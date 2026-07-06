@@ -106,6 +106,15 @@ Screens live in `src/screens/<name>/` and are mounted from a route file under `a
 - `apollo.config.json`, `codegen.ts` — GraphQL codegen.
 - `babel.config.js`, `tsconfig.json`, `eslint.config.js` — standard.
 
+## Roadmap board (`.pm/`)
+
+File-based product roadmap, managed only through two slash commands:
+
+- `/pm-brainstorm <topic>` — proposes milestones/tasks as text (writes nothing).
+- `/pm <subcommand>` — the only writer: materializes workstreams/milestones/tasks, marks done, prints status.
+
+Conventions live canonically in `.claude/commands/pm.md`. Product pillars are in `.pm/GOAL.md`; anti-goals in `.pm/DO_NOT_DO.md`. Don't edit `.pm/` by hand outside `/pm`.
+
 ## CI / Deploy
 
 - CI (`.github/workflows/ci.yml`) runs `yarn lint`, `yarn typecheck`, `yarn test:unit` on push/PR to `main`.
