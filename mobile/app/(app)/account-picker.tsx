@@ -1,7 +1,6 @@
 import { AccountPickerScreen } from "@/screens/account-picker-screen/account-picker-screen";
 import { Stack } from "expo-router";
 import { i18n } from "@/translations";
-import React from "react";
 import { useTheme } from "@/common/theme";
 
 export default function AccountPicker() {

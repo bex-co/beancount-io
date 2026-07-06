@@ -1,4 +1,3 @@
-import React from "react";
 import { i18n } from "@/translations";
 import { useLocalSearchParams } from "expo-router";
 import { SelectedPayee } from "@/common/globalFnFactory";

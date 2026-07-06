@@ -3,7 +3,7 @@ import { useReactiveVar } from "@apollo/client";
 import { sessionVar } from "@/common/vars";
 import { useCallback } from "react";
 
-import { HeaderBackButton } from "@react-navigation/elements";
+import { HeaderBackButton } from "expo-router/react-navigation";
 import { useTheme } from "@/common/theme";
 
 export const DefaultHeaderLeftBack = () => {

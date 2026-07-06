@@ -1,4 +1,3 @@
-import React from "react";
 import { ApolloProvider } from "@apollo/client";
 import { apolloClient } from "@/common/apollo/client";
 import { SplashProvider } from "./splash-provider/splash-provider";

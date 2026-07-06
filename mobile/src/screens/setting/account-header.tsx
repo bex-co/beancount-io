@@ -1,4 +1,3 @@
-import * as React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useTheme } from "@/common/theme";
 import { ScreenWidth } from "@/common/screen-util";

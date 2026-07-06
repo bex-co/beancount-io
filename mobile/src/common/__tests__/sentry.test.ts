@@ -49,21 +49,10 @@ describe("sentry configuration logic", () => {
   });
 
   describe("configuration options", () => {
-    it("should set enableInExpoDevelopment to true", () => {
-      const config = {
-        dsn: "https://key@sentry.io/project",
-        enableInExpoDevelopment: true,
-        debug: false,
-      };
-
-      expect(config.enableInExpoDevelopment).toBe(true);
-    });
-
     it("should enable debug mode in development", () => {
       const __DEV__ = true;
       const config = {
         dsn: "https://key@sentry.io/project",
-        enableInExpoDevelopment: true,
         debug: __DEV__,
       };
 
@@ -74,7 +63,6 @@ describe("sentry configuration logic", () => {
       const __DEV__ = false;
       const config = {
         dsn: "https://key@sentry.io/project",
-        enableInExpoDevelopment: true,
         debug: __DEV__,
       };
 

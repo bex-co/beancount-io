@@ -159,7 +159,6 @@ async function runWorker() {
     jsx: ts.JsxEmit.React,
     esModuleInterop: true,
     allowSyntheticDefaultImports: true,
-    moduleResolution: ts.ModuleResolutionKind.Node10,
     resolveJsonModule: true,
     isolatedModules: false,
     sourceMap: false,

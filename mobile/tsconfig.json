@@ -15,9 +15,9 @@
     "skipDefaultLibCheck": true,
     "sourceMap": true,
     "strictNullChecks": true,
-    "baseUrl": "./",
+    "types": ["node"],
     "paths": {
-      "@/*": ["src/*"]
+      "@/*": ["./src/*"]
     }
   },
   "include": ["src/**/*.ts", "src/**/*.tsx", "app/**/*.ts", "app/**/*.tsx"],

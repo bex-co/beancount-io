@@ -44,18 +44,18 @@ mobile/
 
 Run all from inside `mobile/`.
 
-| Command | What it does |
-|---------|--------------|
-| `yarn start` | Expo dev server (`--tunnel`) |
-| `yarn ios` / `yarn android` | Start in simulator/emulator |
-| `yarn ios:device` | Build and install on a connected iOS device |
-| `yarn lint` | `tsc --noEmit` + ESLint with autofix |
-| `yarn typecheck` | `tsc --noEmit` only |
-| `yarn test:unit` | Custom Jest-lite runner in `scripts/` |
-| `yarn test` | lint + typecheck + unit tests (CI uses this) |
-| `yarn codegen` | Regenerate `src/generated-graphql/` from the GraphQL schema |
-| `yarn format` / `yarn format:check` | Prettier |
-| `yarn bump` | Bump app version (`package.json` + `app.json`) |
+| Command                             | What it does                                                |
+| ----------------------------------- | ----------------------------------------------------------- |
+| `yarn start`                        | Expo dev server (`--tunnel`)                                |
+| `yarn ios` / `yarn android`         | Start in simulator/emulator                                 |
+| `yarn ios:device`                   | Build and install on a connected iOS device                 |
+| `yarn lint`                         | `tsc --noEmit` + ESLint with autofix                        |
+| `yarn typecheck`                    | `tsc --noEmit` only                                         |
+| `yarn test:unit`                    | Custom Jest-lite runner in `scripts/`                       |
+| `yarn test`                         | lint + typecheck + unit tests (CI uses this)                |
+| `yarn codegen`                      | Regenerate `src/generated-graphql/` from the GraphQL schema |
+| `yarn format` / `yarn format:check` | Prettier                                                    |
+| `yarn bump`                         | Bump app version (`package.json` + `app.json`)              |
 
 ## Conventions
 
@@ -121,5 +121,6 @@ Conventions live canonically in `.claude/commands/pm.md`. Product pillars are in
 - Deploy (`.github/workflows/deploy.yml`) triggers EAS build/submit when `mobile/package.json`'s `version` changes on `main`. Use `yarn bump` to bump.
 
 ## Repo
+
 - Origin: `stargately/beancount-mobile`, now part of the `bex-co/beancount-io` monorepo.
 - License: MIT.

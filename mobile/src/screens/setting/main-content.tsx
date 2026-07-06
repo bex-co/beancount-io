@@ -1,6 +1,6 @@
 import Constants from "expo-constants";
 import * as WebBrowser from "expo-web-browser";
-import React, { useState } from "react";
+import { useState } from "react";
 import { Alert, Platform } from "react-native";
 import { List as List2 } from "@/components";
 

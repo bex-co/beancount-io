@@ -1,5 +1,4 @@
 import { G, Path, Svg } from "react-native-svg";
-import * as React from "react";
 import { useTheme } from "@/common/theme";
 
 export function EmailIcon(): JSX.Element {

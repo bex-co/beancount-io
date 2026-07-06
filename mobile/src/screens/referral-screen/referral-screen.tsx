@@ -1,4 +1,3 @@
-import * as React from "react";
 import {
   View,
   StyleSheet,
@@ -104,7 +103,7 @@ export const ReferralScreen = () => {
           <TouchableOpacity
             style={styles.copyBtn}
             onPress={async () => {
-              Clipboard.setString(shareLink);
+              await Clipboard.setStringAsync(shareLink);
               toast.showToast({
                 message: t("copied"),
                 type: "text",

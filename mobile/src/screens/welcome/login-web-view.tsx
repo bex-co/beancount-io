@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Dimensions, View, StyleSheet } from "react-native";
 import { WebView } from "react-native-webview";
 import { useState } from "react";

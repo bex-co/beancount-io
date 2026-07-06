@@ -107,7 +107,11 @@ export const ToastProvider: React.FC<ToastProviderProps> = ({ children }) => {
 
 const styles = StyleSheet.create({
   toast: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     borderRadius: 8,
     marginHorizontal: 16,
     display: "flex",
@@ -116,7 +120,11 @@ const styles = StyleSheet.create({
     pointerEvents: "none",
   },
   messageContainer: {
-    ...StyleSheet.absoluteFillObject,
+    position: "absolute",
+    top: 0,
+    left: 0,
+    right: 0,
+    bottom: 0,
     display: "flex",
     alignItems: "center",
     justifyContent: "center",

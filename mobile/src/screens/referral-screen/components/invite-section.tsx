@@ -1,4 +1,3 @@
-import * as React from "react";
 import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
 import { useTheme } from "@/common/theme";
 import { contentPadding, ScreenWidth, onePx } from "@/common/screen-util";

@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";

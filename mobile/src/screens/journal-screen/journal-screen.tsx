@@ -1,4 +1,4 @@
-import React, { useMemo, useCallback, useRef, useState } from "react";
+import { useMemo, useCallback, useRef, useState } from "react";
 import {
   ActivityIndicator,
   FlatList,

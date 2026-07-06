@@ -5,8 +5,7 @@ declare interface TestContext {
 }
 
 declare type TestFunction =
-  | (() => void | Promise<void>)
-  | ((this: TestContext) => void | Promise<void>);
+  (() => void | Promise<void>) | ((this: TestContext) => void | Promise<void>);
 
 declare function describe(name: string, fn: () => void): void;
 declare namespace describe {

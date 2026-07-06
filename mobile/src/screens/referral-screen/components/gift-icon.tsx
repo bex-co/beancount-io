@@ -1,5 +1,4 @@
 import { G, Path, Svg, Polygon } from "react-native-svg";
-import * as React from "react";
 import { useTheme } from "@/common/theme";
 
 function GiftIconComponent(): JSX.Element {

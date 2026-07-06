@@ -3,8 +3,6 @@ import { StyleSheet, Text } from "react-native";
 
 import { FlexCenter } from "@/components/flex-center";
 
-import React from "react";
-
 export default function NotFoundScreen() {
   return (
     <>

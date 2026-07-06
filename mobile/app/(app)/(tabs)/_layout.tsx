@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import React, { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { HapticTab } from "@/components/haptic-tab";
 import { useTheme } from "@/common/theme";

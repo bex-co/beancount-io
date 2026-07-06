@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import { useState } from "react";
 import {
   StyleSheet,
   Text,
@@ -19,10 +19,7 @@ interface FilterButton {
   labelKey: string;
   titleKey?: string;
   type:
-    | "directive"
-    | "transaction_subtype"
-    | "document_subtype"
-    | "custom_subtype";
+    "directive" | "transaction_subtype" | "document_subtype" | "custom_subtype";
   value?: string;
   parent?: string; // For subtypes
 }

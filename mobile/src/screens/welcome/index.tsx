@@ -1,4 +1,3 @@
-import * as React from "react";
 import { Dimensions, View, StyleSheet, Image } from "react-native";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";

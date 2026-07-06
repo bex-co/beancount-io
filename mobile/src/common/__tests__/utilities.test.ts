@@ -88,7 +88,7 @@ describe("utility modules", () => {
       require.cache[jwtDecodePath] = {
         exports: {
           __esModule: true,
-          default: (token: string) => ({ sub: `${token}-subject` }),
+          jwtDecode: (token: string) => ({ sub: `${token}-subject` }),
         },
       } as NodeModule;
       delete require.cache[sessionUtilsPath];

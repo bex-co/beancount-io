@@ -1,4 +1,3 @@
-import React from "react";
 import { View } from "react-native";
 import Svg, { Rect, Text as SvgText, G, Line } from "react-native-svg";
 import { scaleBand, scaleLinear } from "d3-scale";

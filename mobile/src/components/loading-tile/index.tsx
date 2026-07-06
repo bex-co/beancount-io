@@ -1,5 +1,5 @@
 import { useReactiveVar } from "@apollo/client";
-import React, { useEffect } from "react";
+import { useEffect } from "react";
 import { StyleSheet, ViewStyle } from "react-native";
 import { themeVar } from "@/common/vars";
 import Animated, {

@@ -1,4 +1,3 @@
-import * as React from "react";
 import { useTheme } from "@/common/theme";
 import { About } from "./about";
 import { SafeAreaView } from "react-native-safe-area-context";

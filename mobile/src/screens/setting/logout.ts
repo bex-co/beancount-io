@@ -1,4 +1,3 @@
-import fetch from "isomorphic-unfetch";
 import { analytics } from "@/common/analytics";
 import { getEndpoint, headers } from "@/common/request";
 import { sessionVar } from "@/common/vars";

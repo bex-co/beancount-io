@@ -1,4 +1,3 @@
-import React from "react";
 import { ScrollView, View } from "react-native";
 import { useTheme } from "@/common/theme";
 import { AccountHeader } from "./account-header";

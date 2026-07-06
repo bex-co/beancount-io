@@ -1,4 +1,3 @@
-import React from "react";
 import { i18n } from "@/translations";
 import { SelectedNarration } from "@/common/globalFnFactory";
 import { useLocalSearchParams } from "expo-router";
