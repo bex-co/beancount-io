@@ -3,7 +3,7 @@
 <h1 align="center">Beancount Mobile CE</h1>
 
 <p align="center">
-  <img src="https://github.com/stargately/beancount-io/actions/workflows/ci.yml/badge.svg"/>
+  <img src="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml/badge.svg"/>
 </p>
 
 Beancount Mobile Community Edition is an iOS and Android App for [Beancount.io - Double-entry bookkeeping made easy for living your best financial life](https://beancount.io/?utm_source=github.com&utm_medium=readme&utm_campaign=os_oct_1) 💰
@@ -15,7 +15,7 @@ Beancount Mobile Community Edition is an iOS and Android App for [Beancount.io -
 Run it locally
 
 ```zsh
-git clone https://github.com/stargately/beancount-io.git
+git clone https://github.com/bex-co/beancount-io.git
 cd beancount-io/mobile
 yarn install
 yarn start

@@ -3,7 +3,7 @@
 <h1 align="center">Beancount.io</h1>
 
 <p align="center">
-  <img src="https://github.com/stargately/beancount-io/actions/workflows/ci.yml/badge.svg"/>
+  <img src="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml/badge.svg"/>
 </p>
 
 Monorepo for [Beancount.io](https://beancount.io/) — Double-entry bookkeeping made easy.

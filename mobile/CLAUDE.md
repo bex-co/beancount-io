@@ -121,5 +121,5 @@ Conventions live canonically in `.claude/commands/pm.md`. Product pillars are in
 - Deploy (`.github/workflows/deploy.yml`) triggers EAS build/submit when `mobile/package.json`'s `version` changes on `main`. Use `yarn bump` to bump.
 
 ## Repo
-- Origin: `stargately/beancount-mobile`, now part of the `stargately/beancount-io` monorepo.
+- Origin: `stargately/beancount-mobile`, now part of the `bex-co/beancount-io` monorepo.
 - License: MIT.
