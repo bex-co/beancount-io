@@ -8,6 +8,14 @@ allowed-tools: Bash(git status:*), Bash(git pull:*), Bash(git fetch:*), Bash(git
 
 Bring the local `main` up to date, commit any pending work, and push to `origin/main`.
 
+## Session awareness — skip redundant inspection
+
+If the pending changes were made **by you earlier in this chat session** (you edited/created the files and remember what and why), do NOT re-derive the changes from git:
+
+- Skip the `git diff --stat` / `git diff --cached --stat` calls in Step 2 — run only `git status` as a sanity check that the changed-file list matches what you did this session.
+- Write the commit message in Step 4 from your session knowledge, not by re-reading diffs.
+- If `git status` shows files you did **not** touch this session (or you're unsure), fall back to the full inspection in Step 2 for those files before committing, and stage only what you can account for.
+
 ## Step 1 — Verify branch
 
 ```bash
@@ -21,6 +29,8 @@ If not on `main`, **STOP** and ask the user whether to switch or abort. Do not s
 ```bash
 !git status
 ```
+
+If the changes are your own from this session (see "Session awareness" above), stop here — `git status` alone is enough. Otherwise, inspect the diffs:
 
 ```bash
 !git diff --stat
@@ -44,7 +54,7 @@ If the rebase has conflicts, **STOP** and report. Do not abort the rebase or use
 
 If there are unstaged changes, stage only the relevant files explicitly. Do **not** use `git add -A` or `git add .` (avoid sweeping in `.env`, secrets, or unrelated files).
 
-Generate a Conventional Commits message from the diff. Honor `$ARGUMENTS` as additional context if supplied.
+Generate a Conventional Commits message — from your session knowledge if you made the changes yourself, otherwise from the diff. Honor `$ARGUMENTS` as additional context if supplied.
 
 * Briefly describe UI before/after for frontend changes.
 * !!Important!! Never mention `Generated with Claude Code` or `Co-Authored-By`.
