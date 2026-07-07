@@ -1,4 +1,8 @@
-import { shortNumber } from "../number-utils";
+import {
+  shortNumber,
+  groupThousands,
+  formatSignedMoney,
+} from "../number-utils";
 
 describe("shortNumber", () => {
   it("formats values below one thousand with a fixed decimal", () => {
@@ -76,5 +80,51 @@ describe("shortNumber", () => {
     expect(shortNumber(999)).toBe("999.0");
     expect(shortNumber(999999)).toBe("1000.0K");
     expect(shortNumber(999999999)).toBe("1000.0M");
+  });
+});
+
+describe("groupThousands", () => {
+  it("groups the integer part and keeps two decimals", () => {
+    expect(groupThousands(1234.5)).toBe("1,234.50");
+    expect(groupThousands(1000000)).toBe("1,000,000.00");
+    expect(groupThousands(12)).toBe("12.00");
+  });
+
+  it("uses absolute value (no sign)", () => {
+    expect(groupThousands(-9876.54)).toBe("9,876.54");
+  });
+
+  it("rounds to two decimals", () => {
+    expect(groupThousands(0.005)).toBe("0.01");
+    expect(groupThousands(999.999)).toBe("1,000.00");
+  });
+
+  it("falls back to zero for non-finite input", () => {
+    expect(groupThousands(NaN)).toBe("0.00");
+    expect(groupThousands(Infinity)).toBe("0.00");
+  });
+});
+
+describe("formatSignedMoney", () => {
+  it("prefixes a minus sign and symbol for negatives", () => {
+    expect(formatSignedMoney(-1234.5, "$")).toBe("-$1,234.50");
+  });
+
+  it("omits the sign for non-negative values", () => {
+    expect(formatSignedMoney(1234.5, "$")).toBe("$1,234.50");
+    expect(formatSignedMoney(0, "$")).toBe("$0.00");
+  });
+
+  it("works with multi-character symbols", () => {
+    expect(formatSignedMoney(2500, "CN¥")).toBe("CN¥2,500.00");
+  });
+
+  it("prefixes a plus for non-negative values when includePlus is set", () => {
+    expect(formatSignedMoney(1234.5, "$", true)).toBe("+$1,234.50");
+    expect(formatSignedMoney(0, "$", true)).toBe("+$0.00");
+  });
+
+  it("still prefixes a minus for negatives when includePlus is set", () => {
+    expect(formatSignedMoney(-1234.5, "$", true)).toBe("-$1,234.50");
   });
 });

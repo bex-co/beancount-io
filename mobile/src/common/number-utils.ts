@@ -38,3 +38,30 @@ export const shortNumber = (number: number | string): string => {
 
   return num.toFixed(1);
 };
+
+/**
+ * Group the integer part of a number with thousands separators and keep two
+ * decimals (e.g. 1234.5 → "1,234.50"). Always non-negative — the sign is the
+ * caller's concern. Hermes-safe (no `toLocaleString` reliance).
+ */
+export const groupThousands = (value: number): string => {
+  const safe = Number.isFinite(value) ? Math.abs(value) : 0;
+  const [intPart, decimals] = safe.toFixed(2).split(".");
+  const grouped = intPart.replace(/\B(?=(\d{3})+(?!\d))/g, ",");
+  return `${grouped}.${decimals}`;
+};
+
+/**
+ * A signed money string with a currency symbol, e.g. "-$1,234.50" or "$0.00".
+ * Pass `includePlus` to prefix a "+" on non-negative amounts (e.g. "+$1,234.50")
+ * for gain/loss deltas.
+ */
+export const formatSignedMoney = (
+  value: number,
+  symbol: string,
+  includePlus = false,
+): string => {
+  const normalized = Number.isFinite(value) ? value : 0;
+  const sign = normalized < 0 ? "-" : includePlus ? "+" : "";
+  return `${sign}${symbol}${groupThousands(normalized)}`;
+};

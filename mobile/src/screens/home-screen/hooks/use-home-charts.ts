@@ -2,6 +2,7 @@ import { useHomeChartsQuery } from "@/generated-graphql/graphql";
 import { selectNetWorthArray } from "@/screens/home-screen/selectors/select-net-worth-array";
 import { selectNetProfitArray } from "@/screens/home-screen/selectors/select-net-profit-array";
 import { getNetWorth } from "@/screens/home-screen/selectors/select-net-worth";
+import { selectNetWorthSeries } from "@/screens/home-screen/selectors/select-net-worth-series";
 
 export const useHomeCharts = (
   userId: string,
@@ -16,6 +17,7 @@ export const useHomeCharts = (
   const netWorth = getNetWorth(currency, data);
   const lastSixProfitData = selectNetProfitArray(currency, data);
   const lastSixWorthData = selectNetWorthArray(currency, data);
+  const netWorthSeries = selectNetWorthSeries(currency, data);
 
   return {
     loading,
@@ -25,5 +27,6 @@ export const useHomeCharts = (
     netWorth,
     lastSixProfitData,
     lastSixWorthData,
+    netWorthSeries,
   };
 };

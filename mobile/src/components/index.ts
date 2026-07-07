@@ -1,4 +1,7 @@
 export * from "./button";
+export * from "./dashboard-card";
+export * from "./paged-carousel";
+export * from "./time-range-pills";
 export * from "./progress";
 export * from "./picker";
 export * from "./list";

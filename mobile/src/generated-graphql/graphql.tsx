@@ -1474,7 +1474,7 @@ export type AccountHierarchyQueryVariables = Exact<{
 }>;
 
 
-export type AccountHierarchyQuery = { __typename?: 'Query', accountHierarchy: { __typename?: 'AccountHierarchyResponse', success: boolean, data: Array<{ __typename?: 'LabeledHierarchyItem', type: string, label: string, data: { __typename?: 'AccountBalance', account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string>, children: Array<{ __typename?: 'AccountBalance', account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string> }> } }> } };
+export type AccountHierarchyQuery = { __typename?: 'Query', accountHierarchy: { __typename?: 'AccountHierarchyResponse', success: boolean, data: Array<{ __typename?: 'LabeledHierarchyItem', type: string, label: string, data: { __typename?: 'AccountBalance', account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string>, children: Array<{ __typename?: 'AccountBalance', account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string>, children: Array<{ __typename?: 'AccountBalance', account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string>, children: Array<{ __typename?: 'AccountBalance', account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string>, children: Array<{ __typename?: 'AccountBalance', account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string> }> }> }> }> } }> } };
 
 export type AddEntriesMutationVariables = Exact<{
   entriesInput: Array<EntryInput> | EntryInput;
@@ -1623,6 +1623,21 @@ export const AccountHierarchyDocument = gql`
           account
           balance
           balance_children
+          children {
+            account
+            balance
+            balance_children
+            children {
+              account
+              balance
+              balance_children
+              children {
+                account
+                balance
+                balance_children
+              }
+            }
+          }
         }
       }
     }

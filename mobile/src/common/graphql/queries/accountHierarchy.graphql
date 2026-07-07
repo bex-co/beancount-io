@@ -11,6 +11,21 @@ query AccountHierarchy($userId: String!, $ledgerId: String) {
           account
           balance
           balance_children
+          children {
+            account
+            balance
+            balance_children
+            children {
+              account
+              balance
+              balance_children
+              children {
+                account
+                balance
+                balance_children
+              }
+            }
+          }
         }
       }
     }

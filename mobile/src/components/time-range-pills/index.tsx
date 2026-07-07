@@ -1,0 +1,74 @@
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { ColorTheme } from "@/types/theme-props";
+import { useThemeStyle } from "@/common/hooks/use-theme-style";
+
+export type PillOption<T extends string> = {
+  key: T;
+  label: string;
+};
+
+type TimeRangePillsProps<T extends string> = {
+  value: T;
+  options: PillOption<T>[];
+  onChange: (key: T) => void;
+};
+
+const getStyles = (theme: ColorTheme) =>
+  StyleSheet.create({
+    row: {
+      flexDirection: "row",
+      justifyContent: "center",
+      alignItems: "center",
+      paddingTop: 8,
+    },
+    pill: {
+      paddingHorizontal: 14,
+      paddingVertical: 6,
+      borderRadius: 14,
+      marginHorizontal: 4,
+    },
+    pillActive: {
+      backgroundColor: theme.primary,
+    },
+    label: {
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.black80,
+    },
+    labelActive: {
+      color: theme.white,
+    },
+  });
+
+/**
+ * Robinhood-style row of time-range pills (a small segmented control). Generic
+ * over the option key so it can drive any chart's range selection.
+ */
+export function TimeRangePills<T extends string>({
+  value,
+  options,
+  onChange,
+}: TimeRangePillsProps<T>): JSX.Element {
+  const styles = useThemeStyle(getStyles);
+  return (
+    <View style={styles.row}>
+      {options.map((option) => {
+        const active = option.key === value;
+        return (
+          <TouchableOpacity
+            key={option.key}
+            style={[styles.pill, active && styles.pillActive]}
+            onPress={() => onChange(option.key)}
+            accessibilityRole="button"
+            accessibilityState={{ selected: active }}
+            accessibilityLabel={option.label}
+          >
+            <Text style={[styles.label, active && styles.labelActive]}>
+              {option.label}
+            </Text>
+          </TouchableOpacity>
+        );
+      })}
+    </View>
+  );
+}
