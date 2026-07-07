@@ -2,15 +2,18 @@ import { useState } from "react";
 import {
   StyleSheet,
   Text,
+  TextInput,
   View,
   ScrollView,
   Pressable,
   PressableStateCallbackType,
+  TouchableOpacity,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle } from "@/common/hooks";
+import { useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { getFieldWidth } from "./journal-config";
 import { DirectiveType } from "./types";
 
 // Define filter button configurations
@@ -451,37 +454,47 @@ const getFilterStyles = (theme: ColorTheme) =>
     },
   });
 
-const getStyles = (theme: ColorTheme) =>
+const getNavStyles = (theme: ColorTheme) =>
   StyleSheet.create({
-    header: {
+    navBar: {
       flexDirection: "row",
       alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 12,
       backgroundColor: theme.white,
-      borderBottomWidth: StyleSheet.hairlineWidth,
-      borderBottomColor: theme.black20,
     },
-    dateCell: {
-      fontSize: 14,
-      fontFamily: "monospace",
-      color: theme.black90,
-      textAlign: "center",
-      fontWeight: "600",
-    },
-    flagCell: {
-      fontSize: 14,
-      fontFamily: "monospace",
-      color: theme.black90,
-      textAlign: "center",
-      fontWeight: "600",
-    },
-    descriptionCell: {
+    navTitle: {
       flex: 1,
-      fontSize: 14,
-      color: theme.black90,
-      marginLeft: 8,
+      fontSize: 17,
       fontWeight: "600",
+      color: theme.black90,
+      textAlign: "center",
+    },
+    navRight: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 8,
+      width: 64,
+      justifyContent: "flex-end",
+    },
+    searchBar: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginHorizontal: 16,
+      marginBottom: 8,
+      backgroundColor: theme.black10,
+      borderRadius: 10,
+      paddingHorizontal: 10,
+      height: 36,
+    },
+    searchInput: {
+      flex: 1,
+      marginLeft: 6,
+      fontSize: 15,
+      color: theme.black90,
+    },
+    searchPlaceholder: {
+      color: theme.black60,
     },
   });
 
@@ -494,12 +507,11 @@ interface JournalHeaderProps {
   onDocumentSubtypesChange: (subtypes: string[]) => void;
   selectedCustomSubtypes: string[];
   onCustomSubtypesChange: (subtypes: string[]) => void;
+  searchQuery: string;
+  onSearchChange: (query: string) => void;
+  onAdd: () => void;
 }
 
-/**
- * Component for rendering the journal header with column labels and filters
- * Uses journal-config.ts for width configuration
- */
 export const JournalHeader = ({
   selectedDirectiveTypes,
   onDirectiveTypesChange,
@@ -509,17 +521,44 @@ export const JournalHeader = ({
   onDocumentSubtypesChange,
   selectedCustomSubtypes,
   onCustomSubtypesChange,
+  searchQuery,
+  onSearchChange,
+  onAdd,
 }: JournalHeaderProps) => {
-  const styles = useThemeStyle(getStyles);
+  const navStyles = useThemeStyle(getNavStyles);
+  const theme = useTheme().colorTheme;
   const { t } = useTranslations();
 
-  const dateWidth = getFieldWidth("date");
-  const flagWidth = getFieldWidth("flag");
-  const descriptionWidth = getFieldWidth("description");
-
   return (
-    <View>
-      {/* Filters section */}
+    <View style={{ backgroundColor: theme.white }}>
+      {/* Navigation bar */}
+      <View style={navStyles.navBar}>
+        <Text style={navStyles.navTitle}>{t("transactions")}</Text>
+        <View style={navStyles.navRight}>
+          <TouchableOpacity onPress={onAdd}>
+            <Ionicons name="add" size={26} color={theme.black90} />
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      {/* Search bar */}
+      <View style={navStyles.searchBar}>
+        <Ionicons name="search-outline" size={16} color={theme.black60} />
+        <TextInput
+          style={navStyles.searchInput}
+          placeholder={t("search")}
+          placeholderTextColor={theme.black60}
+          value={searchQuery}
+          onChangeText={onSearchChange}
+          returnKeyType="search"
+          clearButtonMode="while-editing"
+        />
+        <TouchableOpacity>
+          <Ionicons name="options-outline" size={16} color={theme.black60} />
+        </TouchableOpacity>
+      </View>
+
+      {/* Filter chips */}
       <JournalFilters
         selectedDirectiveTypes={selectedDirectiveTypes}
         onDirectiveTypesChange={onDirectiveTypesChange}
@@ -530,34 +569,6 @@ export const JournalHeader = ({
         selectedCustomSubtypes={selectedCustomSubtypes}
         onCustomSubtypesChange={onCustomSubtypesChange}
       />
-
-      {/* Column labels section */}
-      <View style={styles.header}>
-        <Text
-          style={[
-            styles.dateCell,
-            typeof dateWidth === "number" ? { width: dateWidth } : {},
-          ]}
-        >
-          {t("date")}
-        </Text>
-        <Text
-          style={[
-            styles.flagCell,
-            typeof flagWidth === "number" ? { width: flagWidth } : {},
-          ]}
-        >
-          F
-        </Text>
-        <Text
-          style={[
-            styles.descriptionCell,
-            descriptionWidth === "flex" ? { flex: 1 } : {},
-          ]}
-        >
-          {t("payee")} / {t("narration")}
-        </Text>
-      </View>
     </View>
   );
 };

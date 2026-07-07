@@ -2,10 +2,14 @@ import React, { useState } from "react";
 import {
   Text,
   View,
+  ScrollView,
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
+  Platform,
 } from "react-native";
+
+const MONO_FONT = Platform.select({ ios: "Courier New", default: "monospace" });
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme, useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -58,7 +62,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     locationText: {
       fontSize: 14,
-      fontFamily: "monospace",
+      fontFamily: MONO_FONT,
       color: theme.black80,
     },
     contextHeader: {
@@ -94,9 +98,10 @@ const getStyles = (theme: ColorTheme) =>
       minHeight: 100,
       padding: 12,
       fontSize: 13,
-      fontFamily: "monospace",
+      lineHeight: 20,
+      fontFamily: MONO_FONT,
       color: theme.text01,
-      backgroundColor: theme.white,
+      backgroundColor: theme.black10,
     },
     emptyState: {
       paddingVertical: 40,
@@ -247,7 +252,9 @@ export const JournalBottomSheetContent: React.FC<
       <View style={styles.section}>
         <Text style={styles.sectionTitle}>{t("journalSource")}</Text>
         <View style={styles.sourceContainer}>
-          <Text style={styles.sourceText}>{entryContext?.slice || ""}</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            <Text style={styles.sourceText}>{entryContext?.slice || ""}</Text>
+          </ScrollView>
         </View>
       </View>
     </View>

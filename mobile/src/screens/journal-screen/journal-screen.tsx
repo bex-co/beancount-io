@@ -1,7 +1,8 @@
 import { useMemo, useCallback, useRef, useState } from "react";
+import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
-  FlatList,
+  SectionList,
   RefreshControl,
   StyleSheet,
   Text,
@@ -17,12 +18,106 @@ import { ColorTheme } from "@/types/theme-props";
 import { NetworkStatus } from "@apollo/client";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
+import { AddTransactionCallback } from "@/common/globalFnFactory";
 import { JournalHeader } from "./journal-header";
 import { JournalEntryItem } from "./journal-entry-item";
+import { JournalDateSectionHeader } from "./journal-date-section-header";
 import { JournalEmptyState } from "./journal-empty-state";
 import { JournalNoEntriesForFiltersState } from "./journal-no-entries-for-filters-state";
 import { JournalBottomSheet } from "./journal-bottom-sheet";
-import { JournalDirectiveType, DirectiveType } from "./types";
+import {
+  JournalDirectiveType,
+  DirectiveType,
+  isJournalTransaction,
+} from "./types";
+
+type JournalSection = {
+  isoDate: string;
+  displayDate: string;
+  total: string;
+  data: JournalDirectiveType[];
+};
+
+const formatDisplayDate = (isoDate: string): string => {
+  try {
+    const [year, month, day] = isoDate.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  } catch {
+    return isoDate;
+  }
+};
+
+const formatAmount = (value: number, currency: string): string => {
+  const formatted = Math.abs(value).toLocaleString("en-US", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return currency === "USD" ? `$${formatted}` : `${formatted} ${currency}`;
+};
+
+const getSectionTotal = (entries: JournalDirectiveType[]): string => {
+  let net = 0;
+  let currency = "USD";
+  let found = false;
+
+  for (const entry of entries) {
+    if (!isJournalTransaction(entry) || entry.flag === "!") continue;
+    const cashPostings = entry.postings.filter(
+      (p) =>
+        p.account.startsWith("Assets:") || p.account.startsWith("Liabilities:"),
+    );
+    for (const p of cashPostings) {
+      net += parseFloat(p.units.number);
+      currency = p.units.currency;
+      found = true;
+    }
+  }
+
+  if (!found) return "$0.00";
+  const formatted = formatAmount(net, currency);
+  if (net > 0) return `+${formatted}`;
+  if (net < 0) return `-${formatAmount(Math.abs(net), currency)}`;
+  return formatted;
+};
+
+const groupToSections = (
+  entries: JournalDirectiveType[],
+  searchQuery: string,
+): JournalSection[] => {
+  const q = searchQuery.toLowerCase().trim();
+  const filtered = q
+    ? entries.filter((entry) => {
+        if (isJournalTransaction(entry)) {
+          return (
+            entry.payee?.toLowerCase().includes(q) ||
+            entry.narration?.toLowerCase().includes(q) ||
+            entry.postings.some((p) => p.account.toLowerCase().includes(q))
+          );
+        }
+        return entry.directive_type.toLowerCase().includes(q);
+      })
+    : entries;
+
+  const groups = new Map<string, JournalDirectiveType[]>();
+  for (const entry of filtered) {
+    const isoDate = entry.date.slice(0, 10);
+    if (!groups.has(isoDate)) groups.set(isoDate, []);
+    groups.get(isoDate)!.push(entry);
+  }
+
+  return Array.from(groups.entries()).map(([isoDate, items]) => ({
+    isoDate,
+    displayDate: formatDisplayDate(isoDate),
+    total: getSectionTotal(items),
+    data: items,
+  }));
+};
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -64,14 +159,11 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: 14,
       color: theme.black60,
     },
-    itemSeparator: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: theme.black10,
-    },
   });
 
 const JournalList = () => {
   const ledgerId = useLedgerGuard();
+  const router = useRouter();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
@@ -79,17 +171,15 @@ const JournalList = () => {
   const [selectedEntry, setSelectedEntry] =
     useState<JournalDirectiveType | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
+  const [searchQuery, setSearchQuery] = useState<string>("");
 
   usePageView("journal");
 
   const limit = 20;
 
-  // State for directive type filtering
   const [selectedDirectiveTypes, setSelectedDirectiveTypes] = useState<
     DirectiveType[]
   >([DirectiveType.TRANSACTION]);
-
-  // State for subtype filtering
   const [selectedTransactionSubtypes, setSelectedTransactionSubtypes] =
     useState<string[]>([]);
   const [selectedDocumentSubtypes, setSelectedDocumentSubtypes] = useState<
@@ -99,7 +189,6 @@ const JournalList = () => {
     string[]
   >([]);
 
-  // Use GetLedgerJournal query with Apollo Client's native infinite scroll support
   const { data, loading, error, refetch, fetchMore, networkStatus } =
     useGetLedgerJournalQuery({
       variables: {
@@ -129,11 +218,9 @@ const JournalList = () => {
       notifyOnNetworkStatusChange: true,
     });
 
-  // Get total count (same as web dashboard)
   const rawTotal = data?.getLedgerJournal.total;
   const total = typeof rawTotal === "number" ? rawTotal : 0;
 
-  // Extract journal entries from Apollo cache (merged by updateQuery)
   const journalEntries = useMemo(
     () =>
       (data?.getLedgerJournal.data || []) as unknown as JournalDirectiveType[],
@@ -141,20 +228,21 @@ const JournalList = () => {
   );
   const isEmpty = data?.getLedgerJournal.is_empty;
 
-  // Check if we have more data to load
   const hasMore = journalEntries.length < total;
   const isLoadingMore = networkStatus === NetworkStatus.fetchMore;
 
-  // Load more entries using Apollo's native fetchMore with updateQuery
+  const sections = useMemo(
+    () => groupToSections(journalEntries, searchQuery),
+    [journalEntries, searchQuery],
+  );
+
   const loadMore = useCallback(async () => {
-    if (isLoadingMore || !hasMore || loading || !ledgerId) {
-      return;
-    }
+    if (isLoadingMore || !hasMore || loading || !ledgerId) return;
 
     try {
       await fetchMore({
         variables: {
-          ledgerId: ledgerId,
+          ledgerId,
           query: {
             offset: journalEntries.length,
             limit,
@@ -176,20 +264,16 @@ const JournalList = () => {
                 : undefined,
           },
         },
-        // Apollo Client's native way to merge paginated data
         updateQuery: (prev, { fetchMoreResult }) => {
-          if (!fetchMoreResult?.getLedgerJournal?.data) {
-            return prev;
-          }
-
-          const prevData = prev.getLedgerJournal.data || [];
-          const newData = fetchMoreResult.getLedgerJournal.data || [];
-
+          if (!fetchMoreResult?.getLedgerJournal?.data) return prev;
           return {
             ...prev,
             getLedgerJournal: {
               ...prev.getLedgerJournal,
-              data: [...prevData, ...newData],
+              data: [
+                ...(prev.getLedgerJournal.data || []),
+                ...fetchMoreResult.getLedgerJournal.data,
+              ],
               total: fetchMoreResult.getLedgerJournal.total,
             },
           };
@@ -217,8 +301,8 @@ const JournalList = () => {
       setIsRefreshing(true);
       await analytics.track("tap_refresh", {});
       await refetch();
-    } catch (error) {
-      console.error("Error refreshing journal:", error);
+    } catch (err) {
+      console.error("Error refreshing journal:", err);
     } finally {
       setIsRefreshing(false);
     }
@@ -226,38 +310,34 @@ const JournalList = () => {
 
   const handleEntryPress = useCallback((entry: JournalDirectiveType) => {
     setSelectedEntry(entry);
-    // Use snapToIndex to control which snap point to open to:
-    // 0 = "50%", 1 = "75%", 2 = "90%"
-    bottomSheetRef.current?.snapToIndex(0); // Change this number to control initial snap point
+    bottomSheetRef.current?.snapToIndex(0);
   }, []);
 
-  const renderErrorState = () => (
-    <View style={styles.errorContainer}>
-      <Text style={styles.errorText}>
-        {t("journalLoadError")}
-        {error?.message}
-      </Text>
-    </View>
+  const handleQuickAdd = useCallback(() => {
+    analytics.track("tap_quick_add", {});
+    AddTransactionCallback.setFn(async () => { await refetch(); });
+    router.navigate({ pathname: "/add-transaction" });
+  }, [refetch, router]);
+
+  const renderSectionHeader = ({ section }: { section: JournalSection }) => (
+    <JournalDateSectionHeader
+      displayDate={section.displayDate}
+      total={section.total}
+    />
   );
 
-  const renderLoadingState = () => (
-    <View style={styles.loadingContainer}>
-      <ActivityIndicator size="large" color={theme.primary} />
-    </View>
+  const renderItem = ({ item }: { item: JournalDirectiveType }) => (
+    <JournalEntryItem entry={item} onPress={() => handleEntryPress(item)} />
   );
 
-  // Determine what to show in the FlatList
-  const listData = error
-    ? [] // Show error in ListEmptyComponent
-    : loading && !journalEntries.length
-      ? [] // Show loading in ListEmptyComponent
-      : journalEntries;
+  const isInitialLoading = loading && !journalEntries.length;
+  const showEmptyState = !loading && !error && isEmpty && sections.length === 0;
+  const showNoFiltersState =
+    !loading && !error && !isEmpty && sections.length === 0;
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      {/* Journal entries list */}
-      <FlatList
-        stickyHeaderIndices={[0]}
+      <SectionList
         ListHeaderComponent={
           <JournalHeader
             selectedDirectiveTypes={selectedDirectiveTypes}
@@ -268,19 +348,19 @@ const JournalList = () => {
             onDocumentSubtypesChange={setSelectedDocumentSubtypes}
             selectedCustomSubtypes={selectedCustomSubtypes}
             onCustomSubtypesChange={setSelectedCustomSubtypes}
+            searchQuery={searchQuery}
+            onSearchChange={setSearchQuery}
+            onAdd={handleQuickAdd}
           />
         }
         style={styles.list}
-        data={listData}
-        renderItem={({ item }) => (
-          <JournalEntryItem
-            entry={item}
-            onPress={() => handleEntryPress(item)}
-          />
-        )}
+        sections={isInitialLoading || error ? [] : sections}
+        renderSectionHeader={renderSectionHeader}
+        renderItem={renderItem}
         keyExtractor={(item, index) =>
           `${item.date}-${item.directive_type}-${index}`
         }
+        stickySectionHeadersEnabled={false}
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -295,15 +375,27 @@ const JournalList = () => {
         updateCellsBatchingPeriod={50}
         windowSize={10}
         ListEmptyComponent={
-          loading && !journalEntries.length
-            ? renderLoadingState
+          isInitialLoading
+            ? () => (
+                <View style={styles.loadingContainer}>
+                  <ActivityIndicator size="large" color={theme.primary} />
+                </View>
+              )
             : error
-              ? renderErrorState
-              : isEmpty
+              ? () => (
+                  <View style={styles.errorContainer}>
+                    <Text style={styles.errorText}>
+                      {t("journalLoadError")}
+                      {error?.message}
+                    </Text>
+                  </View>
+                )
+              : showEmptyState
                 ? JournalEmptyState
-                : JournalNoEntriesForFiltersState
+                : showNoFiltersState
+                  ? JournalNoEntriesForFiltersState
+                  : undefined
         }
-        ItemSeparatorComponent={() => <View style={styles.itemSeparator} />}
         ListFooterComponent={
           isLoadingMore || (loading && journalEntries.length > 0) ? (
             <View style={styles.loadingFooter}>
