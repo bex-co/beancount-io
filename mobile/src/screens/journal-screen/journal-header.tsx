@@ -498,6 +498,27 @@ const getNavStyles = (theme: ColorTheme) =>
     },
   });
 
+interface JournalNavBarProps {
+  onAdd: () => void;
+}
+
+export const JournalNavBar = ({ onAdd }: JournalNavBarProps) => {
+  const navStyles = useThemeStyle(getNavStyles);
+  const theme = useTheme().colorTheme;
+  const { t } = useTranslations();
+
+  return (
+    <View style={navStyles.navBar}>
+      <Text style={navStyles.navTitle}>{t("transactions")}</Text>
+      <View style={navStyles.navRight}>
+        <TouchableOpacity onPress={onAdd}>
+          <Ionicons name="add" size={26} color={theme.black90} />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
+};
+
 interface JournalHeaderProps {
   selectedDirectiveTypes: DirectiveType[];
   onDirectiveTypesChange: (types: DirectiveType[]) => void;
@@ -509,7 +530,6 @@ interface JournalHeaderProps {
   onCustomSubtypesChange: (subtypes: string[]) => void;
   searchQuery: string;
   onSearchChange: (query: string) => void;
-  onAdd: () => void;
 }
 
 export const JournalHeader = ({
@@ -523,7 +543,6 @@ export const JournalHeader = ({
   onCustomSubtypesChange,
   searchQuery,
   onSearchChange,
-  onAdd,
 }: JournalHeaderProps) => {
   const navStyles = useThemeStyle(getNavStyles);
   const theme = useTheme().colorTheme;
@@ -531,16 +550,6 @@ export const JournalHeader = ({
 
   return (
     <View style={{ backgroundColor: theme.white }}>
-      {/* Navigation bar */}
-      <View style={navStyles.navBar}>
-        <Text style={navStyles.navTitle}>{t("transactions")}</Text>
-        <View style={navStyles.navRight}>
-          <TouchableOpacity onPress={onAdd}>
-            <Ionicons name="add" size={26} color={theme.black90} />
-          </TouchableOpacity>
-        </View>
-      </View>
-
       {/* Search bar */}
       <View style={navStyles.searchBar}>
         <Ionicons name="search-outline" size={16} color={theme.black60} />

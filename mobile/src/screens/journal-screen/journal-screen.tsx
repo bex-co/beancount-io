@@ -19,7 +19,7 @@ import { NetworkStatus } from "@apollo/client";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
-import { JournalHeader } from "./journal-header";
+import { JournalHeader, JournalNavBar } from "./journal-header";
 import { JournalEntryItem } from "./journal-entry-item";
 import { JournalDateSectionHeader } from "./journal-date-section-header";
 import { JournalEmptyState } from "./journal-empty-state";
@@ -249,6 +249,7 @@ const JournalList = () => {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
+      <JournalNavBar onAdd={handleQuickAdd} />
       <SectionList
         ListHeaderComponent={
           <JournalHeader
@@ -262,7 +263,6 @@ const JournalList = () => {
             onCustomSubtypesChange={setSelectedCustomSubtypes}
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
-            onAdd={handleQuickAdd}
           />
         }
         style={styles.list}
