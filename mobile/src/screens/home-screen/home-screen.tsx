@@ -117,8 +117,6 @@ export const HomeScreenImpl = (): JSX.Element => {
 
         <RecentTransactionsCard
           ledgerId={ledgerId}
-          currency={currency}
-          currencySymbol={currencySymbol}
           refreshSignal={refreshSignal}
         />
 
