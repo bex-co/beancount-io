@@ -1,0 +1,12 @@
+query AccountJournal($ledgerId: String!, $query: AccountJournalQueryInput!) {
+  getLedgerAccountJournal(ledgerId: $ledgerId, query: $query) {
+    account
+    total
+    with_children
+    items {
+      entry
+      change
+      balance
+    }
+  }
+}

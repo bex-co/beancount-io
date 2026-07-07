@@ -1,0 +1,30 @@
+query BalanceSheet($ledgerId: String!, $time: String) {
+  getLedgerBalanceSheet(ledgerId: $ledgerId, time: $time) {
+    netWorthData {
+      date
+      balance
+    }
+    assetsData {
+      date
+      balance
+    }
+    liabilitiesData {
+      date
+      balance
+    }
+    assetsHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+    liabilitiesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+  }
+}

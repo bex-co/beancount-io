@@ -1,6 +1,0 @@
-query IsPaid {
-  isPaid {
-    isPaid
-    isForcedToPay
-  }
-}

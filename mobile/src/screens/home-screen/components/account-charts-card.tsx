@@ -1,5 +1,6 @@
-import { ReactNode, useMemo, useState } from "react";
+import { ReactNode, useCallback, useMemo, useState } from "react";
 import { View } from "react-native";
+import { useRouter } from "expo-router";
 import { AccountHierarchyQuery } from "@/generated-graphql/graphql";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
@@ -7,9 +8,9 @@ import { LoadingTile } from "@/components/loading-tile";
 import { DashboardCard, PagedCarousel, TimeRangePills } from "@/components";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
 import { groupThousands } from "@/common/number-utils";
-import { AccountListPage } from "@/screens/home-screen/components/account-list-page";
-import { selectAccountTree } from "@/screens/home-screen/selectors/select-account-list";
+import { AccountListPage, selectAccountTree } from "@/components/account-list";
 import {
+  RANGE_LABEL_KEYS,
   SeriesPoint,
   TimeRange,
   TIME_RANGES,
@@ -19,14 +20,6 @@ import {
 
 const CARD_HEIGHT = 300;
 const NET_WORTH_CHART_HEIGHT = 160;
-
-// Localized labels for the time-range pills.
-const RANGE_LABEL_KEYS: Record<TimeRange, string> = {
-  "3M": "range3M",
-  "6M": "range6M",
-  "1Y": "range1Y",
-  ALL: "rangeAll",
-};
 
 type AccountTotals = {
   assets: string;
@@ -58,8 +51,17 @@ export function AccountChartsCard({
   error,
 }: AccountChartsCardProps): JSX.Element {
   const { t } = useTranslations();
+  const router = useRouter();
   const [scrubbing, setScrubbing] = useState(false);
   const [range, setRange] = useState<TimeRange>("6M");
+
+  const handlePressAccount = useCallback(
+    (account: string) => {
+      analytics.track("home_open_account", { account });
+      router.push({ pathname: "/account-detail", params: { account } });
+    },
+    [router],
+  );
 
   // Memoize the recursive account-tree walks so scrub/range re-renders don't
   // rebuild them (they only depend on currency + hierarchy data).
@@ -115,6 +117,7 @@ export function AccountChartsCard({
       total={`${currencySymbol}${groupThousands(Number(accountTotals.assets))}`}
       items={assetAccounts}
       currencySymbol={currencySymbol}
+      onPressAccount={handlePressAccount}
     />,
     <AccountListPage
       key="liabilities"
@@ -124,6 +127,7 @@ export function AccountChartsCard({
       )}`}
       items={liabilityAccounts}
       currencySymbol={currencySymbol}
+      onPressAccount={handlePressAccount}
     />,
   ];
 

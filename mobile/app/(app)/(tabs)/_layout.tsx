@@ -12,6 +12,7 @@ export default function TabLayout() {
   const locale = useReactiveVar(localeVar);
   const [tabTitles, setTabTitles] = useState({
     home: i18n.t("home"),
+    accounts: i18n.t("accounts"),
     ledger: i18n.t("ledger"),
     journal: i18n.t("journal"),
     setting: i18n.t("setting"),
@@ -20,6 +21,7 @@ export default function TabLayout() {
   useEffect(() => {
     setTabTitles({
       home: i18n.t("home"),
+      accounts: i18n.t("accounts"),
       ledger: i18n.t("ledger"),
       journal: i18n.t("journal"),
       setting: i18n.t("setting"),
@@ -47,6 +49,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name="home"
+              size={28}
+              color={focused ? theme.primary : color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="accounts"
+        options={{
+          title: tabTitles.accounts,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name="copy"
               size={28}
               color={focused ? theme.primary : color}
             />

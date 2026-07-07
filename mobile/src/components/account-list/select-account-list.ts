@@ -1,5 +1,6 @@
 import { AccountHierarchyQuery } from "@/generated-graphql/graphql";
-import { resolveCurrencyBalance } from "./balance-util";
+import { resolveCurrencyBalance } from "../../common/balance-util";
+import { leafName } from "../../common/account-util";
 
 export type AccountNode = {
   /** Full beancount account, e.g. "Assets:Bank:Checking". */
@@ -11,12 +12,6 @@ export type AccountNode = {
   /** Immediate sub-accounts (one level deeper), same shape. */
   children: AccountNode[];
 };
-
-/** Leaf segment of a colon-delimited account (e.g. "Assets:Bank:Checking" → "Checking"). */
-function leafName(account: string): string {
-  const parts = account.split(":");
-  return parts[parts.length - 1] || account;
-}
 
 /** Drop the top-level category segment (e.g. "Assets:Bank" → "Bank"). */
 function stripTopLevel(account: string): string {

@@ -93,6 +93,29 @@ describe("filterSeriesByRange", () => {
     expect(filterSeriesByRange([], "3M")).toEqual([]);
   });
 
+  it("keeps only the latest month for 1M", () => {
+    expect(filterSeriesByRange(series, "1M").map((p) => p.date)).toEqual([
+      "2025-12-01",
+    ]);
+  });
+
+  it("keeps the current calendar year for YTD (anchored to the latest point)", () => {
+    // Series spans two years; YTD keeps Jan–latest of the latest point's year.
+    const acrossYears: SeriesPoint[] = [
+      { date: "2024-10-01", value: 1 },
+      { date: "2024-11-01", value: 2 },
+      { date: "2024-12-01", value: 3 },
+      { date: "2025-01-01", value: 4 },
+      { date: "2025-02-01", value: 5 },
+      { date: "2025-03-01", value: 6 },
+    ];
+    expect(filterSeriesByRange(acrossYears, "YTD").map((p) => p.date)).toEqual([
+      "2025-01-01",
+      "2025-02-01",
+      "2025-03-01",
+    ]);
+  });
+
   it("keeps the last 3 months for 3M (anchored to the latest point)", () => {
     const result = filterSeriesByRange(series, "3M");
     expect(result.map((p) => p.date)).toEqual([

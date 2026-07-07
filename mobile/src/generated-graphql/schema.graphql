@@ -3,144 +3,6 @@ schema {
   mutation: Mutation
 }
 
-"""Indicates exactly one field must be supplied and this field must not be `null`."""
-directive @oneOf on INPUT_OBJECT
-
-"""Exposes a URL that specifies the behavior of this scalar."""
-directive @specifiedBy(
-  """The URL that specifies the behavior of this scalar."""
-  url: String!
-) on SCALAR
-
-type Query {
-  accountHierarchy(ledgerId: String, userId: String!): AccountHierarchyResponse!
-  featureFlags(userId: String!): JSONObject!
-  """Get a specific ledger"""
-  getLedger(ledgerId: String!): Ledger!
-  """Get account journal with change and balance information"""
-  getLedgerAccountJournal(ledgerId: String!, query: AccountJournalQueryInput!): AccountJournalResponse!
-  """Get the last entries of assets and liabilities accounts"""
-  getLedgerAccountLastEntries(account: String, filter: String, ledgerId: String!, time: String): [AccountLastEntry!]!
-  """Get the report of a specific account"""
-  getLedgerAccountReport(account: String, accountName: String!, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): AccountReport!
-  """Get the accounts of a specific ledger"""
-  getLedgerAccounts(ledgerId: String!): [String!]!
-  """Get the filter options of a specific ledger"""
-  getLedgerAttributes(ledgerId: String!): LedgerAttributes!
-  """Get the balance sheet of a specific ledger"""
-  getLedgerBalanceSheet(account: String, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): BalanceSheetData!
-  getLedgerCollaboratorPermission(collaborator: String!, ledgerId: String!): LedgerCollaborator!
-  """Get the commodities of a specific ledger"""
-  getLedgerCommodities(ledgerId: String!): [CommodityPairWithPrices!]!
-  """Get the currencies of a specific ledger"""
-  getLedgerCurrencies(ledgerId: String!): [String!]!
-  """Get the content of a specific ledger directory"""
-  getLedgerDirContent(dirPath: String, ledgerId: String!): [LedgerFileContent!]!
-  """Get documents from a specific ledger with optional filtering"""
-  getLedgerDocuments(account: String, filter: String, ledgerId: String!, time: String): [Document!]!
-  """Get the count of entries per type"""
-  getLedgerEntriesCountPerType(account: String, filter: String, ledgerId: String!, time: String): [EntriesByType!]!
-  """Get context for a specific journal entry"""
-  getLedgerEntryContext(entryHash: String!, ledgerId: String!): EntryContext!
-  """Get all errors from the ledger"""
-  getLedgerErrors(ledgerId: String!): [BeancountError!]!
-  """Export events from a specific ledger with optional filtering"""
-  getLedgerEvents(account: String, filter: String, ledgerId: String!, time: String): [Event!]!
-  """Get the content of a specific ledger file"""
-  getLedgerFile(ledgerId: String!, path: String!): LedgerFileContent
-  """Get the income statement of a specific ledger"""
-  getLedgerIncomeStatement(account: String, conversion: String! = "USD", filter: String, interval: String! = "monthly", invertIncomeLiabilitiesEquity: Boolean! = false, ledgerId: String!, time: String): IncomeStatementData!
-  """Get journal entries for a specific ledger"""
-  getLedgerJournal(ledgerId: String!, query: JournalQueryInput): JournalResponse!
-  """Get the links of a specific ledger"""
-  getLedgerLinks(ledgerId: String!): [String!]!
-  getLedgerNarrations(ledgerId: String!): [String!]!
-  """Get the transactions for a narration"""
-  getLedgerNarrationTransactions(ledgerId: String!, narration: String!): Transaction!
-  """Get the overview of a specific ledger"""
-  getLedgerOverview(account: String, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): LedgerOverview!
-  """Get the accounts for a payee"""
-  getLedgerPayeeAccounts(ledgerId: String!, payee: String!): [String!]!
-  """Get the payees of a specific ledger"""
-  getLedgerPayees(ledgerId: String!): [String!]!
-  """Get the transactions for a payee"""
-  getLedgerPayeeTransactions(ledgerId: String!, payee: String!): Transaction!
-  """Get plaintext journal in beancount format"""
-  getLedgerPlaintextJournal(ledgerId: String!, query: PlaintextJournalQueryInput): PlaintextJournalResponse!
-  """Get the tags of a specific ledger"""
-  getLedgerTags(ledgerId: String!): [String!]!
-  """Get the trial balance of a specific ledger"""
-  getLedgerTrialBalance(account: String, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): TrialBalanceData!
-  """Get the years of a specific ledger"""
-  getLedgerYears(ledgerId: String!): [String!]!
-  """Get a specific public key by ID"""
-  getPublicKey(keyId: Float!): PublicKey
-  getUserByExactMatch(includeCurrentUser: String, keyword: String!): [SearchUser!]!
-  """is the server healthy?"""
-  health: String!
-  homeCharts(ledgerId: String, userId: String!): HomeChartsResponse!
-  isPaid: IsPaidResponse!
-  """Get journal entries with enhanced search, filtering, and pagination"""
-  journalEntries(
-    """Account regex filter (e.g., 'Assets:*' or 'Expenses:Food:*')"""
-    accountFilter: String
-    """Cursor for pagination (can be date string YYYY-MM-DD or index)"""
-    after: String
-    """Maximum amount filter for transactions"""
-    amountMax: Float
-    """Minimum amount filter for transactions"""
-    amountMin: Float
-    """Cursor for pagination (can be date string YYYY-MM-DD or index)"""
-    before: String
-    """Whether to include detailed entry metadata"""
-    detailed: Boolean
-    """Entry types to include (Transaction, Balance, Open, Close, etc.)"""
-    entryTypes: [String!]
-    """Number of entries to fetch from the start"""
-    first: Int
-    """Group entries by: date, account, payee"""
-    groupBy: String
-    """Number of entries to fetch from the end"""
-    last: Int
-    """Text search across payee, narration, and account fields"""
-    searchQuery: String
-    """Sort field: date, amount, payee, account"""
-    sortBy: String
-    """Sort order: asc or desc"""
-    sortOrder: String
-  ): JournalEntriesResponse!
-  """Get a specific ledger"""
-  ledgerMeta(ledgerId: String, userId: String!): LedgerMetaResponse!
-  listLedgerCollaborators(ledgerId: String!, limit: Float, page: Float): [CollaboratorUser!]!
-  """List all ledgers for the current user"""
-  listLedgers(limit: Float, page: Float): [Ledger!]!
-  """List all public keys for the current user"""
-  listPublicKeys(limit: Float, page: Float): [PublicKey!]!
-  """List all user owned ledgers for the current user"""
-  listUserOwnedLedgers(limit: Float, page: Float): [Ledger!]!
-  paymentHistory: [Receipt!]!
-  """Execute a shell query on a ledger"""
-  queryShell(ledgerId: String!, query: String!): QueryResult
-  """Search for ledgers/repositories"""
-  searchLedgers(archived: Boolean, exclusive: Boolean, includeDesc: Boolean, isPrivate: Boolean, limit: Float, mode: String, order: String, page: Float, priorityOwnerId: Float, private: Boolean, q: String, sort: String, starredBy: Float, teamId: Float, template: Boolean, topic: Boolean, uid: Float): [Ledger!]!
-  subscriptionStatus: CustomerSubscriptionStatus!
-  """get the user"""
-  userProfile(userId: String): UserProfileResponse
-  """Validate whether an email token is valid and not expired"""
-  validateEmailToken(token: String!): ValidateEmailTokenResponse!
-}
-
-type AccountHierarchyResponse {
-  data: [LabeledHierarchyItem!]!
-  success: Boolean!
-}
-
-type LabeledHierarchyItem {
-  data: AccountBalance!
-  label: String!
-  type: String!
-}
-
 type AccountBalance {
   account: String!
   balance: JSONObject!
@@ -148,50 +10,15 @@ type AccountBalance {
   children: [AccountBalance!]!
 }
 
-"""The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf)."""
-scalar JSONObject
-
-type Ledger {
-  """Get the filter options (attributes) of a ledger"""
-  attributes: LedgerAttributes!
-  createdAt: String!
-  description: String
-  empty: Boolean!
-  fullName: String!
-  httpUrl: String!
-  id: String!
-  name: String!
-  """Get the beancount options of a ledger"""
-  options: LedgerOptions!
-  permissions: Permission
-  private: Boolean!
-  size: Float!
-  sshUrl: String!
-  updatedAt: String!
+type AccountHierarchyResponse {
+  data: [LabeledHierarchyItem!]!
+  success: Boolean!
 }
 
-type LedgerAttributes {
-  accounts: [String!]!
-  currencies: [String!]!
-  links: [String!]!
-  payees: [String!]!
-  tags: [String!]!
-  years: [String!]!
-}
-
-type LedgerOptions {
-  nameAssets: String!
-  nameEquity: String!
-  nameExpenses: String!
-  nameIncome: String!
-  nameLiabilities: String!
-  operatingCurrency: [String!]!
-}
-
-type Permission {
-  admin: Boolean!
-  pull: Boolean!
-  push: Boolean!
+type AccountJournalEntry {
+  balance: JSONObject!
+  change: JSONObject!
+  entry: JSONObject!
 }
 
 input AccountJournalQueryInput {
@@ -211,12 +38,6 @@ type AccountJournalResponse {
   with_children: Boolean!
 }
 
-type AccountJournalEntry {
-  balance: JSONObject!
-  change: JSONObject!
-  entry: JSONObject!
-}
-
 type AccountLastEntry {
   account: String!
   balance: JSONObject
@@ -229,9 +50,38 @@ type AccountReport {
   linechartData: [DateAndBalance!]!
 }
 
-type DateAndBalance {
-  balance: JSONObject!
-  date: String!
+type AddCollaboratorResponse {
+  message: String
+  success: Boolean!
+}
+
+input AddEntryInput {
+  balance: LedgerBalanceInput
+  budget: LedgerBudgetInput
+  close: LedgerCloseInput
+  commodity: LedgerCommodityInput
+  document: LedgerDocumentInput
+  event: LedgerEventInput
+  note: LedgerNoteInput
+  open: LedgerOpenInput
+  price: LedgerPriceInput
+  transaction: LedgerTransactionInput
+  type: LedgerEntryType!
+}
+
+type AddEntryResponse {
+  data: String
+  success: Boolean!
+}
+
+type AddLedgerEntryResponse {
+  message: String
+  success: Boolean!
+}
+
+type AiCfoUsageResponse {
+  aiCfoTokensMax: Float!
+  aiCfoTokensUsed: Float!
 }
 
 type BalanceSheetData {
@@ -244,23 +94,59 @@ type BalanceSheetData {
   netWorthData: [DateAndBalance!]!
 }
 
-type SerializableTreeNode {
-  account: String!
+type BcioOptions {
+  accountFile: String
+  balanceFile: String
+  budgetFile: String
+  defaultFile: String!
+  documentFile: String
+  noteFile: String
+  padFile: String
+  priceFile: String
+  receiptBaseFolder: String
+  receiptStorage: String
+  transactionFile: String
+}
+
+type BeancountError {
+  filename: String
+  lineno: Float
+  message: String!
+}
+
+"""Budget recurrence interval"""
+enum BudgetInterval {
+  DAILY
+  MONTHLY
+  QUARTERLY
+  WEEKLY
+  YEARLY
+}
+
+type CategorySuggestion {
+  confidence: Float!
+  reasoning: String
+  rowIndex: Int!
+  source: String!
+  targetAccount: String!
+}
+
+type ChartItemV2 {
   balance: JSONObject!
-  balanceChildren: JSONObject!
-  children: [JSONObject!]!
-  cost: JSONObject
-  costChildren: JSONObject
-  hasTxns: Boolean!
+  budgets: JSONObject
+  date: String!
 }
 
-type LedgerCollaborator {
-  permission: String
-  roleName: String
-  user: User
+"""Status of a CLI authentication session"""
+enum CliAuthStatus {
+  AUTHORIZED
+  CONSUMED
+  DENIED
+  EXPIRED
+  PENDING
 }
 
-type User {
+type CollaboratorUser {
   active: Boolean
   created: String
   email: String
@@ -269,6 +155,44 @@ type User {
   isAdmin: Boolean
   lastLogin: String
   login: String
+  permission: String
+}
+
+type CommitAuthor {
+  date: String!
+  email: String!
+  name: String!
+}
+
+type CommitDetails {
+  author: CommitAuthor!
+  committer: CommitAuthor
+  diff: String
+  files: [CommitFileChange!]!
+  message: String!
+  parents: [String!]
+  sha: String!
+  stats: CommitStats!
+}
+
+type CommitFileChange {
+  additions: Int!
+  deletions: Int!
+  filename: String!
+}
+
+type CommitListItem {
+  author: CommitAuthor!
+  committer: CommitAuthor
+  message: String!
+  sha: String!
+  shortSha: String
+}
+
+type CommitStats {
+  additions: Int!
+  deletions: Int!
+  total: Int!
 }
 
 type CommodityPairWithPrices {
@@ -277,22 +201,98 @@ type CommodityPairWithPrices {
   quote: String!
 }
 
-type PricePoint {
-  date: String!
-  value: String!
+type ConfirmCliAuthSessionResponse {
+  success: Boolean!
 }
 
-type LedgerFileContent {
-  content: String
-  encoding: String
-  lastAuthorDate: String
-  lastCommitSha: String
-  lastCommitterDate: String
-  name: String!
+type ConsumeCliAuthSessionResponse {
+  expireAt: String!
+  token: String!
+}
+
+type CreateCliAuthSessionResponse {
+  expiresAt: String!
+  sessionId: String!
+}
+
+type CreateOneTimeTokenResponse {
+  expireAt: String!
+  id: String!
+}
+
+input CreatePRFromPatchInput {
+  baseBranch: String! = "main"
+  changes: [FileChangeInput!]!
+  description: String
+  ledgerName: String!
+  ledgerOwner: String!
+  title: String!
+}
+
+type CustomerSubscriptionStatus {
+  hasActiveSubscription: Boolean!
+  subscriptions: [Subscription!]!
+}
+
+type DateAndBalance {
+  balance: JSONObject!
+  date: String!
+}
+
+type DateAndBalanceWithAccountBalance {
+  accountBalances: JSONObject!
+  balance: JSONObject!
+  date: String!
+}
+
+"""
+A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format.
+"""
+scalar DateTimeISO
+
+type DeleteCollaboratorResponse {
+  message: String
+  success: Boolean!
+}
+
+type DeleteLedgerFileResponse {
   path: String!
-  sha: String!
-  size: Float!
-  type: String!
+}
+
+type DeleteLedgerResponse {
+  ledgerId: String!
+}
+
+input DeleteMultiSourceSliceItemInput {
+  entryHash: String!
+  sha256sum: String!
+}
+
+input DeleteMultiSourceSlicesInput {
+  entries: [DeleteMultiSourceSliceItemInput!]!
+}
+
+type DeleteMultiSourceSlicesResponse {
+  deletedHashes: [String!]!
+  message: String!
+}
+
+type DeletePublicKeyResponse {
+  id: Float!
+}
+
+input DeleteSourceSliceInput {
+  entryHash: String!
+  sha256sum: String!
+}
+
+type DeleteSourceSliceResponse {
+  entryHash: String!
+  message: String!
+}
+
+type DenyCliAuthSessionResponse {
+  success: Boolean!
 }
 
 type Document {
@@ -317,16 +317,95 @@ type EntryContext {
   slice: String!
 }
 
-type BeancountError {
-  filename: String
-  lineno: Float
-  message: String!
+input EntryInput {
+  date: String!
+  flag: String!
+  meta: JSONObject!
+  narration: String!
+  payee: String!
+  postings: [PostingInput!]!
+  type: String!
+}
+
+type EntryMeta {
+  filename: String!
+  lineno: Float!
 }
 
 type Event {
   date: String!
   description: String!
   type: String!
+}
+
+type FavaOptions {
+  accountJournalIncludeChildren: Boolean!
+  autoReload: Boolean!
+  collapsePattern: [String!]!
+  conversionCurrencies: [String!]!
+  currencyColumn: Int!
+  defaultPage: String!
+  fiscalYearEnd: FiscalYearEnd!
+  indent: Int!
+  invertIncomeLiabilitiesEquity: Boolean!
+  language: String
+  locale: String
+  showAccountsWithZeroBalance: Boolean!
+  showAccountsWithZeroTransactions: Boolean!
+  showClosedAccounts: Boolean!
+  sidebarShowQueries: Int!
+  unrealized: String!
+  upcomingEvents: Int!
+  uptodateIndicatorGreyLookbackDays: Int!
+  useExternalEditor: Boolean!
+}
+
+type FeedItem {
+  author: String
+  authorAvatar: String
+  id: String!
+  link: String!
+  publishedAt: DateTimeISO!
+  source: FeedSource!
+  summary: String
+  title: String!
+}
+
+type FeedResponse {
+  hasMore: Boolean!
+  items: [FeedItem!]!
+  total: Float!
+}
+
+"""Source type of the feed item"""
+enum FeedSource {
+  BLOG
+  LEDGER_RSS
+}
+
+input FileChangeInput {
+  content: String!
+  path: String!
+}
+
+type FiscalYearEnd {
+  day: Int!
+  month: Int!
+}
+
+type FollowUserResponse {
+  isFollowing: Boolean
+  message: String
+  success: Boolean!
+}
+
+type GetCliAuthSessionResponse {
+  status: CliAuthStatus!
+}
+
+type HomeChartsResponse {
+  data: [LabeledChartItem!]!
+  success: Boolean!
 }
 
 type IncomeStatementData {
@@ -337,112 +416,33 @@ type IncomeStatementData {
   netProfitData: [DateAndBalance!]!
 }
 
-type DateAndBalanceWithAccountBalance {
-  accountBalances: JSONObject!
-  balance: JSONObject!
-  budgets: JSONObject!
-  date: String!
-}
-
-input JournalQueryInput {
-  account: String
-  customSubtypes: [String!]
-  directiveTypes: [String!]
-  documentSubtypes: [String!]
-  filter: String
-  limit: Float = 20
-  offset: Float = 0
-  time: String
-  transactionSubtypes: [String!]
-}
-
-type JournalResponse {
-  data: [JSONObject!]!
-  is_empty: Boolean!
-  total: Float!
-}
-
-type Transaction {
-  date: String!
-  narration: String
-  payee: String
-  postings: [Posting!]!
-}
-
-type Posting {
-  account: String!
-  amount: String!
-  commodity: String!
-  price: String
-}
-
-type LedgerOverview {
-  assetsData: [DateAndBalance!]!
-  assetsHierarchyData: SerializableTreeNode!
-  expensesData: [DateAndBalance!]!
-  expensesHierarchyData: SerializableTreeNode!
-  expensesIntervalData: [DateAndBalanceWithAccountBalance!]!
-  incomeData: [DateAndBalance!]!
-  incomeHierarchyData: SerializableTreeNode!
-  incomeIntervalData: [DateAndBalanceWithAccountBalance!]!
-  liabilitiesData: [DateAndBalance!]!
-  liabilitiesHierarchyData: SerializableTreeNode!
-  netWorthData: [DateAndBalance!]!
-}
-
-input PlaintextJournalQueryInput {
-  account: String
-  filter: String
-  time: String
-}
-
-type PlaintextJournalResponse {
-  content: String!
-}
-
-type TrialBalanceData {
-  assetsHierarchyData: SerializableTreeNode!
-  equityHierarchyData: SerializableTreeNode!
-  expensesHierarchyData: SerializableTreeNode!
-  incomeHierarchyData: SerializableTreeNode!
-  liabilitiesHierarchyData: SerializableTreeNode!
-}
-
-type PublicKey {
-  createdAt: String!
-  fingerprint: String!
-  id: Float!
-  key: String!
-  lastUsedAt: String
-  title: String!
-}
-
-type SearchUser {
-  email: String!
-  username: String!
-}
-
-type HomeChartsResponse {
-  data: [LabeledChartItem!]!
+type InsertReceiptResult {
   success: Boolean!
 }
 
-type LabeledChartItem {
-  data: [ChartItemV2!]!
-  label: String!
-  type: String!
+input InsertReceiptTransactionInput {
+  date: String!
+  description: String!
+  documentAccount: String!
+  payee: String!
+  postings: [ReceiptPostingInput!]!
 }
 
-type ChartItemV2 {
+type IntervalTotalItem {
+  accountBalances: JSONObject!
   balance: JSONObject!
-  budgets: JSONObject
   date: String!
 }
 
-type IsPaidResponse {
-  isForcedToPay: Boolean!
-  isPaid: Boolean!
-}
+"""
+The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSON
+
+"""
+The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
+"""
+scalar JSONObject
 
 type JournalEntriesResponse {
   data: [JournalEntry!]!
@@ -481,16 +481,6 @@ type JournalEntry {
   type: String
 }
 
-type PostingUnits {
-  currency: String
-  number: Float
-}
-
-type EntryMeta {
-  filename: String!
-  lineno: Float!
-}
-
 type JournalEntryPosting {
   account: String!
   amount: String
@@ -501,9 +491,410 @@ type JournalEntryPosting {
   units: PostingUnits
 }
 
-type PostingMeta {
+input JournalQueryInput {
+  account: String
+  customSubtypes: [String!]
+  directiveTypes: [String!]
+  documentSubtypes: [String!]
+  filter: String
+  limit: Float = 20
+  offset: Float = 0
+  time: String
+  transactionSubtypes: [String!]
+}
+
+type JournalResponse {
+  data: [JSONObject!]!
+  is_empty: Boolean!
+  total: Float!
+}
+
+type LLMParseResult {
+  rows: [ParsedRow!]!
+}
+
+type LabeledChartItem {
+  data: [ChartItemV2!]!
+  label: String!
+  type: String!
+}
+
+type LabeledHierarchyItem {
+  data: AccountBalance!
+  label: String!
+  type: String!
+}
+
+type Ledger {
+  """Get the filter options (attributes) of a ledger"""
+  attributes: LedgerAttributes!
+  """Get the beancount.io-specific options of a ledger"""
+  bcioOptions: BcioOptions!
+  createdAt: String!
+  description: String
+  empty: Boolean!
+  """Get the fava options of a ledger"""
+  favaOptions: FavaOptions!
+  fullName: String!
+  httpUrl: String!
+  id: String!
+  isStarred: Boolean
+  name: String!
+  """Get the beancount options of a ledger"""
+  options: LedgerOptions!
+  permissions: Permission
+  private: Boolean!
+  size: Float!
+  sshUrl: String!
+  updatedAt: String!
+}
+
+type LedgerAccountItem {
+  account: String!
+  balance: JSONObject
+  closeEntryHash: String
+  closedAt: String
+  entryCount: Float!
+  entryHash: String!
+  openedAt: String!
+}
+
+input LedgerAmountInput {
+  currency: String!
+  number: String!
+}
+
+type LedgerAssetDownloadUrlResult {
+  downloadUrl: String!
+}
+
+type LedgerAttributes {
+  accounts: [String!]!
+  currencies: [String!]!
+  links: [String!]!
+  payees: [String!]!
+  tags: [String!]!
+  years: [String!]!
+}
+
+input LedgerBalanceInput {
+  account: String!
+  amount: LedgerAmountInput!
+  date: String!
+}
+
+input LedgerBudgetInput {
+  account: String!
+  amount: LedgerAmountInput!
+  date: String!
+  interval: BudgetInterval!
+}
+
+input LedgerCloseInput {
+  account: String!
+  date: String!
+}
+
+type LedgerCollaborator {
+  permission: String
+  roleName: String
+  user: User
+}
+
+type LedgerCommit {
+  author: LedgerCommitUser
+  committer: LedgerCommitUser
+  created: String
+  message: String
+  sha: String!
+}
+
+type LedgerCommitUser {
+  email: String
+  fullName: String
+  login: String
+}
+
+input LedgerCommodityInput {
+  currency: String!
+  date: String!
+}
+
+input LedgerDocumentInput {
+  account: String!
+  date: String!
   filename: String!
-  lineno: Float!
+  links: [String!]
+  tags: [String!]
+}
+
+"""Discriminator selecting which entry payload to add"""
+enum LedgerEntryType {
+  BALANCE
+  BUDGET
+  CLOSE
+  COMMODITY
+  DOCUMENT
+  EVENT
+  NOTE
+  OPEN
+  PRICE
+  TRANSACTION
+}
+
+input LedgerEventInput {
+  date: String!
+  description: String!
+  type: String!
+}
+
+type LedgerFileContent {
+  content: String
+  encoding: String
+  lastAuthorDate: String
+  lastCommitSha: String
+  lastCommitterDate: String
+  name: String!
+  path: String!
+  sha: String!
+  size: Float!
+  type: String!
+}
+
+type LedgerMeta {
+  accounts: [String!]!
+  currencies: [String!]!
+  errors: Float!
+  options: Options!
+}
+
+type LedgerMetaResponse {
+  data: LedgerMeta!
+  success: Boolean!
+}
+
+input LedgerNoteInput {
+  account: String!
+  content: String!
+  date: String!
+}
+
+input LedgerOpenInput {
+  account: String!
+  currencies: [String!]!
+  date: String!
+}
+
+type LedgerOptions {
+  accountCurrentConversions: String!
+  accountCurrentEarnings: String!
+  nameAssets: String!
+  nameEquity: String!
+  nameExpenses: String!
+  nameIncome: String!
+  nameLiabilities: String!
+  operatingCurrency: [String!]!
+  renderCommas: Boolean!
+  title: String!
+}
+
+type LedgerOverview {
+  assetsData: [DateAndBalance!]!
+  assetsHierarchyData: SerializableTreeNode!
+  expensesData: [DateAndBalance!]!
+  expensesHierarchyData: SerializableTreeNode!
+  expensesIntervalData: [DateAndBalanceWithAccountBalance!]!
+  incomeData: [DateAndBalance!]!
+  incomeHierarchyData: SerializableTreeNode!
+  incomeIntervalData: [DateAndBalanceWithAccountBalance!]!
+  liabilitiesData: [DateAndBalance!]!
+  liabilitiesHierarchyData: SerializableTreeNode!
+  netWorthData: [DateAndBalance!]!
+}
+
+input LedgerPostingInput {
+  account: String!
+  flag: String
+  price: LedgerAmountInput
+  units: LedgerAmountInput!
+}
+
+input LedgerPriceInput {
+  amount: LedgerAmountInput!
+  currency: String!
+  date: String!
+}
+
+input LedgerTransactionInput {
+  date: String!
+  flag: String!
+  links: [String!]
+  narration: String
+  payee: String
+  postings: [LedgerPostingInput!]!
+  tags: [String!]
+}
+
+type LogoutResponse {
+  success: Boolean!
+}
+
+type Mutation {
+  addEntries(entriesInput: [EntryInput!]!, ledgerId: String): AddEntryResponse!
+  addOrUpdateLedgerCollaborator(collaborator: String!, ledgerId: String!, permission: String): AddCollaboratorResponse!
+  addPushToken(token: String!): Boolean! @deprecated(reason: "Push token tracking has been removed. This endpoint returns true for API compatibility but does not store tokens.")
+  approvePullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
+  """Add one or more entries to a specific ledger (atomic)"""
+  bulkEntries(entries: [AddEntryInput!]!, ledgerId: String!): AddLedgerEntryResponse!
+  cancelSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
+  """
+  Authorize a pending CLI session. Issues a JWT token for the CLI and stores it in the session.
+  """
+  confirmCliAuthSession(sessionId: String!): ConfirmCliAuthSessionResponse!
+  """
+  Retrieve and consume the token from an authorized CLI auth session. Single-use: clears the token from the session after returning it. Only the CLI should call this.
+  """
+  consumeCliAuthSession(sessionId: String!): ConsumeCliAuthSessionResponse!
+  """
+  Initiate a CLI authentication session. Returns a sessionId the CLI uses to poll for completion.
+  """
+  createCliAuthSession: CreateCliAuthSessionResponse!
+  """Create a new ledger for the current user"""
+  createLedger(description: String, name: String!, private: Boolean): Ledger!
+  """Create a new file in a specific ledger"""
+  createLedgerFile(content: String!, ledgerId: String!, message: String, path: String!): LedgerFileContent!
+  createOneTimeToken: CreateOneTimeTokenResponse!
+  """Create a Plaid Link token for connecting bank accounts"""
+  createPlaidLinkToken(ledgerId: String!): PlaidLinkToken!
+  """Create a Plaid Link token in update mode for reauthentication"""
+  createPlaidUpdateModeLinkToken(itemId: String!, ledgerId: String!): PlaidLinkToken!
+  """Create a new public key for the current user"""
+  createPublicKey(key: String!, readOnly: Boolean = false, title: String!): PublicKey!
+  createPullRequestFromPatch(input: CreatePRFromPatchInput!): PullRequestResult!
+  createStripePortalSession(clientId: String!): SubscriptionSessionResult!
+  createSubscriptionSession(clientId: String!, priceId: String!): SubscriptionSessionResult!
+  """delete user account and its associated data"""
+  deleteAccount: Boolean!
+  """Delete a specific ledger"""
+  deleteLedger(ledgerId: String!): DeleteLedgerResponse!
+  deleteLedgerCollaborator(collaborator: String!, ledgerId: String!): DeleteCollaboratorResponse!
+  """Delete a source slice for a specific journal entry"""
+  deleteLedgerEntrySourceSlice(input: DeleteSourceSliceInput!, ledgerId: String!): DeleteSourceSliceResponse!
+  """Delete a file from a specific ledger"""
+  deleteLedgerFile(ledgerId: String!, message: String, path: String!, sha: String!): DeleteLedgerFileResponse!
+  """
+  Delete multiple source slices for journal entries in a single operation
+  """
+  deleteMultipleLedgerEntrySourceSlices(input: DeleteMultiSourceSlicesInput!, ledgerId: String!): DeleteMultiSourceSlicesResponse!
+  """Delete pending (unsynced) Plaid transactions from the review list"""
+  deletePlaidTransactions(ledgerId: String!, transactionIds: [String!]!): PlaidDeleteResult!
+  """Delete a specific public key by ID"""
+  deletePublicKey(keyId: Float!): DeletePublicKeyResponse!
+  """Deny a pending CLI authentication session."""
+  denyCliAuthSession(sessionId: String!): DenyCliAuthSessionResponse!
+  """Exchange Plaid public token for access token and store Item"""
+  exchangePlaidPublicToken(ledgerId: String!, publicToken: String!): PlaidItemType!
+  """Follow a user"""
+  followUser(
+    """Username to follow"""
+    username: String!
+  ): FollowUserResponse!
+  generateTempAssetUploadUrl(filename: String, mimeType: String): TempAssetUploadUrl!
+  """
+  Upload a receipt and insert a transaction entry. Storage strategy (S3 or git) is controlled by the `receipt_storage` beancountio-option.
+  """
+  insertReceiptTransaction(input: InsertReceiptTransactionInput!, ledgerId: String!, receiptObjectKey: String!): InsertReceiptResult!
+  leaveLedger(ledgerId: String!): DeleteCollaboratorResponse!
+  """Logout user, revoke JWT token and clear httpOnly cookie"""
+  logout: LogoutResponse!
+  """
+  Parse file using LLM (multimodal support for PDF/images/any format). File must be uploaded to S3 first.
+  """
+  parseFileWithLLM(
+    """File format type (e.g., csv, pdf, xlsx, json, etc.)"""
+    fileFormat: String!
+    """S3 object key from upload"""
+    s3ObjectKey: String!
+  ): LLMParseResult!
+  """
+  Parse a receipt image or PDF using LLM and return a single summarized transaction with account recommendations. File must be uploaded to S3 first.
+  """
+  parseReceiptWithLLM(
+    """Ledger ID used to fetch available accounts for recommendation"""
+    ledgerId: String!
+    """S3 object key of the receipt (image or PDF only)"""
+    s3ObjectKey: String!
+  ): ReceiptParseResult!
+  """
+  Refresh Plaid Item status from Plaid API (useful after reauthentication)
+  """
+  refreshPlaidItemStatus(itemId: String!, ledgerId: String!): PlaidItemType!
+  """
+  Refresh authentication token - issues a new token and revokes the current one
+  """
+  refreshToken: TokenAuthResponse!
+  rejectPullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
+  """Rename a file in a specific ledger"""
+  renameLedgerFile(ledgerId: String!, message: String, newPath: String!, oldPath: String!): RenameLedgerFileResponse!
+  """Reset user password using a token from the password reset email"""
+  resetPassword(newPassword: String!, token: String!): ResetPasswordResponse!
+  resumeSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
+  """Send a password reset link to the user's email"""
+  sendForgotPasswordLink(email: String!): SendForgotPasswordLinkResponse!
+  sendPushNotification(data: JSONObject!, message: String!, pushToken: String!): Boolean! @deprecated(reason: "Push notification functionality has been removed. This endpoint returns false for API compatibility but does not send notifications.")
+  signIn(email: String!, password: String!): TokenAuthResponse!
+  signInWithOneTimeToken(token: String!): TokenAuthResponse!
+  """
+  Start signup by creating an OTP session. Sends a verification code to the user's email.
+  """
+  signUp(email: String!, firstName: String!, inviteBy: String, inviteSrc: String, lastName: String!, password: String!, username: String, withDefaultLedger: Boolean): SignUpResponse!
+  """Star a specific ledger"""
+  starLedger(ledgerId: String!): StarLedgerResponse!
+  """Submit Plaid transactions with user-reviewed target accounts to ledger"""
+  submitPlaidTransactionsToLedger(ledgerId: String!, transactions: [PlaidTransactionSubmitInput!]!): PlaidSubmitResult!
+  """Manually sync transactions for a specific Plaid Item"""
+  syncPlaidTransactions(itemId: String!, ledgerId: String!): PlaidSyncResult!
+  """Unfollow a user"""
+  unfollowUser(
+    """Username to follow"""
+    username: String!
+  ): FollowUserResponse!
+  """Unlink a Plaid Item (remove from Plaid and delete from database)"""
+  unlinkPlaidItem(itemId: String!, ledgerId: String!): Boolean!
+  """Unstar a specific ledger"""
+  unstarLedger(ledgerId: String!): StarLedgerResponse!
+  """Update a specific ledger"""
+  updateLedger(description: String, ledgerId: String!, name: String, private: Boolean): Ledger!
+  """Update a source slice for a specific journal entry"""
+  updateLedgerEntrySourceSlice(input: UpdateSourceSliceInput!, ledgerId: String!): UpdateSourceSliceResponse!
+  """Update an existing file in a specific ledger"""
+  updateLedgerFile(content: String!, ledgerId: String!, message: String, path: String!, sha: String!): LedgerFileContent!
+  """Update the ledger account mapping for a Plaid account"""
+  updatePlaidAccountMapping(accountId: String!, ledgerAccount: String!, ledgerId: String!): Boolean!
+  """Update user profile (firstName and lastName)"""
+  updateProfile(firstName: String, lastName: String): UserProfileResponse!
+  """update or insert user report subscribe status"""
+  updateReportSubscribe(status: ReportStatus!, userId: String!): UpdateReportSubscribeResponse @deprecated(reason: "Report subscription tracking has been removed. This endpoint returns success for API compatibility but does not store subscription status.")
+  updateUsername(username: String!): UserProfileResponse!
+  upgradeSubscription(clientId: String!, priceId: String!): UpgradeSubscriptionResult!
+  """Verify OTP and create user account to complete signup"""
+  verifySignUpOtp(otp: String!, sessionId: String!): TokenAuthResponse!
+}
+
+type Options {
+  name_assets: String!
+  name_equity: String!
+  name_expenses: String!
+  name_income: String!
+  name_liabilities: String!
+  operating_currency: [String!]!
+}
+
+type PRFileChange {
+  additions: Int!
+  changes: Int!
+  deletions: Int!
+  filename: String!
 }
 
 type PageInfo {
@@ -519,53 +910,400 @@ type PageInfo {
   totalCount: Int
 }
 
-type LedgerMetaResponse {
-  data: LedgerMeta!
+type ParsedRow {
+  amount: Float!
+  date: String!
+  description: String!
+  payee: String!
+}
+
+type Permission {
+  admin: Boolean!
+  pull: Boolean!
+  push: Boolean!
+}
+
+type PlaidAccountMappingSuggestion {
+  accountId: String!
+  confidence: Float!
+  reasoning: String
+  suggestedAccount: String!
+}
+
+type PlaidAccountType {
+  accountId: String!
+  accountName: String!
+  accountSubtype: String
+  accountType: String!
+  createdAt: DateTimeISO!
+  enabled: Boolean!
+  id: String!
+  ledgerAccount: String
+  mask: String
+  plaidItemId: String!
+  updatedAt: DateTimeISO!
+}
+
+type PlaidDeleteResult {
+  deletedCount: Float!
+  message: String
   success: Boolean!
 }
 
-type LedgerMeta {
-  accounts: [String!]!
-  currencies: [String!]!
-  errors: Float!
-  options: Options!
+type PlaidItemType {
+  createdAt: DateTimeISO!
+  errorCode: String
+  errorMessage: String
+  id: String!
+  institutionId: String!
+  institutionName: String!
+  itemId: String!
+  lastSync: PlaidLastSync
+  status: String!
+  updatedAt: DateTimeISO!
 }
 
-type Options {
-  name_assets: String!
-  name_equity: String!
-  name_expenses: String!
-  name_income: String!
-  name_liabilities: String!
-  operating_currency: [String!]!
+type PlaidLastSync {
+  errorMessage: String
+  status: String!
+  timestamp: DateTimeISO!
+  transactionsAdded: Float
 }
 
-type CollaboratorUser {
-  active: Boolean
-  created: String
-  email: String
-  fullName: String
-  id: Float
-  isAdmin: Boolean
-  lastLogin: String
-  login: String
-  permission: String
+type PlaidLinkToken {
+  linkToken: String!
 }
 
-type Receipt {
-  _id: String
+type PlaidSubmitResult {
+  addedCount: Float!
+  message: String
+  success: Boolean!
+}
+
+type PlaidSyncResult {
+  message: String
+  success: Boolean!
+  transactionsAdded: Float!
+  transactionsFetched: Float!
+  transactionsModified: Float!
+  transactionsRemoved: Float!
+}
+
+input PlaidTransactionSubmitInput {
+  """
+  Overrides the source account normally derived from the Plaid account's mapping
+  """
+  sourceAccount: String
+  targetAccount: String!
+  transactionId: String!
+}
+
+type PlaidTransactionType {
+  """Name of the source Plaid account this transaction belongs to"""
+  accountName: String!
   amount: String!
-  chargeId: String
-  createAt: DateTimeISO
-  currency: String!
-  estimatedIotx: Float
-  fulfilledHash: String
-  paymentEmail: String!
-  userId: String!
+  category: String
+  createdAt: DateTimeISO!
+  date: DateTimeISO!
+  id: String!
+  """Name of the institution this transaction was synced from"""
+  institutionName: String!
+  isPending: Boolean!
+  """Beancount account the source Plaid account is mapped to"""
+  ledgerAccount: String
+  merchantName: String
+  name: String!
+  plaidAccountId: String!
+  syncedToLedger: Boolean!
+  transactionId: String!
 }
 
-"""A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format."""
-scalar DateTimeISO
+input PlaintextJournalQueryInput {
+  account: String
+  filter: String
+  time: String
+}
+
+type PlaintextJournalResponse {
+  content: String!
+}
+
+type Posting {
+  account: String!
+  amount: String!
+  commodity: String!
+  price: String
+}
+
+input PostingInput {
+  account: String!
+  amount: String!
+}
+
+type PostingMeta {
+  filename: String!
+  lineno: Float!
+}
+
+type PostingUnits {
+  currency: String
+  number: Float
+}
+
+type PricePoint {
+  date: String!
+  value: String!
+}
+
+type PublicKey {
+  createdAt: String!
+  fingerprint: String!
+  id: Float!
+  key: String!
+  lastUsedAt: String
+  title: String!
+}
+
+type PublicUserProfileResponse {
+  activities: [UserActivityFeedItem!]!
+  """Only present if user is authenticated"""
+  isFollowing: Boolean
+  profile: UserProfile!
+  repositories: [UserRepository!]!
+}
+
+type PullRequestDetails {
+  author: String!
+  baseBranch: String!
+  description: String!
+  diff: String
+  files: [PRFileChange!]!
+  headBranch: String!
+  number: Int!
+  state: String!
+  title: String!
+}
+
+type PullRequestResult {
+  message: String
+  prNumber: Int
+  prUrl: String
+  success: Boolean!
+}
+
+type Query {
+  accountHierarchy(ledgerId: String, userId: String!): AccountHierarchyResponse!
+  """Get AI CFO usage for the current billing month"""
+  aiCfoUsage: AiCfoUsageResponse!
+  """Returns quota limits for all subscription tiers"""
+  allTierQuotas: [TierQuotaItem!]!
+  featureFlags(userId: String!): JSONObject!
+  """
+  Generate a presigned download URL for a previously uploaded temporary asset. Use this to obtain a short-lived GET URL for an objectKey returned by generateTempAssetUploadUrl.
+  """
+  generateTempAssetDownloadUrl(
+    """S3 object key returned by generateTempAssetUploadUrl"""
+    objectKey: String!
+  ): TempAssetDownloadUrl!
+  """
+  Poll the status of a CLI authentication session. When AUTHORIZED, returns the token stored in the session.
+  """
+  getCliAuthSession(sessionId: String!): GetCliAuthSessionResponse!
+  getCommitDetails(ledgerId: String!, sha: String!): CommitDetails!
+  getFeed(
+    limit: Float! = 10
+    """
+    Language code (en, zh, etc.). If not provided, uses user's profile locale.
+    """
+    locale: String
+    offset: Float! = 0
+    source: String
+  ): FeedResponse!
+  getLatestLedgerCommit(branchName: String! = "main", ledgerId: String!): LedgerCommit
+  """Get a specific ledger"""
+  getLedger(ledgerId: String!): Ledger!
+  """Get all accounts with their open/close dates for a specific ledger"""
+  getLedgerAccountDirectives(ledgerId: String!): [LedgerAccountItem!]!
+  """Get account journal with change and balance information"""
+  getLedgerAccountJournal(ledgerId: String!, query: AccountJournalQueryInput!): AccountJournalResponse!
+  """Get the last entries of assets and liabilities accounts"""
+  getLedgerAccountLastEntries(account: String, filter: String, ledgerId: String!, time: String): [AccountLastEntry!]!
+  """Get the report of a specific account"""
+  getLedgerAccountReport(account: String, accountName: String!, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): AccountReport!
+  """
+  Get the accounts of a specific ledger. Optional status filter: 'open' (no closeDate) or 'closed' (has closeDate). Returns all accounts when omitted.
+  """
+  getLedgerAccounts(ledgerId: String!, status: String): [String!]!
+  """
+  Get a downloadable URL for a ledger Git archive (gitea-main.zip). Public ledgers require no auth; private ledgers require a valid session.
+  """
+  getLedgerArchiveDownloadUrl(ledgerId: String!): LedgerAssetDownloadUrlResult!
+  """
+  Get a presigned S3 download URL for a ledger asset. Validates ledger access — public ledgers require no auth; private ledgers require a valid session.
+  """
+  getLedgerAssetDownloadUrl(filename: String!, ledgerRepoId: Int!): LedgerAssetDownloadUrlResult!
+  """Get the filter options of a specific ledger"""
+  getLedgerAttributes(ledgerId: String!): LedgerAttributes!
+  """Get the balance sheet of a specific ledger"""
+  getLedgerBalanceSheet(account: String, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): BalanceSheetData!
+  getLedgerCollaboratorPermission(collaborator: String!, ledgerId: String!): LedgerCollaborator!
+  """Get the commodities of a specific ledger"""
+  getLedgerCommodities(ledgerId: String!): [CommodityPairWithPrices!]!
+  """Get the currencies of a specific ledger"""
+  getLedgerCurrencies(ledgerId: String!): [String!]!
+  """Get the content of a specific ledger directory"""
+  getLedgerDirContent(dirPath: String, ledgerId: String!): [LedgerFileContent!]!
+  """Get documents from a specific ledger with optional filtering"""
+  getLedgerDocuments(account: String, filter: String, ledgerId: String!, time: String): [Document!]!
+  """Get the count of entries per type"""
+  getLedgerEntriesCountPerType(account: String, filter: String, ledgerId: String!, time: String): [EntriesByType!]!
+  """Get context for a specific journal entry"""
+  getLedgerEntryContext(entryHash: String!, ledgerId: String!): EntryContext!
+  """Get all errors from the ledger"""
+  getLedgerErrors(ledgerId: String!): [BeancountError!]!
+  """Export events from a specific ledger with optional filtering"""
+  getLedgerEvents(account: String, filter: String, ledgerId: String!, time: String): [Event!]!
+  """Get the content of a specific ledger file"""
+  getLedgerFile(ledgerId: String!, path: String!): LedgerFileContent
+  """Get the income statement of a specific ledger"""
+  getLedgerIncomeStatement(account: String, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): IncomeStatementData!
+  """Get interval totals for a specific account"""
+  getLedgerIntervalTotals(account: String, accountName: String!, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): [IntervalTotalItem!]!
+  """Get journal entries for a specific ledger"""
+  getLedgerJournal(ledgerId: String!, query: JournalQueryInput): JournalResponse!
+  """Get the links of a specific ledger"""
+  getLedgerLinks(ledgerId: String!): [String!]!
+  """Get the transactions for a narration"""
+  getLedgerNarrationTransactions(ledgerId: String!, narration: String!): Transaction!
+  getLedgerNarrations(ledgerId: String!): [String!]!
+  """Get the overview of a specific ledger"""
+  getLedgerOverview(account: String, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): LedgerOverview!
+  """Get the accounts for a payee"""
+  getLedgerPayeeAccounts(ledgerId: String!, payee: String!): [String!]!
+  """Get the transactions for a payee"""
+  getLedgerPayeeTransactions(ledgerId: String!, payee: String!): Transaction!
+  """Get the payees of a specific ledger"""
+  getLedgerPayees(ledgerId: String!): [String!]!
+  """Get plaintext journal in beancount format"""
+  getLedgerPlaintextJournal(ledgerId: String!, query: PlaintextJournalQueryInput): PlaintextJournalResponse!
+  """Get the tags of a specific ledger"""
+  getLedgerTags(ledgerId: String!): [String!]!
+  """Get the trial balance of a specific ledger"""
+  getLedgerTrialBalance(account: String, conversion: String! = "USD", filter: String, interval: String! = "monthly", ledgerId: String!, time: String): TrialBalanceData!
+  """Get the years of a specific ledger"""
+  getLedgerYears(ledgerId: String!): [String!]!
+  """Get all accounts for a specific Plaid Item"""
+  getPlaidAccounts(itemId: String!, ledgerId: String!): [PlaidAccountType!]!
+  """Get a single Plaid Item by ID"""
+  getPlaidItem(id: String!): PlaidItemType!
+  """Get Plaid Items for the current user, scoped to a ledger."""
+  getPlaidItems(ledgerId: String!): [PlaidItemType!]!
+  """Get a specific public key by ID"""
+  getPublicKey(keyId: Float!): PublicKey
+  getPullRequestDetails(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestDetails!
+  """
+  Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted
+  """
+  getUnsyncedPlaidTransactions(accountId: String, ledgerId: String!): [PlaidTransactionType!]!
+  getUserByExactMatch(includeCurrentUser: String, keyword: String!): [SearchUser!]!
+  """Get user's followers"""
+  getUserFollowers(
+    limit: Float = 20
+    page: Float = 1
+    """Username to fetch list for"""
+    username: String!
+  ): UserListResponse!
+  """Get users that this user is following"""
+  getUserFollowing(
+    limit: Float = 20
+    page: Float = 1
+    """Username to fetch list for"""
+    username: String!
+  ): UserListResponse!
+  """Get user profile by username"""
+  getUserProfile(
+    """Username to fetch profile for"""
+    username: String!
+  ): PublicUserProfileResponse!
+  """Get user's starred repositories"""
+  getUserStarredRepos(
+    limit: Float = 20
+    page: Float = 1
+    """Username to fetch list for"""
+    username: String!
+  ): RepositoryListResponse!
+  """is the server healthy?"""
+  health: String!
+  homeCharts(ledgerId: String, userId: String!): HomeChartsResponse!
+  """Get journal entries with enhanced search, filtering, and pagination"""
+  journalEntries(
+    """Account regex filter (e.g., 'Assets:*' or 'Expenses:Food:*')"""
+    accountFilter: String
+    """Cursor for pagination (can be date string YYYY-MM-DD or index)"""
+    after: String
+    """Maximum amount filter for transactions"""
+    amountMax: Float
+    """Minimum amount filter for transactions"""
+    amountMin: Float
+    """Cursor for pagination (can be date string YYYY-MM-DD or index)"""
+    before: String
+    """Whether to include detailed entry metadata"""
+    detailed: Boolean
+    """Entry types to include (Transaction, Balance, Open, Close, etc.)"""
+    entryTypes: [String!]
+    """Number of entries to fetch from the start"""
+    first: Int
+    """Group entries by: date, account, payee"""
+    groupBy: String
+    """Number of entries to fetch from the end"""
+    last: Int
+    """Text search across payee, narration, and account fields"""
+    searchQuery: String
+    """Sort field: date, amount, payee, account"""
+    sortBy: String
+    """Sort order: asc or desc"""
+    sortOrder: String
+  ): JournalEntriesResponse!
+  """Get a specific ledger"""
+  ledgerMeta(ledgerId: String, userId: String!): LedgerMetaResponse!
+  listCommits(branch: String! = "main", ledgerId: String!, limit: Int! = 30, page: Int! = 1): [CommitListItem!]!
+  listLedgerCollaborators(ledgerId: String!, limit: Float, page: Float): [CollaboratorUser!]!
+  """List all ledgers for the current user"""
+  listLedgers(limit: Float, page: Float): [Ledger!]!
+  """List all public keys for the current user"""
+  listPublicKeys(limit: Float, page: Float): [PublicKey!]!
+  """List all user owned ledgers for the current user"""
+  listUserOwnedLedgers(limit: Float, page: Float): [Ledger!]!
+  paymentHistory: [Receipt!]! @deprecated(reason: "Receipt tracking has been removed. This endpoint returns an empty array for API compatibility but does not track receipts.")
+  """Execute a shell query on a ledger"""
+  queryShell(ledgerId: String!, query: String!): QueryResult
+  """Execute a shell query on a ledger and return plain text output"""
+  queryShellText(ledgerId: String!, query: String!): QueryShellTextResult
+  """Search for ledgers/repositories"""
+  searchLedgers(archived: Boolean, exclusive: Boolean, includeDesc: Boolean, isPrivate: Boolean, limit: Float, mode: String, order: String, page: Float, priorityOwnerId: Float, private: Boolean, q: String, sort: String, starredBy: Float, teamId: Float, template: Boolean, topic: Boolean, uid: Float): [Ledger!]!
+  subscriptionStatus: CustomerSubscriptionStatus!
+  """
+  Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI
+  """
+  suggestPlaidAccountMapping(itemId: String!, ledgerId: String!): [PlaidAccountMappingSuggestion!]!
+  """
+  Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted
+  """
+  suggestPlaidTransactionCategories(accountId: String, ledgerId: String!): [CategorySuggestion!]!
+  """
+  Suggest transaction categories using LLM based on payee, description, and transaction history
+  """
+  suggestTransactionCategoriesWithLLM(ledgerId: String!, transactions: [TransactionToCategorizeInput!]!): [CategorySuggestion!]!
+  """get the user"""
+  userProfile(userId: String): UserProfileResponse
+  """Validate whether an email token is valid and not expired"""
+  validateEmailToken(token: String!): ValidateEmailTokenResponse!
+}
+
+type QueryColumn {
+  dtype: String!
+  name: String!
+}
 
 type QueryResult {
   """Result type: 'table' or 'text'"""
@@ -581,22 +1319,100 @@ type QueryResultTable {
   types: [QueryColumn!]!
 }
 
-"""The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf)."""
-scalar JSON
-
-type QueryColumn {
-  dtype: String!
-  name: String!
-}
-
 type QueryResultText {
   contents: String!
   t: String
 }
 
-type CustomerSubscriptionStatus {
-  hasActiveSubscription: Boolean!
-  subscriptions: [Subscription!]!
+type QueryShellTextResult {
+  text: String!
+}
+
+type Receipt {
+  _id: String
+  amount: String!
+  chargeId: String
+  createAt: DateTimeISO
+  currency: String!
+  estimatedIotx: Float
+  fulfilledHash: String
+  paymentEmail: String!
+  userId: String!
+}
+
+type ReceiptParseResult {
+  amount: Float!
+  date: String!
+  description: String!
+  payee: String!
+  sourceAccount: String
+  targetAccount: String
+}
+
+input ReceiptPostingInput {
+  account: String!
+  amountCurrency: String!
+  amountNumber: String!
+}
+
+type RenameLedgerFileResponse {
+  newPath: String!
+  oldPath: String!
+}
+
+"""The email report status (deprecated)"""
+enum ReportStatus {
+  MONTHLY
+  OFF
+  WEEKLY
+}
+
+type RepositoryListItem {
+  description: String
+  fullName: String!
+  isPrivate: Boolean!
+  name: String!
+  starsCount: Float
+  updatedAt: DateTimeISO!
+}
+
+type RepositoryListResponse {
+  repositories: [RepositoryListItem!]!
+  total: Float!
+}
+
+type ResetPasswordResponse {
+  success: Boolean!
+}
+
+type SearchUser {
+  email: String!
+  username: String!
+}
+
+type SendForgotPasswordLinkResponse {
+  success: Boolean!
+}
+
+type SerializableTreeNode {
+  account: String!
+  balance: JSONObject!
+  balanceChildren: JSONObject!
+  children: [JSONObject!]!
+  cost: JSONObject
+  costChildren: JSONObject
+  hasTxns: Boolean!
+}
+
+type SignUpResponse {
+  expireAt: String!
+  sessionId: String!
+}
+
+type StarLedgerResponse {
+  isStarred: Boolean!
+  message: String
+  success: Boolean!
 }
 
 type Subscription {
@@ -609,6 +1425,11 @@ type Subscription {
   id: ID!
   items: [SubscriptionItem!]!
   status: String!
+}
+
+type SubscriptionActionResult {
+  message: String
+  success: Boolean!
 }
 
 type SubscriptionItem {
@@ -634,184 +1455,6 @@ type SubscriptionProduct {
   name: String!
 }
 
-type UserProfileResponse {
-  email: String!
-  emailReportStatus: ReportStatus
-  firstName: String
-  id: String!
-  lastName: String
-  limits: UserLimits!
-  locale: String!
-  tier: String!
-  username: String
-}
-
-"""The email report status"""
-enum ReportStatus {
-  MONTHLY
-  OFF
-  WEEKLY
-}
-
-type UserLimits {
-  collaboratorsPerLedgerMax: Float!
-  ledgersMax: Float!
-  ledgersUsed: Float!
-}
-
-type ValidateEmailTokenResponse {
-  isValid: Boolean!
-}
-
-type Mutation {
-  addEntries(entriesInput: [EntryInput!]!, ledgerId: String): AddEntryResponse!
-  """Add a new balance entry to a specific ledger"""
-  addEntryBalance(balance: LedgerBalanceInput!, ledgerId: String!): AddLedgerEntryResponse!
-  """Add a new commodity entry to a specific ledger"""
-  addEntryCommodity(commodity: LedgerCommodityInput!, ledgerId: String!): AddLedgerEntryResponse!
-  """Add a new note entry to a specific ledger"""
-  addEntryNote(ledgerId: String!, note: LedgerNoteInput!): AddLedgerEntryResponse!
-  """Add a new price entry to a specific ledger"""
-  addEntryPrice(ledgerId: String!, price: LedgerPriceInput!): AddLedgerEntryResponse!
-  """Add a new transaction entry to a specific ledger"""
-  addEntryTransaction(ledgerId: String!, transaction: LedgerTransactionInput!): AddLedgerEntryResponse!
-  addOrUpdateLedgerCollaborator(collaborator: String!, ledgerId: String!, permission: String): AddCollaboratorResponse!
-  addPushToken(token: String!): Boolean!
-  cancelSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
-  """Create a new ledger for the current user"""
-  createLedger(description: String, name: String!, private: Boolean): Ledger!
-  """Create a new file in a specific ledger"""
-  createLedgerFile(content: String!, ledgerId: String!, message: String, path: String!): LedgerFileContent!
-  createOneTimeToken: CreateOneTimeTokenResponse!
-  """Create a new public key for the current user"""
-  createPublicKey(key: String!, readOnly: Boolean = false, title: String!): PublicKey!
-  createStripePortalSession(clientId: String!): SubscriptionSessionResult!
-  createSubscriptionSession(clientId: String!, priceId: String!): SubscriptionSessionResult!
-  """delete user account and its associated data"""
-  deleteAccount: Boolean!
-  """Delete a specific ledger"""
-  deleteLedger(ledgerId: String!): DeleteLedgerResponse!
-  deleteLedgerCollaborator(collaborator: String!, ledgerId: String!): DeleteCollaboratorResponse!
-  """Delete a source slice for a specific journal entry"""
-  deleteLedgerEntrySourceSlice(input: DeleteSourceSliceInput!, ledgerId: String!): DeleteSourceSliceResponse!
-  """Delete a file from a specific ledger"""
-  deleteLedgerFile(ledgerId: String!, message: String, path: String!, sha: String!): DeleteLedgerFileResponse!
-  """Delete a specific public key by ID"""
-  deletePublicKey(keyId: Float!): DeletePublicKeyResponse!
-  """Finish signup process by verifying OTP and creating user account"""
-  finishSignUp(otp: String!, sessionId: String!): TokenAuthResponse!
-  """Create a pre-signup session with OTP verification. Sends OTP to user's email."""
-  preSignUp(email: String!, firstName: String!, inviteBy: String, inviteSrc: String, lastName: String!, password: String!, username: String, withDefaultLedger: Boolean): PreSignUpResponse!
-  """Refresh authentication token - issues a new token and revokes the current one"""
-  refreshToken: TokenAuthResponse!
-  removeSelfFromRepo(ledgerId: String!): DeleteCollaboratorResponse!
-  """Rename a file in a specific ledger"""
-  renameLedgerFile(ledgerId: String!, message: String, newPath: String!, oldPath: String!): RenameLedgerFileResponse!
-  """Reset user password using a token from the password reset email"""
-  resetPassword(newPassword: String!, token: String!): ResetPasswordResponse!
-  """Send a password reset link to the user's email"""
-  sendForgotPasswordLink(email: String!): SendForgotPasswordLinkResponse!
-  sendPushNotification(data: JSONObject!, message: String!, pushToken: String!): Boolean!
-  signIn(email: String!, password: String!): TokenAuthResponse!
-  signInWithOneTimeToken(token: String!): TokenAuthResponse!
-  """Update a specific ledger"""
-  updateLedger(description: String, ledgerId: String!, name: String, private: Boolean): Ledger!
-  """Update a source slice for a specific journal entry"""
-  updateLedgerEntrySourceSlice(input: UpdateSourceSliceInput!, ledgerId: String!): UpdateSourceSliceResponse!
-  """Update an existing file in a specific ledger"""
-  updateLedgerFile(content: String!, ledgerId: String!, message: String, path: String!, sha: String!): LedgerFileContent!
-  """Update user profile (firstName and lastName)"""
-  updateProfile(firstName: String, lastName: String): UserProfileResponse!
-  """update or insert user report subscribe status"""
-  updateReportSubscribe(status: ReportStatus!, userId: String!): UpdateReportSubscribeResponse
-  updateUsername(username: String!): UserProfileResponse!
-}
-
-input EntryInput {
-  date: String!
-  flag: String!
-  meta: JSONObject!
-  narration: String!
-  payee: String!
-  postings: [PostingInput!]!
-  type: String!
-}
-
-input PostingInput {
-  account: String!
-  amount: String!
-}
-
-type AddEntryResponse {
-  data: String
-  success: Boolean!
-}
-
-input LedgerBalanceInput {
-  account: String!
-  amount: LedgerAmountInput!
-  date: String!
-}
-
-input LedgerAmountInput {
-  currency: String!
-  number: String!
-}
-
-type AddLedgerEntryResponse {
-  message: String
-  success: Boolean!
-}
-
-input LedgerCommodityInput {
-  currency: String!
-  date: String!
-}
-
-input LedgerNoteInput {
-  account: String!
-  content: String!
-  date: String!
-}
-
-input LedgerPriceInput {
-  amount: LedgerAmountInput!
-  currency: String!
-  date: String!
-}
-
-input LedgerTransactionInput {
-  date: String!
-  flag: String!
-  links: [String!]
-  narration: String
-  payee: String
-  postings: [LedgerPostingInput!]!
-  tags: [String!]
-}
-
-input LedgerPostingInput {
-  account: String!
-  flag: String
-  price: LedgerAmountInput
-  units: LedgerAmountInput!
-}
-
-type AddCollaboratorResponse {
-  message: String
-  success: Boolean!
-}
-
-type SubscriptionActionResult {
-  message: String
-  success: Boolean!
-}
-
-type CreateOneTimeTokenResponse {
-  expireAt: String!
-  id: String!
-}
-
 type SubscriptionSessionResult {
   message: String
   sessionId: String
@@ -819,31 +1462,22 @@ type SubscriptionSessionResult {
   success: Boolean!
 }
 
-type DeleteLedgerResponse {
-  ledgerId: String!
+type TempAssetDownloadUrl {
+  downloadUrl: String!
+  expiresIn: Float!
 }
 
-type DeleteCollaboratorResponse {
-  message: String
-  success: Boolean!
+type TempAssetUploadUrl {
+  expiresIn: Float!
+  objectKey: String!
+  uploadUrl: String!
 }
 
-input DeleteSourceSliceInput {
-  entryHash: String!
-  sha256sum: String!
-}
-
-type DeleteSourceSliceResponse {
-  entryHash: String!
-  message: String!
-}
-
-type DeleteLedgerFileResponse {
-  path: String!
-}
-
-type DeletePublicKeyResponse {
-  id: Float!
+type TierQuotaItem {
+  aiCfoTokensMax: Float!
+  maxCollaboratorsPerLedger: Float!
+  maxLedgers: Float!
+  tier: String!
 }
 
 type TokenAuthResponse {
@@ -851,21 +1485,30 @@ type TokenAuthResponse {
   token: String!
 }
 
-type PreSignUpResponse {
-  expireAt: String!
-  sessionId: String!
+type Transaction {
+  date: String!
+  narration: String
+  payee: String
+  postings: [Posting!]!
 }
 
-type RenameLedgerFileResponse {
-  newPath: String!
-  oldPath: String!
+input TransactionToCategorizeInput {
+  amount: Float!
+  date: String!
+  description: String!
+  payee: String!
+  rowIndex: Int!
 }
 
-type ResetPasswordResponse {
-  success: Boolean!
+type TrialBalanceData {
+  assetsHierarchyData: SerializableTreeNode!
+  equityHierarchyData: SerializableTreeNode!
+  expensesHierarchyData: SerializableTreeNode!
+  incomeHierarchyData: SerializableTreeNode!
+  liabilitiesHierarchyData: SerializableTreeNode!
 }
 
-type SendForgotPasswordLinkResponse {
+type UpdateReportSubscribeResponse {
   success: Boolean!
 }
 
@@ -881,6 +1524,86 @@ type UpdateSourceSliceResponse {
   newSha256sum: String!
 }
 
-type UpdateReportSubscribeResponse {
+type UpgradeSubscriptionResult {
+  clientSecret: String
+  message: String
+  newTier: String
+  subscriptionId: String
   success: Boolean!
+}
+
+type User {
+  active: Boolean
+  created: String
+  email: String
+  fullName: String
+  id: Float
+  isAdmin: Boolean
+  lastLogin: String
+  login: String
+}
+
+type UserActivityFeedItem {
+  content: String!
+  createdAt: DateTimeISO!
+  id: String!
+  repoFullName: String
+  repoName: String
+  type: String!
+}
+
+type UserLimits {
+  collaboratorsPerLedgerMax: Float!
+  ledgersMax: Float!
+  ledgersUsed: Float!
+}
+
+type UserListItem {
+  avatarUrl: String
+  bio: String
+  fullName: String
+  username: String!
+}
+
+type UserListResponse {
+  total: Float!
+  users: [UserListItem!]!
+}
+
+type UserProfile {
+  avatarUrl: String
+  bio: String
+  created: DateTimeISO
+  followersCount: Float!
+  followingCount: Float!
+  fullName: String
+  location: String
+  starredReposCount: Float!
+  username: String!
+  website: String
+}
+
+type UserProfileResponse {
+  email: String!
+  emailReportStatus: ReportStatus
+  firstName: String
+  id: String!
+  lastName: String
+  limits: UserLimits!
+  locale: String!
+  tier: String!
+  username: String
+}
+
+type UserRepository {
+  createdAt: DateTimeISO!
+  description: String
+  fullName: String!
+  isPrivate: Boolean!
+  name: String!
+  updatedAt: DateTimeISO!
+}
+
+type ValidateEmailTokenResponse {
+  isValid: Boolean!
 }

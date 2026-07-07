@@ -22,10 +22,10 @@ const getStyles = (theme: ColorTheme) =>
       paddingTop: 8,
     },
     pill: {
-      paddingHorizontal: 14,
+      paddingHorizontal: 10,
       paddingVertical: 6,
       borderRadius: 14,
-      marginHorizontal: 4,
+      marginHorizontal: 3,
     },
     pillActive: {
       backgroundColor: theme.primary,

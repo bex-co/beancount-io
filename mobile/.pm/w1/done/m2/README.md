@@ -1,19 +1,19 @@
 # w1 · m2 — Monarch-style Accounts tab
 
-**Worker:** worker1 **Goal:** A dedicated Accounts tab: net-worth chart with time ranges up top, accounts grouped with subtotals below, tap-through to a per-account detail screen (balance history + recent entries). **Status:** todo
+**Worker:** worker1 **Goal:** A dedicated Accounts tab: net-worth chart with time ranges up top, accounts grouped with subtotals below, tap-through to a per-account detail screen (balance history + recent entries). **Status:** done
 
 ## Tasks (in order)
 
-| id   | title                                                               | est | depends_on |
-| ---- | ------------------------------------------------------------------- | --- | ---------- |
-| t001 | GraphQL ops + hooks: balance sheet, account journal, account report | 45m | —          |
-| t002 | Accounts tab route + registration + i18n key                        | 30m | —          |
-| t003 | Net-worth header: current total + line chart with time-range pills  | 50m | t001, t002 |
-| t004 | Grouped account list with subtotals (shared from home account list) | 45m | t002       |
-| t005 | Account detail screen: balance-history chart + paginated entries    | 60m | t001, t004 |
-| t006 | UX pass — light/dark, i18n, loading bg, safe area, analytics        | 40m | t003, t005 |
-| t007 | Simplify pass over accounts-tab code                                | 30m | t006       |
-| t008 | Unit tests for accounts selectors + behavior                        | 40m | t006       |
+| id   | title                                                               | est | depends_on | status     |
+| ---- | ------------------------------------------------------------------- | --- | ---------- | ---------- |
+| t001 | GraphQL ops + hooks: balance sheet, account journal, account report | 45m | —          | — **DONE** |
+| t002 | Accounts tab route + registration + i18n key                        | 30m | —          | — **DONE** |
+| t003 | Net-worth header: current total + line chart with time-range pills  | 50m | t001, t002 | — **DONE** |
+| t004 | Grouped account list with subtotals (shared from home account list) | 45m | t002       | — **DONE** |
+| t005 | Account detail screen: balance-history chart + paginated entries    | 60m | t001, t004 | — **DONE** |
+| t006 | UX pass — light/dark, i18n, loading bg, safe area, analytics        | 40m | t003, t005 | — **DONE** |
+| t007 | Simplify pass over accounts-tab code                                | 30m | t006       | — **DONE** |
+| t008 | Unit tests for accounts selectors + behavior                        | 40m | t006       | — **DONE** |
 
 ## Definition of done
 

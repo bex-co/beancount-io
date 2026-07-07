@@ -13,7 +13,7 @@ import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { groupThousands } from "@/common/number-utils";
-import { AccountNode } from "@/screens/home-screen/selectors/select-account-list";
+import { AccountNode } from "./select-account-list";
 
 const CHEVRON_WIDTH = 22;
 const INDENT_STEP = 16;
@@ -90,20 +90,35 @@ type AccountListPageProps = {
   total: string;
   items: AccountNode[];
   currencySymbol: string;
+  /**
+   * Wrap the tree in its own vertical ScrollView (default). Set false when the
+   * list already lives inside a scrolling parent (e.g. the Accounts tab) so the
+   * outer scroll owns the gesture and the whole tree lays out inline.
+   */
+  scrollable?: boolean;
+  /**
+   * When provided, tapping an account row invokes this with the account name
+   * (for drill-down navigation); the expand/collapse chevron stays independently
+   * tappable. When omitted, tapping a parent row toggles expansion (home).
+   */
+  onPressAccount?: (account: string) => void;
 };
 
 /**
- * A swipe page listing the user's accounts within one category (Assets,
- * Liabilities, …): a headline total plus a scrollable, indented account tree.
- * Expanded to `DEFAULT_EXPANDED_LEVELS` deep by default; any account with
- * sub-accounts can be collapsed/expanded. Every node's balance is the rolled-up
- * subtree total, so children are a breakdown *of* their parent, never additive.
+ * Lists accounts within one category (Assets, Liabilities, …): a headline total
+ * plus an indented account tree. Expanded to `DEFAULT_EXPANDED_LEVELS` deep by
+ * default; any account with sub-accounts can be collapsed/expanded. Every node's
+ * balance is the rolled-up subtree total, so children are a breakdown *of* their
+ * parent, never additive. Shared by the home dashboard carousel and the Accounts
+ * tab.
  */
 export function AccountListPage({
   label,
   total,
   items,
   currencySymbol,
+  scrollable = true,
+  onPressAccount,
 }: AccountListPageProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -128,18 +143,35 @@ export function AccountListPage({
     ];
     const valueStyle = depth === 0 ? styles.valueTop : styles.valueChild;
 
+    const chevronIcon = hasChildren ? (
+      <Ionicons
+        style={styles.chevron}
+        name={isExpanded ? "chevron-down" : "chevron-forward"}
+        size={16}
+        color={theme.black80}
+      />
+    ) : (
+      <View style={styles.chevron} />
+    );
+    // When rows navigate, the chevron owns the toggle so a nested tap collapses
+    // without triggering the row's drill-down.
+    const chevron =
+      onPressAccount && hasChildren ? (
+        <TouchableOpacity
+          onPress={() => toggle(node.account, isExpanded)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: isExpanded }}
+          hitSlop={{ top: 10, bottom: 10, left: 10, right: 6 }}
+        >
+          {chevronIcon}
+        </TouchableOpacity>
+      ) : (
+        chevronIcon
+      );
+
     const rowContent = (
       <>
-        {hasChildren ? (
-          <Ionicons
-            style={styles.chevron}
-            name={isExpanded ? "chevron-down" : "chevron-forward"}
-            size={16}
-            color={theme.black80}
-          />
-        ) : (
-          <View style={styles.chevron} />
-        )}
+        {chevron}
         <Text style={nameStyle} numberOfLines={1}>
           {node.name}
         </Text>
@@ -150,20 +182,35 @@ export function AccountListPage({
       </>
     );
 
+    let row: JSX.Element;
+    if (onPressAccount) {
+      row = (
+        <TouchableOpacity
+          style={[styles.row, { paddingLeft }]}
+          onPress={() => onPressAccount(node.account)}
+          accessibilityRole="button"
+        >
+          {rowContent}
+        </TouchableOpacity>
+      );
+    } else if (hasChildren) {
+      row = (
+        <TouchableOpacity
+          style={[styles.row, { paddingLeft }]}
+          onPress={() => toggle(node.account, isExpanded)}
+          accessibilityRole="button"
+          accessibilityState={{ expanded: isExpanded }}
+        >
+          {rowContent}
+        </TouchableOpacity>
+      );
+    } else {
+      row = <View style={[styles.row, { paddingLeft }]}>{rowContent}</View>;
+    }
+
     return (
       <Fragment key={node.account}>
-        {hasChildren ? (
-          <TouchableOpacity
-            style={[styles.row, { paddingLeft }]}
-            onPress={() => toggle(node.account, isExpanded)}
-            accessibilityRole="button"
-            accessibilityState={{ expanded: isExpanded }}
-          >
-            {rowContent}
-          </TouchableOpacity>
-        ) : (
-          <View style={[styles.row, { paddingLeft }]}>{rowContent}</View>
-        )}
+        {row}
         {hasChildren &&
           isExpanded &&
           node.children.map((child) => renderNode(child, depth + 1))}
@@ -171,27 +218,31 @@ export function AccountListPage({
     );
   };
 
+  const rows = items.map((node, index) => (
+    <Fragment key={`group-${node.account}`}>
+      {index > 0 && <View style={styles.separator} />}
+      {renderNode(node, 0)}
+    </Fragment>
+  ));
+
   return (
-    <View style={styles.container}>
+    <View style={scrollable ? styles.container : undefined}>
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
         <Text style={styles.headline}>{total}</Text>
       </View>
       {items.length === 0 ? (
         <Text style={styles.empty}>{t("noAccounts")}</Text>
-      ) : (
+      ) : scrollable ? (
         <ScrollView
           style={styles.list}
           nestedScrollEnabled
           showsVerticalScrollIndicator={false}
         >
-          {items.map((node, index) => (
-            <Fragment key={`group-${node.account}`}>
-              {index > 0 && <View style={styles.separator} />}
-              {renderNode(node, 0)}
-            </Fragment>
-          ))}
+          {rows}
         </ScrollView>
+      ) : (
+        <View>{rows}</View>
       )}
     </View>
   );

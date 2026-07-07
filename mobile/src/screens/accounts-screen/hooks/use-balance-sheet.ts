@@ -1,0 +1,15 @@
+import { useBalanceSheetQuery } from "@/generated-graphql/graphql";
+
+/**
+ * Balance sheet for a ledger: net-worth / assets / liabilities series plus the
+ * assets & liabilities hierarchy trees. `time` scopes the series (e.g. a
+ * Fava-style range string); omit it for the full history the range pills slice.
+ */
+export const useBalanceSheet = (ledgerId: string, time?: string) => {
+  const { loading, data, error, refetch } = useBalanceSheetQuery({
+    variables: { ledgerId, time },
+    skip: !ledgerId,
+    fetchPolicy: "network-only",
+  });
+  return { loading, data, error, refetch };
+};

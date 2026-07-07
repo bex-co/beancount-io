@@ -1,5 +1,5 @@
 import { AccountHierarchyQuery } from "@/generated-graphql/graphql";
-import { resolveCurrencyBalance } from "./balance-util";
+import { resolveCurrencyBalance } from "../../../common/balance-util";
 
 export function getAccountTotals(
   currency: string,

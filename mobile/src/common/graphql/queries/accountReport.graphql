@@ -1,0 +1,26 @@
+query AccountReport(
+  $ledgerId: String!
+  $accountName: String!
+  $interval: String
+  $time: String
+) {
+  getLedgerAccountReport(
+    ledgerId: $ledgerId
+    accountName: $accountName
+    interval: $interval
+    time: $time
+  ) {
+    linechartData {
+      date
+      balance
+    }
+    intervalTotalsData {
+      date
+      balance
+    }
+    accountBalanceData {
+      date
+      balance
+    }
+  }
+}
