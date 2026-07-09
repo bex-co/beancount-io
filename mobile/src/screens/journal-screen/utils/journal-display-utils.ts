@@ -40,8 +40,7 @@ export const getSectionTotal = (entries: JournalDirectiveType[]): string => {
     if (!isJournalTransaction(entry) || entry.flag === "!") continue;
     const cashPostings = entry.postings.filter(
       (p) =>
-        p.account.startsWith("Assets:") ||
-        p.account.startsWith("Liabilities:"),
+        p.account.startsWith("Assets:") || p.account.startsWith("Liabilities:"),
     );
     for (const p of cashPostings) {
       net += parseFloat(p.units.number);

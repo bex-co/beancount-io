@@ -2,8 +2,8 @@ import { Redirect, Stack, router } from "expo-router";
 import { useReactiveVar } from "@apollo/client";
 import { sessionVar } from "@/common/vars";
 import { useCallback } from "react";
-
-import { HeaderBackButton } from "expo-router/react-navigation";
+import { Pressable } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/common/theme";
 
 export const DefaultHeaderLeftBack = () => {
@@ -11,7 +11,15 @@ export const DefaultHeaderLeftBack = () => {
   const handlePress = useCallback(() => {
     router.back();
   }, []);
-  return <HeaderBackButton onPress={handlePress} tintColor={theme.black} />;
+  return (
+    <Pressable
+      onPress={handlePress}
+      style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+      hitSlop={8}
+    >
+      <Ionicons name="chevron-back" size={28} color={theme.black} />
+    </Pressable>
+  );
 };
 
 export default function AppLayout() {

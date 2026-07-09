@@ -1,5 +1,6 @@
 import { AccountJournalQuery } from "@/generated-graphql/graphql";
 import { resolveCurrencyBalance } from "../../../common/balance-util";
+import { groupThousands } from "../../../common/number-utils";
 
 /** One `{ entry, change, balance }` row from the account journal response. */
 export type AccountJournalItem =
@@ -67,6 +68,57 @@ function entryTitle(entry: AccountJournalItem["entry"]): string {
     asString(entry.account) ||
     asString(entry.directive_type)
   );
+}
+
+/** One date-grouped section of account-journal rows for display. */
+export type AccountJournalSection = {
+  isoDate: string;
+  displayDate: string;
+  totalChange: string;
+  data: AccountJournalRow[];
+};
+
+function formatSectionDate(isoDate: string): string {
+  try {
+    const [year, month, day] = isoDate.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    if (isNaN(date.getTime())) return isoDate;
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  } catch {
+    return isoDate;
+  }
+}
+
+/**
+ * Group display rows into date sections for the SectionList, with a net-change
+ * total per section matching Journal's section-header layout.
+ */
+export function groupAccountJournalRowsToSections(
+  rows: AccountJournalRow[],
+  currencySymbol: string,
+): AccountJournalSection[] {
+  const groups = new Map<string, AccountJournalRow[]>();
+  for (const row of rows) {
+    const isoDate = row.date.slice(0, 10);
+    if (!groups.has(isoDate)) groups.set(isoDate, []);
+    groups.get(isoDate)!.push(row);
+  }
+  return Array.from(groups.entries()).map(([isoDate, data]) => {
+    const net = data.reduce((sum, r) => sum + r.change, 0);
+    const sign = net > 0 ? "+" : net < 0 ? "-" : "";
+    const totalChange = `${sign}${currencySymbol}${groupThousands(net)}`;
+    return {
+      isoDate,
+      displayDate: formatSectionDate(isoDate),
+      totalChange,
+      data,
+    };
+  });
 }
 
 /** Map raw journal items to display rows in the active currency. */

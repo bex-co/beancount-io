@@ -26,10 +26,7 @@ import { JournalEmptyState } from "./journal-empty-state";
 import { JournalNoEntriesForFiltersState } from "./journal-no-entries-for-filters-state";
 import { JournalBottomSheet } from "./journal-bottom-sheet";
 import { JournalDirectiveType, DirectiveType } from "./types";
-import {
-  JournalSection,
-  groupToSections,
-} from "./utils/journal-display-utils";
+import { JournalSection, groupToSections } from "./utils/journal-display-utils";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -227,7 +224,9 @@ const JournalList = () => {
 
   const handleQuickAdd = useCallback(() => {
     analytics.track("tap_quick_add", {});
-    AddTransactionCallback.setFn(async () => { await refetch(); });
+    AddTransactionCallback.setFn(async () => {
+      await refetch();
+    });
     router.navigate({ pathname: "/add-transaction" });
   }, [refetch, router]);
 

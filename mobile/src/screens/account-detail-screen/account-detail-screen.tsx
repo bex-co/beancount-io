@@ -1,7 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  FlatList,
+  SectionList,
   RefreshControl,
   StyleSheet,
   Text,
@@ -31,21 +31,20 @@ import {
 import { selectAccountBalanceSeries } from "@/screens/account-detail-screen/selectors/select-account-balance-series";
 import {
   AccountJournalRow,
+  AccountJournalSection,
   hasMoreAccountJournal,
   mergeAccountJournalItems,
   selectAccountJournalRows,
+  groupAccountJournalRowsToSections,
 } from "@/screens/account-detail-screen/selectors/select-account-journal";
 import { AccountEntryRow } from "@/screens/account-detail-screen/components/account-entry-row";
+import { JournalDateSectionHeader } from "@/screens/journal-screen/journal-date-section-header";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.white,
-    },
-    content: {
-      paddingHorizontal: 16,
-      paddingBottom: 24,
     },
     sectionTitle: {
       fontSize: 18,
@@ -54,11 +53,6 @@ const getStyles = (theme: ColorTheme) =>
       marginTop: 4,
       marginBottom: 8,
       paddingHorizontal: 16,
-    },
-    separator: {
-      height: StyleSheet.hairlineWidth,
-      backgroundColor: theme.black20,
-      marginHorizontal: 16,
     },
     stateContainer: {
       alignItems: "center",
@@ -82,8 +76,6 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black60,
     },
   });
-
-const keyExtractor = (item: AccountJournalRow) => item.key;
 
 const AccountDetailScreenImpl = ({
   account,
@@ -131,6 +123,10 @@ const AccountDetailScreenImpl = ({
   const rows = useMemo(
     () => selectAccountJournalRows(currency, items),
     [currency, items],
+  );
+  const sections = useMemo(
+    () => groupAccountJournalRowsToSections(rows, currencySymbol),
+    [rows, currencySymbol],
   );
 
   const hasMore = hasMoreAccountJournal(items.length, total);
@@ -206,6 +202,16 @@ const AccountDetailScreenImpl = ({
     [currencySymbol],
   );
 
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: AccountJournalSection }) => (
+      <JournalDateSectionHeader
+        displayDate={section.displayDate}
+        total={section.totalChange}
+      />
+    ),
+    [],
+  );
+
   const listHeader = useMemo(
     () => (
       <>
@@ -235,15 +241,16 @@ const AccountDetailScreenImpl = ({
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
       <Stack.Screen options={{ title: leafName(account) }} />
-      <FlatList
-        data={isInitialLoading ? [] : rows}
+      <SectionList
+        sections={isInitialLoading || journalError ? [] : sections}
         renderItem={renderItem}
-        keyExtractor={keyExtractor}
+        renderSectionHeader={renderSectionHeader}
+        keyExtractor={(item) => item.key}
         ListHeaderComponent={listHeader}
-        ItemSeparatorComponent={() => <View style={styles.separator} />}
-        contentContainerStyle={styles.content}
+        contentContainerStyle={{ paddingBottom: 24 }}
         showsVerticalScrollIndicator={false}
         indicatorStyle={currentTheme === "dark" ? "white" : "default"}
+        stickySectionHeadersEnabled={false}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         refreshControl={
