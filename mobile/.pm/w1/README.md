@@ -10,3 +10,4 @@
 - [x] **m4** — Account detail polish (5 tasks) ← from `/pm` request 2026-07-08 (missing back arrow; Journal-style transactions list)
 - [x] **m5** — Settings in the ledger drawer, drop the Settings tab (6 tasks) ← from `/pm` request 2026-07-08 ("learn from monarch, move settings into the left sidebar and then remove the settings tab")
 - [ ] **m7** — Dashboard cards tap through to Reports and Accounts (6 tasks) ← from `/pm-brainstorm` 2026-07-08 ("for w1")
+- [ ] **m8** — Multi-leg transaction entry from Home (8 tasks) ← from `/pm-brainstorm` 2026-07-09 ("multi-legging transaction from Home dropdown")
