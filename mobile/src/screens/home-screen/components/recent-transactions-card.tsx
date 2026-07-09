@@ -12,7 +12,9 @@ import { JournalEntryItem } from "@/screens/journal-screen/journal-entry-item";
 import {
   DirectiveType,
   JournalDirectiveType,
+  isJournalTransaction,
 } from "@/screens/journal-screen/types";
+import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 
 const RECENT_LIMIT = 5;
 
@@ -30,7 +32,6 @@ type RecentTransactionsCardProps = {
   refreshSignal?: number;
 };
 
-// Home rows are non-interactive — no drill-down sheet exists yet.
 export function RecentTransactionsCard({
   ledgerId,
   refreshSignal = 0,
@@ -74,7 +75,15 @@ export function RecentTransactionsCard({
         <Text style={styles.empty}>{t("recentTransactionsEmpty")}</Text>
       ) : (
         entries.map((entry, index) => (
-          <JournalEntryItem key={index} entry={entry} />
+          <JournalEntryItem
+            key={entry.entry_hash || index}
+            entry={entry}
+            onPress={
+              isJournalTransaction(entry)
+                ? () => openTransactionDetail(router, entry, "home")
+                : undefined
+            }
+          />
         ))
       )}
     </DashboardCard>

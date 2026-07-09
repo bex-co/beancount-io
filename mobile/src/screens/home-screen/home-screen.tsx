@@ -18,7 +18,7 @@ import { useSession } from "@/common/hooks/use-session";
 import { themeVar } from "@/common/vars";
 import { useReactiveVar } from "@apollo/client";
 import { useThemeStyle, usePageView } from "@/common/hooks";
-import { Button } from "@/components";
+import { Button, LedgerDrawerHeader } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 
 const getStyles = (theme: ColorTheme) =>
@@ -77,6 +77,7 @@ export const HomeScreenImpl = (): JSX.Element => {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
+      <LedgerDrawerHeader />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16 }}

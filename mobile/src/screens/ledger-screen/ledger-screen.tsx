@@ -12,6 +12,7 @@ import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTheme } from "@/common/theme";
 import { appendPreferenceParam } from "@/common/url-utils";
 import { DashboardWebView } from "@/components/dashboard-webview";
+import { LedgerDrawerHeader } from "@/components/ledger-drawer";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 
 const getStyles = (theme: ColorTheme) =>
@@ -56,6 +57,7 @@ const LedgerScreenImpl = () => {
   }, [ledgerId]);
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
+      <LedgerDrawerHeader />
       <ProgressBar progress={progress} />
       <View style={styles.webViewContainer}>
         <DashboardWebView

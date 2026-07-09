@@ -3,6 +3,7 @@ import { useTheme } from "@/common/theme";
 import { ScreenWidth } from "@/common/screen-util";
 import { useUserProfile } from "./hooks/use-user-profile";
 import { LoadingTile } from "@/components/loading-tile";
+import { LedgerDrawerButton } from "@/components/ledger-drawer";
 import { ColorTheme } from "@/types/theme-props";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSession } from "@/common/hooks/use-session";
@@ -16,6 +17,8 @@ const getStyles = (theme: ColorTheme) =>
       paddingTop: 28,
       paddingBottom: 28,
       flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
       backgroundColor: theme.primary,
     },
     nameText: {
@@ -74,6 +77,7 @@ export const AccountHeader = () => {
       edges={["top"]}
       style={[styles.titleContainer, { backgroundColor: theme.primary }]}
     >
+      <LedgerDrawerButton color={theme.white} />
       {session ? <EmailHeader userId={session.userId} /> : null}
     </SafeAreaView>
   );

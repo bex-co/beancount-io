@@ -1,4 +1,4 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -73,11 +73,13 @@ const getStyles = (theme: ColorTheme) =>
 type AccountEntryRowProps = {
   row: AccountJournalRow;
   currencySymbol: string;
+  onPress?: () => void;
 };
 
 export function AccountEntryRow({
   row,
   currencySymbol,
+  onPress,
 }: AccountEntryRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -93,8 +95,8 @@ export function AccountEntryRow({
         ? theme.error
         : theme.black60;
 
-  return (
-    <View style={styles.row}>
+  const content = (
+    <>
       <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
         <Text style={styles.avatarText}>{initials}</Text>
       </View>
@@ -119,6 +121,20 @@ export function AccountEntryRow({
           {groupThousands(row.balance)}
         </Text>
       </View>
-    </View>
+    </>
   );
+
+  if (onPress) {
+    return (
+      <TouchableOpacity
+        style={styles.row}
+        onPress={onPress}
+        activeOpacity={0.7}
+      >
+        {content}
+      </TouchableOpacity>
+    );
+  }
+
+  return <View style={styles.row}>{content}</View>;
 }

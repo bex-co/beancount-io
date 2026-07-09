@@ -1,5 +1,11 @@
-import React, { createContext, useContext, memo } from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
+import React, { createContext, useContext, memo, useEffect } from "react";
+import {
+  ActivityIndicator,
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
@@ -7,6 +13,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { Ionicons } from "@expo/vector-icons";
 import { useReactiveVar } from "@apollo/client";
 import { ledgerVar } from "@/common/vars";
+import { useListLedgersQuery } from "@/generated-graphql/graphql";
 
 interface LedgerGuardContextValue {
   ledgerId: string;
@@ -64,6 +71,7 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       justifyContent: "center",
       alignItems: "center",
+      backgroundColor: theme.white,
     },
   });
 
@@ -80,7 +88,25 @@ const LedgerGuardProviderComponent = ({
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
 
+  // Self-heal an empty selection (fresh install, or splash-time validation
+  // cleared a stale id) by defaulting to the user's first ledger.
+  const { data, loading } = useListLedgersQuery({ skip: !!ledgerId });
+  const firstLedgerId = data?.listLedgers?.[0]?.id;
+
+  useEffect(() => {
+    if (!ledgerId && firstLedgerId) {
+      ledgerVar(firstLedgerId);
+    }
+  }, [ledgerId, firstLedgerId]);
+
   if (!ledgerId) {
+    if (loading || firstLedgerId) {
+      return (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={theme.primary} />
+        </View>
+      );
+    }
     return (
       <View style={styles.container}>
         <View style={styles.content}>

@@ -25,7 +25,12 @@ import { JournalDateSectionHeader } from "./journal-date-section-header";
 import { JournalEmptyState } from "./journal-empty-state";
 import { JournalNoEntriesForFiltersState } from "./journal-no-entries-for-filters-state";
 import { JournalBottomSheet } from "./journal-bottom-sheet";
-import { JournalDirectiveType, DirectiveType } from "./types";
+import {
+  JournalDirectiveType,
+  DirectiveType,
+  isJournalTransaction,
+} from "./types";
+import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { JournalSection, groupToSections } from "./utils/journal-display-utils";
 
 const getStyles = (theme: ColorTheme) =>
@@ -217,10 +222,18 @@ const JournalList = () => {
     }
   };
 
-  const handleEntryPress = useCallback((entry: JournalDirectiveType) => {
-    setSelectedEntry(entry);
-    bottomSheetRef.current?.snapToIndex(0);
-  }, []);
+  const handleEntryPress = useCallback(
+    (entry: JournalDirectiveType) => {
+      if (isJournalTransaction(entry)) {
+        openTransactionDetail(router, entry, "journal");
+        return;
+      }
+      // Non-transaction directives (open/close/balance/…) keep the sheet.
+      setSelectedEntry(entry);
+      bottomSheetRef.current?.snapToIndex(0);
+    },
+    [router],
+  );
 
   const handleQuickAdd = useCallback(() => {
     analytics.track("tap_quick_add", {});

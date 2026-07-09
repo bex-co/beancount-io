@@ -14,6 +14,7 @@ import { useThemeStyle } from "@/common/hooks";
 import { useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { LedgerDrawerButton } from "@/components/ledger-drawer";
 import { DirectiveType } from "./types";
 
 // Define filter button configurations
@@ -470,6 +471,13 @@ const getNavStyles = (theme: ColorTheme) =>
       color: theme.black90,
       textAlign: "center",
     },
+    // Same width as navRight so the centered title stays centered.
+    navLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      width: 64,
+      justifyContent: "flex-start",
+    },
     navRight: {
       flexDirection: "row",
       alignItems: "center",
@@ -509,6 +517,9 @@ export const JournalNavBar = ({ onAdd }: JournalNavBarProps) => {
 
   return (
     <View style={navStyles.navBar}>
+      <View style={navStyles.navLeft}>
+        <LedgerDrawerButton />
+      </View>
       <Text style={navStyles.navTitle}>{t("transactions")}</Text>
       <View style={navStyles.navRight}>
         <TouchableOpacity onPress={onAdd}>

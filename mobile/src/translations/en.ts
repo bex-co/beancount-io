@@ -32,6 +32,7 @@ export const en = {
   deleteAccount: "Delete Account",
   deleteAccountDescription: "Permanently remove your account and data",
   ledgerDescription: "Select or switch between your ledgers",
+  ledgers: "Ledgers",
   deleteAccountConfirmTitle: "Confirm Account Deletion",
   deleteAccountConfirmMessage:
     'To confirm, please type "sudo delete my account" below:',
@@ -172,6 +173,9 @@ export const en = {
   budget: "Budget",
   metadata: "Metadata",
   postings: "Postings",
+  details: "Details",
+  tags: "Tags",
+  links: "Links",
   clearedTransactions: "Cleared Transactions",
   pendingTransactions: "Pending Transactions",
   otherTransactions: "Other Transactions",

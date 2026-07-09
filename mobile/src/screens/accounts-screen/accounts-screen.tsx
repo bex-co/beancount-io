@@ -12,7 +12,11 @@ import { themeVar } from "@/common/vars";
 import { getCurrencySymbol } from "@/common/currency-util";
 import { groupThousands } from "@/common/number-utils";
 import { CommonMargin } from "@/common/common-margin";
-import { BalanceChartCard, DashboardCard } from "@/components";
+import {
+  BalanceChartCard,
+  DashboardCard,
+  LedgerDrawerHeader,
+} from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
 import { AccountListPage, selectAccountTree } from "@/components/account-list";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -118,6 +122,7 @@ const AccountsScreenImpl = (): JSX.Element => {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
+      <LedgerDrawerHeader />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}

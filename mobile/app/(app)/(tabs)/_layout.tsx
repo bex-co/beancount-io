@@ -2,6 +2,7 @@ import { Tabs } from "expo-router";
 import { useEffect, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { HapticTab } from "@/components/haptic-tab";
+import { LedgerDrawerProvider } from "@/components/ledger-drawer";
 import { useTheme } from "@/common/theme";
 import { i18n } from "@/translations";
 import { localeVar } from "@/common/vars";
@@ -29,8 +30,9 @@ export default function TabLayout() {
   }, [locale]);
 
   return (
-    <Tabs
-      initialRouteName="index"
+    <LedgerDrawerProvider>
+      <Tabs
+        initialRouteName="index"
       screenOptions={{
         headerShown: false,
         tabBarButton: HapticTab,
@@ -107,6 +109,7 @@ export default function TabLayout() {
           ),
         }}
       />
-    </Tabs>
+      </Tabs>
+    </LedgerDrawerProvider>
   );
 }

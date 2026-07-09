@@ -8,7 +8,7 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Stack, useLocalSearchParams } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { NetworkStatus, useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
@@ -30,13 +30,20 @@ import {
 } from "@/screens/accounts-screen/hooks/use-account-journal";
 import { selectAccountBalanceSeries } from "@/screens/account-detail-screen/selectors/select-account-balance-series";
 import {
+  AccountJournalItem,
   AccountJournalRow,
   AccountJournalSection,
+  accountJournalItemKey,
   hasMoreAccountJournal,
   mergeAccountJournalItems,
   selectAccountJournalRows,
   groupAccountJournalRowsToSections,
 } from "@/screens/account-detail-screen/selectors/select-account-journal";
+import {
+  JournalDirectiveType,
+  isJournalTransaction,
+} from "@/screens/journal-screen/types";
+import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { AccountEntryRow } from "@/screens/account-detail-screen/components/account-entry-row";
 import { JournalDateSectionHeader } from "@/screens/journal-screen/journal-date-section-header";
 
@@ -84,6 +91,7 @@ const AccountDetailScreenImpl = ({
 }): JSX.Element => {
   const { userId } = useSession();
   const ledgerId = useLedgerGuard();
+  const router = useRouter();
   const { t } = useTranslations();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -128,6 +136,16 @@ const AccountDetailScreenImpl = ({
     () => groupAccountJournalRowsToSections(rows, currencySymbol),
     [rows, currencySymbol],
   );
+
+  // Display rows carry only shaped fields; index the raw items by the same
+  // key so a tapped row can hand its full entry to the detail screen.
+  const itemsByKey = useMemo(() => {
+    const map = new Map<string, AccountJournalItem>();
+    for (const item of items) {
+      map.set(accountJournalItemKey(item), item);
+    }
+    return map;
+  }, [items]);
 
   const hasMore = hasMoreAccountJournal(items.length, total);
   const isLoadingMore = networkStatus === NetworkStatus.fetchMore;
@@ -196,10 +214,23 @@ const AccountDetailScreenImpl = ({
   }, []);
 
   const renderItem = useCallback(
-    ({ item }: { item: AccountJournalRow }) => (
-      <AccountEntryRow row={item} currencySymbol={currencySymbol} />
-    ),
-    [currencySymbol],
+    ({ item }: { item: AccountJournalRow }) => {
+      const entry = itemsByKey.get(item.key)?.entry as
+        JournalDirectiveType | undefined;
+      const onPress =
+        entry && isJournalTransaction(entry)
+          ? () =>
+              openTransactionDetail(router, entry, "account_detail", account)
+          : undefined;
+      return (
+        <AccountEntryRow
+          row={item}
+          currencySymbol={currencySymbol}
+          onPress={onPress}
+        />
+      );
+    },
+    [currencySymbol, itemsByKey, router, account],
   );
 
   const renderSectionHeader = useCallback(
