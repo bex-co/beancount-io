@@ -362,7 +362,7 @@ return (
         >
           <View style={styles.brandRow}>
             <Image
-              source={require("@/assets/images/icon96.png")}
+              source={require("@/assets/images/icon.png")}
               style={styles.brandLogo}
             />
             <Text style={styles.brandText}>Beancount.io</Text>
