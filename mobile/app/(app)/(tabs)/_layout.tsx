@@ -16,7 +16,6 @@ export default function TabLayout() {
     accounts: i18n.t("accounts"),
     ledger: i18n.t("ledger"),
     journal: i18n.t("journal"),
-    setting: i18n.t("setting"),
   });
 
   useEffect(() => {
@@ -25,7 +24,6 @@ export default function TabLayout() {
       accounts: i18n.t("accounts"),
       ledger: i18n.t("ledger"),
       journal: i18n.t("journal"),
-      setting: i18n.t("setting"),
     });
   }, [locale]);
 
@@ -90,19 +88,6 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name="wallet"
-              size={28}
-              color={focused ? theme.primary : color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="setting"
-        options={{
-          title: tabTitles.setting,
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name="settings"
               size={28}
               color={focused ? theme.primary : color}
             />

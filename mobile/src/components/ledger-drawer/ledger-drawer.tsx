@@ -14,6 +14,7 @@ import {
   useWindowDimensions,
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
@@ -117,6 +118,27 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: "center",
       paddingHorizontal: 20,
     },
+    ledgerListArea: {
+      flex: 1,
+    },
+    menuSection: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.black20,
+      paddingTop: 4,
+      paddingBottom: 4,
+    },
+    menuItem: {
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 20,
+      paddingVertical: 14,
+      gap: 12,
+    },
+    menuItemText: {
+      fontSize: 16,
+      fontWeight: "500",
+      color: theme.text01,
+    },
   });
 
 type LedgerDrawerProps = {
@@ -146,8 +168,18 @@ export function LedgerDrawer({
   const insets = useSafeAreaInsets();
 
   const ledgerId = useReactiveVar(ledgerVar);
-  const { data, loading } = useListLedgersQuery();
+  const { data, loading, refetch } = useListLedgersQuery();
   const ledgers = useMemo(() => data?.listLedgers ?? [], [data?.listLedgers]);
+
+  const [refreshing, setRefreshing] = useState(false);
+  const handleRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
 
   // Gates the menu layer and the tap-to-close catcher; stays true through the
   // close animation so the reveal doesn't pop.
@@ -309,7 +341,13 @@ export function LedgerDrawer({
     requestClose();
   };
 
-  return (
+  const handleSettingsPress = () => {
+    analytics.track("drawer_tap_settings", {});
+    requestClose();
+    router.push("/(app)/settings");
+  };
+
+return (
     <View style={styles.root}>
       {visible && (
         <View
@@ -331,55 +369,76 @@ export function LedgerDrawer({
           </View>
           <Text style={styles.sectionLabel}>{t("ledgers")}</Text>
 
-          {loading && ledgers.length === 0 ? (
-            <View style={styles.stateContainer}>
-              <ActivityIndicator color={theme.primary} />
-            </View>
-          ) : ledgers.length === 0 ? (
-            <View style={styles.stateContainer}>
-              <Text style={styles.stateText}>{t("noEntries")}</Text>
-            </View>
-          ) : (
-            <FlatList
-              data={ledgers}
-              keyExtractor={(item) => item.id}
-              renderItem={({ item }) => {
-                const isSelected = item.id === ledgerId;
-                return (
-                  <TouchableOpacity
-                    testID={`ledger-drawer-item-${item.fullName}`}
-                    style={[
-                      styles.listItem,
-                      isSelected && styles.listItemSelected,
-                    ]}
-                    onPress={() => handleSelect(item.id)}
-                    activeOpacity={0.7}
-                  >
-                    <View style={styles.listItemContent}>
-                      <Text style={styles.listItemName} numberOfLines={1}>
-                        {item.fullName}
-                      </Text>
-                      {item.description ? (
-                        <Text
-                          style={styles.listItemDescription}
-                          numberOfLines={1}
-                        >
-                          {item.description}
+          <View style={styles.ledgerListArea}>
+            {loading && ledgers.length === 0 ? (
+              <View style={styles.stateContainer}>
+                <ActivityIndicator color={theme.primary} />
+              </View>
+            ) : ledgers.length === 0 ? (
+              <View style={styles.stateContainer}>
+                <Text style={styles.stateText}>{t("noEntries")}</Text>
+              </View>
+            ) : (
+              <FlatList
+                style={{ flex: 1 }}
+                data={ledgers}
+                keyExtractor={(item) => item.id}
+                onRefresh={handleRefresh}
+                refreshing={refreshing}
+                renderItem={({ item }) => {
+                  const isSelected = item.id === ledgerId;
+                  return (
+                    <TouchableOpacity
+                      testID={`ledger-drawer-item-${item.fullName}`}
+                      style={[
+                        styles.listItem,
+                        isSelected && styles.listItemSelected,
+                      ]}
+                      onPress={() => handleSelect(item.id)}
+                      activeOpacity={0.7}
+                    >
+                      <View style={styles.listItemContent}>
+                        <Text style={styles.listItemName} numberOfLines={1}>
+                          {item.fullName}
                         </Text>
-                      ) : null}
-                    </View>
-                    {isSelected && (
-                      <Ionicons
-                        name="checkmark-circle"
-                        size={22}
-                        color={theme.primary}
-                      />
-                    )}
-                  </TouchableOpacity>
-                );
-              }}
-            />
-          )}
+                        {item.description ? (
+                          <Text
+                            style={styles.listItemDescription}
+                            numberOfLines={1}
+                          >
+                            {item.description}
+                          </Text>
+                        ) : null}
+                      </View>
+                      {isSelected && (
+                        <Ionicons
+                          name="checkmark-circle"
+                          size={22}
+                          color={theme.primary}
+                        />
+                      )}
+                    </TouchableOpacity>
+                  );
+                }}
+              />
+            )}
+          </View>
+
+          <View style={styles.menuSection}>
+            <TouchableOpacity
+              testID="drawer-settings-row"
+              style={styles.menuItem}
+              onPress={handleSettingsPress}
+              activeOpacity={0.7}
+            >
+              <Ionicons
+                name="settings-outline"
+                size={22}
+                color={theme.black60}
+              />
+              <Text style={styles.menuItemText}>{t("settings")}</Text>
+            </TouchableOpacity>
+          </View>
         </View>
       )}
 

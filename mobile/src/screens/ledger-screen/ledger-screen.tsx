@@ -9,6 +9,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useTranslations } from "@/common/hooks/use-translations";
 import { useTheme } from "@/common/theme";
 import { appendPreferenceParam } from "@/common/url-utils";
 import { DashboardWebView } from "@/components/dashboard-webview";
@@ -43,6 +44,7 @@ const LedgerScreenImpl = () => {
   const [progress, setProgress] = useState(0);
   const [key, setKey] = useState(0);
   usePageView("ledger");
+  const { t } = useTranslations();
   const ledgerId = useLedgerGuard();
   const onRefresh = async () => {
     await analytics.track("tap_refresh", {});
@@ -57,7 +59,7 @@ const LedgerScreenImpl = () => {
   }, [ledgerId]);
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      <LedgerDrawerHeader />
+      <LedgerDrawerHeader title={t("ledger")} />
       <ProgressBar progress={progress} />
       <View style={styles.webViewContainer}>
         <DashboardWebView

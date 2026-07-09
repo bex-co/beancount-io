@@ -122,7 +122,7 @@ const AccountsScreenImpl = (): JSX.Element => {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      <LedgerDrawerHeader />
+      <LedgerDrawerHeader title={t("accounts")} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -135,7 +135,6 @@ const AccountsScreenImpl = (): JSX.Element => {
           />
         }
       >
-        <CommonMargin />
         <BalanceChartCard
           label={t("netWorth")}
           currencySymbol={currencySymbol}

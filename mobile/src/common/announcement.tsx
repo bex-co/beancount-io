@@ -94,7 +94,7 @@ export function Announcement(props: Props): JSX.Element {
     <TouchableOpacity
       style={styles.container}
       onPress={() => {
-        router.navigate("/(app)/(tabs)/setting");
+        router.push("/(app)/settings");
       }}
     >
       <View style={styles.titleContainer}>

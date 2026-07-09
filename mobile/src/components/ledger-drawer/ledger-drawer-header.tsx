@@ -1,30 +1,35 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
-import { ledgerVar } from "@/common/vars";
-import { useListLedgersQuery } from "@/generated-graphql/graphql";
 import { useLedgerDrawer } from "./ledger-drawer-context";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
-    header: {
+    navBar: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
       paddingHorizontal: 16,
-      paddingTop: 4,
-      paddingBottom: 8,
+      paddingVertical: 12,
       backgroundColor: theme.white,
     },
-    headerTitle: {
-      flexShrink: 1,
+    navLeft: {
+      flexDirection: "row",
+      alignItems: "center",
+      width: 64,
+      justifyContent: "flex-start",
+    },
+    navTitle: {
+      flex: 1,
       fontSize: 17,
-      fontWeight: "700",
-      color: theme.text01,
+      fontWeight: "600",
+      color: theme.black90,
+      textAlign: "center",
+    },
+    navRight: {
+      width: 64,
     },
   });
 
@@ -50,22 +55,19 @@ export function LedgerDrawerButton({ color }: { color?: string }): JSX.Element {
   );
 }
 
-/** Slim tab header: hamburger + the active ledger's name. */
-export function LedgerDrawerHeader(): JSX.Element {
+/** Slim tab header: hamburger left, title centered, right placeholder keeps title truly centered. */
+export function LedgerDrawerHeader({ title }: { title: string }): JSX.Element {
   const styles = useThemeStyle(getStyles);
-  const ledgerId = useReactiveVar(ledgerVar);
-  const { data } = useListLedgersQuery();
-  const currentLedgerName =
-    data?.listLedgers?.find((l) => l.id === ledgerId)?.fullName ?? "";
 
   return (
-    <View style={styles.header}>
-      <LedgerDrawerButton />
-      {currentLedgerName ? (
-        <Text style={styles.headerTitle} numberOfLines={1}>
-          {currentLedgerName}
-        </Text>
-      ) : null}
+    <View style={styles.navBar}>
+      <View style={styles.navLeft}>
+        <LedgerDrawerButton />
+      </View>
+      <Text style={styles.navTitle} numberOfLines={1}>
+        {title}
+      </Text>
+      <View style={styles.navRight} />
     </View>
   );
 }

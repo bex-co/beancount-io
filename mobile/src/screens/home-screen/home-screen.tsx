@@ -77,7 +77,7 @@ export const HomeScreenImpl = (): JSX.Element => {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      <LedgerDrawerHeader />
+      <LedgerDrawerHeader title={t("home")} />
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={{ paddingHorizontal: 16 }}
@@ -90,8 +90,6 @@ export const HomeScreenImpl = (): JSX.Element => {
           />
         }
       >
-        <CommonMargin />
-
         <AccountChartsCard
           currency={currency}
           currencySymbol={currencySymbol}
