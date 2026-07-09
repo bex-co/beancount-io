@@ -9,5 +9,4 @@
 - [ ] **m3** — Monarch-style Reports tab (10 tasks) ← from `/pm-brainstorm` 2026-07-06 ("add a reports tab like monarch app")
 - [x] **m4** — Account detail polish (5 tasks) ← from `/pm` request 2026-07-08 (missing back arrow; Journal-style transactions list)
 - [x] **m5** — Settings in the ledger drawer, drop the Settings tab (6 tasks) ← from `/pm` request 2026-07-08 ("learn from monarch, move settings into the left sidebar and then remove the settings tab")
-- [ ] **m6** — Monarch-style center "+" capture tab; Ledger moves to the drawer (7 tasks) ← from `/pm-brainstorm` 2026-07-08 ("for w1") + inbox note 001 (promoted)
 - [ ] **m7** — Dashboard cards tap through to Reports and Accounts (6 tasks) ← from `/pm-brainstorm` 2026-07-08 ("for w1")
