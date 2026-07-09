@@ -67,6 +67,7 @@ export const bg: typeof en = {
   done: "Готово",
   payee: "Получател",
   narration: "Описание",
+  suggestions: "Предложения",
   from: "От",
   to: "До",
   date: "Дата",

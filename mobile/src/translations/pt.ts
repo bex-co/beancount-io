@@ -68,6 +68,7 @@ export const pt: typeof en = {
   done: "Pronto",
   payee: "Beneficiário",
   narration: "Descrição",
+  suggestions: "Sugestões",
   from: "De",
   to: "Para",
   date: "Data",

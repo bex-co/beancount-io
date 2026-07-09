@@ -67,6 +67,7 @@ export const sk: typeof en = {
   done: "Hotovo",
   payee: "Príjemca",
   narration: "Popis",
+  suggestions: "Návrhy",
   from: "Od",
   to: "Pre",
   date: "Dátum",

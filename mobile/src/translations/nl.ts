@@ -67,6 +67,7 @@ export const nl: typeof en = {
   done: "Klaar",
   payee: "Begunstigde",
   narration: "Beschrijving",
+  suggestions: "Suggesties",
   from: "Van",
   to: "Naar",
   date: "Datum",

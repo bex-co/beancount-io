@@ -347,7 +347,7 @@ export function LedgerDrawer({
     router.push("/(app)/settings");
   };
 
-return (
+  return (
     <View style={styles.root}>
       {visible && (
         <View

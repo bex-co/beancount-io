@@ -80,6 +80,7 @@ export const fr: typeof en = {
   done: "Terminé",
   payee: "Bénéficiaire",
   narration: "Libellé",
+  suggestions: "Suggestions",
   from: "De",
   to: "À",
   date: "Date",

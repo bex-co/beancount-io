@@ -1,7 +1,6 @@
-import { useReactiveVar } from "@apollo/client";
 import { useEffect } from "react";
 import { StyleSheet, ViewStyle } from "react-native";
-import { themeVar } from "@/common/vars";
+import { useTheme } from "@/common/theme";
 import Animated, {
   useSharedValue,
   useAnimatedStyle,
@@ -32,7 +31,9 @@ type LoadingTileProps = {
 
 export const LoadingTile = (props: LoadingTileProps) => {
   const { style, mx, height } = props;
-  const theme = useReactiveVar(themeVar);
+  // Resolved theme name from the provider — themeVar itself can hold
+  // "system", which must not be compared against "dark" directly.
+  const theme = useTheme().name;
 
   const dynamicStyles: ViewStyle = {
     ...(mx && { marginHorizontal: mx }),

@@ -78,6 +78,7 @@ export const zh = {
   done: "完成",
   payee: "收款方",
   narration: "备注",
+  suggestions: "建议",
   from: "从",
   to: "到",
   date: "日期",

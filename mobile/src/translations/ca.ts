@@ -67,6 +67,7 @@ export const ca: typeof en = {
   done: "Fet",
   payee: "Beneficiari",
   narration: "Descripció",
+  suggestions: "Suggeriments",
   from: "De",
   to: "A",
   date: "Data",

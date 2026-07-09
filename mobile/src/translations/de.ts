@@ -74,6 +74,7 @@ export const de: typeof en = {
   done: "Fertig",
   payee: "Zahlungsempfänger",
   narration: "Beschreibung",
+  suggestions: "Vorschläge",
   from: "Von",
   to: "An",
   date: "Datum",

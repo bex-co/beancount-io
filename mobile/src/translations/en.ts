@@ -80,6 +80,7 @@ export const en = {
   done: "Done",
   payee: "Payee",
   narration: "Narration",
+  suggestions: "Suggestions",
   from: "From",
   to: "To",
   date: "Date",

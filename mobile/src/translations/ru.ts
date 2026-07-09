@@ -75,6 +75,7 @@ export const ru: typeof en = {
   done: "Готово",
   payee: "Получатель",
   narration: "Описание",
+  suggestions: "Предложения",
   from: "От",
   to: "Кому",
   date: "Дата",

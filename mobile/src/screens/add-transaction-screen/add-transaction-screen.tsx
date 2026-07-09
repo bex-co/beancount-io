@@ -1,5 +1,5 @@
 import * as React from "react";
-import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
 import { useTheme } from "@/common/theme";
 import { i18n } from "@/translations";
@@ -12,8 +12,9 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useToast, usePageView } from "@/common/hooks";
 
-const KeyWidth = ScreenWidth / 3;
-const KeyHeight = 50;
+const KeypadPadding = 12;
+const KeyCellWidth = (ScreenWidth - KeypadPadding * 2) / 3;
+const KeyCellHeight = 62;
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -27,22 +28,60 @@ const getStyles = (theme: ColorTheme) =>
       justifyContent: "center",
       alignItems: "center",
     },
-    txtMoney: {
-      fontSize: 60,
-      color: theme.black,
+    moneyRow: {
+      flexDirection: "row",
+      alignItems: "flex-start",
+      justifyContent: "center",
     },
-    keyButton: {
-      height: KeyHeight,
-      width: KeyWidth,
+    txtCurrencySymbol: {
+      fontSize: 30,
+      fontWeight: "600",
+      marginTop: 12,
+      marginRight: 2,
+    },
+    txtMoney: {
+      fontSize: 64,
+      fontWeight: "700",
+      letterSpacing: -1,
+      fontVariant: ["tabular-nums"],
+    },
+    keypad: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      paddingHorizontal: KeypadPadding,
+      paddingTop: 8,
+      paddingBottom: 4,
+    },
+    keyCell: {
+      width: KeyCellWidth,
+      height: KeyCellHeight,
+      padding: 4,
+    },
+    key: {
+      flex: 1,
       justifyContent: "center",
       alignItems: "center",
-      borderWidth: StyleSheet.hairlineWidth,
-      borderRadius: 0,
+      borderRadius: 14,
+    },
+    keyPressed: {
       backgroundColor: theme.black10,
     },
+    nextKey: {
+      backgroundColor: theme.primary,
+    },
+    nextKeyPressed: {
+      backgroundColor: theme.primaryDark,
+    },
     keyLabel: {
-      fontSize: 20,
+      fontSize: 26,
+      fontWeight: "500",
       color: theme.black,
+      fontVariant: ["tabular-nums"],
+    },
+    nextKeyLabel: {
+      fontSize: 18,
+      fontWeight: "700",
+      color: "#fff",
     },
   });
 
@@ -106,84 +145,78 @@ export function AddTransactionScreen(): JSX.Element {
   };
 
   const currencySymbol = getCurrencySymbol(currentCurrency);
+  const moneyColor = currentMoney === "0.00" ? theme.black60 : theme.black;
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
       <View style={styles.containerCenter}>
-        <Text
-          style={styles.txtMoney}
-        >{`${currencySymbol}${currentMoney}`}</Text>
+        <View style={styles.moneyRow}>
+          <Text style={[styles.txtCurrencySymbol, { color: moneyColor }]}>
+            {currencySymbol}
+          </Text>
+          <Text style={[styles.txtMoney, { color: moneyColor }]}>
+            {currentMoney}
+          </Text>
+        </View>
       </View>
       <QuickAddAccountsSelector onChange={onChange} />
-      <View style={{ flexDirection: "row", flexWrap: "wrap" }}>
+      <View style={styles.keypad}>
         {Keys.map((key) => {
+          const isNext = key.display === i18n.t("next");
           return (
-            <TouchableOpacity
-              key={key.value}
-              activeOpacity={0.5}
-              style={[
-                styles.keyButton,
-                {
-                  backgroundColor:
-                    key.display === i18n.t("next")
-                      ? theme.primary
-                      : theme.black10,
-                },
-              ]}
-              onPress={async () => {
-                if (key.display === "Del" && keyValues.length > 0) {
-                  keyValues.pop();
-                } else if (key.value < 10) {
-                  if (key.display === "0" && keyValues.length > 0) {
-                    keyValues.push(0);
-                  } else if (key.value > 0) {
-                    keyValues.push(key.value);
+            <View key={key.value} style={styles.keyCell}>
+              <Pressable
+                style={({ pressed }) => [
+                  styles.key,
+                  isNext && styles.nextKey,
+                  pressed &&
+                    (isNext ? styles.nextKeyPressed : styles.keyPressed),
+                ]}
+                onPress={async () => {
+                  if (key.display === "Del" && keyValues.length > 0) {
+                    keyValues.pop();
+                  } else if (key.value < 10) {
+                    if (key.display === "0" && keyValues.length > 0) {
+                      keyValues.push(0);
+                    } else if (key.value > 0) {
+                      keyValues.push(key.value);
+                    }
                   }
-                }
-                setCurrentMoney(getMoneyByKeyValues(keyValues));
-                setKeyValues(keyValues);
+                  setCurrentMoney(getMoneyByKeyValues(keyValues));
+                  setKeyValues(keyValues);
 
-                if (key.display === i18n.t("next")) {
-                  if (currentMoney === "0.00") {
-                    toast.showToast({
-                      message: i18n.t("amountEmptyError"),
-                      type: "text",
+                  if (isNext) {
+                    if (currentMoney === "0.00") {
+                      toast.showToast({
+                        message: i18n.t("amountEmptyError"),
+                        type: "text",
+                      });
+                      return;
+                    }
+                    await analytics.track("tap_add_transaction_next", {
+                      money: currentMoney,
                     });
-                    return;
+                    router.replace({
+                      pathname: "/add-transaction-next",
+                      params: {
+                        currentMoney,
+                        currentAsset,
+                        currentExpense,
+                        currentCurrency,
+                        // onRefresh,
+                      },
+                    });
                   }
-                  await analytics.track("tap_add_transaction_next", {
-                    money: currentMoney,
-                  });
-                  router.replace({
-                    pathname: "/add-transaction-next",
-                    params: {
-                      currentMoney,
-                      currentAsset,
-                      currentExpense,
-                      currentCurrency,
-                      // onRefresh,
-                    },
-                  });
-                }
-              }}
-            >
-              {key.display === "Del" ? (
-                <Feather name="delete" size={20} color={theme.black} />
-              ) : (
-                <Text
-                  style={[
-                    styles.keyLabel,
-                    {
-                      color:
-                        key.display === i18n.t("next")
-                          ? theme.white
-                          : theme.black,
-                    },
-                  ]}
-                >
-                  {key.display}
-                </Text>
-              )}
-            </TouchableOpacity>
+                }}
+              >
+                {key.display === "Del" ? (
+                  <Feather name="delete" size={22} color={theme.black} />
+                ) : (
+                  <Text style={isNext ? styles.nextKeyLabel : styles.keyLabel}>
+                    {key.display}
+                  </Text>
+                )}
+              </Pressable>
+            </View>
           );
         })}
       </View>

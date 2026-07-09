@@ -1,12 +1,5 @@
 import { memo, useState } from "react";
-import {
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-  Platform,
-  Pressable,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
 import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getFormatDate } from "@/common/format-util";
@@ -19,7 +12,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { ListItem } from "@/screens/add-transaction-screen/list-item";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useToast, usePageView } from "@/common/hooks";
-import { LedgerGuard, List, useLedgerGuard } from "@/components";
+import { LedgerGuard, useLedgerGuard } from "@/components";
 
 import {
   SelectedAssets,
@@ -36,33 +29,50 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.white,
     },
     topContainer: {
-      height: 260,
+      paddingTop: 36,
+      paddingBottom: 28,
+      paddingHorizontal: 16,
       justifyContent: "center",
       alignItems: "center",
     },
     txtMoney: {
-      fontSize: 60,
+      fontSize: 56,
+      fontWeight: "700",
+      letterSpacing: -1,
       color: theme.black,
+      fontVariant: ["tabular-nums"],
     },
     txtSmallMoney: {
-      fontSize: 25,
+      fontSize: 24,
       color: theme.black,
-      fontWeight: "bold",
-      marginTop: Platform.OS === "ios" ? 10 : 15,
-      letterSpacing: 1,
+      fontWeight: "700",
+      marginTop: 9,
+      letterSpacing: 0.5,
       marginLeft: 1,
+      fontVariant: ["tabular-nums"],
     },
     moneyContainer: {
       flexDirection: "row",
       alignItems: "flex-start",
     },
     payee: {
-      fontSize: 25,
-      color: theme.black,
+      marginTop: 8,
+      fontSize: 16,
+      fontWeight: "500",
+      color: theme.text01,
     },
     date: {
-      fontSize: 25,
-      color: theme.black80,
+      marginTop: 4,
+      fontSize: 14,
+      color: theme.black60,
+    },
+    card: {
+      marginHorizontal: 16,
+      borderWidth: 1,
+      borderColor: theme.black10,
+      borderRadius: 12,
+      overflow: "hidden",
+      backgroundColor: theme.white,
     },
     doneButton: {
       fontWeight: "bold",
@@ -180,7 +190,7 @@ export const AddTransactionNextScreenComponent = () => {
           headerTitle: t("addTransaction"),
           headerRight: () => (
             <Pressable onPress={addEntries} hitSlop={10}>
-              <Text style={styles.doneButton}>Done</Text>
+              <Text style={styles.doneButton}>{t("done")}</Text>
             </Pressable>
           ),
         }}
@@ -195,10 +205,10 @@ export const AddTransactionNextScreenComponent = () => {
               {`${currentMoney.split(".")[1]}`}
             </Text>
           </View>
-          <Text style={styles.payee}>{payee}</Text>
+          {payee ? <Text style={styles.payee}>{payee}</Text> : null}
           <Text style={styles.date}>{date}</Text>
         </View>
-        <List>
+        <View style={styles.card}>
           <ListItem
             title={t("from").toUpperCase()}
             content={assets}
@@ -221,6 +231,7 @@ export const AddTransactionNextScreenComponent = () => {
           <ListItem
             title={t("to").toUpperCase()}
             content={expenses}
+            showDivider
             onPress={async () => {
               analytics.track("tap_expenses_picker", {
                 originalOption: expenses,
@@ -240,11 +251,13 @@ export const AddTransactionNextScreenComponent = () => {
           <ListItem
             title={t("date").toUpperCase()}
             content={date}
+            showDivider
             onPress={showDatePicker}
           />
           <ListItem
             title={t("payee").toUpperCase()}
             content={payee}
+            showDivider
             onPress={() => {
               SelectedPayee.setFn((value: string) => {
                 setPayee(value);
@@ -260,6 +273,7 @@ export const AddTransactionNextScreenComponent = () => {
           <ListItem
             title={t("narration").toUpperCase()}
             content={narration}
+            showDivider
             onPress={() => {
               SelectedNarration.setFn((value: string) => {
                 setNarration(value);
@@ -272,7 +286,7 @@ export const AddTransactionNextScreenComponent = () => {
               });
             }}
           />
-        </List>
+        </View>
         <DateTimePickerModal
           isVisible={isDatePickerVisible}
           mode="date"

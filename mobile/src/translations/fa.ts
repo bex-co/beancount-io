@@ -67,6 +67,7 @@ export const fa: typeof en = {
   done: "تمام",
   payee: "دریافت‌کننده",
   narration: "شرح",
+  suggestions: "پیشنهادها",
   from: "از",
   to: "به",
   date: "تاریخ",

@@ -101,6 +101,20 @@ export type GetLedgerJournalQueryVariables = Exact<{
 
 export type GetLedgerJournalQuery = { getLedgerJournal: { total: number, data: Array<Record<string, number | string>>, is_empty: boolean } };
 
+export type GetLedgerNarrationsQueryVariables = Exact<{
+  ledgerId: string;
+}>;
+
+
+export type GetLedgerNarrationsQuery = { getLedgerNarrations: Array<string> };
+
+export type GetLedgerPayeesQueryVariables = Exact<{
+  ledgerId: string;
+}>;
+
+
+export type GetLedgerPayeesQuery = { getLedgerPayees: Array<string> };
+
 export type HomeChartsQueryVariables = Exact<{
   userId: string;
   ledgerId?: string | null | undefined;
@@ -753,6 +767,88 @@ export type GetLedgerJournalQueryHookResult = ReturnType<typeof useGetLedgerJour
 export type GetLedgerJournalLazyQueryHookResult = ReturnType<typeof useGetLedgerJournalLazyQuery>;
 export type GetLedgerJournalSuspenseQueryHookResult = ReturnType<typeof useGetLedgerJournalSuspenseQuery>;
 export type GetLedgerJournalQueryResult = Apollo.QueryResult<GetLedgerJournalQuery, GetLedgerJournalQueryVariables>;
+export const GetLedgerNarrationsDocument = gql`
+    query getLedgerNarrations($ledgerId: String!) {
+  getLedgerNarrations(ledgerId: $ledgerId)
+}
+    `;
+
+/**
+ * __useGetLedgerNarrationsQuery__
+ *
+ * To run a query within a React component, call `useGetLedgerNarrationsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLedgerNarrationsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLedgerNarrationsQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useGetLedgerNarrationsQuery(baseOptions: Apollo.QueryHookOptions<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables> & ({ variables: GetLedgerNarrationsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>(GetLedgerNarrationsDocument, options);
+      }
+export function useGetLedgerNarrationsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>(GetLedgerNarrationsDocument, options);
+        }
+// @ts-ignore
+export function useGetLedgerNarrationsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>;
+export function useGetLedgerNarrationsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerNarrationsQuery | undefined, GetLedgerNarrationsQueryVariables>;
+export function useGetLedgerNarrationsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>(GetLedgerNarrationsDocument, options);
+        }
+export type GetLedgerNarrationsQueryHookResult = ReturnType<typeof useGetLedgerNarrationsQuery>;
+export type GetLedgerNarrationsLazyQueryHookResult = ReturnType<typeof useGetLedgerNarrationsLazyQuery>;
+export type GetLedgerNarrationsSuspenseQueryHookResult = ReturnType<typeof useGetLedgerNarrationsSuspenseQuery>;
+export type GetLedgerNarrationsQueryResult = Apollo.QueryResult<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>;
+export const GetLedgerPayeesDocument = gql`
+    query getLedgerPayees($ledgerId: String!) {
+  getLedgerPayees(ledgerId: $ledgerId)
+}
+    `;
+
+/**
+ * __useGetLedgerPayeesQuery__
+ *
+ * To run a query within a React component, call `useGetLedgerPayeesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLedgerPayeesQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLedgerPayeesQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useGetLedgerPayeesQuery(baseOptions: Apollo.QueryHookOptions<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables> & ({ variables: GetLedgerPayeesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>(GetLedgerPayeesDocument, options);
+      }
+export function useGetLedgerPayeesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>(GetLedgerPayeesDocument, options);
+        }
+// @ts-ignore
+export function useGetLedgerPayeesSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>;
+export function useGetLedgerPayeesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerPayeesQuery | undefined, GetLedgerPayeesQueryVariables>;
+export function useGetLedgerPayeesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>(GetLedgerPayeesDocument, options);
+        }
+export type GetLedgerPayeesQueryHookResult = ReturnType<typeof useGetLedgerPayeesQuery>;
+export type GetLedgerPayeesLazyQueryHookResult = ReturnType<typeof useGetLedgerPayeesLazyQuery>;
+export type GetLedgerPayeesSuspenseQueryHookResult = ReturnType<typeof useGetLedgerPayeesSuspenseQuery>;
+export type GetLedgerPayeesQueryResult = Apollo.QueryResult<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>;
 export const HomeChartsDocument = gql`
     query HomeCharts($userId: String!, $ledgerId: String) {
   homeCharts(userId: $userId, ledgerId: $ledgerId) {

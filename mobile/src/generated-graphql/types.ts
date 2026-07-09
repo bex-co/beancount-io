@@ -2374,6 +2374,7 @@ export type UserLimits = {
   collaboratorsPerLedgerMax: Scalars['Float']['output'];
   ledgersMax: Scalars['Float']['output'];
   ledgersUsed: Scalars['Float']['output'];
+  maxDirectives: Scalars['Float']['output'];
 };
 
 export type UserListItem = {

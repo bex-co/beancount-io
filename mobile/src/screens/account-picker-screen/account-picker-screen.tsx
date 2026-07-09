@@ -5,7 +5,6 @@ import {
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
 } from "react-native";
 import { useTheme } from "@/common/theme";
 import {
@@ -17,9 +16,12 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import { SelectedAssets, SelectedExpenses } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
 import { Ionicons } from "@expo/vector-icons";
-import { Tabs, FlexCenter, LedgerGuard, useLedgerGuard } from "@/components";
+import { Tabs, LedgerGuard, useLedgerGuard } from "@/components";
+import { LoadingTile } from "@/components/loading-tile";
 import { analytics } from "@/common/analytics";
 import { usePageView } from "@/common/hooks";
+
+const SKELETON_ROW_WIDTHS = [200, 160, 220, 140, 180, 210, 150, 190];
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -35,6 +37,29 @@ const getStyles = (theme: ColorTheme) =>
       justifyContent: "space-between",
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black60,
+    },
+    listItemText: {
+      fontSize: 18,
+      lineHeight: 24,
+      color: theme.black,
+    },
+    tabBarSkeleton: {
+      flexDirection: "row",
+      gap: 16,
+      paddingHorizontal: 16,
+      paddingVertical: 15,
+    },
+    tabTile: {
+      height: 14,
+      width: 64,
+      borderRadius: 7,
+    },
+    // marginVertical fills the same 24px line box as listItemText, keeping
+    // skeleton and loaded rows the same height.
+    rowTile: {
+      height: 14,
+      borderRadius: 7,
+      marginVertical: 5,
     },
   });
 
@@ -78,12 +103,7 @@ export function AccountPickerScreenComponent(): JSX.Element {
                 router.back();
               }}
             >
-              <Text
-                style={{
-                  fontSize: 18,
-                  color: theme.black,
-                }}
-              >
+              <Text style={styles.listItemText} numberOfLines={1}>
                 {op}
               </Text>
               <Ionicons name="chevron-forward" size={24} color={theme.black} />
@@ -104,9 +124,21 @@ export function AccountPickerScreenComponent(): JSX.Element {
 
   if (loading) {
     return (
-      <FlexCenter style={{ backgroundColor: theme.white }}>
-        <ActivityIndicator size="large" color={theme.primary} />
-      </FlexCenter>
+      <View style={styles.container}>
+        <View style={styles.tabBarSkeleton}>
+          <LoadingTile style={styles.tabTile} />
+          <LoadingTile style={styles.tabTile} />
+          <LoadingTile style={styles.tabTile} />
+        </View>
+        {SKELETON_ROW_WIDTHS.map((width, index) => (
+          <View key={index} style={styles.listItem}>
+            <LoadingTile
+              style={StyleSheet.flatten([styles.rowTile, { width }])}
+            />
+            <Ionicons name="chevron-forward" size={24} color={theme.black40} />
+          </View>
+        ))}
+      </View>
     );
   }
 

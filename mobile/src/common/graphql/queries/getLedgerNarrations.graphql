@@ -1,0 +1,3 @@
+query getLedgerNarrations($ledgerId: String!) {
+  getLedgerNarrations(ledgerId: $ledgerId)
+}

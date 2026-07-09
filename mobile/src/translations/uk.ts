@@ -68,6 +68,7 @@ export const uk: typeof en = {
   done: "Готово",
   payee: "Отримувач",
   narration: "Опис",
+  suggestions: "Пропозиції",
   from: "Від",
   to: "До",
   date: "Дата",

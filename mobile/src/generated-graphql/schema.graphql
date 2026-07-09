@@ -1556,6 +1556,7 @@ type UserLimits {
   collaboratorsPerLedgerMax: Float!
   ledgersMax: Float!
   ledgersUsed: Float!
+  maxDirectives: Float!
 }
 
 type UserListItem {
