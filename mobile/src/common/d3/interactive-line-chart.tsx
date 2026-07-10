@@ -69,8 +69,11 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-function triggerHaptic(): void {
-  // Fire-and-forget; haptics are best-effort polish.
+function triggerScrubStart(): void {
+  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
+}
+
+function triggerScrubTick(): void {
   Haptics.selectionAsync().catch(() => undefined);
 }
 
@@ -154,7 +157,7 @@ function InteractiveLineChart({
     if (index !== lastIndexRef.current) {
       lastIndexRef.current = index;
       setScrubIndex(index);
-      triggerHaptic();
+      triggerScrubTick();
     }
   };
 
@@ -165,7 +168,12 @@ function InteractiveLineChart({
         onMoveShouldSetPanResponder: () => hasSeries,
         onPanResponderGrant: (event) => {
           onScrubStart?.();
-          updateScrub(event);
+          // Light impact on initial touch (Robinhood-style "tap-in" feel),
+          // then set the index directly — no tick on the first point.
+          const index = indexFromTouch(event);
+          lastIndexRef.current = index;
+          setScrubIndex(index);
+          triggerScrubStart();
         },
         onPanResponderMove: (event) => updateScrub(event),
         onPanResponderRelease: () => {
