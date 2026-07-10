@@ -13,7 +13,11 @@ import {
 } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
 import { ColorTheme } from "@/types/theme-props";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import { SelectedAssets, SelectedExpenses } from "@/common/globalFnFactory";
+import {
+  SelectedAssets,
+  SelectedExpenses,
+  SelectedLegAccount,
+} from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
 import { Ionicons } from "@expo/vector-icons";
 import { Tabs, LedgerGuard, useLedgerGuard } from "@/components";
@@ -75,10 +79,14 @@ export function AccountPickerScreenComponent(): JSX.Element {
   );
 
   const onSelected =
-    type === "assets" ? SelectedAssets.getFn() : SelectedExpenses.getFn();
+    type === "assets"
+      ? SelectedAssets.getFn()
+      : type === "leg"
+        ? SelectedLegAccount.getFn()
+        : SelectedExpenses.getFn();
 
   const optionTabs: OptionTab[] =
-    type === "assets" ? assetsOptionTabs : expensesOptionTabs;
+    type === "assets" || type === "leg" ? assetsOptionTabs : expensesOptionTabs;
 
   const theme = useTheme().colorTheme;
   const styles = getStyles(theme);

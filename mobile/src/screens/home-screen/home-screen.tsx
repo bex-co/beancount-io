@@ -1,4 +1,4 @@
-import { RefreshControl, ScrollView, StyleSheet, Text } from "react-native";
+import { RefreshControl, ScrollView, StyleSheet } from "react-native";
 import { useState } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
@@ -18,7 +18,7 @@ import { useSession } from "@/common/hooks/use-session";
 import { themeVar } from "@/common/vars";
 import { useReactiveVar } from "@apollo/client";
 import { useThemeStyle, usePageView } from "@/common/hooks";
-import { Button, LedgerDrawerHeader } from "@/components";
+import { LedgerDrawerHeader, SplitButton } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 
 const getStyles = (theme: ColorTheme) =>
@@ -26,10 +26,6 @@ const getStyles = (theme: ColorTheme) =>
     container: {
       flex: 1,
       backgroundColor: theme.white,
-    },
-    quickAddLabel: {
-      color: theme.white,
-      fontSize: 20,
     },
   });
 
@@ -100,18 +96,25 @@ export const HomeScreenImpl = (): JSX.Element => {
           error={Boolean(netWorthError || accountsError)}
         />
 
-        <Button
-          type="primary"
+        <SplitButton
+          label={t("quickAdd")}
+          onMenuOpen={() => analytics.track("tap_quick_add_menu", {})}
           onPress={async () => {
             analytics.track("tap_quick_add", {});
             AddTransactionCallback.setFn(onRefresh);
-            router.navigate({
-              pathname: "/add-transaction",
-            });
+            router.navigate({ pathname: "/add-transaction" });
           }}
-        >
-          <Text style={styles.quickAddLabel}>{t("quickAdd")}</Text>
-        </Button>
+          menuItems={[
+            {
+              label: t("multiLegEntry"),
+              onPress: async () => {
+                analytics.track("tap_split_add", {});
+                AddTransactionCallback.setFn(onRefresh);
+                router.navigate({ pathname: "/add-transaction-multi" });
+              },
+            },
+          ]}
+        />
         <CommonMargin />
 
         <RecentTransactionsCard

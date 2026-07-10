@@ -14,3 +14,4 @@ export * from "./dashboard-webview";
 export * from "./ledger-guard";
 export * from "./ledger-drawer";
 export * from "./account-list";
+export * from "./split-button";

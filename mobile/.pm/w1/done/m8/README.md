@@ -1,19 +1,19 @@
 # w1 · m8 — Multi-leg transaction entry from Home
 
-**Worker:** worker1 **Goal:** From Home, a split Quick Add button opens a multi-leg editor so any balanced N-posting beancount transaction (paychecks, split bills, reimbursements) can be captured on the phone, with the final leg auto-balancing. **Status:** todo
+**Worker:** worker1 **Goal:** From Home, a split Quick Add button opens a multi-leg editor so any balanced N-posting beancount transaction (paychecks, split bills, reimbursements) can be captured on the phone, with the final leg auto-balancing. **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                 | est | depends_on |
 | ---- | --------------------------------------------------------------------- | --- | ---------- |
-| t001 | Split-button component + Home wiring (Quick Add ▾ with anchored menu) | 40m | —          |
-| t002 | Multi-leg route + screen scaffold (date/payee/narration, Done header) | 40m | t001       |
-| t003 | Legs list editor: account + signed amount rows, add/remove legs       | 60m | t002       |
-| t004 | Auto-balance + validation: remainder footer, last-leg auto-fill       | 40m | t003       |
-| t005 | Save N postings via `useAddEntriesToRemote` + refresh parity          | 30m | t004       |
-| t006 | UX pass — light/dark, i18n, loading bg, safe area, analytics          | 40m | t005       |
-| t007 | Simplify pass over multi-leg entry code                               | 30m | t006       |
-| t008 | Unit tests for multi-leg balancing, postings builder, validation      | 40m | t006       |
+| t001 | Split-button component + Home wiring (Quick Add ▾ with anchored menu) | 40m | —          | — **DONE** |
+| t002 | Multi-leg route + screen scaffold (date/payee/narration, Done header) | 40m | t001       | — **DONE** |
+| t003 | Legs list editor: account + signed amount rows, add/remove legs       | 60m | t002       | — **DONE** |
+| t004 | Auto-balance + validation: remainder footer, last-leg auto-fill       | 40m | t003       | — **DONE** |
+| t005 | Save N postings via `useAddEntriesToRemote` + refresh parity          | 30m | t004       | — **DONE** |
+| t006 | UX pass — light/dark, i18n, loading bg, safe area, analytics          | 40m | t005       | — **DONE** |
+| t007 | Simplify pass over multi-leg entry code                               | 30m | t006       | — **DONE** |
+| t008 | Unit tests for multi-leg balancing, postings builder, validation      | 40m | t006       | — **DONE** |
 
 ## Definition of done
 
