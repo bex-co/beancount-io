@@ -12,7 +12,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { NetworkStatus, useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
@@ -54,8 +54,8 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.white,
     },
     sectionTitle: {
-      fontSize: 18,
-      fontWeight: "bold",
+      fontSize: fontSizes.xl,
+      fontWeight: fontWeights.medium,
       color: theme.text01,
       marginTop: 4,
       marginBottom: 8,
@@ -67,7 +67,7 @@ const getStyles = (theme: ColorTheme) =>
       paddingVertical: 40,
     },
     stateText: {
-      fontSize: 14,
+      fontSize: fontSizes.md,
       color: theme.black60,
       textAlign: "center",
     },
@@ -79,7 +79,7 @@ const getStyles = (theme: ColorTheme) =>
       gap: 8,
     },
     footerText: {
-      fontSize: 14,
+      fontSize: fontSizes.md,
       color: theme.black60,
     },
   });

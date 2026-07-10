@@ -11,6 +11,11 @@ Module.prototype.require = function (this: NodeModule, id: string) {
       Appearance: {
         getColorScheme: () => mockColorScheme,
       },
+      Platform: {
+        OS: "ios",
+        select: (options: { ios?: unknown; default?: unknown }) =>
+          "ios" in options ? options.ios : options.default,
+      },
     };
   }
 

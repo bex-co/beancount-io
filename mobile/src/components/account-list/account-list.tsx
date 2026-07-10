@@ -9,7 +9,8 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { groupThousands } from "@/common/number-utils";
@@ -33,13 +34,13 @@ const getStyles = (theme: ColorTheme) =>
       marginBottom: 8,
     },
     label: {
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
     },
     headline: {
-      fontSize: 28,
-      fontWeight: "bold",
+      fontSize: fontSizes.display,
+      fontWeight: fontWeights.medium,
       color: theme.text01,
     },
     row: {
@@ -56,20 +57,19 @@ const getStyles = (theme: ColorTheme) =>
       marginRight: 12,
     },
     nameTop: {
-      fontSize: 16,
+      fontSize: fontSizes.lg,
       color: theme.text01,
     },
     nameChild: {
-      fontSize: 15,
+      fontSize: fontSizes.md,
       color: theme.black80,
     },
     valueTop: {
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: fontSizes.lg,
       color: theme.text01,
     },
     valueChild: {
-      fontSize: 15,
+      fontSize: fontSizes.md,
       color: theme.black80,
     },
     separator: {
@@ -79,7 +79,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     empty: {
       paddingHorizontal: 16,
-      fontSize: 14,
+      fontSize: fontSizes.md,
       color: theme.black80,
     },
   });
@@ -175,10 +175,13 @@ export function AccountListPage({
         <Text style={nameStyle} numberOfLines={1}>
           {node.name}
         </Text>
-        <Text style={valueStyle}>
+        <AmountText
+          mono={depth === 0 ? "medium" : "regular"}
+          style={valueStyle}
+        >
           {currencySymbol}
           {groupThousands(node.value)}
-        </Text>
+        </AmountText>
       </>
     );
 
@@ -229,7 +232,7 @@ export function AccountListPage({
     <View style={scrollable ? styles.container : undefined}>
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
-        <Text style={styles.headline}>{total}</Text>
+        <AmountText style={styles.headline}>{total}</AmountText>
       </View>
       {items.length === 0 ? (
         <Text style={styles.empty}>{t("noAccounts")}</Text>

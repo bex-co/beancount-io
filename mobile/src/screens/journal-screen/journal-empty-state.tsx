@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle, useTheme } from "@/common/hooks";
+import { fontSizes, fontWeights } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
 
@@ -23,15 +24,15 @@ const getStyles = (theme: ColorTheme) =>
       marginBottom: 24,
     },
     title: {
-      fontSize: 24,
-      fontWeight: "700",
+      fontSize: fontSizes.xxl,
+      fontWeight: fontWeights.medium,
       color: theme.black90,
       textAlign: "center",
       marginBottom: 8,
     },
     message: {
-      fontSize: 16,
-      fontWeight: "400",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.regular,
       color: theme.black60,
       textAlign: "center",
       marginBottom: 32,
@@ -42,8 +43,8 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "flex-start",
     },
     instructionsTitle: {
-      fontSize: 16,
-      fontWeight: "600",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
       color: theme.black90,
       marginBottom: 16,
     },
@@ -54,25 +55,25 @@ const getStyles = (theme: ColorTheme) =>
       paddingLeft: 4,
     },
     bullet: {
-      fontSize: 16,
+      fontSize: fontSizes.lg,
       color: theme.primary,
       marginRight: 12,
       marginTop: 2,
     },
     instructionText: {
       flex: 1,
-      fontSize: 15,
-      fontWeight: "400",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.regular,
       color: theme.black80,
       lineHeight: 22,
     },
     finalMessage: {
-      fontSize: 15,
-      fontWeight: "400",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.regular,
       color: theme.black60,
       textAlign: "center",
       marginTop: 24,
-      lineHeight: 22,
+      lineHeight: 20,
       fontStyle: "italic",
     },
   });

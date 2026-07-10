@@ -2,6 +2,7 @@ import { useEffect } from "react";
 import { StyleSheet, Text } from "react-native";
 import { useRouter } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
+import { fontSizes } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
@@ -22,7 +23,7 @@ const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     empty: {
       paddingHorizontal: 16,
-      fontSize: 14,
+      fontSize: fontSizes.md,
       color: theme.black80,
     },
   });

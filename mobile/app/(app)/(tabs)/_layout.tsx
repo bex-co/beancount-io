@@ -35,9 +35,12 @@ export default function TabLayout() {
         headerShown: false,
         tabBarButton: HapticTab,
         tabBarActiveTintColor: theme.primary,
+        // Without an explicit inactive tint, react-navigation falls back to
+        // its light-theme gray, which is unreadable on the dark tab bar.
+        tabBarInactiveTintColor: theme.black80,
         tabBarStyle: {
           backgroundColor: theme.white,
-          borderTopColor: theme.black40,
+          borderTopColor: theme.black10,
         },
         lazy: false,
       }}

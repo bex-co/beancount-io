@@ -9,7 +9,7 @@ import {
   type ViewStyle,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useTheme } from "@/common/theme";
+import { fontSizes, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ColorTheme } from "@/types/theme-props";
 
@@ -45,7 +45,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     primaryLabel: {
       color: theme.white,
-      fontSize: 16,
+      fontSize: fontSizes.lg,
     },
     divider: {
       width: StyleSheet.hairlineWidth,
@@ -86,7 +86,7 @@ const getStyles = (theme: ColorTheme) =>
       borderTopColor: theme.black40,
     },
     menuItemText: {
-      fontSize: 16,
+      fontSize: fontSizes.lg,
       color: theme.black,
     },
   });

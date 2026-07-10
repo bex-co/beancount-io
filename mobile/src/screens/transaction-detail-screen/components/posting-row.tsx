@@ -1,7 +1,8 @@
 import { StyleSheet, Text, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
-import { useTheme } from "@/common/theme";
+import { fonts, fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { PostingDisplayRow } from "../selectors/select-transaction-detail";
 
@@ -21,13 +22,13 @@ const getStyles = (theme: ColorTheme) =>
     },
     account: {
       flex: 1,
-      fontSize: 14,
-      fontWeight: "500",
+      fontSize: fontSizes.md,
+      fontFamily: fonts.mono,
+      fontWeight: fontWeights.medium,
       color: theme.primary,
     },
     amount: {
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: fontSizes.md,
       flexShrink: 0,
     },
   });
@@ -62,9 +63,9 @@ export function PostingRow({
       <Text style={styles.account} numberOfLines={1} ellipsizeMode="middle">
         {posting.account}
       </Text>
-      <Text style={[styles.amount, { color: amountColor }]}>
+      <AmountText mono="medium" style={[styles.amount, { color: amountColor }]}>
         {posting.amount}
-      </Text>
+      </AmountText>
       <Ionicons name="chevron-forward" size={16} color={theme.black60} />
     </TouchableOpacity>
   );

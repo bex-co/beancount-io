@@ -1,5 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -31,22 +31,22 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
     },
     title: {
-      fontSize: 12,
+      fontSize: fontSizes.xs,
       lineHeight: 16,
-      fontWeight: "600",
+      fontWeight: fontWeights.medium,
       letterSpacing: 0.8,
       color: theme.black80,
       marginBottom: 2,
     },
     content: {
-      fontSize: 16,
+      fontSize: fontSizes.lg,
       lineHeight: 20,
-      fontWeight: "500",
+      fontWeight: fontWeights.medium,
       color: theme.text01,
     },
     placeholder: {
       color: theme.black60,
-      fontWeight: "400",
+      fontWeight: fontWeights.regular,
     },
     // Tile margins fill the same 16px/20px line boxes as title/content, so
     // skeleton and loaded rows are pixel-identical in height.

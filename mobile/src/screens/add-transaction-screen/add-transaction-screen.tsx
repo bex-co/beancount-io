@@ -1,7 +1,8 @@
 import * as React from "react";
 import { Pressable, StyleSheet, Text, View } from "react-native";
 import { Feather } from "@expo/vector-icons";
-import { useTheme } from "@/common/theme";
+import { amountStyle, fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { i18n } from "@/translations";
 import { ScreenWidth } from "@/common/screen-util";
 import { QuickAddAccountsSelector } from "@/screens/add-transaction-screen/quick-add-accounts-selector";
@@ -34,16 +35,15 @@ const getStyles = (theme: ColorTheme) =>
       justifyContent: "center",
     },
     txtCurrencySymbol: {
-      fontSize: 30,
-      fontWeight: "600",
+      fontSize: fontSizes.display,
+      fontWeight: fontWeights.medium,
       marginTop: 12,
       marginRight: 2,
     },
     txtMoney: {
-      fontSize: 64,
-      fontWeight: "700",
+      fontSize: fontSizes.hero,
+      fontWeight: fontWeights.medium,
       letterSpacing: -1,
-      fontVariant: ["tabular-nums"],
     },
     keypad: {
       flexDirection: "row",
@@ -73,14 +73,14 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.primaryDark,
     },
     keyLabel: {
-      fontSize: 26,
-      fontWeight: "500",
+      ...amountStyle,
+      fontSize: fontSizes.xxl,
+      fontWeight: fontWeights.medium,
       color: theme.black,
-      fontVariant: ["tabular-nums"],
     },
     nextKeyLabel: {
-      fontSize: 18,
-      fontWeight: "700",
+      fontSize: fontSizes.xl,
+      fontWeight: fontWeights.medium,
       color: "#fff",
     },
   });
@@ -153,9 +153,9 @@ export function AddTransactionScreen(): JSX.Element {
           <Text style={[styles.txtCurrencySymbol, { color: moneyColor }]}>
             {currencySymbol}
           </Text>
-          <Text style={[styles.txtMoney, { color: moneyColor }]}>
+          <AmountText style={[styles.txtMoney, { color: moneyColor }]}>
             {currentMoney}
-          </Text>
+          </AmountText>
         </View>
       </View>
       <QuickAddAccountsSelector onChange={onChange} />

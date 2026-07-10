@@ -1,6 +1,12 @@
 import { memo, useState } from "react";
 import { ScrollView, StyleSheet, Text, View, Pressable } from "react-native";
-import { useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  headerActionStyle,
+  useTheme,
+} from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getFormatDate } from "@/common/format-util";
 import { useAddEntriesToRemote } from "@/screens/add-transaction-screen/hooks/use-add-entries-to-remote";
@@ -36,20 +42,18 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
     },
     txtMoney: {
-      fontSize: 56,
-      fontWeight: "700",
+      fontSize: fontSizes.hero,
+      fontWeight: fontWeights.medium,
       letterSpacing: -1,
       color: theme.black,
-      fontVariant: ["tabular-nums"],
     },
     txtSmallMoney: {
-      fontSize: 24,
+      fontSize: fontSizes.xxl,
       color: theme.black,
-      fontWeight: "700",
+      fontWeight: fontWeights.medium,
       marginTop: 9,
       letterSpacing: 0.5,
       marginLeft: 1,
-      fontVariant: ["tabular-nums"],
     },
     moneyContainer: {
       flexDirection: "row",
@@ -57,13 +61,13 @@ const getStyles = (theme: ColorTheme) =>
     },
     payee: {
       marginTop: 8,
-      fontSize: 16,
-      fontWeight: "500",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
       color: theme.text01,
     },
     date: {
       marginTop: 4,
-      fontSize: 14,
+      fontSize: fontSizes.md,
       color: theme.black60,
     },
     card: {
@@ -74,11 +78,7 @@ const getStyles = (theme: ColorTheme) =>
       overflow: "hidden",
       backgroundColor: theme.white,
     },
-    doneButton: {
-      fontWeight: "bold",
-      color: theme.primary,
-      fontSize: 16,
-    },
+    doneButton: headerActionStyle(theme),
   });
 
 export const AddTransactionNextScreenComponent = () => {
@@ -198,12 +198,12 @@ export const AddTransactionNextScreenComponent = () => {
       <ScrollView>
         <View style={styles.topContainer}>
           <View style={styles.moneyContainer}>
-            <Text style={styles.txtMoney}>
+            <AmountText style={styles.txtMoney}>
               {`${currencySymbol}${currentMoney.split(".")[0]}`}
-            </Text>
-            <Text style={styles.txtSmallMoney}>
+            </AmountText>
+            <AmountText style={styles.txtSmallMoney}>
               {`${currentMoney.split(".")[1]}`}
-            </Text>
+            </AmountText>
           </View>
           {payee ? <Text style={styles.payee}>{payee}</Text> : null}
           <Text style={styles.date}>{date}</Text>

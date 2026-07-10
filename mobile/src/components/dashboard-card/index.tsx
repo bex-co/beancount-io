@@ -9,7 +9,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 
 const getStyles = (theme: ColorTheme) =>
@@ -31,8 +31,8 @@ const getStyles = (theme: ColorTheme) =>
     },
     title: {
       flex: 1,
-      fontSize: 18,
-      fontWeight: "bold",
+      fontSize: fontSizes.xl,
+      fontWeight: fontWeights.medium,
       color: theme.text01,
     },
     seeAll: {
@@ -40,8 +40,8 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
     },
     seeAllText: {
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: theme.primary,
       marginRight: 2,
     },

@@ -1,7 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { ColorTheme } from "@/types/theme-props";
 import {
   JournalDirectiveType,
@@ -30,8 +31,8 @@ const getStyles = (theme: ColorTheme) =>
       flexShrink: 0,
     },
     avatarText: {
-      fontSize: 14,
-      fontWeight: "700",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: "#fff",
     },
     middle: {
@@ -41,8 +42,8 @@ const getStyles = (theme: ColorTheme) =>
       gap: 6,
     },
     name: {
-      fontSize: 15,
-      fontWeight: "500",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
       color: theme.black90,
       flexShrink: 1,
     },
@@ -53,23 +54,22 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.warning,
     },
     badgeText: {
-      fontSize: 11,
-      fontWeight: "700",
+      fontSize: fontSizes.xs,
+      fontWeight: fontWeights.medium,
       color: "#fff",
     },
     typeLabel: {
-      fontSize: 12,
+      fontSize: fontSizes.xs,
       color: theme.black60,
       flexShrink: 1,
     },
     amount: {
-      fontSize: 15,
-      fontWeight: "500",
+      fontSize: fontSizes.md,
       marginLeft: 8,
       flexShrink: 0,
     },
     amountPositive: {
-      color: "#07A35A",
+      color: theme.success,
     },
     amountNeutral: {
       color: theme.black90,
@@ -184,18 +184,22 @@ export const JournalEntryItem: React.FC<JournalEntryItemProps> = ({
       </View>
 
       {amountStr ? (
-        <Text
+        <AmountText
+          mono="medium"
           style={[
             styles.amount,
             isPositive ? styles.amountPositive : styles.amountNeutral,
           ]}
         >
           {isPositive ? `+${amountStr}` : amountStr}
-        </Text>
+        </AmountText>
       ) : (
-        <Text style={[styles.amount, { color: theme.black60 }]}>
+        <AmountText
+          mono="medium"
+          style={[styles.amount, { color: theme.black60 }]}
+        >
           {entry.directive_type}
-        </Text>
+        </AmountText>
       )}
     </>
   );

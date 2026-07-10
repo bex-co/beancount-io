@@ -1,6 +1,7 @@
 import { useEffect } from "react";
 import { StyleSheet, Text } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
+import { fontSizes } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
@@ -26,7 +27,7 @@ const getStyles = (theme: ColorTheme) =>
     subtitle: {
       paddingHorizontal: 16,
       marginBottom: 12,
-      fontSize: 13,
+      fontSize: fontSizes.sm,
       color: theme.black80,
     },
   });

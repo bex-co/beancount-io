@@ -11,7 +11,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import BottomSheet from "@gorhom/bottom-sheet";
 import { analytics } from "@/common/analytics";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
@@ -56,8 +56,8 @@ const getStyles = (theme: ColorTheme) =>
       paddingVertical: 40,
     },
     errorText: {
-      fontSize: 16,
-      fontWeight: "500",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
       color: theme.black60,
       textAlign: "center",
       lineHeight: 24,
@@ -70,7 +70,7 @@ const getStyles = (theme: ColorTheme) =>
       gap: 8,
     },
     loadingFooterText: {
-      fontSize: 14,
+      fontSize: fontSizes.md,
       color: theme.black60,
     },
   });

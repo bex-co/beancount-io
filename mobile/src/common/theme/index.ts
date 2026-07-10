@@ -1,6 +1,26 @@
-import { Appearance } from "react-native";
+import { Appearance, Platform } from "react-native";
 import { createTheming } from "@callstack/react-theme-provider";
 import { ThemeProps, ColorTheme, AntdTheme } from "@/types/theme-props";
+import { isExpoGo } from "../expo-env";
+import { resolveMonoFontFamily } from "./typography";
+
+/** Platform-resolved font families; tokens live in ./typography.ts. */
+export const fonts = {
+  mono: resolveMonoFontFamily(Platform.OS, { embedded: !isExpoGo }),
+  monoMedium: resolveMonoFontFamily(Platform.OS, {
+    embedded: !isExpoGo,
+    weight: "medium",
+  }),
+} as const;
+
+export {
+  amountMaxFontSizeMultiplier,
+  amountStyle,
+  fontSizes,
+  fontWeights,
+  headerActionStyle,
+  monoMinFontSize,
+} from "./typography";
 
 export const getSystemColorScheme = () => {
   const colorScheme = Appearance.getColorScheme();

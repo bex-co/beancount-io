@@ -7,6 +7,8 @@
     "start": "expo start --tunnel",
     "android": "expo start --android",
     "ios": "expo start --ios",
+    "android:build": "expo run:android",
+    "ios:build": "expo run:ios",
     "ios:device": "expo run:ios --device",
     "test": "npm run lint && npm run typecheck && npm run test:unit",
     "test:unit": "node ./scripts/jest-lite-runner.js",

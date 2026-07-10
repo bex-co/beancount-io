@@ -136,62 +136,14 @@ export function isJournalTransaction(
   return directive.directive_type === DirectiveType.TRANSACTION;
 }
 
-export function isJournalBalance(
-  directive: JournalDirectiveType,
-): directive is JournalBalance {
-  return directive.directive_type === DirectiveType.BALANCE;
-}
-
-export function isJournalCommodity(
-  directive: JournalDirectiveType,
-): directive is JournalCommodity {
-  return directive.directive_type === DirectiveType.COMMODITY;
-}
-
 export function isJournalClose(
   directive: JournalDirectiveType,
 ): directive is JournalClose {
   return directive.directive_type === DirectiveType.CLOSE;
 }
 
-export function isJournalCustom(
-  directive: JournalDirectiveType,
-): directive is JournalCustom {
-  return directive.directive_type === DirectiveType.CUSTOM;
-}
-
-export function isJournalDocument(
-  directive: JournalDirectiveType,
-): directive is JournalDocument {
-  return directive.directive_type === DirectiveType.DOCUMENT;
-}
-
-export function isJournalEvent(
-  directive: JournalDirectiveType,
-): directive is JournalEvent {
-  return directive.directive_type === DirectiveType.EVENT;
-}
-
-export function isJournalNote(
-  directive: JournalDirectiveType,
-): directive is JournalNote {
-  return directive.directive_type === DirectiveType.NOTE;
-}
-
 export function isJournalOpen(
   directive: JournalDirectiveType,
 ): directive is JournalOpen {
   return directive.directive_type === DirectiveType.OPEN;
-}
-
-export function isJournalPad(
-  directive: JournalDirectiveType,
-): directive is JournalPad {
-  return directive.directive_type === DirectiveType.PAD;
-}
-
-export function isJournalPrice(
-  directive: JournalDirectiveType,
-): directive is JournalPrice {
-  return directive.directive_type === DirectiveType.PRICE;
 }

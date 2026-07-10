@@ -11,7 +11,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle } from "@/common/hooks";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerDrawerButton } from "@/components/ledger-drawer";
@@ -443,9 +443,9 @@ const getFilterStyles = (theme: ColorTheme) =>
       opacity: 0.7,
     },
     filterButtonText: {
-      fontSize: 12,
+      fontSize: fontSizes.xs,
       color: theme.black90,
-      fontWeight: "500",
+      fontWeight: fontWeights.medium,
     },
     filterButtonTextActive: {
       color: theme.white,
@@ -466,8 +466,8 @@ const getNavStyles = (theme: ColorTheme) =>
     },
     navTitle: {
       flex: 1,
-      fontSize: 17,
-      fontWeight: "600",
+      fontSize: fontSizes.xl,
+      fontWeight: fontWeights.medium,
       color: theme.black90,
       textAlign: "center",
     },
@@ -498,7 +498,7 @@ const getNavStyles = (theme: ColorTheme) =>
     searchInput: {
       flex: 1,
       marginLeft: 6,
-      fontSize: 15,
+      fontSize: fontSizes.lg,
       color: theme.black90,
     },
     searchPlaceholder: {

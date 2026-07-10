@@ -55,7 +55,10 @@
       [
         "expo-font",
         {
-          "fonts": ["./src/assets/fonts/SpaceMono-Regular.ttf"]
+          "fonts": [
+            "./src/assets/fonts/JetBrainsMono-Regular.ttf",
+            "./src/assets/fonts/JetBrainsMono-Medium.ttf"
+          ]
         }
       ],
       [

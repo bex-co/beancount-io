@@ -11,7 +11,8 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -49,7 +50,7 @@ const getStyles = (theme: ColorTheme) =>
       paddingVertical: 40,
     },
     stateText: {
-      fontSize: 14,
+      fontSize: fontSizes.md,
       color: theme.black60,
       textAlign: "center",
     },
@@ -59,12 +60,12 @@ const getStyles = (theme: ColorTheme) =>
       paddingBottom: 8,
     },
     heroAmount: {
-      fontSize: 36,
-      fontWeight: "700",
+      fontSize: fontSizes.heroSm,
+      fontWeight: fontWeights.medium,
     },
     heroSubtitle: {
       marginTop: 6,
-      fontSize: 14,
+      fontSize: fontSizes.md,
       color: theme.black60,
       textAlign: "center",
     },
@@ -76,13 +77,13 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.warning,
     },
     pillText: {
-      fontSize: 12,
-      fontWeight: "700",
+      fontSize: fontSizes.xs,
+      fontWeight: fontWeights.medium,
       color: "#fff",
     },
     sectionTitle: {
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
       marginTop: 20,
       marginBottom: 8,
@@ -107,14 +108,14 @@ const getStyles = (theme: ColorTheme) =>
       borderTopColor: theme.black10,
     },
     detailLabel: {
-      fontSize: 14,
+      fontSize: fontSizes.md,
       color: theme.black60,
       flexShrink: 0,
     },
     detailValue: {
       flex: 1,
-      fontSize: 14,
-      fontWeight: "500",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: theme.text01,
       textAlign: "right",
     },
@@ -218,14 +219,14 @@ const TransactionDetailImpl = ({
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.hero}>
-          <Text
+          <AmountText
             style={[
               styles.heroAmount,
               { color: hero.isPositive ? theme.success : theme.text01 },
             ]}
           >
             {hero.text || title}
-          </Text>
+          </AmountText>
           {entry.payee && entry.narration ? (
             <Text style={styles.heroSubtitle}>{entry.narration}</Text>
           ) : null}

@@ -1,6 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoney, groupThousands } from "@/common/number-utils";
@@ -29,8 +30,8 @@ const getStyles = (theme: ColorTheme) =>
       flexShrink: 0,
     },
     avatarText: {
-      fontSize: 14,
-      fontWeight: "700",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: "#fff",
     },
     middle: {
@@ -40,8 +41,8 @@ const getStyles = (theme: ColorTheme) =>
       gap: 6,
     },
     title: {
-      fontSize: 15,
-      fontWeight: "500",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
       color: theme.black90,
       flexShrink: 1,
     },
@@ -52,20 +53,19 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.warning,
     },
     badgeText: {
-      fontSize: 11,
-      fontWeight: "700",
+      fontSize: fontSizes.xs,
+      fontWeight: fontWeights.medium,
       color: "#fff",
     },
     right: {
       alignItems: "flex-end",
     },
     change: {
-      fontSize: 15,
-      fontWeight: "500",
+      fontSize: fontSizes.md,
     },
     balance: {
       marginTop: 2,
-      fontSize: 12,
+      fontSize: fontSizes.xs,
       color: theme.black60,
     },
   });
@@ -113,13 +113,16 @@ export function AccountEntryRow({
       </View>
 
       <View style={styles.right}>
-        <Text style={[styles.change, { color: changeColor }]}>
+        <AmountText
+          mono="medium"
+          style={[styles.change, { color: changeColor }]}
+        >
           {formatSignedMoney(row.change, currencySymbol, true)}
-        </Text>
-        <Text style={styles.balance}>
+        </AmountText>
+        <AmountText style={styles.balance}>
           {t("balance")}: {currencySymbol}
           {groupThousands(row.balance)}
-        </Text>
+        </AmountText>
       </View>
     </>
   );

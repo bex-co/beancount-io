@@ -1,5 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
+import { fontSizes, fontWeights } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 
 export type PillOption<T extends string> = {
@@ -31,8 +32,8 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.primary,
     },
     label: {
-      fontSize: 13,
-      fontWeight: "600",
+      fontSize: fontSizes.sm,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
     },
     labelActive: {

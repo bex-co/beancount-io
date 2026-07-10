@@ -1,6 +1,8 @@
 import React from "react";
 import { Text, View, StyleSheet } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
+import { fonts, fontSizes, fontWeights } from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { ColorTheme } from "@/types/theme-props";
 
 const getStyles = (theme: ColorTheme) =>
@@ -15,8 +17,8 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.black10,
     },
     balanceSectionHeaderText: {
-      fontSize: 12,
-      fontWeight: "600",
+      fontSize: fontSizes.xs,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
     },
     balanceRow: {
@@ -31,14 +33,13 @@ const getStyles = (theme: ColorTheme) =>
       borderBottomWidth: 0,
     },
     balanceAccount: {
-      fontSize: 13,
-      fontFamily: "monospace",
+      fontSize: fontSizes.sm,
+      fontFamily: fonts.mono,
       color: theme.text01,
       flex: 1,
     },
     balanceAmount: {
-      fontSize: 13,
-      fontFamily: "monospace",
+      fontSize: fontSizes.sm,
       color: theme.text01,
       textAlign: "right",
     },
@@ -73,7 +74,9 @@ export const BalanceSection: React.FC<BalanceSectionProps> = ({
           ]}
         >
           <Text style={styles.balanceAccount}>{balance.account}</Text>
-          <Text style={styles.balanceAmount}>{balance.amount}</Text>
+          <AmountText mono="regular" style={styles.balanceAmount}>
+            {balance.amount}
+          </AmountText>
         </View>
       ))}
     </View>

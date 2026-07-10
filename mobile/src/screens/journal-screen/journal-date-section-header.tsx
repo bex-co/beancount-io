@@ -1,6 +1,8 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
+import { fontSizes, fontWeights } from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { ColorTheme } from "@/types/theme-props";
 
 const getStyles = (theme: ColorTheme) =>
@@ -14,13 +16,13 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.black10,
     },
     date: {
-      fontSize: 13,
-      fontWeight: "500",
+      fontSize: fontSizes.sm,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
     },
     total: {
-      fontSize: 13,
-      fontWeight: "500",
+      fontSize: fontSizes.sm,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
     },
   });
@@ -38,7 +40,7 @@ export const JournalDateSectionHeader: React.FC<
   return (
     <View style={styles.container}>
       <Text style={styles.date}>{displayDate}</Text>
-      <Text style={styles.total}>{total}</Text>
+      <AmountText style={styles.total}>{total}</AmountText>
     </View>
   );
 };

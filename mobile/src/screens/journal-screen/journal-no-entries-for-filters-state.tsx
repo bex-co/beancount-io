@@ -1,6 +1,7 @@
 import { StyleSheet, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle, useTheme } from "@/common/hooks";
+import { fontSizes, fontWeights } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
 
@@ -23,8 +24,8 @@ const getStyles = (theme: ColorTheme) =>
       marginBottom: 20,
     },
     message: {
-      fontSize: 16,
-      fontWeight: "500",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
       textAlign: "center",
       lineHeight: 24,

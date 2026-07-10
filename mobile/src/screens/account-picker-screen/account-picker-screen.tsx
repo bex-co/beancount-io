@@ -6,7 +6,7 @@ import {
   ScrollView,
   TouchableOpacity,
 } from "react-native";
-import { useTheme } from "@/common/theme";
+import { fontSizes, useTheme } from "@/common/theme";
 import {
   OptionTab,
   useLedgerMeta,
@@ -43,7 +43,7 @@ const getStyles = (theme: ColorTheme) =>
       borderBottomColor: theme.black60,
     },
     listItemText: {
-      fontSize: 18,
+      fontSize: fontSizes.xl,
       lineHeight: 24,
       color: theme.black,
     },

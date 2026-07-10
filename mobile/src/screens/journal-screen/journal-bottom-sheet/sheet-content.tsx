@@ -6,11 +6,9 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   StyleSheet,
-  Platform,
 } from "react-native";
-
-const MONO_FONT = Platform.select({ ios: "Courier New", default: "monospace" });
 import { Ionicons } from "@expo/vector-icons";
+import { fonts, fontSizes, fontWeights } from "@/common/theme";
 import { useTheme, useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useGetLedgerEntryContextQuery } from "@/generated-graphql/graphql";
@@ -27,7 +25,7 @@ const getStyles = (theme: ColorTheme) =>
       paddingVertical: 40,
     },
     loadingText: {
-      fontSize: 16,
+      fontSize: fontSizes.lg,
       color: theme.black60,
       marginTop: 12,
     },
@@ -36,7 +34,7 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
     },
     errorText: {
-      fontSize: 16,
+      fontSize: fontSizes.lg,
       color: theme.error,
       textAlign: "center",
     },
@@ -44,8 +42,8 @@ const getStyles = (theme: ColorTheme) =>
       marginBottom: 24,
     },
     sectionTitle: {
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
       marginBottom: 8,
     },
@@ -55,14 +53,14 @@ const getStyles = (theme: ColorTheme) =>
       marginBottom: 16,
     },
     locationLabel: {
-      fontSize: 14,
-      fontWeight: "500",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
       marginRight: 8,
     },
     locationText: {
-      fontSize: 14,
-      fontFamily: MONO_FONT,
+      fontSize: fontSizes.sm,
+      fontFamily: fonts.mono,
       color: theme.black80,
     },
     contextHeader: {
@@ -76,8 +74,8 @@ const getStyles = (theme: ColorTheme) =>
       marginBottom: 8,
     },
     contextHeaderText: {
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
     },
     balancesContainer: {
@@ -97,9 +95,9 @@ const getStyles = (theme: ColorTheme) =>
     sourceText: {
       minHeight: 100,
       padding: 12,
-      fontSize: 13,
+      fontSize: fontSizes.sm,
       lineHeight: 20,
-      fontFamily: MONO_FONT,
+      fontFamily: fonts.mono,
       color: theme.text01,
       backgroundColor: theme.black10,
     },
@@ -108,7 +106,7 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
     },
     emptyStateText: {
-      fontSize: 16,
+      fontSize: fontSizes.lg,
       color: theme.black60,
       textAlign: "center",
     },

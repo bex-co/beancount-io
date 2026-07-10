@@ -7,7 +7,12 @@ import {
   ScrollView,
   Text,
 } from "react-native";
-import { useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  headerActionStyle,
+  useTheme,
+} from "@/common/theme";
 import { i18n } from "@/translations";
 import { ColorTheme } from "@/types/theme-props";
 import { router, Stack } from "expo-router";
@@ -34,22 +39,18 @@ const getStyles = (theme: ColorTheme) =>
     },
     input: {
       color: theme.text01,
-      fontSize: 18,
+      fontSize: fontSizes.xl,
       paddingVertical: 8,
     },
-    doneButton: {
-      fontWeight: "bold",
-      color: theme.primary,
-      fontSize: 16,
-    },
+    doneButton: headerActionStyle(theme),
     suggestionsScroll: {
       flex: 1,
       paddingHorizontal: 16,
       marginTop: 20,
     },
     sectionTitle: {
-      fontSize: 12,
-      fontWeight: "600",
+      fontSize: fontSizes.xs,
+      fontWeight: fontWeights.medium,
       letterSpacing: 0.8,
       color: theme.black80,
       marginBottom: 8,
@@ -79,7 +80,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     suggestionText: {
       flex: 1,
-      fontSize: 16,
+      fontSize: fontSizes.lg,
       lineHeight: 20,
       color: theme.text01,
     },

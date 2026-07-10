@@ -13,7 +13,15 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
 import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { useTheme } from "@/common/theme";
+import {
+  amountMaxFontSizeMultiplier,
+  amountStyle,
+  fontSizes,
+  fontWeights,
+  headerActionStyle,
+  useTheme,
+} from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { useThemeStyle, usePageView, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getFormatDate } from "@/common/format-util";
@@ -46,17 +54,16 @@ import {
   validateLegs,
 } from "@/screens/add-transaction-screen/multi-leg-utils";
 
+const SIGN_TOGGLE_SIZE = 28;
+const LEG_ROW_PADDING_V = 14;
+
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.white,
     },
-    doneButton: {
-      fontWeight: "bold",
-      color: theme.primary,
-      fontSize: 16,
-    },
+    doneButton: headerActionStyle(theme),
     doneButtonDisabled: {
       color: theme.black60,
     },
@@ -71,7 +78,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     legRow: {
       backgroundColor: theme.white,
-      paddingVertical: 14,
+      paddingVertical: LEG_ROW_PADDING_V,
       paddingHorizontal: 16,
       flexDirection: "row",
       alignItems: "center",
@@ -85,13 +92,13 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
     },
     legAccount: {
-      fontSize: 15,
-      fontWeight: "500",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
       color: theme.text01,
     },
     legAccountPlaceholder: {
       color: theme.black40,
-      fontWeight: "400",
+      fontWeight: fontWeights.regular,
     },
     legAmountWrap: {
       flexDirection: "row",
@@ -99,31 +106,32 @@ const getStyles = (theme: ColorTheme) =>
       gap: 8,
     },
     signToggle: {
-      width: 28,
-      height: 28,
-      borderRadius: 14,
+      width: SIGN_TOGGLE_SIZE,
+      height: SIGN_TOGGLE_SIZE,
+      borderRadius: SIGN_TOGGLE_SIZE / 2,
       alignItems: "center",
       justifyContent: "center",
     },
     signTogglePlaceholder: {
-      width: 28,
-      height: 28,
+      width: SIGN_TOGGLE_SIZE,
+      height: SIGN_TOGGLE_SIZE,
     },
     signToggleText: {
-      fontSize: 15,
-      fontWeight: "700",
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
       lineHeight: 18,
     },
+    // TextInput can't be an AmountText; compose the tokens directly.
     legAmountInput: {
-      fontSize: 17,
-      fontWeight: "600",
+      ...amountStyle,
+      fontSize: fontSizes.lg,
+      fontWeight: fontWeights.medium,
       textAlign: "right",
       padding: 0,
       minWidth: 88,
-      fontVariant: ["tabular-nums"],
     },
     legAutoTag: {
-      fontSize: 11,
+      fontSize: fontSizes.xs,
       color: theme.black60,
       marginLeft: 2,
     },
@@ -143,9 +151,9 @@ const getStyles = (theme: ColorTheme) =>
       gap: 6,
     },
     addLegText: {
-      fontSize: 15,
+      fontSize: fontSizes.lg,
       color: theme.primary,
-      fontWeight: "500",
+      fontWeight: fontWeights.medium,
     },
     balanceRow: {
       marginHorizontal: 20,
@@ -155,20 +163,22 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
     },
     balanceLabel: {
-      fontSize: 13,
+      fontSize: fontSizes.sm,
       color: theme.black60,
     },
     balanceAmount: {
-      fontSize: 13,
-      fontWeight: "600",
-      fontVariant: ["tabular-nums"],
+      fontSize: fontSizes.sm,
+      fontWeight: fontWeights.medium,
     },
     skeletonLegRow: {
-      paddingVertical: 14,
+      paddingVertical: LEG_ROW_PADDING_V,
       paddingHorizontal: 16,
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
+      // Real leg rows always contain the sign-toggle circle (or its
+      // placeholder); match it so rows don't grow when data lands.
+      minHeight: SIGN_TOGGLE_SIZE + 2 * LEG_ROW_PADDING_V,
     },
     skeletonAccountTile: {
       height: 14,
@@ -271,6 +281,7 @@ const LegRow = ({
           )}
           <TextInput
             style={[styles.legAmountInput, { color: amountColor }]}
+            maxFontSizeMultiplier={amountMaxFontSizeMultiplier}
             value={absValue}
             onChangeText={handleAbsValueChange}
             keyboardType="decimal-pad"
@@ -477,21 +488,25 @@ export const MultiLegScreenComponent = () => {
             activeOpacity={0.6}
             onPress={() => setLegs((prev) => addLeg(prev))}
           >
-            <Ionicons name="add-circle-outline" size={18} color={theme.primary} />
+            <Ionicons
+              name="add-circle-outline"
+              size={18}
+              color={theme.primary}
+            />
             <Text style={styles.addLegText}>{t("addLeg")}</Text>
           </TouchableOpacity>
         </View>
 
         <View style={styles.balanceRow}>
           <Text style={styles.balanceLabel}>{t("remainderLabel")}</Text>
-          <Text
+          <AmountText
             style={[
               styles.balanceAmount,
               { color: isBalanced ? theme.success : theme.error },
             ]}
           >
             {isBalanced ? `✓  ${currencySymbol}0.00` : formatRemainder(rem)}
-          </Text>
+          </AmountText>
         </View>
       </ScrollView>
 

@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
 import { analytics } from "@/common/analytics";
+import { fontSizes } from "@/common/theme";
 import { i18n } from "@/translations";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
@@ -44,7 +45,7 @@ export const QuickAddAccountsSelector = (
         alignItems: "center",
       },
       errorText: {
-        fontSize: 14,
+        fontSize: fontSizes.md,
         color: theme.black60,
         textAlign: "center",
         padding: 16,

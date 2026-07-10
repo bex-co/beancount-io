@@ -19,7 +19,8 @@ import { line as d3Line, area as d3Area, curveMonotoneX } from "d3-shape";
 import * as Haptics from "expo-haptics";
 import { ErrorBoundary } from "react-error-boundary";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { AmountText } from "@/components/amount-text";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoney } from "@/common/number-utils";
@@ -49,19 +50,19 @@ const getStyles = (theme: ColorTheme) =>
       marginBottom: 8,
     },
     label: {
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
       color: theme.black80,
     },
     headline: {
-      fontSize: 28,
-      fontWeight: "bold",
+      fontSize: fontSizes.display,
+      fontWeight: fontWeights.medium,
       color: theme.text01,
     },
     change: {
       marginTop: 2,
-      fontSize: 14,
-      fontWeight: "600",
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
     },
     chartContainer: {
       position: "relative",
@@ -190,13 +191,13 @@ function InteractiveLineChart({
     <View>
       <View style={styles.header}>
         <Text style={styles.label}>{headerTop}</Text>
-        <Text style={styles.headline}>
+        <AmountText style={styles.headline}>
           {formatSignedMoney(shownValue, currencySymbol)}
-        </Text>
+        </AmountText>
         {hasSeries && (
-          <Text style={[styles.change, { color: lineColor }]}>
+          <AmountText style={[styles.change, { color: lineColor }]}>
             {changeText}
-          </Text>
+          </AmountText>
         )}
       </View>
 

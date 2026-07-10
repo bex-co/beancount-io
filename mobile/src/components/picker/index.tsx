@@ -17,7 +17,7 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedRef,
 } from "react-native-reanimated";
-import { useTheme } from "@/common/theme";
+import { headerActionStyle, useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 
 const { height: screenHeight } = Dimensions.get("window");
@@ -69,11 +69,7 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black80,
       fontSize: 16,
     },
-    doneButton: {
-      color: theme.primary,
-      fontSize: 16,
-      fontWeight: "600",
-    },
+    doneButton: headerActionStyle(theme),
     title: {
       fontSize: 18,
       fontWeight: "600",
