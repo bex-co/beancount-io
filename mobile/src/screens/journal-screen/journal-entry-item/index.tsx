@@ -19,7 +19,10 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       paddingHorizontal: 16,
       paddingVertical: 12,
-      backgroundColor: theme.white,
+      // No background: rows inherit their container's color so they sit on the
+      // DashboardCard (theme.black10) in the home/reports cards and on the
+      // screen (theme.white) in the full journal list. Hardcoding theme.white
+      // made rows punch a page-colored hole through the cards in both themes.
     },
     avatar: {
       width: 40,

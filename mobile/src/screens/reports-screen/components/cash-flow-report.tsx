@@ -1,10 +1,8 @@
 import { useMemo } from "react";
-import { RefreshControl, ScrollView } from "react-native";
-import { useReactiveVar } from "@apollo/client";
-import { themeVar } from "@/common/vars";
+import { StyleSheet, View } from "react-native";
 import { DashboardCard } from "@/components/dashboard-card";
 import { LoadingTile } from "@/components/loading-tile";
-import { CommonMargin } from "@/common/common-margin";
+import { AccountListPage } from "@/components/account-list";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
 import {
   TimeRange,
@@ -12,8 +10,11 @@ import {
   pointsToMonthlySeries,
   seriesToChartArray,
 } from "@/common/series-util";
+import { groupThousands } from "@/common/number-utils";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { IncomeStatementQuery } from "@/generated-graphql/graphql";
+import { DashboardScrollView } from "@/components/dashboard-scroll-view";
+import { selectRangedAccountTree } from "../selectors/select-ranged-account-tree";
 
 type Props = {
   currency: string;
@@ -25,6 +26,49 @@ type Props = {
   incomeData: IncomeStatementQuery | undefined;
 };
 
+// Vary tile widths across rows so the skeleton reads as content, not stripes
+// (mirrors the loaded account-list rows: a label + a right-aligned amount).
+const SKELETON_ROWS = [
+  { labelWidth: 110, valueWidth: 84 },
+  { labelWidth: 150, valueWidth: 70 },
+  { labelWidth: 92, valueWidth: 96 },
+];
+
+const skeletonStyles = StyleSheet.create({
+  header: {
+    paddingHorizontal: 16,
+    marginBottom: 12,
+  },
+  label: {
+    marginBottom: 6,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+  },
+});
+
+/** Skeleton mirroring one DashboardCard + AccountListPage (header + rows). */
+function AccountBreakdownSkeleton() {
+  return (
+    <DashboardCard bleed>
+      <View style={skeletonStyles.header}>
+        <LoadingTile width={90} height={14} style={skeletonStyles.label} />
+        <LoadingTile width={120} height={26} />
+      </View>
+      {SKELETON_ROWS.map((row, index) => (
+        <View key={index} style={skeletonStyles.row}>
+          <LoadingTile width={row.labelWidth} height={14} />
+          <LoadingTile width={row.valueWidth} height={14} />
+        </View>
+      ))}
+    </DashboardCard>
+  );
+}
+
 export function CashFlowReport({
   currency,
   currencySymbol,
@@ -35,7 +79,6 @@ export function CashFlowReport({
   incomeData,
 }: Props): JSX.Element {
   const { t } = useTranslations();
-  const currentTheme = useReactiveVar(themeVar);
 
   const chart = useMemo(() => {
     const series = pointsToMonthlySeries(
@@ -46,19 +89,37 @@ export function CashFlowReport({
     return seriesToChartArray(filtered, t("noDataCharts"));
   }, [currency, incomeData, timeRange, t]);
 
+  // Income/Expense breakdowns sliced to the selected range — same expandable
+  // tree the Accounts tab renders. We sum the monthly per-account series
+  // (`incomeData`/`expensesData`) across the range window because the hierarchy
+  // snapshots are full-period. `total` is the sum of the displayed rows, so the
+  // headline always matches.
+  const income = useMemo(
+    () =>
+      selectRangedAccountTree(
+        currency,
+        incomeData?.getLedgerIncomeStatement?.incomeData ?? [],
+        timeRange,
+      ),
+    [currency, incomeData, timeRange],
+  );
+  const expense = useMemo(
+    () =>
+      selectRangedAccountTree(
+        currency,
+        incomeData?.getLedgerIncomeStatement?.expensesData ?? [],
+        timeRange,
+      ),
+    [currency, incomeData, timeRange],
+  );
+
+  const formatTotal = (total: number) =>
+    `${currencySymbol}${groupThousands(total)}`;
+
   const isLoading = loading && !incomeData;
 
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={currentTheme === "dark" ? "white" : "black"}
-        />
-      }
-    >
+    <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
       <DashboardCard title={t("cashFlow")} bleed>
         {isLoading ? (
           <LoadingTile height={240} mx={16} />
@@ -71,7 +132,34 @@ export function CashFlowReport({
           />
         )}
       </DashboardCard>
-      <CommonMargin />
-    </ScrollView>
+
+      {isLoading ? (
+        <>
+          <AccountBreakdownSkeleton />
+          <AccountBreakdownSkeleton />
+        </>
+      ) : (
+        <>
+          <DashboardCard bleed>
+            <AccountListPage
+              label={t("income")}
+              total={formatTotal(income.total)}
+              items={income.tree}
+              currencySymbol={currencySymbol}
+              scrollable={false}
+            />
+          </DashboardCard>
+          <DashboardCard bleed>
+            <AccountListPage
+              label={t("expenses")}
+              total={formatTotal(expense.total)}
+              items={expense.tree}
+              currencySymbol={currencySymbol}
+              scrollable={false}
+            />
+          </DashboardCard>
+        </>
+      )}
+    </DashboardScrollView>
   );
 }

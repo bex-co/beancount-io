@@ -1,10 +1,6 @@
 import { useMemo } from "react";
-import { RefreshControl, ScrollView } from "react-native";
-import { useReactiveVar } from "@apollo/client";
-import { themeVar } from "@/common/vars";
 import { DashboardCard } from "@/components/dashboard-card";
 import { LoadingTile } from "@/components/loading-tile";
-import { CommonMargin } from "@/common/common-margin";
 import { BarChartD3 } from "@/common/d3/bar-chart-d3";
 import {
   TimeRange,
@@ -14,8 +10,11 @@ import {
 } from "@/common/series-util";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { IncomeStatementQuery } from "@/generated-graphql/graphql";
+import { DashboardScrollView } from "@/components/dashboard-scroll-view";
+import { AccountTransactionsCard } from "./account-transactions-card";
 
 type Props = {
+  ledgerId: string;
   currency: string;
   currencySymbol: string;
   timeRange: TimeRange;
@@ -26,6 +25,7 @@ type Props = {
 };
 
 export function IncomeReport({
+  ledgerId,
   currency,
   currencySymbol,
   timeRange,
@@ -35,7 +35,6 @@ export function IncomeReport({
   incomeData,
 }: Props): JSX.Element {
   const { t } = useTranslations();
-  const currentTheme = useReactiveVar(themeVar);
 
   const chart = useMemo(() => {
     // Beancount income accounts are credit (negative balance) — negate to display as positive.
@@ -50,16 +49,7 @@ export function IncomeReport({
   const isLoading = loading && !incomeData;
 
   return (
-    <ScrollView
-      showsVerticalScrollIndicator={false}
-      refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={currentTheme === "dark" ? "white" : "black"}
-        />
-      }
-    >
+    <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
       <DashboardCard title={t("income")} bleed>
         {isLoading ? (
           <LoadingTile height={220} mx={16} />
@@ -71,7 +61,14 @@ export function IncomeReport({
           />
         )}
       </DashboardCard>
-      <CommonMargin />
-    </ScrollView>
+      <AccountTransactionsCard
+        ledgerId={ledgerId}
+        accountPrefix="Income"
+        titleKey="incomeTransactions"
+        emptyKey="incomeTransactionsEmpty"
+        timeRange={timeRange}
+        refreshing={refreshing}
+      />
+    </DashboardScrollView>
   );
 }

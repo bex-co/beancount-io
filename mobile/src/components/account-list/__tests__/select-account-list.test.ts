@@ -1,4 +1,7 @@
-import { selectAccountTree } from "../select-account-list";
+import {
+  selectAccountTree,
+  selectAccountTreeFromRoot,
+} from "../select-account-list";
 import { AccountHierarchyQuery } from "@/generated-graphql/graphql";
 
 type TestChild = {
@@ -246,5 +249,138 @@ describe("selectAccountTree", () => {
     expect(selectAccountTree("USD", "assets", data).map((n) => n.name)).toEqual(
       ["Cash"],
     );
+  });
+});
+
+// IncomeStatement SerializableTreeNode shape: camelCase balanceChildren,
+// JSON-typed children. selectAccountTreeFromRoot normalizes it into the same
+// AccountNode[] the Accounts tab / home Assets page render.
+type IncomeChild = {
+  account: string;
+  balanceChildren: Record<string, number | string>;
+  children?: IncomeChild[];
+};
+
+type SerializableNode = {
+  account: string;
+  balanceChildren: Record<string, number | string>;
+  children: SerializableNode[];
+  hasTxns: boolean;
+};
+
+function createIncomeRoot(
+  account: string,
+  children: IncomeChild[],
+): SerializableNode {
+  const toChild = (child: IncomeChild): SerializableNode => ({
+    account: child.account,
+    balanceChildren: child.balanceChildren,
+    children: (child.children ?? []).map(toChild),
+    hasTxns: true,
+  });
+  return {
+    account,
+    balanceChildren: {},
+    children: children.map(toChild),
+    hasTxns: true,
+  };
+}
+
+describe("selectAccountTreeFromRoot", () => {
+  it("returns an empty list when root is undefined or null", () => {
+    expect(selectAccountTreeFromRoot("USD", undefined)).toEqual([]);
+    expect(selectAccountTreeFromRoot("USD", null)).toEqual([]);
+  });
+
+  it("returns an empty list when currency is empty", () => {
+    const root = createIncomeRoot("Income", [
+      { account: "Income:Salary", balanceChildren: { USD: 5000 } },
+    ]);
+    expect(selectAccountTreeFromRoot("", root)).toEqual([]);
+  });
+
+  it("returns an empty list when the root has no children", () => {
+    const root = createIncomeRoot("Income", []);
+    expect(selectAccountTreeFromRoot("USD", root)).toEqual([]);
+  });
+
+  it("lists top-level accounts sorted by balance, stripping the category segment", () => {
+    const root = createIncomeRoot("Income", [
+      { account: "Income:Interest", balanceChildren: { USD: 120 } },
+      { account: "Income:Salary", balanceChildren: { USD: 5000 } },
+      { account: "Income:Consulting", balanceChildren: { USD: 1800 } },
+    ]);
+    const result = selectAccountTreeFromRoot("USD", root);
+    expect(result.map((n) => n.name)).toEqual([
+      "Salary",
+      "Consulting",
+      "Interest",
+    ]);
+    expect(result.map((n) => n.value)).toEqual([5000, 1800, 120]);
+  });
+
+  it("nests sub-accounts under their parent, using leaf names, sorted by balance", () => {
+    const root = createIncomeRoot("Income", [
+      {
+        account: "Income:Salary",
+        balanceChildren: { USD: 5000 },
+        children: [
+          { account: "Income:Salary:Bonus", balanceChildren: { USD: 1500 } },
+          { account: "Income:Salary:Base", balanceChildren: { USD: 3500 } },
+        ],
+      },
+    ]);
+    const result = selectAccountTreeFromRoot("USD", root);
+    expect(result.length).toBe(1);
+    const salary = result[0];
+    expect(salary.name).toBe("Salary");
+    expect(salary.value).toBe(5000);
+    expect(salary.children.map((c) => c.name)).toEqual(["Base", "Bonus"]);
+    expect(salary.children.map((c) => c.value)).toEqual([3500, 1500]);
+  });
+
+  it("uses absolute values for negative income (credit-normal) balances at every level", () => {
+    const root = createIncomeRoot("Income", [
+      {
+        account: "Income:Salary",
+        balanceChildren: { USD: -5000 },
+        children: [
+          { account: "Income:Salary:Base", balanceChildren: { USD: -3500 } },
+          { account: "Income:Salary:Bonus", balanceChildren: { USD: -1500 } },
+        ],
+      },
+    ]);
+    const result = selectAccountTreeFromRoot("USD", root);
+    expect(result[0].name).toBe("Salary");
+    expect(result[0].value).toBe(5000);
+    expect(result[0].children.map((c) => c.name)).toEqual(["Base", "Bonus"]);
+    expect(result[0].children.map((c) => c.value)).toEqual([3500, 1500]);
+  });
+
+  it("omits zero-balance accounts at both levels", () => {
+    const root = createIncomeRoot("Income", [
+      { account: "Income:Empty", balanceChildren: { USD: 0 } },
+      {
+        account: "Income:Salary",
+        balanceChildren: { USD: 5000 },
+        children: [
+          { account: "Income:Salary:Base", balanceChildren: { USD: 5000 } },
+          { account: "Income:Salary:Old", balanceChildren: { USD: 0 } },
+        ],
+      },
+    ]);
+    const result = selectAccountTreeFromRoot("USD", root);
+    expect(result.map((n) => n.name)).toEqual(["Salary"]);
+    expect(result[0].children.map((c) => c.name)).toEqual(["Base"]);
+  });
+
+  it("parses string balances and falls back to USD when the currency is missing", () => {
+    const root = createIncomeRoot("Income", [
+      { account: "Income:Salary", balanceChildren: { USD: "5000.50" } },
+      { account: "Income:Euro", balanceChildren: { EUR: 900 } },
+    ]);
+    const result = selectAccountTreeFromRoot("CNY", root);
+    expect(result.map((n) => n.name)).toEqual(["Salary"]);
+    expect(result[0].value).toBe(5000.5);
   });
 });

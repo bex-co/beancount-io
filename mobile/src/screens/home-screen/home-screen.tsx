@@ -1,10 +1,9 @@
-import { RefreshControl, ScrollView, StyleSheet } from "react-native";
+import { StyleSheet } from "react-native";
 import { useState } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
 import { useHomeCharts } from "@/screens/home-screen/hooks/use-home-charts";
 import { useAccountHierarchy } from "@/screens/home-screen/hooks/use-account-hierarchy";
-import { CommonMargin } from "@/common/common-margin";
 import { AccountChartsCard } from "@/screens/home-screen/components/account-charts-card";
 import { RecentTransactionsCard } from "@/screens/home-screen/components/recent-transactions-card";
 import { SpendingCard } from "@/screens/home-screen/components/spending-card";
@@ -16,10 +15,12 @@ import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
-import { themeVar } from "@/common/vars";
-import { useReactiveVar } from "@apollo/client";
 import { useThemeStyle, usePageView } from "@/common/hooks";
-import { LedgerDrawerHeader, SplitButton } from "@/components";
+import {
+  DashboardScrollView,
+  LedgerDrawerHeader,
+  SplitButton,
+} from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 
 const getStyles = (theme: ColorTheme) =>
@@ -27,6 +28,11 @@ const getStyles = (theme: ColorTheme) =>
     container: {
       flex: 1,
       backgroundColor: theme.white,
+    },
+    // The quick-add button isn't a card, so give it the same 16px gap the
+    // cards get from their own marginBottom, keeping the vertical rhythm even.
+    splitButton: {
+      marginBottom: 16,
     },
   });
 
@@ -38,7 +44,6 @@ export const HomeScreenImpl = (): JSX.Element => {
   const router = useRouter();
   const ledgerId = useLedgerGuard();
   const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(userId);
-  const currentTheme = useReactiveVar(themeVar);
 
   const currency = currencies.length > 0 ? currencies[0] : "USD";
   const currencySymbol = getCurrencySymbol(currency);
@@ -75,18 +80,7 @@ export const HomeScreenImpl = (): JSX.Element => {
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
       <LedgerDrawerHeader title={t("home")} />
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={{ paddingHorizontal: 16 }}
-        indicatorStyle={currentTheme === "dark" ? "white" : "default"}
-        refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={currentTheme === "dark" ? "white" : "black"}
-          />
-        }
-      >
+      <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
         <AccountChartsCard
           currency={currency}
           currencySymbol={currencySymbol}
@@ -98,6 +92,7 @@ export const HomeScreenImpl = (): JSX.Element => {
         />
 
         <SplitButton
+          style={styles.splitButton}
           label={t("quickAdd")}
           onMenuOpen={() => analytics.track("tap_quick_add_menu", {})}
           onPress={async () => {
@@ -116,7 +111,6 @@ export const HomeScreenImpl = (): JSX.Element => {
             },
           ]}
         />
-        <CommonMargin />
 
         <RecentTransactionsCard
           ledgerId={ledgerId}
@@ -131,9 +125,7 @@ export const HomeScreenImpl = (): JSX.Element => {
         />
 
         <FeedCard refreshSignal={refreshSignal} />
-
-        <CommonMargin />
-      </ScrollView>
+      </DashboardScrollView>
     </SafeAreaView>
   );
 };

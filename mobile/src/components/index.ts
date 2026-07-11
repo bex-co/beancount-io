@@ -1,6 +1,7 @@
 export * from "./amount-text";
 export * from "./button";
 export * from "./dashboard-card";
+export * from "./dashboard-scroll-view";
 export * from "./balance-chart-card";
 export * from "./paged-carousel";
 export * from "./time-range-pills";

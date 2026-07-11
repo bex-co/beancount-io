@@ -63,6 +63,35 @@ export function pointsToMonthlySeries(
 }
 
 /**
+ * Inclusive lower-bound "YYYY-MM" for a time range, anchored to a reference
+ * month (typically the latest data point). "YTD" → January of that year;
+ * "1M/3M/6M/1Y" → the reference month and the N-1 before it (plain month math,
+ * stepping the year back on underflow). "ALL" returns "" (no lower bound).
+ *
+ * Shared so the Spending chart and its transaction list apply the same window.
+ */
+export function rangeStartMonth(
+  range: TimeRange,
+  referenceYearMonth: string,
+): string {
+  if (range === "ALL") {
+    return "";
+  }
+  const [year, month] = referenceYearMonth.split("-").map(Number);
+  if (range === "YTD") {
+    return `${year}-01`;
+  }
+  const monthsBack = RANGE_MONTHS[range];
+  let y = year;
+  let m = month - (monthsBack - 1);
+  while (m <= 0) {
+    m += 12;
+    y -= 1;
+  }
+  return `${y}-${String(m).padStart(2, "0")}`;
+}
+
+/**
  * Filter a monthly series to a time range. The window is anchored to the
  * **latest data point** (not "today") so a stale ledger still shows history
  * instead of an empty chart. "ALL" returns the whole series.
@@ -74,28 +103,10 @@ export function filterSeriesByRange(
   if (range === "ALL" || series.length === 0) {
     return series;
   }
-  const [latestYear, latestMonth] = series[series.length - 1].date
-    .slice(0, 7)
-    .split("-")
-    .map(Number);
-
-  let cutoffKey: string;
-  if (range === "YTD") {
-    // Year-to-date: from January of the latest data point's year.
-    cutoffKey = `${latestYear}-01`;
-  } else {
-    // First month of the inclusive window (e.g. 3M → latest month and the 2
-    // before), stepping the year back on underflow — plain month math, no
-    // Date quirks.
-    const monthsBack = RANGE_MONTHS[range];
-    let year = latestYear;
-    let month = latestMonth - (monthsBack - 1);
-    while (month <= 0) {
-      month += 12;
-      year -= 1;
-    }
-    cutoffKey = `${year}-${String(month).padStart(2, "0")}`;
-  }
+  const cutoffKey = rangeStartMonth(
+    range,
+    series[series.length - 1].date.slice(0, 7),
+  );
   return series.filter((point) => point.date.slice(0, 7) >= cutoffKey);
 }
 

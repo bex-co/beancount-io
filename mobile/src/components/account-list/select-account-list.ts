@@ -42,6 +42,18 @@ function toNode(
 }
 
 /**
+ * Map + filter + sort the top-level sub-accounts of one category: strip the
+ * category segment from each name, drop zero-balance accounts, sort by balance
+ * descending. Shared by both selectors below.
+ */
+function buildTopLevel(topLevel: RawChild[], currency: string): AccountNode[] {
+  return topLevel
+    .map((child) => toNode(child, currency, stripTopLevel))
+    .filter((accountNode) => accountNode.value > 0)
+    .sort((a, b) => b.value - a.value);
+}
+
+/**
  * Build a two-level account tree under a labelled hierarchy node ("assets",
  * "liabilities", …): each top-level sub-account (rolled-up balance) with its
  * immediate children nested beneath it. Every node's `value` is the rolled-up
@@ -62,8 +74,52 @@ export function selectAccountTree(
   );
   const topLevel = (node?.data?.children ?? []) as RawChild[];
 
-  return topLevel
-    .map((child) => toNode(child, currency, stripTopLevel))
-    .filter((accountNode) => accountNode.value > 0)
-    .sort((a, b) => b.value - a.value);
+  return buildTopLevel(topLevel, currency);
+}
+
+/**
+ * Recursive raw node from an IncomeStatement `SerializableTreeNode`
+ * (camelCase `balanceChildren`, JSON-typed children). Mirrors `RawChild` but in
+ * the shape the income-statement query returns.
+ */
+type SerializableChild = {
+  account: string;
+  balanceChildren: Record<string, number | string>;
+  children?: SerializableChild[] | null;
+};
+
+/** Boundary shape for an IncomeStatement hierarchy root passed in from a query. */
+type SerializableTreeNodeLike = {
+  account: string;
+  balanceChildren: Record<string, number | string>;
+  children?: unknown;
+};
+
+/** Normalize a SerializableTreeNode subtree into the RawChild shape toNode reads. */
+function fromSerializable(node: SerializableChild): RawChild {
+  return {
+    account: node.account,
+    balance_children: node.balanceChildren,
+    children: (node.children ?? []).map(fromSerializable),
+  };
+}
+
+/**
+ * Build the account tree under an IncomeStatement hierarchy root
+ * (`incomeHierarchyData` / `expensesHierarchyData`): a single node whose
+ * `children` are the top-level accounts of that category. Same semantics as
+ * `selectAccountTree` — rolled-up totals, leaf names for nested rows,
+ * zero-balance accounts omitted, sorted by balance descending — over the
+ * camelCase SerializableTreeNode shape instead of the labelled AccountHierarchy
+ * shape.
+ */
+export function selectAccountTreeFromRoot(
+  currency: string,
+  root?: SerializableTreeNodeLike | null,
+): AccountNode[] {
+  if (!currency || !root?.children) {
+    return [];
+  }
+  const children = root.children as SerializableChild[] | null | undefined;
+  return buildTopLevel((children ?? []).map(fromSerializable), currency);
 }
