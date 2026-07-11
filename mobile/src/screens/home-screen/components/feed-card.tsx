@@ -21,7 +21,7 @@ const FEED_LIMIT = 5;
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     row: {
-      paddingVertical: 10,
+      paddingVertical: 8,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.black20,
     },
@@ -29,39 +29,17 @@ const getStyles = (theme: ColorTheme) =>
       borderTopWidth: 0,
     },
     title: {
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
+      fontSize: fontSizes.sm,
+      fontWeight: fontWeights.regular,
       color: theme.text01,
-      lineHeight: 20,
+      lineHeight: 18,
     },
     meta: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginTop: 3,
-      gap: 6,
+      marginTop: 2,
     },
-    badge: {
-      fontSize: fontSizes.xs,
-      fontWeight: fontWeights.medium,
-      color: theme.white,
-      backgroundColor: theme.primary,
-      paddingHorizontal: 6,
-      paddingVertical: 2,
-      borderRadius: 4,
-      overflow: "hidden",
-    },
-    badgeLedger: {
-      backgroundColor: theme.success,
-    },
-    date: {
+    metaText: {
       fontSize: fontSizes.xs,
       color: theme.black60,
-    },
-    summary: {
-      fontSize: fontSizes.sm,
-      color: theme.black60,
-      marginTop: 3,
-      lineHeight: 18,
     },
   });
 
@@ -81,14 +59,13 @@ function formatFeedDate(publishedAt: unknown): string {
 
 type FeedRowProps = {
   title: string;
-  summary: string | null;
   link: string;
   publishedAt: unknown;
   source: FeedSource;
   isFirst: boolean;
 };
 
-function FeedRow({ title, summary, link, publishedAt, source, isFirst }: FeedRowProps) {
+function FeedRow({ title, link, publishedAt, source, isFirst }: FeedRowProps) {
   const styles = useThemeStyle(getStyles);
   const isExternal = link.startsWith("http");
 
@@ -99,7 +76,9 @@ function FeedRow({ title, summary, link, publishedAt, source, isFirst }: FeedRow
     }
   };
 
-  const badgeLabel = source === FeedSource.LedgerRss ? "Ledger" : "Blog";
+  const sourceLabel = source === FeedSource.LedgerRss ? "Ledger" : "Blog";
+  const date = formatFeedDate(publishedAt);
+  const metaText = date ? `${sourceLabel} · ${date}` : sourceLabel;
 
   return (
     <Pressable
@@ -110,21 +89,8 @@ function FeedRow({ title, summary, link, publishedAt, source, isFirst }: FeedRow
         {title}
       </Text>
       <View style={styles.meta}>
-        <Text
-          style={[
-            styles.badge,
-            source === FeedSource.LedgerRss && styles.badgeLedger,
-          ]}
-        >
-          {badgeLabel}
-        </Text>
-        <Text style={styles.date}>{formatFeedDate(publishedAt)}</Text>
+        <Text style={styles.metaText}>{metaText}</Text>
       </View>
-      {!!summary && (
-        <Text style={styles.summary} numberOfLines={2}>
-          {summary}
-        </Text>
-      )}
     </Pressable>
   );
 }
@@ -163,7 +129,6 @@ export function FeedCard({ refreshSignal = 0 }: FeedCardProps): JSX.Element {
             <FeedRow
               key={item.id}
               title={item.title}
-              summary={item.summary ?? null}
               link={item.link}
               publishedAt={item.publishedAt}
               source={item.source}
