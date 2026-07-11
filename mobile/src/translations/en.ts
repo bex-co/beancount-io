@@ -195,6 +195,9 @@ export const en = {
   budgetEntries: "Budget Entries",
   toggleMetadata: "Toggle Metadata",
   togglePostings: "Toggle Postings",
+  // reports tab
+  reports: "Reports",
+  cashFlow: "Cash Flow",
   // home dashboard
   seeAll: "See all",
   netWorth: "Net Worth",
@@ -212,4 +215,17 @@ export const en = {
   range1Y: "1Y",
   rangeAll: "ALL",
   tes: "1",
+  // edit / delete transaction
+  editTransaction: "Edit Transaction",
+  deleteTransaction: "Delete",
+  deleteTransactionTitle: "Delete Transaction",
+  deleteTransactionMessage:
+    "Are you sure you want to delete this transaction? This action cannot be undone.",
+  deleteSuccess: "Transaction deleted",
+  deleteFailed: "Failed to delete transaction",
+  editSuccess: "Transaction saved",
+  editFailed: "Failed to save transaction",
+  editTransactionSource:
+    "Edit raw beancount source below. A stale checksum or invalid beancount will be rejected with an error.",
+  editConflict: "Transaction was modified elsewhere. Reload and try again.",
 };

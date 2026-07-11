@@ -1,0 +1,42 @@
+query IncomeStatement(
+  $ledgerId: String!
+  $time: String
+  $interval: String
+  $conversion: String
+) {
+  getLedgerIncomeStatement(
+    ledgerId: $ledgerId
+    time: $time
+    interval: $interval
+    conversion: $conversion
+  ) {
+    expensesData {
+      date
+      balance
+      accountBalances
+    }
+    incomeData {
+      date
+      balance
+      accountBalances
+    }
+    netProfitData {
+      date
+      balance
+    }
+    expensesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+    incomeHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+  }
+}

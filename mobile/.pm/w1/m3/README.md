@@ -1,13 +1,13 @@
 # w1 · m3 — Monarch-style Reports tab
 
-**Worker:** worker1 **Goal:** A Reports tab with a segmented switcher — Spending / Income / Cash Flow / Net Worth — each a chart + breakdown over a selectable time range, with category drill-down to the underlying entries. **Status:** todo
+**Worker:** worker1 **Goal:** A Reports tab with a segmented switcher — Spending / Income / Cash Flow / Net Worth — each a chart + breakdown over a selectable time range, with category drill-down to the underlying entries. **Status:** in progress (t001, t002 done)
 
 ## Tasks (in order)
 
 | id   | title                                                           | est | depends_on             |
 | ---- | --------------------------------------------------------------- | --- | ---------------------- |
-| t001 | Income-statement GraphQL op + use-income-statement hook         | 30m | w1/m2/t001             |
-| t002 | Reports tab route + shell: segment switcher + shared time range | 40m | —                      |
+| t001 | Income-statement GraphQL op + use-income-statement hook         | 30m | w1/m2/t001             | — **DONE** |
+| t002 | Reports tab route + shell: segment switcher + shared time range | 40m | —                      | — **DONE** |
 | t003 | Spending report: monthly bar chart + category breakdown list    | 60m | t001, t002             |
 | t004 | Income report over incomeData/incomeHierarchyData               | 30m | t003                   |
 | t005 | Cash-flow report: income vs expense bars + net-profit line      | 50m | t001, t002             |

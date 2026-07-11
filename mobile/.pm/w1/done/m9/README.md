@@ -1,18 +1,18 @@
 # w1 · m9 — Edit & delete transactions from transaction detail
 
-**Worker:** worker1 **Goal:** Fixing a mistake no longer requires a desktop — from transaction detail the user can delete an entry (with confirmation) or edit its raw beancount source slice losslessly. **Status:** todo
+**Worker:** worker1 **Goal:** Fixing a mistake no longer requires a desktop — from transaction detail the user can delete an entry (with confirmation) or edit its raw beancount source slice losslessly. **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                    | est | depends_on |
 | ---- | ------------------------------------------------------------------------ | --- | ---------- |
-| t001 | GraphQL ops + codegen: update/delete `LedgerEntrySourceSlice`            | 20m | —          |
-| t002 | Delete flow: confirm dialog → mutation with `sha256sum` → refresh + back | 40m | t001       |
-| t003 | Raw slice editor screen (monospace, prefilled), save + honest errors     | 50m | t001       |
-| t004 | Refresh parity: journal, Home recents, account detail reflect the change | 30m | t002, t003 |
-| t005 | UX pass — light/dark, i18n, loading bg, safe area, analytics             | 30m | t004       |
-| t006 | Simplify pass over edit/delete code                                      | 20m | t005       |
-| t007 | Unit tests for edit/delete behavior                                      | 30m | t005       |
+| t001 | GraphQL ops + codegen: update/delete `LedgerEntrySourceSlice`            | 20m | —          | — **DONE** |
+| t002 | Delete flow: confirm dialog → mutation with `sha256sum` → refresh + back | 40m | t001       | — **DONE** |
+| t003 | Raw slice editor screen (monospace, prefilled), save + honest errors     | 50m | t001       | — **DONE** |
+| t004 | Refresh parity: journal, Home recents, account detail reflect the change | 30m | t002, t003 | — **DONE** |
+| t005 | UX pass — light/dark, i18n, loading bg, safe area, analytics             | 30m | t004       | — **DONE** |
+| t006 | Simplify pass over edit/delete code                                      | 20m | t005       | — **DONE** |
+| t007 | Unit tests for edit/delete behavior                                      | 30m | t005       | — **DONE** |
 
 ## Definition of done
 

@@ -78,6 +78,14 @@ export type DeleteAccountMutationVariables = Exact<{ [key: string]: never; }>;
 
 export type DeleteAccountMutation = { deleteAccount: boolean };
 
+export type DeleteLedgerEntrySourceSliceMutationVariables = Exact<{
+  input: Types.DeleteSourceSliceInput;
+  ledgerId: string;
+}>;
+
+
+export type DeleteLedgerEntrySourceSliceMutation = { deleteLedgerEntrySourceSlice: { entryHash: string, message: string } };
+
 export type GetLedgerQueryVariables = Exact<{
   ledgerId: string;
 }>;
@@ -123,6 +131,16 @@ export type HomeChartsQueryVariables = Exact<{
 
 export type HomeChartsQuery = { homeCharts: { success: boolean, data: Array<{ type: string, label: string, data: Array<{ date: string, balance: Record<string, number | string>, budgets: Record<string, number | string> | null }> }> } };
 
+export type IncomeStatementQueryVariables = Exact<{
+  ledgerId: string;
+  time?: string | null | undefined;
+  interval?: string | null | undefined;
+  conversion?: string | null | undefined;
+}>;
+
+
+export type IncomeStatementQuery = { getLedgerIncomeStatement: { expensesData: Array<{ date: string, balance: Record<string, number | string>, accountBalances: Record<string, number | string> }>, incomeData: Array<{ date: string, balance: Record<string, number | string>, accountBalances: Record<string, number | string> }>, netProfitData: Array<{ date: string, balance: Record<string, number | string> }>, expensesHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean }, incomeHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean } } };
+
 export type JournalEntriesQueryVariables = Exact<{
   first?: number | null | undefined;
   after?: string | null | undefined;
@@ -167,6 +185,14 @@ export type SubscriptionStatusQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SubscriptionStatusQuery = { subscriptionStatus: { hasActiveSubscription: boolean, subscriptions: Array<{ id: string, status: string, cancelAt: unknown, cancelAtPeriodEnd: boolean, canceledAt: unknown, clientId: string, currentPeriodEnd: unknown, currentPeriodStart: unknown, items: Array<{ id: string, quantity: number, price: { id: string, amount: number, currency: string, interval: string, intervalCount: number | null, trialPeriodDays: number | null }, product: { id: string, name: string, description: string | null, images: Array<string> | null } | null }> }> } };
+
+export type UpdateLedgerEntrySourceSliceMutationVariables = Exact<{
+  input: Types.UpdateSourceSliceInput;
+  ledgerId: string;
+}>;
+
+
+export type UpdateLedgerEntrySourceSliceMutation = { updateLedgerEntrySourceSlice: { entryHash: string, message: string, newSha256sum: string } };
 
 export type UpdateReportSubscribeMutationVariables = Exact<{
   userId: string;
@@ -607,6 +633,41 @@ export function useDeleteAccountMutation(baseOptions?: Apollo.MutationHookOption
 export type DeleteAccountMutationHookResult = ReturnType<typeof useDeleteAccountMutation>;
 export type DeleteAccountMutationResult = Apollo.MutationResult<DeleteAccountMutation>;
 export type DeleteAccountMutationOptions = Apollo.BaseMutationOptions<DeleteAccountMutation, DeleteAccountMutationVariables>;
+export const DeleteLedgerEntrySourceSliceDocument = gql`
+    mutation deleteLedgerEntrySourceSlice($input: DeleteSourceSliceInput!, $ledgerId: String!) {
+  deleteLedgerEntrySourceSlice(input: $input, ledgerId: $ledgerId) {
+    entryHash
+    message
+  }
+}
+    `;
+export type DeleteLedgerEntrySourceSliceMutationFn = Apollo.MutationFunction<DeleteLedgerEntrySourceSliceMutation, DeleteLedgerEntrySourceSliceMutationVariables>;
+
+/**
+ * __useDeleteLedgerEntrySourceSliceMutation__
+ *
+ * To run a mutation, you first call `useDeleteLedgerEntrySourceSliceMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteLedgerEntrySourceSliceMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteLedgerEntrySourceSliceMutation, { data, loading, error }] = useDeleteLedgerEntrySourceSliceMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useDeleteLedgerEntrySourceSliceMutation(baseOptions?: Apollo.MutationHookOptions<DeleteLedgerEntrySourceSliceMutation, DeleteLedgerEntrySourceSliceMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteLedgerEntrySourceSliceMutation, DeleteLedgerEntrySourceSliceMutationVariables>(DeleteLedgerEntrySourceSliceDocument, options);
+      }
+export type DeleteLedgerEntrySourceSliceMutationHookResult = ReturnType<typeof useDeleteLedgerEntrySourceSliceMutation>;
+export type DeleteLedgerEntrySourceSliceMutationResult = Apollo.MutationResult<DeleteLedgerEntrySourceSliceMutation>;
+export type DeleteLedgerEntrySourceSliceMutationOptions = Apollo.BaseMutationOptions<DeleteLedgerEntrySourceSliceMutation, DeleteLedgerEntrySourceSliceMutationVariables>;
 export const GetLedgerDocument = gql`
     query GetLedger($ledgerId: String!) {
   getLedger(ledgerId: $ledgerId) {
@@ -902,6 +963,84 @@ export type HomeChartsQueryHookResult = ReturnType<typeof useHomeChartsQuery>;
 export type HomeChartsLazyQueryHookResult = ReturnType<typeof useHomeChartsLazyQuery>;
 export type HomeChartsSuspenseQueryHookResult = ReturnType<typeof useHomeChartsSuspenseQuery>;
 export type HomeChartsQueryResult = Apollo.QueryResult<HomeChartsQuery, HomeChartsQueryVariables>;
+export const IncomeStatementDocument = gql`
+    query IncomeStatement($ledgerId: String!, $time: String, $interval: String, $conversion: String) {
+  getLedgerIncomeStatement(
+    ledgerId: $ledgerId
+    time: $time
+    interval: $interval
+    conversion: $conversion
+  ) {
+    expensesData {
+      date
+      balance
+      accountBalances
+    }
+    incomeData {
+      date
+      balance
+      accountBalances
+    }
+    netProfitData {
+      date
+      balance
+    }
+    expensesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+    incomeHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+  }
+}
+    `;
+
+/**
+ * __useIncomeStatementQuery__
+ *
+ * To run a query within a React component, call `useIncomeStatementQuery` and pass it any options that fit your needs.
+ * When your component renders, `useIncomeStatementQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useIncomeStatementQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      time: // value for 'time'
+ *      interval: // value for 'interval'
+ *      conversion: // value for 'conversion'
+ *   },
+ * });
+ */
+export function useIncomeStatementQuery(baseOptions: Apollo.QueryHookOptions<IncomeStatementQuery, IncomeStatementQueryVariables> & ({ variables: IncomeStatementQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<IncomeStatementQuery, IncomeStatementQueryVariables>(IncomeStatementDocument, options);
+      }
+export function useIncomeStatementLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<IncomeStatementQuery, IncomeStatementQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<IncomeStatementQuery, IncomeStatementQueryVariables>(IncomeStatementDocument, options);
+        }
+// @ts-ignore
+export function useIncomeStatementSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<IncomeStatementQuery, IncomeStatementQueryVariables>): Apollo.UseSuspenseQueryResult<IncomeStatementQuery, IncomeStatementQueryVariables>;
+export function useIncomeStatementSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<IncomeStatementQuery, IncomeStatementQueryVariables>): Apollo.UseSuspenseQueryResult<IncomeStatementQuery | undefined, IncomeStatementQueryVariables>;
+export function useIncomeStatementSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<IncomeStatementQuery, IncomeStatementQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<IncomeStatementQuery, IncomeStatementQueryVariables>(IncomeStatementDocument, options);
+        }
+export type IncomeStatementQueryHookResult = ReturnType<typeof useIncomeStatementQuery>;
+export type IncomeStatementLazyQueryHookResult = ReturnType<typeof useIncomeStatementLazyQuery>;
+export type IncomeStatementSuspenseQueryHookResult = ReturnType<typeof useIncomeStatementSuspenseQuery>;
+export type IncomeStatementQueryResult = Apollo.QueryResult<IncomeStatementQuery, IncomeStatementQueryVariables>;
 export const JournalEntriesDocument = gql`
     query JournalEntries($first: Int, $after: String, $last: Int, $before: String, $detailed: Boolean, $searchQuery: String, $accountFilter: String, $amountMin: Float, $amountMax: Float, $entryTypes: [String!], $sortBy: String, $sortOrder: String, $groupBy: String) {
   journalEntries(
@@ -1257,6 +1396,42 @@ export type SubscriptionStatusQueryHookResult = ReturnType<typeof useSubscriptio
 export type SubscriptionStatusLazyQueryHookResult = ReturnType<typeof useSubscriptionStatusLazyQuery>;
 export type SubscriptionStatusSuspenseQueryHookResult = ReturnType<typeof useSubscriptionStatusSuspenseQuery>;
 export type SubscriptionStatusQueryResult = Apollo.QueryResult<SubscriptionStatusQuery, SubscriptionStatusQueryVariables>;
+export const UpdateLedgerEntrySourceSliceDocument = gql`
+    mutation updateLedgerEntrySourceSlice($input: UpdateSourceSliceInput!, $ledgerId: String!) {
+  updateLedgerEntrySourceSlice(input: $input, ledgerId: $ledgerId) {
+    entryHash
+    message
+    newSha256sum
+  }
+}
+    `;
+export type UpdateLedgerEntrySourceSliceMutationFn = Apollo.MutationFunction<UpdateLedgerEntrySourceSliceMutation, UpdateLedgerEntrySourceSliceMutationVariables>;
+
+/**
+ * __useUpdateLedgerEntrySourceSliceMutation__
+ *
+ * To run a mutation, you first call `useUpdateLedgerEntrySourceSliceMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateLedgerEntrySourceSliceMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateLedgerEntrySourceSliceMutation, { data, loading, error }] = useUpdateLedgerEntrySourceSliceMutation({
+ *   variables: {
+ *      input: // value for 'input'
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useUpdateLedgerEntrySourceSliceMutation(baseOptions?: Apollo.MutationHookOptions<UpdateLedgerEntrySourceSliceMutation, UpdateLedgerEntrySourceSliceMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateLedgerEntrySourceSliceMutation, UpdateLedgerEntrySourceSliceMutationVariables>(UpdateLedgerEntrySourceSliceDocument, options);
+      }
+export type UpdateLedgerEntrySourceSliceMutationHookResult = ReturnType<typeof useUpdateLedgerEntrySourceSliceMutation>;
+export type UpdateLedgerEntrySourceSliceMutationResult = Apollo.MutationResult<UpdateLedgerEntrySourceSliceMutation>;
+export type UpdateLedgerEntrySourceSliceMutationOptions = Apollo.BaseMutationOptions<UpdateLedgerEntrySourceSliceMutation, UpdateLedgerEntrySourceSliceMutationVariables>;
 export const UpdateReportSubscribeDocument = gql`
     mutation updateReportSubscribe($userId: String!, $status: ReportStatus!) {
   updateReportSubscribe(userId: $userId, status: $status) {

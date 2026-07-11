@@ -1,0 +1,7 @@
+mutation updateLedgerEntrySourceSlice($input: UpdateSourceSliceInput!, $ledgerId: String!) {
+  updateLedgerEntrySourceSlice(input: $input, ledgerId: $ledgerId) {
+    entryHash
+    message
+    newSha256sum
+  }
+}

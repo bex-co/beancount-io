@@ -14,6 +14,7 @@ export default function TabLayout() {
   const [tabTitles, setTabTitles] = useState({
     home: i18n.t("home"),
     accounts: i18n.t("accounts"),
+    reports: i18n.t("reports"),
     ledger: i18n.t("ledger"),
     journal: i18n.t("journal"),
   });
@@ -22,6 +23,7 @@ export default function TabLayout() {
     setTabTitles({
       home: i18n.t("home"),
       accounts: i18n.t("accounts"),
+      reports: i18n.t("reports"),
       ledger: i18n.t("ledger"),
       journal: i18n.t("journal"),
     });
@@ -78,6 +80,19 @@ export default function TabLayout() {
           tabBarIcon: ({ color, focused }) => (
             <Ionicons
               name="document-text"
+              size={28}
+              color={focused ? theme.primary : color}
+            />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reports"
+        options={{
+          title: tabTitles.reports,
+          tabBarIcon: ({ color, focused }) => (
+            <Ionicons
+              name="stats-chart"
               size={28}
               color={focused ? theme.primary : color}
             />

@@ -1,6 +1,8 @@
 import { useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
+  Alert,
+  Pressable,
   ScrollView,
   StyleSheet,
   Text,
@@ -9,15 +11,26 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useReactiveVar } from "@apollo/client";
+import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle, usePageView, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
-import { useGetLedgerEntryContextQuery } from "@/generated-graphql/graphql";
+import {
+  AccountHierarchyDocument,
+  AccountJournalDocument,
+  AccountReportDocument,
+  BalanceSheetDocument,
+  GetLedgerJournalDocument,
+  HomeChartsDocument,
+  useDeleteLedgerEntrySourceSliceMutation,
+  useGetLedgerEntryContextQuery,
+} from "@/generated-graphql/graphql";
 import { JournalBottomSheetContent } from "@/screens/journal-screen/journal-bottom-sheet/sheet-content";
+import { openEditTransaction } from "@/screens/edit-transaction-screen";
 import {
   JournalDirectiveType,
   JournalTransaction,
@@ -122,6 +135,12 @@ const getStyles = (theme: ColorTheme) =>
     sourceSection: {
       marginTop: 20,
     },
+    headerActions: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingRight: 4,
+    },
   });
 
 type DetailRow = { label: string; value: string };
@@ -140,6 +159,7 @@ const TransactionDetailImpl = ({
   const theme = useTheme().colorTheme;
   usePageView("transaction_detail");
 
+  const toast = useToast();
   const stashed = useReactiveVar(selectedTransactionVar);
 
   // Also serves as the fallback entry source when the stash is cold (deep
@@ -148,6 +168,55 @@ const TransactionDetailImpl = ({
     variables: { entryHash, ledgerId },
     skip: !entryHash,
   });
+
+  const [deleteMutation, { loading: deleting }] =
+    useDeleteLedgerEntrySourceSliceMutation({
+      refetchQueries: [
+        GetLedgerJournalDocument,
+        HomeChartsDocument,
+        AccountJournalDocument,
+        AccountReportDocument,
+        AccountHierarchyDocument,
+        BalanceSheetDocument,
+      ],
+      awaitRefetchQueries: false,
+    });
+
+  const sha256sum = data?.getLedgerEntryContext?.sha256sum;
+
+  const handleEdit = useCallback(() => {
+    if (!sha256sum) return;
+    analytics.track("transaction_detail_edit", {});
+    openEditTransaction(router, { entryHash, ledgerId });
+  }, [sha256sum, entryHash, ledgerId, router]);
+
+  const handleDelete = useCallback(() => {
+    if (!sha256sum) return;
+    analytics.track("transaction_detail_delete_prompt", {});
+    Alert.alert(t("deleteTransactionTitle"), t("deleteTransactionMessage"), [
+      { text: t("cancel"), style: "cancel" },
+      {
+        text: t("deleteTransaction"),
+        style: "destructive",
+        onPress: async () => {
+          analytics.track("transaction_detail_delete_confirm", {});
+          try {
+            await deleteMutation({
+              variables: {
+                input: { entryHash, sha256sum },
+                ledgerId,
+              },
+            });
+            toast.showToast({ message: t("deleteSuccess"), type: "success" });
+            router.back();
+          } catch (e: unknown) {
+            const msg = e instanceof Error ? e.message : t("deleteFailed");
+            toast.showToast({ message: msg, type: "error" });
+          }
+        },
+      },
+    ]);
+  }, [sha256sum, entryHash, ledgerId, deleteMutation, t, toast, router]);
 
   const entry: JournalTransaction | null = useMemo(() => {
     if (stashed && stashed.entry_hash === entryHash) {
@@ -213,7 +282,39 @@ const TransactionDetailImpl = ({
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
-      <Stack.Screen options={{ title }} />
+      <Stack.Screen
+        options={{
+          title,
+          headerRight: sha256sum
+            ? () => (
+                <View style={styles.headerActions}>
+                  <Pressable
+                    onPress={handleEdit}
+                    hitSlop={8}
+                    disabled={deleting}
+                  >
+                    <Ionicons
+                      name="pencil-outline"
+                      size={22}
+                      color={theme.black}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={handleDelete}
+                    hitSlop={8}
+                    disabled={deleting}
+                  >
+                    <Ionicons
+                      name="trash-outline"
+                      size={22}
+                      color={theme.error}
+                    />
+                  </Pressable>
+                </View>
+              )
+            : undefined,
+        }}
+      />
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         showsVerticalScrollIndicator={false}

@@ -1,26 +1,22 @@
 import { Redirect, Stack, router } from "expo-router";
 import { useReactiveVar } from "@apollo/client";
 import { sessionVar } from "@/common/vars";
-import { useCallback } from "react";
-import { Pressable } from "react-native";
+import { ColorValue, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/common/theme";
 
-export const DefaultHeaderLeftBack = () => {
-  const theme = useTheme().colorTheme;
-  const handlePress = useCallback(() => {
-    router.back();
-  }, []);
-  return (
-    <Pressable
-      onPress={handlePress}
-      style={{ paddingHorizontal: 8, paddingVertical: 4 }}
-      hitSlop={8}
-    >
-      <Ionicons name="chevron-back" size={28} color={theme.black} />
-    </Pressable>
-  );
-};
+// Hook-free so it can be used as a headerLeft render function without causing
+// hook-count mismatches when screens override headerLeft with their own function.
+// The tintColor comes from the Stack's headerTintColor screenOption.
+export const DefaultHeaderLeftBack = ({ tintColor }: { tintColor?: ColorValue }) => (
+  <Pressable
+    onPress={router.back}
+    style={{ paddingHorizontal: 8, paddingVertical: 4 }}
+    hitSlop={8}
+  >
+    <Ionicons name="chevron-back" size={28} color={tintColor} />
+  </Pressable>
+);
 
 export default function AppLayout() {
   const session = useReactiveVar(sessionVar);
@@ -40,6 +36,7 @@ export default function AppLayout() {
         headerStyle: {
           backgroundColor: theme.white,
         },
+        headerTintColor: theme.black,
         headerLeft: DefaultHeaderLeftBack,
       }}
     >

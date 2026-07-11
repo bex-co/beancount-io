@@ -1,0 +1,6 @@
+mutation deleteLedgerEntrySourceSlice($input: DeleteSourceSliceInput!, $ledgerId: String!) {
+  deleteLedgerEntrySourceSlice(input: $input, ledgerId: $ledgerId) {
+    entryHash
+    message
+  }
+}
