@@ -35,4 +35,4 @@ jobs:
         working-directory: mobile
         env:
           EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
-        run: ./deploy.sh
+        run: yarn deploy

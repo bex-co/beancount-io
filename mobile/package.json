@@ -18,7 +18,8 @@
     "format:check": "prettier . --cache --check",
     "codegen": "graphql-codegen",
     "bump": "npx tsx ./src/scripts/bump-version.ts",
-    "bump-dummy": "npx tsx ./src/scripts/bump-version-dummy.ts"
+    "bump-dummy": "npx tsx ./src/scripts/bump-version-dummy.ts",
+    "deploy": "bash ./deploy.sh"
   },
   "dependencies": {
     "@apollo/client": "3.14.1",
