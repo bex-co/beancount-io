@@ -25,23 +25,21 @@ yarn global add eas-cli@latest
 # export EAS_TOKEN=your-token # <-- make sure this is set in your CI or shell environment
 
 # Send Over-the-Air Updates (scoped to the selected platform) ####
+# --environment is required by eas-cli in non-interactive contexts (CI, no TTY).
 npx eas-cli@latest update --channel production --platform "$PLATFORM" \
+  --environment production --non-interactive \
   --message "Production update $(date +'%Y-%m-%d %H:%M:%S')"
 
 deploy_ios() {
-  echo "Building iOS app..."
-  npx eas-cli@latest build --platform ios --profile production --non-interactive --no-wait
-
-  echo "Submitting iOS app to App Store..."
-  npx eas-cli@latest submit --platform ios --latest --non-interactive
+  # --auto-submit submits this exact build to the App Store once it finishes
+  # (server-side), avoiding the `submit --latest` race with --no-wait.
+  echo "Building and submitting iOS app..."
+  npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive --no-wait
 }
 
 deploy_android() {
-  echo "Building Android app..."
-  npx eas-cli@latest build --platform android --profile production --non-interactive --no-wait
-
-  echo "Submitting Android app to Play Store..."
-  npx eas-cli@latest submit --platform android --latest --non-interactive
+  echo "Building and submitting Android app..."
+  npx eas-cli@latest build --platform android --profile production --auto-submit --non-interactive --no-wait
 }
 
 if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "all" ]]; then
