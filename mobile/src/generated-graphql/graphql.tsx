@@ -86,6 +86,15 @@ export type DeleteLedgerEntrySourceSliceMutationVariables = Exact<{
 
 export type DeleteLedgerEntrySourceSliceMutation = { deleteLedgerEntrySourceSlice: { entryHash: string, message: string } };
 
+export type GetFeedQueryVariables = Exact<{
+  offset?: number | null | undefined;
+  limit?: number | null | undefined;
+  locale?: string | null | undefined;
+}>;
+
+
+export type GetFeedQuery = { getFeed: { hasMore: boolean, items: Array<{ id: string, title: string, summary: string | null, link: string, publishedAt: unknown, author: string | null, authorAvatar: string | null, source: Types.FeedSource }> } };
+
 export type GetLedgerQueryVariables = Exact<{
   ledgerId: string;
 }>;
@@ -668,6 +677,61 @@ export function useDeleteLedgerEntrySourceSliceMutation(baseOptions?: Apollo.Mut
 export type DeleteLedgerEntrySourceSliceMutationHookResult = ReturnType<typeof useDeleteLedgerEntrySourceSliceMutation>;
 export type DeleteLedgerEntrySourceSliceMutationResult = Apollo.MutationResult<DeleteLedgerEntrySourceSliceMutation>;
 export type DeleteLedgerEntrySourceSliceMutationOptions = Apollo.BaseMutationOptions<DeleteLedgerEntrySourceSliceMutation, DeleteLedgerEntrySourceSliceMutationVariables>;
+export const GetFeedDocument = gql`
+    query GetFeed($offset: Float, $limit: Float, $locale: String) {
+  getFeed(offset: $offset, limit: $limit, locale: $locale) {
+    items {
+      id
+      title
+      summary
+      link
+      publishedAt
+      author
+      authorAvatar
+      source
+    }
+    hasMore
+  }
+}
+    `;
+
+/**
+ * __useGetFeedQuery__
+ *
+ * To run a query within a React component, call `useGetFeedQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetFeedQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetFeedQuery({
+ *   variables: {
+ *      offset: // value for 'offset'
+ *      limit: // value for 'limit'
+ *      locale: // value for 'locale'
+ *   },
+ * });
+ */
+export function useGetFeedQuery(baseOptions?: Apollo.QueryHookOptions<GetFeedQuery, GetFeedQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetFeedQuery, GetFeedQueryVariables>(GetFeedDocument, options);
+      }
+export function useGetFeedLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetFeedQuery, GetFeedQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetFeedQuery, GetFeedQueryVariables>(GetFeedDocument, options);
+        }
+// @ts-ignore
+export function useGetFeedSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetFeedQuery, GetFeedQueryVariables>): Apollo.UseSuspenseQueryResult<GetFeedQuery, GetFeedQueryVariables>;
+export function useGetFeedSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetFeedQuery, GetFeedQueryVariables>): Apollo.UseSuspenseQueryResult<GetFeedQuery | undefined, GetFeedQueryVariables>;
+export function useGetFeedSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetFeedQuery, GetFeedQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetFeedQuery, GetFeedQueryVariables>(GetFeedDocument, options);
+        }
+export type GetFeedQueryHookResult = ReturnType<typeof useGetFeedQuery>;
+export type GetFeedLazyQueryHookResult = ReturnType<typeof useGetFeedLazyQuery>;
+export type GetFeedSuspenseQueryHookResult = ReturnType<typeof useGetFeedSuspenseQuery>;
+export type GetFeedQueryResult = Apollo.QueryResult<GetFeedQuery, GetFeedQueryVariables>;
 export const GetLedgerDocument = gql`
     query GetLedger($ledgerId: String!) {
   getLedger(ledgerId: $ledgerId) {

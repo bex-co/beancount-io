@@ -197,6 +197,8 @@ export const en = {
   togglePostings: "Toggle Postings",
   // reports tab
   reports: "Reports",
+  // feed
+  latestUpdates: "Latest Updates",
   cashFlow: "Cash Flow",
   // home dashboard
   seeAll: "See all",
