@@ -13,6 +13,7 @@ import {
 } from "react-native";
 
 import PagerView from "react-native-pager-view";
+import { horizontalSwipeOwnerTouchProps } from "@/common/horizontal-swipe-owner";
 import { useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 
@@ -238,7 +239,12 @@ export const Tabs: React.FC<TabsProps> = ({
   };
 
   return (
-    <View style={[styles.container, contentContainerStyle]}>
+    // Owner marker: swipes over the tab bar or pager change tabs, never open
+    // the ledger drawer.
+    <View
+      style={[styles.container, contentContainerStyle]}
+      {...horizontalSwipeOwnerTouchProps}
+    >
       {renderTabBar()}
       <View style={styles.pagerContainer}>
         <PagerView

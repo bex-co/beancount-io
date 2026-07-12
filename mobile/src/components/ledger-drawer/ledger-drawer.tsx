@@ -19,6 +19,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
+import { hasActiveHorizontalSwipeOwnerTouch } from "@/common/horizontal-swipe-owner";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -265,6 +266,12 @@ export function LedgerDrawer({
           }
           if (openRef.current) {
             return gesture.dx < -8;
+          }
+          // A touch that began inside a horizontal-swipe owner (chart card,
+          // pager) belongs to that component even when it doesn't claim the
+          // responder itself — never turn it into a drawer open.
+          if (hasActiveHorizontalSwipeOwnerTouch()) {
+            return false;
           }
           return gesture.x0 <= EDGE_HIT_WIDTH && gesture.dx > 8;
         },

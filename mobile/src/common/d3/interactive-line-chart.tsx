@@ -18,6 +18,7 @@ import { scaleLinear } from "d3-scale";
 import { line as d3Line, area as d3Area, curveMonotoneX } from "d3-shape";
 import * as Haptics from "expo-haptics";
 import { ErrorBoundary } from "react-error-boundary";
+import { horizontalSwipeOwnerTouchProps } from "@/common/horizontal-swipe-owner";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
@@ -166,6 +167,10 @@ function InteractiveLineChart({
       PanResponder.create({
         onStartShouldSetPanResponder: () => hasSeries,
         onMoveShouldSetPanResponder: () => hasSeries,
+        // Once a scrub owns the touch, refuse handoff requests from ancestors
+        // (the ledger drawer's edge-swipe would otherwise steal rightward
+        // scrubs that start near the left screen edge).
+        onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (event) => {
           onScrubStart?.();
           // Light impact on initial touch (Robinhood-style "tap-in" feel),
@@ -196,7 +201,9 @@ function InteractiveLineChart({
     scrubIndex !== null ? t(labels[scrubIndex] ?? label) : label;
 
   return (
-    <View>
+    // Owner marker covers the header/labels too, so swipes starting above the
+    // plot can't be claimed by the ledger drawer's edge gesture.
+    <View {...horizontalSwipeOwnerTouchProps}>
       <View style={styles.header}>
         <Text style={styles.label}>{headerTop}</Text>
         <AmountText style={styles.headline}>

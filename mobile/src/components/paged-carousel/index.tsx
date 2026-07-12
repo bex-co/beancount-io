@@ -6,6 +6,7 @@ import {
   View,
 } from "react-native";
 import PagerView from "react-native-pager-view";
+import { horizontalSwipeOwnerTouchProps } from "@/common/horizontal-swipe-owner";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 
@@ -83,7 +84,9 @@ export function PagedCarousel({
   }, []);
 
   return (
-    <View>
+    // Owner marker spans pages and dots: swipes anywhere on the carousel are
+    // paging (or scrubbing) gestures, never a ledger-drawer edge open.
+    <View {...horizontalSwipeOwnerTouchProps}>
       <PagerView
         ref={pagerRef}
         style={[styles.pager, { height }]}
