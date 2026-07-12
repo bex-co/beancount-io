@@ -157,7 +157,17 @@ export const EditTransactionScreen = (): JSX.Element => {
       setSaveError(msg);
       toast.showToast({ message: t("editFailed"), type: "error" });
     }
-  }, [sha256sum, saving, content, updateMutation, t, toast, router, entryHash, ledgerId]);
+  }, [
+    sha256sum,
+    saving,
+    content,
+    updateMutation,
+    t,
+    toast,
+    router,
+    entryHash,
+    ledgerId,
+  ]);
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>

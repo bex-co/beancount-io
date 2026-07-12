@@ -1,11 +1,5 @@
 import { useEffect } from "react";
-import {
-  Linking,
-  Pressable,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { Linking, Pressable, StyleSheet, Text, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, fontWeights } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -119,9 +113,21 @@ export function FeedCard({ refreshSignal = 0 }: FeedCardProps): JSX.Element {
     <DashboardCard title={t("latestUpdates")} bleed>
       {loading && items.length === 0 ? (
         <>
-          <LoadingTile height={18} mx={16} style={{ marginBottom: 10, width: "90%" }} />
-          <LoadingTile height={18} mx={16} style={{ marginBottom: 10, width: "75%" }} />
-          <LoadingTile height={18} mx={16} style={{ marginBottom: 10, width: "85%" }} />
+          <LoadingTile
+            height={18}
+            mx={16}
+            style={{ marginBottom: 10, width: "90%" }}
+          />
+          <LoadingTile
+            height={18}
+            mx={16}
+            style={{ marginBottom: 10, width: "75%" }}
+          />
+          <LoadingTile
+            height={18}
+            mx={16}
+            style={{ marginBottom: 10, width: "85%" }}
+          />
         </>
       ) : (
         <View style={{ paddingHorizontal: 16 }}>

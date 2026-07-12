@@ -14,7 +14,10 @@ describe("openEditTransaction", () => {
     openEditTransaction(router as never, PARAMS);
 
     expect(pushArgs.length).toBe(1);
-    const call = pushArgs[0] as { pathname: string; params: EditTransactionParams };
+    const call = pushArgs[0] as {
+      pathname: string;
+      params: EditTransactionParams;
+    };
     expect(call.pathname).toBe("/edit-transaction");
     expect(call.params.entryHash).toBe(PARAMS.entryHash);
     expect(call.params.ledgerId).toBe(PARAMS.ledgerId);
