@@ -1,6 +1,6 @@
 # w1 · m11 — Smart account suggestions in the add flow
 
-**Worker:** worker1 **Goal:** Picking a payee makes the app do the accounting thinking: the "to" account pre-fills from that payee's history (`getLedgerPayeeAccounts`), with an LLM suggestion fallback (`suggestTransactionCategoriesWithLLM`) for unseen payees — always visible and overridable before save. **Status:** todo
+**Worker:** worker1 **Goal:** Picking a payee makes the app do the accounting thinking: the "to" account pre-fills from that payee's history (`getLedgerPayeeAccounts`), with an LLM suggestion fallback (`suggestTransactionCategoriesWithLLM`) for unseen payees — always visible and overridable before save. **Status:** done
 
 ## Tasks (in order)
 
