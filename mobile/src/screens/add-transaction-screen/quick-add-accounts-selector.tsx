@@ -6,26 +6,36 @@ import {
   Text,
   View,
 } from "react-native";
+import { useReactiveVar } from "@apollo/client";
 import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
 import { analytics } from "@/common/analytics";
 import { fontSizes } from "@/common/theme";
 import { i18n } from "@/translations";
+import { ledgerVar } from "@/common/vars";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
-import { SelectedAssets, SelectedExpenses } from "@/common/globalFnFactory";
+import {
+  SelectedAssets,
+  SelectedExpenses,
+  SelectedPayee,
+} from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ListItem, ListItemSkeleton } from "./list-item";
+import { useTwoPostingSuggestions } from "./hooks/use-two-posting-suggestions";
+import { SuggestionChips } from "./suggestion-chips";
 
 type QuickAddAccountsSelectorProps = {
   onChange: ({
     asset,
     expense,
     currency,
+    payee,
   }: {
     asset: string;
     expense: string;
     currency: string;
+    payee: string;
   }) => void;
 };
 
@@ -64,38 +74,71 @@ export const QuickAddAccountsSelector = (
   const { userId } = useSession();
   const { onChange } = props;
   const [refreshing, setRefreshing] = useState(false);
-  const {
-    assetsOptionTabs,
-    expensesOptionTabs,
-    currencies,
-    error,
-    loading,
-    refetch,
-  } = useLedgerMeta(userId);
-  const [selectedAssets, setSelectedAssets] = useState<string>(
-    assetsOptionTabs.length > 0 ? assetsOptionTabs[0].options[0] : "",
-  );
-  const [selectedExpenses, setSelectedExpenses] = useState<string>(
-    expensesOptionTabs.length > 0 ? expensesOptionTabs[0].options[0] : "",
-  );
-
-  // Backfill defaults once ledger meta arrives — the useState initializers
-  // run before the query resolves on a cold mount.
-  useEffect(() => {
-    if (!selectedAssets && assetsOptionTabs.length > 0) {
-      setSelectedAssets(assetsOptionTabs[0].options[0]);
-    }
-    if (!selectedExpenses && expensesOptionTabs.length > 0) {
-      setSelectedExpenses(expensesOptionTabs[0].options[0]);
-    }
-  }, [assetsOptionTabs, expensesOptionTabs, selectedAssets, selectedExpenses]);
+  const { currencies, error, loading, refetch } = useLedgerMeta(userId);
+  // FROM/TO start empty — no pre-filled default. They fill from a payee
+  // suggestion or an explicit picker choice.
+  const [selectedAssets, setSelectedAssets] = useState<string>("");
+  const [selectedExpenses, setSelectedExpenses] = useState<string>("");
+  const [selectedPayee, setSelectedPayee] = useState<string>("");
 
   useEffect(() => {
     const currency = currencies.length > 0 ? currencies[0] : "";
     if (onChange) {
-      onChange({ asset: selectedAssets, expense: selectedExpenses, currency });
+      onChange({
+        asset: selectedAssets,
+        expense: selectedExpenses,
+        currency,
+        payee: selectedPayee,
+      });
     }
   });
+
+  // Payee → FROM/TO suggestion (quick-add). Derived only from the payee's
+  // two-posting (simple) transactions, so the suggestion matches quick-add's
+  // own FROM→TO model and ignores multi-leg splits. Picking a payee pre-fills
+  // both rows and offers runner-ups as chips. Nothing changes until a payee is
+  // chosen; slow/failed queries never block the flow.
+  const ledgerId = useReactiveVar(ledgerVar);
+  const {
+    from: fromSuggestions,
+    to: toSuggestions,
+    loading: suggestionsLoading,
+  } = useTwoPostingSuggestions({
+    ledgerId: ledgerId ?? "",
+    payee: selectedPayee,
+  });
+
+  useEffect(() => {
+    if (fromSuggestions.autoFill) {
+      setSelectedAssets(fromSuggestions.autoFill);
+    }
+  }, [fromSuggestions.autoFill]);
+
+  useEffect(() => {
+    if (toSuggestions.autoFill) {
+      setSelectedExpenses(toSuggestions.autoFill);
+    }
+  }, [toSuggestions.autoFill]);
+
+  const handleFromChipPress = async (account: string) => {
+    setSelectedAssets(account);
+    await analytics.track("tap_suggestion_chip", {
+      payee: selectedPayee,
+      account,
+      side: "from",
+      source: "history",
+    });
+  };
+
+  const handleToChipPress = async (account: string) => {
+    setSelectedExpenses(account);
+    await analytics.track("tap_suggestion_chip", {
+      payee: selectedPayee,
+      account,
+      side: "to",
+      source: "history",
+    });
+  };
 
   // Skeleton only on first load — during pull-to-refresh the current
   // selections stay visible under the RefreshControl spinner.
@@ -139,12 +182,33 @@ export const QuickAddAccountsSelector = (
           <>
             <ListItemSkeleton />
             <ListItemSkeleton showDivider />
+            <ListItemSkeleton showDivider />
           </>
         ) : (
           <>
             <ListItem
+              title={i18n.t("payee").toUpperCase()}
+              content={selectedPayee}
+              onPress={async () => {
+                analytics.track("tap_payee_picker", {
+                  originalPayee: selectedPayee,
+                });
+                SelectedPayee.setFn((value: string) => {
+                  setSelectedPayee(value);
+                });
+                router.navigate({
+                  pathname: "/(app)/payee-input",
+                  params: {
+                    payee: selectedPayee,
+                    simpleOnly: "true",
+                  },
+                });
+              }}
+            />
+            <ListItem
               title={i18n.t("from").toUpperCase()}
               content={selectedAssets}
+              showDivider
               onPress={async () => {
                 analytics.track("tap_assets_picker", {
                   originalOption: selectedAssets,
@@ -161,6 +225,14 @@ export const QuickAddAccountsSelector = (
                 });
               }}
             />
+            {(fromSuggestions.chips.length > 0 || suggestionsLoading) && (
+              <SuggestionChips
+                chips={fromSuggestions.chips}
+                selectedAccount={selectedAssets}
+                loading={suggestionsLoading}
+                onSelect={handleFromChipPress}
+              />
+            )}
             <ListItem
               title={i18n.t("to").toUpperCase()}
               content={selectedExpenses}
@@ -181,6 +253,14 @@ export const QuickAddAccountsSelector = (
                 });
               }}
             />
+            {(toSuggestions.chips.length > 0 || suggestionsLoading) && (
+              <SuggestionChips
+                chips={toSuggestions.chips}
+                selectedAccount={selectedExpenses}
+                loading={suggestionsLoading}
+                onSelect={handleToChipPress}
+              />
+            )}
           </>
         )}
       </View>

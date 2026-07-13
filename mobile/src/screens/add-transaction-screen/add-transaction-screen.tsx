@@ -111,19 +111,23 @@ export function AddTransactionScreen(): JSX.Element {
 
   let currentAsset = "";
   let currentExpense = "";
+  let currentPayee = "";
   const [currentCurrency, setCurrentCurrency] = React.useState("");
 
   const onChange = ({
     asset,
     expense,
     currency,
+    payee,
   }: {
     asset: string;
     expense: string;
     currency: string;
+    payee: string;
   }) => {
     currentAsset = asset;
     currentExpense = expense;
+    currentPayee = payee;
     setCurrentCurrency(currency);
   };
 
@@ -202,6 +206,7 @@ export function AddTransactionScreen(): JSX.Element {
                         currentAsset,
                         currentExpense,
                         currentCurrency,
+                        currentPayee,
                         // onRefresh,
                       },
                     });

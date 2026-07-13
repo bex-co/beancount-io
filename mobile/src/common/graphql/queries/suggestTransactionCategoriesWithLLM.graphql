@@ -1,0 +1,13 @@
+query suggestTransactionCategoriesWithLLM(
+  $ledgerId: String!
+  $transactions: [TransactionToCategorizeInput!]!
+) {
+  suggestTransactionCategoriesWithLLM(
+    ledgerId: $ledgerId
+    transactions: $transactions
+  ) {
+    targetAccount
+    confidence
+    source
+  }
+}

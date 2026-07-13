@@ -1,0 +1,3 @@
+query getLedgerPayeeAccounts($ledgerId: String!, $payee: String!) {
+  getLedgerPayeeAccounts(ledgerId: $ledgerId, payee: $payee)
+}

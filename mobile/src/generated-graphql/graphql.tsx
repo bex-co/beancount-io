@@ -125,6 +125,14 @@ export type GetLedgerNarrationsQueryVariables = Exact<{
 
 export type GetLedgerNarrationsQuery = { getLedgerNarrations: Array<string> };
 
+export type GetLedgerPayeeAccountsQueryVariables = Exact<{
+  ledgerId: string;
+  payee: string;
+}>;
+
+
+export type GetLedgerPayeeAccountsQuery = { getLedgerPayeeAccounts: Array<string> };
+
 export type GetLedgerPayeesQueryVariables = Exact<{
   ledgerId: string;
 }>;
@@ -194,6 +202,14 @@ export type SubscriptionStatusQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SubscriptionStatusQuery = { subscriptionStatus: { hasActiveSubscription: boolean, subscriptions: Array<{ id: string, status: string, cancelAt: unknown, cancelAtPeriodEnd: boolean, canceledAt: unknown, clientId: string, currentPeriodEnd: unknown, currentPeriodStart: unknown, items: Array<{ id: string, quantity: number, price: { id: string, amount: number, currency: string, interval: string, intervalCount: number | null, trialPeriodDays: number | null }, product: { id: string, name: string, description: string | null, images: Array<string> | null } | null }> }> } };
+
+export type SuggestTransactionCategoriesWithLlmQueryVariables = Exact<{
+  ledgerId: string;
+  transactions: Array<Types.TransactionToCategorizeInput> | Types.TransactionToCategorizeInput;
+}>;
+
+
+export type SuggestTransactionCategoriesWithLlmQuery = { suggestTransactionCategoriesWithLLM: Array<{ targetAccount: string, confidence: number, source: string }> };
 
 export type UpdateLedgerEntrySourceSliceMutationVariables = Exact<{
   input: Types.UpdateSourceSliceInput;
@@ -933,6 +949,48 @@ export type GetLedgerNarrationsQueryHookResult = ReturnType<typeof useGetLedgerN
 export type GetLedgerNarrationsLazyQueryHookResult = ReturnType<typeof useGetLedgerNarrationsLazyQuery>;
 export type GetLedgerNarrationsSuspenseQueryHookResult = ReturnType<typeof useGetLedgerNarrationsSuspenseQuery>;
 export type GetLedgerNarrationsQueryResult = Apollo.QueryResult<GetLedgerNarrationsQuery, GetLedgerNarrationsQueryVariables>;
+export const GetLedgerPayeeAccountsDocument = gql`
+    query getLedgerPayeeAccounts($ledgerId: String!, $payee: String!) {
+  getLedgerPayeeAccounts(ledgerId: $ledgerId, payee: $payee)
+}
+    `;
+
+/**
+ * __useGetLedgerPayeeAccountsQuery__
+ *
+ * To run a query within a React component, call `useGetLedgerPayeeAccountsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLedgerPayeeAccountsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLedgerPayeeAccountsQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      payee: // value for 'payee'
+ *   },
+ * });
+ */
+export function useGetLedgerPayeeAccountsQuery(baseOptions: Apollo.QueryHookOptions<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables> & ({ variables: GetLedgerPayeeAccountsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables>(GetLedgerPayeeAccountsDocument, options);
+      }
+export function useGetLedgerPayeeAccountsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables>(GetLedgerPayeeAccountsDocument, options);
+        }
+// @ts-ignore
+export function useGetLedgerPayeeAccountsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables>;
+export function useGetLedgerPayeeAccountsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerPayeeAccountsQuery | undefined, GetLedgerPayeeAccountsQueryVariables>;
+export function useGetLedgerPayeeAccountsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables>(GetLedgerPayeeAccountsDocument, options);
+        }
+export type GetLedgerPayeeAccountsQueryHookResult = ReturnType<typeof useGetLedgerPayeeAccountsQuery>;
+export type GetLedgerPayeeAccountsLazyQueryHookResult = ReturnType<typeof useGetLedgerPayeeAccountsLazyQuery>;
+export type GetLedgerPayeeAccountsSuspenseQueryHookResult = ReturnType<typeof useGetLedgerPayeeAccountsSuspenseQuery>;
+export type GetLedgerPayeeAccountsQueryResult = Apollo.QueryResult<GetLedgerPayeeAccountsQuery, GetLedgerPayeeAccountsQueryVariables>;
 export const GetLedgerPayeesDocument = gql`
     query getLedgerPayees($ledgerId: String!) {
   getLedgerPayees(ledgerId: $ledgerId)
@@ -1460,6 +1518,55 @@ export type SubscriptionStatusQueryHookResult = ReturnType<typeof useSubscriptio
 export type SubscriptionStatusLazyQueryHookResult = ReturnType<typeof useSubscriptionStatusLazyQuery>;
 export type SubscriptionStatusSuspenseQueryHookResult = ReturnType<typeof useSubscriptionStatusSuspenseQuery>;
 export type SubscriptionStatusQueryResult = Apollo.QueryResult<SubscriptionStatusQuery, SubscriptionStatusQueryVariables>;
+export const SuggestTransactionCategoriesWithLlmDocument = gql`
+    query suggestTransactionCategoriesWithLLM($ledgerId: String!, $transactions: [TransactionToCategorizeInput!]!) {
+  suggestTransactionCategoriesWithLLM(
+    ledgerId: $ledgerId
+    transactions: $transactions
+  ) {
+    targetAccount
+    confidence
+    source
+  }
+}
+    `;
+
+/**
+ * __useSuggestTransactionCategoriesWithLlmQuery__
+ *
+ * To run a query within a React component, call `useSuggestTransactionCategoriesWithLlmQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSuggestTransactionCategoriesWithLlmQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useSuggestTransactionCategoriesWithLlmQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      transactions: // value for 'transactions'
+ *   },
+ * });
+ */
+export function useSuggestTransactionCategoriesWithLlmQuery(baseOptions: Apollo.QueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables> & ({ variables: SuggestTransactionCategoriesWithLlmQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>(SuggestTransactionCategoriesWithLlmDocument, options);
+      }
+export function useSuggestTransactionCategoriesWithLlmLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>(SuggestTransactionCategoriesWithLlmDocument, options);
+        }
+// @ts-ignore
+export function useSuggestTransactionCategoriesWithLlmSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>): Apollo.UseSuspenseQueryResult<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>;
+export function useSuggestTransactionCategoriesWithLlmSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>): Apollo.UseSuspenseQueryResult<SuggestTransactionCategoriesWithLlmQuery | undefined, SuggestTransactionCategoriesWithLlmQueryVariables>;
+export function useSuggestTransactionCategoriesWithLlmSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>(SuggestTransactionCategoriesWithLlmDocument, options);
+        }
+export type SuggestTransactionCategoriesWithLlmQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesWithLlmQuery>;
+export type SuggestTransactionCategoriesWithLlmLazyQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesWithLlmLazyQuery>;
+export type SuggestTransactionCategoriesWithLlmSuspenseQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesWithLlmSuspenseQuery>;
+export type SuggestTransactionCategoriesWithLlmQueryResult = Apollo.QueryResult<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>;
 export const UpdateLedgerEntrySourceSliceDocument = gql`
     mutation updateLedgerEntrySourceSlice($input: UpdateSourceSliceInput!, $ledgerId: String!) {
   updateLedgerEntrySourceSlice(input: $input, ledgerId: $ledgerId) {
