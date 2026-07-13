@@ -57,6 +57,10 @@ test("receiptErrorKey maps parse_failed", () => {
   expect(receiptErrorKey("parse_failed")).toBe("receiptParseFailed");
 });
 
+test("receiptErrorKey maps save_failed", () => {
+  expect(receiptErrorKey("save_failed")).toBe("receiptSaveFailed");
+});
+
 test("receiptErrorKey falls back to upload failed for unknown codes", () => {
   expect(receiptErrorKey("upload_failed")).toBe("receiptUploadFailed");
   expect(receiptErrorKey("network_error")).toBe("receiptUploadFailed");

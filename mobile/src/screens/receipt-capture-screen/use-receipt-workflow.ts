@@ -8,6 +8,7 @@ import {
 } from "@/generated-graphql/graphql";
 
 export type ReceiptPhase =
+  | { kind: "idle" }
   | { kind: "uploading" }
   | { kind: "parsing" }
   | {
@@ -40,7 +41,7 @@ export type ReceiptWorkflow = {
 };
 
 export const useReceiptWorkflow = (): ReceiptWorkflow => {
-  const [phase, setPhase] = useState<ReceiptPhase>({ kind: "uploading" });
+  const [phase, setPhase] = useState<ReceiptPhase>({ kind: "idle" });
 
   const [generateUploadUrl] = useGenerateTempAssetUploadUrlMutation();
   const [parseReceipt] = useParseReceiptWithLlmMutation();

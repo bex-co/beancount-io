@@ -258,4 +258,8 @@ export const en = {
   receiptUploadFailed: "Upload failed. Please try again.",
   receiptSaveSuccess: "Transaction saved!",
   receiptSaveFailed: "Failed to save transaction.",
+  receiptCameraPermission:
+    "Camera access is needed to take a photo of your receipt. Enable it in Settings.",
+  receiptLibraryPermission:
+    "Photo library access is needed to choose a receipt. Enable it in Settings.",
 };

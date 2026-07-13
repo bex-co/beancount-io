@@ -1,9 +1,7 @@
 import { memo, useEffect, useRef, useState } from "react";
 import {
-  ActionSheetIOS,
   ActivityIndicator,
   Alert,
-  Platform,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -11,6 +9,7 @@ import {
   TextInput,
   View,
 } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { Stack, useRouter, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import * as ImagePicker from "expo-image-picker";
@@ -141,6 +140,38 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
     },
+    chooserContainer: {
+      flex: 1,
+      justifyContent: "center",
+      paddingHorizontal: 24,
+      gap: 16,
+      backgroundColor: theme.white,
+    },
+    chooserButton: {
+      flexDirection: "row",
+      alignItems: "center",
+      justifyContent: "center",
+      gap: 12,
+      paddingVertical: 18,
+      borderRadius: 12,
+      backgroundColor: theme.primary,
+    },
+    chooserButtonPressed: {
+      backgroundColor: theme.primaryDark,
+    },
+    chooserButtonText: {
+      color: theme.white,
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
+    },
+    chooserCancel: {
+      paddingVertical: 14,
+      alignItems: "center",
+    },
+    chooserCancelText: {
+      color: theme.black60,
+      fontSize: fontSizes.md,
+    },
   });
 
 type ReviewState = {
@@ -159,6 +190,49 @@ const ProgressView = ({ message }: { message: string }) => {
     <View style={styles.progressContainer}>
       <ActivityIndicator size="large" />
       <Text style={styles.progressText}>{message}</Text>
+    </View>
+  );
+};
+
+const SourceChooserView = ({
+  onPick,
+  onCancel,
+}: {
+  onPick: (useCamera: boolean) => void;
+  onCancel: () => void;
+}) => {
+  const styles = useThemeStyle(getStyles);
+  const theme = useTheme().colorTheme;
+  const { t } = useTranslations();
+  return (
+    <View style={styles.chooserContainer}>
+      <Pressable
+        testID="receipt-take-photo"
+        style={({ pressed }) => [
+          styles.chooserButton,
+          pressed && styles.chooserButtonPressed,
+        ]}
+        onPress={() => onPick(true)}
+      >
+        <Ionicons name="camera-outline" size={22} color={theme.white} />
+        <Text style={styles.chooserButtonText}>{t("receiptTakePhoto")}</Text>
+      </Pressable>
+      <Pressable
+        testID="receipt-choose-library"
+        style={({ pressed }) => [
+          styles.chooserButton,
+          pressed && styles.chooserButtonPressed,
+        ]}
+        onPress={() => onPick(false)}
+      >
+        <Ionicons name="images-outline" size={22} color={theme.white} />
+        <Text style={styles.chooserButtonText}>
+          {t("receiptChooseLibrary")}
+        </Text>
+      </Pressable>
+      <Pressable style={styles.chooserCancel} onPress={onCancel}>
+        <Text style={styles.chooserCancelText}>{t("receiptCancel")}</Text>
+      </Pressable>
     </View>
   );
 };
@@ -359,13 +433,17 @@ const ReceiptCaptureScreenImpl = () => {
 
   const launched = useRef(false);
 
+  // Opening the OS camera/library picker is user-initiated from the in-screen
+  // chooser. We deliberately do NOT auto-present a native picker/action-sheet on
+  // mount: doing so while the Quick Add menu's <Modal> is dismissing and the
+  // screen push is still animating wedges iOS's presentation stack and freezes
+  // the whole app.
   const launchPicker = async (useCamera: boolean) => {
     let result: ImagePicker.ImagePickerResult;
     if (useCamera) {
       const perm = await ImagePicker.requestCameraPermissionsAsync();
       if (perm.status !== "granted") {
-        Alert.alert(t("noContactPermission"));
-        router.back();
+        Alert.alert(t("receiptCameraPermission"));
         return;
       }
       result = await ImagePicker.launchCameraAsync({
@@ -375,8 +453,7 @@ const ReceiptCaptureScreenImpl = () => {
     } else {
       const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
       if (perm.status !== "granted") {
-        Alert.alert(t("noContactPermission"));
-        router.back();
+        Alert.alert(t("receiptLibraryPermission"));
         return;
       }
       result = await ImagePicker.launchImageLibraryAsync({
@@ -385,8 +462,8 @@ const ReceiptCaptureScreenImpl = () => {
       });
     }
 
+    // On cancel, stay on the chooser so the user can pick again.
     if (result.canceled || !result.assets?.[0]) {
-      router.back();
       return;
     }
 
@@ -400,59 +477,27 @@ const ReceiptCaptureScreenImpl = () => {
     await workflow.startCapture(asset.uri, mimeType, filename, ledgerId);
   };
 
-  const showPicker = () => {
-    const options = [
-      t("receiptTakePhoto"),
-      t("receiptChooseLibrary"),
-      t("receiptCancel"),
-    ];
-    if (Platform.OS === "ios") {
-      ActionSheetIOS.showActionSheetWithOptions(
-        { options, cancelButtonIndex: 2 },
-        (idx) => {
-          if (idx === 0) launchPicker(true);
-          else if (idx === 1) launchPicker(false);
-          else router.back();
-        },
-      );
-    } else {
-      Alert.alert(t("receiptCaptureTitle"), undefined, [
-        { text: t("receiptTakePhoto"), onPress: () => launchPicker(true) },
-        { text: t("receiptChooseLibrary"), onPress: () => launchPicker(false) },
-        {
-          text: t("receiptCancel"),
-          style: "cancel",
-          onPress: () => router.back(),
-        },
-      ]);
-    }
-  };
-
   useEffect(() => {
-    if (!launched.current) {
+    if (!launched.current && __DEV__ && testMode === "1") {
       launched.current = true;
-      if (__DEV__ && testMode === "1") {
-        // Bypass the system photo picker for automated E2E testing.
-        // XCUITest (used by expo-mcp) dismisses native pickers on attach.
-        (async () => {
-          try {
-            const uri = `${LegacyFS.cacheDirectory}test-receipt.jpg`;
-            await LegacyFS.writeAsStringAsync(uri, TEST_JPEG_B64, {
-              encoding: LegacyFS.EncodingType.Base64,
-            });
-            await workflow.startCapture(
-              uri,
-              "image/jpeg",
-              "test-receipt.jpg",
-              ledgerId,
-            );
-          } catch (e) {
-            console.error("testMode capture failed:", e);
-          }
-        })();
-      } else {
-        showPicker();
-      }
+      // Bypass the system photo picker for automated E2E testing.
+      // XCUITest (used by expo-mcp) dismisses native pickers on attach.
+      (async () => {
+        try {
+          const uri = `${LegacyFS.cacheDirectory}test-receipt.jpg`;
+          await LegacyFS.writeAsStringAsync(uri, TEST_JPEG_B64, {
+            encoding: LegacyFS.EncodingType.Base64,
+          });
+          await workflow.startCapture(
+            uri,
+            "image/jpeg",
+            "test-receipt.jpg",
+            ledgerId,
+          );
+        } catch (e) {
+          console.error("testMode capture failed:", e);
+        }
+      })();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -469,6 +514,14 @@ const ReceiptCaptureScreenImpl = () => {
   const renderBody = () => {
     const { phase } = workflow;
 
+    if (phase.kind === "idle") {
+      return (
+        <SourceChooserView
+          onPick={launchPicker}
+          onCancel={() => router.back()}
+        />
+      );
+    }
     if (phase.kind === "uploading") {
       return <ProgressView message={t("receiptUploading")} />;
     }
