@@ -1,18 +1,18 @@
 # w1 · m10 — AI receipt capture from the Quick Add menu
 
-**Worker:** worker1 **Goal:** Photograph a receipt, get a proposed transaction, review, confirm, done — the first pillar-2 (AI) feature in the app. AI proposes; the user confirms; nothing is written without review. **Status:** todo
+**Worker:** worker1 **Goal:** Photograph a receipt, get a proposed transaction, review, confirm, done — the first pillar-2 (AI) feature in the app. AI proposes; the user confirms; nothing is written without review. **Status:** done
 
 ## Tasks (in order)
 
-| id   | title                                                                          | est | depends_on |
-| ---- | ------------------------------------------------------------------------------ | --- | ---------- |
-| t001 | GraphQL ops + codegen: upload URL, parse, insert, `aiCfoUsage`                 | 25m | —          |
-| t002 | "Scan receipt" menu item + camera/library image acquisition (⚠ new dependency) | 35m | w1/m8/t001 |
-| t003 | Upload to presigned URL + `parseReceiptWithLLM`, progress UI, quota/errors     | 45m | t001, t002 |
-| t004 | Review & confirm screen: editable proposal → `insertReceiptTransaction`        | 60m | t003       |
-| t005 | UX pass — light/dark, i18n, loading bg, safe area, analytics                   | 40m | t004       |
-| t006 | Simplify pass over receipt-capture code                                        | 30m | t005       |
-| t007 | Unit tests for receipt-capture behavior                                        | 40m | t005       |
+| id   | title                                                                          | est | depends_on | —        |
+| ---- | ------------------------------------------------------------------------------ | --- | ---------- | -------- |
+| t001 | GraphQL ops + codegen: upload URL, parse, insert, `aiCfoUsage`                 | 25m | —          | **DONE** |
+| t002 | "Scan receipt" menu item + camera/library image acquisition (⚠ new dependency) | 35m | w1/m8/t001 | **DONE** |
+| t003 | Upload to presigned URL + `parseReceiptWithLLM`, progress UI, quota/errors     | 45m | t001, t002 | **DONE** |
+| t004 | Review & confirm screen: editable proposal → `insertReceiptTransaction`        | 60m | t003       | **DONE** |
+| t005 | UX pass — light/dark, i18n, loading bg, safe area, analytics                   | 40m | t004       | **DONE** |
+| t006 | Simplify pass over receipt-capture code                                        | 30m | t005       | **DONE** |
+| t007 | Unit tests for receipt-capture behavior                                        | 40m | t005       | **DONE** |
 
 ## Definition of done
 

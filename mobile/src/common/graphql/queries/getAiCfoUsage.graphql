@@ -1,0 +1,6 @@
+query GetAiCfoUsage {
+  aiCfoUsage {
+    aiCfoTokensUsed
+    aiCfoTokensMax
+  }
+}

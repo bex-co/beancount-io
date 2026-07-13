@@ -109,6 +109,14 @@ export const HomeScreenImpl = (): JSX.Element => {
                 router.navigate({ pathname: "/add-transaction-multi" });
               },
             },
+            {
+              label: t("scanReceipt"),
+              onPress: async () => {
+                analytics.track("tap_scan_receipt", {});
+                AddTransactionCallback.setFn(onRefresh);
+                router.navigate({ pathname: "/receipt-capture" });
+              },
+            },
           ]}
         />
 

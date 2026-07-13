@@ -23,14 +23,14 @@
       "userInterfaceStyle": "automatic",
       "infoPlist": {
         "NSCalendarsUsageDescription": false,
-        "NSCameraUsageDescription": false,
+        "NSCameraUsageDescription": "Beancount uses the camera to scan receipts.",
         "NSContactsUsageDescription": false,
         "NSLocationWhenInUseUsageDescription": false,
         "NSLocationAlwaysUsageDescription": false,
         "NSLocationAlwaysAndWhenInUseUsageDescription": false,
         "NSMicrophoneUsageDescription": false,
         "NSMotionUsageDescription": false,
-        "NSPhotoLibraryUsageDescription": false,
+        "NSPhotoLibraryUsageDescription": "Beancount accesses your photos to scan receipts.",
         "NSPhotoLibraryAddUsageDescription": false,
         "NSFaceIDUsageDescription": false,
         "ITSAppUsesNonExemptEncryption": false

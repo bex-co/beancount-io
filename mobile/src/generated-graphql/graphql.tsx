@@ -86,6 +86,19 @@ export type DeleteLedgerEntrySourceSliceMutationVariables = Exact<{
 
 export type DeleteLedgerEntrySourceSliceMutation = { deleteLedgerEntrySourceSlice: { entryHash: string, message: string } };
 
+export type GenerateTempAssetUploadUrlMutationVariables = Exact<{
+  mimeType?: string | null | undefined;
+  filename?: string | null | undefined;
+}>;
+
+
+export type GenerateTempAssetUploadUrlMutation = { generateTempAssetUploadUrl: { uploadUrl: string, objectKey: string, expiresIn: number } };
+
+export type GetAiCfoUsageQueryVariables = Exact<{ [key: string]: never; }>;
+
+
+export type GetAiCfoUsageQuery = { aiCfoUsage: { aiCfoTokensUsed: number, aiCfoTokensMax: number } };
+
 export type GetFeedQueryVariables = Exact<{
   offset?: number | null | undefined;
   limit?: number | null | undefined;
@@ -158,6 +171,15 @@ export type IncomeStatementQueryVariables = Exact<{
 
 export type IncomeStatementQuery = { getLedgerIncomeStatement: { expensesData: Array<{ date: string, balance: Record<string, number | string>, accountBalances: Record<string, number | string> }>, incomeData: Array<{ date: string, balance: Record<string, number | string>, accountBalances: Record<string, number | string> }>, netProfitData: Array<{ date: string, balance: Record<string, number | string> }>, expensesHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean }, incomeHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean } } };
 
+export type InsertReceiptTransactionMutationVariables = Exact<{
+  ledgerId: string;
+  receiptObjectKey: string;
+  input: Types.InsertReceiptTransactionInput;
+}>;
+
+
+export type InsertReceiptTransactionMutation = { insertReceiptTransaction: { success: boolean } };
+
 export type JournalEntriesQueryVariables = Exact<{
   first?: number | null | undefined;
   after?: string | null | undefined;
@@ -192,6 +214,14 @@ export type ListLedgersQueryVariables = Exact<{
 
 
 export type ListLedgersQuery = { listLedgers: Array<{ id: string, name: string, fullName: string, httpUrl: string, sshUrl: string, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, permissions: { admin: boolean, pull: boolean, push: boolean } | null }> };
+
+export type ParseReceiptWithLlmMutationVariables = Exact<{
+  s3ObjectKey: string;
+  ledgerId: string;
+}>;
+
+
+export type ParseReceiptWithLlmMutation = { parseReceiptWithLLM: { date: string, payee: string, description: string, amount: number, sourceAccount: string | null, targetAccount: string | null } };
 
 export type PaymentHistoryQueryVariables = Exact<{ [key: string]: never; }>;
 
@@ -693,6 +723,85 @@ export function useDeleteLedgerEntrySourceSliceMutation(baseOptions?: Apollo.Mut
 export type DeleteLedgerEntrySourceSliceMutationHookResult = ReturnType<typeof useDeleteLedgerEntrySourceSliceMutation>;
 export type DeleteLedgerEntrySourceSliceMutationResult = Apollo.MutationResult<DeleteLedgerEntrySourceSliceMutation>;
 export type DeleteLedgerEntrySourceSliceMutationOptions = Apollo.BaseMutationOptions<DeleteLedgerEntrySourceSliceMutation, DeleteLedgerEntrySourceSliceMutationVariables>;
+export const GenerateTempAssetUploadUrlDocument = gql`
+    mutation GenerateTempAssetUploadUrl($mimeType: String, $filename: String) {
+  generateTempAssetUploadUrl(mimeType: $mimeType, filename: $filename) {
+    uploadUrl
+    objectKey
+    expiresIn
+  }
+}
+    `;
+export type GenerateTempAssetUploadUrlMutationFn = Apollo.MutationFunction<GenerateTempAssetUploadUrlMutation, GenerateTempAssetUploadUrlMutationVariables>;
+
+/**
+ * __useGenerateTempAssetUploadUrlMutation__
+ *
+ * To run a mutation, you first call `useGenerateTempAssetUploadUrlMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useGenerateTempAssetUploadUrlMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [generateTempAssetUploadUrlMutation, { data, loading, error }] = useGenerateTempAssetUploadUrlMutation({
+ *   variables: {
+ *      mimeType: // value for 'mimeType'
+ *      filename: // value for 'filename'
+ *   },
+ * });
+ */
+export function useGenerateTempAssetUploadUrlMutation(baseOptions?: Apollo.MutationHookOptions<GenerateTempAssetUploadUrlMutation, GenerateTempAssetUploadUrlMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<GenerateTempAssetUploadUrlMutation, GenerateTempAssetUploadUrlMutationVariables>(GenerateTempAssetUploadUrlDocument, options);
+      }
+export type GenerateTempAssetUploadUrlMutationHookResult = ReturnType<typeof useGenerateTempAssetUploadUrlMutation>;
+export type GenerateTempAssetUploadUrlMutationResult = Apollo.MutationResult<GenerateTempAssetUploadUrlMutation>;
+export type GenerateTempAssetUploadUrlMutationOptions = Apollo.BaseMutationOptions<GenerateTempAssetUploadUrlMutation, GenerateTempAssetUploadUrlMutationVariables>;
+export const GetAiCfoUsageDocument = gql`
+    query GetAiCfoUsage {
+  aiCfoUsage {
+    aiCfoTokensUsed
+    aiCfoTokensMax
+  }
+}
+    `;
+
+/**
+ * __useGetAiCfoUsageQuery__
+ *
+ * To run a query within a React component, call `useGetAiCfoUsageQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetAiCfoUsageQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetAiCfoUsageQuery({
+ *   variables: {
+ *   },
+ * });
+ */
+export function useGetAiCfoUsageQuery(baseOptions?: Apollo.QueryHookOptions<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>(GetAiCfoUsageDocument, options);
+      }
+export function useGetAiCfoUsageLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>(GetAiCfoUsageDocument, options);
+        }
+// @ts-ignore
+export function useGetAiCfoUsageSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>): Apollo.UseSuspenseQueryResult<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>;
+export function useGetAiCfoUsageSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>): Apollo.UseSuspenseQueryResult<GetAiCfoUsageQuery | undefined, GetAiCfoUsageQueryVariables>;
+export function useGetAiCfoUsageSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>(GetAiCfoUsageDocument, options);
+        }
+export type GetAiCfoUsageQueryHookResult = ReturnType<typeof useGetAiCfoUsageQuery>;
+export type GetAiCfoUsageLazyQueryHookResult = ReturnType<typeof useGetAiCfoUsageLazyQuery>;
+export type GetAiCfoUsageSuspenseQueryHookResult = ReturnType<typeof useGetAiCfoUsageSuspenseQuery>;
+export type GetAiCfoUsageQueryResult = Apollo.QueryResult<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>;
 export const GetFeedDocument = gql`
     query GetFeed($offset: Float, $limit: Float, $locale: String) {
   getFeed(offset: $offset, limit: $limit, locale: $locale) {
@@ -1163,6 +1272,45 @@ export type IncomeStatementQueryHookResult = ReturnType<typeof useIncomeStatemen
 export type IncomeStatementLazyQueryHookResult = ReturnType<typeof useIncomeStatementLazyQuery>;
 export type IncomeStatementSuspenseQueryHookResult = ReturnType<typeof useIncomeStatementSuspenseQuery>;
 export type IncomeStatementQueryResult = Apollo.QueryResult<IncomeStatementQuery, IncomeStatementQueryVariables>;
+export const InsertReceiptTransactionDocument = gql`
+    mutation InsertReceiptTransaction($ledgerId: String!, $receiptObjectKey: String!, $input: InsertReceiptTransactionInput!) {
+  insertReceiptTransaction(
+    ledgerId: $ledgerId
+    receiptObjectKey: $receiptObjectKey
+    input: $input
+  ) {
+    success
+  }
+}
+    `;
+export type InsertReceiptTransactionMutationFn = Apollo.MutationFunction<InsertReceiptTransactionMutation, InsertReceiptTransactionMutationVariables>;
+
+/**
+ * __useInsertReceiptTransactionMutation__
+ *
+ * To run a mutation, you first call `useInsertReceiptTransactionMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useInsertReceiptTransactionMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [insertReceiptTransactionMutation, { data, loading, error }] = useInsertReceiptTransactionMutation({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      receiptObjectKey: // value for 'receiptObjectKey'
+ *      input: // value for 'input'
+ *   },
+ * });
+ */
+export function useInsertReceiptTransactionMutation(baseOptions?: Apollo.MutationHookOptions<InsertReceiptTransactionMutation, InsertReceiptTransactionMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<InsertReceiptTransactionMutation, InsertReceiptTransactionMutationVariables>(InsertReceiptTransactionDocument, options);
+      }
+export type InsertReceiptTransactionMutationHookResult = ReturnType<typeof useInsertReceiptTransactionMutation>;
+export type InsertReceiptTransactionMutationResult = Apollo.MutationResult<InsertReceiptTransactionMutation>;
+export type InsertReceiptTransactionMutationOptions = Apollo.BaseMutationOptions<InsertReceiptTransactionMutation, InsertReceiptTransactionMutationVariables>;
 export const JournalEntriesDocument = gql`
     query JournalEntries($first: Int, $after: String, $last: Int, $before: String, $detailed: Boolean, $searchQuery: String, $accountFilter: String, $amountMin: Float, $amountMax: Float, $entryTypes: [String!], $sortBy: String, $sortOrder: String, $groupBy: String) {
   journalEntries(
@@ -1398,6 +1546,45 @@ export type ListLedgersQueryHookResult = ReturnType<typeof useListLedgersQuery>;
 export type ListLedgersLazyQueryHookResult = ReturnType<typeof useListLedgersLazyQuery>;
 export type ListLedgersSuspenseQueryHookResult = ReturnType<typeof useListLedgersSuspenseQuery>;
 export type ListLedgersQueryResult = Apollo.QueryResult<ListLedgersQuery, ListLedgersQueryVariables>;
+export const ParseReceiptWithLlmDocument = gql`
+    mutation ParseReceiptWithLLM($s3ObjectKey: String!, $ledgerId: String!) {
+  parseReceiptWithLLM(s3ObjectKey: $s3ObjectKey, ledgerId: $ledgerId) {
+    date
+    payee
+    description
+    amount
+    sourceAccount
+    targetAccount
+  }
+}
+    `;
+export type ParseReceiptWithLlmMutationFn = Apollo.MutationFunction<ParseReceiptWithLlmMutation, ParseReceiptWithLlmMutationVariables>;
+
+/**
+ * __useParseReceiptWithLlmMutation__
+ *
+ * To run a mutation, you first call `useParseReceiptWithLlmMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useParseReceiptWithLlmMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [parseReceiptWithLlmMutation, { data, loading, error }] = useParseReceiptWithLlmMutation({
+ *   variables: {
+ *      s3ObjectKey: // value for 's3ObjectKey'
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useParseReceiptWithLlmMutation(baseOptions?: Apollo.MutationHookOptions<ParseReceiptWithLlmMutation, ParseReceiptWithLlmMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<ParseReceiptWithLlmMutation, ParseReceiptWithLlmMutationVariables>(ParseReceiptWithLlmDocument, options);
+      }
+export type ParseReceiptWithLlmMutationHookResult = ReturnType<typeof useParseReceiptWithLlmMutation>;
+export type ParseReceiptWithLlmMutationResult = Apollo.MutationResult<ParseReceiptWithLlmMutation>;
+export type ParseReceiptWithLlmMutationOptions = Apollo.BaseMutationOptions<ParseReceiptWithLlmMutation, ParseReceiptWithLlmMutationVariables>;
 export const PaymentHistoryDocument = gql`
     query PaymentHistory {
   paymentHistory {

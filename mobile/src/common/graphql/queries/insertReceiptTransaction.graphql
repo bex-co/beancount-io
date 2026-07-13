@@ -1,0 +1,13 @@
+mutation InsertReceiptTransaction(
+  $ledgerId: String!
+  $receiptObjectKey: String!
+  $input: InsertReceiptTransactionInput!
+) {
+  insertReceiptTransaction(
+    ledgerId: $ledgerId
+    receiptObjectKey: $receiptObjectKey
+    input: $input
+  ) {
+    success
+  }
+}
