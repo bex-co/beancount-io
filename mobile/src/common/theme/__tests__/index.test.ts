@@ -80,14 +80,14 @@ describe("themes", () => {
     const { colorTheme } = themes.light;
     expect(colorTheme.white).toBe("#ffffff");
     expect(colorTheme.black).toBe("#1b1e16");
-    expect(colorTheme.primary).toBe("#3f572c");
+    expect(colorTheme.primary).toBe("#3d7d21");
   });
 
   it("dark theme has expected color properties", () => {
     const { colorTheme } = themes.dark;
     expect(colorTheme.white).toBe("#171a14");
     expect(colorTheme.black).toBe("#f1efe4");
-    expect(colorTheme.primary).toBe("#8ab36a");
+    expect(colorTheme.primary).toBe("#5fc535");
   });
 
   it("both themes have sizing array", () => {

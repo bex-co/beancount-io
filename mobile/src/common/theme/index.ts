@@ -32,15 +32,17 @@ const colorMode = getSystemColorScheme();
 /**
  * Brand palette — beancount.io/brand-assets.
  *
- * An earthy, warm system: olive greens carry brand + interaction, and the
- * neutral ramp is a warm khaki (Bone → Stone → Charcoal) rather than clinical
- * grays, so the whole UI reads as one cohesive, on-brand surface. `primary`
- * is Olive in light and Sage in dark: `white` (the button text token) inverts
- * to near-black on dark, so fills need a light brand color there to stay legible.
+ * A vivid grass-green system: the brand green (#5fc535) carries brand +
+ * interaction, and the neutral ramp is a warm khaki (Bone → Stone → Charcoal)
+ * rather than clinical grays, so the whole UI reads as one cohesive, on-brand
+ * surface. `primary` is a deep grass green in light and the vivid brand green in
+ * dark: `white` (the button text token) inverts to near-black on dark, so light
+ * needs a deeper green (white text stays legible ~5:1) while dark can run the
+ * bright brand green (near-black text on it reads cleanly).
  */
-const OLIVE = "#3f572c"; // Brand Olive — primary in light
-const SAGE = "#8ab36a"; // Sage — accent, and primary in dark
-const DEEP_OLIVE = "#2b3f1b"; // Deep Olive — pressed / deep accents
+const GREEN = "#5fc535"; // Brand Green — primary in dark; brand reference
+const GREEN_DARK = "#3d7d21"; // deep grass green — primary in light (white text legible)
+const GREEN_DEEP = "#2b5918"; // deepest green — pressed / CTA footer
 const BONE = "#f1efe4"; // warm paper / dark-mode foreground
 const CHARCOAL = "#171a14"; // warm near-black — dark base + top bar
 
@@ -48,10 +50,10 @@ const lightTheme: ColorTheme = {
   overlay: "rgba(0, 0, 0, 0.5)", // modal scrim
 
   // Brand / interaction
-  primary: OLIVE,
-  primaryLight: SAGE,
-  primaryDark: DEEP_OLIVE,
-  secondary: "#b8894b", // Ochre — earthy complement to olive
+  primary: GREEN_DARK, //  deep grass green — legible under white button text
+  primaryLight: GREEN, //  vivid brand green as the light accent
+  primaryDark: GREEN_DEEP,
+  secondary: "#b8894b", // Ochre — earthy complement to the green
 
   // Surfaces + warm-neutral ramp (light → dark, subtle khaki undertone)
   white: "#ffffff", //    base surface
@@ -73,11 +75,11 @@ const lightTheme: ColorTheme = {
   information: "#4c8dd6", //    Information
 
   nav01: CHARCOAL, //    Global top bar
-  nav02: DEEP_OLIVE, //    CTA footer
+  nav02: GREEN_DEEP, //    CTA footer
 
   tabIconDefault: "#c2c3b6",
-  tabIconSelected: OLIVE,
-  activeTintColor: OLIVE,
+  tabIconSelected: GREEN_DARK,
+  activeTintColor: GREEN_DARK,
   inactiveTintColor: "#727668",
   activeBackgroundColor: "#ffffff",
   inactiveBackgroundColor: "#ffffff",
@@ -88,11 +90,11 @@ const lightTheme: ColorTheme = {
 const darkTheme: ColorTheme = {
   overlay: "rgba(0, 0, 0, 0.6)", // dark scrim in both modes (was a washed-out light scrim)
 
-  // Sage leads on dark so links, tabs and fills stay legible; `white` inverts
-  // to near-black, giving primary button fills dark, readable text.
-  primary: SAGE,
-  primaryLight: "#a6c98c",
-  primaryDark: "#6e9150", // deeper sage — pressed keeps dark text readable
+  // The vivid brand green leads on dark so links, tabs and fills pop; `white`
+  // inverts to near-black, giving primary button fills dark, readable text.
+  primary: GREEN,
+  primaryLight: "#88d666", // lighter brand green
+  primaryDark: "#52a92d", // deeper green — pressed keeps dark text readable
   secondary: "#cfa05e", // lighter Ochre
 
   // Surfaces + warm-neutral ramp on a Charcoal base (not pure black)
@@ -116,8 +118,8 @@ const darkTheme: ColorTheme = {
   nav02: "#0f110c", //    CTA footer
 
   tabIconDefault: "#9a9c8d",
-  tabIconSelected: SAGE,
-  activeTintColor: SAGE,
+  tabIconSelected: GREEN,
+  activeTintColor: GREEN,
   inactiveTintColor: "#a7a99a",
   activeBackgroundColor: CHARCOAL,
   inactiveBackgroundColor: CHARCOAL,
