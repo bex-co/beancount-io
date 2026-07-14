@@ -7,11 +7,13 @@ import { cache } from "@/common/apollo/cache";
 
 const middlewareLink = new ApolloLink((operation, forward) => {
   const token = sessionVar()?.authToken;
-  if (token) {
-    operation.setContext({
-      headers: { authorization: `Bearer ${token}` },
-    });
-  }
+  operation.setContext(({ headers = {} }: { headers?: Record<string, string> }) => ({
+    headers: {
+      ...headers,
+      "x-app-id": "beancount-mobile",
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+  }));
   return forward(operation);
 });
 
