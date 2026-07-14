@@ -74,7 +74,7 @@
           "image": "./src/assets/images/icon.png",
           "resizeMode": "contain",
           "imageWidth": 200,
-          "backgroundColor": "#3d7d21"
+          "backgroundColor": "transparent"
         }
       ],
       [

@@ -11,12 +11,10 @@ import { themeVar } from "@/common/vars";
 
 const styles = StyleSheet.create({
   content: {
-    // 16px side gutters keep cards off the screen edges; a little top room
-    // lifts the first card off the header/tab-bar divider. Dashboard cards
+    // 16px side gutters keep cards off the screen edges. Dashboard cards
     // bring their own 16px bottom margin, so spacing between them stays uniform
     // without extra spacers.
     paddingHorizontal: 16,
-    paddingTop: 16,
   },
 });
 
