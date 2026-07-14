@@ -2,14 +2,11 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
+import { TransactionAvatar } from "@/components/transaction-avatar";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoney, groupThousands } from "@/common/number-utils";
 import { AccountJournalRow } from "@/screens/account-detail-screen/selectors/select-account-journal";
-import {
-  getAvatarColor,
-  getAvatarInitials,
-} from "@/screens/journal-screen/utils/journal-utils";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -19,20 +16,6 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 16,
       paddingVertical: 12,
       backgroundColor: theme.white,
-    },
-    avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 12,
-      flexShrink: 0,
-    },
-    avatarText: {
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-      color: "#fff",
     },
     middle: {
       flex: 1,
@@ -86,8 +69,6 @@ export function AccountEntryRow({
   const { t } = useTranslations();
 
   const isPending = row.flag === "!";
-  const avatarColor = getAvatarColor(row.title);
-  const initials = getAvatarInitials(row.title);
   const changeColor =
     row.change > 0
       ? theme.success
@@ -97,9 +78,7 @@ export function AccountEntryRow({
 
   const content = (
     <>
-      <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-        <Text style={styles.avatarText}>{initials}</Text>
-      </View>
+      <TransactionAvatar payee={row.title ?? ""} />
 
       <View style={styles.middle}>
         <Text style={styles.title} numberOfLines={1}>

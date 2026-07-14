@@ -3,6 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
+import { TransactionAvatar } from "@/components/transaction-avatar";
 import { ColorTheme } from "@/types/theme-props";
 import {
   JournalDirectiveType,
@@ -10,7 +11,6 @@ import {
   isJournalOpen,
   isJournalClose,
 } from "../types";
-import { getAvatarInitials, getAvatarColor } from "../utils/journal-utils";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -23,20 +23,6 @@ const getStyles = (theme: ColorTheme) =>
       // DashboardCard (theme.black10) in the home/reports cards and on the
       // screen (theme.white) in the full journal list. Hardcoding theme.white
       // made rows punch a page-colored hole through the cards in both themes.
-    },
-    avatar: {
-      width: 40,
-      height: 40,
-      borderRadius: 20,
-      alignItems: "center",
-      justifyContent: "center",
-      marginRight: 12,
-      flexShrink: 0,
-    },
-    avatarText: {
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-      color: "#fff",
     },
     middle: {
       flex: 1,
@@ -166,14 +152,10 @@ export const JournalEntryItem: React.FC<JournalEntryItemProps> = ({
 
   const { name, amountStr, isPositive } = getDisplayInfo(entry);
   const isPending = isJournalTransaction(entry) && entry.flag === "!";
-  const avatarColor = getAvatarColor(name);
-  const initials = getAvatarInitials(name);
 
   const content = (
     <>
-      <View style={[styles.avatar, { backgroundColor: avatarColor }]}>
-        <Text style={styles.avatarText}>{initials}</Text>
-      </View>
+      <TransactionAvatar payee={name} />
 
       <View style={styles.middle}>
         <Text style={styles.name} numberOfLines={1}>

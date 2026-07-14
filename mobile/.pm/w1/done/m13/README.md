@@ -1,18 +1,18 @@
 # w1 · m13 — Brand logos for transaction avatars
 
-**Worker:** worker1 **Goal:** transaction rows show the real merchant's logo (Starbucks, Amazon, Uber, …) when the payee is recognized, making every transaction list scannable at a glance **Status:** todo
+**Worker:** worker1 **Goal:** transaction rows show the real merchant's logo (Starbucks, Amazon, Uber, …) when the payee is recognized, making every transaction list scannable at a glance **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                  | est | depends_on |
 | ---- | ---------------------------------------------------------------------- | --- | ---------- |
-| t001 | Brand matcher: curated payee → brand/domain map, on-device match       | 45m | —          |
-| t002 | `TransactionAvatar` component: logo with initials fallback             | 45m | t001       |
-| t003 | Adopt `TransactionAvatar` in `JournalEntryItem` (home/reports/journal) | 30m | t002       |
-| t004 | Adopt `TransactionAvatar` in account-detail `AccountEntryRow`          | 20m | t002       |
-| t005 | UX pass: light/dark, loading, no layout shift                          | 30m | t003, t004 |
-| t006 | Simplify: run `/simplify` over the milestone's changes                 | 30m | t003, t004 |
-| t007 | Test coverage: brand matcher + fallback behavior                       | 30m | t003, t004 |
+| t001 | Brand matcher: curated payee → brand/domain map, on-device match       | 45m | —          | — **DONE** |
+| t002 | `TransactionAvatar` component: logo with initials fallback             | 45m | t001       | — **DONE** |
+| t003 | Adopt `TransactionAvatar` in `JournalEntryItem` (home/reports/journal) | 30m | t002       | — **DONE** |
+| t004 | Adopt `TransactionAvatar` in account-detail `AccountEntryRow`          | 20m | t002       | — **DONE** |
+| t005 | UX pass: light/dark, loading, no layout shift                          | 30m | t003, t004 | — **DONE** |
+| t006 | Simplify: run `/simplify` over the milestone's changes                 | 30m | t003, t004 | — **DONE** |
+| t007 | Test coverage: brand matcher + fallback behavior                       | 30m | t003, t004 | — **DONE** |
 
 ## Definition of done
 
