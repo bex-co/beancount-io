@@ -197,7 +197,7 @@ export const MainContent = () => {
       {authToken && (
         <SecondaryButton
           title={t("logout")}
-          icon={<Ionicons name="log-out" size={20} color="#DC2626" />}
+          icon={<Ionicons name="log-out" size={20} color={theme.error} />}
           destructive
           onPress={() => {
             Alert.alert(

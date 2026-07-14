@@ -81,7 +81,7 @@ const getStyles = (theme: ColorTheme) =>
     nextKeyLabel: {
       fontSize: fontSizes.xl,
       fontWeight: fontWeights.medium,
-      color: "#fff",
+      color: theme.white,
     },
   });
 

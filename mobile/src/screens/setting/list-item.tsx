@@ -55,7 +55,7 @@ export const ListItemHorizontal = ({
       titleDestructive: {
         fontSize: 16,
         fontWeight: "500",
-        color: "#DC2626",
+        color: theme.error,
       },
       secondaryText: {
         fontSize: 14,
@@ -168,7 +168,7 @@ export const SecondaryButton = ({
       button: {
         backgroundColor: theme.white,
         borderWidth: 1,
-        borderColor: destructive ? "#DC2626" : theme.black20,
+        borderColor: destructive ? theme.error : theme.black20,
         borderRadius: 8,
         paddingVertical: 12,
         paddingHorizontal: 16,
@@ -180,7 +180,7 @@ export const SecondaryButton = ({
       text: {
         fontSize: 16,
         fontWeight: "500",
-        color: destructive ? "#DC2626" : theme.black90,
+        color: destructive ? theme.error : theme.black90,
       },
     }),
   );

@@ -78,16 +78,16 @@ describe("themes", () => {
 
   it("light theme has expected color properties", () => {
     const { colorTheme } = themes.light;
-    expect(colorTheme.white).toBe("#fff");
-    expect(colorTheme.black).toBe("#000000");
-    expect(colorTheme.primary).toBe("#6161e8");
+    expect(colorTheme.white).toBe("#ffffff");
+    expect(colorTheme.black).toBe("#1b1e16");
+    expect(colorTheme.primary).toBe("#3f572c");
   });
 
   it("dark theme has expected color properties", () => {
     const { colorTheme } = themes.dark;
-    expect(colorTheme.white).toBe("#000");
-    expect(colorTheme.black).toBe("#FFF");
-    expect(colorTheme.primary).toBe("#6161e8");
+    expect(colorTheme.white).toBe("#171a14");
+    expect(colorTheme.black).toBe("#f1efe4");
+    expect(colorTheme.primary).toBe("#8ab36a");
   });
 
   it("both themes have sizing array", () => {
@@ -108,27 +108,27 @@ describe("themes", () => {
   });
 
   it("both themes have error colors", () => {
-    expect(themes.light.colorTheme.error).toBe("#E54937");
-    expect(themes.dark.colorTheme.error).toBe("#E54937");
+    expect(themes.light.colorTheme.error).toBe("#cc4534");
+    expect(themes.dark.colorTheme.error).toBe("#e8695c");
   });
 
   it("both themes have success colors", () => {
-    expect(themes.light.colorTheme.success).toBe("#07A35A");
-    expect(themes.dark.colorTheme.success).toBe("#07A35A");
+    expect(themes.light.colorTheme.success).toBe("#0a8748");
+    expect(themes.dark.colorTheme.success).toBe("#37c07c");
   });
 
   it("both themes have warning colors", () => {
-    expect(themes.light.colorTheme.warning).toBe("#FFA000");
-    expect(themes.dark.colorTheme.warning).toBe("#FFA000");
+    expect(themes.light.colorTheme.warning).toBe("#e08a1e");
+    expect(themes.dark.colorTheme.warning).toBe("#f0b24e");
   });
 
   it("light theme has white background", () => {
-    expect(themes.light.colorTheme.navBg).toBe("#fff");
-    expect(themes.light.colorTheme.activeBackgroundColor).toBe("#fff");
+    expect(themes.light.colorTheme.navBg).toBe("#ffffff");
+    expect(themes.light.colorTheme.activeBackgroundColor).toBe("#ffffff");
   });
 
-  it("dark theme has black background", () => {
-    expect(themes.dark.colorTheme.navBg).toBe("#000");
-    expect(themes.dark.colorTheme.activeBackgroundColor).toBe("#000");
+  it("dark theme has charcoal background", () => {
+    expect(themes.dark.colorTheme.navBg).toBe("#171a14");
+    expect(themes.dark.colorTheme.activeBackgroundColor).toBe("#171a14");
   });
 });

@@ -31,7 +31,7 @@ export const getAvatarInitials = (name: string): string => {
  * @returns Hex color code
  */
 export const getAvatarColor = (name: string): string => {
-  if (!name) return "#6B7280";
+  if (!name) return "#6b6e5f"; // Brand Stone — neutral fallback avatar
 
   // Normalize the name to ensure consistent hashing (lowercase, trimmed)
   const normalizedName = name.toLowerCase().trim();

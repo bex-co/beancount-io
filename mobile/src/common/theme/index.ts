@@ -29,76 +29,100 @@ export const getSystemColorScheme = () => {
 
 const colorMode = getSystemColorScheme();
 
+/**
+ * Brand palette — beancount.io/brand-assets.
+ *
+ * An earthy, warm system: olive greens carry brand + interaction, and the
+ * neutral ramp is a warm khaki (Bone → Stone → Charcoal) rather than clinical
+ * grays, so the whole UI reads as one cohesive, on-brand surface. `primary`
+ * is Olive in light and Sage in dark: `white` (the button text token) inverts
+ * to near-black on dark, so fills need a light brand color there to stay legible.
+ */
+const OLIVE = "#3f572c"; // Brand Olive — primary in light
+const SAGE = "#8ab36a"; // Sage — accent, and primary in dark
+const DEEP_OLIVE = "#2b3f1b"; // Deep Olive — pressed / deep accents
+const BONE = "#f1efe4"; // warm paper / dark-mode foreground
+const CHARCOAL = "#171a14"; // warm near-black — dark base + top bar
+
 const lightTheme: ColorTheme = {
-  overlay: "rgba(0, 0, 0, 0.5)",
-  primary: "#6161e8",
-  primaryLight: "#7a7aea",
-  primaryDark: "#5252c3",
-  secondary: "#0C8DE4",
-  white: "#fff",
+  overlay: "rgba(0, 0, 0, 0.5)", // modal scrim
 
-  black: "#000000",
-  black90: "#333333",
-  black80: "#999999",
-  black60: "#CCCCCC",
-  black40: "#E5E5E5",
-  black20: "#F0F0F0",
-  black10: "#F7F7F7",
+  // Brand / interaction
+  primary: OLIVE,
+  primaryLight: SAGE,
+  primaryDark: DEEP_OLIVE,
+  secondary: "#b8894b", // Ochre — earthy complement to olive
 
-  text01: "#4c4c4c", //		Primary text, Body copy
+  // Surfaces + warm-neutral ramp (light → dark, subtle khaki undertone)
+  white: "#ffffff", //    base surface
+  black: "#1b1e16", //    strongest foreground (warm near-black)
+  black90: "#30332a", //    titles / strong text
+  black80: "#727668", //    secondary text, inactive tabs (Stone family)
+  black60: "#c2c3b6", //    placeholders / disabled
+  black40: "#e0dfd3", //    borders / hairlines
+  black20: "#eeece2", //    dividers / faint fills
+  black10: "#f6f4ec", //    inset surfaces (nods to Bone)
 
-  error: "#E54937", //	Error
-  success: "#07A35A", //	Success
-  warning: "#FFA000", //	Warning
-  information: "#5aaafa", //	Information
+  text01: "#40433a", //    primary text, body copy
 
-  nav01: "#011627", //	Global top bar
-  nav02: "#20232a", //	CTA footer
+  // Semantics — tuned into the earthy palette; success stays a clear emerald
+  // so income never reads as brand olive.
+  error: "#cc4534", //    Error
+  success: "#0a8748", //    Success
+  warning: "#e08a1e", //    Warning
+  information: "#4c8dd6", //    Information
 
-  tabIconDefault: "#ccc",
-  tabIconSelected: "#2f95dc",
-  activeTintColor: "#2f95dc",
-  inactiveTintColor: "#ccc",
-  activeBackgroundColor: "#fff",
-  inactiveBackgroundColor: "#fff",
-  navBg: "#fff",
-  navText: "#000",
+  nav01: CHARCOAL, //    Global top bar
+  nav02: DEEP_OLIVE, //    CTA footer
+
+  tabIconDefault: "#c2c3b6",
+  tabIconSelected: OLIVE,
+  activeTintColor: OLIVE,
+  inactiveTintColor: "#727668",
+  activeBackgroundColor: "#ffffff",
+  inactiveBackgroundColor: "#ffffff",
+  navBg: "#ffffff",
+  navText: "#1b1e16",
 };
 
 const darkTheme: ColorTheme = {
-  overlay: "rgba(255, 255, 255, 0.5)",
-  primary: "#6161e8",
-  primaryLight: "#7a7aea",
-  primaryDark: "#5252c3",
-  secondary: "#0C8DE4",
-  white: "#000",
+  overlay: "rgba(0, 0, 0, 0.6)", // dark scrim in both modes (was a washed-out light scrim)
 
-  black: "#FFF",
-  black90: "#F7F7F7",
-  black80: "#B3B3B3",
-  black60: "#AAAAAA",
-  black40: "#888888",
-  black20: "#666666",
-  black10: "#333333",
+  // Sage leads on dark so links, tabs and fills stay legible; `white` inverts
+  // to near-black, giving primary button fills dark, readable text.
+  primary: SAGE,
+  primaryLight: "#a6c98c",
+  primaryDark: "#6e9150", // deeper sage — pressed keeps dark text readable
+  secondary: "#cfa05e", // lighter Ochre
 
-  text01: "#FFFFFF", //		Primary text, Body copy
+  // Surfaces + warm-neutral ramp on a Charcoal base (not pure black)
+  white: CHARCOAL, //    base surface (warm near-black)
+  black: BONE, //    strongest foreground (warm white)
+  black90: "#eae8dc", //    bright text
+  black80: "#a7a99a", //    secondary text, inactive tabs
+  black60: "#9a9c8d", //    placeholders / disabled
+  black40: "#797b6c", //    borders
+  black20: "#585a4c", //    dividers
+  black10: "#282a21", //    elevated surfaces / hairlines
 
-  error: "#E54937", //	Error
-  success: "#07A35A", //	Success
-  warning: "#FFA000", //	Warning
-  information: "#5aaafa", //	Information
+  text01: "#ece9dd", //    primary text, body copy (soft, low-glare)
 
-  nav01: "#000", //	Global top bar
-  nav02: "#000", //	CTA footer
+  error: "#e8695c", //    Error
+  success: "#37c07c", //    Success
+  warning: "#f0b24e", //    Warning
+  information: "#6fb0e8", //    Information
 
-  tabIconDefault: "#ccc",
-  tabIconSelected: "#2f95dc",
-  activeTintColor: "#2f95dc",
-  inactiveTintColor: "#CFCFCF",
-  activeBackgroundColor: "#000",
-  inactiveBackgroundColor: "#000",
-  navBg: "#000",
-  navText: "#fff",
+  nav01: "#0f110c", //    Global top bar
+  nav02: "#0f110c", //    CTA footer
+
+  tabIconDefault: "#9a9c8d",
+  tabIconSelected: SAGE,
+  activeTintColor: SAGE,
+  inactiveTintColor: "#a7a99a",
+  activeBackgroundColor: CHARCOAL,
+  inactiveBackgroundColor: CHARCOAL,
+  navBg: CHARCOAL,
+  navText: BONE,
 };
 
 export const antdLightTheme: AntdTheme = {

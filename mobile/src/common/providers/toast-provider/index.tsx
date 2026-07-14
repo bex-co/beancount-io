@@ -131,7 +131,8 @@ const styles = StyleSheet.create({
     pointerEvents: "none",
   },
   message: {
-    backgroundColor: "#333",
+    // Fixed warm-charcoal pill (both themes); white text always reads on it.
+    backgroundColor: "#26281f",
     borderRadius: 8,
     paddingHorizontal: 12,
     paddingVertical: 16,

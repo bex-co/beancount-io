@@ -45,7 +45,7 @@ describe("journal-utils", () => {
 
   describe("getAvatarColor", () => {
     it("should return default gray color for empty string", () => {
-      expect(getAvatarColor("")).toBe("#6B7280");
+      expect(getAvatarColor("")).toBe("#6b6e5f");
     });
 
     it("should return consistent color for same name", () => {
