@@ -122,7 +122,7 @@ export const AddTransactionNextScreenComponent = () => {
   const [payee, setPayee] = useState<string>(currentPayee ?? "");
   const [date, setDate] = useState<string>(getFormatDate(new Date()));
   const [narration, setNarration] = useState<string>("");
-  const { mutate, error } = useAddEntriesToRemote();
+  const { mutate } = useAddEntriesToRemote();
 
   const currencySymbol = getCurrencySymbol(currentCurrency);
   const ledgerId = useLedgerGuard();
@@ -229,11 +229,11 @@ export const AddTransactionNextScreenComponent = () => {
       });
       return;
     }
+    const cancel = toast.showToast({
+      message: t("saving"),
+      type: "loading",
+    });
     try {
-      const cancel = toast.showToast({
-        message: t("saving"),
-        type: "loading",
-      });
       const params = [
         {
           date,
@@ -255,12 +255,12 @@ export const AddTransactionNextScreenComponent = () => {
         },
       ];
 
-      await mutate({ variables: { entriesInput: params, ledgerId } });
-      // await new Promise(resolve => setTimeout(resolve, 1000));
-
+      const result = await mutate({
+        variables: { entriesInput: params, ledgerId },
+      });
       cancel();
 
-      if (!error) {
+      if (result.data?.addEntries?.success) {
         toast.showToast({
           message: t("saveSuccess"),
           type: "success",
@@ -274,19 +274,18 @@ export const AddTransactionNextScreenComponent = () => {
           router.back();
         }, 2000);
       } else {
-        console.error("failed to add transaction", error);
         toast.showToast({
           message: t("saveFailed"),
           type: "error",
         });
       }
     } catch (e) {
+      cancel();
       toast.showToast({
         message: t("saveFailed"),
         type: "error",
       });
-      // tslint:disable-next-line
-      console.error(`failed to create target profile: ${e}`);
+      console.error(`failed to add transaction: ${e}`);
     }
   };
 
