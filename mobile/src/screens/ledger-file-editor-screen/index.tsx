@@ -9,7 +9,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Stack, useLocalSearchParams, useNavigation } from "expo-router";
+import { Stack, useLocalSearchParams, useNavigation, useFocusEffect } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ColorTheme } from "@/types/theme-props";
@@ -181,7 +181,10 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
   useEffect(() => {
     if (!fileData?.getLedgerFile || initialized) return;
-    const fc = fileData.getLedgerFile.content ?? "";
+    const raw = fileData.getLedgerFile.content ?? "";
+    const enc = fileData.getLedgerFile.encoding;
+    const fc =
+      enc === "base64" ? atob(raw.replace(/\n/g, "")) : raw;
     const fs = fileData.getLedgerFile.sha;
     setContent(fc);
     setSha(fs);
@@ -237,7 +240,9 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
   const handleReload = useCallback(async () => {
     const result = await refetch();
-    const fc = result.data?.getLedgerFile?.content ?? "";
+    const raw = result.data?.getLedgerFile?.content ?? "";
+    const enc = result.data?.getLedgerFile?.encoding;
+    const fc = enc === "base64" ? atob(raw.replace(/\n/g, "")) : raw;
     const fs = result.data?.getLedgerFile?.sha ?? "";
     setContent(fc);
     setSha(fs);
@@ -300,15 +305,25 @@ export function LedgerFileEditorScreen(): JSX.Element {
   const [jumpToLine, setJumpToLine] = useState<number | null>(
     !isNaN(initialLineNum ?? NaN) ? initialLineNum : null,
   );
-  // Clear the jump after it fires once (CodeEditor will consume it)
-  const clearJump = () => setJumpToLine(null);
+  // Re-arm the jump target whenever the screen gains focus.
+  // This handles screen reuse: if the user navigates away and back (or
+  // the same deep-link fires again), the jump re-triggers instead of
+  // being skipped because the state was already cleared.
+  useFocusEffect(
+    useCallback(() => {
+      const n = !isNaN(initialLineNum ?? NaN) ? initialLineNum : null;
+      if (n !== null) setJumpToLine(n);
+    }, [initialLineNum]),
+  );
+  // Only start the clear-timer once the file is loaded so CodeEditor has a
+  // chance to receive the non-null value and scroll before we reset it.
   useEffect(() => {
-    if (jumpToLine !== null) {
-      const timer = setTimeout(clearJump, 500);
+    if (jumpToLine !== null && initialized) {
+      const timer = setTimeout(() => setJumpToLine(null), 3000);
       return () => clearTimeout(timer);
     }
     return undefined;
-  }, [jumpToLine]);
+  }, [jumpToLine, initialized]);
 
   // ── Errors for this file ─────────────────────────────────────────────────
 

@@ -260,6 +260,14 @@ export default function CodeEditor({
   const onSaveRef = useRef(onSave);
   const lastEditorValue = useRef(value);
   const prevInsertSeq = useRef<number | null>(null);
+  // Tracks the most-recent jump target so the value effect can fire it
+  // after the full content is loaded (the Expo DOM bridge may deliver
+  // value="" on first render and the real content on the next one).
+  const pendingJumpRef = useRef<number | null>(jumpToLine);
+  // Skip the isDark re-apply on first mount — the mount effect already builds
+  // extensions with the correct isDark value, so re-applying would destroy the
+  // DOM and reset scroll position before any jump can take effect.
+  const isDarkMountedRef = useRef(false);
 
   // Keep callback refs current
   useEffect(() => {
@@ -268,6 +276,17 @@ export default function CodeEditor({
   useEffect(() => {
     onSaveRef.current = onSave;
   }, [onSave]);
+
+  // Prevent the WebView document from scrolling so CM6's own scroller
+  // handles all scroll — without this the body can scroll, making scrollDOM
+  // scrollTop always 0 and jump-to-line a no-op.
+  useEffect(() => {
+    document.documentElement.style.height = "100%";
+    document.documentElement.style.overflow = "hidden";
+    document.body.style.height = "100%";
+    document.body.style.overflow = "hidden";
+    document.body.style.margin = "0";
+  }, []);
 
   // Mount editor once
   useEffect(() => {
@@ -288,7 +307,10 @@ export default function CodeEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // External value changes (e.g. reload after conflict)
+  // External value changes (e.g. reload after conflict).
+  // Also fires the pending jump after content loads — necessary because the
+  // Expo DOM bridge may deliver value="" on first render (1-line doc) and the
+  // real content only on the next render, making an early scroll land on l.1.
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
@@ -298,11 +320,47 @@ export default function CodeEditor({
         changes: { from: 0, to: view.state.doc.length, insert: value },
         selection: { anchor: 0 },
       });
+      // Execute pending jump now that the full content is present.
+      const target = pendingJumpRef.current;
+      if (target) {
+        const lineNum = Math.max(1, Math.min(target, view.state.doc.lines));
+        const line = view.state.doc.line(lineNum);
+        view.dispatch({
+          selection: { anchor: line.from },
+          effects: EditorView.scrollIntoView(line.from, { y: "center" }),
+        });
+        view.focus();
+        const doMeasuredScroll = () => {
+          if (!viewRef.current) return;
+          viewRef.current.requestMeasure({
+            read(v) {
+              return {
+                top: v.lineBlockAt(line.from).top,
+                clientH: v.scrollDOM.clientHeight,
+              };
+            },
+            write(data, v) {
+              if (data.top > 0) {
+                v.scrollDOM.scrollTop = Math.max(
+                  0,
+                  data.top - data.clientH / 2,
+                );
+              }
+            },
+          });
+        };
+        setTimeout(doMeasuredScroll, 100);
+        setTimeout(doMeasuredScroll, 500);
+      }
     }
   }, [value]);
 
-  // Re-apply theme when isDark changes
+  // Re-apply theme when isDark changes (skip first mount — already built correctly).
   useEffect(() => {
+    if (!isDarkMountedRef.current) {
+      isDarkMountedRef.current = true;
+      return;
+    }
     const view = viewRef.current;
     if (!view) return;
     const currentDoc = view.state.doc;
@@ -332,17 +390,45 @@ export default function CodeEditor({
     view.focus();
   }, [insertSpec]);
 
-  // Jump to a specific line
+  // Jump to a specific line.  Guards against a 1-line doc (content not yet
+  // loaded via the Expo bridge) — in that case the value effect will retry.
   useEffect(() => {
+    pendingJumpRef.current = jumpToLine;
     const view = viewRef.current;
-    if (!view || !jumpToLine) return;
+    if (!view || !jumpToLine || view.state.doc.lines <= 1) return;
     const lineNum = Math.max(1, Math.min(jumpToLine, view.state.doc.lines));
     const line = view.state.doc.line(lineNum);
+
     view.dispatch({
       selection: { anchor: line.from },
       effects: EditorView.scrollIntoView(line.from, { y: "center" }),
     });
     view.focus();
+
+    // CM6 may not have measured line positions for un-rendered lines yet —
+    // retry via requestMeasure so the write() phase has accurate coordinates.
+    const doMeasuredScroll = () => {
+      if (!viewRef.current) return;
+      viewRef.current.requestMeasure({
+        read(v) {
+          return { top: v.lineBlockAt(line.from).top, clientH: v.scrollDOM.clientHeight };
+        },
+        write(data, v) {
+          if (data.top > 0) {
+            v.scrollDOM.scrollTop = Math.max(0, data.top - data.clientH / 2);
+          }
+        },
+      });
+    };
+
+    const t1 = setTimeout(doMeasuredScroll, 100);
+    const t2 = setTimeout(doMeasuredScroll, 500);
+    const t3 = setTimeout(doMeasuredScroll, 1000);
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearTimeout(t3);
+    };
   }, [jumpToLine]);
 
   // Keyboard height → pad editor scroller so CM6 scrolls cursor above keyboard
@@ -357,8 +443,8 @@ export default function CodeEditor({
     <div
       ref={containerRef}
       style={{
-        width: "100%",
-        height: "100%",
+        position: "fixed",
+        inset: 0,
         overflow: "hidden",
         backgroundColor: isDark ? dark.background : light.background,
       }}
