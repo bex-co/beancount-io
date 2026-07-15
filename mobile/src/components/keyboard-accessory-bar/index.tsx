@@ -52,7 +52,12 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-type Button = { label: string; insert: string; isDate?: boolean };
+type Button = {
+  label: string;
+  insert: string;
+  cursorOffset?: number;
+  isDate?: boolean;
+};
 
 function getTodayString(): string {
   const d = new Date();
@@ -64,14 +69,14 @@ function getTodayString(): string {
 
 const STATIC_BUTTONS: Button[] = [
   { label: ":", insert: ":" },
-  { label: '"', insert: '""' },
+  { label: '"', insert: '""', cursorOffset: 1 },
   { label: "#", insert: "#" },
   { label: "^", insert: "^" },
   { label: "⇥", insert: "  " },
 ];
 
 type KeyboardAccessoryBarProps = {
-  onInsert: (text: string) => void;
+  onInsert: (text: string, cursorOffset?: number) => void;
 };
 
 export function KeyboardAccessoryBar({ onInsert }: KeyboardAccessoryBarProps) {
@@ -95,7 +100,7 @@ export function KeyboardAccessoryBar({ onInsert }: KeyboardAccessoryBarProps) {
           <TouchableOpacity
             key={btn.label}
             style={styles.btn}
-            onPress={() => onInsert(btn.insert)}
+            onPress={() => onInsert(btn.insert, btn.cursorOffset)}
             activeOpacity={0.6}
           >
             <Text style={btn.isDate ? styles.dateText : styles.btnText}>

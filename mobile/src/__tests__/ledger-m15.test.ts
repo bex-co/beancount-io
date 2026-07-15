@@ -5,10 +5,29 @@ import {
   popPathStack,
 } from "../screens/ledger-file-browser-screen/utils";
 import {
+  decodeLedgerFileContent,
   isConflictError,
   filterFileErrors,
   classifyBeancountChunk,
 } from "../screens/ledger-file-editor-screen/utils";
+
+// ── decodeLedgerFileContent ─────────────────────────────────────────────────
+
+test("decodeLedgerFileContent: leaves plain content unchanged", () => {
+  const content = '2026-07-15 * "Coffee"\n';
+  const decoded = decodeLedgerFileContent(content, "utf-8");
+  if (decoded !== content) throw new Error("plain content should be unchanged");
+});
+
+test("decodeLedgerFileContent: decodes wrapped UTF-8 base64", () => {
+  const content = '2026-07-15 * "Café 東京"\n  Assets:Cash  -5 USD\n';
+  const encoded = Buffer.from(content, "utf8").toString("base64");
+  const wrapped = `${encoded.slice(0, 16)}\n${encoded.slice(16)}`;
+  const decoded = decodeLedgerFileContent(wrapped, "base64");
+  if (decoded !== content) {
+    throw new Error(`expected UTF-8 content, got ${JSON.stringify(decoded)}`);
+  }
+});
 
 // ── isEditable ────────────────────────────────────────────────────────────────
 

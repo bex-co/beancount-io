@@ -9,7 +9,12 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Stack, useLocalSearchParams, useNavigation, useFocusEffect } from "expo-router";
+import {
+  Stack,
+  useLocalSearchParams,
+  useNavigation,
+  useFocusEffect,
+} from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ColorTheme } from "@/types/theme-props";
@@ -26,9 +31,15 @@ import {
   useUpdateLedgerFileMutation,
 } from "@/generated-graphql/graphql";
 import CodeEditor, {
+  type CodeEditorRef,
+  type EditorDocumentSpec,
   type InsertSpec,
 } from "@/components/code-editor/code-editor";
-import { isConflictError, filterFileErrors } from "./utils";
+import {
+  decodeLedgerFileContent,
+  isConflictError,
+  filterFileErrors,
+} from "./utils";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
@@ -91,6 +102,9 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: 16,
       fontWeight: "600",
       color: theme.primary,
+    },
+    saveBtnTextDisabled: {
+      color: theme.black40,
     },
     savingText: {
       fontSize: 14,
@@ -175,79 +189,128 @@ export function LedgerFileEditorScreen(): JSX.Element {
   });
 
   const [initialized, setInitialized] = useState(false);
-  const [content, setContent] = useState("");
-  const [sha, setSha] = useState("");
-  const originalContent = useRef("");
+  const [documentSpec, setDocumentSpec] = useState<EditorDocumentSpec>({
+    value: "",
+    epoch: 0,
+  });
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const shaRef = useRef("");
+  const documentEpochRef = useRef(0);
+  const latestEditRevisionRef = useRef(0);
+  const savedEditRevisionRef = useRef(0);
 
   useEffect(() => {
     if (!fileData?.getLedgerFile || initialized) return;
     const raw = fileData.getLedgerFile.content ?? "";
     const enc = fileData.getLedgerFile.encoding;
-    const fc =
-      enc === "base64" ? atob(raw.replace(/\n/g, "")) : raw;
+    const fc = decodeLedgerFileContent(raw, enc);
     const fs = fileData.getLedgerFile.sha;
-    setContent(fc);
-    setSha(fs);
-    originalContent.current = fc;
+    const epoch = documentEpochRef.current + 1;
+    documentEpochRef.current = epoch;
+    latestEditRevisionRef.current = 0;
+    savedEditRevisionRef.current = 0;
+    shaRef.current = fs;
+    setDocumentSpec({ value: fc, epoch });
+    setHasUnsavedChanges(false);
     setInitialized(true);
   }, [fileData, initialized]);
-
-  const hasUnsavedChanges = initialized && content !== originalContent.current;
 
   // ── Save / conflict ───────────────────────────────────────────────────────
 
   const [updateLedgerFile, { loading: saving }] = useUpdateLedgerFileMutation();
-
-  const handleSave = useCallback(async () => {
-    if (!sha || saving) return;
-    try {
-      analytics.track("tap_ledger_save", { path });
-      const result = await updateLedgerFile({
-        variables: {
-          ledgerId,
-          path,
-          content,
-          sha,
-          message: `edit ${path}`,
-        },
-      });
-      const newSha = result.data?.updateLedgerFile?.sha;
-      if (newSha) {
-        setSha(newSha);
-        originalContent.current = content;
-        analytics.track("ledger_save_success", { path });
-      }
-    } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      if (isConflictError(msg)) {
-        Alert.alert(
-          t("ledgerEditorConflictTitle"),
-          t("ledgerEditorConflictMessage"),
-          [
-            { text: t("ledgerEditorKeepEditing"), style: "cancel" },
-            {
-              text: t("ledgerEditorReload"),
-              style: "destructive",
-              onPress: handleReload,
-            },
-          ],
-        );
-      } else {
-        Alert.alert(t("ledgerEditorSaveFailed"), msg);
-      }
-    }
-  }, [sha, saving, ledgerId, path, content, updateLedgerFile, t]);
+  const saveInFlightRef = useRef(false);
 
   const handleReload = useCallback(async () => {
     const result = await refetch();
     const raw = result.data?.getLedgerFile?.content ?? "";
     const enc = result.data?.getLedgerFile?.encoding;
-    const fc = enc === "base64" ? atob(raw.replace(/\n/g, "")) : raw;
+    const fc = decodeLedgerFileContent(raw, enc);
     const fs = result.data?.getLedgerFile?.sha ?? "";
-    setContent(fc);
-    setSha(fs);
-    originalContent.current = fc;
+    const epoch = documentEpochRef.current + 1;
+    documentEpochRef.current = epoch;
+    latestEditRevisionRef.current = 0;
+    savedEditRevisionRef.current = 0;
+    shaRef.current = fs;
+    setDocumentSpec({ value: fc, epoch });
+    setHasUnsavedChanges(false);
   }, [refetch]);
+
+  const handleEdit = useCallback(
+    async (epoch: number, revision: number, isDirty: boolean) => {
+      if (
+        epoch !== documentEpochRef.current ||
+        revision < latestEditRevisionRef.current
+      )
+        return;
+      latestEditRevisionRef.current = revision;
+      setHasUnsavedChanges(isDirty);
+    },
+    [],
+  );
+
+  const handleSave = useCallback(
+    async (content: string, epoch: number, revision: number) => {
+      if (epoch !== documentEpochRef.current || saveInFlightRef.current)
+        return false;
+
+      const sha = shaRef.current;
+      if (!sha) {
+        Alert.alert(t("ledgerEditorSaveFailed"));
+        return false;
+      }
+
+      saveInFlightRef.current = true;
+      try {
+        analytics.track("tap_ledger_save", { path });
+        const result = await updateLedgerFile({
+          variables: {
+            ledgerId,
+            path,
+            content,
+            sha,
+            message: `edit ${path}`,
+          },
+        });
+        const newSha = result.data?.updateLedgerFile?.sha;
+        if (!newSha) throw new Error(t("ledgerEditorSaveFailed"));
+
+        shaRef.current = newSha;
+        if (epoch === documentEpochRef.current) {
+          savedEditRevisionRef.current = Math.max(
+            savedEditRevisionRef.current,
+            revision,
+          );
+          setHasUnsavedChanges(
+            latestEditRevisionRef.current > savedEditRevisionRef.current,
+          );
+        }
+        analytics.track("ledger_save_success", { path });
+        return true;
+      } catch (err: unknown) {
+        const msg = err instanceof Error ? err.message : String(err);
+        if (isConflictError(msg)) {
+          Alert.alert(
+            t("ledgerEditorConflictTitle"),
+            t("ledgerEditorConflictMessage"),
+            [
+              { text: t("ledgerEditorKeepEditing"), style: "cancel" },
+              {
+                text: t("ledgerEditorReload"),
+                style: "destructive",
+                onPress: handleReload,
+              },
+            ],
+          );
+        } else {
+          Alert.alert(t("ledgerEditorSaveFailed"), msg);
+        }
+        return false;
+      } finally {
+        saveInFlightRef.current = false;
+      }
+    },
+    [handleReload, ledgerId, path, t, updateLedgerFile],
+  );
 
   // ── Unsaved changes guard ────────────────────────────────────────────────
 
@@ -294,9 +357,10 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
   const insertSeq = useRef(0);
   const [insertSpec, setInsertSpec] = useState<InsertSpec | null>(null);
+  const editorRef = useRef<CodeEditorRef>(null);
 
-  const handleInsert = (text: string) => {
-    setInsertSpec({ text, seq: ++insertSeq.current });
+  const handleInsert = (text: string, cursorOffset?: number) => {
+    setInsertSpec({ text, cursorOffset, seq: ++insertSeq.current });
   };
 
   // ── Jump to line ─────────────────────────────────────────────────────────
@@ -343,8 +407,19 @@ export function LedgerFileEditorScreen(): JSX.Element {
   const headerRight = saving
     ? () => <Text style={styles.savingText}>{t("ledgerEditorSaving")}</Text>
     : () => (
-        <TouchableOpacity style={styles.saveBtn} onPress={handleSave}>
-          <Text style={styles.saveBtnText}>{t("ledgerEditorSave")}</Text>
+        <TouchableOpacity
+          style={styles.saveBtn}
+          disabled={!hasUnsavedChanges}
+          onPress={() => editorRef.current?.requestSave()}
+        >
+          <Text
+            style={[
+              styles.saveBtnText,
+              !hasUnsavedChanges && styles.saveBtnTextDisabled,
+            ]}
+          >
+            {t("ledgerEditorSave")}
+          </Text>
         </TouchableOpacity>
       );
 
@@ -386,15 +461,15 @@ export function LedgerFileEditorScreen(): JSX.Element {
           </Text>
         ) : initialized ? (
           <CodeEditor
-            value={content}
-            onChange={setContent}
+            ref={editorRef}
+            documentSpec={documentSpec}
+            onEdit={handleEdit}
             onSave={handleSave}
             isDark={isDark}
             keyboardHeight={keyboardHeight}
             insertSpec={insertSpec}
             jumpToLine={jumpToLine}
-            // @ts-expect-error expo dom component flex style
-            style={{ flex: 1 }}
+            dom={{ style: { flex: 1 } }}
           />
         ) : null}
 

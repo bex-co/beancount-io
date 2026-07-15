@@ -1,6 +1,11 @@
 "use dom";
 
-import { useRef, useEffect } from "react";
+import { type Ref, useEffect, useRef } from "react";
+import {
+  useDOMImperativeHandle,
+  type DOMImperativeFactory,
+  type DOMProps,
+} from "expo/dom";
 import {
   EditorView,
   keymap,
@@ -9,7 +14,13 @@ import {
   highlightActiveLineGutter,
   drawSelection,
 } from "@codemirror/view";
-import { EditorState, Extension, Prec } from "@codemirror/state";
+import {
+  Compartment,
+  EditorState,
+  Extension,
+  Prec,
+  Text,
+} from "@codemirror/state";
 import { defaultKeymap, history, historyKeymap } from "@codemirror/commands";
 import {
   StreamLanguage,
@@ -21,12 +32,27 @@ import { tags } from "@lezer/highlight";
 
 // ─── Types (imported on the native side as well) ─────────────────────────────
 
-export type InsertSpec = { text: string; seq: number };
+export type InsertSpec = {
+  text: string;
+  seq: number;
+  cursorOffset?: number;
+};
+
+export type EditorDocumentSpec = {
+  value: string;
+  epoch: number;
+};
+
+export interface CodeEditorRef extends DOMImperativeFactory {
+  requestSave: () => void;
+}
 
 export type CodeEditorProps = {
-  value: string;
-  onChange: (value: string) => void;
-  onSave: () => void;
+  ref?: Ref<CodeEditorRef>;
+  dom?: DOMProps;
+  documentSpec: EditorDocumentSpec;
+  onEdit: (epoch: number, revision: number, isDirty: boolean) => Promise<void>;
+  onSave: (value: string, epoch: number, revision: number) => Promise<boolean>;
   isDark: boolean;
   /** Keyboard height (px) so CM6 scrolls cursor into view above the keyboard */
   keyboardHeight: number;
@@ -158,11 +184,7 @@ const dark = {
   type: "#DCDCAA",
 };
 
-function buildExtensions(
-  isDark: boolean,
-  onChangeRef: { current: (v: string) => void },
-  onSaveRef: { current: () => void },
-): Extension[] {
+function buildThemeExtensions(isDark: boolean): Extension[] {
   const c = isDark ? dark : light;
 
   const editorTheme = EditorView.theme(
@@ -206,6 +228,24 @@ function buildExtensions(
     { tag: tags.atom, color: c.keyword },
   ]);
 
+  return [editorTheme, syntaxHighlighting(highlightStyle)];
+}
+
+function buildExtensions(
+  isDark: boolean,
+  onEditRef: {
+    current: (
+      epoch: number,
+      revision: number,
+      isDirty: boolean,
+    ) => Promise<void>;
+  },
+  documentEpochRef: { current: number },
+  editRevisionRef: { current: number },
+  savedDocumentRef: { current: Text },
+  requestSaveRef: { current: () => void },
+  themeCompartment: Compartment,
+): Extension[] {
   return [
     history(),
     lineNumbers(),
@@ -214,8 +254,7 @@ function buildExtensions(
     drawSelection(),
     indentUnit.of("  "),
     beancountStreamLanguage,
-    editorTheme,
-    syntaxHighlighting(highlightStyle),
+    themeCompartment.of(buildThemeExtensions(isDark)),
     // Disable autocorrect / autocapitalize on the contenteditable
     EditorView.contentAttributes.of({
       autocorrect: "off",
@@ -225,7 +264,12 @@ function buildExtensions(
     }),
     EditorView.updateListener.of((update) => {
       if (update.docChanged) {
-        onChangeRef.current(update.state.doc.toString());
+        editRevisionRef.current += 1;
+        void onEditRef.current(
+          documentEpochRef.current,
+          editRevisionRef.current,
+          !update.state.doc.eq(savedDocumentRef.current),
+        );
       }
     }),
     Prec.highest(
@@ -233,7 +277,7 @@ function buildExtensions(
         {
           key: "Mod-s",
           run: () => {
-            onSaveRef.current();
+            requestSaveRef.current();
             return true;
           },
         },
@@ -243,11 +287,44 @@ function buildExtensions(
   ];
 }
 
+function jumpToEditorLine(view: EditorView, target: number): () => void {
+  const lineNum = Math.max(1, Math.min(target, view.state.doc.lines));
+  const line = view.state.doc.line(lineNum);
+
+  view.dispatch({
+    selection: { anchor: line.from },
+    effects: EditorView.scrollIntoView(line.from, { y: "center" }),
+  });
+  view.focus();
+
+  const doMeasuredScroll = () => {
+    view.requestMeasure({
+      read(v) {
+        return {
+          top: v.lineBlockAt(line.from).top,
+          clientH: v.scrollDOM.clientHeight,
+        };
+      },
+      write(data, v) {
+        if (data.top > 0) {
+          v.scrollDOM.scrollTop = Math.max(0, data.top - data.clientH / 2);
+        }
+      },
+    });
+  };
+
+  const timers = [100, 500, 1000].map((delay) =>
+    setTimeout(doMeasuredScroll, delay),
+  );
+  return () => timers.forEach(clearTimeout);
+}
+
 // ─── Component ────────────────────────────────────────────────────────────────
 
 export default function CodeEditor({
-  value,
-  onChange,
+  ref,
+  documentSpec,
+  onEdit,
   onSave,
   isDark,
   keyboardHeight,
@@ -256,26 +333,60 @@ export default function CodeEditor({
 }: CodeEditorProps) {
   const containerRef = useRef<HTMLDivElement | null>(null);
   const viewRef = useRef<EditorView | null>(null);
-  const onChangeRef = useRef(onChange);
+  const onEditRef = useRef(onEdit);
   const onSaveRef = useRef(onSave);
-  const lastEditorValue = useRef(value);
+  const documentEpochRef = useRef(documentSpec.epoch);
+  const editRevisionRef = useRef(0);
+  const savedDocumentRef = useRef(Text.of(documentSpec.value.split("\n")));
+  const requestSaveRef = useRef<() => void>(() => undefined);
+  const themeCompartmentRef = useRef(new Compartment());
+  const appliedThemeRef = useRef(isDark);
   const prevInsertSeq = useRef<number | null>(null);
   // Tracks the most-recent jump target so the value effect can fire it
   // after the full content is loaded (the Expo DOM bridge may deliver
   // value="" on first render and the real content on the next one).
   const pendingJumpRef = useRef<number | null>(jumpToLine);
-  // Skip the isDark re-apply on first mount — the mount effect already builds
-  // extensions with the correct isDark value, so re-applying would destroy the
-  // DOM and reset scroll position before any jump can take effect.
-  const isDarkMountedRef = useRef(false);
 
   // Keep callback refs current
   useEffect(() => {
-    onChangeRef.current = onChange;
-  }, [onChange]);
+    onEditRef.current = onEdit;
+  }, [onEdit]);
   useEffect(() => {
     onSaveRef.current = onSave;
   }, [onSave]);
+
+  requestSaveRef.current = () => {
+    const view = viewRef.current;
+    if (!view) return;
+    const document = view.state.doc;
+    const content = view.state.doc.toString();
+    const epoch = documentEpochRef.current;
+    const revision = editRevisionRef.current;
+    void onSaveRef
+      .current(content, epoch, revision)
+      .then((saved) => {
+        if (!saved || epoch !== documentEpochRef.current) return;
+        savedDocumentRef.current = document;
+        const latestView = viewRef.current;
+        if (!latestView) return;
+        void onEditRef.current(
+          epoch,
+          editRevisionRef.current,
+          !latestView.state.doc.eq(savedDocumentRef.current),
+        );
+      })
+      .catch(() => undefined);
+  };
+
+  useDOMImperativeHandle(
+    ref ?? null,
+    () => ({
+      requestSave() {
+        requestSaveRef.current();
+      },
+    }),
+    [],
+  );
 
   // Prevent the WebView document from scrolling so CM6's own scroller
   // handles all scroll — without this the body can scroll, making scrollDOM
@@ -293,8 +404,16 @@ export default function CodeEditor({
     if (!containerRef.current) return;
 
     const state = EditorState.create({
-      doc: value,
-      extensions: buildExtensions(isDark, onChangeRef, onSaveRef),
+      doc: documentSpec.value,
+      extensions: buildExtensions(
+        isDark,
+        onEditRef,
+        documentEpochRef,
+        editRevisionRef,
+        savedDocumentRef,
+        requestSaveRef,
+        themeCompartmentRef.current,
+      ),
     });
 
     const view = new EditorView({ state, parent: containerRef.current });
@@ -307,69 +426,51 @@ export default function CodeEditor({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // External value changes (e.g. reload after conflict).
-  // Also fires the pending jump after content loads — necessary because the
-  // Expo DOM bridge may deliver value="" on first render (1-line doc) and the
-  // real content only on the next render, making an early scroll land on l.1.
+  // Replace the document only for an explicit load/reload epoch. CodeMirror
+  // owns local edits; mirroring every keystroke back as a prop would race over
+  // Expo's asynchronous DOM bridge and reset the cursor.
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
-    if (value !== lastEditorValue.current) {
-      lastEditorValue.current = value;
-      view.dispatch({
-        changes: { from: 0, to: view.state.doc.length, insert: value },
-        selection: { anchor: 0 },
-      });
-      // Execute pending jump now that the full content is present.
-      const target = pendingJumpRef.current;
-      if (target) {
-        const lineNum = Math.max(1, Math.min(target, view.state.doc.lines));
-        const line = view.state.doc.line(lineNum);
-        view.dispatch({
-          selection: { anchor: line.from },
-          effects: EditorView.scrollIntoView(line.from, { y: "center" }),
-        });
-        view.focus();
-        const doMeasuredScroll = () => {
-          if (!viewRef.current) return;
-          viewRef.current.requestMeasure({
-            read(v) {
-              return {
-                top: v.lineBlockAt(line.from).top,
-                clientH: v.scrollDOM.clientHeight,
-              };
-            },
-            write(data, v) {
-              if (data.top > 0) {
-                v.scrollDOM.scrollTop = Math.max(
-                  0,
-                  data.top - data.clientH / 2,
-                );
-              }
-            },
-          });
-        };
-        setTimeout(doMeasuredScroll, 100);
-        setTimeout(doMeasuredScroll, 500);
-      }
-    }
-  }, [value]);
+    documentEpochRef.current = documentSpec.epoch;
+    editRevisionRef.current = 0;
 
-  // Re-apply theme when isDark changes (skip first mount — already built correctly).
-  useEffect(() => {
-    if (!isDarkMountedRef.current) {
-      isDarkMountedRef.current = true;
-      return;
+    if (documentSpec.value !== view.state.doc.toString()) {
+      view.setState(
+        EditorState.create({
+          doc: documentSpec.value,
+          extensions: buildExtensions(
+            appliedThemeRef.current,
+            onEditRef,
+            documentEpochRef,
+            editRevisionRef,
+            savedDocumentRef,
+            requestSaveRef,
+            themeCompartmentRef.current,
+          ),
+        }),
+      );
     }
+    savedDocumentRef.current = view.state.doc;
+
+    const target = pendingJumpRef.current;
+    if (target && view.state.doc.lines > 1) {
+      return jumpToEditorLine(view, target);
+    }
+    return undefined;
+  }, [documentSpec.epoch, documentSpec.value]);
+
+  // Reconfigure only theme extensions, preserving document, selection, and undo.
+  useEffect(() => {
+    if (appliedThemeRef.current === isDark) return;
+    appliedThemeRef.current = isDark;
     const view = viewRef.current;
     if (!view) return;
-    const currentDoc = view.state.doc;
-    view.setState(
-      EditorState.create({
-        doc: currentDoc,
-        extensions: buildExtensions(isDark, onChangeRef, onSaveRef),
-      }),
-    );
+    view.dispatch({
+      effects: themeCompartmentRef.current.reconfigure(
+        buildThemeExtensions(isDark),
+      ),
+    });
   }, [isDark]);
 
   // Insert text at cursor (from accessory bar)
@@ -379,10 +480,17 @@ export default function CodeEditor({
     if (insertSpec.seq === prevInsertSeq.current) return;
     prevInsertSeq.current = insertSpec.seq;
     const { from, to } = view.state.selection.main;
+    const cursorOffset = Math.max(
+      0,
+      Math.min(
+        insertSpec.cursorOffset ?? insertSpec.text.length,
+        insertSpec.text.length,
+      ),
+    );
     view.dispatch(
       view.state.update({
         changes: { from, to, insert: insertSpec.text },
-        selection: { anchor: from + insertSpec.text.length },
+        selection: { anchor: from + cursorOffset },
         scrollIntoView: true,
         userEvent: "input",
       }),
@@ -396,39 +504,7 @@ export default function CodeEditor({
     pendingJumpRef.current = jumpToLine;
     const view = viewRef.current;
     if (!view || !jumpToLine || view.state.doc.lines <= 1) return;
-    const lineNum = Math.max(1, Math.min(jumpToLine, view.state.doc.lines));
-    const line = view.state.doc.line(lineNum);
-
-    view.dispatch({
-      selection: { anchor: line.from },
-      effects: EditorView.scrollIntoView(line.from, { y: "center" }),
-    });
-    view.focus();
-
-    // CM6 may not have measured line positions for un-rendered lines yet —
-    // retry via requestMeasure so the write() phase has accurate coordinates.
-    const doMeasuredScroll = () => {
-      if (!viewRef.current) return;
-      viewRef.current.requestMeasure({
-        read(v) {
-          return { top: v.lineBlockAt(line.from).top, clientH: v.scrollDOM.clientHeight };
-        },
-        write(data, v) {
-          if (data.top > 0) {
-            v.scrollDOM.scrollTop = Math.max(0, data.top - data.clientH / 2);
-          }
-        },
-      });
-    };
-
-    const t1 = setTimeout(doMeasuredScroll, 100);
-    const t2 = setTimeout(doMeasuredScroll, 500);
-    const t3 = setTimeout(doMeasuredScroll, 1000);
-    return () => {
-      clearTimeout(t1);
-      clearTimeout(t2);
-      clearTimeout(t3);
-    };
+    return jumpToEditorLine(view, jumpToLine);
   }, [jumpToLine]);
 
   // Keyboard height → pad editor scroller so CM6 scrolls cursor above keyboard
