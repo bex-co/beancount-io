@@ -1,22 +1,22 @@
 # w1 · m15 — Native beancount code editor in the Ledger tab
 
-**Worker:** worker1 **Goal:** Replace the Ledger tab's remote webview (`beancount.io/ledger/editor/`) with a native file browser and a real beancount **code editor** — CodeMirror 6 bundled locally in an Expo DOM component with fava's beancount language (line numbers, true syntax highlighting) — whose keyboard is tuned for mobile: no autocorrect/smart-quote mangling, and a native accessory bar with the symbols beancount needs (`YYYY-MM-DD`, `:`, `"`, `#`, `^`, indent). **Status:** todo
+**Worker:** worker1 **Goal:** Replace the Ledger tab's remote webview (`beancount.io/ledger/editor/`) with a native file browser and a real beancount **code editor** — CodeMirror 6 bundled locally in an Expo DOM component with fava's beancount language (line numbers, true syntax highlighting) — whose keyboard is tuned for mobile: no autocorrect/smart-quote mangling, and a native accessory bar with the symbols beancount needs (`YYYY-MM-DD`, `:`, `"`, `#`, `^`, indent). **Status:** done
 
 ## Tasks (in order)
 
-| id   | title                                                                             | est | depends_on       |
-| ---- | --------------------------------------------------------------------------------- | --- | ---------------- |
-| t001 | GraphQL ops + codegen: `getLedgerDirContent`, `getLedgerFile`, `updateLedgerFile` | 20m | —                |
-| t002 | Native file browser in the Ledger tab (replaces the webview home view)            | 45m | t001             |
-| t003 | Editor core: CodeMirror 6 in an Expo DOM component ⚠ new deps                     | 45m | —                |
-| t004 | Beancount language (fava's CM6 modules) + theme-token editor themes               | 45m | t003             |
-| t005 | File editor screen: load, edit, save with sha conflict handling                   | 45m | t001, t004       |
-| t006 | Beancount keyboard accessory bar (sticky above the keyboard, both platforms)      | 40m | t005             |
-| t007 | Surface ledger errors for the open file + jump-to-line                            | 30m | t005             |
-| t008 | Retire the webview: migrate notifications deep link, remove `dashboard-webview`   | 30m | t002, t006, t007 |
-| t009 | UX pass — light/dark, i18n, loading bg, safe area, analytics                      | 40m | t008             |
-| t010 | Simplify pass over editor/browser code                                            | 20m | t009             |
-| t011 | Unit tests: tokenizer, save-flow helpers, path navigation                         | 30m | t009             |
+| id   | title                                                                             | est | depends_on       |            |
+| ---- | --------------------------------------------------------------------------------- | --- | ---------------- | ---------- |
+| t001 | GraphQL ops + codegen: `getLedgerDirContent`, `getLedgerFile`, `updateLedgerFile` | 20m | —                | — **DONE** |
+| t002 | Native file browser in the Ledger tab (replaces the webview home view)            | 45m | t001             | — **DONE** |
+| t003 | Editor core: CodeMirror 6 in an Expo DOM component ⚠ new deps                     | 45m | —                | — **DONE** |
+| t004 | Beancount language (fava's CM6 modules) + theme-token editor themes               | 45m | t003             | — **DONE** |
+| t005 | File editor screen: load, edit, save with sha conflict handling                   | 45m | t001, t004       | — **DONE** |
+| t006 | Beancount keyboard accessory bar (sticky above the keyboard, both platforms)      | 40m | t005             | — **DONE** |
+| t007 | Surface ledger errors for the open file + jump-to-line                            | 30m | t005             | — **DONE** |
+| t008 | Retire the webview: migrate notifications deep link, remove `dashboard-webview`   | 30m | t002, t006, t007 | — **DONE** |
+| t009 | UX pass — light/dark, i18n, loading bg, safe area, analytics                      | 40m | t008             | — **DONE** |
+| t010 | Simplify pass over editor/browser code                                            | 20m | t009             | — **DONE** |
+| t011 | Unit tests: tokenizer, save-flow helpers, path navigation                         | 30m | t009             | — **DONE** |
 
 ## Definition of done
 
