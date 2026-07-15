@@ -27,6 +27,10 @@ import { LoadingTile } from "@/components/loading-tile";
 import { KeyboardAccessoryBar } from "@/components/keyboard-accessory-bar";
 import { analytics } from "@/common/analytics";
 import {
+  decodeLedgerFileContent,
+  encodeLedgerFileContent,
+} from "@/common/ledger-file-content";
+import {
   useGetLedgerFileQuery,
   useUpdateLedgerFileMutation,
 } from "@/generated-graphql/graphql";
@@ -35,11 +39,7 @@ import CodeEditor, {
   type EditorDocumentSpec,
   type InsertSpec,
 } from "@/components/code-editor/code-editor";
-import {
-  decodeLedgerFileContent,
-  isConflictError,
-  filterFileErrors,
-} from "./utils";
+import { isConflictError, filterFileErrors } from "./utils";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
@@ -266,7 +266,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
           variables: {
             ledgerId,
             path,
-            content,
+            content: encodeLedgerFileContent(content),
             sha,
             message: `edit ${path}`,
           },

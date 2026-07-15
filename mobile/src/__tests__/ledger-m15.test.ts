@@ -1,15 +1,21 @@
 import {
   isEditable,
+  normalizeLedgerFileName,
+  buildLedgerFilePath,
+  canDeleteLedgerFile,
   sortEntries,
   pushPathStack,
   popPathStack,
 } from "../screens/ledger-file-browser-screen/utils";
 import {
-  decodeLedgerFileContent,
   isConflictError,
   filterFileErrors,
   classifyBeancountChunk,
 } from "../screens/ledger-file-editor-screen/utils";
+import {
+  decodeLedgerFileContent,
+  encodeLedgerFileContent,
+} from "../common/ledger-file-content";
 
 // ── decodeLedgerFileContent ─────────────────────────────────────────────────
 
@@ -26,6 +32,20 @@ test("decodeLedgerFileContent: decodes wrapped UTF-8 base64", () => {
   const decoded = decodeLedgerFileContent(wrapped, "base64");
   if (decoded !== content) {
     throw new Error(`expected UTF-8 content, got ${JSON.stringify(decoded)}`);
+  }
+});
+
+test("ledger file content: UTF-8 encode/decode round trip", () => {
+  const content = '2026-07-15 * "Crème brûlée 東京"\n  Assets:Cash  -5 USD\n';
+  const encoded = encodeLedgerFileContent(content);
+  if (!/^[A-Za-z0-9+/]*={0,2}$/.test(encoded)) {
+    throw new Error("encoded content should be valid base64");
+  }
+  const decoded = decodeLedgerFileContent(encoded, "base64");
+  if (decoded !== content) {
+    throw new Error(
+      `expected round-trip content, got ${JSON.stringify(decoded)}`,
+    );
   }
 });
 
@@ -51,6 +71,55 @@ test("isEditable: .txt files are not editable", () => {
 test("isEditable: directories are not editable", () => {
   if (isEditable("2024"))
     throw new Error("bare dir name should not be editable");
+});
+
+test("normalizeLedgerFileName: appends .bean when omitted", () => {
+  const result = normalizeLedgerFileName("investments");
+  if (result !== "investments.bean") {
+    throw new Error(`expected investments.bean, got ${result}`);
+  }
+});
+
+test("normalizeLedgerFileName: preserves .beancount extension", () => {
+  const result = normalizeLedgerFileName("  archive.beancount  ");
+  if (result !== "archive.beancount") {
+    throw new Error(`expected archive.beancount, got ${result}`);
+  }
+});
+
+test("normalizeLedgerFileName: rejects paths and unsupported extensions", () => {
+  if (normalizeLedgerFileName("nested/file.bean") !== null) {
+    throw new Error("paths should not be accepted as filenames");
+  }
+  if (normalizeLedgerFileName("notes.txt") !== null) {
+    throw new Error("unsupported extensions should be rejected");
+  }
+  if (normalizeLedgerFileName(".bean") !== null) {
+    throw new Error("filenames require a non-empty stem");
+  }
+});
+
+test("buildLedgerFilePath: joins subdirectory and filename", () => {
+  const path = buildLedgerFilePath("2026/", "expenses.bean");
+  if (path !== "2026/expenses.bean") {
+    throw new Error(`expected joined path, got ${path}`);
+  }
+});
+
+test("buildLedgerFilePath: leaves root filename unprefixed", () => {
+  const path = buildLedgerFilePath("", "accounts.bean");
+  if (path !== "accounts.bean") {
+    throw new Error(`expected root filename, got ${path}`);
+  }
+});
+
+test("canDeleteLedgerFile: protects main.bean only", () => {
+  if (canDeleteLedgerFile("main.bean")) {
+    throw new Error("main.bean must be protected");
+  }
+  if (!canDeleteLedgerFile("accounts.bean")) {
+    throw new Error("other ledger files should be deletable");
+  }
 });
 
 // ── sortEntries ───────────────────────────────────────────────────────────────

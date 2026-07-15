@@ -1,3 +1,4 @@
+import { type ReactNode } from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
@@ -34,6 +35,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     navRight: {
       width: 80,
+      alignItems: "flex-end",
     },
     badgeContainer: {
       position: "relative",
@@ -110,8 +112,14 @@ function NotificationsBellButton(): JSX.Element {
   );
 }
 
-/** Slim tab header: hamburger left, title centered, right placeholder keeps title truly centered. */
-export function LedgerDrawerHeader({ title }: { title: string }): JSX.Element {
+/** Slim tab header: equal-width action areas keep the title truly centered. */
+export function LedgerDrawerHeader({
+  title,
+  right,
+}: {
+  title: string;
+  right?: ReactNode;
+}): JSX.Element {
   const styles = useThemeStyle(getStyles);
 
   return (
@@ -123,7 +131,7 @@ export function LedgerDrawerHeader({ title }: { title: string }): JSX.Element {
       <Text style={styles.navTitle} numberOfLines={1}>
         {title}
       </Text>
-      <View style={styles.navRight} />
+      <View style={styles.navRight}>{right}</View>
     </View>
   );
 }

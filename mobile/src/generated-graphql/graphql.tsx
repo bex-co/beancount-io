@@ -65,6 +65,16 @@ export type CancelSubscriptionMutationVariables = Exact<{
 
 export type CancelSubscriptionMutation = { cancelSubscription: { success: boolean, message: string | null } };
 
+export type CreateLedgerFileMutationVariables = Exact<{
+  ledgerId: string;
+  path: string;
+  content: string;
+  message?: string | null | undefined;
+}>;
+
+
+export type CreateLedgerFileMutation = { createLedgerFile: { name: string, path: string, sha: string, size: number, type: string } };
+
 export type CreateSubscriptionSessionMutationVariables = Exact<{
   clientId: string;
   priceId: string;
@@ -85,6 +95,16 @@ export type DeleteLedgerEntrySourceSliceMutationVariables = Exact<{
 
 
 export type DeleteLedgerEntrySourceSliceMutation = { deleteLedgerEntrySourceSlice: { entryHash: string, message: string } };
+
+export type DeleteLedgerFileMutationVariables = Exact<{
+  ledgerId: string;
+  path: string;
+  sha: string;
+  message?: string | null | undefined;
+}>;
+
+
+export type DeleteLedgerFileMutation = { deleteLedgerFile: { path: string } };
 
 export type GenerateTempAssetUploadUrlMutationVariables = Exact<{
   mimeType?: string | null | undefined;
@@ -673,6 +693,51 @@ export function useCancelSubscriptionMutation(baseOptions?: Apollo.MutationHookO
 export type CancelSubscriptionMutationHookResult = ReturnType<typeof useCancelSubscriptionMutation>;
 export type CancelSubscriptionMutationResult = Apollo.MutationResult<CancelSubscriptionMutation>;
 export type CancelSubscriptionMutationOptions = Apollo.BaseMutationOptions<CancelSubscriptionMutation, CancelSubscriptionMutationVariables>;
+export const CreateLedgerFileDocument = gql`
+    mutation createLedgerFile($ledgerId: String!, $path: String!, $content: String!, $message: String) {
+  createLedgerFile(
+    ledgerId: $ledgerId
+    path: $path
+    content: $content
+    message: $message
+  ) {
+    name
+    path
+    sha
+    size
+    type
+  }
+}
+    `;
+export type CreateLedgerFileMutationFn = Apollo.MutationFunction<CreateLedgerFileMutation, CreateLedgerFileMutationVariables>;
+
+/**
+ * __useCreateLedgerFileMutation__
+ *
+ * To run a mutation, you first call `useCreateLedgerFileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useCreateLedgerFileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [createLedgerFileMutation, { data, loading, error }] = useCreateLedgerFileMutation({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      path: // value for 'path'
+ *      content: // value for 'content'
+ *      message: // value for 'message'
+ *   },
+ * });
+ */
+export function useCreateLedgerFileMutation(baseOptions?: Apollo.MutationHookOptions<CreateLedgerFileMutation, CreateLedgerFileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<CreateLedgerFileMutation, CreateLedgerFileMutationVariables>(CreateLedgerFileDocument, options);
+      }
+export type CreateLedgerFileMutationHookResult = ReturnType<typeof useCreateLedgerFileMutation>;
+export type CreateLedgerFileMutationResult = Apollo.MutationResult<CreateLedgerFileMutation>;
+export type CreateLedgerFileMutationOptions = Apollo.BaseMutationOptions<CreateLedgerFileMutation, CreateLedgerFileMutationVariables>;
 export const CreateSubscriptionSessionDocument = gql`
     mutation CreateSubscriptionSession($clientId: String!, $priceId: String!) {
   createSubscriptionSession(clientId: $clientId, priceId: $priceId) {
@@ -775,6 +840,42 @@ export function useDeleteLedgerEntrySourceSliceMutation(baseOptions?: Apollo.Mut
 export type DeleteLedgerEntrySourceSliceMutationHookResult = ReturnType<typeof useDeleteLedgerEntrySourceSliceMutation>;
 export type DeleteLedgerEntrySourceSliceMutationResult = Apollo.MutationResult<DeleteLedgerEntrySourceSliceMutation>;
 export type DeleteLedgerEntrySourceSliceMutationOptions = Apollo.BaseMutationOptions<DeleteLedgerEntrySourceSliceMutation, DeleteLedgerEntrySourceSliceMutationVariables>;
+export const DeleteLedgerFileDocument = gql`
+    mutation deleteLedgerFile($ledgerId: String!, $path: String!, $sha: String!, $message: String) {
+  deleteLedgerFile(ledgerId: $ledgerId, path: $path, sha: $sha, message: $message) {
+    path
+  }
+}
+    `;
+export type DeleteLedgerFileMutationFn = Apollo.MutationFunction<DeleteLedgerFileMutation, DeleteLedgerFileMutationVariables>;
+
+/**
+ * __useDeleteLedgerFileMutation__
+ *
+ * To run a mutation, you first call `useDeleteLedgerFileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useDeleteLedgerFileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [deleteLedgerFileMutation, { data, loading, error }] = useDeleteLedgerFileMutation({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      path: // value for 'path'
+ *      sha: // value for 'sha'
+ *      message: // value for 'message'
+ *   },
+ * });
+ */
+export function useDeleteLedgerFileMutation(baseOptions?: Apollo.MutationHookOptions<DeleteLedgerFileMutation, DeleteLedgerFileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<DeleteLedgerFileMutation, DeleteLedgerFileMutationVariables>(DeleteLedgerFileDocument, options);
+      }
+export type DeleteLedgerFileMutationHookResult = ReturnType<typeof useDeleteLedgerFileMutation>;
+export type DeleteLedgerFileMutationResult = Apollo.MutationResult<DeleteLedgerFileMutation>;
+export type DeleteLedgerFileMutationOptions = Apollo.BaseMutationOptions<DeleteLedgerFileMutation, DeleteLedgerFileMutationVariables>;
 export const GenerateTempAssetUploadUrlDocument = gql`
     mutation GenerateTempAssetUploadUrl($mimeType: String, $filename: String) {
   generateTempAssetUploadUrl(mimeType: $mimeType, filename: $filename) {

@@ -280,6 +280,22 @@ export const en = {
   // ledger file browser
   ledgerLoadError: "Failed to load",
   ledgerEmpty: "No files",
+  ledgerEmptyHint: "Create a ledger file here, or pull down to refresh.",
+  ledgerRefreshHint: "Pull down to try loading this folder again.",
+  ledgerCreateFile: "Create file",
+  ledgerCreateFileTitle: "New Ledger File",
+  ledgerCreateFileMessage:
+    "Enter a unique .bean or .beancount filename. If you omit the extension, .bean is added.",
+  ledgerCreateFilePlaceholder: "investments.bean",
+  ledgerCreateFileSuccess: "Created {{name}}",
+  ledgerCreateFileFailed: "Failed to create file",
+  ledgerDeleteFile: "Delete {{name}}",
+  ledgerDeleteFileTitle: "Delete Ledger File",
+  ledgerDeleteFileMessage: 'Delete "{{name}}"? This cannot be undone.',
+  ledgerDeleteFileConfirm: "Delete",
+  ledgerDeleteFileSuccess: "Deleted {{name}}",
+  ledgerDeleteFileFailed: "Failed to delete file",
+  ledgerMainFileProtected: "main.bean cannot be deleted",
   // ledger file editor
   ledgerEditorSave: "Save",
   ledgerEditorSaving: "Saving...",

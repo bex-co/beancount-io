@@ -1,13 +1,3 @@
-import { Buffer } from "buffer";
-
-export function decodeLedgerFileContent(
-  content: string,
-  encoding?: string | null,
-): string {
-  if (encoding !== "base64") return content;
-  return Buffer.from(content.replace(/\s/g, ""), "base64").toString("utf8");
-}
-
 export function isConflictError(message: string): boolean {
   const m = message.toLowerCase();
   return m.includes("sha") || m.includes("conflict") || m.includes("409");

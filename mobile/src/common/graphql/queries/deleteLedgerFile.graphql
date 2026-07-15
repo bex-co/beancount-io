@@ -1,0 +1,15 @@
+mutation deleteLedgerFile(
+  $ledgerId: String!
+  $path: String!
+  $sha: String!
+  $message: String
+) {
+  deleteLedgerFile(
+    ledgerId: $ledgerId
+    path: $path
+    sha: $sha
+    message: $message
+  ) {
+    path
+  }
+}

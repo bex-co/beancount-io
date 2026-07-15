@@ -1,0 +1,19 @@
+mutation createLedgerFile(
+  $ledgerId: String!
+  $path: String!
+  $content: String!
+  $message: String
+) {
+  createLedgerFile(
+    ledgerId: $ledgerId
+    path: $path
+    content: $content
+    message: $message
+  ) {
+    name
+    path
+    sha
+    size
+    type
+  }
+}
