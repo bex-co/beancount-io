@@ -1,0 +1,11 @@
+query getLedgerDirContent($ledgerId: String!, $dirPath: String) {
+  getLedgerDirContent(ledgerId: $ledgerId, dirPath: $dirPath) {
+    name
+    path
+    type
+    size
+    sha
+    lastCommitSha
+    lastAuthorDate
+  }
+}

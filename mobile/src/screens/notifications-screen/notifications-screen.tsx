@@ -17,26 +17,12 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { useReactiveVar } from "@apollo/client";
 import { ledgerVar } from "@/common/vars";
-import {
-  useListCommitsQuery,
-  useGetLedgerQuery,
-} from "@/generated-graphql/graphql";
+import { useListCommitsQuery } from "@/generated-graphql/graphql";
 import { LoadingTile } from "@/components/loading-tile";
 import { LedgerGuard } from "@/components/ledger-guard";
 import { formatErrorLocation, formatShortSha, LedgerError } from "./formatting";
 
 const SKELETON_WIDTHS = [180, 220, 160, 200, 140, 190];
-
-function buildFileEditUrl(
-  fullName: string,
-  filename: string,
-  lineno: number | null | undefined,
-): string {
-  const base = `https://beancount.io/ledger/${fullName}/files/blob/main/${filename}`;
-  return lineno != null
-    ? `${base}?editMode=true&lineNumber=${lineno}`
-    : `${base}?editMode=true`;
-}
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -139,23 +125,19 @@ function SkeletonRows(): JSX.Element {
   );
 }
 
-function ErrorRow({
-  err,
-  fullName,
-}: {
-  err: LedgerError;
-  fullName: string | undefined;
-}): JSX.Element {
+function ErrorRow({ err }: { err: LedgerError }): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
-  const canFix = !!err.filename && !!fullName;
+  const canFix = !!err.filename;
 
   const handlePress = () => {
     if (!canFix) return;
-    const fileUrl = buildFileEditUrl(fullName!, err.filename!, err.lineno);
-    router.navigate({
-      pathname: "/(app)/(tabs)/ledger",
-      params: { fileUrl },
+    router.push({
+      pathname: "/(app)/ledger-file-editor",
+      params: {
+        path: err.filename!,
+        ...(err.lineno != null ? { initialLine: String(err.lineno) } : {}),
+      },
     });
   };
 
@@ -190,12 +172,6 @@ function NotificationsScreenImpl(): JSX.Element {
   usePageView("notifications");
 
   const ledgerId = useReactiveVar(ledgerVar) ?? "";
-  const { data: ledgerData } = useGetLedgerQuery({
-    variables: { ledgerId },
-    skip: !ledgerId,
-    fetchPolicy: "cache-first",
-  });
-  const fullName = ledgerData?.getLedger?.fullName;
 
   const {
     errors,
@@ -260,7 +236,7 @@ function NotificationsScreenImpl(): JSX.Element {
           ) : (
             errors.map((err, i) => (
               <View key={i}>
-                <ErrorRow err={err} fullName={fullName} />
+                <ErrorRow err={err} />
                 <View style={styles.divider} />
               </View>
             ))

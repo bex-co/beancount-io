@@ -123,6 +123,14 @@ export type GetLedgerQueryVariables = Exact<{
 
 export type GetLedgerQuery = { getLedger: { id: string, name: string, fullName: string, httpUrl: string, sshUrl: string, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, permissions: { admin: boolean, pull: boolean, push: boolean } | null, options: { nameAssets: string, nameEquity: string, nameExpenses: string, nameIncome: string, nameLiabilities: string, operatingCurrency: Array<string> } } };
 
+export type GetLedgerDirContentQueryVariables = Exact<{
+  ledgerId: string;
+  dirPath?: string | null | undefined;
+}>;
+
+
+export type GetLedgerDirContentQuery = { getLedgerDirContent: Array<{ name: string, path: string, type: string, size: number, sha: string, lastCommitSha: string | null, lastAuthorDate: string | null }> };
+
 export type GetLedgerEntryContextQueryVariables = Exact<{
   entryHash: string;
   ledgerId: string;
@@ -137,6 +145,14 @@ export type GetLedgerErrorsQueryVariables = Exact<{
 
 
 export type GetLedgerErrorsQuery = { getLedgerErrors: Array<{ filename: string | null, lineno: number | null, message: string }> };
+
+export type GetLedgerFileQueryVariables = Exact<{
+  ledgerId: string;
+  path: string;
+}>;
+
+
+export type GetLedgerFileQuery = { getLedgerFile: { content: string | null, encoding: string | null, name: string, path: string, sha: string, size: number, type: string } | null };
 
 export type GetLedgerJournalQueryVariables = Exact<{
   ledgerId: string;
@@ -273,6 +289,17 @@ export type UpdateLedgerEntrySourceSliceMutationVariables = Exact<{
 
 
 export type UpdateLedgerEntrySourceSliceMutation = { updateLedgerEntrySourceSlice: { entryHash: string, message: string, newSha256sum: string } };
+
+export type UpdateLedgerFileMutationVariables = Exact<{
+  ledgerId: string;
+  path: string;
+  content: string;
+  sha: string;
+  message?: string | null | undefined;
+}>;
+
+
+export type UpdateLedgerFileMutation = { updateLedgerFile: { content: string | null, name: string, path: string, sha: string, size: number, type: string } };
 
 export type UpdateReportSubscribeMutationVariables = Exact<{
   userId: string;
@@ -1006,6 +1033,56 @@ export type GetLedgerQueryHookResult = ReturnType<typeof useGetLedgerQuery>;
 export type GetLedgerLazyQueryHookResult = ReturnType<typeof useGetLedgerLazyQuery>;
 export type GetLedgerSuspenseQueryHookResult = ReturnType<typeof useGetLedgerSuspenseQuery>;
 export type GetLedgerQueryResult = Apollo.QueryResult<GetLedgerQuery, GetLedgerQueryVariables>;
+export const GetLedgerDirContentDocument = gql`
+    query getLedgerDirContent($ledgerId: String!, $dirPath: String) {
+  getLedgerDirContent(ledgerId: $ledgerId, dirPath: $dirPath) {
+    name
+    path
+    type
+    size
+    sha
+    lastCommitSha
+    lastAuthorDate
+  }
+}
+    `;
+
+/**
+ * __useGetLedgerDirContentQuery__
+ *
+ * To run a query within a React component, call `useGetLedgerDirContentQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLedgerDirContentQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLedgerDirContentQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      dirPath: // value for 'dirPath'
+ *   },
+ * });
+ */
+export function useGetLedgerDirContentQuery(baseOptions: Apollo.QueryHookOptions<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables> & ({ variables: GetLedgerDirContentQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables>(GetLedgerDirContentDocument, options);
+      }
+export function useGetLedgerDirContentLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables>(GetLedgerDirContentDocument, options);
+        }
+// @ts-ignore
+export function useGetLedgerDirContentSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables>;
+export function useGetLedgerDirContentSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerDirContentQuery | undefined, GetLedgerDirContentQueryVariables>;
+export function useGetLedgerDirContentSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables>(GetLedgerDirContentDocument, options);
+        }
+export type GetLedgerDirContentQueryHookResult = ReturnType<typeof useGetLedgerDirContentQuery>;
+export type GetLedgerDirContentLazyQueryHookResult = ReturnType<typeof useGetLedgerDirContentLazyQuery>;
+export type GetLedgerDirContentSuspenseQueryHookResult = ReturnType<typeof useGetLedgerDirContentSuspenseQuery>;
+export type GetLedgerDirContentQueryResult = Apollo.QueryResult<GetLedgerDirContentQuery, GetLedgerDirContentQueryVariables>;
 export const GetLedgerEntryContextDocument = gql`
     query GetLedgerEntryContext($entryHash: String!, $ledgerId: String!) {
   getLedgerEntryContext(entryHash: $entryHash, ledgerId: $ledgerId) {
@@ -1099,6 +1176,56 @@ export type GetLedgerErrorsQueryHookResult = ReturnType<typeof useGetLedgerError
 export type GetLedgerErrorsLazyQueryHookResult = ReturnType<typeof useGetLedgerErrorsLazyQuery>;
 export type GetLedgerErrorsSuspenseQueryHookResult = ReturnType<typeof useGetLedgerErrorsSuspenseQuery>;
 export type GetLedgerErrorsQueryResult = Apollo.QueryResult<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>;
+export const GetLedgerFileDocument = gql`
+    query getLedgerFile($ledgerId: String!, $path: String!) {
+  getLedgerFile(ledgerId: $ledgerId, path: $path) {
+    content
+    encoding
+    name
+    path
+    sha
+    size
+    type
+  }
+}
+    `;
+
+/**
+ * __useGetLedgerFileQuery__
+ *
+ * To run a query within a React component, call `useGetLedgerFileQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLedgerFileQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLedgerFileQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      path: // value for 'path'
+ *   },
+ * });
+ */
+export function useGetLedgerFileQuery(baseOptions: Apollo.QueryHookOptions<GetLedgerFileQuery, GetLedgerFileQueryVariables> & ({ variables: GetLedgerFileQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLedgerFileQuery, GetLedgerFileQueryVariables>(GetLedgerFileDocument, options);
+      }
+export function useGetLedgerFileLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLedgerFileQuery, GetLedgerFileQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLedgerFileQuery, GetLedgerFileQueryVariables>(GetLedgerFileDocument, options);
+        }
+// @ts-ignore
+export function useGetLedgerFileSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetLedgerFileQuery, GetLedgerFileQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerFileQuery, GetLedgerFileQueryVariables>;
+export function useGetLedgerFileSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerFileQuery, GetLedgerFileQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerFileQuery | undefined, GetLedgerFileQueryVariables>;
+export function useGetLedgerFileSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerFileQuery, GetLedgerFileQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLedgerFileQuery, GetLedgerFileQueryVariables>(GetLedgerFileDocument, options);
+        }
+export type GetLedgerFileQueryHookResult = ReturnType<typeof useGetLedgerFileQuery>;
+export type GetLedgerFileLazyQueryHookResult = ReturnType<typeof useGetLedgerFileLazyQuery>;
+export type GetLedgerFileSuspenseQueryHookResult = ReturnType<typeof useGetLedgerFileSuspenseQuery>;
+export type GetLedgerFileQueryResult = Apollo.QueryResult<GetLedgerFileQuery, GetLedgerFileQueryVariables>;
 export const GetLedgerJournalDocument = gql`
     query GetLedgerJournal($ledgerId: String!, $query: JournalQueryInput) {
   getLedgerJournal(ledgerId: $ledgerId, query: $query) {
@@ -1969,6 +2096,54 @@ export function useUpdateLedgerEntrySourceSliceMutation(baseOptions?: Apollo.Mut
 export type UpdateLedgerEntrySourceSliceMutationHookResult = ReturnType<typeof useUpdateLedgerEntrySourceSliceMutation>;
 export type UpdateLedgerEntrySourceSliceMutationResult = Apollo.MutationResult<UpdateLedgerEntrySourceSliceMutation>;
 export type UpdateLedgerEntrySourceSliceMutationOptions = Apollo.BaseMutationOptions<UpdateLedgerEntrySourceSliceMutation, UpdateLedgerEntrySourceSliceMutationVariables>;
+export const UpdateLedgerFileDocument = gql`
+    mutation updateLedgerFile($ledgerId: String!, $path: String!, $content: String!, $sha: String!, $message: String) {
+  updateLedgerFile(
+    ledgerId: $ledgerId
+    path: $path
+    content: $content
+    sha: $sha
+    message: $message
+  ) {
+    content
+    name
+    path
+    sha
+    size
+    type
+  }
+}
+    `;
+export type UpdateLedgerFileMutationFn = Apollo.MutationFunction<UpdateLedgerFileMutation, UpdateLedgerFileMutationVariables>;
+
+/**
+ * __useUpdateLedgerFileMutation__
+ *
+ * To run a mutation, you first call `useUpdateLedgerFileMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUpdateLedgerFileMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [updateLedgerFileMutation, { data, loading, error }] = useUpdateLedgerFileMutation({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      path: // value for 'path'
+ *      content: // value for 'content'
+ *      sha: // value for 'sha'
+ *      message: // value for 'message'
+ *   },
+ * });
+ */
+export function useUpdateLedgerFileMutation(baseOptions?: Apollo.MutationHookOptions<UpdateLedgerFileMutation, UpdateLedgerFileMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UpdateLedgerFileMutation, UpdateLedgerFileMutationVariables>(UpdateLedgerFileDocument, options);
+      }
+export type UpdateLedgerFileMutationHookResult = ReturnType<typeof useUpdateLedgerFileMutation>;
+export type UpdateLedgerFileMutationResult = Apollo.MutationResult<UpdateLedgerFileMutation>;
+export type UpdateLedgerFileMutationOptions = Apollo.BaseMutationOptions<UpdateLedgerFileMutation, UpdateLedgerFileMutationVariables>;
 export const UpdateReportSubscribeDocument = gql`
     mutation updateReportSubscribe($userId: String!, $status: ReportStatus!) {
   updateReportSubscribe(userId: $userId, status: $status) {

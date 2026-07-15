@@ -1,0 +1,11 @@
+query getLedgerFile($ledgerId: String!, $path: String!) {
+  getLedgerFile(ledgerId: $ledgerId, path: $path) {
+    content
+    encoding
+    name
+    path
+    sha
+    size
+    type
+  }
+}

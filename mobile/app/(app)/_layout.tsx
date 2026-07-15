@@ -49,6 +49,7 @@ export default function AppLayout() {
       <Stack.Screen name="settings" />
       <Stack.Screen name="notifications" />
       <Stack.Screen name="commit-detail" />
+      <Stack.Screen name="ledger-file-editor" />
     </Stack>
   );
 }

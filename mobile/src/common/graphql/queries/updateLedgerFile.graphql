@@ -1,0 +1,22 @@
+mutation updateLedgerFile(
+  $ledgerId: String!
+  $path: String!
+  $content: String!
+  $sha: String!
+  $message: String
+) {
+  updateLedgerFile(
+    ledgerId: $ledgerId
+    path: $path
+    content: $content
+    sha: $sha
+    message: $message
+  ) {
+    content
+    name
+    path
+    sha
+    size
+    type
+  }
+}

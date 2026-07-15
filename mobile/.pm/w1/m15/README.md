@@ -1,0 +1,30 @@
+# w1 · m15 — Native beancount code editor in the Ledger tab
+
+**Worker:** worker1 **Goal:** Replace the Ledger tab's remote webview (`beancount.io/ledger/editor/`) with a native file browser and a real beancount **code editor** — CodeMirror 6 bundled locally in an Expo DOM component with fava's beancount language (line numbers, true syntax highlighting) — whose keyboard is tuned for mobile: no autocorrect/smart-quote mangling, and a native accessory bar with the symbols beancount needs (`YYYY-MM-DD`, `:`, `"`, `#`, `^`, indent). **Status:** todo
+
+## Tasks (in order)
+
+| id   | title                                                                             | est | depends_on       |
+| ---- | --------------------------------------------------------------------------------- | --- | ---------------- |
+| t001 | GraphQL ops + codegen: `getLedgerDirContent`, `getLedgerFile`, `updateLedgerFile` | 20m | —                |
+| t002 | Native file browser in the Ledger tab (replaces the webview home view)            | 45m | t001             |
+| t003 | Editor core: CodeMirror 6 in an Expo DOM component ⚠ new deps                     | 45m | —                |
+| t004 | Beancount language (fava's CM6 modules) + theme-token editor themes               | 45m | t003             |
+| t005 | File editor screen: load, edit, save with sha conflict handling                   | 45m | t001, t004       |
+| t006 | Beancount keyboard accessory bar (sticky above the keyboard, both platforms)      | 40m | t005             |
+| t007 | Surface ledger errors for the open file + jump-to-line                            | 30m | t005             |
+| t008 | Retire the webview: migrate notifications deep link, remove `dashboard-webview`   | 30m | t002, t006, t007 |
+| t009 | UX pass — light/dark, i18n, loading bg, safe area, analytics                      | 40m | t008             |
+| t010 | Simplify pass over editor/browser code                                            | 20m | t009             |
+| t011 | Unit tests: tokenizer, save-flow helpers, path navigation                         | 30m | t009             |
+
+## Definition of done
+
+The Ledger tab lists the ledger's files natively (directories navigable, skeleton first-load per convention). Tapping a `.bean`/`.beancount` file opens the editor showing the file with line numbers and beancount syntax highlighting correct in light **and** dark; typing is verified on-device free of autocorrect/auto-capitalize/smart-quote interference on both platforms (t003's keyboard validation gate); a native sticky accessory bar above the keyboard inserts today's date, `:`, `"`, `#`, `^`, and a two-space indent at the cursor on both iOS and Android. Save writes through `updateLedgerFile` with the file's `sha`; a remote-change conflict is surfaced honestly (reload offered, nothing silently overwritten), and unsaved changes guard back-navigation. Ledger validation errors for the open file appear with line context and tap-to-jump; the notifications screen's error deep link opens this native editor at the line instead of the webview. `DashboardWebview` no longer renders anywhere in the ledger flow. Strings localized via `useTranslations()` from the English base; `yarn test:unit` green.
+
+## Source + Goal linkage
+
+- **Source:** `/pm` request 2026-07-14 ("find the expo mobile best code editor and use it to replace the webview editor in ledger tab … keyboard is also an important experience"). Editor research 2026-07-14: the web dashboard's editor is Monaco, which is officially unsupported on mobile browsers — rebundling it is a dead end; the one dedicated RN code-editor package (`@rivascva/react-native-code-editor`) is abandoned with standing cursor bugs. Chosen: `@expensify/react-native-live-markdown` (native TextInput subclass, pluggable worklet parser, actively maintained, RN 0.79–0.86 ✓, New Architecture ✓) + `react-native-keyboard-controller` for the accessory bar. Documented fallback: CodeMirror 6 in an Expo DOM component reusing fava's MIT beancount grammar (best features, worse contenteditable keyboard). Second research pass 2026-07-14 ("can we find a native code editor"): no production native RN code-editor component exists on npm (verified sweep); a true native editor module (Runestone iOS + sora-editor Android) is feasible but ~12–19 person-days + permanent native maintenance — recorded as a v2 option in inbox note `w1/008`. **Owner decision 2026-07-14: beancount is code — use a real code editor.** CodeMirror 6 in an Expo DOM component (bundled locally, fava's MIT beancount language) promoted from fallback to chosen; `@expensify/react-native-live-markdown` (native TextInput decoration, color-only highlighting) demoted to fallback if CM6 fails t003's on-device keyboard validation gate; the Runestone/sora native module (`w1/008`) remains the v2 escalation. CM6's known mobile keyboard quirks (iOS autocapitalize at line start, Android selection edge cases in RN WebView) are called out as explicit t003 verification items.
+- **Goal linkage:** Pillar 4 **Plain-text fidelity** — "power users can always drop to the text"; this makes dropping to the text a first-class native experience instead of a webview. Secondary: Pillar 1 **Effortless capture** — quick on-the-go ledger fixes in seconds.
+- **Expected outcome:** a beancount.io user can open any ledger file on their phone and edit it as comfortably as a native notes app: instant keyboard, no autocorrect mangling of accounts/amounts, beancount highlighting, one-tap date/symbol insertion, honest save/conflict behavior.
+- **Why now:** the Ledger tab is the app's last webview surface (m5/m9/m14 made everything else native), and webview keyboard jank is its biggest usability complaint. All required file ops (`getLedgerDirContent`, `getLedgerFile`, `updateLedgerFile`) already sit unused in the mobile schema — no backend work — and the Expo 57 upgrade already installed `react-native-worklets@0.10.0`, live-markdown's peer dependency, so the dependency cost is at its lowest. m14's error notifications currently deep-link into the webview; this closes that loop natively.

@@ -277,4 +277,21 @@ export const en = {
   commitDetailNoDiff: "No diff available.",
   commitDetailAdditions: "+{{count}} additions",
   commitDetailDeletions: "-{{count}} deletions",
+  // ledger file browser
+  ledgerLoadError: "Failed to load",
+  ledgerEmpty: "No files",
+  // ledger file editor
+  ledgerEditorSave: "Save",
+  ledgerEditorSaving: "Saving...",
+  ledgerEditorSaveSuccess: "File saved",
+  ledgerEditorSaveFailed: "Failed to save",
+  ledgerEditorLoadFailed: "Failed to load file",
+  ledgerEditorUnsavedTitle: "Unsaved Changes",
+  ledgerEditorUnsavedMessage: "Discard your changes?",
+  ledgerEditorDiscardChanges: "Discard",
+  ledgerEditorConflictTitle: "File Changed",
+  ledgerEditorConflictMessage:
+    "This file was changed remotely. Discard local changes and reload?",
+  ledgerEditorReload: "Reload",
+  ledgerEditorKeepEditing: "Keep Editing",
 };
