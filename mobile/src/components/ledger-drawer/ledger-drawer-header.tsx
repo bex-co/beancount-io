@@ -1,9 +1,12 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { router } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
+import { useTranslations } from "@/common/hooks/use-translations";
+import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { useLedgerDrawer } from "./ledger-drawer-context";
 
 const getStyles = (theme: ColorTheme) =>
@@ -18,8 +21,9 @@ const getStyles = (theme: ColorTheme) =>
     navLeft: {
       flexDirection: "row",
       alignItems: "center",
-      width: 64,
+      width: 80,
       justifyContent: "flex-start",
+      gap: 8,
     },
     navTitle: {
       flex: 1,
@@ -29,7 +33,28 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: "center",
     },
     navRight: {
-      width: 64,
+      width: 80,
+    },
+    badgeContainer: {
+      position: "relative",
+    },
+    badge: {
+      position: "absolute",
+      top: -4,
+      right: -6,
+      minWidth: 16,
+      height: 16,
+      borderRadius: 8,
+      backgroundColor: theme.error,
+      justifyContent: "center",
+      alignItems: "center",
+      paddingHorizontal: 2,
+    },
+    badgeText: {
+      color: theme.white,
+      fontSize: 10,
+      fontWeight: "600",
+      lineHeight: 14,
     },
   });
 
@@ -55,6 +80,36 @@ export function LedgerDrawerButton({ color }: { color?: string }): JSX.Element {
   );
 }
 
+function NotificationsBellButton(): JSX.Element {
+  const theme = useTheme().colorTheme;
+  const styles = useThemeStyle(getStyles);
+  const { t } = useTranslations();
+  const { count } = useLedgerErrors();
+
+  const handlePress = () => {
+    analytics.track("tap_notifications_bell", { errorCount: count });
+    router.push("/(app)/notifications");
+  };
+
+  return (
+    <TouchableOpacity
+      accessibilityLabel={t("notificationsBell")}
+      onPress={handlePress}
+      hitSlop={8}
+      activeOpacity={0.7}
+    >
+      <View style={styles.badgeContainer}>
+        <Ionicons name="notifications-outline" size={24} color={theme.black} />
+        {count > 0 && (
+          <View style={styles.badge}>
+            <Text style={styles.badgeText}>{count > 99 ? "99+" : count}</Text>
+          </View>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+}
+
 /** Slim tab header: hamburger left, title centered, right placeholder keeps title truly centered. */
 export function LedgerDrawerHeader({ title }: { title: string }): JSX.Element {
   const styles = useThemeStyle(getStyles);
@@ -63,6 +118,7 @@ export function LedgerDrawerHeader({ title }: { title: string }): JSX.Element {
     <View style={styles.navBar}>
       <View style={styles.navLeft}>
         <LedgerDrawerButton />
+        <NotificationsBellButton />
       </View>
       <Text style={styles.navTitle} numberOfLines={1}>
         {title}

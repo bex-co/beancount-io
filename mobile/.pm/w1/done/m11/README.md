@@ -4,14 +4,14 @@
 
 ## Tasks (in order)
 
-| id   | title                                                                                  | est | depends_on |
-| ---- | -------------------------------------------------------------------------------------- | --- | ---------- |
-| t001 | GraphQL ops + codegen: `getLedgerPayeeAccounts`, `suggestTransactionCategoriesWithLLM` | 20m | —          |
-| t002 | Payee-selected hook: fetch history, auto-apply top match in the add flow               | 40m | t001       |
-| t003 | Suggestion chips UI on account rows + LLM fallback for unseen payees                   | 45m | t002       |
-| t004 | UX pass — light/dark, i18n, loading bg, safe area, analytics                           | 30m | t003       |
-| t005 | Simplify pass over suggestion code                                                     | 20m | t004       |
-| t006 | Unit tests for suggestion selection + fallback behavior                                | 30m | t004       |
+| id   | title                                                                                  | est | depends_on |            |
+| ---- | -------------------------------------------------------------------------------------- | --- | ---------- | ---------- |
+| t001 | GraphQL ops + codegen: `getLedgerPayeeAccounts`, `suggestTransactionCategoriesWithLLM` | 20m | —          | — **DONE** |
+| t002 | Payee-selected hook: fetch history, auto-apply top match in the add flow               | 40m | t001       | — **DONE** |
+| t003 | Suggestion chips UI on account rows + LLM fallback for unseen payees                   | 45m | t002       | — **DONE** |
+| t004 | UX pass — light/dark, i18n, loading bg, safe area, analytics                           | 30m | t003       | — **DONE** |
+| t005 | Simplify pass over suggestion code                                                     | 20m | t004       | — **DONE** |
+| t006 | Unit tests for suggestion selection + fallback behavior                                | 30m | t004       | — **DONE** |
 
 ## Definition of done
 

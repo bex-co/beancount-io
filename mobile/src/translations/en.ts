@@ -262,4 +262,19 @@ export const en = {
     "Camera access is needed to take a photo of your receipt. Enable it in Settings.",
   receiptLibraryPermission:
     "Photo library access is needed to choose a receipt. Enable it in Settings.",
+  // notifications
+  notificationsBell: "Notifications",
+  notificationsTitle: "Notifications",
+  notificationsErrorsSection: "Ledger Errors",
+  notificationsChangesSection: "Recent Changes",
+  notificationsLedgerHealthy: "Ledger is healthy — no errors.",
+  notificationsNoChanges: "No recent changes.",
+  // commit detail
+  commitDetailAuthor: "Author",
+  commitDetailStats: "Stats",
+  commitDetailFiles: "Files",
+  commitDetailDiff: "Diff",
+  commitDetailNoDiff: "No diff available.",
+  commitDetailAdditions: "+{{count}} additions",
+  commitDetailDeletions: "-{{count}} deletions",
 };

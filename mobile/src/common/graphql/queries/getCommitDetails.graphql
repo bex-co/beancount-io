@@ -1,0 +1,19 @@
+query getCommitDetails($ledgerId: String!, $sha: String!) {
+  getCommitDetails(ledgerId: $ledgerId, sha: $sha) {
+    message
+    author {
+      name
+    }
+    stats {
+      additions
+      deletions
+      total
+    }
+    files {
+      filename
+      additions
+      deletions
+    }
+    diff
+  }
+}

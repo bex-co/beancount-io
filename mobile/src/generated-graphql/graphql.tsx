@@ -99,6 +99,14 @@ export type GetAiCfoUsageQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetAiCfoUsageQuery = { aiCfoUsage: { aiCfoTokensUsed: number, aiCfoTokensMax: number } };
 
+export type GetCommitDetailsQueryVariables = Exact<{
+  ledgerId: string;
+  sha: string;
+}>;
+
+
+export type GetCommitDetailsQuery = { getCommitDetails: { message: string, diff: string | null, author: { name: string }, stats: { additions: number, deletions: number, total: number }, files: Array<{ filename: string, additions: number, deletions: number }> } };
+
 export type GetFeedQueryVariables = Exact<{
   offset?: number | null | undefined;
   limit?: number | null | undefined;
@@ -122,6 +130,13 @@ export type GetLedgerEntryContextQueryVariables = Exact<{
 
 
 export type GetLedgerEntryContextQuery = { getLedgerEntryContext: { slice: string, sha256sum: string, entry: Record<string, number | string>, balances_before: Record<string, number | string> | null, balances_after: Record<string, number | string> | null } };
+
+export type GetLedgerErrorsQueryVariables = Exact<{
+  ledgerId: string;
+}>;
+
+
+export type GetLedgerErrorsQuery = { getLedgerErrors: Array<{ filename: string | null, lineno: number | null, message: string }> };
 
 export type GetLedgerJournalQueryVariables = Exact<{
   ledgerId: string;
@@ -206,6 +221,16 @@ export type LedgerMetaQueryVariables = Exact<{
 
 
 export type LedgerMetaQuery = { ledgerMeta: { success: boolean, data: { accounts: Array<string>, currencies: Array<string>, errors: number, options: { name_assets: string, name_equity: string, name_expenses: string, name_income: string, name_liabilities: string, operating_currency: Array<string> } } } };
+
+export type ListCommitsQueryVariables = Exact<{
+  ledgerId: string;
+  branch: string;
+  page: number;
+  limit: number;
+}>;
+
+
+export type ListCommitsQuery = { listCommits: Array<{ sha: string, shortSha: string | null, message: string, author: { name: string } }> };
 
 export type ListLedgersQueryVariables = Exact<{
   limit?: number | null | undefined;
@@ -802,6 +827,64 @@ export type GetAiCfoUsageQueryHookResult = ReturnType<typeof useGetAiCfoUsageQue
 export type GetAiCfoUsageLazyQueryHookResult = ReturnType<typeof useGetAiCfoUsageLazyQuery>;
 export type GetAiCfoUsageSuspenseQueryHookResult = ReturnType<typeof useGetAiCfoUsageSuspenseQuery>;
 export type GetAiCfoUsageQueryResult = Apollo.QueryResult<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>;
+export const GetCommitDetailsDocument = gql`
+    query getCommitDetails($ledgerId: String!, $sha: String!) {
+  getCommitDetails(ledgerId: $ledgerId, sha: $sha) {
+    message
+    author {
+      name
+    }
+    stats {
+      additions
+      deletions
+      total
+    }
+    files {
+      filename
+      additions
+      deletions
+    }
+    diff
+  }
+}
+    `;
+
+/**
+ * __useGetCommitDetailsQuery__
+ *
+ * To run a query within a React component, call `useGetCommitDetailsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetCommitDetailsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetCommitDetailsQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      sha: // value for 'sha'
+ *   },
+ * });
+ */
+export function useGetCommitDetailsQuery(baseOptions: Apollo.QueryHookOptions<GetCommitDetailsQuery, GetCommitDetailsQueryVariables> & ({ variables: GetCommitDetailsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetCommitDetailsQuery, GetCommitDetailsQueryVariables>(GetCommitDetailsDocument, options);
+      }
+export function useGetCommitDetailsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetCommitDetailsQuery, GetCommitDetailsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetCommitDetailsQuery, GetCommitDetailsQueryVariables>(GetCommitDetailsDocument, options);
+        }
+// @ts-ignore
+export function useGetCommitDetailsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetCommitDetailsQuery, GetCommitDetailsQueryVariables>): Apollo.UseSuspenseQueryResult<GetCommitDetailsQuery, GetCommitDetailsQueryVariables>;
+export function useGetCommitDetailsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetCommitDetailsQuery, GetCommitDetailsQueryVariables>): Apollo.UseSuspenseQueryResult<GetCommitDetailsQuery | undefined, GetCommitDetailsQueryVariables>;
+export function useGetCommitDetailsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetCommitDetailsQuery, GetCommitDetailsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetCommitDetailsQuery, GetCommitDetailsQueryVariables>(GetCommitDetailsDocument, options);
+        }
+export type GetCommitDetailsQueryHookResult = ReturnType<typeof useGetCommitDetailsQuery>;
+export type GetCommitDetailsLazyQueryHookResult = ReturnType<typeof useGetCommitDetailsLazyQuery>;
+export type GetCommitDetailsSuspenseQueryHookResult = ReturnType<typeof useGetCommitDetailsSuspenseQuery>;
+export type GetCommitDetailsQueryResult = Apollo.QueryResult<GetCommitDetailsQuery, GetCommitDetailsQueryVariables>;
 export const GetFeedDocument = gql`
     query GetFeed($offset: Float, $limit: Float, $locale: String) {
   getFeed(offset: $offset, limit: $limit, locale: $locale) {
@@ -971,6 +1054,51 @@ export type GetLedgerEntryContextQueryHookResult = ReturnType<typeof useGetLedge
 export type GetLedgerEntryContextLazyQueryHookResult = ReturnType<typeof useGetLedgerEntryContextLazyQuery>;
 export type GetLedgerEntryContextSuspenseQueryHookResult = ReturnType<typeof useGetLedgerEntryContextSuspenseQuery>;
 export type GetLedgerEntryContextQueryResult = Apollo.QueryResult<GetLedgerEntryContextQuery, GetLedgerEntryContextQueryVariables>;
+export const GetLedgerErrorsDocument = gql`
+    query getLedgerErrors($ledgerId: String!) {
+  getLedgerErrors(ledgerId: $ledgerId) {
+    filename
+    lineno
+    message
+  }
+}
+    `;
+
+/**
+ * __useGetLedgerErrorsQuery__
+ *
+ * To run a query within a React component, call `useGetLedgerErrorsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLedgerErrorsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLedgerErrorsQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useGetLedgerErrorsQuery(baseOptions: Apollo.QueryHookOptions<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables> & ({ variables: GetLedgerErrorsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>(GetLedgerErrorsDocument, options);
+      }
+export function useGetLedgerErrorsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>(GetLedgerErrorsDocument, options);
+        }
+// @ts-ignore
+export function useGetLedgerErrorsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>;
+export function useGetLedgerErrorsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerErrorsQuery | undefined, GetLedgerErrorsQueryVariables>;
+export function useGetLedgerErrorsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>(GetLedgerErrorsDocument, options);
+        }
+export type GetLedgerErrorsQueryHookResult = ReturnType<typeof useGetLedgerErrorsQuery>;
+export type GetLedgerErrorsLazyQueryHookResult = ReturnType<typeof useGetLedgerErrorsLazyQuery>;
+export type GetLedgerErrorsSuspenseQueryHookResult = ReturnType<typeof useGetLedgerErrorsSuspenseQuery>;
+export type GetLedgerErrorsQueryResult = Apollo.QueryResult<GetLedgerErrorsQuery, GetLedgerErrorsQueryVariables>;
 export const GetLedgerJournalDocument = gql`
     query GetLedgerJournal($ledgerId: String!, $query: JournalQueryInput) {
   getLedgerJournal(ledgerId: $ledgerId, query: $query) {
@@ -1487,6 +1615,57 @@ export type LedgerMetaQueryHookResult = ReturnType<typeof useLedgerMetaQuery>;
 export type LedgerMetaLazyQueryHookResult = ReturnType<typeof useLedgerMetaLazyQuery>;
 export type LedgerMetaSuspenseQueryHookResult = ReturnType<typeof useLedgerMetaSuspenseQuery>;
 export type LedgerMetaQueryResult = Apollo.QueryResult<LedgerMetaQuery, LedgerMetaQueryVariables>;
+export const ListCommitsDocument = gql`
+    query listCommits($ledgerId: String!, $branch: String!, $page: Int!, $limit: Int!) {
+  listCommits(ledgerId: $ledgerId, branch: $branch, page: $page, limit: $limit) {
+    sha
+    shortSha
+    message
+    author {
+      name
+    }
+  }
+}
+    `;
+
+/**
+ * __useListCommitsQuery__
+ *
+ * To run a query within a React component, call `useListCommitsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useListCommitsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useListCommitsQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      branch: // value for 'branch'
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useListCommitsQuery(baseOptions: Apollo.QueryHookOptions<ListCommitsQuery, ListCommitsQueryVariables> & ({ variables: ListCommitsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<ListCommitsQuery, ListCommitsQueryVariables>(ListCommitsDocument, options);
+      }
+export function useListCommitsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<ListCommitsQuery, ListCommitsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<ListCommitsQuery, ListCommitsQueryVariables>(ListCommitsDocument, options);
+        }
+// @ts-ignore
+export function useListCommitsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<ListCommitsQuery, ListCommitsQueryVariables>): Apollo.UseSuspenseQueryResult<ListCommitsQuery, ListCommitsQueryVariables>;
+export function useListCommitsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ListCommitsQuery, ListCommitsQueryVariables>): Apollo.UseSuspenseQueryResult<ListCommitsQuery | undefined, ListCommitsQueryVariables>;
+export function useListCommitsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<ListCommitsQuery, ListCommitsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<ListCommitsQuery, ListCommitsQueryVariables>(ListCommitsDocument, options);
+        }
+export type ListCommitsQueryHookResult = ReturnType<typeof useListCommitsQuery>;
+export type ListCommitsLazyQueryHookResult = ReturnType<typeof useListCommitsLazyQuery>;
+export type ListCommitsSuspenseQueryHookResult = ReturnType<typeof useListCommitsSuspenseQuery>;
+export type ListCommitsQueryResult = Apollo.QueryResult<ListCommitsQuery, ListCommitsQueryVariables>;
 export const ListLedgersDocument = gql`
     query ListLedgers($limit: Float, $page: Float) {
   listLedgers(limit: $limit, page: $page) {

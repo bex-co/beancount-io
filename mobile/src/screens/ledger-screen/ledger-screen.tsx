@@ -1,9 +1,9 @@
 import { useMemo, useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { StyleSheet, View, TouchableOpacity } from "react-native";
+import { useLocalSearchParams } from "expo-router";
 import { analytics } from "@/common/analytics";
 import { headers, getEndpoint } from "@/common/request";
-import { statusBarHeight } from "@/common/screen-util";
 import { ProgressBar } from "./progress-bar";
 import { ColorTheme } from "@/types/theme-props";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -29,7 +29,7 @@ const getStyles = (theme: ColorTheme) =>
       borderRadius: 28,
       backgroundColor: theme.primary,
       position: "absolute",
-      top: statusBarHeight,
+      bottom: 24,
       right: 10,
       alignItems: "center",
       justifyContent: "center",
@@ -51,12 +51,13 @@ const LedgerScreenImpl = () => {
     setKey((key) => key + 1);
   };
   const { authToken } = useSession();
+  const { fileUrl } = useLocalSearchParams<{ fileUrl?: string }>();
   const uri = useMemo(() => {
-    const ledgerEditorUri = appendPreferenceParam(
-      getEndpoint(`ledger/editor/?ledgerId=${ledgerId}`),
-    );
-    return ledgerEditorUri;
-  }, [ledgerId]);
+    const base = fileUrl
+      ? fileUrl
+      : getEndpoint(`ledger/editor/?ledgerId=${ledgerId}`);
+    return appendPreferenceParam(base);
+  }, [ledgerId, fileUrl]);
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
       <LedgerDrawerHeader title={t("ledger")} />

@@ -869,6 +869,8 @@ type Mutation {
   updateLedgerEntrySourceSlice(input: UpdateSourceSliceInput!, ledgerId: String!): UpdateSourceSliceResponse!
   """Update an existing file in a specific ledger"""
   updateLedgerFile(content: String!, ledgerId: String!, message: String, path: String!, sha: String!): LedgerFileContent!
+  """Update the currency used for a Plaid account's transactions"""
+  updatePlaidAccountCurrency(accountId: String!, currency: String!, ledgerId: String!): Boolean!
   """Update the ledger account mapping for a Plaid account"""
   updatePlaidAccountMapping(accountId: String!, ledgerAccount: String!, ledgerId: String!): Boolean!
   """Update user profile (firstName and lastName)"""
@@ -936,6 +938,8 @@ type PlaidAccountType {
   accountSubtype: String
   accountType: String!
   createdAt: DateTimeISO!
+  """Currency used when writing this account's transactions to the ledger"""
+  currency: String!
   enabled: Boolean!
   id: String!
   ledgerAccount: String

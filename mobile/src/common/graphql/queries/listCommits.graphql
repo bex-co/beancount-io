@@ -1,0 +1,20 @@
+query listCommits(
+  $ledgerId: String!
+  $branch: String!
+  $page: Int!
+  $limit: Int!
+) {
+  listCommits(
+    ledgerId: $ledgerId
+    branch: $branch
+    page: $page
+    limit: $limit
+  ) {
+    sha
+    shortSha
+    message
+    author {
+      name
+    }
+  }
+}

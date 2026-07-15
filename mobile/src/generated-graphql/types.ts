@@ -901,6 +901,8 @@ export type Mutation = {
   updateLedgerEntrySourceSlice: UpdateSourceSliceResponse;
   /** Update an existing file in a specific ledger */
   updateLedgerFile: LedgerFileContent;
+  /** Update the currency used for a Plaid account's transactions */
+  updatePlaidAccountCurrency: Scalars['Boolean']['output'];
   /** Update the ledger account mapping for a Plaid account */
   updatePlaidAccountMapping: Scalars['Boolean']['output'];
   /** Update user profile (firstName and lastName) */
@@ -1225,6 +1227,13 @@ export type MutationUpdateLedgerFileArgs = {
 };
 
 
+export type MutationUpdatePlaidAccountCurrencyArgs = {
+  accountId: Scalars['String']['input'];
+  currency: Scalars['String']['input'];
+  ledgerId: Scalars['String']['input'];
+};
+
+
 export type MutationUpdatePlaidAccountMappingArgs = {
   accountId: Scalars['String']['input'];
   ledgerAccount: Scalars['String']['input'];
@@ -1322,6 +1331,8 @@ export type PlaidAccountType = {
   accountSubtype?: Maybe<Scalars['String']['output']>;
   accountType: Scalars['String']['output'];
   createdAt: Scalars['DateTimeISO']['output'];
+  /** Currency used when writing this account's transactions to the ledger */
+  currency: Scalars['String']['output'];
   enabled: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   ledgerAccount?: Maybe<Scalars['String']['output']>;

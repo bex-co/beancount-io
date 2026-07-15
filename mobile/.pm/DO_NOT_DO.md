@@ -15,6 +15,7 @@ Use this file as a hard constraint when running `/pm-brainstorm` and `/pm`. If a
 - Do not plan tasks that require new dependencies without flagging it explicitly (repo rule: ask the user before adding dependencies).
 - Do not include tasks that cannot name the concrete files/screens/GraphQL operations they touch.
 - Do not treat speculative ideas as committed roadmap items without explicit source context.
+- Do not build a BQL console or raw-query surface on mobile (`queryShell` / `queryShellText`). Typing queries on a phone is a poor fit; Reports and AI-powered features are the mobile way to answer ad-hoc questions. (Owner decision 2026-07-14; superseded inbox note `w1/003` and the rejected 2026-07-13 `/pm-brainstorm` m15 proposal.)
 
 ## Minimum bar for a meaningful milestone
 
