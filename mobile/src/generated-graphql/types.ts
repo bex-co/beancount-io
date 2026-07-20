@@ -12,6 +12,13 @@ export type Scalars = {
   JSONObject: { input: Record<string, number | string>; output: Record<string, number | string>; }
 };
 
+export type AcceptLedgerInvitationResult = {
+  __typename?: 'AcceptLedgerInvitationResult';
+  ledgerId?: Maybe<Scalars['String']['output']>;
+  permission?: Maybe<LedgerInvitationAccess>;
+  state: LedgerInvitationState;
+};
+
 export type AccountBalance = {
   __typename?: 'AccountBalance';
   account: Scalars['String']['output'];
@@ -489,6 +496,11 @@ export type IntervalTotalItem = {
   date: Scalars['String']['output'];
 };
 
+export type InvitationSignUpResponse = {
+  __typename?: 'InvitationSignUpResponse';
+  expireAt: Scalars['String']['output'];
+};
+
 export type JournalEntriesResponse = {
   __typename?: 'JournalEntriesResponse';
   data: Array<JournalEntry>;
@@ -721,6 +733,50 @@ export type LedgerFileContent = {
   type: Scalars['String']['output'];
 };
 
+/** View or Edit access for a shared ledger invitation */
+export enum LedgerInvitationAccess {
+  Edit = 'EDIT',
+  View = 'VIEW'
+}
+
+export type LedgerInvitationDeliveryResult = {
+  __typename?: 'LedgerInvitationDeliveryResult';
+  deliverySucceeded: Scalars['Boolean']['output'];
+  invitation: PendingLedgerInvitation;
+};
+
+export enum LedgerInvitationDeliveryStatus {
+  Delivered = 'DELIVERED',
+  Failed = 'FAILED',
+  Pending = 'PENDING'
+}
+
+export type LedgerInvitationPresentation = {
+  __typename?: 'LedgerInvitationPresentation';
+  acceptedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  expiresAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  inviterName?: Maybe<Scalars['String']['output']>;
+  ledgerId?: Maybe<Scalars['String']['output']>;
+  ledgerName?: Maybe<Scalars['String']['output']>;
+  ledgerOwner?: Maybe<Scalars['String']['output']>;
+  maskedEmail?: Maybe<Scalars['String']['output']>;
+  permission?: Maybe<LedgerInvitationAccess>;
+  signupPending?: Maybe<Scalars['Boolean']['output']>;
+  state: LedgerInvitationState;
+};
+
+export enum LedgerInvitationState {
+  Accepted = 'ACCEPTED',
+  Blocked = 'BLOCKED',
+  Expired = 'EXPIRED',
+  Invalid = 'INVALID',
+  LedgerDeleted = 'LEDGER_DELETED',
+  Ready = 'READY',
+  Retry = 'RETRY',
+  Revoked = 'REVOKED',
+  WrongAccount = 'WRONG_ACCOUNT'
+}
+
 export type LedgerMeta = {
   __typename?: 'LedgerMeta';
   accounts: Array<Scalars['String']['output']>;
@@ -789,6 +845,12 @@ export type LedgerPriceInput = {
   date: Scalars['String']['input'];
 };
 
+/** Template used to populate a newly created ledger */
+export enum LedgerTemplate {
+  Sample = 'SAMPLE',
+  Starter = 'STARTER'
+}
+
 export type LedgerTransactionInput = {
   date: Scalars['String']['input'];
   flag: Scalars['String']['input'];
@@ -806,11 +868,13 @@ export type LogoutResponse = {
 
 export type Mutation = {
   __typename?: 'Mutation';
+  acceptLedgerInvitation: AcceptLedgerInvitationResult;
   addEntries: AddEntryResponse;
   addOrUpdateLedgerCollaborator: AddCollaboratorResponse;
   /** @deprecated Push token tracking has been removed. This endpoint returns true for API compatibility but does not store tokens. */
   addPushToken: Scalars['Boolean']['output'];
   approvePullRequest: PullRequestResult;
+  beginLedgerInvitation: LedgerInvitationPresentation;
   /** Add one or more entries to a specific ledger (atomic) */
   bulkEntries: AddLedgerEntryResponse;
   cancelSubscription: SubscriptionActionResult;
@@ -824,6 +888,7 @@ export type Mutation = {
   createLedger: Ledger;
   /** Create a new file in a specific ledger */
   createLedgerFile: LedgerFileContent;
+  createLedgerInvitation: LedgerInvitationDeliveryResult;
   createOneTimeToken: CreateOneTimeTokenResponse;
   /** Create a Plaid Link token for connecting bank accounts */
   createPlaidLinkToken: PlaidLinkToken;
@@ -872,9 +937,11 @@ export type Mutation = {
   rejectPullRequest: PullRequestResult;
   /** Rename a file in a specific ledger */
   renameLedgerFile: RenameLedgerFileResponse;
+  resendLedgerInvitation: LedgerInvitationDeliveryResult;
   /** Reset user password using a token from the password reset email */
   resetPassword: ResetPasswordResponse;
   resumeSubscription: SubscriptionActionResult;
+  revokeLedgerInvitation: RevokeLedgerInvitationResult;
   /** Send a password reset link to the user's email */
   sendForgotPasswordLink: SendForgotPasswordLinkResponse;
   /** @deprecated Push notification functionality has been removed. This endpoint returns false for API compatibility but does not send notifications. */
@@ -885,6 +952,8 @@ export type Mutation = {
   signUp: SignUpResponse;
   /** Star a specific ledger */
   starLedger: StarLedgerResponse;
+  /** Start signup using the email bound to the active ledger invitation */
+  startInvitationSignUp: InvitationSignUpResponse;
   /** Submit Plaid transactions with user-reviewed target accounts to ledger */
   submitPlaidTransactionsToLedger: PlaidSubmitResult;
   /** Manually sync transactions for a specific Plaid Item */
@@ -914,6 +983,8 @@ export type Mutation = {
   updateReportSubscribe?: Maybe<UpdateReportSubscribeResponse>;
   updateUsername: UserProfileResponse;
   upgradeSubscription: UpgradeSubscriptionResult;
+  /** Verify OTP and create the invitation-bound user account */
+  verifyInvitationSignUpOtp: TokenAuthResponse;
   /** Verify OTP and create user account to complete signup */
   verifySignUpOtp: TokenAuthResponse;
 };
@@ -928,7 +999,7 @@ export type MutationAddEntriesArgs = {
 export type MutationAddOrUpdateLedgerCollaboratorArgs = {
   collaborator: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
-  permission?: InputMaybe<Scalars['String']['input']>;
+  permission?: InputMaybe<LedgerInvitationAccess>;
 };
 
 
@@ -941,6 +1012,11 @@ export type MutationApprovePullRequestArgs = {
   ledgerName: Scalars['String']['input'];
   ledgerOwner: Scalars['String']['input'];
   prNumber: Scalars['Int']['input'];
+};
+
+
+export type MutationBeginLedgerInvitationArgs = {
+  secret: Scalars['String']['input'];
 };
 
 
@@ -970,6 +1046,7 @@ export type MutationCreateLedgerArgs = {
   description?: InputMaybe<Scalars['String']['input']>;
   name: Scalars['String']['input'];
   private?: InputMaybe<Scalars['Boolean']['input']>;
+  template?: InputMaybe<LedgerTemplate>;
 };
 
 
@@ -978,6 +1055,13 @@ export type MutationCreateLedgerFileArgs = {
   ledgerId: Scalars['String']['input'];
   message?: InputMaybe<Scalars['String']['input']>;
   path: Scalars['String']['input'];
+};
+
+
+export type MutationCreateLedgerInvitationArgs = {
+  email: Scalars['String']['input'];
+  ledgerId: Scalars['String']['input'];
+  permission: LedgerInvitationAccess;
 };
 
 
@@ -1124,6 +1208,11 @@ export type MutationRenameLedgerFileArgs = {
 };
 
 
+export type MutationResendLedgerInvitationArgs = {
+  invitationId: Scalars['String']['input'];
+};
+
+
 export type MutationResetPasswordArgs = {
   newPassword: Scalars['String']['input'];
   token: Scalars['String']['input'];
@@ -1133,6 +1222,11 @@ export type MutationResetPasswordArgs = {
 export type MutationResumeSubscriptionArgs = {
   clientId: Scalars['String']['input'];
   subscriptionId: Scalars['String']['input'];
+};
+
+
+export type MutationRevokeLedgerInvitationArgs = {
+  invitationId: Scalars['String']['input'];
 };
 
 
@@ -1173,6 +1267,14 @@ export type MutationSignUpArgs = {
 
 export type MutationStarLedgerArgs = {
   ledgerId: Scalars['String']['input'];
+};
+
+
+export type MutationStartInvitationSignUpArgs = {
+  firstName: Scalars['String']['input'];
+  lastName: Scalars['String']['input'];
+  password: Scalars['String']['input'];
+  username?: InputMaybe<Scalars['String']['input']>;
 };
 
 
@@ -1264,6 +1366,11 @@ export type MutationUpgradeSubscriptionArgs = {
 };
 
 
+export type MutationVerifyInvitationSignUpOtpArgs = {
+  otp: Scalars['String']['input'];
+};
+
+
 export type MutationVerifySignUpOtpArgs = {
   otp: Scalars['String']['input'];
   sessionId: Scalars['String']['input'];
@@ -1307,6 +1414,18 @@ export type ParsedRow = {
   date: Scalars['String']['output'];
   description: Scalars['String']['output'];
   payee: Scalars['String']['output'];
+};
+
+export type PendingLedgerInvitation = {
+  __typename?: 'PendingLedgerInvitation';
+  deliveryStatus: LedgerInvitationDeliveryStatus;
+  expiresAt: Scalars['DateTimeISO']['output'];
+  id: Scalars['String']['output'];
+  inviterName: Scalars['String']['output'];
+  maskedEmail: Scalars['String']['output'];
+  nextResendAt: Scalars['DateTimeISO']['output'];
+  permission: LedgerInvitationAccess;
+  sentAt: Scalars['DateTimeISO']['output'];
 };
 
 export type Permission = {
@@ -1608,12 +1727,14 @@ export type Query = {
   homeCharts: HomeChartsResponse;
   /** Get journal entries with enhanced search, filtering, and pagination */
   journalEntries: JournalEntriesResponse;
+  ledgerInvitationStatus: LedgerInvitationPresentation;
   /** Get a specific ledger */
   ledgerMeta: LedgerMetaResponse;
   listCommits: Array<CommitListItem>;
   listLedgerCollaborators: Array<CollaboratorUser>;
   /** List all ledgers for the current user */
   listLedgers: Array<Ledger>;
+  listPendingLedgerInvitations: Array<PendingLedgerInvitation>;
   /** List all public keys for the current user */
   listPublicKeys: Array<PublicKey>;
   /** List all user owned ledgers for the current user */
@@ -2023,6 +2144,11 @@ export type QueryListLedgersArgs = {
 };
 
 
+export type QueryListPendingLedgerInvitationsArgs = {
+  ledgerId: Scalars['String']['input'];
+};
+
+
 export type QueryListPublicKeysArgs = {
   limit?: InputMaybe<Scalars['Float']['input']>;
   page?: InputMaybe<Scalars['Float']['input']>;
@@ -2191,6 +2317,11 @@ export type ResetPasswordResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type RevokeLedgerInvitationResult = {
+  __typename?: 'RevokeLedgerInvitationResult';
+  success: Scalars['Boolean']['output'];
+};
+
 export type SearchUser = {
   __typename?: 'SearchUser';
   email: Scalars['String']['output'];
@@ -2296,6 +2427,7 @@ export type TierQuotaItem = {
   __typename?: 'TierQuotaItem';
   aiCfoTokensMax: Scalars['Float']['output'];
   maxCollaboratorsPerLedger: Scalars['Float']['output'];
+  maxDirectives: Scalars['Float']['output'];
   maxLedgers: Scalars['Float']['output'];
   tier: Scalars['String']['output'];
 };
@@ -2421,6 +2553,7 @@ export type UserProfileResponse = {
   email: Scalars['String']['output'];
   emailReportStatus?: Maybe<ReportStatus>;
   firstName?: Maybe<Scalars['String']['output']>;
+  hasEverSubscribed: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
   lastName?: Maybe<Scalars['String']['output']>;
   limits: UserLimits;

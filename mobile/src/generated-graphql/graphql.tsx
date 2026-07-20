@@ -42,13 +42,6 @@ export type AddEntriesMutationVariables = Exact<{
 
 export type AddEntriesMutation = { addEntries: { data: string | null, success: boolean } };
 
-export type AddPushTokenMutationVariables = Exact<{
-  pushToken: string;
-}>;
-
-
-export type AddPushTokenMutation = { addPushToken: boolean };
-
 export type BalanceSheetQueryVariables = Exact<{
   ledgerId: string;
   time?: string | null | undefined;
@@ -284,11 +277,6 @@ export type ParseReceiptWithLlmMutationVariables = Exact<{
 
 export type ParseReceiptWithLlmMutation = { parseReceiptWithLLM: { date: string, payee: string, description: string, amount: number, sourceAccount: string | null, targetAccount: string | null } };
 
-export type PaymentHistoryQueryVariables = Exact<{ [key: string]: never; }>;
-
-
-export type PaymentHistoryQuery = { paymentHistory: Array<{ _id: string | null, amount: string, currency: string, paymentEmail: string, userId: string, createAt: unknown, chargeId: string | null, estimatedIotx: number | null, fulfilledHash: string | null }> };
-
 export type SubscriptionStatusQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -320,14 +308,6 @@ export type UpdateLedgerFileMutationVariables = Exact<{
 
 
 export type UpdateLedgerFileMutation = { updateLedgerFile: { content: string | null, name: string, path: string, sha: string, size: number, type: string } };
-
-export type UpdateReportSubscribeMutationVariables = Exact<{
-  userId: string;
-  status: Types.ReportStatus;
-}>;
-
-
-export type UpdateReportSubscribeMutation = { updateReportSubscribe: { success: boolean } | null };
 
 export type UserProfileQueryVariables = Exact<{
   userId: string;
@@ -558,37 +538,6 @@ export function useAddEntriesMutation(baseOptions?: Apollo.MutationHookOptions<A
 export type AddEntriesMutationHookResult = ReturnType<typeof useAddEntriesMutation>;
 export type AddEntriesMutationResult = Apollo.MutationResult<AddEntriesMutation>;
 export type AddEntriesMutationOptions = Apollo.BaseMutationOptions<AddEntriesMutation, AddEntriesMutationVariables>;
-export const AddPushTokenDocument = gql`
-    mutation addPushToken($pushToken: String!) {
-  addPushToken(token: $pushToken)
-}
-    `;
-export type AddPushTokenMutationFn = Apollo.MutationFunction<AddPushTokenMutation, AddPushTokenMutationVariables>;
-
-/**
- * __useAddPushTokenMutation__
- *
- * To run a mutation, you first call `useAddPushTokenMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useAddPushTokenMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [addPushTokenMutation, { data, loading, error }] = useAddPushTokenMutation({
- *   variables: {
- *      pushToken: // value for 'pushToken'
- *   },
- * });
- */
-export function useAddPushTokenMutation(baseOptions?: Apollo.MutationHookOptions<AddPushTokenMutation, AddPushTokenMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<AddPushTokenMutation, AddPushTokenMutationVariables>(AddPushTokenDocument, options);
-      }
-export type AddPushTokenMutationHookResult = ReturnType<typeof useAddPushTokenMutation>;
-export type AddPushTokenMutationResult = Apollo.MutationResult<AddPushTokenMutation>;
-export type AddPushTokenMutationOptions = Apollo.BaseMutationOptions<AddPushTokenMutation, AddPushTokenMutationVariables>;
 export const BalanceSheetDocument = gql`
     query BalanceSheet($ledgerId: String!, $time: String) {
   getLedgerBalanceSheet(ledgerId: $ledgerId, time: $time) {
@@ -1992,56 +1941,6 @@ export function useParseReceiptWithLlmMutation(baseOptions?: Apollo.MutationHook
 export type ParseReceiptWithLlmMutationHookResult = ReturnType<typeof useParseReceiptWithLlmMutation>;
 export type ParseReceiptWithLlmMutationResult = Apollo.MutationResult<ParseReceiptWithLlmMutation>;
 export type ParseReceiptWithLlmMutationOptions = Apollo.BaseMutationOptions<ParseReceiptWithLlmMutation, ParseReceiptWithLlmMutationVariables>;
-export const PaymentHistoryDocument = gql`
-    query PaymentHistory {
-  paymentHistory {
-    _id
-    amount
-    currency
-    paymentEmail
-    userId
-    createAt
-    chargeId
-    estimatedIotx
-    fulfilledHash
-  }
-}
-    `;
-
-/**
- * __usePaymentHistoryQuery__
- *
- * To run a query within a React component, call `usePaymentHistoryQuery` and pass it any options that fit your needs.
- * When your component renders, `usePaymentHistoryQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = usePaymentHistoryQuery({
- *   variables: {
- *   },
- * });
- */
-export function usePaymentHistoryQuery(baseOptions?: Apollo.QueryHookOptions<PaymentHistoryQuery, PaymentHistoryQueryVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<PaymentHistoryQuery, PaymentHistoryQueryVariables>(PaymentHistoryDocument, options);
-      }
-export function usePaymentHistoryLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<PaymentHistoryQuery, PaymentHistoryQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<PaymentHistoryQuery, PaymentHistoryQueryVariables>(PaymentHistoryDocument, options);
-        }
-// @ts-ignore
-export function usePaymentHistorySuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<PaymentHistoryQuery, PaymentHistoryQueryVariables>): Apollo.UseSuspenseQueryResult<PaymentHistoryQuery, PaymentHistoryQueryVariables>;
-export function usePaymentHistorySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<PaymentHistoryQuery, PaymentHistoryQueryVariables>): Apollo.UseSuspenseQueryResult<PaymentHistoryQuery | undefined, PaymentHistoryQueryVariables>;
-export function usePaymentHistorySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<PaymentHistoryQuery, PaymentHistoryQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<PaymentHistoryQuery, PaymentHistoryQueryVariables>(PaymentHistoryDocument, options);
-        }
-export type PaymentHistoryQueryHookResult = ReturnType<typeof usePaymentHistoryQuery>;
-export type PaymentHistoryLazyQueryHookResult = ReturnType<typeof usePaymentHistoryLazyQuery>;
-export type PaymentHistorySuspenseQueryHookResult = ReturnType<typeof usePaymentHistorySuspenseQuery>;
-export type PaymentHistoryQueryResult = Apollo.QueryResult<PaymentHistoryQuery, PaymentHistoryQueryVariables>;
 export const SubscriptionStatusDocument = gql`
     query SubscriptionStatus {
   subscriptionStatus {
@@ -2245,40 +2144,6 @@ export function useUpdateLedgerFileMutation(baseOptions?: Apollo.MutationHookOpt
 export type UpdateLedgerFileMutationHookResult = ReturnType<typeof useUpdateLedgerFileMutation>;
 export type UpdateLedgerFileMutationResult = Apollo.MutationResult<UpdateLedgerFileMutation>;
 export type UpdateLedgerFileMutationOptions = Apollo.BaseMutationOptions<UpdateLedgerFileMutation, UpdateLedgerFileMutationVariables>;
-export const UpdateReportSubscribeDocument = gql`
-    mutation updateReportSubscribe($userId: String!, $status: ReportStatus!) {
-  updateReportSubscribe(userId: $userId, status: $status) {
-    success
-  }
-}
-    `;
-export type UpdateReportSubscribeMutationFn = Apollo.MutationFunction<UpdateReportSubscribeMutation, UpdateReportSubscribeMutationVariables>;
-
-/**
- * __useUpdateReportSubscribeMutation__
- *
- * To run a mutation, you first call `useUpdateReportSubscribeMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useUpdateReportSubscribeMutation` returns a tuple that includes:
- * - A mutate function that you can call at any time to execute the mutation
- * - An object with fields that represent the current status of the mutation's execution
- *
- * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
- *
- * @example
- * const [updateReportSubscribeMutation, { data, loading, error }] = useUpdateReportSubscribeMutation({
- *   variables: {
- *      userId: // value for 'userId'
- *      status: // value for 'status'
- *   },
- * });
- */
-export function useUpdateReportSubscribeMutation(baseOptions?: Apollo.MutationHookOptions<UpdateReportSubscribeMutation, UpdateReportSubscribeMutationVariables>) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<UpdateReportSubscribeMutation, UpdateReportSubscribeMutationVariables>(UpdateReportSubscribeDocument, options);
-      }
-export type UpdateReportSubscribeMutationHookResult = ReturnType<typeof useUpdateReportSubscribeMutation>;
-export type UpdateReportSubscribeMutationResult = Apollo.MutationResult<UpdateReportSubscribeMutation>;
-export type UpdateReportSubscribeMutationOptions = Apollo.BaseMutationOptions<UpdateReportSubscribeMutation, UpdateReportSubscribeMutationVariables>;
 export const UserProfileDocument = gql`
     query UserProfile($userId: String!) {
   userProfile(userId: $userId) {

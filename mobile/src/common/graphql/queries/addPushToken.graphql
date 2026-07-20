@@ -1,3 +1,0 @@
-mutation addPushToken($pushToken: String!) {
-  addPushToken(token: $pushToken)
-}

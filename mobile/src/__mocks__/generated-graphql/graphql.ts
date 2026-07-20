@@ -26,5 +26,4 @@ export const useLedgerMetaQuery = () => ({});
 export const useHomeChartsQuery = () => ({});
 export const useAccountHierarchyQuery = () => ({});
 export const useAddEntriesMutation = () => [() => {}, {}];
-export const useUpdateReportSubscribeMutation = () => [() => {}, {}];
 export const useUserProfileQuery = () => ({});

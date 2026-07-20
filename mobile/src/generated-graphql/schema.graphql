@@ -3,6 +3,12 @@ schema {
   mutation: Mutation
 }
 
+type AcceptLedgerInvitationResult {
+  ledgerId: String
+  permission: LedgerInvitationAccess
+  state: LedgerInvitationState!
+}
+
 type AccountBalance {
   account: String!
   balance: JSONObject!
@@ -434,6 +440,10 @@ type IntervalTotalItem {
   date: String!
 }
 
+type InvitationSignUpResponse {
+  expireAt: String!
+}
+
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -661,6 +671,48 @@ type LedgerFileContent {
   type: String!
 }
 
+"""View or Edit access for a shared ledger invitation"""
+enum LedgerInvitationAccess {
+  EDIT
+  VIEW
+}
+
+type LedgerInvitationDeliveryResult {
+  deliverySucceeded: Boolean!
+  invitation: PendingLedgerInvitation!
+}
+
+enum LedgerInvitationDeliveryStatus {
+  DELIVERED
+  FAILED
+  PENDING
+}
+
+type LedgerInvitationPresentation {
+  acceptedAt: DateTimeISO
+  expiresAt: DateTimeISO
+  inviterName: String
+  ledgerId: String
+  ledgerName: String
+  ledgerOwner: String
+  maskedEmail: String
+  permission: LedgerInvitationAccess
+  signupPending: Boolean
+  state: LedgerInvitationState!
+}
+
+enum LedgerInvitationState {
+  ACCEPTED
+  BLOCKED
+  EXPIRED
+  INVALID
+  LEDGER_DELETED
+  READY
+  RETRY
+  REVOKED
+  WRONG_ACCOUNT
+}
+
 type LedgerMeta {
   accounts: [String!]!
   currencies: [String!]!
@@ -725,6 +777,12 @@ input LedgerPriceInput {
   date: String!
 }
 
+"""Template used to populate a newly created ledger"""
+enum LedgerTemplate {
+  SAMPLE
+  STARTER
+}
+
 input LedgerTransactionInput {
   date: String!
   flag: String!
@@ -740,10 +798,12 @@ type LogoutResponse {
 }
 
 type Mutation {
+  acceptLedgerInvitation: AcceptLedgerInvitationResult!
   addEntries(entriesInput: [EntryInput!]!, ledgerId: String): AddEntryResponse!
-  addOrUpdateLedgerCollaborator(collaborator: String!, ledgerId: String!, permission: String): AddCollaboratorResponse!
+  addOrUpdateLedgerCollaborator(collaborator: String!, ledgerId: String!, permission: LedgerInvitationAccess): AddCollaboratorResponse!
   addPushToken(token: String!): Boolean! @deprecated(reason: "Push token tracking has been removed. This endpoint returns true for API compatibility but does not store tokens.")
   approvePullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
+  beginLedgerInvitation(secret: String!): LedgerInvitationPresentation!
   """Add one or more entries to a specific ledger (atomic)"""
   bulkEntries(entries: [AddEntryInput!]!, ledgerId: String!): AddLedgerEntryResponse!
   cancelSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
@@ -760,9 +820,10 @@ type Mutation {
   """
   createCliAuthSession: CreateCliAuthSessionResponse!
   """Create a new ledger for the current user"""
-  createLedger(description: String, name: String!, private: Boolean): Ledger!
+  createLedger(description: String, name: String!, private: Boolean, template: LedgerTemplate): Ledger!
   """Create a new file in a specific ledger"""
   createLedgerFile(content: String!, ledgerId: String!, message: String, path: String!): LedgerFileContent!
+  createLedgerInvitation(email: String!, ledgerId: String!, permission: LedgerInvitationAccess!): LedgerInvitationDeliveryResult!
   createOneTimeToken: CreateOneTimeTokenResponse!
   """Create a Plaid Link token for connecting bank accounts"""
   createPlaidLinkToken(ledgerId: String!): PlaidLinkToken!
@@ -836,9 +897,11 @@ type Mutation {
   rejectPullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
   """Rename a file in a specific ledger"""
   renameLedgerFile(ledgerId: String!, message: String, newPath: String!, oldPath: String!): RenameLedgerFileResponse!
+  resendLedgerInvitation(invitationId: String!): LedgerInvitationDeliveryResult!
   """Reset user password using a token from the password reset email"""
   resetPassword(newPassword: String!, token: String!): ResetPasswordResponse!
   resumeSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
+  revokeLedgerInvitation(invitationId: String!): RevokeLedgerInvitationResult!
   """Send a password reset link to the user's email"""
   sendForgotPasswordLink(email: String!): SendForgotPasswordLinkResponse!
   sendPushNotification(data: JSONObject!, message: String!, pushToken: String!): Boolean! @deprecated(reason: "Push notification functionality has been removed. This endpoint returns false for API compatibility but does not send notifications.")
@@ -850,6 +913,8 @@ type Mutation {
   signUp(email: String!, firstName: String!, inviteBy: String, inviteSrc: String, lastName: String!, password: String!, username: String, withDefaultLedger: Boolean): SignUpResponse!
   """Star a specific ledger"""
   starLedger(ledgerId: String!): StarLedgerResponse!
+  """Start signup using the email bound to the active ledger invitation"""
+  startInvitationSignUp(firstName: String!, lastName: String!, password: String!, username: String): InvitationSignUpResponse!
   """Submit Plaid transactions with user-reviewed target accounts to ledger"""
   submitPlaidTransactionsToLedger(ledgerId: String!, transactions: [PlaidTransactionSubmitInput!]!): PlaidSubmitResult!
   """Manually sync transactions for a specific Plaid Item"""
@@ -879,6 +944,8 @@ type Mutation {
   updateReportSubscribe(status: ReportStatus!, userId: String!): UpdateReportSubscribeResponse @deprecated(reason: "Report subscription tracking has been removed. This endpoint returns success for API compatibility but does not store subscription status.")
   updateUsername(username: String!): UserProfileResponse!
   upgradeSubscription(clientId: String!, priceId: String!): UpgradeSubscriptionResult!
+  """Verify OTP and create the invitation-bound user account"""
+  verifyInvitationSignUpOtp(otp: String!): TokenAuthResponse!
   """Verify OTP and create user account to complete signup"""
   verifySignUpOtp(otp: String!, sessionId: String!): TokenAuthResponse!
 }
@@ -917,6 +984,17 @@ type ParsedRow {
   date: String!
   description: String!
   payee: String!
+}
+
+type PendingLedgerInvitation {
+  deliveryStatus: LedgerInvitationDeliveryStatus!
+  expiresAt: DateTimeISO!
+  id: String!
+  inviterName: String!
+  maskedEmail: String!
+  nextResendAt: DateTimeISO!
+  permission: LedgerInvitationAccess!
+  sentAt: DateTimeISO!
 }
 
 type Permission {
@@ -1268,12 +1346,14 @@ type Query {
     """Sort order: asc or desc"""
     sortOrder: String
   ): JournalEntriesResponse!
+  ledgerInvitationStatus: LedgerInvitationPresentation!
   """Get a specific ledger"""
   ledgerMeta(ledgerId: String, userId: String!): LedgerMetaResponse!
   listCommits(branch: String! = "main", ledgerId: String!, limit: Int! = 30, page: Int! = 1): [CommitListItem!]!
   listLedgerCollaborators(ledgerId: String!, limit: Float, page: Float): [CollaboratorUser!]!
   """List all ledgers for the current user"""
   listLedgers(limit: Float, page: Float): [Ledger!]!
+  listPendingLedgerInvitations(ledgerId: String!): [PendingLedgerInvitation!]!
   """List all public keys for the current user"""
   listPublicKeys(limit: Float, page: Float): [PublicKey!]!
   """List all user owned ledgers for the current user"""
@@ -1389,6 +1469,10 @@ type ResetPasswordResponse {
   success: Boolean!
 }
 
+type RevokeLedgerInvitationResult {
+  success: Boolean!
+}
+
 type SearchUser {
   email: String!
   username: String!
@@ -1480,6 +1564,7 @@ type TempAssetUploadUrl {
 type TierQuotaItem {
   aiCfoTokensMax: Float!
   maxCollaboratorsPerLedger: Float!
+  maxDirectives: Float!
   maxLedgers: Float!
   tier: String!
 }
@@ -1592,6 +1677,7 @@ type UserProfileResponse {
   email: String!
   emailReportStatus: ReportStatus
   firstName: String
+  hasEverSubscribed: Boolean!
   id: String!
   lastName: String
   limits: UserLimits!
