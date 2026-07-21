@@ -15,6 +15,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { IncomeStatementQuery } from "@/generated-graphql/graphql";
 import { DashboardScrollView } from "@/components/dashboard-scroll-view";
 import { selectRangedAccountTree } from "../selectors/select-ranged-account-tree";
+import { reportScrollStyles } from "./report-scroll-style";
 
 type Props = {
   currency: string;
@@ -119,8 +120,12 @@ export function CashFlowReport({
   const isLoading = loading && !incomeData;
 
   return (
-    <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
-      <DashboardCard title={t("cashFlow")} bleed>
+    <DashboardScrollView
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      contentContainerStyle={reportScrollStyles.content}
+    >
+      <DashboardCard bleed>
         {isLoading ? (
           <LoadingTile height={240} mx={16} />
         ) : (

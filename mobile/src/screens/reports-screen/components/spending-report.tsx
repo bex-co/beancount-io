@@ -12,6 +12,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { IncomeStatementQuery } from "@/generated-graphql/graphql";
 import { DashboardScrollView } from "@/components/dashboard-scroll-view";
 import { AccountTransactionsCard } from "./account-transactions-card";
+import { reportScrollStyles } from "./report-scroll-style";
 
 type Props = {
   ledgerId: string;
@@ -48,7 +49,11 @@ export function SpendingReport({
   const isLoading = loading && !incomeData;
 
   return (
-    <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
+    <DashboardScrollView
+      refreshing={refreshing}
+      onRefresh={onRefresh}
+      contentContainerStyle={reportScrollStyles.content}
+    >
       <DashboardCard title={t("spending")} bleed>
         {isLoading ? (
           <LoadingTile height={220} mx={16} />

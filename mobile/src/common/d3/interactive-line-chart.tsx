@@ -209,8 +209,12 @@ function InteractiveLineChart({
         <AmountText style={styles.headline}>
           {formatSignedMoney(shownValue, currencySymbol)}
         </AmountText>
-        {hasSeries && (
+        {hasSeries ? (
           <AmountText style={[styles.change, { color: lineColor }]}>
+            {changeText}
+          </AmountText>
+        ) : (
+          <AmountText style={[styles.change, { color: theme.success }]}>
             {changeText}
           </AmountText>
         )}
