@@ -16,16 +16,28 @@ function row(
   balance: number,
   flag?: string,
 ): AccountJournalRow {
-  return { key: `${date}-${title}`, date, title, change, balance, flag };
+  return {
+    key: `${date}-${title}`,
+    date,
+    title,
+    change,
+    balance,
+    flag,
+    accounts: [],
+  };
 }
 
-/** Build a journal item; `entry` fields default to a hashed transaction. */
+/**
+ * Build a journal item; `entry` fields default to a hashed transaction. `entry`
+ * is an opaque JSON scalar at the API boundary, so tests pass richer shapes
+ * (e.g. `postings`) than its generated type admits.
+ */
 function item(
-  entry: Record<string, number | string>,
+  entry: Record<string, unknown>,
   change: Record<string, number | string> = { USD: -5 },
   balance: Record<string, number | string> = { USD: 95 },
 ): AccountJournalItem {
-  return { entry, change, balance } as AccountJournalItem;
+  return { entry, change, balance } as unknown as AccountJournalItem;
 }
 
 describe("accountJournalItemKey", () => {
@@ -91,10 +103,41 @@ describe("selectAccountJournalRows", () => {
         title: "Blue Bottle",
         date: "2025-01-02",
         flag: undefined,
+        accounts: [],
         change: -4.5,
         balance: 120.5,
       },
     ]);
+  });
+
+  it("collects posting accounts for the row icon", () => {
+    const [row] = selectAccountJournalRows("USD", [
+      item({
+        entry_hash: "a",
+        payee: "Blue Bottle",
+        postings: [
+          { account: "Expenses:Food:Coffee" },
+          { account: "Assets:Bank:Checking" },
+        ],
+      }),
+    ]);
+    expect(row.accounts).toEqual([
+      "Expenses:Food:Coffee",
+      "Assets:Bank:Checking",
+    ]);
+  });
+
+  it("falls back to the directive's own account when there are no postings", () => {
+    const [withAccount, withNothing] = selectAccountJournalRows("USD", [
+      item({
+        entry_hash: "a",
+        directive_type: "Open",
+        account: "Assets:Bank:Checking",
+      }),
+      item({ entry_hash: "b", directive_type: "Price", currency: "RGAGX" }),
+    ]);
+    expect(withAccount.accounts).toEqual(["Assets:Bank:Checking"]);
+    expect(withNothing.accounts).toEqual([]);
   });
 
   it("falls back payee → narration → account → directive_type for the title", () => {

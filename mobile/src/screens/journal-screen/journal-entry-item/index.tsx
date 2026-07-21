@@ -3,7 +3,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
-import { TransactionAvatar } from "@/components/transaction-avatar";
+import { AccountTypeIcon } from "@/components/account-type-icon";
 import { ColorTheme } from "@/types/theme-props";
 import {
   JournalDirectiveType,
@@ -11,6 +11,7 @@ import {
   isJournalOpen,
   isJournalClose,
 } from "../types";
+import { getEntryAccounts } from "../utils/journal-utils";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -155,7 +156,7 @@ export const JournalEntryItem: React.FC<JournalEntryItemProps> = ({
 
   const content = (
     <>
-      <TransactionAvatar payee={name} />
+      <AccountTypeIcon accounts={getEntryAccounts(entry)} />
 
       <View style={styles.middle}>
         <Text style={styles.name} numberOfLines={1}>

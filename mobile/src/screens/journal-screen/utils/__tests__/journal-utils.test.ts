@@ -1,6 +1,5 @@
 import {
-  getAvatarInitials,
-  getAvatarColor,
+  getEntryAccounts,
   formatAccountName,
   getAccountFlow,
   getTransactionAmount,
@@ -8,78 +7,72 @@ import {
   type JournalEntryPosting,
   type JournalEntry,
 } from "../journal-utils";
+import { DirectiveType, type JournalDirectiveType } from "../../types";
 
 describe("journal-utils", () => {
-  describe("getAvatarInitials", () => {
-    it("should return first letter of first two words for full names", () => {
-      expect(getAvatarInitials("John Doe")).toBe("JD");
-      expect(getAvatarInitials("Jane Smith")).toBe("JS");
+  describe("getEntryAccounts", () => {
+    it("should return every posting account for a transaction", () => {
+      const entry = {
+        entry_hash: "h1",
+        date: "2025-06-09",
+        directive_type: DirectiveType.TRANSACTION,
+        flag: "*",
+        payee: "Kin Soy",
+        postings: [
+          {
+            account: "Expenses:Food:Restaurant",
+            units: { number: "23.09", currency: "USD" },
+          },
+          {
+            account: "Assets:Bank:Checking",
+            units: { number: "-23.09", currency: "USD" },
+          },
+        ],
+        tags: [],
+        links: [],
+      } as unknown as JournalDirectiveType;
+
+      expect(getEntryAccounts(entry)).toEqual([
+        "Expenses:Food:Restaurant",
+        "Assets:Bank:Checking",
+      ]);
     });
 
-    it("should return first two characters for single word names", () => {
-      expect(getAvatarInitials("Alice")).toBe("AL");
-      expect(getAvatarInitials("Bob")).toBe("BO");
+    it("should return an empty array for a transaction with no postings", () => {
+      const entry = {
+        entry_hash: "h2",
+        date: "2025-06-09",
+        directive_type: DirectiveType.TRANSACTION,
+        flag: "*",
+        postings: [],
+        tags: [],
+        links: [],
+      } as unknown as JournalDirectiveType;
+
+      expect(getEntryAccounts(entry)).toEqual([]);
     });
 
-    it("should handle names with more than two words", () => {
-      expect(getAvatarInitials("John Paul Jones")).toBe("JP");
+    it("should return the single account of an account-bearing directive", () => {
+      const entry = {
+        entry_hash: "h3",
+        date: "2025-06-09",
+        directive_type: DirectiveType.OPEN,
+        account: "Assets:Bank:Checking",
+      } as unknown as JournalDirectiveType;
+
+      expect(getEntryAccounts(entry)).toEqual(["Assets:Bank:Checking"]);
     });
 
-    it("should return uppercase initials", () => {
-      expect(getAvatarInitials("john doe")).toBe("JD");
-      expect(getAvatarInitials("alice")).toBe("AL");
-    });
+    it("should return an empty array for account-less directives", () => {
+      const entry = {
+        entry_hash: "h4",
+        date: "2025-06-09",
+        directive_type: DirectiveType.PRICE,
+        currency: "RGAGX",
+        amount: { number: "71.13", currency: "USD" },
+      } as unknown as JournalDirectiveType;
 
-    it("should return '?' for empty strings", () => {
-      expect(getAvatarInitials("")).toBe("?");
-    });
-
-    it("should handle single character names", () => {
-      expect(getAvatarInitials("X")).toBe("X");
-    });
-
-    it("should handle names with extra spaces", () => {
-      expect(getAvatarInitials("John  Doe")).toBe("JD");
-    });
-  });
-
-  describe("getAvatarColor", () => {
-    it("should return default gray color for empty string", () => {
-      expect(getAvatarColor("")).toBe("#6b6e5f");
-    });
-
-    it("should return consistent color for same name", () => {
-      const color1 = getAvatarColor("John Doe");
-      const color2 = getAvatarColor("John Doe");
-      expect(color1).toBe(color2);
-    });
-
-    it("should return consistent color for names with different casing", () => {
-      const color1 = getAvatarColor("John Doe");
-      const color2 = getAvatarColor("john doe");
-      const color3 = getAvatarColor("JOHN DOE");
-      expect(color1).toBe(color2);
-      expect(color2).toBe(color3);
-    });
-
-    it("should return consistent color for names with whitespace differences", () => {
-      const color1 = getAvatarColor("John Doe");
-      const color2 = getAvatarColor("  John Doe  ");
-      expect(color1).toBe(color2);
-    });
-
-    it("should return different colors for different names", () => {
-      const color1 = getAvatarColor("John Doe");
-      const color2 = getAvatarColor("Jane Smith");
-      // Not guaranteed to be different, but highly likely
-      expect(color1 !== color2 || color1 === color2).toBe(true);
-    });
-
-    it("should return valid hex color codes", () => {
-      const color = getAvatarColor("Test Name");
-      expect(color).toBeTruthy();
-      expect(color.startsWith("#")).toBe(true);
-      expect(color.length).toBe(7);
+      expect(getEntryAccounts(entry)).toEqual([]);
     });
   });
 

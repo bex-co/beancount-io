@@ -22,6 +22,8 @@ export {
   monoMinFontSize,
 } from "./typography";
 
+export { withAlpha } from "./color-utils";
+
 export const getSystemColorScheme = () => {
   const colorScheme = Appearance.getColorScheme();
   return colorScheme === "dark" ? "dark" : "light";

@@ -1,3 +1,5 @@
+import { JournalDirectiveType, isJournalTransaction } from "../types";
+
 // Type definitions that work with GraphQL generated types
 // These types are compatible with the generated types but allow null for units.number
 export type JournalEntryPosting = {
@@ -12,55 +14,22 @@ export type JournalEntry = {
 };
 
 /**
- * Gets initials from a name for avatar display
- * @param name - The name to extract initials from
- * @returns Two-character initials in uppercase
+ * Collects every account a directive touches, for resolving its row icon.
+ *
+ * Transactions expose their postings; most other directives (Open, Close,
+ * Balance, Note, Document, Pad) are anchored to a single account. Price,
+ * Commodity, Event and Custom have none — they return `[]` and fall back to a
+ * neutral glyph.
+ *
+ * @param entry - Any journal directive
+ * @returns The directive's account names, possibly empty
  */
-export const getAvatarInitials = (name: string): string => {
-  if (!name) return "?";
-  const words = name.split(" ").filter((word) => word.length > 0);
-  if (words.length >= 2) {
-    return `${words[0][0]}${words[1][0]}`.toUpperCase();
+export const getEntryAccounts = (entry: JournalDirectiveType): string[] => {
+  if (isJournalTransaction(entry)) {
+    return entry.postings?.map((p) => p.account).filter(Boolean) ?? [];
   }
-  return name.slice(0, 2).toUpperCase();
-};
-
-/**
- * Gets a deterministic color from a string for avatar background
- * @param name - The name to generate color from
- * @returns Hex color code
- */
-export const getAvatarColor = (name: string): string => {
-  if (!name) return "#6b6e5f"; // Brand Stone — neutral fallback avatar
-
-  // Normalize the name to ensure consistent hashing (lowercase, trimmed)
-  const normalizedName = name.toLowerCase().trim();
-
-  // Create a more robust hash function
-  let hash = 0;
-  for (let i = 0; i < normalizedName.length; i++) {
-    const char = normalizedName.charCodeAt(i);
-    hash = (hash << 5) - hash + char;
-    hash = hash & hash; // Convert to 32-bit integer
-  }
-
-  // Expanded color palette for better variety
-  const colors = [
-    "#3B82F6", // Blue
-    "#10B981", // Emerald
-    "#F59E0B", // Amber
-    "#EF4444", // Red
-    "#8B5CF6", // Violet
-    "#06B6D4", // Cyan
-    "#84CC16", // Lime
-    "#F97316", // Orange
-    "#EC4899", // Pink
-    "#6366F1", // Indigo
-    "#14B8A6", // Teal
-    "#A855F7", // Purple
-  ];
-
-  return colors[Math.abs(hash) % colors.length];
+  const account = (entry as { account?: string }).account;
+  return account ? [account] : [];
 };
 
 /**

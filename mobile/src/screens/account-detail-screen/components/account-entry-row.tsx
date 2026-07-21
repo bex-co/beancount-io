@@ -2,7 +2,7 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
-import { TransactionAvatar } from "@/components/transaction-avatar";
+import { AccountTypeIcon } from "@/components/account-type-icon";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoney, groupThousands } from "@/common/number-utils";
@@ -78,7 +78,7 @@ export function AccountEntryRow({
 
   const content = (
     <>
-      <TransactionAvatar payee={row.title ?? ""} />
+      <AccountTypeIcon accounts={row.accounts} />
 
       <View style={styles.middle}>
         <Text style={styles.title} numberOfLines={1}>

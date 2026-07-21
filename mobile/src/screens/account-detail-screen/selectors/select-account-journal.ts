@@ -14,12 +14,31 @@ export type AccountJournalRow = {
   date: string;
   /** Transaction flag (e.g. "!" for pending), when present. */
   flag?: string;
+  /** Every account the entry touches; drives the row's icon. */
+  accounts: string[];
   change: number;
   balance: number;
 };
 
 function asString(value: number | string | undefined): string {
   return typeof value === "string" ? value : "";
+}
+
+/**
+ * Accounts the entry touches, for the row icon. `entry` is an opaque JSON
+ * scalar, so read postings defensively and fall back to the directive's own
+ * account (Open, Close, Balance, …).
+ */
+function entryAccounts(entry: AccountJournalItem["entry"]): string[] {
+  const postings = (entry as { postings?: { account?: string }[] }).postings;
+  if (Array.isArray(postings)) {
+    const accounts = postings
+      .map((p) => (typeof p?.account === "string" ? p.account : ""))
+      .filter(Boolean);
+    if (accounts.length > 0) return accounts;
+  }
+  const account = asString(entry.account);
+  return account ? [account] : [];
 }
 
 /**
@@ -131,6 +150,7 @@ export function selectAccountJournalRows(
     title: entryTitle(item.entry),
     date: asString(item.entry.date),
     flag: asString(item.entry.flag) || undefined,
+    accounts: entryAccounts(item.entry),
     change: resolveCurrencyBalance(item.change, currency),
     balance: resolveCurrencyBalance(item.balance, currency),
   }));
