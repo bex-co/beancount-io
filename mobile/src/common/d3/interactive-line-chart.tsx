@@ -28,8 +28,12 @@ import { formatSignedMoney } from "@/common/number-utils";
 import { ColorTheme } from "@/types/theme-props";
 
 type InteractiveLineChartProps = {
-  /** Static header label shown when not scrubbing (e.g. "Net Worth"). */
-  label: string;
+  /**
+   * Static heading above the value (e.g. "Net Worth"). Stays put while
+   * scrubbing. Omit when the surrounding card already carries a title, so the
+   * heading isn't duplicated.
+   */
+  label?: string;
   labels: string[];
   numbers: number[];
   currencySymbol: string;
@@ -60,10 +64,22 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.medium,
       color: theme.text01,
     },
-    change: {
+    changeRow: {
       marginTop: 2,
+      flexDirection: "row",
+      alignItems: "center",
+    },
+    change: {
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
+    },
+    // Muted so the month reads as context for the change, not as a second
+    // figure competing with it.
+    scrubLabel: {
+      marginLeft: 6,
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
+      color: theme.black80,
     },
     chartContainer: {
       position: "relative",
@@ -197,27 +213,29 @@ function InteractiveLineChart({
     [hasSeries, count, chartWidth],
   );
 
-  const headerTop =
-    scrubIndex !== null ? t(labels[scrubIndex] ?? label) : label;
+  // The heading stays put while scrubbing: where it is the card's only title,
+  // swapping it for a month would leave the card unlabeled mid-gesture. The
+  // scrubbed month rides along with the change row instead, where it reads as
+  // "period start → this month" rather than as a replacement identity.
+  const scrubLabel = scrubIndex !== null ? t(labels[scrubIndex]) : null;
 
   return (
     // Owner marker covers the header/labels too, so swipes starting above the
     // plot can't be claimed by the ledger drawer's edge gesture.
     <View {...horizontalSwipeOwnerTouchProps}>
       <View style={styles.header}>
-        <Text style={styles.label}>{headerTop}</Text>
+        {label !== undefined && <Text style={styles.label}>{label}</Text>}
         <AmountText style={styles.headline}>
           {formatSignedMoney(shownValue, currencySymbol)}
         </AmountText>
-        {hasSeries ? (
+        <View style={styles.changeRow}>
           <AmountText style={[styles.change, { color: lineColor }]}>
             {changeText}
           </AmountText>
-        ) : (
-          <AmountText style={[styles.change, { color: theme.success }]}>
-            {changeText}
-          </AmountText>
-        )}
+          {scrubLabel !== null && (
+            <Text style={styles.scrubLabel}>{`· ${scrubLabel}`}</Text>
+          )}
+        </View>
       </View>
 
       <View
