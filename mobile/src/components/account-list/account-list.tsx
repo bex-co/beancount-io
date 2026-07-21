@@ -16,8 +16,14 @@ import { analytics } from "@/common/analytics";
 import { groupThousands } from "@/common/number-utils";
 import { AccountNode } from "./select-account-list";
 
-const CHEVRON_WIDTH = 22;
-const INDENT_STEP = 16;
+/**
+ * One step of tree indent, and — deliberately the same number — the width of
+ * the chevron slot every row reserves. Keeping them equal is what makes a
+ * child's chevron land exactly under its parent's label: a child sits one step
+ * right of its parent, and its chevron slot occupies precisely that step. Let
+ * the two diverge and every level drifts by the difference.
+ */
+const INDENT_STEP = 18;
 // Levels of account depth shown expanded on load (deeper nodes start collapsed).
 const DEFAULT_EXPANDED_LEVELS = 3;
 
@@ -47,10 +53,18 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       paddingRight: 16,
-      paddingVertical: 10,
+      paddingVertical: 7,
+      // Pins every row to the same height regardless of depth (depth 0 renders
+      // one size up, so its natural line box is taller). `minHeight` rather
+      // than a fixed `lineHeight`: line heights don't scale with Dynamic Type,
+      // so pinning one would clip large text — this lets the row grow instead.
+      minHeight: 34,
     },
     chevron: {
-      width: CHEVRON_WIDTH,
+      width: INDENT_STEP,
+    },
+    leaf: {
+      width: 10,
     },
     name: {
       flex: 1,
@@ -147,11 +161,13 @@ export function AccountListPage({
       <Ionicons
         style={styles.chevron}
         name={isExpanded ? "chevron-down" : "chevron-forward"}
-        size={16}
-        color={theme.black80}
+        size={14}
+        // Dimmer than the label in both themes, so the chevron reads as a
+        // control rather than competing with the account name.
+        color={theme.black60}
       />
     ) : (
-      <View style={styles.chevron} />
+      <View style={styles.leaf} />
     );
     // When rows navigate, the chevron owns the toggle so a nested tap collapses
     // without triggering the row's drill-down.
@@ -161,7 +177,8 @@ export function AccountListPage({
           onPress={() => toggle(node.account, isExpanded)}
           accessibilityRole="button"
           accessibilityState={{ expanded: isExpanded }}
-          hitSlop={{ top: 10, bottom: 10, left: 10, right: 6 }}
+          // Widened to keep a comfortable target under the smaller glyph.
+          hitSlop={{ top: 12, bottom: 12, left: 12, right: 12 }}
         >
           {chevronIcon}
         </TouchableOpacity>

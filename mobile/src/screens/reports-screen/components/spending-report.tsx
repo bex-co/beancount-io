@@ -56,7 +56,8 @@ export function SpendingReport({
     >
       <DashboardCard
         // title={t("spending")}
-        bleed>
+        bleed
+      >
         {isLoading ? (
           <LoadingTile height={220} mx={16} />
         ) : (
