@@ -29,6 +29,11 @@ const getStyles = (theme: ColorTheme) =>
     tabsContainer: {
       flex: 1,
     },
+    // Three fixed tabs — let each trigger claim an equal share of the row so
+    // the labels and the active underline are evenly distributed.
+    tab: {
+      flex: 1,
+    },
   });
 
 type SharedReportProps = {
@@ -142,6 +147,7 @@ const ReportsScreenImpl = (): JSX.Element => {
           tabs={tabs}
           initialIndex={0}
           onTabChange={handleTabChange}
+          tabStyle={styles.tab}
           scrollable={false}
         />
       </View>
