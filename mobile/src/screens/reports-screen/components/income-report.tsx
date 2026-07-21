@@ -55,7 +55,9 @@ export function IncomeReport({
       onRefresh={onRefresh}
       contentContainerStyle={reportScrollStyles.content}
     >
-      <DashboardCard title={t("income")} bleed>
+      <DashboardCard
+        // title={t("income")}
+        bleed>
         {isLoading ? (
           <LoadingTile height={220} mx={16} />
         ) : (

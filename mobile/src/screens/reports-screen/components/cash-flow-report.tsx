@@ -130,7 +130,7 @@ export function CashFlowReport({
           <LoadingTile height={240} mx={16} />
         ) : (
           <InteractiveLineChartD3
-            label={t("cashFlow")}
+            // label={t("cashFlow")}
             currencySymbol={currencySymbol}
             labels={chart.labels}
             numbers={chart.numbers}

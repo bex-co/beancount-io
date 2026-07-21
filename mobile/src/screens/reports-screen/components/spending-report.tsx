@@ -54,7 +54,9 @@ export function SpendingReport({
       onRefresh={onRefresh}
       contentContainerStyle={reportScrollStyles.content}
     >
-      <DashboardCard title={t("spending")} bleed>
+      <DashboardCard
+        // title={t("spending")}
+        bleed>
         {isLoading ? (
           <LoadingTile height={220} mx={16} />
         ) : (
