@@ -1,7 +1,7 @@
 import {
   isJournalTransaction,
   JournalDirectiveType,
-} from "../../journal-screen/types";
+} from "../../transactions-screen/types";
 
 export type SpendingCompare = {
   thisMonth: number;

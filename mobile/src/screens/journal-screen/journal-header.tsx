@@ -15,7 +15,7 @@ import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerDrawerButton } from "@/components/ledger-drawer";
-import { DirectiveType } from "./types";
+import { DirectiveType } from "@/screens/transactions-screen/types";
 
 // Define filter button configurations
 interface FilterButton {

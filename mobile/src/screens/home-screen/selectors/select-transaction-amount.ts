@@ -1,7 +1,7 @@
 import {
   isJournalTransaction,
   JournalDirectiveType,
-} from "../../journal-screen/types";
+} from "../../transactions-screen/types";
 
 /**
  * Signed display amount for a transaction, computed honestly from its postings

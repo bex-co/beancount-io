@@ -41,10 +41,10 @@ import {
 import {
   JournalDirectiveType,
   isJournalTransaction,
-} from "@/screens/journal-screen/types";
+} from "@/screens/transactions-screen/types";
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { AccountEntryRow } from "@/screens/account-detail-screen/components/account-entry-row";
-import { JournalDateSectionHeader } from "@/screens/journal-screen/journal-date-section-header";
+import { DateSectionHeader } from "@/screens/transactions-screen/date-section-header";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -237,7 +237,7 @@ const AccountDetailScreenImpl = ({
 
   const renderSectionHeader = useCallback(
     ({ section }: { section: AccountJournalSection }) => (
-      <JournalDateSectionHeader
+      <DateSectionHeader
         displayDate={section.displayDate}
         total={section.totalChange}
       />

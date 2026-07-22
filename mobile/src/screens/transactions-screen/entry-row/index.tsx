@@ -11,8 +11,8 @@ import {
   isJournalOpen,
   isJournalClose,
 } from "../types";
-import { getEntryAccounts } from "../utils/journal-utils";
-import { selectTransactionAmount } from "../utils/journal-display-utils";
+import { getEntryAccounts } from "../utils/entry-utils";
+import { selectTransactionAmount } from "../utils/transaction-display-utils";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -23,7 +23,7 @@ const getStyles = (theme: ColorTheme) =>
       paddingVertical: 12,
       // No background: rows inherit their container's color so they sit on the
       // DashboardCard (theme.black10) in the home/reports cards and on the
-      // screen (theme.white) in the full journal list. Hardcoding theme.white
+      // screen (theme.white) in the transactions and journal lists. Hardcoding theme.white
       // made rows punch a page-colored hole through the cards in both themes.
     },
     middle: {
@@ -97,15 +97,12 @@ const getDisplayInfo = (
   return { name, amountStr: amount.text, isPositive: amount.value > 0 };
 };
 
-interface JournalEntryItemProps {
+interface EntryRowProps {
   entry: JournalDirectiveType;
   onPress?: () => void;
 }
 
-export const JournalEntryItem: React.FC<JournalEntryItemProps> = ({
-  entry,
-  onPress,
-}) => {
+export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
 

@@ -11,7 +11,7 @@ import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import {
   DirectiveType,
   JournalDirectiveType,
-} from "@/screens/journal-screen/types";
+} from "@/screens/transactions-screen/types";
 import { selectSpendingCompare } from "@/screens/home-screen/selectors/select-spending-compare";
 
 // Pull enough recent transactions to cover this + last month client-side.

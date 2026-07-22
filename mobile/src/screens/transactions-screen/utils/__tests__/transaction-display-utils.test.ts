@@ -3,7 +3,7 @@ import {
   formatAmount,
   selectTransactionAmount,
   groupToSections,
-} from "../journal-display-utils";
+} from "../transaction-display-utils";
 import {
   DirectiveType,
   JournalTransaction,

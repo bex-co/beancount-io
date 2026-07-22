@@ -2,7 +2,7 @@ import { selectSpendingCompare } from "../select-spending-compare";
 import {
   DirectiveType,
   JournalDirectiveType,
-} from "../../../journal-screen/types";
+} from "../../../transactions-screen/types";
 
 // Build a Transaction directive with a set of postings.
 function txn(

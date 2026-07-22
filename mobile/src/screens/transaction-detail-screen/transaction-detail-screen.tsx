@@ -29,14 +29,14 @@ import {
   useDeleteLedgerEntrySourceSliceMutation,
   useGetLedgerEntryContextQuery,
 } from "@/generated-graphql/graphql";
-import { JournalBottomSheetContent } from "@/screens/journal-screen/journal-bottom-sheet/sheet-content";
+import { EntryContext } from "@/screens/transactions-screen/entry-context";
 import { openEditTransaction } from "@/screens/edit-transaction-screen";
 import {
   JournalDirectiveType,
   JournalTransaction,
   isJournalTransaction,
-} from "@/screens/journal-screen/types";
-import { formatDisplayDate } from "@/screens/journal-screen/utils/journal-display-utils";
+} from "@/screens/transactions-screen/types";
+import { formatDisplayDate } from "@/screens/transactions-screen/utils/transaction-display-utils";
 import { selectedTransactionVar } from "./open-transaction-detail";
 import {
   selectHeroAmount,
@@ -368,7 +368,7 @@ const TransactionDetailImpl = ({
         </View>
 
         <View style={styles.sourceSection}>
-          <JournalBottomSheetContent entry={entry} ledgerId={ledgerId} />
+          <EntryContext entry={entry} ledgerId={ledgerId} />
         </View>
       </ScrollView>
     </SafeAreaView>

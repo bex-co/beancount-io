@@ -119,14 +119,20 @@ interface EntryContextEntry {
   };
 }
 
-interface JournalBottomSheetContentProps {
+interface EntryContextProps {
   entry: JournalDirectiveType | null;
   ledgerId: string;
 }
 
-export const JournalBottomSheetContent: React.FC<
-  JournalBottomSheetContentProps
-> = ({ entry, ledgerId }) => {
+/**
+ * Read-only context for a directive: where it lives in the ledger file, the
+ * balances around it, and its source. Rendered inline by transaction detail and
+ * inside the journal's bottom sheet.
+ */
+export const EntryContext: React.FC<EntryContextProps> = ({
+  entry,
+  ledgerId,
+}) => {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();

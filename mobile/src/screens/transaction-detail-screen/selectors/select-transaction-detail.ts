@@ -1,8 +1,8 @@
-import type { JournalTransaction } from "../../journal-screen/types";
+import type { JournalTransaction } from "../../transactions-screen/types";
 import {
   formatAmount,
   selectTransactionAmount,
-} from "../../journal-screen/utils/journal-display-utils";
+} from "../../transactions-screen/utils/transaction-display-utils";
 
 /** Headline amount for the detail screen, matching the list rows' convention:
  * `+` prefix for cash inflows, unsigned otherwise. */
@@ -12,7 +12,7 @@ export type HeroAmount = {
 };
 
 /**
- * The headline amount, from the same selector JournalEntryItem uses for list
+ * The headline amount, from the same selector `EntryRow` uses for list
  * rows, so the hero number can never disagree with the row the user tapped.
  */
 export function selectHeroAmount(txn: JournalTransaction): HeroAmount {

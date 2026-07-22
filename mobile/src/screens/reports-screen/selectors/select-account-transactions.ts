@@ -2,7 +2,7 @@ import {
   isJournalTransaction,
   JournalDirectiveType,
   JournalTransaction,
-} from "../../journal-screen/types";
+} from "../../transactions-screen/types";
 import { rangeStartMonth, TimeRange } from "../../../common/series-util";
 
 /** Max number of account transactions to surface in a report list. */

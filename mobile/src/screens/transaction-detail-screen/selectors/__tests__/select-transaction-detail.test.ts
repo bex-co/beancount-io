@@ -3,11 +3,11 @@ import {
   selectPostingRows,
   selectTransactionTitle,
 } from "../select-transaction-detail";
-import { DirectiveType } from "../../../journal-screen/types";
+import { DirectiveType } from "../../../transactions-screen/types";
 import type {
   JournalPosting,
   JournalTransaction,
-} from "../../../journal-screen/types";
+} from "../../../transactions-screen/types";
 
 function posting(
   account: string,

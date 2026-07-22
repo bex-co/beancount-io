@@ -121,6 +121,16 @@ export const zh = {
   "10": "十月",
   "11": "十一月",
   "12": "十二月",
+  // transactions screen
+  transactionsWelcomeTitle: "欢迎使用交易记录！🧾",
+  transactionsWelcomeMessage: "您还没有记录任何交易。",
+  transactionsWelcomeInstructions: "开始使用：",
+  transactionsWelcomeInstruction1: "点击“+”按钮记录第一笔交易",
+  transactionsWelcomeInstruction2: "通过网页界面上传 beancount 文件",
+  transactionsWelcomeInstruction3: "导入现有会计数据",
+  transactionsWelcomeInstructionFinal: "添加交易后，它们会显示在这里。",
+  transactionsNoSearchResults: "没有匹配的交易。",
+  transactionsLoadError: "加载交易记录失败：",
   // journal screen
   transactions: "交易记录",
   search: "搜索",

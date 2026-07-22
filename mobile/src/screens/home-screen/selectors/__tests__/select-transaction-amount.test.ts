@@ -5,7 +5,7 @@ import {
 import {
   DirectiveType,
   JournalDirectiveType,
-} from "../../../journal-screen/types";
+} from "../../../transactions-screen/types";
 
 function txn(
   postings: Array<{ account: string; number: string; currency?: string }>,

@@ -4,19 +4,14 @@
     "name": "Beancount",
     "scheme": "beancount",
     "slug": "beancount",
-    "platforms": [
-      "ios",
-      "android"
-    ],
+    "platforms": ["ios", "android"],
     "orientation": "portrait",
     "icon": "./src/assets/images/icon.png",
     "updates": {
       "fallbackToCacheTimeout": 0,
       "url": "https://u.expo.dev/eef0c5cf-1a6f-4566-a6a6-e03821db7f8d"
     },
-    "assetBundlePatterns": [
-      "**/*"
-    ],
+    "assetBundlePatterns": ["**/*"],
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "io.beancount.ios",
@@ -40,9 +35,7 @@
     "android": {
       "versionCode": 38,
       "package": "io.beancount.android",
-      "permissions": [
-        "com.google.android.gms.permission.AD_ID"
-      ],
+      "permissions": ["com.google.android.gms.permission.AD_ID"],
       "edgeToEdgeEnabled": true
     },
     "notification": {
@@ -80,9 +73,7 @@
       [
         "expo-asset",
         {
-          "assets": [
-            "./src/assets"
-          ]
+          "assets": ["./src/assets"]
         }
       ],
       "expo-localization",

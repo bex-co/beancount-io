@@ -27,20 +27,21 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-interface JournalDateSectionHeaderProps {
+interface DateSectionHeaderProps {
   displayDate: string;
   /**
    * Net change for the day, when it is a number worth trusting. Account detail
-   * passes one — single account, normalized to the active currency. The journal
-   * omits it: its entries span currencies and arrive a page at a time, so no
-   * honest daily total can be computed from what is loaded.
+   * passes one — single account, normalized to the active currency. The
+   * transactions list omits it: its entries span currencies and arrive a page
+   * at a time, so no honest daily total can be computed from what is loaded.
    */
   total?: string;
 }
 
-export const JournalDateSectionHeader: React.FC<
-  JournalDateSectionHeaderProps
-> = ({ displayDate, total }) => {
+export const DateSectionHeader: React.FC<DateSectionHeaderProps> = ({
+  displayDate,
+  total,
+}) => {
   const styles = useThemeStyle(getStyles);
 
   return (

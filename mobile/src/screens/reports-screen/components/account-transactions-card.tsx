@@ -8,12 +8,12 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
 import { DashboardCard } from "@/components";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
-import { JournalEntryItem } from "@/screens/journal-screen/journal-entry-item";
+import { EntryRow } from "@/screens/transactions-screen/entry-row";
 import {
   DirectiveType,
   JournalDirectiveType,
   isJournalTransaction,
-} from "@/screens/journal-screen/types";
+} from "@/screens/transactions-screen/types";
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import { TimeRange } from "@/common/series-util";
 import { selectAccountTransactions } from "../selectors/select-account-transactions";
@@ -48,7 +48,7 @@ type AccountTransactionsCardProps = {
  * Transactions involving a given account subtree (Expenses, Income, …), shown
  * under a report chart. Fetches a window of journal entries and filters
  * client-side (see select-account-transactions.ts), within the active time
- * range. Rows reuse `JournalEntryItem` and open the transaction detail on tap.
+ * range. Rows reuse `EntryRow` and open the transaction detail on tap.
  */
 export function AccountTransactionsCard({
   ledgerId,
@@ -100,7 +100,7 @@ export function AccountTransactionsCard({
         <Text style={styles.empty}>{t(emptyKey)}</Text>
       ) : (
         entries.map((entry, index) => (
-          <JournalEntryItem
+          <EntryRow
             key={entry.entry_hash || index}
             entry={entry}
             onPress={

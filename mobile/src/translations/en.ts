@@ -140,6 +140,19 @@ export const en = {
   "10": "OCT",
   "11": "NOV",
   "12": "DEC",
+  // transactions screen
+  transactionsWelcomeTitle: "Welcome to your transactions! 🧾",
+  transactionsWelcomeMessage: "You haven't recorded any transactions yet.",
+  transactionsWelcomeInstructions: "To get started:",
+  transactionsWelcomeInstruction1:
+    'Use the "+" button to record your first transaction',
+  transactionsWelcomeInstruction2:
+    "Upload beancount files through the web interface",
+  transactionsWelcomeInstruction3: "Import existing accounting data",
+  transactionsWelcomeInstructionFinal:
+    "Once you add some transactions, they'll appear here.",
+  transactionsNoSearchResults: "No transactions match your search.",
+  transactionsLoadError: "Failed to load transactions: ",
   // journal screen
   transactions: "Transactions",
   search: "Search",

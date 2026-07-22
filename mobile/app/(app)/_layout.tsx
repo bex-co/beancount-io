@@ -8,7 +8,11 @@ import { useTheme } from "@/common/theme";
 // Hook-free so it can be used as a headerLeft render function without causing
 // hook-count mismatches when screens override headerLeft with their own function.
 // The tintColor comes from the Stack's headerTintColor screenOption.
-export const DefaultHeaderLeftBack = ({ tintColor }: { tintColor?: ColorValue }) => (
+export const DefaultHeaderLeftBack = ({
+  tintColor,
+}: {
+  tintColor?: ColorValue;
+}) => (
   <Pressable
     onPress={router.back}
     style={{ paddingHorizontal: 8, paddingVertical: 4 }}

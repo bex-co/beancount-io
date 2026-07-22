@@ -6,8 +6,8 @@ import BottomSheet, {
 } from "@gorhom/bottom-sheet";
 import { useThemeStyle } from "@/common/hooks";
 import { ColorTheme } from "@/types/theme-props";
-import { JournalDirectiveType } from "../types";
-import { JournalBottomSheetContent } from "./sheet-content";
+import { JournalDirectiveType } from "@/screens/transactions-screen/types";
+import { EntryContext } from "@/screens/transactions-screen/entry-context";
 
 export const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -64,7 +64,7 @@ export const JournalBottomSheet: React.FC<JournalBottomSheetProps> = ({
       backdropComponent={renderBackdrop}
     >
       <BottomSheetScrollView contentContainerStyle={styles.contentContainer}>
-        <JournalBottomSheetContent entry={entry} ledgerId={ledgerId} />
+        <EntryContext entry={entry} ledgerId={ledgerId} />
       </BottomSheetScrollView>
     </BottomSheet>
   );

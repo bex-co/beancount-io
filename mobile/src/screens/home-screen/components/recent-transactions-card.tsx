@@ -9,12 +9,12 @@ import { analytics } from "@/common/analytics";
 import { LoadingTile } from "@/components/loading-tile";
 import { DashboardCard } from "@/components";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
-import { JournalEntryItem } from "@/screens/journal-screen/journal-entry-item";
+import { EntryRow } from "@/screens/transactions-screen/entry-row";
 import {
   DirectiveType,
   JournalDirectiveType,
   isJournalTransaction,
-} from "@/screens/journal-screen/types";
+} from "@/screens/transactions-screen/types";
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 
 const RECENT_LIMIT = 5;
@@ -65,7 +65,7 @@ export function RecentTransactionsCard({
 
   const onSeeAll = () => {
     analytics.track("tap_see_all_transactions", {});
-    router.navigate({ pathname: "/journal" });
+    router.navigate({ pathname: "/transactions" });
   };
 
   return (
@@ -76,7 +76,7 @@ export function RecentTransactionsCard({
         <Text style={styles.empty}>{t("recentTransactionsEmpty")}</Text>
       ) : (
         entries.map((entry, index) => (
-          <JournalEntryItem
+          <EntryRow
             key={entry.entry_hash || index}
             entry={entry}
             onPress={

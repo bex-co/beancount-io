@@ -122,9 +122,18 @@ export const selectTransactionAmount = (
   return { text: formatAmount(value, currency), value, currency };
 };
 
+/**
+ * Buckets entries into date sections, newest-page-first as the server returned
+ * them.
+ *
+ * `searchQuery` filters client-side over the entries already loaded. The
+ * transactions list leaves it empty — it searches server-side through
+ * `JournalQueryInput.filter`, so paging is not capped at what is in memory. The
+ * journal screen still passes one.
+ */
 export const groupToSections = (
   entries: JournalDirectiveType[],
-  searchQuery: string,
+  searchQuery = "",
 ): JournalSection[] => {
   const q = searchQuery.toLowerCase().trim();
   const filtered = q

@@ -1,4 +1,4 @@
-import { useMemo, useCallback, useRef, useState } from "react";
+import { useMemo, useCallback, useState } from "react";
 import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
@@ -9,32 +9,35 @@ import {
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
-import BottomSheet from "@gorhom/bottom-sheet";
 import { analytics } from "@/common/analytics";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle, usePageView, useDebouncedValue } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
 import { NetworkStatus } from "@apollo/client";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
-import { JournalHeader, JournalNavBar } from "./journal-header";
-import { EntryRow } from "@/screens/transactions-screen/entry-row";
-import { DateSectionHeader } from "@/screens/transactions-screen/date-section-header";
-import { JournalEmptyState } from "./journal-empty-state";
-import { JournalNoEntriesForFiltersState } from "./journal-no-entries-for-filters-state";
-import { JournalBottomSheet } from "./journal-bottom-sheet";
+import { TransactionsHeader, TransactionsNavBar } from "./transactions-header";
+import { EntryRow } from "./entry-row";
+import { DateSectionHeader } from "./date-section-header";
+import { TransactionsEmptyState } from "./transactions-empty-state";
+import { NoResultsState } from "./no-results-state";
+import { TransactionsListSkeleton } from "./transactions-list-skeleton";
 import {
-  JournalDirectiveType,
   DirectiveType,
+  JournalDirectiveType,
   isJournalTransaction,
-} from "@/screens/transactions-screen/types";
+} from "./types";
 import { openTransactionDetail } from "@/screens/transaction-detail-screen/open-transaction-detail";
 import {
   JournalSection,
   groupToSections,
-} from "@/screens/transactions-screen/utils/transaction-display-utils";
+} from "./utils/transaction-display-utils";
+
+const PAGE_SIZE = 20;
+/** Only transactions live on this tab; Open/Close/Balance/… stay in the journal. */
+const DIRECTIVE_TYPES = [DirectiveType.TRANSACTION];
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -44,12 +47,6 @@ const getStyles = (theme: ColorTheme) =>
     },
     list: {
       flex: 1,
-    },
-    loadingContainer: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 40,
     },
     errorContainer: {
       flex: 1,
@@ -78,33 +75,21 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-const JournalList = () => {
+const TransactionList = () => {
   const ledgerId = useLedgerGuard();
   const router = useRouter();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
-  const bottomSheetRef = useRef<BottomSheet>(null);
-  const [selectedEntry, setSelectedEntry] =
-    useState<JournalDirectiveType | null>(null);
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
-  usePageView("journal");
+  usePageView("transactions");
 
-  const limit = 20;
-
-  const [selectedDirectiveTypes, setSelectedDirectiveTypes] = useState<
-    DirectiveType[]
-  >([DirectiveType.TRANSACTION]);
-  const [selectedTransactionSubtypes, setSelectedTransactionSubtypes] =
-    useState<string[]>([]);
-  const [selectedDocumentSubtypes, setSelectedDocumentSubtypes] = useState<
-    string[]
-  >([]);
-  const [selectedCustomSubtypes, setSelectedCustomSubtypes] = useState<
-    string[]
-  >([]);
+  // Search runs server-side through `query.filter`, so it reaches transactions
+  // past the first page — but only once typing settles.
+  const search = useDebouncedValue(searchQuery.trim(), 300);
+  const filter = search || undefined;
 
   const { data, loading, error, refetch, fetchMore, networkStatus } =
     useGetLedgerJournalQuery({
@@ -112,23 +97,9 @@ const JournalList = () => {
         ledgerId: ledgerId!,
         query: {
           offset: 0,
-          limit,
-          directiveTypes:
-            selectedDirectiveTypes.length > 0
-              ? selectedDirectiveTypes
-              : undefined,
-          transactionSubtypes:
-            selectedTransactionSubtypes.length > 0
-              ? selectedTransactionSubtypes
-              : undefined,
-          documentSubtypes:
-            selectedDocumentSubtypes.length > 0
-              ? selectedDocumentSubtypes
-              : undefined,
-          customSubtypes:
-            selectedCustomSubtypes.length > 0
-              ? selectedCustomSubtypes
-              : undefined,
+          limit: PAGE_SIZE,
+          directiveTypes: DIRECTIVE_TYPES,
+          filter,
         },
       },
       skip: !ledgerId,
@@ -138,20 +109,15 @@ const JournalList = () => {
   const rawTotal = data?.getLedgerJournal.total;
   const total = typeof rawTotal === "number" ? rawTotal : 0;
 
-  const journalEntries = useMemo(
+  const transactions = useMemo(
     () =>
       (data?.getLedgerJournal.data || []) as unknown as JournalDirectiveType[],
     [data?.getLedgerJournal.data],
   );
-  const isEmpty = data?.getLedgerJournal.is_empty;
-
-  const hasMore = journalEntries.length < total;
+  const hasMore = transactions.length < total;
   const isLoadingMore = networkStatus === NetworkStatus.fetchMore;
 
-  const sections = useMemo(
-    () => groupToSections(journalEntries, searchQuery),
-    [journalEntries, searchQuery],
-  );
+  const sections = useMemo(() => groupToSections(transactions), [transactions]);
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore || loading || !ledgerId) return;
@@ -161,24 +127,10 @@ const JournalList = () => {
         variables: {
           ledgerId,
           query: {
-            offset: journalEntries.length,
-            limit,
-            directiveTypes:
-              selectedDirectiveTypes.length > 0
-                ? selectedDirectiveTypes
-                : undefined,
-            transactionSubtypes:
-              selectedTransactionSubtypes.length > 0
-                ? selectedTransactionSubtypes
-                : undefined,
-            documentSubtypes:
-              selectedDocumentSubtypes.length > 0
-                ? selectedDocumentSubtypes
-                : undefined,
-            customSubtypes:
-              selectedCustomSubtypes.length > 0
-                ? selectedCustomSubtypes
-                : undefined,
+            offset: transactions.length,
+            limit: PAGE_SIZE,
+            directiveTypes: DIRECTIVE_TYPES,
+            filter,
           },
         },
         updateQuery: (prev, { fetchMoreResult }) => {
@@ -197,20 +149,16 @@ const JournalList = () => {
         },
       });
     } catch (err) {
-      console.error("Error loading more entries:", err);
+      console.error("Error loading more transactions:", err);
     }
   }, [
     isLoadingMore,
     hasMore,
     loading,
     ledgerId,
-    journalEntries.length,
-    limit,
+    transactions.length,
     fetchMore,
-    selectedDirectiveTypes,
-    selectedTransactionSubtypes,
-    selectedDocumentSubtypes,
-    selectedCustomSubtypes,
+    filter,
   ]);
 
   const onRefresh = async () => {
@@ -219,7 +167,7 @@ const JournalList = () => {
       await analytics.track("tap_refresh", {});
       await refetch();
     } catch (err) {
-      console.error("Error refreshing journal:", err);
+      console.error("Error refreshing transactions:", err);
     } finally {
       setIsRefreshing(false);
     }
@@ -227,13 +175,10 @@ const JournalList = () => {
 
   const handleEntryPress = useCallback(
     (entry: JournalDirectiveType) => {
-      if (isJournalTransaction(entry)) {
-        openTransactionDetail(router, entry, "journal");
-        return;
-      }
-      // Non-transaction directives (open/close/balance/…) keep the sheet.
-      setSelectedEntry(entry);
-      bottomSheetRef.current?.snapToIndex(0);
+      // The query is pinned to transactions, so this guard only ever rejects a
+      // surprise from the server — there is no detail screen for other kinds.
+      if (!isJournalTransaction(entry)) return;
+      openTransactionDetail(router, entry, "transactions");
     },
     [router],
   );
@@ -254,25 +199,19 @@ const JournalList = () => {
     <EntryRow entry={item} onPress={() => handleEntryPress(item)} />
   );
 
-  const isInitialLoading = loading && !journalEntries.length;
-  const showEmptyState = !loading && !error && isEmpty && sections.length === 0;
-  const showNoFiltersState =
-    !loading && !error && !isEmpty && sections.length === 0;
+  const isInitialLoading = loading && !transactions.length;
+  const isBlank = !loading && !error && sections.length === 0;
+  // A ledger with no transactions gets the welcome copy even when it holds
+  // other directives — this tab only ever shows transactions.
+  const showEmptyState = isBlank && !search;
+  const showNoResults = isBlank && !!search;
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      <JournalNavBar onAdd={handleQuickAdd} />
+      <TransactionsNavBar onAdd={handleQuickAdd} />
       <SectionList
         ListHeaderComponent={
-          <JournalHeader
-            selectedDirectiveTypes={selectedDirectiveTypes}
-            onDirectiveTypesChange={setSelectedDirectiveTypes}
-            selectedTransactionSubtypes={selectedTransactionSubtypes}
-            onTransactionSubtypesChange={setSelectedTransactionSubtypes}
-            selectedDocumentSubtypes={selectedDocumentSubtypes}
-            onDocumentSubtypesChange={setSelectedDocumentSubtypes}
-            selectedCustomSubtypes={selectedCustomSubtypes}
-            onCustomSubtypesChange={setSelectedCustomSubtypes}
+          <TransactionsHeader
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
           />
@@ -281,10 +220,10 @@ const JournalList = () => {
         sections={isInitialLoading || error ? [] : sections}
         renderSectionHeader={renderSectionHeader}
         renderItem={renderItem}
-        keyExtractor={(item, index) =>
-          `${item.date}-${item.directive_type}-${index}`
-        }
+        keyExtractor={(item, index) => `${item.entry_hash}-${index}`}
         stickySectionHeadersEnabled={false}
+        keyboardDismissMode="on-drag"
+        keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={isRefreshing}
@@ -300,33 +239,29 @@ const JournalList = () => {
         windowSize={10}
         ListEmptyComponent={
           isInitialLoading
-            ? () => (
-                <View style={styles.loadingContainer}>
-                  <ActivityIndicator size="large" color={theme.primary} />
-                </View>
-              )
+            ? TransactionsListSkeleton
             : error
               ? () => (
                   <View style={styles.errorContainer}>
                     <Text style={styles.errorText}>
-                      {t("journalLoadError")}
+                      {t("transactionsLoadError")}
                       {error?.message}
                     </Text>
                   </View>
                 )
               : showEmptyState
-                ? JournalEmptyState
-                : showNoFiltersState
-                  ? JournalNoEntriesForFiltersState
+                ? TransactionsEmptyState
+                : showNoResults
+                  ? NoResultsState
                   : undefined
         }
         ListFooterComponent={
-          isLoadingMore || (loading && journalEntries.length > 0) ? (
+          isLoadingMore ? (
             <View style={styles.loadingFooter}>
               <ActivityIndicator color={theme.primary} />
               <Text style={styles.loadingFooterText}>{t("loadingMore")}</Text>
             </View>
-          ) : !hasMore && journalEntries.length > 0 ? (
+          ) : !hasMore && transactions.length > 0 ? (
             <View style={styles.loadingFooter}>
               <Text style={styles.loadingFooterText}>{t("noMoreEntries")}</Text>
             </View>
@@ -334,29 +269,14 @@ const JournalList = () => {
         }
         showsVerticalScrollIndicator={false}
       />
-      <JournalBottomSheet
-        bottomSheetRef={bottomSheetRef}
-        entry={selectedEntry}
-        ledgerId={ledgerId}
-      />
     </SafeAreaView>
   );
 };
 
-/**
- * Directive-level view of the ledger — Open, Close, Balance, Pad, Price and the
- * rest — for advanced users.
- *
- * No route mounts it: the tab that used to point here now shows
- * `@/screens/transactions-screen`, which is pinned to transactions and is what
- * most people want day to day. The shared pieces (types, row, date header,
- * entry context, display utils) live under `transactions-screen/` and are
- * imported from there; this screen keeps only what is journal-specific.
- */
-export const JournalScreen = () => {
+export const TransactionsScreen = () => {
   return (
     <LedgerGuard>
-      <JournalList />
+      <TransactionList />
     </LedgerGuard>
   );
 };

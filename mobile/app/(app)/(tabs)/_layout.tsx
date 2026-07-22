@@ -16,7 +16,7 @@ export default function TabLayout() {
     accounts: i18n.t("accounts"),
     reports: i18n.t("reports"),
     ledger: i18n.t("ledger"),
-    journal: i18n.t("journal"),
+    transactions: i18n.t("transactions"),
   });
 
   useEffect(() => {
@@ -25,7 +25,7 @@ export default function TabLayout() {
       accounts: i18n.t("accounts"),
       reports: i18n.t("reports"),
       ledger: i18n.t("ledger"),
-      journal: i18n.t("journal"),
+      transactions: i18n.t("transactions"),
     });
   }, [locale]);
 
@@ -33,85 +33,85 @@ export default function TabLayout() {
     <LedgerDrawerProvider>
       <Tabs
         initialRouteName="index"
-      screenOptions={{
-        headerShown: false,
-        tabBarButton: HapticTab,
-        tabBarActiveTintColor: theme.primary,
-        // Without an explicit inactive tint, react-navigation falls back to
-        // its light-theme gray, which is unreadable on the dark tab bar.
-        tabBarInactiveTintColor: theme.black80,
-        tabBarStyle: {
-          backgroundColor: theme.white,
-          borderTopColor: theme.black10,
-        },
-        lazy: false,
-      }}
-    >
-      <Tabs.Screen
-        name="index"
-        options={{
-          title: tabTitles.home,
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name="home"
-              size={28}
-              color={focused ? theme.primary : color}
-            />
-          ),
+        screenOptions={{
+          headerShown: false,
+          tabBarButton: HapticTab,
+          tabBarActiveTintColor: theme.primary,
+          // Without an explicit inactive tint, react-navigation falls back to
+          // its light-theme gray, which is unreadable on the dark tab bar.
+          tabBarInactiveTintColor: theme.black80,
+          tabBarStyle: {
+            backgroundColor: theme.white,
+            borderTopColor: theme.black10,
+          },
+          lazy: false,
         }}
-      />
-      <Tabs.Screen
-        name="accounts"
-        options={{
-          title: tabTitles.accounts,
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name="copy"
-              size={28}
-              color={focused ? theme.primary : color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="journal"
-        options={{
-          title: tabTitles.journal,
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name="document-text"
-              size={28}
-              color={focused ? theme.primary : color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="reports"
-        options={{
-          title: tabTitles.reports,
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name="stats-chart"
-              size={28}
-              color={focused ? theme.primary : color}
-            />
-          ),
-        }}
-      />
-      <Tabs.Screen
-        name="ledger"
-        options={{
-          title: tabTitles.ledger,
-          tabBarIcon: ({ color, focused }) => (
-            <Ionicons
-              name="wallet"
-              size={28}
-              color={focused ? theme.primary : color}
-            />
-          ),
-        }}
-      />
+      >
+        <Tabs.Screen
+          name="index"
+          options={{
+            title: tabTitles.home,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name="home"
+                size={28}
+                color={focused ? theme.primary : color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="accounts"
+          options={{
+            title: tabTitles.accounts,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name="copy"
+                size={28}
+                color={focused ? theme.primary : color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="transactions"
+          options={{
+            title: tabTitles.transactions,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name="document-text"
+                size={28}
+                color={focused ? theme.primary : color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="reports"
+          options={{
+            title: tabTitles.reports,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name="stats-chart"
+                size={28}
+                color={focused ? theme.primary : color}
+              />
+            ),
+          }}
+        />
+        <Tabs.Screen
+          name="ledger"
+          options={{
+            title: tabTitles.ledger,
+            tabBarIcon: ({ color, focused }) => (
+              <Ionicons
+                name="wallet"
+                size={28}
+                color={focused ? theme.primary : color}
+              />
+            ),
+          }}
+        />
       </Tabs>
     </LedgerDrawerProvider>
   );
