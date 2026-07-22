@@ -194,9 +194,9 @@ const AccountTableRow = memo(function AccountTableRow({
   );
 
   // When rows navigate, the chevron owns the toggle so a nested tap collapses
-  // without triggering the row's drill-down.
-  const navigates =
-    Boolean(onPressAccount) && !isCategory && row.account !== "";
+  // without triggering the row's drill-down. Category rows included: they carry a
+  // real root account, so tapping one opens the whole category's detail.
+  const navigates = Boolean(onPressAccount) && row.account !== "";
   const chevron =
     navigates && row.hasChildren ? (
       <TouchableOpacity

@@ -201,6 +201,11 @@ export function selectAccountTree(
 export type AccountCategory = {
   /** Category key — also the i18n key for its label. */
   key: CategoryKey;
+  /**
+   * The ledger's own root account for this category ("Assets", …), for drilling
+   * into. Empty when the hierarchy doesn't name one.
+   */
+  account: string;
   /** Signed rolled-up total for the whole category. */
   value: number;
   /** Top-level accounts beneath it (already compressed). */
@@ -211,6 +216,11 @@ export type AccountCategory = {
  * The five root categories in conventional order, each with its signed total and
  * account tree — the row model behind the Accounts tab's single balance table.
  * A category the ledger doesn't use (zero total, no rows) is omitted.
+ *
+ * `account` is read off the hierarchy rather than derived by capitalizing `key`:
+ * beancount lets a ledger rename its roots (`option "name_assets" "Activa"`), and
+ * a guessed name would drill into an account that doesn't exist. Where the
+ * hierarchy names neither, it stays empty and the row simply isn't navigable.
  */
 export function selectAccountCategories(
   currency: string,
@@ -226,6 +236,7 @@ export function selectAccountCategories(
     const sign = CATEGORY_SIGN[key];
     return {
       key,
+      account: node?.data?.account || node?.label || "",
       value:
         sign * resolveCurrencyBalance(node?.data?.balance_children, currency),
       children: buildTopLevel(

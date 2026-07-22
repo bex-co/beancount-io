@@ -17,6 +17,11 @@ function createHierarchy(
     children: TestChild[];
     /** The category's own rolled-up total, as the backend reports it. */
     total?: Record<string, number | string>;
+    /**
+     * The category's root account name. Defaults to the label, which is what the
+     * backend normally reports; pass "" to simulate a hierarchy that omits it.
+     */
+    account?: string;
   }>,
 ): AccountHierarchyQuery {
   const toChild = (child: TestChild): unknown => ({
@@ -32,7 +37,7 @@ function createHierarchy(
         type: "account",
         label: node.label,
         data: {
-          account: node.label,
+          account: node.account ?? node.label,
           balance: 0,
           balance_children: node.total ?? {},
           children: node.children.map(toChild),
@@ -551,6 +556,43 @@ describe("selectAccountCategories", () => {
     expect(result.map((c) => c.value)).toEqual([
       2677.28, 902.36, -3579.64, 12404, 9726.72,
     ]);
+  });
+
+  it("carries the ledger's own root account for drilling in", () => {
+    const data = createHierarchy([
+      {
+        label: "Assets",
+        total: { USD: 100 },
+        children: [{ account: "Assets:Cash", balance_children: { USD: 100 } }],
+      },
+    ]);
+    expect(selectAccountCategories("USD", data)[0].account).toBe("Assets");
+  });
+
+  it("honors a renamed root instead of guessing one from the key", () => {
+    // beancount's `option "name_assets" "Activa"` — capitalizing the category key
+    // would drill into an "Assets" account this ledger doesn't have.
+    const data = createHierarchy([
+      {
+        label: "Assets",
+        account: "Activa",
+        total: { USD: 100 },
+        children: [{ account: "Activa:Cash", balance_children: { USD: 100 } }],
+      },
+    ]);
+    expect(selectAccountCategories("USD", data)[0].account).toBe("Activa");
+  });
+
+  it("falls back to the label, then to empty, when no account is named", () => {
+    const data = createHierarchy([
+      {
+        label: "Assets",
+        account: "",
+        total: { USD: 100 },
+        children: [{ account: "Assets:Cash", balance_children: { USD: 100 } }],
+      },
+    ]);
+    expect(selectAccountCategories("USD", data)[0].account).toBe("Assets");
   });
 
   it("drops categories the ledger doesn't use", () => {

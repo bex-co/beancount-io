@@ -8,7 +8,11 @@ import type {
 export type TableRow = {
   /** Stable, unique row key (the full beancount account, or the category key). */
   key: string;
-  /** Account to drill into; empty on category rows, which aren't navigable. */
+  /**
+   * Account to drill into — a category row carries its own root account, so it
+   * navigates like any other. Empty only when the ledger names no account for it,
+   * which leaves the row fold-only.
+   */
   account: string;
   /** Row label: an i18n key on category rows, a ready display name below them. */
   label: string;
@@ -111,8 +115,11 @@ export function flattenRows(
       hasChildren &&
       isExpanded(category.key, DEFAULT_EXPANDED.includes(category.key));
     rows.push({
+      // Keyed by category, not by account: this is what the expand/collapse
+      // overrides map is keyed on, and no account row can collide with it (they
+      // are all colon-paths beneath a root).
       key: category.key,
-      account: "",
+      account: category.account,
       label: category.key,
       category: category.key,
       value: category.value,

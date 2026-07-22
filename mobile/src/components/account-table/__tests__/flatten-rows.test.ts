@@ -19,6 +19,7 @@ const node = (
 const categories: AccountCategory[] = [
   {
     key: "assets",
+    account: "Assets",
     value: 2677.28,
     children: [
       node("Assets:US:BofA", 3313.42, [
@@ -31,11 +32,13 @@ const categories: AccountCategory[] = [
   },
   {
     key: "liabilities",
+    account: "Liabilities",
     value: 902.36,
     children: [node("Liabilities:US:Chase:Slate", 902.36)],
   },
   {
     key: "expenses",
+    account: "Expenses",
     value: 9726.72,
     children: [node("Expenses:Food", 9726.72)],
   },
@@ -64,10 +67,25 @@ describe("flattenRows", () => {
   it("labels category rows with their i18n key and accounts with their name", () => {
     const [category, account] = flattenRows(categories, {});
     expect(category.label).toBe("assets");
-    // Category rows aren't navigable — nothing to drill into.
-    expect(category.account).toBe("");
     expect(account.label).toBe("US:BofA");
     expect(account.account).toBe("Assets:US:BofA");
+  });
+
+  it("gives category rows their root account so they drill in like any other", () => {
+    const rows = flattenRows(categories, {});
+    expect(rows.filter((r) => r.depth === 0).map((r) => r.account)).toEqual([
+      "Assets",
+      "Liabilities",
+      "Expenses",
+    ]);
+  });
+
+  it("leaves a category fold-only when the ledger names no account for it", () => {
+    const rows = flattenRows(
+      [{ key: "equity", account: "", value: 10, children: [] }],
+      {},
+    );
+    expect(rows[0].account).toBe("");
   });
 
   it("starts accounts collapsed below the top level", () => {
@@ -144,7 +162,14 @@ describe("flattenRows", () => {
 
   it("handles an all-zero sibling set without dividing by zero", () => {
     const rows = flattenRows(
-      [{ key: "equity", value: 0, children: [node("Equity:Opening", 0)] }],
+      [
+        {
+          key: "equity",
+          account: "Equity",
+          value: 0,
+          children: [node("Equity:Opening", 0)],
+        },
+      ],
       { equity: true },
     );
     expect(rows.map((r) => r.share)).toEqual([0, 0]);

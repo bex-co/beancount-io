@@ -82,6 +82,9 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       color: theme.black60,
     },
+    chartContainer: {
+      paddingHorizontal: 10
+    }
   });
 
 const AccountDetailScreenImpl = ({
@@ -220,7 +223,7 @@ const AccountDetailScreenImpl = ({
       const onPress =
         entry && isJournalTransaction(entry)
           ? () =>
-              openTransactionDetail(router, entry, "account_detail", account)
+            openTransactionDetail(router, entry, "account_detail", account)
           : undefined;
       return (
         <AccountEntryRow
@@ -246,14 +249,16 @@ const AccountDetailScreenImpl = ({
   const listHeader = useMemo(
     () => (
       <>
-        <BalanceChartCard
-          label={t("balance")}
-          currencySymbol={currencySymbol}
-          series={balanceSeries}
-          loading={reportLoading || refreshing}
-          error={Boolean(reportError)}
-          onRangeChange={onBalanceRangeChange}
-        />
+        <View style={styles.chartContainer}>
+          <BalanceChartCard
+            label={t("balance")}
+            currencySymbol={currencySymbol}
+            series={balanceSeries}
+            loading={reportLoading || refreshing}
+            error={Boolean(reportError)}
+            onRangeChange={onBalanceRangeChange}
+          />
+        </View>
         <Text style={styles.sectionTitle}>{t("transactions")}</Text>
       </>
     ),
@@ -271,7 +276,7 @@ const AccountDetailScreenImpl = ({
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
-      <Stack.Screen options={{ title: leafName(account) }} />
+      <Stack.Screen options={{ title: account }} />
       <SectionList
         sections={isInitialLoading || journalError ? [] : sections}
         renderItem={renderItem}
