@@ -5,7 +5,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
-import type { AccountSuggestion } from "@/screens/add-transaction-screen/hooks/suggestion-utils";
+import type { AccountSuggestion } from "@/common/suggestion-utils";
 
 const SKELETON_WIDTHS = [88, 120, 72];
 

@@ -50,5 +50,6 @@ export const AddTransactionCallback = createGlobalFn<() => Promise<void>>(
   "AddTransactionCallback",
 );
 
-export const SelectedLegAccount =
-  createGlobalFn<(value: string) => void>("SelectedLegAccount");
+export const SelectedPostingAccount = createGlobalFn<(value: string) => void>(
+  "SelectedPostingAccount",
+);

@@ -17,5 +17,5 @@ export * from "./ledger-guard";
 export * from "./ledger-drawer";
 export * from "./account-list";
 export * from "./account-table";
-export * from "./split-button";
+export * from "./menu-button";
 export * from "./account-type-icon";

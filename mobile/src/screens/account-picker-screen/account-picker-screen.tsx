@@ -7,16 +7,13 @@ import {
   TouchableOpacity,
 } from "react-native";
 import { fontSizes, useTheme } from "@/common/theme";
-import {
-  OptionTab,
-  useLedgerMeta,
-} from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
+import { OptionTab, useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { ColorTheme } from "@/types/theme-props";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   SelectedAssets,
   SelectedExpenses,
-  SelectedLegAccount,
+  SelectedPostingAccount,
 } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
 import { Ionicons } from "@expo/vector-icons";
@@ -81,12 +78,14 @@ export function AccountPickerScreenComponent(): JSX.Element {
   const onSelected =
     type === "assets"
       ? SelectedAssets.getFn()
-      : type === "leg"
-        ? SelectedLegAccount.getFn()
+      : type === "posting"
+        ? SelectedPostingAccount.getFn()
         : SelectedExpenses.getFn();
 
   const optionTabs: OptionTab[] =
-    type === "assets" || type === "leg" ? assetsOptionTabs : expensesOptionTabs;
+    type === "assets" || type === "posting"
+      ? assetsOptionTabs
+      : expensesOptionTabs;
 
   const theme = useTheme().colorTheme;
   const styles = getStyles(theme);

@@ -1,7 +1,8 @@
 import { StyleSheet } from "react-native";
 import { useMemo, useState } from "react";
+import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
+import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useBalanceSheet } from "@/screens/home-screen/hooks/use-balance-sheet";
 import {
   selectAssetsSeries,
@@ -20,10 +21,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useTheme } from "@/common/theme";
 import {
   DashboardScrollView,
   LedgerDrawerHeader,
-  SplitButton,
+  MenuButton,
 } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 
@@ -33,17 +35,13 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       backgroundColor: theme.white,
     },
-    // The quick-add button isn't a card, so give it the same 16px gap the
-    // cards get from their own marginBottom, keeping the vertical rhythm even.
-    splitButton: {
-      marginBottom: 16,
-    },
   });
 
 export const HomeScreenImpl = (): JSX.Element => {
   const { userId } = useSession();
   const { t } = useTranslations();
   usePageView("home");
+  const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const router = useRouter();
   const ledgerId = useLedgerGuard();
@@ -86,7 +84,49 @@ export const HomeScreenImpl = (): JSX.Element => {
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
-      <LedgerDrawerHeader title={t("home")} />
+      <LedgerDrawerHeader
+        title={t("home")}
+        right={
+          <MenuButton
+            testID="home-add-menu-button"
+            accessibilityLabel={t("quickAdd")}
+            icon={<Ionicons name="add" size={28} color={theme.black} />}
+            onOpen={() => analytics.track("tap_quick_add_menu", {})}
+            items={[
+              {
+                label: t("enterNewTransaction"),
+                icon: (
+                  <MaterialCommunityIcons
+                    name="gesture-tap"
+                    size={22}
+                    color={theme.black80}
+                  />
+                ),
+                onPress: () => {
+                  analytics.track("tap_quick_add", {});
+                  AddTransactionCallback.setFn(onRefresh);
+                  router.navigate({ pathname: "/add-transaction" });
+                },
+              },
+              {
+                label: t("scanReceipt"),
+                icon: (
+                  <Ionicons
+                    name="scan-outline"
+                    size={22}
+                    color={theme.black80}
+                  />
+                ),
+                onPress: () => {
+                  analytics.track("tap_scan_receipt", {});
+                  AddTransactionCallback.setFn(onRefresh);
+                  router.navigate({ pathname: "/receipt-capture" });
+                },
+              },
+            ]}
+          />
+        }
+      />
       <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
         <AccountChartsCard
           currencySymbol={currencySymbol}
@@ -95,35 +135,6 @@ export const HomeScreenImpl = (): JSX.Element => {
           liabilitiesSeries={liabilitiesSeries}
           loading={isLoading}
           error={Boolean(balanceSheetError)}
-        />
-
-        <SplitButton
-          style={styles.splitButton}
-          label={t("quickAdd")}
-          onMenuOpen={() => analytics.track("tap_quick_add_menu", {})}
-          onPress={async () => {
-            analytics.track("tap_quick_add", {});
-            AddTransactionCallback.setFn(onRefresh);
-            router.navigate({ pathname: "/add-transaction" });
-          }}
-          menuItems={[
-            {
-              label: t("multiLegEntry"),
-              onPress: async () => {
-                analytics.track("tap_split_add", {});
-                AddTransactionCallback.setFn(onRefresh);
-                router.navigate({ pathname: "/add-transaction-multi" });
-              },
-            },
-            {
-              label: t("scanReceipt"),
-              onPress: async () => {
-                analytics.track("tap_scan_receipt", {});
-                AddTransactionCallback.setFn(onRefresh);
-                router.navigate({ pathname: "/receipt-capture" });
-              },
-            },
-          ]}
         />
 
         <RecentTransactionsCard

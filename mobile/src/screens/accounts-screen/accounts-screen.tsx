@@ -13,7 +13,7 @@ import { LoadingTile } from "@/components/loading-tile";
 import { AccountTable } from "@/components/account-table";
 import { selectTrialBalanceCategories } from "@/components/account-list";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
-import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
+import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
 
 // Skeleton rows sized to the loaded table's rhythm: each tile plus its vertical

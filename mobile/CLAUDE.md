@@ -79,7 +79,7 @@ Content areas that wait on a query render a skeleton built from `LoadingTile`
 - The skeleton mirrors the loaded layout: same container, paddings, and dividers.
   Give real text fixed `lineHeight`s and size each tile + its vertical margins to
   fill that same line box, so the view doesn't shift a pixel when data lands
-  (see `ListItemSkeleton` in `src/screens/add-transaction-screen/list-item.tsx`,
+  (see `ListItemSkeleton` in `src/screens/multi-postings-transaction/list-item.tsx`,
   the account-picker loading state, and the suggestions card in
   `src/components/text-input-screen/`).
 - Vary tile widths across rows (a const array of widths) so the skeleton reads

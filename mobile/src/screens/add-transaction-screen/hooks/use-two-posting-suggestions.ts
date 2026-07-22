@@ -3,7 +3,7 @@ import {
   deriveTwoPostingSuggestions,
   type JournalEntryLike,
   type SideSuggestions,
-} from "./suggestion-utils";
+} from "@/common/suggestion-utils";
 
 export interface UseTwoPostingSuggestionsArgs {
   ledgerId: string;

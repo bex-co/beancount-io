@@ -1,4 +1,4 @@
-import { PayeeInputScreen } from "@/screens/add-transaction-screen/payee-input-screen";
+import { PayeeInputScreen } from "@/screens/multi-postings-transaction/payee-input-screen";
 import { i18n } from "@/translations";
 import { Stack } from "expo-router";
 

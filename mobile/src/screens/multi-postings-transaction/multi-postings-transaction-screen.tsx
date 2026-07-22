@@ -32,30 +32,30 @@ import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { LoadingTile } from "@/components/loading-tile";
 import {
   AddTransactionCallback,
-  SelectedLegAccount,
+  SelectedPostingAccount,
   SelectedNarration,
   SelectedPayee,
 } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
-import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
-import { useAddEntriesToRemote } from "@/screens/add-transaction-screen/hooks/use-add-entries-to-remote";
-import { ListItem } from "@/screens/add-transaction-screen/list-item";
+import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
+import { useAddEntriesToRemote } from "@/screens/multi-postings-transaction/hooks/use-add-entries-to-remote";
+import { ListItem } from "@/screens/multi-postings-transaction/list-item";
 import {
-  type Leg,
-  addLeg,
+  type Posting,
+  addPosting,
   buildEntryInput,
-  createInitialLegs,
-  makeLeg,
-  removeLeg,
+  createInitialPostings,
+  makePosting,
+  removePosting,
   remainder,
-  toggleLastLegAuto,
-  updateLegAccount,
-  updateLegAmount,
-  validateLegs,
-} from "@/screens/add-transaction-screen/multi-leg-utils";
+  toggleLastPostingAuto,
+  updatePostingAccount,
+  updatePostingAmount,
+  validatePostings,
+} from "./postings-utils";
 
 const SIGN_TOGGLE_SIZE = 28;
-const LEG_ROW_PADDING_V = 14;
+const POSTING_ROW_PADDING_V = 14;
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -67,6 +67,11 @@ const getStyles = (theme: ColorTheme) =>
     doneButtonDisabled: {
       color: theme.black60,
     },
+    // Cards bring their own 12px bottom margin; match it at the top so the
+    // header-to-card gap equals the card-to-card gap.
+    scrollContent: {
+      paddingTop: 12,
+    },
     card: {
       marginHorizontal: 16,
       marginBottom: 12,
@@ -76,31 +81,31 @@ const getStyles = (theme: ColorTheme) =>
       overflow: "hidden",
       backgroundColor: theme.white,
     },
-    legRow: {
+    postingRow: {
       backgroundColor: theme.white,
-      paddingVertical: LEG_ROW_PADDING_V,
+      paddingVertical: POSTING_ROW_PADDING_V,
       paddingHorizontal: 16,
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
     },
-    legRowDivider: {
+    postingRowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.black10,
     },
-    legAccountWrap: {
+    postingAccountWrap: {
       flex: 1,
     },
-    legAccount: {
+    postingAccount: {
       fontSize: fontSizes.lg,
       fontWeight: fontWeights.medium,
       color: theme.text01,
     },
-    legAccountPlaceholder: {
+    postingAccountPlaceholder: {
       color: theme.black40,
       fontWeight: fontWeights.regular,
     },
-    legAmountWrap: {
+    postingAmountWrap: {
       flexDirection: "row",
       alignItems: "center",
       gap: 8,
@@ -122,7 +127,7 @@ const getStyles = (theme: ColorTheme) =>
       lineHeight: 18,
     },
     // TextInput can't be an AmountText; compose the tokens directly.
-    legAmountInput: {
+    postingAmountInput: {
       ...amountStyle,
       fontSize: fontSizes.lg,
       fontWeight: fontWeights.medium,
@@ -130,7 +135,7 @@ const getStyles = (theme: ColorTheme) =>
       padding: 0,
       minWidth: 88,
     },
-    legAutoTag: {
+    postingAutoTag: {
       fontSize: fontSizes.xs,
       color: theme.black60,
       marginLeft: 2,
@@ -141,7 +146,7 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       width: 72,
     },
-    addLegRow: {
+    addPostingRow: {
       paddingVertical: 14,
       paddingHorizontal: 16,
       borderTopWidth: StyleSheet.hairlineWidth,
@@ -150,7 +155,7 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       gap: 6,
     },
-    addLegText: {
+    addPostingText: {
       fontSize: fontSizes.lg,
       color: theme.primary,
       fontWeight: fontWeights.medium,
@@ -170,15 +175,15 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.sm,
       fontWeight: fontWeights.medium,
     },
-    skeletonLegRow: {
-      paddingVertical: LEG_ROW_PADDING_V,
+    skeletonPostingRow: {
+      paddingVertical: POSTING_ROW_PADDING_V,
       paddingHorizontal: 16,
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
-      // Real leg rows always contain the sign-toggle circle (or its
+      // Real posting rows always contain the sign-toggle circle (or its
       // placeholder); match it so rows don't grow when data lands.
-      minHeight: SIGN_TOGGLE_SIZE + 2 * LEG_ROW_PADDING_V,
+      minHeight: SIGN_TOGGLE_SIZE + 2 * POSTING_ROW_PADDING_V,
     },
     skeletonAccountTile: {
       height: 14,
@@ -191,8 +196,8 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-const LegRow = ({
-  leg,
+const PostingRow = ({
+  posting,
   index,
   isLast,
   canRemove,
@@ -201,7 +206,7 @@ const LegRow = ({
   onToggleAuto,
   onRemove,
 }: {
-  leg: Leg;
+  posting: Posting;
   index: number;
   isLast: boolean;
   canRemove: boolean;
@@ -214,9 +219,11 @@ const LegRow = ({
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
 
-  const isNegative = leg.amountInput.startsWith("-");
-  const absValue = isNegative ? leg.amountInput.slice(1) : leg.amountInput;
-  const hasAmount = leg.amountCents !== 0;
+  const isNegative = posting.amountInput.startsWith("-");
+  const absValue = isNegative
+    ? posting.amountInput.slice(1)
+    : posting.amountInput;
+  const hasAmount = posting.amountCents !== 0;
   const amountColor = !hasAmount
     ? theme.black60
     : isNegative
@@ -247,25 +254,25 @@ const LegRow = ({
       renderRightActions={canRemove ? renderDeleteAction : undefined}
       overshootRight={false}
     >
-      <View style={[styles.legRow, index > 0 && styles.legRowDivider]}>
+      <View style={[styles.postingRow, index > 0 && styles.postingRowDivider]}>
         <TouchableOpacity
-          style={styles.legAccountWrap}
+          style={styles.postingAccountWrap}
           activeOpacity={0.6}
           onPress={onPickAccount}
         >
           <Text
             style={[
-              styles.legAccount,
-              !leg.account && styles.legAccountPlaceholder,
+              styles.postingAccount,
+              !posting.account && styles.postingAccountPlaceholder,
             ]}
             numberOfLines={1}
             ellipsizeMode="middle"
           >
-            {leg.account || t("legAccount")}
+            {posting.account || t("postingAccount")}
           </Text>
         </TouchableOpacity>
 
-        <View style={styles.legAmountWrap}>
+        <View style={styles.postingAmountWrap}>
           {hasAmount ? (
             <TouchableOpacity
               style={[styles.signToggle, { backgroundColor: toggleBg }]}
@@ -280,7 +287,7 @@ const LegRow = ({
             <View style={styles.signTogglePlaceholder} />
           )}
           <TextInput
-            style={[styles.legAmountInput, { color: amountColor }]}
+            style={[styles.postingAmountInput, { color: amountColor }]}
             maxFontSizeMultiplier={amountMaxFontSizeMultiplier}
             value={absValue}
             onChangeText={handleAbsValueChange}
@@ -289,9 +296,9 @@ const LegRow = ({
             placeholderTextColor={theme.black60}
             selectTextOnFocus
           />
-          {isLast && leg.isAuto ? (
+          {isLast && posting.isAuto ? (
             <TouchableOpacity onPress={onToggleAuto} hitSlop={8}>
-              <Text style={styles.legAutoTag}>{t("autoLabel")}</Text>
+              <Text style={styles.postingAutoTag}>{t("autoLabel")}</Text>
             </TouchableOpacity>
           ) : null}
         </View>
@@ -300,7 +307,7 @@ const LegRow = ({
   );
 };
 
-export const MultiLegScreenComponent = () => {
+export const MultiPostingsTransactionScreenComponent = () => {
   usePageView("add_transaction_split");
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -320,9 +327,9 @@ export const MultiLegScreenComponent = () => {
   const currency = currencies.length > 0 ? currencies[0] : "USD";
   const currencySymbol = getCurrencySymbol(currency);
 
-  const [legs, setLegs] = useState<Leg[]>([
-    makeLeg({ isAuto: false }),
-    makeLeg({ isAuto: true }),
+  const [postings, setPostings] = useState<Posting[]>([
+    makePosting({ isAuto: false }),
+    makePosting({ isAuto: true }),
   ]);
   const [seeded, setSeeded] = useState(false);
   const [date, setDate] = useState(getFormatDate(new Date()));
@@ -338,31 +345,37 @@ export const MultiLegScreenComponent = () => {
           : assets.length > 1
             ? assets[1]
             : assets[0];
-      setLegs(createInitialLegs(assets[0], secondAccount));
+      setPostings(createInitialPostings(assets[0], secondAccount));
       setSeeded(true);
     }
   }, [seeded, metaLoading, assets]);
 
-  const rem = remainder(legs);
+  const rem = remainder(postings);
   const isBalanced = rem === 0;
-  const validationError = validateLegs(legs);
+  const validationError = validatePostings(postings);
   const canSave = validationError === null;
 
   const handleSave = async () => {
     if (!canSave) {
-      let msg = t("multiLegInvalidBalance");
+      let msg = t("multiPostingsInvalidBalance");
       if (validationError === "missingAccount")
-        msg = t("multiLegMissingAccount");
-      else if (validationError === "zeroAmount") msg = t("multiLegZeroAmount");
+        msg = t("multiPostingsMissingAccount");
+      else if (validationError === "zeroAmount")
+        msg = t("multiPostingsZeroAmount");
       toast.showToast({ message: msg, type: "error" });
       return;
     }
 
-    await analytics.track("tap_split_done", { legCount: legs.length });
+    await analytics.track("tap_split_done", { legCount: postings.length });
 
     try {
       const cancel = toast.showToast({ message: t("saving"), type: "loading" });
-      const entry = buildEntryInput(legs, { date, payee, narration, currency });
+      const entry = buildEntryInput(postings, {
+        date,
+        payee,
+        narration,
+        currency,
+      });
       await mutate({ variables: { entriesInput: [entry], ledgerId } });
       cancel();
 
@@ -384,13 +397,13 @@ export const MultiLegScreenComponent = () => {
     }
   };
 
-  const pickAccountForLeg = (index: number) => {
-    SelectedLegAccount.setFn((account: string) => {
-      setLegs((prev) => updateLegAccount(prev, index, account));
+  const pickAccountForPosting = (index: number) => {
+    SelectedPostingAccount.setFn((account: string) => {
+      setPostings((prev) => updatePostingAccount(prev, index, account));
     });
     router.push({
       pathname: "/(app)/account-picker",
-      params: { type: "leg" },
+      params: { type: "posting" },
     });
   };
 
@@ -401,10 +414,10 @@ export const MultiLegScreenComponent = () => {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
+    <SafeAreaView edges={["bottom"]} style={styles.container}>
       <Stack.Screen
         options={{
-          headerTitle: t("multiLegTitle"),
+          headerTitle: t("multiPostingsTitle"),
           headerRight: () => (
             <Pressable onPress={handleSave} hitSlop={10}>
               <Text
@@ -419,7 +432,10 @@ export const MultiLegScreenComponent = () => {
           ),
         }}
       />
-      <ScrollView keyboardShouldPersistTaps="handled">
+      <ScrollView
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.scrollContent}
+      >
         <View style={styles.card}>
           <ListItem
             title={t("date").toUpperCase()}
@@ -458,7 +474,10 @@ export const MultiLegScreenComponent = () => {
               {[160, 120].map((w, i) => (
                 <View
                   key={i}
-                  style={[styles.skeletonLegRow, i > 0 && styles.legRowDivider]}
+                  style={[
+                    styles.skeletonPostingRow,
+                    i > 0 && styles.postingRowDivider,
+                  ]}
                 >
                   <LoadingTile style={styles.skeletonAccountTile} width={w} />
                   <LoadingTile style={styles.skeletonAmountTile} />
@@ -467,33 +486,35 @@ export const MultiLegScreenComponent = () => {
               ))}
             </>
           ) : (
-            legs.map((leg, i) => (
-              <LegRow
-                key={leg.id}
-                leg={leg}
+            postings.map((posting, i) => (
+              <PostingRow
+                key={posting.id}
+                posting={posting}
                 index={i}
-                isLast={i === legs.length - 1}
-                canRemove={legs.length > 2}
-                onPickAccount={() => pickAccountForLeg(i)}
+                isLast={i === postings.length - 1}
+                canRemove={postings.length > 2}
+                onPickAccount={() => pickAccountForPosting(i)}
                 onChangeAmount={(input) =>
-                  setLegs((prev) => updateLegAmount(prev, i, input))
+                  setPostings((prev) => updatePostingAmount(prev, i, input))
                 }
-                onToggleAuto={() => setLegs((prev) => toggleLastLegAuto(prev))}
-                onRemove={() => setLegs((prev) => removeLeg(prev, i))}
+                onToggleAuto={() =>
+                  setPostings((prev) => toggleLastPostingAuto(prev))
+                }
+                onRemove={() => setPostings((prev) => removePosting(prev, i))}
               />
             ))
           )}
           <TouchableOpacity
-            style={styles.addLegRow}
+            style={styles.addPostingRow}
             activeOpacity={0.6}
-            onPress={() => setLegs((prev) => addLeg(prev))}
+            onPress={() => setPostings((prev) => addPosting(prev))}
           >
             <Ionicons
               name="add-circle-outline"
               size={18}
               color={theme.primary}
             />
-            <Text style={styles.addLegText}>{t("addLeg")}</Text>
+            <Text style={styles.addPostingText}>{t("addPosting")}</Text>
           </TouchableOpacity>
         </View>
 
@@ -524,12 +545,12 @@ export const MultiLegScreenComponent = () => {
   );
 };
 
-export const MultiLegScreen = memo(function () {
+export const MultiPostingsTransactionScreen = memo(function () {
   return (
     <LedgerGuard>
-      <MultiLegScreenComponent />
+      <MultiPostingsTransactionScreenComponent />
     </LedgerGuard>
   );
 });
 
-MultiLegScreen.displayName = "MultiLegScreen";
+MultiPostingsTransactionScreen.displayName = "MultiPostingsTransactionScreen";

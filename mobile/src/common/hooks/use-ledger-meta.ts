@@ -3,7 +3,7 @@ import {
   getAccountsAndCurrency,
   handleOptions,
   type OptionTab,
-} from "./ledger-meta-utils";
+} from "../ledger-meta-utils";
 
 export type { OptionTab };
 

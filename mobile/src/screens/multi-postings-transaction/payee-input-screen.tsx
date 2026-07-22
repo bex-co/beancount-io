@@ -11,7 +11,7 @@ import { TextInputScreen } from "@/components";
 import {
   twoPostingPayees,
   type JournalEntryLike,
-} from "@/screens/add-transaction-screen/hooks/suggestion-utils";
+} from "@/common/suggestion-utils";
 
 export function PayeeInputScreen(): JSX.Element {
   const { payee, simpleOnly } = useLocalSearchParams<{

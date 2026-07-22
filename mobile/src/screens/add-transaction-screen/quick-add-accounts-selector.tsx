@@ -7,7 +7,7 @@ import {
   View,
 } from "react-native";
 import { useReactiveVar } from "@apollo/client";
-import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
+import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { analytics } from "@/common/analytics";
 import { fontSizes } from "@/common/theme";
 import { i18n } from "@/translations";
@@ -21,7 +21,10 @@ import {
 } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
-import { ListItem, ListItemSkeleton } from "./list-item";
+import {
+  ListItem,
+  ListItemSkeleton,
+} from "@/screens/multi-postings-transaction/list-item";
 import { useTwoPostingSuggestions } from "./hooks/use-two-posting-suggestions";
 import { SuggestionChips } from "./suggestion-chips";
 

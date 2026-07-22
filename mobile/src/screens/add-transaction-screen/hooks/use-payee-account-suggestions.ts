@@ -10,7 +10,7 @@ import {
   type AccountTypes,
   type SideSuggestions,
   type SuggestionSource,
-} from "./suggestion-utils";
+} from "@/common/suggestion-utils";
 
 export interface UsePayeeAccountSuggestionsArgs {
   ledgerId: string;

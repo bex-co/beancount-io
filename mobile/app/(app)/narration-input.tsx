@@ -1,4 +1,4 @@
-import { NarrationInputScreen } from "@/screens/add-transaction-screen/narration-input-screen";
+import { NarrationInputScreen } from "@/screens/multi-postings-transaction/narration-input-screen";
 import { i18n } from "@/translations";
 import { Stack } from "expo-router";
 

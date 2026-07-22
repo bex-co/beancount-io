@@ -12,7 +12,7 @@ import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { Tabs } from "@/components/tabs";
 import { TimeRangePills } from "@/components/time-range-pills";
 import { RANGE_LABEL_KEYS, TIME_RANGES, TimeRange } from "@/common/series-util";
-import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
+import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useIncomeStatement } from "./hooks/use-income-statement";
 import { SpendingReport } from "./components/spending-report";
 import { IncomeReport } from "./components/income-report";

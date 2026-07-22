@@ -1,5 +1,5 @@
 import { LedgerMeta } from "@/generated-graphql/graphql";
-import { getAccountsAndCurrency, handleOptions } from "../ledger-meta-utils";
+import { getAccountsAndCurrency, handleOptions } from "../../ledger-meta-utils";
 
 describe("use-ledger-meta helper functions", () => {
   describe("getAccountsAndCurrency", () => {

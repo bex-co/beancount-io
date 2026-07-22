@@ -22,9 +22,9 @@ import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { useSession } from "@/common/hooks/use-session";
-import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
+import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import {
-  SelectedLegAccount,
+  SelectedPostingAccount,
   AddTransactionCallback,
 } from "@/common/globalFnFactory";
 import { getFormatDate } from "@/common/format-util";
@@ -287,13 +287,13 @@ const ReviewForm = ({
 
   const openAccountPicker = (slot: "source" | "target") => {
     pendingSlot.current = slot;
-    SelectedLegAccount.setFn((account: string) => {
+    SelectedPostingAccount.setFn((account: string) => {
       if (pendingSlot.current === "source") setSourceAccount(account);
       else setTargetAccount(account);
     });
     router.navigate({
       pathname: "/(app)/account-picker",
-      params: { type: "leg" },
+      params: { type: "posting" },
     });
   };
 

@@ -21,7 +21,7 @@ import { getCurrencySymbol } from "@/common/currency-util";
 import { TimeRange } from "@/common/series-util";
 import { BalanceChartCard } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
-import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
+import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useAccountReport } from "@/screens/accounts-screen/hooks/use-account-report";
 import {
   ACCOUNT_JOURNAL_PAGE_SIZE,

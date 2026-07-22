@@ -9,15 +9,15 @@ import {
 import { AmountText } from "@/components/amount-text";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getFormatDate } from "@/common/format-util";
-import { useAddEntriesToRemote } from "@/screens/add-transaction-screen/hooks/use-add-entries-to-remote";
-import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
+import { useAddEntriesToRemote } from "@/screens/multi-postings-transaction/hooks/use-add-entries-to-remote";
+import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useSession } from "@/common/hooks/use-session";
 import { getCurrencySymbol } from "@/common/currency-util";
 import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { ListItem } from "@/screens/add-transaction-screen/list-item";
+import { ListItem } from "@/screens/multi-postings-transaction/list-item";
 import { SuggestionChips } from "@/screens/add-transaction-screen/suggestion-chips";
 import {
   usePayeeAccountSuggestions,
