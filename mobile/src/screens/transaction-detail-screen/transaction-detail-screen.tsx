@@ -20,7 +20,7 @@ import { useThemeStyle, usePageView, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import {
-  AccountHierarchyDocument,
+  TrialBalanceDocument,
   AccountJournalDocument,
   AccountReportDocument,
   BalanceSheetDocument,
@@ -176,7 +176,7 @@ const TransactionDetailImpl = ({
         HomeChartsDocument,
         AccountJournalDocument,
         AccountReportDocument,
-        AccountHierarchyDocument,
+        TrialBalanceDocument,
         BalanceSheetDocument,
       ],
       awaitRefetchQueries: false,

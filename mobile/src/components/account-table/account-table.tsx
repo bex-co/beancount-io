@@ -15,7 +15,10 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { formatSignedMoney } from "@/common/number-utils";
 import { AmountText } from "@/components/amount-text";
-import type { AccountCategory } from "@/components/account-list/select-account-list";
+import {
+  CATEGORY_SIGN,
+  type AccountCategory,
+} from "@/components/account-list/select-account-list";
 import { flattenRows, type TableRow } from "./flatten-rows";
 
 /**
@@ -169,15 +172,20 @@ const AccountTableRow = memo(function AccountTableRow({
         ? styles.nameTop
         : styles.nameChild,
   ];
+  // Balances read exactly as the ledger holds them, so Liabilities, Equity and
+  // Income are normally negative — colouring every negative red would paint three
+  // categories as problems. Flag only a balance running *against* its category:
+  // an overdrawn asset, a refunded expense, a credit-balance card. Same error red
+  // the journal and posting rows use.
+  const againstType =
+    row.value !== 0 && Math.sign(row.value) !== CATEGORY_SIGN[row.category];
   const valueStyle = [
     isCategory
       ? styles.valueCategory
       : row.depth === 1
         ? styles.value
         : styles.valueChild,
-    // Negatives take the same error red the journal and posting rows use, so a
-    // credit-balance asset or a refunded expense is visible at a glance.
-    row.value < 0 && { color: theme.error },
+    againstType && { color: theme.error },
   ];
 
   const chevronIcon = row.hasChildren ? (

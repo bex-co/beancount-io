@@ -8,14 +8,6 @@ import { gql } from '@apollo/client';
 import * as Apollo from '@apollo/client';
 export * from "./types";
 const defaultOptions = {} as const;
-export type AccountHierarchyQueryVariables = Exact<{
-  userId: string;
-  ledgerId?: string | null | undefined;
-}>;
-
-
-export type AccountHierarchyQuery = { accountHierarchy: { success: boolean, data: Array<{ type: string, label: string, data: { account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string>, children: Array<{ account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string>, children: Array<{ account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string>, children: Array<{ account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string>, children: Array<{ account: string, balance: Record<string, number | string>, balance_children: Record<string, number | string> }> }> }> }> } }> } };
-
 export type AccountJournalQueryVariables = Exact<{
   ledgerId: string;
   query: Types.AccountJournalQueryInput;
@@ -29,6 +21,7 @@ export type AccountReportQueryVariables = Exact<{
   accountName: string;
   interval?: string | null | undefined;
   time?: string | null | undefined;
+  conversion: string;
 }>;
 
 
@@ -45,6 +38,7 @@ export type AddEntriesMutation = { addEntries: { data: string | null, success: b
 export type BalanceSheetQueryVariables = Exact<{
   ledgerId: string;
   time?: string | null | undefined;
+  conversion: string;
 }>;
 
 
@@ -290,6 +284,15 @@ export type SuggestTransactionCategoriesWithLlmQueryVariables = Exact<{
 
 export type SuggestTransactionCategoriesWithLlmQuery = { suggestTransactionCategoriesWithLLM: Array<{ targetAccount: string, confidence: number, source: string }> };
 
+export type TrialBalanceQueryVariables = Exact<{
+  ledgerId: string;
+  time?: string | null | undefined;
+  conversion: string;
+}>;
+
+
+export type TrialBalanceQuery = { getLedgerTrialBalance: { assetsHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean }, liabilitiesHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean }, equityHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean }, incomeHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean }, expensesHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean } } };
+
 export type UpdateLedgerEntrySourceSliceMutationVariables = Exact<{
   input: Types.UpdateSourceSliceInput;
   ledgerId: string;
@@ -317,79 +320,6 @@ export type UserProfileQueryVariables = Exact<{
 export type UserProfileQuery = { userProfile: { email: string, emailReportStatus: Types.ReportStatus | null } | null };
 
 
-export const AccountHierarchyDocument = gql`
-    query AccountHierarchy($userId: String!, $ledgerId: String) {
-  accountHierarchy(userId: $userId, ledgerId: $ledgerId) {
-    data {
-      type
-      label
-      data {
-        account
-        balance
-        balance_children
-        children {
-          account
-          balance
-          balance_children
-          children {
-            account
-            balance
-            balance_children
-            children {
-              account
-              balance
-              balance_children
-              children {
-                account
-                balance
-                balance_children
-              }
-            }
-          }
-        }
-      }
-    }
-    success
-  }
-}
-    `;
-
-/**
- * __useAccountHierarchyQuery__
- *
- * To run a query within a React component, call `useAccountHierarchyQuery` and pass it any options that fit your needs.
- * When your component renders, `useAccountHierarchyQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useAccountHierarchyQuery({
- *   variables: {
- *      userId: // value for 'userId'
- *      ledgerId: // value for 'ledgerId'
- *   },
- * });
- */
-export function useAccountHierarchyQuery(baseOptions: Apollo.QueryHookOptions<AccountHierarchyQuery, AccountHierarchyQueryVariables> & ({ variables: AccountHierarchyQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<AccountHierarchyQuery, AccountHierarchyQueryVariables>(AccountHierarchyDocument, options);
-      }
-export function useAccountHierarchyLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<AccountHierarchyQuery, AccountHierarchyQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<AccountHierarchyQuery, AccountHierarchyQueryVariables>(AccountHierarchyDocument, options);
-        }
-// @ts-ignore
-export function useAccountHierarchySuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<AccountHierarchyQuery, AccountHierarchyQueryVariables>): Apollo.UseSuspenseQueryResult<AccountHierarchyQuery, AccountHierarchyQueryVariables>;
-export function useAccountHierarchySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<AccountHierarchyQuery, AccountHierarchyQueryVariables>): Apollo.UseSuspenseQueryResult<AccountHierarchyQuery | undefined, AccountHierarchyQueryVariables>;
-export function useAccountHierarchySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<AccountHierarchyQuery, AccountHierarchyQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<AccountHierarchyQuery, AccountHierarchyQueryVariables>(AccountHierarchyDocument, options);
-        }
-export type AccountHierarchyQueryHookResult = ReturnType<typeof useAccountHierarchyQuery>;
-export type AccountHierarchyLazyQueryHookResult = ReturnType<typeof useAccountHierarchyLazyQuery>;
-export type AccountHierarchySuspenseQueryHookResult = ReturnType<typeof useAccountHierarchySuspenseQuery>;
-export type AccountHierarchyQueryResult = Apollo.QueryResult<AccountHierarchyQuery, AccountHierarchyQueryVariables>;
 export const AccountJournalDocument = gql`
     query AccountJournal($ledgerId: String!, $query: AccountJournalQueryInput!) {
   getLedgerAccountJournal(ledgerId: $ledgerId, query: $query) {
@@ -442,12 +372,13 @@ export type AccountJournalLazyQueryHookResult = ReturnType<typeof useAccountJour
 export type AccountJournalSuspenseQueryHookResult = ReturnType<typeof useAccountJournalSuspenseQuery>;
 export type AccountJournalQueryResult = Apollo.QueryResult<AccountJournalQuery, AccountJournalQueryVariables>;
 export const AccountReportDocument = gql`
-    query AccountReport($ledgerId: String!, $accountName: String!, $interval: String, $time: String) {
+    query AccountReport($ledgerId: String!, $accountName: String!, $interval: String, $time: String, $conversion: String!) {
   getLedgerAccountReport(
     ledgerId: $ledgerId
     accountName: $accountName
     interval: $interval
     time: $time
+    conversion: $conversion
   ) {
     linechartData {
       date
@@ -481,6 +412,7 @@ export const AccountReportDocument = gql`
  *      accountName: // value for 'accountName'
  *      interval: // value for 'interval'
  *      time: // value for 'time'
+ *      conversion: // value for 'conversion'
  *   },
  * });
  */
@@ -539,8 +471,8 @@ export type AddEntriesMutationHookResult = ReturnType<typeof useAddEntriesMutati
 export type AddEntriesMutationResult = Apollo.MutationResult<AddEntriesMutation>;
 export type AddEntriesMutationOptions = Apollo.BaseMutationOptions<AddEntriesMutation, AddEntriesMutationVariables>;
 export const BalanceSheetDocument = gql`
-    query BalanceSheet($ledgerId: String!, $time: String) {
-  getLedgerBalanceSheet(ledgerId: $ledgerId, time: $time) {
+    query BalanceSheet($ledgerId: String!, $time: String, $conversion: String!) {
+  getLedgerBalanceSheet(ledgerId: $ledgerId, time: $time, conversion: $conversion) {
     netWorthData {
       date
       balance
@@ -585,6 +517,7 @@ export const BalanceSheetDocument = gql`
  *   variables: {
  *      ledgerId: // value for 'ledgerId'
  *      time: // value for 'time'
+ *      conversion: // value for 'conversion'
  *   },
  * });
  */
@@ -2060,6 +1993,85 @@ export type SuggestTransactionCategoriesWithLlmQueryHookResult = ReturnType<type
 export type SuggestTransactionCategoriesWithLlmLazyQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesWithLlmLazyQuery>;
 export type SuggestTransactionCategoriesWithLlmSuspenseQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesWithLlmSuspenseQuery>;
 export type SuggestTransactionCategoriesWithLlmQueryResult = Apollo.QueryResult<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>;
+export const TrialBalanceDocument = gql`
+    query TrialBalance($ledgerId: String!, $time: String, $conversion: String!) {
+  getLedgerTrialBalance(ledgerId: $ledgerId, time: $time, conversion: $conversion) {
+    assetsHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+    liabilitiesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+    equityHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+    incomeHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+    expensesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+    }
+  }
+}
+    `;
+
+/**
+ * __useTrialBalanceQuery__
+ *
+ * To run a query within a React component, call `useTrialBalanceQuery` and pass it any options that fit your needs.
+ * When your component renders, `useTrialBalanceQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useTrialBalanceQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      time: // value for 'time'
+ *      conversion: // value for 'conversion'
+ *   },
+ * });
+ */
+export function useTrialBalanceQuery(baseOptions: Apollo.QueryHookOptions<TrialBalanceQuery, TrialBalanceQueryVariables> & ({ variables: TrialBalanceQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<TrialBalanceQuery, TrialBalanceQueryVariables>(TrialBalanceDocument, options);
+      }
+export function useTrialBalanceLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<TrialBalanceQuery, TrialBalanceQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<TrialBalanceQuery, TrialBalanceQueryVariables>(TrialBalanceDocument, options);
+        }
+// @ts-ignore
+export function useTrialBalanceSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<TrialBalanceQuery, TrialBalanceQueryVariables>): Apollo.UseSuspenseQueryResult<TrialBalanceQuery, TrialBalanceQueryVariables>;
+export function useTrialBalanceSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TrialBalanceQuery, TrialBalanceQueryVariables>): Apollo.UseSuspenseQueryResult<TrialBalanceQuery | undefined, TrialBalanceQueryVariables>;
+export function useTrialBalanceSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<TrialBalanceQuery, TrialBalanceQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<TrialBalanceQuery, TrialBalanceQueryVariables>(TrialBalanceDocument, options);
+        }
+export type TrialBalanceQueryHookResult = ReturnType<typeof useTrialBalanceQuery>;
+export type TrialBalanceLazyQueryHookResult = ReturnType<typeof useTrialBalanceLazyQuery>;
+export type TrialBalanceSuspenseQueryHookResult = ReturnType<typeof useTrialBalanceSuspenseQuery>;
+export type TrialBalanceQueryResult = Apollo.QueryResult<TrialBalanceQuery, TrialBalanceQueryVariables>;
 export const UpdateLedgerEntrySourceSliceDocument = gql`
     mutation updateLedgerEntrySourceSlice($input: UpdateSourceSliceInput!, $ledgerId: String!) {
   updateLedgerEntrySourceSlice(input: $input, ledgerId: $ledgerId) {

@@ -18,7 +18,6 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { themeVar } from "@/common/vars";
 import { getCurrencySymbol } from "@/common/currency-util";
-import { leafName } from "@/common/account-util";
 import { TimeRange } from "@/common/series-util";
 import { BalanceChartCard } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -83,8 +82,8 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black60,
     },
     chartContainer: {
-      paddingHorizontal: 10
-    }
+      paddingHorizontal: 10,
+    },
   });
 
 const AccountDetailScreenImpl = ({
@@ -223,7 +222,7 @@ const AccountDetailScreenImpl = ({
       const onPress =
         entry && isJournalTransaction(entry)
           ? () =>
-            openTransactionDetail(router, entry, "account_detail", account)
+              openTransactionDetail(router, entry, "account_detail", account)
           : undefined;
       return (
         <AccountEntryRow

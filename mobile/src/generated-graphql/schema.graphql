@@ -3,12 +3,6 @@ schema {
   mutation: Mutation
 }
 
-type AcceptLedgerInvitationResult {
-  ledgerId: String
-  permission: LedgerInvitationAccess
-  state: LedgerInvitationState!
-}
-
 type AccountBalance {
   account: String!
   balance: JSONObject!
@@ -440,10 +434,6 @@ type IntervalTotalItem {
   date: String!
 }
 
-type InvitationSignUpResponse {
-  expireAt: String!
-}
-
 """
 The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf).
 """
@@ -671,48 +661,6 @@ type LedgerFileContent {
   type: String!
 }
 
-"""View or Edit access for a shared ledger invitation"""
-enum LedgerInvitationAccess {
-  EDIT
-  VIEW
-}
-
-type LedgerInvitationDeliveryResult {
-  deliverySucceeded: Boolean!
-  invitation: PendingLedgerInvitation!
-}
-
-enum LedgerInvitationDeliveryStatus {
-  DELIVERED
-  FAILED
-  PENDING
-}
-
-type LedgerInvitationPresentation {
-  acceptedAt: DateTimeISO
-  expiresAt: DateTimeISO
-  inviterName: String
-  ledgerId: String
-  ledgerName: String
-  ledgerOwner: String
-  maskedEmail: String
-  permission: LedgerInvitationAccess
-  signupPending: Boolean
-  state: LedgerInvitationState!
-}
-
-enum LedgerInvitationState {
-  ACCEPTED
-  BLOCKED
-  EXPIRED
-  INVALID
-  LEDGER_DELETED
-  READY
-  RETRY
-  REVOKED
-  WRONG_ACCOUNT
-}
-
 type LedgerMeta {
   accounts: [String!]!
   currencies: [String!]!
@@ -798,12 +746,9 @@ type LogoutResponse {
 }
 
 type Mutation {
-  acceptLedgerInvitation: AcceptLedgerInvitationResult!
   addEntries(entriesInput: [EntryInput!]!, ledgerId: String): AddEntryResponse!
-  addOrUpdateLedgerCollaborator(collaborator: String!, ledgerId: String!, permission: LedgerInvitationAccess): AddCollaboratorResponse!
-  addPushToken(token: String!): Boolean! @deprecated(reason: "Push token tracking has been removed. This endpoint returns true for API compatibility but does not store tokens.")
+  addOrUpdateLedgerCollaborator(collaborator: String!, ledgerId: String!, permission: String): AddCollaboratorResponse!
   approvePullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
-  beginLedgerInvitation(secret: String!): LedgerInvitationPresentation!
   """Add one or more entries to a specific ledger (atomic)"""
   bulkEntries(entries: [AddEntryInput!]!, ledgerId: String!): AddLedgerEntryResponse!
   cancelSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
@@ -823,7 +768,6 @@ type Mutation {
   createLedger(description: String, name: String!, private: Boolean, template: LedgerTemplate): Ledger!
   """Create a new file in a specific ledger"""
   createLedgerFile(content: String!, ledgerId: String!, message: String, path: String!): LedgerFileContent!
-  createLedgerInvitation(email: String!, ledgerId: String!, permission: LedgerInvitationAccess!): LedgerInvitationDeliveryResult!
   createOneTimeToken: CreateOneTimeTokenResponse!
   """Create a Plaid Link token for connecting bank accounts"""
   createPlaidLinkToken(ledgerId: String!): PlaidLinkToken!
@@ -897,14 +841,11 @@ type Mutation {
   rejectPullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
   """Rename a file in a specific ledger"""
   renameLedgerFile(ledgerId: String!, message: String, newPath: String!, oldPath: String!): RenameLedgerFileResponse!
-  resendLedgerInvitation(invitationId: String!): LedgerInvitationDeliveryResult!
   """Reset user password using a token from the password reset email"""
   resetPassword(newPassword: String!, token: String!): ResetPasswordResponse!
   resumeSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
-  revokeLedgerInvitation(invitationId: String!): RevokeLedgerInvitationResult!
   """Send a password reset link to the user's email"""
   sendForgotPasswordLink(email: String!): SendForgotPasswordLinkResponse!
-  sendPushNotification(data: JSONObject!, message: String!, pushToken: String!): Boolean! @deprecated(reason: "Push notification functionality has been removed. This endpoint returns false for API compatibility but does not send notifications.")
   signIn(email: String!, password: String!): TokenAuthResponse!
   signInWithOneTimeToken(token: String!): TokenAuthResponse!
   """
@@ -913,10 +854,15 @@ type Mutation {
   signUp(email: String!, firstName: String!, inviteBy: String, inviteSrc: String, lastName: String!, password: String!, username: String, withDefaultLedger: Boolean): SignUpResponse!
   """Star a specific ledger"""
   starLedger(ledgerId: String!): StarLedgerResponse!
-  """Start signup using the email bound to the active ledger invitation"""
-  startInvitationSignUp(firstName: String!, lastName: String!, password: String!, username: String): InvitationSignUpResponse!
   """Submit Plaid transactions with user-reviewed target accounts to ledger"""
-  submitPlaidTransactionsToLedger(ledgerId: String!, transactions: [PlaidTransactionSubmitInput!]!): PlaidSubmitResult!
+  submitPlaidTransactionsToLedger(
+    """
+    Existing ledger file to write the transactions to; defaults to main.bean
+    """
+    filename: String
+    ledgerId: String!
+    transactions: [PlaidTransactionSubmitInput!]!
+  ): PlaidSubmitResult!
   """Manually sync transactions for a specific Plaid Item"""
   syncPlaidTransactions(itemId: String!, ledgerId: String!): PlaidSyncResult!
   """Unfollow a user"""
@@ -940,12 +886,8 @@ type Mutation {
   updatePlaidAccountMapping(accountId: String!, ledgerAccount: String!, ledgerId: String!): Boolean!
   """Update user profile (firstName and lastName)"""
   updateProfile(firstName: String, lastName: String): UserProfileResponse!
-  """update or insert user report subscribe status"""
-  updateReportSubscribe(status: ReportStatus!, userId: String!): UpdateReportSubscribeResponse @deprecated(reason: "Report subscription tracking has been removed. This endpoint returns success for API compatibility but does not store subscription status.")
   updateUsername(username: String!): UserProfileResponse!
   upgradeSubscription(clientId: String!, priceId: String!): UpgradeSubscriptionResult!
-  """Verify OTP and create the invitation-bound user account"""
-  verifyInvitationSignUpOtp(otp: String!): TokenAuthResponse!
   """Verify OTP and create user account to complete signup"""
   verifySignUpOtp(otp: String!, sessionId: String!): TokenAuthResponse!
 }
@@ -984,17 +926,6 @@ type ParsedRow {
   date: String!
   description: String!
   payee: String!
-}
-
-type PendingLedgerInvitation {
-  deliveryStatus: LedgerInvitationDeliveryStatus!
-  expiresAt: DateTimeISO!
-  id: String!
-  inviterName: String!
-  maskedEmail: String!
-  nextResendAt: DateTimeISO!
-  permission: LedgerInvitationAccess!
-  sentAt: DateTimeISO!
 }
 
 type Permission {
@@ -1268,6 +1199,10 @@ type Query {
   getLedgerPayees(ledgerId: String!): [String!]!
   """Get plaintext journal in beancount format"""
   getLedgerPlaintextJournal(ledgerId: String!, query: PlaintextJournalQueryInput): PlaintextJournalResponse!
+  """
+  Get the Beancount source files of a ledger (main.bean plus every file it includes)
+  """
+  getLedgerSourceFiles(ledgerId: String!): [String!]!
   """Get the tags of a specific ledger"""
   getLedgerTags(ledgerId: String!): [String!]!
   """Get the trial balance of a specific ledger"""
@@ -1346,19 +1281,16 @@ type Query {
     """Sort order: asc or desc"""
     sortOrder: String
   ): JournalEntriesResponse!
-  ledgerInvitationStatus: LedgerInvitationPresentation!
   """Get a specific ledger"""
   ledgerMeta(ledgerId: String, userId: String!): LedgerMetaResponse!
   listCommits(branch: String! = "main", ledgerId: String!, limit: Int! = 30, page: Int! = 1): [CommitListItem!]!
   listLedgerCollaborators(ledgerId: String!, limit: Float, page: Float): [CollaboratorUser!]!
   """List all ledgers for the current user"""
   listLedgers(limit: Float, page: Float): [Ledger!]!
-  listPendingLedgerInvitations(ledgerId: String!): [PendingLedgerInvitation!]!
   """List all public keys for the current user"""
   listPublicKeys(limit: Float, page: Float): [PublicKey!]!
   """List all user owned ledgers for the current user"""
   listUserOwnedLedgers(limit: Float, page: Float): [Ledger!]!
-  paymentHistory: [Receipt!]! @deprecated(reason: "Receipt tracking has been removed. This endpoint returns an empty array for API compatibility but does not track receipts.")
   """Execute a shell query on a ledger"""
   queryShell(ledgerId: String!, query: String!): QueryResult
   """Execute a shell query on a ledger and return plain text output"""
@@ -1412,18 +1344,6 @@ type QueryShellTextResult {
   text: String!
 }
 
-type Receipt {
-  _id: String
-  amount: String!
-  chargeId: String
-  createAt: DateTimeISO
-  currency: String!
-  estimatedIotx: Float
-  fulfilledHash: String
-  paymentEmail: String!
-  userId: String!
-}
-
 type ReceiptParseResult {
   amount: Float!
   date: String!
@@ -1466,10 +1386,6 @@ type RepositoryListResponse {
 }
 
 type ResetPasswordResponse {
-  success: Boolean!
-}
-
-type RevokeLedgerInvitationResult {
   success: Boolean!
 }
 
@@ -1595,10 +1511,6 @@ type TrialBalanceData {
   expensesHierarchyData: SerializableTreeNode!
   incomeHierarchyData: SerializableTreeNode!
   liabilitiesHierarchyData: SerializableTreeNode!
-}
-
-type UpdateReportSubscribeResponse {
-  success: Boolean!
 }
 
 input UpdateSourceSliceInput {

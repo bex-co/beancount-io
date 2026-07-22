@@ -11,10 +11,10 @@ import { getCurrencySymbol } from "@/common/currency-util";
 import { LedgerDrawerHeader } from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
 import { AccountTable } from "@/components/account-table";
-import { selectAccountCategories } from "@/components/account-list";
+import { selectTrialBalanceCategories } from "@/components/account-list";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
-import { useAccountHierarchy } from "@/screens/home-screen/hooks/use-account-hierarchy";
+import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
 
 // Skeleton rows sized to the loaded table's rhythm: each tile plus its vertical
 // margins fills the same 38px line box a real row occupies, so nothing shifts
@@ -67,14 +67,16 @@ const AccountsScreenImpl = (): JSX.Element => {
   const currency = currencies.length > 0 ? currencies[0] : "USD";
   const currencySymbol = getCurrencySymbol(currency);
 
+  // Commodity holdings are valued, so they count toward Assets rather than being
+  // dropped for lack of a cash balance.
   const {
     data: accountData,
     loading: accountsLoading,
     refetch: accountsRefetch,
-  } = useAccountHierarchy(userId, currency, ledgerId);
+  } = useTrialBalance(ledgerId);
 
   const categories = useMemo(
-    () => selectAccountCategories(currency, accountData),
+    () => selectTrialBalanceCategories(currency, accountData),
     [currency, accountData],
   );
 

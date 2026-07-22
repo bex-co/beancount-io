@@ -1,5 +1,13 @@
-query BalanceSheet($ledgerId: String!, $time: String) {
-  getLedgerBalanceSheet(ledgerId: $ledgerId, time: $time) {
+query BalanceSheet(
+  $ledgerId: String!
+  $time: String
+  $conversion: String!
+) {
+  getLedgerBalanceSheet(
+    ledgerId: $ledgerId
+    time: $time
+    conversion: $conversion
+  ) {
     netWorthData {
       date
       balance

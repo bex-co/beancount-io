@@ -1,4 +1,7 @@
-import { selectAccountTreeFromRoot } from "../../../components/account-list/select-account-list";
+import {
+  CATEGORY_SIGN,
+  selectAccountTreeFromRoot,
+} from "../../../components/account-list/select-account-list";
 import type {
   AccountNode,
   CategoryKey,
@@ -156,7 +159,11 @@ export function selectRangedAccountTree(
     balanceChildren: {},
     children: topLevel,
   };
-  const tree = selectAccountTreeFromRoot(currency, fakeRoot, category);
+  const tree = selectAccountTreeFromRoot(
+    currency,
+    fakeRoot,
+    CATEGORY_SIGN[category],
+  );
   const total = tree.reduce((sum, node) => sum + node.value, 0);
   return { tree, total };
 }

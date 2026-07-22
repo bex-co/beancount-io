@@ -1,4 +1,3 @@
-import { AccountHierarchyQuery } from "@/generated-graphql/graphql";
 import { resolveCurrencyBalance } from "../../common/balance-util";
 import { leafName } from "../../common/account-util";
 
@@ -27,12 +26,21 @@ export const CATEGORY_KEYS: readonly CategoryKey[] = [
 ] as const;
 
 /**
- * Display sign per category. Beancount stores Liabilities, Income and Equity as
- * credits (negative), so each is negated **once at the category root** — debt and
- * earnings then read positive while every descendant keeps its real sign relative
- * to it. Negating per node instead (the old `Math.abs`) corrupts any subtree
- * holding a negative: a margin-negative `Assets:…:Cash` flipped positive and its
- * siblings no longer summed to their parent.
+ * The direction a category's balance naturally runs. Beancount stores
+ * Liabilities, Income and Equity as credits, so their balances are normally
+ * negative; Assets and Expenses are debits and normally positive. Two uses:
+ *
+ * - The Reports tab negates by it, so an income or expense breakdown reads as a
+ *   positive magnitude ("you earned $63k") — fava's
+ *   `invert-income-liabilities-equity` convention.
+ * - The Accounts tab shows balances exactly as the ledger holds them, matching
+ *   the web dashboard, and uses this only to spot a value running *against* its
+ *   category — an overdrawn asset, a refunded expense — which earns the error color.
+ *
+ * Either way the sign is applied **once at the category root**, never per node:
+ * negating each node (the old `Math.abs`) corrupted any subtree holding a
+ * negative, so a margin-negative `Assets:…:Cash` flipped positive and its
+ * siblings stopped summing to their parent.
  */
 export const CATEGORY_SIGN: Record<CategoryKey, 1 | -1> = {
   assets: 1,
@@ -41,11 +49,6 @@ export const CATEGORY_SIGN: Record<CategoryKey, 1 | -1> = {
   income: -1,
   expenses: 1,
 };
-
-/** Category sign for a hierarchy label, defaulting to +1 for unknown labels. */
-function signForLabel(label: string): 1 | -1 {
-  return CATEGORY_SIGN[label.toLowerCase() as CategoryKey] ?? 1;
-}
 
 /** Drop the top-level category segment (e.g. "Assets:Bank" → "Bank"). */
 function stripTopLevel(account: string): string {
@@ -172,32 +175,7 @@ function buildTopLevel(
   return skipPassThroughLevels(rows);
 }
 
-/**
- * Build the account tree under a labelled hierarchy node ("assets",
- * "liabilities", …): each top-level sub-account (rolled-up balance) with its
- * sub-accounts nested beneath it. Every node's `value` is the rolled-up subtree
- * total signed by `CATEGORY_SIGN`, so children are a breakdown *of* their parent
- * — never additive to it — and always sum back to it. Zero-balance accounts are
- * omitted, nodes are sorted by magnitude descending, and single-child chains are
- * folded into one row.
- */
-export function selectAccountTree(
-  currency: string,
-  label: string,
-  data?: AccountHierarchyQuery,
-): AccountNode[] {
-  if (!currency || !data?.accountHierarchy?.data) {
-    return [];
-  }
-  const node = data.accountHierarchy.data.find(
-    (item) => item.label.toLowerCase() === label.toLowerCase(),
-  );
-  const topLevel = (node?.data?.children ?? []) as RawChild[];
-
-  return buildTopLevel(topLevel, currency, signForLabel(label));
-}
-
-/** One of the five root categories: its own signed total plus its account tree. */
+/** One of the five root categories: its own total plus its account tree. */
 export type AccountCategory = {
   /** Category key — also the i18n key for its label. */
   key: CategoryKey;
@@ -206,47 +184,11 @@ export type AccountCategory = {
    * into. Empty when the hierarchy doesn't name one.
    */
   account: string;
-  /** Signed rolled-up total for the whole category. */
+  /** Rolled-up total for the whole category, as the ledger holds it. */
   value: number;
   /** Top-level accounts beneath it (already compressed). */
   children: AccountNode[];
 };
-
-/**
- * The five root categories in conventional order, each with its signed total and
- * account tree — the row model behind the Accounts tab's single balance table.
- * A category the ledger doesn't use (zero total, no rows) is omitted.
- *
- * `account` is read off the hierarchy rather than derived by capitalizing `key`:
- * beancount lets a ledger rename its roots (`option "name_assets" "Activa"`), and
- * a guessed name would drill into an account that doesn't exist. Where the
- * hierarchy names neither, it stays empty and the row simply isn't navigable.
- */
-export function selectAccountCategories(
-  currency: string,
-  data?: AccountHierarchyQuery,
-): AccountCategory[] {
-  if (!currency || !data?.accountHierarchy?.data) {
-    return [];
-  }
-  const hierarchy = data.accountHierarchy.data;
-
-  return CATEGORY_KEYS.map((key) => {
-    const node = hierarchy.find((item) => item.label.toLowerCase() === key);
-    const sign = CATEGORY_SIGN[key];
-    return {
-      key,
-      account: node?.data?.account || node?.label || "",
-      value:
-        sign * resolveCurrencyBalance(node?.data?.balance_children, currency),
-      children: buildTopLevel(
-        (node?.data?.children ?? []) as RawChild[],
-        currency,
-        sign,
-      ),
-    };
-  }).filter((category) => category.value !== 0 || category.children.length > 0);
-}
 
 /**
  * Recursive raw node from an IncomeStatement `SerializableTreeNode`
@@ -282,21 +224,20 @@ function fromSerializable(node: SerializableChild): RawChild {
  * `selectAccountTree` — rolled-up totals, leaf names for nested rows,
  * zero-balance accounts omitted, sorted by magnitude descending, single-child
  * chains folded — over the camelCase SerializableTreeNode shape instead of the
- * labelled AccountHierarchy shape. `category` picks the display sign, since this
- * root carries no label to infer it from.
+ * labelled AccountHierarchy shape.
+ *
+ * `sign` defaults to leaving the ledger's own signs alone (what the Accounts tab
+ * wants); pass `CATEGORY_SIGN[category]` to flip a credit-normal category into
+ * positive magnitudes (what the Reports tab wants).
  */
 export function selectAccountTreeFromRoot(
   currency: string,
   root?: SerializableTreeNodeLike | null,
-  category: CategoryKey = "assets",
+  sign: 1 | -1 = 1,
 ): AccountNode[] {
   if (!currency || !root?.children) {
     return [];
   }
   const children = root.children as SerializableChild[] | null | undefined;
-  return buildTopLevel(
-    (children ?? []).map(fromSerializable),
-    currency,
-    CATEGORY_SIGN[category],
-  );
+  return buildTopLevel((children ?? []).map(fromSerializable), currency, sign);
 }

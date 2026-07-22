@@ -3,12 +3,14 @@ query AccountReport(
   $accountName: String!
   $interval: String
   $time: String
+  $conversion: String!
 ) {
   getLedgerAccountReport(
     ledgerId: $ledgerId
     accountName: $accountName
     interval: $interval
     time: $time
+    conversion: $conversion
   ) {
     linechartData {
       date

@@ -2,7 +2,6 @@
 // Re-export types from generated code
 export type {
   HomeChartsQuery,
-  AccountHierarchyQuery,
   LedgerMetaQuery,
 } from "../../generated-graphql/graphql";
 

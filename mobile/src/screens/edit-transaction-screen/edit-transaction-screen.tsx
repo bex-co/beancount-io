@@ -16,7 +16,7 @@ import { useThemeStyle, useToast, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
 import {
-  AccountHierarchyDocument,
+  TrialBalanceDocument,
   AccountJournalDocument,
   AccountReportDocument,
   BalanceSheetDocument,
@@ -117,7 +117,7 @@ export const EditTransactionScreen = (): JSX.Element => {
         HomeChartsDocument,
         AccountJournalDocument,
         AccountReportDocument,
-        AccountHierarchyDocument,
+        TrialBalanceDocument,
         BalanceSheetDocument,
         GetLedgerEntryContextDocument,
       ],
