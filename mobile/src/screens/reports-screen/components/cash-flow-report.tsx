@@ -101,6 +101,7 @@ export function CashFlowReport({
         currency,
         incomeData?.getLedgerIncomeStatement?.incomeData ?? [],
         timeRange,
+        "income",
       ),
     [currency, incomeData, timeRange],
   );
@@ -110,6 +111,7 @@ export function CashFlowReport({
         currency,
         incomeData?.getLedgerIncomeStatement?.expensesData ?? [],
         timeRange,
+        "expenses",
       ),
     [currency, incomeData, timeRange],
   );

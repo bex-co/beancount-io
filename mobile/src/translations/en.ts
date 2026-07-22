@@ -84,6 +84,10 @@ export const en = {
   accountEmptyError: "Please select the from and to accounts",
   netAssets: "Net Assets",
   accounts: "Accounts",
+  // Column headers for the Accounts tab's balance table. Separate from the
+  // journal's `balance` key, which names the beancount directive.
+  account: "Account",
+  accountBalance: "Balance",
   monthlyNetIncome: "Monthly Net Income",
   liabilities: "Liabilities",
   equity: "Equity",

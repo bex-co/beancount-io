@@ -1,5 +1,8 @@
 import { selectAccountTreeFromRoot } from "../../../components/account-list/select-account-list";
-import type { AccountNode } from "../../../components/account-list/select-account-list";
+import type {
+  AccountNode,
+  CategoryKey,
+} from "../../../components/account-list/select-account-list";
 import { resolveCurrencyBalance } from "../../../common/balance-util";
 import { rangeStartMonth, type TimeRange } from "../../../common/series-util";
 
@@ -77,14 +80,17 @@ function toTreeNode(
  * month — the same convention the report charts use (`rangeStartMonth`) — so a
  * stale ledger still shows history instead of an empty list. The summed
  * per-account totals are rebuilt into the same expandable tree the Accounts tab
- * renders, via `selectAccountTreeFromRoot`. `total` is the sum of the displayed
- * top-level accounts (absolute), so the card headline always matches its rows.
+ * renders, via `selectAccountTreeFromRoot`. `category` picks the display sign
+ * (income is stored as a credit, so it's negated to read positive); `total` is
+ * the signed sum of the displayed top-level accounts, so the card headline always
+ * matches its rows.
  */
 export function selectRangedAccountTree(
   currency: string,
   points:
     readonly (MonthlyAccountPoint | null | undefined)[] | null | undefined,
   range: TimeRange,
+  category: CategoryKey,
 ): { tree: AccountNode[]; total: number } {
   if (!currency || !points || points.length === 0) {
     return { tree: [], total: 0 };
@@ -150,7 +156,7 @@ export function selectRangedAccountTree(
     balanceChildren: {},
     children: topLevel,
   };
-  const tree = selectAccountTreeFromRoot(currency, fakeRoot);
+  const tree = selectAccountTreeFromRoot(currency, fakeRoot, category);
   const total = tree.reduce((sum, node) => sum + node.value, 0);
   return { tree, total };
 }

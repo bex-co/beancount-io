@@ -2,7 +2,7 @@ import { StyleSheet } from "react-native";
 import { useMemo, useState } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerMeta } from "@/screens/add-transaction-screen/hooks/use-ledger-meta";
-import { useBalanceSheet } from "@/screens/accounts-screen/hooks/use-balance-sheet";
+import { useBalanceSheet } from "@/screens/home-screen/hooks/use-balance-sheet";
 import {
   selectAssetsSeries,
   selectLiabilitiesSeries,
@@ -51,8 +51,8 @@ export const HomeScreenImpl = (): JSX.Element => {
 
   const currency = currencies.length > 0 ? currencies[0] : "USD";
   const currencySymbol = getCurrencySymbol(currency);
-  // One balance-sheet query feeds all three curves on the card — and it's the
-  // same source the Accounts tab charts, so both screens agree on net worth.
+  // One balance-sheet query feeds all three curves on the card. Home is the
+  // only place net worth is charted; the Accounts tab is account lists only.
   const {
     data: balanceSheet,
     loading: balanceSheetLoading,

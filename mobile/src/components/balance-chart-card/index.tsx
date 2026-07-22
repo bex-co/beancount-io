@@ -30,9 +30,9 @@ type BalanceChartCardProps = {
 
 /**
  * Monarch-style balance header: a headline value with the change over the
- * selected range, an interactive line chart, and time-range pills. Shared by
- * the Accounts tab (net worth) and the account drill-down (account balance);
- * range changes slice the passed series client-side (no refetch).
+ * selected range, an interactive line chart, and time-range pills. Used by the
+ * account drill-down (account balance); range changes slice the passed series
+ * client-side (no refetch).
  */
 export function BalanceChartCard({
   label,
