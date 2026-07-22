@@ -15,7 +15,7 @@ export default function TabLayout() {
     home: i18n.t("home"),
     accounts: i18n.t("accounts"),
     reports: i18n.t("reports"),
-    ledger: i18n.t("ledger"),
+    files: i18n.t("files"),
     transactions: i18n.t("transactions"),
   });
 
@@ -24,7 +24,7 @@ export default function TabLayout() {
       home: i18n.t("home"),
       accounts: i18n.t("accounts"),
       reports: i18n.t("reports"),
-      ledger: i18n.t("ledger"),
+      files: i18n.t("files"),
       transactions: i18n.t("transactions"),
     });
   }, [locale]);
@@ -102,10 +102,10 @@ export default function TabLayout() {
         <Tabs.Screen
           name="ledger"
           options={{
-            title: tabTitles.ledger,
+            title: tabTitles.files,
             tabBarIcon: ({ color, focused }) => (
               <Ionicons
-                name="wallet"
+                name="folder"
                 size={28}
                 color={focused ? theme.primary : color}
               />

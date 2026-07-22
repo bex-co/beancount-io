@@ -2,6 +2,7 @@ export const zh = {
   // bottom tab bar
   home: "首页",
   ledger: "账本",
+  files: "文件",
   journal: "流水",
   settings: "设置",
   mine: "我的",

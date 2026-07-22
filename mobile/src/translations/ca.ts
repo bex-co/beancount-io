@@ -5,6 +5,7 @@ export const ca: typeof en = {
   // bottom tab bar
   home: "Inici",
   ledger: "Llibre",
+  files: "Fitxers",
   journal: "Diari",
   settings: "Configuració",
   mine: "El meu",

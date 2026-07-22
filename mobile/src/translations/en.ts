@@ -2,6 +2,7 @@ export const en = {
   // bottom tab bar
   home: "Home",
   ledger: "Ledger",
+  files: "Files",
   journal: "Journal",
   settings: "Settings",
   mine: "Mine",

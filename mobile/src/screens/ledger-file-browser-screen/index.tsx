@@ -457,7 +457,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
       <LedgerDrawerHeader
-        title={t("ledger")}
+        title={t("files")}
         right={
           <TouchableOpacity
             style={styles.headerAction}

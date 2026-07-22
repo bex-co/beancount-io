@@ -5,6 +5,7 @@ export const fa: typeof en = {
   // bottom tab bar
   home: "خانه",
   ledger: "دفتر کل",
+  files: "فایل‌ها",
   journal: "روزنامه",
   settings: "تنظیمات",
   mine: "من",
