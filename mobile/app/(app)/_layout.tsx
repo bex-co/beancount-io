@@ -52,6 +52,11 @@ export default function AppLayout() {
       />
       <Stack.Screen name="settings" />
       <Stack.Screen name="notifications" />
+      {/* The screen supplies its own header actions (Cancel / Reset). */}
+      <Stack.Screen
+        name="transaction-filters"
+        options={{ presentation: "modal" }}
+      />
       <Stack.Screen name="commit-detail" />
       <Stack.Screen name="ledger-file-editor" />
     </Stack>

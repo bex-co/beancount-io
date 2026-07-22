@@ -151,8 +151,19 @@ export const en = {
   transactionsWelcomeInstruction3: "Import existing accounting data",
   transactionsWelcomeInstructionFinal:
     "Once you add some transactions, they'll appear here.",
-  transactionsNoSearchResults: "No transactions match your search.",
+  transactionsNoSearchResults: "No transactions match your search or filters.",
   transactionsLoadError: "Failed to load transactions: ",
+  // transactions filter modal
+  filters: "Filters",
+  filterStatus: "Status",
+  filterDateRange: "Date range",
+  filterAccount: "Account",
+  allAccounts: "All accounts",
+  rangeCustom: "Custom",
+  startDate: "Start",
+  endDate: "End",
+  apply: "Apply",
+  reset: "Reset",
   // journal screen
   transactions: "Transactions",
   search: "Search",

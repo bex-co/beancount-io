@@ -14,7 +14,7 @@ import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { useThemeStyle, usePageView, useDebouncedValue } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
-import { NetworkStatus } from "@apollo/client";
+import { NetworkStatus, useReactiveVar } from "@apollo/client";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
@@ -34,6 +34,11 @@ import {
   JournalSection,
   groupToSections,
 } from "./utils/transaction-display-utils";
+import {
+  countActiveFilters,
+  toFilterQuery,
+} from "./filters/select-filter-query";
+import { transactionFiltersVar } from "./filters/var";
 
 const PAGE_SIZE = 20;
 /** Only transactions live on this tab; Open/Close/Balance/… stay in the journal. */
@@ -91,6 +96,15 @@ const TransactionList = () => {
   const search = useDebouncedValue(searchQuery.trim(), 300);
   const filter = search || undefined;
 
+  // Status / date range / account, picked in the filter modal. Like the search
+  // they narrow the query itself, so paging stays consistent with the filter.
+  const filters = useReactiveVar(transactionFiltersVar);
+  const activeFilterCount = countActiveFilters(filters, new Date());
+  const filterQuery = useMemo(
+    () => toFilterQuery(filters, new Date()),
+    [filters],
+  );
+
   const { data, loading, error, refetch, fetchMore, networkStatus } =
     useGetLedgerJournalQuery({
       variables: {
@@ -100,6 +114,7 @@ const TransactionList = () => {
           limit: PAGE_SIZE,
           directiveTypes: DIRECTIVE_TYPES,
           filter,
+          ...filterQuery,
         },
       },
       skip: !ledgerId,
@@ -131,6 +146,7 @@ const TransactionList = () => {
             limit: PAGE_SIZE,
             directiveTypes: DIRECTIVE_TYPES,
             filter,
+            ...filterQuery,
           },
         },
         updateQuery: (prev, { fetchMoreResult }) => {
@@ -159,6 +175,7 @@ const TransactionList = () => {
     transactions.length,
     fetchMore,
     filter,
+    filterQuery,
   ]);
 
   const onRefresh = async () => {
@@ -183,6 +200,11 @@ const TransactionList = () => {
     [router],
   );
 
+  const handleOpenFilters = useCallback(() => {
+    analytics.track("tap_transaction_filters", {});
+    router.push({ pathname: "/(app)/transaction-filters" });
+  }, [router]);
+
   const handleQuickAdd = useCallback(() => {
     analytics.track("tap_quick_add", {});
     AddTransactionCallback.setFn(async () => {
@@ -201,10 +223,11 @@ const TransactionList = () => {
 
   const isInitialLoading = loading && !transactions.length;
   const isBlank = !loading && !error && sections.length === 0;
+  const isNarrowed = !!search || activeFilterCount > 0;
   // A ledger with no transactions gets the welcome copy even when it holds
   // other directives — this tab only ever shows transactions.
-  const showEmptyState = isBlank && !search;
-  const showNoResults = isBlank && !!search;
+  const showEmptyState = isBlank && !isNarrowed;
+  const showNoResults = isBlank && isNarrowed;
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
@@ -214,6 +237,8 @@ const TransactionList = () => {
           <TransactionsHeader
             searchQuery={searchQuery}
             onSearchChange={setSearchQuery}
+            onOpenFilters={handleOpenFilters}
+            activeFilterCount={activeFilterCount}
           />
         }
         style={styles.list}

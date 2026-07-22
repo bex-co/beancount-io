@@ -13,6 +13,7 @@ import { useLocalSearchParams, useRouter } from "expo-router";
 import {
   SelectedAssets,
   SelectedExpenses,
+  SelectedFilterAccount,
   SelectedPostingAccount,
 } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
@@ -80,10 +81,15 @@ export function AccountPickerScreenComponent(): JSX.Element {
       ? SelectedAssets.getFn()
       : type === "posting"
         ? SelectedPostingAccount.getFn()
-        : SelectedExpenses.getFn();
+        : type === "filter"
+          ? SelectedFilterAccount.getFn()
+          : SelectedExpenses.getFn();
 
+  // Both tab sets hold every account (see `getAccountsAndCurrency`); they only
+  // differ in which root sorts first, so "assets" order suits any picker that
+  // isn't choosing a destination.
   const optionTabs: OptionTab[] =
-    type === "assets" || type === "posting"
+    type === "assets" || type === "posting" || type === "filter"
       ? assetsOptionTabs
       : expensesOptionTabs;
 

@@ -53,3 +53,7 @@ export const AddTransactionCallback = createGlobalFn<() => Promise<void>>(
 export const SelectedPostingAccount = createGlobalFn<(value: string) => void>(
   "SelectedPostingAccount",
 );
+
+export const SelectedFilterAccount = createGlobalFn<(value: string) => void>(
+  "SelectedFilterAccount",
+);
