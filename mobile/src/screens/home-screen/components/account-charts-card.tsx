@@ -1,14 +1,10 @@
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { useRouter } from "expo-router";
-import { AccountHierarchyQuery } from "@/generated-graphql/graphql";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { LoadingTile } from "@/components/loading-tile";
 import { DashboardCard, SegmentedPages, TimeRangePills } from "@/components";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
-import { groupThousands } from "@/common/number-utils";
-import { AccountListPage, selectAccountTree } from "@/components/account-list";
 import {
   RANGE_LABEL_KEYS,
   SeriesPoint,
@@ -16,13 +12,14 @@ import {
   TIME_RANGES,
   filterSeriesByRange,
   seriesToChartArray,
-} from "@/screens/home-screen/selectors/select-net-worth-series";
+} from "@/common/series-util";
 
-// Pages lost their in-page title to the tab strip above, so they need ~20px
-// less than they did under the dot indicator — the card's overall height is
-// unchanged.
-const CARD_HEIGHT = 280;
-const NET_WORTH_CHART_HEIGHT = 160;
+const CHART_HEIGHT = 170;
+// PagerView needs a bounded height, and every page is the same shape: the
+// chart's header (value + change) plus the plot.
+const PAGE_HEIGHT = 240;
+/** Height the range pills add below the pager — the skeleton covers it too. */
+const PILLS_HEIGHT = 40;
 /** Widths of the skeleton's tab pills — uneven, so it reads as labels. */
 const TAB_TILE_WIDTHS = [88, 64, 72];
 
@@ -39,58 +36,34 @@ const styles = StyleSheet.create({
   },
 });
 
-type AccountTotals = {
-  assets: string;
-  liabilities: string;
-};
-
 type AccountChartsCardProps = {
-  currency: string;
   currencySymbol: string;
   netWorthSeries: SeriesPoint[];
-  accountTotals: AccountTotals;
-  hierarchyData?: AccountHierarchyQuery;
+  assetsSeries: SeriesPoint[];
+  liabilitiesSeries: SeriesPoint[];
   loading: boolean;
   error: boolean;
 };
 
 /**
- * Top-of-dashboard card whose tab strip switches between (1) an interactive net
- * worth chart, (2) the user's Asset accounts, and (3) their Liability accounts.
- * Tabs rather than swipe + dots: the chart owns horizontal drags for scrubbing,
- * and the tab labels say what each page is where dots could not.
+ * Top-of-dashboard card whose tab strip switches between three balance-sheet
+ * curves — net worth, assets, liabilities — over a shared time range. Same
+ * three views (and the same signed liabilities) as the web dashboard's balance
+ * sheet report. Tabs rather than swipe + dots: the charts own horizontal drags
+ * for scrubbing, and the tab labels say what each page is where dots could not.
  */
 export function AccountChartsCard({
-  currency,
   currencySymbol,
   netWorthSeries,
-  accountTotals,
-  hierarchyData,
+  assetsSeries,
+  liabilitiesSeries,
   loading,
   error,
 }: AccountChartsCardProps): JSX.Element {
   const { t } = useTranslations();
-  const router = useRouter();
   const [range, setRange] = useState<TimeRange>("6M");
-
-  const handlePressAccount = useCallback(
-    (account: string) => {
-      analytics.track("home_open_account", { account });
-      router.push({ pathname: "/account-detail", params: { account } });
-    },
-    [router],
-  );
-
-  // Memoize the recursive account-tree walks so scrub/range re-renders don't
-  // rebuild them (they only depend on currency + hierarchy data).
-  const assetAccounts = useMemo(
-    () => selectAccountTree(currency, "assets", hierarchyData),
-    [currency, hierarchyData],
-  );
-  const liabilityAccounts = useMemo(
-    () => selectAccountTree(currency, "liabilities", hierarchyData),
-    [currency, hierarchyData],
-  );
+  // Tracked so a range change reports which curve the user was looking at.
+  const [activeIndex, setActiveIndex] = useState(0);
 
   if (loading || error) {
     return (
@@ -100,64 +73,64 @@ export function AccountChartsCard({
             <LoadingTile key={width} width={width} style={styles.skeletonTab} />
           ))}
         </View>
-        <LoadingTile height={CARD_HEIGHT} mx={16} />
+        <LoadingTile height={PAGE_HEIGHT + PILLS_HEIGHT} mx={16} />
       </DashboardCard>
     );
   }
 
-  const netWorthChart = seriesToChartArray(
-    filterSeriesByRange(netWorthSeries, range),
-    t("noDataCharts"),
-  );
+  // Pages carry no title of their own — the tab above already names them.
+  const charts = [
+    { key: "netWorth", series: netWorthSeries },
+    { key: "assets", series: assetsSeries },
+    { key: "liabilities", series: liabilitiesSeries },
+  ];
   const rangeOptions = TIME_RANGES.map((key) => ({
     key,
     label: t(RANGE_LABEL_KEYS[key]),
   }));
 
-  // Pages carry no title of their own — the tab above already names them.
-  const tabs = [t("netWorth"), t("assets"), t("liabilities")];
-  const pages: ReactNode[] = [
-    <View key="net-worth">
+  const pages = charts.map(({ key, series }) => {
+    const chart = seriesToChartArray(
+      filterSeriesByRange(series, range),
+      t("noDataCharts"),
+    );
+    return (
       <InteractiveLineChartD3
-        labels={netWorthChart.labels}
-        numbers={netWorthChart.numbers}
+        key={key}
+        labels={chart.labels}
+        numbers={chart.numbers}
         currencySymbol={currencySymbol}
-        height={NET_WORTH_CHART_HEIGHT}
+        height={CHART_HEIGHT}
       />
+    );
+  });
+
+  return (
+    <DashboardCard bleed>
+      <SegmentedPages
+        tabs={charts.map(({ key }) => t(key))}
+        pages={pages}
+        height={PAGE_HEIGHT}
+        onPageChange={(index) => {
+          setActiveIndex(index);
+          analytics.track("home_chart_page", {
+            index,
+            chart: charts[index].key,
+          });
+        }}
+      />
+      {/* Outside the pager: one row of pills driving whichever curve is shown,
+          so switching tabs keeps the selected range. */}
       <TimeRangePills
         value={range}
         options={rangeOptions}
         onChange={(next) => {
           setRange(next);
-          analytics.track("home_net_worth_range", { range: next });
+          analytics.track("home_chart_range", {
+            chart: charts[activeIndex].key,
+            range: next,
+          });
         }}
-      />
-    </View>,
-    <AccountListPage
-      key="assets"
-      total={`${currencySymbol}${groupThousands(Number(accountTotals.assets))}`}
-      items={assetAccounts}
-      currencySymbol={currencySymbol}
-      onPressAccount={handlePressAccount}
-    />,
-    <AccountListPage
-      key="liabilities"
-      total={`${currencySymbol}${groupThousands(
-        Number(accountTotals.liabilities),
-      )}`}
-      items={liabilityAccounts}
-      currencySymbol={currencySymbol}
-      onPressAccount={handlePressAccount}
-    />,
-  ];
-
-  return (
-    <DashboardCard bleed>
-      <SegmentedPages
-        tabs={tabs}
-        pages={pages}
-        height={CARD_HEIGHT}
-        onPageChange={(index) => analytics.track("home_chart_page", { index })}
       />
     </DashboardCard>
   );
