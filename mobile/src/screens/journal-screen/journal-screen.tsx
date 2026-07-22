@@ -244,10 +244,7 @@ const JournalList = () => {
   }, [refetch, router]);
 
   const renderSectionHeader = ({ section }: { section: JournalSection }) => (
-    <JournalDateSectionHeader
-      displayDate={section.displayDate}
-      total={section.total}
-    />
+    <JournalDateSectionHeader displayDate={section.displayDate} />
   );
 
   const renderItem = ({ item }: { item: JournalDirectiveType }) => (

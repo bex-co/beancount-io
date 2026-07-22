@@ -29,7 +29,13 @@ const getStyles = (theme: ColorTheme) =>
 
 interface JournalDateSectionHeaderProps {
   displayDate: string;
-  total: string;
+  /**
+   * Net change for the day, when it is a number worth trusting. Account detail
+   * passes one — single account, normalized to the active currency. The journal
+   * omits it: its entries span currencies and arrive a page at a time, so no
+   * honest daily total can be computed from what is loaded.
+   */
+  total?: string;
 }
 
 export const JournalDateSectionHeader: React.FC<
@@ -40,7 +46,7 @@ export const JournalDateSectionHeader: React.FC<
   return (
     <View style={styles.container}>
       <Text style={styles.date}>{displayDate}</Text>
-      <AmountText style={styles.total}>{total}</AmountText>
+      {total ? <AmountText style={styles.total}>{total}</AmountText> : null}
     </View>
   );
 };

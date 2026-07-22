@@ -1,7 +1,7 @@
 import {
   formatDisplayDate,
   formatAmount,
-  getSectionTotal,
+  selectTransactionAmount,
   groupToSections,
 } from "../journal-display-utils";
 import {
@@ -30,9 +30,15 @@ const makeTransaction = (
   ...overrides,
 });
 
-const makePosting = (account: string, number: string, currency = "USD") => ({
+const makePosting = (
+  account: string,
+  number: string,
+  currency = "USD",
+  cost?: { number: string; currency: string },
+) => ({
   account,
   units: { number, currency },
+  ...(cost ? { cost: { ...cost, date: "2026-07-01" } } : {}),
 });
 
 const makeOpen = (account: string, currencies?: string[]): JournalOpen => ({
@@ -101,15 +107,138 @@ describe("formatAmount", () => {
 });
 
 // ---------------------------------------------------------------------------
-// getSectionTotal
+// selectTransactionAmount
 // ---------------------------------------------------------------------------
 
-describe("getSectionTotal", () => {
-  it("returns $0.00 when there are no entries", () => {
-    expect(getSectionTotal([])).toBe("$0.00");
+describe("selectTransactionAmount", () => {
+  it("returns null when the transaction has no postings", () => {
+    expect(selectTransactionAmount(makeTransaction())).toBe(null);
   });
 
-  it("returns $0.00 when all transactions are pending (flag !)", () => {
+  it("nets same-currency cash postings, keeping the sign", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Checking", "330.19"),
+        makePosting("Income:Stripe", "-330.19"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "$330.19",
+      value: 330.19,
+      currency: "USD",
+    });
+  });
+
+  it("reports outflows as a negative value with unsigned text", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Expenses:Food", "100.00"),
+        makePosting("Assets:Checking", "-100.00"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "$100.00",
+      value: -100,
+      currency: "USD",
+    });
+  });
+
+  it("includes Liabilities postings in the cash net", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Expenses:Travel", "500.00"),
+        makePosting("Liabilities:CreditCard", "-500.00"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)?.value).toBe(-500);
+  });
+
+  it("nets several postings in the same currency", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Checking", "300.00"),
+        makePosting("Assets:Savings", "-100.00"),
+        makePosting("Income:Stripe", "-200.00"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)?.value).toBe(200);
+  });
+
+  it("never adds across currencies: a fund buy reports the cash leg", () => {
+    // Assets:…:RGAGX +355.63 RGAGX {8.93 USD} / Assets:…:Cash -3177.39 USD.
+    // Summing both legs would yield -2821.76 of no currency at all.
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Vanguard:RGAGX", "355.63", "RGAGX", {
+          number: "8.93",
+          currency: "USD",
+        }),
+        makePosting("Assets:Vanguard:Cash", "-3177.39"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "$3,177.39",
+      value: -3177.39,
+      currency: "USD",
+    });
+  });
+
+  it("prefers the cost currency even when the commodity leg is larger", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Broker:AAPL", "9000", "AAPL", {
+          number: "0.5",
+          currency: "EUR",
+        }),
+        makePosting("Assets:Broker:Cash", "-4500.00", "EUR"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)).toEqual({
+      text: "4,500.00 EUR",
+      value: -4500,
+      currency: "EUR",
+    });
+  });
+
+  it("falls back to the largest bucket when no leg quotes a cost", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Wallet:BTC", "0.25", "BTC"),
+        makePosting("Assets:Checking", "-12000.00"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)?.currency).toBe("USD");
+  });
+
+  it("falls back to the largest single posting when no cash accounts exist", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Expenses:Food", "30.00"),
+        makePosting("Income:Gifts", "-30.00"),
+      ],
+    });
+    // Netting would read $0.00 — an Income → Expenses entry still moved $30.
+    expect(selectTransactionAmount(tx)?.value).toBe(30);
+  });
+
+  it("skips postings whose amount is not a finite number", () => {
+    const tx = makeTransaction({
+      postings: [
+        makePosting("Assets:Checking", "not-a-number"),
+        makePosting("Assets:Savings", "-42.00"),
+      ],
+    });
+    expect(selectTransactionAmount(tx)?.value).toBe(-42);
+  });
+
+  it("returns null when no posting has a usable amount", () => {
+    const tx = makeTransaction({
+      postings: [makePosting("Assets:Checking", "not-a-number")],
+    });
+    expect(selectTransactionAmount(tx)).toBe(null);
+  });
+
+  it("does not special-case pending transactions", () => {
     const tx = makeTransaction({
       flag: "!",
       postings: [
@@ -117,87 +246,7 @@ describe("getSectionTotal", () => {
         makePosting("Income:Goldman", "-7000.00"),
       ],
     });
-    expect(getSectionTotal([tx])).toBe("$0.00");
-  });
-
-  it("returns $0.00 when no postings hit Assets or Liabilities accounts", () => {
-    const tx = makeTransaction({
-      postings: [
-        makePosting("Expenses:Food", "100.00"),
-        makePosting("Income:Salary", "-100.00"),
-      ],
-    });
-    expect(getSectionTotal([tx])).toBe("$0.00");
-  });
-
-  it("returns positive total with + prefix for net inflow to assets", () => {
-    const tx = makeTransaction({
-      postings: [
-        makePosting("Assets:Checking", "330.19"),
-        makePosting("Income:Stripe", "-330.19"),
-      ],
-    });
-    expect(getSectionTotal([tx])).toBe("+$330.19");
-  });
-
-  it("returns negative total with - prefix for net outflow from assets", () => {
-    const tx = makeTransaction({
-      postings: [
-        makePosting("Expenses:Food", "100.00"),
-        makePosting("Assets:Checking", "-100.00"),
-      ],
-    });
-    expect(getSectionTotal([tx])).toBe("-$100.00");
-  });
-
-  it("sums cleared transactions and ignores pending ones", () => {
-    const cleared = makeTransaction({
-      flag: "*",
-      postings: [
-        makePosting("Assets:Checking", "330.19"),
-        makePosting("Income:Stripe", "-330.19"),
-      ],
-    });
-    const pending = makeTransaction({
-      flag: "!",
-      postings: [
-        makePosting("Assets:Goldman", "7000.00"),
-        makePosting("Income:Goldman", "-7000.00"),
-      ],
-    });
-    expect(getSectionTotal([cleared, pending])).toBe("+$330.19");
-  });
-
-  it("nets income and expenses across multiple cleared transactions", () => {
-    const income = makeTransaction({
-      postings: [
-        makePosting("Assets:Checking", "330.19"),
-        makePosting("Income:Stripe", "-330.19"),
-      ],
-    });
-    const expense = makeTransaction({
-      postings: [
-        makePosting("Expenses:SaaS", "100.00"),
-        makePosting("Assets:Checking", "-100.00"),
-      ],
-    });
-    // net = 330.19 - 100 = 230.19
-    expect(getSectionTotal([income, expense])).toBe("+$230.19");
-  });
-
-  it("includes Liabilities postings in the net", () => {
-    const tx = makeTransaction({
-      postings: [
-        makePosting("Expenses:Travel", "500.00"),
-        makePosting("Liabilities:CreditCard", "-500.00"),
-      ],
-    });
-    expect(getSectionTotal([tx])).toBe("-$500.00");
-  });
-
-  it("returns $0.00 for non-transaction directives", () => {
-    expect(getSectionTotal([makeOpen("Assets:Checking")])).toBe("$0.00");
-    expect(getSectionTotal([makeClose("Assets:Checking")])).toBe("$0.00");
+    expect(selectTransactionAmount(tx)?.value).toBe(7000);
   });
 });
 
@@ -287,5 +336,13 @@ describe("groupToSections", () => {
     const sections = groupToSections([open, tx], "open");
     expect(sections.length).toBe(1);
     expect(sections[0].data[0]).toBe(open);
+  });
+
+  it("groups non-transaction directives alongside transactions", () => {
+    const close = makeClose("Assets:Checking");
+    const tx = makeTransaction({ date: close.date, payee: "Stripe" });
+    const sections = groupToSections([close, tx], "");
+    expect(sections.length).toBe(1);
+    expect(sections[0].data.length).toBe(2);
   });
 });

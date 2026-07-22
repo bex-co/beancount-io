@@ -82,6 +82,20 @@ describe("selectHeroAmount", () => {
   it("returns empty for a transaction without postings", () => {
     expect(selectHeroAmount(txn([]))).toEqual({ text: "", isPositive: null });
   });
+
+  it("reports the cash leg of a commodity purchase, not a mixed sum", () => {
+    const hero = selectHeroAmount(
+      txn([
+        {
+          account: "Assets:Vanguard:RGAGX",
+          units: { number: "355.63", currency: "RGAGX" },
+          cost: { number: "8.93", currency: "USD", date: "2026-07-06" },
+        },
+        posting("Assets:Vanguard:Cash", "-3177.39"),
+      ]),
+    );
+    expect(hero).toEqual({ text: "$3,177.39", isPositive: false });
+  });
 });
 
 describe("selectPostingRows", () => {

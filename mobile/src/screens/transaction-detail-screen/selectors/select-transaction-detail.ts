@@ -1,5 +1,8 @@
 import type { JournalTransaction } from "../../journal-screen/types";
-import { formatAmount } from "../../journal-screen/utils/journal-display-utils";
+import {
+  formatAmount,
+  selectTransactionAmount,
+} from "../../journal-screen/utils/journal-display-utils";
 
 /** Headline amount for the detail screen, matching the list rows' convention:
  * `+` prefix for cash inflows, unsigned otherwise. */
@@ -9,51 +12,18 @@ export type HeroAmount = {
 };
 
 /**
- * Net the Assets/Liabilities postings to determine cash-flow direction — the
- * same rule JournalEntryItem uses for list rows, so the hero number never
- * disagrees with the row the user just tapped. Falls back to the largest
- * posting when no cash accounts are involved.
+ * The headline amount, from the same selector JournalEntryItem uses for list
+ * rows, so the hero number can never disagree with the row the user tapped.
  */
 export function selectHeroAmount(txn: JournalTransaction): HeroAmount {
-  const postings = txn.postings ?? [];
-  if (!postings.length) {
+  const amount = selectTransactionAmount(txn);
+  if (!amount) {
     return { text: "", isPositive: null };
   }
 
-  const cashPostings = postings.filter(
-    (p) =>
-      p.account.startsWith("Assets:") || p.account.startsWith("Liabilities:"),
-  );
-
-  let value: number;
-  let currency: string;
-  if (cashPostings.length > 0) {
-    value = cashPostings.reduce(
-      (sum, p) => sum + parseFloat(p.units.number),
-      0,
-    );
-    currency = cashPostings[0].units.currency;
-  } else {
-    let max = postings[0];
-    for (const p of postings) {
-      if (
-        Math.abs(parseFloat(p.units.number)) >
-        Math.abs(parseFloat(max.units.number))
-      ) {
-        max = p;
-      }
-    }
-    value = parseFloat(max.units.number);
-    currency = max.units.currency;
-  }
-
-  if (!Number.isFinite(value)) {
-    return { text: "", isPositive: null };
-  }
-
-  const formatted = formatAmount(value, currency);
+  const { text, value } = amount;
   return {
-    text: value > 0 ? `+${formatted}` : formatted,
+    text: value > 0 ? `+${text}` : text,
     isPositive: value > 0 ? true : value < 0 ? false : null,
   };
 }

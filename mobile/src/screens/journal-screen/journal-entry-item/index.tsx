@@ -12,6 +12,7 @@ import {
   isJournalClose,
 } from "../types";
 import { getEntryAccounts } from "../utils/journal-utils";
+import { selectTransactionAmount } from "../utils/journal-display-utils";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -66,15 +67,6 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-const formatAmount = (value: number, currency: string): string => {
-  const abs = Math.abs(value);
-  const formatted = abs.toLocaleString("en-US", {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
-  });
-  return currency === "USD" ? `$${formatted}` : `${formatted} ${currency}`;
-};
-
 const getDisplayInfo = (
   entry: JournalDirectiveType,
 ): { name: string; amountStr: string; isPositive: boolean | null } => {
@@ -97,46 +89,12 @@ const getDisplayInfo = (
 
   const name = entry.payee || entry.narration || entry.directive_type;
 
-  const { postings } = entry;
-  if (!postings?.length) {
+  const amount = selectTransactionAmount(entry);
+  if (!amount) {
     return { name, amountStr: "", isPositive: null };
   }
 
-  // Use asset/liability postings to determine cash flow direction
-  const cashPostings = postings.filter(
-    (p) =>
-      p.account.startsWith("Assets:") || p.account.startsWith("Liabilities:"),
-  );
-
-  if (cashPostings.length > 0) {
-    const net = cashPostings.reduce(
-      (sum, p) => sum + parseFloat(p.units.number),
-      0,
-    );
-    const currency = cashPostings[0].units.currency;
-    return {
-      name,
-      amountStr: formatAmount(net, currency),
-      isPositive: net > 0,
-    };
-  }
-
-  // Fallback: largest absolute posting
-  let max = postings[0];
-  for (const p of postings) {
-    if (
-      Math.abs(parseFloat(p.units.number)) >
-      Math.abs(parseFloat(max.units.number))
-    ) {
-      max = p;
-    }
-  }
-  const num = parseFloat(max.units.number);
-  return {
-    name,
-    amountStr: formatAmount(num, max.units.currency),
-    isPositive: num > 0,
-  };
+  return { name, amountStr: amount.text, isPositive: amount.value > 0 };
 };
 
 interface JournalEntryItemProps {
