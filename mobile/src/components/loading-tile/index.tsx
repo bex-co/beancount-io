@@ -30,7 +30,7 @@ type LoadingTileProps = {
 };
 
 export const LoadingTile = (props: LoadingTileProps) => {
-  const { style, mx, height } = props;
+  const { style, mx, height, width } = props;
   // Resolved theme name from the provider — themeVar itself can hold
   // "system", which must not be compared against "dark" directly.
   const theme = useTheme().name;
@@ -38,6 +38,7 @@ export const LoadingTile = (props: LoadingTileProps) => {
   const dynamicStyles: ViewStyle = {
     ...(mx && { marginHorizontal: mx }),
     ...(height && { height }),
+    ...(width && { width }),
   };
 
   const opacity = useSharedValue(1);

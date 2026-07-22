@@ -99,7 +99,11 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 type AccountListPageProps = {
-  label: string;
+  /**
+   * Small caption above the total. Omit where the surrounding chrome already
+   * names the category (the home card's tab strip), so it isn't said twice.
+   */
+  label?: string;
   /** Pre-formatted category total (with currency symbol). */
   total: string;
   items: AccountNode[];
@@ -248,7 +252,7 @@ export function AccountListPage({
   return (
     <View style={scrollable ? styles.container : undefined}>
       <View style={styles.header}>
-        <Text style={styles.label}>{label}</Text>
+        {label !== undefined && <Text style={styles.label}>{label}</Text>}
         <AmountText style={styles.headline}>{total}</AmountText>
       </View>
       {items.length === 0 ? (
