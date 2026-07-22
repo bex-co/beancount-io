@@ -38,6 +38,12 @@ type InteractiveLineChartProps = {
   numbers: number[];
   currencySymbol: string;
   height?: number;
+  /**
+   * Shown in the middle of the plot when there aren't two points to draw a line
+   * from (an empty ledger, or one with a single month of history). Defaults to
+   * a generic "not enough data" line.
+   */
+  placeholder?: string;
   /** Called when the user starts scrubbing — lets the parent lock a pager. */
   onScrubStart?: () => void;
   onScrubEnd?: () => void;
@@ -84,6 +90,22 @@ const getStyles = (theme: ColorTheme) =>
     chartContainer: {
       position: "relative",
     },
+    // Centered over the plot area, which is empty whenever a line can't be drawn.
+    placeholder: {
+      position: "absolute",
+      top: 0,
+      right: 0,
+      bottom: 0,
+      left: 0,
+      alignItems: "center",
+      justifyContent: "center",
+      paddingHorizontal: 16,
+    },
+    placeholderText: {
+      fontSize: fontSizes.md,
+      color: theme.black60,
+      textAlign: "center",
+    },
   });
 
 function triggerScrubStart(): void {
@@ -100,6 +122,7 @@ function InteractiveLineChart({
   numbers,
   currencySymbol,
   height = CHART_HEIGHT,
+  placeholder,
   onScrubStart,
   onScrubEnd,
 }: InteractiveLineChartProps): JSX.Element {
@@ -308,6 +331,14 @@ function InteractiveLineChart({
             />
           )}
         </Svg>
+
+        {!hasSeries && (
+          <View style={styles.placeholder} pointerEvents="none">
+            <Text style={styles.placeholderText}>
+              {placeholder ?? t("notEnoughChartData")}
+            </Text>
+          </View>
+        )}
       </View>
     </View>
   );

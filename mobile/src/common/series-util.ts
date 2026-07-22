@@ -111,6 +111,29 @@ export function filterSeriesByRange(
 }
 
 /**
+ * Range filter for **balance (stock) series** — net worth, assets, liabilities,
+ * an account's balance — where the window's first point is the baseline the
+ * change is measured from. Our series are monthly, so a "1M" window holds
+ * exactly one point and would render as a blank plot with a flat +0.00% change;
+ * a window that can't draw a line borrows the point just before it, making 1M
+ * read "last month → this month".
+ *
+ * Not for **flow series** (net profit, spending, income): each of their points
+ * is that period's own total, and the reports' transaction lists are sliced by
+ * `rangeStartMonth` — an extra month would put chart and list out of step.
+ */
+export function filterBalanceSeriesByRange(
+  series: SeriesPoint[],
+  range: TimeRange,
+): SeriesPoint[] {
+  const windowed = filterSeriesByRange(series, range);
+  const startIndex = series.length - windowed.length;
+  return windowed.length < 2 && startIndex > 0
+    ? series.slice(startIndex - 1)
+    : windowed;
+}
+
+/**
  * Convert a series to the `{ labels, numbers }` shape the charts consume,
  * with month labels ("MM"). Returns a single zero "no data" entry when empty.
  */

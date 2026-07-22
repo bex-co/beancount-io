@@ -88,6 +88,7 @@ export const en = {
   liabilities: "Liabilities",
   equity: "Equity",
   noDataCharts: "Quick add to show charts",
+  notEnoughChartData: "Not enough data to chart yet",
   done: "Done",
   payee: "Payee",
   narration: "Narration",

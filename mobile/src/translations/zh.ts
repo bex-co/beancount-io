@@ -75,6 +75,7 @@ export const zh = {
   liabilities: "负债",
   equity: "权益",
   noDataCharts: "添加数据以显示图例",
+  notEnoughChartData: "数据不足,暂无法绘制图表",
   done: "完成",
   payee: "收款方",
   narration: "备注",

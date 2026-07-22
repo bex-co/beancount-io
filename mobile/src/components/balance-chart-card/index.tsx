@@ -9,7 +9,7 @@ import {
   SeriesPoint,
   TIME_RANGES,
   TimeRange,
-  filterSeriesByRange,
+  filterBalanceSeriesByRange,
   seriesToChartArray,
 } from "@/common/series-util";
 
@@ -54,7 +54,7 @@ export function BalanceChartCard({
   }
 
   const chart = seriesToChartArray(
-    filterSeriesByRange(series, range),
+    filterBalanceSeriesByRange(series, range),
     t("noDataCharts"),
   );
   const rangeOptions = TIME_RANGES.map((key) => ({

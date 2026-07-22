@@ -1,4 +1,10 @@
-import { pointsToMonthlySeries, DateBalancePoint } from "../series-util";
+import {
+  pointsToMonthlySeries,
+  filterSeriesByRange,
+  filterBalanceSeriesByRange,
+  DateBalancePoint,
+  SeriesPoint,
+} from "../series-util";
 
 describe("pointsToMonthlySeries", () => {
   it("returns an empty array for null/undefined input", () => {
@@ -71,5 +77,42 @@ describe("pointsToMonthlySeries", () => {
     expect(pointsToMonthlySeries("USD", points)).toEqual([
       { date: "2025-01-01", value: 10 },
     ]);
+  });
+});
+
+describe("filterBalanceSeriesByRange", () => {
+  // Monthly series: one point per month, ascending.
+  const monthly: SeriesPoint[] = [
+    { date: "2025-04-30", value: 100 },
+    { date: "2025-05-31", value: 200 },
+    { date: "2025-06-30", value: 300 },
+    { date: "2025-07-31", value: 400 },
+  ];
+
+  it("borrows the preceding point when the window holds a single month", () => {
+    // "1M" anchors on the latest month, so plain filtering yields one point.
+    expect(filterSeriesByRange(monthly, "1M").length).toBe(1);
+    expect(filterBalanceSeriesByRange(monthly, "1M")).toEqual([
+      { date: "2025-06-30", value: 300 },
+      { date: "2025-07-31", value: 400 },
+    ]);
+  });
+
+  it("matches filterSeriesByRange once the window already has two points", () => {
+    expect(filterBalanceSeriesByRange(monthly, "3M")).toEqual(
+      filterSeriesByRange(monthly, "3M"),
+    );
+    expect(filterBalanceSeriesByRange(monthly, "ALL")).toEqual(monthly);
+  });
+
+  it("returns the single point when there is nothing earlier to borrow", () => {
+    const oneMonth: SeriesPoint[] = [{ date: "2025-07-31", value: 400 }];
+    expect(filterBalanceSeriesByRange(oneMonth, "1M")).toEqual(oneMonth);
+    expect(filterBalanceSeriesByRange(oneMonth, "ALL")).toEqual(oneMonth);
+  });
+
+  it("returns an empty array for an empty series", () => {
+    expect(filterBalanceSeriesByRange([], "1M")).toEqual([]);
+    expect(filterBalanceSeriesByRange([], "ALL")).toEqual([]);
   });
 });
