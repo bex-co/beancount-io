@@ -297,7 +297,7 @@ export const TransactionFiltersScreen = (): JSX.Element => {
           <View style={[styles.rows, styles.accountRow]}>
             <View style={styles.accountRowItem}>
               <ListItem
-                title={t("account").toUpperCase()}
+                // title={t("account").toUpperCase()}
                 content={draft.account ?? t("allAccounts")}
                 onPress={pickAccount}
               />

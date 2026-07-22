@@ -7,7 +7,7 @@ import { LoadingTile } from "@/components/loading-tile";
 
 type ListItemProps = {
   onPress?: () => void;
-  title: string;
+  title?: string;
   content?: string;
   showDivider?: boolean;
 };
@@ -81,7 +81,7 @@ export const ListItem = ({
       onPress={onPress}
     >
       <View style={styles.textWrap}>
-        <Text style={styles.title}>{title}</Text>
+        {title && <Text style={styles.title}>{title}</Text>}
         <Text
           style={[styles.content, !content && styles.placeholder]}
           numberOfLines={1}
