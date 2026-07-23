@@ -16,7 +16,10 @@ import {
   useFocusEffect,
 } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { ColorTheme } from "@/types/theme-props";
 import { fonts, useTheme } from "@/common/theme";
 import { useThemeStyle, usePageView } from "@/common/hooks";
@@ -24,7 +27,10 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { useLedgerGuard } from "@/components/ledger-guard";
 import { LoadingTile } from "@/components/loading-tile";
-import { KeyboardAccessoryBar } from "@/components/keyboard-accessory-bar";
+import {
+  KeyboardAccessoryBar,
+  KEYBOARD_ACCESSORY_BAR_HEIGHT,
+} from "@/components/keyboard-accessory-bar";
 import { analytics } from "@/common/analytics";
 import {
   decodeLedgerFileContent,
@@ -39,7 +45,7 @@ import CodeEditor, {
   type EditorDocumentSpec,
   type InsertSpec,
 } from "@/components/code-editor/code-editor";
-import { isConflictError, filterFileErrors } from "./utils";
+import { isConflictError, filterFileErrors, getKeyboardOverlap } from "./utils";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
@@ -64,7 +70,25 @@ const getStyles = (theme: ColorTheme) =>
     errorBanner: {
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black40,
+      backgroundColor: theme.white,
+    },
+    errorHeader: {
+      minHeight: 40,
+      flexDirection: "row",
+      alignItems: "center",
+      paddingHorizontal: 12,
+      gap: 8,
+    },
+    errorSummary: {
+      flex: 1,
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.error,
+    },
+    errorList: {
       maxHeight: 140,
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.black40,
     },
     errorRow: {
       flexDirection: "row",
@@ -130,34 +154,76 @@ function ErrorBanner({
   errors: FileError[];
   onJump: (line: number) => void;
 }): JSX.Element {
+  const { t } = useTranslations();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
+  const [expanded, setExpanded] = useState(false);
+  const errorCountLabel = t("ledgerEditorErrorCount", {
+    count: errors.length,
+  });
+
   return (
-    <ScrollView style={styles.errorBanner} scrollEnabled={errors.length > 3}>
-      {errors.map((err, i) => (
-        <View key={i}>
-          <TouchableOpacity
-            style={styles.errorRow}
-            activeOpacity={err.lineno != null ? 0.7 : 1}
-            onPress={() => err.lineno != null && onJump(err.lineno)}
-          >
-            <Ionicons name="warning-outline" size={14} color={theme.error} />
-            <View style={{ flex: 1 }}>
-              <Text style={styles.errorText} numberOfLines={2}>
-                {err.message}
-              </Text>
-              {err.lineno != null && (
-                <Text style={styles.errorLocation}>{`line ${err.lineno}`}</Text>
-              )}
+    <View style={styles.errorBanner}>
+      <TouchableOpacity
+        testID="ledger-editor-error-toggle"
+        style={styles.errorHeader}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityLabel={errorCountLabel}
+        accessibilityState={{ expanded }}
+        onPress={() => setExpanded((value) => !value)}
+      >
+        <Ionicons name="warning-outline" size={16} color={theme.error} />
+        <Text style={styles.errorSummary}>{errorCountLabel}</Text>
+        <Ionicons
+          name={expanded ? "chevron-up" : "chevron-down"}
+          size={16}
+          color={theme.black60}
+        />
+      </TouchableOpacity>
+
+      {expanded && (
+        <ScrollView
+          testID="ledger-editor-error-list"
+          style={styles.errorList}
+          scrollEnabled={errors.length > 3}
+        >
+          {errors.map((err, i) => (
+            <View key={`${err.lineno ?? "unknown"}-${i}`}>
+              <TouchableOpacity
+                style={styles.errorRow}
+                activeOpacity={err.lineno != null ? 0.7 : 1}
+                onPress={() => err.lineno != null && onJump(err.lineno)}
+              >
+                <Ionicons
+                  name="warning-outline"
+                  size={14}
+                  color={theme.error}
+                />
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.errorText} numberOfLines={2}>
+                    {err.message}
+                  </Text>
+                  {err.lineno != null && (
+                    <Text
+                      style={styles.errorLocation}
+                    >{`line ${err.lineno}`}</Text>
+                  )}
+                </View>
+                {err.lineno != null && (
+                  <Ionicons
+                    name="arrow-forward"
+                    size={14}
+                    color={theme.black60}
+                  />
+                )}
+              </TouchableOpacity>
+              {i < errors.length - 1 && <View style={styles.errorDivider} />}
             </View>
-            {err.lineno != null && (
-              <Ionicons name="arrow-forward" size={14} color={theme.black60} />
-            )}
-          </TouchableOpacity>
-          {i < errors.length - 1 && <View style={styles.errorDivider} />}
-        </View>
-      ))}
-    </ScrollView>
+          ))}
+        </ScrollView>
+      )}
+    </View>
   );
 }
 
@@ -167,6 +233,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
+  const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const ledgerId = useLedgerGuard();
   usePageView("ledger_file_editor");
@@ -353,6 +420,12 @@ export function LedgerFileEditorScreen(): JSX.Element {
     };
   }, []);
 
+  const isKeyboardVisible = keyboardHeight > 0;
+  const keyboardOverlap = getKeyboardOverlap(keyboardHeight, insets.bottom);
+  const editorKeyboardInset = isKeyboardVisible
+    ? keyboardOverlap + KEYBOARD_ACCESSORY_BAR_HEIGHT
+    : 0;
+
   // ── Accessory bar insert ─────────────────────────────────────────────────
 
   const insertSeq = useRef(0);
@@ -466,15 +539,15 @@ export function LedgerFileEditorScreen(): JSX.Element {
             onEdit={handleEdit}
             onSave={handleSave}
             isDark={isDark}
-            keyboardHeight={keyboardHeight}
+            keyboardInset={editorKeyboardInset}
             insertSpec={insertSpec}
             jumpToLine={jumpToLine}
             dom={{ style: { flex: 1 } }}
           />
         ) : null}
 
-        {keyboardHeight > 0 && initialized && (
-          <View style={[styles.accessoryWrapper, { bottom: keyboardHeight }]}>
+        {isKeyboardVisible && initialized && (
+          <View style={[styles.accessoryWrapper, { bottom: keyboardOverlap }]}>
             <KeyboardAccessoryBar onInsert={handleInsert} />
           </View>
         )}

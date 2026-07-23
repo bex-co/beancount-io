@@ -54,8 +54,8 @@ export type CodeEditorProps = {
   onEdit: (epoch: number, revision: number, isDirty: boolean) => Promise<void>;
   onSave: (value: string, epoch: number, revision: number) => Promise<boolean>;
   isDark: boolean;
-  /** Keyboard height (px) so CM6 scrolls cursor into view above the keyboard */
-  keyboardHeight: number;
+  /** Bottom inset (px) so CM6 scrolls above the keyboard accessory and keyboard */
+  keyboardInset: number;
   insertSpec: InsertSpec | null;
   jumpToLine: number | null;
 };
@@ -327,7 +327,7 @@ export default function CodeEditor({
   onEdit,
   onSave,
   isDark,
-  keyboardHeight,
+  keyboardInset,
   insertSpec,
   jumpToLine,
 }: CodeEditorProps) {
@@ -507,13 +507,13 @@ export default function CodeEditor({
     return jumpToEditorLine(view, jumpToLine);
   }, [jumpToLine]);
 
-  // Keyboard height → pad editor scroller so CM6 scrolls cursor above keyboard
+  // Keep the cursor above the native keyboard accessory and keyboard.
   useEffect(() => {
     const view = viewRef.current;
     if (!view) return;
     view.scrollDOM.style.paddingBottom =
-      keyboardHeight > 0 ? `${keyboardHeight}px` : "";
-  }, [keyboardHeight]);
+      keyboardInset > 0 ? `${keyboardInset}px` : "";
+  }, [keyboardInset]);
 
   return (
     <div

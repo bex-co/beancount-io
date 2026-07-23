@@ -11,6 +11,7 @@ import {
   isConflictError,
   filterFileErrors,
   classifyBeancountChunk,
+  getKeyboardOverlap,
 } from "../screens/ledger-file-editor-screen/utils";
 import {
   decodeLedgerFileContent,
@@ -246,6 +247,22 @@ test("filterFileErrors: returns empty when no match", () => {
   const filtered = filterFileErrors(errors, "main.bean");
   if (filtered.length !== 0)
     throw new Error(`expected 0 errors, got ${filtered.length}`);
+});
+
+// ── keyboard overlap ─────────────────────────────────────────────────────────
+
+test("getKeyboardOverlap: removes the bottom safe-area gap", () => {
+  const overlap = getKeyboardOverlap(291, 34);
+  if (overlap !== 257) {
+    throw new Error(`expected 257px overlap, got ${overlap}`);
+  }
+});
+
+test("getKeyboardOverlap: never returns a negative overlap", () => {
+  const overlap = getKeyboardOverlap(20, 34);
+  if (overlap !== 0) {
+    throw new Error(`expected zero overlap, got ${overlap}`);
+  }
 });
 
 // ── classifyBeancountChunk (tokenizer patterns) ───────────────────────────────

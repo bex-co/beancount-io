@@ -9,12 +9,12 @@ import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { fonts } from "@/common/theme";
 
-const BAR_HEIGHT = 44;
+export const KEYBOARD_ACCESSORY_BAR_HEIGHT = 44;
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     bar: {
-      height: BAR_HEIGHT,
+      height: KEYBOARD_ACCESSORY_BAR_HEIGHT,
       backgroundColor: theme.white,
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.black40,
@@ -88,7 +88,7 @@ export function KeyboardAccessoryBar({ onInsert }: KeyboardAccessoryBarProps) {
   ];
 
   return (
-    <View style={styles.bar}>
+    <View testID="ledger-editor-quick-buttons" style={styles.bar}>
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}

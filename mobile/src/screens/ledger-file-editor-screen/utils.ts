@@ -23,6 +23,18 @@ export function filterFileErrors(
 }
 
 /**
+ * Keyboard events report height from the bottom of the window, while the
+ * editor is laid out above its bottom safe-area inset. Convert the event
+ * height into the portion that actually overlaps the editor.
+ */
+export function getKeyboardOverlap(
+  keyboardHeight: number,
+  bottomInset: number,
+): number {
+  return Math.max(0, keyboardHeight - bottomInset);
+}
+
+/**
  * Pure regex-based beancount token classifier (no CM6 dependency).
  * Returns the token category for the START of the given string chunk,
  * or null if no token matches (plain text / whitespace).

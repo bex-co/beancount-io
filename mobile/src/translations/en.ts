@@ -328,4 +328,8 @@ export const en = {
     "This file was changed remotely. Discard local changes and reload?",
   ledgerEditorReload: "Reload",
   ledgerEditorKeepEditing: "Keep Editing",
+  ledgerEditorErrorCount: {
+    one: "{{count}} error",
+    other: "{{count}} errors",
+  },
 };
