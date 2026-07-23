@@ -388,6 +388,10 @@ input FileChangeInput {
   path: String!
 }
 
+type FileParseResult {
+  rows: [ParsedRow!]!
+}
+
 type FiscalYearEnd {
   day: Int!
   month: Int!
@@ -507,10 +511,6 @@ type JournalResponse {
   data: [JSONObject!]!
   is_empty: Boolean!
   total: Float!
-}
-
-type LLMParseResult {
-  rows: [ParsedRow!]!
 }
 
 type LabeledChartItem {
@@ -813,18 +813,18 @@ type Mutation {
   """Logout user, revoke JWT token and clear httpOnly cookie"""
   logout: LogoutResponse!
   """
-  Parse file using LLM (multimodal support for PDF/images/any format). File must be uploaded to S3 first.
+  Parse an uploaded file (multimodal support for PDF/images/any format) into structured transactions. File must be uploaded to S3 first.
   """
-  parseFileWithLLM(
+  parseFile(
     """File format type (e.g., csv, pdf, xlsx, json, etc.)"""
     fileFormat: String!
     """S3 object key from upload"""
     s3ObjectKey: String!
-  ): LLMParseResult!
+  ): FileParseResult!
   """
-  Parse a receipt image or PDF using LLM and return a single summarized transaction with account recommendations. File must be uploaded to S3 first.
+  Parse a receipt image or PDF and return a single summarized transaction with account recommendations. File must be uploaded to S3 first.
   """
-  parseReceiptWithLLM(
+  parseReceipt(
     """Ledger ID used to fetch available accounts for recommendation"""
     ledgerId: String!
     """S3 object key of the receipt (image or PDF only)"""
@@ -1307,9 +1307,9 @@ type Query {
   """
   suggestPlaidTransactionCategories(accountId: String, ledgerId: String!): [CategorySuggestion!]!
   """
-  Suggest transaction categories using LLM based on payee, description, and transaction history
+  Suggest transaction categories based on payee, description, and transaction history
   """
-  suggestTransactionCategoriesWithLLM(ledgerId: String!, transactions: [TransactionToCategorizeInput!]!): [CategorySuggestion!]!
+  suggestTransactionCategories(ledgerId: String!, transactions: [TransactionToCategorizeInput!]!): [CategorySuggestion!]!
   """get the user"""
   userProfile(userId: String): UserProfileResponse
   """Validate whether an email token is valid and not expired"""
@@ -1346,7 +1346,7 @@ type QueryShellTextResult {
 
 type ReceiptParseResult {
   amount: Float!
-  date: String!
+  date: String
   description: String!
   payee: String!
   sourceAccount: String

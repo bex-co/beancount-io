@@ -436,6 +436,11 @@ export type FileChangeInput = {
   path: Scalars['String']['input'];
 };
 
+export type FileParseResult = {
+  __typename?: 'FileParseResult';
+  rows: Array<ParsedRow>;
+};
+
 export type FiscalYearEnd = {
   __typename?: 'FiscalYearEnd';
   day: Scalars['Int']['output'];
@@ -556,11 +561,6 @@ export type JournalResponse = {
   data: Array<Scalars['JSONObject']['output']>;
   is_empty: Scalars['Boolean']['output'];
   total: Scalars['Float']['output'];
-};
-
-export type LlmParseResult = {
-  __typename?: 'LLMParseResult';
-  rows: Array<ParsedRow>;
 };
 
 export type LabeledChartItem = {
@@ -865,10 +865,10 @@ export type Mutation = {
   leaveLedger: DeleteCollaboratorResponse;
   /** Logout user, revoke JWT token and clear httpOnly cookie */
   logout: LogoutResponse;
-  /** Parse file using LLM (multimodal support for PDF/images/any format). File must be uploaded to S3 first. */
-  parseFileWithLLM: LlmParseResult;
-  /** Parse a receipt image or PDF using LLM and return a single summarized transaction with account recommendations. File must be uploaded to S3 first. */
-  parseReceiptWithLLM: ReceiptParseResult;
+  /** Parse an uploaded file (multimodal support for PDF/images/any format) into structured transactions. File must be uploaded to S3 first. */
+  parseFile: FileParseResult;
+  /** Parse a receipt image or PDF and return a single summarized transaction with account recommendations. File must be uploaded to S3 first. */
+  parseReceipt: ReceiptParseResult;
   /** Refresh Plaid Item status from Plaid API (useful after reauthentication) */
   refreshPlaidItemStatus: PlaidItemType;
   /** Refresh authentication token - issues a new token and revokes the current one */
@@ -1084,13 +1084,13 @@ export type MutationLeaveLedgerArgs = {
 };
 
 
-export type MutationParseFileWithLlmArgs = {
+export type MutationParseFileArgs = {
   fileFormat: Scalars['String']['input'];
   s3ObjectKey: Scalars['String']['input'];
 };
 
 
-export type MutationParseReceiptWithLlmArgs = {
+export type MutationParseReceiptArgs = {
   ledgerId: Scalars['String']['input'];
   s3ObjectKey: Scalars['String']['input'];
 };
@@ -1612,8 +1612,8 @@ export type Query = {
   suggestPlaidAccountMapping: Array<PlaidAccountMappingSuggestion>;
   /** Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted */
   suggestPlaidTransactionCategories: Array<CategorySuggestion>;
-  /** Suggest transaction categories using LLM based on payee, description, and transaction history */
-  suggestTransactionCategoriesWithLLM: Array<CategorySuggestion>;
+  /** Suggest transaction categories based on payee, description, and transaction history */
+  suggestTransactionCategories: Array<CategorySuggestion>;
   /** get the user */
   userProfile?: Maybe<UserProfileResponse>;
   /** Validate whether an email token is valid and not expired */
@@ -2066,7 +2066,7 @@ export type QuerySuggestPlaidTransactionCategoriesArgs = {
 };
 
 
-export type QuerySuggestTransactionCategoriesWithLlmArgs = {
+export type QuerySuggestTransactionCategoriesArgs = {
   ledgerId: Scalars['String']['input'];
   transactions: Array<TransactionToCategorizeInput>;
 };
@@ -2117,7 +2117,7 @@ export type QueryShellTextResult = {
 export type ReceiptParseResult = {
   __typename?: 'ReceiptParseResult';
   amount: Scalars['Float']['output'];
-  date: Scalars['String']['output'];
+  date?: Maybe<Scalars['String']['output']>;
   description: Scalars['String']['output'];
   payee: Scalars['String']['output'];
   sourceAccount?: Maybe<Scalars['String']['output']>;

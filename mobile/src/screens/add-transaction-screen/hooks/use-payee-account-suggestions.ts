@@ -1,7 +1,7 @@
 import { useMemo } from "react";
 import {
   useGetLedgerPayeeAccountsQuery,
-  useSuggestTransactionCategoriesWithLlmQuery,
+  useSuggestTransactionCategoriesQuery,
 } from "@/generated-graphql/graphql";
 import {
   buildLlmTransaction,
@@ -82,13 +82,13 @@ export function usePayeeAccountSuggestions(
 
   // LLM fallback — only fires once we know the payee is unseen. Skipping while
   // history is still loading avoids a redundant call for repeat payees.
-  const llmRes = useSuggestTransactionCategoriesWithLlmQuery({
+  const llmRes = useSuggestTransactionCategoriesQuery({
     variables: { ledgerId, transactions: [transaction] },
     skip: !enableLlm || !historyEmpty || !ledgerId,
     fetchPolicy: "network-only",
   });
 
-  const llmSuggestions = llmRes.data?.suggestTransactionCategoriesWithLLM ?? [];
+  const llmSuggestions = llmRes.data?.suggestTransactionCategories ?? [];
 
   return deriveSuggestions({
     payee,

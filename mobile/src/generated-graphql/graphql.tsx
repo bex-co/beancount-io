@@ -263,26 +263,26 @@ export type ListLedgersQueryVariables = Exact<{
 
 export type ListLedgersQuery = { listLedgers: Array<{ id: string, name: string, fullName: string, httpUrl: string, sshUrl: string, private: boolean, empty: boolean, size: number, createdAt: string, updatedAt: string, description: string | null, permissions: { admin: boolean, pull: boolean, push: boolean } | null }> };
 
-export type ParseReceiptWithLlmMutationVariables = Exact<{
+export type ParseReceiptMutationVariables = Exact<{
   s3ObjectKey: string;
   ledgerId: string;
 }>;
 
 
-export type ParseReceiptWithLlmMutation = { parseReceiptWithLLM: { date: string, payee: string, description: string, amount: number, sourceAccount: string | null, targetAccount: string | null } };
+export type ParseReceiptMutation = { parseReceipt: { date: string | null, payee: string, description: string, amount: number, sourceAccount: string | null, targetAccount: string | null } };
 
 export type SubscriptionStatusQueryVariables = Exact<{ [key: string]: never; }>;
 
 
 export type SubscriptionStatusQuery = { subscriptionStatus: { hasActiveSubscription: boolean, subscriptions: Array<{ id: string, status: string, cancelAt: unknown, cancelAtPeriodEnd: boolean, canceledAt: unknown, clientId: string, currentPeriodEnd: unknown, currentPeriodStart: unknown, items: Array<{ id: string, quantity: number, price: { id: string, amount: number, currency: string, interval: string, intervalCount: number | null, trialPeriodDays: number | null }, product: { id: string, name: string, description: string | null, images: Array<string> | null } | null }> }> } };
 
-export type SuggestTransactionCategoriesWithLlmQueryVariables = Exact<{
+export type SuggestTransactionCategoriesQueryVariables = Exact<{
   ledgerId: string;
   transactions: Array<Types.TransactionToCategorizeInput> | Types.TransactionToCategorizeInput;
 }>;
 
 
-export type SuggestTransactionCategoriesWithLlmQuery = { suggestTransactionCategoriesWithLLM: Array<{ targetAccount: string, confidence: number, source: string }> };
+export type SuggestTransactionCategoriesQuery = { suggestTransactionCategories: Array<{ targetAccount: string, confidence: number, source: string }> };
 
 export type TrialBalanceQueryVariables = Exact<{
   ledgerId: string;
@@ -1835,9 +1835,9 @@ export type ListLedgersQueryHookResult = ReturnType<typeof useListLedgersQuery>;
 export type ListLedgersLazyQueryHookResult = ReturnType<typeof useListLedgersLazyQuery>;
 export type ListLedgersSuspenseQueryHookResult = ReturnType<typeof useListLedgersSuspenseQuery>;
 export type ListLedgersQueryResult = Apollo.QueryResult<ListLedgersQuery, ListLedgersQueryVariables>;
-export const ParseReceiptWithLlmDocument = gql`
-    mutation ParseReceiptWithLLM($s3ObjectKey: String!, $ledgerId: String!) {
-  parseReceiptWithLLM(s3ObjectKey: $s3ObjectKey, ledgerId: $ledgerId) {
+export const ParseReceiptDocument = gql`
+    mutation ParseReceipt($s3ObjectKey: String!, $ledgerId: String!) {
+  parseReceipt(s3ObjectKey: $s3ObjectKey, ledgerId: $ledgerId) {
     date
     payee
     description
@@ -1847,33 +1847,33 @@ export const ParseReceiptWithLlmDocument = gql`
   }
 }
     `;
-export type ParseReceiptWithLlmMutationFn = Apollo.MutationFunction<ParseReceiptWithLlmMutation, ParseReceiptWithLlmMutationVariables>;
+export type ParseReceiptMutationFn = Apollo.MutationFunction<ParseReceiptMutation, ParseReceiptMutationVariables>;
 
 /**
- * __useParseReceiptWithLlmMutation__
+ * __useParseReceiptMutation__
  *
- * To run a mutation, you first call `useParseReceiptWithLlmMutation` within a React component and pass it any options that fit your needs.
- * When your component renders, `useParseReceiptWithLlmMutation` returns a tuple that includes:
+ * To run a mutation, you first call `useParseReceiptMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useParseReceiptMutation` returns a tuple that includes:
  * - A mutate function that you can call at any time to execute the mutation
  * - An object with fields that represent the current status of the mutation's execution
  *
  * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
  *
  * @example
- * const [parseReceiptWithLlmMutation, { data, loading, error }] = useParseReceiptWithLlmMutation({
+ * const [parseReceiptMutation, { data, loading, error }] = useParseReceiptMutation({
  *   variables: {
  *      s3ObjectKey: // value for 's3ObjectKey'
  *      ledgerId: // value for 'ledgerId'
  *   },
  * });
  */
-export function useParseReceiptWithLlmMutation(baseOptions?: Apollo.MutationHookOptions<ParseReceiptWithLlmMutation, ParseReceiptWithLlmMutationVariables>) {
+export function useParseReceiptMutation(baseOptions?: Apollo.MutationHookOptions<ParseReceiptMutation, ParseReceiptMutationVariables>) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useMutation<ParseReceiptWithLlmMutation, ParseReceiptWithLlmMutationVariables>(ParseReceiptWithLlmDocument, options);
+        return Apollo.useMutation<ParseReceiptMutation, ParseReceiptMutationVariables>(ParseReceiptDocument, options);
       }
-export type ParseReceiptWithLlmMutationHookResult = ReturnType<typeof useParseReceiptWithLlmMutation>;
-export type ParseReceiptWithLlmMutationResult = Apollo.MutationResult<ParseReceiptWithLlmMutation>;
-export type ParseReceiptWithLlmMutationOptions = Apollo.BaseMutationOptions<ParseReceiptWithLlmMutation, ParseReceiptWithLlmMutationVariables>;
+export type ParseReceiptMutationHookResult = ReturnType<typeof useParseReceiptMutation>;
+export type ParseReceiptMutationResult = Apollo.MutationResult<ParseReceiptMutation>;
+export type ParseReceiptMutationOptions = Apollo.BaseMutationOptions<ParseReceiptMutation, ParseReceiptMutationVariables>;
 export const SubscriptionStatusDocument = gql`
     query SubscriptionStatus {
   subscriptionStatus {
@@ -1944,12 +1944,9 @@ export type SubscriptionStatusQueryHookResult = ReturnType<typeof useSubscriptio
 export type SubscriptionStatusLazyQueryHookResult = ReturnType<typeof useSubscriptionStatusLazyQuery>;
 export type SubscriptionStatusSuspenseQueryHookResult = ReturnType<typeof useSubscriptionStatusSuspenseQuery>;
 export type SubscriptionStatusQueryResult = Apollo.QueryResult<SubscriptionStatusQuery, SubscriptionStatusQueryVariables>;
-export const SuggestTransactionCategoriesWithLlmDocument = gql`
-    query suggestTransactionCategoriesWithLLM($ledgerId: String!, $transactions: [TransactionToCategorizeInput!]!) {
-  suggestTransactionCategoriesWithLLM(
-    ledgerId: $ledgerId
-    transactions: $transactions
-  ) {
+export const SuggestTransactionCategoriesDocument = gql`
+    query suggestTransactionCategories($ledgerId: String!, $transactions: [TransactionToCategorizeInput!]!) {
+  suggestTransactionCategories(ledgerId: $ledgerId, transactions: $transactions) {
     targetAccount
     confidence
     source
@@ -1958,41 +1955,41 @@ export const SuggestTransactionCategoriesWithLlmDocument = gql`
     `;
 
 /**
- * __useSuggestTransactionCategoriesWithLlmQuery__
+ * __useSuggestTransactionCategoriesQuery__
  *
- * To run a query within a React component, call `useSuggestTransactionCategoriesWithLlmQuery` and pass it any options that fit your needs.
- * When your component renders, `useSuggestTransactionCategoriesWithLlmQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * To run a query within a React component, call `useSuggestTransactionCategoriesQuery` and pass it any options that fit your needs.
+ * When your component renders, `useSuggestTransactionCategoriesQuery` returns an object from Apollo Client that contains loading, error, and data properties
  * you can use to render your UI.
  *
  * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
  *
  * @example
- * const { data, loading, error } = useSuggestTransactionCategoriesWithLlmQuery({
+ * const { data, loading, error } = useSuggestTransactionCategoriesQuery({
  *   variables: {
  *      ledgerId: // value for 'ledgerId'
  *      transactions: // value for 'transactions'
  *   },
  * });
  */
-export function useSuggestTransactionCategoriesWithLlmQuery(baseOptions: Apollo.QueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables> & ({ variables: SuggestTransactionCategoriesWithLlmQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+export function useSuggestTransactionCategoriesQuery(baseOptions: Apollo.QueryHookOptions<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables> & ({ variables: SuggestTransactionCategoriesQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
         const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>(SuggestTransactionCategoriesWithLlmDocument, options);
+        return Apollo.useQuery<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables>(SuggestTransactionCategoriesDocument, options);
       }
-export function useSuggestTransactionCategoriesWithLlmLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>) {
+export function useSuggestTransactionCategoriesLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables>) {
           const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>(SuggestTransactionCategoriesWithLlmDocument, options);
+          return Apollo.useLazyQuery<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables>(SuggestTransactionCategoriesDocument, options);
         }
 // @ts-ignore
-export function useSuggestTransactionCategoriesWithLlmSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>): Apollo.UseSuspenseQueryResult<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>;
-export function useSuggestTransactionCategoriesWithLlmSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>): Apollo.UseSuspenseQueryResult<SuggestTransactionCategoriesWithLlmQuery | undefined, SuggestTransactionCategoriesWithLlmQueryVariables>;
-export function useSuggestTransactionCategoriesWithLlmSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>) {
+export function useSuggestTransactionCategoriesSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables>): Apollo.UseSuspenseQueryResult<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables>;
+export function useSuggestTransactionCategoriesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables>): Apollo.UseSuspenseQueryResult<SuggestTransactionCategoriesQuery | undefined, SuggestTransactionCategoriesQueryVariables>;
+export function useSuggestTransactionCategoriesSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables>) {
           const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>(SuggestTransactionCategoriesWithLlmDocument, options);
+          return Apollo.useSuspenseQuery<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables>(SuggestTransactionCategoriesDocument, options);
         }
-export type SuggestTransactionCategoriesWithLlmQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesWithLlmQuery>;
-export type SuggestTransactionCategoriesWithLlmLazyQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesWithLlmLazyQuery>;
-export type SuggestTransactionCategoriesWithLlmSuspenseQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesWithLlmSuspenseQuery>;
-export type SuggestTransactionCategoriesWithLlmQueryResult = Apollo.QueryResult<SuggestTransactionCategoriesWithLlmQuery, SuggestTransactionCategoriesWithLlmQueryVariables>;
+export type SuggestTransactionCategoriesQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesQuery>;
+export type SuggestTransactionCategoriesLazyQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesLazyQuery>;
+export type SuggestTransactionCategoriesSuspenseQueryHookResult = ReturnType<typeof useSuggestTransactionCategoriesSuspenseQuery>;
+export type SuggestTransactionCategoriesQueryResult = Apollo.QueryResult<SuggestTransactionCategoriesQuery, SuggestTransactionCategoriesQueryVariables>;
 export const TrialBalanceDocument = gql`
     query TrialBalance($ledgerId: String!, $time: String, $conversion: String!) {
   getLedgerTrialBalance(ledgerId: $ledgerId, time: $time, conversion: $conversion) {

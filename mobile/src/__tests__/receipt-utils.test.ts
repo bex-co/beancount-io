@@ -1,7 +1,24 @@
 import {
+  receiptDate,
   receiptErrorKey,
   mimeToExt,
 } from "../screens/receipt-capture-screen/receipt-utils";
+import { getFormatDate } from "../common/format-util";
+
+// ──────────────────────────────────────────────────────────────────────────────
+// receiptDate
+// ──────────────────────────────────────────────────────────────────────────────
+
+test("receiptDate passes a parsed date through unchanged", () => {
+  expect(receiptDate("2026-01-15")).toBe("2026-01-15");
+});
+
+test("receiptDate falls back to today when the server returns no date", () => {
+  const today = getFormatDate(new Date());
+  expect(receiptDate("")).toBe(today);
+  expect(receiptDate(null)).toBe(today);
+  expect(receiptDate(undefined)).toBe(today);
+});
 
 // ──────────────────────────────────────────────────────────────────────────────
 // receiptErrorKey

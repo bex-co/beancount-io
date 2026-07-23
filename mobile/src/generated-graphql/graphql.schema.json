@@ -3906,6 +3906,42 @@
       },
       {
         "kind": "OBJECT",
+        "name": "FileParseResult",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "rows",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "ParsedRow",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "FiscalYearEnd",
         "description": null,
         "isOneOf": null,
@@ -5116,42 +5152,6 @@
                 "name": "Float",
                 "kind": "SCALAR",
                 "ofType": null
-              }
-            },
-            "isDeprecated": false,
-            "deprecationReason": null
-          }
-        ],
-        "inputFields": null,
-        "interfaces": [],
-        "enumValues": null,
-        "possibleTypes": null
-      },
-      {
-        "kind": "OBJECT",
-        "name": "LLMParseResult",
-        "description": null,
-        "isOneOf": null,
-        "fields": [
-          {
-            "name": "rows",
-            "description": null,
-            "args": [],
-            "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "name": null,
-                "kind": "LIST",
-                "ofType": {
-                  "name": null,
-                  "kind": "NON_NULL",
-                  "ofType": {
-                    "name": "ParsedRow",
-                    "kind": "OBJECT",
-                    "ofType": null
-                  }
-                }
               }
             },
             "isDeprecated": false,
@@ -9110,8 +9110,8 @@
             "deprecationReason": null
           },
           {
-            "name": "parseFileWithLLM",
-            "description": "Parse file using LLM (multimodal support for PDF/images/any format). File must be uploaded to S3 first.",
+            "name": "parseFile",
+            "description": "Parse an uploaded file (multimodal support for PDF/images/any format) into structured transactions. File must be uploaded to S3 first.",
             "args": [
               {
                 "name": "fileFormat",
@@ -9150,7 +9150,7 @@
               "kind": "NON_NULL",
               "name": null,
               "ofType": {
-                "name": "LLMParseResult",
+                "name": "FileParseResult",
                 "kind": "OBJECT",
                 "ofType": null
               }
@@ -9159,8 +9159,8 @@
             "deprecationReason": null
           },
           {
-            "name": "parseReceiptWithLLM",
-            "description": "Parse a receipt image or PDF using LLM and return a single summarized transaction with account recommendations. File must be uploaded to S3 first.",
+            "name": "parseReceipt",
+            "description": "Parse a receipt image or PDF and return a single summarized transaction with account recommendations. File must be uploaded to S3 first.",
             "args": [
               {
                 "name": "ledgerId",
@@ -16678,8 +16678,8 @@
             "deprecationReason": null
           },
           {
-            "name": "suggestTransactionCategoriesWithLLM",
-            "description": "Suggest transaction categories using LLM based on payee, description, and transaction history",
+            "name": "suggestTransactionCategories",
+            "description": "Suggest transaction categories based on payee, description, and transaction history",
             "args": [
               {
                 "name": "ledgerId",
@@ -17077,13 +17077,9 @@
             "description": null,
             "args": [],
             "type": {
-              "kind": "NON_NULL",
-              "name": null,
-              "ofType": {
-                "name": "String",
-                "kind": "SCALAR",
-                "ofType": null
-              }
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null

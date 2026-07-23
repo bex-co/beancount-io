@@ -2,8 +2,9 @@ import { useState, useCallback } from "react";
 import * as FileSystem from "expo-file-system/legacy";
 import {
   useGenerateTempAssetUploadUrlMutation,
-  useParseReceiptWithLlmMutation,
+  useParseReceiptMutation,
 } from "@/generated-graphql/graphql";
+import { receiptDate } from "./receipt-utils";
 
 export type ParsedReceipt = {
   date: string;
@@ -36,7 +37,7 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
   const [phase, setPhase] = useState<ReceiptPhase>({ kind: "idle" });
 
   const [generateUploadUrl] = useGenerateTempAssetUploadUrlMutation();
-  const [parseReceipt] = useParseReceiptWithLlmMutation();
+  const [parseReceipt] = useParseReceiptMutation();
 
   const startCapture = useCallback(
     async (
@@ -89,7 +90,7 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
           throw new Error("parse_failed");
         }
 
-        const parsed = parseResult.data?.parseReceiptWithLLM;
+        const parsed = parseResult.data?.parseReceipt;
         if (!parsed) throw new Error("parse_failed");
 
         // The uploaded asset is only an LLM input — it expires out of the temp
@@ -97,7 +98,7 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
         // transaction is written through the generic addEntries mutation.
         setPhase({
           kind: "parsed",
-          date: parsed.date,
+          date: receiptDate(parsed.date),
           payee: parsed.payee,
           description: parsed.description,
           amount: parsed.amount,
