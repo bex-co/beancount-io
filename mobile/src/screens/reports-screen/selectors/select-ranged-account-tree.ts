@@ -43,16 +43,21 @@ function insertAccount(root: Trie, account: string): void {
 }
 
 /**
- * Rolled-up signed sum of a node's *leaf* descendants. Only trie leaves carry a
- * sum, so parent totals reported by the backend (if any) are never added back
- * in — this avoids double-counting when both an account and its sub-accounts
- * appear in the same month's `accountBalances`.
+ * Rolled-up signed sum of a node's OWN balance plus every descendant's.
+ *
+ * The backend's `accountBalances` reports each account's own, non-overlapping
+ * balance — NOT a rolled-up parent total — so an account can appear with its own
+ * postings AND alongside its sub-accounts. `Expenses:Taxes:…:Federal` (its own USD
+ * withholding) sits next to `…:Federal:PreTax401k` (a 401k leg booked in a
+ * commodity). Summing only trie *leaves* dropped the own balance of every account
+ * that also has sub-accounts — e.g. Federal's USD — which is what made the Taxes
+ * total under-report against the web dashboard. So every node contributes its own
+ * `sums` entry (0 when it has none, e.g. a pure aggregating level the backend
+ * never reported); there is no double-counting because parents carry only their
+ * own direct postings.
  */
 function rollup(trie: Trie, sums: Map<string, number>): number {
-  if (trie.children.size === 0) {
-    return sums.get(trie.account) ?? 0;
-  }
-  let total = 0;
+  let total = sums.get(trie.account) ?? 0;
   for (const child of trie.children.values()) {
     total += rollup(child, sums);
   }

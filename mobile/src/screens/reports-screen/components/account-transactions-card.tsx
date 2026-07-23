@@ -34,8 +34,11 @@ const getStyles = (theme: ColorTheme) =>
 
 type AccountTransactionsCardProps = {
   ledgerId: string;
-  /** Beancount account subtree to filter by, e.g. "Expenses" or "Income". */
-  accountPrefix: string;
+  /**
+   * Beancount account subtree(s) to filter by — a single prefix ("Expenses") or
+   * several (`["Income", "Expenses"]`) for a combined money-in/out list.
+   */
+  accountPrefix: string | string[];
   /** Translation key for the card title. */
   titleKey: string;
   /** Translation key for the empty-state message. */

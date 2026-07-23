@@ -55,6 +55,19 @@ describe("selectAccountTransactions", () => {
     ).toEqual(["inc"]);
   });
 
+  it("matches any subtree when given an array of prefixes", () => {
+    const entries = [
+      txn("2026-07-02", [{ account: "Expenses:Food", number: "40" }], "exp"),
+      txn("2026-07-03", [{ account: "Income:Salary", number: "-1000" }], "inc"),
+      txn("2026-07-04", [{ account: "Assets:Bank", number: "5" }], "asset"),
+    ];
+    expect(
+      selectAccountTransactions(entries, ["Income", "Expenses"], "ALL").map(
+        (e) => e.entry_hash,
+      ),
+    ).toEqual(["inc", "exp"]);
+  });
+
   it("skips non-transaction directives even when their account matches", () => {
     const balance = {
       entry_hash: "b1",

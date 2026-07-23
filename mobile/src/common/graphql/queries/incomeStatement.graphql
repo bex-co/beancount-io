@@ -24,19 +24,5 @@ query IncomeStatement(
       date
       balance
     }
-    expensesHierarchyData {
-      account
-      balance
-      balanceChildren
-      children
-      hasTxns
-    }
-    incomeHierarchyData {
-      account
-      balance
-      balanceChildren
-      children
-      hasTxns
-    }
   }
 }

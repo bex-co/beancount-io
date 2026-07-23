@@ -149,26 +149,46 @@ describe("selectRangedAccountTree", () => {
     expect(result.total).toBe(340);
   });
 
-  it("does not double-count when an account and its sub-account both appear", () => {
-    // Backend sometimes reports both a parent total and its leaf; only the leaf
-    // (trie-leaf) sum should count.
+  it("sums an account's own balance together with its sub-accounts'", () => {
+    // The backend reports each account's OWN, non-overlapping balance — an
+    // account can carry its own direct postings AND appear next to a sub-account
+    // (which carries its own). Both must count: Salary's own 5000 plus Bonus 1500.
     const result = selectRangedAccountTree(
       "USD",
       [
         point("2024-03-01", {
-          "Income:Salary": { USD: -5000 }, // parent total
-          "Income:Salary:Bonus": { USD: -1500 }, // leaf
+          "Income:Salary": { USD: -5000 }, // Salary's own direct postings
+          "Income:Salary:Bonus": { USD: -1500 }, // a sub-account's own postings
         }),
       ],
       "ALL",
       "income",
     );
-    // Salary's value is the leaf rollup (1500), not 5000 + 1500 — and since Bonus
-    // is its only child, the two collapse into a single "Salary:Bonus" row.
-    expect(result.tree[0].name).toBe("Salary:Bonus");
-    expect(result.tree[0].account).toBe("Income:Salary:Bonus");
-    expect(result.tree[0].value).toBe(1500);
-    expect(result.total).toBe(1500);
+    expect(result.tree[0].name).toBe("Salary");
+    expect(result.tree[0].value).toBe(6500);
+    expect(result.total).toBe(6500);
+  });
+
+  it("counts a parent's own balance even when it has a commodity-only sub-account", () => {
+    // The real Taxes/401k case that mismatched the web dashboard: an account with
+    // its own USD withholding sitting next to a 401k leg booked in a non-USD
+    // commodity (resolves to 0 USD). Summing only trie leaves dropped Federal's
+    // own $28k; every account's own balance must be counted.
+    const result = selectRangedAccountTree(
+      "USD",
+      [
+        point("2024-03-01", {
+          "Expenses:Taxes:Federal": { USD: 28000 }, // own withholding
+          "Expenses:Taxes:Federal:PreTax401k": { IRAUSD: 18500 }, // 0 in USD
+          "Expenses:Taxes:State": { USD: 9000 },
+        }),
+      ],
+      "ALL",
+      "expenses",
+    );
+    // 28000 (Federal own) + 0 (401k, non-USD) + 9000 (State) = 37000. The leaf-only
+    // bug produced 9000 (Federal's own $28k dropped because it had a sub-account).
+    expect(result.total).toBe(37000);
   });
 
   it("resolves the active currency and falls back to USD", () => {

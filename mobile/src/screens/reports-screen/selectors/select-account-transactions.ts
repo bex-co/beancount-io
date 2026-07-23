@@ -16,19 +16,24 @@ export const ACCOUNT_TRANSACTIONS_LIMIT = 10;
  */
 function involvesAccount(
   entry: JournalDirectiveType,
-  accountPrefix: string,
+  accountPrefix: string | string[],
 ): entry is JournalTransaction {
   if (!isJournalTransaction(entry)) {
     return false;
   }
+  const prefixes = Array.isArray(accountPrefix)
+    ? accountPrefix
+    : [accountPrefix];
   return (entry.postings ?? []).some((posting) =>
-    posting.account.startsWith(accountPrefix),
+    prefixes.some((prefix) => posting.account.startsWith(prefix)),
   );
 }
 
 /**
  * Transactions for a report: those with at least one posting under
- * `accountPrefix`, within the active time range, newest first, capped at `limit`.
+ * `accountPrefix` (a single subtree, or any of several when an array is passed —
+ * e.g. `["Income", "Expenses"]` for a combined money-in/out list), within the
+ * active time range, newest first, capped at `limit`.
  *
  * The window is anchored to the latest matching transaction's month — the same
  * "latest data point" anchoring the report bar charts use — so a stale ledger
@@ -40,7 +45,7 @@ function involvesAccount(
  */
 export function selectAccountTransactions(
   entries: JournalDirectiveType[],
-  accountPrefix: string,
+  accountPrefix: string | string[],
   timeRange: TimeRange,
   limit: number = ACCOUNT_TRANSACTIONS_LIMIT,
 ): JournalTransaction[] {

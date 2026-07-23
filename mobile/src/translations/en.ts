@@ -228,9 +228,9 @@ export const en = {
   togglePostings: "Toggle Postings",
   // reports tab
   reports: "Reports",
+  netProfit: "Net Profit",
   // feed
   latestUpdates: "Latest Updates",
-  cashFlow: "Cash Flow",
   // home dashboard
   seeAll: "See all",
   netWorth: "Net Worth",
@@ -239,10 +239,6 @@ export const en = {
   recentTransactionsEmpty: "No transactions yet",
   spending: "Spending",
   spendingSubtitle: "This month vs. last month",
-  expenseTransactions: "Expense Transactions",
-  expenseTransactionsEmpty: "No expense transactions yet",
-  incomeTransactions: "Income Transactions",
-  incomeTransactionsEmpty: "No income transactions yet",
   thisMonth: "This month",
   lastMonth: "Last month",
   range1M: "1M",

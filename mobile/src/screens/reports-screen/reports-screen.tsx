@@ -1,5 +1,5 @@
-import { useCallback, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { useCallback, useMemo, useState } from "react";
+import { StyleSheet } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
@@ -7,18 +7,35 @@ import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { getCurrencySymbol } from "@/common/currency-util";
+import { gutter } from "@/common/theme";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer/ledger-drawer-header";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
-import { Tabs } from "@/components/tabs";
+import { DashboardCard } from "@/components/dashboard-card";
+import { DashboardScrollView } from "@/components/dashboard-scroll-view";
+import { LoadingTile } from "@/components/loading-tile";
+import { IncomeExpenseBarChartD3 } from "@/common/d3/income-expense-bar-chart";
 import { TimeRangePills } from "@/components/time-range-pills";
-import { RANGE_LABEL_KEYS, TIME_RANGES, TimeRange } from "@/common/series-util";
+import {
+  RANGE_LABEL_KEYS,
+  TIME_RANGES,
+  TimeRange,
+  alignMonthlySeries,
+  filterSeriesByRange,
+  pointsToMonthlySeries,
+} from "@/common/series-util";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useIncomeStatement } from "./hooks/use-income-statement";
-import { SpendingReport } from "./components/spending-report";
-import { IncomeReport } from "./components/income-report";
-import { CashFlowReport } from "./components/cash-flow-report";
+import { selectRangedAccountTree } from "./selectors/select-ranged-account-tree";
+import { topNWithOther } from "./selectors/select-breakdown-rows";
+import {
+  CategoryBreakdown,
+  CategoryBreakdownSkeleton,
+} from "./components/category-breakdown";
+import { AccountTransactionsCard } from "./components/account-transactions-card";
+import { reportScrollStyles } from "./components/report-scroll-style";
 
-export type ReportType = "spending" | "income" | "cashFlow";
+/** How many top categories to show before folding the tail into "Other". */
+const BREAKDOWN_TOP_N = 7;
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -26,24 +43,7 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       backgroundColor: theme.white,
     },
-    tabsContainer: {
-      flex: 1,
-    },
-    // Three fixed tabs — let each trigger claim an equal share of the row so
-    // the labels and the active underline are evenly distributed.
-    tab: {
-      flex: 1,
-    },
   });
-
-type SharedReportProps = {
-  ledgerId: string;
-  currency: string;
-  currencySymbol: string;
-  timeRange: TimeRange;
-  refreshing: boolean;
-  onRefresh: () => void;
-};
 
 const ReportsScreenImpl = (): JSX.Element => {
   const { userId } = useSession();
@@ -64,11 +64,7 @@ const ReportsScreenImpl = (): JSX.Element => {
     loading: incomeLoading,
     refetch: incomeRefetch,
   } = useIncomeStatement(ledgerId);
-
-  const handleTabChange = useCallback((index: number) => {
-    const types: ReportType[] = ["cashFlow", "spending", "income"];
-    analytics.track("reports_segment_change", { segment: types[index] });
-  }, []);
+  const stmt = incomeData?.getLedgerIncomeStatement;
 
   const handleRangeChange = useCallback((range: TimeRange) => {
     setTimeRange(range);
@@ -89,50 +85,43 @@ const ReportsScreenImpl = (): JSX.Element => {
     label: t(RANGE_LABEL_KEYS[key]),
   }));
 
-  const sharedProps: SharedReportProps = {
-    ledgerId,
-    currency,
-    currencySymbol,
-    timeRange,
-    refreshing,
-    onRefresh,
-  };
+  // Combined chart: income (negated to a positive magnitude) and expense bars
+  // plus the signed net line, each range-filtered then aligned onto one axis.
+  const chart = useMemo(() => {
+    const income = pointsToMonthlySeries(currency, stmt?.incomeData ?? []).map(
+      (point) => ({ ...point, value: -point.value }),
+    );
+    const expense = pointsToMonthlySeries(currency, stmt?.expensesData ?? []);
+    const net = pointsToMonthlySeries(currency, stmt?.netProfitData ?? []);
+    return alignMonthlySeries({
+      income: filterSeriesByRange(income, timeRange),
+      expense: filterSeriesByRange(expense, timeRange),
+      net: filterSeriesByRange(net, timeRange),
+    });
+  }, [currency, stmt, timeRange]);
 
-  const tabs = [
-    {
-      key: "cashFlow",
-      title: t("cashFlow"),
-      component: (
-        <CashFlowReport
-          {...sharedProps}
-          loading={incomeLoading}
-          incomeData={incomeData}
-        />
+  const expense = useMemo(
+    () =>
+      selectRangedAccountTree(
+        currency,
+        stmt?.expensesData ?? [],
+        timeRange,
+        "expenses",
       ),
-    },
-    {
-      key: "spending",
-      title: t("spending"),
-      component: (
-        <SpendingReport
-          {...sharedProps}
-          loading={incomeLoading}
-          incomeData={incomeData}
-        />
+    [currency, stmt, timeRange],
+  );
+  const income = useMemo(
+    () =>
+      selectRangedAccountTree(
+        currency,
+        stmt?.incomeData ?? [],
+        timeRange,
+        "income",
       ),
-    },
-    {
-      key: "income",
-      title: t("income"),
-      component: (
-        <IncomeReport
-          {...sharedProps}
-          loading={incomeLoading}
-          incomeData={incomeData}
-        />
-      ),
-    },
-  ];
+    [currency, stmt, timeRange],
+  );
+
+  const isLoading = incomeLoading && !incomeData;
 
   return (
     <SafeAreaView edges={["top"]} style={styles.container}>
@@ -142,15 +131,64 @@ const ReportsScreenImpl = (): JSX.Element => {
         options={rangeOptions}
         onChange={handleRangeChange}
       />
-      <View style={styles.tabsContainer}>
-        <Tabs
-          tabs={tabs}
-          initialIndex={0}
-          onTabChange={handleTabChange}
-          tabStyle={styles.tab}
-          scrollable={false}
+      <DashboardScrollView
+        refreshing={refreshing}
+        onRefresh={onRefresh}
+        contentContainerStyle={reportScrollStyles.content}
+      >
+        <DashboardCard bleed>
+          {isLoading ? (
+            <LoadingTile height={220} mx={gutter} />
+          ) : (
+            <IncomeExpenseBarChartD3
+              currencySymbol={currencySymbol}
+              months={chart.months}
+              income={chart.income}
+              expense={chart.expense}
+              net={chart.net}
+            />
+          )}
+        </DashboardCard>
+
+        {isLoading ? (
+          <CategoryBreakdownSkeleton />
+        ) : (
+          <DashboardCard bleed>
+            <CategoryBreakdown
+              label={t("expenses")}
+              total={expense.total}
+              items={topNWithOther(expense.tree, BREAKDOWN_TOP_N, t("other"))}
+              currencySymbol={currencySymbol}
+              tone={(theme) => theme.error}
+              section="expenses"
+            />
+          </DashboardCard>
+        )}
+
+        {isLoading ? (
+          <CategoryBreakdownSkeleton />
+        ) : (
+          <DashboardCard bleed>
+            <CategoryBreakdown
+              label={t("income")}
+              total={income.total}
+              items={topNWithOther(income.tree, BREAKDOWN_TOP_N, t("other"))}
+              currencySymbol={currencySymbol}
+              tone={(theme) => theme.success}
+              section="income"
+            />
+          </DashboardCard>
+        )}
+
+        <AccountTransactionsCard
+          ledgerId={ledgerId}
+          accountPrefix={["Income", "Expenses"]}
+          titleKey="recentTransactions"
+          emptyKey="recentTransactionsEmpty"
+          timeRange={timeRange}
+          refreshing={refreshing}
         />
-      </View>
+      </DashboardScrollView>
     </SafeAreaView>
   );
 };

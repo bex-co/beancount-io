@@ -149,3 +149,40 @@ export function seriesToChartArray(
     numbers: series.map((point) => point.value),
   };
 }
+
+/**
+ * Align income / expense / net monthly series onto ONE shared month axis for the
+ * combined reports chart. The three series are filtered independently, so a month
+ * present in one may be missing from another (e.g. a month with income but no
+ * expenses); we union every month key ("YYYY-MM"), sort ascending, and 0-fill any
+ * series that lacks a month. Returns the unique `months` keys plus the three
+ * aligned number arrays, each the same length as `months`.
+ *
+ * `months` are the full "YYYY-MM" keys, NOT "MM": the chart uses them as its x
+ * identity so a span crossing a year boundary (e.g. two Julys) keeps a distinct
+ * column per month instead of collapsing them. Display labels are derived from the
+ * key downstream (`t(month.slice(5, 7))`).
+ *
+ * Callers pass series already sign-corrected for display (income negated to
+ * positive); this only aligns, it does not touch signs.
+ */
+export function alignMonthlySeries(input: {
+  income: SeriesPoint[];
+  expense: SeriesPoint[];
+  net: SeriesPoint[];
+}): { months: string[]; income: number[]; expense: number[]; net: number[] } {
+  const keyOf = (point: SeriesPoint) => point.date.slice(0, 7);
+  const months = Array.from(
+    new Set([...input.income, ...input.expense, ...input.net].map(keyOf)),
+  ).sort();
+  const alignTo = (series: SeriesPoint[]) => {
+    const byMonth = new Map(series.map((point) => [keyOf(point), point.value]));
+    return months.map((month) => byMonth.get(month) ?? 0);
+  };
+  return {
+    months,
+    income: alignTo(input.income),
+    expense: alignTo(input.expense),
+    net: alignTo(input.net),
+  };
+}

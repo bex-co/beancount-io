@@ -207,7 +207,7 @@ export type IncomeStatementQueryVariables = Exact<{
 }>;
 
 
-export type IncomeStatementQuery = { getLedgerIncomeStatement: { expensesData: Array<{ date: string, balance: Record<string, number | string>, accountBalances: Record<string, number | string> }>, incomeData: Array<{ date: string, balance: Record<string, number | string>, accountBalances: Record<string, number | string> }>, netProfitData: Array<{ date: string, balance: Record<string, number | string> }>, expensesHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean }, incomeHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean } } };
+export type IncomeStatementQuery = { getLedgerIncomeStatement: { expensesData: Array<{ date: string, balance: Record<string, number | string>, accountBalances: Record<string, number | string> }>, incomeData: Array<{ date: string, balance: Record<string, number | string>, accountBalances: Record<string, number | string> }>, netProfitData: Array<{ date: string, balance: Record<string, number | string> }> } };
 
 export type InsertReceiptTransactionMutationVariables = Exact<{
   ledgerId: string;
@@ -1453,20 +1453,6 @@ export const IncomeStatementDocument = gql`
     netProfitData {
       date
       balance
-    }
-    expensesHierarchyData {
-      account
-      balance
-      balanceChildren
-      children
-      hasTxns
-    }
-    incomeHierarchyData {
-      account
-      balance
-      balanceChildren
-      children
-      hasTxns
     }
   }
 }
