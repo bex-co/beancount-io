@@ -23,7 +23,6 @@ import {
 import { Theme } from "@/common/vars/theme";
 import { useTheme } from "@/common/theme";
 import { Ionicons } from "@expo/vector-icons";
-import { LedgerListItem } from "./ledger-list-item";
 
 export const MainContent = () => {
   const { authToken } = useSession();
@@ -131,7 +130,6 @@ export const MainContent = () => {
             setThemeModalVisible(true);
           }}
         />
-        <LedgerListItem />
 
         <SectionHeader title={t("supportSettings")} />
         <ListItemHorizontal
