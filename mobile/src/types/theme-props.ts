@@ -1,16 +1,6 @@
 export interface ThemeProps {
   name: string;
-  antdTheme: AntdTheme;
   colorTheme: ColorTheme;
-  sizing: number[];
-}
-
-export interface AntdTheme {
-  color_text_base: string;
-  brand_primary: string;
-  color_link: string;
-  primary_button_fill: string;
-  primary_button_fill_tap: string;
 }
 
 export interface ColorTheme {

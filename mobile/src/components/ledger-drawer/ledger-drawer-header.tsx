@@ -4,7 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
-import { useTheme } from "@/common/theme";
+import { gutter, space, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
@@ -15,8 +15,8 @@ const getStyles = (theme: ColorTheme) =>
     navBar: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: gutter,
+      paddingVertical: space.md,
       backgroundColor: theme.white,
     },
     navLeft: {
@@ -24,7 +24,7 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       width: 80,
       justifyContent: "flex-start",
-      gap: 8,
+      gap: space.sm,
     },
     navTitle: {
       flex: 1,

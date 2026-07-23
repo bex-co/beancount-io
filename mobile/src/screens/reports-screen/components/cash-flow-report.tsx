@@ -11,6 +11,12 @@ import {
   seriesToChartArray,
 } from "@/common/series-util";
 import { groupThousands } from "@/common/number-utils";
+import {
+  gutter,
+  rowMinHeight,
+  rowPaddingVertical,
+  sectionHeaderPaddingVertical,
+} from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { IncomeStatementQuery } from "@/generated-graphql/graphql";
 import { DashboardScrollView } from "@/components/dashboard-scroll-view";
@@ -37,18 +43,20 @@ const SKELETON_ROWS = [
 
 const skeletonStyles = StyleSheet.create({
   header: {
-    paddingHorizontal: 16,
-    marginBottom: 12,
+    paddingHorizontal: gutter,
+    marginBottom: sectionHeaderPaddingVertical,
   },
   label: {
     marginBottom: 6,
   },
+  // Mirrors the loaded AccountListPage row rhythm so nothing shifts on load.
   row: {
     flexDirection: "row",
     alignItems: "center",
     justifyContent: "space-between",
-    paddingHorizontal: 16,
-    paddingVertical: 10,
+    paddingHorizontal: gutter,
+    paddingVertical: rowPaddingVertical,
+    minHeight: rowMinHeight,
   },
 });
 

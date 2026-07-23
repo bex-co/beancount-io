@@ -9,7 +9,16 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  gutter,
+  rowMinHeight,
+  rowPaddingVertical,
+  sectionHeaderPaddingVertical,
+  space,
+  useTheme,
+} from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
@@ -36,8 +45,8 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
     },
     header: {
-      paddingHorizontal: 16,
-      marginBottom: 8,
+      paddingHorizontal: gutter,
+      marginBottom: sectionHeaderPaddingVertical,
     },
     label: {
       fontSize: fontSizes.md,
@@ -52,13 +61,14 @@ const getStyles = (theme: ColorTheme) =>
     row: {
       flexDirection: "row",
       alignItems: "center",
-      paddingRight: 16,
-      paddingVertical: 7,
+      paddingRight: gutter,
+      paddingVertical: rowPaddingVertical,
       // Pins every row to the same height regardless of depth (depth 0 renders
-      // one size up, so its natural line box is taller). `minHeight` rather
-      // than a fixed `lineHeight`: line heights don't scale with Dynamic Type,
-      // so pinning one would clip large text — this lets the row grow instead.
-      minHeight: 34,
+      // one size up, so its natural line box is taller), and to the same rhythm
+      // as the app's list rows. `minHeight` rather than a fixed `lineHeight`:
+      // line heights don't scale with Dynamic Type, so pinning one would clip
+      // large text — this lets the row grow instead.
+      minHeight: rowMinHeight,
     },
     chevron: {
       width: INDENT_STEP,
@@ -68,7 +78,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     name: {
       flex: 1,
-      marginRight: 12,
+      marginRight: space.md,
     },
     nameTop: {
       fontSize: fontSizes.lg,
@@ -89,10 +99,10 @@ const getStyles = (theme: ColorTheme) =>
     separator: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: theme.black20,
-      marginHorizontal: 16,
+      marginHorizontal: gutter,
     },
     empty: {
-      paddingHorizontal: 16,
+      paddingHorizontal: gutter,
       fontSize: fontSizes.md,
       color: theme.black80,
     },
@@ -154,7 +164,7 @@ export function AccountListPage({
     const hasChildren = node.children.length > 0;
     const isExpanded =
       overrides[node.account] ?? depth < DEFAULT_EXPANDED_LEVELS - 1;
-    const paddingLeft = 16 + depth * INDENT_STEP;
+    const paddingLeft = gutter + depth * INDENT_STEP;
     const nameStyle = [
       styles.name,
       depth === 0 ? styles.nameTop : styles.nameChild,

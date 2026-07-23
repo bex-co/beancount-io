@@ -8,13 +8,14 @@ import {
 } from "react-native";
 import { useReactiveVar } from "@apollo/client";
 import { themeVar } from "@/common/vars";
+import { gutter } from "@/common/theme";
 
 const styles = StyleSheet.create({
   content: {
-    // 16px side gutters keep cards off the screen edges. Dashboard cards
-    // bring their own 16px bottom margin, so spacing between them stays uniform
-    // without extra spacers.
-    paddingHorizontal: 16,
+    // Side gutters keep cards off the screen edges — the app-wide inset.
+    // Dashboard cards bring their own bottom margin, so spacing between them
+    // stays uniform without extra spacers.
+    paddingHorizontal: gutter,
   },
 });
 

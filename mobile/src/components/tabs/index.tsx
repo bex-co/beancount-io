@@ -14,7 +14,7 @@ import {
 
 import PagerView from "react-native-pager-view";
 import { horizontalSwipeOwnerTouchProps } from "@/common/horizontal-swipe-owner";
-import { useTheme } from "@/common/theme";
+import { gutter, space, useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 
 interface PageSelectedEvent {
@@ -66,8 +66,8 @@ const getStyles = (theme: ColorTheme) =>
       flexGrow: 0,
     },
     tab: {
-      paddingVertical: 16,
-      paddingHorizontal: 20,
+      paddingVertical: space.lg,
+      paddingHorizontal: gutter,
       alignItems: "center",
       justifyContent: "center",
       minWidth: 80,

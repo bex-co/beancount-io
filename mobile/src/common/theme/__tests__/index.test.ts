@@ -33,7 +33,7 @@ Module.prototype.require = function (this: NodeModule, id: string) {
   return originalRequire.apply(this, arguments);
 };
 
-import { getSystemColorScheme, themes } from "../index";
+import { getSystemColorScheme, themes, space, gutter } from "../index";
 
 describe("getSystemColorScheme", () => {
   it("returns light when system color scheme is light", () => {
@@ -66,14 +66,12 @@ describe("themes", () => {
     expect(themes.light).toBeTruthy();
     expect(themes.light.name).toBe("light");
     expect(themes.light.colorTheme).toBeTruthy();
-    expect(themes.light.antdTheme).toBeTruthy();
   });
 
   it("contains dark theme definition", () => {
     expect(themes.dark).toBeTruthy();
     expect(themes.dark.name).toBe("dark");
     expect(themes.dark.colorTheme).toBeTruthy();
-    expect(themes.dark.antdTheme).toBeTruthy();
   });
 
   it("light theme has expected color properties", () => {
@@ -90,21 +88,27 @@ describe("themes", () => {
     expect(colorTheme.primary).toBe("#5fc535");
   });
 
-  it("both themes have sizing array", () => {
-    expect(themes.light.sizing).toEqual([2, 6, 8, 10, 16, 24, 32]);
-    expect(themes.dark.sizing).toEqual([2, 6, 8, 10, 16, 24, 32]);
+  it("exposes an ascending 4pt-based spacing scale", () => {
+    const scale = [
+      space.xxs,
+      space.xs,
+      space.sm,
+      space.md,
+      space.lg,
+      space.xl,
+      space.xxl,
+    ];
+    expect(scale).toEqual([2, 4, 8, 12, 16, 24, 32]);
+    // Strictly ascending, so tokens can't silently collide.
+    const isAscending = scale.every(
+      (value, i) => i === 0 || value > scale[i - 1],
+    );
+    expect(isAscending).toBe(true);
   });
 
-  it("light theme antdTheme uses colorTheme colors", () => {
-    const { antdTheme, colorTheme } = themes.light;
-    expect(antdTheme.brand_primary).toBe(colorTheme.primary);
-    expect(antdTheme.color_text_base).toBe(colorTheme.text01);
-  });
-
-  it("dark theme antdTheme uses colorTheme colors", () => {
-    const { antdTheme, colorTheme } = themes.dark;
-    expect(antdTheme.brand_primary).toBe(colorTheme.primary);
-    expect(antdTheme.color_text_base).toBe(colorTheme.text01);
+  it("gutter is the canonical 16pt horizontal inset", () => {
+    expect(gutter).toBe(16);
+    expect(gutter).toBe(space.lg);
   });
 
   it("both themes have error colors", () => {

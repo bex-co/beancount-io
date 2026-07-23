@@ -1,7 +1,15 @@
 import React from "react";
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  gutter,
+  rowMinHeight,
+  rowPaddingVertical,
+  space,
+  useTheme,
+} from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { ColorTheme } from "@/types/theme-props";
@@ -19,8 +27,9 @@ const getStyles = (theme: ColorTheme) =>
     row: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: gutter,
+      paddingVertical: rowPaddingVertical,
+      minHeight: rowMinHeight,
       // No background: rows inherit their container's color so they sit on the
       // DashboardCard (theme.black10) in the home/reports cards and on the
       // screen (theme.white) in the transactions and journal lists. Hardcoding theme.white
@@ -56,7 +65,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     amount: {
       fontSize: fontSizes.md,
-      marginLeft: 8,
+      marginLeft: space.sm,
       flexShrink: 0,
     },
     amountPositive: {

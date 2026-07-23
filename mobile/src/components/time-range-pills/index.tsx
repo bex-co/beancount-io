@@ -1,6 +1,6 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
-import { fontSizes, fontWeights } from "@/common/theme";
+import { fontSizes, fontWeights, space } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 
 export type PillOption<T extends string> = {
@@ -20,8 +20,10 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       justifyContent: "center",
       alignItems: "center",
-      paddingTop: 8,
+      paddingTop: space.sm,
     },
+    // Pill internals are a self-contained segmented control; these compact
+    // metrics are intentional and not part of the shared spacing scale.
     pill: {
       paddingHorizontal: 10,
       paddingVertical: 6,

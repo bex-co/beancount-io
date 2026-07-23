@@ -7,7 +7,13 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle } from "@/common/hooks";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  gutter,
+  space,
+  useTheme,
+} from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerDrawerButton } from "@/components/ledger-drawer";
@@ -17,8 +23,8 @@ const getStyles = (theme: ColorTheme) =>
     navBar: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingHorizontal: gutter,
+      paddingVertical: space.md,
       backgroundColor: theme.white,
     },
     navTitle: {
@@ -38,7 +44,7 @@ const getStyles = (theme: ColorTheme) =>
     navRight: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 8,
+      gap: space.sm,
       width: 64,
       justifyContent: "flex-end",
     },
@@ -48,8 +54,8 @@ const getStyles = (theme: ColorTheme) =>
     searchBar: {
       flexDirection: "row",
       alignItems: "center",
-      marginHorizontal: 16,
-      marginBottom: 8,
+      marginHorizontal: gutter,
+      marginBottom: space.sm,
       backgroundColor: theme.black10,
       borderRadius: 10,
       paddingHorizontal: 10,

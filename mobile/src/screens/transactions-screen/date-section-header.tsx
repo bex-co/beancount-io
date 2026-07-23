@@ -1,7 +1,12 @@
 import React from "react";
 import { StyleSheet, Text, View } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
-import { fontSizes, fontWeights } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  gutter,
+  sectionHeaderPaddingVertical,
+} from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { ColorTheme } from "@/types/theme-props";
 
@@ -11,8 +16,8 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingHorizontal: 16,
-      paddingVertical: 6,
+      paddingHorizontal: gutter,
+      paddingVertical: sectionHeaderPaddingVertical,
       backgroundColor: theme.black10,
     },
     date: {

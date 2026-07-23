@@ -4,6 +4,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
+import { gutter, rowMinHeight } from "@/common/theme";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
@@ -17,8 +18,9 @@ import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
 
 // Skeleton rows sized to the loaded table's rhythm: each tile plus its vertical
-// margins fills the same 38px line box a real row occupies, so nothing shifts
-// when data lands. Widths vary across rows so it reads as content, not stripes.
+// margins fills the same line box a real row occupies (rowMinHeight), so nothing
+// shifts when data lands. Widths vary across rows so it reads as content, not
+// stripes.
 const SKELETON_ROWS = [
   { indent: 0, labelWidth: 78, valueWidth: 92 },
   { indent: 1, labelWidth: 148, valueWidth: 80 },
@@ -40,8 +42,8 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingRight: 16,
-      minHeight: 38,
+      paddingRight: gutter,
+      minHeight: rowMinHeight,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black20,
     },
@@ -102,7 +104,8 @@ const AccountsScreenImpl = (): JSX.Element => {
               key={index}
               style={[
                 styles.skeletonRow,
-                { paddingLeft: 16 + row.indent * 18 },
+                // gutter + one INDENT_STEP (18) per depth, mirroring AccountTable.
+                { paddingLeft: gutter + row.indent * 18 },
               ]}
             >
               <LoadingTile width={row.labelWidth} height={14} />

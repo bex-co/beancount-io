@@ -12,7 +12,14 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { ColorTheme } from "@/types/theme-props";
-import { useTheme } from "@/common/theme";
+import {
+  gutter,
+  rowMinHeight,
+  rowPaddingVertical,
+  sectionHeaderPaddingVertical,
+  space,
+  useTheme,
+} from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useToast } from "@/common/hooks/use-toast";
@@ -60,15 +67,15 @@ const getStyles = (theme: ColorTheme) =>
     breadcrumbRow: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 8,
+      paddingHorizontal: gutter,
+      paddingVertical: sectionHeaderPaddingVertical,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black40,
       backgroundColor: theme.white,
-      gap: 4,
+      gap: space.xs,
     },
     breadcrumbBack: {
-      padding: 4,
+      padding: space.xs,
     },
     breadcrumbText: {
       fontSize: 13,
@@ -84,9 +91,10 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      paddingLeft: 16,
-      paddingRight: 12,
-      paddingVertical: 14,
+      paddingLeft: gutter,
+      paddingRight: gutter,
+      paddingVertical: rowPaddingVertical,
+      minHeight: rowMinHeight,
     },
     rowDim: {
       opacity: 0.4,
@@ -101,8 +109,8 @@ const getStyles = (theme: ColorTheme) =>
       lineHeight: 20,
     },
     rowAction: {
-      paddingHorizontal: 16,
-      paddingVertical: 14,
+      paddingHorizontal: gutter,
+      paddingVertical: rowPaddingVertical,
     },
     rowActionDisabled: {
       opacity: 0.35,
@@ -110,21 +118,23 @@ const getStyles = (theme: ColorTheme) =>
     divider: {
       height: StyleSheet.hairlineWidth,
       backgroundColor: theme.black40,
-      marginLeft: 16 + 28,
+      // Indented to the row's text start: gutter + the icon slot width.
+      marginLeft: gutter + 28,
     },
     skeletonRow: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 16,
-      gap: 12,
+      paddingHorizontal: gutter,
+      paddingVertical: rowPaddingVertical,
+      minHeight: rowMinHeight,
+      gap: space.md,
     },
     emptyContainer: {
       flex: 1,
       alignItems: "center",
       justifyContent: "center",
       paddingVertical: 40,
-      gap: 8,
+      gap: space.sm,
     },
     emptyText: {
       fontSize: 15,
@@ -133,13 +143,13 @@ const getStyles = (theme: ColorTheme) =>
     errorText: {
       fontSize: 14,
       color: theme.error,
-      paddingHorizontal: 16,
-      paddingVertical: 20,
+      paddingHorizontal: gutter,
+      paddingVertical: space.xl,
       textAlign: "center",
     },
     stateHint: {
       maxWidth: 280,
-      paddingHorizontal: 24,
+      paddingHorizontal: space.xl,
       fontSize: 13,
       lineHeight: 18,
       textAlign: "center",
@@ -149,10 +159,10 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       gap: 6,
-      marginTop: 8,
+      marginTop: space.sm,
       paddingHorizontal: 14,
       paddingVertical: 9,
-      borderRadius: 8,
+      borderRadius: space.sm,
       backgroundColor: theme.primary,
     },
     emptyActionText: {

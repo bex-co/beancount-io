@@ -1,4 +1,5 @@
 import { StyleSheet } from "react-native";
+import { space } from "@/common/theme";
 
 /**
  * Shared top gutter for the Reports tab bodies. `DashboardCard` only carries a
@@ -7,6 +8,6 @@ import { StyleSheet } from "react-native";
  */
 export const reportScrollStyles = StyleSheet.create({
   content: {
-    paddingTop: 16,
+    paddingTop: space.lg,
   },
 });

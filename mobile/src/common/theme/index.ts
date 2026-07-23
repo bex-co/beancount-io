@@ -1,6 +1,6 @@
 import { Appearance, Platform } from "react-native";
 import { createTheming } from "@callstack/react-theme-provider";
-import { ThemeProps, ColorTheme, AntdTheme } from "@/types/theme-props";
+import { ThemeProps, ColorTheme } from "@/types/theme-props";
 import { isExpoGo } from "../expo-env";
 import { resolveMonoFontFamily } from "./typography";
 
@@ -23,6 +23,14 @@ export {
 } from "./typography";
 
 export { withAlpha } from "./color-utils";
+
+export {
+  space,
+  gutter,
+  rowMinHeight,
+  rowPaddingVertical,
+  sectionHeaderPaddingVertical,
+} from "./spacing";
 
 export const getSystemColorScheme = () => {
   const colorScheme = Appearance.getColorScheme();
@@ -129,34 +137,14 @@ const darkTheme: ColorTheme = {
   navText: BONE,
 };
 
-export const antdLightTheme: AntdTheme = {
-  color_text_base: lightTheme.text01,
-  brand_primary: lightTheme.primary,
-  color_link: lightTheme.primary,
-  primary_button_fill: lightTheme.primary,
-  primary_button_fill_tap: lightTheme.primary,
-};
-
-export const antdDarkTheme: AntdTheme = {
-  color_text_base: darkTheme.text01,
-  brand_primary: darkTheme.primary,
-  color_link: darkTheme.primary,
-  primary_button_fill: darkTheme.primary,
-  primary_button_fill_tap: darkTheme.primary,
-};
-
 export const themes: { [key: string]: ThemeProps } = {
   light: {
     name: "light",
     colorTheme: lightTheme,
-    antdTheme: antdLightTheme,
-    sizing: [2, 6, 8, 10, 16, 24, 32],
   },
   dark: {
     name: "dark",
     colorTheme: darkTheme,
-    antdTheme: antdDarkTheme,
-    sizing: [2, 6, 8, 10, 16, 24, 32],
   },
 };
 

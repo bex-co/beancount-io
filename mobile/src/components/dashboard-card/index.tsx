@@ -9,25 +9,31 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  gutter,
+  space,
+  useTheme,
+} from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     card: {
       backgroundColor: theme.black10,
-      borderRadius: 16,
+      borderRadius: gutter,
       borderWidth: StyleSheet.hairlineWidth,
       borderColor: theme.black20,
-      paddingVertical: 16,
-      marginBottom: 16,
+      paddingVertical: space.lg,
+      marginBottom: space.lg,
       overflow: "hidden",
     },
     header: {
       flexDirection: "row",
       alignItems: "center",
-      paddingHorizontal: 16,
-      marginBottom: 12,
+      paddingHorizontal: gutter,
+      marginBottom: space.md,
     },
     title: {
       flex: 1,
@@ -43,10 +49,10 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.primary,
-      marginRight: 2,
+      marginRight: space.xxs,
     },
     content: {
-      paddingHorizontal: 16,
+      paddingHorizontal: gutter,
     },
   });
 

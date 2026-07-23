@@ -10,7 +10,16 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  gutter,
+  rowMinHeight,
+  rowPaddingVertical,
+  sectionHeaderPaddingVertical,
+  space,
+  useTheme,
+} from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { formatSignedMoney } from "@/common/number-utils";
@@ -29,8 +38,8 @@ import { flattenRows, type TableRow } from "./flatten-rows";
  * diverge and every level drifts by the difference.
  */
 const INDENT_STEP = 18;
-/** Left gutter before the first chevron slot. */
-const GUTTER = 16;
+/** Left gutter before the first chevron slot — the app-wide screen inset. */
+const GUTTER = gutter;
 /** Track a row's magnitude bar fills at 100% of its widest sibling. */
 const BAR_TRACK_WIDTH = 72;
 
@@ -43,8 +52,7 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       paddingHorizontal: GUTTER,
-      paddingTop: 4,
-      paddingBottom: 8,
+      paddingVertical: sectionHeaderPaddingVertical,
     },
     columnLabel: {
       flex: 1,
@@ -59,11 +67,12 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       paddingRight: GUTTER,
-      paddingVertical: 7,
-      // Pins every row to the same height regardless of depth. `minHeight` rather
-      // than a fixed `lineHeight`: line heights don't scale with Dynamic Type, so
-      // pinning one would clip large text — this lets the row grow instead.
-      minHeight: 38,
+      paddingVertical: rowPaddingVertical,
+      // Pins every row to the same height regardless of depth, and to the same
+      // rhythm as the app's list rows. `minHeight` rather than a fixed
+      // `lineHeight`: line heights don't scale with Dynamic Type, so pinning one
+      // would clip large text — this lets the row grow instead.
+      minHeight: rowMinHeight,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black20,
     },
@@ -139,7 +148,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     empty: {
       paddingHorizontal: GUTTER,
-      paddingVertical: 12,
+      paddingVertical: space.md,
       fontSize: fontSizes.md,
       color: theme.black80,
     },
