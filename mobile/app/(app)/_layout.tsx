@@ -59,6 +59,11 @@ export default function AppLayout() {
       />
       <Stack.Screen name="commit-detail" />
       <Stack.Screen name="ledger-file-editor" />
+      {/* Full-bleed camera: it draws its own dark chrome over the viewfinder. */}
+      <Stack.Screen
+        name="receipt-capture"
+        options={{ headerShown: false, presentation: "fullScreenModal" }}
+      />
     </Stack>
   );
 }

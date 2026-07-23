@@ -1,492 +1,89 @@
 import { memo, useEffect, useRef, useState } from "react";
-import {
-  ActivityIndicator,
-  Alert,
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-} from "react-native";
-import { Ionicons } from "@expo/vector-icons";
-import { Stack, useRouter, useLocalSearchParams } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Alert, StyleSheet, View } from "react-native";
+import { useRouter, useLocalSearchParams } from "expo-router";
+import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
 import * as LegacyFS from "expo-file-system/legacy";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
-import { useThemeStyle, usePageView, useToast } from "@/common/hooks";
+import { usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
-import { ColorTheme } from "@/types/theme-props";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
-import { useSession } from "@/common/hooks/use-session";
-import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
-import {
-  SelectedPostingAccount,
-  AddTransactionCallback,
-} from "@/common/globalFnFactory";
-import { getFormatDate } from "@/common/format-util";
 import { useReceiptWorkflow } from "./use-receipt-workflow";
-import {
-  buildReceiptPostings,
-  receiptErrorKey,
-  mimeToExt,
-} from "./receipt-utils";
-import type { InsertReceiptTransactionInput } from "@/generated-graphql/graphql";
+import { receiptErrorKey, mimeToExt } from "./receipt-utils";
+import { CameraView, type CapturedShot } from "./camera-view";
+import { PreviewView } from "./preview-view";
+import { CHROME } from "./chrome";
 
-const getStyles = (theme: ColorTheme) =>
-  StyleSheet.create({
-    container: { flex: 1, backgroundColor: theme.white },
-    progressContainer: {
-      flex: 1,
-      justifyContent: "center",
-      alignItems: "center",
-      gap: 16,
-      paddingHorizontal: 32,
-    },
-    progressText: {
-      fontSize: fontSizes.md,
-      color: theme.black60,
-      textAlign: "center",
-    },
-    errorText: {
-      fontSize: fontSizes.md,
-      color: theme.error,
-      textAlign: "center",
-      marginBottom: 24,
-    },
-    retryButton: {
-      paddingHorizontal: 24,
-      paddingVertical: 12,
-      borderRadius: 8,
-      backgroundColor: theme.primary,
-    },
-    retryButtonText: {
-      color: theme.white,
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-    },
-    scrollContent: { paddingBottom: 32 },
-    section: {
-      marginHorizontal: 16,
-      marginTop: 16,
-      borderWidth: 1,
-      borderColor: theme.black10,
-      borderRadius: 12,
-      overflow: "hidden",
-      backgroundColor: theme.white,
-    },
-    row: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-      borderBottomWidth: 1,
-      borderBottomColor: theme.black10,
-    },
-    rowLast: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: 16,
-      paddingVertical: 14,
-    },
-    rowLabel: {
-      fontSize: fontSizes.sm,
-      color: theme.black60,
-      width: 110,
-      flexShrink: 0,
-    },
-    rowValue: {
-      flex: 1,
-      fontSize: fontSizes.md,
-      color: theme.text01,
-    },
-    rowValueInput: {
-      flex: 1,
-      fontSize: fontSizes.md,
-      color: theme.text01,
-      padding: 0,
-    },
-    rowValuePlaceholder: {
-      flex: 1,
-      fontSize: fontSizes.md,
-      color: theme.black40,
-    },
-    sectionTitle: {
-      fontSize: fontSizes.sm,
-      color: theme.black60,
-      fontWeight: fontWeights.medium,
-      marginHorizontal: 16,
-      marginTop: 24,
-      marginBottom: 4,
-      textTransform: "uppercase",
-      letterSpacing: 0.5,
-    },
-    confirmButton: {
-      margin: 16,
-      marginTop: 24,
-      backgroundColor: theme.primary,
-      borderRadius: 12,
-      paddingVertical: 16,
-      alignItems: "center",
-    },
-    confirmButtonDisabled: {
-      backgroundColor: theme.black20,
-    },
-    confirmButtonText: {
-      color: theme.white,
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-    },
-    chooserContainer: {
-      flex: 1,
-      justifyContent: "center",
-      paddingHorizontal: 24,
-      gap: 16,
-      backgroundColor: theme.white,
-    },
-    chooserButton: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "center",
-      gap: 12,
-      paddingVertical: 18,
-      borderRadius: 12,
-      backgroundColor: theme.primary,
-    },
-    chooserButtonPressed: {
-      backgroundColor: theme.primaryDark,
-    },
-    chooserButtonText: {
-      color: theme.white,
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-    },
-    chooserCancel: {
-      paddingVertical: 14,
-      alignItems: "center",
-    },
-    chooserCancelText: {
-      color: theme.black60,
-      fontSize: fontSizes.md,
-    },
-  });
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: CHROME.background },
+});
 
-type ReviewState = {
-  payee: string;
-  date: Date;
-  description: string;
-  sourceAccount: string;
-  targetAccount: string;
-  amount: number;
-  objectKey: string;
-};
-
-const ProgressView = ({ message }: { message: string }) => {
-  const styles = useThemeStyle(getStyles);
-  return (
-    <View style={styles.progressContainer}>
-      <ActivityIndicator size="large" />
-      <Text style={styles.progressText}>{message}</Text>
-    </View>
-  );
-};
-
-const SourceChooserView = ({
-  onPick,
-  onCancel,
-}: {
-  onPick: (useCamera: boolean) => void;
-  onCancel: () => void;
-}) => {
-  const styles = useThemeStyle(getStyles);
-  const theme = useTheme().colorTheme;
-  const { t } = useTranslations();
-  return (
-    <View style={styles.chooserContainer}>
-      <Pressable
-        testID="receipt-take-photo"
-        style={({ pressed }) => [
-          styles.chooserButton,
-          pressed && styles.chooserButtonPressed,
-        ]}
-        onPress={() => onPick(true)}
-      >
-        <Ionicons name="camera-outline" size={22} color={theme.white} />
-        <Text style={styles.chooserButtonText}>{t("receiptTakePhoto")}</Text>
-      </Pressable>
-      <Pressable
-        testID="receipt-choose-library"
-        style={({ pressed }) => [
-          styles.chooserButton,
-          pressed && styles.chooserButtonPressed,
-        ]}
-        onPress={() => onPick(false)}
-      >
-        <Ionicons name="images-outline" size={22} color={theme.white} />
-        <Text style={styles.chooserButtonText}>
-          {t("receiptChooseLibrary")}
-        </Text>
-      </Pressable>
-      <Pressable style={styles.chooserCancel} onPress={onCancel}>
-        <Text style={styles.chooserCancelText}>{t("receiptCancel")}</Text>
-      </Pressable>
-    </View>
-  );
-};
-
-const ErrorView = ({
-  message,
-  onRetry,
-}: {
-  message: string;
-  onRetry: () => void;
-}) => {
-  const styles = useThemeStyle(getStyles);
-  const { t } = useTranslations();
-  return (
-    <View style={styles.progressContainer}>
-      <Text style={styles.errorText}>{message}</Text>
-      <Pressable style={styles.retryButton} onPress={onRetry}>
-        <Text style={styles.retryButtonText}>{t("cancel")}</Text>
-      </Pressable>
-    </View>
-  );
-};
-
-const ReviewForm = ({
-  review,
-  currency,
-  ledgerId,
-  onConfirm,
-}: {
-  review: ReviewState;
-  currency: string;
-  ledgerId: string;
-  onConfirm: (
-    input: InsertReceiptTransactionInput,
-    ledgerId: string,
-    objectKey: string,
-  ) => void;
-}) => {
-  const styles = useThemeStyle(getStyles);
-  const { t } = useTranslations();
-  const router = useRouter();
-
-  const [payee, setPayee] = useState(review.payee);
-  const [date, setDate] = useState(review.date);
-  const [description, setDescription] = useState(review.description);
-  const [sourceAccount, setSourceAccount] = useState(review.sourceAccount);
-  const [targetAccount, setTargetAccount] = useState(review.targetAccount);
-  const [showDatePicker, setShowDatePicker] = useState(false);
-
-  // which account slot is being picked: "source" | "target" | null
-  const pendingSlot = useRef<"source" | "target" | null>(null);
-
-  const openAccountPicker = (slot: "source" | "target") => {
-    pendingSlot.current = slot;
-    SelectedPostingAccount.setFn((account: string) => {
-      if (pendingSlot.current === "source") setSourceAccount(account);
-      else setTargetAccount(account);
-    });
-    router.navigate({
-      pathname: "/(app)/account-picker",
-      params: { type: "posting" },
-    });
-  };
-
-  const canConfirm = sourceAccount.length > 0 && targetAccount.length > 0;
-
-  const handleConfirm = () => {
-    const input: InsertReceiptTransactionInput = {
-      payee,
-      date: getFormatDate(date),
-      description,
-      documentAccount: sourceAccount,
-      postings: buildReceiptPostings(
-        review.amount,
-        targetAccount,
-        sourceAccount,
-        currency,
-      ),
-    };
-    analytics.track("receipt_confirm", { ledgerId });
-    onConfirm(input, ledgerId, review.objectKey);
-  };
-
-  return (
-    <ScrollView contentContainerStyle={styles.scrollContent}>
-      <Text style={styles.sectionTitle}>{t("transaction")}</Text>
-      <View style={styles.section}>
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>{t("receiptPayee")}</Text>
-          <TextInput
-            style={styles.rowValueInput}
-            value={payee}
-            onChangeText={setPayee}
-            placeholder={t("receiptPayee")}
-          />
-        </View>
-        <View style={styles.row}>
-          <Text style={styles.rowLabel}>{t("receiptDate")}</Text>
-          <Pressable
-            style={{ flex: 1 }}
-            onPress={() => setShowDatePicker(true)}
-          >
-            <Text style={styles.rowValue}>{getFormatDate(date)}</Text>
-          </Pressable>
-        </View>
-        <View style={styles.rowLast}>
-          <Text style={styles.rowLabel}>{t("receiptDescription")}</Text>
-          <TextInput
-            style={styles.rowValueInput}
-            value={description}
-            onChangeText={setDescription}
-            placeholder={t("narration")}
-          />
-        </View>
-      </View>
-
-      <Text style={styles.sectionTitle}>{t("accounts")}</Text>
-      <View style={styles.section}>
-        <Pressable
-          testID="receipt-target-account"
-          style={styles.row}
-          onPress={() => openAccountPicker("target")}
-        >
-          <Text style={styles.rowLabel}>{t("receiptTargetAccount")}</Text>
-          {targetAccount ? (
-            <Text style={styles.rowValue}>{targetAccount}</Text>
-          ) : (
-            <Text style={styles.rowValuePlaceholder}>{t("legAccount")}</Text>
-          )}
-        </Pressable>
-        <Pressable
-          testID="receipt-source-account"
-          style={styles.rowLast}
-          onPress={() => openAccountPicker("source")}
-        >
-          <Text style={styles.rowLabel}>{t("receiptSourceAccount")}</Text>
-          {sourceAccount ? (
-            <Text style={styles.rowValue}>{sourceAccount}</Text>
-          ) : (
-            <Text style={styles.rowValuePlaceholder}>{t("legAccount")}</Text>
-          )}
-        </Pressable>
-      </View>
-
-      <Text style={styles.sectionTitle}>{t("receiptAmount")}</Text>
-      <View style={styles.section}>
-        <View style={styles.rowLast}>
-          <Text style={styles.rowLabel}>{t("total")}</Text>
-          <Text style={styles.rowValue}>
-            {review.amount.toFixed(2)} {currency}
-          </Text>
-        </View>
-      </View>
-
-      <Pressable
-        testID="receipt-confirm-button"
-        style={[
-          styles.confirmButton,
-          !canConfirm && styles.confirmButtonDisabled,
-        ]}
-        onPress={handleConfirm}
-        disabled={!canConfirm}
-      >
-        <Text style={styles.confirmButtonText}>{t("receiptConfirm")}</Text>
-      </Pressable>
-
-      <DateTimePickerModal
-        isVisible={showDatePicker}
-        mode="date"
-        date={date}
-        onConfirm={(d) => {
-          setDate(d);
-          setShowDatePicker(false);
-        }}
-        onCancel={() => setShowDatePicker(false)}
-      />
-    </ScrollView>
-  );
-};
-
-// Minimal 1×1 white JPEG used in __DEV__ test mode to bypass the system photo picker.
+// Minimal 1×1 white JPEG used in __DEV__ test mode to bypass the camera.
+// XCUITest (used by expo-mcp) dismisses native camera UI on attach.
 const TEST_JPEG_B64 =
   "/9j/4AAQSkZJRgABAQAAAQABAAD/2wBDAAgGBgcGBQgHBwcJCQgKDBQNDAsLDBkSEw8UHRofHh0aHBwgJC4nICIsIxwcKDcpLDAxNDQ0Hyc5PTgyPC4zNDL/wAALCAABAAEBAREA/8QAHwAAAQUBAQEBAQEAAAAAAAAAAAECAwQFBgcICQoL/8QAtRAAAgEDAwIEAwUFBAQAAAF9AQIDAAQRBRIhMUEGE1FhByJxFDKBkaEII0KxwRVS0fAkM2JyggkKFhcYGRolJicoKSo0NTY3ODk6Q0RFRkdISUpTVFVWV1hZWmNkZWZnaGlqc3R1dnd4eXqDhIWGh4iJipKTlJWWl5iZmqKjpKWmp6ipqrKztLW2t7i5usLDxMXGx8jJytLT1NXW19jZ2uHi4+Tl5ufo6erx8vP09fb3+Pn6/9oACAEBAAA/APvSiigD/9k=";
 
 const ReceiptCaptureScreenImpl = () => {
-  const styles = useThemeStyle(getStyles);
-  const theme = useTheme().colorTheme;
   const { t } = useTranslations();
   const router = useRouter();
-  const { showToast } = useToast();
-  const { userId } = useSession();
   const ledgerId = useLedgerGuard();
-  const { currencies } = useLedgerMeta(userId);
-  const currency = currencies.length > 0 ? currencies[0] : "USD";
   const workflow = useReceiptWorkflow();
   const { testMode } = useLocalSearchParams<{ testMode?: string }>();
   usePageView("receipt_capture");
 
+  const [shot, setShot] = useState<CapturedShot | null>(null);
   const launched = useRef(false);
 
-  // Opening the OS camera/library picker is user-initiated from the in-screen
-  // chooser. We deliberately do NOT auto-present a native picker/action-sheet on
-  // mount: doing so while the Quick Add menu's <Modal> is dismissing and the
-  // screen push is still animating wedges iOS's presentation stack and freezes
-  // the whole app.
-  const launchPicker = async (useCamera: boolean) => {
-    let result: ImagePicker.ImagePickerResult;
-    if (useCamera) {
-      const perm = await ImagePicker.requestCameraPermissionsAsync();
-      if (perm.status !== "granted") {
-        Alert.alert(t("receiptCameraPermission"));
-        return;
-      }
-      result = await ImagePicker.launchCameraAsync({
-        mediaTypes: ["images"],
-        quality: 0.85,
-      });
-    } else {
-      const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
-      if (perm.status !== "granted") {
-        Alert.alert(t("receiptLibraryPermission"));
-        return;
-      }
-      result = await ImagePicker.launchImageLibraryAsync({
-        mediaTypes: ["images"],
-        quality: 0.85,
-      });
-    }
-
-    // On cancel, stay on the chooser so the user can pick again.
-    if (result.canceled || !result.assets?.[0]) {
+  const pickFromLibrary = async () => {
+    const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (perm.status !== "granted") {
+      Alert.alert(t("receiptLibraryPermission"));
       return;
     }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ["images"],
+      quality: 0.85,
+    });
+    if (result.canceled || !result.assets?.[0]) return;
 
     const asset = result.assets[0];
     const mimeType = asset.mimeType ?? "image/jpeg";
-    const filename = asset.fileName ?? `receipt.${mimeToExt(mimeType)}`;
-
-    analytics.track("receipt_image_selected", {
-      source: useCamera ? "camera" : "library",
+    analytics.track("receipt_image_selected", { source: "library" });
+    setShot({
+      uri: asset.uri,
+      mimeType,
+      filename: asset.fileName ?? `receipt.${mimeToExt(mimeType)}`,
     });
-    await workflow.startCapture(asset.uri, mimeType, filename, ledgerId);
+  };
+
+  const handleCapture = (captured: CapturedShot) => {
+    analytics.track("receipt_image_selected", { source: "camera" });
+    setShot(captured);
+  };
+
+  const handleRetake = () => {
+    workflow.reset();
+    setShot(null);
+  };
+
+  const handleUpload = () => {
+    if (!shot) return;
+    workflow.startCapture(shot.uri, shot.mimeType, shot.filename, ledgerId);
   };
 
   useEffect(() => {
     if (!launched.current && __DEV__ && testMode === "1") {
       launched.current = true;
-      // Bypass the system photo picker for automated E2E testing.
-      // XCUITest (used by expo-mcp) dismisses native pickers on attach.
       (async () => {
         try {
           const uri = `${LegacyFS.cacheDirectory}test-receipt.jpg`;
           await LegacyFS.writeAsStringAsync(uri, TEST_JPEG_B64, {
             encoding: LegacyFS.EncodingType.Base64,
+          });
+          setShot({
+            uri,
+            mimeType: "image/jpeg",
+            filename: "test-receipt.jpg",
           });
           await workflow.startCapture(
             uri,
@@ -502,76 +99,71 @@ const ReceiptCaptureScreenImpl = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Handle success: show toast and navigate back
+  // Parse succeeded — hand the fields to the real transaction editor.
+  // `replace`, not `push`: it drops the camera from the stack so the form's
+  // own router.back() after saving returns to where the scan started.
   useEffect(() => {
-    if (workflow.phase.kind === "success") {
-      showToast({ message: t("receiptSaveSuccess"), type: "success" });
-      AddTransactionCallback.getFn()?.();
-      router.back();
-    }
-  }, [workflow.phase.kind, showToast, t, router]);
+    const phase = workflow.phase;
+    if (phase.kind !== "parsed") return;
+    analytics.track("receipt_parsed", { ledgerId });
+    router.replace({
+      pathname: "/(app)/add-transaction",
+      params: {
+        prefillDate: phase.date,
+        prefillPayee: phase.payee,
+        prefillNarration: phase.description,
+        prefillSourceAccount: phase.sourceAccount,
+        prefillTargetAccount: phase.targetAccount,
+        // Receipts are expenses; normalize so the form always seeds a clean
+        // positive total regardless of how the model signed it.
+        prefillAmount: Math.abs(phase.amount).toFixed(2),
+      },
+    });
+  }, [workflow.phase, router, ledgerId]);
 
   const renderBody = () => {
-    const { phase } = workflow;
+    if (!shot) {
+      return (
+        <CameraView
+          onCapture={handleCapture}
+          onPickFromLibrary={pickFromLibrary}
+          onClose={() => router.back()}
+        />
+      );
+    }
 
-    if (phase.kind === "idle") {
-      return (
-        <SourceChooserView
-          onPick={launchPicker}
-          onCancel={() => router.back()}
-        />
-      );
-    }
-    if (phase.kind === "uploading") {
-      return <ProgressView message={t("receiptUploading")} />;
-    }
-    if (phase.kind === "parsing") {
-      return <ProgressView message={t("receiptParsing")} />;
-    }
-    if (phase.kind === "confirming") {
-      return <ProgressView message={t("saving")} />;
-    }
-    if (phase.kind === "success") {
-      return <ProgressView message={t("receiptSaveSuccess")} />;
-    }
-    if (phase.kind === "error") {
-      const msg = `${t(receiptErrorKey(phase.message))}\n[${phase.message}]`;
-      return <ErrorView message={msg} onRetry={() => router.back()} />;
-    }
-    if (phase.kind === "review") {
-      const reviewState: ReviewState = {
-        payee: phase.payee,
-        date: new Date(phase.date),
-        description: phase.description,
-        sourceAccount: phase.sourceAccount,
-        targetAccount: phase.targetAccount,
-        amount: phase.amount,
-        objectKey: phase.objectKey,
-      };
-      return (
-        <ReviewForm
-          review={reviewState}
-          currency={currency}
-          ledgerId={ledgerId}
-          onConfirm={workflow.confirmTransaction}
-        />
-      );
-    }
-    return null;
+    const { phase } = workflow;
+    // "parsed" keeps showing the parsing spinner: the navigation effect runs a
+    // frame later, and falling through to "preview" would flash the
+    // Retake/Upload buttons back up on the way out.
+    const status =
+      phase.kind === "uploading"
+        ? "uploading"
+        : phase.kind === "parsing" || phase.kind === "parsed"
+          ? "parsing"
+          : phase.kind === "error"
+            ? "error"
+            : "preview";
+
+    return (
+      <PreviewView
+        shot={shot}
+        status={status}
+        errorMessage={
+          phase.kind === "error" ? t(receiptErrorKey(phase.message)) : undefined
+        }
+        onRetake={handleRetake}
+        onUpload={handleUpload}
+        onCancel={() => router.back()}
+      />
+    );
   };
 
   return (
-    <SafeAreaView edges={["bottom"]} style={styles.container}>
-      <Stack.Screen
-        options={{
-          title: t("receiptCaptureTitle"),
-          headerStyle: { backgroundColor: theme.white },
-          headerTintColor: theme.text01,
-          headerTitleStyle: { fontWeight: fontWeights.medium },
-        }}
-      />
+    <View style={styles.container}>
+      <StatusBar style="light" />
       {renderBody()}
-    </SafeAreaView>
+    </View>
   );
 };
 

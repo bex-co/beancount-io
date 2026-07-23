@@ -1,35 +1,14 @@
-import type { ReceiptPostingInput } from "@/generated-graphql/graphql";
-
-/** Build the two balanced postings for a receipt transaction. */
-export const buildReceiptPostings = (
-  amount: number,
-  targetAccount: string,
-  sourceAccount: string,
-  currency: string,
-): ReceiptPostingInput[] => [
-  {
-    account: targetAccount,
-    amountNumber: amount.toFixed(2),
-    amountCurrency: currency,
-  },
-  {
-    account: sourceAccount,
-    amountNumber: (-amount).toFixed(2),
-    amountCurrency: currency,
-  },
-];
-
-/** Map an internal error code to a translation key. */
+/**
+ * Map an internal error code to a translation key.
+ *
+ * Only covers the capture → upload → parse leg; saving happens later on the
+ * transaction form, which reports its own errors.
+ */
 export const receiptErrorKey = (
   code: string,
-):
-  | "receiptQuotaExhausted"
-  | "receiptParseFailed"
-  | "receiptUploadFailed"
-  | "receiptSaveFailed" => {
+): "receiptQuotaExhausted" | "receiptParseFailed" | "receiptUploadFailed" => {
   if (code === "quota_exhausted") return "receiptQuotaExhausted";
   if (code === "parse_failed") return "receiptParseFailed";
-  if (code === "save_failed") return "receiptSaveFailed";
   return "receiptUploadFailed";
 };
 

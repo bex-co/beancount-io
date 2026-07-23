@@ -1,6 +1,7 @@
 import {
   addPosting,
   buildEntryInput,
+  createPrefilledPostings,
   makePosting,
   removePosting,
   remainder,
@@ -256,6 +257,57 @@ test("buildEntryInput postings sum to zero (balanced)", () => {
     return s + Math.round(v * 100);
   }, 0);
   expect(total).toBe(0);
+});
+
+// ──────────────────────────────────────────────────────────────────────────────
+// createPrefilledPostings — seeds a scanned receipt into the form
+// ──────────────────────────────────────────────────────────────────────────────
+
+test("createPrefilledPostings opens balanced with the payment leg negative", () => {
+  const postings = createPrefilledPostings(
+    "Assets:Checking",
+    "Expenses:Groceries",
+    "27.35",
+  );
+  expect(postings.length).toBe(2);
+  expect(postings[0].account).toBe("Assets:Checking");
+  expect(postings[0].amountCents).toBe(-2735);
+  expect(postings[1].account).toBe("Expenses:Groceries");
+  expect(postings[1].amountCents).toBe(2735);
+  expect(remainder(postings)).toBe(0);
+  expect(validatePostings(postings)).toBe(null);
+});
+
+test("createPrefilledPostings leaves the expense leg auto so later edits refill it", () => {
+  const postings = createPrefilledPostings(
+    "Assets:Cash",
+    "Expenses:Food",
+    "10",
+  );
+  expect(postings[0].isAuto).toBe(false);
+  expect(postings[1].isAuto).toBe(true);
+
+  // Changing the payment leg re-derives the expense leg.
+  const edited = updatePostingAmount(postings, 0, "-42.50");
+  expect(edited[1].amountCents).toBe(4250);
+  expect(remainder(edited)).toBe(0);
+});
+
+test("createPrefilledPostings formats whole and fractional totals to cents", () => {
+  expect(
+    createPrefilledPostings("Assets:A", "Expenses:B", "5")[0].amountInput,
+  ).toBe("-5.00");
+  expect(
+    createPrefilledPostings("Assets:A", "Expenses:B", "0.99")[1].amountInput,
+  ).toBe("0.99");
+});
+
+test("createPrefilledPostings tolerates an unparseable amount", () => {
+  const postings = createPrefilledPostings("Assets:A", "Expenses:B", "");
+  expect(postings[0].amountCents).toBe(0);
+  expect(postings[1].amountCents).toBe(0);
+  // Still invalid to save — the user has to type a total.
+  expect(validatePostings(postings)).toBe("zeroAmount");
 });
 
 test("updatePostingAccount sets account without touching amounts", () => {

@@ -3,26 +3,22 @@ import * as FileSystem from "expo-file-system/legacy";
 import {
   useGenerateTempAssetUploadUrlMutation,
   useParseReceiptWithLlmMutation,
-  useInsertReceiptTransactionMutation,
-  type InsertReceiptTransactionInput,
 } from "@/generated-graphql/graphql";
+
+export type ParsedReceipt = {
+  date: string;
+  payee: string;
+  description: string;
+  amount: number;
+  sourceAccount: string;
+  targetAccount: string;
+};
 
 export type ReceiptPhase =
   | { kind: "idle" }
   | { kind: "uploading" }
   | { kind: "parsing" }
-  | {
-      kind: "review";
-      objectKey: string;
-      date: string;
-      payee: string;
-      description: string;
-      amount: number;
-      sourceAccount: string;
-      targetAccount: string;
-    }
-  | { kind: "confirming" }
-  | { kind: "success" }
+  | ({ kind: "parsed" } & ParsedReceipt)
   | { kind: "error"; message: string };
 
 export type ReceiptWorkflow = {
@@ -33,11 +29,7 @@ export type ReceiptWorkflow = {
     filename: string,
     ledgerId: string,
   ) => Promise<void>;
-  confirmTransaction: (
-    input: InsertReceiptTransactionInput,
-    ledgerId: string,
-    receiptObjectKey: string,
-  ) => Promise<void>;
+  reset: () => void;
 };
 
 export const useReceiptWorkflow = (): ReceiptWorkflow => {
@@ -45,7 +37,6 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
 
   const [generateUploadUrl] = useGenerateTempAssetUploadUrlMutation();
   const [parseReceipt] = useParseReceiptWithLlmMutation();
-  const [insertReceipt] = useInsertReceiptTransactionMutation();
 
   const startCapture = useCallback(
     async (
@@ -101,9 +92,11 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
         const parsed = parseResult.data?.parseReceiptWithLLM;
         if (!parsed) throw new Error("parse_failed");
 
+        // The uploaded asset is only an LLM input — it expires out of the temp
+        // bucket on its own. Nothing downstream needs the objectKey because the
+        // transaction is written through the generic addEntries mutation.
         setPhase({
-          kind: "review",
-          objectKey: uploadData.objectKey,
+          kind: "parsed",
           date: parsed.date,
           payee: parsed.payee,
           description: parsed.description,
@@ -119,29 +112,7 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
     [generateUploadUrl, parseReceipt],
   );
 
-  const confirmTransaction = useCallback(
-    async (
-      input: InsertReceiptTransactionInput,
-      ledgerId: string,
-      receiptObjectKey: string,
-    ) => {
-      try {
-        setPhase({ kind: "confirming" });
-        const result = await insertReceipt({
-          variables: { ledgerId, receiptObjectKey, input },
-        });
-        if (result.data?.insertReceiptTransaction?.success) {
-          setPhase({ kind: "success" });
-        } else {
-          throw new Error("save_failed");
-        }
-      } catch (err) {
-        console.error("[receipt] confirmTransaction failed:", err);
-        setPhase({ kind: "error", message: "save_failed" });
-      }
-    },
-    [insertReceipt],
-  );
+  const reset = useCallback(() => setPhase({ kind: "idle" }), []);
 
-  return { phase, startCapture, confirmTransaction };
+  return { phase, startCapture, reset };
 };

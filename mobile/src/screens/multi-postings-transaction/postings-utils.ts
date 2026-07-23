@@ -62,6 +62,36 @@ export function createInitialPostings(
   ]);
 }
 
+/**
+ * Seed the two legs of a scanned receipt.
+ *
+ * The receipt parser labels `sourceAccount` as "where money comes FROM" (the
+ * payment method) and `targetAccount` as the expense, which is the same shape
+ * `createInitialPostings` produces. Putting the negative amount on the source
+ * leg lets `applyAutoFill` derive the expense leg, so the form opens balanced.
+ *
+ * `amountInput` is the raw total as a string (it arrives as a route param).
+ */
+export function createPrefilledPostings(
+  sourceAccount: string,
+  targetAccount: string,
+  amountInput: string,
+): Posting[] {
+  // Guard the negation: -0 is a valid JS number and would otherwise leak into
+  // posting state for an unparseable total.
+  const cents = parseCents(amountInput);
+  const paid = cents === 0 ? 0 : -cents;
+  return applyAutoFill([
+    makePosting({
+      account: sourceAccount,
+      amountCents: paid,
+      amountInput: centsToInput(paid),
+      isAuto: false,
+    }),
+    makePosting({ account: targetAccount, isAuto: true }),
+  ]);
+}
+
 export function remainder(postings: Posting[]): number {
   return postings.reduce((s, p) => s + p.amountCents, 0);
 }

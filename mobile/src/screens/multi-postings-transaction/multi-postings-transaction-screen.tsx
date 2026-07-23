@@ -8,7 +8,7 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
@@ -45,6 +45,7 @@ import {
   addPosting,
   buildEntryInput,
   createInitialPostings,
+  createPrefilledPostings,
   makePosting,
   removePosting,
   remainder,
@@ -324,6 +325,24 @@ export const MultiPostingsTransactionScreenComponent = () => {
   } = useLedgerMeta(userId, ledgerId);
   const { mutate, error } = useAddEntriesToRemote();
 
+  // Optional prefill, currently supplied by the receipt scanner after the LLM
+  // reads a photo. Absent for a plain "new transaction".
+  const {
+    prefillDate,
+    prefillPayee,
+    prefillNarration,
+    prefillSourceAccount,
+    prefillTargetAccount,
+    prefillAmount,
+  } = useLocalSearchParams<{
+    prefillDate?: string;
+    prefillPayee?: string;
+    prefillNarration?: string;
+    prefillSourceAccount?: string;
+    prefillTargetAccount?: string;
+    prefillAmount?: string;
+  }>();
+
   const currency = currencies.length > 0 ? currencies[0] : "USD";
   const currencySymbol = getCurrencySymbol(currency);
 
@@ -332,9 +351,11 @@ export const MultiPostingsTransactionScreenComponent = () => {
     makePosting({ isAuto: true }),
   ]);
   const [seeded, setSeeded] = useState(false);
-  const [date, setDate] = useState(getFormatDate(new Date()));
-  const [payee, setPayee] = useState("");
-  const [narration, setNarration] = useState("");
+  // Params are available on first render, so seeding these through the state
+  // initializers avoids a visible flash of the empty form.
+  const [date, setDate] = useState(prefillDate || getFormatDate(new Date()));
+  const [payee, setPayee] = useState(prefillPayee ?? "");
+  const [narration, setNarration] = useState(prefillNarration ?? "");
   const [isDatePickerVisible, setDatePickerVisible] = useState(false);
 
   useEffect(() => {
@@ -345,10 +366,28 @@ export const MultiPostingsTransactionScreenComponent = () => {
           : assets.length > 1
             ? assets[1]
             : assets[0];
-      setPostings(createInitialPostings(assets[0], secondAccount));
+      // The parser may return no account at all; fall back to the same defaults
+      // a blank transaction would get rather than showing empty account rows.
+      setPostings(
+        prefillAmount
+          ? createPrefilledPostings(
+              prefillSourceAccount || assets[0],
+              prefillTargetAccount || secondAccount,
+              prefillAmount,
+            )
+          : createInitialPostings(assets[0], secondAccount),
+      );
       setSeeded(true);
     }
-  }, [seeded, metaLoading, assets]);
+  }, [
+    seeded,
+    metaLoading,
+    assets,
+    expenses,
+    prefillAmount,
+    prefillSourceAccount,
+    prefillTargetAccount,
+  ]);
 
   const rem = remainder(postings);
   const isBalanced = rem === 0;

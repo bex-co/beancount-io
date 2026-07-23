@@ -5,8 +5,8 @@
   "scheme": "beancount",
   "scripts": {
     "start": "expo start --tunnel",
-    "android": "expo start --android",
-    "ios": "expo start --ios",
+    "android": "expo run:android",
+    "ios": "expo run:ios",
     "android:build": "expo run:android",
     "ios:build": "expo run:ios",
     "ios:device": "expo run:ios --device",
@@ -39,6 +39,7 @@
     "expo-application": "~57.0.0",
     "expo-asset": "~57.0.3",
     "expo-build-properties": "~57.0.3",
+    "expo-camera": "~57.0.3",
     "expo-clipboard": "~57.0.0",
     "expo-constants": "~57.0.3",
     "expo-device": "~57.0.0",

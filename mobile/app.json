@@ -49,6 +49,9 @@
             "compileSdkVersion": 35,
             "targetSdkVersion": 35,
             "buildToolsVersion": "35.0.0"
+          },
+          "ios": {
+            "usePrecompiledModules": false
           }
         }
       ],
@@ -74,6 +77,21 @@
         "expo-asset",
         {
           "assets": ["./src/assets"]
+        }
+      ],
+      [
+        "expo-camera",
+        {
+          "cameraPermission": "Allow $(PRODUCT_NAME) to access your camera",
+          "microphonePermission": "Allow $(PRODUCT_NAME) to access your microphone",
+          "recordAudioAndroid": true,
+          "barcodeScannerEnabled": true
+        }
+      ],
+      [
+        "expo-image-picker",
+        {
+          "photosPermission": "Allow $(PRODUCT_NAME) to access your photo library to attach receipts"
         }
       ],
       "expo-localization",
