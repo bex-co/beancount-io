@@ -23,9 +23,8 @@ import {
   usePayeeAccountSuggestions,
   type AccountTypes,
 } from "@/screens/add-transaction-screen/hooks/use-payee-account-suggestions";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { useToast, usePageView } from "@/common/hooks";
-import { LedgerGuard, useLedgerGuard } from "@/components";
+import { DatePickerModal, LedgerGuard, useLedgerGuard } from "@/components";
 
 import {
   SelectedAssets,
@@ -424,7 +423,7 @@ export const AddTransactionNextScreenComponent = () => {
             }}
           />
         </View>
-        <DateTimePickerModal
+        <DatePickerModal
           isVisible={isDatePickerVisible}
           mode="date"
           date={new Date(date)}

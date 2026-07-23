@@ -12,7 +12,7 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Swipeable } from "react-native-gesture-handler";
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
+import { DatePickerModal } from "@/components/date-picker-modal";
 import {
   amountMaxFontSizeMultiplier,
   amountStyle,
@@ -570,7 +570,7 @@ export const MultiPostingsTransactionScreenComponent = () => {
         </View>
       </ScrollView>
 
-      <DateTimePickerModal
+      <DatePickerModal
         isVisible={isDatePickerVisible}
         mode="date"
         date={new Date(date)}

@@ -10,14 +10,13 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import DateTimePickerModal from "react-native-modal-datetime-picker";
 import { analytics } from "@/common/analytics";
 import { getFormatDate } from "@/common/format-util";
 import { SelectedFilterAccount } from "@/common/globalFnFactory";
 import { usePageView, useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
-import { Button } from "@/components";
+import { Button, DatePickerModal } from "@/components";
 import { ListItem } from "@/screens/multi-postings-transaction/list-item";
 import { ColorTheme } from "@/types/theme-props";
 import {
@@ -323,7 +322,7 @@ export const TransactionFiltersScreen = (): JSX.Element => {
         <Button onPress={apply}>{t("apply")}</Button>
       </View>
 
-      <DateTimePickerModal
+      <DatePickerModal
         isVisible={pickerTarget !== null}
         mode="date"
         date={pickerDate}
