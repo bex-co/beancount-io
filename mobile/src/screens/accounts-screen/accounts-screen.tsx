@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { useRouter } from "expo-router";
 import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
@@ -95,7 +94,7 @@ const AccountsScreenImpl = (): JSX.Element => {
   const accountsPending = accountsLoading && !accountData;
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
+    <View style={styles.container}>
       <LedgerDrawerHeader title={t("accounts")} />
       {accountsPending ? (
         <View>
@@ -122,7 +121,7 @@ const AccountsScreenImpl = (): JSX.Element => {
           onPressAccount={handlePressAccount}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 };
 

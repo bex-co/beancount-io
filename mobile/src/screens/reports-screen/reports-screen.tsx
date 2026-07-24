@@ -1,6 +1,5 @@
 import { useCallback, useMemo, useState } from "react";
-import { StyleSheet } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
 import { useThemeStyle, usePageView } from "@/common/hooks";
@@ -124,7 +123,7 @@ const ReportsScreenImpl = (): JSX.Element => {
   const isLoading = incomeLoading && !incomeData;
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
+    <View style={styles.container}>
       <LedgerDrawerHeader title={t("reports")} />
       <TimeRangePills
         value={timeRange}
@@ -189,7 +188,7 @@ const ReportsScreenImpl = (): JSX.Element => {
           refreshing={refreshing}
         />
       </DashboardScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

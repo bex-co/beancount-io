@@ -1,4 +1,4 @@
-import { StyleSheet } from "react-native";
+import { StyleSheet, View } from "react-native";
 import { useMemo, useState } from "react";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -17,7 +17,6 @@ import { getCurrencySymbol } from "@/common/currency-util";
 import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle, usePageView } from "@/common/hooks";
@@ -83,14 +82,14 @@ export const HomeScreenImpl = (): JSX.Element => {
   };
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
+    <View style={styles.container}>
       <LedgerDrawerHeader
         title={t("home")}
         right={
           <MenuButton
             testID="home-add-menu-button"
             accessibilityLabel={t("quickAdd")}
-            icon={<Ionicons name="add" size={28} color={theme.black} />}
+            icon={<Ionicons name="add" size={26} color={theme.black} />}
             onOpen={() => analytics.track("tap_quick_add_menu", {})}
             items={[
               {
@@ -151,7 +150,7 @@ export const HomeScreenImpl = (): JSX.Element => {
 
         <FeedCard refreshSignal={refreshSignal} />
       </DashboardScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

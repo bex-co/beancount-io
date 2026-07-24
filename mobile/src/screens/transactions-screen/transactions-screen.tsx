@@ -6,9 +6,10 @@ import {
   RefreshControl,
   StyleSheet,
   Text,
+  TouchableOpacity,
   View,
 } from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { Ionicons } from "@expo/vector-icons";
 import { analytics } from "@/common/analytics";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { useThemeStyle, usePageView, useDebouncedValue } from "@/common/hooks";
@@ -17,8 +18,9 @@ import { ColorTheme } from "@/types/theme-props";
 import { NetworkStatus, useReactiveVar } from "@apollo/client";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
+import { LedgerDrawerHeader } from "@/components";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
-import { TransactionsHeader, TransactionsNavBar } from "./transactions-header";
+import { TransactionsHeader } from "./transactions-header";
 import { EntryRow } from "./entry-row";
 import { DateSectionHeader } from "./date-section-header";
 import { TransactionsEmptyState } from "./transactions-empty-state";
@@ -230,8 +232,15 @@ const TransactionList = () => {
   const showNoResults = isBlank && isNarrowed;
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
-      <TransactionsNavBar onAdd={handleQuickAdd} />
+    <View style={styles.container}>
+      <LedgerDrawerHeader
+        title={t("transactions")}
+        right={
+          <TouchableOpacity onPress={handleQuickAdd} hitSlop={8} activeOpacity={0.7}>
+            <Ionicons name="add" size={26} color={theme.black90} />
+          </TouchableOpacity>
+        }
+      />
       <SectionList
         ListHeaderComponent={
           <TransactionsHeader
@@ -294,7 +303,7 @@ const TransactionList = () => {
         }
         showsVerticalScrollIndicator={false}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

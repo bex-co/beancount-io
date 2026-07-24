@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { SafeAreaView } from "react-native-safe-area-context";
 import { ColorTheme } from "@/types/theme-props";
 import {
   gutter,
@@ -172,9 +171,6 @@ const getStyles = (theme: ColorTheme) =>
     },
     listContent: {
       flexGrow: 1,
-    },
-    headerAction: {
-      padding: 4,
     },
   });
 
@@ -465,14 +461,14 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const breadcrumbLabel = inSubDir ? currentPath : "";
 
   return (
-    <SafeAreaView edges={["top"]} style={styles.container}>
+    <View style={styles.container}>
       <LedgerDrawerHeader
         title={t("files")}
         right={
           <TouchableOpacity
-            style={styles.headerAction}
             accessibilityLabel={t("ledgerCreateFile")}
             activeOpacity={0.7}
+            hitSlop={8}
             disabled={creating}
             onPress={() => setCreateModalVisible(true)}
           >
@@ -568,6 +564,6 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         onConfirm={(input) => void handleCreate(input)}
         onCancel={() => setCreateModalVisible(false)}
       />
-    </SafeAreaView>
+    </View>
   );
 }

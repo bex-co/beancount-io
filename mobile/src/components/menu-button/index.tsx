@@ -30,12 +30,9 @@ type MenuButtonProps = {
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     trigger: {
-      width: 44,
-      height: 44,
       alignItems: "center",
       justifyContent: "center",
-      // The 44pt tap target is wider than the glyph; pull it back to the
-      // header's 16px inset so the plus lines up with the screen edge.
+      // Pull back to the header's 16px inset so the plus lines up with the screen edge.
       marginRight: -10,
     },
     triggerPressed: {
@@ -119,7 +116,7 @@ export const MenuButton = ({
           pressed && styles.triggerPressed,
         ]}
         onPress={openMenu}
-        hitSlop={4}
+        hitSlop={8}
       >
         {icon}
       </Pressable>

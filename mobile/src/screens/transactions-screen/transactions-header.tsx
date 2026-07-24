@@ -1,53 +1,12 @@
-import {
-  StyleSheet,
-  Text,
-  TextInput,
-  View,
-  TouchableOpacity,
-} from "react-native";
+import { StyleSheet, TextInput, View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle } from "@/common/hooks";
-import {
-  fontSizes,
-  fontWeights,
-  gutter,
-  space,
-  useTheme,
-} from "@/common/theme";
+import { fontSizes, gutter, space, useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { LedgerDrawerButton } from "@/components/ledger-drawer";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
-    navBar: {
-      flexDirection: "row",
-      alignItems: "center",
-      paddingHorizontal: gutter,
-      paddingVertical: space.md,
-      backgroundColor: theme.white,
-    },
-    navTitle: {
-      flex: 1,
-      fontSize: fontSizes.xl,
-      fontWeight: fontWeights.medium,
-      color: theme.black90,
-      textAlign: "center",
-    },
-    // Same width as navRight so the centered title stays centered.
-    navLeft: {
-      flexDirection: "row",
-      alignItems: "center",
-      width: 64,
-      justifyContent: "flex-start",
-    },
-    navRight: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.sm,
-      width: 64,
-      justifyContent: "flex-end",
-    },
     header: {
       backgroundColor: theme.white,
     },
@@ -82,30 +41,6 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.primary,
     },
   });
-
-interface TransactionsNavBarProps {
-  onAdd: () => void;
-}
-
-export const TransactionsNavBar = ({ onAdd }: TransactionsNavBarProps) => {
-  const styles = useThemeStyle(getStyles);
-  const theme = useTheme().colorTheme;
-  const { t } = useTranslations();
-
-  return (
-    <View style={styles.navBar}>
-      <View style={styles.navLeft}>
-        <LedgerDrawerButton />
-      </View>
-      <Text style={styles.navTitle}>{t("transactions")}</Text>
-      <View style={styles.navRight}>
-        <TouchableOpacity onPress={onAdd}>
-          <Ionicons name="add" size={26} color={theme.black90} />
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
-};
 
 interface TransactionsHeaderProps {
   searchQuery: string;
