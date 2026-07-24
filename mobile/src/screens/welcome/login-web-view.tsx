@@ -51,6 +51,7 @@ export const LoginWebView = ({ isSignUp, onClose }: Props) => {
     <View style={styles.container}>
       <ProgressBar progress={progress} />
       <WebView
+        incognito
         injectedJavaScript={injectedJavascript}
         source={{
           uri: appendPreferenceParam(uri),

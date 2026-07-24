@@ -9,6 +9,7 @@ import { i18n, setLocale } from "@/translations";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useDeleteAccountMutation } from "@/generated-graphql/graphql";
 import { useSession } from "@/common/hooks/use-session";
+import { actionLogout } from "./logout";
 import { localeVar, themeVar } from "@/common/vars";
 import { useReactiveVar } from "@apollo/client";
 import { router } from "expo-router";
@@ -85,8 +86,8 @@ export const MainContent = () => {
           message: "Account deleted successfully",
           type: "success",
         });
-        // Navigate to logout screen after successful deletion
-        router.push("/(app)/logout");
+        await actionLogout(authToken ?? "");
+        router.replace("/auth/welcome");
       } else {
         toast.showToast({
           message: "Failed to delete account",
@@ -205,8 +206,9 @@ export const MainContent = () => {
                 { text: t("logoutAlertCancel"), style: "cancel" },
                 {
                   text: t("logoutAlertConfirm"),
-                  onPress: () => {
-                    router.push("/(app)/logout");
+                  onPress: async () => {
+                    await actionLogout(authToken ?? "");
+                    router.replace("/auth/welcome");
                   },
                 },
               ],

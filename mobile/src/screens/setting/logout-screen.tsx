@@ -89,8 +89,6 @@ export const LogoutScreen = () => {
       if (authToken) {
         await actionLogout(authToken);
       }
-      // Reset navigation stack and navigate to welcome
-      router.replace("/auth/welcome");
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);

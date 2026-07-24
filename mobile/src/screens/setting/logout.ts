@@ -1,21 +1,20 @@
 import { analytics } from "@/common/analytics";
-import { getEndpoint, headers } from "@/common/request";
 import { sessionVar } from "@/common/vars";
+import { apolloClient } from "@/common/apollo/client";
+import { LogoutDocument } from "@/generated-graphql/graphql";
 
 export async function actionLogout(authToken: string) {
-  sessionVar(null);
   try {
-    await fetch(getEndpoint("logout"), {
-      method: "GET",
-      headers: {
-        ...headers,
-        authorization: `Bearer ${authToken}`,
-      },
+    await apolloClient.mutate({
+      mutation: LogoutDocument,
+      context: { headers: { authorization: `Bearer ${authToken}` } },
     });
     analytics.track("logged_out", {});
     analytics.peopleDeleteUser();
   } catch (err) {
-    // it is fine not to handle the server-side token invalidation
     console.log(`failed to request logout: ${err}`);
+  } finally {
+    sessionVar(null);
+    apolloClient.clearStore().catch(() => {});
   }
 }
