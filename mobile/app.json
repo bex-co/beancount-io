@@ -70,7 +70,10 @@
           "image": "./src/assets/images/icon.png",
           "resizeMode": "contain",
           "imageWidth": 200,
-          "backgroundColor": "transparent"
+          "backgroundColor": "#ffffff",
+          "dark": {
+            "backgroundColor": "#171a14"
+          }
         }
       ],
       [
