@@ -43,10 +43,6 @@
       "permissions": [
         "com.google.android.gms.permission.AD_ID"
       ],
-      "edgeToEdgeEnabled": true
-    },
-    "notification": {
-      "icon": "./src/assets/images/icon96.png"
     },
     "plugins": [
       [
