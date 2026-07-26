@@ -122,6 +122,11 @@ const getStyles = (theme: ColorTheme) =>
     ledgerListArea: {
       flex: 1,
     },
+    // Fills the frame when the ledger list is empty, so the "no entries" state
+    // sits inside the scrollable list and stays pull-to-refreshable.
+    ledgerListContent: {
+      flexGrow: 1,
+    },
     menuSection: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.black20,
@@ -381,17 +386,23 @@ export function LedgerDrawer({
               <View style={styles.stateContainer}>
                 <ActivityIndicator color={theme.primary} />
               </View>
-            ) : ledgers.length === 0 ? (
-              <View style={styles.stateContainer}>
-                <Text style={styles.stateText}>{t("noEntries")}</Text>
-              </View>
             ) : (
+              // Always render the list past first load — even with no ledgers — so
+              // the empty state lives inside a pull-to-refreshable FlatList rather
+              // than a static View that can't be refreshed.
               <FlatList
                 style={{ flex: 1 }}
+                contentContainerStyle={styles.ledgerListContent}
+                alwaysBounceVertical
                 data={ledgers}
                 keyExtractor={(item) => item.id}
                 onRefresh={handleRefresh}
                 refreshing={refreshing}
+                ListEmptyComponent={
+                  <View style={styles.stateContainer}>
+                    <Text style={styles.stateText}>{t("noEntries")}</Text>
+                  </View>
+                }
                 renderItem={({ item }) => {
                   const isSelected = item.id === ledgerId;
                   return (

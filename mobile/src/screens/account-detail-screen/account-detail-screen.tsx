@@ -282,7 +282,10 @@ const AccountDetailScreenImpl = ({
         renderSectionHeader={renderSectionHeader}
         keyExtractor={(item) => item.key}
         ListHeaderComponent={listHeader}
-        contentContainerStyle={{ paddingBottom: 24 }}
+        // flexGrow keeps the empty / error state inside the scrollable content so
+        // the whole area — not just the chart header — stays pull-to-refreshable.
+        contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
+        alwaysBounceVertical
         showsVerticalScrollIndicator={false}
         indicatorStyle={currentTheme === "dark" ? "white" : "default"}
         stickySectionHeadersEnabled={false}

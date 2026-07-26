@@ -30,6 +30,9 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       backgroundColor: theme.white,
     },
+    scrollContent: {
+      flexGrow: 1,
+    },
     sectionHeader: {
       fontSize: 13,
       fontWeight: "600",
@@ -207,6 +210,10 @@ function NotificationsScreenImpl(): JSX.Element {
       <Stack.Screen options={{ title: t("notificationsTitle") }} />
       <SafeAreaView edges={["bottom"]} style={styles.container}>
         <ScrollView
+          // flexGrow keeps short content (healthy ledger, no changes) filling the
+          // frame, so the whole area stays pull-to-refreshable, not just the rows.
+          contentContainerStyle={styles.scrollContent}
+          alwaysBounceVertical
           refreshControl={
             <RefreshControl
               refreshing={refreshing}

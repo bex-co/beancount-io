@@ -16,6 +16,9 @@ const styles = StyleSheet.create({
     // Dashboard cards bring their own bottom margin, so spacing between them
     // stays uniform without extra spacers.
     paddingHorizontal: gutter,
+    // Fill the frame even when the cards are short, so the whole area stays
+    // inside the scrollable content and pull-to-refresh works everywhere.
+    flexGrow: 1,
   },
 });
 
@@ -44,6 +47,7 @@ export function DashboardScrollView({
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
+      alwaysBounceVertical
       contentContainerStyle={[styles.content, contentContainerStyle]}
       indicatorStyle={currentTheme === "dark" ? "white" : "default"}
       refreshControl={

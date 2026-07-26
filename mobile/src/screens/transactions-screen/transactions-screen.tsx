@@ -55,6 +55,12 @@ const getStyles = (theme: ColorTheme) =>
     list: {
       flex: 1,
     },
+    // Fills the frame when there are no sections (empty / no-results / error), so
+    // the whole area stays inside the scrollable content and pull-to-refresh works
+    // even with nothing to show.
+    listContent: {
+      flexGrow: 1,
+    },
     errorContainer: {
       flex: 1,
       alignItems: "center",
@@ -251,6 +257,8 @@ const TransactionList = () => {
           />
         }
         style={styles.list}
+        contentContainerStyle={styles.listContent}
+        alwaysBounceVertical
         sections={isInitialLoading || error ? [] : sections}
         renderSectionHeader={renderSectionHeader}
         renderItem={renderItem}

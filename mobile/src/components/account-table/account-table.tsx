@@ -48,6 +48,12 @@ const getStyles = (theme: ColorTheme) =>
     list: {
       flex: 1,
     },
+    // Fills the frame even when the table is empty, so the whole area — not just
+    // the short "no accounts" text — sits inside the scrollable content and stays
+    // pull-to-refreshable.
+    listContent: {
+      flexGrow: 1,
+    },
     columnHeader: {
       flexDirection: "row",
       alignItems: "center",
@@ -350,6 +356,8 @@ export function AccountTable({
   return (
     <FlatList
       style={styles.list}
+      contentContainerStyle={styles.listContent}
+      alwaysBounceVertical
       data={rows}
       renderItem={renderItem}
       keyExtractor={(row) => row.key}
