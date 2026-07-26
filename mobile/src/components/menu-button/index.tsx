@@ -32,8 +32,9 @@ const getStyles = (theme: ColorTheme) =>
     trigger: {
       alignItems: "center",
       justifyContent: "center",
-      // Pull back to the header's 16px inset so the plus lines up with the screen edge.
-      marginRight: -10,
+      // No negative margin: the icon sits at the header's 16px gutter like every
+      // other header action (e.g. the Transactions tab's add button), so the glyph
+      // stays symmetric with the left-side icons and lines up across tabs.
     },
     triggerPressed: {
       opacity: 0.6,
