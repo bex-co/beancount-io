@@ -23,7 +23,7 @@ function row(
     change,
     balance,
     flag,
-    accounts: [],
+    postings: [],
   };
 }
 
@@ -103,27 +103,40 @@ describe("selectAccountJournalRows", () => {
         title: "Blue Bottle",
         date: "2025-01-02",
         flag: undefined,
-        accounts: [],
+        payee: "Blue Bottle",
+        postings: [],
         change: -4.5,
         balance: 120.5,
       },
     ]);
   });
 
-  it("collects posting accounts for the row icon", () => {
+  it("collects posting accounts and amounts for the row icon", () => {
     const [row] = selectAccountJournalRows("USD", [
       item({
         entry_hash: "a",
         payee: "Blue Bottle",
         postings: [
-          { account: "Expenses:Food:Coffee" },
-          { account: "Assets:Bank:Checking" },
+          { account: "Expenses:Food:Coffee", units: { number: "4.5" } },
+          { account: "Assets:Bank:Checking", units: { number: "-4.5" } },
         ],
       }),
     ]);
-    expect(row.accounts).toEqual([
-      "Expenses:Food:Coffee",
-      "Assets:Bank:Checking",
+    expect(row.postings).toEqual([
+      { account: "Expenses:Food:Coffee", amount: 4.5 },
+      { account: "Assets:Bank:Checking", amount: -4.5 },
+    ]);
+  });
+
+  it("keeps the posting account when its amount is missing", () => {
+    const [row] = selectAccountJournalRows("USD", [
+      item({
+        entry_hash: "a",
+        postings: [{ account: "Expenses:Food:Coffee" }],
+      }),
+    ]);
+    expect(row.postings).toEqual([
+      { account: "Expenses:Food:Coffee", amount: undefined },
     ]);
   });
 
@@ -136,8 +149,8 @@ describe("selectAccountJournalRows", () => {
       }),
       item({ entry_hash: "b", directive_type: "Price", currency: "RGAGX" }),
     ]);
-    expect(withAccount.accounts).toEqual(["Assets:Bank:Checking"]);
-    expect(withNothing.accounts).toEqual([]);
+    expect(withAccount.postings).toEqual([{ account: "Assets:Bank:Checking" }]);
+    expect(withNothing.postings).toEqual([]);
   });
 
   it("falls back payee → narration → account → directive_type for the title", () => {

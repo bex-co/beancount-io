@@ -78,7 +78,7 @@ export function AccountEntryRow({
 
   const content = (
     <>
-      <AccountTypeIcon accounts={row.accounts} />
+      <AccountTypeIcon postings={row.postings} payee={row.payee} />
 
       <View style={styles.middle}>
         <Text style={styles.title} numberOfLines={1}>

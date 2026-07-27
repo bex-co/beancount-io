@@ -56,3 +56,22 @@ export function pickAccountRoot(accounts: string[]): AccountRoot | null {
   }
   return null;
 }
+
+/**
+ * Order accounts by {@link ROOT_PRIORITY} so the categorization side (Expenses,
+ * Income) comes before the funding side (Liabilities, Assets). Used to decide
+ * which account to try first when matching a brand logo — the "target" account
+ * wins over the account it was paid from. Accounts whose root does not resolve
+ * sort last; ties keep their original order (stable).
+ */
+export function orderAccountsByRootPriority(accounts: string[]): string[] {
+  const rank = (account: string): number => {
+    const root = getAccountRoot(account);
+    const idx = root ? ROOT_PRIORITY.indexOf(root) : -1;
+    return idx === -1 ? ROOT_PRIORITY.length : idx;
+  };
+  return accounts
+    .map((account, i) => ({ account, i, r: rank(account) }))
+    .sort((a, b) => a.r - b.r || a.i - b.i)
+    .map((x) => x.account);
+}

@@ -1,4 +1,5 @@
 import { AccountJournalQuery } from "@/generated-graphql/graphql";
+import { PostingLite } from "@/common/tx-category";
 import { resolveCurrencyBalance } from "../../../common/balance-util";
 import { groupThousands } from "../../../common/number-utils";
 
@@ -14,8 +15,11 @@ export type AccountJournalRow = {
   date: string;
   /** Transaction flag (e.g. "!" for pending), when present. */
   flag?: string;
-  /** Every account the entry touches; drives the row's icon. */
-  accounts: string[];
+  /** Payee/narration text for brand-logo matching, when present. */
+  payee?: string;
+  /** Every posting the entry touches (account + amount); drives the row's icon,
+   * including amount-weighted category selection. */
+  postings: PostingLite[];
   change: number;
   balance: number;
 };
@@ -25,20 +29,27 @@ function asString(value: number | string | undefined): string {
 }
 
 /**
- * Accounts the entry touches, for the row icon. `entry` is an opaque JSON
- * scalar, so read postings defensively and fall back to the directive's own
- * account (Open, Close, Balance, …).
+ * Postings the entry touches (account + amount), for the row icon. `entry` is
+ * an opaque JSON scalar, so read defensively and fall back to the directive's
+ * own account (Open, Close, Balance, …) with no amount.
  */
-function entryAccounts(entry: AccountJournalItem["entry"]): string[] {
-  const postings = (entry as { postings?: { account?: string }[] }).postings;
+function entryPostings(entry: AccountJournalItem["entry"]): PostingLite[] {
+  const postings = (
+    entry as {
+      postings?: { account?: string; units?: { number?: string | number } }[];
+    }
+  ).postings;
   if (Array.isArray(postings)) {
-    const accounts = postings
-      .map((p) => (typeof p?.account === "string" ? p.account : ""))
-      .filter(Boolean);
-    if (accounts.length > 0) return accounts;
+    const result = postings
+      .filter((p) => typeof p?.account === "string" && p.account)
+      .map((p) => ({
+        account: p.account as string,
+        amount: p?.units?.number != null ? Number(p.units.number) : undefined,
+      }));
+    if (result.length > 0) return result;
   }
   const account = asString(entry.account);
-  return account ? [account] : [];
+  return account ? [{ account }] : [];
 }
 
 /**
@@ -150,7 +161,9 @@ export function selectAccountJournalRows(
     title: entryTitle(item.entry),
     date: asString(item.entry.date),
     flag: asString(item.entry.flag) || undefined,
-    accounts: entryAccounts(item.entry),
+    payee:
+      asString(item.entry.payee) || asString(item.entry.narration) || undefined,
+    postings: entryPostings(item.entry),
     change: resolveCurrencyBalance(item.change, currency),
     balance: resolveCurrencyBalance(item.balance, currency),
   }));

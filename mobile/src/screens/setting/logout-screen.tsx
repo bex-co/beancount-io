@@ -1,6 +1,5 @@
 import { useEffect, useRef } from "react";
 import { View, StyleSheet, Text, Animated } from "react-native";
-import { router } from "expo-router";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { ColorTheme } from "@/types/theme-props";

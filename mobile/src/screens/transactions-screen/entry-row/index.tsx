@@ -19,7 +19,7 @@ import {
   isJournalOpen,
   isJournalClose,
 } from "../types";
-import { getEntryAccounts } from "../utils/entry-utils";
+import { getEntryPostings } from "../utils/entry-utils";
 import { selectTransactionAmount } from "../utils/transaction-display-utils";
 
 const getStyles = (theme: ColorTheme) =>
@@ -117,10 +117,15 @@ export const EntryRow: React.FC<EntryRowProps> = ({ entry, onPress }) => {
 
   const { name, amountStr, isPositive } = getDisplayInfo(entry);
   const isPending = isJournalTransaction(entry) && entry.flag === "!";
+  // Brand text for the logo: payee/narration only (not the directive_type
+  // fallback), so non-transactions match on their account instead.
+  const brandText = isJournalTransaction(entry)
+    ? entry.payee || entry.narration || undefined
+    : undefined;
 
   const content = (
     <>
-      <AccountTypeIcon accounts={getEntryAccounts(entry)} />
+      <AccountTypeIcon postings={getEntryPostings(entry)} payee={brandText} />
 
       <View style={styles.middle}>
         <Text style={styles.name} numberOfLines={1}>

@@ -1,3 +1,4 @@
+import { PostingLite } from "@/common/tx-category";
 import { JournalDirectiveType, isJournalTransaction } from "../types";
 
 /**
@@ -17,4 +18,29 @@ export const getEntryAccounts = (entry: JournalDirectiveType): string[] => {
   }
   const account = (entry as { account?: string }).account;
   return account ? [account] : [];
+};
+
+/**
+ * Like {@link getEntryAccounts} but keeps each posting's amount, so the row icon
+ * can weight the postings (the largest category leg drives the glyph). Non-
+ * transaction directives yield a single amount-less posting for their account.
+ *
+ * @param entry - Any journal directive
+ * @returns Postings with account + numeric amount (NaN when unparseable)
+ */
+export const getEntryPostings = (
+  entry: JournalDirectiveType,
+): PostingLite[] => {
+  if (isJournalTransaction(entry)) {
+    return (
+      entry.postings
+        ?.filter((p) => p.account)
+        .map((p) => ({
+          account: p.account,
+          amount: p.units?.number != null ? Number(p.units.number) : undefined,
+        })) ?? []
+    );
+  }
+  const account = (entry as { account?: string }).account;
+  return account ? [{ account }] : [];
 };

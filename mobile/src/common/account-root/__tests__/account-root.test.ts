@@ -1,4 +1,8 @@
-import { getAccountRoot, pickAccountRoot } from "../index";
+import {
+  getAccountRoot,
+  orderAccountsByRootPriority,
+  pickAccountRoot,
+} from "../index";
 
 describe("account-root", () => {
   describe("getAccountRoot", () => {
@@ -72,6 +76,43 @@ describe("account-root", () => {
     it("should return null when nothing resolves", () => {
       expect(pickAccountRoot([])).toBe(null);
       expect(pickAccountRoot(["Whatever:Thing"])).toBe(null);
+    });
+  });
+
+  describe("orderAccountsByRootPriority", () => {
+    it("should order the categorization side before the funding side", () => {
+      expect(
+        orderAccountsByRootPriority([
+          "Assets:Bank:Checking",
+          "Expenses:Food:Restaurant",
+        ]),
+      ).toEqual(["Expenses:Food:Restaurant", "Assets:Bank:Checking"]);
+    });
+
+    it("should sort by the full priority (expenses > income > liabilities > assets)", () => {
+      expect(
+        orderAccountsByRootPriority([
+          "Assets:Cash",
+          "Liabilities:Card",
+          "Income:Salary",
+          "Expenses:Food",
+        ]),
+      ).toEqual([
+        "Expenses:Food",
+        "Income:Salary",
+        "Liabilities:Card",
+        "Assets:Cash",
+      ]);
+    });
+
+    it("should sort unresolved accounts last, keeping original order on ties", () => {
+      expect(
+        orderAccountsByRootPriority(["Whatever:Thing", "Assets:B", "Assets:A"]),
+      ).toEqual(["Assets:B", "Assets:A", "Whatever:Thing"]);
+    });
+
+    it("should return an empty array unchanged", () => {
+      expect(orderAccountsByRootPriority([])).toEqual([]);
     });
   });
 });
