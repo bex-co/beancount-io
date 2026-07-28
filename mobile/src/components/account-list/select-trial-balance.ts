@@ -23,6 +23,62 @@ const ROOT_FIELD: Record<
   expenses: "expensesHierarchyData",
 };
 
+const ROOT_PREFIX: Record<CategoryKey, string> = {
+  assets: "Assets",
+  liabilities: "Liabilities",
+  equity: "Equity",
+  income: "Income",
+  expenses: "Expenses",
+};
+
+function collectAccountNames(nodes: AccountCategory["children"]): Set<string> {
+  const names = new Set<string>();
+  const visit = (items: AccountCategory["children"]) => {
+    for (const item of items) {
+      names.add(item.account);
+      visit(item.children);
+    }
+  };
+  visit(nodes);
+  return names;
+}
+
+/**
+ * Trial-balance trees omit zero-balance leaves. Merge ledger metadata names back
+ * in so a newly opened account is visible before its first transaction.
+ */
+function appendZeroBalanceAccounts(
+  category: AccountCategory,
+  accountNames: readonly string[],
+): AccountCategory {
+  const root = category.account || ROOT_PREFIX[category.key];
+  const existing = collectAccountNames(category.children);
+  const renderedAccounts = Array.from(existing);
+  const missing = accountNames
+    .filter(
+      (account) =>
+        account.startsWith(`${root}:`) &&
+        !renderedAccounts.some(
+          (rendered) =>
+            rendered === account || rendered.startsWith(`${account}:`),
+        ),
+    )
+    .map((account) => ({
+      account,
+      name: account.slice(root.length + 1),
+      value: 0,
+      children: [],
+    }));
+
+  return missing.length > 0
+    ? {
+        ...category,
+        account: root,
+        children: [...category.children, ...missing],
+      }
+    : category;
+}
+
 /**
  * The five root categories in conventional order, each with its total and account
  * tree — the row model behind the Accounts tab's balance table.
@@ -40,6 +96,7 @@ const ROOT_FIELD: Record<
 export function selectTrialBalanceCategories(
   currency: string,
   data?: TrialBalanceQuery,
+  accountNames: readonly string[] = [],
 ): AccountCategory[] {
   const trialBalance = data?.getLedgerTrialBalance;
   if (!currency || !trialBalance) {
@@ -48,11 +105,14 @@ export function selectTrialBalanceCategories(
 
   return CATEGORY_KEYS.map((key) => {
     const root = trialBalance[ROOT_FIELD[key]] as TrialBalanceRoot | undefined;
-    return {
-      key,
-      account: root?.account ?? "",
-      value: resolveCurrencyBalance(root?.balanceChildren, currency),
-      children: selectAccountTreeFromRoot(currency, root),
-    };
+    return appendZeroBalanceAccounts(
+      {
+        key,
+        account: root?.account ?? "",
+        value: resolveCurrencyBalance(root?.balanceChildren, currency),
+        children: selectAccountTreeFromRoot(currency, root),
+      },
+      accountNames,
+    );
   }).filter((category) => category.value !== 0 || category.children.length > 0);
 }

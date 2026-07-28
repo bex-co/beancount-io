@@ -148,6 +148,52 @@ describe("selectTrialBalanceCategories", () => {
     );
   });
 
+  it("keeps metadata-only accounts visible before their first posting", () => {
+    const data = createTrialBalance({});
+    const result = selectTrialBalanceCategories("USD", data, [
+      "Assets:Bank:Checking",
+    ]);
+
+    expect(result.map((category) => category.key)).toEqual(["assets"]);
+    expect(result[0].children).toEqual([
+      {
+        account: "Assets:Bank:Checking",
+        name: "Bank:Checking",
+        value: 0,
+        children: [],
+      },
+    ]);
+  });
+
+  it("does not duplicate compressed ancestors from metadata", () => {
+    const data = createTrialBalance({
+      assets: {
+        account: "Assets",
+        total: { USD: 10 },
+        children: [
+          {
+            account: "Assets:Bank",
+            balanceChildren: { USD: 10 },
+            children: [
+              {
+                account: "Assets:Bank:Checking",
+                balanceChildren: { USD: 10 },
+              },
+            ],
+          },
+        ],
+      },
+    });
+    const [assets] = selectTrialBalanceCategories("USD", data, [
+      "Assets:Bank",
+      "Assets:Bank:Checking",
+    ]);
+
+    expect(assets.children.map((account) => account.account)).toEqual([
+      "Assets:Bank:Checking",
+    ]);
+  });
+
   it("compresses each category's account tree", () => {
     const data = createTrialBalance({
       liabilities: {

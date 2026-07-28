@@ -1,9 +1,10 @@
 import { useCallback, useMemo, useState } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
+import { Ionicons } from "@expo/vector-icons";
 import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
-import { gutter, rowMinHeight } from "@/common/theme";
+import { gutter, rowMinHeight, useTheme } from "@/common/theme";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
@@ -54,6 +55,7 @@ const AccountsScreenImpl = (): JSX.Element => {
   const { t } = useTranslations();
   const router = useRouter();
   const styles = useThemeStyle(getStyles);
+  const theme = useTheme().colorTheme;
   usePageView("accounts");
 
   const handlePressAccount = useCallback(
@@ -64,7 +66,11 @@ const AccountsScreenImpl = (): JSX.Element => {
     [router],
   );
 
-  const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(userId);
+  const {
+    data: ledgerMeta,
+    currencies,
+    refetch: ledgerMetaRefetch,
+  } = useLedgerMeta(userId, ledgerId);
   const currency = currencies.length > 0 ? currencies[0] : "USD";
   const currencySymbol = getCurrencySymbol(currency);
 
@@ -77,9 +83,15 @@ const AccountsScreenImpl = (): JSX.Element => {
   } = useTrialBalance(ledgerId);
 
   const categories = useMemo(
-    () => selectTrialBalanceCategories(currency, accountData),
-    [currency, accountData],
+    () =>
+      selectTrialBalanceCategories(currency, accountData, ledgerMeta?.accounts),
+    [currency, accountData, ledgerMeta?.accounts],
   );
+
+  const handleOpenAccount = useCallback(() => {
+    analytics.track("tap_open_account", {});
+    router.push("/open-account");
+  }, [router]);
 
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = async () => {
@@ -95,7 +107,20 @@ const AccountsScreenImpl = (): JSX.Element => {
 
   return (
     <View style={styles.container}>
-      <LedgerDrawerHeader title={t("accounts")} />
+      <LedgerDrawerHeader
+        title={t("accounts")}
+        right={
+          <TouchableOpacity
+            testID="open-account-button"
+            onPress={handleOpenAccount}
+            hitSlop={8}
+            activeOpacity={0.7}
+            accessibilityLabel={t("openAccount")}
+          >
+            <Ionicons name="add" size={26} color={theme.black} />
+          </TouchableOpacity>
+        }
+      />
       {accountsPending ? (
         <View>
           {SKELETON_ROWS.map((row, index) => (

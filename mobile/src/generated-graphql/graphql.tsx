@@ -44,6 +44,14 @@ export type BalanceSheetQueryVariables = Exact<{
 
 export type BalanceSheetQuery = { getLedgerBalanceSheet: { netWorthData: Array<{ date: string, balance: Record<string, number | string> }>, assetsData: Array<{ date: string, balance: Record<string, number | string> }>, liabilitiesData: Array<{ date: string, balance: Record<string, number | string> }>, assetsHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean }, liabilitiesHierarchyData: { account: string, balance: Record<string, number | string>, balanceChildren: Record<string, number | string>, children: Array<Record<string, number | string>>, hasTxns: boolean } } };
 
+export type BulkEntriesMutationVariables = Exact<{
+  entries: Array<Types.AddEntryInput> | Types.AddEntryInput;
+  ledgerId: string;
+}>;
+
+
+export type BulkEntriesMutation = { bulkEntries: { success: boolean, message: string | null } };
+
 export type CancelSubscriptionMutationVariables = Exact<{
   clientId: string;
   subscriptionId: string;
@@ -545,6 +553,41 @@ export type BalanceSheetQueryHookResult = ReturnType<typeof useBalanceSheetQuery
 export type BalanceSheetLazyQueryHookResult = ReturnType<typeof useBalanceSheetLazyQuery>;
 export type BalanceSheetSuspenseQueryHookResult = ReturnType<typeof useBalanceSheetSuspenseQuery>;
 export type BalanceSheetQueryResult = Apollo.QueryResult<BalanceSheetQuery, BalanceSheetQueryVariables>;
+export const BulkEntriesDocument = gql`
+    mutation BulkEntries($entries: [AddEntryInput!]!, $ledgerId: String!) {
+  bulkEntries(entries: $entries, ledgerId: $ledgerId) {
+    success
+    message
+  }
+}
+    `;
+export type BulkEntriesMutationFn = Apollo.MutationFunction<BulkEntriesMutation, BulkEntriesMutationVariables>;
+
+/**
+ * __useBulkEntriesMutation__
+ *
+ * To run a mutation, you first call `useBulkEntriesMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useBulkEntriesMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [bulkEntriesMutation, { data, loading, error }] = useBulkEntriesMutation({
+ *   variables: {
+ *      entries: // value for 'entries'
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useBulkEntriesMutation(baseOptions?: Apollo.MutationHookOptions<BulkEntriesMutation, BulkEntriesMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<BulkEntriesMutation, BulkEntriesMutationVariables>(BulkEntriesDocument, options);
+      }
+export type BulkEntriesMutationHookResult = ReturnType<typeof useBulkEntriesMutation>;
+export type BulkEntriesMutationResult = Apollo.MutationResult<BulkEntriesMutation>;
+export type BulkEntriesMutationOptions = Apollo.BaseMutationOptions<BulkEntriesMutation, BulkEntriesMutationVariables>;
 export const CancelSubscriptionDocument = gql`
     mutation CancelSubscription($clientId: String!, $subscriptionId: String!) {
   cancelSubscription(clientId: $clientId, subscriptionId: $subscriptionId) {

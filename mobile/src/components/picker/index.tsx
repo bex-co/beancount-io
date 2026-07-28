@@ -28,6 +28,7 @@ const WHEEL_HEIGHT = ITEM_HEIGHT * VISIBLE_ITEMS;
 type PickerItem = {
   label: string;
   value: string;
+  icon?: React.ReactNode;
 };
 
 type PickerProps = {
@@ -88,6 +89,8 @@ const getStyles = (theme: ColorTheme) =>
       height: ITEM_HEIGHT,
       justifyContent: "center",
       alignItems: "center",
+      flexDirection: "row",
+      gap: 8,
     },
     wheelItemText: {
       fontSize: 18,
@@ -210,7 +213,12 @@ export const Picker: React.FC<PickerProps> = ({
       const isSelected = item.value === selectedValue;
       // const isSelected = Math.round(scrollY.value / ITEM_HEIGHT) === index;
       return (
-        <View key={item.value} style={styles.wheelItem}>
+        <View
+          key={item.value}
+          testID={`picker-item-${item.value || "empty"}`}
+          style={styles.wheelItem}
+        >
+          {item.icon}
           <Text
             style={[
               styles.wheelItemText,
@@ -243,11 +251,11 @@ export const Picker: React.FC<PickerProps> = ({
         <Pressable style={styles.mask} onPress={handleCancel}></Pressable>
         <Animated.View style={[styles.modalContainer, animatedStyle]}>
           <View style={styles.header}>
-            <TouchableOpacity onPress={handleCancel}>
+            <TouchableOpacity testID="picker-cancel" onPress={handleCancel}>
               <Text style={styles.cancelButton}>{cancelButtonText}</Text>
             </TouchableOpacity>
             <Text style={styles.title}>{title}</Text>
-            <TouchableOpacity onPress={handleDone}>
+            <TouchableOpacity testID="picker-confirm" onPress={handleDone}>
               <Text style={styles.doneButton}>{confirmButtonText}</Text>
             </TouchableOpacity>
           </View>
