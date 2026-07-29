@@ -24,6 +24,10 @@ There is no root `package.json`. Each package owns its own dependencies, scripts
 
 When `skills/` or `cli/` get real code, add a `skills/CLAUDE.md` / `cli/CLAUDE.md` documenting their tech stack and conventions.
 
+## Roadmap board (`.pm/`)
+
+`.pm/` is the public TPM board for growing adoption in the open-source and agentic-coding community (workstreams → milestones → tasks). Conventions live canonically in `.claude/commands/pm.md`; `/pm` is the **only** command that writes to `.pm/`, and `/pm-brainstorm` proposes work as text. Read `.pm/DO_NOT_DO.md` before proposing roadmap work. The board is public — no secrets, no private-repo references.
+
 ## Repo-wide rules
 
 ### Never modify any `yarn.lock`

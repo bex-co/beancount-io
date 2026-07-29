@@ -26,6 +26,8 @@ skills/
 | `beancount-init` | Scaffold a fresh `main.bean` + Fava + uv project from an empty directory. Triggers on `/beancount-init` or "set up a new beancount repo". |
 | `beancount-options` | Turn human-language descriptions of options trades (CSP, covered call, vertical, condor, roll, assignment, exercise, expiration, …) into balanced beancount transactions. Uses per-contract cost basis, IRS-aligned assignment treatment, and runs `bean-check` to verify before reporting success. |
 | `ship` | Codex entry point for the repository's canonical [`/ship` workflow](../.claude/commands/ship.md). |
+| `pm` | Codex entry point for the canonical [`/pm` workflow](../.claude/commands/pm.md) — arrange the public `.pm` adoption board (the only writer to `.pm/`). |
+| `pm-brainstorm` | Codex entry point for the canonical [`/pm-brainstorm` workflow](../.claude/commands/pm-brainstorm.md) — propose adoption milestones as text; `/pm` materializes them. |
 
 ## Conventions
 
