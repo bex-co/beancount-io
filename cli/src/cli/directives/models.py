@@ -1,7 +1,4 @@
-"""Pydantic models for all beancount directives.
-
-Adapted from backend-cluster/beancount-ledger/app/schemas/entries.py.
-"""
+"""Pydantic models for all beancount directives."""
 
 from __future__ import annotations
 
