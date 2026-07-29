@@ -1,0 +1,19 @@
+mutation CreateCliAuthSession {
+  createCliAuthSession {
+    sessionId
+    expiresAt
+  }
+}
+
+query GetCliAuthSession($sessionId: String!) {
+  getCliAuthSession(sessionId: $sessionId) {
+    status
+  }
+}
+
+mutation ConsumeCliAuthSession($sessionId: String!) {
+  consumeCliAuthSession(sessionId: $sessionId) {
+    token
+    expireAt
+  }
+}

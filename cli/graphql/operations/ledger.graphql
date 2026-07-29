@@ -1,0 +1,47 @@
+mutation CreateLedger($name: String!, $private: Boolean, $description: String) {
+  createLedger(name: $name, private: $private, description: $description) {
+    id
+    name
+    fullName
+    sshUrl
+    httpUrl
+    private
+    empty
+    createdAt
+    updatedAt
+  }
+}
+
+query ListLedgers($limit: Float, $page: Float) {
+  listLedgers(limit: $limit, page: $page) {
+    id
+    name
+    fullName
+    httpUrl
+    sshUrl
+    private
+    empty
+    createdAt
+    updatedAt
+  }
+}
+
+mutation DeleteLedger($ledgerId: String!) {
+  deleteLedger(ledgerId: $ledgerId) {
+    ledgerId
+  }
+}
+
+query GetLedger($ledgerId: String!) {
+  getLedger(ledgerId: $ledgerId) {
+    id
+    name
+    fullName
+    sshUrl
+    httpUrl
+    private
+    empty
+    createdAt
+    updatedAt
+  }
+}
