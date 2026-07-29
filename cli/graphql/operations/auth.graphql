@@ -1,0 +1,14 @@
+mutation Logout {
+  logout {
+    success
+  }
+}
+
+query GetCurrentUser {
+  userProfile {
+    id
+    email
+    username
+    tier
+  }
+}

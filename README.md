@@ -14,8 +14,9 @@ Monorepo for [Beancount.io](https://beancount.io/) — Double-entry bookkeeping 
 | Package | Description |
 |---------|-------------|
 | [`mobile/`](./mobile) | React Native iOS & Android app (Expo) |
+| [`cli/`](./cli) | Command-line interface for authentication, ledger management, and reporting |
+| [`fava-slim/`](./fava-slim) | Lightweight Beancount parsing and financial reporting library |
 | [`skills/`](./skills) | Skills package |
-| [`cli/`](./cli) | CLI tool |
 
 ## Development
 
