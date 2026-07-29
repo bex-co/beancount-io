@@ -1,0 +1,170 @@
+# mutation SignUp(
+#   $email: String!
+#   $password: String!
+#   $withDefaultLedger: Boolean
+#   $lastName: String
+#   $firstName: String
+#   $username: String
+# ) {
+#   signUp(
+#     email: $email
+#     password: $password
+#     withDefaultLedger: $withDefaultLedger
+#     lastName: $lastName
+#     firstName: $firstName
+#     username: $username
+#   ) {
+#     token
+#     expireAt
+#   }
+# }
+
+mutation SignIn($email: String!, $password: String!) {
+  signIn(email: $email, password: $password) {
+    token
+    expireAt
+  }
+}
+
+query GetCurrentUser {
+  userProfile {
+    locale
+    lastName
+    id
+    firstName
+    emailReportStatus
+    email
+    username
+    tier
+    hasEverSubscribed
+    limits {
+      ledgersUsed
+      ledgersMax
+      collaboratorsPerLedgerMax
+      maxDirectives
+    }
+  }
+}
+
+query GetAiCfoUsage {
+  aiCfoUsage {
+    aiCfoTokensUsed
+    aiCfoTokensMax
+  }
+}
+
+mutation SignInWithOneTimeToken($token: String!) {
+  signInWithOneTimeToken(token: $token) {
+    token
+    expireAt
+  }
+}
+
+mutation RefreshToken {
+  refreshToken {
+    token
+    expireAt
+  }
+}
+
+mutation DeleteAccount {
+  deleteAccount
+}
+
+mutation Logout {
+  logout {
+    success
+  }
+}
+
+mutation UpdateUsername($username: String!) {
+  updateUsername(username: $username) {
+    username
+    locale
+    lastName
+    id
+    firstName
+    emailReportStatus
+    email
+  }
+}
+
+mutation UpdateProfile($firstName: String, $lastName: String) {
+  updateProfile(firstName: $firstName, lastName: $lastName) {
+    username
+    locale
+    lastName
+    id
+    firstName
+    emailReportStatus
+    email
+  }
+}
+
+mutation SendForgotPasswordLink($email: String!) {
+  sendForgotPasswordLink(email: $email) {
+    success
+  }
+}
+
+query ValidateEmailToken($token: String!) {
+  validateEmailToken(token: $token) {
+    isValid
+  }
+}
+
+mutation ResetPassword($token: String!, $newPassword: String!) {
+  resetPassword(token: $token, newPassword: $newPassword) {
+    success
+  }
+}
+
+mutation SignUp(
+  $email: String!
+  $password: String!
+  $firstName: String!
+  $lastName: String!
+  $inviteBy: String
+  $inviteSrc: String
+  $username: String
+  $withDefaultLedger: Boolean
+) {
+  signUp(
+    email: $email
+    password: $password
+    firstName: $firstName
+    lastName: $lastName
+    inviteBy: $inviteBy
+    inviteSrc: $inviteSrc
+    username: $username
+    withDefaultLedger: $withDefaultLedger
+  ) {
+    sessionId
+    expireAt
+  }
+}
+
+mutation VerifySignUpOtp($sessionId: String!, $otp: String!) {
+  verifySignUpOtp(sessionId: $sessionId, otp: $otp) {
+    token
+    expireAt
+  }
+}
+
+mutation ConfirmCliAuthSession($sessionId: String!) {
+  confirmCliAuthSession(sessionId: $sessionId) {
+    success
+  }
+}
+
+mutation DenyCliAuthSession($sessionId: String!) {
+  denyCliAuthSession(sessionId: $sessionId) {
+    success
+  }
+}
+
+query GetCliAuthSession($sessionId: String!) {
+  getCliAuthSession(sessionId: $sessionId) {
+    status
+  }
+}

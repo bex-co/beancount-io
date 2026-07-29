@@ -1,0 +1,49 @@
+query ListLedgerCollaborators($ledgerId: String!, $limit: Float, $page: Float) {
+  listLedgerCollaborators(ledgerId: $ledgerId, limit: $limit, page: $page) {
+    login
+    lastLogin
+    isAdmin
+    id
+    fullName
+    email
+    created
+    active
+    permission
+  }
+}
+
+mutation AddLedgerCollaborator(
+  $ledgerId: String!
+  $collaborator: String!
+  $permission: String
+) {
+  addOrUpdateLedgerCollaborator(
+    ledgerId: $ledgerId
+    collaborator: $collaborator
+    permission: $permission
+  ) {
+    success
+    message
+  }
+}
+
+mutation DeleteLedgerCollaborator($ledgerId: String!, $collaborator: String!) {
+  deleteLedgerCollaborator(ledgerId: $ledgerId, collaborator: $collaborator) {
+    success
+    message
+  }
+}
+
+query GetUserByExactMatch($keyword: String!) {
+  getUserByExactMatch(keyword: $keyword) {
+    username
+    email
+  }
+}
+
+mutation LeaveLedger($ledgerId: String!) {
+  leaveLedger(ledgerId: $ledgerId) {
+    success
+    message
+  }
+}

@@ -1,0 +1,71 @@
+query GetUserProfile($username: String!) {
+  getUserProfile(username: $username) {
+    profile {
+      username
+      fullName
+      avatarUrl
+      bio
+      location
+      website
+      followersCount
+      followingCount
+      starredReposCount
+      created
+    }
+    isFollowing
+    activities {
+      id
+      type
+      content
+      createdAt
+      repoName
+      repoFullName
+    }
+    repositories {
+      name
+      fullName
+      description
+      isPrivate
+      createdAt
+      updatedAt
+    }
+  }
+}
+
+query GetUserFollowers($username: String!, $page: Float, $limit: Float) {
+  getUserFollowers(username: $username, page: $page, limit: $limit) {
+    users {
+      username
+      fullName
+      avatarUrl
+      bio
+    }
+    total
+  }
+}
+
+query GetUserFollowing($username: String!, $page: Float, $limit: Float) {
+  getUserFollowing(username: $username, page: $page, limit: $limit) {
+    users {
+      username
+      fullName
+      avatarUrl
+      bio
+    }
+    total
+  }
+}
+
+query GetUserStarredRepos($username: String!, $page: Float, $limit: Float) {
+  getUserStarredRepos(username: $username, page: $page, limit: $limit) {
+    repositories {
+      name
+      fullName
+      description
+      isPrivate
+      updatedAt
+      starsCount
+    }
+    total
+  }
+}

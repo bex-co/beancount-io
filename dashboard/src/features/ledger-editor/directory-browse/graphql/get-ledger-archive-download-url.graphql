@@ -1,0 +1,5 @@
+query GetLedgerArchiveDownloadUrl($ledgerId: String!) {
+  getLedgerArchiveDownloadUrl(ledgerId: $ledgerId) {
+    downloadUrl
+  }
+}

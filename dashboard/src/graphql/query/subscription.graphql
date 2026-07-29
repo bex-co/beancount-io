@@ -1,0 +1,43 @@
+query GetSubscriptionStatus {
+  subscriptionStatus {
+    subscriptions {
+      id
+      status
+      currentPeriodStart
+      currentPeriodEnd
+      clientId
+      cancelAt
+      canceledAt
+      cancelAtPeriodEnd
+      items {
+        id
+        price {
+          id
+          amount
+          currency
+          interval
+          intervalCount
+          trialPeriodDays
+        }
+        quantity
+        product {
+          id
+          name
+          description
+          images
+        }
+      }
+    }
+    hasActiveSubscription
+  }
+}
+
+query GetAllTierQuotas {
+  allTierQuotas {
+    tier
+    aiCfoTokensMax
+    maxLedgers
+    maxCollaboratorsPerLedger
+    maxDirectives
+  }
+}

@@ -1,0 +1,84 @@
+query GetLedgerOverview(
+  $ledgerId: String!
+  $conversion: String
+  $account: String
+  $filter: String
+  $time: String
+  $interval: String
+) {
+  getLedgerOverview(
+    ledgerId: $ledgerId
+    conversion: $conversion
+    account: $account
+    filter: $filter
+    time: $time
+    interval: $interval
+  ) {
+    netWorthData {
+      date
+      balance
+    }
+    assetsData {
+      date
+      balance
+    }
+    assetsHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    liabilitiesData {
+      date
+      balance
+    }
+    liabilitiesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    incomeIntervalData {
+      date
+      balance
+      accountBalances
+    }
+    incomeHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    incomeData {
+      date
+      balance
+    }
+    expensesIntervalData {
+      date
+      balance
+      accountBalances
+    }
+    expensesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    expensesData {
+      date
+      balance
+    }
+  }
+}

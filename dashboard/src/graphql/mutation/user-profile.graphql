@@ -1,0 +1,15 @@
+mutation FollowUser($username: String!) {
+  followUser(username: $username) {
+    success
+    isFollowing
+    message
+  }
+}
+
+mutation UnfollowUser($username: String!) {
+  unfollowUser(username: $username) {
+    success
+    isFollowing
+    message
+  }
+}

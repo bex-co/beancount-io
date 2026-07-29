@@ -1,0 +1,10 @@
+mutation ParseReceipt($s3ObjectKey: String!, $ledgerId: String!) {
+  parseReceipt(s3ObjectKey: $s3ObjectKey, ledgerId: $ledgerId) {
+    date
+    payee
+    description
+    amount
+    sourceAccount
+    targetAccount
+  }
+}

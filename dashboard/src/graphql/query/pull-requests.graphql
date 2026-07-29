@@ -1,0 +1,26 @@
+query GetPullRequestDetails(
+  $ledgerOwner: String!
+  $ledgerName: String!
+  $prNumber: Int!
+) {
+  getPullRequestDetails(
+    ledgerOwner: $ledgerOwner
+    ledgerName: $ledgerName
+    prNumber: $prNumber
+  ) {
+    number
+    title
+    description
+    state
+    author
+    headBranch
+    baseBranch
+    files {
+      filename
+      additions
+      deletions
+      changes
+    }
+    diff
+  }
+}

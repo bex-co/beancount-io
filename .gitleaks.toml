@@ -15,3 +15,13 @@ paths = [
   '''.*\.test\.tsx?$''',
   '''.*(^|/)__tests__/.*''',
 ]
+
+# Docs that show `curl -H "Authorization: Bearer YOUR_TOKEN"` use placeholder
+# tokens, not real credentials. Scoped to the `curl-auth-header` rule AND
+# Markdown files — a real key elsewhere is still caught.
+[[allowlists]]
+description = "Auth-header placeholders in Markdown docs"
+targetRules = ["curl-auth-header"]
+paths = [
+  '''.*\.md$''',
+]

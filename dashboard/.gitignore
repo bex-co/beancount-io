@@ -1,0 +1,47 @@
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Yarn
+.yarn/install-state.gz
+
+node_modules
+dist
+dist-ssr
+*.local
+coverage
+
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+.env
+
+# Vite temporary config files
+app.config.timestamp_*.js
+*.tsbuildinfo
+tmp/
+.output/
+
+# Generated files
+src/routeTree.gen.ts
+
+# TanStack build cache
+.tanstack/
+
+# Local tooling / agent scratch (never publish)
+.claude/
+.playwright-mcp/
+.agents/

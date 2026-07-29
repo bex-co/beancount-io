@@ -1,0 +1,147 @@
+/**
+ * react-diff-view Theme Integration
+ *
+ * Uses Tailwind CSS variables for theme-aware colors
+ * Matches GitHub's PR diff viewer aesthetic
+ */
+
+/* Import react-diff-view base styles */
+@import "react-diff-view/style/index.css";
+
+/* Diff container */
+.diff-viewer-container {
+  border-radius: var(--radius-lg);
+  font-family:
+    ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, "Liberation Mono",
+    monospace;
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+/* Override react-diff-view variables with GitHub-style colors */
+:root {
+  /* Light mode - GitHub green for additions */
+  --diff-gutter-insert-background-color: oklch(0.95 0.03 145 / 0.5);
+  --diff-code-insert-background-color: oklch(0.95 0.03 145 / 0.2);
+
+  /* Light mode - GitHub red for deletions */
+  --diff-gutter-delete-background-color: oklch(0.95 0.15 25 / 0.5);
+  --diff-code-delete-background-color: oklch(0.95 0.15 25 / 0.2);
+
+  /* Neutral colors */
+  --diff-background-color: transparent;
+  --diff-text-color: inherit;
+}
+
+/* Dark mode - GitHub dark theme colors */
+.dark {
+  --diff-gutter-insert-background-color: oklch(0.35 0.1 145 / 0.4);
+  --diff-code-insert-background-color: oklch(0.25 0.08 145 / 0.2);
+
+  --diff-gutter-delete-background-color: oklch(0.35 0.12 25 / 0.4);
+  --diff-code-delete-background-color: oklch(0.25 0.1 25 / 0.2);
+}
+
+/* Make gutters more compact like GitHub */
+.diff-gutter {
+  padding: 0 6px !important;
+  min-width: 42px;
+}
+
+/* Ensure proper code padding */
+.diff-code {
+  padding: 0 6px !important;
+}
+
+/* Beancount-specific syntax colors (light mode) */
+.token.comment {
+  color: oklch(0.45 0.05 145);
+  font-style: italic;
+}
+
+.token.keyword {
+  color: oklch(0.45 0.15 300);
+  font-weight: bold;
+}
+
+.token.constant,
+.token.date {
+  color: oklch(0.45 0.15 250);
+}
+
+.token.constant-language,
+.token.account-root {
+  color: oklch(0.4 0.12 200);
+  font-weight: bold;
+}
+
+.token.variable,
+.token.account {
+  color: oklch(0.35 0.08 250);
+}
+
+.token.string {
+  color: oklch(0.45 0.12 25);
+}
+
+.token.symbol,
+.token.currency {
+  color: oklch(0.4 0.1 50);
+}
+
+.token.number {
+  color: oklch(0.4 0.15 145);
+}
+
+.token.tag {
+  color: oklch(0.4 0.12 200);
+}
+
+.token.link {
+  color: oklch(0.4 0.12 200);
+}
+
+/* Beancount-specific syntax colors (dark mode) */
+.dark .token.comment {
+  color: oklch(0.6 0.05 145);
+}
+
+.dark .token.keyword {
+  color: oklch(0.7 0.15 310);
+}
+
+.dark .token.constant,
+.dark .token.date {
+  color: oklch(0.7 0.12 250);
+}
+
+.dark .token.constant-language,
+.dark .token.account-root {
+  color: oklch(0.65 0.12 180);
+}
+
+.dark .token.variable,
+.dark .token.account {
+  color: oklch(0.75 0.08 230);
+}
+
+.dark .token.string {
+  color: oklch(0.7 0.1 40);
+}
+
+.dark .token.symbol,
+.dark .token.currency {
+  color: oklch(0.75 0.08 80);
+}
+
+.dark .token.number {
+  color: oklch(0.7 0.12 145);
+}
+
+.dark .token.tag {
+  color: oklch(0.65 0.12 180);
+}
+
+.dark .token.link {
+  color: oklch(0.65 0.12 180);
+}

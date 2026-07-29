@@ -1,0 +1,501 @@
+import type { TranslationEntry } from "@/i18n";
+
+const koAuth: Record<string, TranslationEntry> = {
+  "auth.alreadyHaveAccount": {
+    message: "이미 계정이 있으신가요? 로그인",
+    description: "Prompt text asking if user already has account",
+  },
+  "auth.alreadyHaveAccountQuestion": {
+    message: "이미 계정이 있으신가요?",
+    description: "Prompt asking if user has existing account",
+  },
+  "auth.authenticating": {
+    message: "인증 중...",
+    description: "Message shown during authentication process",
+  },
+  "auth.authenticationError": {
+    message: "인증 오류",
+    description: "Title for authentication error dialog",
+  },
+  "auth.authenticationErrorOccurred": {
+    message: "인증 중 오류가 발생했습니다",
+    description: "Generic authentication error message",
+  },
+  "auth.authenticationFailed": {
+    message: "인증에 실패했습니다",
+    description: "Error message when authentication fails",
+  },
+  "auth.backToSignIn": {
+    message: "로그인으로 돌아가기",
+    description: "Link text to return to sign in page",
+  },
+  "auth.confirmNewPassword": {
+    message: "새 비밀번호 확인",
+    description: "Label for confirm password field",
+  },
+  "auth.confirmPassword": {
+    message: "비밀번호 확인",
+    description: "Label for password confirmation input field",
+  },
+  "auth.confirmPasswordRequired": {
+    message: "비밀번호를 확인해 주세요",
+    description: "Validation error when password confirmation is missing",
+  },
+  "auth.confirmYourNewPassword": {
+    message: "새 비밀번호를 확인해 주세요",
+    description: "Placeholder for confirm password input",
+  },
+  "auth.confirmYourPassword": {
+    message: "비밀번호를 확인해 주세요",
+    description: "Placeholder for password confirmation",
+  },
+  "auth.createAccount": {
+    message: "계정 만들기",
+    description: "Button to submit registration",
+  },
+  "auth.createYourAccount": {
+    message: "계정을 만드세요",
+    description: "Registration page title",
+  },
+  "auth.creatingAccount": {
+    message: "계정 생성 중...",
+    description: "Button state while creating account",
+  },
+  "auth.dontHaveAccount": {
+    message: "계정이 없으신가요?",
+    description: "Prompt text asking if user doesn't have account",
+  },
+  "auth.email": {
+    message: "이메일",
+    description: "Label for email input field",
+  },
+  "auth.emailAddress": {
+    message: "이메일 주소",
+    description: "Email address field label",
+  },
+  "auth.emailInvalid": {
+    message: "유효한 이메일 주소를 입력해 주세요",
+    description: "Validation error when email format is invalid",
+  },
+  "auth.emailRequired": {
+    message: "이메일은 필수입니다",
+    description: "Validation error when email is not provided",
+  },
+  "auth.emailSent": {
+    message: "이메일을 보냈습니다!",
+    description: "Success title after email sent",
+  },
+  "auth.emailSentDescription": {
+    message:
+      "이메일 주소로 비밀번호 재설정 링크를 보냈습니다. 받은 편지함을 확인하고 안내에 따라 비밀번호를 재설정해 주세요.",
+    description: "Detailed success message after reset email sent",
+  },
+  "auth.enterCredentials": {
+    message: "대시보드에 접근하기 위한 인증 정보를 입력하세요",
+    description: "Login page description",
+  },
+  "auth.enterDetailsToGetStarted": {
+    message: "대시보드를 시작하기 위해 정보를 입력하세요",
+    description: "Registration page description",
+  },
+  "auth.enterEmailForReset": {
+    message: "이메일 주소를 입력하면 비밀번호 재설정 링크를 보내드립니다",
+    description: "Instructions on forgot password page",
+  },
+  "auth.enterNewPasswordBelow": {
+    message: "아래에 새 비밀번호를 입력하세요",
+    description: "Instruction for reset password form",
+  },
+  "auth.enterUsername": {
+    message: "사용자 이름을 입력하세요 (소문자, 최대 20자)",
+    description: "Placeholder for username input with character limit",
+  },
+  "auth.enterYourEmail": {
+    message: "이메일을 입력하세요",
+    description: "Placeholder for email input",
+  },
+  "auth.enterYourNewPassword": {
+    message: "새 비밀번호를 입력하세요",
+    description: "Placeholder for new password input",
+  },
+  "auth.enterYourPassword": {
+    message: "비밀번호를 입력하세요 (최소 6자)",
+    description: "Placeholder for password input with requirement",
+  },
+  "auth.firstName": {
+    message: "이름",
+    description: "Label for first name input field",
+  },
+  "auth.lastName": {
+    message: "성",
+    description: "Label for last name input field",
+  },
+  "auth.enterFirstName": {
+    message: "이름을 입력하세요",
+    description: "Placeholder for first name input",
+  },
+  "auth.enterLastName": {
+    message: "성을 입력하세요",
+    description: "Placeholder for last name input",
+  },
+  "auth.firstNameMaxLength": {
+    message: "이름은 최대 50자까지 입력할 수 있습니다",
+    description: "Validation error when first name is too long",
+  },
+  "auth.lastNameMaxLength": {
+    message: "성은 최대 50자까지 입력할 수 있습니다",
+    description: "Validation error when last name is too long",
+  },
+  "auth.failedToResetPassword": {
+    message: "비밀번호 재설정에 실패했습니다. 다시 시도해 주세요.",
+    description: "Error message when password reset fails",
+  },
+  "auth.failedToSendResetEmail": {
+    message: "비밀번호 재설정 이메일 전송에 실패했습니다. 다시 시도해 주세요.",
+    description: "Error when reset email fails to send",
+  },
+  "auth.forgotPassword": {
+    message: "비밀번호를 잊으셨나요?",
+    description: "Link text for forgot password feature",
+  },
+  "auth.forgotYourPassword": {
+    message: "비밀번호를 잊으셨나요?",
+    description: "Forgot password page title",
+  },
+  "auth.loggingOut": {
+    message: "로그아웃 중",
+    description: "Title shown while logging out",
+  },
+  "auth.loggingOutMessage": {
+    message: "로그아웃 중입니다. 잠시 기다려 주세요...",
+    description: "Message shown while logging out",
+  },
+  "auth.login": {
+    message: "로그인 / 회원가입",
+    description: "Button label for login or signup",
+  },
+  "auth.loginError": {
+    message: "로그인 중 오류가 발생했습니다",
+    description: "Generic login error message",
+  },
+  "auth.loginFailed": {
+    message: "로그인에 실패했습니다",
+    description: "Error title when login fails",
+  },
+  "auth.logout": {
+    message: "로그아웃",
+    description: "Button label to log out",
+  },
+  "auth.logoutAlertCancel": {
+    message: "취소",
+    description: "Cancel button in logout confirmation dialog",
+  },
+  "auth.logoutAlertConfirm": {
+    message: "로그아웃",
+    description: "Confirm button in logout confirmation dialog",
+  },
+  "auth.logoutAlertMsg": {
+    message: "정말 로그아웃하시겠습니까?",
+    description: "Confirmation message asking user if they want to log out",
+  },
+  "auth.newPassword": {
+    message: "새 비밀번호",
+    description: "Label for new password field",
+  },
+  "auth.newPasswordMinLength": {
+    message: "비밀번호는 최소 6자 이상이어야 합니다",
+    description: "Validation error for password length",
+  },
+  "auth.newPasswordMaxLength": {
+    message: "비밀번호는 최대 128자 이하여야 합니다",
+    description:
+      "Validation error when new password exceeds the maximum length",
+  },
+  "auth.newPasswordRequired": {
+    message: "비밀번호는 필수입니다",
+    description: "Validation error for missing new password",
+  },
+  "auth.password": {
+    message: "비밀번호",
+    description: "Label for password input field",
+  },
+  "auth.passwordMinLength": {
+    message: "비밀번호는 최소 6자 이상이어야 합니다",
+    description: "Validation error when password is too short",
+  },
+  "auth.passwordMaxLength": {
+    message: "비밀번호는 최대 128자 이하여야 합니다",
+    description: "Validation error when password exceeds the maximum length",
+  },
+  "auth.passwordRequired": {
+    message: "비밀번호는 필수입니다",
+    description: "Validation error when password is not provided",
+  },
+  "auth.passwordResetSuccessMessage": {
+    message: "비밀번호가 재설정되었습니다. 로그인 페이지로 이동 중...",
+    description: "Success message description",
+  },
+  "auth.passwordResetSuccessful": {
+    message: "비밀번호 재설정 완료!",
+    description: "Success message title",
+  },
+  "auth.passwordsDoNotMatch": {
+    message: "비밀번호가 일치하지 않습니다",
+    description: "Validation error when passwords don't match",
+  },
+  "auth.redirectingToLogin": {
+    message: "로그인 페이지로 이동 중...",
+    description: "Message shown after successful logout",
+  },
+  "auth.registrationError": {
+    message: "등록 중 오류가 발생했습니다",
+    description: "Generic registration error",
+  },
+  "auth.registrationFailed": {
+    message: "등록에 실패했습니다",
+    description: "Error when registration fails",
+  },
+  "auth.resetEmailError": {
+    message: "비밀번호 재설정 이메일 전송 중 오류가 발생했습니다",
+    description: "Generic error for reset email sending",
+  },
+  "auth.resetPassword": {
+    message: "비밀번호 재설정",
+    description: "Page title or button for password reset",
+  },
+  "auth.resetPasswordButton": {
+    message: "비밀번호 재설정",
+    description: "Button text to reset password",
+  },
+  "auth.resetPasswordDescription": {
+    message: "이메일 주소를 입력하면 비밀번호 재설정 링크를 보내드립니다.",
+    description: "Instructions for password reset process",
+  },
+  "auth.resetPasswordEmailSent": {
+    message:
+      "이메일 주소로 이메일을 보냈습니다. 이메일을 확인하여 비밀번호를 재설정해 주세요.",
+    description: "Success message after password reset email is sent",
+  },
+  "auth.resetPasswordError": {
+    message: "비밀번호 재설정 중 오류가 발생했습니다",
+    description: "Generic error message for password reset",
+  },
+  "auth.resetYourPassword": {
+    message: "비밀번호를 재설정하세요",
+    description: "Title for reset password page",
+  },
+  "auth.resettingPassword": {
+    message: "비밀번호 재설정 중...",
+    description: "Button text while resetting password",
+  },
+  "auth.sendResetLink": {
+    message: "재설정 링크 보내기",
+    description: "Button to send password reset link",
+  },
+  "auth.sendResetPasswordEmail": {
+    message: "비밀번호 재설정 이메일 보내기",
+    description: "Button label to send password reset email",
+  },
+  "auth.sending": {
+    message: "전송 중...",
+    description: "Button state while sending email",
+  },
+  "auth.signIn": {
+    message: "로그인",
+    description: "Button label for sign in action",
+  },
+  "auth.signUp": {
+    message: "회원가입",
+    description: "Button label for sign up action",
+  },
+  "auth.tokenExpired": {
+    message: "토큰 만료",
+    description: "Title when reset token is expired",
+  },
+  "auth.tokenExpiredDescription": {
+    message: "비밀번호 재설정 토큰이 만료되었거나 유효하지 않습니다",
+    description: "Description when token is expired",
+  },
+  "auth.tokenExpiredMessage": {
+    message:
+      "이 비밀번호 재설정 토큰이 만료되었습니다. 새 토큰을 요청해 주세요.",
+    description: "Alert message for expired token",
+  },
+  "auth.username": {
+    message: "사용자 이름",
+    description: "Username field label",
+  },
+  "auth.usernameAlphanumeric": {
+    message: "사용자 이름은 문자와 숫자만 포함할 수 있습니다",
+    description: "Validation error when username contains invalid characters",
+  },
+  "auth.usernameLowercaseAlphanumeric": {
+    message: "사용자 이름은 소문자, 숫자, 밑줄만 포함할 수 있습니다",
+    description:
+      "Validation error when username contains invalid characters (must be lowercase)",
+  },
+  "auth.usernameMaxLength": {
+    message: "사용자 이름은 최대 20자까지 입력할 수 있습니다",
+    description: "Validation error when username too long",
+  },
+  "auth.usernameRequired": {
+    message: "사용자 이름은 필수입니다",
+    description: "Validation error when username is missing",
+  },
+  "auth.usernamePublicHint": {
+    message: "이 사용자 이름은 공개되어 다른 사람들에게 표시됩니다",
+    description: "Hint text explaining that username is publicly visible",
+  },
+  "auth.welcomeBack": {
+    message: "다시 오셨군요",
+    description: "Login page welcome title",
+  },
+  "auth.signInToAccount": {
+    message: "Beancount 계정에 로그인",
+    description: "Login page subtitle",
+  },
+  "auth.secureAccess": {
+    message: "안전한 접근",
+    description: "Secure access feature title",
+  },
+  "auth.secureAccessDescription": {
+    message: "귀하의 재무 데이터는 엔터프라이즈급 보안으로 보호됩니다",
+    description: "Secure access feature description",
+  },
+  "auth.realTimeInsights": {
+    message: "실시간 인사이트",
+    description: "Real-time insights feature title",
+  },
+  "auth.realTimeInsightsDescription": {
+    message: "재무 상황과 트렌드를 즉시 파악하세요",
+    description: "Real-time insights feature description",
+  },
+  "auth.lovedByUsers": {
+    message: "사용자들의 사랑을 받는",
+    description: "Loved by users feature title",
+  },
+  "auth.lovedByUsersDescription": {
+    message:
+      "회계 요구에 Beancount를 신뢰하는 수천 명의 만족한 사용자들과 함께하세요",
+    description: "Loved by users feature description",
+  },
+  "auth.verifyYourEmail": {
+    message: "이메일을 확인하세요",
+    description: "OTP verification page title",
+  },
+  "auth.otpSentToYourEmail": {
+    message: "이메일 주소로 4자리 코드를 보냈습니다",
+    description: "Message showing OTP was sent to email",
+  },
+  "auth.enterOtpCode": {
+    message: "코드를 입력하세요",
+    description: "Label for OTP input field",
+  },
+  "auth.otpRequired": {
+    message: "OTP 코드는 필수입니다",
+    description: "Validation error when OTP is missing",
+  },
+  "auth.otpInvalidLength": {
+    message: "OTP 코드는 4자리여야 합니다",
+    description: "Validation error when OTP length is invalid",
+  },
+  "auth.otpVerificationFailed": {
+    message: "OTP 인증에 실패했습니다",
+    description: "Error message when OTP verification fails",
+  },
+  "auth.otpVerificationError": {
+    message: "OTP 인증 중 오류가 발생했습니다",
+    description: "Generic error message for OTP verification",
+  },
+  "auth.sessionExpired": {
+    message: "세션 만료",
+    description: "Title when signup session is expired",
+  },
+  "auth.sessionExpiredDescription": {
+    message: "회원가입 세션이 만료되었거나 유효하지 않습니다",
+    description: "Description when session is expired",
+  },
+  "auth.sessionExpiredMessage": {
+    message:
+      "이 회원가입 세션이 만료되었습니다. 등록 과정을 처음부터 다시 시작해 주세요.",
+    description: "Alert message for expired session",
+  },
+  "auth.backToSignUp": {
+    message: "회원가입으로 돌아가기",
+    description: "Link text to return to sign up page",
+  },
+  "auth.didNotReceiveOtp": {
+    message: "코드를 받지 못하셨나요?",
+    description: "Prompt asking if user didn't receive OTP",
+  },
+  "auth.verifying": {
+    message: "확인 중...",
+    description: "Button text while verifying OTP",
+  },
+  "auth.verifyEmail": {
+    message: "이메일 확인",
+    description: "Button text to verify email with OTP",
+  },
+  "auth.termsAgreementPrefix": {
+    message: '"계정 만들기"를 클릭하면 beancount.io의',
+    description: "Prefix text before terms and privacy links on sign up form",
+  },
+  "auth.termsOfUse": {
+    message: "이용약관",
+    description: "Link text for terms of use",
+  },
+  "auth.privacyPolicy": {
+    message: "개인정보처리방침",
+    description: "Link text for privacy policy",
+  },
+  "auth.and": {
+    message: "및",
+    description: "Conjunction between terms and privacy links",
+  },
+  "auth.oauthSignInToContinue": {
+    message: "Sign in to continue",
+    description: "OAuth consent page login step title",
+  },
+  "auth.oauthAppWantsAccess": {
+    message: "An app wants to access your Beancount ledger.",
+    description: "OAuth consent page login step description",
+  },
+  "auth.oauthChooseLedger": {
+    message: "Choose a ledger",
+    description: "OAuth consent page ledger step title",
+  },
+  "auth.oauthSelectLedger": {
+    message: "Select which ledger to grant access to.",
+    description: "OAuth consent page ledger step description",
+  },
+  "auth.oauthApproveAccess": {
+    message: "Approve access",
+    description: "OAuth consent page approve button",
+  },
+  "auth.oauthNoLedgersMessage": {
+    message: "No ledgers found. Please create one first.",
+    description: "OAuth consent page empty ledger state message",
+  },
+  "auth.oauthDontHaveAccount": {
+    message: "Don't have an account?",
+    description: "OAuth consent page link to register",
+  },
+  "auth.oauthAlreadyHaveAccount": {
+    message: "Already have an account?",
+    description: "OAuth consent page link back to sign in",
+  },
+  "auth.oauthRegisterToContinue": {
+    message: "Create an account to continue",
+    description: "OAuth consent page register step title",
+  },
+  "auth.oauthVerifyEmailToContinue": {
+    message: "Verify your email to continue",
+    description: "OAuth consent page OTP step title",
+  },
+  "auth.loginSessionExpiredMessage": {
+    message: "세션이 만료되었습니다. 다시 로그인해 주세요.",
+    description:
+      "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
+  },
+};
+export default koAuth;

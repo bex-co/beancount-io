@@ -1,0 +1,59 @@
+query ListCommits(
+  $ledgerId: String!
+  $branch: String
+  $page: Int
+  $limit: Int
+) {
+  listCommits(
+    ledgerId: $ledgerId
+    branch: $branch
+    page: $page
+    limit: $limit
+  ) {
+    sha
+    shortSha
+    message
+    author {
+      name
+      email
+      date
+    }
+  }
+}
+
+query GetLatestLedgerCommit($ledgerId: String!, $branchName: String) {
+  getLatestLedgerCommit(ledgerId: $ledgerId, branchName: $branchName) {
+    sha
+    message
+    created
+  }
+}
+
+query GetCommitDetails($ledgerId: String!, $sha: String!) {
+  getCommitDetails(ledgerId: $ledgerId, sha: $sha) {
+    sha
+    message
+    author {
+      name
+      email
+      date
+    }
+    committer {
+      name
+      email
+      date
+    }
+    files {
+      filename
+      additions
+      deletions
+    }
+    stats {
+      additions
+      deletions
+      total
+    }
+    diff
+    parents
+  }
+}

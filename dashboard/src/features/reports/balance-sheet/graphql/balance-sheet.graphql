@@ -1,0 +1,62 @@
+query GetLedgerBalanceSheet(
+  $ledgerId: String!
+  $conversion: String
+  $account: String
+  $filter: String
+  $time: String
+  $interval: String
+) {
+  getLedgerAccounts(ledgerId: $ledgerId, status: "closed")
+  getLedgerBalanceSheet(
+    ledgerId: $ledgerId
+    conversion: $conversion
+    account: $account
+    filter: $filter
+    time: $time
+    interval: $interval
+  ) {
+    assetsHierarchyData {
+      account
+      balance
+      balanceChildren
+      cost
+      costChildren
+      hasTxns
+      children
+    }
+    equityHierarchyData {
+      account
+      balance
+      balanceChildren
+      cost
+      costChildren
+      hasTxns
+      children
+    }
+    liabilitiesHierarchyData {
+      account
+      balance
+      balanceChildren
+      cost
+      costChildren
+      hasTxns
+      children
+    }
+    netWorthData {
+      date
+      balance
+    }
+    assetsData {
+      date
+      balance
+    }
+    liabilitiesData {
+      date
+      balance
+    }
+    equityData {
+      date
+      balance
+    }
+  }
+}

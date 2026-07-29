@@ -1,0 +1,17 @@
+query GetLedgerEvents(
+  $ledgerId: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  getLedgerEvents(
+    ledgerId: $ledgerId
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    type
+    description
+    date
+  }
+}

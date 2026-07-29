@@ -1,0 +1,117 @@
+mutation CreatePlaidLinkToken($ledgerId: String!) {
+  createPlaidLinkToken(ledgerId: $ledgerId) {
+    linkToken
+  }
+}
+
+mutation CreatePlaidUpdateModeLinkToken(
+  $itemId: String!
+  $ledgerId: String!
+  $accountSelection: Boolean
+) {
+  createPlaidUpdateModeLinkToken(
+    itemId: $itemId
+    ledgerId: $ledgerId
+    accountSelection: $accountSelection
+  ) {
+    linkToken
+  }
+}
+
+mutation ReconcilePlaidAccounts($itemId: String!, $ledgerId: String!) {
+  reconcilePlaidAccounts(itemId: $itemId, ledgerId: $ledgerId) {
+    success
+    addedCount
+    removedCount
+  }
+}
+
+mutation ExchangePlaidPublicToken($ledgerId: String!, $publicToken: String!) {
+  exchangePlaidPublicToken(ledgerId: $ledgerId, publicToken: $publicToken) {
+    id
+    institutionName
+    status
+  }
+}
+
+mutation UpdatePlaidAccountMapping(
+  $accountId: String!
+  $ledgerAccount: String!
+  $ledgerId: String!
+) {
+  updatePlaidAccountMapping(
+    accountId: $accountId
+    ledgerAccount: $ledgerAccount
+    ledgerId: $ledgerId
+  )
+}
+
+mutation UpdatePlaidAccountCurrency(
+  $accountId: String!
+  $currency: String!
+  $ledgerId: String!
+) {
+  updatePlaidAccountCurrency(
+    accountId: $accountId
+    currency: $currency
+    ledgerId: $ledgerId
+  )
+}
+
+mutation RefreshPlaidItemStatus($itemId: String!, $ledgerId: String!) {
+  refreshPlaidItemStatus(itemId: $itemId, ledgerId: $ledgerId) {
+    id
+    status
+    errorCode
+    errorMessage
+  }
+}
+
+mutation UnlinkPlaidItem($itemId: String!, $ledgerId: String!) {
+  unlinkPlaidItem(itemId: $itemId, ledgerId: $ledgerId)
+}
+
+mutation SyncPlaidTransactions($itemId: String!, $ledgerId: String!) {
+  syncPlaidTransactions(itemId: $itemId, ledgerId: $ledgerId) {
+    success
+    transactionsFetched
+    transactionsAdded
+    message
+  }
+}
+
+input PlaidTransactionSubmitInput {
+  transactionId: String!
+  targetAccount: String!
+  sourceAccount: String
+}
+
+mutation SubmitPlaidTransactionsToLedger(
+  $ledgerId: String!
+  $transactions: [PlaidTransactionSubmitInput!]!
+  $filename: String
+) {
+  submitPlaidTransactionsToLedger(
+    ledgerId: $ledgerId
+    transactions: $transactions
+    filename: $filename
+  ) {
+    success
+    addedCount
+    message
+  }
+}
+
+mutation DeletePlaidTransactions(
+  $ledgerId: String!
+  $transactionIds: [String!]!
+) {
+  deletePlaidTransactions(
+    ledgerId: $ledgerId
+    transactionIds: $transactionIds
+  ) {
+    success
+    deletedCount
+    message
+  }
+}

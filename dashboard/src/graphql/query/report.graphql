@@ -1,0 +1,52 @@
+query QueryShell($ledgerId: String!, $query: String!) {
+  queryShell(ledgerId: $ledgerId, query: $query) {
+    text {
+      t
+      contents
+    }
+    table {
+      types {
+        name
+        dtype
+      }
+      t
+      rows
+    }
+    resultType
+  }
+}
+
+query GetLedgerErrors($ledgerId: String!) {
+  getLedgerErrors(ledgerId: $ledgerId) {
+    message
+    lineno
+    filename
+  }
+}
+
+query GetLedgerAttributes($ledgerId: String!) {
+  getLedgerAttributes(ledgerId: $ledgerId) {
+    accounts
+    tags
+    years
+    links
+    payees
+    currencies
+  }
+}
+
+query GetLedgerAccounts($ledgerId: String!, $status: String) {
+  getLedgerAccounts(ledgerId: $ledgerId, status: $status)
+}
+
+query GetLedgerCurrencies($ledgerId: String!) {
+  getLedgerCurrencies(ledgerId: $ledgerId)
+}
+
+query GetLedgerNarrations($ledgerId: String!) {
+  getLedgerNarrations(ledgerId: $ledgerId)
+}
+
+query GetLedgerPayees($ledgerId: String!) {
+  getLedgerPayees(ledgerId: $ledgerId)
+}

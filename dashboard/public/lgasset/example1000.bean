@@ -1,0 +1,4821 @@
+;; -*- mode: org; mode: beancount; -*-
+;; Birth: 1980-05-12
+;; Dates: 2023-01-01 - 2025-06-15
+;; THIS FILE HAS BEEN AUTO-GENERATED, THEN TRIMMED TO 999 DIRECTIVES FOR TESTING.
+* Options
+
+option "title" "Example Beancount file"
+option "operating_currency" "USD"
+
+
+
+1792-01-01 commodity USD
+  name: "US Dollar"
+  export: "CASH"
+
+1900-01-01 commodity VMMXX
+  export: "MUTF:VMMXX (MONEY:USD)"
+
+1980-05-12 open Equity:Opening-Balances
+1980-05-12 open Liabilities:AccountsPayable
+1980-05-12 open Liabilities:US:Chase:Slate                      USD
+1980-05-12 open Income:US:Federal:PreTax401k                    IRAUSD
+1980-05-12 open Assets:US:Federal:PreTax401k                    IRAUSD
+1980-05-12 open Expenses:Food:Groceries
+1980-05-12 open Expenses:Food:Restaurant
+1980-05-12 open Expenses:Food:Coffee
+1980-05-12 open Expenses:Food:Alcohol
+1980-05-12 open Expenses:Transport:Tram
+1980-05-12 open Expenses:Home:Rent
+1980-05-12 open Expenses:Home:Electricity
+1980-05-12 open Expenses:Home:Internet
+1980-05-12 open Expenses:Home:Phone
+1980-05-12 open Expenses:Financial:Fees
+1980-05-12 open Expenses:Financial:Commissions
+
+1980-05-12 commodity VACHR
+  name: "Employer Vacation Hours"
+  export: "IGNORE"
+
+1980-05-12 commodity IRAUSD
+  name: "US 401k and IRA Contributions"
+  export: "IGNORE"
+
+1995-09-18 commodity VBMPX
+  name: "Vanguard Total Bond Market Index Fund Institutional Plus Shares"
+  export: "MUTF:VBMPX"
+  price: "USD:google/MUTF:VBMPX"
+
+2004-01-20 commodity ITOT
+  name: "iShares Core S&P Total U.S. Stock Market ETF"
+  export: "NYSEARCA:ITOT"
+  price: "USD:google/NYSEARCA:ITOT"
+
+2004-01-26 commodity VHT
+  name: "Vanguard Health Care ETF"
+  export: "NYSEARCA:VHT"
+  price: "USD:google/NYSEARCA:VHT"
+
+2004-11-01 commodity GLD
+  name: "SPDR Gold Trust (ETF)"
+  export: "NYSEARCA:GLD"
+  price: "USD:google/NYSEARCA:GLD"
+
+2007-07-20 commodity VEA
+  name: "Vanguard FTSE Developed Markets ETF"
+  export: "NYSEARCA:VEA"
+  price: "USD:google/NYSEARCA:VEA"
+
+2009-05-01 commodity RGAGX
+  name: "American Funds The Growth Fund of America Class R-6"
+  export: "MUTF:RGAGX"
+  price: "USD:google/MUTF:RGAGX"
+
+2023-01-01 open Assets:US:BofA
+  institution: "Bank of America"
+  address: "123 America Street, LargeTown, USA"
+  phone: "+1.012.345.6789"
+2023-01-01 open Assets:US:BofA:Checking                         USD
+  account: "00234-48574897"
+2023-01-01 open Assets:US:ETrade:Cash                           USD
+2023-01-01 open Assets:US:ETrade:ITOT                           ITOT
+2023-01-01 open Assets:US:ETrade:VEA                            VEA
+2023-01-01 open Assets:US:ETrade:VHT                            VHT
+2023-01-01 open Assets:US:ETrade:GLD                            GLD
+2023-01-01 open Income:US:ETrade:PnL                            USD
+2023-01-01 open Income:US:ETrade:ITOT:Dividend                  USD
+2023-01-01 open Income:US:ETrade:VEA:Dividend                   USD
+2023-01-01 open Income:US:ETrade:VHT:Dividend                   USD
+2023-01-01 open Income:US:ETrade:GLD:Dividend                   USD
+2023-01-01 open Assets:US:Vanguard:VBMPX                        VBMPX
+  number: "882882"
+2023-01-01 open Assets:US:Vanguard:RGAGX                        RGAGX
+  number: "882882"
+2023-01-01 open Assets:US:Vanguard                              USD
+  institution: "Vanguard Group"
+  address: "P.O. Box 1110, Valley Forge, PA 19482-1110"
+  phone: "+1.800.523.1188"
+2023-01-01 open Income:US:Babble:Match401k                      USD
+2023-01-01 open Assets:US:Vanguard:Cash                         USD
+  number: "882882"
+2023-01-01 open Income:US:Babble:Salary                         USD
+2023-01-01 open Income:US:Babble:GroupTermLife                  USD
+2023-01-01 open Income:US:Babble:Vacation                       VACHR
+2023-01-01 open Assets:US:Babble:Vacation                       VACHR
+2023-01-01 open Expenses:Vacation                               VACHR
+2023-01-01 open Expenses:Health:Life:GroupTermLife
+2023-01-01 open Expenses:Health:Medical:Insurance
+2023-01-01 open Expenses:Health:Dental:Insurance
+2023-01-01 open Expenses:Health:Vision:Insurance
+2023-01-01 open Expenses:Taxes:Y2023:US:Federal:PreTax401k      IRAUSD
+2023-01-01 open Expenses:Taxes:Y2023:US:Medicare                USD
+2023-01-01 open Expenses:Taxes:Y2023:US:Federal                 USD
+2023-01-01 open Expenses:Taxes:Y2023:US:CityNYC                 USD
+2023-01-01 open Expenses:Taxes:Y2023:US:SDI                     USD
+2023-01-01 open Expenses:Taxes:Y2023:US:State                   USD
+2023-01-01 open Expenses:Taxes:Y2023:US:SocSec                  USD
+
+2023-01-01 event "employer" "Babble, 1 Continuous Loop, Bupertina, CA"
+
+2023-01-01 * "Opening Balance for checking account"
+  Assets:US:BofA:Checking   3919.69 USD
+  Equity:Opening-Balances  -3919.69 USD
+
+2023-01-01 * "Allowed contributions for one year"
+  Income:US:Federal:PreTax401k  -18500.00 IRAUSD
+  Assets:US:Federal:PreTax401k   18500.00 IRAUSD
+
+2023-01-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-01-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-01-05 * "Rose Flower" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -40.29 USD
+  Expenses:Food:Restaurant     40.29 USD
+
+2023-01-05 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-01-06 * "Rose Flower" "Eating out after work"
+  Liabilities:US:Chase:Slate  -23.27 USD
+  Expenses:Food:Restaurant     23.27 USD
+
+2023-01-06 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-01-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-01-09 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.629 VBMPX {182.57 USD, 2023-01-09}
+  Assets:US:Vanguard:Cash   -479.98 USD
+
+2023-01-09 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   12.669 RGAGX {56.83 USD, 2023-01-09}
+  Assets:US:Vanguard:Cash   -719.98 USD
+
+2023-01-09 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.315 VBMPX {182.57 USD, 2023-01-09}
+  Assets:US:Vanguard:Cash   -240.08 USD
+
+2023-01-09 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    6.335 RGAGX {56.83 USD, 2023-01-09}
+  Assets:US:Vanguard:Cash   -360.02 USD
+
+2023-01-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   94.40 USD
+  Assets:US:BofA:Checking     -94.40 USD
+
+2023-01-11 * "Goba Goba" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -30.84 USD
+  Expenses:Food:Restaurant     30.84 USD
+
+2023-01-14 * "Kin Soy" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -33.38 USD
+  Expenses:Food:Restaurant     33.38 USD
+
+2023-01-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -50.21 USD
+  Expenses:Home:Phone       50.21 USD
+
+2023-01-19 * "Cafe Modagor" "Eating out "
+  Liabilities:US:Chase:Slate  -34.04 USD
+  Expenses:Food:Restaurant     34.04 USD
+
+2023-01-19 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-01-20 * "Cafe Modagor" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -57.56 USD
+  Expenses:Food:Restaurant     57.56 USD
+
+2023-01-20 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -81.22 USD
+  Expenses:Food:Groceries      81.22 USD
+
+2023-01-20 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-01-21 * "China Garden" "Eating out alone"
+  Liabilities:US:Chase:Slate  -20.54 USD
+  Expenses:Food:Restaurant     20.54 USD
+
+2023-01-22 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.96 USD
+  Expenses:Home:Internet    79.96 USD
+
+2023-01-23 * "Jewel of Morroco" "Eating out "
+  Liabilities:US:Chase:Slate  -23.69 USD
+  Expenses:Food:Restaurant     23.69 USD
+
+2023-01-23 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.651 VBMPX {181.06 USD, 2023-01-23}
+  Assets:US:Vanguard:Cash   -479.99 USD
+
+2023-01-23 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   12.402 RGAGX {58.05 USD, 2023-01-23}
+  Assets:US:Vanguard:Cash   -719.94 USD
+
+2023-01-23 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.326 VBMPX {181.06 USD, 2023-01-23}
+  Assets:US:Vanguard:Cash   -240.09 USD
+
+2023-01-23 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    6.202 RGAGX {58.05 USD, 2023-01-23}
+  Assets:US:Vanguard:Cash   -360.03 USD
+
+2023-01-26 * "Rose Flower" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -38.89 USD
+  Expenses:Food:Restaurant     38.89 USD
+
+2023-01-27 * "China Garden" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -32.13 USD
+  Expenses:Food:Restaurant     32.13 USD
+
+2023-01-27 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -67.99 USD
+  Expenses:Food:Groceries      67.99 USD
+
+2023-01-30 * "Rose Flower" "Eating out "
+  Liabilities:US:Chase:Slate  -20.22 USD
+  Expenses:Food:Restaurant     20.22 USD
+
+2023-02-01 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -133.37 USD
+  Expenses:Food:Groceries      133.37 USD
+
+2023-02-01 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-02-02 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-02-03 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-02-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-02-04 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-02-04 * "Jewel of Morroco" "Eating out after work"
+  Liabilities:US:Chase:Slate  -30.04 USD
+  Expenses:Food:Restaurant     30.04 USD
+
+2023-02-06 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.646 VBMPX {181.41 USD, 2023-02-06}
+  Assets:US:Vanguard:Cash   -480.01 USD
+
+2023-02-06 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   12.521 RGAGX {57.50 USD, 2023-02-06}
+  Assets:US:Vanguard:Cash   -719.96 USD
+
+2023-02-06 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.323 VBMPX {181.41 USD, 2023-02-06}
+  Assets:US:Vanguard:Cash   -240.01 USD
+
+2023-02-06 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    6.260 RGAGX {57.50 USD, 2023-02-06}
+  Assets:US:Vanguard:Cash   -359.95 USD
+
+2023-02-07 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   718.71 USD
+  Assets:US:BofA:Checking     -718.71 USD
+
+2023-02-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-02-09 * "Goba Goba" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -25.64 USD
+  Expenses:Food:Restaurant     25.64 USD
+
+2023-02-11 * "Chichipotle" "Eating out alone"
+  Liabilities:US:Chase:Slate  -20.12 USD
+  Expenses:Food:Restaurant     20.12 USD
+
+2023-02-12 * "Kin Soy" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -24.50 USD
+  Expenses:Food:Restaurant     24.50 USD
+
+2023-02-16 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -43.64 USD
+  Expenses:Food:Groceries      43.64 USD
+
+2023-02-16 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-02-17 * "Uncle Boons" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -55.71 USD
+  Expenses:Food:Restaurant     55.71 USD
+
+2023-02-17 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-02-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -64.35 USD
+  Expenses:Home:Phone       64.35 USD
+
+2023-02-19 * "Chichipotle" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -30.95 USD
+  Expenses:Food:Restaurant     30.95 USD
+
+2023-02-20 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.612 VBMPX {183.76 USD, 2023-02-20}
+  Assets:US:Vanguard:Cash   -479.98 USD
+
+2023-02-20 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   12.137 RGAGX {59.32 USD, 2023-02-20}
+  Assets:US:Vanguard:Cash   -719.97 USD
+
+2023-02-20 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.306 VBMPX {183.76 USD, 2023-02-20}
+  Assets:US:Vanguard:Cash   -239.99 USD
+
+2023-02-20 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    6.069 RGAGX {59.32 USD, 2023-02-20}
+  Assets:US:Vanguard:Cash   -360.01 USD
+
+2023-02-22 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.06 USD
+  Expenses:Home:Internet    80.06 USD
+
+2023-02-24 * "Jewel of Morroco" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -32.92 USD
+  Expenses:Food:Restaurant     32.92 USD
+
+2023-02-25 * "Rose Flower" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -40.64 USD
+  Expenses:Food:Restaurant     40.64 USD
+
+2023-02-28 * "Rose Flower" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -20.48 USD
+  Expenses:Food:Restaurant     20.48 USD
+
+2023-03-02 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -61.34 USD
+  Expenses:Food:Groceries      61.34 USD
+
+2023-03-02 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-03-03 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-03-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-03-04 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-03-04 * "Goba Goba" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -29.20 USD
+  Expenses:Food:Restaurant     29.20 USD
+
+2023-03-06 * "Jewel of Morroco" "Eating out "
+  Liabilities:US:Chase:Slate  -17.56 USD
+  Expenses:Food:Restaurant     17.56 USD
+
+2023-03-06 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-03-06 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.610 VBMPX {183.92 USD, 2023-03-06}
+  Assets:US:Vanguard:Cash   -480.03 USD
+
+2023-03-06 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   12.208 RGAGX {58.98 USD, 2023-03-06}
+  Assets:US:Vanguard:Cash   -720.03 USD
+
+2023-03-06 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.305 VBMPX {183.92 USD, 2023-03-06}
+  Assets:US:Vanguard:Cash   -240.02 USD
+
+2023-03-06 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    6.103 RGAGX {58.98 USD, 2023-03-06}
+  Assets:US:Vanguard:Cash   -359.95 USD
+
+2023-03-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-03-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   535.70 USD
+  Assets:US:BofA:Checking     -535.70 USD
+
+2023-03-11 * "Goba Goba" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -38.64 USD
+  Expenses:Food:Restaurant     38.64 USD
+
+2023-03-12 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -93.17 USD
+  Expenses:Food:Restaurant     93.17 USD
+
+2023-03-14 * "Cafe Modagor" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -27.55 USD
+  Expenses:Food:Restaurant     27.55 USD
+
+2023-03-16 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-03-17 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-03-18 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -67.14 USD
+  Expenses:Food:Groceries      67.14 USD
+
+2023-03-19 * "Cafe Modagor" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -21.69 USD
+  Expenses:Food:Restaurant     21.69 USD
+
+2023-03-20 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -63.15 USD
+  Expenses:Home:Phone       63.15 USD
+
+2023-03-20 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.619 VBMPX {183.29 USD, 2023-03-20}
+  Assets:US:Vanguard:Cash   -480.04 USD
+
+2023-03-20 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.673 RGAGX {61.68 USD, 2023-03-20}
+  Assets:US:Vanguard:Cash   -719.99 USD
+
+2023-03-20 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.309 VBMPX {183.29 USD, 2023-03-20}
+  Assets:US:Vanguard:Cash   -239.93 USD
+
+2023-03-20 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.836 RGAGX {61.68 USD, 2023-03-20}
+  Assets:US:Vanguard:Cash   -359.96 USD
+
+2023-03-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.05 USD
+  Expenses:Home:Internet    80.05 USD
+
+2023-03-23 * "Uncle Boons" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -30.96 USD
+  Expenses:Food:Restaurant     30.96 USD
+
+2023-03-24 * "Chichipotle" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -50.80 USD
+  Expenses:Food:Restaurant     50.80 USD
+
+2023-03-27 * "China Garden" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -25.20 USD
+  Expenses:Food:Restaurant     25.20 USD
+
+2023-03-30 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-03-31 * "China Garden" "Eating out after work"
+  Liabilities:US:Chase:Slate  -23.88 USD
+  Expenses:Food:Restaurant     23.88 USD
+
+2023-03-31 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-04-03 * "Rose Flower" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -17.87 USD
+  Expenses:Food:Restaurant     17.87 USD
+
+2023-04-03 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.622 VBMPX {183.09 USD, 2023-04-03}
+  Assets:US:Vanguard:Cash   -480.06 USD
+
+2023-04-03 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.585 RGAGX {62.15 USD, 2023-04-03}
+  Assets:US:Vanguard:Cash   -720.01 USD
+
+2023-04-03 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.311 VBMPX {183.09 USD, 2023-04-03}
+  Assets:US:Vanguard:Cash   -240.03 USD
+
+2023-04-03 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.792 RGAGX {62.15 USD, 2023-04-03}
+  Assets:US:Vanguard:Cash   -359.97 USD
+
+2023-04-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-04-04 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-04-04 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -85.09 USD
+  Expenses:Food:Groceries      85.09 USD
+
+2023-04-07 * "Goba Goba" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -31.26 USD
+  Expenses:Food:Restaurant     31.26 USD
+
+2023-04-08 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-04-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-04-10 * "Rose Flower" "Eating out after work"
+  Liabilities:US:Chase:Slate  -30.34 USD
+  Expenses:Food:Restaurant     30.34 USD
+
+2023-04-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   624.95 USD
+  Assets:US:BofA:Checking     -624.95 USD
+
+2023-04-12 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -71.15 USD
+  Expenses:Food:Groceries      71.15 USD
+
+2023-04-13 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-04-14 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-04-15 * "Kin Soy" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -32.53 USD
+  Expenses:Food:Restaurant     32.53 USD
+
+2023-04-17 * "Chichipotle" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -36.73 USD
+  Expenses:Food:Restaurant     36.73 USD
+
+2023-04-17 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.619 VBMPX {183.26 USD, 2023-04-17}
+  Assets:US:Vanguard:Cash   -479.96 USD
+
+2023-04-17 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.142 RGAGX {64.62 USD, 2023-04-17}
+  Assets:US:Vanguard:Cash   -720.00 USD
+
+2023-04-17 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.310 VBMPX {183.26 USD, 2023-04-17}
+  Assets:US:Vanguard:Cash   -240.07 USD
+
+2023-04-17 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.571 RGAGX {64.62 USD, 2023-04-17}
+  Assets:US:Vanguard:Cash   -360.00 USD
+
+2023-04-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -52.52 USD
+  Expenses:Home:Phone       52.52 USD
+
+2023-04-20 * "Kin Soy" "Eating out "
+  Liabilities:US:Chase:Slate  -27.77 USD
+  Expenses:Food:Restaurant     27.77 USD
+
+2023-04-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.25 USD
+  Expenses:Home:Internet    80.25 USD
+
+2023-04-24 * "Goba Goba" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -62.17 USD
+  Expenses:Food:Restaurant     62.17 USD
+
+2023-04-27 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -69.30 USD
+  Expenses:Food:Groceries      69.30 USD
+
+2023-04-27 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-04-28 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-04-29 * "Jewel of Morroco" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -56.91 USD
+  Expenses:Food:Restaurant     56.91 USD
+
+2023-04-30 * "Kin Soy" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -33.56 USD
+  Expenses:Food:Restaurant     33.56 USD
+
+2023-05-01 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.620 VBMPX {183.23 USD, 2023-05-01}
+  Assets:US:Vanguard:Cash   -480.06 USD
+
+2023-05-01 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.215 RGAGX {64.20 USD, 2023-05-01}
+  Assets:US:Vanguard:Cash   -720.00 USD
+
+2023-05-01 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.310 VBMPX {183.23 USD, 2023-05-01}
+  Assets:US:Vanguard:Cash   -240.03 USD
+
+2023-05-01 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.607 RGAGX {64.20 USD, 2023-05-01}
+  Assets:US:Vanguard:Cash   -359.97 USD
+
+2023-05-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-05-04 * "Rose Flower" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -31.51 USD
+  Expenses:Food:Restaurant     31.51 USD
+
+2023-05-05 * "Chichipotle" "Eating out alone"
+  Liabilities:US:Chase:Slate  -42.85 USD
+  Expenses:Food:Restaurant     42.85 USD
+
+2023-05-05 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -102.40 USD
+  Expenses:Food:Groceries      102.40 USD
+
+2023-05-06 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-05-08 * "Jewel of Morroco" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -21.18 USD
+  Expenses:Food:Restaurant     21.18 USD
+
+2023-05-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-05-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   615.73 USD
+  Assets:US:BofA:Checking     -615.73 USD
+
+2023-05-11 * "Goba Goba" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -27.67 USD
+  Expenses:Food:Restaurant     27.67 USD
+
+2023-05-11 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-05-11 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-05-12 * "Rose Flower" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -22.04 USD
+  Expenses:Food:Restaurant     22.04 USD
+
+2023-05-12 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-05-15 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -42.64 USD
+  Expenses:Food:Restaurant     42.64 USD
+
+2023-05-15 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.605 VBMPX {184.24 USD, 2023-05-15}
+  Assets:US:Vanguard:Cash   -479.95 USD
+
+2023-05-15 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.420 RGAGX {63.04 USD, 2023-05-15}
+  Assets:US:Vanguard:Cash   -719.92 USD
+
+2023-05-15 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.303 VBMPX {184.24 USD, 2023-05-15}
+  Assets:US:Vanguard:Cash   -240.06 USD
+
+2023-05-15 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.711 RGAGX {63.04 USD, 2023-05-15}
+  Assets:US:Vanguard:Cash   -360.02 USD
+
+2023-05-16 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -47.42 USD
+  Expenses:Food:Groceries      47.42 USD
+
+2023-05-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -79.54 USD
+  Expenses:Home:Phone       79.54 USD
+
+2023-05-19 * "Goba Goba" "Eating out "
+  Liabilities:US:Chase:Slate  -63.94 USD
+  Expenses:Food:Restaurant     63.94 USD
+
+2023-05-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.81 USD
+  Expenses:Home:Internet    79.81 USD
+
+2023-05-23 * "Cafe Modagor" "Eating out after work"
+  Liabilities:US:Chase:Slate  -25.27 USD
+  Expenses:Food:Restaurant     25.27 USD
+
+2023-05-25 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-05-26 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-05-28 * "Chichipotle" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -60.38 USD
+  Expenses:Food:Restaurant     60.38 USD
+
+2023-05-29 * "Goba Goba" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -40.92 USD
+  Expenses:Food:Restaurant     40.92 USD
+
+2023-05-29 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.593 VBMPX {185.12 USD, 2023-05-29}
+  Assets:US:Vanguard:Cash   -480.02 USD
+
+2023-05-29 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.428 RGAGX {63.00 USD, 2023-05-29}
+  Assets:US:Vanguard:Cash   -719.96 USD
+
+2023-05-29 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.296 VBMPX {185.12 USD, 2023-05-29}
+  Assets:US:Vanguard:Cash   -239.92 USD
+
+2023-05-29 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.714 RGAGX {63.00 USD, 2023-05-29}
+  Assets:US:Vanguard:Cash   -359.98 USD
+
+2023-05-31 * "China Garden" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -25.05 USD
+  Expenses:Food:Restaurant     25.05 USD
+
+2023-06-01 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -74.66 USD
+  Expenses:Food:Restaurant     74.66 USD
+
+2023-06-03 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-06-03 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -66.66 USD
+  Expenses:Food:Groceries      66.66 USD
+
+2023-06-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-06-04 * "Kin Soy" "Eating out "
+  Liabilities:US:Chase:Slate  -27.48 USD
+  Expenses:Food:Restaurant     27.48 USD
+
+2023-06-06 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -31.16 USD
+  Expenses:Food:Restaurant     31.16 USD
+
+2023-06-07 * "Jewel of Morroco" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -63.00 USD
+  Expenses:Food:Restaurant     63.00 USD
+
+2023-06-08 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   830.62 USD
+  Assets:US:BofA:Checking     -830.62 USD
+
+2023-06-08 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-06-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-06-09 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-06-09 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-06-12 * "Kin Soy" "Eating out after work"
+  Liabilities:US:Chase:Slate  -24.79 USD
+  Expenses:Food:Restaurant     24.79 USD
+
+2023-06-12 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.562 VBMPX {187.34 USD, 2023-06-12}
+  Assets:US:Vanguard:Cash   -479.97 USD
+
+2023-06-12 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.420 RGAGX {63.05 USD, 2023-06-12}
+  Assets:US:Vanguard:Cash   -720.03 USD
+
+2023-06-12 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.281 VBMPX {187.34 USD, 2023-06-12}
+  Assets:US:Vanguard:Cash   -239.98 USD
+
+2023-06-12 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.710 RGAGX {63.05 USD, 2023-06-12}
+  Assets:US:Vanguard:Cash   -360.02 USD
+
+2023-06-15 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -93.52 USD
+  Expenses:Food:Groceries      93.52 USD
+
+2023-06-17 * "Kin Soy" "Eating out after work"
+  Liabilities:US:Chase:Slate  -30.40 USD
+  Expenses:Food:Restaurant     30.40 USD
+
+2023-06-20 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -49.48 USD
+  Expenses:Home:Phone       49.48 USD
+
+2023-06-20 * "Goba Goba" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -31.91 USD
+  Expenses:Food:Restaurant     31.91 USD
+
+2023-06-22 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-06-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.00 USD
+  Expenses:Home:Internet    80.00 USD
+
+2023-06-23 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-06-24 * "Rose Flower" "Eating out "
+  Liabilities:US:Chase:Slate  -18.35 USD
+  Expenses:Food:Restaurant     18.35 USD
+
+2023-06-26 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.574 VBMPX {186.47 USD, 2023-06-26}
+  Assets:US:Vanguard:Cash   -479.97 USD
+
+2023-06-26 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.391 RGAGX {63.21 USD, 2023-06-26}
+  Assets:US:Vanguard:Cash   -720.03 USD
+
+2023-06-26 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.287 VBMPX {186.47 USD, 2023-06-26}
+  Assets:US:Vanguard:Cash   -239.99 USD
+
+2023-06-26 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.696 RGAGX {63.21 USD, 2023-06-26}
+  Assets:US:Vanguard:Cash   -360.04 USD
+
+2023-06-28 * "China Garden" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -27.47 USD
+  Expenses:Food:Restaurant     27.47 USD
+
+2023-07-02 * "Goba Goba" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -12.10 USD
+  Expenses:Food:Restaurant     12.10 USD
+
+2023-07-03 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-07-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-07-05 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -103.85 USD
+  Expenses:Food:Groceries      103.85 USD
+
+2023-07-06 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-07-07 * "Uncle Boons" "Eating out alone"
+  Liabilities:US:Chase:Slate  -17.31 USD
+  Expenses:Food:Restaurant     17.31 USD
+
+2023-07-07 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-07-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-07-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   479.70 USD
+  Assets:US:BofA:Checking     -479.70 USD
+
+2023-07-10 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.574 VBMPX {186.51 USD, 2023-07-10}
+  Assets:US:Vanguard:Cash   -480.08 USD
+
+2023-07-10 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.507 RGAGX {62.57 USD, 2023-07-10}
+  Assets:US:Vanguard:Cash   -719.99 USD
+
+2023-07-10 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.287 VBMPX {186.51 USD, 2023-07-10}
+  Assets:US:Vanguard:Cash   -240.04 USD
+
+2023-07-10 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.753 RGAGX {62.57 USD, 2023-07-10}
+  Assets:US:Vanguard:Cash   -359.97 USD
+
+2023-07-11 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-07-12 * "Jewel of Morroco" "Eating out "
+  Liabilities:US:Chase:Slate  -54.88 USD
+  Expenses:Food:Restaurant     54.88 USD
+
+2023-07-14 * "Goba Goba" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -21.18 USD
+  Expenses:Food:Restaurant     21.18 USD
+
+2023-07-16 * "Cafe Modagor" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -26.75 USD
+  Expenses:Food:Restaurant     26.75 USD
+
+2023-07-18 * "Kin Soy" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -41.95 USD
+  Expenses:Food:Restaurant     41.95 USD
+
+2023-07-18 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -139.88 USD
+  Expenses:Food:Groceries      139.88 USD
+
+2023-07-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -51.16 USD
+  Expenses:Home:Phone       51.16 USD
+
+2023-07-20 * "Kin Soy" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -17.96 USD
+  Expenses:Food:Restaurant     17.96 USD
+
+2023-07-20 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-07-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.86 USD
+  Expenses:Home:Internet    79.86 USD
+
+2023-07-21 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2023-07-23 * "Rose Flower" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -10.21 USD
+  Expenses:Food:Restaurant     10.21 USD
+
+2023-07-24 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.516 VBMPX {190.78 USD, 2023-07-24}
+  Assets:US:Vanguard:Cash   -480.00 USD
+
+2023-07-24 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.308 RGAGX {63.67 USD, 2023-07-24}
+  Assets:US:Vanguard:Cash   -719.98 USD
+
+2023-07-24 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.258 VBMPX {190.78 USD, 2023-07-24}
+  Assets:US:Vanguard:Cash   -240.00 USD
+
+2023-07-24 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.654 RGAGX {63.67 USD, 2023-07-24}
+  Assets:US:Vanguard:Cash   -359.99 USD
+
+2023-07-26 * "Uncle Boons" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -61.39 USD
+  Expenses:Food:Restaurant     61.39 USD
+
+2023-07-30 * "Uncle Boons" "Eating out alone"
+  Liabilities:US:Chase:Slate  -29.34 USD
+  Expenses:Food:Restaurant     29.34 USD
+
+2023-08-02 * "Cafe Modagor" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -15.15 USD
+  Expenses:Food:Restaurant     15.15 USD
+
+2023-08-03 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-08-03 * "Uncle Boons" "Eating out "
+  Liabilities:US:Chase:Slate  -24.88 USD
+  Expenses:Food:Restaurant     24.88 USD
+
+2023-08-03 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -93.81 USD
+  Expenses:Food:Groceries      93.81 USD
+
+2023-08-03 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      2050.60 USD
+  Assets:US:Vanguard:Cash                       500.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2023:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2023:US:State                 365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2023:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                 -500.00 IRAUSD
+  Expenses:Taxes:Y2023:US:Federal:PreTax401k    500.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2023-08-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-08-04 * "Jewel of Morroco" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -24.03 USD
+  Expenses:Food:Restaurant     24.03 USD
+
+2023-08-04 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      250.00 USD
+  Income:US:Babble:Match401k  -250.00 USD
+
+2023-08-05 * "Cafe Modagor" "Eating out alone"
+  Liabilities:US:Chase:Slate  -20.75 USD
+  Expenses:Food:Restaurant     20.75 USD
+
+2023-08-07 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   625.45 USD
+  Assets:US:BofA:Checking     -625.45 USD
+
+2023-08-07 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.044 VBMPX {191.52 USD, 2023-08-07}
+  Assets:US:Vanguard:Cash   -199.95 USD
+
+2023-08-07 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.715 RGAGX {63.62 USD, 2023-08-07}
+  Assets:US:Vanguard:Cash   -299.97 USD
+
+2023-08-07 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX   0.522 VBMPX {191.52 USD, 2023-08-07}
+  Assets:US:Vanguard:Cash   -99.97 USD
+
+2023-08-07 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    2.358 RGAGX {63.62 USD, 2023-08-07}
+  Assets:US:Vanguard:Cash   -150.02 USD
+
+2023-08-08 * "Goba Goba" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -43.29 USD
+  Expenses:Food:Restaurant     43.29 USD
+
+2023-08-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-08-10 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -99.06 USD
+  Expenses:Food:Groceries      99.06 USD
+
+2023-08-13 * "Chichipotle" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -24.31 USD
+  Expenses:Food:Restaurant     24.31 USD
+
+2023-08-13 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-08-16 * "Rose Flower" "Eating out alone"
+  Liabilities:US:Chase:Slate  -23.68 USD
+  Expenses:Food:Restaurant     23.68 USD
+
+2023-08-16 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -89.03 USD
+  Expenses:Food:Groceries      89.03 USD
+
+2023-08-17 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-08-18 * "Cafe Modagor" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -8.83 USD
+  Expenses:Food:Restaurant     8.83 USD
+
+2023-08-19 * "Chichipotle" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -28.75 USD
+  Expenses:Food:Restaurant     28.75 USD
+
+2023-08-20 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -68.03 USD
+  Expenses:Home:Phone       68.03 USD
+
+2023-08-22 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.03 USD
+  Expenses:Home:Internet    80.03 USD
+
+2023-08-22 * "Kin Soy" "Eating out alone"
+  Liabilities:US:Chase:Slate  -10.70 USD
+  Expenses:Food:Restaurant     10.70 USD
+
+2023-08-24 * "China Garden" "Eating out alone"
+  Liabilities:US:Chase:Slate  -12.87 USD
+  Expenses:Food:Restaurant     12.87 USD
+
+2023-08-26 * "Uncle Boons" "Eating out "
+  Liabilities:US:Chase:Slate  -31.93 USD
+  Expenses:Food:Restaurant     31.93 USD
+
+2023-08-28 * "Kin Soy" "Eating out after work"
+  Liabilities:US:Chase:Slate  -54.51 USD
+  Expenses:Food:Restaurant     54.51 USD
+
+2023-08-29 * "Chichipotle" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -55.11 USD
+  Expenses:Food:Restaurant     55.11 USD
+
+2023-08-29 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -77.22 USD
+  Expenses:Food:Groceries      77.22 USD
+
+2023-08-30 * "Chichipotle" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -26.52 USD
+  Expenses:Food:Restaurant     26.52 USD
+
+2023-08-31 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-09-01 * "Rose Flower" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -40.91 USD
+  Expenses:Food:Restaurant     40.91 USD
+
+2023-09-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-09-04 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-09-04 * "Rose Flower" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -25.28 USD
+  Expenses:Food:Restaurant     25.28 USD
+
+2023-09-06 * "Cafe Modagor" "Eating out alone"
+  Liabilities:US:Chase:Slate  -42.60 USD
+  Expenses:Food:Restaurant     42.60 USD
+
+2023-09-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-09-10 * "Uncle Boons" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -14.02 USD
+  Expenses:Food:Restaurant     14.02 USD
+
+2023-09-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   785.33 USD
+  Assets:US:BofA:Checking     -785.33 USD
+
+2023-09-13 * "Jewel of Morroco" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -19.08 USD
+  Expenses:Food:Restaurant     19.08 USD
+
+2023-09-13 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -81.97 USD
+  Expenses:Food:Groceries      81.97 USD
+
+2023-09-13 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-09-14 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-09-15 * "Transfering accumulated savings to other account"
+  Assets:US:BofA:Checking  -4000.00 USD
+  Assets:US:ETrade:Cash     4000.00 USD
+
+2023-09-17 * "Kin Soy" "Eating out alone"
+  Liabilities:US:Chase:Slate  -17.37 USD
+  Expenses:Food:Restaurant     17.37 USD
+
+2023-09-18 * "Dividends on portfolio"
+  Assets:US:ETrade:Cash          0.00 USD
+  Income:US:ETrade:GLD:Dividend  0.00 USD
+
+2023-09-19 * "Jewel of Morroco" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -28.16 USD
+  Expenses:Food:Restaurant     28.16 USD
+
+2023-09-20 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -66.79 USD
+  Expenses:Home:Phone       66.79 USD
+
+2023-09-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.13 USD
+  Expenses:Home:Internet    80.13 USD
+
+2023-09-24 * "Goba Goba" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -60.46 USD
+  Expenses:Food:Restaurant     60.46 USD
+
+2023-09-24 * "Buy shares of GLD"
+  Assets:US:ETrade:Cash           -1754.15 USD
+  Assets:US:ETrade:GLD                   8 GLD {218.15 USD, 2023-09-24}
+  Expenses:Financial:Commissions      8.95 USD
+
+2023-09-24 * "Buy shares of ITOT"
+  Assets:US:ETrade:Cash           -1894.06 USD
+  Assets:US:ETrade:ITOT                 31 ITOT {60.81 USD, 2023-09-24}
+  Expenses:Financial:Commissions      8.95 USD
+
+2023-09-26 * "Cafe Modagor" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -23.77 USD
+  Expenses:Food:Restaurant     23.77 USD
+
+2023-09-28 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -68.92 USD
+  Expenses:Food:Groceries      68.92 USD
+
+2023-09-28 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-09-30 * "China Garden" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -25.28 USD
+  Expenses:Food:Restaurant     25.28 USD
+
+2023-10-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-10-04 * "Jewel of Morroco" "Eating out "
+  Liabilities:US:Chase:Slate  -29.01 USD
+  Expenses:Food:Restaurant     29.01 USD
+
+2023-10-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-10-06 * "Sell shares of GLD"
+  Assets:US:ETrade:GLD                 -8 GLD {218.15 USD, 2023-09-24} @ 218.34 USD
+  Assets:US:ETrade:Cash           1737.77 USD
+  Expenses:Financial:Commissions     8.95 USD
+  Income:US:ETrade:PnL              -1.52 USD
+
+2023-10-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-10-08 * "Rose Flower" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -29.93 USD
+  Expenses:Food:Restaurant     29.93 USD
+
+2023-10-08 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -92.13 USD
+  Expenses:Food:Groceries      92.13 USD
+
+2023-10-09 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   629.37 USD
+  Assets:US:BofA:Checking     -629.37 USD
+
+2023-10-12 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-10-13 * "China Garden" "Eating out alone"
+  Liabilities:US:Chase:Slate  -33.29 USD
+  Expenses:Food:Restaurant     33.29 USD
+
+2023-10-13 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-10-17 * "China Garden" "Eating out "
+  Liabilities:US:Chase:Slate  -16.70 USD
+  Expenses:Food:Restaurant     16.70 USD
+
+2023-10-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -65.26 USD
+  Expenses:Home:Phone       65.26 USD
+
+2023-10-18 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -75.01 USD
+  Expenses:Food:Groceries      75.01 USD
+
+2023-10-20 * "Uncle Boons" "Eating out "
+  Liabilities:US:Chase:Slate  -26.26 USD
+  Expenses:Food:Restaurant     26.26 USD
+
+2023-10-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.94 USD
+  Expenses:Home:Internet    79.94 USD
+
+2023-10-24 * "Cafe Modagor" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -34.60 USD
+  Expenses:Food:Restaurant     34.60 USD
+
+2023-10-26 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-10-27 * "Buy shares of ITOT"
+  Assets:US:ETrade:Cash           -507.11 USD
+  Assets:US:ETrade:ITOT                 8 ITOT {62.27 USD, 2023-10-27}
+  Expenses:Financial:Commissions     8.95 USD
+
+2023-10-27 * "Buy shares of VHT"
+  Assets:US:ETrade:Cash           -480.07 USD
+  Assets:US:ETrade:VHT                  8 VHT {58.89 USD, 2023-10-27}
+  Expenses:Financial:Commissions     8.95 USD
+
+2023-10-27 * "Buy shares of VEA"
+  Assets:US:ETrade:Cash           -437.75 USD
+  Assets:US:ETrade:VEA                  2 VEA {214.40 USD, 2023-10-27}
+  Expenses:Financial:Commissions     8.95 USD
+
+2023-10-27 * "Buy shares of GLD"
+  Assets:US:ETrade:Cash           -458.03 USD
+  Assets:US:ETrade:GLD                  2 GLD {224.54 USD, 2023-10-27}
+  Expenses:Financial:Commissions     8.95 USD
+
+2023-10-28 * "Chichipotle" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -48.09 USD
+  Expenses:Food:Restaurant     48.09 USD
+
+2023-10-30 * "Cafe Modagor" "Eating out alone"
+  Liabilities:US:Chase:Slate  -43.20 USD
+  Expenses:Food:Restaurant     43.20 USD
+
+2023-11-02 * "Cafe Modagor" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -37.46 USD
+  Expenses:Food:Restaurant     37.46 USD
+
+2023-11-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-11-05 * "Goba Goba" "Eating out after work"
+  Liabilities:US:Chase:Slate  -27.48 USD
+  Expenses:Food:Restaurant     27.48 USD
+
+2023-11-05 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -47.00 USD
+  Expenses:Food:Groceries      47.00 USD
+
+2023-11-06 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-11-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-11-09 * "Cafe Modagor" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -49.27 USD
+  Expenses:Food:Restaurant     49.27 USD
+
+2023-11-09 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-11-10 event "location" "Chicago"
+
+2023-11-10 * "Transfering accumulated savings to other account"
+  Assets:US:BofA:Checking  -4500.00 USD
+  Assets:US:ETrade:Cash     4500.00 USD
+
+2023-11-11 * "Another Sports Pub" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -9.15 USD
+  Expenses:Food:Alcohol        9.15 USD
+
+2023-11-11 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   539.06 USD
+  Assets:US:BofA:Checking     -539.06 USD
+
+2023-11-12 * "Star of Siam" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -26.98 USD
+  Expenses:Food:Restaurant     26.98 USD
+
+2023-11-12 * "Another Sports Pub" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -11.93 USD
+  Expenses:Food:Alcohol        11.93 USD
+
+2023-11-13 * "25 Degrees Burger Bar" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -19.94 USD
+  Expenses:Food:Restaurant     19.94 USD
+
+2023-11-13 * "Another Sports Pub" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -11.15 USD
+  Expenses:Food:Alcohol        11.15 USD
+
+2023-11-14 * "Star of Siam" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -25.03 USD
+  Expenses:Food:Restaurant     25.03 USD
+
+2023-11-14 * "Another Sports Pub" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -11.86 USD
+  Expenses:Food:Alcohol        11.86 USD
+
+2023-11-14 * "Argo Tea" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -6.49 USD
+  Expenses:Food:Coffee         6.49 USD
+
+2023-11-15 * "Mercadito" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -42.74 USD
+  Expenses:Food:Restaurant     42.74 USD
+
+2023-11-16 * "Star of Siam" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -23.12 USD
+  Expenses:Food:Restaurant     23.12 USD
+
+2023-11-16 * "Another Sports Pub" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -8.80 USD
+  Expenses:Food:Alcohol        8.80 USD
+
+2023-11-16 * "Argo Tea" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -5.87 USD
+  Expenses:Food:Coffee         5.87 USD
+
+2023-11-17 * "Mercadito" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -49.61 USD
+  Expenses:Food:Restaurant     49.61 USD
+
+2023-11-17 * "Eataly Chicago" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -52.99 USD
+  Expenses:Food:Restaurant     52.99 USD
+
+2023-11-17 * "Another Sports Pub" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -14.44 USD
+  Expenses:Food:Alcohol        14.44 USD
+
+2023-11-18 * "Star of Siam" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -31.42 USD
+  Expenses:Food:Restaurant     31.42 USD
+
+2023-11-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -40.29 USD
+  Expenses:Home:Phone       40.29 USD
+
+2023-11-19 * "Mercadito" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -38.81 USD
+  Expenses:Food:Restaurant     38.81 USD
+
+2023-11-20 * "25 Degrees Burger Bar" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -17.32 USD
+  Expenses:Food:Restaurant     17.32 USD
+
+2023-11-20 * "Another Sports Pub" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -11.36 USD
+  Expenses:Food:Alcohol        11.36 USD
+
+2023-11-21 * "Argo Tea" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -6.45 USD
+  Expenses:Food:Coffee         6.45 USD
+
+2023-11-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.97 USD
+  Expenses:Home:Internet    79.97 USD
+
+2023-11-23 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-11-25 event "location" "New Metropolis"
+
+2023-11-25 * "Argo Tea" "" #trip-chicago-2023
+  Liabilities:US:Chase:Slate  -6.77 USD
+  Expenses:Food:Coffee         6.77 USD
+
+2023-11-25 * "Consume vacation days"
+  Assets:US:Babble:Vacation  -120 VACHR
+  Expenses:Vacation           120 VACHR
+
+2023-11-25 * "Buy shares of ITOT"
+  Assets:US:ETrade:Cash           -1051.56 USD
+  Assets:US:ETrade:ITOT                 17 ITOT {61.33 USD, 2023-11-25}
+  Expenses:Financial:Commissions      8.95 USD
+
+2023-11-25 * "Buy shares of GLD"
+  Assets:US:ETrade:Cash           -919.63 USD
+  Assets:US:ETrade:GLD                  4 GLD {227.67 USD, 2023-11-25}
+  Expenses:Financial:Commissions     8.95 USD
+
+2023-11-25 * "Buy shares of VHT"
+  Assets:US:ETrade:Cash           -1079.41 USD
+  Assets:US:ETrade:VHT                  18 VHT {59.47 USD, 2023-11-25}
+  Expenses:Financial:Commissions      8.95 USD
+
+2023-11-25 * "Buy shares of VEA"
+  Assets:US:ETrade:Cash           -1095.05 USD
+  Assets:US:ETrade:VEA                   5 VEA {217.22 USD, 2023-11-25}
+  Expenses:Financial:Commissions      8.95 USD
+
+2023-11-26 * "Chichipotle" "Eating out "
+  Liabilities:US:Chase:Slate  -13.99 USD
+  Expenses:Food:Restaurant     13.99 USD
+
+2023-11-29 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -67.32 USD
+  Expenses:Food:Groceries      67.32 USD
+
+2023-11-30 * "Jewel of Morroco" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -36.81 USD
+  Expenses:Food:Restaurant     36.81 USD
+
+2023-12-02 * "Goba Goba" "Eating out "
+  Liabilities:US:Chase:Slate  -21.79 USD
+  Expenses:Food:Restaurant     21.79 USD
+
+2023-12-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2023-12-04 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -71.14 USD
+  Expenses:Food:Groceries      71.14 USD
+
+2023-12-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2023-12-07 * "Jewel of Morroco" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -22.58 USD
+  Expenses:Food:Restaurant     22.58 USD
+
+2023-12-07 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   219.64 USD
+  Assets:US:BofA:Checking     -219.64 USD
+
+2023-12-07 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2589.06 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec        243.08 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-12-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2023-12-09 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2023-12-12 * "Rose Flower" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -16.58 USD
+  Expenses:Food:Restaurant     16.58 USD
+
+2023-12-15 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -70.98 USD
+  Expenses:Food:Groceries      70.98 USD
+
+2023-12-16 * "China Garden" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -28.12 USD
+  Expenses:Food:Restaurant     28.12 USD
+
+2023-12-17 * "Dividends on portfolio"
+  Assets:US:ETrade:Cash           38.35 USD
+  Income:US:ETrade:VEA:Dividend  -38.35 USD
+
+2023-12-20 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -56.26 USD
+  Expenses:Home:Phone       56.26 USD
+
+2023-12-21 * "China Garden" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -31.58 USD
+  Expenses:Food:Restaurant     31.58 USD
+
+2023-12-21 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2832.14 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2023:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2023:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2023:US:State         365.08 USD
+  Expenses:Taxes:Y2023:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2023:US:SDI             1.12 USD
+  Expenses:Taxes:Y2023:US:SocSec          0.00 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2023-12-22 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.04 USD
+  Expenses:Home:Internet    80.04 USD
+
+2023-12-23 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -94.56 USD
+  Expenses:Food:Groceries      94.56 USD
+
+2023-12-24 * "Chichipotle" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -51.98 USD
+  Expenses:Food:Restaurant     51.98 USD
+
+2023-12-29 * "China Garden" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -55.42 USD
+  Expenses:Food:Restaurant     55.42 USD
+
+2023-12-31 * "Chichipotle" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -25.45 USD
+  Expenses:Food:Restaurant     25.45 USD
+
+2024-01-01 open Expenses:Taxes:Y2024:US:Federal:PreTax401k      IRAUSD
+2024-01-01 open Expenses:Taxes:Y2024:US:Medicare                USD
+2024-01-01 open Expenses:Taxes:Y2024:US:Federal                 USD
+2024-01-01 open Expenses:Taxes:Y2024:US:CityNYC                 USD
+2024-01-01 open Expenses:Taxes:Y2024:US:SDI                     USD
+2024-01-01 open Expenses:Taxes:Y2024:US:State                   USD
+2024-01-01 open Expenses:Taxes:Y2024:US:SocSec                  USD
+
+2024-01-01 * "Allowed contributions for one year"
+  Income:US:Federal:PreTax401k  -18500.00 IRAUSD
+  Assets:US:Federal:PreTax401k   18500.00 IRAUSD
+
+2024-01-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-01-04 * "Rose Flower" "Eating out "
+  Liabilities:US:Chase:Slate  -16.16 USD
+  Expenses:Food:Restaurant     16.16 USD
+
+2024-01-04 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-01-05 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-01-06 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-01-06 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -81.35 USD
+  Expenses:Food:Groceries      81.35 USD
+
+2024-01-07 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-01-08 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.555 VBMPX {187.91 USD, 2024-01-08}
+  Assets:US:Vanguard:Cash   -480.11 USD
+
+2024-01-08 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.617 RGAGX {61.98 USD, 2024-01-08}
+  Assets:US:Vanguard:Cash   -720.02 USD
+
+2024-01-08 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.277 VBMPX {187.91 USD, 2024-01-08}
+  Assets:US:Vanguard:Cash   -239.96 USD
+
+2024-01-08 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.808 RGAGX {61.98 USD, 2024-01-08}
+  Assets:US:Vanguard:Cash   -359.98 USD
+
+2024-01-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-01-09 * "Uncle Boons" "Eating out "
+  Liabilities:US:Chase:Slate  -38.70 USD
+  Expenses:Food:Restaurant     38.70 USD
+
+2024-01-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   775.11 USD
+  Assets:US:BofA:Checking     -775.11 USD
+
+2024-01-11 * "Cafe Modagor" "Eating out alone"
+  Liabilities:US:Chase:Slate  -24.23 USD
+  Expenses:Food:Restaurant     24.23 USD
+
+2024-01-14 * "Rose Flower" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -23.08 USD
+  Expenses:Food:Restaurant     23.08 USD
+
+2024-01-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -51.34 USD
+  Expenses:Home:Phone       51.34 USD
+
+2024-01-18 * "Goba Goba" "Eating out after work"
+  Liabilities:US:Chase:Slate  -27.67 USD
+  Expenses:Food:Restaurant     27.67 USD
+
+2024-01-18 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-01-19 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-01-20 * "China Garden" "Eating out alone"
+  Liabilities:US:Chase:Slate  -28.23 USD
+  Expenses:Food:Restaurant     28.23 USD
+
+2024-01-22 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.05 USD
+  Expenses:Home:Internet    80.05 USD
+
+2024-01-22 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.536 VBMPX {189.25 USD, 2024-01-22}
+  Assets:US:Vanguard:Cash   -479.94 USD
+
+2024-01-22 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.846 RGAGX {60.78 USD, 2024-01-22}
+  Assets:US:Vanguard:Cash   -720.00 USD
+
+2024-01-22 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.268 VBMPX {189.25 USD, 2024-01-22}
+  Assets:US:Vanguard:Cash   -239.97 USD
+
+2024-01-22 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.924 RGAGX {60.78 USD, 2024-01-22}
+  Assets:US:Vanguard:Cash   -360.06 USD
+
+2024-01-25 * "Cafe Modagor" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -10.59 USD
+  Expenses:Food:Restaurant     10.59 USD
+
+2024-01-26 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -123.57 USD
+  Expenses:Food:Groceries      123.57 USD
+
+2024-01-28 * "Kin Soy" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -38.49 USD
+  Expenses:Food:Restaurant     38.49 USD
+
+2024-01-30 * "Chichipotle" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -51.79 USD
+  Expenses:Food:Restaurant     51.79 USD
+
+2024-01-31 * "Uncle Boons" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -48.79 USD
+  Expenses:Food:Restaurant     48.79 USD
+
+2024-02-01 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-02-02 * "Jewel of Morroco" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -27.36 USD
+  Expenses:Food:Restaurant     27.36 USD
+
+2024-02-02 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-02-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-02-04 * "Jewel of Morroco" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -26.74 USD
+  Expenses:Food:Restaurant     26.74 USD
+
+2024-02-04 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -67.92 USD
+  Expenses:Food:Groceries      67.92 USD
+
+2024-02-05 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.473 VBMPX {194.08 USD, 2024-02-05}
+  Assets:US:Vanguard:Cash   -479.96 USD
+
+2024-02-05 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.835 RGAGX {60.84 USD, 2024-02-05}
+  Assets:US:Vanguard:Cash   -720.04 USD
+
+2024-02-05 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.237 VBMPX {194.08 USD, 2024-02-05}
+  Assets:US:Vanguard:Cash   -240.08 USD
+
+2024-02-05 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.918 RGAGX {60.84 USD, 2024-02-05}
+  Assets:US:Vanguard:Cash   -360.05 USD
+
+2024-02-06 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-02-08 * "Goba Goba" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -47.96 USD
+  Expenses:Food:Restaurant     47.96 USD
+
+2024-02-08 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-02-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-02-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   656.31 USD
+  Assets:US:BofA:Checking     -656.31 USD
+
+2024-02-11 * "Jewel of Morroco" "Eating out "
+  Liabilities:US:Chase:Slate  -14.12 USD
+  Expenses:Food:Restaurant     14.12 USD
+
+2024-02-13 * "Uncle Boons" "Eating out "
+  Liabilities:US:Chase:Slate  -29.69 USD
+  Expenses:Food:Restaurant     29.69 USD
+
+2024-02-15 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-02-16 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-02-17 * "Goba Goba" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -27.27 USD
+  Expenses:Food:Restaurant     27.27 USD
+
+2024-02-19 * "Rose Flower" "Eating out "
+  Liabilities:US:Chase:Slate  -37.64 USD
+  Expenses:Food:Restaurant     37.64 USD
+
+2024-02-19 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.476 VBMPX {193.82 USD, 2024-02-19}
+  Assets:US:Vanguard:Cash   -479.90 USD
+
+2024-02-19 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.890 RGAGX {60.55 USD, 2024-02-19}
+  Assets:US:Vanguard:Cash   -719.94 USD
+
+2024-02-19 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.238 VBMPX {193.82 USD, 2024-02-19}
+  Assets:US:Vanguard:Cash   -239.95 USD
+
+2024-02-19 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.946 RGAGX {60.55 USD, 2024-02-19}
+  Assets:US:Vanguard:Cash   -360.03 USD
+
+2024-02-20 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -65.14 USD
+  Expenses:Home:Phone       65.14 USD
+
+2024-02-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.04 USD
+  Expenses:Home:Internet    80.04 USD
+
+2024-02-22 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -97.57 USD
+  Expenses:Food:Groceries      97.57 USD
+
+2024-02-23 * "Goba Goba" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -18.95 USD
+  Expenses:Food:Restaurant     18.95 USD
+
+2024-02-28 * "Chichipotle" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -24.95 USD
+  Expenses:Food:Restaurant     24.95 USD
+
+2024-02-29 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-03-01 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-03-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-03-04 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-03-04 * "Jewel of Morroco" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -36.20 USD
+  Expenses:Food:Restaurant     36.20 USD
+
+2024-03-04 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.487 VBMPX {193.04 USD, 2024-03-04}
+  Assets:US:Vanguard:Cash   -480.09 USD
+
+2024-03-04 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.827 RGAGX {60.88 USD, 2024-03-04}
+  Assets:US:Vanguard:Cash   -720.03 USD
+
+2024-03-04 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.243 VBMPX {193.04 USD, 2024-03-04}
+  Assets:US:Vanguard:Cash   -239.95 USD
+
+2024-03-04 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.913 RGAGX {60.88 USD, 2024-03-04}
+  Assets:US:Vanguard:Cash   -359.98 USD
+
+2024-03-05 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -81.95 USD
+  Expenses:Food:Groceries      81.95 USD
+
+2024-03-06 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-03-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-03-09 * "Kin Soy" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -23.31 USD
+  Expenses:Food:Restaurant     23.31 USD
+
+2024-03-10 * "Chichipotle" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -36.16 USD
+  Expenses:Food:Restaurant     36.16 USD
+
+2024-03-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   533.69 USD
+  Assets:US:BofA:Checking     -533.69 USD
+
+2024-03-14 * "China Garden" "Eating out after work"
+  Liabilities:US:Chase:Slate  -25.09 USD
+  Expenses:Food:Restaurant     25.09 USD
+
+2024-03-14 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-03-15 * "Cafe Modagor" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -20.00 USD
+  Expenses:Food:Restaurant     20.00 USD
+
+2024-03-15 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-03-16 * "Rose Flower" "Eating out after work"
+  Liabilities:US:Chase:Slate  -29.20 USD
+  Expenses:Food:Restaurant     29.20 USD
+
+2024-03-17 * "China Garden" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -40.39 USD
+  Expenses:Food:Restaurant     40.39 USD
+
+2024-03-17 * "Dividends on portfolio"
+  Assets:US:ETrade:Cash           38.35 USD
+  Income:US:ETrade:GLD:Dividend  -38.35 USD
+
+2024-03-18 * "Chichipotle" "Eating out after work"
+  Liabilities:US:Chase:Slate  -67.56 USD
+  Expenses:Food:Restaurant     67.56 USD
+
+2024-03-18 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.520 VBMPX {190.50 USD, 2024-03-18}
+  Assets:US:Vanguard:Cash   -480.06 USD
+
+2024-03-18 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.634 RGAGX {61.89 USD, 2024-03-18}
+  Assets:US:Vanguard:Cash   -720.03 USD
+
+2024-03-18 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.260 VBMPX {190.50 USD, 2024-03-18}
+  Assets:US:Vanguard:Cash   -240.03 USD
+
+2024-03-18 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.816 RGAGX {61.89 USD, 2024-03-18}
+  Assets:US:Vanguard:Cash   -359.95 USD
+
+2024-03-19 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -114.13 USD
+  Expenses:Food:Groceries      114.13 USD
+
+2024-03-20 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -50.13 USD
+  Expenses:Home:Phone       50.13 USD
+
+2024-03-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.85 USD
+  Expenses:Home:Internet    79.85 USD
+
+2024-03-22 * "Uncle Boons" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -29.15 USD
+  Expenses:Food:Restaurant     29.15 USD
+
+2024-03-24 * "Filing taxes for 2023"
+  Expenses:Taxes:Y2023:US:Federal   439.77 USD
+  Expenses:Taxes:Y2023:US:State     292.34 USD
+  Liabilities:AccountsPayable      -732.11 USD
+
+2024-03-25 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -21.56 USD
+  Expenses:Food:Restaurant     21.56 USD
+
+2024-03-27 * "STATE TAX & FINANC PYMT"
+  Assets:US:BofA:Checking      -292.34 USD
+  Liabilities:AccountsPayable   292.34 USD
+
+2024-03-28 * "Uncle Boons" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -24.66 USD
+  Expenses:Food:Restaurant     24.66 USD
+
+2024-03-28 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-03-28 * "FEDERAL TAXPYMT"
+  Assets:US:BofA:Checking      -439.77 USD
+  Liabilities:AccountsPayable   439.77 USD
+
+2024-03-29 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-03-30 * "Uncle Boons" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -23.86 USD
+  Expenses:Food:Restaurant     23.86 USD
+
+2024-03-31 * "Cafe Modagor" "Eating out after work"
+  Liabilities:US:Chase:Slate  -29.26 USD
+  Expenses:Food:Restaurant     29.26 USD
+
+2024-04-01 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.474 VBMPX {194.03 USD, 2024-04-01}
+  Assets:US:Vanguard:Cash   -480.03 USD
+
+2024-04-01 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.320 RGAGX {63.60 USD, 2024-04-01}
+  Assets:US:Vanguard:Cash   -719.95 USD
+
+2024-04-01 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.237 VBMPX {194.03 USD, 2024-04-01}
+  Assets:US:Vanguard:Cash   -240.02 USD
+
+2024-04-01 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.660 RGAGX {63.60 USD, 2024-04-01}
+  Assets:US:Vanguard:Cash   -359.98 USD
+
+2024-04-02 * "Goba Goba" "Eating out alone"
+  Liabilities:US:Chase:Slate  -56.21 USD
+  Expenses:Food:Restaurant     56.21 USD
+
+2024-04-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-04-04 * "Goba Goba" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -55.69 USD
+  Expenses:Food:Restaurant     55.69 USD
+
+2024-04-05 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-04-06 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-04-07 * "Chichipotle" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -35.98 USD
+  Expenses:Food:Restaurant     35.98 USD
+
+2024-04-08 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -71.13 USD
+  Expenses:Food:Groceries      71.13 USD
+
+2024-04-08 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   763.87 USD
+  Assets:US:BofA:Checking     -763.87 USD
+
+2024-04-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-04-11 * "Cafe Modagor" "Eating out "
+  Liabilities:US:Chase:Slate  -23.92 USD
+  Expenses:Food:Restaurant     23.92 USD
+
+2024-04-11 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-04-12 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-04-14 * "Uncle Boons" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -48.59 USD
+  Expenses:Food:Restaurant     48.59 USD
+
+2024-04-15 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.500 VBMPX {192.02 USD, 2024-04-15}
+  Assets:US:Vanguard:Cash   -480.05 USD
+
+2024-04-15 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.698 RGAGX {61.55 USD, 2024-04-15}
+  Assets:US:Vanguard:Cash   -720.01 USD
+
+2024-04-15 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.250 VBMPX {192.02 USD, 2024-04-15}
+  Assets:US:Vanguard:Cash   -240.02 USD
+
+2024-04-15 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.848 RGAGX {61.55 USD, 2024-04-15}
+  Assets:US:Vanguard:Cash   -359.94 USD
+
+2024-04-17 * "Jewel of Morroco" "Eating out "
+  Liabilities:US:Chase:Slate  -30.24 USD
+  Expenses:Food:Restaurant     30.24 USD
+
+2024-04-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -60.04 USD
+  Expenses:Home:Phone       60.04 USD
+
+2024-04-22 * "China Garden" "Eating out "
+  Liabilities:US:Chase:Slate  -18.88 USD
+  Expenses:Food:Restaurant     18.88 USD
+
+2024-04-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.99 USD
+  Expenses:Home:Internet    79.99 USD
+
+2024-04-23 * "Cafe Modagor" "Eating out "
+  Liabilities:US:Chase:Slate  -28.43 USD
+  Expenses:Food:Restaurant     28.43 USD
+
+2024-04-25 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-04-26 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-04-28 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -24.18 USD
+  Expenses:Food:Restaurant     24.18 USD
+
+2024-04-28 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -118.16 USD
+  Expenses:Food:Groceries      118.16 USD
+
+2024-04-29 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.472 VBMPX {194.14 USD, 2024-04-29}
+  Assets:US:Vanguard:Cash   -479.91 USD
+
+2024-04-29 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.119 RGAGX {64.75 USD, 2024-04-29}
+  Assets:US:Vanguard:Cash   -719.96 USD
+
+2024-04-29 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.236 VBMPX {194.14 USD, 2024-04-29}
+  Assets:US:Vanguard:Cash   -239.96 USD
+
+2024-04-29 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.561 RGAGX {64.75 USD, 2024-04-29}
+  Assets:US:Vanguard:Cash   -360.07 USD
+
+2024-05-03 * "Goba Goba" "Eating out after work"
+  Liabilities:US:Chase:Slate  -42.44 USD
+  Expenses:Food:Restaurant     42.44 USD
+
+2024-05-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-05-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-05-06 * "Rose Flower" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -26.12 USD
+  Expenses:Food:Restaurant     26.12 USD
+
+2024-05-06 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-05-08 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   507.93 USD
+  Assets:US:BofA:Checking     -507.93 USD
+
+2024-05-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-05-09 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-05-10 * "Goba Goba" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -26.97 USD
+  Expenses:Food:Restaurant     26.97 USD
+
+2024-05-10 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-05-12 * "Kin Soy" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -34.52 USD
+  Expenses:Food:Restaurant     34.52 USD
+
+2024-05-13 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.480 VBMPX {193.55 USD, 2024-05-13}
+  Assets:US:Vanguard:Cash   -480.00 USD
+
+2024-05-13 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.252 RGAGX {63.99 USD, 2024-05-13}
+  Assets:US:Vanguard:Cash   -720.02 USD
+
+2024-05-13 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.240 VBMPX {193.55 USD, 2024-05-13}
+  Assets:US:Vanguard:Cash   -240.00 USD
+
+2024-05-13 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.626 RGAGX {63.99 USD, 2024-05-13}
+  Assets:US:Vanguard:Cash   -360.01 USD
+
+2024-05-17 * "Jewel of Morroco" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -17.42 USD
+  Expenses:Food:Restaurant     17.42 USD
+
+2024-05-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -66.95 USD
+  Expenses:Home:Phone       66.95 USD
+
+2024-05-18 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -72.88 USD
+  Expenses:Food:Groceries      72.88 USD
+
+2024-05-21 * "China Garden" "Eating out alone"
+  Liabilities:US:Chase:Slate  -15.76 USD
+  Expenses:Food:Restaurant     15.76 USD
+
+2024-05-22 * "Chichipotle" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -55.94 USD
+  Expenses:Food:Restaurant     55.94 USD
+
+2024-05-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.24 USD
+  Expenses:Home:Internet    80.24 USD
+
+2024-05-23 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-05-24 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-05-26 * "Uncle Boons" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -36.58 USD
+  Expenses:Food:Restaurant     36.58 USD
+
+2024-05-27 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.510 VBMPX {191.25 USD, 2024-05-27}
+  Assets:US:Vanguard:Cash   -480.04 USD
+
+2024-05-27 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.240 RGAGX {64.06 USD, 2024-05-27}
+  Assets:US:Vanguard:Cash   -720.03 USD
+
+2024-05-27 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.255 VBMPX {191.25 USD, 2024-05-27}
+  Assets:US:Vanguard:Cash   -240.02 USD
+
+2024-05-27 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.619 RGAGX {64.06 USD, 2024-05-27}
+  Assets:US:Vanguard:Cash   -359.95 USD
+
+2024-05-28 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -78.64 USD
+  Expenses:Food:Groceries      78.64 USD
+
+2024-05-29 * "Rose Flower" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -22.18 USD
+  Expenses:Food:Restaurant     22.18 USD
+
+2024-06-03 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -24.14 USD
+  Expenses:Food:Restaurant     24.14 USD
+
+2024-06-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-06-04 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-06-04 * "China Garden" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -20.16 USD
+  Expenses:Food:Restaurant     20.16 USD
+
+2024-06-05 * "Cafe Modagor" "Eating out after work"
+  Liabilities:US:Chase:Slate  -21.50 USD
+  Expenses:Food:Restaurant     21.50 USD
+
+2024-06-06 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-06-07 * "Kin Soy" "Eating out "
+  Liabilities:US:Chase:Slate  -23.07 USD
+  Expenses:Food:Restaurant     23.07 USD
+
+2024-06-07 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-06-07 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-06-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-06-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   583.29 USD
+  Assets:US:BofA:Checking     -583.29 USD
+
+2024-06-10 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.466 VBMPX {194.62 USD, 2024-06-10}
+  Assets:US:Vanguard:Cash   -479.93 USD
+
+2024-06-10 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.271 RGAGX {63.88 USD, 2024-06-10}
+  Assets:US:Vanguard:Cash   -719.99 USD
+
+2024-06-10 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.233 VBMPX {194.62 USD, 2024-06-10}
+  Assets:US:Vanguard:Cash   -239.97 USD
+
+2024-06-10 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.636 RGAGX {63.88 USD, 2024-06-10}
+  Assets:US:Vanguard:Cash   -360.03 USD
+
+2024-06-12 * "Cafe Modagor" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -40.50 USD
+  Expenses:Food:Restaurant     40.50 USD
+
+2024-06-14 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -67.58 USD
+  Expenses:Food:Groceries      67.58 USD
+
+2024-06-17 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -37.36 USD
+  Expenses:Food:Restaurant     37.36 USD
+
+2024-06-17 * "Dividends on portfolio"
+  Assets:US:ETrade:Cash            38.35 USD
+  Income:US:ETrade:ITOT:Dividend  -38.35 USD
+
+2024-06-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -56.49 USD
+  Expenses:Home:Phone       56.49 USD
+
+2024-06-20 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -67.77 USD
+  Expenses:Food:Groceries      67.77 USD
+
+2024-06-20 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-06-21 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-06-22 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.06 USD
+  Expenses:Home:Internet    80.06 USD
+
+2024-06-22 * "Uncle Boons" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -24.98 USD
+  Expenses:Food:Restaurant     24.98 USD
+
+2024-06-24 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.489 VBMPX {192.87 USD, 2024-06-24}
+  Assets:US:Vanguard:Cash   -480.05 USD
+
+2024-06-24 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.634 RGAGX {61.89 USD, 2024-06-24}
+  Assets:US:Vanguard:Cash   -720.03 USD
+
+2024-06-24 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.244 VBMPX {192.87 USD, 2024-06-24}
+  Assets:US:Vanguard:Cash   -239.93 USD
+
+2024-06-24 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.817 RGAGX {61.89 USD, 2024-06-24}
+  Assets:US:Vanguard:Cash   -360.01 USD
+
+2024-06-25 * "China Garden" "Eating out alone"
+  Liabilities:US:Chase:Slate  -37.36 USD
+  Expenses:Food:Restaurant     37.36 USD
+
+2024-06-27 * "Cafe Modagor" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -28.01 USD
+  Expenses:Food:Restaurant     28.01 USD
+
+2024-06-29 * "Chichipotle" "Eating out alone"
+  Liabilities:US:Chase:Slate  -42.01 USD
+  Expenses:Food:Restaurant     42.01 USD
+
+2024-07-02 * "Kin Soy" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -28.52 USD
+  Expenses:Food:Restaurant     28.52 USD
+
+2024-07-03 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-07-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-07-04 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-07-05 * "Goba Goba" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -13.83 USD
+  Expenses:Food:Restaurant     13.83 USD
+
+2024-07-05 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-07-05 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-07-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-07-08 * "Goba Goba" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -25.76 USD
+  Expenses:Food:Restaurant     25.76 USD
+
+2024-07-08 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -105.30 USD
+  Expenses:Food:Groceries      105.30 USD
+
+2024-07-08 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.467 VBMPX {194.58 USD, 2024-07-08}
+  Assets:US:Vanguard:Cash   -480.03 USD
+
+2024-07-08 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.449 RGAGX {62.89 USD, 2024-07-08}
+  Assets:US:Vanguard:Cash   -720.03 USD
+
+2024-07-08 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.233 VBMPX {194.58 USD, 2024-07-08}
+  Assets:US:Vanguard:Cash   -239.92 USD
+
+2024-07-08 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.724 RGAGX {62.89 USD, 2024-07-08}
+  Assets:US:Vanguard:Cash   -359.98 USD
+
+2024-07-09 * "China Garden" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -23.84 USD
+  Expenses:Food:Restaurant     23.84 USD
+
+2024-07-09 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   622.32 USD
+  Assets:US:BofA:Checking     -622.32 USD
+
+2024-07-14 * "Jewel of Morroco" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -30.64 USD
+  Expenses:Food:Restaurant     30.64 USD
+
+2024-07-15 * "Cafe Modagor" "Eating out "
+  Liabilities:US:Chase:Slate  -15.38 USD
+  Expenses:Food:Restaurant     15.38 USD
+
+2024-07-16 * "Chichipotle" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -43.46 USD
+  Expenses:Food:Restaurant     43.46 USD
+
+2024-07-18 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-07-19 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2024-07-20 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -68.44 USD
+  Expenses:Home:Phone       68.44 USD
+
+2024-07-20 * "Cafe Modagor" "Eating out after work"
+  Liabilities:US:Chase:Slate  -33.15 USD
+  Expenses:Food:Restaurant     33.15 USD
+
+2024-07-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.08 USD
+  Expenses:Home:Internet    80.08 USD
+
+2024-07-21 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -58.76 USD
+  Expenses:Food:Groceries      58.76 USD
+
+2024-07-22 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.532 VBMPX {189.61 USD, 2024-07-22}
+  Assets:US:Vanguard:Cash   -480.09 USD
+
+2024-07-22 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX   11.209 RGAGX {64.24 USD, 2024-07-22}
+  Assets:US:Vanguard:Cash   -720.07 USD
+
+2024-07-22 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.266 VBMPX {189.61 USD, 2024-07-22}
+  Assets:US:Vanguard:Cash   -240.05 USD
+
+2024-07-22 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    5.603 RGAGX {64.24 USD, 2024-07-22}
+  Assets:US:Vanguard:Cash   -359.94 USD
+
+2024-07-24 * "Jewel of Morroco" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -40.08 USD
+  Expenses:Food:Restaurant     40.08 USD
+
+2024-07-27 * "Goba Goba" "Eating out alone"
+  Liabilities:US:Chase:Slate  -47.58 USD
+  Expenses:Food:Restaurant     47.58 USD
+
+2024-08-01 * "Chichipotle" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -21.58 USD
+  Expenses:Food:Restaurant     21.58 USD
+
+2024-08-01 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-08-01 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      2050.60 USD
+  Assets:US:Vanguard:Cash                       500.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2024:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2024:US:State                 365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2024:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                 -500.00 IRAUSD
+  Expenses:Taxes:Y2024:US:Federal:PreTax401k    500.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2024-08-02 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      250.00 USD
+  Income:US:Babble:Match401k  -250.00 USD
+
+2024-08-03 * "Uncle Boons" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -26.82 USD
+  Expenses:Food:Restaurant     26.82 USD
+
+2024-08-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-08-04 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-08-04 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -83.13 USD
+  Expenses:Food:Groceries      83.13 USD
+
+2024-08-05 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.066 VBMPX {187.63 USD, 2024-08-05}
+  Assets:US:Vanguard:Cash   -200.01 USD
+
+2024-08-05 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.711 RGAGX {63.67 USD, 2024-08-05}
+  Assets:US:Vanguard:Cash   -299.95 USD
+
+2024-08-05 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    0.533 VBMPX {187.63 USD, 2024-08-05}
+  Assets:US:Vanguard:Cash   -100.01 USD
+
+2024-08-05 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    2.356 RGAGX {63.67 USD, 2024-08-05}
+  Assets:US:Vanguard:Cash   -150.01 USD
+
+2024-08-07 * "Goba Goba" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -47.52 USD
+  Expenses:Food:Restaurant     47.52 USD
+
+2024-08-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-08-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   601.23 USD
+  Assets:US:BofA:Checking     -601.23 USD
+
+2024-08-12 * "Rose Flower" "Eating out alone"
+  Liabilities:US:Chase:Slate  -33.13 USD
+  Expenses:Food:Restaurant     33.13 USD
+
+2024-08-15 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-08-16 * "Transfering accumulated savings to other account"
+  Assets:US:BofA:Checking  -3000.00 USD
+  Assets:US:ETrade:Cash     3000.00 USD
+
+2024-08-16 * "Cafe Modagor" "Eating out "
+  Liabilities:US:Chase:Slate  -33.62 USD
+  Expenses:Food:Restaurant     33.62 USD
+
+2024-08-17 * "Uncle Boons" "Eating out "
+  Liabilities:US:Chase:Slate  -53.67 USD
+  Expenses:Food:Restaurant     53.67 USD
+
+2024-08-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -61.65 USD
+  Expenses:Home:Phone       61.65 USD
+
+2024-08-22 * "Cafe Modagor" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -59.83 USD
+  Expenses:Food:Restaurant     59.83 USD
+
+2024-08-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.93 USD
+  Expenses:Home:Internet    79.93 USD
+
+2024-08-24 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -50.33 USD
+  Expenses:Food:Groceries      50.33 USD
+
+2024-08-27 * "Kin Soy" "Eating out alone"
+  Liabilities:US:Chase:Slate  -46.77 USD
+  Expenses:Food:Restaurant     46.77 USD
+
+2024-08-29 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-08-31 * "Goba Goba" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -24.54 USD
+  Expenses:Food:Restaurant     24.54 USD
+
+2024-09-02 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-09-03 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-09-03 * "Jewel of Morroco" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -45.03 USD
+  Expenses:Food:Restaurant     45.03 USD
+
+2024-09-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-09-05 * "Rose Flower" "Eating out alone"
+  Liabilities:US:Chase:Slate  -46.76 USD
+  Expenses:Food:Restaurant     46.76 USD
+
+2024-09-06 * "China Garden" "Eating out "
+  Liabilities:US:Chase:Slate  -43.30 USD
+  Expenses:Food:Restaurant     43.30 USD
+
+2024-09-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-09-08 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   549.93 USD
+  Assets:US:BofA:Checking     -549.93 USD
+
+2024-09-11 * "Uncle Boons" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -26.08 USD
+  Expenses:Food:Restaurant     26.08 USD
+
+2024-09-11 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -65.04 USD
+  Expenses:Food:Groceries      65.04 USD
+
+2024-09-12 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-09-14 * "Buy shares of ITOT"
+  Assets:US:ETrade:Cash           -1661.35 USD
+  Assets:US:ETrade:ITOT                 27 ITOT {61.20 USD, 2024-09-14}
+  Expenses:Financial:Commissions      8.95 USD
+
+2024-09-14 * "Buy shares of GLD"
+  Assets:US:ETrade:Cash           -1506.73 USD
+  Assets:US:ETrade:GLD                   6 GLD {249.63 USD, 2024-09-14}
+  Expenses:Financial:Commissions      8.95 USD
+
+2024-09-16 * "Uncle Boons" "Eating out alone"
+  Liabilities:US:Chase:Slate  -30.51 USD
+  Expenses:Food:Restaurant     30.51 USD
+
+2024-09-17 * "Dividends on portfolio"
+  Assets:US:ETrade:Cash            50.95 USD
+  Income:US:ETrade:ITOT:Dividend  -50.95 USD
+
+2024-09-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -50.93 USD
+  Expenses:Home:Phone       50.93 USD
+
+2024-09-18 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -54.67 USD
+  Expenses:Food:Restaurant     54.67 USD
+
+2024-09-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.99 USD
+  Expenses:Home:Internet    79.99 USD
+
+2024-09-21 * "Cafe Modagor" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -26.89 USD
+  Expenses:Food:Restaurant     26.89 USD
+
+2024-09-21 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -65.83 USD
+  Expenses:Food:Groceries      65.83 USD
+
+2024-09-26 * "Cafe Modagor" "Eating out after work"
+  Liabilities:US:Chase:Slate  -53.54 USD
+  Expenses:Food:Restaurant     53.54 USD
+
+2024-09-26 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-09-27 * "Chichipotle" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -52.71 USD
+  Expenses:Food:Restaurant     52.71 USD
+
+2024-10-02 * "Chichipotle" "Eating out after work"
+  Liabilities:US:Chase:Slate  -49.27 USD
+  Expenses:Food:Restaurant     49.27 USD
+
+2024-10-02 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-10-03 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-10-03 * "China Garden" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -19.74 USD
+  Expenses:Food:Restaurant     19.74 USD
+
+2024-10-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-10-05 * "Uncle Boons" "Eating out alone"
+  Liabilities:US:Chase:Slate  -25.31 USD
+  Expenses:Food:Restaurant     25.31 USD
+
+2024-10-08 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -104.38 USD
+  Expenses:Food:Groceries      104.38 USD
+
+2024-10-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-10-10 * "Chichipotle" "Eating out alone"
+  Liabilities:US:Chase:Slate  -58.14 USD
+  Expenses:Food:Restaurant     58.14 USD
+
+2024-10-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   726.03 USD
+  Assets:US:BofA:Checking     -726.03 USD
+
+2024-10-10 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-10-11 * "Transfering accumulated savings to other account"
+  Assets:US:BofA:Checking  -4000.00 USD
+  Assets:US:ETrade:Cash     4000.00 USD
+
+2024-10-15 * "Uncle Boons" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -24.27 USD
+  Expenses:Food:Restaurant     24.27 USD
+
+2024-10-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -59.92 USD
+  Expenses:Home:Phone       59.92 USD
+
+2024-10-18 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -99.35 USD
+  Expenses:Food:Groceries      99.35 USD
+
+2024-10-19 * "Uncle Boons" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -57.68 USD
+  Expenses:Food:Restaurant     57.68 USD
+
+2024-10-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.10 USD
+  Expenses:Home:Internet    80.10 USD
+
+2024-10-23 * "Goba Goba" "Eating out alone"
+  Liabilities:US:Chase:Slate  -35.72 USD
+  Expenses:Food:Restaurant     35.72 USD
+
+2024-10-24 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-10-27 * "Kin Soy" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -41.07 USD
+  Expenses:Food:Restaurant     41.07 USD
+
+2024-10-27 * "Buy shares of VEA"
+  Assets:US:ETrade:Cash           -4117.81 USD
+  Assets:US:ETrade:VEA                  18 VEA {228.27 USD, 2024-10-27}
+  Expenses:Financial:Commissions      8.95 USD
+
+2024-10-30 * "Jewel of Morroco" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -24.15 USD
+  Expenses:Food:Restaurant     24.15 USD
+
+2024-10-31 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-11-02 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -152.93 USD
+  Expenses:Food:Groceries      152.93 USD
+
+2024-11-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-11-04 * "Chichipotle" "Eating out after work"
+  Liabilities:US:Chase:Slate  -22.61 USD
+  Expenses:Food:Restaurant     22.61 USD
+
+2024-11-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-11-06 * "Jewel of Morroco" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -22.98 USD
+  Expenses:Food:Restaurant     22.98 USD
+
+2024-11-07 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-11-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-11-10 * "Kin Soy" "Eating out after work"
+  Liabilities:US:Chase:Slate  -36.81 USD
+  Expenses:Food:Restaurant     36.81 USD
+
+2024-11-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   637.57 USD
+  Assets:US:BofA:Checking     -637.57 USD
+
+2024-11-13 * "China Garden" "Eating out after work"
+  Liabilities:US:Chase:Slate  -34.96 USD
+  Expenses:Food:Restaurant     34.96 USD
+
+2024-11-17 * "Cafe Modagor" "Eating out after work"
+  Liabilities:US:Chase:Slate  -40.54 USD
+  Expenses:Food:Restaurant     40.54 USD
+
+2024-11-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -57.58 USD
+  Expenses:Home:Phone       57.58 USD
+
+2024-11-20 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -72.19 USD
+  Expenses:Food:Groceries      72.19 USD
+
+2024-11-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.87 USD
+  Expenses:Home:Internet    79.87 USD
+
+2024-11-21 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2550.60 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec        281.54 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-11-22 * "Jewel of Morroco" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -43.56 USD
+  Expenses:Food:Restaurant     43.56 USD
+
+2024-11-24 * "Uncle Boons" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -27.54 USD
+  Expenses:Food:Restaurant     27.54 USD
+
+2024-11-27 * "Sell shares of VEA"
+  Assets:US:ETrade:VEA                -18 VEA {228.27 USD, 2024-10-27} @ 226.95 USD
+  Assets:US:ETrade:Cash           4076.15 USD
+  Expenses:Financial:Commissions     8.95 USD
+  Income:US:ETrade:PnL              23.76 USD
+
+2024-11-29 * "Chichipotle" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -45.18 USD
+  Expenses:Food:Restaurant     45.18 USD
+
+2024-11-30 * "Rose Flower" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -19.59 USD
+  Expenses:Food:Restaurant     19.59 USD
+
+2024-12-01 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2024-12-02 * "China Garden" "Eating out "
+  Liabilities:US:Chase:Slate  -33.17 USD
+  Expenses:Food:Restaurant     33.17 USD
+
+2024-12-02 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -87.20 USD
+  Expenses:Food:Groceries      87.20 USD
+
+2024-12-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2024-12-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2024-12-05 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2589.06 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec        243.08 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-12-06 event "location" "New York"
+
+2024-12-07 * "Laut" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -32.19 USD
+  Expenses:Food:Restaurant     32.19 USD
+
+2024-12-07 * "La Colombe" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -6.00 USD
+  Expenses:Food:Coffee         6.00 USD
+
+2024-12-08 * "Cafe Select" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -20.83 USD
+  Expenses:Food:Restaurant     20.83 USD
+
+2024-12-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2024-12-09 * "La Colombe" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -5.07 USD
+  Expenses:Food:Coffee         5.07 USD
+
+2024-12-09 * "Gimme! Coffee" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -3.68 USD
+  Expenses:Food:Coffee         3.68 USD
+
+2024-12-10 * "Cafe Select" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -39.12 USD
+  Expenses:Food:Restaurant     39.12 USD
+
+2024-12-10 * "La Colombe" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -6.44 USD
+  Expenses:Food:Coffee         6.44 USD
+
+2024-12-11 * "Cafe Select" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -26.41 USD
+  Expenses:Food:Restaurant     26.41 USD
+
+2024-12-11 * "Gimme! Coffee" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -7.10 USD
+  Expenses:Food:Coffee         7.10 USD
+
+2024-12-11 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   610.11 USD
+  Assets:US:BofA:Checking     -610.11 USD
+
+2024-12-12 * "Laut" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -34.68 USD
+  Expenses:Food:Restaurant     34.68 USD
+
+2024-12-13 * "Takahachi" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -52.89 USD
+  Expenses:Food:Restaurant     52.89 USD
+
+2024-12-14 * "Uncle Boons" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -38.94 USD
+  Expenses:Food:Restaurant     38.94 USD
+
+2024-12-16 * "Cafe Select" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -29.20 USD
+  Expenses:Food:Restaurant     29.20 USD
+
+2024-12-16 * "Laut" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -32.17 USD
+  Expenses:Food:Restaurant     32.17 USD
+
+2024-12-17 * "Takahachi" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -56.86 USD
+  Expenses:Food:Restaurant     56.86 USD
+
+2024-12-17 * "Laut" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -32.71 USD
+  Expenses:Food:Restaurant     32.71 USD
+
+2024-12-17 * "Gimme! Coffee" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -8.12 USD
+  Expenses:Food:Coffee         8.12 USD
+
+2024-12-17 * "Dividends on portfolio"
+  Assets:US:ETrade:Cash            67.39 USD
+  Income:US:ETrade:ITOT:Dividend  -67.39 USD
+
+2024-12-18 * "Uncle Boons" "" #trip-new-york-2024
+  Liabilities:US:Chase:Slate  -37.72 USD
+  Expenses:Food:Restaurant     37.72 USD
+
+2024-12-19 event "location" "New Metropolis"
+
+2024-12-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -74.04 USD
+  Expenses:Home:Phone       74.04 USD
+
+2024-12-19 * "Consume vacation days"
+  Assets:US:Babble:Vacation  -104 VACHR
+  Expenses:Vacation           104 VACHR
+
+2024-12-19 * "Babble" "Payroll"
+  Assets:US:BofA:Checking              2832.14 USD
+  Income:US:Babble:Salary             -4615.38 USD
+  Income:US:Babble:GroupTermLife        -24.32 USD
+  Expenses:Health:Life:GroupTermLife     24.32 USD
+  Expenses:Health:Dental:Insurance        2.90 USD
+  Expenses:Health:Medical:Insurance      27.38 USD
+  Expenses:Health:Vision:Insurance       42.30 USD
+  Expenses:Taxes:Y2024:US:Medicare      106.62 USD
+  Expenses:Taxes:Y2024:US:Federal      1062.92 USD
+  Expenses:Taxes:Y2024:US:State         365.08 USD
+  Expenses:Taxes:Y2024:US:CityNYC       174.92 USD
+  Expenses:Taxes:Y2024:US:SDI             1.12 USD
+  Expenses:Taxes:Y2024:US:SocSec          0.00 USD
+  Assets:US:Babble:Vacation                  5 VACHR
+  Income:US:Babble:Vacation                 -5 VACHR
+
+2024-12-20 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -86.18 USD
+  Expenses:Food:Groceries      86.18 USD
+
+2024-12-21 * "Rose Flower" "Eating out alone"
+  Liabilities:US:Chase:Slate  -27.42 USD
+  Expenses:Food:Restaurant     27.42 USD
+
+2024-12-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.92 USD
+  Expenses:Home:Internet    79.92 USD
+
+2024-12-23 * "Chichipotle" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -18.29 USD
+  Expenses:Food:Restaurant     18.29 USD
+
+2024-12-26 * "Cafe Modagor" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -25.76 USD
+  Expenses:Food:Restaurant     25.76 USD
+
+2024-12-27 * "Cafe Modagor" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -20.80 USD
+  Expenses:Food:Restaurant     20.80 USD
+
+2024-12-28 * "Cafe Modagor" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -20.43 USD
+  Expenses:Food:Restaurant     20.43 USD
+
+2024-12-30 * "China Garden" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -18.81 USD
+  Expenses:Food:Restaurant     18.81 USD
+
+2024-12-31 * "Rose Flower" "Eating out after work"
+  Liabilities:US:Chase:Slate  -29.46 USD
+  Expenses:Food:Restaurant     29.46 USD
+
+2025-01-01 open Expenses:Taxes:Y2025:US:Federal:PreTax401k      IRAUSD
+2025-01-01 open Expenses:Taxes:Y2025:US:Medicare                USD
+2025-01-01 open Expenses:Taxes:Y2025:US:Federal                 USD
+2025-01-01 open Expenses:Taxes:Y2025:US:CityNYC                 USD
+2025-01-01 open Expenses:Taxes:Y2025:US:SDI                     USD
+2025-01-01 open Expenses:Taxes:Y2025:US:State                   USD
+2025-01-01 open Expenses:Taxes:Y2025:US:SocSec                  USD
+
+2025-01-01 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -92.68 USD
+  Expenses:Food:Groceries      92.68 USD
+
+2025-01-01 * "Allowed contributions for one year"
+  Income:US:Federal:PreTax401k  -18500.00 IRAUSD
+  Assets:US:Federal:PreTax401k   18500.00 IRAUSD
+
+2025-01-02 * "Uncle Boons" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -16.76 USD
+  Expenses:Food:Restaurant     16.76 USD
+
+2025-01-02 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2025-01-02 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-01-03 * "Uncle Boons" "Eating out after work"
+  Liabilities:US:Chase:Slate  -38.95 USD
+  Expenses:Food:Restaurant     38.95 USD
+
+2025-01-03 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-01-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2025-01-04 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2025-01-06 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.434 VBMPX {197.22 USD, 2025-01-06}
+  Assets:US:Vanguard:Cash   -480.03 USD
+
+2025-01-06 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    9.439 RGAGX {76.28 USD, 2025-01-06}
+  Assets:US:Vanguard:Cash   -720.01 USD
+
+2025-01-06 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.217 VBMPX {197.22 USD, 2025-01-06}
+  Assets:US:Vanguard:Cash   -240.02 USD
+
+2025-01-06 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.719 RGAGX {76.28 USD, 2025-01-06}
+  Assets:US:Vanguard:Cash   -359.97 USD
+
+2025-01-08 * "Rose Flower" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -55.26 USD
+  Expenses:Food:Restaurant     55.26 USD
+
+2025-01-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2025-01-11 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   502.83 USD
+  Assets:US:BofA:Checking     -502.83 USD
+
+2025-01-13 * "Jewel of Morroco" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -18.21 USD
+  Expenses:Food:Restaurant     18.21 USD
+
+2025-01-16 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-01-17 * "Cafe Modagor" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -8.58 USD
+  Expenses:Food:Restaurant     8.58 USD
+
+2025-01-17 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-01-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -84.63 USD
+  Expenses:Home:Phone       84.63 USD
+
+2025-01-20 * "Chichipotle" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -19.78 USD
+  Expenses:Food:Restaurant     19.78 USD
+
+2025-01-20 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.405 VBMPX {199.54 USD, 2025-01-20}
+  Assets:US:Vanguard:Cash   -479.89 USD
+
+2025-01-20 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    9.703 RGAGX {74.20 USD, 2025-01-20}
+  Assets:US:Vanguard:Cash   -719.96 USD
+
+2025-01-20 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.203 VBMPX {199.54 USD, 2025-01-20}
+  Assets:US:Vanguard:Cash   -240.05 USD
+
+2025-01-20 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.852 RGAGX {74.20 USD, 2025-01-20}
+  Assets:US:Vanguard:Cash   -360.02 USD
+
+2025-01-21 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -52.68 USD
+  Expenses:Food:Groceries      52.68 USD
+
+2025-01-22 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.98 USD
+  Expenses:Home:Internet    79.98 USD
+
+2025-01-23 * "Cafe Modagor" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -44.56 USD
+  Expenses:Food:Restaurant     44.56 USD
+
+2025-01-27 * "Cafe Modagor" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -37.06 USD
+  Expenses:Food:Restaurant     37.06 USD
+
+2025-01-29 * "Rose Flower" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -16.20 USD
+  Expenses:Food:Restaurant     16.20 USD
+
+2025-01-29 * "Buy shares of VHT"
+  Assets:US:ETrade:Cash           -1380.21 USD
+  Assets:US:ETrade:VHT                  23 VHT {59.62 USD, 2025-01-29}
+  Expenses:Financial:Commissions      8.95 USD
+
+2025-01-29 * "Buy shares of ITOT"
+  Assets:US:ETrade:Cash           -1348.09 USD
+  Assets:US:ETrade:ITOT                 22 ITOT {60.87 USD, 2025-01-29}
+  Expenses:Financial:Commissions      8.95 USD
+
+2025-01-29 * "Buy shares of VEA"
+  Assets:US:ETrade:Cash           -1405.57 USD
+  Assets:US:ETrade:VEA                   6 VEA {232.77 USD, 2025-01-29}
+  Expenses:Financial:Commissions      8.95 USD
+
+2025-01-30 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-01-31 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-02-01 * "Uncle Boons" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -47.64 USD
+  Expenses:Food:Restaurant     47.64 USD
+
+2025-02-02 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2025-02-03 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.384 VBMPX {201.33 USD, 2025-02-03}
+  Assets:US:Vanguard:Cash   -479.97 USD
+
+2025-02-03 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    9.337 RGAGX {77.11 USD, 2025-02-03}
+  Assets:US:Vanguard:Cash   -719.98 USD
+
+2025-02-03 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.192 VBMPX {201.33 USD, 2025-02-03}
+  Assets:US:Vanguard:Cash   -239.99 USD
+
+2025-02-03 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.669 RGAGX {77.11 USD, 2025-02-03}
+  Assets:US:Vanguard:Cash   -360.03 USD
+
+2025-02-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2025-02-04 * "China Garden" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -82.66 USD
+  Expenses:Food:Restaurant     82.66 USD
+
+2025-02-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2025-02-07 * "Cafe Modagor" "Eating out alone"
+  Liabilities:US:Chase:Slate  -44.29 USD
+  Expenses:Food:Restaurant     44.29 USD
+
+2025-02-07 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -75.80 USD
+  Expenses:Food:Groceries      75.80 USD
+
+2025-02-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2025-02-08 * "Uncle Boons" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -23.74 USD
+  Expenses:Food:Restaurant     23.74 USD
+
+2025-02-09 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   599.81 USD
+  Assets:US:BofA:Checking     -599.81 USD
+
+2025-02-13 * "Cafe Modagor" "Eating out "
+  Liabilities:US:Chase:Slate  -26.82 USD
+  Expenses:Food:Restaurant     26.82 USD
+
+2025-02-13 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-02-14 * "Sell shares of VHT"
+  Assets:US:ETrade:VHT                -23 VHT {59.62 USD, 2025-01-29} @ 59.01 USD
+  Assets:US:ETrade:Cash           1348.28 USD
+  Expenses:Financial:Commissions     8.95 USD
+  Income:US:ETrade:PnL              14.03 USD
+
+2025-02-14 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-02-16 * "Goba Goba" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -18.35 USD
+  Expenses:Food:Restaurant     18.35 USD
+
+2025-02-17 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -85.05 USD
+  Expenses:Food:Groceries      85.05 USD
+
+2025-02-17 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.403 VBMPX {199.80 USD, 2025-02-17}
+  Assets:US:Vanguard:Cash   -480.12 USD
+
+2025-02-17 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    9.790 RGAGX {73.55 USD, 2025-02-17}
+  Assets:US:Vanguard:Cash   -720.05 USD
+
+2025-02-17 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.201 VBMPX {199.80 USD, 2025-02-17}
+  Assets:US:Vanguard:Cash   -239.96 USD
+
+2025-02-17 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.894 RGAGX {73.55 USD, 2025-02-17}
+  Assets:US:Vanguard:Cash   -359.95 USD
+
+2025-02-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -59.70 USD
+  Expenses:Home:Phone       59.70 USD
+
+2025-02-21 * "Kin Soy" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -34.76 USD
+  Expenses:Food:Restaurant     34.76 USD
+
+2025-02-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.93 USD
+  Expenses:Home:Internet    79.93 USD
+
+2025-02-23 * "Sell shares of ITOT"
+  Assets:US:ETrade:ITOT               -8 ITOT {62.27 USD, 2023-10-27} @ 61.17 USD
+  Assets:US:ETrade:Cash           480.41 USD
+  Expenses:Financial:Commissions    8.95 USD
+  Income:US:ETrade:PnL              8.80 USD
+
+2025-02-26 * "Chichipotle" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -23.62 USD
+  Expenses:Food:Restaurant     23.62 USD
+
+2025-02-26 * "Sell shares of GLD"
+  Assets:US:ETrade:GLD                 -4 GLD {227.67 USD, 2023-11-25} @ 271.44 USD
+  Assets:US:ETrade:Cash           1076.81 USD
+  Expenses:Financial:Commissions     8.95 USD
+  Income:US:ETrade:PnL            -175.08 USD
+
+2025-02-27 * "Uncle Boons" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -14.89 USD
+  Expenses:Food:Restaurant     14.89 USD
+
+2025-02-27 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-02-28 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-03-02 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2025-03-03 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.399 VBMPX {200.05 USD, 2025-03-03}
+  Assets:US:Vanguard:Cash   -479.92 USD
+
+2025-03-03 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    9.737 RGAGX {73.94 USD, 2025-03-03}
+  Assets:US:Vanguard:Cash   -719.95 USD
+
+2025-03-03 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.200 VBMPX {200.05 USD, 2025-03-03}
+  Assets:US:Vanguard:Cash   -240.06 USD
+
+2025-03-03 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.870 RGAGX {73.94 USD, 2025-03-03}
+  Assets:US:Vanguard:Cash   -360.09 USD
+
+2025-03-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2025-03-04 * "Goba Goba" "Eating out after work"
+  Liabilities:US:Chase:Slate  -40.80 USD
+  Expenses:Food:Restaurant     40.80 USD
+
+2025-03-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2025-03-05 * "Kin Soy" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -21.16 USD
+  Expenses:Food:Restaurant     21.16 USD
+
+2025-03-07 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -99.85 USD
+  Expenses:Food:Groceries      99.85 USD
+
+2025-03-08 * "Kin Soy" "Eating out alone"
+  Liabilities:US:Chase:Slate  -40.32 USD
+  Expenses:Food:Restaurant     40.32 USD
+
+2025-03-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2025-03-10 * "Buy shares of ITOT"
+  Assets:US:ETrade:Cash           -979.35 USD
+  Assets:US:ETrade:ITOT                16 ITOT {60.65 USD, 2025-03-10}
+  Expenses:Financial:Commissions     8.95 USD
+
+2025-03-10 * "Buy shares of GLD"
+  Assets:US:ETrade:Cash           -824.11 USD
+  Assets:US:ETrade:GLD                  3 GLD {271.72 USD, 2025-03-10}
+  Expenses:Financial:Commissions     8.95 USD
+
+2025-03-10 * "Buy shares of VHT"
+  Assets:US:ETrade:Cash           -963.51 USD
+  Assets:US:ETrade:VHT                 16 VHT {59.66 USD, 2025-03-10}
+  Expenses:Financial:Commissions     8.95 USD
+
+2025-03-11 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   517.57 USD
+  Assets:US:BofA:Checking     -517.57 USD
+
+2025-03-12 * "Rose Flower" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -18.77 USD
+  Expenses:Food:Restaurant     18.77 USD
+
+2025-03-13 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-03-14 * "Rose Flower" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -52.21 USD
+  Expenses:Food:Restaurant     52.21 USD
+
+2025-03-14 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-03-17 * "Cafe Modagor" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -61.47 USD
+  Expenses:Food:Restaurant     61.47 USD
+
+2025-03-17 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.300 VBMPX {208.65 USD, 2025-03-17}
+  Assets:US:Vanguard:Cash   -479.90 USD
+
+2025-03-17 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    9.389 RGAGX {76.68 USD, 2025-03-17}
+  Assets:US:Vanguard:Cash   -719.95 USD
+
+2025-03-17 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.150 VBMPX {208.65 USD, 2025-03-17}
+  Assets:US:Vanguard:Cash   -239.95 USD
+
+2025-03-17 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.696 RGAGX {76.68 USD, 2025-03-17}
+  Assets:US:Vanguard:Cash   -360.09 USD
+
+2025-03-18 * "Dividends on portfolio"
+  Assets:US:ETrade:Cash           94.77 USD
+  Income:US:ETrade:GLD:Dividend  -94.77 USD
+
+2025-03-19 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -43.22 USD
+  Expenses:Home:Phone       43.22 USD
+
+2025-03-21 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -80.26 USD
+  Expenses:Home:Internet    80.26 USD
+
+2025-03-21 * "Kin Soy" "Eating out after work"
+  Liabilities:US:Chase:Slate  -23.67 USD
+  Expenses:Food:Restaurant     23.67 USD
+
+2025-03-21 * "Corner Deli" "Buying groceries"
+  Liabilities:US:Chase:Slate  -111.49 USD
+  Expenses:Food:Groceries      111.49 USD
+
+2025-03-22 * "Filing taxes for 2024"
+  Expenses:Taxes:Y2024:US:Federal   607.84 USD
+  Expenses:Taxes:Y2024:US:State     350.04 USD
+  Liabilities:AccountsPayable      -957.88 USD
+
+2025-03-22 * "FEDERAL TAXPYMT"
+  Assets:US:BofA:Checking      -607.84 USD
+  Liabilities:AccountsPayable   607.84 USD
+
+2025-03-26 * "Chichipotle" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -45.29 USD
+  Expenses:Food:Restaurant     45.29 USD
+
+2025-03-26 * "STATE TAX & FINANC PYMT"
+  Assets:US:BofA:Checking      -350.04 USD
+  Liabilities:AccountsPayable   350.04 USD
+
+2025-03-27 * "Kin Soy" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -20.59 USD
+  Expenses:Food:Restaurant     20.59 USD
+
+2025-03-27 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-03-28 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-03-29 * "Goba Goba" "Eating out "
+  Liabilities:US:Chase:Slate  -39.55 USD
+  Expenses:Food:Restaurant     39.55 USD
+
+2025-03-31 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.257 VBMPX {212.64 USD, 2025-03-31}
+  Assets:US:Vanguard:Cash   -479.93 USD
+
+2025-03-31 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    9.584 RGAGX {75.13 USD, 2025-03-31}
+  Assets:US:Vanguard:Cash   -720.05 USD
+
+2025-03-31 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.129 VBMPX {212.64 USD, 2025-03-31}
+  Assets:US:Vanguard:Cash   -240.07 USD
+
+2025-03-31 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.792 RGAGX {75.13 USD, 2025-03-31}
+  Assets:US:Vanguard:Cash   -360.02 USD
+
+2025-04-01 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2025-04-02 * "Rose Flower" "Eating out "
+  Liabilities:US:Chase:Slate  -19.17 USD
+  Expenses:Food:Restaurant     19.17 USD
+
+2025-04-02 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -69.74 USD
+  Expenses:Food:Groceries      69.74 USD
+
+2025-04-03 * "Kin Soy" "Eating out after work"
+  Liabilities:US:Chase:Slate  -19.88 USD
+  Expenses:Food:Restaurant     19.88 USD
+
+2025-04-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2025-04-06 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2025-04-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2025-04-08 * "Rose Flower" "Eating out "
+  Liabilities:US:Chase:Slate  -18.64 USD
+  Expenses:Food:Restaurant     18.64 USD
+
+2025-04-09 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   619.23 USD
+  Assets:US:BofA:Checking     -619.23 USD
+
+2025-04-10 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-04-11 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-04-12 * "Jewel of Morroco" "Eating out alone"
+  Liabilities:US:Chase:Slate  -17.53 USD
+  Expenses:Food:Restaurant     17.53 USD
+
+2025-04-12 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -83.72 USD
+  Expenses:Food:Groceries      83.72 USD
+
+2025-04-14 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.340 VBMPX {205.10 USD, 2025-04-14}
+  Assets:US:Vanguard:Cash   -479.93 USD
+
+2025-04-14 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    9.259 RGAGX {77.76 USD, 2025-04-14}
+  Assets:US:Vanguard:Cash   -719.98 USD
+
+2025-04-14 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.170 VBMPX {205.10 USD, 2025-04-14}
+  Assets:US:Vanguard:Cash   -239.97 USD
+
+2025-04-14 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.630 RGAGX {77.76 USD, 2025-04-14}
+  Assets:US:Vanguard:Cash   -360.03 USD
+
+2025-04-16 * "Uncle Boons" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -24.26 USD
+  Expenses:Food:Restaurant     24.26 USD
+
+2025-04-20 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -34.56 USD
+  Expenses:Home:Phone       34.56 USD
+
+2025-04-21 * "Kin Soy" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -16.46 USD
+  Expenses:Food:Restaurant     16.46 USD
+
+2025-04-22 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.93 USD
+  Expenses:Home:Internet    79.93 USD
+
+2025-04-24 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-04-25 * "Kin Soy" "Eating out alone"
+  Liabilities:US:Chase:Slate  -18.80 USD
+  Expenses:Food:Restaurant     18.80 USD
+
+2025-04-25 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -105.30 USD
+  Expenses:Food:Groceries      105.30 USD
+
+2025-04-25 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-04-28 * "China Garden" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -29.52 USD
+  Expenses:Food:Restaurant     29.52 USD
+
+2025-04-28 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.268 VBMPX {211.67 USD, 2025-04-28}
+  Assets:US:Vanguard:Cash   -480.07 USD
+
+2025-04-28 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    8.956 RGAGX {80.40 USD, 2025-04-28}
+  Assets:US:Vanguard:Cash   -720.06 USD
+
+2025-04-28 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.134 VBMPX {211.67 USD, 2025-04-28}
+  Assets:US:Vanguard:Cash   -240.03 USD
+
+2025-04-28 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.477 RGAGX {80.40 USD, 2025-04-28}
+  Assets:US:Vanguard:Cash   -359.95 USD
+
+2025-04-30 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2025-05-01 * "Farmer Fresh" "Buying groceries"
+  Liabilities:US:Chase:Slate  -84.57 USD
+  Expenses:Food:Groceries      84.57 USD
+
+2025-05-03 * "Jewel of Morroco" "Eating out with work buddies"
+  Liabilities:US:Chase:Slate  -23.87 USD
+  Expenses:Food:Restaurant     23.87 USD
+
+2025-05-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2025-05-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2025-05-05 * "Cafe Modagor" "Eating out with Julie"
+  Liabilities:US:Chase:Slate  -22.73 USD
+  Expenses:Food:Restaurant     22.73 USD
+
+2025-05-08 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2025-05-08 * "Jewel of Morroco" "Eating out "
+  Liabilities:US:Chase:Slate  -29.32 USD
+  Expenses:Food:Restaurant     29.32 USD
+
+2025-05-08 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-05-09 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-05-10 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   584.98 USD
+  Assets:US:BofA:Checking     -584.98 USD
+
+2025-05-11 * "Uncle Boons" "Eating out alone"
+  Liabilities:US:Chase:Slate  -26.43 USD
+  Expenses:Food:Restaurant     26.43 USD
+
+2025-05-11 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -97.92 USD
+  Expenses:Food:Groceries      97.92 USD
+
+2025-05-12 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.278 VBMPX {210.69 USD, 2025-05-12}
+  Assets:US:Vanguard:Cash   -479.95 USD
+
+2025-05-12 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    8.894 RGAGX {80.95 USD, 2025-05-12}
+  Assets:US:Vanguard:Cash   -719.97 USD
+
+2025-05-12 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.139 VBMPX {210.69 USD, 2025-05-12}
+  Assets:US:Vanguard:Cash   -239.98 USD
+
+2025-05-12 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.448 RGAGX {80.95 USD, 2025-05-12}
+  Assets:US:Vanguard:Cash   -360.07 USD
+
+2025-05-15 * "Jewel of Morroco" "Eating out "
+  Liabilities:US:Chase:Slate  -32.97 USD
+  Expenses:Food:Restaurant     32.97 USD
+
+2025-05-17 * "Chichipotle" "Eating out "
+  Liabilities:US:Chase:Slate  -54.03 USD
+  Expenses:Food:Restaurant     54.03 USD
+
+2025-05-18 * "Verizon Wireless" ""
+  Assets:US:BofA:Checking  -55.86 USD
+  Expenses:Home:Phone       55.86 USD
+
+2025-05-18 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -77.92 USD
+  Expenses:Food:Groceries      77.92 USD
+
+2025-05-22 * "China Garden" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -32.95 USD
+  Expenses:Food:Restaurant     32.95 USD
+
+2025-05-22 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-05-23 * "Wine-Tarner Cable" ""
+  Assets:US:BofA:Checking  -79.91 USD
+  Expenses:Home:Internet    79.91 USD
+
+2025-05-23 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-05-24 * "Jewel of Morroco" "Eating out with Bill"
+  Liabilities:US:Chase:Slate  -38.68 USD
+  Expenses:Food:Restaurant     38.68 USD
+
+2025-05-26 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.287 VBMPX {209.92 USD, 2025-05-26}
+  Assets:US:Vanguard:Cash   -480.09 USD
+
+2025-05-26 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    8.899 RGAGX {80.91 USD, 2025-05-26}
+  Assets:US:Vanguard:Cash   -720.02 USD
+
+2025-05-26 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.143 VBMPX {209.92 USD, 2025-05-26}
+  Assets:US:Vanguard:Cash   -239.94 USD
+
+2025-05-26 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.449 RGAGX {80.91 USD, 2025-05-26}
+  Assets:US:Vanguard:Cash   -359.97 USD
+
+2025-05-27 * "Rose Flower" "Eating out "
+  Liabilities:US:Chase:Slate  -63.58 USD
+  Expenses:Food:Restaurant     63.58 USD
+
+2025-05-28 * "Good Moods Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -87.52 USD
+  Expenses:Food:Groceries      87.52 USD
+
+2025-05-29 * "Metro Transport Authority" "Tram tickets"
+  Liabilities:US:Chase:Slate  -120.00 USD
+  Expenses:Transport:Tram      120.00 USD
+
+2025-05-30 * "Kin Soy" "Eating out with Natasha"
+  Liabilities:US:Chase:Slate  -14.77 USD
+  Expenses:Food:Restaurant     14.77 USD
+
+2025-06-01 * "Chichipotle" "Eating out after work"
+  Liabilities:US:Chase:Slate  -32.93 USD
+  Expenses:Food:Restaurant     32.93 USD
+
+2025-06-04 * "BANK FEES" "Monthly bank fee"
+  Assets:US:BofA:Checking  -4.00 USD
+  Expenses:Financial:Fees   4.00 USD
+
+2025-06-04 * "China Garden" "Eating out alone"
+  Liabilities:US:Chase:Slate  -29.96 USD
+  Expenses:Food:Restaurant     29.96 USD
+
+2025-06-05 * "RiverBank Properties" "Paying the rent"
+  Assets:US:BofA:Checking  -2400.00 USD
+  Expenses:Home:Rent        2400.00 USD
+
+2025-06-05 * "Babble" "Payroll"
+  Assets:US:BofA:Checking                      1350.60 USD
+  Assets:US:Vanguard:Cash                      1200.00 USD
+  Income:US:Babble:Salary                     -4615.38 USD
+  Income:US:Babble:GroupTermLife                -24.32 USD
+  Expenses:Health:Life:GroupTermLife             24.32 USD
+  Expenses:Health:Dental:Insurance                2.90 USD
+  Expenses:Health:Medical:Insurance              27.38 USD
+  Expenses:Health:Vision:Insurance               42.30 USD
+  Expenses:Taxes:Y2025:US:Medicare              106.62 USD
+  Expenses:Taxes:Y2025:US:Federal              1062.92 USD
+  Expenses:Taxes:Y2025:US:State                 365.08 USD
+  Expenses:Taxes:Y2025:US:CityNYC               174.92 USD
+  Expenses:Taxes:Y2025:US:SDI                     1.12 USD
+  Expenses:Taxes:Y2025:US:SocSec                281.54 USD
+  Assets:US:Federal:PreTax401k                -1200.00 IRAUSD
+  Expenses:Taxes:Y2025:US:Federal:PreTax401k   1200.00 IRAUSD
+  Assets:US:Babble:Vacation                          5 VACHR
+  Income:US:Babble:Vacation                         -5 VACHR
+
+2025-06-06 * "Employer match for contribution"
+  Assets:US:Vanguard:Cash      600.00 USD
+  Income:US:Babble:Match401k  -600.00 USD
+
+2025-06-08 * "Chase:Slate" "Paying off credit card"
+  Liabilities:US:Chase:Slate   706.32 USD
+  Assets:US:BofA:Checking     -706.32 USD
+
+2025-06-09 * "EDISON POWER" ""
+  Assets:US:BofA:Checking    -65.00 USD
+  Expenses:Home:Electricity   65.00 USD
+
+2025-06-09 * "Kin Soy" "Eating out with Joe"
+  Liabilities:US:Chase:Slate  -23.09 USD
+  Expenses:Food:Restaurant     23.09 USD
+
+2025-06-09 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    2.315 VBMPX {207.33 USD, 2025-06-09}
+  Assets:US:Vanguard:Cash   -479.97 USD
+
+2025-06-09 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    8.740 RGAGX {82.38 USD, 2025-06-09}
+  Assets:US:Vanguard:Cash   -720.00 USD
+
+2025-06-09 * "Investing 40% of cash in VBMPX"
+  Assets:US:Vanguard:VBMPX    1.158 VBMPX {207.33 USD, 2025-06-09}
+  Assets:US:Vanguard:Cash   -240.09 USD
+
+2025-06-09 * "Investing 60% of cash in RGAGX"
+  Assets:US:Vanguard:RGAGX    4.370 RGAGX {82.38 USD, 2025-06-09}
+  Assets:US:Vanguard:Cash   -360.00 USD
+
+2025-06-11 * "Kin Soy" "Eating out "
+  Liabilities:US:Chase:Slate  -21.74 USD
+  Expenses:Food:Restaurant     21.74 USD
+
+2025-06-15 * "Onion Market" "Buying groceries"
+  Liabilities:US:Chase:Slate  -83.11 USD
+  Expenses:Food:Groceries      83.11 USD

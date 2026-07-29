@@ -1,0 +1,282 @@
+@import "tailwindcss";
+@import "tw-animate-css";
+@import "./features/ai-agent/styles/chat-markdown.css";
+@import "./common/components/diff-viewer/diff-viewer.css";
+
+@custom-variant dark (&:is(.dark *));
+
+/* Brand: #5FC535 — a vivid green, at oklch(0.7344 0.2016 138.3122).
+   It is used VERBATIM in dark mode, where it sits at 8.8:1 on the dark ground.
+   Light mode CANNOT use it as-is: at L=0.73 it gives only 2.2:1 against white,
+   so white-on-button text and green-on-white link text would both fail WCAG AA.
+   Light mode therefore uses the same hue darkened to L=0.52 (#2B7E00, 5.1:1).
+   Same brand, rendered legibly per theme — do not "fix" light mode back to the
+   literal hex.
+
+   NOTE: the structure of this token set (and everything except the brand hue)
+   still mirrors the marketing site (beancount-cms-v2, src/style.css), but the
+   brand color itself now DIVERGES from it: the CMS is still on olive #3F572C. */
+:root {
+  font-family: system-ui, Avenir, Helvetica, Arial, sans-serif;
+  line-height: 1.5;
+  font-weight: 400;
+
+  color-scheme: light dark;
+
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+
+  --radius: 0.65rem;
+
+  /* Light theme — clean white base with the brand green darkened to stay
+     readable (#2B7E00: 5.1:1 for white button text and for link text on white).
+     Neutrals carry only a whisper of warmth (chroma ≤0.02) so the page reads
+     crisp-white rather than cream. */
+  --background: oklch(1 0 0);
+  --foreground: oklch(0.21 0.016 130);
+  --card: oklch(1 0 0);
+  --card-foreground: oklch(0.21 0.016 130);
+  --popover: oklch(1 0 0);
+  --popover-foreground: oklch(0.21 0.016 130);
+  --primary: oklch(0.52 0.17 138);
+  --primary-foreground: oklch(0.985 0.004 106);
+  --secondary: oklch(0.968 0.004 106);
+  --secondary-foreground: oklch(0.3 0.018 130);
+  --muted: oklch(0.968 0.004 106);
+  --muted-foreground: oklch(0.44 0.014 125);
+  --accent: oklch(0.955 0.012 122);
+  --accent-foreground: oklch(0.26 0.02 130);
+  --destructive: oklch(0.55 0.24 27);
+  --border: oklch(0.905 0.004 106);
+  --input: oklch(0.905 0.004 106);
+  --ring: oklch(0.52 0.17 138);
+
+  /* Semantic money colors — positive/negative amounts, deltas, diffs.
+     --loss is the same red as --chart-8 so charts can reserve it for
+     negative values and filter it out of the series palette. */
+  --gain: oklch(0.52 0.14 150);
+  --loss: oklch(0.55 0.22 25);
+
+  /* Chart series. --chart-1 is the brand; the rest are spaced around the hue
+     wheel so that every pair is at least ~16 ΔE00 apart — far enough that two
+     adjacent series in a chart or Sankey never read as the same color. The
+     brand green now occupies hue 138, so --chart-2 sits at 164 (sea green) and
+     --chart-9 at 6 (rose); at their old hues (150 / 105) they collided with the
+     brand and with --chart-3 respectively. Re-check ΔE00 before retuning. */
+  --chart-1: oklch(0.52 0.17 138);
+  --chart-2: oklch(0.53 0.14 164);
+  --chart-3: oklch(0.58 0.13 78);
+  --chart-4: oklch(0.55 0.2 330);
+  --chart-5: oklch(0.58 0.16 48);
+  --chart-6: oklch(0.53 0.11 195);
+  --chart-7: oklch(0.55 0.14 262);
+  --chart-8: oklch(0.55 0.22 25);
+  --chart-9: oklch(0.56 0.13 6);
+
+  --sidebar: oklch(0.985 0.003 106);
+  --sidebar-foreground: oklch(0.21 0.016 130);
+  --sidebar-primary: oklch(0.52 0.17 138);
+  --sidebar-primary-foreground: oklch(0.985 0.004 106);
+  --sidebar-accent: oklch(0.955 0.012 122);
+  --sidebar-accent-foreground: oklch(0.26 0.02 130);
+  --sidebar-border: oklch(0.905 0.004 106);
+  --sidebar-ring: oklch(0.52 0.17 138);
+}
+
+@theme inline {
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --color-chart-6: var(--chart-6);
+  --color-chart-7: var(--chart-7);
+  --color-chart-8: var(--chart-8);
+  --color-chart-9: var(--chart-9);
+  --color-gain: var(--gain);
+  --color-loss: var(--loss);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+.dark {
+  color-scheme: dark;
+
+  /* Dark theme — deep green-charcoal (hue ~145 at low chroma, so it reads as a
+     clean near-black with a subtle green cast rather than muddy green). Primary
+     is the brand #5FC535 EXACTLY: oklch(0.7344 0.2016 138.3122) round-trips to
+     that hex, and it lands at 8.8:1 on this ground. Its foreground is a near
+     black-green (8.3:1 on the button) — white text here would be 2.2:1. */
+  --background: oklch(0.16 0.008 145);
+  --foreground: oklch(0.94 0.006 106);
+  --card: oklch(0.198 0.009 145);
+  --card-foreground: oklch(0.94 0.006 106);
+  --popover: oklch(0.198 0.009 145);
+  --popover-foreground: oklch(0.94 0.006 106);
+  --primary: oklch(0.7344 0.2016 138.3122);
+  --primary-foreground: oklch(0.19 0.03 138);
+  --secondary: oklch(0.25 0.008 145);
+  --secondary-foreground: oklch(0.87 0.01 106);
+  --muted: oklch(0.25 0.008 145);
+  --muted-foreground: oklch(0.71 0.016 115);
+  --accent: oklch(0.27 0.012 138);
+  --accent-foreground: oklch(0.91 0.008 106);
+  --destructive: oklch(0.65 0.22 25);
+  --border: oklch(0.28 0.01 142);
+  --input: oklch(0.27 0.012 138);
+  --ring: oklch(0.7344 0.2016 138.3122);
+
+  --gain: oklch(0.7 0.15 150);
+  --loss: oklch(0.65 0.22 25);
+
+  --chart-1: oklch(0.7344 0.2016 138.3122);
+  --chart-2: oklch(0.7 0.15 164);
+  --chart-3: oklch(0.75 0.13 78);
+  --chart-4: oklch(0.7 0.2 330);
+  --chart-5: oklch(0.72 0.16 48);
+  --chart-6: oklch(0.68 0.12 195);
+  --chart-7: oklch(0.7 0.13 262);
+  --chart-8: oklch(0.65 0.22 25);
+  --chart-9: oklch(0.73 0.14 6);
+
+  --sidebar: oklch(0.178 0.008 145);
+  --sidebar-foreground: oklch(0.94 0.006 106);
+  --sidebar-primary: oklch(0.7344 0.2016 138.3122);
+  --sidebar-primary-foreground: oklch(0.19 0.03 138);
+  --sidebar-accent: oklch(0.25 0.008 145);
+  --sidebar-accent-foreground: oklch(0.91 0.008 106);
+  --sidebar-border: oklch(0.28 0.01 142);
+  --sidebar-ring: oklch(0.7344 0.2016 138.3122);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+  }
+
+  /* Baseline keyboard-focus indicator, matching the marketing site: every
+     focusable element gets a visible ring in the brand color. Components with
+     their own focus-visible:ring-* styles override this; this only guarantees
+     no interactive control is ever focus-invisible. */
+  :focus-visible {
+    outline: 2px solid var(--ring);
+    outline-offset: 2px;
+  }
+}
+
+/* Hide Monaco Editor cursor in read-only mode */
+.hide-cursor .cursor,
+.hide-cursor .cursors-layer {
+  display: none !important;
+}
+
+/* Highlighted line in Monaco Editor */
+.highlighted-line {
+  background: rgba(255, 235, 59, 0.15) !important;
+}
+
+.dark .highlighted-line {
+  background: rgba(255, 235, 59, 0.1) !important;
+}
+
+.highlighted-line-inline {
+  background: rgba(255, 235, 59, 0.08) !important;
+}
+
+.dark .highlighted-line-inline {
+  background: rgba(255, 235, 59, 0.05) !important;
+}
+
+/**
+ * Global Scrollbar Styling
+ * 
+ * Provides theme-aware, modern scrollbar styling across the entire application.
+ * Inspired by shadcn/ui ScrollArea component design patterns.
+ * 
+ * Design Principles:
+ * - Theme-aware: Uses CSS custom properties (--border, --muted-foreground) that
+ *   automatically adapt to light/dark mode
+ * - Minimal: Thin scrollbars (10px) with transparent tracks for a clean look
+ * - Modern: Fully rounded thumbs with smooth hover transitions
+ * - Consistent: Matches the visual style of shadcn/ui components
+ * 
+ * Cross-browser Support:
+ * - Firefox: Uses scrollbar-width and scrollbar-color properties
+ * - Webkit (Chrome, Safari, Edge): Uses ::-webkit-scrollbar pseudo-elements
+ */
+
+/* Firefox scrollbar styling */
+* {
+  /* Thin scrollbar width for a modern, minimal appearance */
+  scrollbar-width: thin;
+  /* Theme-aware colors: thumb uses border color, track is transparent */
+  scrollbar-color: var(--border) transparent;
+}
+
+/* Webkit browsers (Chrome, Safari, Edge) scrollbar styling */
+*::-webkit-scrollbar {
+  /* 10px width matches shadcn/ui ScrollArea component (w-2.5 = 10px) */
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  /* Transparent track for a clean, minimal appearance */
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  /* Theme-aware thumb color using border variable */
+  background-color: var(--border);
+  /* Fully rounded thumb for modern appearance */
+  border-radius: 9999px;
+  /* Transparent border with padding creates visual spacing from edges */
+  border: 2px solid transparent;
+  /* Ensures background doesn't extend into border area */
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  /* Darker color on hover for better interactivity feedback */
+  background-color: var(--muted-foreground);
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-corner {
+  /* Transparent corner where vertical and horizontal scrollbars meet */
+  background: transparent;
+}

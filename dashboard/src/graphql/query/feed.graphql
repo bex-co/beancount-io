@@ -1,0 +1,16 @@
+query GetFeed($offset: Float, $limit: Float, $source: String, $locale: String) {
+  getFeed(offset: $offset, limit: $limit, source: $source, locale: $locale) {
+    items {
+      id
+      title
+      summary
+      link
+      publishedAt
+      author
+      authorAvatar
+      source
+    }
+    total
+    hasMore
+  }
+}

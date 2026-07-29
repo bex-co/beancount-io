@@ -1,0 +1,99 @@
+query GetLedgerDirContent($ledgerId: String!, $dirPath: String) {
+  getLedgerDirContent(ledgerId: $ledgerId, dirPath: $dirPath) {
+    name
+    path
+    sha
+    size
+    type
+    encoding
+    content
+    lastCommitSha
+    lastAuthorDate
+    lastCommitterDate
+  }
+}
+
+mutation CreateLedgerFile(
+  $ledgerId: String!
+  $path: String!
+  $content: String!
+  $message: String
+) {
+  createLedgerFile(
+    ledgerId: $ledgerId
+    path: $path
+    content: $content
+    message: $message
+  ) {
+    name
+    path
+    sha
+    size
+    type
+    encoding
+    content
+    lastCommitSha
+    lastAuthorDate
+    lastCommitterDate
+  }
+}
+
+mutation UpdateLedgerFile(
+  $ledgerId: String!
+  $path: String!
+  $content: String!
+  $sha: String!
+  $message: String
+) {
+  updateLedgerFile(
+    ledgerId: $ledgerId
+    path: $path
+    content: $content
+    sha: $sha
+    message: $message
+  ) {
+    name
+    path
+    sha
+    size
+    type
+    encoding
+    content
+    lastCommitSha
+    lastAuthorDate
+    lastCommitterDate
+  }
+}
+
+mutation DeleteLedgerFile(
+  $ledgerId: String!
+  $path: String!
+  $sha: String!
+  $message: String
+) {
+  deleteLedgerFile(
+    ledgerId: $ledgerId
+    path: $path
+    sha: $sha
+    message: $message
+  ) {
+    path
+  }
+}
+
+mutation RenameLedgerFile(
+  $ledgerId: String!
+  $oldPath: String!
+  $newPath: String!
+  $message: String
+) {
+  renameLedgerFile(
+    ledgerId: $ledgerId
+    oldPath: $oldPath
+    newPath: $newPath
+    message: $message
+  ) {
+    oldPath
+    newPath
+  }
+}

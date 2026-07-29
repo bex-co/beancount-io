@@ -1,0 +1,77 @@
+query GetPlaidItems($ledgerId: String!) {
+  getPlaidItems(ledgerId: $ledgerId) {
+    id
+    institutionName
+    status
+    errorMessage
+    createdAt
+    lastSync {
+      status
+      timestamp
+      transactionsAdded
+      errorMessage
+    }
+  }
+}
+
+query GetPlaidAccounts($itemId: String!, $ledgerId: String!) {
+  getPlaidAccounts(itemId: $itemId, ledgerId: $ledgerId) {
+    id
+    accountName
+    accountType
+    mask
+    ledgerAccount
+    currency
+    enabled
+  }
+}
+
+query GetPlaidAccountsForLedger($ledgerId: String!) {
+  getPlaidAccountsForLedger(ledgerId: $ledgerId) {
+    id
+    plaidItemId
+    accountName
+    mask
+    institutionName
+  }
+}
+
+query GetUnsyncedPlaidTransactions($ledgerId: String!, $accountId: String) {
+  getUnsyncedPlaidTransactions(ledgerId: $ledgerId, accountId: $accountId) {
+    id
+    plaidAccountId
+    transactionId
+    date
+    amount
+    merchantName
+    name
+    isPending
+    accountName
+    institutionName
+    ledgerAccount
+  }
+}
+
+query SuggestPlaidTransactionCategories(
+  $ledgerId: String!
+  $accountId: String
+) {
+  suggestPlaidTransactionCategories(
+    ledgerId: $ledgerId
+    accountId: $accountId
+  ) {
+    rowIndex
+    targetAccount
+    confidence
+    reasoning
+  }
+}
+
+query SuggestPlaidAccountMapping($ledgerId: String!, $itemId: String!) {
+  suggestPlaidAccountMapping(ledgerId: $ledgerId, itemId: $itemId) {
+    accountId
+    suggestedAccount
+    confidence
+    reasoning
+  }
+}

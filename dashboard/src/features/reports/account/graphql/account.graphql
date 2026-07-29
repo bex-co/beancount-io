@@ -1,0 +1,48 @@
+query GetLedgerAccountReport(
+  $accountName: String!
+  $ledgerId: String!
+  $interval: String!
+  $conversion: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  getLedgerAccountReport(
+    accountName: $accountName
+    ledgerId: $ledgerId
+    interval: $interval
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    linechartData {
+      date
+      balance
+    }
+    intervalTotalsData {
+      date
+      balance
+    }
+    accountBalanceData {
+      date
+      balance
+    }
+  }
+}
+
+query GetLedgerAccountJournal(
+  $query: AccountJournalQueryInput!
+  $ledgerId: String!
+) {
+  getLedgerAccountJournal(query: $query, ledgerId: $ledgerId) {
+    with_children
+    total
+    items {
+      entry
+      change
+      balance
+    }
+    account
+  }
+}

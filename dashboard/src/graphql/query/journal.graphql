@@ -1,0 +1,70 @@
+query GetLedgerJournal($ledgerId: String!, $query: JournalQueryInput) {
+  getLedgerJournal(ledgerId: $ledgerId, query: $query) {
+    total
+    data
+    is_empty
+  }
+}
+
+mutation BulkEntries($ledgerId: String!, $entries: [AddEntryInput!]!) {
+  bulkEntries(ledgerId: $ledgerId, entries: $entries) {
+    success
+    message
+  }
+}
+
+query SuggestTransactionCategories(
+  $ledgerId: String!
+  $transactions: [TransactionToCategorizeInput!]!
+) {
+  suggestTransactionCategories(
+    ledgerId: $ledgerId
+    transactions: $transactions
+  ) {
+    rowIndex
+    targetAccount
+    confidence
+    source
+    reasoning
+  }
+}
+
+query GetLedgerEntryContext($entryHash: String!, $ledgerId: String!) {
+  getLedgerEntryContext(entryHash: $entryHash, ledgerId: $ledgerId) {
+    slice
+    sha256sum
+    entry
+    balances_before
+    balances_after
+  }
+}
+
+mutation DeleteLedgerEntrySourceSlice(
+  $input: DeleteSourceSliceInput!
+  $ledgerId: String!
+) {
+  deleteLedgerEntrySourceSlice(input: $input, ledgerId: $ledgerId) {
+    message
+    entryHash
+  }
+}
+
+mutation UpdateLedgerEntrySourceSlice(
+  $input: UpdateSourceSliceInput!
+  $ledgerId: String!
+) {
+  updateLedgerEntrySourceSlice(input: $input, ledgerId: $ledgerId) {
+    newSha256sum
+    message
+    entryHash
+  }
+}
+
+query GetLedgerPlaintextJournal(
+  $ledgerId: String!
+  $query: PlaintextJournalQueryInput
+) {
+  getLedgerPlaintextJournal(ledgerId: $ledgerId, query: $query) {
+    content
+  }
+}

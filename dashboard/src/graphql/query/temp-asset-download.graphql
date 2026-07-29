@@ -1,0 +1,6 @@
+query GenerateTempAssetDownloadUrl($objectKey: String!) {
+  generateTempAssetDownloadUrl(objectKey: $objectKey) {
+    downloadUrl
+    expiresIn
+  }
+}

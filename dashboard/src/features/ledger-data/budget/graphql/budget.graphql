@@ -1,0 +1,23 @@
+query GetLedgerIntervalTotals(
+  $accountName: String!
+  $ledgerId: String!
+  $interval: String!
+  $conversion: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  getLedgerIntervalTotals(
+    accountName: $accountName
+    ledgerId: $ledgerId
+    interval: $interval
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    balance
+    accountBalances
+  }
+}

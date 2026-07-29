@@ -1,0 +1,10 @@
+mutation ParseFile($s3ObjectKey: String!, $fileFormat: String!) {
+  parseFile(s3ObjectKey: $s3ObjectKey, fileFormat: $fileFormat) {
+    rows {
+      date
+      payee
+      description
+      amount
+    }
+  }
+}

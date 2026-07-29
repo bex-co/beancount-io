@@ -1,0 +1,7 @@
+mutation GenerateTempAssetUploadUrl($mimeType: String, $filename: String) {
+  generateTempAssetUploadUrl(mimeType: $mimeType, filename: $filename) {
+    uploadUrl
+    objectKey
+    expiresIn
+  }
+}

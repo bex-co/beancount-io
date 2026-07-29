@@ -1,0 +1,20 @@
+query GetLedgerDocuments(
+  $ledgerId: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  getLedgerDocuments(
+    ledgerId: $ledgerId
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    tags
+    meta
+    links
+    filename
+    date
+    account
+  }
+}

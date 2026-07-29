@@ -1,0 +1,34 @@
+query GetLedgerEntriesCountPerType(
+  $ledgerId: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  getLedgerEntriesCountPerType(
+    ledgerId: $ledgerId
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    type
+    number
+  }
+}
+
+query GetLedgerAccountLastEntries(
+  $ledgerId: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  getLedgerAccountLastEntries(
+    ledgerId: $ledgerId
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    balance
+    account
+  }
+}

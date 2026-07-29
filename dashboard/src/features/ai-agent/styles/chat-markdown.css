@@ -1,0 +1,128 @@
+/**
+ * AI Chat Markdown Styling
+ *
+ * Provides comprehensive styling for markdown content rendered in AI chat messages.
+ * Includes prose styling for text elements and syntax highlighting for code blocks.
+ */
+
+/* Markdown content styling for AI chat messages */
+.prose {
+  @apply text-base leading-relaxed;
+}
+
+.prose h1,
+.prose h2,
+.prose h3,
+.prose h4 {
+  @apply font-semibold mt-6 mb-3 first:mt-0;
+}
+
+.prose h1 {
+  @apply text-2xl;
+}
+.prose h2 {
+  @apply text-xl;
+}
+.prose h3 {
+  @apply text-lg;
+}
+
+.prose p {
+  @apply my-3 first:mt-0 last:mb-0;
+}
+
+.prose ul,
+.prose ol {
+  @apply my-3 ml-6 first:mt-0 last:mb-0;
+}
+
+.prose ul {
+  @apply list-disc;
+}
+.prose ol {
+  @apply list-decimal;
+}
+
+.prose li {
+  @apply my-1;
+}
+
+.prose a {
+  @apply text-primary underline hover:text-primary/80 transition-colors;
+}
+
+.prose blockquote {
+  @apply border-l-4 border-muted-foreground/20 pl-4 my-4 italic text-muted-foreground;
+}
+
+.prose code {
+  @apply bg-muted px-1.5 py-0.5 rounded text-sm font-mono;
+}
+
+.prose pre {
+  @apply my-4;
+}
+
+.prose pre code {
+  @apply bg-transparent p-0 text-sm;
+}
+
+/* Syntax highlighting for code blocks */
+.prose pre[class*="language-"] {
+  @apply bg-muted rounded-lg p-4 overflow-x-auto my-4 border border-border;
+}
+
+/* Compact, consistent typography for the conversational agent surface. */
+.agent-message-markdown {
+  @apply text-base leading-7;
+}
+
+.agent-message-markdown h1 {
+  @apply mt-5 mb-2 text-xl leading-7;
+}
+
+.agent-message-markdown h2 {
+  @apply mt-5 mb-2 text-lg leading-7;
+}
+
+.agent-message-markdown h3,
+.agent-message-markdown h4 {
+  @apply mt-4 mb-2 text-base leading-6;
+}
+
+.agent-message-markdown p,
+.agent-message-markdown ul,
+.agent-message-markdown ol {
+  @apply my-2.5;
+}
+
+.agent-message-markdown ul,
+.agent-message-markdown ol {
+  @apply ml-5;
+}
+
+.agent-message-markdown li {
+  @apply my-0.5;
+}
+
+.agent-message-markdown blockquote {
+  @apply my-3 border-l-2 pl-3;
+}
+
+.agent-message-markdown th,
+.agent-message-markdown td {
+  @apply px-3 py-2 text-base;
+}
+
+/* Dark mode adjustments */
+.dark .prose {
+  @apply text-foreground;
+}
+
+.dark .prose code {
+  @apply bg-muted;
+}
+
+.dark .prose blockquote {
+  @apply border-muted-foreground/20 text-muted-foreground;
+}

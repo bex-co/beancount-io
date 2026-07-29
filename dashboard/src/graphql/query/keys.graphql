@@ -1,0 +1,38 @@
+mutation CreatePublicKey($key: String!, $title: String!, $readOnly: Boolean) {
+  createPublicKey(key: $key, title: $title, readOnly: $readOnly) {
+    id
+    key
+    title
+    fingerprint
+    createdAt
+    lastUsedAt
+  }
+}
+
+mutation DeletePublicKey($keyId: Float!) {
+  deletePublicKey(keyId: $keyId) {
+    id
+  }
+}
+
+query ListPublicKeys($limit: Float, $page: Float) {
+  listPublicKeys(limit: $limit, page: $page) {
+    id
+    key
+    title
+    fingerprint
+    createdAt
+    lastUsedAt
+  }
+}
+
+query GetPublicKey($keyId: Float!) {
+  getPublicKey(keyId: $keyId) {
+    id
+    key
+    title
+    fingerprint
+    createdAt
+    lastUsedAt
+  }
+}

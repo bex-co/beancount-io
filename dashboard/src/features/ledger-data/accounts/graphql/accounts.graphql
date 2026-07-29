@@ -1,0 +1,21 @@
+query GetLedgerAccountDirectives($ledgerId: String!) {
+  getLedgerAccountDirectives(ledgerId: $ledgerId) {
+    account
+    openedAt
+    closedAt
+    balance
+    entryCount
+    entryHash
+    closeEntryHash
+  }
+}
+
+mutation DeleteMultipleLedgerEntrySourceSlices(
+  $input: DeleteMultiSourceSlicesInput!
+  $ledgerId: String!
+) {
+  deleteMultipleLedgerEntrySourceSlices(input: $input, ledgerId: $ledgerId) {
+    message
+    deletedHashes
+  }
+}

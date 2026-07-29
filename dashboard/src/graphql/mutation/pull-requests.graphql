@@ -1,0 +1,29 @@
+mutation ApprovePullRequest(
+  $ledgerOwner: String!
+  $ledgerName: String!
+  $prNumber: Int!
+) {
+  approvePullRequest(
+    ledgerOwner: $ledgerOwner
+    ledgerName: $ledgerName
+    prNumber: $prNumber
+  ) {
+    success
+    message
+  }
+}
+
+mutation RejectPullRequest(
+  $ledgerOwner: String!
+  $ledgerName: String!
+  $prNumber: Int!
+) {
+  rejectPullRequest(
+    ledgerOwner: $ledgerOwner
+    ledgerName: $ledgerName
+    prNumber: $prNumber
+  ) {
+    success
+    message
+  }
+}

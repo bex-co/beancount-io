@@ -1,0 +1,24 @@
+networks:
+  beancount:
+    external: true
+    name: infra_beancount
+
+services:
+  beancount-dashboard:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+      args:
+        VITE_API_URL: https://beancount.io/api-gateway/
+        VITE_SSR_API_URL: http://backend-v2:4104/api-gateway/
+        # Production GA4 stream. Set to the prod stream's Measurement ID.
+        # Override per-deploy (e.g. a staging compose file uses the staging
+        # stream's ID). Leave blank/unset to disable analytics for a build.
+        VITE_GA_MEASUREMENT_ID: ${VITE_GA_MEASUREMENT_ID:-G-Y0WGKFHE3E}
+    image: beancount-dashboard:local
+    container_name: beancount-dashboard
+    restart: always
+    ports:
+      - "3180:3000"
+    networks:
+      - beancount

@@ -1,0 +1,41 @@
+mutation CancelSubscription($clientId: String!, $subscriptionId: String!) {
+  cancelSubscription(clientId: $clientId, subscriptionId: $subscriptionId) {
+    success
+    message
+  }
+}
+
+mutation ResumeSubscription($clientId: String!, $subscriptionId: String!) {
+  resumeSubscription(clientId: $clientId, subscriptionId: $subscriptionId) {
+    success
+    message
+  }
+}
+
+mutation CreateSubscriptionSession($clientId: String!, $priceId: String!) {
+  createSubscriptionSession(clientId: $clientId, priceId: $priceId) {
+    success
+    sessionId
+    sessionUrl
+    message
+  }
+}
+
+mutation CreateStripePortalSession($clientId: String!) {
+  createStripePortalSession(clientId: $clientId) {
+    success
+    sessionId
+    sessionUrl
+    message
+  }
+}
+
+mutation UpgradeSubscription($clientId: String!, $priceId: String!) {
+  upgradeSubscription(clientId: $clientId, priceId: $priceId) {
+    success
+    message
+    clientSecret
+    subscriptionId
+    newTier
+  }
+}

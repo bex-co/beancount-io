@@ -1,0 +1,5 @@
+query GetLedgerAssetDownloadUrl($ledgerRepoId: Int!, $filename: String!) {
+  getLedgerAssetDownloadUrl(ledgerRepoId: $ledgerRepoId, filename: $filename) {
+    downloadUrl
+  }
+}

@@ -1,0 +1,506 @@
+import type { TranslationEntry } from "@/i18n";
+
+const jaAuth: Record<string, TranslationEntry> = {
+  "auth.alreadyHaveAccount": {
+    message: "アカウントをお持ちですか？ サインイン",
+    description: "Prompt text asking if user already has account",
+  },
+  "auth.alreadyHaveAccountQuestion": {
+    message: "すでにアカウントをお持ちですか？",
+    description: "Prompt asking if user has existing account",
+  },
+  "auth.authenticating": {
+    message: "認証中...",
+    description: "Message shown during authentication process",
+  },
+  "auth.authenticationError": {
+    message: "認証エラー",
+    description: "Title for authentication error dialog",
+  },
+  "auth.authenticationErrorOccurred": {
+    message: "認証中にエラーが発生しました",
+    description: "Generic authentication error message",
+  },
+  "auth.authenticationFailed": {
+    message: "認証に失敗しました",
+    description: "Error message when authentication fails",
+  },
+  "auth.backToSignIn": {
+    message: "サインインに戻る",
+    description: "Link text to return to sign in page",
+  },
+  "auth.confirmNewPassword": {
+    message: "新しいパスワードの確認",
+    description: "Label for confirm password field",
+  },
+  "auth.confirmPassword": {
+    message: "パスワードの確認",
+    description: "Label for password confirmation input field",
+  },
+  "auth.confirmPasswordRequired": {
+    message: "パスワードを確認してください",
+    description: "Validation error when password confirmation is missing",
+  },
+  "auth.confirmYourNewPassword": {
+    message: "新しいパスワードを確認してください",
+    description: "Placeholder for confirm password input",
+  },
+  "auth.confirmYourPassword": {
+    message: "パスワードを確認してください",
+    description: "Placeholder for password confirmation",
+  },
+  "auth.createAccount": {
+    message: "アカウントを作成",
+    description: "Button to submit registration",
+  },
+  "auth.createYourAccount": {
+    message: "アカウントを作成する",
+    description: "Registration page title",
+  },
+  "auth.creatingAccount": {
+    message: "アカウント作成中...",
+    description: "Button state while creating account",
+  },
+  "auth.dontHaveAccount": {
+    message: "アカウントをお持ちでないですか？",
+    description: "Prompt text asking if user doesn't have account",
+  },
+  "auth.email": {
+    message: "メールアドレス",
+    description: "Label for email input field",
+  },
+  "auth.emailAddress": {
+    message: "メールアドレス",
+    description: "Email address field label",
+  },
+  "auth.emailInvalid": {
+    message: "有効なメールアドレスを入力してください",
+    description: "Validation error when email format is invalid",
+  },
+  "auth.emailRequired": {
+    message: "メールアドレスは必須です",
+    description: "Validation error when email is not provided",
+  },
+  "auth.emailSent": {
+    message: "メールを送信しました！",
+    description: "Success title after email sent",
+  },
+  "auth.emailSentDescription": {
+    message:
+      "パスワードリセットのリンクをメールアドレスに送信しました。受信トレイを確認し、手順に従ってパスワードをリセットしてください。",
+    description: "Detailed success message after reset email sent",
+  },
+  "auth.enterCredentials": {
+    message: "ダッシュボードにアクセスするための認証情報を入力してください",
+    description: "Login page description",
+  },
+  "auth.enterDetailsToGetStarted": {
+    message: "ダッシュボードを始めるために詳細を入力してください",
+    description: "Registration page description",
+  },
+  "auth.enterEmailForReset": {
+    message:
+      "メールアドレスを入力すると、パスワードリセット用のリンクをお送りします",
+    description: "Instructions on forgot password page",
+  },
+  "auth.enterNewPasswordBelow": {
+    message: "以下に新しいパスワードを入力してください",
+    description: "Instruction for reset password form",
+  },
+  "auth.enterUsername": {
+    message: "ユーザー名を入力してください（小文字、最大20文字）",
+    description: "Placeholder for username input with character limit",
+  },
+  "auth.enterYourEmail": {
+    message: "メールアドレスを入力してください",
+    description: "Placeholder for email input",
+  },
+  "auth.enterYourNewPassword": {
+    message: "新しいパスワードを入力してください",
+    description: "Placeholder for new password input",
+  },
+  "auth.enterYourPassword": {
+    message: "パスワードを入力してください（最低6文字）",
+    description: "Placeholder for password input with requirement",
+  },
+  "auth.firstName": {
+    message: "名",
+    description: "Label for first name input field",
+  },
+  "auth.lastName": {
+    message: "姓",
+    description: "Label for last name input field",
+  },
+  "auth.enterFirstName": {
+    message: "名を入力してください",
+    description: "Placeholder for first name input",
+  },
+  "auth.enterLastName": {
+    message: "姓を入力してください",
+    description: "Placeholder for last name input",
+  },
+  "auth.firstNameMaxLength": {
+    message: "名は50文字以内で入力してください",
+    description: "Validation error when first name is too long",
+  },
+  "auth.lastNameMaxLength": {
+    message: "姓は50文字以内で入力してください",
+    description: "Validation error when last name is too long",
+  },
+  "auth.failedToResetPassword": {
+    message: "パスワードのリセットに失敗しました。もう一度お試しください。",
+    description: "Error message when password reset fails",
+  },
+  "auth.failedToSendResetEmail": {
+    message:
+      "パスワードリセットメールの送信に失敗しました。もう一度お試しください。",
+    description: "Error when reset email fails to send",
+  },
+  "auth.forgotPassword": {
+    message: "パスワードをお忘れですか？",
+    description: "Link text for forgot password feature",
+  },
+  "auth.forgotYourPassword": {
+    message: "パスワードをお忘れですか？",
+    description: "Forgot password page title",
+  },
+  "auth.loggingOut": {
+    message: "ログアウト中",
+    description: "Title shown while logging out",
+  },
+  "auth.loggingOutMessage": {
+    message: "サインアウト中です。しばらくお待ちください...",
+    description: "Message shown while logging out",
+  },
+  "auth.login": {
+    message: "ログイン / サインアップ",
+    description: "Button label for login or signup",
+  },
+  "auth.loginError": {
+    message: "ログイン中にエラーが発生しました",
+    description: "Generic login error message",
+  },
+  "auth.loginFailed": {
+    message: "ログインに失敗しました",
+    description: "Error title when login fails",
+  },
+  "auth.logout": {
+    message: "ログアウト",
+    description: "Button label to log out",
+  },
+  "auth.logoutAlertCancel": {
+    message: "キャンセル",
+    description: "Cancel button in logout confirmation dialog",
+  },
+  "auth.logoutAlertConfirm": {
+    message: "ログアウト",
+    description: "Confirm button in logout confirmation dialog",
+  },
+  "auth.logoutAlertMsg": {
+    message: "本当にログアウトしますか？",
+    description: "Confirmation message asking user if they want to log out",
+  },
+  "auth.newPassword": {
+    message: "新しいパスワード",
+    description: "Label for new password field",
+  },
+  "auth.newPasswordMinLength": {
+    message: "パスワードは6文字以上で入力してください",
+    description: "Validation error for password length",
+  },
+  "auth.newPasswordMaxLength": {
+    message: "パスワードは128文字以下で入力してください",
+    description:
+      "Validation error when new password exceeds the maximum length",
+  },
+  "auth.newPasswordRequired": {
+    message: "パスワードは必須です",
+    description: "Validation error for missing new password",
+  },
+  "auth.password": {
+    message: "パスワード",
+    description: "Label for password input field",
+  },
+  "auth.passwordMinLength": {
+    message: "パスワードは6文字以上で入力してください",
+    description: "Validation error when password is too short",
+  },
+  "auth.passwordMaxLength": {
+    message: "パスワードは128文字以下で入力してください",
+    description: "Validation error when password exceeds the maximum length",
+  },
+  "auth.passwordRequired": {
+    message: "パスワードは必須です",
+    description: "Validation error when password is not provided",
+  },
+  "auth.passwordResetSuccessMessage": {
+    message:
+      "パスワードがリセットされました。ログインページにリダイレクト中...",
+    description: "Success message description",
+  },
+  "auth.passwordResetSuccessful": {
+    message: "パスワードのリセットが完了しました！",
+    description: "Success message title",
+  },
+  "auth.passwordsDoNotMatch": {
+    message: "パスワードが一致しません",
+    description: "Validation error when passwords don't match",
+  },
+  "auth.redirectingToLogin": {
+    message: "ログインページにリダイレクト中...",
+    description: "Message shown after successful logout",
+  },
+  "auth.registrationError": {
+    message: "登録中にエラーが発生しました",
+    description: "Generic registration error",
+  },
+  "auth.registrationFailed": {
+    message: "登録に失敗しました",
+    description: "Error when registration fails",
+  },
+  "auth.resetEmailError": {
+    message: "パスワードリセットメールの送信中にエラーが発生しました",
+    description: "Generic error for reset email sending",
+  },
+  "auth.resetPassword": {
+    message: "パスワードをリセット",
+    description: "Page title or button for password reset",
+  },
+  "auth.resetPasswordButton": {
+    message: "パスワードをリセット",
+    description: "Button text to reset password",
+  },
+  "auth.resetPasswordDescription": {
+    message:
+      "メールアドレスを入力すると、パスワードリセット用のリンクをお送りします。",
+    description: "Instructions for password reset process",
+  },
+  "auth.resetPasswordEmailSent": {
+    message:
+      "メールアドレスにメールを送信しました。メールを確認してパスワードをリセットしてください。",
+    description: "Success message after password reset email is sent",
+  },
+  "auth.resetPasswordError": {
+    message: "パスワードのリセット中にエラーが発生しました",
+    description: "Generic error message for password reset",
+  },
+  "auth.resetYourPassword": {
+    message: "パスワードをリセットする",
+    description: "Title for reset password page",
+  },
+  "auth.resettingPassword": {
+    message: "パスワードをリセット中...",
+    description: "Button text while resetting password",
+  },
+  "auth.sendResetLink": {
+    message: "リセットリンクを送信",
+    description: "Button to send password reset link",
+  },
+  "auth.sendResetPasswordEmail": {
+    message: "パスワードリセットメールを送信",
+    description: "Button label to send password reset email",
+  },
+  "auth.sending": {
+    message: "送信中...",
+    description: "Button state while sending email",
+  },
+  "auth.signIn": {
+    message: "サインイン",
+    description: "Button label for sign in action",
+  },
+  "auth.signUp": {
+    message: "サインアップ",
+    description: "Button label for sign up action",
+  },
+  "auth.tokenExpired": {
+    message: "トークンの有効期限切れ",
+    description: "Title when reset token is expired",
+  },
+  "auth.tokenExpiredDescription": {
+    message: "パスワードリセットトークンの有効期限が切れているか無効です",
+    description: "Description when token is expired",
+  },
+  "auth.tokenExpiredMessage": {
+    message:
+      "このパスワードリセットトークンの有効期限が切れています。新しいトークンをリクエストしてください。",
+    description: "Alert message for expired token",
+  },
+  "auth.username": {
+    message: "ユーザー名",
+    description: "Username field label",
+  },
+  "auth.usernameAlphanumeric": {
+    message: "ユーザー名には文字と数字のみ使用できます",
+    description: "Validation error when username contains invalid characters",
+  },
+  "auth.usernameLowercaseAlphanumeric": {
+    message: "ユーザー名には小文字、数字、アンダースコアのみ使用できます",
+    description:
+      "Validation error when username contains invalid characters (must be lowercase)",
+  },
+  "auth.usernameMaxLength": {
+    message: "ユーザー名は20文字以内で入力してください",
+    description: "Validation error when username too long",
+  },
+  "auth.usernameRequired": {
+    message: "ユーザー名は必須です",
+    description: "Validation error when username is missing",
+  },
+  "auth.usernamePublicHint": {
+    message: "このユーザー名は公開され、他のユーザーに表示されます",
+    description: "Hint text explaining that username is publicly visible",
+  },
+  "auth.welcomeBack": {
+    message: "おかえりなさい",
+    description: "Login page welcome title",
+  },
+  "auth.signInToAccount": {
+    message: "Beancountアカウントにサインイン",
+    description: "Login page subtitle",
+  },
+  "auth.secureAccess": {
+    message: "セキュアアクセス",
+    description: "Secure access feature title",
+  },
+  "auth.secureAccessDescription": {
+    message:
+      "あなたの財務データはエンタープライズグレードのセキュリティで保護されています",
+    description: "Secure access feature description",
+  },
+  "auth.realTimeInsights": {
+    message: "リアルタイムインサイト",
+    description: "Real-time insights feature title",
+  },
+  "auth.realTimeInsightsDescription": {
+    message: "財務状況とトレンドを即座に把握できます",
+    description: "Real-time insights feature description",
+  },
+  "auth.lovedByUsers": {
+    message: "ユーザーに愛されています",
+    description: "Loved by users feature title",
+  },
+  "auth.lovedByUsersDescription": {
+    message:
+      "会計ニーズにBeancountを信頼する何千人もの満足ユーザーに加わりましょう",
+    description: "Loved by users feature description",
+  },
+  "auth.verifyYourEmail": {
+    message: "メールアドレスを確認する",
+    description: "OTP verification page title",
+  },
+  "auth.otpSentToYourEmail": {
+    message: "メールアドレスに4桁のコードを送信しました",
+    description: "Message showing OTP was sent to email",
+  },
+  "auth.enterOtpCode": {
+    message: "コードを入力してください",
+    description: "Label for OTP input field",
+  },
+  "auth.otpRequired": {
+    message: "OTPコードは必須です",
+    description: "Validation error when OTP is missing",
+  },
+  "auth.otpInvalidLength": {
+    message: "OTPコードは4桁でなければなりません",
+    description: "Validation error when OTP length is invalid",
+  },
+  "auth.otpVerificationFailed": {
+    message: "OTP検証に失敗しました",
+    description: "Error message when OTP verification fails",
+  },
+  "auth.otpVerificationError": {
+    message: "OTP検証中にエラーが発生しました",
+    description: "Generic error message for OTP verification",
+  },
+  "auth.sessionExpired": {
+    message: "セッションの有効期限切れ",
+    description: "Title when signup session is expired",
+  },
+  "auth.sessionExpiredDescription": {
+    message: "サインアップセッションの有効期限が切れているか無効です",
+    description: "Description when session is expired",
+  },
+  "auth.sessionExpiredMessage": {
+    message:
+      "このサインアップセッションの有効期限が切れています。登録プロセスを最初からやり直してください。",
+    description: "Alert message for expired session",
+  },
+  "auth.backToSignUp": {
+    message: "サインアップに戻る",
+    description: "Link text to return to sign up page",
+  },
+  "auth.didNotReceiveOtp": {
+    message: "コードが届きませんでしたか？",
+    description: "Prompt asking if user didn't receive OTP",
+  },
+  "auth.verifying": {
+    message: "検証中...",
+    description: "Button text while verifying OTP",
+  },
+  "auth.verifyEmail": {
+    message: "メールを確認",
+    description: "Button text to verify email with OTP",
+  },
+  "auth.termsAgreementPrefix": {
+    message: "「アカウントを作成」をクリックすることで、beancount.ioの",
+    description: "Prefix text before terms and privacy links on sign up form",
+  },
+  "auth.termsOfUse": {
+    message: "利用規約",
+    description: "Link text for terms of use",
+  },
+  "auth.privacyPolicy": {
+    message: "プライバシーポリシー",
+    description: "Link text for privacy policy",
+  },
+  "auth.and": {
+    message: "および",
+    description: "Conjunction between terms and privacy links",
+  },
+  "auth.oauthSignInToContinue": {
+    message: "Sign in to continue",
+    description: "OAuth consent page login step title",
+  },
+  "auth.oauthAppWantsAccess": {
+    message: "An app wants to access your Beancount ledger.",
+    description: "OAuth consent page login step description",
+  },
+  "auth.oauthChooseLedger": {
+    message: "Choose a ledger",
+    description: "OAuth consent page ledger step title",
+  },
+  "auth.oauthSelectLedger": {
+    message: "Select which ledger to grant access to.",
+    description: "OAuth consent page ledger step description",
+  },
+  "auth.oauthApproveAccess": {
+    message: "Approve access",
+    description: "OAuth consent page approve button",
+  },
+  "auth.oauthNoLedgersMessage": {
+    message: "No ledgers found. Please create one first.",
+    description: "OAuth consent page empty ledger state message",
+  },
+  "auth.oauthDontHaveAccount": {
+    message: "Don't have an account?",
+    description: "OAuth consent page link to register",
+  },
+  "auth.oauthAlreadyHaveAccount": {
+    message: "Already have an account?",
+    description: "OAuth consent page link back to sign in",
+  },
+  "auth.oauthRegisterToContinue": {
+    message: "Create an account to continue",
+    description: "OAuth consent page register step title",
+  },
+  "auth.oauthVerifyEmailToContinue": {
+    message: "Verify your email to continue",
+    description: "OAuth consent page OTP step title",
+  },
+  "auth.loginSessionExpiredMessage": {
+    message: "セッションの有効期限が切れました。もう一度ログインしてください。",
+    description:
+      "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
+  },
+};
+export default jaAuth;

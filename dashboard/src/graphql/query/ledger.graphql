@@ -1,0 +1,257 @@
+mutation CreateLedger(
+  $name: String!
+  $private: Boolean
+  $description: String
+  $template: LedgerTemplate
+) {
+  createLedger(
+    name: $name
+    private: $private
+    description: $description
+    template: $template
+  ) {
+    updatedAt
+    sshUrl
+    size
+    private
+    name
+    id
+    fullName
+    empty
+    createdAt
+    httpUrl
+    description
+    permissions {
+      admin
+      pull
+      push
+    }
+  }
+}
+
+mutation UpdateLedger(
+  $ledgerId: String!
+  $name: String
+  $private: Boolean
+  $description: String
+) {
+  updateLedger(
+    ledgerId: $ledgerId
+    name: $name
+    private: $private
+    description: $description
+  ) {
+    id
+    name
+    fullName
+    httpUrl
+    sshUrl
+    private
+    empty
+    size
+    createdAt
+    updatedAt
+    description
+    permissions {
+      admin
+      pull
+      push
+    }
+  }
+}
+
+mutation DeleteLedger($ledgerId: String!) {
+  deleteLedger(ledgerId: $ledgerId) {
+    ledgerId
+  }
+}
+
+query ListLedgers($limit: Float, $page: Float) {
+  listLedgers(limit: $limit, page: $page) {
+    id
+    name
+    fullName
+    httpUrl
+    sshUrl
+    private
+    empty
+    size
+    createdAt
+    updatedAt
+    description
+    permissions {
+      admin
+      pull
+      push
+    }
+  }
+}
+
+query GetLedger($ledgerId: String!) {
+  getLedger(ledgerId: $ledgerId) {
+    id
+    name
+    fullName
+    httpUrl
+    sshUrl
+    private
+    empty
+    size
+    createdAt
+    updatedAt
+    description
+    isStarred
+    permissions {
+      admin
+      pull
+      push
+    }
+    options {
+      title
+      nameAssets
+      nameEquity
+      nameExpenses
+      nameIncome
+      nameLiabilities
+      accountCurrentConversions
+      accountCurrentEarnings
+      renderCommas
+      operatingCurrency
+    }
+    favaOptions {
+      accountJournalIncludeChildren
+      autoReload
+      collapsePattern
+      conversionCurrencies
+      currencyColumn
+      defaultPage
+      fiscalYearEnd {
+        month
+        day
+      }
+      indent
+      invertIncomeLiabilitiesEquity
+      language
+      locale
+      showAccountsWithZeroBalance
+      showAccountsWithZeroTransactions
+      showClosedAccounts
+      sidebarShowQueries
+      unrealized
+      upcomingEvents
+      uptodateIndicatorGreyLookbackDays
+      useExternalEditor
+    }
+    bcioOptions {
+      defaultFile
+      transactionFile
+      accountFile
+      priceFile
+      balanceFile
+      noteFile
+      padFile
+    }
+  }
+}
+
+query GetLedgerSourceFiles($ledgerId: String!) {
+  getLedgerSourceFiles(ledgerId: $ledgerId)
+}
+
+query GetLedgerOperatingCurrencies($ledgerId: String!) {
+  getLedger(ledgerId: $ledgerId) {
+    id
+    options {
+      operatingCurrency
+    }
+  }
+}
+
+query SearchLedgers(
+  $limit: Float
+  $page: Float
+  $order: String
+  $sort: String
+  $exclusive: Boolean
+  $mode: String
+  $archived: Boolean
+  $template: Boolean
+  $uid: Float
+  $includeDesc: Boolean
+  $topic: Boolean
+  $q: String
+  $private: Boolean
+  $starredBy: Float
+  $teamId: Float
+  $priorityOwnerId: Float
+  $isPrivate: Boolean
+) {
+  searchLedgers(
+    limit: $limit
+    page: $page
+    order: $order
+    sort: $sort
+    exclusive: $exclusive
+    mode: $mode
+    archived: $archived
+    template: $template
+    uid: $uid
+    includeDesc: $includeDesc
+    topic: $topic
+    q: $q
+    private: $private
+    starredBy: $starredBy
+    teamId: $teamId
+    priorityOwnerId: $priorityOwnerId
+    isPrivate: $isPrivate
+  ) {
+    updatedAt
+    sshUrl
+    size
+    private
+    name
+    createdAt
+    empty
+    fullName
+    httpUrl
+    id
+    description
+    permissions {
+      admin
+      pull
+      push
+    }
+  }
+}
+
+query ListUserOwnedLedgers($limit: Float, $page: Float) {
+  listUserOwnedLedgers(limit: $limit, page: $page) {
+    updatedAt
+    sshUrl
+    size
+    private
+    id
+    httpUrl
+    fullName
+    empty
+    description
+    createdAt
+    name
+  }
+}
+
+mutation StarLedger($ledgerId: String!) {
+  starLedger(ledgerId: $ledgerId) {
+    success
+    isStarred
+    message
+  }
+}
+
+mutation UnstarLedger($ledgerId: String!) {
+  unstarLedger(ledgerId: $ledgerId) {
+    success
+    isStarred
+    message
+  }
+}

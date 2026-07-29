@@ -1,0 +1,62 @@
+query GetLedgerTrialBalance(
+  $ledgerId: String!
+  $conversion: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  getLedgerAccounts(ledgerId: $ledgerId, status: "closed")
+  getLedgerTrialBalance(
+    ledgerId: $ledgerId
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    incomeHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    liabilitiesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    equityHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    expensesHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+    assetsHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+  }
+}

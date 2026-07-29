@@ -1,0 +1,51 @@
+query GetLedgerIncomeStatement(
+  $ledgerId: String!
+  $conversion: String
+  $account: String
+  $filter: String
+  $time: String
+  $interval: String
+) {
+  getLedgerAccounts(ledgerId: $ledgerId, status: "closed")
+  getLedgerIncomeStatement(
+    ledgerId: $ledgerId
+    conversion: $conversion
+    account: $account
+    filter: $filter
+    time: $time
+    interval: $interval
+  ) {
+    incomeData {
+      date
+      balance
+      accountBalances
+    }
+    expensesData {
+      date
+      balance
+      accountBalances
+    }
+    netProfitData {
+      date
+      balance
+    }
+    expensesHierarchyData {
+      account
+      balance
+      balanceChildren
+      cost
+      costChildren
+      hasTxns
+      children
+    }
+    incomeHierarchyData {
+      account
+      balance
+      balanceChildren
+      cost
+      costChildren
+      hasTxns
+      children
+    }
+  }
+}
