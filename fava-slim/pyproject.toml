@@ -2,6 +2,7 @@
 name = "fava-slim"
 version = "0.1.0"
 description = "Slim Fava beancount parsing and reporting library"
+license = { file = "LICENSE" }
 requires-python = ">=3.12"
 dependencies = [
     "beancount>=3.2.0",
