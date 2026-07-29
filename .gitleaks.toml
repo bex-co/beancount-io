@@ -1,0 +1,17 @@
+# gitleaks configuration for the beancount-io monorepo.
+# Extends the built-in ruleset; only adds narrowly-scoped allowlists for known
+# non-secrets. Never allowlist a whole directory or disable a rule globally.
+
+[extend]
+useDefault = true
+
+# Sample/example JWTs used as fixtures in unit tests are not real credentials.
+# Scoped to the `jwt` rule AND test-file paths — a real AWS key, private key, or
+# generic secret in a test file is still caught.
+[[allowlists]]
+description = "JWT fixtures in unit tests"
+targetRules = ["jwt"]
+paths = [
+  '''.*\.test\.tsx?$''',
+  '''.*(^|/)__tests__/.*''',
+]
