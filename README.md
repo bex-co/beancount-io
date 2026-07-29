@@ -4,6 +4,7 @@
 
 <p align="center">
   <img src="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml/badge.svg"/>
+  <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="License: MIT"/></a>
 </p>
 
 Monorepo for [Beancount.io](https://beancount.io/) — Double-entry bookkeeping made easy.
@@ -27,6 +28,15 @@ yarn start
 ```
 
 See [`mobile/README.md`](./mobile/README.md) for full details.
+
+## Contributing
+
+See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for repository layout, development setup,
+the commit convention, and the rule that secrets never enter this repo.
+
+## License
+
+[MIT](./LICENSE) © Beancount.io
 
 ## Have a question?
 
