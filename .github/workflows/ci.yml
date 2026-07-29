@@ -27,7 +27,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node 22: a transitive dep (listr2@10.2.x) requires >=22.13.0 to install.
+          # Satisfies mobile/package.json engines (>=20.19.4).
+          node-version: 22
           cache: yarn
           cache-dependency-path: mobile/yarn.lock
       - run: yarn install
