@@ -334,7 +334,7 @@ export function TransactionReviewTable({
     )
     .map((account) => {
       // The mask disambiguates two accounts a bank labelled the same way.
-      const name = account.accountName
+      const name = account.accountName;
       return {
         value: account.id,
         label:
