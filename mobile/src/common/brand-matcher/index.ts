@@ -233,14 +233,15 @@ export function resolveBrandDomain(
 }
 
 /**
- * Build a logo.dev image URL for a domain. Requests a 128px retina PNG (~3× the
- * 40px render box) for crisp, full-colour marks. Returns null when no token is
- * configured, so the caller falls back to the account-type glyph.
+ * Build a proxied logo URL for a domain. Points at our opengraph-image service
+ * (config.logoProxyUrl), which fetches from logo.dev once and caches the result,
+ * so the app never talks to a third party directly. Returns null when no base URL
+ * is configured, so the caller falls back to the account-type glyph.
  *
  * @param domain - Brand domain, e.g. "netflix.com".
- * @param token - logo.dev publishable token (safe to ship in the client).
+ * @param baseUrl - Logo proxy endpoint, e.g. ".../api/logo".
  */
-export function buildLogoUrl(domain: string, token: string): string | null {
-  if (!domain || !token) return null;
-  return `https://img.logo.dev/${domain}?token=${token}&size=128&format=png&retina=true`;
+export function buildLogoUrl(domain: string, baseUrl: string): string | null {
+  if (!domain || !baseUrl) return null;
+  return `${baseUrl}?domain=${encodeURIComponent(domain)}`;
 }

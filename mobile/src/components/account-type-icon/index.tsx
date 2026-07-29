@@ -100,7 +100,7 @@ export const AccountTypeIcon: React.FC<AccountTypeIconProps> = ({
 
   const accounts = postings.map((p) => p.account);
   const domain = resolveBrandDomain(payee, accounts);
-  const logoUrl = domain ? buildLogoUrl(domain, config.logoDevToken) : null;
+  const logoUrl = domain ? buildLogoUrl(domain, config.logoProxyUrl) : null;
 
   if (logoUrl && failedDomain !== domain) {
     return (

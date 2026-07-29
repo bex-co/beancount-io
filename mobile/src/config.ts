@@ -6,9 +6,12 @@ export const config = {
     mixpanelProjectToken: "", // TODO
   },
   serverUrl: process.env.EXPO_PUBLIC_SERVER_URL || "https://beancount.io/",
-  // logo.dev publishable token for brand logos on transaction rows. It's a
-  // publishable (pk_) key, safe to ship in the client; override per-env with
-  // EXPO_PUBLIC_LOGO_DEV_TOKEN. Empty disables logos (rows fall back to glyphs).
-  logoDevToken:
-    process.env.EXPO_PUBLIC_LOGO_DEV_TOKEN || "pk_a_7xXp04RRy-a518vXGlfw",
+  // Brand logos on transaction rows are proxied + cached through our
+  // opengraph-image service, so the app has no direct third-party (logo.dev)
+  // dependency and logo.dev is hit at most once per brand across all users.
+  // Override per-env with EXPO_PUBLIC_LOGO_PROXY_URL. Empty disables logos
+  // (rows fall back to glyphs).
+  logoProxyUrl:
+    process.env.EXPO_PUBLIC_LOGO_PROXY_URL ||
+    "https://opengraph-image.blockeden.xyz/api/logo",
 };

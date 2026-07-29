@@ -91,15 +91,15 @@ describe("brand-matcher", () => {
   });
 
   describe("buildLogoUrl", () => {
-    it("builds a logo.dev retina PNG url", () => {
-      expect(buildLogoUrl("netflix.com", "pk_test")).toBe(
-        "https://img.logo.dev/netflix.com?token=pk_test&size=128&format=png&retina=true",
+    it("builds a proxied logo url", () => {
+      expect(buildLogoUrl("netflix.com", "https://ogi.example/api/logo")).toBe(
+        "https://ogi.example/api/logo?domain=netflix.com",
       );
     });
 
-    it("returns null without a token or domain", () => {
+    it("returns null without a base url or domain", () => {
       expect(buildLogoUrl("netflix.com", "")).toBe(null);
-      expect(buildLogoUrl("", "pk_test")).toBe(null);
+      expect(buildLogoUrl("", "https://ogi.example/api/logo")).toBe(null);
     });
   });
 });
