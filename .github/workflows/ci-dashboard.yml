@@ -28,8 +28,9 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 22
-          cache: yarn
-          cache-dependency-path: dashboard/yarn.lock
+      # Enable Corepack (for Yarn 4 per package.json "packageManager") AFTER
+      # setup-node, and don't use setup-node's `cache: yarn` — its cache probe
+      # runs `yarn` before Corepack is enabled and fails on the global Yarn 1.x.
       - run: corepack enable
       - run: yarn install --immutable
       - run: yarn format:check
