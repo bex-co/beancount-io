@@ -5,6 +5,13 @@ Monorepo for [Beancount.io](https://beancount.io/) — double-entry bookkeeping 
 This file holds repo-wide rules. Per-package guidance lives next to the code:
 - `mobile/CLAUDE.md` — React Native app
 
+## Codex and Claude Code compatibility
+- `CLAUDE.md` is the canonical instruction file at every scope. The adjacent `AGENTS.md` must be a relative symlink to it so Claude Code and Codex always read the same instructions; never maintain duplicate copies.
+- When adding, moving, or removing a scoped `CLAUDE.md`, make the same structural change to its `AGENTS.md` symlink. When editing either name, update the canonical `CLAUDE.md` through the symlink rather than replacing the symlink with a regular file.
+- Shared skills live in `skills/.claude/skills/`. The root `.agents/skills` symlink must continue to point there so both agents use the same skill implementation. Edit the canonical skill tree only; do not create divergent Claude-only and Codex-only copies.
+- Write instructions and skills using behavior supported by both Claude Code and Codex. If platform-specific configuration or tooling is unavoidable, label it clearly and provide equivalent behavior for the other agent.
+- After changing instruction files, skills, or their symlinks, verify that each applicable `AGENTS.md` resolves to its sibling `CLAUDE.md` and that `.agents/skills` resolves to `skills/.claude/skills/`.
+
 ## Packages
 
 | Path | Status | Description |
