@@ -1,0 +1,4 @@
+interface:
+  display_name: "Ship"
+  short_description: "Ship main and monitor CI until green"
+  default_prompt: "Use $ship to commit, push, and monitor this repository until green."
