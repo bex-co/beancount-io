@@ -8,6 +8,7 @@ import {
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { fonts } from "@/common/theme";
+import { buildKeyboardShortcutButtons } from "./utils";
 
 export const KEYBOARD_ACCESSORY_BAR_HEIGHT = 44;
 
@@ -52,13 +53,6 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-type Button = {
-  label: string;
-  insert: string;
-  cursorOffset?: number;
-  isDate?: boolean;
-};
-
 function getTodayString(): string {
   const d = new Date();
   const yyyy = d.getFullYear();
@@ -67,25 +61,18 @@ function getTodayString(): string {
   return `${yyyy}-${mm}-${dd}`;
 }
 
-const STATIC_BUTTONS: Button[] = [
-  { label: ":", insert: ":" },
-  { label: '"', insert: '""', cursorOffset: 1 },
-  { label: "#", insert: "#" },
-  { label: "^", insert: "^" },
-  { label: "⇥", insert: "  " },
-];
-
 type KeyboardAccessoryBarProps = {
   onInsert: (text: string, cursorOffset?: number) => void;
+  operatingCurrencies?: string[];
 };
 
-export function KeyboardAccessoryBar({ onInsert }: KeyboardAccessoryBarProps) {
+export function KeyboardAccessoryBar({
+  onInsert,
+  operatingCurrencies = [],
+}: KeyboardAccessoryBarProps) {
   const styles = useThemeStyle(getStyles);
   const today = getTodayString();
-  const buttons: Button[] = [
-    { label: today, insert: today + " ", isDate: true },
-    ...STATIC_BUTTONS,
-  ];
+  const buttons = buildKeyboardShortcutButtons(today, operatingCurrencies);
 
   return (
     <View testID="ledger-editor-quick-buttons" style={styles.bar}>

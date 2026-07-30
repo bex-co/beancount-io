@@ -23,6 +23,8 @@ import {
 import { ColorTheme } from "@/types/theme-props";
 import { fonts, useTheme } from "@/common/theme";
 import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
+import { useSession } from "@/common/hooks/use-session";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { useLedgerGuard } from "@/components/ledger-guard";
@@ -236,6 +238,8 @@ export function LedgerFileEditorScreen(): JSX.Element {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const ledgerId = useLedgerGuard();
+  const { userId } = useSession();
+  const { currencies: operatingCurrencies } = useLedgerMeta(userId, ledgerId);
   usePageView("ledger_file_editor");
 
   const { path, initialLine } = useLocalSearchParams<{
@@ -548,7 +552,10 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
         {isKeyboardVisible && initialized && (
           <View style={[styles.accessoryWrapper, { bottom: keyboardOverlap }]}>
-            <KeyboardAccessoryBar onInsert={handleInsert} />
+            <KeyboardAccessoryBar
+              onInsert={handleInsert}
+              operatingCurrencies={operatingCurrencies}
+            />
           </View>
         )}
       </View>
