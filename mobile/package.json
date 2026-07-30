@@ -91,7 +91,8 @@
   },
   "resolutions": {
     "@types/node": "^26.1.0",
-    "expo-constants": "~57.0.3"
+    "expo-constants": "~57.0.3",
+    "listr2": "9.0.5"
   },
   "devDependencies": {
     "@graphql-codegen/cli": "^7.2.0",
