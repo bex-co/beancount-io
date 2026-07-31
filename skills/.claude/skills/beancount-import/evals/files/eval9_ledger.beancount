@@ -1,0 +1,31 @@
+option "title" "Test Ledger"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Expenses:Food:Groceries USD
+2026-01-01 open Expenses:Transport USD
+2026-01-01 open Equity:Opening-Balances
+
+2026-04-01 * "Opening balance"
+  Assets:Bank:Checking      1200.00 USD
+  Equity:Opening-Balances
+
+2026-05-03 * "TRADER JOES #123"
+  import-id: "ofx:9001"
+  Assets:Bank:Checking       -47.85 USD
+  Expenses:Food:Groceries     47.85 USD
+
+2026-05-06 * "SHELL OIL 5551"
+  import-id: "ofx:9002"
+  Assets:Bank:Checking       -38.00 USD
+  Expenses:Transport          38.00 USD
+
+2026-05-17 * "TRADER JOES #123"
+  import-id: "ofx:9003"
+  Assets:Bank:Checking       -22.10 USD
+  Expenses:Food:Groceries     22.10 USD
+
+2026-05-28 * "SHELL OIL 5551"
+  import-id: "ofx:9004"
+  Assets:Bank:Checking       -61.30 USD
+  Expenses:Transport          61.30 USD

@@ -1,0 +1,9 @@
+option "title" "Test Ledger"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Equity:Opening-Balances
+
+2026-04-01 * "Opening balance"
+  Assets:Bank:Checking       500.00 USD
+  Equity:Opening-Balances

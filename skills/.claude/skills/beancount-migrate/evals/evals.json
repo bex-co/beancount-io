@@ -1,0 +1,89 @@
+{
+  "skill_name": "beancount-migrate",
+  "notes": "Each eval runs in an empty scratch dir with the fixture export copied in as ./export.csv. bean-check is /tmp/beancount_venv/bin/bean-check. eval1-3 are per-source happy paths (Mint, Monarch, QBO); eval4-6 are failure-mode checks (balance delta surfaced, unmapped category never guessed, no conversion before mapping confirm). Fixture arithmetic: eval1 Chase flows sum +1935.81 (opening 1000.00 -> stated 2935.81), Amex flows +370.76 in ledger sign (opening -500.00 -> stated -129.24); eval2 Checking +1945.80 (opening 500.00 -> 2445.80), Savings +501.25 (opening 1000.00 -> 1501.25).",
+  "evals": [
+    {
+      "id": 1,
+      "name": "mint-full-migration",
+      "prompt": "I finally got my Mint export before it died — it's ./export.csv. Migrate me to beancount. Current balances: Chase Checking is 2935.81, my Amex card owes 129.24.",
+      "expected_output": "Fresh ledger scaffolded (beancount-init flow). Mapping tables proposed and confirmed: Chase Checking -> Assets:Bank:ChaseChecking, Amex Card -> Liabilities:CreditCard:Amex; categories mapped, 'Stuff' -> Expenses:Uncategorized (listed, not guessed). The two Credit Card Payment rows merge into ONE transfer transaction. Opening balances computed (Chase 1000.00 on the day before the earliest row; Amex -500.00), endpoint balance assertions appended (2935.81 and -129.24, day-after-last-row dates). 7 transactions from 8 rows (one pair merged). Migration report shows counts, the unmapped category, and balances tying out. bean-check passes.",
+      "files": ["evals/files/eval1_mint.csv"],
+      "expectations": [
+        "Account and category mapping tables are presented and confirmed BEFORE any conversion",
+        "The two Credit Card Payment rows (450.00 debit from Chase, 450.00 credit on Amex, same day) become exactly one two-posting transfer transaction, not two transactions",
+        "Category 'Stuff' maps to Expenses:Uncategorized and is listed in the mapping table and final report with its row count — no invented account",
+        "Opening balance entries: Assets:Bank:ChaseChecking 1000.00 USD and Liabilities:CreditCard:Amex -500.00 USD against Equity:Opening-Balances, dated before the earliest row",
+        "Endpoint balance assertions dated the day AFTER each account's last row: Chase 2935.81 USD, Amex -129.24 USD",
+        "Row-count math is reported: 8 source rows = 7 transactions with 1 transfer pair merged (2 rows), 0 skipped",
+        "Every converted entry carries import-id metadata with a mint: prefix",
+        "Mint's all-positive amounts are signed via the Transaction Type column (debit=out, credit=in) mapped to each account's ledger sign",
+        "bean-check passes on the final ledger"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "monarch-migration-transfer-pair",
+      "prompt": "Migrate my Monarch export ./export.csv to a new beancount ledger. Checking balance is 2445.80 and savings is 1501.25.",
+      "expected_output": "ISO dates parsed without asking; signed amounts verified against a recognizable row. The two Transfer rows (checking -500 / savings +500, same day) merge to one transaction. Interest maps to Income. Openings: Checking 500.00, Savings 1000.00; endpoint assertions 2445.80 / 1501.25. bean-check passes.",
+      "files": ["evals/files/eval2_monarch.csv"],
+      "expectations": [
+        "The two 2026-03-10 Transfer rows become one transaction between Assets accounts",
+        "Interest maps to an Income:... account (row sign +1.25 on the asset, negative Income leg)",
+        "Opening balances 500.00 (checking) and 1000.00 (savings) computed from stated balances minus flows",
+        "Endpoint assertions match the stated balances with day-after dates",
+        "Mapping confirmed before conversion; bean-check passes"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "qbo-migration-split-row",
+      "prompt": "Convert my QuickBooks transaction list export ./export.csv into beancount. Checking balance is 3325.80, savings is 1300.00.",
+      "expected_output": "Header inspected and column mapping confirmed (QBO layouts vary). The -Split- row cannot be categorized from this export: the skill asks the user to re-export with split detail or accept Expenses:Uncategorized — it does not guess. The two Transfer rows pair into one transaction. Sales deposit maps to Income. Openings and endpoint assertions tie to the stated balances; bean-check passes.",
+      "files": ["evals/files/eval3_qbo.csv"],
+      "expectations": [
+        "The column mapping is confirmed with the user before parsing (QBO layouts vary)",
+        "The -Split- row is surfaced with the re-export-or-Uncategorized choice, never silently categorized",
+        "The two 03/09/2026 Transfer rows merge into one Checking->Savings transaction",
+        "The Deposit with Split 'Sales' maps to an Income account",
+        "Endpoint assertions tie to 3325.80 (checking) and 1300.00 (savings); bean-check passes"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "balance-delta-surfaced",
+      "prompt": "Migrate ./export.csv (Mint) to beancount. My Chase Checking OPENED with exactly 1000.00 in early January and the app shows 3000.00 today; Amex owes 129.24.",
+      "expected_output": "With both anchors stated, the math doesn't tie: 1000.00 + 1935.81 of flows = 2935.81, not 3000.00. The skill surfaces the 64.19 delta with candidate causes (rows missing from export, pending transactions, wrong stated balance) instead of forcing a tie-out. It only books an Equity:Migration-Residual entry if the user explicitly accepts the discrepancy; it never silently adjusts amounts or drops the assertion.",
+      "files": ["evals/files/eval1_mint.csv"],
+      "expectations": [
+        "The 64.19 USD delta between stated (3000.00) and computed (2935.81) is reported explicitly with its candidate causes",
+        "No amount is adjusted and no row is invented to force the assertion to pass",
+        "An Equity:Migration-Residual posting is offered but only booked on explicit user acceptance",
+        "If the user does not accept, the report states the migration is complete except the unexplained delta, and which assertion would fail"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "unmapped-category-never-guessed",
+      "prompt": "Migrate ./export.csv (Mint) to beancount. Balances: Chase 2935.81, Amex owes 129.24. Map the categories however seems standard.",
+      "expected_output": "Despite the user delegating mapping, the category 'Stuff' has no standard mapping: it goes to Expenses:Uncategorized, visibly listed in the mapping table and the final report with its row count — the skill does not invent a plausible account like Expenses:Shopping for it without the user seeing and confirming the mapping table.",
+      "files": ["evals/files/eval1_mint.csv"],
+      "expectations": [
+        "The mapping table is still shown for confirmation even though the user said 'however seems standard'",
+        "'Stuff' lands in Expenses:Uncategorized (or an account the user explicitly confirmed), never a silently invented specific account",
+        "The final report lists the unmapped category and its row count"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "no-conversion-before-confirm",
+      "prompt": "Here's my Mint export ./export.csv — migrate it. Chase balance 2935.81, Amex owes 129.24. Walk me through it.",
+      "expected_output": "The skill identifies the source, proposes the account and category mapping tables, and stops for confirmation. No ledger files are written (beyond any beancount-init scaffold the user approved) until the user confirms the mappings.",
+      "files": ["evals/files/eval1_mint.csv"],
+      "expectations": [
+        "Both mapping tables (accounts, categories) are presented before any transaction is converted",
+        "No transaction entries exist on disk at the point the mapping confirmation is requested",
+        "After confirmation, conversion proceeds and bean-check passes"
+      ]
+    }
+  ]
+}

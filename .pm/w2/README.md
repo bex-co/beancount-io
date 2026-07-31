@@ -5,7 +5,8 @@
 ## Milestones
 
 - [x] **m1** — beancount-reconcile: statement-vs-ledger diff + balance assertion (9 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research)
-- [ ] **m2** — beancount-importer-author: agent writes/repairs beangulp importers (8 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research)
-- [ ] **m3** — beancount-migrate: Mint/Monarch/QBO exports → working ledger (8 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research)
-- [ ] **m4** — beancount-ask: local BQL Q&A over the ledger (8 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research)
-- [ ] **m5** — beancount-close: month-end close ritual (8 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research) — sequenced after m1
+- [x] **m2** — beancount-importer-author: agent writes/repairs beangulp importers (8 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research)
+- [x] **m3** — beancount-migrate: Mint/Monarch/QBO exports → working ledger (8 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research)
+- [x] **m4** — beancount-ask: local BQL Q&A over the ledger (8 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research)
+- [x] **m5** — beancount-close: month-end close ritual (8 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research) — sequenced after m1
+- [x] **m6** — beancount-import: bank CSV/OFX to verified, deduplicated entries (10 tasks) ← from import-architecture design 2026-07-31

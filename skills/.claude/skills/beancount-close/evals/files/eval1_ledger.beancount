@@ -1,0 +1,52 @@
+option "title" "Test Ledger"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Liabilities:CreditCard:Amex USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Food:Groceries USD
+2026-01-01 open Expenses:Transport:Gas USD
+2026-01-01 open Expenses:Entertainment:Streaming USD
+2026-01-01 open Equity:Opening-Balances
+
+2026-04-01 * "Opening balance"
+  Assets:Bank:Checking      5000.00 USD
+  Equity:Opening-Balances
+
+2026-04-01 * "Opening balance"
+  Liabilities:CreditCard:Amex   -200.00 USD
+  Equity:Opening-Balances
+
+2026-04-15 * "NETFLIX" "Monthly subscription"
+  Liabilities:CreditCard:Amex    -15.49 USD
+  Expenses:Entertainment:Streaming 15.49 USD
+
+2026-04-18 * "TRADER JOES" "Groceries"
+  Liabilities:CreditCard:Amex    -66.30 USD
+  Expenses:Food:Groceries         66.30 USD
+
+2026-05-15 * "NETFLIX" "Monthly subscription"
+  Liabilities:CreditCard:Amex    -15.49 USD
+  Expenses:Entertainment:Streaming 15.49 USD
+
+2026-05-21 * "TRADER JOES" "Groceries"
+  Liabilities:CreditCard:Amex    -71.85 USD
+  Expenses:Food:Groceries         71.85 USD
+
+2026-06-01 balance Assets:Bank:Checking  5000.00 USD
+
+2026-06-05 * "ACME CORP" "Salary"
+  Assets:Bank:Checking      3000.00 USD
+  Income:Salary            -3000.00 USD
+
+2026-06-09 * "TRADER JOES" "Groceries"
+  Liabilities:CreditCard:Amex    -78.20 USD
+  Expenses:Food:Groceries         78.20 USD
+
+2026-06-16 * "SHELL OIL" "Gas"
+  Assets:Bank:Checking       -50.00 USD
+  Expenses:Transport:Gas          50.00 USD
+
+2026-06-21 ! "WHOLE FOODS" "Groceries - verify amount"
+  Assets:Bank:Checking       -63.40 USD
+  Expenses:Food:Groceries     63.40 USD

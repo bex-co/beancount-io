@@ -1,0 +1,6 @@
+"Date","Transaction Type","No.","Name","Memo/Description","Account","Split","Amount"
+"03/03/2026","Expense","","Trader Joes","TRADER JOES #123","Checking","Groceries","-54.20"
+"03/06/2026","Deposit","","Acme Corp","ACME PAYROLL","Checking","Sales","2500.00"
+"03/09/2026","Transfer","","","TO SAVINGS","Checking","Savings","-300.00"
+"03/09/2026","Transfer","","","FROM CHECKING","Savings","Checking","300.00"
+"03/12/2026","Expense","","Costco","COSTCO WHOLESALE","Checking","-Split-","-120.00"

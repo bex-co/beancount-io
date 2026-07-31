@@ -1,0 +1,19 @@
+option "title" "Test Ledger"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Food:Groceries USD
+2026-01-01 open Equity:Opening-Balances
+
+2026-04-01 * "Opening balance"
+  Assets:Bank:Checking      2000.00 USD
+  Equity:Opening-Balances
+
+2026-04-08 * "WHOLE FOODS MARKET"
+  Assets:Bank:Checking       -51.30 USD
+  Expenses:Food:Groceries     51.30 USD
+
+2026-04-15 * "ACME CORP PAYROLL"
+  Assets:Bank:Checking      2500.00 USD
+  Income:Salary            -2500.00 USD

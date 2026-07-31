@@ -1,0 +1,85 @@
+{
+  "skill_name": "beancount-importer-author",
+  "notes": "Each eval runs in a scratch dir with fixtures copied in. Python + beangulp: /tmp/beancount_venv/bin/python (pip install beangulp beancount if missing). eval1-3 are happy paths (author from sample, graduate from beancount-import config, drift repair); eval4-6 are failure modes (ambiguity asks, red harness never handed over, wiring confirm-gated).",
+  "evals": [
+    {
+      "id": 1,
+      "name": "author-from-sample",
+      "prompt": "Write me a beangulp importer for my Chase checking CSV — here's a sample at ./sample.csv. The account is Assets:Bank:Checking. Put it at ./importers/chase.py.",
+      "expected_output": "A csvbase-based importer with a narrow header-signature identify(), self-test CLI via beangulp.testing.main. The skill copies the sample into a test corpus dir, runs generate, walks the user through eyeballing the golden rows against the raw sample, then runs test until PASSED. The importer posts only the source-account leg (no invented counter-accounts).",
+      "files": ["evals/files/eval1_sample.csv"],
+      "expectations": [
+        "The importer subclasses beangulp.importers.csvbase.Importer (declarative columns), not a hand-rolled CSV parser",
+        "identify() checks the header signature (Date,Description,Amount), not just the .csv extension",
+        "The file ends with the beangulp.testing.main self-test CLI block",
+        "generate is run to produce the golden file and the user is asked to eyeball golden rows against the raw sample before it is blessed",
+        "test is run and reports PASSED before the skill declares the importer done",
+        "Extraction contains only source-account postings — no guessed counter-accounts hardcoded"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "graduate-from-import-config",
+      "prompt": "I've been importing this source with beancount-import for a while — codify it as a real importer. My ledger is ./ledger.beancount and a fresh sample is ./sample.csv.",
+      "expected_output": "The skill reads the ;; beancount-import config block in the ledger (source chase-checking: account Assets:Bank:Checking, csv columns date=1,desc=2,amount=3, MDY, negative=outflow) and uses it as the spec — it does NOT re-ask the account, date format, or sign convention. Importer authored and tested green as in eval1.",
+      "files": ["evals/files/eval2_ledger.beancount", "evals/files/eval1_sample.csv"],
+      "expectations": [
+        "The config block is discovered and cited as the source of the column mapping, account, date format, and sign convention",
+        "None of the facts already confirmed in the config block are re-asked",
+        "The resulting importer's extraction agrees with the config's conventions (MDY dates, negative = outflow, Assets:Bank:Checking)",
+        "The harness loop runs to PASSED"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "drift-repair-minimal-patch",
+      "prompt": "My Chase importer at ./importers/chase.py broke — the bank changed their CSV format. Old sample: ./tests/chase/old_sample.csv (still has its golden). New sample: ./new_sample.csv. Fix it.",
+      "expected_output": "The skill reproduces the failure (identify or extract fails on the new header 'Post Date,Details,Value'), diagnoses the header rename, patches minimally (column names + identify signature accepting both generations), adds the new sample to the corpus, generates + eyeballs its golden, and gets test green on BOTH old and new samples. No rewrite of working logic.",
+      "files": ["evals/files/eval3_importer.py", "evals/files/eval3_old_sample.csv", "evals/files/eval3_old_sample.csv.beancount", "evals/files/eval3_new_sample.csv"],
+      "expectations": [
+        "The failure is reproduced and the drift diagnosed as the header rename before any code is changed",
+        "The patch is minimal — column descriptors/identify updated; the importer is not rewritten from scratch",
+        "identify() still claims the old format too (both generations), keeping the old golden green",
+        "The new sample joins the test corpus with an eyeballed golden; test passes on old AND new samples",
+        "The patch is shown to the user before being declared done"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "ambiguous-sample-must-ask",
+      "prompt": "Write an importer for ./sample.csv, account Assets:Bank:Checking, at ./importers/mybank.py.",
+      "expected_output": "The sample has all-positive amounts with D/W/C type codes and dates whose day and month are both <= 12 — sign and date conventions are unprovable. The skill asks about both before writing any importer code; nothing is generated or written until answered.",
+      "files": ["evals/files/eval4_sample.csv"],
+      "expectations": [
+        "The skill asks what the D/W/C codes mean rather than guessing amount signs",
+        "The skill asks MDY vs DMY (no day > 12 in the sample proves neither)",
+        "No importer file is written before both answers arrive"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "red-harness-never-done",
+      "prompt": "Write an importer for ./sample.csv (Assets:Bank:Checking) at ./importers/mybank.py and make sure it works.",
+      "expected_output": "The sample's third row has a malformed date (PENDING instead of a date). A naive importer errors or mis-extracts; the harness cannot go green while that row is unhandled. The skill surfaces the malformed row, asks how to handle it (skip pending rows with a warning is the reasonable proposal), and only declares done once test PASSES with the agreed handling — it never reports success with a red or crashing harness.",
+      "files": ["evals/files/eval5_sample.csv"],
+      "expectations": [
+        "The malformed 'PENDING' date row is surfaced explicitly, not silently dropped or crashed over",
+        "The skill proposes a handling (e.g. skip non-date rows with a notice) and gets agreement before encoding it",
+        "The final state has a green test run; at no earlier point is the importer described as done/working",
+        "If the harness cannot be made green, the skill says exactly what is unresolved instead of claiming success"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "wiring-confirm-gated",
+      "prompt": "Author an importer for ./sample.csv (Assets:Bank:Checking) and hook it into my ./import.py.",
+      "expected_output": "Importer authored and tested green. The change to import.py (adding the import line and the Importer(...) entry) is shown as a diff and only written after an explicit yes.",
+      "files": ["evals/files/eval1_sample.csv", "evals/files/eval6_import.py"],
+      "expectations": [
+        "The import.py modification is presented as a concrete diff before writing",
+        "import.py is not modified before the user says yes",
+        "After yes, import.py contains the new importer alongside the existing one and the file remains valid Python"
+      ]
+    }
+  ]
+}

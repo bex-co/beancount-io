@@ -1,0 +1,9 @@
+;; Account: Assets:Bank:Checking
+;; Date: 2026-04-18
+;; Name: 
+
+2026-04-03 * "TRADER JOES #123 SEATTLE WA"
+  Assets:Bank:Checking  -33.20 USD
+
+2026-04-18 * "SHELL OIL 5551 KIRKLAND WA"
+  Assets:Bank:Checking  -40.00 USD

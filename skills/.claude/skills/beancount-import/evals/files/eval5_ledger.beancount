@@ -1,0 +1,14 @@
+option "title" "Test Ledger"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Expenses:Food:Groceries USD
+2026-01-01 open Equity:Opening-Balances
+
+2026-04-01 * "Opening balance"
+  Assets:Bank:Checking       800.00 USD
+  Equity:Opening-Balances
+
+2026-04-22 * "TRADER JOES #123"
+  Assets:Bank:Checking       -29.95 USD
+  Expenses:Food:Groceries     29.95 USD

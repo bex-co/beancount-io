@@ -1,0 +1,131 @@
+{
+  "skill_name": "beancount-import",
+  "notes": "Each eval maps the fixture ledger to ./ledger.beancount and the fixture export to ./export.csv (or .ofx) in a scratch dir. bean-check is /tmp/beancount_venv/bin/bean-check (or `pip install beancount`). eval1-5 cover the happy paths (signed CSV, debit/credit split, OFX FITID, overlap dedup, pending rows); eval6-9 are failure-mode/guarantee checks (ambiguity must ask, no write without confirm, missing target file, idempotent re-import).",
+  "evals": [
+    {
+      "id": 1,
+      "name": "signed-csv-basic",
+      "prompt": "Import ./export.csv into my ledger at ./ledger.beancount. It's my Chase checking account (Assets:Bank:Checking).",
+      "expected_output": "Four rows staged, categorized from ledger history: TRADER JOES -> Expenses:Food:Groceries (high, prior entries), SHELL OIL -> Expenses:Transport (high), PAYROLL ACME -> Income:Salary (high), CITY PARKING -> Expenses:Uncategorized (low, no prior). A review table with per-row confidence and reason is shown; after explicit yes, entries are appended date-sorted with import-id metadata, Expenses:Uncategorized is opened, and bean-check passes.",
+      "files": ["evals/files/eval1_ledger.beancount", "evals/files/eval1_export.csv"],
+      "expectations": [
+        "The MDY date format is proven from the data (rows with day > 12) rather than asked or guessed",
+        "TRADER JOES #123 is categorized to Expenses:Food:Groceries with a reason citing the prior TRADER JOES entries",
+        "PAYROLL ACME CORP is categorized to Income:Salary from the prior payroll entry",
+        "CITY PARKING AUTH goes to Expenses:Uncategorized with low confidence and a flag to refine — NOT an invented account",
+        "An open directive for Expenses:Uncategorized is proposed and written",
+        "Every written entry carries import-id metadata of the form csv:sha256:<16 hex chars>",
+        "Entries are inserted in date order and the source-account posting equals the row amount exactly",
+        "Nothing is written before the user confirms",
+        "After appending, bean-check passes"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "debit-credit-split-columns",
+      "prompt": "Here's my bank export ./export.csv — import it into ./ledger.beancount (account Assets:Bank:Checking).",
+      "expected_output": "The skill detects the Debit/Credit split-column layout, confirms the convention once (debit = money out on this asset account), then stages WHOLE FOODS -63.75 (Expenses:Food:Groceries from prior) and ACME CORP PAYROLL +2500.00 (Income:Salary from prior). After confirmation both entries land with import-ids and bean-check passes; the confirmed mapping is persisted to the config block.",
+      "files": ["evals/files/eval2_ledger.beancount", "evals/files/eval2_export.csv"],
+      "expectations": [
+        "The split Debit/Credit columns are recognized and their meaning is confirmed with the user once, not silently assumed",
+        "WHOLE FOODS becomes a -63.75 USD posting on Assets:Bank:Checking with counter-account Expenses:Food:Groceries",
+        "ACME CORP PAYROLL becomes a +2500.00 USD posting with counter-account Income:Salary",
+        "The confirmed column mapping and sign convention are persisted in a ;; beancount-import config block",
+        "Both written entries carry csv:sha256 import-id metadata",
+        "After appending, bean-check passes"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "ofx-with-fitid",
+      "prompt": "Import ./export.ofx into ./ledger.beancount — it's my checking account Assets:Bank:Checking.",
+      "expected_output": "Three STMTTRN blocks parsed: dates from DTPOSTED, signed TRNAMT amounts, payees from NAME. Each written entry's import-id uses the native FITID (ofx:9101 etc.), NOT a hash. Categorization from history as usual; bean-check passes after append.",
+      "files": ["evals/files/eval3_ledger.beancount", "evals/files/eval3_export.ofx"],
+      "expectations": [
+        "All three STMTTRN transactions are staged with dates parsed from the first 8 digits of DTPOSTED",
+        "Each written entry's import-id is ofx:<FITID> (9101, 9102, 9103) — the native ID is preferred over any hash",
+        "TRADER JOES maps to Expenses:Food:Groceries from prior history; the unknown merchant goes to Expenses:Uncategorized",
+        "Amounts keep the sign from TRNAMT (verified against a recognizable row, not blindly trusted)",
+        "After appending, bean-check passes"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "overlapping-reimport-partial",
+      "prompt": "Import ./export.ofx into ./ledger.beancount (Assets:Bank:Checking). I think I may have imported part of this before.",
+      "expected_output": "The ledger already contains entries with import-id ofx:9001 and ofx:9002; the export has 9001-9004. Layer-1 exact dedup drops 9001/9002 (reported as 'already imported: 2'); only 9003 and 9004 are staged, reviewed, and written. bean-check passes.",
+      "files": ["evals/files/eval4_ledger.beancount", "evals/files/eval4_export.ofx"],
+      "expectations": [
+        "Rows with FITID 9001 and 9002 are skipped via exact import-id match and counted as already imported in the summary",
+        "Exactly 2 new transactions (FITIDs 9003, 9004) are proposed and written, no more",
+        "The skipped rows are not re-categorized and do not appear as full rows in the review table",
+        "The written entries carry import-id ofx:9003 and ofx:9004",
+        "After appending, bean-check passes"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "pending-rows-flag",
+      "prompt": "Import ./export.csv into ./ledger.beancount, account Assets:Bank:Checking.",
+      "expected_output": "The Status column marks one row Pending: it is imported with flag ! while Posted rows get *. The user is warned that the pending row may re-export later with different details and surface as a suspected duplicate. bean-check passes.",
+      "files": ["evals/files/eval5_ledger.beancount", "evals/files/eval5_export.csv"],
+      "expectations": [
+        "The Pending row is written with flag ! and the Posted rows with flag *",
+        "The user is told the pending transaction may change on settlement and how that will be handled (suspected-duplicate review)",
+        "All written entries carry import-id metadata",
+        "After appending, bean-check passes"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "ambiguous-format-must-ask",
+      "prompt": "Import ./export.csv into ./ledger.beancount (Assets:Bank:Checking).",
+      "expected_output": "The export has all-positive amounts with cryptic type codes (D/W) and every date's day and month are both <= 12, so neither the sign convention nor the date format is provable from the data. The skill asks about both before staging anything, and writes nothing.",
+      "files": ["evals/files/eval6_ledger.beancount", "evals/files/eval6_export.csv"],
+      "expectations": [
+        "The skill asks the user to clarify the date format (MDY vs DMY cannot be proven — all days <= 12)",
+        "The skill asks what the D/W type codes mean rather than guessing the sign of any amount",
+        "No transaction is staged as final and nothing is written to the ledger before both answers arrive",
+        "The ledger file is unchanged (byte-identical) at the point the questions are asked"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "no-write-without-confirm",
+      "prompt": "Import ./export.csv into ./ledger.beancount (Assets:Bank:Checking). Show me what you'd add first.",
+      "expected_output": "The skill runs the full pipeline through the review table but writes nothing — the ledger file is unchanged until the user replies yes. The review table shows target file, counts, per-row account/confidence/reason.",
+      "files": ["evals/files/eval1_ledger.beancount", "evals/files/eval1_export.csv"],
+      "expectations": [
+        "A complete review table is presented (target file, summary counts, per-row suggested account + confidence + reason)",
+        "The ledger file is byte-identical to the fixture at the point the review table is shown",
+        "The skill ends the turn waiting for yes/no rather than assuming consent"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "missing-target-file-refusal",
+      "prompt": "Import ./export.csv into ./ledger.beancount and append the entries to ./transactions/2026.beancount (Assets:Bank:Checking).",
+      "expected_output": "./transactions/2026.beancount does not exist. The skill refuses to create it, explains that a file nothing includes would silently swallow entries, and asks the user to either create/include it first or pick an existing file. Nothing is written anywhere.",
+      "files": ["evals/files/eval1_ledger.beancount", "evals/files/eval1_export.csv"],
+      "expectations": [
+        "The skill detects that the requested append target does not exist and refuses to auto-create it",
+        "The refusal explains the include risk (entries in a file nothing includes are silently invisible to bean-check and fava)",
+        "The skill offers concrete next steps (create + include the file first, or choose an existing target)",
+        "No file is created and no ledger file is modified"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "idempotent-full-reimport",
+      "prompt": "Import ./export.ofx into ./ledger.beancount (Assets:Bank:Checking). I might have already done this one.",
+      "expected_output": "Every FITID in the export (9001-9004) already exists as import-id metadata in the ledger. The summary reports 4 already imported, 0 to import; zero new entries are added; the ledger is unchanged and bean-check still passes.",
+      "files": ["evals/files/eval9_ledger.beancount", "evals/files/eval4_export.ofx"],
+      "expectations": [
+        "All 4 rows are dropped by exact import-id match and reported as already imported",
+        "Zero new transactions are proposed or written — the second import of the same file is a no-op",
+        "The ledger file is unchanged (byte-identical) after the run",
+        "The skill reports the outcome clearly rather than presenting an empty confirmation prompt"
+      ]
+    }
+  ]
+}

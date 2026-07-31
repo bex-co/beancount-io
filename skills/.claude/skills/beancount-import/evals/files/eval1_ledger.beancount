@@ -1,0 +1,28 @@
+option "title" "Test Ledger"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Food:Groceries USD
+2026-01-01 open Expenses:Transport USD
+2026-01-01 open Equity:Opening-Balances
+
+2026-04-01 * "Opening balance"
+  Assets:Bank:Checking      1000.00 USD
+  Equity:Opening-Balances
+
+2026-04-12 * "TRADER JOES #089"
+  Assets:Bank:Checking       -42.10 USD
+  Expenses:Food:Groceries     42.10 USD
+
+2026-04-15 * "PAYROLL ACME CORP"
+  Assets:Bank:Checking      2500.00 USD
+  Income:Salary            -2500.00 USD
+
+2026-04-20 * "TRADER JOES #089"
+  Assets:Bank:Checking       -18.55 USD
+  Expenses:Food:Groceries     18.55 USD
+
+2026-04-25 * "SHELL OIL 5551"
+  Assets:Bank:Checking       -35.00 USD
+  Expenses:Transport          35.00 USD

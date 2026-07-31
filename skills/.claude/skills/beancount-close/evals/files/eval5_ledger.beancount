@@ -1,0 +1,16 @@
+option "title" "Test Ledger"
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Bank:Checking USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Equity:Opening-Balances
+
+2026-04-01 * "Opening balance"
+  Assets:Bank:Checking      5000.00 USD
+  Equity:Opening-Balances
+
+2026-06-05 * "ACME CORP" "Salary"
+  Assets:Bank:Checking      3000.00 USD
+  Income:Salary            -3000.00 USD
+
+2026-07-01 balance Assets:Bank:Checking  9000.00 USD

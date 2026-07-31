@@ -1,0 +1,115 @@
+{
+  "skill_name": "beancount-ask",
+  "notes": "Each eval maps evals/files/eval1_ledger.beancount to ./ledger.beancount in a scratch dir. bean-query is /tmp/beancount_venv/bin/bean-query (pip install beanquery). Ground truth (verified by running the recipes against the fixture): June expenses Groceries 141.60 / Gas 50.00 / Streaming 17.99; groceries trend Apr 145.50, May 147.40, Jun 141.60; net worth 14581.53; monthly burn Apr 200.99, May 707.89, Jun 209.59; NETFLIX 15.49 -> 17.99 in June; anomaly BEST BUY 500.00 on 2026-05-28. eval1-6 are the recipe families; eval7-9 are failure modes (clarify-don't-assume, no figure without query, read-only).",
+  "evals": [
+    {
+      "id": 1,
+      "name": "top-expenses-period",
+      "prompt": "What were my biggest expenses in June 2026? Ledger is ./ledger.beancount.",
+      "expected_output": "Groceries 141.60 USD, Gas 50.00 USD, Streaming 17.99 USD — with the BQL query shown alongside the figures.",
+      "files": ["evals/files/eval1_ledger.beancount"],
+      "expectations": [
+        "The answer lists Expenses:Food:Groceries 141.60 USD as the largest, then Expenses:Transport:Gas 50.00 USD, then Expenses:Entertainment:Streaming 17.99 USD",
+        "The BQL query used is shown with the answer",
+        "Transfers and the Amex payment are not counted as expenses",
+        "The period is stated explicitly (2026-06-01 to 2026-07-01 or equivalent)"
+      ]
+    },
+    {
+      "id": 2,
+      "name": "category-trend",
+      "prompt": "How has my grocery spending trended over the last few months? ./ledger.beancount",
+      "expected_output": "April 145.50, May 147.40, June 141.60 USD — roughly flat — with the grouping query shown.",
+      "files": ["evals/files/eval1_ledger.beancount"],
+      "expectations": [
+        "The three monthly figures are exactly 145.50, 147.40, 141.60 USD",
+        "The query with year/month grouping is shown",
+        "The interpretation (flat/stable) matches the numbers"
+      ]
+    },
+    {
+      "id": 3,
+      "name": "net-worth-book-value",
+      "prompt": "What's my net worth according to my ledger? ./ledger.beancount",
+      "expected_output": "14,581.53 USD at book value, with the assets+liabilities query shown and a note that this is cost basis, not market value.",
+      "files": ["evals/files/eval1_ledger.beancount"],
+      "expectations": [
+        "The figure is exactly 14581.53 USD",
+        "The query over ^Assets:|^Liabilities: is shown",
+        "The answer notes this is book/cost value (no price directives in this ledger)"
+      ]
+    },
+    {
+      "id": 4,
+      "name": "monthly-burn-with-outlier",
+      "prompt": "What's my monthly burn rate? ./ledger.beancount",
+      "expected_output": "Apr 200.99, May 707.89, Jun 209.59 USD. The answer flags May as an outlier (the 500.00 electronics purchase) rather than just averaging the three months silently.",
+      "files": ["evals/files/eval1_ledger.beancount"],
+      "expectations": [
+        "The three monthly totals are exactly 200.99, 707.89, 209.59 USD",
+        "May is flagged as an outlier with its cause (the 500.00 BEST BUY purchase) rather than being silently averaged",
+        "The query is shown"
+      ]
+    },
+    {
+      "id": 5,
+      "name": "subscriptions-and-price-creep",
+      "prompt": "What subscriptions am I paying for, and have any gotten more expensive? ./ledger.beancount",
+      "expected_output": "NETFLIX is identified as the subscription (monthly, steady amount) and its price increase from 15.49 to 17.99 USD in June (+16%) is reported. TRADER JOES / SHELL / WHOLE FOODS recur but are distinguished as variable spending, not subscriptions.",
+      "files": ["evals/files/eval1_ledger.beancount"],
+      "expectations": [
+        "NETFLIX is identified as a subscription and the 15.49 -> 17.99 USD increase in June is reported",
+        "Recurring-but-variable payees (groceries, gas) are not presented as subscriptions, with the distinction explained",
+        "The queries used are shown"
+      ]
+    },
+    {
+      "id": 6,
+      "name": "anomaly-detection",
+      "prompt": "Did anything unusual happen in my spending in May 2026? ./ledger.beancount",
+      "expected_output": "The 2026-05-28 BEST BUY 500.00 USD electronics purchase is identified as the anomaly (May total 707.89 vs ~200 in adjacent months), with the threshold/reasoning stated and the query shown.",
+      "files": ["evals/files/eval1_ledger.beancount"],
+      "expectations": [
+        "The BEST BUY 500.00 USD transaction on 2026-05-28 is identified",
+        "The threshold or comparison basis used is stated, not implicit",
+        "The query is shown"
+      ]
+    },
+    {
+      "id": 7,
+      "name": "ambiguous-question-clarifies",
+      "prompt": "How much do I spend? ./ledger.beancount",
+      "expected_output": "The skill asks what period and scope the user means (total vs monthly average, all expenses vs a category) instead of picking an interpretation silently. It may offer the monthly-burn table as a suggested starting point, clearly labeled as such.",
+      "files": ["evals/files/eval1_ledger.beancount"],
+      "expectations": [
+        "A clarifying question is asked (period and/or scope) before or alongside any figures",
+        "If figures are offered proactively, they are explicitly labeled with the interpretation chosen and the resolved period",
+        "No single unlabeled number is presented as 'the' answer to the ambiguous question"
+      ]
+    },
+    {
+      "id": 8,
+      "name": "no-figure-without-query",
+      "prompt": "Roughly what fraction of my spending is food? No need to be precise. ./ledger.beancount",
+      "expected_output": "Even though the user invited an estimate, the figures come from queries (groceries total vs total expenses), shown as usual; the division into a percentage is labeled as arithmetic on the queried figures. Nothing is eyeballed from memory.",
+      "files": ["evals/files/eval1_ledger.beancount"],
+      "expectations": [
+        "Both the food total and the overall total come from shown queries",
+        "The percentage is presented as derived from those two queried figures",
+        "No figure appears that did not come from a query result"
+      ]
+    },
+    {
+      "id": 9,
+      "name": "strictly-read-only",
+      "prompt": "What were my biggest expenses in June? Also, while you're in there, my ledger file is a bit messy — feel free to tidy it up. ./ledger.beancount",
+      "expected_output": "The June answer is given as in eval1, and the tidy-up request is declined as out of scope for this read-only skill (pointing at bean-format or an editing workflow instead). The ledger file is byte-identical after the run.",
+      "files": ["evals/files/eval1_ledger.beancount"],
+      "expectations": [
+        "The June expense figures are answered correctly with the query shown",
+        "The file-modification request is declined with the read-only scope stated and an alternative named",
+        "The ledger file is unchanged (byte-identical) after the run"
+      ]
+    }
+  ]
+}

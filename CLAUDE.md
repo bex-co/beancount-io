@@ -3,7 +3,10 @@
 Monorepo for [Beancount.io](https://beancount.io/) — double-entry bookkeeping made easy.
 
 This file holds repo-wide rules. Per-package guidance lives next to the code:
+- `dashboard/CLAUDE.md` — web client
 - `mobile/CLAUDE.md` — React Native app
+- `fava-slim/CLAUDE.md` — typed Python reporting library
+- `skills/CLAUDE.md` — agent skills package
 
 ## Codex and Claude Code compatibility
 - `CLAUDE.md` is the canonical instruction file at every scope. The adjacent `AGENTS.md` must be a relative symlink to it so Claude Code and Codex always read the same instructions; never maintain duplicate copies.
@@ -16,13 +19,16 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 
 | Path | Status | Description |
 |------|--------|-------------|
+| `dashboard/` | active | Web client (React 19, TanStack Start, Apollo, TypeScript) |
 | `mobile/` | active | React Native iOS/Android app (Expo, Apollo, TypeScript) |
-| `skills/` | placeholder | Skills package — empty, only `.gitkeep` |
-| `cli/` | placeholder | CLI tool — empty, only `.gitkeep` |
+| `cli/` | active | `beancount-cli` — directives, bean-check/format, BQL queries, reports, local-ledger chat (Python, Typer) |
+| `fava-slim/` | active | Ledger loading, account trees, queries, financial statements without the Fava web UI (typed Python) |
+| `skills/` | active | Agent skills: init, import, importer-author, reconcile, migrate, ask, close, options (see `skills/CLAUDE.md`) |
+| `docs/` | active | Documentation content |
 
-There is no root `package.json`. Each package owns its own dependencies, scripts, and `yarn.lock`. CI is per-package and path-filtered: a change under `mobile/**` runs only the mobile job (see `.github/workflows/ci.yml`).
+There is no root `package.json`. Each package owns its own dependencies, scripts, and lockfile. CI is per-package and path-filtered: a change under `mobile/**` runs only the mobile job (see `.github/workflows/ci.yml`).
 
-When `skills/` or `cli/` get real code, add a `skills/CLAUDE.md` / `cli/CLAUDE.md` documenting their tech stack and conventions.
+When a new package gets real code, add a `<package>/CLAUDE.md` documenting its tech stack and conventions (with the `AGENTS.md` symlink per the compatibility rules above).
 
 ## Roadmap board (`.pm/`)
 
