@@ -39,7 +39,7 @@ const getButtonStyles = (theme: ColorTheme) => {
       backgroundColor: theme.primaryDark,
     },
     buttonPrimaryText: {
-      color: theme.black,
+      color: theme.white,
       fontSize: 16,
     },
     buttonOutline: {
@@ -94,8 +94,7 @@ export const Button = (props: ButtonProps) => {
     }
   }, [styles, type]);
 
-  const { name, colorTheme: theme } = useTheme();
-  const isDark = name === "dark";
+  const { colorTheme: theme } = useTheme();
 
   return (
     <Pressable
@@ -105,26 +104,11 @@ export const Button = (props: ButtonProps) => {
     >
       {props.loading ? (
         <ActivityIndicator
-          color={
-            type === "primary"
-              ? isDark
-                ? theme.white
-                : theme.black
-              : theme.primaryLight
-          }
+          color={type === "primary" ? theme.white : theme.primaryLight}
           style={styles.buttonLoading}
         />
       ) : null}
-      <Text
-        style={[
-          buttonTextStyle,
-          type === "primary" && {
-            color: isDark ? theme.white : theme.black,
-          },
-        ]}
-      >
-        {props.children}
-      </Text>
+      <Text style={buttonTextStyle}>{props.children}</Text>
     </Pressable>
   );
 };
