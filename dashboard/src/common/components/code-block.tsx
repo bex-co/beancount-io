@@ -70,7 +70,7 @@ export function CodeBlock({ code, language, inline }: CodeBlockProps) {
           )}
         </Button>
       </div>
-      <pre className="overflow-x-auto p-4 rounded-b-lg bg-muted border border-t-0 border-border">
+      <pre className="overflow-x-auto p-4 rounded-b-lg bg-muted border border-t-0 border-border !my-0">
         <code className={language ? `language-${language}` : undefined}>
           {code}
         </code>
