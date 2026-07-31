@@ -1,0 +1,21 @@
+;; fixture — beancount-reconcile eval5 (missing-on-statement suspect)
+option "operating_currency" "USD"
+
+2026-04-01 open Assets:Bank:Checking USD
+2026-04-01 open Expenses:Food:Groceries USD
+2026-04-01 open Expenses:Rent USD
+2026-04-01 open Equity:Opening-Balances
+
+2026-04-30 * "Opening deposit"
+  Assets:Bank:Checking   3000.00 USD
+  Equity:Opening-Balances
+
+2026-05-01 balance Assets:Bank:Checking   3000.00 USD
+
+2026-05-04 * "TRADER JOES #123"
+  Assets:Bank:Checking    -60.00 USD
+  Expenses:Food:Groceries
+
+2026-05-30 * "RENT CHECK 1042"
+  Assets:Bank:Checking  -1500.00 USD
+  Expenses:Rent

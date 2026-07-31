@@ -65,7 +65,7 @@ Beancount.io is a developer-friendly workspace for [Beancount](https://beancount
 | [`mobile/`](./mobile) | Active iOS & Android client | Native transaction entry, account views, receipt capture, ledger editing, light/dark themes, and 13 locales. Expo + React Native + Apollo. |
 | [`cli/`](./cli) | `0.1.0` | Read and write directives, check and format files, run BQL and reports, manage remote ledgers, or chat with a local-ledger agent. Python + Typer. |
 | [`fava-slim/`](./fava-slim) | `0.1.0` | Load and filter ledgers, build account trees, query data, and generate financial statements without the Fava web UI. Typed Python. |
-| [`skills/`](./skills) | Active skills | Scaffold a Beancount + Fava ledger and turn natural-language options trades into verified, balanced transactions. |
+| [`skills/`](./skills) | Active skills | Scaffold a Beancount + Fava ledger, turn natural-language options trades into verified balanced transactions, and reconcile an account against a bank statement. |
 
 The dashboard and mobile app are clients for the hosted Beancount.io API. The **backend** behind that API will be open-sourced soon. The CLI, `fava-slim`, and ledger skills also support local-first workflows that do not require the hosted service.
 

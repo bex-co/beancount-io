@@ -1,0 +1,22 @@
+;; fixture — beancount-reconcile eval7 (credit card liability, sign inversion + missing charge)
+option "operating_currency" "USD"
+
+2026-04-01 open Liabilities:CreditCard:Amex USD
+2026-04-01 open Expenses:Food:Restaurant USD
+2026-04-01 open Expenses:Travel USD
+2026-04-01 open Assets:Bank:Checking USD
+2026-04-01 open Equity:Opening-Balances
+
+2026-04-30 * "Opening checking"
+  Assets:Bank:Checking   5000.00 USD
+  Equity:Opening-Balances
+
+2026-05-01 balance Liabilities:CreditCard:Amex   0.00 USD
+
+2026-05-05 * "BLUE BOTTLE COFFEE"
+  Liabilities:CreditCard:Amex    -18.00 USD
+  Expenses:Food:Restaurant        18.00 USD
+
+2026-05-20 * "Payment - thank you"
+  Liabilities:CreditCard:Amex    200.00 USD
+  Assets:Bank:Checking          -200.00 USD

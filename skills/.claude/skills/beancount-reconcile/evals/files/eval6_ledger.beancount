@@ -1,0 +1,16 @@
+;; fixture — beancount-reconcile eval6 (date-drift, otherwise clean)
+option "operating_currency" "USD"
+
+2026-04-01 open Assets:Bank:Checking USD
+2026-04-01 open Expenses:Shopping USD
+2026-04-01 open Equity:Opening-Balances
+
+2026-04-30 * "Opening deposit"
+  Assets:Bank:Checking   500.00 USD
+  Equity:Opening-Balances
+
+2026-05-01 balance Assets:Bank:Checking   500.00 USD
+
+2026-05-09 * "AMZN Mktp"
+  Assets:Bank:Checking   -33.00 USD
+  Expenses:Shopping

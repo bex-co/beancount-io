@@ -16,6 +16,10 @@ skills/
         SKILL.md
         references/           Per-strategy guidance loaded on demand
         evals/                Test prompts + fixtures for skill-creator iteration
+      beancount-reconcile/    Reconcile one account against a bank/broker statement
+        SKILL.md
+        references/           Statement-format + matching guidance loaded on demand
+        evals/                Statement+ledger fixtures per mismatch class
   tmp/                        Scratch space — gitignored, safe for experiments
 ```
 
@@ -25,6 +29,7 @@ skills/
 |---|---|
 | `beancount-init` | Scaffold a fresh `main.bean` + Fava + uv project from an empty directory. Triggers on `/beancount-init` or "set up a new beancount repo". |
 | `beancount-options` | Turn human-language descriptions of options trades (CSP, covered call, vertical, condor, roll, assignment, exercise, expiration, …) into balanced beancount transactions. Uses per-contract cost basis, IRS-aligned assignment treatment, and runs `bean-check` to verify before reporting success. |
+| `beancount-reconcile` | Reconcile one account against a bank/broker statement (CSV or pasted PDF text). Diffs statement vs ledger into mismatch classes (missing, duplicate, amount-mismatch, date-drift), and — only after confirmation — appends the missing transactions plus a period-end `balance` assertion that ties the account out. Append-only (reports suspects/duplicates/mismatches for manual fixing); never writes a failing assertion; `bean-check`-gated. Triggers on "reconcile my checking account" / "does my ledger match my statement". |
 | `ship` | Codex entry point for the repository's canonical [`/ship` workflow](../.claude/commands/ship.md). |
 | `pm` | Codex entry point for the canonical [`/pm` workflow](../.claude/commands/pm.md) — arrange the public `.pm` adoption board (the only writer to `.pm/`). |
 | `pm-brainstorm` | Codex entry point for the canonical [`/pm-brainstorm` workflow](../.claude/commands/pm-brainstorm.md) — propose adoption milestones as text; `/pm` materializes them. |

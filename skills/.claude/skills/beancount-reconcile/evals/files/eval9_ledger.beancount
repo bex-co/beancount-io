@@ -1,0 +1,12 @@
+;; fixture — beancount-reconcile eval9 (ambiguous date format, no day>12 to disambiguate)
+option "operating_currency" "USD"
+
+2026-04-01 open Assets:Bank:Checking USD
+2026-04-01 open Expenses:Subscriptions USD
+2026-04-01 open Equity:Opening-Balances
+
+2026-04-30 * "Opening deposit"
+  Assets:Bank:Checking   200.00 USD
+  Equity:Opening-Balances
+
+2026-05-01 balance Assets:Bank:Checking   200.00 USD

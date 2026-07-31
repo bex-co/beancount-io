@@ -1,0 +1,16 @@
+;; fixture — beancount-reconcile eval3 (amount-mismatch)
+option "operating_currency" "USD"
+
+2026-04-01 open Assets:Bank:Checking USD
+2026-04-01 open Expenses:Transport:Gas USD
+2026-04-01 open Equity:Opening-Balances
+
+2026-04-30 * "Opening deposit"
+  Assets:Bank:Checking   1000.00 USD
+  Equity:Opening-Balances
+
+2026-05-01 balance Assets:Bank:Checking   1000.00 USD
+
+2026-05-09 * "SHELL GAS"
+  Assets:Bank:Checking    -40.00 USD
+  Expenses:Transport:Gas
