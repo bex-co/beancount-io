@@ -42,7 +42,7 @@
       "package": "io.beancount.android",
       "permissions": [
         "com.google.android.gms.permission.AD_ID"
-      ],
+      ]
     },
     "plugins": [
       [
