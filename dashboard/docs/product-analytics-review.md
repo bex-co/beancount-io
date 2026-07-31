@@ -103,7 +103,7 @@ Below are the events that should exist, mapped to the exact handler where each s
 ### Engagement — feature usage
 | Recommended event | Fire at | Why it matters |
 |---|---|---|
-| `ai_agent_message_sent` | `ask-ai/index.tsx:handleSubmit` (~L131) and `agent-chat-input.tsx` | AI is a marketed differentiator and a paid feature; usage is unmeasured. |
+| `ai_agent_message_sent` | `ask-ai/index.tsx:submitQuestion` and `agent-chat-input.tsx` | AI is a marketed differentiator and a paid feature; usage is unmeasured. |
 | `ai_agent_action_approved` | agent approve/execute path | Measures whether AI *output* is trusted/acted on, not just chatted with. |
 | `bql_query_executed` | `bql/pages/index.tsx:executeQueryAndCache` (~L62), `QueryShell` | Power-user signal; predicts retention. Include `success`. |
 | `report_viewed` | reports routes (balance-sheet, income-statement, trial-balance, overview, account) | Which reports drive the product? Currently invisible beyond raw page_view. |

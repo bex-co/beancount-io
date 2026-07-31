@@ -172,6 +172,47 @@ const faAiAgent: Record<string, TranslationEntry> = {
     message: "List",
     description: "Label on the list-files tool step",
   },
+  "aiAgent.suggestionsTitle": {
+    message: "امتحان کنید:",
+    description:
+      "Heading above suggested example questions in the empty chat state",
+  },
+  "aiAgent.suggestions.diningLastMonth": {
+    message: "ماه گذشته چقدر برای غذا خرج کردم؟",
+    description: "Suggested question: dining spend last month",
+  },
+  "aiAgent.suggestions.netWorth": {
+    message: "خالص دارایی فعلی من چقدر است؟",
+    description: "Suggested question: current net worth",
+  },
+  "aiAgent.suggestions.topCategories": {
+    message: "۵ دسته‌ی بزرگ هزینه‌های امسال من را نشان بده",
+    description: "Suggested question: top 5 expense categories this year",
+  },
+  "aiAgent.suggestions.uncategorized": {
+    message: "تراکنش دسته‌بندی‌نشده‌ای دارم؟",
+    description: "Suggested question: uncategorized transactions",
+  },
+  "aiAgent.suggestions.monthOverMonth": {
+    message: "هزینه‌های این ماه را با ماه گذشته مقایسه کن",
+    description: "Suggested question: compare this month to last month",
+  },
+  "aiAgent.suggestions.largestExpense": {
+    message: "بزرگ‌ترین هزینه‌ی من در این فصل چیست؟",
+    description: "Suggested question: largest single expense this quarter",
+  },
+  "aiAgent.stop": {
+    message: "توقف",
+    description: "Button to stop an in-flight AI response",
+  },
+  "aiAgent.stopped": {
+    message: "متوقف شد",
+    description: "Label shown on an AI response the user stopped",
+  },
+  "aiAgent.retry": {
+    message: "تلاش مجدد",
+    description: "Button to resubmit the last question after an error",
+  },
 };
 
 export default faAiAgent;

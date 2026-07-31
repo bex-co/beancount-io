@@ -172,6 +172,47 @@ const caAiAgent: Record<string, TranslationEntry> = {
     message: "List",
     description: "Label on the list-files tool step",
   },
+  "aiAgent.suggestionsTitle": {
+    message: "Prova de preguntar:",
+    description:
+      "Heading above suggested example questions in the empty chat state",
+  },
+  "aiAgent.suggestions.diningLastMonth": {
+    message: "Quant vaig gastar en restauració el mes passat?",
+    description: "Suggested question: dining spend last month",
+  },
+  "aiAgent.suggestions.netWorth": {
+    message: "Quin és el meu patrimoni net actual?",
+    description: "Suggested question: current net worth",
+  },
+  "aiAgent.suggestions.topCategories": {
+    message: "Mostra'm les meves 5 categories de despeses principals d'enguany",
+    description: "Suggested question: top 5 expense categories this year",
+  },
+  "aiAgent.suggestions.uncategorized": {
+    message: "Tinc transaccions sense categoritzar?",
+    description: "Suggested question: uncategorized transactions",
+  },
+  "aiAgent.suggestions.monthOverMonth": {
+    message: "Compara la despesa d'aquest mes amb la del mes passat",
+    description: "Suggested question: compare this month to last month",
+  },
+  "aiAgent.suggestions.largestExpense": {
+    message: "Quina és la meva despesa més gran d'aquest trimestre?",
+    description: "Suggested question: largest single expense this quarter",
+  },
+  "aiAgent.stop": {
+    message: "Atura",
+    description: "Button to stop an in-flight AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Aturat",
+    description: "Label shown on an AI response the user stopped",
+  },
+  "aiAgent.retry": {
+    message: "Torna-ho a provar",
+    description: "Button to resubmit the last question after an error",
+  },
 };
 
 export default caAiAgent;

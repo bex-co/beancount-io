@@ -172,6 +172,47 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     message: "List",
     description: "Label on the list-files tool step",
   },
+  "aiAgent.suggestionsTitle": {
+    message: "Probeer te vragen:",
+    description:
+      "Heading above suggested example questions in the empty chat state",
+  },
+  "aiAgent.suggestions.diningLastMonth": {
+    message: "Hoeveel heb ik vorige maand aan eten uitgegeven?",
+    description: "Suggested question: dining spend last month",
+  },
+  "aiAgent.suggestions.netWorth": {
+    message: "Wat is mijn huidige nettovermogen?",
+    description: "Suggested question: current net worth",
+  },
+  "aiAgent.suggestions.topCategories": {
+    message: "Toon mijn top 5 uitgavencategorieën van dit jaar",
+    description: "Suggested question: top 5 expense categories this year",
+  },
+  "aiAgent.suggestions.uncategorized": {
+    message: "Heb ik ongecategoriseerde transacties?",
+    description: "Suggested question: uncategorized transactions",
+  },
+  "aiAgent.suggestions.monthOverMonth": {
+    message: "Vergelijk de uitgaven van deze maand met vorige maand",
+    description: "Suggested question: compare this month to last month",
+  },
+  "aiAgent.suggestions.largestExpense": {
+    message: "Wat is mijn grootste uitgave dit kwartaal?",
+    description: "Suggested question: largest single expense this quarter",
+  },
+  "aiAgent.stop": {
+    message: "Stoppen",
+    description: "Button to stop an in-flight AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Gestopt",
+    description: "Label shown on an AI response the user stopped",
+  },
+  "aiAgent.retry": {
+    message: "Opnieuw proberen",
+    description: "Button to resubmit the last question after an error",
+  },
 };
 
 export default nlAiAgent;

@@ -172,6 +172,47 @@ const bgAiAgent: Record<string, TranslationEntry> = {
     message: "List",
     description: "Label on the list-files tool step",
   },
+  "aiAgent.suggestionsTitle": {
+    message: "Опитайте да попитате:",
+    description:
+      "Heading above suggested example questions in the empty chat state",
+  },
+  "aiAgent.suggestions.diningLastMonth": {
+    message: "Колко похарчих за храна миналия месец?",
+    description: "Suggested question: dining spend last month",
+  },
+  "aiAgent.suggestions.netWorth": {
+    message: "Какво е текущото ми нетно богатство?",
+    description: "Suggested question: current net worth",
+  },
+  "aiAgent.suggestions.topCategories": {
+    message: "Покажи ми топ 5 категории разходи за тази година",
+    description: "Suggested question: top 5 expense categories this year",
+  },
+  "aiAgent.suggestions.uncategorized": {
+    message: "Имам ли некатегоризирани транзакции?",
+    description: "Suggested question: uncategorized transactions",
+  },
+  "aiAgent.suggestions.monthOverMonth": {
+    message: "Сравни разходите ми този месец с миналия",
+    description: "Suggested question: compare this month to last month",
+  },
+  "aiAgent.suggestions.largestExpense": {
+    message: "Кой е най-големият ми единичен разход това тримесечие?",
+    description: "Suggested question: largest single expense this quarter",
+  },
+  "aiAgent.stop": {
+    message: "Спри",
+    description: "Button to stop an in-flight AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Спрян",
+    description: "Label shown on an AI response the user stopped",
+  },
+  "aiAgent.retry": {
+    message: "Опитай отново",
+    description: "Button to resubmit the last question after an error",
+  },
 };
 
 export default bgAiAgent;

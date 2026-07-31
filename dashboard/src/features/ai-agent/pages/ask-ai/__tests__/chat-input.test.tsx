@@ -69,4 +69,55 @@ describe("ChatInput", () => {
     // Button is disabled so click won't fire, but let's verify it's disabled
     expect(screen.getByRole("button")).toBeDisabled();
   });
+
+  it("autofocuses the textarea on mount", () => {
+    render(<ChatInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
+    expect(screen.getByRole("textbox")).toHaveFocus();
+  });
+
+  it("does NOT autofocus on coarse-pointer (touch) devices", () => {
+    const original = window.matchMedia;
+    window.matchMedia = vi
+      .fn()
+      .mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
+    try {
+      render(<ChatInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
+      expect(screen.getByRole("textbox")).not.toHaveFocus();
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
+  it("calls onClear when Escape is pressed", () => {
+    const onClear = vi.fn();
+    render(
+      <ChatInput
+        value="hello"
+        onChange={vi.fn()}
+        onSubmit={vi.fn()}
+        onClear={onClear}
+      />,
+    );
+    fireEvent.keyDown(screen.getByRole("textbox"), { key: "Escape" });
+    expect(onClear).toHaveBeenCalledTimes(1);
+  });
+
+  it("shows a stop button while streaming and calls onStop when clicked", () => {
+    const onSubmit = vi.fn();
+    const onStop = vi.fn();
+    render(
+      <ChatInput
+        value=""
+        onChange={vi.fn()}
+        onSubmit={onSubmit}
+        isStreaming
+        onStop={onStop}
+        stopLabel="Stop"
+      />,
+    );
+    const stopButton = screen.getByRole("button", { name: "Stop" });
+    fireEvent.click(stopButton);
+    expect(onStop).toHaveBeenCalledTimes(1);
+    expect(onSubmit).not.toHaveBeenCalled();
+  });
 });

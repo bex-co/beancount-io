@@ -172,6 +172,47 @@ const deAiAgent: Record<string, TranslationEntry> = {
     message: "List",
     description: "Label on the list-files tool step",
   },
+  "aiAgent.suggestionsTitle": {
+    message: "Probiere es mit:",
+    description:
+      "Heading above suggested example questions in the empty chat state",
+  },
+  "aiAgent.suggestions.diningLastMonth": {
+    message: "Wie viel habe ich letzten Monat für Essen ausgegeben?",
+    description: "Suggested question: dining spend last month",
+  },
+  "aiAgent.suggestions.netWorth": {
+    message: "Wie hoch ist mein aktuelles Nettovermögen?",
+    description: "Suggested question: current net worth",
+  },
+  "aiAgent.suggestions.topCategories": {
+    message: "Zeig mir meine Top-5-Ausgabenkategorien dieses Jahr",
+    description: "Suggested question: top 5 expense categories this year",
+  },
+  "aiAgent.suggestions.uncategorized": {
+    message: "Habe ich nicht kategorisierte Transaktionen?",
+    description: "Suggested question: uncategorized transactions",
+  },
+  "aiAgent.suggestions.monthOverMonth": {
+    message: "Vergleiche die Ausgaben dieses Monats mit dem letzten Monat",
+    description: "Suggested question: compare this month to last month",
+  },
+  "aiAgent.suggestions.largestExpense": {
+    message: "Was ist meine größte Einzelausgabe dieses Quartals?",
+    description: "Suggested question: largest single expense this quarter",
+  },
+  "aiAgent.stop": {
+    message: "Stopp",
+    description: "Button to stop an in-flight AI response",
+  },
+  "aiAgent.stopped": {
+    message: "Gestoppt",
+    description: "Label shown on an AI response the user stopped",
+  },
+  "aiAgent.retry": {
+    message: "Erneut versuchen",
+    description: "Button to resubmit the last question after an error",
+  },
 };
 
 export default deAiAgent;

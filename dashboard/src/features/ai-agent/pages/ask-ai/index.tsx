@@ -7,6 +7,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { nanoidBase58 } from "@/common/lib/utils/nanoid-base58";
 import { ChatMessage } from "./chat-message";
 import { ChatInput } from "./chat-input";
+import { SuggestionChips } from "./suggestion-chips";
 import { TypingIndicator } from "../../components/typing-indicator";
 import { AiCfoUpgradePanel } from "@/common/components/ai-cfo-upgrade-panel";
 import type { StreamingState } from "./streaming-state";
@@ -18,6 +19,7 @@ import {
   GitPullRequest,
   ExternalLink,
   ChevronDown,
+  RotateCcw,
 } from "lucide-react";
 
 export type AskAIMode = "bql" | "sandbox";
@@ -32,11 +34,17 @@ interface Message {
     branchName?: string;
     diff?: string;
     isQuestion?: boolean;
+    stopped?: boolean;
+    retryable?: boolean;
   };
 }
 
 interface AskAIPageProps {
   mode?: AskAIMode;
+}
+
+function isCoarsePointer(): boolean {
+  return window.matchMedia?.("(pointer: coarse)").matches ?? false;
 }
 
 export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
@@ -59,7 +67,7 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
       content: t("aiAgent.welcome"),
     },
   ]);
-  const [input, setInput] = useState(initialQuestion || "");
+  const [input, setInput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [, setStreamingState] = useState<StreamingState>("idle");
 
@@ -72,40 +80,29 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
   // Track if we've already auto-submitted to prevent duplicates
   const hasAutoSubmittedRef = useRef(false);
   const streamingStateTimerRef = useRef<ReturnType<typeof setTimeout>>(null);
-  const formRef = useRef<HTMLFormElement>(null);
+  const abortControllerRef = useRef<AbortController | null>(null);
+  const lastQuestionRef = useRef<string | null>(null);
+  const inputRef = useRef<HTMLTextAreaElement>(null);
+  const wasLoadingRef = useRef(false);
 
-  // Cleanup timers on unmount
+  // Cleanup timers and any in-flight stream on unmount
   useEffect(() => {
     return () => {
       if (streamingStateTimerRef.current) {
         clearTimeout(streamingStateTimerRef.current);
       }
+      abortControllerRef.current?.abort();
     };
   }, []);
 
-  // Auto-submit initial question if provided
+  // Return focus to the input when a turn finishes so the follow-up loop is
+  // keyboard-only (skipped on touch devices — see ChatInput autofocus note).
   useEffect(() => {
-    if (
-      initialQuestion &&
-      initialQuestion.trim() &&
-      messages.length === 1 &&
-      !hasAutoSubmittedRef.current &&
-      !isLoading
-    ) {
-      // Mark as submitted before triggering to prevent double submission
-      hasAutoSubmittedRef.current = true;
-      // Set input and trigger form submission via state
-      setInput(initialQuestion.trim());
-      // Use a small timeout to ensure state is updated
-      setTimeout(() => {
-        if (formRef.current) {
-          formRef.current.dispatchEvent(
-            new Event("submit", { cancelable: true, bubbles: true }),
-          );
-        }
-      }, 0);
+    if (wasLoadingRef.current && !isLoading && !isCoarsePointer()) {
+      inputRef.current?.focus();
     }
-  }, [initialQuestion, messages.length, isLoading]);
+    wasLoadingRef.current = isLoading;
+  }, [isLoading]);
 
   // Auto-scroll refs and state
   const messagesEndRef = useRef<HTMLDivElement>(null);
@@ -128,21 +125,29 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
     setShouldAutoScroll(isAtBottom);
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const submitQuestion = async (question: string) => {
+    const trimmed = question.trim();
+    if (!trimmed || isLoading) return;
 
-    if (!input.trim() || isLoading) return;
+    lastQuestionRef.current = trimmed;
 
     const userMessage: Message = {
       id: Date.now().toString(),
       role: "user",
-      content: input.trim(),
+      content: trimmed,
     };
 
     setMessages((prev) => [...prev, userMessage]);
     setInput("");
     setIsLoading(true);
     setStreamingState("connecting");
+
+    const controller = new AbortController();
+    abortControllerRef.current = controller;
+
+    // Set when the assistant bubble has been appended, so the abort path knows
+    // whether there is a partial answer to mark as stopped.
+    let pushedAssistantId: string | null = null;
 
     try {
       const response = await fetch(`${config.apiUrl}chat`, {
@@ -158,6 +163,7 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
           mode,
         }),
         credentials: "include",
+        signal: controller.signal,
       });
 
       // Handle authentication/authorization errors
@@ -204,6 +210,7 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
             id: Date.now().toString(),
             role: "assistant",
             content: t("aiAgent.serviceUnavailable"),
+            data: { retryable: true },
           },
         ]);
         return;
@@ -225,6 +232,7 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
         role: "assistant",
         content: "",
       };
+      pushedAssistantId = assistantMessage.id;
 
       setMessages((prev) => [...prev, assistantMessage]);
 
@@ -317,6 +325,10 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
                 // Handle errors
                 setStreamingState("error");
                 updatedMessage.content = `Error: ${data.metadata.error}`;
+                updatedMessage.data = {
+                  ...updatedMessage.data,
+                  retryable: true,
+                };
                 hasError = true;
               } else if (data.content && !hasFinalAnswer) {
                 // Only show status messages if we don't have the final answer yet
@@ -367,18 +379,62 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
         );
       }
     } catch (error) {
-      console.error("Chat error:", error);
-      setStreamingState("error");
-      setMessages((prev) => [
-        ...prev,
-        {
-          id: Date.now().toString(),
-          role: "assistant",
-          content: t("common.errors.generic"),
-        },
-      ]);
+      if (controller.signal.aborted) {
+        // User stopped the stream: keep whatever partial answer exists and
+        // mark it as stopped rather than showing an error.
+        setStreamingState("idle");
+        if (pushedAssistantId) {
+          const stoppedId = pushedAssistantId;
+          setMessages((prev) =>
+            prev.map((m) =>
+              m.id === stoppedId
+                ? { ...m, data: { ...m.data, stopped: true } }
+                : m,
+            ),
+          );
+        }
+      } else {
+        console.error("Chat error:", error);
+        setStreamingState("error");
+        setMessages((prev) => [
+          ...prev,
+          {
+            id: Date.now().toString(),
+            role: "assistant",
+            content: t("common.errors.generic"),
+            data: { retryable: true },
+          },
+        ]);
+      }
     } finally {
+      abortControllerRef.current = null;
       setIsLoading(false);
+    }
+  };
+
+  // Auto-submit initial question if provided (?q= deep link)
+  useEffect(() => {
+    if (initialQuestion?.trim() && !hasAutoSubmittedRef.current) {
+      // Mark as submitted before triggering to prevent double submission
+      hasAutoSubmittedRef.current = true;
+      void submitQuestion(initialQuestion.trim());
+    }
+    // Runs once on mount; submitQuestion is re-created every render.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    void submitQuestion(input);
+  };
+
+  const handleStop = () => {
+    abortControllerRef.current?.abort();
+  };
+
+  const handleRetry = () => {
+    if (!isLoading && lastQuestionRef.current) {
+      void submitQuestion(lastQuestionRef.current);
     }
   };
 
@@ -433,6 +489,28 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
                   message={message}
                   isStreaming={isLoading && index === messages.length - 1}
                 />
+
+                {/* Stopped marker */}
+                {message.data?.stopped && (
+                  <div className="mt-2 text-xs italic opacity-70">
+                    {t("aiAgent.stopped")}
+                  </div>
+                )}
+
+                {/* Retry button for retryable errors */}
+                {message.data?.retryable && !isLoading && (
+                  <div className="mt-3">
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={handleRetry}
+                    >
+                      <RotateCcw className="h-3.5 w-3.5 mr-1.5" />
+                      {t("aiAgent.retry")}
+                    </Button>
+                  </div>
+                )}
 
                 {/* Show PR link if present (task) */}
                 {message.data?.prUrl && (
@@ -501,27 +579,26 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
 
         {/* Input Form - Sticky at bottom */}
         <div className="z-40 bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 px-4 sm:px-6 pt-3 pb-1">
-          <form
-            ref={formRef}
-            onSubmit={(e) => {
-              e.preventDefault();
-              void handleSubmit(e);
-            }}
-          >
+          {/* Suggestion chips in the empty state only */}
+          {messages.length === 1 && !isLoading && !initialQuestion && (
+            <SuggestionChips onSelect={(q) => void submitQuestion(q)} />
+          )}
+          <form onSubmit={handleSubmit}>
             <ChatInput
+              ref={inputRef}
               value={input}
               onChange={(e) => setInput(e.target.value)}
               onSubmit={() => {
                 if (!isLoading && input.trim()) {
-                  const submitEvent = new Event("submit", {
-                    bubbles: true,
-                    cancelable: true,
-                  }) as unknown as React.FormEvent;
-                  void handleSubmit(submitEvent);
+                  void submitQuestion(input);
                 }
               }}
+              onStop={handleStop}
+              onClear={() => setInput("")}
+              isStreaming={isLoading}
               placeholder={t("aiAgent.placeholder")}
               disabled={isLoading}
+              stopLabel={t("aiAgent.stop")}
             />
           </form>
         </div>
