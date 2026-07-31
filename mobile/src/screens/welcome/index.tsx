@@ -19,6 +19,13 @@ const getStyles = (theme: ColorTheme) =>
       height: 144,
       width: 144,
     },
+    iconContainer: {
+      width: 144,
+      height: 144,
+      borderRadius: 24,
+      overflow: "hidden",
+      backgroundColor: theme.white,
+    },
     buttonContainer: {
       position: "absolute",
       left: 0,
@@ -41,7 +48,9 @@ export function WelcomeScreen(): JSX.Element {
   const { t } = useTranslations();
   return (
     <View style={styles.container}>
-      <Image source={require("@/assets/images/icon.png")} style={styles.icon} />
+      <View style={styles.iconContainer}>
+        <Image source={require("@/assets/images/logo.png")} style={styles.icon} />
+      </View>
       <View style={styles.buttonContainer}>
         <LoginOrSignUp isSignUp={false} style={styles.flex}>
           <Button type="outline">{t("signIn")}</Button>

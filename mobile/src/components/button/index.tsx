@@ -33,25 +33,25 @@ const getButtonStyles = (theme: ColorTheme) => {
       flexDirection: "row",
     },
     buttonPrimary: {
-      backgroundColor: theme.primary,
+      backgroundColor: theme.primaryLight,
     },
     buttonPrimaryPressed: {
       backgroundColor: theme.primaryDark,
     },
     buttonPrimaryText: {
-      color: theme.white,
+      color: theme.black,
       fontSize: 16,
     },
     buttonOutline: {
       backgroundColor: theme.white,
       borderWidth: 1,
-      borderColor: theme.primary,
+      borderColor: theme.primaryLight,
     },
     buttonOutlinePressed: {
       opacity: 0.6,
     },
     buttonOutlineText: {
-      color: theme.primary,
+      color: theme.primaryLight,
       fontSize: 16,
     },
     buttonLoading: {
@@ -94,7 +94,8 @@ export const Button = (props: ButtonProps) => {
     }
   }, [styles, type]);
 
-  const theme = useTheme().colorTheme;
+  const { name, colorTheme: theme } = useTheme();
+  const isDark = name === "dark";
 
   return (
     <Pressable
@@ -104,11 +105,26 @@ export const Button = (props: ButtonProps) => {
     >
       {props.loading ? (
         <ActivityIndicator
-          color={type === "primary" ? theme.white : theme.primary}
+          color={
+            type === "primary"
+              ? isDark
+                ? theme.white
+                : theme.black
+              : theme.primaryLight
+          }
           style={styles.buttonLoading}
         />
       ) : null}
-      <Text style={buttonTextStyle}>{props.children}</Text>
+      <Text
+        style={[
+          buttonTextStyle,
+          type === "primary" && {
+            color: isDark ? theme.white : theme.black,
+          },
+        ]}
+      >
+        {props.children}
+      </Text>
     </Pressable>
   );
 };
