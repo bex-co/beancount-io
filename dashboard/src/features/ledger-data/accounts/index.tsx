@@ -98,7 +98,10 @@ function BalanceCell({
   return (
     <div className="flex flex-col items-end gap-0.5">
       {Object.entries(balance).map(([currency, amount]) => (
-        <span key={currency} className="font-mono text-xs tabular-nums">
+        <span
+          key={currency}
+          className="whitespace-nowrap font-mono text-xs tabular-nums"
+        >
           {String(amount)} {currency}
         </span>
       ))}
@@ -212,16 +215,16 @@ export function AccountRow({
       <TableCell>
         <AccountStatus isClosed={isClosed} />
       </TableCell>
-      <TableCell className="hidden text-sm text-muted-foreground md:table-cell">
+      <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground @2xl:table-cell">
         {account.openedAt}
       </TableCell>
-      <TableCell className="hidden text-sm text-muted-foreground lg:table-cell">
+      <TableCell className="hidden whitespace-nowrap text-sm text-muted-foreground @4xl:table-cell">
         {account.closedAt ?? "-"}
       </TableCell>
-      <TableCell className="hidden text-right text-sm tabular-nums sm:table-cell">
+      <TableCell className="hidden whitespace-nowrap text-right text-sm tabular-nums @xl:table-cell">
         {account.entryCount}
       </TableCell>
-      <TableCell className="hidden text-right text-sm sm:table-cell">
+      <TableCell className="hidden text-right text-sm @xl:table-cell">
         <BalanceCell balance={account.balance} />
       </TableCell>
       <TableCell
@@ -338,7 +341,7 @@ export default function LedgerAccountsPage() {
         </LedgerWritePermission>
       </div>
 
-      <div className="overflow-hidden rounded-xl border bg-card shadow-sm">
+      <div className="@container overflow-hidden rounded-xl border bg-card shadow-sm">
         <div className="flex flex-col gap-3 border-b bg-muted/20 p-3 lg:flex-row lg:items-center">
           <div className="relative min-w-0 flex-1 lg:w-72 lg:flex-none">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -420,16 +423,16 @@ export default function LedgerAccountsPage() {
                   <TableHead>
                     <Skeleton className="h-4 w-12" />
                   </TableHead>
-                  <TableHead className="hidden md:table-cell">
+                  <TableHead className="hidden @2xl:table-cell">
                     <Skeleton className="h-4 w-20" />
                   </TableHead>
-                  <TableHead className="hidden lg:table-cell">
+                  <TableHead className="hidden @4xl:table-cell">
                     <Skeleton className="h-4 w-20" />
                   </TableHead>
-                  <TableHead className="hidden text-right sm:table-cell">
+                  <TableHead className="hidden text-right @xl:table-cell">
                     <Skeleton className="h-4 w-12 ml-auto" />
                   </TableHead>
-                  <TableHead className="hidden text-right sm:table-cell">
+                  <TableHead className="hidden text-right @xl:table-cell">
                     <Skeleton className="h-4 w-16 ml-auto" />
                   </TableHead>
                   <TableHead className="text-right">
@@ -446,16 +449,16 @@ export default function LedgerAccountsPage() {
                     <TableCell>
                       <Skeleton className="h-4 w-10" />
                     </TableCell>
-                    <TableCell className="hidden md:table-cell">
+                    <TableCell className="hidden @2xl:table-cell">
                       <Skeleton className="h-4 w-20" />
                     </TableCell>
-                    <TableCell className="hidden lg:table-cell">
+                    <TableCell className="hidden @4xl:table-cell">
                       <Skeleton className="h-4 w-4" />
                     </TableCell>
-                    <TableCell className="hidden text-right sm:table-cell">
+                    <TableCell className="hidden text-right @xl:table-cell">
                       <Skeleton className="h-4 w-8 ml-auto" />
                     </TableCell>
-                    <TableCell className="hidden text-right sm:table-cell">
+                    <TableCell className="hidden text-right @xl:table-cell">
                       <Skeleton className="h-4 w-16 ml-auto" />
                     </TableCell>
                     <TableCell />
@@ -480,16 +483,16 @@ export default function LedgerAccountsPage() {
                     <TableRow className="hover:bg-transparent">
                       <TableHead>{t("page.accounts.account")}</TableHead>
                       <TableHead>{t("page.accounts.status")}</TableHead>
-                      <TableHead className="hidden md:table-cell">
+                      <TableHead className="hidden whitespace-nowrap @2xl:table-cell">
                         {t("page.accounts.openDate")}
                       </TableHead>
-                      <TableHead className="hidden lg:table-cell">
+                      <TableHead className="hidden whitespace-nowrap @4xl:table-cell">
                         {t("page.accounts.closeDate")}
                       </TableHead>
-                      <TableHead className="hidden text-right sm:table-cell">
+                      <TableHead className="hidden text-right whitespace-nowrap @xl:table-cell">
                         {t("page.accounts.entries")}
                       </TableHead>
-                      <TableHead className="hidden text-right sm:table-cell">
+                      <TableHead className="hidden text-right whitespace-nowrap @xl:table-cell">
                         {t("page.accounts.balance")}
                       </TableHead>
                       <TableHead className="w-12">
