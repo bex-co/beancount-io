@@ -67,7 +67,7 @@ Beancount.io is a developer-friendly workspace for [Beancount](https://beancount
 | [`fava-slim/`](./fava-slim) | `0.1.0` | Load and filter ledgers, build account trees, query data, and generate financial statements without the Fava web UI. Typed Python. |
 | [`skills/`](./skills) | Active skills | Scaffold a Beancount + Fava ledger and turn natural-language options trades into verified, balanced transactions. |
 
-The dashboard and mobile app are clients for the hosted Beancount.io API. The CLI, `fava-slim`, and ledger skills also support local-first workflows that do not require the hosted service.
+The dashboard and mobile app are clients for the hosted Beancount.io API. The **backend** behind that API will be open-sourced soon. The CLI, `fava-slim`, and ledger skills also support local-first workflows that do not require the hosted service.
 
 ## Choose your entry point
 
