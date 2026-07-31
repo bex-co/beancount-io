@@ -73,10 +73,12 @@ export const formatNumber = (value: unknown): string => {
 
 /**
  * Determines if an unknown value is considered "empty"
- * Returns true for: "0", "", {}, 0, false
+ * Returns true for: null, undefined, "0", "", {}, 0, false
  * @param value - The value to check
  * @returns true if the value is considered empty, false otherwise
  * @example
+ * isEmpty(null) // => true
+ * isEmpty(undefined) // => true
  * isEmpty("0") // => true
  * isEmpty("") // => true
  * isEmpty({}) // => true
@@ -88,6 +90,14 @@ export const formatNumber = (value: unknown): string => {
  * isEmpty(true) // => false
  */
 export function isEmpty(value: unknown): boolean {
+  // null / undefined carry no value — treat as empty. A zero-balance holding
+  // (e.g. a fully-netted IRAUSD lot) comes back with null average_cost/price
+  // columns; without this those nulls would keep the otherwise-empty row and
+  // surface a commodity the user doesn't actually hold.
+  if (value === null || value === undefined) {
+    return true;
+  }
+
   // Check for string "0" or empty string
   if (typeof value === "string") {
     return value === "0" || value === "";
@@ -113,7 +123,7 @@ export function isEmpty(value: unknown): boolean {
     return Object.keys(value).length === 0;
   }
 
-  // For all other types (null, undefined, etc.), return false
+  // For all other types (functions, symbols, etc.), return false
   return false;
 }
 

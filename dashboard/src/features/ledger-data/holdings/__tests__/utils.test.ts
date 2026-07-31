@@ -346,12 +346,12 @@ describe("Holdings Utils", () => {
       expect(isEmpty([1, 2, 3])).toBe(false);
     });
 
-    it("should return false for null", () => {
-      expect(isEmpty(null)).toBe(false);
+    it("should return true for null (carries no value)", () => {
+      expect(isEmpty(null)).toBe(true);
     });
 
-    it("should return false for undefined", () => {
-      expect(isEmpty(undefined)).toBe(false);
+    it("should return true for undefined (carries no value)", () => {
+      expect(isEmpty(undefined)).toBe(true);
     });
   });
 
