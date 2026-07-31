@@ -124,9 +124,7 @@ describe("AskAIPage", () => {
     // Partial content is preserved
     expect(screen.getByText("Working on it...")).toBeInTheDocument();
     // Input is usable again
-    await waitFor(() =>
-      expect(screen.getByRole("textbox")).not.toBeDisabled(),
-    );
+    await waitFor(() => expect(screen.getByRole("textbox")).not.toBeDisabled());
   });
 
   it("shows retry on a network error and resubmits the same question", async () => {

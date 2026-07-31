@@ -77,9 +77,9 @@ describe("ChatInput", () => {
 
   it("does NOT autofocus on coarse-pointer (touch) devices", () => {
     const original = window.matchMedia;
-    window.matchMedia = vi
-      .fn()
-      .mockReturnValue({ matches: true }) as unknown as typeof window.matchMedia;
+    window.matchMedia = vi.fn().mockReturnValue({
+      matches: true,
+    }) as unknown as typeof window.matchMedia;
     try {
       render(<ChatInput value="" onChange={vi.fn()} onSubmit={vi.fn()} />);
       expect(screen.getByRole("textbox")).not.toHaveFocus();
