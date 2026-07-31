@@ -23,7 +23,7 @@ const getLoginOrSignUpStyles = (theme: ColorTheme) => {
       width: 60,
       height: 60,
       borderRadius: 30,
-      backgroundColor: theme.primary,
+      backgroundColor: theme.primaryLight,
       position: "absolute",
       bottom: 10,
       right: 10,
@@ -84,7 +84,9 @@ export function LoginOrSignUp(props: LoginOrSignUpProps): JSX.Element {
             isSignUp={props.isSignUp ?? false}
           />
           <TouchableOpacity style={styles.closeButton} onPress={onCloseModal}>
-            <Text style={styles.closeText}>✕</Text>
+            <Text style={styles.closeText}>
+              ✕
+            </Text>
           </TouchableOpacity>
         </View>
       </Modal>
