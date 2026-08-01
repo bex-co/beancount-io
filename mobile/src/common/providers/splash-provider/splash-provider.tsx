@@ -1,39 +1,56 @@
 import * as SplashScreen from "expo-splash-screen";
-import { useEffect, memo, useState, useCallback } from "react";
+import { useEffect, memo, useState, useCallback, useRef } from "react";
 import * as Font from "expo-font";
 import { Ionicons } from "@expo/vector-icons";
-import { View, StyleSheet } from "react-native";
+import { View, StyleSheet, Animated, Image } from "react-native";
 import { loadLocale } from "@/common/vars/locale";
 import { loadLedger, ledgerVar } from "@/common/vars/ledger";
 import { loadTheme } from "@/common/vars/theme";
 import { loadSession } from "@/common/vars/session";
 import { i18n } from "@/translations";
-import Constants from "expo-constants";
 import { apolloClient } from "@/common/apollo/client";
 import { GetLedgerDocument } from "@/generated-graphql/graphql";
+import { useTheme } from "@/common/theme";
+
+const LOGO_SIZE = 144;
+const FADE_DURATION = 400;
 
 SplashScreen.preventAutoHideAsync();
 
-// Set the animation options. This is optional.
-if (Constants.executionEnvironment === "standalone") {
-  SplashScreen.setOptions({
-    fade: false,
-    duration: 0,
-  });
-}
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
+// Let the native splash fade out; the JS overlay below completes the transition.
+SplashScreen.setOptions({
+  fade: true,
+  duration: 300,
 });
+
+const getStyles = (backgroundColor: string) =>
+  StyleSheet.create({
+    container: {
+      flex: 1,
+    },
+    splash: {
+      ...StyleSheet.absoluteFill,
+      backgroundColor,
+      alignItems: "center",
+      justifyContent: "center",
+    },
+    logo: {
+      width: LOGO_SIZE,
+      height: LOGO_SIZE,
+    },
+  });
 
 const SplashProviderComponent = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
+  const { colorTheme: theme } = useTheme();
   const [appIsReady, setAppIsReady] = useState(false);
+  const [splashHidden, setSplashHidden] = useState(false);
+  const fadeAnim = useRef(new Animated.Value(1)).current;
+  const scaleAnim = useRef(new Animated.Value(1)).current;
+  const hasAnimated = useRef(false);
 
   useEffect(() => {
     async function prepare() {
@@ -75,18 +92,61 @@ const SplashProviderComponent = ({
   }, []);
 
   const onLayout = useCallback(() => {
-    if (appIsReady) {
+    if (appIsReady && !hasAnimated.current) {
+      hasAnimated.current = true;
       SplashScreen.hideAsync();
+      Animated.parallel([
+        Animated.timing(fadeAnim, {
+          toValue: 0,
+          duration: FADE_DURATION,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1.08,
+          friction: 6,
+          useNativeDriver: true,
+        }),
+      ]).start(() => {
+        setSplashHidden(true);
+      });
     }
-  }, [appIsReady]);
+  }, [appIsReady, fadeAnim, scaleAnim]);
+
+  const styles = getStyles(theme.white);
 
   if (!appIsReady) {
-    return null;
+    // Show the same branded view behind the native splash so there is no
+    // blank flash after the OS launch screen disappears.
+    return (
+      <View style={styles.splash}>
+        <Image
+          source={require("@/assets/images/logo.png")}
+          style={styles.logo}
+        />
+      </View>
+    );
   }
 
   return (
     <View style={styles.container} onLayout={onLayout}>
       {children}
+      {!splashHidden && (
+        <Animated.View
+          style={[
+            styles.splash,
+            {
+              opacity: fadeAnim,
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+          pointerEvents="none"
+        >
+          <Image
+            source={require("@/assets/images/logo.png")}
+            style={styles.logo}
+          />
+        </Animated.View>
+      )}
     </View>
   );
 };
