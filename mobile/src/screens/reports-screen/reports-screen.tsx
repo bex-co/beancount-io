@@ -5,7 +5,7 @@ import { analytics } from "@/common/analytics";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
-import { getCurrencySymbol } from "@/common/currency-util";
+import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
 import { gutter } from "@/common/theme";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer/ledger-drawer-header";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -54,8 +54,8 @@ const ReportsScreenImpl = (): JSX.Element => {
   const [timeRange, setTimeRange] = useState<TimeRange>("6M");
   const [refreshing, setRefreshing] = useState(false);
 
-  const { currencies } = useLedgerMeta(userId);
-  const currency = currencies.length > 0 ? currencies[0] : "USD";
+  const { currencies } = useLedgerMeta(userId, ledgerId);
+  const currency = getPrimaryCurrency(currencies);
   const currencySymbol = getCurrencySymbol(currency);
 
   const {

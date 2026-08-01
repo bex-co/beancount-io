@@ -1,3 +1,5 @@
+import { getCurrencySymbol } from "./currency-util";
+
 export const shortNumber = (number: number | string): string => {
   // Convert string to number if needed
   const num = typeof number === "string" ? parseFloat(number) : number;
@@ -51,6 +53,19 @@ export const groupThousands = (value: number): string => {
   return `${grouped}.${decimals}`;
 };
 
+// Sign prefix + grouped absolute amount, shared by the money formatters. The
+// sign is always a prefix; only the currency's placement differs between them.
+const signedAmount = (
+  value: number,
+  includePlus: boolean,
+): { sign: string; amount: string } => {
+  const normalized = Number.isFinite(value) ? value : 0;
+  return {
+    sign: normalized < 0 ? "-" : includePlus ? "+" : "",
+    amount: groupThousands(normalized),
+  };
+};
+
 /**
  * A signed money string with a currency symbol, e.g. "-$1,234.50" or "$0.00".
  * Pass `includePlus` to prefix a "+" on non-negative amounts (e.g. "+$1,234.50")
@@ -61,7 +76,24 @@ export const formatSignedMoney = (
   symbol: string,
   includePlus = false,
 ): string => {
-  const normalized = Number.isFinite(value) ? value : 0;
-  const sign = normalized < 0 ? "-" : includePlus ? "+" : "";
-  return `${sign}${symbol}${groupThousands(normalized)}`;
+  const { sign, amount } = signedAmount(value, includePlus);
+  return `${sign}${symbol}${amount}`;
+};
+
+/**
+ * A signed money string annotated with its currency, resolving the symbol from
+ * the currency code. When the currency has a known symbol it is prefixed
+ * (e.g. "-$1,234.50"); otherwise the currency code is appended after the amount
+ * (e.g. "551,620.00 MUSD") so a custom or unrecognized commodity is never shown
+ * as a bare, unlabeled number. Prefer this over `formatSignedMoney` wherever the
+ * currency code is available.
+ */
+export const formatSignedMoneyWithCurrency = (
+  value: number,
+  currency: string,
+  includePlus = false,
+): string => {
+  const { sign, amount } = signedAmount(value, includePlus);
+  const symbol = getCurrencySymbol(currency);
+  return symbol ? `${sign}${symbol}${amount}` : `${sign}${amount} ${currency}`;
 };

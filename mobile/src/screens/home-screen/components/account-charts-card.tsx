@@ -37,7 +37,7 @@ const styles = StyleSheet.create({
 });
 
 type AccountChartsCardProps = {
-  currencySymbol: string;
+  currency: string;
   netWorthSeries: SeriesPoint[];
   assetsSeries: SeriesPoint[];
   liabilitiesSeries: SeriesPoint[];
@@ -53,7 +53,7 @@ type AccountChartsCardProps = {
  * for scrubbing, and the tab labels say what each page is where dots could not.
  */
 export function AccountChartsCard({
-  currencySymbol,
+  currency,
   netWorthSeries,
   assetsSeries,
   liabilitiesSeries,
@@ -99,7 +99,7 @@ export function AccountChartsCard({
         key={key}
         labels={chart.labels}
         numbers={chart.numbers}
-        currencySymbol={currencySymbol}
+        currency={currency}
         height={CHART_HEIGHT}
       />
     );

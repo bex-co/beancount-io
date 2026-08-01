@@ -24,7 +24,7 @@ import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { formatSignedMoney } from "@/common/number-utils";
+import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { ColorTheme } from "@/types/theme-props";
 
 type InteractiveLineChartProps = {
@@ -36,7 +36,11 @@ type InteractiveLineChartProps = {
   label?: string;
   labels: string[];
   numbers: number[];
-  currencySymbol: string;
+  /**
+   * Currency code (e.g. "USD", "MUSD"). The headline and change use its symbol
+   * when one is known, otherwise the code is appended after the amount.
+   */
+  currency: string;
   height?: number;
   /**
    * Shown in the middle of the plot when there aren't two points to draw a line
@@ -120,7 +124,7 @@ function InteractiveLineChart({
   label,
   labels,
   numbers,
-  currencySymbol,
+  currency,
   height = CHART_HEIGHT,
   placeholder,
   onScrubStart,
@@ -181,7 +185,7 @@ function InteractiveLineChart({
 
   const change = shownValue - baseline;
   const changePct = baseline !== 0 ? (change / Math.abs(baseline)) * 100 : 0;
-  const changeText = `${formatSignedMoney(change, currencySymbol, true)} (${
+  const changeText = `${formatSignedMoneyWithCurrency(change, currency, true)} (${
     change >= 0 ? "+" : ""
   }${changePct.toFixed(2)}%)`;
 
@@ -249,7 +253,7 @@ function InteractiveLineChart({
       <View style={styles.header}>
         {label !== undefined && <Text style={styles.label}>{label}</Text>}
         <AmountText style={styles.headline}>
-          {formatSignedMoney(shownValue, currencySymbol)}
+          {formatSignedMoneyWithCurrency(shownValue, currency)}
         </AmountText>
         <View style={styles.changeRow}>
           <AmountText style={[styles.change, { color: lineColor }]}>

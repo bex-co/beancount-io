@@ -2,6 +2,7 @@ import {
   shortNumber,
   groupThousands,
   formatSignedMoney,
+  formatSignedMoneyWithCurrency,
 } from "../number-utils";
 
 describe("shortNumber", () => {
@@ -126,5 +127,34 @@ describe("formatSignedMoney", () => {
 
   it("still prefixes a minus for negatives when includePlus is set", () => {
     expect(formatSignedMoney(-1234.5, "$", true)).toBe("-$1,234.50");
+  });
+});
+
+describe("formatSignedMoneyWithCurrency", () => {
+  it("prefixes the symbol for a currency with a known symbol", () => {
+    expect(formatSignedMoneyWithCurrency(1234.5, "USD")).toBe("$1,234.50");
+    expect(formatSignedMoneyWithCurrency(-1234.5, "USD")).toBe("-$1,234.50");
+  });
+
+  it("resolves the CNY symbol via the special case", () => {
+    expect(formatSignedMoneyWithCurrency(2500, "CNY")).toBe("¥2,500.00");
+  });
+
+  it("appends the currency code when no symbol is known (e.g. MUSD)", () => {
+    // The Amazon ledger reports in MUSD, which currency-icons has no symbol for.
+    expect(formatSignedMoneyWithCurrency(551620, "MUSD")).toBe(
+      "551,620.00 MUSD",
+    );
+  });
+
+  it("keeps the sign as a prefix when appending an unknown currency code", () => {
+    expect(formatSignedMoneyWithCurrency(-100, "MUSD")).toBe("-100.00 MUSD");
+    expect(formatSignedMoneyWithCurrency(0, "MUSD")).toBe("0.00 MUSD");
+  });
+
+  it("prefixes a plus for gain deltas of an unknown currency", () => {
+    expect(formatSignedMoneyWithCurrency(551620, "MUSD", true)).toBe(
+      "+551,620.00 MUSD",
+    );
   });
 });

@@ -5,3 +5,4 @@
 ## Milestones
 
 - [x] **m1** — Ask-page quick wins: focus, preset questions, stop & retry (9 tasks) ← from `/pm` invocation capturing the AI-chat UX review (2026-07-31)
+- [x] **m2** — Scope useLedgerMeta to the selected ledger (fix wrong currency display) (5 tasks) ← from `/pm` invocation capturing the expo-mcp currency investigation (2026-07-31)

@@ -13,7 +13,7 @@ import { AccountChartsCard } from "@/screens/home-screen/components/account-char
 import { RecentTransactionsCard } from "@/screens/home-screen/components/recent-transactions-card";
 import { SpendingCard } from "@/screens/home-screen/components/spending-card";
 import { FeedCard } from "@/screens/home-screen/components/feed-card";
-import { getCurrencySymbol } from "@/common/currency-util";
+import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
 import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
@@ -44,9 +44,12 @@ export const HomeScreenImpl = (): JSX.Element => {
   const styles = useThemeStyle(getStyles);
   const router = useRouter();
   const ledgerId = useLedgerGuard();
-  const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(userId);
+  const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(
+    userId,
+    ledgerId,
+  );
 
-  const currency = currencies.length > 0 ? currencies[0] : "USD";
+  const currency = getPrimaryCurrency(currencies);
   const currencySymbol = getCurrencySymbol(currency);
   // One balance-sheet query feeds all three curves on the card. Home is the
   // only place net worth is charted; the Accounts tab is account lists only.
@@ -128,7 +131,7 @@ export const HomeScreenImpl = (): JSX.Element => {
       />
       <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
         <AccountChartsCard
-          currencySymbol={currencySymbol}
+          currency={currency}
           netWorthSeries={netWorthSeries}
           assetsSeries={assetsSeries}
           liabilitiesSeries={liabilitiesSeries}

@@ -17,7 +17,7 @@ import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { themeVar } from "@/common/vars";
-import { getCurrencySymbol } from "@/common/currency-util";
+import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
 import { TimeRange } from "@/common/series-util";
 import { BalanceChartCard } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -100,8 +100,11 @@ const AccountDetailScreenImpl = ({
   const currentTheme = useReactiveVar(themeVar);
   usePageView("account_detail", { account });
 
-  const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(userId);
-  const currency = currencies.length > 0 ? currencies[0] : "USD";
+  const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(
+    userId,
+    ledgerId,
+  );
+  const currency = getPrimaryCurrency(currencies);
   const currencySymbol = getCurrencySymbol(currency);
 
   const {
@@ -251,7 +254,7 @@ const AccountDetailScreenImpl = ({
         <View style={styles.chartContainer}>
           <BalanceChartCard
             label={t("balance")}
-            currencySymbol={currencySymbol}
+            currency={currency}
             series={balanceSeries}
             loading={reportLoading || refreshing}
             error={Boolean(reportError)}
@@ -263,7 +266,7 @@ const AccountDetailScreenImpl = ({
     ),
     [
       t,
-      currencySymbol,
+      currency,
       balanceSeries,
       reportLoading,
       refreshing,

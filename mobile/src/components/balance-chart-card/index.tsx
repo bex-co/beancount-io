@@ -19,7 +19,8 @@ const CHART_HEIGHT = 180;
 type BalanceChartCardProps = {
   /** Small caption above the headline (e.g. "Net Worth", "Balance"). */
   label: string;
-  currencySymbol: string;
+  /** Currency code (e.g. "USD", "MUSD") for the headline/change formatting. */
+  currency: string;
   /** Full monthly series (ascending); sliced client-side by the range pills. */
   series: SeriesPoint[];
   loading: boolean;
@@ -36,7 +37,7 @@ type BalanceChartCardProps = {
  */
 export function BalanceChartCard({
   label,
-  currencySymbol,
+  currency,
   series,
   loading,
   error,
@@ -68,7 +69,7 @@ export function BalanceChartCard({
         label={label}
         labels={chart.labels}
         numbers={chart.numbers}
-        currencySymbol={currencySymbol}
+        currency={currency}
         height={CHART_HEIGHT}
       />
       <TimeRangePills

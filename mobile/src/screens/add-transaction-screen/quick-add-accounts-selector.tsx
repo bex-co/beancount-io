@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { useReactiveVar } from "@apollo/client";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
+import { getPrimaryCurrency } from "@/common/currency-util";
 import { analytics } from "@/common/analytics";
 import { fontSizes } from "@/common/theme";
 import { i18n } from "@/translations";
@@ -77,7 +78,11 @@ export const QuickAddAccountsSelector = (
   const { userId } = useSession();
   const { onChange } = props;
   const [refreshing, setRefreshing] = useState(false);
-  const { currencies, error, loading, refetch } = useLedgerMeta(userId);
+  const ledgerId = useReactiveVar(ledgerVar);
+  const { currencies, error, loading, refetch } = useLedgerMeta(
+    userId,
+    ledgerId ?? undefined,
+  );
   // FROM/TO start empty — no pre-filled default. They fill from a payee
   // suggestion or an explicit picker choice.
   const [selectedAssets, setSelectedAssets] = useState<string>("");
@@ -85,7 +90,7 @@ export const QuickAddAccountsSelector = (
   const [selectedPayee, setSelectedPayee] = useState<string>("");
 
   useEffect(() => {
-    const currency = currencies.length > 0 ? currencies[0] : "";
+    const currency = getPrimaryCurrency(currencies, "");
     if (onChange) {
       onChange({
         asset: selectedAssets,
@@ -101,7 +106,6 @@ export const QuickAddAccountsSelector = (
   // own FROM→TO model and ignores multi-leg splits. Picking a payee pre-fills
   // both rows and offers runner-ups as chips. Nothing changes until a payee is
   // chosen; slow/failed queries never block the flow.
-  const ledgerId = useReactiveVar(ledgerVar);
   const {
     from: fromSuggestions,
     to: toSuggestions,
