@@ -20,11 +20,15 @@ export type RegisterFormData = {
 
 type UseRegisterFormOptions = {
   withDefaultLedger?: boolean;
+  inviteSrc?: string;
+  inviteBy?: string;
   onSuccess: (sessionId: string, email: string) => void;
 };
 
 export function useRegisterForm({
   withDefaultLedger = false,
+  inviteSrc,
+  inviteBy,
   onSuccess,
 }: UseRegisterFormOptions) {
   const { t } = useTranslations();
@@ -48,6 +52,8 @@ export function useRegisterForm({
           email: data.email,
           password: data.password,
           withDefaultLedger,
+          inviteSrc,
+          inviteBy,
         },
       });
       const responseData = response.data;

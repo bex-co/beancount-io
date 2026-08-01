@@ -17,6 +17,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle, useToast, usePageView } from "@/common/hooks";
+import { buildReferralUrl } from "@/common/referral-url";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -82,7 +83,7 @@ export const ReferralScreen = () => {
   const { userId } = useSession();
   const toast = useToast();
   const { t } = useTranslations();
-  const shareLink = `beancount.io/sign-up/?src=${Platform.OS}&by=${userId}`;
+  const shareLink = buildReferralUrl(Platform.OS, userId);
   const styles = useThemeStyle(getStyles);
   return (
     <SafeAreaView style={styles.container}>

@@ -39,7 +39,9 @@ const getStyles = (theme: ColorTheme) => {
 export const LoginWebView = ({ isSignUp, onClose }: Props) => {
   const [progress, setProgress] = useState(0);
   const styles = useThemeStyle(getStyles);
-  const uri = isSignUp ? getEndpoint("sign-up") : getEndpoint("login");
+  const uri = isSignUp
+    ? getEndpoint("auth/sign-up")
+    : getEndpoint("auth/login");
 
   const injectedJavascript = `(function() {
     window.postMessage = function(data) {

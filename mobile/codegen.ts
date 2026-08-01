@@ -1,9 +1,10 @@
 import type { CodegenConfig } from "@graphql-codegen/cli";
 
-const schema =
-  (process.env.EXPO_PUBLIC_SERVER_URL &&
-    process.env.EXPO_PUBLIC_SERVER_URL + "api-gateway/") ||
-  "https://beancount.io/api-gateway/";
+const serverUrl = process.env.EXPO_PUBLIC_SERVER_URL || "https://beancount.io/";
+const schema = new URL(
+  "api-gateway/",
+  `${serverUrl.replace(/\/+$/, "")}/`,
+).toString();
 
 const scalars = {
   JSONObject: "Record<string, number | string>",

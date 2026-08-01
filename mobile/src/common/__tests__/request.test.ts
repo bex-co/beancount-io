@@ -59,7 +59,7 @@ describe("request utilities", () => {
   });
 
   it("combines the server URL with the provided path", () => {
-    expect(getEndpoint("api/data")).toBe(`${config.serverUrl}api/data`);
-    expect(getEndpoint("/users")).toBe(`${config.serverUrl}/users`);
+    expect(getEndpoint("api/data")).toBe("https://beancount.io/api/data");
+    expect(getEndpoint("/users")).toBe("https://beancount.io/users");
   });
 });

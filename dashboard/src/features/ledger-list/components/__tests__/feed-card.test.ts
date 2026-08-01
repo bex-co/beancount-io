@@ -48,7 +48,7 @@ describe("getLedgerDestination", () => {
     expect(
       getLedgerDestination(
         createFeedItem({
-          link: "https://beancount.io/blog/product-update",
+          link: "https://beancount.io/blog",
         }),
       ),
     ).toBeNull();

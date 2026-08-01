@@ -302,4 +302,4 @@ On error, exit code is non-zero and the output is:
 | Variable | Default | Description |
 |---|---|---|
 | `BEANCOUNT_API_URL` | `https://api.v3.beancount.io` | GraphQL API base URL |
-| `BEANCOUNT_DASHBOARD_URL` | `https://dashboard.v3.beancount.io` | Dashboard URL (used for device login flow) |
+| `BEANCOUNT_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL (used for device login flow) |

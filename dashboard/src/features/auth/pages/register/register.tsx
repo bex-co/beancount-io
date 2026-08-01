@@ -6,17 +6,21 @@ import { RegisterForm } from "@/features/auth/components/register-form";
 
 type RegisterPageProps = {
   withDefaultLedger?: boolean;
+  inviteSrc?: string;
+  inviteBy?: string;
   onSuccess: (sessionId: string, email: string) => void;
 };
 
 export default function RegisterPage({
   withDefaultLedger = false,
+  inviteSrc,
+  inviteBy,
   onSuccess,
 }: RegisterPageProps) {
   const { t } = useTranslations();
 
   const { onSubmit, isLoading, serverError, defaultUsername } = useRegisterForm(
-    { withDefaultLedger, onSuccess },
+    { withDefaultLedger, inviteSrc, inviteBy, onSuccess },
   );
 
   const features = [

@@ -52,6 +52,8 @@ export default function RegisterFlow() {
   return (
     <RegisterPage
       withDefaultLedger={search.withDefaultLedger ?? false}
+      inviteSrc={search.src}
+      inviteBy={search.by}
       onSuccess={handleRegisterSuccess}
     />
   );

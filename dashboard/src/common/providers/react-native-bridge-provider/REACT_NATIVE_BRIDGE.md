@@ -26,7 +26,7 @@ export default function DashboardScreen() {
   return (
     <WebView
       ref={webViewRef}
-      source={{ uri: 'https://dashboard.v3.beancount.io' }}
+      source={{ uri: 'https://beancount.io' }}
       javaScriptEnabled={true}
     />
   );
@@ -69,7 +69,7 @@ export default function DashboardScreen() {
   return (
     <WebView
       ref={webViewRef}
-      source={{ uri: 'https://dashboard.v3.beancount.io' }}
+      source={{ uri: 'https://beancount.io' }}
       onMessage={handleMessage}
       javaScriptEnabled={true}
     />
@@ -197,7 +197,7 @@ export default function DashboardScreen() {
     <View style={styles.container}>
       <WebView
         ref={webViewRef}
-        source={{ uri: 'https://dashboard.v3.beancount.io' }}
+        source={{ uri: 'https://beancount.io' }}
         onMessage={handleMessage}
         javaScriptEnabled={true}
         domStorageEnabled={true}
@@ -350,7 +350,7 @@ export default function DashboardScreen() {
   return (
     <View style={{ flex: 1 }}>
       <WebView
-        source={{ uri: 'https://dashboard.v3.beancount.io' }}
+        source={{ uri: 'https://beancount.io' }}
         onLoadEnd={handleLoadEnd}
         javaScriptEnabled={true}
       />

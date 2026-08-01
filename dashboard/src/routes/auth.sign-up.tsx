@@ -6,6 +6,8 @@ import { registerLoader } from "@/features/auth/pages/register/loader";
 
 const signUpSearchSchema = z.object({
   withDefaultLedger: z.boolean().optional(),
+  src: z.string().optional(),
+  by: z.string().optional(),
 });
 
 export const Route = createFileRoute("/auth/sign-up")({

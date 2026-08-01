@@ -40,7 +40,7 @@ export const getSystemColorScheme = () => {
 const colorMode = getSystemColorScheme();
 
 /**
- * Brand palette — beancount.io/brand-assets.
+ * Brand palette — https://beancount.io/brand-assets.
  *
  * A vivid grass-green system: the brand green (#5fc535) carries brand +
  * interaction, and the neutral ramp is a warm khaki (Bone → Stone → Charcoal)

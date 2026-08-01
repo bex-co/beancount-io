@@ -20,6 +20,8 @@ const signUpOtpSearchSchema = z.object({
 
 const signUpSearchSchema = z.object({
   withDefaultLedger: z.boolean().optional(),
+  src: z.string().optional(),
+  by: z.string().optional(),
 });
 
 const filesSearchSchema = z.object({
@@ -159,6 +161,15 @@ describe("Route Search Schema Validation", () => {
     it("should accept empty object", () => {
       const result = signUpSearchSchema.parse({});
       expect(result.withDefaultLedger).toBeUndefined();
+    });
+
+    it("should preserve referral attribution", () => {
+      const result = signUpSearchSchema.parse({
+        src: "ios",
+        by: "referrer-123",
+      });
+      expect(result.src).toBe("ios");
+      expect(result.by).toBe("referrer-123");
     });
 
     it("should reject non-boolean withDefaultLedger", () => {

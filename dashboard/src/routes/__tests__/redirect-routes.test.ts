@@ -90,7 +90,11 @@ describe("Redirect Routes", () => {
 
     describe("/sign-up -> /auth/sign-up", () => {
       it("should redirect to /auth/sign-up with same search params", () => {
-        const search = { withDefaultLedger: true };
+        const search = {
+          withDefaultLedger: true,
+          src: "ios",
+          by: "referrer-123",
+        };
 
         const beforeLoad = ({
           search,
@@ -107,7 +111,11 @@ describe("Redirect Routes", () => {
 
         expect(redirect).toHaveBeenCalledWith({
           to: "/auth/sign-up",
-          search: { withDefaultLedger: true },
+          search: {
+            withDefaultLedger: true,
+            src: "ios",
+            by: "referrer-123",
+          },
         });
       });
 

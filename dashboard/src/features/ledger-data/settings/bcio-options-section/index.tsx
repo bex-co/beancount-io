@@ -27,13 +27,13 @@ export function BcioOptionsSection({
 }: {
   ledger: NonNullable<GetLedgerQuery["getLedger"]>;
 }) {
-  const { t, i18n } = useTranslations();
+  const { t } = useTranslations();
   const bcioOptions = ledger.bcioOptions;
 
   if (!bcioOptions) return null;
 
-  const localePrefix = i18n.language === "en" ? "" : `/${i18n.language}`;
-  const bcioOptionsDocUrl = `https://beancount.io${localePrefix}/docs/Basics/beancountio-options`;
+  const bcioOptionsDocUrl =
+    "https://github.com/bex-co/beancount-io/blob/main/fava-slim/fava/core/bcio_options.py";
 
   const optionEntries = [
     { name: "default_file", value: bcioOptions.defaultFile },

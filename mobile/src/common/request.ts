@@ -6,4 +6,7 @@ export const headers: { [key: string]: string } = {
   "x-app-version": Constants.nativeAppVersion,
 };
 
-export const getEndpoint = (path: string) => `${config.serverUrl}${path}`;
+export const getEndpoint = (path: string) => {
+  const baseUrl = `${config.serverUrl.replace(/\/+$/, "")}/`;
+  return new URL(path.replace(/^\/+/, ""), baseUrl).toString();
+};
