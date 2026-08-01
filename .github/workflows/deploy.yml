@@ -14,7 +14,9 @@ jobs:
           fetch-depth: 2
       - uses: actions/setup-node@v4
         with:
-          node-version: 20
+          # Node 22: a transitive dep (listr2@10.2.x) requires >=22.13.0 to install.
+          # Keep deploy aligned with the mobile CI runtime.
+          node-version: 22
           cache: yarn
           cache-dependency-path: ./mobile/yarn.lock
       - name: Detect version change
