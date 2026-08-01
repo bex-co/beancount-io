@@ -1,49 +1,109 @@
-<p align="center"><a href="https://beancount.io/?utm_source=github.com&utm_medium=readme&utm_campaign=os_oct_1" target="_blank" rel="noopener noreferrer"><img width="100" src="https://beancount.io/img/favicon.png" alt="Beancount.io logo"></a></p>
-
-<h1 align="center">Beancount Mobile CE</h1>
-
 <p align="center">
-  <img src="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml/badge.svg"/>
+  <a href="https://beancount.io/?utm_source=github.com&utm_medium=readme&utm_campaign=mobile_oss">
+    <img width="96" src="https://beancount.io/img/favicon.png" alt="Beancount.io logo">
+  </a>
 </p>
 
-Beancount Mobile Community Edition is an iOS and Android App for [Beancount.io - Double-entry bookkeeping made easy for living your best financial life](https://beancount.io/?utm_source=github.com&utm_medium=readme&utm_campaign=os_oct_1) 💰
+<h1 align="center">Beancount Mobile</h1>
 
-![Beancount Mobile](https://beancount-io.b-cdn.net/beancount-ios-app-2.png)
+<p align="center">
+  <strong>Plain-text accounting in your pocket.</strong>
+  <br>
+  The open-source iOS and Android client for Beancount.io, built with Expo and React Native.
+</p>
+
+<p align="center">
+  <a href="https://github.com/bex-co/beancount-io"><strong>⭐ Star the project</strong></a>
+  ·
+  <a href="#product-tour">Product tour</a>
+  ·
+  <a href="#development">Run locally</a>
+  ·
+  <a href="../CONTRIBUTING.md">Contribute</a>
+</p>
+
+<p align="center">
+  <a href="https://github.com/bex-co/beancount-io"><img src="https://img.shields.io/github/stars/bex-co/beancount-io?style=social" alt="Star Beancount.io on GitHub"></a>
+  <a href="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml"><img src="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml/badge.svg?branch=main" alt="Mobile CI"></a>
+  <a href="../LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
+</p>
+
+<p align="center">
+  <a href="https://apps.apple.com/us/app/beancount/id1527950512"><img height="48" src="https://beancount-io.b-cdn.net/app-store.png" alt="Download Beancount on the App Store"></a>
+  &nbsp;
+  <a href="https://play.google.com/store/apps/details?id=io.beancount.android"><img height="48" src="https://beancount-io.b-cdn.net/google-play.png" alt="Get Beancount on Google Play"></a>
+</p>
+
+<p align="center"><sub>If open, programmable personal finance matters to you, starring the repository is the simplest way to help more people discover it.</sub></p>
+
+## Built for daily financial work
+
+Beancount Mobile Community Edition turns a Beancount.io ledger into a native workspace for checking your position, recording activity, and working directly with the source behind your books.
+
+<p align="center">
+  <a href="./docs/marketing-showcase/webp/01-home.webp"><img width="31%" src="./docs/marketing-showcase/webp/01-home.webp" alt="Home dashboard with net worth trend and recent transactions"></a>
+  <a href="./docs/marketing-showcase/webp/02-accounts.webp"><img width="31%" src="./docs/marketing-showcase/webp/02-accounts.webp" alt="Hierarchical account balances in Beancount Mobile"></a>
+  <a href="./docs/marketing-showcase/webp/04-reports.webp"><img width="31%" src="./docs/marketing-showcase/webp/04-reports.webp" alt="Income, expense, and category reports in Beancount Mobile"></a>
+</p>
+
+- **Understand the whole picture** — follow net worth, assets, liabilities, spending, and account-level trends.
+- **Record clean transactions** — enter balanced multi-posting transactions, reuse account suggestions, and scan receipts.
+- **Investigate every entry** — search and filter the journal, inspect postings and balance context, then edit the underlying directive.
+- **Work with the ledger itself** — browse and edit `.bean` files with syntax highlighting and review Git commit diffs.
+- **Stay connected** — switch ledgers, review notifications, invite collaborators, and use light or dark themes.
+- **Use your language** — the app ships with 13 locales and follows the device language when supported.
+
+## Product tour
+
+<p align="center">
+  <a href="./docs/marketing-showcase/webp/09-add-transaction.webp"><img width="31%" src="./docs/marketing-showcase/webp/09-add-transaction.webp" alt="Balanced multi-posting transaction form"></a>
+  <a href="./docs/marketing-showcase/webp/19-transaction-detail.webp"><img width="31%" src="./docs/marketing-showcase/webp/19-transaction-detail.webp" alt="Transaction details with postings and balance context"></a>
+  <a href="./docs/marketing-showcase/webp/21-file-editor.webp"><img width="31%" src="./docs/marketing-showcase/webp/21-file-editor.webp" alt="Syntax-highlighted Beancount source editor"></a>
+</p>
+
+<details>
+<summary><strong>See all 25 captured screens</strong></summary>
+
+<br>
+
+<a href="./docs/marketing-showcase/contact-all.webp"><img src="./docs/marketing-showcase/contact-all.webp" alt="Contact sheet showing all 25 Beancount Mobile screens"></a>
+
+The individual full-resolution WebP files are in [`docs/marketing-showcase/webp/`](./docs/marketing-showcase/webp/).
+
+</details>
 
 ## Development
 
-Run it locally
+Requires Node.js 20.19.4 or newer and Yarn Classic 1.22.
 
 ```zsh
 git clone https://github.com/bex-co/beancount-io.git
 cd beancount-io/mobile
 yarn install
+cp .env.template .env.local
 yarn start
 ```
 
-Scripts
+Expo will guide you to an iOS simulator, Android emulator, or connected device.
 
-- `yarn test`: run lint and type checks
-- `yarn lint`: run the linter
-- `yarn codegen`: generate Apollo GraphQL schema types
+| Command | Purpose |
+| --- | --- |
+| `yarn ios` | Build and launch the iOS app |
+| `yarn android` | Build and launch the Android app |
+| `yarn lint` | Run TypeScript and ESLint checks |
+| `yarn typecheck` | Run strict TypeScript checking |
+| `yarn test:unit` | Run the unit test suite |
+| `yarn test` | Run lint, typecheck, and unit tests |
+| `yarn codegen` | Regenerate GraphQL types and hooks |
+
+The mobile client connects to the hosted Beancount.io API. Set `EXPO_PUBLIC_SERVER_URL` in `.env.local`; never commit credentials or private configuration.
 
 ## Languages
 
-The app will use your device language when possible. Available translations:
+English, Simplified Chinese, Bulgarian, Catalan, German, Spanish, Persian, French, Dutch, Portuguese, Russian, Slovak, and Ukrainian.
 
-- English
-- Chinese
-- Spanish
-- French
+## Contributing and support
 
-## Like it?
+Contributions are welcome across product UI, accessibility, translations, tests, and developer experience. Read the [contributing guide](../CONTRIBUTING.md), browse [mobile issues](https://github.com/bex-co/beancount-io/issues), or join the [Telegram community](https://t.me/beancount).
 
-Star ⭐️ the repo, download the App, and give it a review!
-
-<a target="_blank" href="https://apps.apple.com/us/app/id1527950512" rel="noreferrer"><img src="https://beancount-io.b-cdn.net/app-store.png" alt="download from App Store" style="height: 42px; width: 124px;"></a>
-
-<a target="_blank" href="https://play.google.com/store/apps/details?id=io.beancount.android" rel="noreferrer"><img src="https://beancount-io.b-cdn.net/google-play.png" alt="download from Play Store" style="height: 42px; width: 124px;"></a>
-
-## Have a question?
-
-Ask us at https://t.me/beancount
+If you want this open-source mobile client to reach more people, [star Beancount.io on GitHub](https://github.com/bex-co/beancount-io).

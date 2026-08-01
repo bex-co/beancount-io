@@ -13,7 +13,11 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/bex-co/beancount-io"><strong>⭐ Star on GitHub</strong></a>
+  ·
   <a href="https://beancount.io/">Web app</a>
+  ·
+  <a href="#mobile-apps">Mobile apps</a>
   ·
   <a href="#choose-your-entry-point">Start building</a>
   ·
@@ -25,6 +29,7 @@
 </p>
 
 <p align="center">
+  <a href="https://github.com/bex-co/beancount-io"><img src="https://img.shields.io/github/stars/bex-co/beancount-io?style=social" alt="Star Beancount.io on GitHub"></a>
   <a href="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml"><img src="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml/badge.svg?branch=main" alt="Mobile CI"></a>
   <a href="https://github.com/bex-co/beancount-io/actions/workflows/ci-dashboard.yml"><img src="https://github.com/bex-co/beancount-io/actions/workflows/ci-dashboard.yml/badge.svg?branch=main" alt="Dashboard CI"></a>
   <a href="https://github.com/bex-co/beancount-io/actions/workflows/ci-cli.yml"><img src="https://github.com/bex-co/beancount-io/actions/workflows/ci-cli.yml/badge.svg?branch=main" alt="Python CI"></a>
@@ -48,6 +53,24 @@
 </p>
 
 Beancount.io is a developer-friendly workspace for [Beancount](https://beancount.github.io/docs/) ledgers. Your books remain readable plain text while the surrounding tools add polished reports, transaction entry, Git-backed collaboration, automation, and access from the browser, phone, terminal, or a coding agent.
+
+## Mobile apps
+
+Review your finances, add transactions, scan receipts, and edit ledger files from the native Beancount client. The same open ledger remains available from the web, terminal, Python, and agent workflows.
+
+<p align="center">
+  <a href="./mobile/README.md"><img width="31%" src="./mobile/docs/marketing-showcase/webp/01-home.webp" alt="Beancount Mobile home dashboard with net worth trend and recent transactions"></a>
+  <a href="./mobile/README.md"><img width="31%" src="./mobile/docs/marketing-showcase/webp/04-reports.webp" alt="Beancount Mobile reports with income, expenses, and category breakdowns"></a>
+  <a href="./mobile/README.md"><img width="31%" src="./mobile/docs/marketing-showcase/webp/09-add-transaction.webp" alt="Beancount Mobile balanced multi-posting transaction entry"></a>
+</p>
+
+<p align="center">
+  <a href="https://apps.apple.com/us/app/beancount/id1527950512"><img height="48" src="https://beancount-io.b-cdn.net/app-store.png" alt="Download Beancount on the App Store"></a>
+  &nbsp;
+  <a href="https://play.google.com/store/apps/details?id=io.beancount.android"><img height="48" src="https://beancount-io.b-cdn.net/google-play.png" alt="Get Beancount on Google Play"></a>
+</p>
+
+<p align="center"><sub><a href="./mobile/README.md">Explore the mobile product tour</a> or run the Expo app locally.</sub></p>
 
 ## Why developers build with it
 
@@ -134,7 +157,7 @@ If Beancount.io is the kind of open, programmable finance software you want to s
 
 - Website: [beancount.io](https://beancount.io/)
 - Chat: [Telegram](https://t.me/beancount)
-- Mobile: [App Store](https://apps.apple.com/us/app/id1527950512) · [Google Play](https://play.google.com/store/apps/details?id=io.beancount.android)
+- Mobile: [App Store](https://apps.apple.com/us/app/beancount/id1527950512) · [Google Play](https://play.google.com/store/apps/details?id=io.beancount.android)
 
 ## License
 
