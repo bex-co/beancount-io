@@ -40,6 +40,14 @@ const getStyles = (theme: ColorTheme) =>
       marginTop: 12,
       marginRight: 2,
     },
+    // Suffix shown when the currency has no symbol (e.g. "MUSD"): mirrors the
+    // symbol's size, placed after the amount instead of before it.
+    txtCurrencyCode: {
+      fontSize: fontSizes.display,
+      fontWeight: fontWeights.medium,
+      marginTop: 12,
+      marginLeft: 4,
+    },
     txtMoney: {
       fontSize: fontSizes.hero,
       fontWeight: fontWeights.medium,
@@ -154,12 +162,19 @@ export function AddTransactionScreen(): JSX.Element {
     <SafeAreaView edges={["bottom"]} style={styles.container}>
       <View style={styles.containerCenter}>
         <View style={styles.moneyRow}>
-          <Text style={[styles.txtCurrencySymbol, { color: moneyColor }]}>
-            {currencySymbol}
-          </Text>
+          {currencySymbol !== "" && (
+            <Text style={[styles.txtCurrencySymbol, { color: moneyColor }]}>
+              {currencySymbol}
+            </Text>
+          )}
           <AmountText style={[styles.txtMoney, { color: moneyColor }]}>
             {currentMoney}
           </AmountText>
+          {currencySymbol === "" && (
+            <Text style={[styles.txtCurrencyCode, { color: moneyColor }]}>
+              {currentCurrency}
+            </Text>
+          )}
         </View>
       </View>
       <QuickAddAccountsSelector onChange={onChange} />

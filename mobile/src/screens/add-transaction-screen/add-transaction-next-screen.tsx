@@ -324,6 +324,11 @@ export const AddTransactionNextScreenComponent = () => {
             <AmountText style={styles.txtSmallMoney}>
               {`${currentMoney.split(".")[1]}`}
             </AmountText>
+            {currencySymbol === "" && (
+              <AmountText style={styles.txtSmallMoney}>
+                {` ${currentCurrency}`}
+              </AmountText>
+            )}
           </View>
           {payee ? <Text style={styles.payee}>{payee}</Text> : null}
           <Text style={styles.date}>{date}</Text>
