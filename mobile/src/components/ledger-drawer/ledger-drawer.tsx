@@ -3,10 +3,10 @@ import {
   ActivityIndicator,
   Animated,
   BackHandler,
-  FlatList,
   Image,
   PanResponder,
   Pressable,
+  SectionList,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -25,6 +25,7 @@ import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ledgerVar } from "@/common/vars";
 import { useListLedgersQuery } from "@/generated-graphql/graphql";
+import { groupLedgersByOwner } from "./group-ledgers-by-owner";
 
 const OPEN_DURATION_MS = 240;
 const CLOSE_DURATION_MS = 200;
@@ -109,6 +110,15 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: 13,
       color: theme.black60,
     },
+    ownerHeader: {
+      paddingHorizontal: 20,
+      paddingTop: 12,
+      paddingBottom: 4,
+      fontSize: 13,
+      fontWeight: "600",
+      color: theme.black60,
+      backgroundColor: theme.white,
+    },
     stateContainer: {
       alignItems: "center",
       paddingVertical: 40,
@@ -176,6 +186,7 @@ export function LedgerDrawer({
   const ledgerId = useReactiveVar(ledgerVar);
   const { data, loading, refetch } = useListLedgersQuery();
   const ledgers = useMemo(() => data?.listLedgers ?? [], [data?.listLedgers]);
+  const ledgerSections = useMemo(() => groupLedgersByOwner(ledgers), [ledgers]);
 
   const [refreshing, setRefreshing] = useState(false);
   const handleRefresh = useCallback(async () => {
@@ -388,21 +399,27 @@ export function LedgerDrawer({
               </View>
             ) : (
               // Always render the list past first load — even with no ledgers — so
-              // the empty state lives inside a pull-to-refreshable FlatList rather
+              // the empty state lives inside a pull-to-refreshable SectionList rather
               // than a static View that can't be refreshed.
-              <FlatList
+              <SectionList
                 style={{ flex: 1 }}
                 contentContainerStyle={styles.ledgerListContent}
                 alwaysBounceVertical
-                data={ledgers}
+                sections={ledgerSections}
                 keyExtractor={(item) => item.id}
                 onRefresh={handleRefresh}
                 refreshing={refreshing}
+                stickySectionHeadersEnabled={false}
                 ListEmptyComponent={
                   <View style={styles.stateContainer}>
                     <Text style={styles.stateText}>{t("noEntries")}</Text>
                   </View>
                 }
+                renderSectionHeader={({ section }) => (
+                  <Text style={styles.ownerHeader} numberOfLines={1}>
+                    {section.owner}
+                  </Text>
+                )}
                 renderItem={({ item }) => {
                   const isSelected = item.id === ledgerId;
                   return (
@@ -417,7 +434,7 @@ export function LedgerDrawer({
                     >
                       <View style={styles.listItemContent}>
                         <Text style={styles.listItemName} numberOfLines={1}>
-                          {item.fullName}
+                          {item.name}
                         </Text>
                         {item.description ? (
                           <Text
