@@ -21,8 +21,8 @@ yarn
 # Install eas-cli if not already installed
 yarn global add eas-cli@latest
 
-# No need for login; EAS_TOKEN will be used automatically by the CLI if set
-# export EAS_TOKEN=your-token # <-- make sure this is set in your CI or shell environment
+# No need for login; EXPO_TOKEN will be used automatically by the CLI if set
+# export EXPO_TOKEN=your-token # <-- make sure this is set in your CI or shell environment
 
 # Send Over-the-Air Updates (scoped to the selected platform) ####
 # --environment is required by eas-cli in non-interactive contexts (CI, no TTY).

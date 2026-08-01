@@ -37,5 +37,5 @@ jobs:
         if: github.event_name == 'workflow_dispatch' || steps.version.outputs.changed == 'true'
         working-directory: mobile
         env:
-          EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
         run: yarn deploy
