@@ -5,7 +5,10 @@ import { AmountText } from "@/components/amount-text";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { formatSignedMoney, groupThousands } from "@/common/number-utils";
+import {
+  formatMoneyWithCurrency,
+  formatSignedMoneyWithCurrency,
+} from "@/common/number-utils";
 import { AccountJournalRow } from "@/screens/account-detail-screen/selectors/select-account-journal";
 
 const getStyles = (theme: ColorTheme) =>
@@ -55,13 +58,13 @@ const getStyles = (theme: ColorTheme) =>
 
 type AccountEntryRowProps = {
   row: AccountJournalRow;
-  currencySymbol: string;
+  currency: string;
   onPress?: () => void;
 };
 
 export function AccountEntryRow({
   row,
-  currencySymbol,
+  currency,
   onPress,
 }: AccountEntryRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
@@ -96,11 +99,10 @@ export function AccountEntryRow({
           mono="medium"
           style={[styles.change, { color: changeColor }]}
         >
-          {formatSignedMoney(row.change, currencySymbol, true)}
+          {formatSignedMoneyWithCurrency(row.change, currency, true)}
         </AmountText>
         <AmountText style={styles.balance}>
-          {t("balance")}: {currencySymbol}
-          {groupThousands(row.balance)}
+          {t("balance")}: {formatMoneyWithCurrency(row.balance, currency)}
         </AmountText>
       </View>
     </>

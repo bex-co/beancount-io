@@ -2,6 +2,7 @@ import {
   shortNumber,
   groupThousands,
   formatSignedMoney,
+  formatMoneyWithCurrency,
   formatSignedMoneyWithCurrency,
 } from "../number-utils";
 
@@ -156,5 +157,22 @@ describe("formatSignedMoneyWithCurrency", () => {
     expect(formatSignedMoneyWithCurrency(551620, "MUSD", true)).toBe(
       "+551,620.00 MUSD",
     );
+  });
+});
+
+describe("formatMoneyWithCurrency", () => {
+  it("prefixes the symbol for a currency with a known symbol", () => {
+    expect(formatMoneyWithCurrency(1234.5, "USD")).toBe("$1,234.50");
+    expect(formatMoneyWithCurrency(2500, "CNY")).toBe("¥2,500.00");
+  });
+
+  it("appends the currency code when no symbol is known (e.g. MUSD)", () => {
+    expect(formatMoneyWithCurrency(846425, "MUSD")).toBe("846,425.00 MUSD");
+  });
+
+  it("shows the absolute value with no sign (the caller owns the sign)", () => {
+    // Balances/totals render unsigned; a negative value drops its sign.
+    expect(formatMoneyWithCurrency(-544069, "USD")).toBe("$544,069.00");
+    expect(formatMoneyWithCurrency(-544069, "MUSD")).toBe("544,069.00 MUSD");
   });
 });

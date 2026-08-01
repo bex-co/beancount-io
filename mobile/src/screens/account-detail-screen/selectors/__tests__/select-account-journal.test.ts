@@ -182,7 +182,7 @@ describe("selectAccountJournalRows", () => {
 
 describe("groupAccountJournalRowsToSections", () => {
   it("returns an empty array for empty input", () => {
-    expect(groupAccountJournalRowsToSections([], "$")).toEqual([]);
+    expect(groupAccountJournalRowsToSections([], "USD")).toEqual([]);
   });
 
   it("groups rows on the same date into one section", () => {
@@ -191,7 +191,7 @@ describe("groupAccountJournalRowsToSections", () => {
         row("2025-01-02", "Coffee", -4.5, 95.5),
         row("2025-01-02", "Lunch", -12, 83.5),
       ],
-      "$",
+      "USD",
     );
     expect(sections.length).toBe(1);
     expect(sections[0].isoDate).toBe("2025-01-02");
@@ -204,7 +204,7 @@ describe("groupAccountJournalRowsToSections", () => {
         row("2025-01-01", "Salary", 1000, 1000),
         row("2025-01-02", "Coffee", -4.5, 995.5),
       ],
-      "$",
+      "USD",
     );
     expect(sections.length).toBe(2);
     expect(sections[0].isoDate).toBe("2025-01-01");
@@ -214,19 +214,19 @@ describe("groupAccountJournalRowsToSections", () => {
   it("formats the section total as a signed currency string", () => {
     const [positive] = groupAccountJournalRowsToSections(
       [row("2025-01-01", "Salary", 1000, 1000)],
-      "$",
+      "USD",
     );
     expect(positive.totalChange).toBe("+$1,000.00");
 
     const [negative] = groupAccountJournalRowsToSections(
       [row("2025-01-02", "Coffee", -4.5, 95.5)],
-      "$",
+      "USD",
     );
     expect(negative.totalChange).toBe("-$4.50");
 
     const [zero] = groupAccountJournalRowsToSections(
       [row("2025-01-03", "Balance", 0, 95.5)],
-      "$",
+      "USD",
     );
     expect(zero.totalChange).toBe("$0.00");
   });
@@ -237,7 +237,7 @@ describe("groupAccountJournalRowsToSections", () => {
         row("2025-01-02", "Coffee", -4.5, 95.5),
         row("2025-01-02", "Lunch", -12, 83.5),
       ],
-      "$",
+      "USD",
     );
     expect(section.totalChange).toBe("-$16.50");
   });
@@ -245,7 +245,7 @@ describe("groupAccountJournalRowsToSections", () => {
   it("formats a human-readable displayDate from the isoDate", () => {
     const [section] = groupAccountJournalRowsToSections(
       [row("2025-03-15", "Coffee", -4.5, 95.5)],
-      "$",
+      "USD",
     );
     expect(section.displayDate).toBe("March 15, 2025");
   });
@@ -253,7 +253,7 @@ describe("groupAccountJournalRowsToSections", () => {
   it("falls back to the raw isoDate when parsing fails", () => {
     const [section] = groupAccountJournalRowsToSections(
       [row("not-a-date", "X", 0, 0)],
-      "$",
+      "USD",
     );
     expect(section.displayDate).toBe("not-a-date");
   });

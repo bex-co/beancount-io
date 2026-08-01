@@ -80,6 +80,32 @@ export const formatSignedMoney = (
   return `${sign}${symbol}${amount}`;
 };
 
+// Wrap a sign + absolute amount in its currency: a known symbol prefixes (right
+// after the sign, e.g. "-$1,234.50"); an unknown/symbol-less currency's code is
+// appended after the amount (e.g. "1,234.50 MUSD"), so a custom commodity is
+// never shown as a bare, unlabeled number.
+const annotateCurrency = (
+  sign: string,
+  absAmount: string,
+  currency: string,
+): string => {
+  const symbol = getCurrencySymbol(currency);
+  return symbol
+    ? `${sign}${symbol}${absAmount}`
+    : `${sign}${absAmount} ${currency}`;
+};
+
+/**
+ * An unsigned money string annotated with its currency (e.g. "$1,234.50" or
+ * "1,234.50 MUSD"). Use for absolute figures where the sign is not shown — a
+ * running balance, a category total, an account row. Resolves the symbol from
+ * the currency code and falls back to appending the code.
+ */
+export const formatMoneyWithCurrency = (
+  value: number,
+  currency: string,
+): string => annotateCurrency("", groupThousands(value), currency);
+
 /**
  * A signed money string annotated with its currency, resolving the symbol from
  * the currency code. When the currency has a known symbol it is prefixed
@@ -94,6 +120,5 @@ export const formatSignedMoneyWithCurrency = (
   includePlus = false,
 ): string => {
   const { sign, amount } = signedAmount(value, includePlus);
-  const symbol = getCurrencySymbol(currency);
-  return symbol ? `${sign}${symbol}${amount}` : `${sign}${amount} ${currency}`;
+  return annotateCurrency(sign, amount, currency);
 };

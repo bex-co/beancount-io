@@ -17,7 +17,7 @@ import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { themeVar } from "@/common/vars";
-import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
+import { getPrimaryCurrency } from "@/common/currency-util";
 import { TimeRange } from "@/common/series-util";
 import { BalanceChartCard } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -105,7 +105,6 @@ const AccountDetailScreenImpl = ({
     ledgerId,
   );
   const currency = getPrimaryCurrency(currencies);
-  const currencySymbol = getCurrencySymbol(currency);
 
   const {
     data: reportData,
@@ -138,8 +137,8 @@ const AccountDetailScreenImpl = ({
     [currency, items],
   );
   const sections = useMemo(
-    () => groupAccountJournalRowsToSections(rows, currencySymbol),
-    [rows, currencySymbol],
+    () => groupAccountJournalRowsToSections(rows, currency),
+    [rows, currency],
   );
 
   // Display rows carry only shaped fields; index the raw items by the same
@@ -228,14 +227,10 @@ const AccountDetailScreenImpl = ({
               openTransactionDetail(router, entry, "account_detail", account)
           : undefined;
       return (
-        <AccountEntryRow
-          row={item}
-          currencySymbol={currencySymbol}
-          onPress={onPress}
-        />
+        <AccountEntryRow row={item} currency={currency} onPress={onPress} />
       );
     },
-    [currencySymbol, itemsByKey, router, account],
+    [currency, itemsByKey, router, account],
   );
 
   const renderSectionHeader = useCallback(

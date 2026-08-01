@@ -1,7 +1,7 @@
 import { AccountJournalQuery } from "@/generated-graphql/graphql";
 import { PostingLite } from "@/common/tx-category";
 import { resolveCurrencyBalance } from "../../../common/balance-util";
-import { groupThousands } from "../../../common/number-utils";
+import { formatMoneyWithCurrency } from "../../../common/number-utils";
 
 /** One `{ entry, change, balance }` row from the account journal response. */
 export type AccountJournalItem =
@@ -130,7 +130,7 @@ function formatSectionDate(isoDate: string): string {
  */
 export function groupAccountJournalRowsToSections(
   rows: AccountJournalRow[],
-  currencySymbol: string,
+  currency: string,
 ): AccountJournalSection[] {
   const groups = new Map<string, AccountJournalRow[]>();
   for (const row of rows) {
@@ -140,8 +140,9 @@ export function groupAccountJournalRowsToSections(
   }
   return Array.from(groups.entries()).map(([isoDate, data]) => {
     const net = data.reduce((sum, r) => sum + r.change, 0);
+    // Sign is an explicit prefix; the amount carries the symbol (or code suffix).
     const sign = net > 0 ? "+" : net < 0 ? "-" : "";
-    const totalChange = `${sign}${currencySymbol}${groupThousands(net)}`;
+    const totalChange = `${sign}${formatMoneyWithCurrency(net, currency)}`;
     return {
       isoDate,
       displayDate: formatSectionDate(isoDate),

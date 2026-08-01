@@ -25,7 +25,10 @@ import { AmountText } from "@/components/amount-text";
 import { useThemeStyle, usePageView, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getFormatDate } from "@/common/format-util";
-import { getCurrencySymbol } from "@/common/currency-util";
+import {
+  formatMoneyWithCurrency,
+  formatSignedMoneyWithCurrency,
+} from "@/common/number-utils";
 import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -344,7 +347,6 @@ export const MultiPostingsTransactionScreenComponent = () => {
   }>();
 
   const currency = currencies.length > 0 ? currencies[0] : "USD";
-  const currencySymbol = getCurrencySymbol(currency);
 
   const [postings, setPostings] = useState<Posting[]>([
     makePosting({ isAuto: false }),
@@ -446,11 +448,8 @@ export const MultiPostingsTransactionScreenComponent = () => {
     });
   };
 
-  const formatRemainder = (cents: number) => {
-    const abs = Math.abs(cents);
-    const sign = cents < 0 ? "-" : cents > 0 ? "+" : "";
-    return `${sign}${currencySymbol}${Math.floor(abs / 100)}.${String(abs % 100).padStart(2, "0")}`;
-  };
+  const formatRemainder = (cents: number) =>
+    formatSignedMoneyWithCurrency(cents / 100, currency, true);
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
@@ -565,7 +564,9 @@ export const MultiPostingsTransactionScreenComponent = () => {
               { color: isBalanced ? theme.success : theme.error },
             ]}
           >
-            {isBalanced ? `✓  ${currencySymbol}0.00` : formatRemainder(rem)}
+            {isBalanced
+              ? `✓  ${formatMoneyWithCurrency(0, currency)}`
+              : formatRemainder(rem)}
           </AmountText>
         </View>
       </ScrollView>

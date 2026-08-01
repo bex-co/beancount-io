@@ -22,7 +22,7 @@ import {
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
-import { formatSignedMoney } from "@/common/number-utils";
+import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { AmountText } from "@/components/amount-text";
 import {
   CATEGORY_SIGN,
@@ -163,7 +163,7 @@ const getStyles = (theme: ColorTheme) =>
 type AccountTableRowProps = {
   row: TableRow;
   label: string;
-  currencySymbol: string;
+  currency: string;
   onToggle: (row: TableRow) => void;
   onPressAccount?: (account: string) => void;
 };
@@ -171,7 +171,7 @@ type AccountTableRowProps = {
 const AccountTableRow = memo(function AccountTableRow({
   row,
   label,
-  currencySymbol,
+  currency,
   onToggle,
   onPressAccount,
 }: AccountTableRowProps): JSX.Element {
@@ -249,7 +249,7 @@ const AccountTableRow = memo(function AccountTableRow({
         {label}
       </Text>
       <AmountText mono={isCategory ? "medium" : "regular"} style={valueStyle}>
-        {formatSignedMoney(row.value, currencySymbol)}
+        {formatSignedMoneyWithCurrency(row.value, currency)}
       </AmountText>
       {row.share > 0 && (
         <View
@@ -299,7 +299,7 @@ const AccountTableRow = memo(function AccountTableRow({
 
 type AccountTableProps = {
   categories: AccountCategory[];
-  currencySymbol: string;
+  currency: string;
   refreshing: boolean;
   onRefresh: () => void;
   /** Tapping an account row drills into it; the chevron still toggles. */
@@ -316,7 +316,7 @@ type AccountTableProps = {
  */
 export function AccountTable({
   categories,
-  currencySymbol,
+  currency,
   refreshing,
   onRefresh,
   onPressAccount,
@@ -345,12 +345,12 @@ export function AccountTable({
         // Category rows label themselves from the i18n key they carry; account
         // rows already hold a display name built from the ledger.
         label={item.depth === 0 ? t(item.label) : item.label}
-        currencySymbol={currencySymbol}
+        currency={currency}
         onToggle={onToggle}
         onPressAccount={onPressAccount}
       />
     ),
-    [t, currencySymbol, onToggle, onPressAccount],
+    [t, currency, onToggle, onPressAccount],
   );
 
   return (

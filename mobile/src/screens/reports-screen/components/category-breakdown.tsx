@@ -15,7 +15,7 @@ import {
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
-import { groupThousands } from "@/common/number-utils";
+import { formatMoneyWithCurrency } from "@/common/number-utils";
 import { AmountText } from "@/components/amount-text";
 import { DashboardCard } from "@/components/dashboard-card";
 import { LoadingTile } from "@/components/loading-tile";
@@ -128,7 +128,7 @@ type CategoryBreakdownProps = {
   total: number;
   /** Top-level category rows, already sorted by magnitude descending. */
   items: AccountNode[];
-  currencySymbol: string;
+  currency: string;
   /** Bar fill accent, echoing the chart legend (expenses=error, income=success). */
   tone: (theme: ColorTheme) => string;
   /** Analytics tag for expand events. */
@@ -146,7 +146,7 @@ export function CategoryBreakdown({
   label,
   total,
   items,
-  currencySymbol,
+  currency,
   tone,
   section,
 }: CategoryBreakdownProps): JSX.Element {
@@ -185,8 +185,7 @@ export function CategoryBreakdown({
           {node.name}
         </Text>
         <AmountText style={styles.childValue}>
-          {currencySymbol}
-          {groupThousands(node.value)}
+          {formatMoneyWithCurrency(node.value, currency)}
         </AmountText>
       </>
     );
@@ -226,8 +225,7 @@ export function CategoryBreakdown({
           {node.name}
         </Text>
         <AmountText mono="medium" style={styles.topValue}>
-          {currencySymbol}
-          {groupThousands(node.value)}
+          {formatMoneyWithCurrency(node.value, currency)}
         </AmountText>
         {hasChildren && (
           <Ionicons
@@ -284,8 +282,7 @@ export function CategoryBreakdown({
       <View style={styles.header}>
         <Text style={styles.label}>{label}</Text>
         <AmountText style={styles.headline}>
-          {currencySymbol}
-          {groupThousands(total)}
+          {formatMoneyWithCurrency(total, currency)}
         </AmountText>
       </View>
       {items.length === 0 ? (

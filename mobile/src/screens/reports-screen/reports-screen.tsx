@@ -157,7 +157,7 @@ const ReportsScreenImpl = (): JSX.Element => {
               label={t("expenses")}
               total={expense.total}
               items={topNWithOther(expense.tree, BREAKDOWN_TOP_N, t("other"))}
-              currencySymbol={currencySymbol}
+              currency={currency}
               tone={(theme) => theme.error}
               section="expenses"
             />
@@ -172,7 +172,7 @@ const ReportsScreenImpl = (): JSX.Element => {
               label={t("income")}
               total={income.total}
               items={topNWithOther(income.tree, BREAKDOWN_TOP_N, t("other"))}
-              currencySymbol={currencySymbol}
+              currency={currency}
               tone={(theme) => theme.success}
               section="income"
             />

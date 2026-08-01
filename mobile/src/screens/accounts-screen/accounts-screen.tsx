@@ -8,7 +8,7 @@ import { gutter, rowMinHeight, useTheme } from "@/common/theme";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
-import { getCurrencySymbol } from "@/common/currency-util";
+import { getPrimaryCurrency } from "@/common/currency-util";
 import { LedgerDrawerHeader } from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
 import { AccountTable } from "@/components/account-table";
@@ -71,8 +71,7 @@ const AccountsScreenImpl = (): JSX.Element => {
     currencies,
     refetch: ledgerMetaRefetch,
   } = useLedgerMeta(userId, ledgerId);
-  const currency = currencies.length > 0 ? currencies[0] : "USD";
-  const currencySymbol = getCurrencySymbol(currency);
+  const currency = getPrimaryCurrency(currencies);
 
   // Commodity holdings are valued, so they count toward Assets rather than being
   // dropped for lack of a cash balance.
@@ -140,7 +139,7 @@ const AccountsScreenImpl = (): JSX.Element => {
       ) : (
         <AccountTable
           categories={categories}
-          currencySymbol={currencySymbol}
+          currency={currency}
           refreshing={refreshing}
           onRefresh={onRefresh}
           onPressAccount={handlePressAccount}
