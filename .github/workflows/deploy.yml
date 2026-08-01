@@ -33,7 +33,8 @@ jobs:
             echo "changed=false" >> "$GITHUB_OUTPUT"
           fi
       - name: Build and submit
-        if: steps.version.outputs.changed == 'true'
+        # A push deploys only for a version bump; a manual run intentionally retries it.
+        if: github.event_name == 'workflow_dispatch' || steps.version.outputs.changed == 'true'
         working-directory: mobile
         env:
           EAS_TOKEN: ${{ secrets.EAS_TOKEN }}
