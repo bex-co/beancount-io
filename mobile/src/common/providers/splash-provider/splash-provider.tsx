@@ -10,7 +10,9 @@ import { loadSession } from "@/common/vars/session";
 import { i18n } from "@/translations";
 import { apolloClient } from "@/common/apollo/client";
 import { GetLedgerDocument } from "@/generated-graphql/graphql";
-import { useTheme } from "@/common/theme";
+import { getSystemColorScheme, themes } from "@/common/theme";
+import { useReactiveVar } from "@apollo/client";
+import { themeVar } from "@/common/vars/theme";
 
 const LOGO_SIZE = 144;
 const FADE_DURATION = 400;
@@ -45,7 +47,10 @@ const SplashProviderComponent = ({
 }: {
   children: React.ReactNode;
 }) => {
-  const { colorTheme: theme } = useTheme();
+  const themeSetting = useReactiveVar(themeVar);
+  const colorTheme =
+    themes[themeSetting === "system" ? getSystemColorScheme() : themeSetting]
+      .colorTheme;
   const [appIsReady, setAppIsReady] = useState(false);
   const [splashHidden, setSplashHidden] = useState(false);
   const fadeAnim = useRef(new Animated.Value(1)).current;
@@ -112,7 +117,7 @@ const SplashProviderComponent = ({
     }
   }, [appIsReady, fadeAnim, scaleAnim]);
 
-  const styles = getStyles(theme.white);
+  const styles = getStyles(colorTheme.white);
 
   if (!appIsReady) {
     // Show the same branded view behind the native splash so there is no
