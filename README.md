@@ -7,7 +7,7 @@
 <h1 align="center">Beancount.io</h1>
 
 <p align="center">
-  <strong>Plain-text accounting, from every surface you work in.</strong>
+  <strong>Agentic plain-text accounting, from every surface you work in.</strong>
   <br>
   Open-source web and mobile clients, a Python CLI and reporting library, and skills for coding agents.
 </p>
