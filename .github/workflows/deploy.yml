@@ -1,41 +1,107 @@
-name: Deploy
+name: Release (mobile)
+
+# Tag-anchored release automation:
+# - A release is needed whenever mobile/package.json's version has no
+#   `mobile-v<version>` git tag yet — state-based, not diff-based, so a failed
+#   release retries automatically on the next push (or workflow_dispatch).
+# - The tag + GitHub Release are created only AFTER a successful build/submit
+#   kickoff, which is what makes the retry self-healing.
+# - OTA updates ship on every mobile push; native build+submit only on a new
+#   version. runtimeVersion policy is `appVersion`, so OTA updates only reach
+#   binaries whose version string matches — decoupling the two is safe.
 
 on:
   push:
     branches: [main]
+    paths:
+      - "mobile/**"
+      - ".github/workflows/deploy.yml"
   workflow_dispatch:
 
+# One release at a time; never cancel a submit mid-flight.
+concurrency:
+  group: mobile-release
+  cancel-in-progress: false
+
+permissions:
+  contents: write # push tags + create releases
+
 jobs:
-  deploy:
+  release:
     runs-on: ubuntu-latest
+    environment: production
+    defaults:
+      run:
+        working-directory: mobile
     steps:
       - uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 0 # tags + full history for release notes
+
+      - name: Determine release state
+        id: state
+        run: |
+          VERSION=$(jq -r '.version' package.json)
+          APP_VERSION=$(jq -r '.expo.version' app.json)
+          if [ "$VERSION" != "$APP_VERSION" ]; then
+            echo "::error::package.json ($VERSION) and app.json ($APP_VERSION) versions differ — run yarn bump"
+            exit 1
+          fi
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          if git rev-parse -q --verify "refs/tags/mobile-v$VERSION" >/dev/null; then
+            echo "mobile-v$VERSION already released; OTA update only"
+            echo "needs_release=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "mobile-v$VERSION not yet released; full build + submit"
+            echo "needs_release=true" >> "$GITHUB_OUTPUT"
+          fi
+
       - uses: actions/setup-node@v4
         with:
           # Node 22: a transitive dep (listr2@10.2.x) requires >=22.13.0 to install.
           # Keep deploy aligned with the mobile CI runtime.
           node-version: 22
           cache: yarn
-          cache-dependency-path: ./mobile/yarn.lock
-      - name: Detect version change
-        id: version
-        working-directory: mobile
-        run: |
-          CURRENT_VERSION=$(jq -r '.version' package.json)
-          PREVIOUS_VERSION=$(git show HEAD^:mobile/package.json 2>/dev/null | jq -r '.version')
-          echo "current=${CURRENT_VERSION}"
-          echo "previous=${PREVIOUS_VERSION}"
-          if [ "${CURRENT_VERSION}" != "${PREVIOUS_VERSION}" ]; then
-            echo "changed=true" >> "$GITHUB_OUTPUT"
-          else
-            echo "changed=false" >> "$GITHUB_OUTPUT"
-          fi
-      - name: Build and submit
-        # A push deploys only for a version bump; a manual run intentionally retries it.
-        if: github.event_name == 'workflow_dispatch' || steps.version.outputs.changed == 'true'
-        working-directory: mobile
+          cache-dependency-path: mobile/yarn.lock
+
+      - run: yarn install --frozen-lockfile
+
+      # Both OTA and store builds ship to production users — never on red checks.
+      - name: Verify (lint, typecheck, unit)
+        run: yarn test
+
+      - name: OTA update
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
-        run: yarn deploy
+          COMMIT_MSG: ${{ github.event.head_commit.message }}
+        run: |
+          MSG="${COMMIT_MSG:-manual dispatch}"
+          MSG="${MSG%%$'\n'*}" # eas update wants a short one-line message
+          npx eas-cli@16 update --channel production --platform all \
+            --environment production --non-interactive \
+            --message "$MSG"
+
+      - name: Build and submit
+        if: steps.state.outputs.needs_release == 'true'
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          # --auto-submit submits this exact build once it finishes (server-side),
+          # avoiding the `submit --latest` race with --no-wait.
+          npx eas-cli@16 build --platform all --profile production \
+            --auto-submit --non-interactive --no-wait
+
+      - name: Tag and create GitHub release
+        if: steps.state.outputs.needs_release == 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ steps.state.outputs.version }}
+        run: |
+          LAST=$(git describe --tags --match 'mobile-v*' --abbrev=0 2>/dev/null || true)
+          # First release has no prior tag and lists full mobile history — cap it.
+          git log ${LAST:+$LAST..HEAD} --format='- %s (%h)' -- . | head -200 > "$RUNNER_TEMP/notes.md"
+          git tag "mobile-v$VERSION"
+          git push origin "mobile-v$VERSION"
+          gh release create "mobile-v$VERSION" \
+            --title "Beancount mobile $VERSION" \
+            --notes-file "$RUNNER_TEMP/notes.md"

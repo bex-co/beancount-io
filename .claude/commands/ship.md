@@ -1,12 +1,12 @@
 ---
 description: Pull latest main, commit pending changes, push to origin/main, and monitor substantial CI/deploy runs until green
 argument-hint: [optional commit message context...]
-allowed-tools: Bash(git status:*), Bash(git pull:*), Bash(git fetch:*), Bash(git diff:*), Bash(git show:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git rebase:*), Bash(gh run list:*), Bash(gh run watch:*), Bash(gh run view:*), Bash(gh run rerun:*)
+allowed-tools: Bash(git status:*), Bash(git pull:*), Bash(git fetch:*), Bash(git diff:*), Bash(git show:*), Bash(git log:*), Bash(git add:*), Bash(git commit:*), Bash(git push:*), Bash(git branch:*), Bash(git rev-parse:*), Bash(git rebase:*), Bash(git ls-remote:*), Bash(gh run list:*), Bash(gh run watch:*), Bash(gh run view:*), Bash(gh run rerun:*)
 ---
 
 # Task: Ship the current main branch
 
-Bring the local `main` up to date, commit any pending work, and push to `origin/main`. If the push contains package code or workflow changes, stay on duty until every triggered GitHub Actions run is green. Diagnose failures, fix or rerun them as appropriate, re-ship, and keep monitoring until the shipped HEAD passes. A mobile version bump also runs the production EAS build and submission, so that ship is not complete until the `Deploy` workflow succeeds.
+Bring the local `main` up to date, commit any pending work, and push to `origin/main`. If the push contains package code or workflow changes, stay on duty until every triggered GitHub Actions run is green. Diagnose failures, fix or rerun them as appropriate, re-ship, and keep monitoring until the shipped HEAD passes. Any `mobile/**` push runs the `Release (mobile)` workflow (production OTA update; plus EAS build/submit and a `mobile-v<version>` tag when the version is untagged), so that ship is not complete until `Release (mobile)` succeeds.
 
 For trivial pushes such as documentation, `.pm/**`, `.claude/**`, `.agents/**`, or guidance links, take a quick CI snapshot and report without waiting through a long watch loop.
 
@@ -93,7 +93,7 @@ If the push is rejected as non-fast-forward, re-run Step 3, resolve conflicts us
 Use the paths pushed in this invocation and the triggered workflow list to select a tier:
 
 - **Substantial:** package code under `mobile/**`, `dashboard/**`, `cli/**`, or `fava-slim/**`, or changes under `.github/workflows/**`. Fully monitor every run and continue to Step 7 on failure.
-- **Production release:** the shipped HEAD changes `mobile/package.json`'s `version` relative to `HEAD^`. This matches `deploy.yml`'s release detector; it is substantial, and the `Deploy` workflow's `Build and submit` step must succeed before reporting completion. If a release was intended but the version bump is not in HEAD, stop before reporting success because the deploy workflow will skip it.
+- **Production release:** the shipped HEAD's `mobile/package.json` version has no `mobile-v<version>` tag on `origin` (check with `git ls-remote --tags origin "mobile-v*"`). This matches `deploy.yml`'s release detector; it is substantial, and the `Release (mobile)` workflow's `Build and submit` and `Tag and create GitHub release` steps must succeed before reporting completion. The detector is state-based, so a previously failed release re-runs on any later mobile push even without a new bump.
 - **Trivial:** documentation, roadmap, agent guidance, Claude commands, skills, formatting-only changes, or other changes with no package CI. Take a run snapshot; optionally recheck fast runs once, but do not enter a long watch loop.
 
 GitHub runs may take about 30 seconds to register, so retry the list a few times if it is initially empty:
@@ -111,7 +111,7 @@ The expected workflows are:
 | `dashboard/**` | `CI (dashboard)` | `cd dashboard && yarn format:check && yarn lint && yarn test && yarn build` |
 | `cli/**`, `fava-slim/**` | `CI (cli)` | `cd fava-slim && make check-all`, then `cd cli && make check-all` |
 | any path | `Secret scan` | `gitleaks dir . --redact --verbose` |
-| any path | `Deploy` | Only performs an EAS build/submission when the mobile version changed |
+| `mobile/**` | `Release (mobile)` | OTA update on every mobile push; EAS build/submit + `mobile-v<version>` tag + GitHub Release when the version is untagged |
 
 ### Watch substantial ships
 
@@ -121,7 +121,7 @@ Wait for every run associated with the shipped SHA. Prefer:
 gh run watch <run-id> --exit-status --interval 30
 ```
 
-Watch the package CI and any real `Deploy` run first. If a watch command times out while a run is still active, re-invoke it or re-list the runs; do not abandon monitoring because it is slow. Success means all triggered runs conclude `success` (skipped jobs are acceptable) and, for a production release, the `Deploy` workflow shows a successful `Build and submit` job.
+Watch the package CI and any `Release (mobile)` run first. If a watch command times out while a run is still active, re-invoke it or re-list the runs; do not abandon monitoring because it is slow. Success means all triggered runs conclude `success` (skipped steps are acceptable) and, for a production release, the `Release (mobile)` workflow shows successful `Build and submit` and `Tag and create GitHub release` steps.
 
 ## Step 7 — Fix until green
 
@@ -132,7 +132,7 @@ If a substantial ship fails, fixing it is part of `/ship`; do not merely report 
    - **Real regression:** reproduce with the matching command from the table, fix the code, run the relevant checks, then repeat Steps 3–6. The monitored SHA becomes the new HEAD.
    - **Secret leak:** remove the secret from the pending work and rotate/revoke it if it may be real or exposed. Never commit `.env` or credentials.
    - **Transient infrastructure failure:** rerun failed jobs with `gh run rerun <run-id> --failed`. Give a suspected flake at most two reruns before treating it as a real problem.
-   - **EAS deploy failure:** inspect the `Deploy` logs, fix the mobile code/configuration or credential-independent issue, and re-ship. Do not expose or commit `EAS_TOKEN`. Escalate if the repair requires credentials only the user controls.
+   - **EAS release failure:** inspect the `Release (mobile)` logs, fix the mobile code/configuration or credential-independent issue, and re-ship. The version tag is only pushed after success, so re-shipping retries the release automatically. Do not expose or commit `EXPO_TOKEN`. Escalate if the repair requires credentials only the user controls.
 3. After every fix push or rerun, return to Step 6 and monitor the current HEAD again. Continue until green.
 4. Escalate only when the same step has failed three consecutive attempts without an inferable fix, a required credential is unavailable, or a repair needs a destructive/product decision. Report the run URL, exact error, attempts made, and one narrow question.
 
@@ -141,13 +141,13 @@ If a substantial ship fails, fixing it is part of `/ship`; do not merely report 
 Print the shipped HEAD SHA and subject plus the CI/deploy verdict. Examples:
 
 ```
-Shipped: a1b2c3d feat(mobile): add account filters — CI + Deploy ✅ green; no release build needed
+Shipped: a1b2c3d feat(mobile): add account filters — CI + Release (mobile) ✅ green (OTA only; no release build needed)
 ```
 
 For a mobile release:
 
 ```
-Shipped: d4e5f6a chore(mobile): bump version — CI + EAS production deploy ✅ green (run <url>)
+Shipped: d4e5f6a chore(mobile): bump version — CI + EAS production release ✅ green, tagged mobile-v1.20260731.41 (run <url>)
 ```
 
 For a trivial ship:

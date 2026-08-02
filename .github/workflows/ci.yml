@@ -16,6 +16,10 @@ on:
       - "mobile/**"
       - ".github/workflows/ci.yml"
 
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
 jobs:
   mobile:
     name: mobile

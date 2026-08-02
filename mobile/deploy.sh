@@ -1,6 +1,8 @@
 #! /usr/bin/env bash
 
 # https://docs.expo.dev/build/introduction/
+# Local convenience for a manual release. CI (.github/workflows/deploy.yml)
+# runs the same eas-cli commands directly, then tags `mobile-v<version>`.
 # Usage: yarn deploy [ios|android|all]   (default: all)
 
 set -e # exit on error
@@ -18,15 +20,12 @@ esac
 # Install dependencies
 yarn
 
-# Install eas-cli if not already installed
-yarn global add eas-cli@latest
-
-# No need for login; EXPO_TOKEN will be used automatically by the CLI if set
-# export EXPO_TOKEN=your-token # <-- make sure this is set in your CI or shell environment
+# No need for login; EXPO_TOKEN (or a prior `eas login`) authenticates the CLI.
+# eas-cli is pinned to major 16 to match eas.json's `cli.version` constraint.
 
 # Send Over-the-Air Updates (scoped to the selected platform) ####
 # --environment is required by eas-cli in non-interactive contexts (CI, no TTY).
-npx eas-cli@latest update --channel production --platform "$PLATFORM" \
+npx eas-cli@16 update --channel production --platform "$PLATFORM" \
   --environment production --non-interactive \
   --message "Production update $(date +'%Y-%m-%d %H:%M:%S')"
 
@@ -34,12 +33,12 @@ deploy_ios() {
   # --auto-submit submits this exact build to the App Store once it finishes
   # (server-side), avoiding the `submit --latest` race with --no-wait.
   echo "Building and submitting iOS app..."
-  npx eas-cli@latest build --platform ios --profile production --auto-submit --non-interactive --no-wait
+  npx eas-cli@16 build --platform ios --profile production --auto-submit --non-interactive --no-wait
 }
 
 deploy_android() {
   echo "Building and submitting Android app..."
-  npx eas-cli@latest build --platform android --profile production --auto-submit --non-interactive --no-wait
+  npx eas-cli@16 build --platform android --profile production --auto-submit --non-interactive --no-wait
 }
 
 if [[ "$PLATFORM" == "ios" || "$PLATFORM" == "all" ]]; then
