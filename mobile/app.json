@@ -42,7 +42,12 @@
       "package": "io.beancount.android",
       "permissions": [
         "com.google.android.gms.permission.AD_ID"
-      ]
+      ],
+      "adaptiveIcon": {
+        "foregroundImage": "./src/assets/images/icon-adaptive-foreground.png",
+        "monochromeImage": "./src/assets/images/icon-adaptive-foreground.png",
+        "backgroundColor": "#5fc535"
+      }
     },
     "plugins": [
       [
