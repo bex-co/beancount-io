@@ -37,12 +37,31 @@ describe("AgentChatInput type-to-focus", () => {
     );
   });
 
-  it("focuses the composer and preserves typing started elsewhere", async () => {
+  it("autofocuses the composer on mount", () => {
+    render(<AgentChatInputHarness />);
+
+    expect(screen.getByPlaceholderText("Ask anything")).toHaveFocus();
+  });
+
+  it("does NOT autofocus on coarse-pointer (touch) devices", () => {
+    const original = window.matchMedia;
+    window.matchMedia = vi.fn().mockReturnValue({
+      matches: true,
+    }) as unknown as typeof window.matchMedia;
+    try {
+      render(<AgentChatInputHarness />);
+      expect(screen.getByPlaceholderText("Ask anything")).not.toHaveFocus();
+    } finally {
+      window.matchMedia = original;
+    }
+  });
+
+  it("focuses the composer and captures typing", async () => {
     const user = userEvent.setup();
     render(<AgentChatInputHarness />);
 
     const textarea = screen.getByPlaceholderText("Ask anything");
-    expect(textarea).not.toHaveFocus();
+    expect(textarea).toHaveFocus();
 
     await user.keyboard("hello");
 
