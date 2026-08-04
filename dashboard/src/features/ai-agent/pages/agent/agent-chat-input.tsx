@@ -107,6 +107,13 @@ export function AgentChatInput({
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
+  // Autofocus on mount — but not on touch devices, where focusing pops the
+  // virtual keyboard and shoves the layout.
+  useEffect(() => {
+    if (window.matchMedia?.("(pointer: coarse)").matches) return;
+    textareaRef.current?.focus();
+  }, []);
+
   useEffect(() => {
     if (textareaRef.current) {
       textareaRef.current.style.height = "auto";
