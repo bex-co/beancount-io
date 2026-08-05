@@ -42,19 +42,22 @@ const colorMode = getSystemColorScheme();
 /**
  * Brand palette — https://beancount.io/brand-assets.
  *
- * A vivid grass-green system: the brand green (#5fc535) carries brand +
- * interaction, and the neutral ramp is a warm khaki (Bone → Stone → Charcoal)
- * rather than clinical grays, so the whole UI reads as one cohesive, on-brand
- * surface. `primary` is a deep grass green in light and the vivid brand green in
- * dark: `white` (the button text token) inverts to near-black on dark, so light
- * needs a deeper green (white text stays legible ~5:1) while dark can run the
- * bright brand green (near-black text on it reads cleanly).
+ * Built directly from the official swatches (Brand Green #5FC535, Deep Green
+ * #307D04, Forest #215C01, Bone #F1EFE4, Stone #6B6E5F, Charcoal #171A14): the
+ * brand green carries brand + interaction, and the neutral ramp is the warm
+ * khaki Bone → Stone → Charcoal rather than clinical grays, so the whole UI
+ * reads as one cohesive, on-brand surface. `primary` is Deep Green in light
+ * and the vivid Brand Green in dark: `white` (the button text token) inverts
+ * to near-black on dark, so light needs the deeper green (white text stays
+ * legible ~5:1) while dark can run the bright brand green (near-black text on
+ * it reads cleanly).
  */
 const GREEN = "#5fc535"; // Brand Green — primary in dark; brand reference
-const GREEN_DARK = "#3d7d21"; // deep grass green — primary in light (white text legible)
-const GREEN_DEEP = "#2b5918"; // deepest green — pressed / CTA footer
-const BONE = "#f1efe4"; // warm paper / dark-mode foreground
-const CHARCOAL = "#171a14"; // warm near-black — dark base + top bar
+const GREEN_DARK = "#307d04"; // Deep Green — primary in light (white text legible)
+const GREEN_DEEP = "#215c01"; // Forest — deepest green, pressed / CTA footer
+const BONE = "#f1efe4"; // Bone — warm paper / dark-mode foreground
+const STONE = "#6b6e5f"; // Stone — secondary text, inactive tabs (light mode)
+const CHARCOAL = "#171a14"; // Charcoal — warm near-black — dark base + top bar
 
 const lightTheme: ColorTheme = {
   overlay: "rgba(0, 0, 0, 0.5)", // modal scrim
@@ -69,7 +72,7 @@ const lightTheme: ColorTheme = {
   white: "#ffffff", //    base surface
   black: "#1b1e16", //    strongest foreground (warm near-black)
   black90: "#30332a", //    titles / strong text
-  black80: "#727668", //    secondary text, inactive tabs (Stone family)
+  black80: STONE, //    secondary text, inactive tabs
   black60: "#c2c3b6", //    placeholders / disabled
   black40: "#e0dfd3", //    borders / hairlines
   black20: "#eeece2", //    dividers / faint fills
@@ -90,7 +93,7 @@ const lightTheme: ColorTheme = {
   tabIconDefault: "#c2c3b6",
   tabIconSelected: GREEN_DARK,
   activeTintColor: GREEN_DARK,
-  inactiveTintColor: "#727668",
+  inactiveTintColor: STONE,
   activeBackgroundColor: "#ffffff",
   inactiveBackgroundColor: "#ffffff",
   navBg: "#ffffff",

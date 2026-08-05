@@ -78,7 +78,7 @@ describe("themes", () => {
     const { colorTheme } = themes.light;
     expect(colorTheme.white).toBe("#ffffff");
     expect(colorTheme.black).toBe("#1b1e16");
-    expect(colorTheme.primary).toBe("#3d7d21");
+    expect(colorTheme.primary).toBe("#307d04");
   });
 
   it("dark theme has expected color properties", () => {
