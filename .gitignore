@@ -34,3 +34,8 @@ dist/
 
 # AI agent scratch (Claude Code, GitHub Copilot, etc.)
 tmp/
+
+# App Store Connect CLI (`asc`) working dir.
+# `asc auth login --local` writes API credentials to ./.asc/config.json, and
+# `asc metadata plan` writes review artifacts here. Never commit either.
+.asc/

@@ -79,3 +79,8 @@ dist
 
 # Temporary files directory for agents (Claude Code, GitHub Copilot)
 tmp/
+
+# Derived App Store screenshots — rebuild with ./scripts/build-screenshots.sh
+# from docs/marketing-showcase/. The canonical metadata JSON is committed; these
+# are ~5MB of generated PNGs and are not.
+metadata/screenshots/**/*.png
