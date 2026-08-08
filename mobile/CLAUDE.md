@@ -206,7 +206,7 @@ Conventions live canonically in `.claude/commands/pm.md`. Product pillars are in
 ## CI / Deploy
 
 - CI (`.github/workflows/ci.yml`) runs `yarn lint`, `yarn typecheck`, `yarn test:unit` on push/PR to `main`.
-- Release (`.github/workflows/deploy.yml`, workflow name `Release (mobile)`) runs on every `mobile/**` push to `main`: it verifies checks, sends an OTA update, and — if `package.json`'s version has no `mobile-v<version>` git tag yet — runs the EAS build/submit, then pushes the tag and a GitHub Release. Use `yarn bump` to cut a release; a failed release retries automatically on the next push because the tag is only created after success.
+- Release (`.github/workflows/deploy.yml`, workflow name `Release (mobile)`) runs on every `mobile/**` push to `main` and verifies checks, but deploys only if `package.json`'s version has no `mobile-v<version>` git tag yet: it sends the OTA update and runs the EAS build/submit, then pushes the tag and a GitHub Release. A push without a version bump deploys nothing — use `yarn bump` to cut a release; a failed release retries automatically on the next push because the tag is only created after success.
 
 ## Repo
 

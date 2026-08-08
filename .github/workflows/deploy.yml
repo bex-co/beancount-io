@@ -6,9 +6,10 @@ name: Release (mobile)
 #   release retries automatically on the next push (or workflow_dispatch).
 # - The tag + GitHub Release are created only AFTER a successful build/submit
 #   kickoff, which is what makes the retry self-healing.
-# - OTA updates ship on every mobile push; native build+submit only on a new
-#   version. runtimeVersion policy is `appVersion`, so OTA updates only reach
-#   binaries whose version string matches — decoupling the two is safe.
+# - Everything deploys only on a new version: the OTA update AND the native
+#   build+submit are both gated on the missing tag, so a push without a
+#   `yarn bump` verifies checks but ships nothing. runtimeVersion policy is
+#   `appVersion`, so the OTA only reaches binaries whose version matches.
 
 on:
   push:
@@ -49,7 +50,7 @@ jobs:
           fi
           echo "version=$VERSION" >> "$GITHUB_OUTPUT"
           if git rev-parse -q --verify "refs/tags/mobile-v$VERSION" >/dev/null; then
-            echo "mobile-v$VERSION already released; OTA update only"
+            echo "mobile-v$VERSION already released; nothing to deploy"
             echo "needs_release=false" >> "$GITHUB_OUTPUT"
           else
             echo "mobile-v$VERSION not yet released; full build + submit"
@@ -71,6 +72,7 @@ jobs:
         run: yarn test
 
       - name: OTA update
+        if: steps.state.outputs.needs_release == 'true'
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           COMMIT_MSG: ${{ github.event.head_commit.message }}
