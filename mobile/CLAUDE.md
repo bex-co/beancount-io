@@ -147,12 +147,12 @@ Locales: `en-US`, `zh-Hans`. Apple's limits — name 30, subtitle 30, keywords 1
 promotional text 170, description 4000 — are counted in **code points**, so CJK
 characters cost 1 each.
 
-| Command | What it does |
-| ------- | ------------ |
-| `asc metadata validate --dir ./metadata` | Offline lint; run before every push |
-| `asc metadata pull --app 1527950512 --version <v> --dir ./metadata` | Overwrite local files from live ASC |
-| `asc metadata plan --app 1527950512 --version <v> --dir ./metadata --output table` | Dry-run diff vs. live |
-| `asc metadata approve` → `asc metadata push` | Apply the approved plan |
+| Command                                                                            | What it does                        |
+| ---------------------------------------------------------------------------------- | ----------------------------------- |
+| `asc metadata validate --dir ./metadata`                                           | Offline lint; run before every push |
+| `asc metadata pull --app 1527950512 --version <v> --dir ./metadata`                | Overwrite local files from live ASC |
+| `asc metadata plan --app 1527950512 --version <v> --dir ./metadata --output table` | Dry-run diff vs. live               |
+| `asc metadata approve` → `asc metadata push`                                       | Apply the approved plan             |
 
 Only **promotional text** is editable while a version is live. `name`, `subtitle`,
 `keywords`, `description`, `marketingUrl`, `supportUrl`, and the age-rating
@@ -170,10 +170,10 @@ is gitignored at the repo root. Keep it that way; this repo is public.
 
 Apple currently accepts only two display types — everything else is derived from them:
 
-| Display type | Dimensions | Source |
-| ------------ | ---------- | ------ |
-| `APP_IPHONE_65` | 1284×2778 or 1242×2688 | `docs/marketing-showcase/webp/` (1206×2622) |
-| `APP_IPAD_PRO_3GEN_129` | 2048×2732 or 2064×2752 | needs an iPad capture run |
+| Display type            | Dimensions             | Source                                      |
+| ----------------------- | ---------------------- | ------------------------------------------- |
+| `APP_IPHONE_65`         | 1284×2778 or 1242×2688 | `docs/marketing-showcase/webp/` (1206×2622) |
+| `APP_IPAD_PRO_3GEN_129` | 2048×2732 or 2064×2752 | needs an iPad capture run                   |
 
 No current simulator renders 1284×2778 natively, so resizing is unavoidable regardless of
 capture device. Two scripts own this; the generated PNGs are gitignored, so rebuild rather
@@ -186,8 +186,8 @@ SET_ID=<set> DIR=metadata/screenshots/en-US/APP_IPHONE_65 \
 ```
 
 Strip alpha — Apple rejects screenshots with a transparency channel. Uploads only work
-against a version in `PREPARE_FOR_SUBMISSION`; a live version returns *"An attribute value
-is not acceptable for the current resource state"*. Locales with no screenshot set inherit
+against a version in `PREPARE_FOR_SUBMISSION`; a live version returns _"An attribute value
+is not acceptable for the current resource state"_. Locales with no screenshot set inherit
 the primary locale's, so zh-Hans needs none.
 
 iPad (`APP_IPAD_PRO_3GEN_129`) still carries 2020 captures. `app.json` sets

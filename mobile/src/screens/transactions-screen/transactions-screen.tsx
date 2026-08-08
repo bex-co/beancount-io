@@ -242,7 +242,11 @@ const TransactionList = () => {
       <LedgerDrawerHeader
         title={t("transactions")}
         right={
-          <TouchableOpacity onPress={handleQuickAdd} hitSlop={8} activeOpacity={0.7}>
+          <TouchableOpacity
+            onPress={handleQuickAdd}
+            hitSlop={8}
+            activeOpacity={0.7}
+          >
             <Ionicons name="add" size={26} color={theme.black90} />
           </TouchableOpacity>
         }

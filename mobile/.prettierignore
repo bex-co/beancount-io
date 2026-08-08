@@ -1,5 +1,6 @@
 package-lock.json
 package.json
+.asc
 .github
 __generated__
 src/generated-graphql

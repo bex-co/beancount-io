@@ -4,7 +4,13 @@ import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
-import { fontSizes, fontWeights, gutter, space, useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  gutter,
+  space,
+  useTheme,
+} from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
