@@ -2,34 +2,34 @@
 import { makeVar, ReactiveVar } from "@apollo/client";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
-// 存储后端接口（默认 AsyncStorage；凭证类数据请传安全存储）
+// Storage backend interface (defaults to AsyncStorage; pass secure storage for credential data)
 export type PersistentStorage = {
   getItem: (key: string) => Promise<string | null>;
   setItem: (key: string, value: string) => Promise<void>;
 };
 
-// 定义泛型类型，支持任意类型的持久化变量
+// Generic factory supporting persistent variables of any type
 export function createPersistentVar<T>(
-  key: string, // 存储键名
-  defaultValue: T, // 默认值（初始加载失败时使用）
-  serialize?: (value: T) => string, // 序列化函数（默认 JSON.stringify）
-  deserialize?: (value: string) => T, // 反序列化函数（默认 JSON.parse）
-  storage: PersistentStorage = AsyncStorage, // 存储后端
+  key: string, // storage key
+  defaultValue: T, // default value (used when the initial load fails)
+  serialize?: (value: T) => string, // serializer (defaults to JSON.stringify)
+  deserialize?: (value: string) => T, // deserializer (defaults to JSON.parse)
+  storage: PersistentStorage = AsyncStorage, // storage backend
 ): [ReactiveVar<T>, () => Promise<T | null>] {
-  // 初始化变量（内存中的响应式变量）
+  // Initialize the in-memory reactive variable
   const varInstance = makeVar<T>(defaultValue);
 
-  // 序列化与反序列化方法（默认使用 JSON）
+  // Serialization and deserialization methods (default to JSON)
   const serializeValue = serialize || ((value) => JSON.stringify(value));
   const deserializeValue = deserialize || ((value) => JSON.parse(value) as T);
 
-  // 加载存储的值并更新变量（异步）
+  // Load the stored value and update the variable (async)
   const loadFromStorage = async (): Promise<T | null> => {
     try {
       const storedValue = await storage.getItem(key);
       if (storedValue !== null) {
         const result = deserializeValue(storedValue);
-        varInstance(result); // 更新内存变量
+        varInstance(result); // update the in-memory variable
         return result;
       }
       return null;
@@ -39,7 +39,7 @@ export function createPersistentVar<T>(
     }
   };
 
-  // 监听变量变化并写入存储（异步）
+  // Watch for changes and write them to storage (async)
   const saveToStorage = async (newValue: T): Promise<void> => {
     try {
       const serializedValue = serializeValue(newValue);
@@ -55,6 +55,6 @@ export function createPersistentVar<T>(
     varInstance.onNextChange(onNextChange);
   });
 
-  // 返回变量实例和手动加载方法（可选）
+  // Return the variable instance and an optional manual-load method
   return [varInstance, loadFromStorage];
 }
