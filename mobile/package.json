@@ -50,6 +50,7 @@
     "expo-localization": "~57.0.0",
     "expo-mixpanel-analytics": "0.0.7",
     "expo-router": "~57.0.4",
+    "expo-secure-store": "~57.0.1",
     "expo-splash-screen": "~57.0.2",
     "expo-status-bar": "~57.0.0",
     "expo-store-review": "~57.0.0",

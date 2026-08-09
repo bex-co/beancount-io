@@ -5292,6 +5292,11 @@ expo-router@~57.0.4:
     standard-navigation "^0.0.5"
     vaul "^1.1.2"
 
+expo-secure-store@~57.0.1:
+  version "57.0.1"
+  resolved "https://registry.yarnpkg.com/expo-secure-store/-/expo-secure-store-57.0.1.tgz#746892729ca7a78513a1c220b48c1f3f803af413"
+  integrity sha512-tLa1VmSadOq19mA/dwkl99RbHyjLE0T1qqBYMY3/OsguZTI+rlrDy/DDJjupqlVtmr95hD7o1pYqx5aL+B4YMA==
+
 expo-server@^57.0.0:
   version "57.0.0"
   resolved "https://registry.yarnpkg.com/expo-server/-/expo-server-57.0.0.tgz#5b9d9a126008007dd998ba019a0bf0fa2a0fd387"
