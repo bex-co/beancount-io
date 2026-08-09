@@ -116,7 +116,8 @@
       "expo-web-browser",
       "@react-native-community/datetimepicker",
       "@sentry/react-native",
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-secure-store"
     ],
     "extra": {
       "eas": {
