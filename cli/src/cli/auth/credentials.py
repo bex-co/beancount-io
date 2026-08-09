@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 import stat
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -21,9 +22,22 @@ class Credentials:
 
 
 def save_credentials(token: str, expire_at: str) -> None:
+    # Create the file as 0600 inside a 0700 directory from the start — a
+    # write-then-chmod sequence leaks the token under a permissive umask.
     CREDENTIALS_DIR.mkdir(parents=True, exist_ok=True)
-    CREDENTIALS_PATH.write_text(json.dumps({"token": token, "expireAt": expire_at}, indent=2))
-    CREDENTIALS_PATH.chmod(stat.S_IRUSR | stat.S_IWUSR)
+    CREDENTIALS_DIR.chmod(stat.S_IRWXU)
+    payload = json.dumps({"token": token, "expireAt": expire_at}, indent=2)
+    tmp_path = CREDENTIALS_PATH.with_name(CREDENTIALS_PATH.name + ".tmp")
+    tmp_path.unlink(missing_ok=True)
+    fd = os.open(tmp_path, os.O_CREAT | os.O_EXCL | os.O_WRONLY, stat.S_IRUSR | stat.S_IWUSR)
+    try:
+        with os.fdopen(fd, "w") as fh:
+            fh.write(payload)
+            fh.flush()
+            os.fsync(fh.fileno())
+        os.replace(tmp_path, CREDENTIALS_PATH)
+    finally:
+        tmp_path.unlink(missing_ok=True)
 
 
 def load_credentials() -> Credentials | None:
