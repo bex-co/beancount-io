@@ -1,5 +1,49 @@
 import { getBackendBase } from "@/common/lib/oauth/forward-to-backend";
 
+// The consent form is a handful of small fields; capping the proxied body
+// keeps an unauthenticated client from buffering arbitrary memory here.
+const MAX_CONSENT_BODY_BYTES = 64 * 1024;
+
+async function readBodyWithinLimit(
+  request: Request,
+  maxBytes: number,
+): Promise<string | null> {
+  const contentLength = request.headers.get("content-length");
+  if (contentLength !== null) {
+    const declared = Number(contentLength);
+    if (!Number.isInteger(declared) || declared < 0 || declared > maxBytes) {
+      return null;
+    }
+  }
+
+  if (!request.body) {
+    return "";
+  }
+
+  // Content-Length can be absent or wrong, so bound the actual stream too.
+  const reader = request.body.getReader();
+  const chunks: Uint8Array[] = [];
+  let received = 0;
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    received += value.byteLength;
+    if (received > maxBytes) {
+      await reader.cancel();
+      return null;
+    }
+    chunks.push(value);
+  }
+
+  const merged = new Uint8Array(received);
+  let offset = 0;
+  for (const chunk of chunks) {
+    merged.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return new TextDecoder().decode(merged);
+}
+
 export async function handleConsentPost({
   request,
 }: {
@@ -7,6 +51,11 @@ export async function handleConsentPost({
 }): Promise<Response> {
   const uid = new URL(request.url).searchParams.get("uid") ?? "";
   const backendBase = getBackendBase();
+
+  const body = await readBodyWithinLimit(request, MAX_CONSENT_BODY_BYTES);
+  if (body === null) {
+    return new Response(null, { status: 413 });
+  }
 
   const upstream = await fetch(
     `${backendBase}/api-gateway/oauth/interaction/${uid}/login`,
@@ -23,7 +72,7 @@ export async function handleConsentPost({
         "x-forwarded-host": new URL(request.url).host,
         "x-forwarded-proto": new URL(request.url).protocol.replace(":", ""),
       },
-      body: await request.text(),
+      body,
       redirect: "manual",
     },
   );
