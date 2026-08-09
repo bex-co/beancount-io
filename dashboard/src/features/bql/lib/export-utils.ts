@@ -1,5 +1,23 @@
 import type { QueryResultTable } from "@/graphql/definitions";
 
+// Cells starting with =, @, tab, or CR — or +/- unless the whole cell is a
+// plain number — are executed as formulas by Excel/Sheets/LibreOffice.
+const FORMULA_PREFIX = /^[\t\r]|^\s*[=+\-@]/;
+const PLAIN_NUMBER = /^[+-]?\d+(\.\d+)?$/;
+
+/**
+ * Force spreadsheet-dangerous text to inert text semantics.
+ * CSV quoting alone does not stop formula evaluation (CWE-1236), so prefix
+ * dangerous cells with an apostrophe, which spreadsheets treat as a text
+ * marker. Plain numbers (including negative amounts) are left untouched.
+ */
+function neutralizeSpreadsheetFormula(str: string): string {
+  if (!FORMULA_PREFIX.test(str) || PLAIN_NUMBER.test(str)) {
+    return str;
+  }
+  return `'${str}`;
+}
+
 /**
  * Escape CSV field value.
  * Fields containing quotes, commas, or newlines must be quoted.
@@ -16,6 +34,8 @@ function escapeCSVField(value: unknown): string {
   if (typeof value === "object") {
     str = JSON.stringify(value);
   }
+
+  str = neutralizeSpreadsheetFormula(str);
 
   // Check if field needs quoting
   const needsQuoting = /[",\n\r]/.test(str);

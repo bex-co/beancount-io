@@ -114,7 +114,7 @@ describe("export-utils", () => {
       );
     });
 
-    it("should handle formula injection attempts", () => {
+    it("should neutralize formula injection attempts", () => {
       const result: QueryResultTable = {
         types: [{ name: "formula", dtype: "str" }],
         rows: [
@@ -123,17 +123,42 @@ describe("export-utils", () => {
           ["+1+1"],
           ["-1+1"],
           ["@SUM(A1:A10)"],
+          ["\t=1+1"],
+          ["  =1+1"],
+        ],
+      } as any;
+
+      const csv = tableToCSV(result);
+      const lines = csv.split("\n");
+
+      // Dangerous prefixes become inert text via a leading apostrophe
+      expect(lines).toEqual([
+        "formula",
+        "'=1+1",
+        "'=cmd|'/c calc'!A1",
+        "'+1+1",
+        "'-1+1",
+        "'@SUM(A1:A10)",
+        "'\t=1+1",
+        "'  =1+1",
+      ]);
+    });
+
+    it("should keep plain numbers and negative amounts numeric", () => {
+      const result: QueryResultTable = {
+        types: [
+          { name: "amount", dtype: "Decimal" },
+          { name: "note", dtype: "str" },
+        ],
+        rows: [
+          [-42.5, "-42.50"],
+          [100, "+15"],
         ],
       } as any;
 
       const csv = tableToCSV(result);
 
-      // All formulas should be properly escaped
-      expect(csv).toContain("=1+1");
-      expect(csv).toContain("=cmd|'/c calc'!A1");
-      // These should be safe when quoted
-      const lines = csv.split("\n");
-      expect(lines.length).toBe(6); // header + 5 rows
+      expect(csv).toBe("amount,note\n-42.5,-42.50\n100,+15");
     });
 
     it("should handle empty strings", () => {
