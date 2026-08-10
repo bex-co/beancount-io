@@ -1,4 +1,5 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import * as Haptics from "expo-haptics";
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, fontWeights, space } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -61,7 +62,12 @@ export function TimeRangePills<T extends string>({
           <TouchableOpacity
             key={option.key}
             style={[styles.pill, active && styles.pillActive]}
-            onPress={() => onChange(option.key)}
+            onPress={() => {
+              if (!active) {
+                Haptics.selectionAsync().catch(() => undefined);
+              }
+              onChange(option.key);
+            }}
             accessibilityRole="button"
             accessibilityState={{ selected: active }}
             accessibilityLabel={option.label}
