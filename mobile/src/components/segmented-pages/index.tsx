@@ -7,8 +7,9 @@ import {
   TouchableOpacity,
   View,
 } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
 import PagerView from "react-native-pager-view";
-import { horizontalSwipeOwnerTouchProps } from "@/common/horizontal-swipe-owner";
+import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { fontSizes, fontWeights } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -77,6 +78,7 @@ export function SegmentedPages({
   onPageChange,
 }: SegmentedPagesProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
+  const swipeOwner = useHorizontalSwipeOwnerGesture();
   const pagerRef = useRef<PagerView>(null);
   const [activeIndex, setActiveIndex] = useState(initialIndex);
 
@@ -104,34 +106,35 @@ export function SegmentedPages({
     <View>
       {/* Owner marker: a horizontal drag across the tab strip scrolls it,
           never opens the ledger drawer's edge swipe. */}
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        style={styles.tabsRow}
-        contentContainerStyle={styles.tabsContent}
-        accessibilityRole="tablist"
-        {...horizontalSwipeOwnerTouchProps}
-      >
-        {tabs.map((tab, index) => {
-          const active = index === activeIndex;
-          return (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.tab, active && styles.tabActive]}
-              onPress={() => handleTabPress(index)}
-              accessibilityRole="tab"
-              accessibilityState={{ selected: active }}
-            >
-              <Text
-                style={[styles.label, active && styles.labelActive]}
-                numberOfLines={1}
+      <GestureDetector gesture={swipeOwner}>
+        <ScrollView
+          horizontal
+          showsHorizontalScrollIndicator={false}
+          style={styles.tabsRow}
+          contentContainerStyle={styles.tabsContent}
+          accessibilityRole="tablist"
+        >
+          {tabs.map((tab, index) => {
+            const active = index === activeIndex;
+            return (
+              <TouchableOpacity
+                key={tab}
+                style={[styles.tab, active && styles.tabActive]}
+                onPress={() => handleTabPress(index)}
+                accessibilityRole="tab"
+                accessibilityState={{ selected: active }}
               >
-                {tab}
-              </Text>
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
+                <Text
+                  style={[styles.label, active && styles.labelActive]}
+                  numberOfLines={1}
+                >
+                  {tab}
+                </Text>
+              </TouchableOpacity>
+            );
+          })}
+        </ScrollView>
+      </GestureDetector>
       <PagerView
         ref={pagerRef}
         style={[styles.pager, { height }]}

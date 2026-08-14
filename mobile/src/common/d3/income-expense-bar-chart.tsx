@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
 import Svg, {
   Circle,
   G,
@@ -17,7 +18,7 @@ import { fontSizes, space, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { shortNumber } from "@/common/number-utils";
-import { horizontalSwipeOwnerTouchProps } from "@/common/horizontal-swipe-owner";
+import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 
 type IncomeExpenseBarChartProps = {
   /**
@@ -109,6 +110,7 @@ function IncomeExpenseBarChart({
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
+  const swipeOwner = useHorizontalSwipeOwnerGesture();
   const scrollRef = useRef<ScrollView>(null);
 
   const chartHeight = height;
@@ -189,140 +191,142 @@ function IncomeExpenseBarChart({
 
   return (
     // Own horizontal swipes so scrubbing the months doesn't also open the ledger
-    // drawer (its PanResponder stands down while a swipe-owner touch is active).
-    // Same pattern as InteractiveLineChartD3; on the outer View so it also covers
-    // touches starting on the fixed y-axis gutter or the legend.
-    <View {...horizontalSwipeOwnerTouchProps}>
-      <View style={styles.row}>
-        {/* Fixed y-axis: tick labels stay visible while the plot scrolls. */}
-        <Svg width={LEFT_PADDING} height={chartHeight}>
-          {yTicks.map((tick: number, i: number) => (
-            <SvgText
-              key={`y-${i}`}
-              x={LEFT_PADDING - 4}
-              y={yScale(tick) + 5}
-              fontSize={AXIS_FONT_SIZE}
-              fill={theme.text01}
-              textAnchor="end"
-            >
-              {`${currencySymbol}${shortNumber(tick)}`}
-            </SvgText>
-          ))}
-        </Svg>
-
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          // Open long spans on the most recent months. Fires once content is
-          // measured (avoids the first-mount layout race) and again only when the
-          // plot width changes (a new range/data), so it never yanks the user
-          // back mid-scroll on unrelated re-renders. A no-op when it all fits.
-          onContentSizeChange={() =>
-            scrollRef.current?.scrollToEnd({ animated: false })
-          }
-        >
-          <Svg width={plotWidth} height={chartHeight}>
-            {/* Y grid lines (span the whole plot) */}
+    // drawer (gesture-handler blocks its edge swipe for the life of any touch
+    // that lands in here). Same pattern as InteractiveLineChartD3; on the outer
+    // View so it also covers touches starting on the y-axis gutter or legend.
+    <GestureDetector gesture={swipeOwner}>
+      <View>
+        <View style={styles.row}>
+          {/* Fixed y-axis: tick labels stay visible while the plot scrolls. */}
+          <Svg width={LEFT_PADDING} height={chartHeight}>
             {yTicks.map((tick: number, i: number) => (
-              <Line
-                key={`grid-${i}`}
-                x1={0}
-                x2={plotWidth}
-                y1={yScale(tick)}
-                y2={yScale(tick)}
-                stroke={theme.black40}
-                strokeDasharray="4,2"
-                strokeWidth={1}
-              />
-            ))}
-
-            {/* Solid zero baseline — the net line references it. */}
-            <Line
-              x1={0}
-              x2={plotWidth}
-              y1={zeroY}
-              y2={zeroY}
-              stroke={theme.black40}
-              strokeWidth={1}
-            />
-
-            {/* Grouped income / expense bars */}
-            {months.map((month, i) => {
-              const x0 = groupX(i);
-              return (
-                <G key={`group-${month}`}>
-                  {barRect(
-                    income[i],
-                    x0 + (subScale("income") ?? 0),
-                    `inc-${month}`,
-                    theme.success,
-                  )}
-                  {barRect(
-                    expense[i],
-                    x0 + (subScale("expense") ?? 0),
-                    `exp-${month}`,
-                    theme.error,
-                  )}
-                </G>
-              );
-            })}
-
-            {/* Net profit line + per-point dots (dots keep a single month visible) */}
-            {hasLine && (
-              <Path
-                d={netPath}
-                fill="none"
-                stroke={netColor}
-                strokeWidth={2.5}
-              />
-            )}
-            {net.map((value, i) => (
-              <Circle
-                key={`net-${months[i]}`}
-                cx={centerX(i)}
-                cy={yScale(value)}
-                r={3}
-                fill={netColor}
-              />
-            ))}
-
-            {/* X axis labels — month abbreviation per column */}
-            {months.map((month, i) => (
               <SvgText
-                key={`x-${month}`}
-                x={centerX(i)}
-                y={chartHeight - 8}
-                fontSize={LABEL_FONT_SIZE}
+                key={`y-${i}`}
+                x={LEFT_PADDING - 4}
+                y={yScale(tick) + 5}
+                fontSize={AXIS_FONT_SIZE}
                 fill={theme.text01}
-                textAnchor="middle"
+                textAnchor="end"
               >
-                {t(month.slice(5, 7))}
+                {`${currencySymbol}${shortNumber(tick)}`}
               </SvgText>
             ))}
           </Svg>
-        </ScrollView>
-      </View>
 
-      <View style={styles.legend}>
-        <View style={styles.legendItem}>
-          <View
-            style={[styles.legendSwatch, { backgroundColor: theme.success }]}
-          />
-          <Text style={styles.legendText}>{t("income")}</Text>
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            // Open long spans on the most recent months. Fires once content is
+            // measured (avoids the first-mount layout race) and again only when the
+            // plot width changes (a new range/data), so it never yanks the user
+            // back mid-scroll on unrelated re-renders. A no-op when it all fits.
+            onContentSizeChange={() =>
+              scrollRef.current?.scrollToEnd({ animated: false })
+            }
+          >
+            <Svg width={plotWidth} height={chartHeight}>
+              {/* Y grid lines (span the whole plot) */}
+              {yTicks.map((tick: number, i: number) => (
+                <Line
+                  key={`grid-${i}`}
+                  x1={0}
+                  x2={plotWidth}
+                  y1={yScale(tick)}
+                  y2={yScale(tick)}
+                  stroke={theme.black40}
+                  strokeDasharray="4,2"
+                  strokeWidth={1}
+                />
+              ))}
+
+              {/* Solid zero baseline — the net line references it. */}
+              <Line
+                x1={0}
+                x2={plotWidth}
+                y1={zeroY}
+                y2={zeroY}
+                stroke={theme.black40}
+                strokeWidth={1}
+              />
+
+              {/* Grouped income / expense bars */}
+              {months.map((month, i) => {
+                const x0 = groupX(i);
+                return (
+                  <G key={`group-${month}`}>
+                    {barRect(
+                      income[i],
+                      x0 + (subScale("income") ?? 0),
+                      `inc-${month}`,
+                      theme.success,
+                    )}
+                    {barRect(
+                      expense[i],
+                      x0 + (subScale("expense") ?? 0),
+                      `exp-${month}`,
+                      theme.error,
+                    )}
+                  </G>
+                );
+              })}
+
+              {/* Net profit line + per-point dots (dots keep a single month visible) */}
+              {hasLine && (
+                <Path
+                  d={netPath}
+                  fill="none"
+                  stroke={netColor}
+                  strokeWidth={2.5}
+                />
+              )}
+              {net.map((value, i) => (
+                <Circle
+                  key={`net-${months[i]}`}
+                  cx={centerX(i)}
+                  cy={yScale(value)}
+                  r={3}
+                  fill={netColor}
+                />
+              ))}
+
+              {/* X axis labels — month abbreviation per column */}
+              {months.map((month, i) => (
+                <SvgText
+                  key={`x-${month}`}
+                  x={centerX(i)}
+                  y={chartHeight - 8}
+                  fontSize={LABEL_FONT_SIZE}
+                  fill={theme.text01}
+                  textAnchor="middle"
+                >
+                  {t(month.slice(5, 7))}
+                </SvgText>
+              ))}
+            </Svg>
+          </ScrollView>
         </View>
-        <View style={styles.legendItem}>
-          <View
-            style={[styles.legendSwatch, { backgroundColor: theme.error }]}
-          />
-          <Text style={styles.legendText}>{t("expenses")}</Text>
-        </View>
-        <View style={styles.legendItem}>
-          <View style={[styles.legendLine, { backgroundColor: netColor }]} />
-          <Text style={styles.legendText}>{t("netProfit")}</Text>
+
+        <View style={styles.legend}>
+          <View style={styles.legendItem}>
+            <View
+              style={[styles.legendSwatch, { backgroundColor: theme.success }]}
+            />
+            <Text style={styles.legendText}>{t("income")}</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View
+              style={[styles.legendSwatch, { backgroundColor: theme.error }]}
+            />
+            <Text style={styles.legendText}>{t("expenses")}</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View style={[styles.legendLine, { backgroundColor: netColor }]} />
+            <Text style={styles.legendText}>{t("netProfit")}</Text>
+          </View>
         </View>
       </View>
-    </View>
+    </GestureDetector>
   );
 }
 

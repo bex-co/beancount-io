@@ -6,6 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
 import Svg, {
   Path,
   Circle,
@@ -18,7 +19,7 @@ import { scaleLinear } from "d3-scale";
 import { line as d3Line, area as d3Area, curveMonotoneX } from "d3-shape";
 import * as Haptics from "expo-haptics";
 import { ErrorBoundary } from "react-error-boundary";
-import { horizontalSwipeOwnerTouchProps } from "@/common/horizontal-swipe-owner";
+import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
@@ -133,6 +134,7 @@ function InteractiveLineChart({
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
+  const swipeOwner = useHorizontalSwipeOwnerGesture();
 
   const chartWidth = ScreenWidth - contentPadding * 2;
   const count = numbers.length;
@@ -210,9 +212,8 @@ function InteractiveLineChart({
       PanResponder.create({
         onStartShouldSetPanResponder: () => hasSeries,
         onMoveShouldSetPanResponder: () => hasSeries,
-        // Once a scrub owns the touch, refuse handoff requests from ancestors
-        // (the ledger drawer's edge-swipe would otherwise steal rightward
-        // scrubs that start near the left screen edge).
+        // Once a scrub owns the touch, refuse handoff requests from ancestors:
+        // a scrub that reaches the edge of the plot is still a scrub.
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (event) => {
           onScrubStart?.();
@@ -249,102 +250,104 @@ function InteractiveLineChart({
   return (
     // Owner marker covers the header/labels too, so swipes starting above the
     // plot can't be claimed by the ledger drawer's edge gesture.
-    <View {...horizontalSwipeOwnerTouchProps}>
-      <View style={styles.header}>
-        {label !== undefined && <Text style={styles.label}>{label}</Text>}
-        <AmountText style={styles.headline}>
-          {formatSignedMoneyWithCurrency(shownValue, currency)}
-        </AmountText>
-        <View style={styles.changeRow}>
-          <AmountText style={[styles.change, { color: lineColor }]}>
-            {changeText}
+    <GestureDetector gesture={swipeOwner}>
+      <View>
+        <View style={styles.header}>
+          {label !== undefined && <Text style={styles.label}>{label}</Text>}
+          <AmountText style={styles.headline}>
+            {formatSignedMoneyWithCurrency(shownValue, currency)}
           </AmountText>
-          {scrubLabel !== null && (
-            <Text style={styles.scrubLabel}>{`· ${scrubLabel}`}</Text>
-          )}
+          <View style={styles.changeRow}>
+            <AmountText style={[styles.change, { color: lineColor }]}>
+              {changeText}
+            </AmountText>
+            {scrubLabel !== null && (
+              <Text style={styles.scrubLabel}>{`· ${scrubLabel}`}</Text>
+            )}
+          </View>
         </View>
-      </View>
 
-      <View
-        style={[styles.chartContainer, { width: chartWidth, height }]}
-        {...panResponder.panHandlers}
-      >
-        <Svg width={chartWidth} height={height}>
-          <Defs>
-            <LinearGradient id="netWorthFill" x1="0" y1="0" x2="0" y2="1">
-              <Stop offset="0" stopColor={lineColor} stopOpacity={0.22} />
-              <Stop offset="1" stopColor={lineColor} stopOpacity={0} />
-            </LinearGradient>
-          </Defs>
+        <View
+          style={[styles.chartContainer, { width: chartWidth, height }]}
+          {...panResponder.panHandlers}
+        >
+          <Svg width={chartWidth} height={height}>
+            <Defs>
+              <LinearGradient id="netWorthFill" x1="0" y1="0" x2="0" y2="1">
+                <Stop offset="0" stopColor={lineColor} stopOpacity={0.22} />
+                <Stop offset="1" stopColor={lineColor} stopOpacity={0} />
+              </LinearGradient>
+            </Defs>
 
-          {hasSeries && <Path d={areaPath} fill="url(#netWorthFill)" />}
+            {hasSeries && <Path d={areaPath} fill="url(#netWorthFill)" />}
 
-          {/* Dashed baseline at the period-start value */}
-          {hasSeries && (
-            <Line
-              x1={PAD_X}
-              x2={chartWidth - PAD_X}
-              y1={baselineY}
-              y2={baselineY}
-              stroke={theme.black40}
-              strokeDasharray="4,3"
-              strokeWidth={1}
-            />
-          )}
-
-          {hasSeries && (
-            <Path
-              d={linePath}
-              fill="none"
-              stroke={lineColor}
-              strokeWidth={2.5}
-            />
-          )}
-
-          {/* Scrub cursor: vertical guide + dot on the line */}
-          {scrubIndex !== null && (
-            <>
+            {/* Dashed baseline at the period-start value */}
+            {hasSeries && (
               <Line
-                x1={xFor(scrubIndex)}
-                x2={xFor(scrubIndex)}
-                y1={PAD_TOP}
-                y2={height - PAD_BOTTOM}
+                x1={PAD_X}
+                x2={chartWidth - PAD_X}
+                y1={baselineY}
+                y2={baselineY}
                 stroke={theme.black40}
+                strokeDasharray="4,3"
                 strokeWidth={1}
               />
+            )}
+
+            {hasSeries && (
+              <Path
+                d={linePath}
+                fill="none"
+                stroke={lineColor}
+                strokeWidth={2.5}
+              />
+            )}
+
+            {/* Scrub cursor: vertical guide + dot on the line */}
+            {scrubIndex !== null && (
+              <>
+                <Line
+                  x1={xFor(scrubIndex)}
+                  x2={xFor(scrubIndex)}
+                  y1={PAD_TOP}
+                  y2={height - PAD_BOTTOM}
+                  stroke={theme.black40}
+                  strokeWidth={1}
+                />
+                <Circle
+                  cx={xFor(scrubIndex)}
+                  cy={yFor(numbers[scrubIndex])}
+                  r={5}
+                  fill={lineColor}
+                  stroke={theme.white}
+                  strokeWidth={2}
+                />
+              </>
+            )}
+
+            {/* Resting end dot showing the latest value */}
+            {hasSeries && scrubIndex === null && (
               <Circle
-                cx={xFor(scrubIndex)}
-                cy={yFor(numbers[scrubIndex])}
-                r={5}
+                cx={xFor(count - 1)}
+                cy={yFor(numbers[count - 1])}
+                r={4}
                 fill={lineColor}
                 stroke={theme.white}
                 strokeWidth={2}
               />
-            </>
-          )}
+            )}
+          </Svg>
 
-          {/* Resting end dot showing the latest value */}
-          {hasSeries && scrubIndex === null && (
-            <Circle
-              cx={xFor(count - 1)}
-              cy={yFor(numbers[count - 1])}
-              r={4}
-              fill={lineColor}
-              stroke={theme.white}
-              strokeWidth={2}
-            />
+          {!hasSeries && (
+            <View style={styles.placeholder} pointerEvents="none">
+              <Text style={styles.placeholderText}>
+                {placeholder ?? t("notEnoughChartData")}
+              </Text>
+            </View>
           )}
-        </Svg>
-
-        {!hasSeries && (
-          <View style={styles.placeholder} pointerEvents="none">
-            <Text style={styles.placeholderText}>
-              {placeholder ?? t("notEnoughChartData")}
-            </Text>
-          </View>
-        )}
+        </View>
       </View>
-    </View>
+    </GestureDetector>
   );
 }
 

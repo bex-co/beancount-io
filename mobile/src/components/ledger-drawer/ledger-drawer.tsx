@@ -1,10 +1,8 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
-  Animated,
   BackHandler,
   Image,
-  PanResponder,
   Pressable,
   SectionList,
   StyleSheet,
@@ -13,29 +11,46 @@ import {
   View,
   useWindowDimensions,
 } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
+import Animated, {
+  cancelAnimation,
+  runOnJS,
+  runOnUI,
+  SnappySpringConfig,
+  useAnimatedReaction,
+  useAnimatedStyle,
+  useSharedValue,
+  withSpring,
+} from "react-native-reanimated";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
-import { hasActiveHorizontalSwipeOwnerTouch } from "@/common/horizontal-swipe-owner";
+import { type EdgeSwipeGestureRef } from "@/common/horizontal-swipe-owner";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ledgerVar } from "@/common/vars";
 import { useListLedgersQuery } from "@/generated-graphql/graphql";
+import { clampProgress, settleTarget } from "./drawer-motion";
 import { groupLedgersByOwner } from "./group-ledgers-by-owner";
 
-const OPEN_DURATION_MS = 240;
-const CLOSE_DURATION_MS = 200;
-const SNAP_BACK_DURATION_MS = 150;
-// Rightward swipes only open the drawer when they start in this strip along
-// the content's left edge, so horizontal carousels and chips keep working.
+// Rightward swipes only open the drawer when they start in this strip along the
+// content's left edge, so horizontal carousels and chips keep working. Enforced
+// as the gesture's hit area: touches outside it never reach the drawer at all.
 const EDGE_HIT_WIDTH = 32;
-
-const clamp = (value: number, min: number, max: number): number =>
-  Math.min(max, Math.max(min, value));
+// Horizontal travel that commits a drag to the drawer, and the vertical travel
+// that hands it back to whatever scrolls underneath. Gesture-handler applies
+// both natively, before the drag ever reaches this component.
+const ACTIVATE_OFFSET_X = 8;
+const FAIL_OFFSET_Y = 12;
+// Reanimated's snappy preset: fast, and already overshoot-clamped, which a
+// drawer needs — bouncing past fully open would expose the root view beyond the
+// menu's right edge. The release velocity is layered on at the call site so a
+// flick keeps the speed the finger gave it.
+const SETTLE_SPRING = SnappySpringConfig;
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -161,6 +176,8 @@ type LedgerDrawerProps = {
   open: boolean;
   onOpen: () => void;
   onClose: () => void;
+  /** Filled with the edge-swipe gesture so swipe owners can block it. */
+  edgeSwipeRef: EdgeSwipeGestureRef;
   children: React.ReactNode;
 };
 
@@ -169,11 +186,16 @@ type LedgerDrawerProps = {
  * edge) to uncover it. No Modal — nothing ever overlays the app when closed.
  * Opens via a rightward swipe from the content's left edge (the content
  * follows the finger); closes via tap on the visible content sliver, leftward
- * swipe, or Android back. */
+ * swipe, or Android back.
+ *
+ * Position lives in a shared value driven on the UI thread, so a drag stays
+ * smooth no matter what the JS thread is doing and the gesture can read where
+ * the drawer is the instant a finger lands. */
 export function LedgerDrawer({
   open,
   onOpen,
   onClose,
+  edgeSwipeRef,
   children,
 }: LedgerDrawerProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
@@ -198,59 +220,42 @@ export function LedgerDrawer({
     }
   }, [refetch]);
 
-  // Gates the menu layer and the tap-to-close catcher; stays true through the
-  // close animation so the reveal doesn't pop.
-  const [visible, setVisible] = useState(open);
-  const progress = useRef(new Animated.Value(0)).current;
-  // Each show/hide bumps the generation so a superseded hide's completion
-  // callback can't unmount the wrong state.
-  const generationRef = useRef(0);
-  const openRef = useRef(open);
-  openRef.current = open;
+  // The one source of truth for where the drawer is: 0 = closed, 1 = open.
+  const progress = useSharedValue(open ? 1 : 0);
+  // Where `progress` is currently headed. The gesture settles the drawer itself
+  // and tells React afterwards, so the `open` effect below uses this to skip
+  // re-animating towards a destination the UI thread already picked.
+  const settledTarget = useSharedValue(open ? 1 : 0);
+  // Progress the drag started from, back-dated by the travel that activating the
+  // gesture already consumed so the content doesn't jump on the first frame.
+  const dragOrigin = useSharedValue(0);
 
-  const hide = useCallback(() => {
-    const generation = ++generationRef.current;
-    Animated.timing(progress, {
-      toValue: 0,
-      duration: CLOSE_DURATION_MS,
-      useNativeDriver: true,
-    }).start(() => {
-      // Deliberately ignore `finished`: even an interrupted close must end
-      // hidden so the tap catcher stops eating touches.
-      if (generationRef.current === generation && !openRef.current) {
-        setVisible(false);
+  // Gates the tap-to-close catcher and the content's edge shadow. Derived from
+  // the animation rather than from `open`, so it can't drift out of sync with
+  // what's on screen — a drift the previous implementation had to paper over
+  // with a generation counter and a force-hide escape hatch.
+  const [revealed, setRevealed] = useState(open);
+  useAnimatedReaction(
+    () => progress.value > 0,
+    (isRevealed, wasRevealed) => {
+      if (isRevealed !== wasRevealed) {
+        runOnJS(setRevealed)(isRevealed);
       }
-    });
-  }, [progress]);
-
-  const show = useCallback(() => {
-    generationRef.current += 1;
-    setVisible(true);
-    Animated.timing(progress, {
-      toValue: 1,
-      duration: OPEN_DURATION_MS,
-      useNativeDriver: true,
-    }).start();
-  }, [progress]);
+    },
+  );
 
   useEffect(() => {
-    if (open) {
-      show();
-    } else {
-      hide();
-    }
-  }, [open, show, hide]);
-
-  // Escape hatch: if the parent already flipped to closed but the catcher is
-  // still up (a missed close), a repeat dismiss force-hides instead of
-  // no-opping on unchanged parent state.
-  const requestClose = useCallback(() => {
-    if (openRef.current) {
-      onClose();
-    } else {
-      hide();
-    }
-  }, [onClose, hide]);
+    const target: 0 | 1 = open ? 1 : 0;
+    runOnUI(() => {
+      if (settledTarget.value === target) {
+        // The gesture already committed to this and is animating there with the
+        // user's release velocity; restarting would flatten that.
+        return;
+      }
+      settledTarget.value = target;
+      progress.value = withSpring(target, SETTLE_SPRING);
+    })();
+  }, [open, progress, settledTarget]);
 
   useEffect(() => {
     if (!open) {
@@ -259,241 +264,207 @@ export function LedgerDrawer({
     const subscription = BackHandler.addEventListener(
       "hardwareBackPress",
       () => {
-        requestClose();
+        onClose();
         return true;
       },
     );
     return () => subscription.remove();
-  }, [open, requestClose]);
+  }, [open, onClose]);
+
+  // Called from the gesture once the UI thread has picked where the drawer
+  // settles: React state follows the animation instead of gating it.
+  const commitSettle = useCallback(
+    (nextOpen: boolean) => {
+      if (!nextOpen) {
+        onClose();
+        return;
+      }
+      if (!open) {
+        analytics.track("swipe_open_ledger_drawer", {});
+      }
+      onOpen();
+    },
+    [open, onOpen, onClose],
+  );
 
   // Bidirectional content drag, Monarch-style. Closed: rightward drags that
   // start in the left-edge strip pull the drawer open. Open: leftward drags
-  // anywhere push it shut. Either way the content tracks the finger; taps and
-  // vertical scrolls never claim the responder.
-  const dragStartRef = useRef(1);
-  const panResponder = useMemo(
+  // anywhere on the content push it shut. Either way the content tracks the
+  // finger on the UI thread, and gesture-handler keeps taps and vertical
+  // scrolls from ever reaching the drawer.
+  const panGesture = useMemo(
     () =>
-      PanResponder.create({
-        onMoveShouldSetPanResponder: (_evt, gesture) => {
-          const isHorizontal =
-            Math.abs(gesture.dx) > Math.abs(gesture.dy) * 1.5;
-          if (!isHorizontal) {
-            return false;
-          }
-          if (openRef.current) {
-            return gesture.dx < -8;
-          }
-          // A touch that began inside a horizontal-swipe owner (chart card,
-          // pager) belongs to that component even when it doesn't claim the
-          // responder itself — never turn it into a drawer open.
-          if (hasActiveHorizontalSwipeOwnerTouch()) {
-            return false;
-          }
-          return gesture.x0 <= EDGE_HIT_WIDTH && gesture.dx > 8;
-        },
-        onPanResponderTerminationRequest: () => false,
-        onPanResponderGrant: () => {
-          if (!openRef.current) {
-            // Mount the menu layer so it's visible under the dragged content.
-            generationRef.current += 1;
-            setVisible(true);
-          }
-          progress.stopAnimation((value) => {
-            dragStartRef.current = value;
-          });
-        },
-        onPanResponderMove: (_evt, gesture) => {
-          progress.setValue(
-            clamp(dragStartRef.current + gesture.dx / drawerWidth, 0, 1),
+      Gesture.Pan()
+        .withRef(edgeSwipeRef)
+        .hitSlop(open ? undefined : { left: 0, width: EDGE_HIT_WIDTH })
+        .activeOffsetX(open ? -ACTIVATE_OFFSET_X : ACTIVATE_OFFSET_X)
+        .failOffsetY([-FAIL_OFFSET_Y, FAIL_OFFSET_Y])
+        .onStart((event) => {
+          cancelAnimation(progress);
+          dragOrigin.value = progress.value - event.translationX / drawerWidth;
+        })
+        .onUpdate((event) => {
+          progress.value = clampProgress(
+            dragOrigin.value + event.translationX / drawerWidth,
           );
-        },
-        onPanResponderRelease: (_evt, gesture) => {
-          if (openRef.current) {
-            const shouldClose =
-              gesture.vx < -0.3 || gesture.dx < -drawerWidth / 3;
-            if (shouldClose) {
-              requestClose();
-            } else {
-              Animated.timing(progress, {
-                toValue: 1,
-                duration: SNAP_BACK_DURATION_MS,
-                useNativeDriver: true,
-              }).start();
-            }
-            return;
-          }
-          const shouldOpen = gesture.vx > 0.3 || gesture.dx > drawerWidth / 3;
-          if (shouldOpen) {
-            analytics.track("swipe_open_ledger_drawer", {});
-            onOpen();
-          } else {
-            hide();
-          }
-        },
-        onPanResponderTerminate: () => {
-          if (openRef.current) {
-            Animated.timing(progress, {
-              toValue: 1,
-              duration: SNAP_BACK_DURATION_MS,
-              useNativeDriver: true,
-            }).start();
-          } else {
-            hide();
-          }
-        },
-      }),
-    [progress, drawerWidth, requestClose, onOpen, hide],
+        })
+        .onEnd((event, success) => {
+          // Interrupted drags settle to the nearer end with no fling.
+          const velocity = success ? event.velocityX / drawerWidth : 0;
+          const target = settleTarget(progress.value, velocity);
+          settledTarget.value = target;
+          progress.value = withSpring(target, {
+            ...SETTLE_SPRING,
+            velocity,
+          });
+          runOnJS(commitSettle)(target === 1);
+        }),
+    [
+      edgeSwipeRef,
+      open,
+      drawerWidth,
+      progress,
+      dragOrigin,
+      settledTarget,
+      commitSettle,
+    ],
   );
 
-  // Memoized so re-renders mid-animation (query refreshes after a ledger
-  // switch) don't swap the animated node out from under the native driver.
-  const translateX = useMemo(
-    () =>
-      progress.interpolate({
-        inputRange: [0, 1],
-        outputRange: [0, drawerWidth],
-      }),
-    [progress, drawerWidth],
-  );
+  const contentStyle = useAnimatedStyle(() => ({
+    transform: [{ translateX: progress.value * drawerWidth }],
+  }));
 
   const handleSelect = (id: string) => {
     analytics.track("drawer_select_ledger", { ledgerId: id });
     if (id !== ledgerId) {
       ledgerVar(id);
     }
-    requestClose();
+    onClose();
   };
 
   const handleSettingsPress = () => {
     analytics.track("drawer_tap_settings", {});
-    requestClose();
+    onClose();
     router.push("/(app)/settings");
   };
 
   return (
     <View style={styles.root}>
-      {visible && (
-        <View
-          style={[
-            styles.drawerLayer,
-            {
-              width: drawerWidth,
-              paddingTop: Math.max(insets.top, 12),
-              paddingBottom: insets.bottom,
-            },
-          ]}
-        >
-          <View style={styles.brandRow}>
-            <Image
-              source={require("@/assets/images/icon.png")}
-              style={styles.brandLogo}
-            />
-            <Text style={styles.brandText}>Beancount.io</Text>
-          </View>
-          <Text style={styles.sectionLabel}>{t("ledgers")}</Text>
-
-          <View style={styles.ledgerListArea}>
-            {loading && ledgers.length === 0 ? (
-              <View style={styles.stateContainer}>
-                <ActivityIndicator color={theme.primary} />
-              </View>
-            ) : (
-              // Always render the list past first load — even with no ledgers — so
-              // the empty state lives inside a pull-to-refreshable SectionList rather
-              // than a static View that can't be refreshed.
-              <SectionList
-                style={{ flex: 1 }}
-                contentContainerStyle={styles.ledgerListContent}
-                alwaysBounceVertical
-                sections={ledgerSections}
-                keyExtractor={(item) => item.id}
-                onRefresh={handleRefresh}
-                refreshing={refreshing}
-                stickySectionHeadersEnabled={false}
-                ListEmptyComponent={
-                  <View style={styles.stateContainer}>
-                    <Text style={styles.stateText}>{t("noEntries")}</Text>
-                  </View>
-                }
-                renderSectionHeader={({ section }) => (
-                  <Text style={styles.ownerHeader} numberOfLines={1}>
-                    {section.owner}
-                  </Text>
-                )}
-                renderItem={({ item }) => {
-                  const isSelected = item.id === ledgerId;
-                  return (
-                    <TouchableOpacity
-                      testID={`ledger-drawer-item-${item.fullName}`}
-                      style={[
-                        styles.listItem,
-                        isSelected && styles.listItemSelected,
-                      ]}
-                      onPress={() => handleSelect(item.id)}
-                      activeOpacity={0.7}
-                    >
-                      <View style={styles.listItemContent}>
-                        <Text style={styles.listItemName} numberOfLines={1}>
-                          {item.name}
-                        </Text>
-                        {item.description ? (
-                          <Text
-                            style={styles.listItemDescription}
-                            numberOfLines={1}
-                          >
-                            {item.description}
-                          </Text>
-                        ) : null}
-                      </View>
-                      {isSelected && (
-                        <Ionicons
-                          name="checkmark-circle"
-                          size={22}
-                          color={theme.primary}
-                        />
-                      )}
-                    </TouchableOpacity>
-                  );
-                }}
-              />
-            )}
-          </View>
-
-          <View style={styles.menuSection}>
-            <TouchableOpacity
-              testID="drawer-settings-row"
-              style={styles.menuItem}
-              onPress={handleSettingsPress}
-              activeOpacity={0.7}
-            >
-              <Ionicons
-                name="settings-outline"
-                size={22}
-                color={theme.black60}
-              />
-              <Text style={styles.menuItemText}>{t("settings")}</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
-      )}
-
-      <Animated.View
+      {/* Always mounted: mounting the ledger list at the first frame of an
+          opening drag is the one piece of work heavy enough to be felt. */}
+      <View
         style={[
-          styles.content,
-          visible && styles.contentOpen,
-          { transform: [{ translateX }] },
+          styles.drawerLayer,
+          {
+            width: drawerWidth,
+            paddingTop: Math.max(insets.top, 12),
+            paddingBottom: insets.bottom,
+          },
         ]}
-        {...panResponder.panHandlers}
       >
-        {children}
-        {visible && (
-          <Pressable
-            testID="ledger-drawer-backdrop"
-            style={StyleSheet.absoluteFill}
-            onPress={requestClose}
+        <View style={styles.brandRow}>
+          <Image
+            source={require("@/assets/images/icon.png")}
+            style={styles.brandLogo}
           />
-        )}
-      </Animated.View>
+          <Text style={styles.brandText}>Beancount.io</Text>
+        </View>
+        <Text style={styles.sectionLabel}>{t("ledgers")}</Text>
+
+        <View style={styles.ledgerListArea}>
+          {loading && ledgers.length === 0 ? (
+            <View style={styles.stateContainer}>
+              <ActivityIndicator color={theme.primary} />
+            </View>
+          ) : (
+            // Always render the list past first load — even with no ledgers — so
+            // the empty state lives inside a pull-to-refreshable SectionList rather
+            // than a static View that can't be refreshed.
+            <SectionList
+              style={{ flex: 1 }}
+              contentContainerStyle={styles.ledgerListContent}
+              alwaysBounceVertical
+              sections={ledgerSections}
+              keyExtractor={(item) => item.id}
+              onRefresh={handleRefresh}
+              refreshing={refreshing}
+              stickySectionHeadersEnabled={false}
+              ListEmptyComponent={
+                <View style={styles.stateContainer}>
+                  <Text style={styles.stateText}>{t("noEntries")}</Text>
+                </View>
+              }
+              renderSectionHeader={({ section }) => (
+                <Text style={styles.ownerHeader} numberOfLines={1}>
+                  {section.owner}
+                </Text>
+              )}
+              renderItem={({ item }) => {
+                const isSelected = item.id === ledgerId;
+                return (
+                  <TouchableOpacity
+                    testID={`ledger-drawer-item-${item.fullName}`}
+                    style={[
+                      styles.listItem,
+                      isSelected && styles.listItemSelected,
+                    ]}
+                    onPress={() => handleSelect(item.id)}
+                    activeOpacity={0.7}
+                  >
+                    <View style={styles.listItemContent}>
+                      <Text style={styles.listItemName} numberOfLines={1}>
+                        {item.name}
+                      </Text>
+                      {item.description ? (
+                        <Text
+                          style={styles.listItemDescription}
+                          numberOfLines={1}
+                        >
+                          {item.description}
+                        </Text>
+                      ) : null}
+                    </View>
+                    {isSelected && (
+                      <Ionicons
+                        name="checkmark-circle"
+                        size={22}
+                        color={theme.primary}
+                      />
+                    )}
+                  </TouchableOpacity>
+                );
+              }}
+            />
+          )}
+        </View>
+
+        <View style={styles.menuSection}>
+          <TouchableOpacity
+            testID="drawer-settings-row"
+            style={styles.menuItem}
+            onPress={handleSettingsPress}
+            activeOpacity={0.7}
+          >
+            <Ionicons name="settings-outline" size={22} color={theme.black60} />
+            <Text style={styles.menuItemText}>{t("settings")}</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <GestureDetector gesture={panGesture}>
+        <Animated.View
+          style={[styles.content, revealed && styles.contentOpen, contentStyle]}
+        >
+          {children}
+          {revealed && (
+            <Pressable
+              testID="ledger-drawer-backdrop"
+              style={StyleSheet.absoluteFill}
+              onPress={onClose}
+            />
+          )}
+        </Animated.View>
+      </GestureDetector>
     </View>
   );
 }

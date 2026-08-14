@@ -12,8 +12,9 @@ import {
   NativeSyntheticEvent,
 } from "react-native";
 
+import { GestureDetector } from "react-native-gesture-handler";
 import PagerView from "react-native-pager-view";
-import { horizontalSwipeOwnerTouchProps } from "@/common/horizontal-swipe-owner";
+import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { gutter, space, useTheme } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 
@@ -125,6 +126,7 @@ export const Tabs: React.FC<TabsProps> = ({
 }) => {
   const theme = useTheme().colorTheme;
   const styles = getStyles(theme);
+  const swipeOwner = useHorizontalSwipeOwnerGesture();
   const [activeIndex, setActiveIndex] = useState(initialIndex);
   const pagerRef = useRef<PagerView>(null);
   const scrollViewRef = useRef<ScrollView>(null);
@@ -241,27 +243,26 @@ export const Tabs: React.FC<TabsProps> = ({
   return (
     // Owner marker: swipes over the tab bar or pager change tabs, never open
     // the ledger drawer.
-    <View
-      style={[styles.container, contentContainerStyle]}
-      {...horizontalSwipeOwnerTouchProps}
-    >
-      {renderTabBar()}
-      <View style={styles.pagerContainer}>
-        <PagerView
-          ref={pagerRef}
-          style={styles.pagerView}
-          initialPage={initialIndex}
-          onPageSelected={handlePageSelected}
-          scrollEnabled={true}
-        >
-          {tabs.map((tab) => (
-            <View key={tab.key} style={{ flex: 1 }}>
-              {tab.component}
-            </View>
-          ))}
-        </PagerView>
+    <GestureDetector gesture={swipeOwner}>
+      <View style={[styles.container, contentContainerStyle]}>
+        {renderTabBar()}
+        <View style={styles.pagerContainer}>
+          <PagerView
+            ref={pagerRef}
+            style={styles.pagerView}
+            initialPage={initialIndex}
+            onPageSelected={handlePageSelected}
+            scrollEnabled={true}
+          >
+            {tabs.map((tab) => (
+              <View key={tab.key} style={{ flex: 1 }}>
+                {tab.component}
+              </View>
+            ))}
+          </PagerView>
+        </View>
       </View>
-    </View>
+    </GestureDetector>
   );
 };
 

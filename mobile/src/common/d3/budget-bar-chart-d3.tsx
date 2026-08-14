@@ -1,5 +1,6 @@
 import { useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Line, Path, Rect, Text as SvgText } from "react-native-svg";
 import { scaleLinear } from "d3-scale";
 import { ErrorBoundary } from "react-error-boundary";
@@ -9,7 +10,7 @@ import { fontSizes, space, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { shortNumber } from "@/common/number-utils";
-import { horizontalSwipeOwnerTouchProps } from "@/common/horizontal-swipe-owner";
+import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 
 type BudgetBarChartProps = {
   /** Period labels, one per column (already display-ready). */
@@ -102,6 +103,7 @@ function BudgetBarChart({
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
+  const swipeOwner = useHorizontalSwipeOwnerGesture();
   const scrollRef = useRef<ScrollView>(null);
 
   const chartHeight = height;
@@ -148,114 +150,118 @@ function BudgetBarChart({
     .join(" ");
 
   return (
-    <View {...horizontalSwipeOwnerTouchProps}>
-      <View style={styles.row}>
-        {/* Fixed y-axis so tick labels stay put while the plot scrolls. */}
-        <Svg width={LEFT_PADDING} height={chartHeight}>
-          {yTicks.map((tick: number, i: number) => (
-            <SvgText
-              key={`y-${i}`}
-              x={LEFT_PADDING - 4}
-              y={yScale(tick) + 5}
-              fontSize={AXIS_FONT_SIZE}
-              fill={theme.text01}
-              textAnchor="end"
-            >
-              {`${currencySymbol}${shortNumber(tick)}`}
-            </SvgText>
-          ))}
-        </Svg>
-
-        <ScrollView
-          ref={scrollRef}
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          onContentSizeChange={() =>
-            scrollRef.current?.scrollToEnd({ animated: false })
-          }
-        >
-          <Svg width={plotWidth} height={chartHeight}>
+    // Owner marker: horizontal drags belong to the plot's scroller (and to the
+    // header and legend around it), never to the ledger drawer's edge swipe.
+    <GestureDetector gesture={swipeOwner}>
+      <View>
+        <View style={styles.row}>
+          {/* Fixed y-axis so tick labels stay put while the plot scrolls. */}
+          <Svg width={LEFT_PADDING} height={chartHeight}>
             {yTicks.map((tick: number, i: number) => (
-              <Line
-                key={`grid-${i}`}
-                x1={0}
-                x2={plotWidth}
-                y1={yScale(tick)}
-                y2={yScale(tick)}
-                stroke={theme.black40}
-                strokeDasharray="4,2"
-                strokeWidth={1}
-              />
-            ))}
-
-            <Line
-              x1={0}
-              x2={plotWidth}
-              y1={zeroY}
-              y2={zeroY}
-              stroke={theme.black40}
-              strokeWidth={1}
-            />
-
-            {actuals.map((value, i) => {
-              const valueY = yScale(value);
-              const rawHeight = value >= 0 ? zeroY - valueY : valueY - zeroY;
-              const barHeight = Math.max(Math.abs(rawHeight), 2);
-              const barY =
-                value >= 0 ? Math.min(valueY, zeroY - 2) : Math.max(zeroY, 0);
-              return (
-                <Rect
-                  key={`bar-${labels[i]}-${i}`}
-                  x={columnX(i) + columnWidth * BAR_INSET}
-                  y={barY}
-                  width={barWidth}
-                  height={barHeight}
-                  fill={favorables[i] === false ? theme.error : theme.primary}
-                  rx={2}
-                />
-              );
-            })}
-
-            {/* Budget reference: dashed, stepped, drawn over the bars. */}
-            <Path
-              d={budgetPath}
-              fill="none"
-              stroke={theme.secondary}
-              strokeWidth={2}
-              strokeDasharray="5,3"
-            />
-
-            {labels.map((label, i) => (
               <SvgText
-                key={`x-${label}-${i}`}
-                x={centerX(i)}
-                y={chartHeight - 8}
-                fontSize={LABEL_FONT_SIZE}
+                key={`y-${i}`}
+                x={LEFT_PADDING - 4}
+                y={yScale(tick) + 5}
+                fontSize={AXIS_FONT_SIZE}
                 fill={theme.text01}
-                textAnchor="middle"
+                textAnchor="end"
               >
-                {label}
+                {`${currencySymbol}${shortNumber(tick)}`}
               </SvgText>
             ))}
           </Svg>
-        </ScrollView>
-      </View>
 
-      <View style={styles.legend}>
-        <View style={styles.legendItem}>
-          <View
-            style={[styles.legendSwatch, { backgroundColor: theme.primary }]}
-          />
-          <Text style={styles.legendText}>{t("budgetActual")}</Text>
+          <ScrollView
+            ref={scrollRef}
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            onContentSizeChange={() =>
+              scrollRef.current?.scrollToEnd({ animated: false })
+            }
+          >
+            <Svg width={plotWidth} height={chartHeight}>
+              {yTicks.map((tick: number, i: number) => (
+                <Line
+                  key={`grid-${i}`}
+                  x1={0}
+                  x2={plotWidth}
+                  y1={yScale(tick)}
+                  y2={yScale(tick)}
+                  stroke={theme.black40}
+                  strokeDasharray="4,2"
+                  strokeWidth={1}
+                />
+              ))}
+
+              <Line
+                x1={0}
+                x2={plotWidth}
+                y1={zeroY}
+                y2={zeroY}
+                stroke={theme.black40}
+                strokeWidth={1}
+              />
+
+              {actuals.map((value, i) => {
+                const valueY = yScale(value);
+                const rawHeight = value >= 0 ? zeroY - valueY : valueY - zeroY;
+                const barHeight = Math.max(Math.abs(rawHeight), 2);
+                const barY =
+                  value >= 0 ? Math.min(valueY, zeroY - 2) : Math.max(zeroY, 0);
+                return (
+                  <Rect
+                    key={`bar-${labels[i]}-${i}`}
+                    x={columnX(i) + columnWidth * BAR_INSET}
+                    y={barY}
+                    width={barWidth}
+                    height={barHeight}
+                    fill={favorables[i] === false ? theme.error : theme.primary}
+                    rx={2}
+                  />
+                );
+              })}
+
+              {/* Budget reference: dashed, stepped, drawn over the bars. */}
+              <Path
+                d={budgetPath}
+                fill="none"
+                stroke={theme.secondary}
+                strokeWidth={2}
+                strokeDasharray="5,3"
+              />
+
+              {labels.map((label, i) => (
+                <SvgText
+                  key={`x-${label}-${i}`}
+                  x={centerX(i)}
+                  y={chartHeight - 8}
+                  fontSize={LABEL_FONT_SIZE}
+                  fill={theme.text01}
+                  textAnchor="middle"
+                >
+                  {label}
+                </SvgText>
+              ))}
+            </Svg>
+          </ScrollView>
         </View>
-        <View style={styles.legendItem}>
-          <View
-            style={[styles.legendLine, { backgroundColor: theme.secondary }]}
-          />
-          <Text style={styles.legendText}>{t("budget")}</Text>
+
+        <View style={styles.legend}>
+          <View style={styles.legendItem}>
+            <View
+              style={[styles.legendSwatch, { backgroundColor: theme.primary }]}
+            />
+            <Text style={styles.legendText}>{t("budgetActual")}</Text>
+          </View>
+          <View style={styles.legendItem}>
+            <View
+              style={[styles.legendLine, { backgroundColor: theme.secondary }]}
+            />
+            <Text style={styles.legendText}>{t("budget")}</Text>
+          </View>
         </View>
       </View>
-    </View>
+    </GestureDetector>
   );
 }
 
