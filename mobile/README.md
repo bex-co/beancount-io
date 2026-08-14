@@ -87,15 +87,15 @@ yarn start
 
 Expo will guide you to an iOS simulator, Android emulator, or connected device.
 
-| Command | Purpose |
-| --- | --- |
-| `yarn ios` | Build and launch the iOS app |
-| `yarn android` | Build and launch the Android app |
-| `yarn lint` | Run TypeScript and ESLint checks |
-| `yarn typecheck` | Run strict TypeScript checking |
-| `yarn test:unit` | Run the unit test suite |
-| `yarn test` | Run lint, typecheck, and unit tests |
-| `yarn codegen` | Regenerate GraphQL types and hooks |
+| Command          | Purpose                             |
+| ---------------- | ----------------------------------- |
+| `yarn ios`       | Build and launch the iOS app        |
+| `yarn android`   | Build and launch the Android app    |
+| `yarn lint`      | Run TypeScript and ESLint checks    |
+| `yarn typecheck` | Run strict TypeScript checking      |
+| `yarn test:unit` | Run the unit test suite             |
+| `yarn test`      | Run lint, typecheck, and unit tests |
+| `yarn codegen`   | Regenerate GraphQL types and hooks  |
 
 The mobile client connects to the hosted Beancount.io API. Set `EXPO_PUBLIC_SERVER_URL` in `.env.local`; never commit credentials or private configuration.
 
