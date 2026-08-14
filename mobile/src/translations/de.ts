@@ -158,4 +158,38 @@ export const de: typeof en = {
   journalBalancesBefore: "Salden vor Eintrag",
   journalBalancesAfter: "Salden nach Eintrag",
   journalSource: "Quellcode",
+  // budget
+  budgetActual: "Ist",
+  budgetVariance: "Abweichung",
+  budgetAboveTarget: "Über dem Ziel",
+  budgetBelowTarget: "Unter dem Ziel",
+  budgetOnTarget: "Im Ziel",
+  budgetHistoryCount: {
+    one: "{{count}} Eintrag",
+    other: "{{count}} Einträge",
+  },
+  budgetNoBudgetsFound: "Keine Budgets gefunden",
+  budgetNoBudgetsFoundDescription:
+    "Lege für ein beliebiges Konto ein Ziel fest, um es zu verfolgen.",
+  budgetEmptyStateCta: "Erstes Budget hinzufügen",
+  budgetPanelEmpty: "Für ein Konto ein Ziel festlegen",
+  budgetLoadFailed: "Budgets konnten nicht geladen werden",
+  budgetIntervalDaily: "Täglich",
+  budgetIntervalWeekly: "Wöchentlich",
+  budgetIntervalMonthly: "Monatlich",
+  budgetIntervalQuarterly: "Vierteljährlich",
+  budgetIntervalYearly: "Jährlich",
+  budgetAdd: "Budget hinzufügen",
+  budgetUpdate: "Budget aktualisieren",
+  budgetAccountHelp:
+    "Budgets gelten für ein Konto. Ein neuerer Eintrag für dasselbe Konto und dieselbe Währung gilt ab seinem Datum.",
+  budgetInterval: "Intervall",
+  budgetSelectInterval: "Intervall auswählen",
+  budgetAmount: "Betrag",
+  budgetSaveFailed: "Budget konnte nicht gespeichert werden",
+  budgetDelete: "Löschen",
+  budgetDeleteTitle: "Budget löschen",
+  budgetDeleteMessage:
+    "Das {{interval}} Budget von {{amount}} für {{account}} mit Wirkung zum {{date}} löschen? Dies entfernt einen einzelnen Eintrag und kann nicht rückgängig gemacht werden.",
+  budgetDeleteFailed: "Budget konnte nicht gelöscht werden",
 };

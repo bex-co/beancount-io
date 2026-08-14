@@ -1,5 +1,5 @@
 import { resolveCurrencyBalance } from "../../common/balance-util";
-import { leafName } from "../../common/account-util";
+import { dropRoot, leafName } from "../../common/account-util";
 
 export type AccountNode = {
   /** Full beancount account, e.g. "Assets:Bank:Checking". */
@@ -49,12 +49,6 @@ export const CATEGORY_SIGN: Record<CategoryKey, 1 | -1> = {
   income: -1,
   expenses: 1,
 };
-
-/** Drop the top-level category segment (e.g. "Assets:Bank" → "Bank"). */
-function stripTopLevel(account: string): string {
-  const parts = account.split(":");
-  return parts.length > 1 ? parts.slice(1).join(":") : account;
-}
 
 type RawChild = {
   account: string;
@@ -168,7 +162,7 @@ function buildTopLevel(
   sign: 1 | -1,
 ): AccountNode[] {
   const rows = topLevel
-    .map((child) => toNode(child, currency, sign, stripTopLevel))
+    .map((child) => toNode(child, currency, sign, dropRoot))
     .filter((accountNode) => accountNode.value !== 0)
     .sort((a, b) => Math.abs(b.value) - Math.abs(a.value))
     .map(compressChain);

@@ -151,4 +151,38 @@ export const fa: typeof en = {
   journalBalancesBefore: "موجودی قبل از ورودی", // TODO: needs native speaker review
   journalBalancesAfter: "موجودی بعد از ورودی", // TODO: needs native speaker review
   journalSource: "کد منبع", // TODO: needs native speaker review
+  // budget
+  budgetActual: "واقعی",
+  budgetVariance: "اختلاف",
+  budgetAboveTarget: "بالاتر از هدف",
+  budgetBelowTarget: "پایین‌تر از هدف",
+  budgetOnTarget: "در هدف",
+  budgetHistoryCount: {
+    one: "{{count}} مورد",
+    other: "{{count}} مورد",
+  },
+  budgetNoBudgetsFound: "هیچ بودجه‌ای یافت نشد",
+  budgetNoBudgetsFoundDescription:
+    "برای هر حسابی یک هدف تعیین کنید تا پیگیری آغاز شود.",
+  budgetEmptyStateCta: "افزودن اولین بودجه",
+  budgetPanelEmpty: "برای یک حساب هدف تعیین کنید",
+  budgetLoadFailed: "بارگذاری بودجه‌ها ناموفق بود",
+  budgetIntervalDaily: "روزانه",
+  budgetIntervalWeekly: "هفتگی",
+  budgetIntervalMonthly: "ماهانه",
+  budgetIntervalQuarterly: "فصلی",
+  budgetIntervalYearly: "سالانه",
+  budgetAdd: "افزودن بودجه",
+  budgetUpdate: "به‌روزرسانی بودجه",
+  budgetAccountHelp:
+    "هر بودجه برای یک حساب اعمال می‌شود. مورد جدیدتر برای همان حساب و ارز از تاریخ خود اعمال می‌شود.",
+  budgetInterval: "بازه زمانی",
+  budgetSelectInterval: "انتخاب بازه زمانی",
+  budgetAmount: "مبلغ",
+  budgetSaveFailed: "ذخیره بودجه ناموفق بود",
+  budgetDelete: "حذف",
+  budgetDeleteTitle: "حذف بودجه",
+  budgetDeleteMessage:
+    "بودجه {{interval}} به مبلغ {{amount}} برای {{account}} با اعتبار از {{date}} حذف شود؟ این کار تنها یک مورد را حذف می‌کند و قابل بازگشت نیست.",
+  budgetDeleteFailed: "حذف بودجه ناموفق بود",
 };

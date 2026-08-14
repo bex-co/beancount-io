@@ -149,4 +149,38 @@ export const sk: typeof en = {
   journalBalancesBefore: "Zostatky pred záznamom",
   journalBalancesAfter: "Zostatky po zázname",
   journalSource: "Zdrojový kód",
+  // budget
+  budgetActual: "Skutočnosť",
+  budgetVariance: "Odchýlka",
+  budgetAboveTarget: "Nad cieľom",
+  budgetBelowTarget: "Pod cieľom",
+  budgetOnTarget: "V cieli",
+  budgetHistoryCount: {
+    one: "{{count}} záznam",
+    other: "{{count}} záznamov",
+  },
+  budgetNoBudgetsFound: "Žiadne rozpočty nenájdené",
+  budgetNoBudgetsFoundDescription:
+    "Nastavte cieľ pre ľubovoľný účet a začnite sledovať.",
+  budgetEmptyStateCta: "Pridať prvý rozpočet",
+  budgetPanelEmpty: "Nastavte cieľ pre účet",
+  budgetLoadFailed: "Načítanie rozpočtov zlyhalo",
+  budgetIntervalDaily: "Denne",
+  budgetIntervalWeekly: "Týždenne",
+  budgetIntervalMonthly: "Mesačne",
+  budgetIntervalQuarterly: "Štvrťročne",
+  budgetIntervalYearly: "Ročne",
+  budgetAdd: "Pridať rozpočet",
+  budgetUpdate: "Aktualizovať rozpočet",
+  budgetAccountHelp:
+    "Rozpočet sa vzťahuje na jeden účet. Novší záznam pre rovnaký účet a menu platí od svojho dátumu.",
+  budgetInterval: "Interval",
+  budgetSelectInterval: "Vyberte interval",
+  budgetAmount: "Suma",
+  budgetSaveFailed: "Uloženie rozpočtu zlyhalo",
+  budgetDelete: "Odstrániť",
+  budgetDeleteTitle: "Odstrániť rozpočet",
+  budgetDeleteMessage:
+    "Odstrániť {{interval}} rozpočet {{amount}} pre {{account}} platný od {{date}}? Odstráni sa jeden záznam a nedá sa to vrátiť späť.",
+  budgetDeleteFailed: "Odstránenie rozpočtu zlyhalo",
 };

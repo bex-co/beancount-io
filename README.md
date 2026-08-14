@@ -85,7 +85,7 @@ Review your finances, add transactions, scan receipts, and edit ledger files fro
 | Package | Status | What you can build with it |
 | --- | --- | --- |
 | [`dashboard/`](./dashboard) | Active web client | Ledgers, journal, reports, Monaco editor, imports, collaboration, and an AI assistant. React 19 + TanStack Start + Apollo. |
-| [`mobile/`](./mobile) | Active iOS & Android client | Native transaction entry, account views, receipt capture, ledger editing, light/dark themes, and 13 locales. Expo + React Native + Apollo. |
+| [`mobile/`](./mobile) | Active iOS & Android client | Native transaction entry, account views, budgets, receipt capture, ledger editing, light/dark themes, and 13 locales. Expo + React Native + Apollo. |
 | [`cli/`](./cli) | `0.1.0` | Read and write directives, check and format files, run BQL and reports, manage remote ledgers, or chat with a local-ledger agent. Python + Typer. |
 | [`fava-slim/`](./fava-slim) | `0.1.0` | Load and filter ledgers, build account trees, query data, and generate financial statements without the Fava web UI. Typed Python. |
 | [`skills/`](./skills) | Active skills | The agent-native accounting loop: scaffold a ledger, import bank exports with dedup, author tested beangulp importers, reconcile against statements, migrate from Mint/Monarch/QuickBooks, query your finances in plain language, run a month-end close, and record options trades — all confirm-gated and `bean-check`-verified. |

@@ -6,32 +6,44 @@ import Animated, {
   withTiming,
 } from "react-native-reanimated";
 import { useTheme } from "@/common/theme";
-import { useThemeStyle } from "@/common/hooks/use-theme-style";
 
 type ProgressProps = {
   percent: number;
   height?: number;
   duration?: number;
+  /** Fill color; defaults to the brand primary. */
+  color?: string;
+  /** Track color behind the fill; defaults to the base surface. */
+  trackColor?: string;
+  /** Rounds both track and fill — use for standalone meters. */
+  rounded?: boolean;
 };
 
 export const Progress = ({
   percent,
   height = 3,
   duration = 500,
+  color,
+  trackColor,
+  rounded = false,
 }: ProgressProps) => {
   const percentValue = useSharedValue(percent);
   const theme = useTheme().colorTheme;
-  const styles = useThemeStyle(() => ({
-    container: {
-      backgroundColor: theme.white,
-      height: height,
-      width: "100%",
-    },
-  }));
+  const fillColor = color ?? theme.primary;
+  // Composed inline rather than through `useThemeStyle`: that hook freezes the
+  // factory in a ref, so a closure over props would keep first-render values
+  // and never pick up a prop or theme change.
+  const containerStyle = {
+    backgroundColor: trackColor ?? theme.white,
+    height,
+    width: "100%" as const,
+    borderRadius: rounded ? height / 2 : 0,
+    overflow: "hidden" as const,
+  };
   const animatedStyle = useAnimatedStyle(() => ({
     width: `${Math.min(percentValue.value, 100)}%`,
-    backgroundColor: theme.primary,
-    height: height,
+    backgroundColor: fillColor,
+    height,
   }));
 
   useEffect(() => {
@@ -40,7 +52,7 @@ export const Progress = ({
   }, [percent]);
 
   return (
-    <RNView style={styles.container}>
+    <RNView style={containerStyle}>
       <Animated.View style={animatedStyle} />
     </RNView>
   );

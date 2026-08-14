@@ -150,4 +150,38 @@ export const nl: typeof en = {
   journalBalancesBefore: "Saldi voor vermelding",
   journalBalancesAfter: "Saldi na vermelding",
   journalSource: "Broncode",
+  // budget
+  budgetActual: "Werkelijk",
+  budgetVariance: "Verschil",
+  budgetAboveTarget: "Boven doel",
+  budgetBelowTarget: "Onder doel",
+  budgetOnTarget: "Op doel",
+  budgetHistoryCount: {
+    one: "{{count}} regel",
+    other: "{{count}} regels",
+  },
+  budgetNoBudgetsFound: "Geen budgetten gevonden",
+  budgetNoBudgetsFoundDescription:
+    "Stel voor een willekeurige rekening een doel in om te gaan volgen.",
+  budgetEmptyStateCta: "Je eerste budget toevoegen",
+  budgetPanelEmpty: "Stel een doel in voor een rekening",
+  budgetLoadFailed: "Budgetten konden niet worden geladen",
+  budgetIntervalDaily: "Dagelijks",
+  budgetIntervalWeekly: "Wekelijks",
+  budgetIntervalMonthly: "Maandelijks",
+  budgetIntervalQuarterly: "Per kwartaal",
+  budgetIntervalYearly: "Jaarlijks",
+  budgetAdd: "Budget toevoegen",
+  budgetUpdate: "Budget bijwerken",
+  budgetAccountHelp:
+    "Budgetten gelden voor één rekening. Een nieuwere regel voor dezelfde rekening en valuta geldt vanaf de datum.",
+  budgetInterval: "Interval",
+  budgetSelectInterval: "Interval selecteren",
+  budgetAmount: "Bedrag",
+  budgetSaveFailed: "Budget kon niet worden opgeslagen",
+  budgetDelete: "Verwijderen",
+  budgetDeleteTitle: "Budget verwijderen",
+  budgetDeleteMessage:
+    "Het {{interval}} budget van {{amount}} voor {{account}} met ingang van {{date}} verwijderen? Dit verwijdert één regel en kan niet ongedaan worden gemaakt.",
+  budgetDeleteFailed: "Budget kon niet worden verwijderd",
 };

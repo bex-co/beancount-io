@@ -152,4 +152,38 @@ export const pt: typeof en = {
   journalBalancesBefore: "Saldos antes da entrada",
   journalBalancesAfter: "Saldos depois da entrada",
   journalSource: "Código-fonte",
+  // budget
+  budgetActual: "Real",
+  budgetVariance: "Variação",
+  budgetAboveTarget: "Acima da meta",
+  budgetBelowTarget: "Abaixo da meta",
+  budgetOnTarget: "Dentro da meta",
+  budgetHistoryCount: {
+    one: "{{count}} entrada",
+    other: "{{count}} entradas",
+  },
+  budgetNoBudgetsFound: "Nenhum orçamento encontrado",
+  budgetNoBudgetsFoundDescription:
+    "Defina uma meta para qualquer conta e comece a acompanhar.",
+  budgetEmptyStateCta: "Adicionar seu primeiro orçamento",
+  budgetPanelEmpty: "Defina uma meta para uma conta",
+  budgetLoadFailed: "Falha ao carregar os orçamentos",
+  budgetIntervalDaily: "Diário",
+  budgetIntervalWeekly: "Semanal",
+  budgetIntervalMonthly: "Mensal",
+  budgetIntervalQuarterly: "Trimestral",
+  budgetIntervalYearly: "Anual",
+  budgetAdd: "Adicionar orçamento",
+  budgetUpdate: "Atualizar orçamento",
+  budgetAccountHelp:
+    "Os orçamentos se aplicam a uma conta. Uma entrada mais recente para a mesma conta e moeda entra em vigor na sua data.",
+  budgetInterval: "Intervalo",
+  budgetSelectInterval: "Selecionar intervalo",
+  budgetAmount: "Valor",
+  budgetSaveFailed: "Falha ao salvar o orçamento",
+  budgetDelete: "Excluir",
+  budgetDeleteTitle: "Excluir orçamento",
+  budgetDeleteMessage:
+    "Excluir o orçamento {{interval}} de {{amount}} para {{account}} em vigor em {{date}}? Isso remove uma única entrada e não pode ser desfeito.",
+  budgetDeleteFailed: "Falha ao excluir o orçamento",
 };

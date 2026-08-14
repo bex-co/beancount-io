@@ -262,6 +262,7 @@ export const en = {
   range6M: "6M",
   rangeYTD: "YTD",
   range1Y: "1Y",
+  rangeLastYear: "LY",
   rangeAll: "ALL",
   tes: "1",
   // edit / delete transaction
@@ -348,4 +349,43 @@ export const en = {
     one: "{{count}} error",
     other: "{{count}} errors",
   },
+  // budget — dated spending/income targets per account, stored as
+  // `custom "budget"` directives. Copy mirrors the dashboard's page.budget.*
+  // namespace so the two clients speak the same language.
+  budgetActual: "Actual",
+  budgetVariance: "Variance",
+  budgetAboveTarget: "Above target",
+  budgetBelowTarget: "Below target",
+  budgetOnTarget: "On target",
+  budgetHistoryCount: {
+    one: "{{count}} entry",
+    other: "{{count}} entries",
+  },
+  budgetNoBudgetsFound: "No budgets found",
+  budgetNoBudgetsFoundDescription:
+    "Set a spending target for any account to start tracking against it.",
+  budgetEmptyStateCta: "Add your first budget",
+  budgetPanelEmpty: "Set a spending target for any account",
+  budgetLoadFailed: "Failed to load budgets",
+  budgetIntervalDaily: "Daily",
+  budgetIntervalWeekly: "Weekly",
+  budgetIntervalMonthly: "Monthly",
+  budgetIntervalQuarterly: "Quarterly",
+  budgetIntervalYearly: "Yearly",
+  // add / update budget
+  budgetAdd: "Add Budget",
+  budgetUpdate: "Update Budget",
+  budgetAccountPlaceholder: "Expenses:Groceries",
+  budgetAccountHelp:
+    "Budgets apply to one account. A newer entry for the same account and currency takes effect on its date.",
+  budgetInterval: "Interval",
+  budgetSelectInterval: "Select interval",
+  budgetAmount: "Amount",
+  budgetSaveFailed: "Failed to save budget",
+  // delete
+  budgetDelete: "Delete",
+  budgetDeleteTitle: "Delete Budget",
+  budgetDeleteMessage:
+    "Delete the {{interval}} budget of {{amount}} for {{account}} effective {{date}}? This removes a single entry and cannot be undone.",
+  budgetDeleteFailed: "Failed to delete budget",
 };

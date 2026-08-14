@@ -869,6 +869,8 @@ export type Mutation = {
   parseFile: FileParseResult;
   /** Parse a receipt image or PDF and return a single summarized transaction with account recommendations. File must be uploaded to S3 first. */
   parseReceipt: ReceiptParseResult;
+  /** Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select. */
+  reconcilePlaidAccounts: PlaidAccountReconcileResult;
   /** Refresh Plaid Item status from Plaid API (useful after reauthentication) */
   refreshPlaidItemStatus: PlaidItemType;
   /** Refresh authentication token - issues a new token and revokes the current one */
@@ -980,6 +982,7 @@ export type MutationCreatePlaidLinkTokenArgs = {
 
 
 export type MutationCreatePlaidUpdateModeLinkTokenArgs = {
+  accountSelection?: InputMaybe<Scalars['Boolean']['input']>;
   itemId: Scalars['String']['input'];
   ledgerId: Scalars['String']['input'];
 };
@@ -1093,6 +1096,12 @@ export type MutationParseFileArgs = {
 export type MutationParseReceiptArgs = {
   ledgerId: Scalars['String']['input'];
   s3ObjectKey: Scalars['String']['input'];
+};
+
+
+export type MutationReconcilePlaidAccountsArgs = {
+  itemId: Scalars['String']['input'];
+  ledgerId: Scalars['String']['input'];
 };
 
 
@@ -1305,6 +1314,15 @@ export type PlaidAccountMappingSuggestion = {
   suggestedAccount: Scalars['String']['output'];
 };
 
+export type PlaidAccountReconcileResult = {
+  __typename?: 'PlaidAccountReconcileResult';
+  /** Accounts Plaid now shares that we had not stored yet */
+  addedCount: Scalars['Float']['output'];
+  /** Stored accounts Plaid no longer shares; these were deleted along with their transactions */
+  removedCount: Scalars['Float']['output'];
+  success: Scalars['Boolean']['output'];
+};
+
 export type PlaidAccountType = {
   __typename?: 'PlaidAccountType';
   accountId: Scalars['String']['output'];
@@ -1316,6 +1334,25 @@ export type PlaidAccountType = {
   currency: Scalars['String']['output'];
   enabled: Scalars['Boolean']['output'];
   id: Scalars['String']['output'];
+  ledgerAccount?: Maybe<Scalars['String']['output']>;
+  mask?: Maybe<Scalars['String']['output']>;
+  plaidItemId: Scalars['String']['output'];
+  updatedAt: Scalars['DateTimeISO']['output'];
+};
+
+export type PlaidAccountWithInstitutionType = {
+  __typename?: 'PlaidAccountWithInstitutionType';
+  accountId: Scalars['String']['output'];
+  accountName: Scalars['String']['output'];
+  accountSubtype?: Maybe<Scalars['String']['output']>;
+  accountType: Scalars['String']['output'];
+  createdAt: Scalars['DateTimeISO']['output'];
+  /** Currency used when writing this account's transactions to the ledger */
+  currency: Scalars['String']['output'];
+  enabled: Scalars['Boolean']['output'];
+  id: Scalars['String']['output'];
+  /** Name of the institution this account belongs to */
+  institutionName: Scalars['String']['output'];
   ledgerAccount?: Maybe<Scalars['String']['output']>;
   mask?: Maybe<Scalars['String']['output']>;
   plaidItemId: Scalars['String']['output'];
@@ -1568,6 +1605,8 @@ export type Query = {
   getLedgerYears: Array<Scalars['String']['output']>;
   /** Get all accounts for a specific Plaid Item */
   getPlaidAccounts: Array<PlaidAccountType>;
+  /** Get every Plaid account in a ledger together with its owning institution. Powers ledger-wide account pickers. */
+  getPlaidAccountsForLedger: Array<PlaidAccountWithInstitutionType>;
   /** Get a single Plaid Item by ID */
   getPlaidItem: PlaidItemType;
   /** Get Plaid Items for the current user, scoped to a ledger. */
@@ -1895,6 +1934,11 @@ export type QueryGetLedgerYearsArgs = {
 
 export type QueryGetPlaidAccountsArgs = {
   itemId: Scalars['String']['input'];
+  ledgerId: Scalars['String']['input'];
+};
+
+
+export type QueryGetPlaidAccountsForLedgerArgs = {
   ledgerId: Scalars['String']['input'];
 };
 

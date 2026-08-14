@@ -157,4 +157,38 @@ export const es: typeof en = {
   journalBalancesBefore: "Saldos antes de la entrada",
   journalBalancesAfter: "Saldos después de la entrada",
   journalSource: "Código fuente",
+  // budget
+  budgetActual: "Real",
+  budgetVariance: "Diferencia",
+  budgetAboveTarget: "Por encima del objetivo",
+  budgetBelowTarget: "Por debajo del objetivo",
+  budgetOnTarget: "En objetivo",
+  budgetHistoryCount: {
+    one: "{{count}} entrada",
+    other: "{{count}} entradas",
+  },
+  budgetNoBudgetsFound: "No se encontraron presupuestos",
+  budgetNoBudgetsFoundDescription:
+    "Define un objetivo para cualquier cuenta y empieza a hacer seguimiento.",
+  budgetEmptyStateCta: "Añadir tu primer presupuesto",
+  budgetPanelEmpty: "Define un objetivo para una cuenta",
+  budgetLoadFailed: "Error al cargar los presupuestos",
+  budgetIntervalDaily: "Diario",
+  budgetIntervalWeekly: "Semanal",
+  budgetIntervalMonthly: "Mensual",
+  budgetIntervalQuarterly: "Trimestral",
+  budgetIntervalYearly: "Anual",
+  budgetAdd: "Agregar presupuesto",
+  budgetUpdate: "Actualizar presupuesto",
+  budgetAccountHelp:
+    "Los presupuestos se aplican a una cuenta. Una entrada más reciente para la misma cuenta y moneda entra en vigor en su fecha.",
+  budgetInterval: "Intervalo",
+  budgetSelectInterval: "Seleccionar intervalo",
+  budgetAmount: "Monto",
+  budgetSaveFailed: "Error al guardar el presupuesto",
+  budgetDelete: "Eliminar",
+  budgetDeleteTitle: "Eliminar presupuesto",
+  budgetDeleteMessage:
+    "¿Eliminar el presupuesto {{interval}} de {{amount}} para {{account}} vigente desde {{date}}? Esto elimina una sola entrada y no se puede deshacer.",
+  budgetDeleteFailed: "Error al eliminar el presupuesto",
 };

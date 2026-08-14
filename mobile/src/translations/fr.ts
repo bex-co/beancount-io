@@ -157,4 +157,38 @@ export const fr: typeof en = {
   journalBalancesBefore: "Soldes avant l'entrée",
   journalBalancesAfter: "Soldes après l'entrée",
   journalSource: "Code source",
+  // budget
+  budgetActual: "Réel",
+  budgetVariance: "Écart",
+  budgetAboveTarget: "Au-dessus de l’objectif",
+  budgetBelowTarget: "En dessous de l’objectif",
+  budgetOnTarget: "Objectif atteint",
+  budgetHistoryCount: {
+    one: "{{count}} entrée",
+    other: "{{count}} entrées",
+  },
+  budgetNoBudgetsFound: "Aucun budget trouvé",
+  budgetNoBudgetsFoundDescription:
+    "Définissez un objectif pour n’importe quel compte pour commencer le suivi.",
+  budgetEmptyStateCta: "Ajouter votre premier budget",
+  budgetPanelEmpty: "Définir un objectif pour un compte",
+  budgetLoadFailed: "Échec du chargement des budgets",
+  budgetIntervalDaily: "Quotidien",
+  budgetIntervalWeekly: "Hebdomadaire",
+  budgetIntervalMonthly: "Mensuel",
+  budgetIntervalQuarterly: "Trimestriel",
+  budgetIntervalYearly: "Annuel",
+  budgetAdd: "Ajouter un budget",
+  budgetUpdate: "Mettre à jour le budget",
+  budgetAccountHelp:
+    "Un budget s’applique à un seul compte. Une entrée plus récente pour le même compte et la même devise prend effet à sa date.",
+  budgetInterval: "Intervalle",
+  budgetSelectInterval: "Choisir un intervalle",
+  budgetAmount: "Montant",
+  budgetSaveFailed: "Échec de l’enregistrement du budget",
+  budgetDelete: "Supprimer",
+  budgetDeleteTitle: "Supprimer le budget",
+  budgetDeleteMessage:
+    "Supprimer le budget {{interval}} de {{amount}} pour {{account}} en vigueur au {{date}} ? Cela supprime une seule entrée et est irréversible.",
+  budgetDeleteFailed: "Échec de la suppression du budget",
 };

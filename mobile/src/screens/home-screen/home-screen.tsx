@@ -12,6 +12,7 @@ import {
 import { AccountChartsCard } from "@/screens/home-screen/components/account-charts-card";
 import { RecentTransactionsCard } from "@/screens/home-screen/components/recent-transactions-card";
 import { SpendingCard } from "@/screens/home-screen/components/spending-card";
+import { BudgetCard } from "@/screens/home-screen/components/budget-card";
 import { FeedCard } from "@/screens/home-screen/components/feed-card";
 import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
 import { analytics } from "@/common/analytics";
@@ -150,6 +151,8 @@ export const HomeScreenImpl = (): JSX.Element => {
           currencySymbol={currencySymbol}
           refreshSignal={refreshSignal}
         />
+
+        <BudgetCard ledgerId={ledgerId} refreshSignal={refreshSignal} />
 
         <FeedCard refreshSignal={refreshSignal} />
       </DashboardScrollView>

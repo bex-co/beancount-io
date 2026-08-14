@@ -772,7 +772,14 @@ type Mutation {
   """Create a Plaid Link token for connecting bank accounts"""
   createPlaidLinkToken(ledgerId: String!): PlaidLinkToken!
   """Create a Plaid Link token in update mode for reauthentication"""
-  createPlaidUpdateModeLinkToken(itemId: String!, ledgerId: String!): PlaidLinkToken!
+  createPlaidUpdateModeLinkToken(
+    """
+    Request Plaid's Account Select pane so the user can add or remove accounts. A no-op at OAuth institutions, which always show it in update mode.
+    """
+    accountSelection: Boolean = false
+    itemId: String!
+    ledgerId: String!
+  ): PlaidLinkToken!
   """Create a new public key for the current user"""
   createPublicKey(key: String!, readOnly: Boolean = false, title: String!): PublicKey!
   createPullRequestFromPatch(input: CreatePRFromPatchInput!): PullRequestResult!
@@ -830,6 +837,10 @@ type Mutation {
     """S3 object key of the receipt (image or PDF only)"""
     s3ObjectKey: String!
   ): ReceiptParseResult!
+  """
+  Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select.
+  """
+  reconcilePlaidAccounts(itemId: String!, ledgerId: String!): PlaidAccountReconcileResult!
   """
   Refresh Plaid Item status from Plaid API (useful after reauthentication)
   """
@@ -941,6 +952,16 @@ type PlaidAccountMappingSuggestion {
   suggestedAccount: String!
 }
 
+type PlaidAccountReconcileResult {
+  """Accounts Plaid now shares that we had not stored yet"""
+  addedCount: Float!
+  """
+  Stored accounts Plaid no longer shares; these were deleted along with their transactions
+  """
+  removedCount: Float!
+  success: Boolean!
+}
+
 type PlaidAccountType {
   accountId: String!
   accountName: String!
@@ -951,6 +972,24 @@ type PlaidAccountType {
   currency: String!
   enabled: Boolean!
   id: String!
+  ledgerAccount: String
+  mask: String
+  plaidItemId: String!
+  updatedAt: DateTimeISO!
+}
+
+type PlaidAccountWithInstitutionType {
+  accountId: String!
+  accountName: String!
+  accountSubtype: String
+  accountType: String!
+  createdAt: DateTimeISO!
+  """Currency used when writing this account's transactions to the ledger"""
+  currency: String!
+  enabled: Boolean!
+  id: String!
+  """Name of the institution this account belongs to"""
+  institutionName: String!
   ledgerAccount: String
   mask: String
   plaidItemId: String!
@@ -1211,6 +1250,10 @@ type Query {
   getLedgerYears(ledgerId: String!): [String!]!
   """Get all accounts for a specific Plaid Item"""
   getPlaidAccounts(itemId: String!, ledgerId: String!): [PlaidAccountType!]!
+  """
+  Get every Plaid account in a ledger together with its owning institution. Powers ledger-wide account pickers.
+  """
+  getPlaidAccountsForLedger(ledgerId: String!): [PlaidAccountWithInstitutionType!]!
   """Get a single Plaid Item by ID"""
   getPlaidItem(id: String!): PlaidItemType!
   """Get Plaid Items for the current user, scoped to a ledger."""

@@ -226,6 +226,17 @@ export type InsertReceiptTransactionMutationVariables = Exact<{
 
 export type InsertReceiptTransactionMutation = { insertReceiptTransaction: { success: boolean } };
 
+export type GetLedgerIntervalTotalsQueryVariables = Exact<{
+  ledgerId: string;
+  accountName: string;
+  interval: string;
+  conversion: string;
+  time?: string | null | undefined;
+}>;
+
+
+export type GetLedgerIntervalTotalsQuery = { getLedgerIntervalTotals: Array<{ date: string, balance: Record<string, number | string> }> };
+
 export type JournalEntriesQueryVariables = Exact<{
   first?: number | null | undefined;
   after?: string | null | undefined;
@@ -1583,6 +1594,60 @@ export function useInsertReceiptTransactionMutation(baseOptions?: Apollo.Mutatio
 export type InsertReceiptTransactionMutationHookResult = ReturnType<typeof useInsertReceiptTransactionMutation>;
 export type InsertReceiptTransactionMutationResult = Apollo.MutationResult<InsertReceiptTransactionMutation>;
 export type InsertReceiptTransactionMutationOptions = Apollo.BaseMutationOptions<InsertReceiptTransactionMutation, InsertReceiptTransactionMutationVariables>;
+export const GetLedgerIntervalTotalsDocument = gql`
+    query GetLedgerIntervalTotals($ledgerId: String!, $accountName: String!, $interval: String!, $conversion: String!, $time: String) {
+  getLedgerIntervalTotals(
+    ledgerId: $ledgerId
+    accountName: $accountName
+    interval: $interval
+    conversion: $conversion
+    time: $time
+  ) {
+    date
+    balance
+  }
+}
+    `;
+
+/**
+ * __useGetLedgerIntervalTotalsQuery__
+ *
+ * To run a query within a React component, call `useGetLedgerIntervalTotalsQuery` and pass it any options that fit your needs.
+ * When your component renders, `useGetLedgerIntervalTotalsQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useGetLedgerIntervalTotalsQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      accountName: // value for 'accountName'
+ *      interval: // value for 'interval'
+ *      conversion: // value for 'conversion'
+ *      time: // value for 'time'
+ *   },
+ * });
+ */
+export function useGetLedgerIntervalTotalsQuery(baseOptions: Apollo.QueryHookOptions<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables> & ({ variables: GetLedgerIntervalTotalsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>(GetLedgerIntervalTotalsDocument, options);
+      }
+export function useGetLedgerIntervalTotalsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>(GetLedgerIntervalTotalsDocument, options);
+        }
+// @ts-ignore
+export function useGetLedgerIntervalTotalsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>;
+export function useGetLedgerIntervalTotalsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>): Apollo.UseSuspenseQueryResult<GetLedgerIntervalTotalsQuery | undefined, GetLedgerIntervalTotalsQueryVariables>;
+export function useGetLedgerIntervalTotalsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>(GetLedgerIntervalTotalsDocument, options);
+        }
+export type GetLedgerIntervalTotalsQueryHookResult = ReturnType<typeof useGetLedgerIntervalTotalsQuery>;
+export type GetLedgerIntervalTotalsLazyQueryHookResult = ReturnType<typeof useGetLedgerIntervalTotalsLazyQuery>;
+export type GetLedgerIntervalTotalsSuspenseQueryHookResult = ReturnType<typeof useGetLedgerIntervalTotalsSuspenseQuery>;
+export type GetLedgerIntervalTotalsQueryResult = Apollo.QueryResult<GetLedgerIntervalTotalsQuery, GetLedgerIntervalTotalsQueryVariables>;
 export const JournalEntriesDocument = gql`
     query JournalEntries($first: Int, $after: String, $last: Int, $before: String, $detailed: Boolean, $searchQuery: String, $accountFilter: String, $amountMin: Float, $amountMax: Float, $entryTypes: [String!], $sortBy: String, $sortOrder: String, $groupBy: String) {
   journalEntries(

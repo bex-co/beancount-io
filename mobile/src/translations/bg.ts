@@ -150,4 +150,38 @@ export const bg: typeof en = {
   journalBalancesBefore: "Салда преди запис",
   journalBalancesAfter: "Салда след запис",
   journalSource: "Изходен код",
+  // budget
+  budgetActual: "Действително",
+  budgetVariance: "Отклонение",
+  budgetAboveTarget: "Над целта",
+  budgetBelowTarget: "Под целта",
+  budgetOnTarget: "На целта",
+  budgetHistoryCount: {
+    one: "{{count}} запис",
+    other: "{{count}} записа",
+  },
+  budgetNoBudgetsFound: "Не са намерени бюджети",
+  budgetNoBudgetsFoundDescription:
+    "Задайте цел за която и да е сметка, за да започнете проследяване.",
+  budgetEmptyStateCta: "Добавете първия си бюджет",
+  budgetPanelEmpty: "Задайте цел за сметка",
+  budgetLoadFailed: "Неуспешно зареждане на бюджетите",
+  budgetIntervalDaily: "Дневно",
+  budgetIntervalWeekly: "Седмично",
+  budgetIntervalMonthly: "Месечно",
+  budgetIntervalQuarterly: "Тримесечно",
+  budgetIntervalYearly: "Годишно",
+  budgetAdd: "Добавяне на бюджет",
+  budgetUpdate: "Актуализиране на бюджета",
+  budgetAccountHelp:
+    "Бюджетът важи за една сметка. По-нов запис за същата сметка и валута влиза в сила на своята дата.",
+  budgetInterval: "Интервал",
+  budgetSelectInterval: "Изберете интервал",
+  budgetAmount: "Сума",
+  budgetSaveFailed: "Неуспешно записване на бюджета",
+  budgetDelete: "Изтриване",
+  budgetDeleteTitle: "Изтриване на бюджет",
+  budgetDeleteMessage:
+    "Да се изтрие ли {{interval}} бюджет от {{amount}} за {{account}}, в сила от {{date}}? Това премахва един запис и не може да бъде отменено.",
+  budgetDeleteFailed: "Неуспешно изтриване на бюджета",
 };

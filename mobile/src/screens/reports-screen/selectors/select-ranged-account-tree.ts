@@ -139,7 +139,7 @@ export function selectRangedAccountTree(
 
   // Build a trie from the account paths, roll up leaf sums, and convert to the
   // SerializableTreeNode shape. Skip the category level (e.g. "Income") so
-  // stripTopLevel names the top-level accounts the same way the Accounts tab
+  // dropRoot names the top-level accounts the same way the Accounts tab
   // does — the synthetic root's children are the depth-1 accounts.
   const root: Trie = { account: "", children: new Map() };
   sums.forEach((_v, account) => insertAccount(root, account));

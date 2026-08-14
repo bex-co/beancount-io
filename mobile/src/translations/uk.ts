@@ -152,4 +152,38 @@ export const uk: typeof en = {
   journalBalancesBefore: "Баланси до запису",
   journalBalancesAfter: "Баланси після запису",
   journalSource: "Вихідний код",
+  // budget
+  budgetActual: "Факт",
+  budgetVariance: "Відхилення",
+  budgetAboveTarget: "Вище цілі",
+  budgetBelowTarget: "Нижче цілі",
+  budgetOnTarget: "В цілі",
+  budgetHistoryCount: {
+    one: "{{count}} запис",
+    other: "{{count}} записів",
+  },
+  budgetNoBudgetsFound: "Бюджети не знайдено",
+  budgetNoBudgetsFoundDescription:
+    "Задайте ціль для будь-якого рахунку, щоб почати відстеження.",
+  budgetEmptyStateCta: "Додати перший бюджет",
+  budgetPanelEmpty: "Задайте ціль для рахунку",
+  budgetLoadFailed: "Не вдалося завантажити бюджети",
+  budgetIntervalDaily: "Щодня",
+  budgetIntervalWeekly: "Щотижня",
+  budgetIntervalMonthly: "Щомісяця",
+  budgetIntervalQuarterly: "Щоквартально",
+  budgetIntervalYearly: "Щорічно",
+  budgetAdd: "Додати бюджет",
+  budgetUpdate: "Оновити бюджет",
+  budgetAccountHelp:
+    "Бюджет застосовується до одного рахунку. Новіший запис для того самого рахунку й валюти діє зі своєї дати.",
+  budgetInterval: "Інтервал",
+  budgetSelectInterval: "Оберіть інтервал",
+  budgetAmount: "Сума",
+  budgetSaveFailed: "Не вдалося зберегти бюджет",
+  budgetDelete: "Видалити",
+  budgetDeleteTitle: "Видалити бюджет",
+  budgetDeleteMessage:
+    "Видалити {{interval}} бюджет {{amount}} для {{account}}, що діє з {{date}}? Буде видалено один запис, скасувати неможливо.",
+  budgetDeleteFailed: "Не вдалося видалити бюджет",
 };

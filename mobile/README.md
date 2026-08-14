@@ -47,6 +47,7 @@ Beancount Mobile Community Edition turns a Beancount.io ledger into a native wor
 </p>
 
 - **Understand the whole picture** — follow net worth, assets, liabilities, spending, and account-level trends.
+- **Set and track budgets** — give any account a spending or income target, then watch actuals against it period by period, with overages called out.
 - **Record clean transactions** — enter balanced multi-posting transactions, reuse account suggestions, and scan receipts.
 - **Investigate every entry** — search and filter the journal, inspect postings and balance context, then edit the underlying directive.
 - **Work with the ledger itself** — browse and edit `.bean` files with syntax highlighting and review Git commit diffs.

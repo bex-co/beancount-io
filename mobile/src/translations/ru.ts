@@ -157,4 +157,38 @@ export const ru: typeof en = {
   journalBalancesBefore: "Балансы до записи",
   journalBalancesAfter: "Балансы после записи",
   journalSource: "Исходный код",
+  // budget
+  budgetActual: "Факт",
+  budgetVariance: "Отклонение",
+  budgetAboveTarget: "Выше цели",
+  budgetBelowTarget: "Ниже цели",
+  budgetOnTarget: "В цели",
+  budgetHistoryCount: {
+    one: "{{count}} запись",
+    other: "{{count}} записей",
+  },
+  budgetNoBudgetsFound: "Бюджеты не найдены",
+  budgetNoBudgetsFoundDescription:
+    "Задайте цель для любого счёта, чтобы начать отслеживание.",
+  budgetEmptyStateCta: "Добавить первый бюджет",
+  budgetPanelEmpty: "Задайте цель для счёта",
+  budgetLoadFailed: "Не удалось загрузить бюджеты",
+  budgetIntervalDaily: "Ежедневно",
+  budgetIntervalWeekly: "Еженедельно",
+  budgetIntervalMonthly: "Ежемесячно",
+  budgetIntervalQuarterly: "Ежеквартально",
+  budgetIntervalYearly: "Ежегодно",
+  budgetAdd: "Добавить бюджет",
+  budgetUpdate: "Обновить бюджет",
+  budgetAccountHelp:
+    "Бюджет применяется к одному счёту. Более новая запись для того же счёта и валюты действует с указанной даты.",
+  budgetInterval: "Интервал",
+  budgetSelectInterval: "Выберите интервал",
+  budgetAmount: "Сумма",
+  budgetSaveFailed: "Не удалось сохранить бюджет",
+  budgetDelete: "Удалить",
+  budgetDeleteTitle: "Удалить бюджет",
+  budgetDeleteMessage:
+    "Удалить {{interval}} бюджет {{amount}} для {{account}}, действующий с {{date}}? Будет удалена одна запись, отменить это нельзя.",
+  budgetDeleteFailed: "Не удалось удалить бюджет",
 };

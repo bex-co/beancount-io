@@ -151,4 +151,38 @@ export const ca: typeof en = {
   journalBalancesBefore: "Saldo abans de l'entrada",
   journalBalancesAfter: "Saldo després de l'entrada",
   journalSource: "Codi font",
+  // budget
+  budgetActual: "Real",
+  budgetVariance: "Diferència",
+  budgetAboveTarget: "Per sobre de l'objectiu",
+  budgetBelowTarget: "Per sota de l'objectiu",
+  budgetOnTarget: "A l'objectiu",
+  budgetHistoryCount: {
+    one: "{{count}} entrada",
+    other: "{{count}} entrades",
+  },
+  budgetNoBudgetsFound: "No s'ha trobat cap pressupost",
+  budgetNoBudgetsFoundDescription:
+    "Defineix un objectiu per a qualsevol compte per començar-ne el seguiment.",
+  budgetEmptyStateCta: "Afegeix el teu primer pressupost",
+  budgetPanelEmpty: "Defineix un objectiu per a un compte",
+  budgetLoadFailed: "No s'han pogut carregar els pressupostos",
+  budgetIntervalDaily: "Diari",
+  budgetIntervalWeekly: "Setmanal",
+  budgetIntervalMonthly: "Mensual",
+  budgetIntervalQuarterly: "Trimestral",
+  budgetIntervalYearly: "Anual",
+  budgetAdd: "Afegeix pressupost",
+  budgetUpdate: "Actualitza el pressupost",
+  budgetAccountHelp:
+    "Els pressupostos s'apliquen a un sol compte. Una entrada més recent per al mateix compte i moneda entra en vigor en la seva data.",
+  budgetInterval: "Interval",
+  budgetSelectInterval: "Selecciona un interval",
+  budgetAmount: "Import",
+  budgetSaveFailed: "No s'ha pogut desar el pressupost",
+  budgetDelete: "Elimina",
+  budgetDeleteTitle: "Elimina el pressupost",
+  budgetDeleteMessage:
+    "Vols eliminar el pressupost {{interval}} de {{amount}} per a {{account}} vigent des del {{date}}? Això elimina una sola entrada i no es pot desfer.",
+  budgetDeleteFailed: "No s'ha pogut eliminar el pressupost",
 };
