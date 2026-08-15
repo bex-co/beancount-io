@@ -10,7 +10,7 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { useReactiveVar } from "@apollo/client";
+import { useApolloClient, useReactiveVar } from "@apollo/client";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
@@ -20,15 +20,10 @@ import { useThemeStyle, usePageView, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import {
-  TrialBalanceDocument,
-  AccountJournalDocument,
-  AccountReportDocument,
-  BalanceSheetDocument,
-  GetLedgerJournalDocument,
-  HomeChartsDocument,
   useDeleteLedgerEntrySourceSliceMutation,
   useGetLedgerEntryContextQuery,
 } from "@/generated-graphql/graphql";
+import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { EntryContext } from "@/screens/transactions-screen/entry-context";
 import { openEditTransaction } from "@/screens/edit-transaction-screen";
 import {
@@ -161,6 +156,7 @@ const TransactionDetailImpl = ({
 
   const toast = useToast();
   const stashed = useReactiveVar(selectedTransactionVar);
+  const client = useApolloClient();
 
   // Also serves as the fallback entry source when the stash is cold (deep
   // link or remount) — the context payload carries the full entry JSON.
@@ -170,17 +166,7 @@ const TransactionDetailImpl = ({
   });
 
   const [deleteMutation, { loading: deleting }] =
-    useDeleteLedgerEntrySourceSliceMutation({
-      refetchQueries: [
-        GetLedgerJournalDocument,
-        HomeChartsDocument,
-        AccountJournalDocument,
-        AccountReportDocument,
-        TrialBalanceDocument,
-        BalanceSheetDocument,
-      ],
-      awaitRefetchQueries: false,
-    });
+    useDeleteLedgerEntrySourceSliceMutation();
 
   const sha256sum = data?.getLedgerEntryContext?.sha256sum;
 
@@ -207,6 +193,7 @@ const TransactionDetailImpl = ({
                 ledgerId,
               },
             });
+            void invalidateLedgerData(client, "entries");
             toast.showToast({ message: t("deleteSuccess"), type: "success" });
             router.back();
           } catch (e: unknown) {
@@ -216,7 +203,16 @@ const TransactionDetailImpl = ({
         },
       },
     ]);
-  }, [sha256sum, entryHash, ledgerId, deleteMutation, t, toast, router]);
+  }, [
+    sha256sum,
+    entryHash,
+    ledgerId,
+    deleteMutation,
+    client,
+    t,
+    toast,
+    router,
+  ]);
 
   const entry: JournalTransaction | null = useMemo(() => {
     if (stashed && stashed.entry_hash === entryHash) {

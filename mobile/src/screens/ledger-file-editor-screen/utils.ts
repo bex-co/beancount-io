@@ -14,12 +14,20 @@ export function filterFileErrors(
   filePath: string,
 ): FileError[] {
   const fileName = filePath.split("/").pop() ?? filePath;
-  return allErrors.filter(
-    (e) =>
-      e.filename === filePath ||
-      e.filename === fileName ||
-      (e.filename != null && e.filename.endsWith("/" + fileName)),
-  );
+  return allErrors.filter((e) => {
+    if (e.filename != null && e.filename !== "") {
+      return (
+        e.filename === filePath ||
+        e.filename === fileName ||
+        e.filename.endsWith("/" + fileName)
+      );
+    }
+    // `getLedgerErrors` can return a null filename and name the file in the
+    // message instead ("parse errors in main.bean"). Verified against a live
+    // ledger: without this fallback the banner matched nothing and never
+    // rendered for any file, however broken the ledger was.
+    return typeof e.message === "string" && e.message.includes(fileName);
+  });
 }
 
 /**

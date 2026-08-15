@@ -326,7 +326,7 @@ export const MultiPostingsTransactionScreenComponent = () => {
     currencies,
     loading: metaLoading,
   } = useLedgerMeta(userId, ledgerId);
-  const { mutate, error } = useAddEntriesToRemote();
+  const { mutate } = useAddEntriesToRemote();
 
   // Optional prefill, currently supplied by the receipt scanner after the LLM
   // reads a photo. Absent for a plain "new transaction".
@@ -417,10 +417,15 @@ export const MultiPostingsTransactionScreenComponent = () => {
         narration,
         currency,
       });
-      await mutate({ variables: { entriesInput: [entry], ledgerId } });
+      const result = await mutate({
+        variables: { entriesInput: [entry], ledgerId },
+      });
       cancel();
 
-      if (!error) {
+      // The mutation reports rejection in its payload. The hook's `error` field
+      // is a render behind at this point, so a server-rejected split used to
+      // toast success — branch on what the server actually returned.
+      if (result.data?.addEntries?.success) {
         toast.showToast({ message: t("saveSuccess"), type: "success" });
         setTimeout(async () => {
           const callback = AddTransactionCallback.getFn();

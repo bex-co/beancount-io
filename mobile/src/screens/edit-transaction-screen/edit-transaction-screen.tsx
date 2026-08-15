@@ -11,22 +11,18 @@ import {
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
+import { useApolloClient } from "@apollo/client";
 import { fonts, fontSizes, headerActionStyle, useTheme } from "@/common/theme";
 import { useThemeStyle, useToast, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
 import {
-  TrialBalanceDocument,
-  AccountJournalDocument,
-  AccountReportDocument,
-  BalanceSheetDocument,
   GetLedgerEntryContextDocument,
-  GetLedgerJournalDocument,
-  HomeChartsDocument,
   useGetLedgerEntryContextQuery,
   useUpdateLedgerEntrySourceSliceMutation,
 } from "@/generated-graphql/graphql";
 import { analytics } from "@/common/analytics";
+import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -86,6 +82,7 @@ export const EditTransactionScreen = (): JSX.Element => {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const toast = useToast();
+  const client = useApolloClient();
   const { entryHash, ledgerId } = useLocalSearchParams<{
     entryHash: string;
     ledgerId: string;
@@ -112,15 +109,11 @@ export const EditTransactionScreen = (): JSX.Element => {
 
   const [updateMutation, { loading: saving }] =
     useUpdateLedgerEntrySourceSliceMutation({
-      refetchQueries: [
-        GetLedgerJournalDocument,
-        HomeChartsDocument,
-        AccountJournalDocument,
-        AccountReportDocument,
-        TrialBalanceDocument,
-        BalanceSheetDocument,
-        GetLedgerEntryContextDocument,
-      ],
+      // Everything ledger-derived comes from `invalidateLedgerData` below; this
+      // screen only adds the slice it reads back itself, which is deliberately
+      // not in the shared scope (refetching an entry's context after a *delete*
+      // would request one that no longer exists).
+      refetchQueries: [GetLedgerEntryContextDocument],
       awaitRefetchQueries: false,
     });
 
@@ -149,6 +142,7 @@ export const EditTransactionScreen = (): JSX.Element => {
         },
       });
       cancelToast();
+      void invalidateLedgerData(client, "entries");
       toast.showToast({ message: t("editSuccess"), type: "success" });
       router.back();
     } catch (e: unknown) {
@@ -162,6 +156,7 @@ export const EditTransactionScreen = (): JSX.Element => {
     saving,
     content,
     updateMutation,
+    client,
     t,
     toast,
     router,

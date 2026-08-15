@@ -249,6 +249,55 @@ test("filterFileErrors: returns empty when no match", () => {
     throw new Error(`expected 0 errors, got ${filtered.length}`);
 });
 
+// The live backend returns a null filename and names the file in the message.
+// Before this fallback the banner matched nothing and never rendered at all —
+// confirmed on a real ledger, where the notifications screen showed "parse
+// errors in main.bean" while the editor sat clean.
+
+test("filterFileErrors: falls back to the message when filename is null", () => {
+  const errors = [
+    { message: "parse errors in main.bean", filename: null, lineno: null },
+  ];
+  const filtered = filterFileErrors(errors, "main.bean");
+  if (filtered.length !== 1)
+    throw new Error(`expected 1 match via message, got ${filtered.length}`);
+});
+
+test("filterFileErrors: message fallback still scopes to the open file", () => {
+  const errors = [
+    { message: "parse errors in other.bean", filename: null, lineno: null },
+  ];
+  const filtered = filterFileErrors(errors, "main.bean");
+  if (filtered.length !== 0)
+    throw new Error(`expected 0 matches, got ${filtered.length}`);
+});
+
+test("filterFileErrors: message fallback matches a nested path by basename", () => {
+  const errors = [
+    { message: "parse errors in expenses.bean", filename: "", lineno: null },
+  ];
+  const filtered = filterFileErrors(errors, "2024/expenses.bean");
+  if (filtered.length !== 1)
+    throw new Error(
+      `expected 1 match for empty filename, got ${filtered.length}`,
+    );
+});
+
+test("filterFileErrors: a present filename never falls back to the message", () => {
+  // Otherwise an error attributed to another file would surface here just
+  // because this file's name appears in its text.
+  const errors = [
+    {
+      message: "main.bean is included from here",
+      filename: "other.bean",
+      lineno: 3,
+    },
+  ];
+  const filtered = filterFileErrors(errors, "main.bean");
+  if (filtered.length !== 0)
+    throw new Error(`expected 0 matches, got ${filtered.length}`);
+});
+
 // ── keyboard overlap ─────────────────────────────────────────────────────────
 
 test("getKeyboardOverlap: removes the bottom safe-area gap", () => {

@@ -1,9 +1,5 @@
 import { useEffect, useMemo } from "react";
-import type { ApolloClient } from "@apollo/client";
-import {
-  GetLedgerJournalDocument,
-  useGetLedgerJournalQuery,
-} from "@/generated-graphql/graphql";
+import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { DirectiveType } from "@/screens/transactions-screen/types";
 import {
   groupBudgetEntries,
@@ -67,24 +63,3 @@ export function useBudgetGroups(ledgerId?: string, refreshSignal = 0) {
  */
 export type BudgetMutationResult =
   { ok: true } | { ok: false; message: string | null };
-
-/**
- * Re-read the budget directives after a write. Targets this query's own
- * variables rather than every active journal query — the transactions list and
- * spending card share the operation but not this data.
- */
-export async function refetchBudgetJournal(
-  client: ApolloClient<unknown>,
-  ledgerId: string,
-): Promise<void> {
-  try {
-    await client.query({
-      query: GetLedgerJournalDocument,
-      variables: budgetJournalVariables(ledgerId),
-      fetchPolicy: "network-only",
-    });
-  } catch {
-    // The directive is already written; pull-to-refresh reconciles the view.
-    // Reporting this as a write failure would invite a duplicate.
-  }
-}

@@ -1,10 +1,7 @@
 import { useCallback } from "react";
 import { useApolloClient } from "@apollo/client";
-import {
-  LedgerMetaDocument,
-  TrialBalanceDocument,
-  useBulkEntriesMutation,
-} from "@/generated-graphql/graphql";
+import { useBulkEntriesMutation } from "@/generated-graphql/graphql";
+import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import {
   buildOpenAccountEntry,
   type OpenAccountInput,
@@ -28,17 +25,13 @@ export function useOpenAccount(ledgerId: string) {
         });
 
         if (data?.bulkEntries.success) {
-          // These are active while this screen is pushed from Accounts. Await
-          // both so the name and balance hierarchy are current before going back.
-          // A refresh failure must not be reported as an open failure: the
-          // directive has already been committed and retrying could duplicate it.
-          try {
-            await client.refetchQueries({
-              include: [TrialBalanceDocument, LedgerMetaDocument],
-            });
-          } catch {
-            // The Accounts tab still has pull-to-refresh as a recovery path.
-          }
+          // Awaited so the account name and the balance hierarchy the Accounts
+          // tab is about to show are current before we navigate back. The
+          // queries run in parallel, so this costs the slowest one, not the sum
+          // — and it never rejects: the directive has already been committed,
+          // and reporting a refresh failure as an open failure could get it
+          // written twice.
+          await invalidateLedgerData(client, "entries");
           return { ok: true };
         }
 

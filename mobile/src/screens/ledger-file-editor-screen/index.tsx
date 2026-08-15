@@ -20,8 +20,10 @@ import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
+import { useApolloClient } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { fonts, useTheme } from "@/common/theme";
+import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useSession } from "@/common/hooks/use-session";
@@ -290,6 +292,21 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
   const [updateLedgerFile, { loading: saving }] = useUpdateLedgerFileMutation();
   const saveInFlightRef = useRef(false);
+  const client = useApolloClient();
+  // A `.bean` save can rewrite every balance in the ledger, but users save
+  // repeatedly mid-edit — refetching the whole ledger each time is not
+  // affordable. So the save fires only the cheap `errors` scope (this screen
+  // renders those), and the full sweep waits until the user leaves.
+  const savedThisSessionRef = useRef(false);
+
+  useEffect(
+    () => () => {
+      if (savedThisSessionRef.current) {
+        void invalidateLedgerData(client, "file");
+      }
+    },
+    [client],
+  );
 
   const handleReload = useCallback(async () => {
     const result = await refetch();
@@ -356,6 +373,11 @@ export function LedgerFileEditorScreen(): JSX.Element {
           );
         }
         analytics.track("ledger_save_success", { path });
+        // Without this the banner keeps rendering the errors that existed
+        // before the save — it is fetched once at mount, and this screen never
+        // remounts while the user edits.
+        savedThisSessionRef.current = true;
+        void invalidateLedgerData(client, "errors");
         return true;
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : String(err);
@@ -380,7 +402,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
         saveInFlightRef.current = false;
       }
     },
-    [handleReload, ledgerId, path, t, updateLedgerFile],
+    [client, handleReload, ledgerId, path, t, updateLedgerFile],
   );
 
   // ── Unsaved changes guard ────────────────────────────────────────────────

@@ -1,4 +1,5 @@
 import { useCallback, useMemo, useRef, useState } from "react";
+import { useApolloClient } from "@apollo/client";
 import {
   Alert,
   FlatList,
@@ -32,6 +33,7 @@ import { LedgerDrawerHeader } from "@/components/ledger-drawer";
 import { useLedgerGuard } from "@/components/ledger-guard";
 import { TextInputModal } from "@/components/text-input-modal";
 import { analytics } from "@/common/analytics";
+import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { encodeLedgerFileContent } from "@/common/ledger-file-content";
 import {
   buildLedgerFilePath,
@@ -277,6 +279,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const ledgerId = useLedgerGuard();
   const toast = useToast();
+  const client = useApolloClient();
 
   // Internal directory navigation stack (root = "")
   const [pathStack, setPathStack] = useState<string[]>([""]);
@@ -368,7 +371,9 @@ export function LedgerFileBrowserScreen(): JSX.Element {
           message: t("ledgerCreateFileSuccess", { name: filename }),
           type: "success",
         });
-        await refetch().catch(() => undefined);
+        // Not awaited: the user is on their way into the editor, and the
+        // listing behind them repaints as soon as the refetch lands.
+        void invalidateLedgerData(client, "file");
         router.push({
           pathname: "/(app)/ledger-file-editor",
           params: { path: createdPath },
@@ -383,7 +388,16 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         createInFlightRef.current = false;
       }
     },
-    [createLedgerFile, currentPath, entries, ledgerId, refetch, t, toast],
+    [
+      client,
+      createLedgerFile,
+      currentPath,
+      entries,
+      ledgerId,
+      refetch,
+      t,
+      toast,
+    ],
   );
 
   const confirmDelete = useCallback(
@@ -406,7 +420,9 @@ export function LedgerFileBrowserScreen(): JSX.Element {
           message: t("ledgerDeleteFileSuccess", { name: entry.name }),
           type: "success",
         });
-        await refetch().catch(() => undefined);
+        // Awaited: the delete buttons stay disabled until the row is actually
+        // gone, so a second tap can't resend the sha we just spent.
+        await invalidateLedgerData(client, "file");
       } catch (deleteError: unknown) {
         const message =
           deleteError instanceof Error
@@ -418,7 +434,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         setDeletingPath(null);
       }
     },
-    [deleteLedgerFile, ledgerId, refetch, t, toast],
+    [client, deleteLedgerFile, ledgerId, refetch, t, toast],
   );
 
   const handleDelete = useCallback(

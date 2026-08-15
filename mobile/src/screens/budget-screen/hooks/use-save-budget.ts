@@ -1,14 +1,12 @@
 import { useCallback } from "react";
 import { useApolloClient } from "@apollo/client";
 import { useBulkEntriesMutation } from "@/generated-graphql/graphql";
+import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import {
   buildBudgetEntry,
   type BudgetEntryInput,
 } from "@/screens/budget-screen/build-budget-entry";
-import {
-  refetchBudgetJournal,
-  type BudgetMutationResult,
-} from "@/screens/budget-screen/hooks/use-budget-groups";
+import { type BudgetMutationResult } from "@/screens/budget-screen/hooks/use-budget-groups";
 
 export function useSaveBudget(ledgerId: string) {
   const client = useApolloClient();
@@ -22,7 +20,10 @@ export function useSaveBudget(ledgerId: string) {
         });
 
         if (data?.bulkEntries.success) {
-          await refetchBudgetJournal(client, ledgerId);
+          // A budget directive is a ledger write like any other: the journal,
+          // interval totals, the error badge and the commit history all move.
+          // Awaited so the list the caller returns to is already correct.
+          await invalidateLedgerData(client, "entries");
           return { ok: true };
         }
 

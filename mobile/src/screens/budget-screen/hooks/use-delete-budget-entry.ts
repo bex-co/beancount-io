@@ -6,10 +6,8 @@ import {
   type GetLedgerEntryContextQuery,
   type GetLedgerEntryContextQueryVariables,
 } from "@/generated-graphql/graphql";
-import {
-  refetchBudgetJournal,
-  type BudgetMutationResult,
-} from "@/screens/budget-screen/hooks/use-budget-groups";
+import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
+import { type BudgetMutationResult } from "@/screens/budget-screen/hooks/use-budget-groups";
 
 /**
  * Deleting a budget entry removes its source slice from the ledger file, which
@@ -46,7 +44,7 @@ export function useDeleteBudgetEntry(ledgerId: string) {
           variables: { ledgerId, input: { entryHash, sha256sum } },
         });
 
-        await refetchBudgetJournal(client, ledgerId);
+        await invalidateLedgerData(client, "entries");
         return { ok: true };
       } catch (caught) {
         return {

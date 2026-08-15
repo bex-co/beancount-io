@@ -1,11 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { useApolloClient } from "@apollo/client";
+import { useApolloClient, useReactiveVar } from "@apollo/client";
 import {
   GetLedgerIntervalTotalsDocument,
   type GetLedgerIntervalTotalsQuery,
   type GetLedgerIntervalTotalsQueryVariables,
 } from "@/generated-graphql/graphql";
 import { resolveCurrencyBalance } from "@/common/balance-util";
+import { ledgerRevisionVar } from "@/common/apollo/invalidate-ledger";
 import { budgetTotalsVariables } from "@/screens/budget-screen/hooks/use-budget-actuals";
 import {
   currentPeriodRange,
@@ -53,6 +54,11 @@ export function useBudgetPanel({
   refreshSignal?: number;
 }): { rows: BudgetPanelRow[]; loading: boolean } {
   const client = useApolloClient();
+  // These are one-off `client.query` reads, not observable queries, so a write
+  // elsewhere in the app cannot reach them: `groupsKey` only changes when the
+  // budget *directives* do, and a new transaction leaves those untouched.
+  // Re-run on every ledger write so the actuals track spending.
+  const ledgerRevision = useReactiveVar(ledgerRevisionVar);
   const [rows, setRows] = useState<BudgetPanelRow[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -122,7 +128,7 @@ export function useBudgetPanel({
       cancelled = true;
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [client, ledgerId, groupsKey, refreshSignal]);
+  }, [client, ledgerId, groupsKey, refreshSignal, ledgerRevision]);
 
   return { rows, loading };
 }
