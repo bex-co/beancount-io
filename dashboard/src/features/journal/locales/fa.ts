@@ -8,10 +8,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "حساب",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "انتخاب حساب",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "حساب (مثلاً دارایی‌ها:بانک:جاری)",
     description: "Placeholder for account field",
@@ -24,25 +20,9 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "حساب‌ها",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "حساب‌ها",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "افزودن ثبت روزنامه جدید",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "افزودن ثبت",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "افزودن تراکنش",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "لطفاً مبلغ را وارد کنید",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "مبلغ باید یک عدد معتبر باشد",
@@ -55,10 +35,6 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "مبلغ الزامی است",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "حداقل یک ثبت الزامی است",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "حداقل دو ثبت مورد نیاز است",
@@ -103,14 +79,6 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "بستن",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "بستن حساب",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "هزینه",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "ایجاد یک ثبت روزنامه جدید برای این دفتر",
@@ -209,14 +177,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "صدور روزنامه ناموفق بود",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "پرچم (مثلاً *)",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "از",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "روزنامه",
     description: "Navigation label for journal/transaction history page",
@@ -224,39 +184,6 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "روزنامه با موفقیت صادر شد",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "بارگذاری روزنامه ناموفق بود: ",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message: 'از دکمه "افزودن تراکنش" برای ایجاد ثبت‌ها استفاده کنید',
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "فایل‌های beancount را از طریق رابط وب آپلود کنید",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "داده‌های حسابداری موجود را وارد کنید",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message:
-      "به محض اضافه کردن برخی تراکنش‌ها، آنها در اینجا نمایش داده می‌شوند.",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "برای شروع:",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "شما هنوز هیچ ثبت روزنامه‌ای ندارید.",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "به روزنامه خود خوش آمدید! 📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "L",
@@ -270,25 +197,13 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "در حال بارگذاری متن ثبت...",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "در حال بارگذاری بیشتر...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "فراداده",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "شرح",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "شرح",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "شرح الزامی است",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "ثبت جدید",
@@ -301,10 +216,6 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "هیچ ثبت روزنامه‌ای برای فیلترهای فعلی یافت نشد.",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "ثبت بیشتری وجود ندارد",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "شرحی یافت نشد",
@@ -330,10 +241,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "باز کردن",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "باز کردن حساب",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "x",
     description: "Label for other transaction subtype filter",
@@ -346,10 +253,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "تراز",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "دریافت‌کننده",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "دریافت‌کننده/شرح",
     description: "Table header for payee and narration column",
@@ -357,10 +260,6 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "دریافت‌کننده",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "دریافت‌کننده الزامی است",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "!",
@@ -370,14 +269,6 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "تراکنش‌های در انتظار",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "لطفاً وارد کنید...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "ثبت",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "پست‌ها",
     description: "Label for postings toggle filter",
@@ -385,22 +276,6 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "قیمت",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "قیمت",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "افزودن سریع",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "ذخیره ناموفق",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "تراکنش ذخیره شد!",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "انتخاب حساب...",
@@ -425,14 +300,6 @@ const faJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "انتخاب دریافت‌کننده...",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "انتخاب تاریخ تراکنش",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "به",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "تغییر وضعیت فراداده",

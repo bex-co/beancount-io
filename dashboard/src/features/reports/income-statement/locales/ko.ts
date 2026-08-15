@@ -20,10 +20,6 @@ const koIncomeStatement: Record<string, TranslationEntry> = {
     message: "{ledgerName}의 수입을 시간에 따라 다양한 상품별로 추적",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "월별 순수입",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message: "{ledgerName}의 순이익을 시간에 따라 다양한 상품별로 추적",
     description: "Description for net profit chart",

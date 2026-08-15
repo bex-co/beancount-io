@@ -59,14 +59,6 @@ const faDashboardPage: Record<string, TranslationEntry> = {
     message: "نام دفتر را وارد کنید",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "ایجاد دفتر ناموفق بود",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "حذف دفتر ناموفق بود",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "بارگذاری دفاتر ناموفق بود",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const faDashboardPage: Record<string, TranslationEntry> = {
     message:
       "امکان بازیابی دفاتر شما وجود نداشت. لطفاً اتصال خود را بررسی کرده و دوباره تلاش کنید.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "به‌روزرسانی دفتر ناموفق بود",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "بارگذاری خوراک ناموفق بود",

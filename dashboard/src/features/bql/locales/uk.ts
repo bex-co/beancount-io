@@ -12,14 +12,6 @@ const ukBql: Record<string, TranslationEntry> = {
     message: "Виконання...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "Сталася помилка while executing the query",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Результати запиту",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Натисніть Cmd+Enter (Mac) або Ctrl+Enter (Windows/Linux) для виконання запиту",

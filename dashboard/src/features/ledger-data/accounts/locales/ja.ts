@@ -81,14 +81,6 @@ const jaAccounts: Record<string, TranslationEntry> = {
     message: "エントリ",
     description: "Table column header for entry count",
   },
-  "page.accounts.failedToLoadAccounts": {
-    message: "口座の読み込みに失敗しました",
-    description: "Error message when accounts fail to load",
-  },
-  "page.accounts.loadingAccounts": {
-    message: "口座を読み込み中...",
-    description: "Loading message when fetching accounts",
-  },
   "page.accounts.loadingEntryContent": {
     message: "エントリコンテンツを読み込み中...",
     description: "Loading message when fetching entry content in delete dialog",
@@ -119,10 +111,6 @@ const jaAccounts: Record<string, TranslationEntry> = {
     message: "開設日",
     description: "Table column header and form label for account open date",
   },
-  "page.accounts.operation": {
-    message: "操作",
-    description: "Table column header for available operations on an account",
-  },
   "page.accounts.searchAccounts": {
     message: "口座を検索...",
     description: "Placeholder text for accounts search input",
@@ -134,6 +122,11 @@ const jaAccounts: Record<string, TranslationEntry> = {
   "page.accounts.type": {
     message: "タイプ",
     description: "Table column header for type",
+  },
+  "page.accounts.accountClosedToast": {
+    message: "口座 {account} を閉鎖しました",
+    description:
+      "Toast shown after an account was closed; {account} is the account name",
   },
 };
 

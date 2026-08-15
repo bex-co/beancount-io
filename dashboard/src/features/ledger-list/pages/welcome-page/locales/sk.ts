@@ -13,10 +13,6 @@ const skWelcomePage: Record<string, TranslationEntry> = {
     message: "Vytvorte svoju prvú knihu",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Vytvorenie knihy zlyhalo",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Kniha bola úspešne vytvorená",
     description: "Success message when ledger is created",

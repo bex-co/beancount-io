@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const zhHoldings: Record<string, TranslationEntry> = {
-  "page.holdings.errorExecutingQuery": {
-    message: "发生错误 while executing the query",
-    description: "Generic error message for query execution failure",
-  },
   "page.holdings.exportCsv": {
     message: "导出 CSV",
     description: "Button text to export data as CSV",

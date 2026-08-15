@@ -8,10 +8,6 @@ const frDocuments: Record<string, TranslationEntry> = {
     message: "Documents",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "Échec du chargement des documents",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "Nom de fichier",
     description: "Table column header for filename",

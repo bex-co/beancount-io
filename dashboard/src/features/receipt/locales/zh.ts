@@ -211,10 +211,6 @@ const zhReceipt: Record<string, TranslationEntry> = {
     message: "收据解析失败",
     description: "Error message when AI fails to parse the receipt",
   },
-  "receipt.workflow.failedToProcess": {
-    message: "收据处理失败",
-    description: "Generic fallback error message during receipt processing",
-  },
   "receipt.workflow.failedToRecord": {
     message: "记录收据交易失败",
     description: "Error message when recording the transaction fails",

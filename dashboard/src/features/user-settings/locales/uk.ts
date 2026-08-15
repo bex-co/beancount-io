@@ -12,10 +12,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Рахунок deleted successfully",
     description: "Success message when account is deleted",
   },
-  "userSettings.accountSettings": {
-    message: "Обліковий запис",
-    description: "Section header for account settings",
-  },
   "userSettings.addNewKey": {
     message: "Додати новий ключ",
     description: "Button text to add new key",
@@ -39,10 +35,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   "userSettings.allTransactionsAndRecords": {
     message: "Всі транзакції та записи",
     description: "Item in delete account list",
-  },
-  "userSettings.appSettings": {
-    message: "Налаштування додатку",
-    description: "Section header for application settings",
   },
   "userSettings.appearance": {
     message: "Зовнішній вигляд",
@@ -68,10 +60,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   "userSettings.cannotBeUndone": {
     message: "Цю дію неможливо скасувати.",
     description: "Warning that action is irreversible",
-  },
-  "userSettings.changeLanguage": {
-    message: "Зміна",
-    description: "Button to change language",
   },
   "userSettings.changeName": {
     message: "Змінити ім'я",
@@ -109,14 +97,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Мова",
     description: "Label showing current language selection",
   },
-  "userSettings.currentPeriodEnds": {
-    message: "Поточний період закінчується",
-    description: "Label for subscription period end date",
-  },
-  "userSettings.currentVersion": {
-    message: "Версія",
-    description: "Label showing current app version",
-  },
   "userSettings.customizeAppearance": {
     message: "Власнийize how the application looks and feels",
     description: "Description for appearance settings",
@@ -133,40 +113,15 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Видалити обліковий запис",
     description: "Button or menu item to delete user account",
   },
-  "userSettings.deleteAccountAlertCancel": {
-    message: "Скасувати",
-    description: "Cancel button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertConfirm": {
-    message: "Видалити обліковий запис",
-    description: "Confirm button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertMsg": {
-    message:
-      "Ви впевнені, що хочете видалити свій обліковий запис? Цю дію неможливо скасувати, і всі ваші дані буде назавжди видалено.",
-    description: "Warning message in account deletion confirmation dialog",
-  },
   "userSettings.deleteAccountConfirmMessage": {
     message:
       'Для підтвердження введіть ваше ім\'я користувача "{username}" нижче:',
     description:
       "Instructions for confirming account deletion by typing username",
   },
-  "userSettings.deleteAccountConfirmPhrase": {
-    message: "sudo delete my account",
-    description: "Exact phrase user must type to confirm deletion",
-  },
   "userSettings.deleteAccountConfirmPlaceholder": {
     message: "Введіть ваше ім'я користувача",
     description: "Placeholder text for deletion confirmation input",
-  },
-  "userSettings.deleteAccountConfirmTitle": {
-    message: "Підтвердити видалення облікового запису",
-    description: "Title of account deletion confirmation step",
-  },
-  "userSettings.deleteAccountDescription": {
-    message: "Назавжди видалити обліковий запис та дані",
-    description: "Description of what account deletion does",
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
@@ -227,16 +182,16 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to resume a subscription scheduled to cancel",
   },
   "userSettings.resumeSubscriptionTitle": {
-    message: "[TODO] Resume Subscription?",
+    message: "Відновити підписку?",
     description: "Confirmation dialog title for resuming subscription",
   },
   "userSettings.resumeSubscriptionDescription": {
     message:
-      "[TODO] Are you sure you want to resume your subscription? Your subscription will continue to renew automatically and you will be billed again at the end of your current billing period.",
+      "Ви впевнені, що хочете відновити підписку? Вона й надалі автоматично поновлюватиметься, а наприкінці поточного розрахункового періоду з вас знову буде стягнуто плату.",
     description: "Confirmation dialog description for resuming subscription",
   },
   "userSettings.confirmResume": {
-    message: "[TODO] Yes, Resume Subscription",
+    message: "Так, відновити підписку",
     description: "Button text to confirm subscription resumption",
   },
   "userSettings.resuming": {
@@ -254,14 +209,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   "userSettings.failedToCreateCheckoutSession": {
     message: "Не вдалося створити сеанс оплати. Будь ласка, спробуйте ще раз.",
     description: "Error message when creating checkout session fails",
-  },
-  "userSettings.failedToCreateKey": {
-    message: "Не вдалося створити ключ. Будь ласка, спробуйте ще раз.",
-    description: "Error message when key creation fails",
-  },
-  "userSettings.failedToDeleteAccount": {
-    message: "Не вдалося видалити обліковий запис",
-    description: "Error message when account deletion fails",
   },
   "userSettings.failedToLoadKeys": {
     message: "Не вдалося завантажити ключі",
@@ -292,26 +239,9 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Загальні",
     description: "General settings section label",
   },
-  "userSettings.helpCenter": {
-    message: "Центр допомоги",
-    description: "Link to help center",
-  },
-  "userSettings.inputKeyword": {
-    message: "Будь ласка, введіть ключове слово",
-    description: "Placeholder prompting user to enter keyword",
-  },
   "userSettings.invite": {
     message: "Запросити",
     description: "Invite action button",
-  },
-  "userSettings.inviteFriends": {
-    message: "Запросити друзів",
-    description: "Button or section title for inviting friends",
-  },
-  "userSettings.inviteSummary": {
-    message:
-      "Поділіться цим професійним інструментом управління фінансами та допоможіть іншим побудувати їхнє фінансове майбутнє.",
-    description: "Summary description of invite feature",
   },
   "userSettings.irreversibleActions": {
     message: "Незворотні та руйнівні дії",
@@ -358,10 +288,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Пoading your account information...",
     description: "Loading message for account information",
   },
-  "userSettings.loadingAccountOptions": {
-    message: "Пoading account options...",
-    description: "Loading message for account options",
-  },
   "userSettings.loadingSessionInformation": {
     message: "Пoading session information...",
     description: "Loading message for session data",
@@ -377,10 +303,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   "userSettings.loadingThemePreferences": {
     message: "Пoading theme preferences...",
     description: "Loading message for theme settings",
-  },
-  "userSettings.manage": {
-    message: "Керувати",
-    description: "Button to manage subscription",
   },
   "userSettings.manageActiveSession": {
     message: "Керуйте своїм активним сеансом",
@@ -410,14 +332,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Новий SSH ключ",
     description: "Button text to create new SSH key",
   },
-  "userSettings.noActiveSubscription": {
-    message: "Немає активної підписки",
-    description: "Label when user has no subscription",
-  },
-  "userSettings.noContactPermission": {
-    message: "Відсутній дозвіл на доступ до контактів.",
-    description: "Error when contacts permission is denied",
-  },
   "userSettings.noSshKeys": {
     message: "Немає SSH ключів",
     description: "Empty state title when no SSH keys exist",
@@ -431,17 +345,9 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Не встановлено",
     description: "Placeholder when a field has no value",
   },
-  "userSettings.off": {
-    message: "Вимкнено",
-    description: "Off state for toggles or subscriptions",
-  },
   "userSettings.opening": {
     message: "Відкриття...",
     description: "Button text while opening billing portal",
-  },
-  "userSettings.processing": {
-    message: "Обробка...",
-    description: "Button text while processing checkout",
   },
   "userSettings.publicKey": {
     message: "Публічний Key",
@@ -461,31 +367,9 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Публічний key is required",
     description: "Validation error for missing public key",
   },
-  "userSettings.recommend": {
-    message:
-      "Я хотів би поділитися цим професійним інструментом управління фінансами, який допоміг мені ефективно організувати свої фінанси.",
-    description: "Pre-written recommendation message for sharing",
-  },
-  "userSettings.referral": {
-    message: "Рекомендація",
-    description: "Referral program label",
-  },
   "userSettings.renewsOn": {
     message: "Поновлюється",
     description: "Label for subscription renewal date",
-  },
-  "userSettings.reviewApp": {
-    message: "Подобається? Залиште відгук :)",
-    description: "Prompt to review the app",
-  },
-  "userSettings.rewardDetail": {
-    message:
-      "Поділіться цим професійним інструментом управління фінансами та допоможіть іншим побудувати їхнє фінансове майбутнє.",
-    description: "Detailed description of referral rewards",
-  },
-  "userSettings.rewardSummary": {
-    message: "Запросити друзів",
-    description: "Summary of referral rewards",
   },
   "userSettings.selectColorTheme": {
     message: "Виберіть бажану колірну тему",
@@ -499,15 +383,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Сеанс",
     description: "Session management section title",
   },
-  "userSettings.settingsErrorMessage": {
-    message:
-      "Сталася помилка під час завантаження ваших налаштувань. Перевірте підключення та спробуйте ще раз.",
-    description: "Detailed error message for settings loading failure",
-  },
-  "userSettings.shareError": {
-    message: "Помилка поділитися",
-    description: "Error message when sharing fails",
-  },
   "userSettings.signOutDescription": {
     message: "Вийдіть зі свого облікового запису та очистіть свій сеанс.",
     description: "Description for logout action",
@@ -515,10 +390,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   "userSettings.sshKeys": {
     message: "SSH Ключі",
     description: "Page title for SSH keys",
-  },
-  "userSettings.subscribe": {
-    message: "Звіт електронною поштою",
-    description: "Email report subscription feature label",
   },
   "userSettings.subscription": {
     message: "Підписка",
@@ -542,10 +413,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     description:
       "Message when 3DS authentication is needed for subscription upgrade",
   },
-  "userSettings.supportSettings": {
-    message: "Підтримка",
-    description: "Section header for support settings",
-  },
   "userSettings.system": {
     message: "Системна",
     description: "System theme option",
@@ -553,10 +420,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   "userSettings.testMode": {
     message: "Тестовий режим",
     description: "Label indicating Stripe is in test/development mode",
-  },
-  "userSettings.thanksShare": {
-    message: "Дякуємо за поділ!!",
-    description: "Thank you message after sharing",
   },
   "userSettings.theme": {
     message: "Тема",
@@ -582,14 +445,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Назва обов'язкова",
     description: "Validation error for missing title",
   },
-  "userSettings.trialProPlan": {
-    message: "Оновити до Premium",
-    description: "Button text for premium subscription upgrade",
-  },
-  "userSettings.trialProPlanComingSoon": {
-    message: "Функція пробного Pro плану скоро з'явиться!",
-    description: "Toast message when trial Pro plan is clicked",
-  },
   "userSettings.unableToOpenBillingPortal": {
     message:
       "Не вдалося відкрити портал платежів. Будь ласка, спробуйте пізніше.",
@@ -598,19 +453,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   "userSettings.unknownPlan": {
     message: "Невідомий план",
     description: "Fallback when plan name is not available",
-  },
-  "userSettings.updateFailed": {
-    message: "Помилка оновлення підписки",
-    description: "Error message when update fails",
-  },
-  "userSettings.updateSuccess": {
-    message: "Підписку успішно оновлено",
-    description: "Success message after updating subscription",
-  },
-  "userSettings.upgradeToProDescription": {
-    message:
-      "Оновіться до Pro, щоб розблокувати преміум-функції та необмежений доступ.",
-    description: "Description encouraging subscription upgrade",
   },
   "userSettings.userProfile": {
     message: "Користувач Profile",
@@ -636,10 +478,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "AI Tokens",
     description: "Label for AI CFO usage section",
   },
-  "userSettings.aiCfoUsageDescription": {
-    message: "Monthly AI token usage for your current billing period",
-    description: "Description for AI CFO usage section",
-  },
   "userSettings.aiCfoUsageCount": {
     message: "{used} / {max} tokens used this month",
     description: "AI CFO usage count display",
@@ -660,10 +498,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
     message: "Enterprise",
     description: "Display name for the enterprise tier",
   },
-  "userSettings.customPricing": {
-    message: "Custom pricing",
-    description: "Price label for enterprise tier",
-  },
   "userSettings.usage": {
     message: "Usage",
     description: "Section header for usage overview",
@@ -675,14 +509,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   "userSettings.ledgerUsageCount": {
     message: "{used} / {max} ledgers",
     description: "Ledger usage count display",
-  },
-  "userSettings.collaboratorLimit": {
-    message: "Up to {max} collaborators per ledger",
-    description: "Collaborator limit description",
-  },
-  "userSettings.collaboratorLimitUnlimited": {
-    message: "Unlimited collaborators per ledger",
-    description: "Collaborator limit for unlimited tiers",
   },
   "userSettings.upgradeYourPlan": {
     message: "Upgrade Your Plan",
@@ -699,11 +525,6 @@ const ukUserSettings: Record<string, TranslationEntry> = {
   "userSettings.perMonth": {
     message: "/month",
     description: "Price interval suffix",
-  },
-  "userSettings.planFeatureSummary": {
-    message:
-      "{tokens} AI tokens · {ledgers} ledgers · {collaborators} collaborators",
-    description: "Summary of plan features in the current plan banner",
   },
 };
 

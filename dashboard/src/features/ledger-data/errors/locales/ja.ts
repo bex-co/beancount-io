@@ -20,11 +20,6 @@ const jaErrors: Record<string, TranslationEntry> = {
     message: "エラーの読み込みに失敗しました",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "エラーデータの読み込み中にエラーが発生しました。後でもう一度お試しください。",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "行",
     description: "Table column header for line number",

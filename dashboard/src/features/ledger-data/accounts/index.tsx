@@ -205,7 +205,7 @@ export function AccountRow({
         },
       )}
     >
-      <TableCell className="min-w-40 py-3 sm:min-w-64">
+      <TableCell className="min-w-40 py-3 @2xl:min-w-64">
         <AccountPrefixNavigation
           accountName={account.account}
           isClosed={isClosed}
@@ -342,8 +342,8 @@ export default function LedgerAccountsPage() {
       </div>
 
       <div className="@container overflow-hidden rounded-xl border bg-card shadow-sm">
-        <div className="flex flex-col gap-3 border-b bg-muted/20 p-3 lg:flex-row lg:items-center">
-          <div className="relative min-w-0 flex-1 lg:w-72 lg:flex-none">
+        <div className="flex flex-col gap-3 border-b bg-muted/20 p-3 @3xl:flex-row @3xl:items-center">
+          <div className="relative min-w-0 flex-1 @3xl:w-72 @3xl:flex-none">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
               aria-label={t("page.accounts.searchAccounts")}
@@ -367,7 +367,7 @@ export default function LedgerAccountsPage() {
           </div>
           <div className="flex min-w-0 items-center gap-3">
             <div
-              className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto pb-1 lg:pb-0"
+              className="flex min-w-0 flex-1 items-center gap-1 overflow-x-auto pb-1 @3xl:pb-0"
               role="group"
               aria-label={t("page.accounts.type")}
             >
@@ -444,7 +444,7 @@ export default function LedgerAccountsPage() {
                 {Array.from({ length: 8 }).map((_, i) => (
                   <TableRow key={i}>
                     <TableCell className="py-3">
-                      <Skeleton className="h-4 w-36 sm:w-48" />
+                      <Skeleton className="h-4 w-36 @2xl:w-48" />
                     </TableCell>
                     <TableCell>
                       <Skeleton className="h-4 w-10" />
@@ -481,18 +481,22 @@ export default function LedgerAccountsPage() {
                 <Table>
                   <TableHeader className="bg-muted/40">
                     <TableRow className="hover:bg-transparent">
-                      <TableHead>{t("page.accounts.account")}</TableHead>
-                      <TableHead>{t("page.accounts.status")}</TableHead>
+                      <TableHead className="whitespace-nowrap">
+                        {t("page.accounts.account")}
+                      </TableHead>
+                      <TableHead className="whitespace-nowrap">
+                        {t("page.accounts.status")}
+                      </TableHead>
                       <TableHead className="hidden whitespace-nowrap @2xl:table-cell">
                         {t("page.accounts.openDate")}
                       </TableHead>
                       <TableHead className="hidden whitespace-nowrap @4xl:table-cell">
                         {t("page.accounts.closeDate")}
                       </TableHead>
-                      <TableHead className="hidden text-right whitespace-nowrap @xl:table-cell">
+                      <TableHead className="hidden whitespace-nowrap text-right @xl:table-cell">
                         {t("page.accounts.entries")}
                       </TableHead>
-                      <TableHead className="hidden text-right whitespace-nowrap @xl:table-cell">
+                      <TableHead className="hidden whitespace-nowrap text-right @xl:table-cell">
                         {t("page.accounts.balance")}
                       </TableHead>
                       <TableHead className="w-12">

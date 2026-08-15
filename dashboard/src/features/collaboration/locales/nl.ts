@@ -82,14 +82,6 @@ const nlCollaboration: Record<string, TranslationEntry> = {
     message: "Toegetreden",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "Laatst actief",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "Nooit",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "Geen medewerkers",
     description: "Empty state title when no collaborators exist",
@@ -141,10 +133,6 @@ const nlCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "Typ om gebruikers te zoeken...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "Er is een onbekende fout opgetreden",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "Onbekende gebruiker",

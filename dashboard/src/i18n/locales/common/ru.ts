@@ -12,25 +12,9 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Транзакции",
     description: "Plural form of transaction",
   },
-  "common.adminPermissionRequired": {
-    message: "Для доступа к этой странице требуются права администратора.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "Произошла ошибка",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "Назад",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "Вернуться к книге",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Панель Beancount",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Логотип Beancount",
@@ -56,19 +40,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Лимит сотрудников достигнут",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "Вы достигли лимита в {max} сотрудников. Обновитесь до Premium, чтобы добавить больше сотрудников в вашу книгу.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{used} из {max} сотрудников",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "Подтвердить",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "Скопировано",
     description: "Status message indicating content was copied",
@@ -76,10 +47,6 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "Копировать",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "Текстовый учёт. Мощный, Точный, Проверяемый.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "Удалить",
@@ -99,10 +66,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "Готово",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "Редактировать",
@@ -129,11 +92,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Не удалось загрузить данные",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "Не удалось получить информацию о вашей книге. Проверьте соединение и попробуйте снова.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "Не удалось загрузить книгу",
     description: "Error title when ledger fails to load",
@@ -153,19 +111,6 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "Перейти на предыдущую страницу",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "Главная",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "Недостаточно прав",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "У вас нет необходимых прав для доступа к этой странице. Пожалуйста, обратитесь к администратору книги для получения доступа.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "Импорт",
@@ -219,10 +164,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Последнее обновление",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "Книга",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "Настройки книги",
     description:
@@ -236,10 +177,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Лимит книг достигнут",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{used} из {max} книг использовано",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "загрузка...",
     description: "Loading state message",
@@ -247,10 +184,6 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "Загрузка данных...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "Мой",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "Больше страниц",
@@ -309,30 +242,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "пагинация",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "Пожалуйста, попробуйте позже",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "Добавьте до 5 сотрудников на книгу",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "Создайте до 5 книг вместо 1",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "Пригласите до 5 сотрудников вместо 2",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "Доступ к расширенным функциям и приоритетной поддержке",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "Преимущества Premium",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "Предыдущая",
     description: "Text label for previous page button",
@@ -349,10 +258,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Сохранение...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "Поиск",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "Связанные страницы",
     description: "Heading for related pages navigation section",
@@ -365,17 +270,9 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Выберите дату",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "Настройка",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "Настройки",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "Поделиться",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "Боковая панель",
@@ -412,14 +309,6 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "обновление...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "Обновить Сейчас",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "Обновить до Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Перейти на Pro",
@@ -464,11 +353,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message:
       "Просмотр баланса для {ledgerName}. Анализируйте активы, обязательства и капитал в любой момент времени.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "Управляйте сотрудниками для {ledgerName}. Приглашайте пользователей и контролируйте права доступа.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -550,26 +434,13 @@ const ruCommon: Record<string, TranslationEntry> = {
       "Загрузите файлы в {ledgerName}. Импортируйте существующие файлы или документы Beancount.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "Просмотр истории коммитов для {ledgerName}. Отслеживайте изменения в файлах книги с течением времени.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "Проводки",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "Счет",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "Баланс",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "Сотрудники",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "Товары",
@@ -619,10 +490,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Запрос",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "Настройки",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "Статистика",
     description: "Link label for statistics page",
@@ -651,10 +518,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Успешно",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "Сумма",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "Активы",
     description: "Assets category in accounting",
@@ -674,10 +537,6 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "Дополнительно",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "Нужна помощь?",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "Помощь и поддержка",
@@ -707,17 +566,9 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Очистить all",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "Товары",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "Конвертировано в",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "Валюта",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "Ежедневно",
@@ -818,10 +669,6 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Ежеквартально",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "Сбережения",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "Поиск счетов...",
     description: "Placeholder for account search",
@@ -833,10 +680,6 @@ const ruCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "Выберите временной период",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "Сводка",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "Время",
@@ -953,6 +796,18 @@ const ruCommon: Record<string, TranslationEntry> = {
     message:
       "Не удалось отобразить этот раздел. Остальная часть страницы должна работать.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "Копировать код",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "Скопировано в буфер обмена",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "Не удалось скопировать",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

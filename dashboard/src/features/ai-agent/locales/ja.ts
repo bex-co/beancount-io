@@ -5,21 +5,9 @@ const jaAiAgent: Record<string, TranslationEntry> = {
     message: "Beancount.io に質問する",
     description: "Title for AI chat feature",
   },
-  "aiAgent.subtitle": {
-    message: "台帳のためのAIサポート",
-    description: "Subtitle for AI chat feature",
-  },
   "aiAgent.placeholder": {
     message: "Beancountについて何でも聞いてください...",
     description: "Input placeholder text",
-  },
-  "aiAgent.send": {
-    message: "送信",
-    description: "Send button text",
-  },
-  "aiAgent.sending": {
-    message: "送信中...",
-    description: "Loading state text",
   },
   "aiAgent.welcome": {
     message:
@@ -32,14 +20,6 @@ const jaAiAgent: Record<string, TranslationEntry> = {
       "何を知りたいですか？",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.you": {
-    message: "あなた",
-    description: "Label for user messages",
-  },
-  "aiAgent.assistant": {
-    message: "AIアシスタント",
-    description: "Label for AI assistant messages",
-  },
   "aiAgent.prCreated": {
     message: "✓ プルリクエストが作成されました",
     description: "Message shown when PR is created",
@@ -47,26 +27,6 @@ const jaAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.viewPR": {
     message: "PR # を表示",
     description: "Link text to view pull request",
-  },
-  "aiAgent.status.connecting": {
-    message: "考え中...",
-    description: "Status badge text when connecting to AI",
-  },
-  "aiAgent.status.streaming": {
-    message: "ストリーミング中...",
-    description: "Status badge text when receiving AI response",
-  },
-  "aiAgent.status.finalizing": {
-    message: "完了処理中...",
-    description: "Status badge text when finalizing AI response",
-  },
-  "aiAgent.status.complete": {
-    message: "完了",
-    description: "Status badge text when AI response is complete",
-  },
-  "aiAgent.status.error": {
-    message: "エラー",
-    description: "Status badge text when an error occurs",
   },
   "aiAgent.quickAskPlaceholder": {
     message: "この台帳について何でも聞いてください...",
@@ -155,19 +115,6 @@ const jaAiAgent: Record<string, TranslationEntry> = {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
   },
-  "aiAgent.editApproval.binaryContent": {
-    message: "(binary content)",
-    description:
-      "Placeholder shown when file content is binary (image, PDF, etc.)",
-  },
-  "aiAgent.readFile.label": {
-    message: "Read",
-    description: "Label on the read-file tool step",
-  },
-  "aiAgent.listFiles.label": {
-    message: "List",
-    description: "Label on the list-files tool step",
-  },
   "aiAgent.suggestionsTitle": {
     message: "質問してみましょう:",
     description:
@@ -208,6 +155,59 @@ const jaAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.retry": {
     message: "再試行",
     description: "Button to resubmit the last question after an error",
+  },
+  "aiAgent.receiptApproval.title": {
+    message: "レシートの取引を記録",
+    description: "Title of the receipt transaction approval card",
+  },
+  "aiAgent.receiptApproval.preparing": {
+    message: "取引を準備中…",
+    description: "Status while the receipt transaction is being prepared",
+  },
+  "aiAgent.receiptApproval.recorded": {
+    message: "取引を記録しました",
+    description: "Status after the receipt transaction was recorded",
+  },
+  "aiAgent.receiptApproval.failed": {
+    message: "取引の記録に失敗しました",
+    description: "Error when recording the receipt transaction failed",
+  },
+  "aiAgent.receiptApproval.date": {
+    message: "日付",
+    description: "Label for the receipt transaction date",
+  },
+  "aiAgent.receiptApproval.payee": {
+    message: "支払先",
+    description: "Label for the receipt transaction payee",
+  },
+  "aiAgent.receiptApproval.amount": {
+    message: "金額",
+    description: "Label for the receipt transaction amount",
+  },
+  "aiAgent.receiptApproval.expense": {
+    message: "費用",
+    description: "Label for the receipt expense account",
+  },
+  "aiAgent.receiptApproval.payment": {
+    message: "支払い",
+    description: "Label for the receipt payment account",
+  },
+  "aiAgent.attachFile": {
+    message: "ファイルを添付",
+    description: "Aria label for the attach file button in the chat input",
+  },
+  "aiAgent.removeAttachment": {
+    message: "{fileName}を削除",
+    description:
+      "Aria label for removing a staged attachment; {fileName} is the attachment file name",
+  },
+  "aiAgent.attachmentFailed": {
+    message: "失敗",
+    description: "Chip label when an attachment failed to upload",
+  },
+  "aiAgent.scrollToBottom": {
+    message: "一番下へスクロール",
+    description: "Aria label for the scroll to bottom button in the chat",
   },
 };
 

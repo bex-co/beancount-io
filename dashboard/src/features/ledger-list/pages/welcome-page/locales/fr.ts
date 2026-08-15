@@ -13,10 +13,6 @@ const frWelcomePage: Record<string, TranslationEntry> = {
     message: "Créez votre premier grand livre",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Échec de la création du grand livre",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Grand livre créé avec succès",
     description: "Toast notification when ledger created",

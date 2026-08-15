@@ -5,10 +5,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "계정이 성공적으로 삭제되었습니다",
     description: "Success message when account is deleted",
   },
-  "userSettings.accountSettings": {
-    message: "계정",
-    description: "Section header for account settings",
-  },
   "userSettings.addNewKey": {
     message: "새 키 추가",
     description: "Button text to add new key",
@@ -33,10 +29,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "모든 거래 및 기록",
     description: "Item in delete account list",
   },
-  "userSettings.appSettings": {
-    message: "앱 설정",
-    description: "Section header for application settings",
-  },
   "userSettings.appearance": {
     message: "외관",
     description: "Appearance settings section label",
@@ -44,10 +36,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
   "userSettings.cannotBeUndone": {
     message: "이 작업은 취소할 수 없습니다.",
     description: "Warning that action is irreversible",
-  },
-  "userSettings.changeLanguage": {
-    message: "변경",
-    description: "Button to change language",
   },
   "userSettings.changeUsername": {
     message: "사용자 이름 변경",
@@ -77,14 +65,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "언어",
     description: "Label showing current language selection",
   },
-  "userSettings.currentPeriodEnds": {
-    message: "현재 기간 종료",
-    description: "Label for subscription period end date",
-  },
-  "userSettings.currentVersion": {
-    message: "버전",
-    description: "Label showing current app version",
-  },
   "userSettings.customizeAppearance": {
     message: "애플리케이션의 외관과 느낌을 사용자 지정",
     description: "Description for appearance settings",
@@ -101,39 +81,14 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "계정 삭제",
     description: "Button or menu item to delete user account",
   },
-  "userSettings.deleteAccountAlertCancel": {
-    message: "취소",
-    description: "Cancel button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertConfirm": {
-    message: "계정 삭제",
-    description: "Confirm button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertMsg": {
-    message:
-      "계정을 삭제하시겠습니까? 이 작업은 취소할 수 없으며 모든 데이터가 영구적으로 삭제됩니다.",
-    description: "Warning message in account deletion confirmation dialog",
-  },
   "userSettings.deleteAccountConfirmMessage": {
     message: '확인을 위해 아래에 사용자 이름 "{username}"을 입력하세요:',
     description:
       "Instructions for confirming account deletion by typing username",
   },
-  "userSettings.deleteAccountConfirmPhrase": {
-    message: "sudo delete my account",
-    description: "Exact phrase user must type to confirm deletion",
-  },
   "userSettings.deleteAccountConfirmPlaceholder": {
     message: "사용자 이름 입력",
     description: "Placeholder text for deletion confirmation input",
-  },
-  "userSettings.deleteAccountConfirmTitle": {
-    message: "계정 삭제 확인",
-    description: "Title of account deletion confirmation step",
-  },
-  "userSettings.deleteAccountDescription": {
-    message: "계정 및 데이터 영구 삭제",
-    description: "Description of what account deletion does",
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
@@ -181,14 +136,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "설정 로드 오류",
     description: "Error message when settings fail to load",
   },
-  "userSettings.failedToCreateKey": {
-    message: "키 생성에 실패했습니다. 다시 시도해 주세요.",
-    description: "Error message when key creation fails",
-  },
-  "userSettings.failedToDeleteAccount": {
-    message: "계정 삭제에 실패했습니다",
-    description: "Error message when account deletion fails",
-  },
   "userSettings.failedToLoadKeys": {
     message: "키 로드에 실패했습니다",
     description: "Error title when keys fail to load",
@@ -213,26 +160,9 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "일반",
     description: "General settings section label",
   },
-  "userSettings.helpCenter": {
-    message: "도움말 센터",
-    description: "Link to help center",
-  },
-  "userSettings.inputKeyword": {
-    message: "키워드를 입력해 주세요",
-    description: "Placeholder prompting user to enter keyword",
-  },
   "userSettings.invite": {
     message: "초대",
     description: "Invite action button",
-  },
-  "userSettings.inviteFriends": {
-    message: "친구 초대",
-    description: "Button or section title for inviting friends",
-  },
-  "userSettings.inviteSummary": {
-    message:
-      "이 전문 재무 관리 도구를 공유하고 다른 사람들이 재정적 미래를 구축할 수 있도록 도와주세요.",
-    description: "Summary description of invite feature",
   },
   "userSettings.irreversibleActions": {
     message: "되돌릴 수 없는 파괴적인 작업",
@@ -274,10 +204,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
   "userSettings.loadingAccountInformation": {
     message: "계정 정보를 로드하는 중...",
     description: "Loading message for account information",
-  },
-  "userSettings.loadingAccountOptions": {
-    message: "계정 옵션을 로드하는 중...",
-    description: "Loading message for account options",
   },
   "userSettings.loadingSessionInformation": {
     message: "세션 정보를 로드하는 중...",
@@ -329,16 +255,16 @@ const koUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to resume a subscription scheduled to cancel",
   },
   "userSettings.resumeSubscriptionTitle": {
-    message: "[TODO] Resume Subscription?",
+    message: "구독을 재개할까요?",
     description: "Confirmation dialog title for resuming subscription",
   },
   "userSettings.resumeSubscriptionDescription": {
     message:
-      "[TODO] Are you sure you want to resume your subscription? Your subscription will continue to renew automatically and you will be billed again at the end of your current billing period.",
+      "구독을 재개하시겠어요? 구독이 계속 자동으로 갱신되며 현재 결제 기간이 끝나면 다시 청구됩니다.",
     description: "Confirmation dialog description for resuming subscription",
   },
   "userSettings.confirmResume": {
-    message: "[TODO] Yes, Resume Subscription",
+    message: "예, 구독 재개",
     description: "Button text to confirm subscription resumption",
   },
   "userSettings.resuming": {
@@ -356,10 +282,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
   "userSettings.failedToCreateCheckoutSession": {
     message: "결제 세션 생성에 실패했습니다. 다시 시도해 주세요.",
     description: "Error message when creating checkout session fails",
-  },
-  "userSettings.manage": {
-    message: "관리",
-    description: "Button to manage subscription",
   },
   "userSettings.manageBilling": {
     message: "청구 관리",
@@ -385,14 +307,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "새 SSH 키",
     description: "Button text to create new SSH key",
   },
-  "userSettings.noActiveSubscription": {
-    message: "활성 구독 없음",
-    description: "Label when user has no subscription",
-  },
-  "userSettings.noContactPermission": {
-    message: "연락처 권한이 없습니다.",
-    description: "Error when contacts permission is denied",
-  },
   "userSettings.noSshKeys": {
     message: "SSH 키 없음",
     description: "Empty state title when no SSH keys exist",
@@ -406,17 +320,9 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "설정되지 않음",
     description: "Placeholder when a field has no value",
   },
-  "userSettings.off": {
-    message: "끄기",
-    description: "Off state for toggles or subscriptions",
-  },
   "userSettings.opening": {
     message: "열고 있는 중...",
     description: "Button text while opening billing portal",
-  },
-  "userSettings.processing": {
-    message: "처리 중...",
-    description: "Button text while processing checkout",
   },
   "userSettings.publicKey": {
     message: "공개 키",
@@ -436,31 +342,9 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "공개 키는 필수입니다",
     description: "Validation error for missing public key",
   },
-  "userSettings.recommend": {
-    message:
-      "재정을 효과적으로 정리하는 데 도움이 된 전문 재무 관리 도구를 소개하고 싶습니다.",
-    description: "Pre-written recommendation message for sharing",
-  },
-  "userSettings.referral": {
-    message: "추천",
-    description: "Referral program label",
-  },
   "userSettings.renewsOn": {
     message: "갱신일",
     description: "Label for subscription renewal date",
-  },
-  "userSettings.reviewApp": {
-    message: "마음에 드셨나요? 리뷰를 남겨주세요 :)",
-    description: "Prompt to review the app",
-  },
-  "userSettings.rewardDetail": {
-    message:
-      "이 전문 재무 관리 도구를 공유하고 다른 사람들이 재정적 미래를 구축할 수 있도록 도와주세요.",
-    description: "Detailed description of referral rewards",
-  },
-  "userSettings.rewardSummary": {
-    message: "친구 초대",
-    description: "Summary of referral rewards",
   },
   "userSettings.selectColorTheme": {
     message: "선호하는 색상 테마 선택",
@@ -474,15 +358,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "세션",
     description: "Session management section title",
   },
-  "userSettings.settingsErrorMessage": {
-    message:
-      "설정을 로드하는 중 오류가 발생했습니다. 연결을 확인하고 다시 시도해 주세요.",
-    description: "Detailed error message for settings loading failure",
-  },
-  "userSettings.shareError": {
-    message: "공유 실패",
-    description: "Error message when sharing fails",
-  },
   "userSettings.signOutDescription": {
     message: "계정에서 로그아웃하고 세션을 지웁니다.",
     description: "Description for logout action",
@@ -490,10 +365,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
   "userSettings.sshKeys": {
     message: "SSH 키",
     description: "Page title for SSH keys",
-  },
-  "userSettings.subscribe": {
-    message: "이메일 보고서",
-    description: "Email report subscription feature label",
   },
   "userSettings.subscription": {
     message: "구독",
@@ -517,10 +388,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     description:
       "Message when 3DS authentication is needed for subscription upgrade",
   },
-  "userSettings.supportSettings": {
-    message: "지원",
-    description: "Section header for support settings",
-  },
   "userSettings.system": {
     message: "시스템",
     description: "System theme option",
@@ -528,10 +395,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
   "userSettings.testMode": {
     message: "테스트 모드",
     description: "Label indicating Stripe is in test/development mode",
-  },
-  "userSettings.thanksShare": {
-    message: "공유해 주셔서 감사합니다!!",
-    description: "Thank you message after sharing",
   },
   "userSettings.theme": {
     message: "테마",
@@ -557,14 +420,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "제목은 필수입니다",
     description: "Validation error for missing title",
   },
-  "userSettings.trialProPlan": {
-    message: "프리미엄으로 업그레이드",
-    description: "Button text for premium subscription upgrade",
-  },
-  "userSettings.trialProPlanComingSoon": {
-    message: "트라이얼 프로 플랜 기능이 곧 출시됩니다!",
-    description: "Toast message when trial Pro plan is clicked",
-  },
   "userSettings.unableToOpenBillingPortal": {
     message: "청구 포털을 열 수 없습니다. 나중에 다시 시도해 주세요.",
     description: "Error message when billing portal fails to open",
@@ -573,22 +428,9 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "알 수 없는 플랜",
     description: "Fallback when plan name is not available",
   },
-  "userSettings.updateFailed": {
-    message: "구독 업데이트에 실패했습니다",
-    description: "Error message when update fails",
-  },
-  "userSettings.updateSuccess": {
-    message: "구독이 성공적으로 업데이트되었습니다",
-    description: "Success message after updating subscription",
-  },
   "userSettings.usernameUpdatedSuccess": {
     message: "사용자 이름이 성공적으로 업데이트되었습니다",
     description: "Success message after updating username",
-  },
-  "userSettings.upgradeToProDescription": {
-    message:
-      "프로로 업그레이드하여 프리미엄 기능과 무제한 액세스를 활성화하세요.",
-    description: "Description encouraging subscription upgrade",
   },
   "userSettings.userProfile": {
     message: "사용자 프로필",
@@ -630,10 +472,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "AI 요청",
     description: "Label for AI CFO usage section",
   },
-  "userSettings.aiCfoUsageDescription": {
-    message: "현재 청구 기간의 월간 AI 요청 사용량",
-    description: "Description for AI CFO usage section",
-  },
   "userSettings.aiCfoUsageCount": {
     message: "이번 달 {used} / {max} 요청 사용됨",
     description: "AI CFO usage count display",
@@ -654,10 +492,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
     message: "엔터프라이즈",
     description: "Display name for the enterprise tier",
   },
-  "userSettings.customPricing": {
-    message: "맞춤 가격",
-    description: "Price label for enterprise tier",
-  },
   "userSettings.usage": {
     message: "사용량",
     description: "Section header for usage overview",
@@ -669,14 +503,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
   "userSettings.ledgerUsageCount": {
     message: "{used} / {max} 원장",
     description: "Ledger usage count display",
-  },
-  "userSettings.collaboratorLimit": {
-    message: "원장당 최대 {max}명의 협업자",
-    description: "Collaborator limit description",
-  },
-  "userSettings.collaboratorLimitUnlimited": {
-    message: "원장당 협업자 수 무제한",
-    description: "Collaborator limit for unlimited tiers",
   },
   "userSettings.upgradeYourPlan": {
     message: "플랜 업그레이드",
@@ -693,10 +519,6 @@ const koUserSettings: Record<string, TranslationEntry> = {
   "userSettings.perMonth": {
     message: "/월",
     description: "Price interval suffix",
-  },
-  "userSettings.planFeatureSummary": {
-    message: "{tokens} AI 토큰 · {ledgers} 원장 · {collaborators} 협업자",
-    description: "Summary of plan features in the current plan banner",
   },
 };
 

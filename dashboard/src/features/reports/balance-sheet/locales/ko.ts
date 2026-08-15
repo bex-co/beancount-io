@@ -28,10 +28,6 @@ const koBalanceSheet: Record<string, TranslationEntry> = {
     message: "{ledgerName}의 부채를 시간에 따라 다양한 상품별로 추적",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "월별 순자산",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message: "{ledgerName}의 순자산을 시간에 따라 다양한 상품별로 추적",
     description: "Description for net worth chart",

@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const ruHoldings: Record<string, TranslationEntry> = {
-  "page.holdings.errorExecutingQuery": {
-    message: "Произошла ошибка while executing the query",
-    description: "Generic error message for query execution failure",
-  },
   "page.holdings.exportCsv": {
     message: "Экспорт CSV",
     description: "Button text to export data as CSV",

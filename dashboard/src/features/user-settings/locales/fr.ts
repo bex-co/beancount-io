@@ -12,10 +12,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Compte supprimé avec succès",
     description: "Success message when account is deleted",
   },
-  "userSettings.accountSettings": {
-    message: "Compte",
-    description: "Section header for account settings",
-  },
   "userSettings.addNewKey": {
     message: "Ajouter une nouvelle clé",
     description: "Button text to add new key",
@@ -39,10 +35,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
   "userSettings.allTransactionsAndRecords": {
     message: "Toutes les transactions et enregistrements",
     description: "Item in delete account list",
-  },
-  "userSettings.appSettings": {
-    message: "Paramètres de l'application",
-    description: "Section header for application settings",
   },
   "userSettings.appearance": {
     message: "Apparence",
@@ -68,10 +60,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
   "userSettings.cannotBeUndone": {
     message: "Cette action ne peut pas être annulée.",
     description: "Warning that action is irreversible",
-  },
-  "userSettings.changeLanguage": {
-    message: "Modifier",
-    description: "Button to change language",
   },
   "userSettings.changeName": {
     message: "Changer le nom",
@@ -110,14 +98,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Langue",
     description: "Label showing current language selection",
   },
-  "userSettings.currentPeriodEnds": {
-    message: "Fin de la période actuelle",
-    description: "Label for subscription period end date",
-  },
-  "userSettings.currentVersion": {
-    message: "Version",
-    description: "Label showing current app version",
-  },
   "userSettings.customizeAppearance": {
     message: "Personnaliser l'apparence de l'application",
     description: "Description for appearance settings",
@@ -134,40 +114,15 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Supprimer le compte",
     description: "Button or menu item to delete user account",
   },
-  "userSettings.deleteAccountAlertCancel": {
-    message: "Annuler",
-    description: "Cancel button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertConfirm": {
-    message: "Supprimer le compte",
-    description: "Confirm button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertMsg": {
-    message:
-      "Êtes-vous sûr de vouloir supprimer votre compte ? Cette action ne peut pas être annulée et supprimera définitivement toutes vos données.",
-    description: "Warning message in account deletion confirmation dialog",
-  },
   "userSettings.deleteAccountConfirmMessage": {
     message:
       'Pour confirmer, saisissez votre nom d\'utilisateur "{username}" ci-dessous :',
     description:
       "Instructions for confirming account deletion by typing username",
   },
-  "userSettings.deleteAccountConfirmPhrase": {
-    message: "sudo delete my account",
-    description: "Exact phrase user must type to confirm deletion",
-  },
   "userSettings.deleteAccountConfirmPlaceholder": {
     message: "Saisissez votre nom d'utilisateur",
     description: "Placeholder text for deletion confirmation input",
-  },
-  "userSettings.deleteAccountConfirmTitle": {
-    message: "Confirmer la suppression du compte",
-    description: "Title of account deletion confirmation step",
-  },
-  "userSettings.deleteAccountDescription": {
-    message: "Supprimer définitivement votre compte et données",
-    description: "Description of what account deletion does",
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
@@ -228,16 +183,16 @@ const frUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to resume a subscription scheduled to cancel",
   },
   "userSettings.resumeSubscriptionTitle": {
-    message: "[TODO] Resume Subscription?",
+    message: "Reprendre l’abonnement ?",
     description: "Confirmation dialog title for resuming subscription",
   },
   "userSettings.resumeSubscriptionDescription": {
     message:
-      "[TODO] Are you sure you want to resume your subscription? Your subscription will continue to renew automatically and you will be billed again at the end of your current billing period.",
+      "Voulez-vous vraiment reprendre votre abonnement ? Il continuera à se renouveler automatiquement et vous serez de nouveau facturé à la fin de la période de facturation en cours.",
     description: "Confirmation dialog description for resuming subscription",
   },
   "userSettings.confirmResume": {
-    message: "[TODO] Yes, Resume Subscription",
+    message: "Oui, reprendre l’abonnement",
     description: "Button text to confirm subscription resumption",
   },
   "userSettings.resuming": {
@@ -256,14 +211,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message:
       "Échec de la création de la session de paiement. Veuillez réessayer.",
     description: "Error message when creating checkout session fails",
-  },
-  "userSettings.failedToCreateKey": {
-    message: "Échec de la création de la clé. Veuillez réessayer.",
-    description: "Error message when key creation fails",
-  },
-  "userSettings.failedToDeleteAccount": {
-    message: "Échec de la suppression du compte",
-    description: "Error message when account deletion fails",
   },
   "userSettings.failedToLoadKeys": {
     message: "Échec du chargement des clés",
@@ -294,26 +241,9 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Général",
     description: "General settings section label",
   },
-  "userSettings.helpCenter": {
-    message: "Centre d'aide",
-    description: "Link to help center",
-  },
-  "userSettings.inputKeyword": {
-    message: "Veuillez saisir un mot-clé",
-    description: "Placeholder prompting user to enter keyword",
-  },
   "userSettings.invite": {
     message: "Inviter",
     description: "Invite action button",
-  },
-  "userSettings.inviteFriends": {
-    message: "Inviter des amis",
-    description: "Button or section title for inviting friends",
-  },
-  "userSettings.inviteSummary": {
-    message:
-      "Partagez cet outil de gestion financière professionnel et aidez les autres à construire leur avenir financier.",
-    description: "Summary description of invite feature",
   },
   "userSettings.irreversibleActions": {
     message: "Actions irréversibles et destructrices",
@@ -360,10 +290,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Chargement de vos informations de compte...",
     description: "Loading message for account information",
   },
-  "userSettings.loadingAccountOptions": {
-    message: "Chargement des options de compte...",
-    description: "Loading message for account options",
-  },
   "userSettings.loadingSessionInformation": {
     message: "Chargement des informations de session...",
     description: "Loading message for session data",
@@ -379,10 +305,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
   "userSettings.loadingThemePreferences": {
     message: "Chargement des préférences de thème...",
     description: "Loading message for theme settings",
-  },
-  "userSettings.manage": {
-    message: "Gérer",
-    description: "Button to manage subscription",
   },
   "userSettings.manageActiveSession": {
     message: "Gérer votre session active",
@@ -412,14 +334,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Nouvelle clé SSH",
     description: "Button text to create new SSH key",
   },
-  "userSettings.noActiveSubscription": {
-    message: "Aucun abonnement actif",
-    description: "Label when user has no subscription",
-  },
-  "userSettings.noContactPermission": {
-    message: "Autorisation de contacts manquante.",
-    description: "Error when contacts permission is denied",
-  },
   "userSettings.noSshKeys": {
     message: "Aucune clé SSH",
     description: "Empty state title when no SSH keys exist",
@@ -433,17 +347,9 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Non défini",
     description: "Placeholder when a field has no value",
   },
-  "userSettings.off": {
-    message: "Désactivé",
-    description: "Off state for toggles or subscriptions",
-  },
   "userSettings.opening": {
     message: "Ouverture...",
     description: "Button text while opening billing portal",
-  },
-  "userSettings.processing": {
-    message: "Traitement...",
-    description: "Button text while processing checkout",
   },
   "userSettings.publicKey": {
     message: "Clé publique",
@@ -463,31 +369,9 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "La clé publique est requise",
     description: "Validation error for missing public key",
   },
-  "userSettings.recommend": {
-    message:
-      "J'aimerais partager cet outil professionnel de gestion financière qui m'a aidé à organiser mes finances efficacement.",
-    description: "Pre-written recommendation message for sharing",
-  },
-  "userSettings.referral": {
-    message: "Parrainage",
-    description: "Referral program label",
-  },
   "userSettings.renewsOn": {
     message: "Renouvelle le",
     description: "Label for subscription renewal date",
-  },
-  "userSettings.reviewApp": {
-    message: "Vous aimez ? Laissez un avis :)",
-    description: "Prompt to review the app",
-  },
-  "userSettings.rewardDetail": {
-    message:
-      "Partagez cet outil professionnel de gestion financière et aidez les autres à construire leur avenir financier.",
-    description: "Detailed description of referral rewards",
-  },
-  "userSettings.rewardSummary": {
-    message: "Inviter des amis",
-    description: "Summary of referral rewards",
   },
   "userSettings.selectColorTheme": {
     message: "Sélectionnez votre thème de couleur préféré",
@@ -501,15 +385,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Session",
     description: "Session management section title",
   },
-  "userSettings.settingsErrorMessage": {
-    message:
-      "Une erreur s'est produite lors du chargement de vos paramètres. Veuillez vérifier votre connexion et réessayer.",
-    description: "Detailed error message for settings loading failure",
-  },
-  "userSettings.shareError": {
-    message: "Échec du partage",
-    description: "Error message when sharing fails",
-  },
   "userSettings.signOutDescription": {
     message: "Déconnectez-vous de votre compte et effacez votre session.",
     description: "Description for logout action",
@@ -517,10 +392,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
   "userSettings.sshKeys": {
     message: "Clés SSH",
     description: "Page title for SSH keys",
-  },
-  "userSettings.subscribe": {
-    message: "Rapport par e-mail",
-    description: "Email report subscription feature label",
   },
   "userSettings.subscription": {
     message: "Abonnement",
@@ -544,10 +415,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     description:
       "Message when 3DS authentication is needed for subscription upgrade",
   },
-  "userSettings.supportSettings": {
-    message: "Support",
-    description: "Section header for support settings",
-  },
   "userSettings.system": {
     message: "Système",
     description: "System theme option",
@@ -555,10 +422,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
   "userSettings.testMode": {
     message: "Mode test",
     description: "Label indicating Stripe is in test/development mode",
-  },
-  "userSettings.thanksShare": {
-    message: "Merci pour le partage !",
-    description: "Thank you message after sharing",
   },
   "userSettings.theme": {
     message: "Thème",
@@ -584,14 +447,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Le titre est requis",
     description: "Validation error for missing title",
   },
-  "userSettings.trialProPlan": {
-    message: "Passer à Premium",
-    description: "Button text for premium subscription upgrade",
-  },
-  "userSettings.trialProPlanComingSoon": {
-    message: "Fonctionnalité d'essai du forfait Pro bientôt disponible !",
-    description: "Toast message when trial Pro plan is clicked",
-  },
   "userSettings.unableToOpenBillingPortal": {
     message:
       "Impossible d'ouvrir le portail de facturation. Veuillez réessayer plus tard.",
@@ -600,19 +455,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
   "userSettings.unknownPlan": {
     message: "Forfait inconnu",
     description: "Fallback when plan name is not available",
-  },
-  "userSettings.updateFailed": {
-    message: "Échec de la mise à jour",
-    description: "Error message when update fails",
-  },
-  "userSettings.updateSuccess": {
-    message: "Abonnement mis à jour",
-    description: "Success message after updating subscription",
-  },
-  "userSettings.upgradeToProDescription": {
-    message:
-      "Passez à Pro pour débloquer les fonctionnalités premium et un accès illimité.",
-    description: "Description encouraging subscription upgrade",
   },
   "userSettings.userProfile": {
     message: "Profil utilisateur",
@@ -638,10 +480,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "AI Tokens",
     description: "Label for AI CFO usage section",
   },
-  "userSettings.aiCfoUsageDescription": {
-    message: "Monthly AI token usage for your current billing period",
-    description: "Description for AI CFO usage section",
-  },
   "userSettings.aiCfoUsageCount": {
     message: "{used} / {max} tokens used this month",
     description: "AI CFO usage count display",
@@ -662,10 +500,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "Enterprise",
     description: "Display name for the enterprise tier",
   },
-  "userSettings.customPricing": {
-    message: "Custom pricing",
-    description: "Price label for enterprise tier",
-  },
   "userSettings.usage": {
     message: "Usage",
     description: "Section header for usage overview",
@@ -677,14 +511,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
   "userSettings.ledgerUsageCount": {
     message: "{used} / {max} ledgers",
     description: "Ledger usage count display",
-  },
-  "userSettings.collaboratorLimit": {
-    message: "Up to {max} collaborators per ledger",
-    description: "Collaborator limit description",
-  },
-  "userSettings.collaboratorLimitUnlimited": {
-    message: "Unlimited collaborators per ledger",
-    description: "Collaborator limit for unlimited tiers",
   },
   "userSettings.upgradeYourPlan": {
     message: "Upgrade Your Plan",
@@ -701,11 +527,6 @@ const frUserSettings: Record<string, TranslationEntry> = {
   "userSettings.perMonth": {
     message: "/month",
     description: "Price interval suffix",
-  },
-  "userSettings.planFeatureSummary": {
-    message:
-      "{tokens} AI tokens · {ledgers} ledgers · {collaborators} collaborators",
-    description: "Summary of plan features in the current plan banner",
   },
 };
 

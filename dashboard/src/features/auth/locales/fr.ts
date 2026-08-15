@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const frAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "Vous avez déjà un compte ? Se connecter",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "Vous avez déjà un compte ?",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const frAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Authentification en cours...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Erreur d'authentification",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "Une erreur est survenue lors de l'authentification",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "Échec de l'authentification",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Retour à la connexion",
@@ -104,10 +88,6 @@ const frAuth: Record<string, TranslationEntry> = {
     message:
       "Nous avons envoyé un lien de réinitialisation de mot de passe à votre adresse e-mail. Veuillez consulter votre boîte de réception et suivre les instructions pour réinitialiser votre mot de passe.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "Saisissez vos identifiants pour accéder à votre tableau de bord",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message:
@@ -197,10 +177,6 @@ const frAuth: Record<string, TranslationEntry> = {
     message: "Se connecter / S'inscrire",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "Une erreur est survenue lors de la connexion",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "Échec de la connexion",
     description: "Error title when login fails",
@@ -208,18 +184,6 @@ const frAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Déconnexion",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Annuler",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Se déconnecter",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "Êtes-vous sûr de vouloir vous déconnecter ?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "Apprécié par les utilisateurs",
@@ -313,41 +277,13 @@ const frAuth: Record<string, TranslationEntry> = {
     message: "Redirection vers la page de connexion...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "Une erreur est survenue lors de l'inscription",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "Échec de l'inscription",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message:
-      "Une erreur est survenue lors de l'envoi de l'e-mail de réinitialisation du mot de passe",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Réinitialiser le mot de passe",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Réinitialiser le mot de passe",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Saisissez votre adresse e-mail pour recevoir un lien de réinitialisation de votre mot de passe.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "Un e-mail a été envoyé à votre adresse e-mail. Veuillez consulter votre e-mail pour réinitialiser votre mot de passe.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message:
-      "Une erreur est survenue lors de la réinitialisation de votre mot de passe",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Réinitialisez votre mot de passe",
@@ -369,10 +305,6 @@ const frAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Envoyer le lien de réinitialisation",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Envoyer l'e-mail de réinitialisation",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Envoi en cours...",
@@ -429,11 +361,6 @@ const frAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Nom d'utilisateur",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message:
-      "Le nom d'utilisateur ne peut contenir que des lettres et des chiffres",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -493,14 +420,6 @@ const frAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -514,5 +433,62 @@ const frAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "Autoriser l'accès de la CLI",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "La CLI Beancount demande l'accès à votre compte.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "Cela permettra à la CLI de :",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Lire et modifier vos grands livres",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Accéder aux informations de votre compte",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Autoriser",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "Autorisation en cours...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Refuser",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "Refus en cours...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "Session expirée ou introuvable.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Autorisation réussie",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "Vous pouvez fermer cet onglet et revenir à la CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Accès refusé",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "Vous pouvez fermer cet onglet.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default frAuth;

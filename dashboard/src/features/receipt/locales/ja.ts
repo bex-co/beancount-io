@@ -198,10 +198,6 @@ const jaReceipt: Record<string, TranslationEntry> = {
     message: "レシートの解析に失敗しました",
     description: "Error message when AI fails to parse the receipt",
   },
-  "receipt.workflow.failedToProcess": {
-    message: "レシートの処理に失敗しました",
-    description: "Generic fallback error message during receipt processing",
-  },
   "receipt.workflow.failedToRecord": {
     message: "レシート取引の記録に失敗しました",
     description: "Error message when recording the transaction fails",

@@ -8,21 +8,9 @@ const skAiAgent: Record<string, TranslationEntry> = {
     message: "Opýtajte sa Beancount.io",
     description: "Title for AI chat feature",
   },
-  "aiAgent.subtitle": {
-    message: "AI pomoc pre vašu hlavnú knihu",
-    description: "Subtitle for AI chat feature",
-  },
   "aiAgent.placeholder": {
     message: "Opýtajte sa ma na čokoľvek o Beancount...",
     description: "Input placeholder text",
-  },
-  "aiAgent.send": {
-    message: "Odoslať",
-    description: "Send button text",
-  },
-  "aiAgent.sending": {
-    message: "Odosiela sa...",
-    description: "Loading state text",
   },
   "aiAgent.welcome": {
     message:
@@ -35,14 +23,6 @@ const skAiAgent: Record<string, TranslationEntry> = {
       "Čo by ste chceli vedieť?",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.you": {
-    message: "Vy",
-    description: "Label for user messages",
-  },
-  "aiAgent.assistant": {
-    message: "AI Asistent",
-    description: "Label for AI assistant messages",
-  },
   "aiAgent.prCreated": {
     message: "✓ Pull Request vytvorený",
     description: "Message shown when PR is created",
@@ -50,26 +30,6 @@ const skAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.viewPR": {
     message: "Zobraziť PR #",
     description: "Link text to view pull request",
-  },
-  "aiAgent.status.connecting": {
-    message: "Premýšľam...",
-    description: "Status badge text when connecting to AI",
-  },
-  "aiAgent.status.streaming": {
-    message: "Streamovanie...",
-    description: "Status badge text when receiving AI response",
-  },
-  "aiAgent.status.finalizing": {
-    message: "Dokončovanie...",
-    description: "Status badge text when finalizing AI response",
-  },
-  "aiAgent.status.complete": {
-    message: "Dokončené",
-    description: "Status badge text when AI response is complete",
-  },
-  "aiAgent.status.error": {
-    message: "Chyba",
-    description: "Status badge text when an error occurs",
   },
   "aiAgent.quickAskPlaceholder": {
     message: "Opýtajte sa ma čokoľvek o tejto knihe...",
@@ -159,19 +119,6 @@ const skAiAgent: Record<string, TranslationEntry> = {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
   },
-  "aiAgent.editApproval.binaryContent": {
-    message: "(binary content)",
-    description:
-      "Placeholder shown when file content is binary (image, PDF, etc.)",
-  },
-  "aiAgent.readFile.label": {
-    message: "Read",
-    description: "Label on the read-file tool step",
-  },
-  "aiAgent.listFiles.label": {
-    message: "List",
-    description: "Label on the list-files tool step",
-  },
   "aiAgent.suggestionsTitle": {
     message: "Skúste sa opýtať:",
     description:
@@ -212,6 +159,59 @@ const skAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.retry": {
     message: "Skúsiť znova",
     description: "Button to resubmit the last question after an error",
+  },
+  "aiAgent.receiptApproval.title": {
+    message: "Zaznamenať transakciu z účtenky",
+    description: "Title of the receipt transaction approval card",
+  },
+  "aiAgent.receiptApproval.preparing": {
+    message: "Pripravuje sa transakcia…",
+    description: "Status while the receipt transaction is being prepared",
+  },
+  "aiAgent.receiptApproval.recorded": {
+    message: "Transakcia zaznamenaná",
+    description: "Status after the receipt transaction was recorded",
+  },
+  "aiAgent.receiptApproval.failed": {
+    message: "Transakciu sa nepodarilo zaznamenať",
+    description: "Error when recording the receipt transaction failed",
+  },
+  "aiAgent.receiptApproval.date": {
+    message: "Dátum",
+    description: "Label for the receipt transaction date",
+  },
+  "aiAgent.receiptApproval.payee": {
+    message: "Príjemca",
+    description: "Label for the receipt transaction payee",
+  },
+  "aiAgent.receiptApproval.amount": {
+    message: "Suma",
+    description: "Label for the receipt transaction amount",
+  },
+  "aiAgent.receiptApproval.expense": {
+    message: "Výdavok",
+    description: "Label for the receipt expense account",
+  },
+  "aiAgent.receiptApproval.payment": {
+    message: "Platba",
+    description: "Label for the receipt payment account",
+  },
+  "aiAgent.attachFile": {
+    message: "Priložiť súbor",
+    description: "Aria label for the attach file button in the chat input",
+  },
+  "aiAgent.removeAttachment": {
+    message: "Odstrániť {fileName}",
+    description:
+      "Aria label for removing a staged attachment; {fileName} is the attachment file name",
+  },
+  "aiAgent.attachmentFailed": {
+    message: "zlyhalo",
+    description: "Chip label when an attachment failed to upload",
+  },
+  "aiAgent.scrollToBottom": {
+    message: "Posunúť sa nadol",
+    description: "Aria label for the scroll to bottom button in the chat",
   },
 };
 

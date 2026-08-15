@@ -12,14 +12,6 @@ const bgBql: Record<string, TranslationEntry> = {
     message: "Изпълнява се...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "Възникна грешка при изпълнението на заявката",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Резултати от заявката",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Натиснете Cmd+Enter (Mac) или Ctrl+Enter (Windows/Linux), за да изпълните заявка",

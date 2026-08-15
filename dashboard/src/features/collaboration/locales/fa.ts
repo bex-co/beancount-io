@@ -82,14 +82,6 @@ const faCollaboration: Record<string, TranslationEntry> = {
     message: "تاریخ عضویت",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "آخرین فعالیت",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "هرگز",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "همکاری وجود ندارد",
     description: "Empty state title when no collaborators exist",
@@ -141,10 +133,6 @@ const faCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "برای جستجوی کاربران تایپ کنید...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "خطای ناشناخته‌ای رخ داد",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "کاربر ناشناس",

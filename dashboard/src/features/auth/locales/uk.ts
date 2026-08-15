@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const ukAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "Вже маєте обліковий запис? Sign in",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "Вже маєте обліковий запис?",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const ukAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Автентифікація...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Помилка автентифікації",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "Сталася помилка during authentication",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "Автентифікація не вдалася",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Назад to Sign in",
@@ -104,10 +88,6 @@ const ukAuth: Record<string, TranslationEntry> = {
     message:
       "Ми надіслали посилання для скидання пароля на вашу електронну адресу. Перевірте свою поштову скриньку та дотримуйтесь інструкцій для скидання пароля.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "Введіть свої облікові дані для доступу до панелі",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "Введіть свої дані, щоб почати роботу з панеллю",
@@ -195,10 +175,6 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "Увійти / Реєстрація",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "Сталася помилка during login",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "Пogin failed",
     description: "Error title when login fails",
@@ -206,18 +182,6 @@ const ukAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Вихід",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Скасувати",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Вийти",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "Ви впевнені, що хочете вийти?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "Улюблений користувачами",
@@ -309,39 +273,13 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "Перенаправлення на сторінку входу...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "Сталася помилка during registration",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "Реєстрація не вдалася",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "Сталася помилка while sending the password reset email",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Скинути пароль",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Скинути пароль",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Введіть свою електронну пошту address to receive a link to reset your password.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "На вашу адресу електронної пошти надіслано лист. Перевірте пошту для скидання пароля.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "Сталася помилка while resetting your password",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Скиньте свій пароль",
@@ -362,10 +300,6 @@ const ukAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Надіслати посилання для скидання",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Надіслати лист для скидання пароля",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Надсилання...",
@@ -421,10 +355,6 @@ const ukAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Користувачname",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "Користувачname can only contain letters and numbers",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -484,14 +414,6 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -505,5 +427,62 @@ const ukAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "Дозволити доступ CLI",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "Beancount CLI запитує доступ до вашого облікового запису.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "Це дозволить CLI:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Читати та записувати ваші книги",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Отримувати доступ до даних вашого облікового запису",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Дозволити",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "Надання дозволу...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Відхилити",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "Відхилення...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "Сеанс завершився або не знайдений.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Авторизація успішна",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "Можете закрити цю вкладку та повернутися до CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Доступ відхилено",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "Можете закрити цю вкладку.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default ukAuth;

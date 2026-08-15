@@ -10,10 +10,6 @@ const faDirectoryBrowse: Record<
     message: "دانلود ZIP",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "در حال بارگذاری محتویات پوشه...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "مدیریت کلیدهای SSH",
     description: "Menu item for SSH key management",

@@ -22,10 +22,6 @@ const ruIncomeStatement: Record<string, TranslationEntry> = {
       "Отслеживание {ledgerName} доходов по различным товарам со временем",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Месячный чистый доход",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message:
       "Отслеживание {ledgerName} чистой прибыли по различным товарам со временем",

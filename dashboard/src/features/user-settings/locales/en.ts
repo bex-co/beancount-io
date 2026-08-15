@@ -8,10 +8,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Account deleted successfully",
     description: "Success message when account is deleted",
   },
-  "userSettings.accountSettings": {
-    message: "Account",
-    description: "Section header for account settings",
-  },
   "userSettings.addNewKey": {
     message: "Add New Key",
     description: "Button text to add new key",
@@ -36,10 +32,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "All transactions and records",
     description: "Item in delete account list",
   },
-  "userSettings.appSettings": {
-    message: "App Settings",
-    description: "Section header for application settings",
-  },
   "userSettings.appearance": {
     message: "Appearance",
     description: "Appearance settings section label",
@@ -47,10 +39,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
   "userSettings.cannotBeUndone": {
     message: "This action cannot be undone.",
     description: "Warning that action is irreversible",
-  },
-  "userSettings.changeLanguage": {
-    message: "Change",
-    description: "Button to change language",
   },
   "userSettings.changeUsername": {
     message: "Change Username",
@@ -80,14 +68,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Language",
     description: "Label showing current language selection",
   },
-  "userSettings.currentPeriodEnds": {
-    message: "Current period ends",
-    description: "Label for subscription period end date",
-  },
-  "userSettings.currentVersion": {
-    message: "Version",
-    description: "Label showing current app version",
-  },
   "userSettings.customizeAppearance": {
     message: "Customize how the application looks and feels",
     description: "Description for appearance settings",
@@ -104,39 +84,14 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Delete Account",
     description: "Button or menu item to delete user account",
   },
-  "userSettings.deleteAccountAlertCancel": {
-    message: "Cancel",
-    description: "Cancel button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertConfirm": {
-    message: "Delete Account",
-    description: "Confirm button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertMsg": {
-    message:
-      "Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.",
-    description: "Warning message in account deletion confirmation dialog",
-  },
   "userSettings.deleteAccountConfirmMessage": {
     message: 'To confirm, type your username "{username}" below:',
     description:
       "Instructions for confirming account deletion by typing username",
   },
-  "userSettings.deleteAccountConfirmPhrase": {
-    message: "sudo delete my account",
-    description: "Exact phrase user must type to confirm deletion",
-  },
   "userSettings.deleteAccountConfirmPlaceholder": {
     message: "Enter your username",
     description: "Placeholder text for deletion confirmation input",
-  },
-  "userSettings.deleteAccountConfirmTitle": {
-    message: "Confirm Account Deletion",
-    description: "Title of account deletion confirmation step",
-  },
-  "userSettings.deleteAccountDescription": {
-    message: "Permanently remove your account and data",
-    description: "Description of what account deletion does",
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
@@ -184,14 +139,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Error loading settings",
     description: "Error message when settings fail to load",
   },
-  "userSettings.failedToCreateKey": {
-    message: "Failed to create key. Please try again.",
-    description: "Error message when key creation fails",
-  },
-  "userSettings.failedToDeleteAccount": {
-    message: "Failed to delete account",
-    description: "Error message when account deletion fails",
-  },
   "userSettings.failedToLoadKeys": {
     message: "Failed to load keys",
     description: "Error title when keys fail to load",
@@ -216,26 +163,9 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "General",
     description: "General settings section label",
   },
-  "userSettings.helpCenter": {
-    message: "Help Center",
-    description: "Link to help center",
-  },
-  "userSettings.inputKeyword": {
-    message: "Please enter a keyword",
-    description: "Placeholder prompting user to enter keyword",
-  },
   "userSettings.invite": {
     message: "Invite",
     description: "Invite action button",
-  },
-  "userSettings.inviteFriends": {
-    message: "Invite Friends",
-    description: "Button or section title for inviting friends",
-  },
-  "userSettings.inviteSummary": {
-    message:
-      "Share this professional financial management tool and help others build their financial future.",
-    description: "Summary description of invite feature",
   },
   "userSettings.irreversibleActions": {
     message: "Irreversible and destructive actions",
@@ -276,10 +206,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
   "userSettings.loadingAccountInformation": {
     message: "Loading your account information...",
     description: "Loading message for account information",
-  },
-  "userSettings.loadingAccountOptions": {
-    message: "Loading account options...",
-    description: "Loading message for account options",
   },
   "userSettings.loadingSessionInformation": {
     message: "Loading session information...",
@@ -359,10 +285,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Failed to create checkout session. Please try again.",
     description: "Error message when creating checkout session fails",
   },
-  "userSettings.manage": {
-    message: "Manage",
-    description: "Button to manage subscription",
-  },
   "userSettings.manageBilling": {
     message: "Manage Billing",
     description: "Button text to manage billing portal",
@@ -387,14 +309,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "New SSH key",
     description: "Button text to create new SSH key",
   },
-  "userSettings.noActiveSubscription": {
-    message: "No Active Subscription",
-    description: "Label when user has no subscription",
-  },
-  "userSettings.noContactPermission": {
-    message: "Missing contacts permission.",
-    description: "Error when contacts permission is denied",
-  },
   "userSettings.noSshKeys": {
     message: "No SSH keys",
     description: "Empty state title when no SSH keys exist",
@@ -408,17 +322,9 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Not set",
     description: "Placeholder when a field has no value",
   },
-  "userSettings.off": {
-    message: "Off",
-    description: "Off state for toggles or subscriptions",
-  },
   "userSettings.opening": {
     message: "Opening...",
     description: "Button text while opening billing portal",
-  },
-  "userSettings.processing": {
-    message: "Processing...",
-    description: "Button text while processing checkout",
   },
   "userSettings.publicKey": {
     message: "Public Key",
@@ -438,31 +344,9 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Public key is required",
     description: "Validation error for missing public key",
   },
-  "userSettings.recommend": {
-    message:
-      "I'd like to share this professional financial management tool that has helped me organize my finances effectively.",
-    description: "Pre-written recommendation message for sharing",
-  },
-  "userSettings.referral": {
-    message: "Referral",
-    description: "Referral program label",
-  },
   "userSettings.renewsOn": {
     message: "Renews on",
     description: "Label for subscription renewal date",
-  },
-  "userSettings.reviewApp": {
-    message: "Like it? Give it a review :)",
-    description: "Prompt to review the app",
-  },
-  "userSettings.rewardDetail": {
-    message:
-      "Share this professional financial management tool and help others build their financial future.",
-    description: "Detailed description of referral rewards",
-  },
-  "userSettings.rewardSummary": {
-    message: "Invite Friends",
-    description: "Summary of referral rewards",
   },
   "userSettings.selectColorTheme": {
     message: "Select your preferred color theme",
@@ -476,15 +360,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Session",
     description: "Session management section title",
   },
-  "userSettings.settingsErrorMessage": {
-    message:
-      "There was an error loading your settings. Please check your connection and try again.",
-    description: "Detailed error message for settings loading failure",
-  },
-  "userSettings.shareError": {
-    message: "Failed to share",
-    description: "Error message when sharing fails",
-  },
   "userSettings.signOutDescription": {
     message: "Sign out of your account and clear your session.",
     description: "Description for logout action",
@@ -492,10 +367,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
   "userSettings.sshKeys": {
     message: "SSH Keys",
     description: "Page title for SSH keys",
-  },
-  "userSettings.subscribe": {
-    message: "Email Report",
-    description: "Email report subscription feature label",
   },
   "userSettings.subscription": {
     message: "Subscription",
@@ -519,10 +390,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     description:
       "Message when 3DS authentication is needed for subscription upgrade",
   },
-  "userSettings.supportSettings": {
-    message: "Support",
-    description: "Section header for support settings",
-  },
   "userSettings.system": {
     message: "System",
     description: "System theme option",
@@ -530,10 +397,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
   "userSettings.testMode": {
     message: "Test Mode",
     description: "Label indicating Stripe is in test/development mode",
-  },
-  "userSettings.thanksShare": {
-    message: "Thanks for sharing!!",
-    description: "Thank you message after sharing",
   },
   "userSettings.theme": {
     message: "Theme",
@@ -559,14 +422,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Title is required",
     description: "Validation error for missing title",
   },
-  "userSettings.trialProPlan": {
-    message: "Upgrade to Premium",
-    description: "Button text for premium subscription upgrade",
-  },
-  "userSettings.trialProPlanComingSoon": {
-    message: "Trial Pro plan feature coming soon!",
-    description: "Toast message when trial Pro plan is clicked",
-  },
   "userSettings.unableToOpenBillingPortal": {
     message: "Unable to open billing portal. Please try again later.",
     description: "Error message when billing portal fails to open",
@@ -575,21 +430,9 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Unknown Plan",
     description: "Fallback when plan name is not available",
   },
-  "userSettings.updateFailed": {
-    message: "Update subscription failed",
-    description: "Error message when update fails",
-  },
-  "userSettings.updateSuccess": {
-    message: "Subscription updated successfully",
-    description: "Success message after updating subscription",
-  },
   "userSettings.usernameUpdatedSuccess": {
     message: "Username updated successfully",
     description: "Success message after updating username",
-  },
-  "userSettings.upgradeToProDescription": {
-    message: "Upgrade to Pro to unlock premium features and unlimited access.",
-    description: "Description encouraging subscription upgrade",
   },
   "userSettings.userProfile": {
     message: "User Profile",
@@ -631,10 +474,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "AI Tokens",
     description: "Label for AI CFO usage section",
   },
-  "userSettings.aiCfoUsageDescription": {
-    message: "Monthly AI token usage for your current billing period",
-    description: "Description for AI CFO usage section",
-  },
   "userSettings.aiCfoUsageCount": {
     message: "{used} / {max} tokens used this month",
     description: "AI CFO usage count display",
@@ -655,10 +494,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
     message: "Enterprise",
     description: "Display name for the enterprise tier",
   },
-  "userSettings.customPricing": {
-    message: "Custom pricing",
-    description: "Price label for enterprise tier",
-  },
   "userSettings.usage": {
     message: "Usage",
     description: "Section header for usage overview",
@@ -670,14 +505,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
   "userSettings.ledgerUsageCount": {
     message: "{used} / {max} ledgers",
     description: "Ledger usage count display",
-  },
-  "userSettings.collaboratorLimit": {
-    message: "Up to {max}/ledger",
-    description: "Collaborator limit per ledger (concise count)",
-  },
-  "userSettings.collaboratorLimitUnlimited": {
-    message: "Unlimited collaborators per ledger",
-    description: "Collaborator limit for unlimited tiers",
   },
   "userSettings.upgradeYourPlan": {
     message: "Upgrade Your Plan",
@@ -694,11 +521,6 @@ const enUserSettings: Record<string, TranslationEntry> = {
   "userSettings.perMonth": {
     message: "/month",
     description: "Price interval suffix",
-  },
-  "userSettings.planFeatureSummary": {
-    message:
-      "{tokens} AI tokens · {ledgers} ledgers · {collaborators} collaborators",
-    description: "Summary of plan features in the current plan banner",
   },
 };
 

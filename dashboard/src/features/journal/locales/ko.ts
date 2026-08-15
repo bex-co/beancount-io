@@ -5,10 +5,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "계정",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "계정 선택기",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "계정 (예: Assets:Bank:Checking)",
     description: "Placeholder for account field",
@@ -21,25 +17,9 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "계정",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "계정",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "새 저널 항목 추가",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "전기 추가",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "거래 추가",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "금액을 입력해 주세요",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "금액은 유효한 숫자여야 합니다",
@@ -52,10 +32,6 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "금액은 필수입니다",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "최소 하나의 전기가 필요합니다",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "최소 두 개의 전기가 필요합니다",
@@ -100,14 +76,6 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "닫기",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "계정 닫기",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "비용",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "이 장부에 새 저널 항목 만들기",
@@ -206,14 +174,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "저널 내보내기에 실패했습니다",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "플래그 (예: *)",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "출금 계정",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "저널",
     description: "Navigation label for journal/transaction history page",
@@ -221,38 +181,6 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "저널이 성공적으로 내보내졌습니다",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "저널 로드 실패: ",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message: '"거래 추가" 버튼으로 항목 만들기',
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "웹 인터페이스를 통해 beancount 파일 업로드",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "기존 회계 데이터 가져오기",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message: "거래를 추가하면 여기에 표시됩니다.",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "시작하려면:",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "아직 저널 항목이 없습니다.",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "저널에 오신 것을 환영합니다! 📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "L",
@@ -266,25 +194,13 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "항목 컨텍스트 로딩 중...",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "더 로딩 중...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "메타데이터",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "서술",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "서술",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "서술은 필수입니다",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "새 항목",
@@ -297,10 +213,6 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "현재 필터에 맞는 저널 항목이 없습니다.",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "더 이상 항목이 없습니다",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "서술을 찾을 수 없습니다",
@@ -326,10 +238,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "열기",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "계정 열기",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "x",
     description: "Label for other transaction subtype filter",
@@ -342,10 +250,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "패드",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "수취인",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "수취인/서술",
     description: "Table header for payee and narration column",
@@ -353,10 +257,6 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "수취인",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "수취인은 필수입니다",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "!",
@@ -366,14 +266,6 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "보류 중인 거래",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "입력해 주세요...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "전기",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "전기",
     description: "Label for postings toggle filter",
@@ -381,22 +273,6 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "가격",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "가격",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "빠른 추가",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "저장에 실패했습니다",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "거래가 저장되었습니다!",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "계정 선택...",
@@ -421,14 +297,6 @@ const koJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "수취인 선택...",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "거래 날짜 선택",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "입금 계정",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "메타데이터 전환",

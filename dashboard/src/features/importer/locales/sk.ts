@@ -5,30 +5,8 @@ export interface TranslationEntry {
 
 const skImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "Inteligentný import je aktívny — Bezplatný skorý prístup",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "Zavrieť banner",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "Importujte bankové výpisy z PDF, OFX súborov a obrázkov za sekundy s AI analýzou. Bezplatné na obmedzený čas.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "Nahrať súbor",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "Nahrajte svoj bankový výpis alebo súbor transakcií. Podporované formáty: CSV, PDF, OFX alebo obrázky (PNG/JPG). Maximum 10MB.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message: "Tento súbor presahuje limit 10 MB. Skúste prosím menší súbor.",
     description: "Error message when file size exceeds limit",
@@ -41,10 +19,6 @@ const skImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "Čítanie vášho súboru\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "Vybrať iný súbor",
@@ -124,10 +98,6 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Analyzujte PDF, OFX a obrázky automaticky pomocou AI",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "Spracováva sa...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "Aktualizovať teraz",
     description: "Button text to start upgrade process",
@@ -194,10 +164,6 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Suma",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "Stav",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "Žiadne údaje na zobrazenie",
     description: "Empty state message when no transactions",
@@ -239,14 +205,6 @@ const skImporter: Record<string, TranslationEntry> = {
     message: "Kliknite na úpravu",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "Chyba",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "Platný",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "Akcie",
     description: "Table header for actions column",
@@ -254,10 +212,6 @@ const skImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "Odstrániť riadok",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "Riadok odstránený",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "Nenašli sa žiadne transakcie",
@@ -267,11 +221,6 @@ const skImporter: Record<string, TranslationEntry> = {
     message:
       "Súbor bol úspešne analyzovaný, ale nenašli sa žiadne údaje o transakciách. Skontrolujte svoj súbor a skúste to znova.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message:
-      "Uistite sa, že váš súbor obsahuje údaje o transakciách v správnom formáte.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "Skúsiť iný súbor",
@@ -449,11 +398,6 @@ const skImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "AI kategorizácia zlyhala",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "Kategorizácia zlyhala",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

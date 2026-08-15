@@ -5,30 +5,8 @@ export interface TranslationEntry {
 
 const nlImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "Slimme import is live — Gratis vroege toegang",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "Banner sluiten",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "Importeer bankafschriften uit PDF's, OFX-bestanden en afbeeldingen in seconden met AI-analyse. Gratis voor beperkte tijd.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "Bestand uploaden",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "Upload uw bankafschrift of transactiebestand. Ondersteunde formaten: CSV, PDF, OFX of afbeeldingen (PNG/JPG). Maximaal 10MB.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message:
       "Dit bestand overschrijdt de limiet van 10 MB. Probeer een kleiner bestand.",
@@ -42,10 +20,6 @@ const nlImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "Uw bestand wordt gelezen\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "Kies een ander bestand",
@@ -125,10 +99,6 @@ const nlImporter: Record<string, TranslationEntry> = {
     message: "Analyseer PDF-, OFX- en afbeeldingsbestanden automatisch met AI",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "Verwerken...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "Nu upgraden",
     description: "Button text to start upgrade process",
@@ -197,10 +167,6 @@ const nlImporter: Record<string, TranslationEntry> = {
     message: "Bedrag",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "Status",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "Geen gegevens om weer te geven",
     description: "Empty state message when no transactions",
@@ -242,14 +208,6 @@ const nlImporter: Record<string, TranslationEntry> = {
     message: "Klik om te bewerken",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "Fout",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "Geldig",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "Acties",
     description: "Table header for actions column",
@@ -257,10 +215,6 @@ const nlImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "Rij verwijderen",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "Rij verwijderd",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "Geen transacties gevonden",
@@ -270,11 +224,6 @@ const nlImporter: Record<string, TranslationEntry> = {
     message:
       "Het bestand is succesvol geparseerd, maar er zijn geen transactiegegevens gevonden. Controleer uw bestand en probeer het opnieuw.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message:
-      "Zorg ervoor dat uw bestand transactiegegevens bevat in het juiste formaat.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "Probeer een ander bestand",
@@ -452,11 +401,6 @@ const nlImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "AI-categorisering mislukt",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "Categoriseren mislukt",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

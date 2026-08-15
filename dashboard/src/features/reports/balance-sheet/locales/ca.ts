@@ -31,10 +31,6 @@ const caBalanceSheet: Record<string, TranslationEntry> = {
       "Seguir els {ledgerName} passius en diferents monedes al llarg del temps",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Patrimoni net mensual",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message:
       "Seguir el {ledgerName} patrimoni net en diferents monedes al llarg del temps",

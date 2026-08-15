@@ -13,10 +13,6 @@ const nlFileEditor: Record<string, { message: string; description: string }> = {
     message: "Bestand verwijderen",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Bestand verwijderen mislukt",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Bestandsinhoud laden mislukt",
     description: "Error message when file content fails to load",

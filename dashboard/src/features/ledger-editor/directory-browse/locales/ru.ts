@@ -10,10 +10,6 @@ const ruDirectoryBrowse: Record<
     message: "Скачать ZIP",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "Загрузка содержимого каталога...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "Управление SSH-ключами",
     description: "Menu item for SSH key management",

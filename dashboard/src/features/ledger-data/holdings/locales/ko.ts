@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const koHoldings: Record<string, TranslationEntry> = {
-  "page.holdings.errorExecutingQuery": {
-    message: "쿼리 실행 중 오류가 발생했습니다",
-    description: "Generic error message for query execution failure",
-  },
   "page.holdings.exportCsv": {
     message: "CSV 내보내기",
     description: "Button text to export data as CSV",

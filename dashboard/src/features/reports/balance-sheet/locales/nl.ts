@@ -31,10 +31,6 @@ const nlBalanceSheet: Record<string, TranslationEntry> = {
       "Volg {ledgerName} passiva over verschillende grondstoffen in de tijd",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Maandelijks netto vermogen",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message:
       "Volg {ledgerName} netto vermogen over verschillende grondstoffen in de tijd",

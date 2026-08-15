@@ -20,11 +20,6 @@ const nlErrors: Record<string, TranslationEntry> = {
     message: "Fouten laden mislukt",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "Er is een fout opgetreden bij het laden van de foutgegevens. Probeer het later opnieuw.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

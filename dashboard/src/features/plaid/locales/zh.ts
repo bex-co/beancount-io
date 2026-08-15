@@ -355,10 +355,6 @@ const zhPlaid: Record<string, TranslationEntry> = {
     description:
       "Section label for the account mapping list within a bank card",
   },
-  "plaid.accountMapping.mapped": {
-    message: "已映射",
-    description: "Badge text for mapped account",
-  },
   "plaid.accountMapping.currency": {
     message: "货币",
     description: "Label for the account's ledger currency selector",
@@ -634,38 +630,37 @@ const zhPlaid: Record<string, TranslationEntry> = {
     description: "Toast description for submission failure",
   },
   "plaid.transactionReview.delete": {
-    message: "[TODO] Delete",
+    message: "删除",
     description: "Delete button text",
   },
   "plaid.transactionReview.deleting": {
-    message: "[TODO] Deleting...",
+    message: "正在删除...",
     description: "Button text while deleting",
   },
   "plaid.transactionReview.deleteConfirmTitle": {
-    message: "[TODO] Delete Transactions?",
+    message: "删除交易？",
     description: "Confirmation dialog title for bulk-deleting transactions",
   },
   "plaid.transactionReview.deleteConfirmDescription": {
-    message:
-      "[TODO] This will permanently remove {count} selected transaction(s) from this list. This cannot be undone.",
+    message: "这将从列表中永久移除选中的 {count} 笔交易。此操作无法撤销。",
     description:
       "Confirmation dialog description for bulk-deleting transactions - interpolation: {count}",
   },
   "plaid.transactionReview.toast.transactionsDeleted": {
-    message: "[TODO] Transactions Deleted",
+    message: "交易已删除",
     description: "Toast title when transactions are deleted",
   },
   "plaid.transactionReview.toast.transactionsDeletedDescription": {
-    message: "[TODO] {count} transaction(s) removed from this list.",
+    message: "已从列表中移除 {count} 笔交易。",
     description:
       "Toast description for deleted transactions - interpolation: {count}",
   },
   "plaid.transactionReview.toast.deletionFailed": {
-    message: "[TODO] Deletion Failed",
+    message: "删除失败",
     description: "Toast title when deletion fails",
   },
   "plaid.transactionReview.toast.deletionFailedDescription": {
-    message: "[TODO] Failed to delete transactions. Please try again.",
+    message: "无法删除交易，请重试。",
     description: "Toast description for deletion failure",
   },
 };

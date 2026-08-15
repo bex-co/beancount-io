@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const jaHoldings: Record<string, TranslationEntry> = {
-  "page.holdings.errorExecutingQuery": {
-    message: "クエリの実行中にエラーが発生しました",
-    description: "Generic error message for query execution failure",
-  },
   "page.holdings.exportCsv": {
     message: "CSVエクスポート",
     description: "Button text to export data as CSV",

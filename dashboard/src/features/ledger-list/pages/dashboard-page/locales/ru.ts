@@ -58,14 +58,6 @@ const ruDashboardPage: Record<string, TranslationEntry> = {
     message: "Введите название книги",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Не удалось создать книгу",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Не удалось удалить книгу",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Не удалось загрузить книги",
     description: "Error title when ledgers fail to load",
@@ -74,10 +66,6 @@ const ruDashboardPage: Record<string, TranslationEntry> = {
     message:
       "Не удалось получить ваши книги. Проверьте соединение и попробуйте снова.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Не удалось обновить книгу",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Не удалось загрузить ленту",

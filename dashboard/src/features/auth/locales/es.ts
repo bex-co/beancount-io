@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const esAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "¿Ya tienes una cuenta? Inicia sesión",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "¿Ya tienes una cuenta?",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const esAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Autenticando...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Error de Autenticación",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "Ocurrió un error durante la autenticación",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "Falló la autenticación",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Volver a iniciar sesión",
@@ -104,10 +88,6 @@ const esAuth: Record<string, TranslationEntry> = {
     message:
       "Hemos enviado un enlace para restablecer la contraseña a su dirección de correo electrónico. Por favor revise su bandeja de entrada y siga las instrucciones para restablecer su contraseña.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "Ingrese sus credenciales para acceder a su panel",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "Ingrese sus datos para comenzar con su panel",
@@ -196,10 +176,6 @@ const esAuth: Record<string, TranslationEntry> = {
     message: "Iniciar sesión / Registrarse",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "Ocurrió un error during login",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "Falló el inicio de sesión",
     description: "Error title when login fails",
@@ -207,18 +183,6 @@ const esAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Cerrar sesión",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Cancelar",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Cerrar sesión",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "¿Seguro que quieres salir?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "Amado por los usuarios",
@@ -313,39 +277,13 @@ const esAuth: Record<string, TranslationEntry> = {
     message: "Redirigiendo a la página de inicio de sesión...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "Ocurrió un error during registration",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "Falló el registro",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "Ocurrió un error while sending the password reset email",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Restablecer contraseña",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Restablecer contraseña",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Ingrese su dirección de correo electrónico para recibir un enlace para restablecer su contraseña.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "Se ha enviado un correo electrónico a su dirección de correo electrónico. Por favor revise su correo electrónico para restablecer su contraseña.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "Ocurrió un error while resetting your password",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Restablezca su contraseña",
@@ -367,10 +305,6 @@ const esAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Enviar enlace de restablecimiento",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Enviar correo de restablecimiento",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Enviando...",
@@ -427,10 +361,6 @@ const esAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Usuarioname",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "Usuarioname can only contain letters and numbers",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -490,14 +420,6 @@ const esAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -511,5 +433,62 @@ const esAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "Autorizar acceso de la CLI",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "La CLI de Beancount solicita acceso a tu cuenta.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "Esto permitirá a la CLI:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Leer y escribir tus libros",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Acceder a la información de tu cuenta",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Autorizar",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "Autorizando...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Denegar",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "Denegando...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "La sesión ha caducado o no se ha encontrado.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Autorización correcta",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "Puedes cerrar esta pestaña y volver a la CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Acceso denegado",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "Puedes cerrar esta pestaña.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default esAuth;

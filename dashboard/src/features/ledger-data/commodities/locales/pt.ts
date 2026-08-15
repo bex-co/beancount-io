@@ -12,11 +12,6 @@ const ptCommodities: Record<string, TranslationEntry> = {
     message: "Falha ao Carregar Commodities",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "Ocorreu um erro ao carregar os dados de commodities. Por favor, tente novamente mais tarde.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "Nenhuma Commodity Encontrada",
     description: "Empty state title when no commodities exist",

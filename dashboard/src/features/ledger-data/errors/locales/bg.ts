@@ -20,11 +20,6 @@ const bgErrors: Record<string, TranslationEntry> = {
     message: "Неуспешно зареждане на грешките",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "Възникна грешка при зареждането на данните за грешките. Моля, опитайте отново по-късно.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

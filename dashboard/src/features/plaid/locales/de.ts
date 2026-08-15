@@ -361,10 +361,6 @@ const dePlaid: Record<string, TranslationEntry> = {
     description:
       "Section label for the account mapping list within a bank card",
   },
-  "plaid.accountMapping.mapped": {
-    message: "Zugeordnet",
-    description: "Badge text for mapped account",
-  },
   "plaid.accountMapping.currency": {
     message: "Währung",
     description: "Label for the account's ledger currency selector",
@@ -647,38 +643,39 @@ const dePlaid: Record<string, TranslationEntry> = {
     description: "Toast description for submission failure",
   },
   "plaid.transactionReview.delete": {
-    message: "[TODO] Delete",
+    message: "Löschen",
     description: "Delete button text",
   },
   "plaid.transactionReview.deleting": {
-    message: "[TODO] Deleting...",
+    message: "Wird gelöscht...",
     description: "Button text while deleting",
   },
   "plaid.transactionReview.deleteConfirmTitle": {
-    message: "[TODO] Delete Transactions?",
+    message: "Transaktionen löschen?",
     description: "Confirmation dialog title for bulk-deleting transactions",
   },
   "plaid.transactionReview.deleteConfirmDescription": {
     message:
-      "[TODO] This will permanently remove {count} selected transaction(s) from this list. This cannot be undone.",
+      "Dadurch werden {count} ausgewählte Transaktionen dauerhaft aus dieser Liste entfernt. Dies kann nicht rückgängig gemacht werden.",
     description:
       "Confirmation dialog description for bulk-deleting transactions - interpolation: {count}",
   },
   "plaid.transactionReview.toast.transactionsDeleted": {
-    message: "[TODO] Transactions Deleted",
+    message: "Transaktionen gelöscht",
     description: "Toast title when transactions are deleted",
   },
   "plaid.transactionReview.toast.transactionsDeletedDescription": {
-    message: "[TODO] {count} transaction(s) removed from this list.",
+    message: "{count} Transaktionen wurden aus dieser Liste entfernt.",
     description:
       "Toast description for deleted transactions - interpolation: {count}",
   },
   "plaid.transactionReview.toast.deletionFailed": {
-    message: "[TODO] Deletion Failed",
+    message: "Löschen fehlgeschlagen",
     description: "Toast title when deletion fails",
   },
   "plaid.transactionReview.toast.deletionFailedDescription": {
-    message: "[TODO] Failed to delete transactions. Please try again.",
+    message:
+      "Die Transaktionen konnten nicht gelöscht werden. Bitte erneut versuchen.",
     description: "Toast description for deletion failure",
   },
 };

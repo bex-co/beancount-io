@@ -80,16 +80,12 @@ const ptBudget: Record<string, TranslationEntry> = {
     message: "Falha ao adicionar o orçamento",
     description: "Error message when adding a budget fails",
   },
-  "page.budget.budgetFailedToLoad": {
-    message: "Falha ao carregar os orçamentos",
-    description: "Error message when budgets fail to load",
-  },
   "page.budget.budgetInterval": {
     message: "Intervalo",
     description: "Form label and table header for budget interval",
   },
   "page.budget.budgetIntervalAll": {
-    message: "[TODO] All",
+    message: "Todos",
     description: "Budget interval filter option that shows all intervals",
   },
   "page.budget.budgetIntervalDaily": {
@@ -97,7 +93,7 @@ const ptBudget: Record<string, TranslationEntry> = {
     description: "Budget interval option - daily",
   },
   "page.budget.budgetIntervalFilterLabel": {
-    message: "[TODO] Interval",
+    message: "Intervalo",
     description: "Label for the budget interval filter pill group",
   },
   "page.budget.budgetIntervalMonthly": {
@@ -154,23 +150,23 @@ const ptBudget: Record<string, TranslationEntry> = {
     description: "Chart series name for actual spending data",
   },
   "page.budget.budgetTimeSpanAll": {
-    message: "[TODO] All time",
+    message: "Todo o período",
     description: "Time span filter option that shows all available history",
   },
   "page.budget.budgetTimeSpanFilterLabel": {
-    message: "[TODO] Time span",
+    message: "Período",
     description: "Label for the budget time span filter pill group",
   },
   "page.budget.budgetTimeSpanLast12Months": {
-    message: "[TODO] Last 12 months",
+    message: "Últimos 12 meses",
     description: "Time span filter option for the trailing 12 months",
   },
   "page.budget.budgetTimeSpanLastYear": {
-    message: "[TODO] Last year",
+    message: "Ano passado",
     description: "Time span filter option for the previous calendar year",
   },
   "page.budget.budgetTimeSpanThisYear": {
-    message: "[TODO] This year",
+    message: "Este ano",
     description: "Time span filter option for the current calendar year",
   },
   "page.budget.budgetUnderBudget": {

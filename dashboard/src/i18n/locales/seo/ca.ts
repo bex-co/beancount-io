@@ -83,15 +83,6 @@ const caSeo: Record<string, TranslationEntry> = {
     message: "Balanç - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "Gestioneu col·laboradors de {ledgerName}. Convideu usuaris i controleu permisos d'accés.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "Col·laboradors - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "Llista de productes i preus de {ledgerName}. Seguiu monedes, accions i altres actius.",
@@ -332,15 +323,6 @@ const caSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "Configuració General",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "Gestioneu la configuració, preferències i ajustos del vostre compte de Beancount.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "Configuració del Compte",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

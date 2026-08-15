@@ -4,18 +4,9 @@ export interface TranslationEntry {
 }
 
 const nlUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "Gebruikersprofiel",
-    description: "Header title for user profile page",
-  },
   "userProfile.errorLoadingProfile": {
     message: "Fout bij het laden van profiel",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "Er is iets misgegaan bij het laden van dit profiel. Probeer het later opnieuw.",
-    description: "Generic error message for profile loading failures",
   },
   "userProfile.followError": {
     message: "Kan gebruiker niet volgen",
@@ -24,14 +15,6 @@ const nlUserProfile: Record<string, TranslationEntry> = {
   "userProfile.followSuccess": {
     message: "Je volgt nu {username}",
     description: "Success toast message after following a user",
-  },
-  "userProfile.followers": {
-    message: "volgers",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "volgend",
-    description: "Label for following count",
   },
   "userProfile.joined": {
     message: "Lid sinds",
@@ -64,10 +47,6 @@ const nlUserProfile: Record<string, TranslationEntry> = {
   "userProfile.follow": {
     message: "Volgen",
     description: "Button label to follow a user",
-  },
-  "userProfile.starredRepos": {
-    message: "repositories met ster",
-    description: "Label for starred repositories count",
   },
   "userProfile.unfollowError": {
     message: "Kan gebruiker niet ontvolgen",

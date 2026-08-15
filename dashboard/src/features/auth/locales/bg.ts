@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const bgAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "Вече имате профил? Влезте",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "Вече имате профил?",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const bgAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Удостоверяване...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Грешка при удостоверяване",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "Възникна грешка при удостоверяването",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "Неуспешно удостоверяване",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Обратно към вход",
@@ -104,10 +88,6 @@ const bgAuth: Record<string, TranslationEntry> = {
     message:
       "Изпратихме връзка за нулиране на паролата на вашия имейл адрес. Моля, проверете входящата си поща и следвайте инструкциите за нулиране на паролата.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "Въведете данните си за достъп до таблото",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "Въведете данните си, за да започнете работа с таблото",
@@ -195,10 +175,6 @@ const bgAuth: Record<string, TranslationEntry> = {
     message: "Вход / Регистрация",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "Възникна грешка при влизането",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "Неуспешен вход",
     description: "Error title when login fails",
@@ -206,18 +182,6 @@ const bgAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Изход",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Отказ",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Изход",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "Сигурни ли сте, че искате да излезете?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "Обичан от потребителите",
@@ -311,39 +275,13 @@ const bgAuth: Record<string, TranslationEntry> = {
     message: "Пренасочване към страницата за вход...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "Възникна грешка при регистрацията",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "Неуспешна регистрация",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "Възникна грешка при изпращането на имейл за нулиране на парола",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Нулиране на парола",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Нулиране на парола",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Въведете имейл адреса си, за да получите връзка за нулиране на паролата.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "Имейл беше изпратен на вашия адрес. Моля, проверете пощата си, за да нулирате паролата.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "Възникна грешка при нулирането на паролата",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Нулирайте паролата си",
@@ -364,10 +302,6 @@ const bgAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Изпрати връзка за нулиране",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Изпрати имейл за нулиране на парола",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Изпращане...",
@@ -422,10 +356,6 @@ const bgAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Потребителско име",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "Потребителското име може да съдържа само букви и цифри",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -485,14 +415,6 @@ const bgAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -506,5 +428,62 @@ const bgAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "Разрешаване на CLI достъп",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "Beancount CLI иска достъп до вашия профил.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "Това ще позволи на CLI да:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Чете и записва вашите книги",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Достъп до информацията за вашия профил",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Разрешаване",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "Разрешаване...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Отказ",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "Отказване...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "Сесията е изтекла или не е намерена.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Успешно разрешаване",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "Можете да затворите този раздел и да се върнете към CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Достъпът е отказан",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "Можете да затворите този раздел.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default bgAuth;

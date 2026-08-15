@@ -22,10 +22,6 @@ const frIncomeStatement: Record<string, TranslationEntry> = {
       "Suivre {ledgerName} revenus à travers différentes devises dans le temps",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Revenu net mensuel",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message:
       "Suivre {ledgerName} bénéfice net à travers différentes devises dans le temps",

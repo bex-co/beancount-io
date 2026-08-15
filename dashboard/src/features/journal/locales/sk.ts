@@ -8,10 +8,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Účet",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "Výber účtu",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "Účet (napr. Assets:Bank:Checking)",
     description: "Placeholder for account field",
@@ -24,25 +20,9 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Účty",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "účty",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "Pridať nový záznam do denníka",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "Pridať zápis",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "Pridať transakciu",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "Prosím zadajte sumu",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "Suma musí byť platné číslo",
@@ -55,10 +35,6 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "Suma je povinná",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "Je potrebný aspoň jeden zápis",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "Vyžadujú sa aspoň dva záznamy",
@@ -103,14 +79,6 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "Zatvoriť",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "Zatvoriť účet",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "Obstarávacia cena",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "Vytvorte nový záznam v denníku pre túto knihu",
@@ -209,14 +177,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Export denníka zlyhal",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "Príznak (napr. *)",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "Od",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "Denník",
     description: "Navigation label for journal/transaction history page",
@@ -224,38 +184,6 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "Denník bol úspešne exportovaný",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "Načítanie denníka zlyhalo: ",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message: 'Použite tlačidlo "Pridať transakciu" na vytvorenie záznamov',
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "Nahrajte beancount súbory cez webové rozhranie",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "Importujte existujúce účtovné údaje",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message: "Akonáhle pridáte transakcie, objavia sa tu.",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "Pre začiatok:",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "Zatiaľ nemáte žiadne záznamy v denníku.",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "Vitajte vo vašom Denníku! 📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "L",
@@ -269,25 +197,13 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Načítavam kontext záznamu...",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "Načítava sa viac...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "Metadáta",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "Popis",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "Popis",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "Popis je povinný",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "Nový záznam",
@@ -300,10 +216,6 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "Pre aktuálne filtre neboli nájdené žiadne záznamy v denníku.",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "Žiadne ďalšie záznamy",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "Nenašli sa žiadne popisy",
@@ -329,10 +241,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Otvoriť",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "Otvoriť účet",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "x",
     description: "Label for other transaction subtype filter",
@@ -345,10 +253,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Vyrovnanie",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "Príjemca",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "Príjemca/Popis",
     description: "Table header for payee and narration column",
@@ -356,10 +260,6 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "Príjemca",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "Príjemca je povinný",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "!",
@@ -369,14 +269,6 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Čakajúce transakcie",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "Prosím zadajte...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "Zápis",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "Zápisy",
     description: "Label for postings toggle filter",
@@ -384,22 +276,6 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "Cena",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "Cena",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "Rýchle pridanie",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "Ukladanie zlyhalo",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "Transakcia uložená!",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "Vyberte účet...",
@@ -424,14 +300,6 @@ const skJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "Vyberte príjemcu...",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "Vyberte dátum transakcie",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "Pre",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "Prepnúť metadáta",

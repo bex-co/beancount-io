@@ -12,10 +12,6 @@ const frGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Paramètres mis à jour avec succès",
     description: "Success message when settings are saved",
   },
-  "page.settings.failedToUpdateGeneral": {
-    message: "Échec de la mise à jour des paramètres généraux",
-    description: "Error message when general settings update fails",
-  },
   "page.settings.ledgerNameDescription": {
     message: "Ce nom sera affiché dans toute l'application",
     description: "Help text for ledger name field",
@@ -36,10 +32,6 @@ const frGeneralSettingsSection: Record<string, TranslationEntry> = {
   "page.settings.ledgerDescriptionPlaceholder": {
     message: "Entrez une description pour votre registre (facultatif)",
     description: "Placeholder text for description field",
-  },
-  "page.settings.failedToRenameLedger": {
-    message: "Échec du renommage du grand livre",
-    description: "Error message when ledger rename fails",
   },
 };
 

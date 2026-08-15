@@ -82,14 +82,6 @@ const nlAccounts: Record<string, TranslationEntry> = {
     message: "Invoer",
     description: "Table column header for entry count",
   },
-  "page.accounts.failedToLoadAccounts": {
-    message: "Rekeningen laden mislukt",
-    description: "Error message when accounts fail to load",
-  },
-  "page.accounts.loadingAccounts": {
-    message: "Rekeningen laden...",
-    description: "Loading message when fetching accounts",
-  },
   "page.accounts.loadingEntryContent": {
     message: "Inhoudsitem laden...",
     description: "Loading message when fetching entry content in delete dialog",
@@ -120,10 +112,6 @@ const nlAccounts: Record<string, TranslationEntry> = {
     message: "Openingsdatum",
     description: "Table column header and form label for account open date",
   },
-  "page.accounts.operation": {
-    message: "Operatie",
-    description: "Table column header for available operations on an account",
-  },
   "page.accounts.searchAccounts": {
     message: "Rekeningen zoeken...",
     description: "Placeholder text for accounts search input",
@@ -135,6 +123,11 @@ const nlAccounts: Record<string, TranslationEntry> = {
   "page.accounts.type": {
     message: "Type",
     description: "Table column header for type",
+  },
+  "page.accounts.accountClosedToast": {
+    message: "Rekening {account} gesloten",
+    description:
+      "Toast shown after an account was closed; {account} is the account name",
   },
 };
 

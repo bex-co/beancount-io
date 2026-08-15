@@ -12,14 +12,6 @@ const ruBql: Record<string, TranslationEntry> = {
     message: "Выполняется...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "Произошла ошибка при выполнении запроса",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Результаты запроса",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Нажмите Cmd+Enter (Mac) или Ctrl+Enter (Windows/Linux) для выполнения запроса",

@@ -31,10 +31,6 @@ const ptBalanceSheet: Record<string, TranslationEntry> = {
       "Acompanhe {ledgerName} passivos em diferentes commodities ao longo do tempo",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Patrimônio líquido mensal",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message:
       "Acompanhe {ledgerName} patrimônio líquido em diferentes commodities ao longo do tempo",

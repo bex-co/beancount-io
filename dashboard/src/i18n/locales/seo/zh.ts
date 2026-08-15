@@ -78,14 +78,6 @@ const zhSeo: Record<string, TranslationEntry> = {
     message: "资产负债表 - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message: "管理{ledgerName}的协作者。邀请用户并控制访问权限。",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "协作者 - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message: "{ledgerName}的商品列表和价格。跟踪货币、股票和其他资产。",
     description: "Commodities page meta description",
@@ -306,14 +298,6 @@ const zhSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "常规设置",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message: "管理你的Beancount账户设置、偏好和配置。",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "账户设置",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message: "管理SSH密钥以通过Git安全访问你的Beancount账本。",

@@ -12,14 +12,6 @@ const esBql: Record<string, TranslationEntry> = {
     message: "Ejecutando...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "Ocurrió un error while executing the query",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Resultados de Consulta",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Presione Cmd+Enter (Mac) o Ctrl+Enter (Windows/Linux) para ejecutar la consulta",

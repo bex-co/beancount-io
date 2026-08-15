@@ -82,14 +82,6 @@ const deCollaboration: Record<string, TranslationEntry> = {
     message: "Beigetreten",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "Zuletzt aktiv",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "Nie",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "Keine Mitarbeiter",
     description: "Empty state title when no collaborators exist",
@@ -142,10 +134,6 @@ const deCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "Benutzer suchen...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "Ein unbekannter Fehler ist aufgetreten",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "Unbekannter Benutzer",

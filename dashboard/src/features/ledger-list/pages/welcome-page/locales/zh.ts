@@ -12,10 +12,6 @@ const zhWelcomePage: Record<string, TranslationEntry> = {
     message: "创建你的第一个账本",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "创建账本失败",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "账本创建成功",
     description: "Toast notification when ledger created",

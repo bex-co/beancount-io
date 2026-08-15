@@ -13,10 +13,6 @@ const ptFileEditor: Record<string, { message: string; description: string }> = {
     message: "Excluir File",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Falha ao excluir arquivo",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Falha ao carregar conteúdo do arquivo",
     description: "Error message when file content fails to load",

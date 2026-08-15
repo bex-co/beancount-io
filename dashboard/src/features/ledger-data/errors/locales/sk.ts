@@ -20,11 +20,6 @@ const skErrors: Record<string, TranslationEntry> = {
     message: "Nepodarilo sa načítať chyby",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "Nastala chyba pri načítavaní údajov o chybách. Prosím skúste to znova neskôr.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

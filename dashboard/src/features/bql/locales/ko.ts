@@ -9,14 +9,6 @@ const koBql: Record<string, TranslationEntry> = {
     message: "실행 중...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "쿼리 실행 중 오류가 발생했습니다",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "쿼리 결과",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message: "Cmd+Enter(Mac) 또는 Ctrl+Enter(Windows/Linux)로 쿼리 실행",
     description: "Hint text for query keyboard shortcut",

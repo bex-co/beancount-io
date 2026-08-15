@@ -13,10 +13,6 @@ const esFileEditor: Record<string, { message: string; description: string }> = {
     message: "Eliminar File",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Error al eliminar archivo",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Error al cargar el contenido del archivo",
     description: "Error message when file content fails to load",

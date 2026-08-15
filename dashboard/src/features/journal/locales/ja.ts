@@ -5,10 +5,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "勘定科目",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "勘定科目選択",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "勘定科目（例：Assets:Bank:Checking）",
     description: "Placeholder for account field",
@@ -21,25 +17,9 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "勘定科目",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "勘定科目",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "新しいジャーナルエントリを追加",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "ポスティングを追加",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "取引を追加",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "金額を入力してください",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "金額は有効な数値でなければなりません",
@@ -52,10 +32,6 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "金額は必須です",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "少なくとも1つのポスティングが必要です",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "少なくとも2つのポスティングが必要です",
@@ -100,14 +76,6 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "クローズ",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "勘定科目をクローズ",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "原価",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "この台帳に新しいジャーナルエントリを作成",
@@ -207,14 +175,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "ジャーナルのエクスポートに失敗しました",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "フラグ（例：*）",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "送金元",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "ジャーナル",
     description: "Navigation label for journal/transaction history page",
@@ -222,38 +182,6 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "ジャーナルが正常にエクスポートされました",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "ジャーナルの読み込みに失敗しました：",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message: "「取引を追加」ボタンを使用してエントリを作成",
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "Webインターフェースからbeancountファイルをアップロード",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "既存の会計データをインポート",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message: "取引を追加すると、ここに表示されます。",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "はじめに：",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "まだジャーナルエントリがありません。",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "ジャーナルへようこそ！📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "L",
@@ -267,25 +195,13 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "エントリコンテキストを読み込み中...",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "さらに読み込み中...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "メタデータ",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "説明",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "説明",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "説明は必須です",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "新しいエントリ",
@@ -298,10 +214,6 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "現在のフィルターに一致するジャーナルエントリが見つかりません。",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "これ以上のエントリはありません",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "説明が見つかりません",
@@ -327,10 +239,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "オープン",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "勘定科目をオープン",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "x",
     description: "Label for other transaction subtype filter",
@@ -343,10 +251,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "パッド",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "支払先",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "支払先/説明",
     description: "Table header for payee and narration column",
@@ -354,10 +258,6 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "支払先",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "支払先は必須です",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "!",
@@ -367,14 +267,6 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "保留中の取引",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "入力してください...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "ポスティング",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "ポスティング",
     description: "Label for postings toggle filter",
@@ -382,22 +274,6 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "価格",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "価格",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "クイック追加",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "保存に失敗しました",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "取引が保存されました！",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "勘定科目を選択...",
@@ -422,14 +298,6 @@ const jaJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "支払先を選択...",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "取引日付を選択",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "送金先",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "メタデータを切り替え",

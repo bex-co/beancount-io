@@ -12,14 +12,6 @@ const zhBql: Record<string, TranslationEntry> = {
     message: "执行中...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "执行查询时发生错误",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "查询结果",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message: "按 Cmd+Enter（Mac）或 Ctrl+Enter（Windows/Linux）执行查询",
     description: "Hint text for query keyboard shortcut",

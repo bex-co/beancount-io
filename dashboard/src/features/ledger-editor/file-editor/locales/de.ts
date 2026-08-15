@@ -13,10 +13,6 @@ const deFileEditor: Record<string, { message: string; description: string }> = {
     message: "Datei löschen",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Datei konnte nicht gelöscht werden",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Dateiinhalt konnte nicht geladen werden",
     description: "Error message when file content fails to load",

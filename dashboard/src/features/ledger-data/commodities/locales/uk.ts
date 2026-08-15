@@ -12,11 +12,6 @@ const ukCommodities: Record<string, TranslationEntry> = {
     message: "Не вдалося завантажити товари",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "Сталася помилка під час завантаження даних про товари. Спробуйте ще раз пізніше.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "Товарів не знайдено",
     description: "Empty state title when no commodities exist",

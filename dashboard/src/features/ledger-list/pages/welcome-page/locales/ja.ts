@@ -12,10 +12,6 @@ const jaWelcomePage: Record<string, TranslationEntry> = {
     message: "最初の台帳を作成",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "台帳の作成に失敗しました",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "台帳が正常に作成されました",
     description: "Toast notification when ledger created",

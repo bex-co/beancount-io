@@ -31,10 +31,6 @@ const frBalanceSheet: Record<string, TranslationEntry> = {
       "Suivre {ledgerName} passifs à travers différentes devises dans le temps",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Valeur nette mensuelle",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message:
       "Suivre {ledgerName} patrimoine net à travers différentes devises dans le temps",

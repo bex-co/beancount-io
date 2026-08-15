@@ -81,14 +81,6 @@ const ruAccounts: Record<string, TranslationEntry> = {
     message: "Записи",
     description: "Table column header for entry count",
   },
-  "page.accounts.failedToLoadAccounts": {
-    message: "Не удалось загрузить счета",
-    description: "Error message when accounts fail to load",
-  },
-  "page.accounts.loadingAccounts": {
-    message: "Загрузка счетов...",
-    description: "Loading message when fetching accounts",
-  },
   "page.accounts.loadingEntryContent": {
     message: "Загрузка содержимого записи...",
     description: "Loading message when fetching entry content in delete dialog",
@@ -119,10 +111,6 @@ const ruAccounts: Record<string, TranslationEntry> = {
     message: "Дата открытия",
     description: "Table column header and form label for account open date",
   },
-  "page.accounts.operation": {
-    message: "Операция",
-    description: "Table column header for available operations on an account",
-  },
   "page.accounts.searchAccounts": {
     message: "Поиск счетов...",
     description: "Placeholder text for accounts search input",
@@ -134,6 +122,11 @@ const ruAccounts: Record<string, TranslationEntry> = {
   "page.accounts.type": {
     message: "Type",
     description: "Table column header for type",
+  },
+  "page.accounts.accountClosedToast": {
+    message: "Счёт {account} закрыт",
+    description:
+      "Toast shown after an account was closed; {account} is the account name",
   },
 };
 

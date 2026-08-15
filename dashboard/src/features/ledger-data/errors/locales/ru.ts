@@ -20,11 +20,6 @@ const ruErrors: Record<string, TranslationEntry> = {
     message: "Не удалось загрузить ошибки",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "Произошла ошибка при загрузке данных об ошибках. Пожалуйста, попробуйте позже.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

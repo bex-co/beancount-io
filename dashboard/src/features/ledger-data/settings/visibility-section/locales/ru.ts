@@ -17,14 +17,6 @@ const ruVisibilitySection: Record<string, TranslationEntry> = {
     message: "Код для встраивания",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "Копировать ссылку",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "Не удалось обновить видимость книги",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "Скопировано!",
     description: "Confirmation message when text is copied",
@@ -45,11 +37,6 @@ const ruVisibilitySection: Record<string, TranslationEntry> = {
     message: "Ссылка для публикации",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "Публикация доступна только для публичных книг. Измените видимость вашей книги выше, чтобы включить публикацию.",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "Публичный доступ",
     description: "Subsection title for public sharing options",
@@ -63,9 +50,18 @@ const ruVisibilitySection: Record<string, TranslationEntry> = {
     message: "Приватная книга",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "Копировать код",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "Открыть на Beancount.io",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "Не удалось скопировать URL",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "Не удалось скопировать код",
+    description: "Toast when copying the embed code failed",
   },
 };
 

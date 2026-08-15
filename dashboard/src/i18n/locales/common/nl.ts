@@ -12,25 +12,9 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Transacties",
     description: "Plural form of transaction",
   },
-  "common.adminPermissionRequired": {
-    message: "Beheerdersrechten zijn vereist om deze pagina te openen.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "Er is een fout opgetreden",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "Terug",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "Terug naar grootboek",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Beancount Dashboard",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Beancount Logo",
@@ -56,19 +40,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Medewerkers limiet bereikt",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "U heeft uw limiet van {max} medewerkers bereikt. Upgrade naar Premium om meer medewerkers aan uw grootboek toe te voegen.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{used} van {max} medewerkers",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "Bevestigen",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "Gekopieerd",
     description: "Status message indicating content was copied",
@@ -76,11 +47,6 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "Kopiëren",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message:
-      "Tekst-gebaseerde boekhouding. Krachtig, Nauwkeurig, Controleerbaar.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "Verwijderen",
@@ -100,10 +66,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "Klaar",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "Bewerken",
@@ -130,11 +92,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Laden van gegevens mislukt",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "We konden uw grootboekinformatie niet ophalen. Controleer uw verbinding en probeer het opnieuw.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "Laden van grootboek mislukt",
     description: "Error title when ledger fails to load",
@@ -154,19 +111,6 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "Ga naar vorige pagina",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "Home",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "Onvoldoende rechten",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "U heeft niet de benodigde rechten om deze pagina te openen. Neem contact op met de grootboekbeheerder voor toegang.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "Importeren",
@@ -220,10 +164,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Laatst bijgewerkt",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "Grootboek",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "Grootboekinstellingen",
     description:
@@ -237,10 +177,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Grootboek limiet bereikt",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{used} van {max} grootboeken gebruikt",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "laden...",
     description: "Loading state message",
@@ -248,10 +184,6 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "Gegevens laden...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "Mijn",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "Meer pagina's",
@@ -311,30 +243,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "paginering",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "Probeer het later opnieuw",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "Voeg tot 5 medewerkers per grootboek toe",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "Maak tot 5 grootboeken in plaats van 1",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "Nodig tot 5 medewerkers uit in plaats van 2",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "Toegang tot geavanceerde functies en prioriteitsondersteuning",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "Premium Voordelen",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "Vorige",
     description: "Text label for previous page button",
@@ -351,10 +259,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Opslaan...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "Zoeken",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "Gerelateerde pagina's",
     description: "Heading for related pages navigation section",
@@ -367,17 +271,9 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Selecteer datum",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "Instelling",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "Instellingen",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "Delen",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "Zijbalk",
@@ -415,14 +311,6 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "bijwerken...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "Nu upgraden",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "Upgraden naar Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Upgraden naar Pro",
@@ -467,11 +355,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message:
       "Balansweergave voor {ledgerName}. Analyseer activa, passiva en eigen vermogen op elk moment.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "Beheer medewerkers voor {ledgerName}. Nodig gebruikers uit en beheer toegangsrechten.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -553,26 +436,13 @@ const nlCommon: Record<string, TranslationEntry> = {
       "Upload bestanden naar {ledgerName}. Importeer bestaande Beancount-bestanden of -documenten.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "Weergave van commitgeschiedenis voor {ledgerName}. Volg wijzigingen in grootboekbestanden in de tijd.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "Rekeningposten",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "Rekening",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "Balans",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "Medewerkers",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "Goederen",
@@ -622,10 +492,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Query",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "Instellingen",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "Statistieken",
     description: "Link label for statistics page",
@@ -654,10 +520,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Succes",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "Bedrag",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "Activa",
     description: "Assets category in accounting",
@@ -677,10 +539,6 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "Geavanceerd",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "Hulp nodig?",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "Hulp en ondersteuning",
@@ -710,17 +568,9 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Wissen all",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "Grondstoffen",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "Geconverteerd naar",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "Valuta",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "Dagelijks",
@@ -821,10 +671,6 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Driemaandelijks",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "Besparingen",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "Rekeningen zoeken...",
     description: "Placeholder for account search",
@@ -836,10 +682,6 @@ const nlCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "Selecteer tijdsperiode",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "Samenvatting",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "Tijd",
@@ -954,6 +796,18 @@ const nlCommon: Record<string, TranslationEntry> = {
     message:
       "Deze sectie kon niet worden weergegeven. De rest van de pagina zou moeten blijven werken.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "Code kopiëren",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "Gekopieerd naar het klembord",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "Kopiëren mislukt",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

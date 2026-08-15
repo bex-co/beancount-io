@@ -13,10 +13,6 @@ const bgWelcomePage: Record<string, TranslationEntry> = {
     message: "Създайте първата си книга",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Неуспешно създаване на книга",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Книгата е създадена успешно",
     description: "Toast notification when ledger created",

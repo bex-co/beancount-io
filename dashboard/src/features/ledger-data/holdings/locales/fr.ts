@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const frHoldings: Record<string, TranslationEntry> = {
-  "page.holdings.errorExecutingQuery": {
-    message: "Une erreur est survenue while executing the query",
-    description: "Generic error message for query execution failure",
-  },
   "page.holdings.exportCsv": {
     message: "Exporter en CSV",
     description: "Button text to export data as CSV",

@@ -12,10 +12,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "حساب با موفقیت حذف شد",
     description: "Success message when account is deleted",
   },
-  "userSettings.accountSettings": {
-    message: "حساب",
-    description: "Section header for account settings",
-  },
   "userSettings.addNewKey": {
     message: "افزودن کلید جدید",
     description: "Button text to add new key",
@@ -39,10 +35,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
   "userSettings.allTransactionsAndRecords": {
     message: "تمام تراکنش‌ها و سوابق",
     description: "Item in delete account list",
-  },
-  "userSettings.appSettings": {
-    message: "تنظیمات برنامه",
-    description: "Section header for application settings",
   },
   "userSettings.appearance": {
     message: "ظاهر",
@@ -68,10 +60,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
   "userSettings.cannotBeUndone": {
     message: "این عملیات قابل بازگشت نیست.",
     description: "Warning that action is irreversible",
-  },
-  "userSettings.changeLanguage": {
-    message: "تغییر",
-    description: "Button to change language",
   },
   "userSettings.changeName": {
     message: "تغییر نام",
@@ -109,14 +97,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "زبان",
     description: "Label showing current language selection",
   },
-  "userSettings.currentPeriodEnds": {
-    message: "پایان دوره فعلی",
-    description: "Label for subscription period end date",
-  },
-  "userSettings.currentVersion": {
-    message: "نسخه",
-    description: "Label showing current app version",
-  },
   "userSettings.customizeAppearance": {
     message: "سفارشی‌سازی ظاهر و احساس برنامه",
     description: "Description for appearance settings",
@@ -133,39 +113,14 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "حذف حساب",
     description: "Button or menu item to delete user account",
   },
-  "userSettings.deleteAccountAlertCancel": {
-    message: "لغو",
-    description: "Cancel button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertConfirm": {
-    message: "حذف حساب",
-    description: "Confirm button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertMsg": {
-    message:
-      "آیا مطمئن هستید که می‌خواهید حساب خود را حذف کنید؟ این عملیات قابل بازگشت نیست و تمام داده‌های شما به‌طور دائمی حذف خواهند شد.",
-    description: "Warning message in account deletion confirmation dialog",
-  },
   "userSettings.deleteAccountConfirmMessage": {
     message: 'برای تأیید، نام کاربری خود "{username}" را در زیر تایپ کنید:',
     description:
       "Instructions for confirming account deletion by typing username",
   },
-  "userSettings.deleteAccountConfirmPhrase": {
-    message: "sudo delete my account",
-    description: "Exact phrase user must type to confirm deletion",
-  },
   "userSettings.deleteAccountConfirmPlaceholder": {
     message: "نام کاربری خود را وارد کنید",
     description: "Placeholder text for deletion confirmation input",
-  },
-  "userSettings.deleteAccountConfirmTitle": {
-    message: "تأیید حذف حساب",
-    description: "Title of account deletion confirmation step",
-  },
-  "userSettings.deleteAccountDescription": {
-    message: "حذف دائمی حساب و داده‌ها",
-    description: "Description of what account deletion does",
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
@@ -226,16 +181,16 @@ const faUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to resume a subscription scheduled to cancel",
   },
   "userSettings.resumeSubscriptionTitle": {
-    message: "[TODO] Resume Subscription?",
+    message: "اشتراک از سر گرفته شود؟",
     description: "Confirmation dialog title for resuming subscription",
   },
   "userSettings.resumeSubscriptionDescription": {
     message:
-      "[TODO] Are you sure you want to resume your subscription? Your subscription will continue to renew automatically and you will be billed again at the end of your current billing period.",
+      "آیا مطمئن هستید که می‌خواهید اشتراک خود را از سر بگیرید؟ اشتراک شما همچنان به‌طور خودکار تمدید می‌شود و در پایان دوره صورتحساب فعلی دوباره از شما هزینه دریافت خواهد شد.",
     description: "Confirmation dialog description for resuming subscription",
   },
   "userSettings.confirmResume": {
-    message: "[TODO] Yes, Resume Subscription",
+    message: "بله، اشتراک را از سر بگیر",
     description: "Button text to confirm subscription resumption",
   },
   "userSettings.resuming": {
@@ -253,14 +208,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
   "userSettings.failedToCreateCheckoutSession": {
     message: "ایجاد جلسه پرداخت ناموفق بود. لطفاً دوباره تلاش کنید.",
     description: "Error message when creating checkout session fails",
-  },
-  "userSettings.failedToCreateKey": {
-    message: "ایجاد کلید ناموفق بود. لطفاً دوباره تلاش کنید.",
-    description: "Error message when key creation fails",
-  },
-  "userSettings.failedToDeleteAccount": {
-    message: "حذف حساب ناموفق بود",
-    description: "Error message when account deletion fails",
   },
   "userSettings.failedToLoadKeys": {
     message: "بارگذاری کلیدها ناموفق بود",
@@ -291,26 +238,9 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "عمومی",
     description: "General settings section label",
   },
-  "userSettings.helpCenter": {
-    message: "مرکز کمک",
-    description: "Link to help center",
-  },
-  "userSettings.inputKeyword": {
-    message: "لطفاً کلمه کلیدی وارد کنید",
-    description: "Placeholder prompting user to enter keyword",
-  },
   "userSettings.invite": {
     message: "دعوت",
     description: "Invite action button",
-  },
-  "userSettings.inviteFriends": {
-    message: "دعوت دوستان",
-    description: "Button or section title for inviting friends",
-  },
-  "userSettings.inviteSummary": {
-    message:
-      "این ابزار حرفه‌ای مدیریت مالی را به اشتراک بگذارید و به دیگران کمک کنید تا آینده مالی خود را بسازند.",
-    description: "Summary description of invite feature",
   },
   "userSettings.irreversibleActions": {
     message: "عملیات‌های غیرقابل بازگشت و مخرب",
@@ -356,10 +286,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "در حال بارگذاری اطلاعات حساب شما...",
     description: "Loading message for account information",
   },
-  "userSettings.loadingAccountOptions": {
-    message: "در حال بارگذاری گزینه‌های حساب...",
-    description: "Loading message for account options",
-  },
   "userSettings.loadingSessionInformation": {
     message: "در حال بارگذاری اطلاعات نشست...",
     description: "Loading message for session data",
@@ -375,10 +301,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
   "userSettings.loadingThemePreferences": {
     message: "در حال بارگذاری ترجیحات تم...",
     description: "Loading message for theme settings",
-  },
-  "userSettings.manage": {
-    message: "مدیریت",
-    description: "Button to manage subscription",
   },
   "userSettings.manageActiveSession": {
     message: "مدیریت نشست فعال خود",
@@ -408,14 +330,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "کلید SSH جدید",
     description: "Button text to create new SSH key",
   },
-  "userSettings.noActiveSubscription": {
-    message: "اشتراک فعالی وجود ندارد",
-    description: "Label when user has no subscription",
-  },
-  "userSettings.noContactPermission": {
-    message: "مجوز دسترسی به مخاطبین وجود ندارد.",
-    description: "Error when contacts permission is denied",
-  },
   "userSettings.noSshKeys": {
     message: "کلید SSH وجود ندارد",
     description: "Empty state title when no SSH keys exist",
@@ -429,17 +343,9 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "تنظیم نشده",
     description: "Placeholder when a field has no value",
   },
-  "userSettings.off": {
-    message: "خاموش",
-    description: "Off state for toggles or subscriptions",
-  },
   "userSettings.opening": {
     message: "در حال باز کردن...",
     description: "Button text while opening billing portal",
-  },
-  "userSettings.processing": {
-    message: "در حال پردازش...",
-    description: "Button text while processing checkout",
   },
   "userSettings.publicKey": {
     message: "کلید عمومی",
@@ -459,31 +365,9 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "کلید عمومی الزامی است",
     description: "Validation error for missing public key",
   },
-  "userSettings.recommend": {
-    message:
-      "می‌خواهم این ابزار حرفه‌ای مدیریت مالی را که به من در سازماندهی امور مالی‌ام کمک کرده است به اشتراک بگذارم.",
-    description: "Pre-written recommendation message for sharing",
-  },
-  "userSettings.referral": {
-    message: "معرفی",
-    description: "Referral program label",
-  },
   "userSettings.renewsOn": {
     message: "تمدید در",
     description: "Label for subscription renewal date",
-  },
-  "userSettings.reviewApp": {
-    message: "دوستش دارید؟ نظر بدهید :)",
-    description: "Prompt to review the app",
-  },
-  "userSettings.rewardDetail": {
-    message:
-      "این ابزار حرفه‌ای مدیریت مالی را به اشتراک بگذارید و به دیگران کمک کنید تا آینده مالی خود را بسازند.",
-    description: "Detailed description of referral rewards",
-  },
-  "userSettings.rewardSummary": {
-    message: "دعوت دوستان",
-    description: "Summary of referral rewards",
   },
   "userSettings.selectColorTheme": {
     message: "تم رنگی مورد نظر خود را انتخاب کنید",
@@ -497,15 +381,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "نشست",
     description: "Session management section title",
   },
-  "userSettings.settingsErrorMessage": {
-    message:
-      "خطایی در بارگذاری تنظیمات شما رخ داد. لطفاً اتصال خود را بررسی کرده و دوباره تلاش کنید.",
-    description: "Detailed error message for settings loading failure",
-  },
-  "userSettings.shareError": {
-    message: "اشتراک‌گذاری ناموفق",
-    description: "Error message when sharing fails",
-  },
   "userSettings.signOutDescription": {
     message: "خروج از حساب خود و پاک کردن نشست.",
     description: "Description for logout action",
@@ -513,10 +388,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
   "userSettings.sshKeys": {
     message: "کلیدهای SSH",
     description: "Page title for SSH keys",
-  },
-  "userSettings.subscribe": {
-    message: "گزارش ایمیل",
-    description: "Email report subscription feature label",
   },
   "userSettings.subscription": {
     message: "اشتراک",
@@ -540,10 +411,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
     description:
       "Message when 3DS authentication is needed for subscription upgrade",
   },
-  "userSettings.supportSettings": {
-    message: "پشتیبانی",
-    description: "Section header for support settings",
-  },
   "userSettings.system": {
     message: "سیستم",
     description: "System theme option",
@@ -551,10 +418,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
   "userSettings.testMode": {
     message: "حالت آزمایشی",
     description: "Label indicating Stripe is in test/development mode",
-  },
-  "userSettings.thanksShare": {
-    message: "از اشتراک‌گذاری متشکریم!!",
-    description: "Thank you message after sharing",
   },
   "userSettings.theme": {
     message: "تم",
@@ -580,14 +443,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "عنوان الزامی است",
     description: "Validation error for missing title",
   },
-  "userSettings.trialProPlan": {
-    message: "ارتقا به پریمیوم",
-    description: "Button text for premium subscription upgrade",
-  },
-  "userSettings.trialProPlanComingSoon": {
-    message: "قابلیت طرح پریمیوم آزمایشی به‌زودی!",
-    description: "Toast message when trial Pro plan is clicked",
-  },
   "userSettings.unableToOpenBillingPortal": {
     message:
       "امکان باز کردن پورتال صورت‌حساب وجود ندارد. لطفاً بعداً دوباره تلاش کنید.",
@@ -596,19 +451,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
   "userSettings.unknownPlan": {
     message: "طرح نامشخص",
     description: "Fallback when plan name is not available",
-  },
-  "userSettings.updateFailed": {
-    message: "به‌روزرسانی اشتراک ناموفق",
-    description: "Error message when update fails",
-  },
-  "userSettings.updateSuccess": {
-    message: "اشتراک با موفقیت به‌روزرسانی شد",
-    description: "Success message after updating subscription",
-  },
-  "userSettings.upgradeToProDescription": {
-    message:
-      "برای دسترسی به امکانات پریمیوم و دسترسی نامحدود، به نسخه پرو ارتقا یابید.",
-    description: "Description encouraging subscription upgrade",
   },
   "userSettings.userProfile": {
     message: "پروفایل کاربر",
@@ -634,10 +476,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "AI Tokens",
     description: "Label for AI CFO usage section",
   },
-  "userSettings.aiCfoUsageDescription": {
-    message: "Monthly AI token usage for your current billing period",
-    description: "Description for AI CFO usage section",
-  },
   "userSettings.aiCfoUsageCount": {
     message: "{used} / {max} tokens used this month",
     description: "AI CFO usage count display",
@@ -658,10 +496,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "Enterprise",
     description: "Display name for the enterprise tier",
   },
-  "userSettings.customPricing": {
-    message: "Custom pricing",
-    description: "Price label for enterprise tier",
-  },
   "userSettings.usage": {
     message: "Usage",
     description: "Section header for usage overview",
@@ -673,14 +507,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
   "userSettings.ledgerUsageCount": {
     message: "{used} / {max} ledgers",
     description: "Ledger usage count display",
-  },
-  "userSettings.collaboratorLimit": {
-    message: "Up to {max} collaborators per ledger",
-    description: "Collaborator limit description",
-  },
-  "userSettings.collaboratorLimitUnlimited": {
-    message: "Unlimited collaborators per ledger",
-    description: "Collaborator limit for unlimited tiers",
   },
   "userSettings.upgradeYourPlan": {
     message: "Upgrade Your Plan",
@@ -697,11 +523,6 @@ const faUserSettings: Record<string, TranslationEntry> = {
   "userSettings.perMonth": {
     message: "/month",
     description: "Price interval suffix",
-  },
-  "userSettings.planFeatureSummary": {
-    message:
-      "{tokens} AI tokens · {ledgers} ledgers · {collaborators} collaborators",
-    description: "Summary of plan features in the current plan banner",
   },
 };
 

@@ -12,14 +12,6 @@ const nlBql: Record<string, TranslationEntry> = {
     message: "Uitvoeren...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "Er is een fout opgetreden while executing the query",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Query resultaten",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Druk op Cmd+Enter (Mac) of Ctrl+Enter (Windows/Linux) om de query uit te voeren",

@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const nlAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "Heeft u al een account? Inloggen",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "Heeft u al een account?",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const nlAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Authenticeren...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Authenticatiefout",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "Er is een fout opgetreden during authentication",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "Authenticatie mislukt",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Terug to Sign in",
@@ -104,10 +88,6 @@ const nlAuth: Record<string, TranslationEntry> = {
     message:
       "We hebben een link om uw wachtwoord te resetten naar uw e-mailadres verzonden. Controleer uw inbox en volg de instructies om uw wachtwoord te resetten.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "Voer uw inloggegevens in om toegang te krijgen tot uw dashboard",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "Voer uw gegevens in om aan de slag te gaan met uw dashboard",
@@ -195,10 +175,6 @@ const nlAuth: Record<string, TranslationEntry> = {
     message: "Inloggen / Registreren",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "Er is een fout opgetreden during login",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "Inloggen mislukt",
     description: "Error title when login fails",
@@ -206,18 +182,6 @@ const nlAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Uitloggen",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Annuleren",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Uitloggen",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "Weet je zeker dat je wilt uitloggen?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "Geliefd bij gebruikers",
@@ -309,39 +273,13 @@ const nlAuth: Record<string, TranslationEntry> = {
     message: "Doorverwijzen naar inlogpagina...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "Er is een fout opgetreden during registration",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "Registratie mislukt",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "Er is een fout opgetreden while sending the password reset email",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Wachtwoord resetten",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Wachtwoord resetten",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Voer uw e-mailadres in om een link te ontvangen om uw wachtwoord te resetten.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "Er is een e-mail verzonden naar uw e-mailadres. Controleer uw e-mail om uw wachtwoord te resetten.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "Er is een fout opgetreden while resetting your password",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Reset uw wachtwoord",
@@ -363,10 +301,6 @@ const nlAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Verstuur resetlink",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Verstuur wachtwoord reset e-mail",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Verzenden...",
@@ -421,10 +355,6 @@ const nlAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Gebruikername",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "Gebruikername can only contain letters and numbers",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -484,14 +414,6 @@ const nlAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -505,5 +427,62 @@ const nlAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "CLI-toegang autoriseren",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "De Beancount CLI vraagt toegang tot uw account.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "Hiermee kan de CLI:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Uw grootboeken lezen en schrijven",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Toegang tot uw accountgegevens",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Autoriseren",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "Autoriseren...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Weigeren",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "Weigeren...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "Sessie verlopen of niet gevonden.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Autorisatie geslaagd",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "U kunt dit tabblad sluiten en teruggaan naar de CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Toegang geweigerd",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "U kunt dit tabblad sluiten.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default nlAuth;

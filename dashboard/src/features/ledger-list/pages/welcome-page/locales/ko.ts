@@ -12,10 +12,6 @@ const koWelcomePage: Record<string, TranslationEntry> = {
     message: "첫 번째 장부 만들기",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "장부 생성에 실패했습니다",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "장부가 성공적으로 생성되었습니다",
     description: "Toast notification when ledger created",

@@ -16,14 +16,6 @@ const jaVisibilitySection: Record<string, TranslationEntry> = {
     message: "埋め込みコード",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "URLをコピー",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "元帳の公開設定の更新に失敗しました",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "コピーしました！",
     description: "Confirmation message when text is copied",
@@ -44,11 +36,6 @@ const jaVisibilitySection: Record<string, TranslationEntry> = {
     message: "共有可能なURL",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "共有は公開元帳でのみ利用可能です。共有を有効にするには上記で元帳の公開設定を変更してください。",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "公開共有",
     description: "Subsection title for public sharing options",
@@ -61,9 +48,18 @@ const jaVisibilitySection: Record<string, TranslationEntry> = {
     message: "非公開元帳",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "コードをコピー",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "Beancount.ioで表示",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "URLのコピーに失敗しました",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "コードのコピーに失敗しました",
+    description: "Toast when copying the embed code failed",
   },
 };
 

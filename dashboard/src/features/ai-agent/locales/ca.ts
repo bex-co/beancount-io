@@ -8,21 +8,9 @@ const caAiAgent: Record<string, TranslationEntry> = {
     message: "Pregunta a Beancount.io",
     description: "Title for AI chat feature",
   },
-  "aiAgent.subtitle": {
-    message: "Ajuda impulsada per IA per al teu llibre major",
-    description: "Subtitle for AI chat feature",
-  },
   "aiAgent.placeholder": {
     message: "Pregunta'm qualsevol cosa sobre Beancount...",
     description: "Input placeholder text",
-  },
-  "aiAgent.send": {
-    message: "Enviar",
-    description: "Send button text",
-  },
-  "aiAgent.sending": {
-    message: "Enviant...",
-    description: "Loading state text",
   },
   "aiAgent.welcome": {
     message:
@@ -35,14 +23,6 @@ const caAiAgent: Record<string, TranslationEntry> = {
       "Què vols saber?",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.you": {
-    message: "Tu",
-    description: "Label for user messages",
-  },
-  "aiAgent.assistant": {
-    message: "Assistent IA",
-    description: "Label for AI assistant messages",
-  },
   "aiAgent.prCreated": {
     message: "✓ Pull Request creat",
     description: "Message shown when PR is created",
@@ -50,26 +30,6 @@ const caAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.viewPR": {
     message: "Veure PR #",
     description: "Link text to view pull request",
-  },
-  "aiAgent.status.connecting": {
-    message: "Pensant...",
-    description: "Status badge text when connecting to AI",
-  },
-  "aiAgent.status.streaming": {
-    message: "Transmissió...",
-    description: "Status badge text when receiving AI response",
-  },
-  "aiAgent.status.finalizing": {
-    message: "Finalitzant...",
-    description: "Status badge text when finalizing AI response",
-  },
-  "aiAgent.status.complete": {
-    message: "Completat",
-    description: "Status badge text when AI response is complete",
-  },
-  "aiAgent.status.error": {
-    message: "Error",
-    description: "Status badge text when an error occurs",
   },
   "aiAgent.quickAskPlaceholder": {
     message: "Pregunta'm qualsevol cosa sobre aquest llibre major...",
@@ -159,19 +119,6 @@ const caAiAgent: Record<string, TranslationEntry> = {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
   },
-  "aiAgent.editApproval.binaryContent": {
-    message: "(binary content)",
-    description:
-      "Placeholder shown when file content is binary (image, PDF, etc.)",
-  },
-  "aiAgent.readFile.label": {
-    message: "Read",
-    description: "Label on the read-file tool step",
-  },
-  "aiAgent.listFiles.label": {
-    message: "List",
-    description: "Label on the list-files tool step",
-  },
   "aiAgent.suggestionsTitle": {
     message: "Prova de preguntar:",
     description:
@@ -212,6 +159,59 @@ const caAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.retry": {
     message: "Torna-ho a provar",
     description: "Button to resubmit the last question after an error",
+  },
+  "aiAgent.receiptApproval.title": {
+    message: "Registra la transacció del rebut",
+    description: "Title of the receipt transaction approval card",
+  },
+  "aiAgent.receiptApproval.preparing": {
+    message: "S'està preparant la transacció…",
+    description: "Status while the receipt transaction is being prepared",
+  },
+  "aiAgent.receiptApproval.recorded": {
+    message: "Transacció registrada",
+    description: "Status after the receipt transaction was recorded",
+  },
+  "aiAgent.receiptApproval.failed": {
+    message: "No s'ha pogut registrar la transacció",
+    description: "Error when recording the receipt transaction failed",
+  },
+  "aiAgent.receiptApproval.date": {
+    message: "Data",
+    description: "Label for the receipt transaction date",
+  },
+  "aiAgent.receiptApproval.payee": {
+    message: "Beneficiari",
+    description: "Label for the receipt transaction payee",
+  },
+  "aiAgent.receiptApproval.amount": {
+    message: "Import",
+    description: "Label for the receipt transaction amount",
+  },
+  "aiAgent.receiptApproval.expense": {
+    message: "Despesa",
+    description: "Label for the receipt expense account",
+  },
+  "aiAgent.receiptApproval.payment": {
+    message: "Pagament",
+    description: "Label for the receipt payment account",
+  },
+  "aiAgent.attachFile": {
+    message: "Adjunta un fitxer",
+    description: "Aria label for the attach file button in the chat input",
+  },
+  "aiAgent.removeAttachment": {
+    message: "Elimina {fileName}",
+    description:
+      "Aria label for removing a staged attachment; {fileName} is the attachment file name",
+  },
+  "aiAgent.attachmentFailed": {
+    message: "ha fallat",
+    description: "Chip label when an attachment failed to upload",
+  },
+  "aiAgent.scrollToBottom": {
+    message: "Desplaça't al final",
+    description: "Aria label for the scroll to bottom button in the chat",
   },
 };
 

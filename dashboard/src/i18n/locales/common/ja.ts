@@ -12,25 +12,9 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "アクション",
     description: "Plural form of actions",
   },
-  "common.adminPermissionRequired": {
-    message: "このページにアクセスするには管理者権限が必要です。",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "エラーが発生しました",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "戻る",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "台帳に戻る",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Beancount ダッシュボード",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Beancount ロゴ",
@@ -56,19 +40,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "コラボレーター制限に達しました",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "{max}人のコラボレーター制限に達しました。プレミアムにアップグレードすると、台帳にさらにコラボレーターを追加できます。",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{max}人中{used}人のコラボレーター",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "確認",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "コピーしました",
     description: "Status message indicating content was copied",
@@ -76,10 +47,6 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "コピー",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "プレーンテキスト会計。強力、正確、監査可能。",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "削除",
@@ -99,10 +66,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "完了",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "編集",
@@ -129,11 +92,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "データの読み込みに失敗しました",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "台帳情報を取得できませんでした。接続を確認してもう一度お試しください。",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "台帳の読み込みに失敗しました",
     description: "Error title when ledger fails to load",
@@ -153,19 +111,6 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "前のページへ",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "ホーム",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "権限が不足しています",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "このページにアクセスするための権限がありません。アクセスについては台帳の管理者にお問い合わせください。",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "インポート",
@@ -219,10 +164,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "最終更新",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "台帳",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "台帳設定",
     description:
@@ -236,10 +177,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "台帳制限に達しました",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{max}個中{used}個の台帳を使用中",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "読み込み中...",
     description: "Loading state message",
@@ -247,10 +184,6 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "データを読み込み中...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "マイページ",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "さらにページ",
@@ -309,30 +242,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "ページネーション",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "後でもう一度お試しください",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "台帳ごとに最大5人のコラボレーターを追加",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "1つの代わりに最大5つの台帳を作成",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "2人の代わりに最大5人のコラボレーターを招待",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "高度な機能と優先サポートへのアクセス",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "プレミアム特典",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "前へ",
     description: "Text label for previous page button",
@@ -349,10 +258,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "保存中...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "検索",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "関連ページ",
     description: "Heading for related pages navigation section",
@@ -365,17 +270,9 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "日付を選択",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "設定",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "設定",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "共有",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "サイドバー",
@@ -412,14 +309,6 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "更新中...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "今すぐアップグレード",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "プレミアムにアップグレード",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Pro にアップグレード",
@@ -464,11 +353,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message:
       "{ledgerName}の貸借対照表を表示します。任意の時点での資産、負債、純資産を分析できます。",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "{ledgerName}のコラボレーターを管理します。ユーザーを招待してアクセス権限を制御できます。",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -550,26 +434,13 @@ const jaCommon: Record<string, TranslationEntry> = {
       "{ledgerName}にファイルをアップロードします。既存のBeancountファイルやドキュメントをインポートできます。",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "{ledgerName}のコミット履歴を表示します。台帳ファイルへの変更を時系列で追跡できます。",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "転記",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "アカウント",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "貸借対照表",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "コラボレーター",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "商品",
@@ -619,10 +490,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "クエリ",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "設定",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "統計",
     description: "Link label for statistics page",
@@ -651,10 +518,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "成功",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "金額",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "資産",
     description: "Assets category in accounting",
@@ -674,10 +537,6 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "詳細",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "ヘルプが必要ですか？",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "ヘルプとサポート",
@@ -707,17 +566,9 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "すべてクリア",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "商品",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "に変換",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "通貨",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "毎日",
@@ -817,10 +668,6 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "四半期",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "貯蓄",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "口座を検索...",
     description: "Placeholder for account search",
@@ -832,10 +679,6 @@ const jaCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "期間を選択",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "サマリー",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "期間",
@@ -954,6 +797,18 @@ const jaCommon: Record<string, TranslationEntry> = {
     message:
       "このセクションを表示できませんでした。ページの他の部分は引き続き利用できます。",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "コードをコピー",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "クリップボードにコピーしました",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "コピーに失敗しました",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

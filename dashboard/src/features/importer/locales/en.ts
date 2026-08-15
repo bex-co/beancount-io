@@ -10,30 +10,8 @@ const enImporter: Record<string, TranslationEntry> = {
   },
 
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "Smart Import is Live — Free Early Access",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "Dismiss banner",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "Import bank statements from PDFs, OFX files, and images in seconds with AI-powered parsing. Free for a limited time.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "Upload File",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "Upload your bank statement or transaction file. Supported formats: CSV, PDF, OFX, or images (PNG/JPG). Maximum 10MB.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message: "This file exceeds the 10 MB limit. Please try a smaller file.",
     description: "Error message when file size exceeds limit",
@@ -46,10 +24,6 @@ const enImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "Reading your file\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "Choose Different File",
@@ -129,10 +103,6 @@ const enImporter: Record<string, TranslationEntry> = {
     message: "Parse PDF, OFX, and image files automatically with AI",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "Processing...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "Upgrade Now",
     description: "Button text to start upgrade process",
@@ -199,10 +169,6 @@ const enImporter: Record<string, TranslationEntry> = {
     message: "Amount",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "Status",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "No data to display",
     description: "Empty state message when no transactions",
@@ -244,14 +210,6 @@ const enImporter: Record<string, TranslationEntry> = {
     message: "Click to edit",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "Error",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "Valid",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "Actions",
     description: "Table header for actions column",
@@ -259,10 +217,6 @@ const enImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "Delete row",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "Row deleted",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "No Transactions Found",
@@ -272,11 +226,6 @@ const enImporter: Record<string, TranslationEntry> = {
     message:
       "The file was successfully parsed, but no transaction data was found. Please check your file and try again.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message:
-      "Make sure your file contains transaction data in the correct format.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "Try Another File",
@@ -454,11 +403,6 @@ const enImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "AI categorization failed",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "Failed to categorize",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

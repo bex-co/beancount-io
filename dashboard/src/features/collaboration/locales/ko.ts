@@ -78,14 +78,6 @@ const koCollaboration: Record<string, TranslationEntry> = {
     message: "가입일",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "마지막 활동",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "없음",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "협력자 없음",
     description: "Empty state title when no collaborators exist",
@@ -137,10 +129,6 @@ const koCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "사용자 검색...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "알 수 없는 오류가 발생했습니다",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "알 수 없는 사용자",

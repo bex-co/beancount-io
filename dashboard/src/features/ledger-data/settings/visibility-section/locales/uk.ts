@@ -16,14 +16,6 @@ const ukVisibilitySection: Record<string, TranslationEntry> = {
     message: "Код для вбудовування",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "Копіювати URL",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "Не вдалося оновити видимість книги",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "Скопійовано!",
     description: "Confirmation message when text is copied",
@@ -44,11 +36,6 @@ const ukVisibilitySection: Record<string, TranslationEntry> = {
     message: "URL для спільного використання",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "Спільне використання доступне лише для публічних книг. Змініть видимість вашої книги вище, щоб увімкнути спільне використання.",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "Публічне спільне використання",
     description: "Subsection title for public sharing options",
@@ -62,9 +49,18 @@ const ukVisibilitySection: Record<string, TranslationEntry> = {
     message: "Приватний Ledger",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "Копіювати код",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "Переглянути на Beancount.io",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "Не вдалося скопіювати URL",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "Не вдалося скопіювати код",
+    description: "Toast when copying the embed code failed",
   },
 };
 

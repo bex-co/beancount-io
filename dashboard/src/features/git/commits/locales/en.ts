@@ -62,10 +62,6 @@ const enCommits: Record<string, TranslationEntry> = {
     message: "files",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "by",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

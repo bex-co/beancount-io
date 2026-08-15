@@ -13,10 +13,6 @@ const skFileEditor: Record<string, { message: string; description: string }> = {
     message: "Vymazať súbor",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Vymazanie súboru zlyhalo",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Načítanie obsahu súboru zlyhalo",
     description: "Error message when file content fails to load",

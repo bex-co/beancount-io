@@ -4,14 +4,6 @@ export interface TranslationEntry {
 }
 
 const skPullRequests: Record<string, TranslationEntry> = {
-  "pullRequests.reviewPR": {
-    message: "Skontrolovať žiadosť o zlúčenie",
-    description: "Page title for PR review page",
-  },
-  "pullRequests.createPR": {
-    message: "Vytvoriť žiadosť o zlúčenie",
-    description: "Page title for create PR page",
-  },
   "pullRequests.approve": {
     message: "Schváliť a zlúčiť",
     description: "Button text to approve and merge PR",
@@ -36,10 +28,6 @@ const skPullRequests: Record<string, TranslationEntry> = {
     message: "Chyba pri zatváraní žiadosti o zlúčenie",
     description: "Error message when PR rejection fails",
   },
-  "pullRequests.changes": {
-    message: "Zmeny",
-    description: "Label for diff viewer section",
-  },
   "pullRequests.filesChanged": {
     message: "Zmenené súbory",
     description: "Label for changed files section",
@@ -47,10 +35,6 @@ const skPullRequests: Record<string, TranslationEntry> = {
   "pullRequests.prNotFound": {
     message: "Žiadosť o zlúčenie nenájdená",
     description: "Error message when PR doesn't exist",
-  },
-  "pullRequests.loadingPR": {
-    message: "Načítanie podrobností žiadosti o zlúčenie...",
-    description: "Loading message while fetching PR",
   },
 };
 

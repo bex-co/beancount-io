@@ -8,10 +8,6 @@ const caDocuments: Record<string, TranslationEntry> = {
     message: "Documents",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "No s'han pogut carregar els documents",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "Filename",
     description: "Table column header for filename",

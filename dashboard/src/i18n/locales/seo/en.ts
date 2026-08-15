@@ -74,15 +74,6 @@ const enSeo: Record<string, TranslationEntry> = {
     message: "Balance Sheet - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "Manage collaborators for {ledgerName}. Invite users and control access permissions.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "Collaborators - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "Commodity list and prices for {ledgerName}. Track currencies, stocks, and other assets.",
@@ -296,15 +287,6 @@ const enSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "General Settings",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "Manage your Beancount account settings, preferences, and configurations.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "Account Settings",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

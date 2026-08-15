@@ -20,11 +20,6 @@ const frErrors: Record<string, TranslationEntry> = {
     message: "Échec du chargement des erreurs",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "Une erreur s'est produite lors du chargement des données d'erreur. Veuillez réessayer plus tard.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

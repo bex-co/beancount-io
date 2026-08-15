@@ -38,10 +38,6 @@ const enBalanceSheet: Record<string, TranslationEntry> = {
     message: "Equity Hierarchy",
     description: "Tab label for equity hierarchy section",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Monthly Net Worth",
-    description: "Net worth calculated monthly",
-  },
 };
 
 export default enBalanceSheet;

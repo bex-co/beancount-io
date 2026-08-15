@@ -59,14 +59,6 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
     message: "Voer grootboeknaam in",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Grootboek aanmaken mislukt",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Grootboek verwijderen mislukt",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Laden van grootboek mislukts",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
     message:
       "We konden uw grootboeken niet ophalen. Controleer uw verbinding en probeer het opnieuw.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Grootboek bijwerken mislukt",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Kan feed niet laden",

@@ -16,14 +16,6 @@ const koVisibilitySection: Record<string, TranslationEntry> = {
     message: "삽입 코드",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "URL 복사",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "장부 공개 설정 업데이트 실패",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "복사됨!",
     description: "Confirmation message when text is copied",
@@ -44,11 +36,6 @@ const koVisibilitySection: Record<string, TranslationEntry> = {
     message: "공유 가능한 URL",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "공유는 공개 장부에서만 가능합니다. 공유를 활성화하려면 위에서 장부 공개 설정을 변경하세요.",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "공개 공유",
     description: "Subsection title for public sharing options",
@@ -61,9 +48,18 @@ const koVisibilitySection: Record<string, TranslationEntry> = {
     message: "비공개 장부",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "코드 복사",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "Beancount.io에서 보기",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "URL 복사에 실패했습니다",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "코드 복사에 실패했습니다",
+    description: "Toast when copying the embed code failed",
   },
 };
 

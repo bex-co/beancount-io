@@ -82,14 +82,6 @@ const bgCollaboration: Record<string, TranslationEntry> = {
     message: "Присъединен",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "Последна активност",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "Никога",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "Няма сътрудници",
     description: "Empty state title when no collaborators exist",
@@ -141,10 +133,6 @@ const bgCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "Въведете за търсене на потребители...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "Възникна неизвестна грешка",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "Неизвестен потребител",

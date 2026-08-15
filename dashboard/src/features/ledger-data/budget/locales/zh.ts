@@ -80,16 +80,12 @@ const zhBudget: Record<string, TranslationEntry> = {
     message: "添加预算失败",
     description: "Error message when adding a budget fails",
   },
-  "page.budget.budgetFailedToLoad": {
-    message: "加载预算失败",
-    description: "Error message when budgets fail to load",
-  },
   "page.budget.budgetInterval": {
     message: "时间间隔",
     description: "Form label and table header for budget interval",
   },
   "page.budget.budgetIntervalAll": {
-    message: "[TODO] All",
+    message: "全部",
     description: "Budget interval filter option that shows all intervals",
   },
   "page.budget.budgetIntervalDaily": {
@@ -97,7 +93,7 @@ const zhBudget: Record<string, TranslationEntry> = {
     description: "Budget interval option - daily",
   },
   "page.budget.budgetIntervalFilterLabel": {
-    message: "[TODO] Interval",
+    message: "周期",
     description: "Label for the budget interval filter pill group",
   },
   "page.budget.budgetIntervalMonthly": {
@@ -153,23 +149,23 @@ const zhBudget: Record<string, TranslationEntry> = {
     description: "Chart series name for actual spending data",
   },
   "page.budget.budgetTimeSpanAll": {
-    message: "[TODO] All time",
+    message: "全部时间",
     description: "Time span filter option that shows all available history",
   },
   "page.budget.budgetTimeSpanFilterLabel": {
-    message: "[TODO] Time span",
+    message: "时间范围",
     description: "Label for the budget time span filter pill group",
   },
   "page.budget.budgetTimeSpanLast12Months": {
-    message: "[TODO] Last 12 months",
+    message: "过去 12 个月",
     description: "Time span filter option for the trailing 12 months",
   },
   "page.budget.budgetTimeSpanLastYear": {
-    message: "[TODO] Last year",
+    message: "去年",
     description: "Time span filter option for the previous calendar year",
   },
   "page.budget.budgetTimeSpanThisYear": {
-    message: "[TODO] This year",
+    message: "今年",
     description: "Time span filter option for the current calendar year",
   },
   "page.budget.budgetUnderBudget": {

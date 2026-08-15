@@ -27,7 +27,7 @@ export default function DeviceAuthPage() {
   const status = data?.getCliAuthSession?.status;
 
   if (status === CliAuthStatus.Expired) {
-    return <DeviceAuthCard error="Session expired or not found." />;
+    return <DeviceAuthCard error={t("auth.cliAuthSessionExpired")} />;
   }
 
   if (
@@ -41,9 +41,11 @@ export default function DeviceAuthPage() {
             <CheckCircle className="w-8 h-8 text-green-500" />
           </div>
           <div>
-            <p className="text-lg font-semibold">Authorization successful</p>
+            <p className="text-lg font-semibold">
+              {t("auth.cliAuthSuccessTitle")}
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
-              You can close this tab and return to the CLI.
+              {t("auth.cliAuthSuccessDescription")}
             </p>
           </div>
         </CardContent>
@@ -59,9 +61,11 @@ export default function DeviceAuthPage() {
             <XCircle className="w-8 h-8 text-muted-foreground" />
           </div>
           <div>
-            <p className="text-lg font-semibold">Access denied</p>
+            <p className="text-lg font-semibold">
+              {t("auth.cliAuthDeniedTitle")}
+            </p>
             <p className="text-sm text-muted-foreground mt-1">
-              You can close this tab.
+              {t("auth.cliAuthDeniedDescription")}
             </p>
           </div>
         </CardContent>

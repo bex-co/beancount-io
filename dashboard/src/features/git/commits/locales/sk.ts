@@ -62,10 +62,6 @@ const skCommits: Record<string, TranslationEntry> = {
     message: "súbory",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "od",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

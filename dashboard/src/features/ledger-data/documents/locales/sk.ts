@@ -8,10 +8,6 @@ const skDocuments: Record<string, TranslationEntry> = {
     message: "Dokumenty",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "Nepodarilo sa načítať dokumenty",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "Názov súboru",
     description: "Table column header for filename",

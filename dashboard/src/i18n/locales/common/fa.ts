@@ -12,25 +12,9 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "تراکنش‌ها",
     description: "Plural form of transaction",
   },
-  "common.adminPermissionRequired": {
-    message: "Admin permission is required to access this page.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "خطایی رخ داد",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "بازگشت",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "Back to Ledger",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "داشبورد Beancount",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "لوگوی Beancount",
@@ -56,19 +40,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "محدودیت همکاران به پایان رسید",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "شما به محدودیت {max} همکار رسیده‌اید. برای افزودن همکاران بیشتر به دفتر خود، به Premium ارتقا دهید.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{used} از {max} همکار",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "تأیید",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "کپی شد",
     description: "Status message indicating content was copied",
@@ -76,10 +47,6 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "کپی",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "حسابداری متنی ساده. قدرتمند، دقیق، قابل حسابرسی.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "حذف",
@@ -99,10 +66,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "تمام",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "ویرایش",
@@ -129,11 +92,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "بارگذاری داده‌ها ناموفق بود",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "امکان بازیابی اطلاعات دفتر شما وجود نداشت. لطفاً اتصال خود را بررسی کرده و دوباره تلاش کنید.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "بارگذاری دفتر ناموفق بود",
     description: "Error title when ledger fails to load",
@@ -153,19 +111,6 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "رفتن به صفحه قبل",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "خانه",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "Insufficient Permissions",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "You don't have the necessary permissions to access this page. Please contact the ledger administrator for access.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "واردکردن",
@@ -219,10 +164,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "آخرین به‌روزرسانی",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "دفتر کل",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "تنظیمات دفتر",
     description:
@@ -236,10 +177,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "محدودیت دفتر به پایان رسید",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{used} از {max} دفتر استفاده شده",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "در حال بارگذاری...",
     description: "Loading state message",
@@ -247,10 +184,6 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "در حال بارگذاری داده‌ها...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "من",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "صفحات بیشتر",
@@ -310,30 +243,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "صفحه‌بندی",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "لطفاً بعداً دوباره تلاش کنید",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "افزودن تا 5 همکار به هر دفتر",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "ایجاد تا 5 دفتر به جای 1",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "دعوت تا 5 همکار به جای 2",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "دسترسی به ویژگی‌های پیشرفته و پشتیبانی اولویت‌دار",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "مزایای Premium",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "قبلی",
     description: "Text label for previous page button",
@@ -350,10 +259,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "در حال ذخیره...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "جستجو",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "صفحات مرتبط",
     description: "Heading for related pages navigation section",
@@ -366,17 +271,9 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "انتخاب تاریخ",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "تنظیم",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "تنظیمات",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "اشتراک‌گذاری",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "نوار کناری",
@@ -413,14 +310,6 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "به‌روزرسانی...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "اکنون ارتقا دهید",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "ارتقا به Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "ارتقا به Pro",
@@ -465,11 +354,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message:
       "نمای ترازنامه برای {ledgerName}. تجزیه و تحلیل دارایی‌ها، بدهی‌ها و حقوق صاحبان سهام در هر نقطه زمانی.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "مدیریت همکاران برای {ledgerName}. دعوت کاربران و کنترل مجوزهای دسترسی.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -551,26 +435,13 @@ const faCommon: Record<string, TranslationEntry> = {
       "آپلود فایل‌ها به {ledgerName}. وارد کردن فایل‌ها یا اسناد موجود Beancount.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "نمای تاریخچه کامیت‌ها برای {ledgerName}. پیگیری تغییرات در فایل‌های دفتر کل در طول زمان.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "ردیف‌های حسابداری",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "حساب",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "ترازنامه",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "همکاران",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "کالاها",
@@ -620,10 +491,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "پرس و جو",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "تنظیمات",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "آمار",
     description: "Link label for statistics page",
@@ -652,10 +519,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "موفقیت",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "مبلغ",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "دارایی‌ها",
     description: "Assets category in accounting",
@@ -675,10 +538,6 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "پیشرفته",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "به کمک نیاز دارید؟",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "راهنما و پشتیبانی",
@@ -708,17 +567,9 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "پاک کردن همه",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "کالاها",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "تبدیل شده به",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "ارز",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "روزانه",
@@ -819,10 +670,6 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "فصلی",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "پس‌انداز",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "جستجوی حساب‌ها...",
     description: "Placeholder for account search",
@@ -834,10 +681,6 @@ const faCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "انتخاب دوره زمانی",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "خلاصه",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "زمان",
@@ -951,6 +794,18 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.errorBoundary.description": {
     message: "نمایش این بخش ممکن نشد. بقیه صفحه باید همچنان کار کند.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "کپی کد",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "در کلیپ‌بورد کپی شد",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "کپی ناموفق بود",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

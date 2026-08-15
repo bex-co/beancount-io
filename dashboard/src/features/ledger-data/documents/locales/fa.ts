@@ -8,10 +8,6 @@ const faDocuments: Record<string, TranslationEntry> = {
     message: "اسناد",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "بارگذاری اسناد ناموفق بود",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "نام فایل",
     description: "Table column header for filename",

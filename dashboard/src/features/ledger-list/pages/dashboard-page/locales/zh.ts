@@ -57,14 +57,6 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
     message: "输入账本名称",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "创建账本失败",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "删除账本失败",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "加载账本失败",
     description: "Error title when ledgers fail to load",
@@ -72,10 +64,6 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.failedToLoadLedgersDescription": {
     message: "无法获取你的账本。请检查你的连接后重试。",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "更新账本失败",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "加载动态失败",

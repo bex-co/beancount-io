@@ -81,14 +81,6 @@ const zhCollaboration: Record<string, TranslationEntry> = {
     message: "加入时间",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "最后活跃",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "从未",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "无协作者",
     description: "Empty state title when no collaborators exist",
@@ -140,10 +132,6 @@ const zhCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "输入以搜索用户...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "发生未知错误",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "未知用户",

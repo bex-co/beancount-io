@@ -10,10 +10,6 @@ const ptDirectoryBrowse: Record<
     message: "Baixar ZIP",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "Carregando conteúdo do diretório...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "Gerenciar Chaves SSH",
     description: "Menu item for SSH key management",

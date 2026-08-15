@@ -59,14 +59,6 @@ const caDashboardPage: Record<string, TranslationEntry> = {
     message: "Introduïu el nom del llibre",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Error en crear el llibre",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Error en eliminar el llibre",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Error en carregar els llibres",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const caDashboardPage: Record<string, TranslationEntry> = {
     message:
       "No s'han pogut recuperar els vostres llibres. Si us plau, comproveu la connexió i torneu-ho a intentar.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Error en actualitzar el llibre",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Error al carregar el feed",

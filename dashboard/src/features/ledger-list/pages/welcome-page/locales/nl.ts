@@ -13,10 +13,6 @@ const nlWelcomePage: Record<string, TranslationEntry> = {
     message: "Maak uw eerste grootboek aan",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Grootboek aanmaken mislukt",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Grootboek succesvol aangemaakt",
     description: "Toast notification when ledger created",

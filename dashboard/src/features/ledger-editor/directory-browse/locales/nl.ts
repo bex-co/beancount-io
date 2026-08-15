@@ -10,10 +10,6 @@ const nlDirectoryBrowse: Record<
     message: "ZIP downloaden",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "Mapinhoud laden...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "SSH-sleutels beheren",
     description: "Menu item for SSH key management",

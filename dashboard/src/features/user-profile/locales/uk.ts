@@ -4,18 +4,9 @@ export interface TranslationEntry {
 }
 
 const ukUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "Профіль користувача",
-    description: "Header title for user profile page",
-  },
   "userProfile.errorLoadingProfile": {
     message: "Помилка завантаження профілю",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "Щось пішло не так під час завантаження цього профілю. Будь ласка, спробуйте пізніше.",
-    description: "Generic error message for profile loading failures",
   },
   "userProfile.followError": {
     message: "Не вдалося підписатися на користувача",
@@ -24,14 +15,6 @@ const ukUserProfile: Record<string, TranslationEntry> = {
   "userProfile.followSuccess": {
     message: "Ви підписалися на {username}",
     description: "Success toast message after following a user",
-  },
-  "userProfile.followers": {
-    message: "підписники",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "підписки",
-    description: "Label for following count",
   },
   "userProfile.joined": {
     message: "Приєднався",
@@ -64,10 +47,6 @@ const ukUserProfile: Record<string, TranslationEntry> = {
   "userProfile.follow": {
     message: "Підписатися",
     description: "Button label to follow a user",
-  },
-  "userProfile.starredRepos": {
-    message: "репозиторії із зіркою",
-    description: "Label for starred repositories count",
   },
   "userProfile.unfollowError": {
     message: "Не вдалося відписатися від користувача",

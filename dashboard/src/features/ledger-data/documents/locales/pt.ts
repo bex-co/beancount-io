@@ -8,10 +8,6 @@ const ptDocuments: Record<string, TranslationEntry> = {
     message: "Documentos",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "Falha ao carregar documentos",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "Nome do Arquivo",
     description: "Table column header for filename",

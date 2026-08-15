@@ -13,10 +13,6 @@ const caFileEditor: Record<string, { message: string; description: string }> = {
     message: "Eliminar fitxer",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Error en eliminar el fitxer",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Error en carregar el contingut del fitxer",
     description: "Error message when file content fails to load",

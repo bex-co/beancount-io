@@ -59,14 +59,6 @@ const deDashboardPage: Record<string, TranslationEntry> = {
     message: "Hauptbuchname eingeben",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Hauptbuch konnte nicht erstellt werden",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Hauptbuch konnte nicht gelöscht werden",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Laden des Hauptbuchs fehlgeschlagens",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const deDashboardPage: Record<string, TranslationEntry> = {
     message:
       "Wir konnten Ihre Hauptbücher nicht abrufen. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Hauptbuch konnte nicht aktualisiert werden",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Fehler beim Laden des Feeds",

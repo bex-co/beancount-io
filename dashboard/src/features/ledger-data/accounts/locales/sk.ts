@@ -82,14 +82,6 @@ const skAccounts: Record<string, TranslationEntry> = {
     message: "Záznamy",
     description: "Table column header for entry count",
   },
-  "page.accounts.failedToLoadAccounts": {
-    message: "Nepodarilo sa načítať účty",
-    description: "Error message when accounts fail to load",
-  },
-  "page.accounts.loadingAccounts": {
-    message: "Načítavam účty...",
-    description: "Loading message when fetching accounts",
-  },
   "page.accounts.loadingEntryContent": {
     message: "Načítavam obsah záznamu...",
     description: "Loading message when fetching entry content in delete dialog",
@@ -120,10 +112,6 @@ const skAccounts: Record<string, TranslationEntry> = {
     message: "Dátum otvorenia",
     description: "Table column header and form label for account open date",
   },
-  "page.accounts.operation": {
-    message: "Operácia",
-    description: "Table column header for available operations on an account",
-  },
   "page.accounts.searchAccounts": {
     message: "Hľadať účty...",
     description: "Placeholder text for accounts search input",
@@ -135,6 +123,11 @@ const skAccounts: Record<string, TranslationEntry> = {
   "page.accounts.type": {
     message: "Type",
     description: "Table column header for type",
+  },
+  "page.accounts.accountClosedToast": {
+    message: "Účet {account} bol zavretý",
+    description:
+      "Toast shown after an account was closed; {account} is the account name",
   },
 };
 

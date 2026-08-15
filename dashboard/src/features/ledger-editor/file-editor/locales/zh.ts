@@ -12,10 +12,6 @@ const zhFileEditor: Record<string, { message: string; description: string }> = {
     message: "删除文件",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "删除文件失败",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "加载文件内容失败",
     description: "Error message when file content fails to load",

@@ -12,26 +12,9 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Transactions",
     description: "Plural form of transaction",
   },
-  "common.adminPermissionRequired": {
-    message:
-      "Une permission d'administrateur est requise pour accéder à cette page.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "Une erreur est survenue",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "Retour",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "Retour au grand livre",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Tableau de bord Beancount",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Logo Beancount",
@@ -57,19 +40,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Limite de collaborateurs atteinte",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "Vous avez atteint votre limite de {max} collaborateurs. Passez à Premium pour ajouter plus de collaborateurs à votre livre comptable.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{used} sur {max} collaborateurs",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "Confirmer",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "Copié",
     description: "Status message indicating content was copied",
@@ -77,10 +47,6 @@ const frCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "Copier",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "Comptabilité en texte brut. Puissant, Précis, Auditable.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "Supprimer",
@@ -100,10 +66,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "Terminé",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "Modifier",
@@ -130,11 +92,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Échec du chargement des données",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "Nous n'avons pas pu récupérer les informations de votre grand livre. Veuillez vérifier votre connexion et réessayer.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "Échec du chargement du grand livre",
     description: "Error title when ledger fails to load",
@@ -154,19 +111,6 @@ const frCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "Aller à la page précédente",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "Accueil",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "Permissions insuffisantes",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "Vous n'avez pas les permissions nécessaires pour accéder à cette page. Veuillez contacter l'administrateur du grand livre pour obtenir l'accès.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "Importer",
@@ -220,10 +164,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Dernière mise à jour",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "Grand livre",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "Paramètres du livre",
     description:
@@ -237,10 +177,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Limite de registres atteinte",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{used} sur {max} registres utilisés",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "chargement...",
     description: "Loading state message",
@@ -248,10 +184,6 @@ const frCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "Chargement des données...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "Moi",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "Plus de pages",
@@ -310,30 +242,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "pagination",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "Veuillez réessayer plus tard",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "Ajoutez jusqu'à 5 collaborateurs par livre",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "Créez jusqu'à 5 livres au lieu de 1",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "Invitez jusqu'à 5 collaborateurs au lieu de 2",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "Accès aux fonctionnalités avancées et support prioritaire",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "Avantages Premium",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "Précédent",
     description: "Text label for previous page button",
@@ -350,10 +258,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Enregistrement...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "Rechercher",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "Pages connexes",
     description: "Heading for related pages navigation section",
@@ -366,17 +270,9 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Sélectionner une date",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "Réglage",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "Paramètres",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "Partager",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "Barre latérale",
@@ -414,14 +310,6 @@ const frCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "mise à jour...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "Mettre à niveau maintenant",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "Passer à Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Passer à Pro",
@@ -466,11 +354,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message:
       "Vue du bilan pour {ledgerName}. Analysez les actifs, les passifs et les capitaux propres à tout moment.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "Gérez les collaborateurs pour {ledgerName}. Invitez des utilisateurs et contrôlez les autorisations d'accès.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -552,26 +435,13 @@ const frCommon: Record<string, TranslationEntry> = {
       "Téléchargez des fichiers vers {ledgerName}. Importez des fichiers ou documents Beancount existants.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "Vue de l'historique des commits pour {ledgerName}. Suivez les modifications apportées aux fichiers du grand livre au fil du temps.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "Écritures",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "Compte",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "Bilan",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "Collaborateurs",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "Marchandises",
@@ -621,10 +491,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Requête",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "Paramètres",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "Statistiques",
     description: "Link label for statistics page",
@@ -653,10 +519,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Succès",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "Montant",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "Actifs",
     description: "Assets category in accounting",
@@ -676,10 +538,6 @@ const frCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "Avancé",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "Besoin d’aide ?",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "Aide et assistance",
@@ -709,17 +567,9 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Effacer all",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "Matières premières",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "Converti en",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "Devise",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "Quotidien",
@@ -821,10 +671,6 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Trimestriel",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "Épargne",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "Rechercher des comptes...",
     description: "Placeholder for account search",
@@ -836,10 +682,6 @@ const frCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "Sélectionner la période",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "Résumé",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "Période",
@@ -958,6 +800,18 @@ const frCommon: Record<string, TranslationEntry> = {
     message:
       "Cette section n'a pas pu être affichée. Le reste de la page devrait continuer à fonctionner.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "Copier le code",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "Copié dans le presse-papiers",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "Échec de la copie",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

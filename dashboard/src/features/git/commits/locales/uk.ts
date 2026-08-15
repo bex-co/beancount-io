@@ -62,10 +62,6 @@ const ukCommits: Record<string, TranslationEntry> = {
     message: "файлів",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "від",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

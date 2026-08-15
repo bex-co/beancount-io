@@ -12,25 +12,9 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Actions",
     description: "Plural form of actions",
   },
-  "common.adminPermissionRequired": {
-    message: "Admin permission is required to access this page.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "An error occurred",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "Back",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "Back to Ledger",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Beancount Dashboard",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Beancount Logo",
@@ -56,19 +40,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Collaborator Limit Reached",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "You've reached your limit of {max} collaborators. Upgrade to Premium to add more collaborators to your ledger.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{used} of {max} collaborators",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "Confirm",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "Copied",
     description: "Status message indicating content was copied",
@@ -76,10 +47,6 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "Copy",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "Plain-Text Accounting. Powerful, Precise, Auditable.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "Delete",
@@ -99,10 +66,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "Done",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "Edit",
@@ -129,11 +92,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Failed to Load Data",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "We couldn't retrieve your ledger information. Please check your connection and try again.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "Failed to Load Ledger",
     description: "Error title when ledger fails to load",
@@ -153,19 +111,6 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "Go to previous page",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "Home",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "Insufficient Permissions",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "You don't have the necessary permissions to access this page. Please contact the ledger administrator for access.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "Import",
@@ -219,10 +164,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Last Updated",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "Ledger",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "Ledger Settings",
     description:
@@ -236,10 +177,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Ledger Limit Reached",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{used} of {max} ledgers used",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "loading...",
     description: "Loading state message",
@@ -247,10 +184,6 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "Loading data...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "Mine",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "More pages",
@@ -310,30 +243,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "pagination",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "Please try again later",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "Add up to 5 collaborators per ledger",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "Create up to 5 ledgers instead of 1",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "Invite up to 5 collaborators instead of 2",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "Access to advanced features and priority support",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "Premium Benefits",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "Previous",
     description: "Text label for previous page button",
@@ -350,10 +259,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Saving...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "Search",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "Related Pages",
     description: "Heading for related pages navigation section",
@@ -366,17 +271,9 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Select date",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "Setting",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "Settings",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "Share",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "Sidebar",
@@ -413,14 +310,6 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "updating...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "Upgrade Now",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "Upgrade to Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Upgrade to Pro",
@@ -465,11 +354,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message:
       "View the balance sheet for {ledgerName}. Analyze assets, liabilities, and equity at any point in time.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "Manage collaborators for {ledgerName}. Invite users and control access permissions.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -551,26 +435,13 @@ const enCommon: Record<string, TranslationEntry> = {
       "Upload files to {ledgerName}. Import existing Beancount files or documents.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "View commit history for {ledgerName}. Track changes to your ledger files over time.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "Postings",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "Account",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "Balance Sheet",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "Collaborators",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "Commodities",
@@ -619,10 +490,6 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.query": {
     message: "Query",
     description: "Link label for query page",
-  },
-  "common.relatedLinks.settings": {
-    message: "Settings",
-    description: "Link label for settings page",
   },
   "common.relatedLinks.statistics": {
     message: "Statistics",
@@ -681,26 +548,6 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Net Profit",
     description: "Label for net profit section",
   },
-  "common.savings": {
-    message: "Savings",
-    description: "Label for savings node in cash flow diagram",
-  },
-  "common.amount": {
-    message: "Amount",
-    description: "Label for amount column in tables",
-  },
-  "common.commodities": {
-    message: "Commodities",
-    description: "Label for commodities column in tables",
-  },
-  "common.currency": {
-    message: "Currency",
-    description: "Label for currency column in tables",
-  },
-  "common.summary": {
-    message: "Summary",
-    description: "Label for summary section or table",
-  },
   "common.overview": {
     message: "Overview",
     description: "Navigation label for overview/dashboard page",
@@ -712,10 +559,6 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "Advanced",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "Need Help?",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "Help and support",
@@ -960,6 +803,18 @@ const enCommon: Record<string, TranslationEntry> = {
     message:
       "This section couldn't be displayed. The rest of the page should still work.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "Copy code",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "Copied to clipboard",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "Failed to copy",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

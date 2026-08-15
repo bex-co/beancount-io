@@ -8,21 +8,9 @@ const bgAiAgent: Record<string, TranslationEntry> = {
     message: "Питай Beancount.io",
     description: "Title for AI chat feature",
   },
-  "aiAgent.subtitle": {
-    message: "AI-помощник за вашата счетоводна книга",
-    description: "Subtitle for AI chat feature",
-  },
   "aiAgent.placeholder": {
     message: "Попитайте ме за Beancount...",
     description: "Input placeholder text",
-  },
-  "aiAgent.send": {
-    message: "Изпрати",
-    description: "Send button text",
-  },
-  "aiAgent.sending": {
-    message: "Изпращане...",
-    description: "Loading state text",
   },
   "aiAgent.welcome": {
     message:
@@ -35,14 +23,6 @@ const bgAiAgent: Record<string, TranslationEntry> = {
       "Какво искате да знаете?",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.you": {
-    message: "Вие",
-    description: "Label for user messages",
-  },
-  "aiAgent.assistant": {
-    message: "AI Асистент",
-    description: "Label for AI assistant messages",
-  },
   "aiAgent.prCreated": {
     message: "✓ Pull Request създаден",
     description: "Message shown when PR is created",
@@ -50,26 +30,6 @@ const bgAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.viewPR": {
     message: "Виж PR #",
     description: "Link text to view pull request",
-  },
-  "aiAgent.status.connecting": {
-    message: "Мисля...",
-    description: "Status badge text when connecting to AI",
-  },
-  "aiAgent.status.streaming": {
-    message: "Стрийминг...",
-    description: "Status badge text when receiving AI response",
-  },
-  "aiAgent.status.finalizing": {
-    message: "Финализиране...",
-    description: "Status badge text when finalizing AI response",
-  },
-  "aiAgent.status.complete": {
-    message: "Завършено",
-    description: "Status badge text when AI response is complete",
-  },
-  "aiAgent.status.error": {
-    message: "Грешка",
-    description: "Status badge text when an error occurs",
   },
   "aiAgent.quickAskPlaceholder": {
     message: "Попитайте мене нещо за тази главна книга...",
@@ -159,19 +119,6 @@ const bgAiAgent: Record<string, TranslationEntry> = {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
   },
-  "aiAgent.editApproval.binaryContent": {
-    message: "(binary content)",
-    description:
-      "Placeholder shown when file content is binary (image, PDF, etc.)",
-  },
-  "aiAgent.readFile.label": {
-    message: "Read",
-    description: "Label on the read-file tool step",
-  },
-  "aiAgent.listFiles.label": {
-    message: "List",
-    description: "Label on the list-files tool step",
-  },
   "aiAgent.suggestionsTitle": {
     message: "Опитайте да попитате:",
     description:
@@ -212,6 +159,59 @@ const bgAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.retry": {
     message: "Опитай отново",
     description: "Button to resubmit the last question after an error",
+  },
+  "aiAgent.receiptApproval.title": {
+    message: "Записване на транзакция от касова бележка",
+    description: "Title of the receipt transaction approval card",
+  },
+  "aiAgent.receiptApproval.preparing": {
+    message: "Подготвяне на транзакцията…",
+    description: "Status while the receipt transaction is being prepared",
+  },
+  "aiAgent.receiptApproval.recorded": {
+    message: "Транзакцията е записана",
+    description: "Status after the receipt transaction was recorded",
+  },
+  "aiAgent.receiptApproval.failed": {
+    message: "Неуспешно записване на транзакцията",
+    description: "Error when recording the receipt transaction failed",
+  },
+  "aiAgent.receiptApproval.date": {
+    message: "Дата",
+    description: "Label for the receipt transaction date",
+  },
+  "aiAgent.receiptApproval.payee": {
+    message: "Получател",
+    description: "Label for the receipt transaction payee",
+  },
+  "aiAgent.receiptApproval.amount": {
+    message: "Сума",
+    description: "Label for the receipt transaction amount",
+  },
+  "aiAgent.receiptApproval.expense": {
+    message: "Разход",
+    description: "Label for the receipt expense account",
+  },
+  "aiAgent.receiptApproval.payment": {
+    message: "Плащане",
+    description: "Label for the receipt payment account",
+  },
+  "aiAgent.attachFile": {
+    message: "Прикачване на файл",
+    description: "Aria label for the attach file button in the chat input",
+  },
+  "aiAgent.removeAttachment": {
+    message: "Премахване на {fileName}",
+    description:
+      "Aria label for removing a staged attachment; {fileName} is the attachment file name",
+  },
+  "aiAgent.attachmentFailed": {
+    message: "неуспешно",
+    description: "Chip label when an attachment failed to upload",
+  },
+  "aiAgent.scrollToBottom": {
+    message: "Превъртане до края",
+    description: "Aria label for the scroll to bottom button in the chat",
   },
 };
 

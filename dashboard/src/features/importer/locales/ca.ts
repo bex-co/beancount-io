@@ -5,30 +5,8 @@ export interface TranslationEntry {
 
 const caImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "Importació intel·ligent disponible — Accés anticipat gratuït",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "Tancar el bàner",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "Importeu extractes bancaris de PDF, fitxers OFX i imatges en segons amb anàlisi amb IA. Gratuït per temps limitat.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "Pujar fitxer",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "Pengeu el vostre extracte bancari o fitxer de transaccions. Formats compatibles: CSV, PDF, OFX o imatges (PNG/JPG). Màxim 10MB.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message:
       "Aquest fitxer supera el límit de 10 MB. Proveu amb un fitxer més petit.",
@@ -42,10 +20,6 @@ const caImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "Llegint el vostre fitxer\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "Tria un altre fitxer",
@@ -126,10 +100,6 @@ const caImporter: Record<string, TranslationEntry> = {
     message: "Analitzeu fitxers PDF, OFX i imatges automàticament amb IA",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "Processant...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "Actualitzar ara",
     description: "Button text to start upgrade process",
@@ -198,10 +168,6 @@ const caImporter: Record<string, TranslationEntry> = {
     message: "Import",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "Estat",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "No hi ha dades per mostrar",
     description: "Empty state message when no transactions",
@@ -243,14 +209,6 @@ const caImporter: Record<string, TranslationEntry> = {
     message: "Feu clic per editar",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "Error",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "Vàlid",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "Accions",
     description: "Table header for actions column",
@@ -258,10 +216,6 @@ const caImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "Elimina la fila",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "Fila eliminada",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "No s'han trobat transaccions",
@@ -271,11 +225,6 @@ const caImporter: Record<string, TranslationEntry> = {
     message:
       "El fitxer s'ha analitzat correctament, però no s'han trobat dades de transaccions. Si us plau, reviseu el vostre fitxer i torneu-ho a intentar.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message:
-      "Assegureu-vos que el vostre fitxer conté dades de transaccions en el format correcte.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "Proveu un altre fitxer",
@@ -454,11 +403,6 @@ const caImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "La categorització amb IA ha fallat",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "No s'ha pogut categoritzar",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

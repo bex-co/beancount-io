@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const skAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "Už máte účet? Prihláste sa",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "Už máte účet?",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const skAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Overujem...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Chyba autentifikácie",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "Počas autentifikácie nastala chyba",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "Autentifikácia zlyhala",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Späť na prihlásenie",
@@ -104,11 +88,6 @@ const skAuth: Record<string, TranslationEntry> = {
     message:
       "Odoslali sme odkaz na resetovanie hesla na vašu e-mailovú adresu. Skontrolujte si prosím doručenú poštu a postupujte podľa pokynov.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message:
-      "Zadajte svoje prihlasovacie údaje pre prístup k ovládaciemu panelu",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "Zadajte svoje údaje pre začiatok práce s ovládacím panelom",
@@ -196,10 +175,6 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "Prihlásiť / Registrovať",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "Počas prihlásenia došlo k chybe",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "Prihlásenie zlyhalo",
     description: "Error title when login fails",
@@ -207,18 +182,6 @@ const skAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Odhlásiť",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Zrušiť",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Odhlásiť",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "Ste si istí, že sa chcete odhlásiť?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "Obľúbený používateľmi",
@@ -310,39 +273,13 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "Presmerovávam na prihlasovaciu stránku...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "Počas registrácie došlo k chybe",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "Registrácia zlyhala",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "Pri odosielaní e-mailu na resetovanie hesla došlo k chybe",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Resetovať heslo",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Resetovať heslo",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Zadajte svoju e-mailovú adresu a pošleme vám odkaz na resetovanie hesla.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "E-mail bol odoslaný na vašu adresu. Skontrolujte si prosím e-mail a postupujte podľa pokynov na resetovanie hesla.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "Pri resetovaní hesla došlo k chybe",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Resetovať heslo",
@@ -363,10 +300,6 @@ const skAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Odoslať odkaz na resetovanie",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Odoslať e-mail na resetovanie hesla",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Odosielam...",
@@ -421,10 +354,6 @@ const skAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Používateľské meno",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "Používateľské meno môže obsahovať len písmená a čísla",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -484,14 +413,6 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -505,5 +426,62 @@ const skAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "Autorizovať prístup CLI",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "Beancount CLI žiada o prístup k vášmu účtu.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "Toto umožní CLI:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Čítať a zapisovať vaše knihy",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Pristupovať k informáciám o vašom účte",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Autorizovať",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "Autorizuje sa...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Zamietnuť",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "Zamieta sa...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "Relácia vypršala alebo sa nenašla.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Autorizácia úspešná",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "Túto kartu môžete zavrieť a vrátiť sa do CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Prístup zamietnutý",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "Túto kartu môžete zavrieť.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default skAuth;

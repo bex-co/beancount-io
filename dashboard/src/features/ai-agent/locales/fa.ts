@@ -8,21 +8,9 @@ const faAiAgent: Record<string, TranslationEntry> = {
     message: "از Beancount.io بپرسید",
     description: "Title for AI chat feature",
   },
-  "aiAgent.subtitle": {
-    message: "کمک هوش مصنوعی برای دفتر کل شما",
-    description: "Subtitle for AI chat feature",
-  },
   "aiAgent.placeholder": {
     message: "هر سوالی درباره Beancount بپرسید...",
     description: "Input placeholder text",
-  },
-  "aiAgent.send": {
-    message: "ارسال",
-    description: "Send button text",
-  },
-  "aiAgent.sending": {
-    message: "در حال ارسال...",
-    description: "Loading state text",
   },
   "aiAgent.welcome": {
     message:
@@ -35,14 +23,6 @@ const faAiAgent: Record<string, TranslationEntry> = {
       "چه چیزی می‌خواهید بدانید؟",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.you": {
-    message: "شما",
-    description: "Label for user messages",
-  },
-  "aiAgent.assistant": {
-    message: "دستیار هوش مصنوعی",
-    description: "Label for AI assistant messages",
-  },
   "aiAgent.prCreated": {
     message: "✓ Pull Request ایجاد شد",
     description: "Message shown when PR is created",
@@ -50,26 +30,6 @@ const faAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.viewPR": {
     message: "مشاهده PR #",
     description: "Link text to view pull request",
-  },
-  "aiAgent.status.connecting": {
-    message: "در حال فکر کردن...",
-    description: "Status badge text when connecting to AI",
-  },
-  "aiAgent.status.streaming": {
-    message: "در حال جریان...",
-    description: "Status badge text when receiving AI response",
-  },
-  "aiAgent.status.finalizing": {
-    message: "در حال نهایی سازی...",
-    description: "Status badge text when finalizing AI response",
-  },
-  "aiAgent.status.complete": {
-    message: "تکمیل شد",
-    description: "Status badge text when AI response is complete",
-  },
-  "aiAgent.status.error": {
-    message: "خطا",
-    description: "Status badge text when an error occurs",
   },
   "aiAgent.quickAskPlaceholder": {
     message: "هر چیزی در مورد این دفتر کل بپرسید...",
@@ -159,19 +119,6 @@ const faAiAgent: Record<string, TranslationEntry> = {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
   },
-  "aiAgent.editApproval.binaryContent": {
-    message: "(binary content)",
-    description:
-      "Placeholder shown when file content is binary (image, PDF, etc.)",
-  },
-  "aiAgent.readFile.label": {
-    message: "Read",
-    description: "Label on the read-file tool step",
-  },
-  "aiAgent.listFiles.label": {
-    message: "List",
-    description: "Label on the list-files tool step",
-  },
   "aiAgent.suggestionsTitle": {
     message: "امتحان کنید:",
     description:
@@ -212,6 +159,59 @@ const faAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.retry": {
     message: "تلاش مجدد",
     description: "Button to resubmit the last question after an error",
+  },
+  "aiAgent.receiptApproval.title": {
+    message: "ثبت تراکنش رسید",
+    description: "Title of the receipt transaction approval card",
+  },
+  "aiAgent.receiptApproval.preparing": {
+    message: "در حال آماده‌سازی تراکنش…",
+    description: "Status while the receipt transaction is being prepared",
+  },
+  "aiAgent.receiptApproval.recorded": {
+    message: "تراکنش ثبت شد",
+    description: "Status after the receipt transaction was recorded",
+  },
+  "aiAgent.receiptApproval.failed": {
+    message: "ثبت تراکنش ناموفق بود",
+    description: "Error when recording the receipt transaction failed",
+  },
+  "aiAgent.receiptApproval.date": {
+    message: "تاریخ",
+    description: "Label for the receipt transaction date",
+  },
+  "aiAgent.receiptApproval.payee": {
+    message: "دریافت‌کننده",
+    description: "Label for the receipt transaction payee",
+  },
+  "aiAgent.receiptApproval.amount": {
+    message: "مبلغ",
+    description: "Label for the receipt transaction amount",
+  },
+  "aiAgent.receiptApproval.expense": {
+    message: "هزینه",
+    description: "Label for the receipt expense account",
+  },
+  "aiAgent.receiptApproval.payment": {
+    message: "پرداخت",
+    description: "Label for the receipt payment account",
+  },
+  "aiAgent.attachFile": {
+    message: "پیوست فایل",
+    description: "Aria label for the attach file button in the chat input",
+  },
+  "aiAgent.removeAttachment": {
+    message: "حذف {fileName}",
+    description:
+      "Aria label for removing a staged attachment; {fileName} is the attachment file name",
+  },
+  "aiAgent.attachmentFailed": {
+    message: "ناموفق",
+    description: "Chip label when an attachment failed to upload",
+  },
+  "aiAgent.scrollToBottom": {
+    message: "پیمایش به پایین",
+    description: "Aria label for the scroll to bottom button in the chat",
   },
 };
 

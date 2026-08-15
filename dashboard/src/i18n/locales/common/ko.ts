@@ -12,25 +12,9 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "작업",
     description: "Plural form of actions",
   },
-  "common.adminPermissionRequired": {
-    message: "이 페이지에 접근하려면 관리자 권한이 필요합니다.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "오류가 발생했습니다",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "뒤로",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "장부로 돌아가기",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Beancount 대시보드",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Beancount 로고",
@@ -56,19 +40,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "협력자 제한에 도달했습니다",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "{max}명의 협력자 제한에 도달했습니다. 프리미엄으로 업그레이드하면 장부에 더 많은 협력자를 추가할 수 있습니다.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{max}명 중 {used}명의 협력자",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "확인",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "복사됨",
     description: "Status message indicating content was copied",
@@ -76,10 +47,6 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "복사",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "일반 텍스트 회계. 강력하고, 정확하며, 감사 가능합니다.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "삭제",
@@ -99,10 +66,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "완료",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "편집",
@@ -129,11 +92,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "데이터 불러오기 실패",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "장부 정보를 가져올 수 없습니다. 연결을 확인하고 다시 시도해 주세요.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "장부 불러오기 실패",
     description: "Error title when ledger fails to load",
@@ -153,19 +111,6 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "이전 페이지로",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "홈",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "권한이 부족합니다",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "이 페이지에 접근하기 위한 필요한 권한이 없습니다. 접근에 대해 장부 관리자에게 문의하세요.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "가져오기",
@@ -219,10 +164,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "마지막 업데이트",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "장부",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "장부 설정",
     description:
@@ -236,10 +177,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "장부 제한에 도달했습니다",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{max}개 중 {used}개의 장부 사용 중",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "불러오는 중...",
     description: "Loading state message",
@@ -247,10 +184,6 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "데이터 불러오는 중...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "내 것",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "더 많은 페이지",
@@ -309,30 +242,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "페이지 탐색",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "나중에 다시 시도해 주세요",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "장부당 최대 5명의 협력자 추가",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "1개 대신 최대 5개의 장부 생성",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "2명 대신 최대 5명의 협력자 초대",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "고급 기능 및 우선 지원 접근",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "프리미엄 혜택",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "이전",
     description: "Text label for previous page button",
@@ -349,10 +258,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "저장 중...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "검색",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "관련 페이지",
     description: "Heading for related pages navigation section",
@@ -365,17 +270,9 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "날짜 선택",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "설정",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "설정",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "공유",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "사이드바",
@@ -412,14 +309,6 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "업데이트 중...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "지금 업그레이드",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "프리미엄으로 업그레이드",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Pro로 업그레이드",
@@ -464,11 +353,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message:
       "{ledgerName}의 재무상태표를 봅니다. 어느 시점에서든 자산, 부채, 자본을 분석할 수 있습니다.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "{ledgerName}의 협력자를 관리합니다. 사용자를 초대하고 접근 권한을 제어할 수 있습니다.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -550,26 +434,13 @@ const koCommon: Record<string, TranslationEntry> = {
       "{ledgerName}에 파일을 업로드합니다. 기존 Beancount 파일이나 문서를 가져올 수 있습니다.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "{ledgerName}의 커밋 내역을 봅니다. 장부 파일에 대한 변경 사항을 시간별로 추적할 수 있습니다.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "전기",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "계정",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "재무상태표",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "협력자",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "상품",
@@ -619,10 +490,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "쿼리",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "설정",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "통계",
     description: "Link label for statistics page",
@@ -651,10 +518,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "성공",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "금액",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "자산",
     description: "Assets category in accounting",
@@ -674,10 +537,6 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "고급",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "도움이 필요하신가요?",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "도움말 및 지원",
@@ -707,17 +566,9 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "모두 지우기",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "상품",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "로 변환",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "통화",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "매일",
@@ -818,10 +669,6 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "분기",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "저축",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "계정 검색...",
     description: "Placeholder for account search",
@@ -833,10 +680,6 @@ const koCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "기간 선택",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "요약",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "기간",
@@ -949,6 +792,18 @@ const koCommon: Record<string, TranslationEntry> = {
     message:
       "이 섹션을 표시할 수 없습니다. 페이지의 나머지 부분은 계속 사용할 수 있습니다.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "코드 복사",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "클립보드에 복사되었습니다",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "복사에 실패했습니다",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

@@ -22,10 +22,6 @@ const deIncomeStatement: Record<string, TranslationEntry> = {
       "Verfolgen Sie {ledgerName} Erträge über verschiedene Währungen im Zeitverlauf",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Monatliches Nettoeinkommen",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message:
       "Verfolgen Sie {ledgerName} Nettogewinn über verschiedene Währungen im Zeitverlauf",

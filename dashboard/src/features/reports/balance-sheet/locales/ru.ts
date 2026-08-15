@@ -31,10 +31,6 @@ const ruBalanceSheet: Record<string, TranslationEntry> = {
       "Отслеживание {ledgerName} обязательств по различным товарам со временем",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Месячный чистый капитал",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message:
       "Отслеживание {ledgerName} чистой стоимости по различным товарам со временем",

@@ -10,10 +10,6 @@ const skDirectoryBrowse: Record<
     message: "Stiahnuť ZIP",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "Načítavam obsah priečinka...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "Spravovať SSH kľúče",
     description: "Menu item for SSH key management",

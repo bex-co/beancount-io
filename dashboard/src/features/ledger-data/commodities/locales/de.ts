@@ -12,11 +12,6 @@ const deCommodities: Record<string, TranslationEntry> = {
     message: "Währungen konnten nicht geladen werden",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "Beim Laden der Währungsdaten ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "Keine Währungen gefunden",
     description: "Empty state title when no commodities exist",

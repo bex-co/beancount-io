@@ -28,10 +28,6 @@ const skBalanceSheet: Record<string, TranslationEntry> = {
     message: "Sledujte {ledgerName} pasíva v rôznych menách v čase",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Mesačné čisté bohatstvo",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message: "Sledujte {ledgerName} čisté imanie v rôznych menách v čase",
     description: "Description for net worth chart",

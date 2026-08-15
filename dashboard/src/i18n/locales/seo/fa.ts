@@ -82,15 +82,6 @@ const faSeo: Record<string, TranslationEntry> = {
     message: "ترازنامه - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "همکاران را برای {ledgerName} مدیریت کنید. کاربران را دعوت کنید و مجوزهای دسترسی را کنترل کنید.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "همکاران - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "فهرست کالاها و قیمت‌ها برای {ledgerName}. ارزها، سهام و دارایی‌های دیگر را پیگیری کنید.",
@@ -331,15 +322,6 @@ const faSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "تنظیمات عمومی",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "تنظیمات، ترجیحات و پیکربندی‌های حساب Beancount خود را مدیریت کنید.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "تنظیمات حساب",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

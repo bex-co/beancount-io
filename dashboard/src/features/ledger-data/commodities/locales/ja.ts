@@ -12,11 +12,6 @@ const jaCommodities: Record<string, TranslationEntry> = {
     message: "商品の読み込みに失敗しました",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "商品データの読み込み中にエラーが発生しました。後でもう一度お試しください。",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "商品が見つかりません",
     description: "Empty state title when no commodities exist",

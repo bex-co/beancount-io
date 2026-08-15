@@ -4,14 +4,6 @@ export interface TranslationEntry {
 }
 
 const faPullRequests: Record<string, TranslationEntry> = {
-  "pullRequests.reviewPR": {
-    message: "بررسی درخواست ادغام",
-    description: "Page title for PR review page",
-  },
-  "pullRequests.createPR": {
-    message: "ایجاد درخواست ادغام",
-    description: "Page title for create PR page",
-  },
   "pullRequests.approve": {
     message: "تایید و ادغام",
     description: "Button text to approve and merge PR",
@@ -36,10 +28,6 @@ const faPullRequests: Record<string, TranslationEntry> = {
     message: "خطا در بستن درخواست ادغام",
     description: "Error message when PR rejection fails",
   },
-  "pullRequests.changes": {
-    message: "تغییرات",
-    description: "Label for diff viewer section",
-  },
   "pullRequests.filesChanged": {
     message: "فایل‌های تغییر یافته",
     description: "Label for changed files section",
@@ -47,10 +35,6 @@ const faPullRequests: Record<string, TranslationEntry> = {
   "pullRequests.prNotFound": {
     message: "درخواست ادغام یافت نشد",
     description: "Error message when PR doesn't exist",
-  },
-  "pullRequests.loadingPR": {
-    message: "بارگذاری جزئیات درخواست ادغام...",
-    description: "Loading message while fetching PR",
   },
 };
 

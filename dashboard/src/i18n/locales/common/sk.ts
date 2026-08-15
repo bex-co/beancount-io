@@ -12,26 +12,9 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Transakcie",
     description: "Plural form of transaction",
   },
-  "common.adminPermissionRequired": {
-    message:
-      "Pre prístup k tejto stránke je potrebné oprávnenie administrátora.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "Nastala chyba",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "Späť",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "Späť na Knihu",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Beancount Dashboard",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Beancount logo",
@@ -57,19 +40,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Limit spolupracovníkov dosiahnutý",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "Dosiahli ste limit {max} spolupracovníkov. Upgradujte na Premium, aby ste mohli pridať viac spolupracovníkov do vašej knihy.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{used} z {max} spolupracovníkov",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "Potvrdiť",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "Skopírované",
     description: "Status message indicating content was copied",
@@ -77,10 +47,6 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "Kopírovať",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "Účtovníctvo v čistom texte. Výkonné, Presné, Auditovateľné.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "Vymazať",
@@ -100,10 +66,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "Hotovo",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "Upraviť",
@@ -130,11 +92,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Nepodarilo sa načítať údaje",
     description: "Generic failed to load data message",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "Nepodarilo sa načítať informácie o vašej knihe. Skontrolujte prosím svoje pripojenie a skúste to znova.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "Načítanie knihy zlyhalo",
     description: "Error title when ledger fails to load",
@@ -154,19 +111,6 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "Prejsť na predchádzajúcu stranu",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "Domov",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "Nedostatočné oprávnenia",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "Nemáte potrebné oprávnenia na prístup k tejto stránke. Kontaktujte prosím správcu knihy.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "Importovať",
@@ -220,10 +164,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Naposledy aktualizované",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "Kniha",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "Nastavenia knihy",
     description:
@@ -237,10 +177,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Limit kníh dosiahnutý",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{used} z {max} kníh použitých",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "načítavanie...",
     description: "Loading state message",
@@ -248,10 +184,6 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "Načítavam údaje...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "Moje",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "Viac strán",
@@ -311,30 +243,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "stránkovanie",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "Prosím skúste to znova neskôr",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "Pridajte až 5 spolupracovníkov na knihu",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "Vytvorte až 5 kníh namiesto 1",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "Pozvite až 5 spolupracovníkov namiesto 2",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "Prístup k pokročilým funkciám a prioritnej podpore",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "Premium Výhody",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "Predchádzajúca",
     description: "Text label for previous page button",
@@ -351,10 +259,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Ukladanie...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "Hľadať",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "Súvisiace stránky",
     description: "Heading for related pages navigation section",
@@ -367,17 +271,9 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Vyberte dátum",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "Nastavenie",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "Nastavenia",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "Zdieľať",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "Postranný panel",
@@ -414,14 +310,6 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "aktualizácia...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "Upgradovať Teraz",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "Upgradovať na Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Prejsť na Pro",
@@ -466,11 +354,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message:
       "Zobrazenie súvahy pre {ledgerName}. Analyzujte aktíva, záväzky a vlastné imanie v ktoromkoľvek bode v čase.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "Spravujte spolupracovníkov pre {ledgerName}. Pozývajte používateľov a kontrolujte prístupové oprávnenia.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -552,26 +435,13 @@ const skCommon: Record<string, TranslationEntry> = {
       "Nahrajte súbory do {ledgerName}. Importujte existujúce súbory alebo dokumenty Beancount.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "Zobrazenie histórie commitov pre {ledgerName}. Sledujte zmeny vo vašich súboroch knihy v priebehu času.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "Účtovné zápisy",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "Účet",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "Súvaha",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "Spolupracovníci",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "Komodity",
@@ -621,10 +491,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Dopyt",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "Nastavenia",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "Štatistiky",
     description: "Link label for statistics page",
@@ -653,10 +519,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Úspech",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "Suma",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "Aktíva",
     description: "Label for assets section",
@@ -676,10 +538,6 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "Rozšírené",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "Potrebujete pomoc?",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "Pomoc a podpora",
@@ -709,17 +567,9 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Vymazať všetko",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "Komodity",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "Konvertované na",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "Mena",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "Denne",
@@ -820,10 +670,6 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Štvrťročne",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "Úspory",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "Hľadať účty...",
     description: "Placeholder for account search",
@@ -835,10 +681,6 @@ const skCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "Vyberte časové obdobie",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "Súhrn",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "Čas",
@@ -954,6 +796,18 @@ const skCommon: Record<string, TranslationEntry> = {
     message:
       "Túto sekciu sa nepodarilo zobraziť. Zvyšok stránky by mal fungovať.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "Kopírovať kód",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "Skopírované do schránky",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "Kopírovanie zlyhalo",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

@@ -4,14 +4,6 @@ export interface TranslationEntry {
 }
 
 const ptPullRequests: Record<string, TranslationEntry> = {
-  "pullRequests.reviewPR": {
-    message: "Revisar solicitação de mesclagem",
-    description: "Page title for PR review page",
-  },
-  "pullRequests.createPR": {
-    message: "Criar solicitação de mesclagem",
-    description: "Page title for create PR page",
-  },
   "pullRequests.approve": {
     message: "Aprovar e mesclar",
     description: "Button text to approve and merge PR",
@@ -36,10 +28,6 @@ const ptPullRequests: Record<string, TranslationEntry> = {
     message: "Falha ao fechar solicitação de mesclagem",
     description: "Error message when PR rejection fails",
   },
-  "pullRequests.changes": {
-    message: "Alterações",
-    description: "Label for diff viewer section",
-  },
   "pullRequests.filesChanged": {
     message: "Arquivos alterados",
     description: "Label for changed files section",
@@ -47,10 +35,6 @@ const ptPullRequests: Record<string, TranslationEntry> = {
   "pullRequests.prNotFound": {
     message: "Solicitação de mesclagem não encontrada",
     description: "Error message when PR doesn't exist",
-  },
-  "pullRequests.loadingPR": {
-    message: "Carregando detalhes da solicitação de mesclagem...",
-    description: "Loading message while fetching PR",
   },
 };
 

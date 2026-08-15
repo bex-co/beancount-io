@@ -83,15 +83,6 @@ const skSeo: Record<string, TranslationEntry> = {
     message: "Súvaha - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "Spravujte spolupracovníkov pre {ledgerName}. Pozývajte používateľov a ovládajte prístupové oprávnenia.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "Spolupracovníci - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "Zoznam komodít a ceny pre {ledgerName}. Sledujte meny, akcie a ďalšie aktíva.",
@@ -332,15 +323,6 @@ const skSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "Všeobecné Nastavenia",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "Spravujte nastavenia, preferencie a konfigurácie svojho účtu Beancount.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "Nastavenia Účtu",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

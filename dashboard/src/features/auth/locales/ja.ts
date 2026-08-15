@@ -1,10 +1,6 @@
 import type { TranslationEntry } from "@/i18n";
 
 const jaAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "アカウントをお持ちですか？ サインイン",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "すでにアカウントをお持ちですか？",
     description: "Prompt asking if user has existing account",
@@ -12,18 +8,6 @@ const jaAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "認証中...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "認証エラー",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "認証中にエラーが発生しました",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "認証に失敗しました",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "サインインに戻る",
@@ -89,10 +73,6 @@ const jaAuth: Record<string, TranslationEntry> = {
     message:
       "パスワードリセットのリンクをメールアドレスに送信しました。受信トレイを確認し、手順に従ってパスワードをリセットしてください。",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "ダッシュボードにアクセスするための認証情報を入力してください",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "ダッシュボードを始めるために詳細を入力してください",
@@ -176,10 +156,6 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "ログイン / サインアップ",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "ログイン中にエラーが発生しました",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "ログインに失敗しました",
     description: "Error title when login fails",
@@ -187,18 +163,6 @@ const jaAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "ログアウト",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "キャンセル",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "ログアウト",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "本当にログアウトしますか？",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.newPassword": {
     message: "新しいパスワード",
@@ -250,39 +214,13 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "ログインページにリダイレクト中...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "登録中にエラーが発生しました",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "登録に失敗しました",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "パスワードリセットメールの送信中にエラーが発生しました",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "パスワードをリセット",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "パスワードをリセット",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "メールアドレスを入力すると、パスワードリセット用のリンクをお送りします。",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "メールアドレスにメールを送信しました。メールを確認してパスワードをリセットしてください。",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "パスワードのリセット中にエラーが発生しました",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "パスワードをリセットする",
@@ -295,10 +233,6 @@ const jaAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "リセットリンクを送信",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "パスワードリセットメールを送信",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "送信中...",
@@ -328,10 +262,6 @@ const jaAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "ユーザー名",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "ユーザー名には文字と数字のみ使用できます",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message: "ユーザー名には小文字、数字、アンダースコアのみ使用できます",
@@ -481,14 +411,6 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -502,5 +424,62 @@ const jaAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "CLIアクセスを許可",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "Beancount CLIがアカウントへのアクセスを要求しています。",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "CLIに以下を許可します:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "台帳の読み取りと書き込み",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "アカウント情報へのアクセス",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "許可",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "許可中...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "拒否",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "拒否中...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "セッションの有効期限が切れているか、見つかりません。",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "許可が完了しました",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "このタブを閉じてCLIに戻ることができます。",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "アクセスが拒否されました",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "このタブを閉じて構いません。",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default jaAuth;

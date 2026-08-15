@@ -82,14 +82,6 @@ const skCollaboration: Record<string, TranslationEntry> = {
     message: "Pripojil sa",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "Naposledy aktívny",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "Nikdy",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "Žiadni spolupracovníci",
     description: "Empty state title when no collaborators exist",
@@ -141,10 +133,6 @@ const skCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "Začnite písať pre vyhľadávanie používateľov...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "Nastala neznáma chyba",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "Neznámy používateľ",

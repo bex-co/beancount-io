@@ -62,10 +62,6 @@ const faCommits: Record<string, TranslationEntry> = {
     message: "فایل‌ها",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "توسط",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

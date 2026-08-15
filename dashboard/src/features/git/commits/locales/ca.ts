@@ -62,10 +62,6 @@ const caCommits: Record<string, TranslationEntry> = {
     message: "fitxers",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "per",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

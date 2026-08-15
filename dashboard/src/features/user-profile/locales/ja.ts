@@ -1,22 +1,6 @@
 import type { TranslationEntry } from "@/i18n";
 
 const jaUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "ユーザープロファイル",
-    description: "Header title for user profile page",
-  },
-  "userProfile.followers": {
-    message: "フォロワー",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "フォロー中",
-    description: "Label for following count",
-  },
-  "userProfile.starredRepos": {
-    message: "スターリポジトリ",
-    description: "Label for starred repositories count",
-  },
   "userProfile.follow": {
     message: "フォロー",
     description: "Button label to follow a user",
@@ -84,11 +68,6 @@ const jaUserProfile: Record<string, TranslationEntry> = {
   "userProfile.errorLoadingProfile": {
     message: "プロファイルの読み込みエラー",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "このプロファイルの読み込み中に問題が発生しました。後でもう一度お試しください。",
-    description: "Generic error message for profile loading failures",
   },
   "seo.userProfile.title": {
     message: "{username} - ユーザープロファイル",

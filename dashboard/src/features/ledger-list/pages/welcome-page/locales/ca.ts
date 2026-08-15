@@ -13,10 +13,6 @@ const caWelcomePage: Record<string, TranslationEntry> = {
     message: "Crea el teu primer llibre",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Error en crear el llibre",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Llibre creat correctament",
     description: "Toast notification when ledger created",

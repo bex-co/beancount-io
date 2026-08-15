@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const caAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "Ja tens un compte? Inicia sessió",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "Ja tens un compte?",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const caAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Autenticant...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Error d'autenticació",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "S'ha produït un error durant l'autenticació",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "L'autenticació ha fallat",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Tornar a iniciar sessió",
@@ -104,10 +88,6 @@ const caAuth: Record<string, TranslationEntry> = {
     message:
       "Hem enviat un enllaç per restablir la contrasenya a la vostra adreça de correu. Si us plau, comproveu la safata d'entrada i seguiu les instruccions per restablir la contrasenya.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "Introduïu les vostres credencials per accedir al tauler",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "Introduïu les vostres dades per començar amb el tauler",
@@ -196,10 +176,6 @@ const caAuth: Record<string, TranslationEntry> = {
     message: "Iniciar sessió / Registrar-se",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "S'ha produït un error durant l'inici de sessió",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "L'inici de sessió ha fallat",
     description: "Error title when login fails",
@@ -207,18 +183,6 @@ const caAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Tancar sessió",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Cancel·lar",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Tancar sessió",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "Estàs segur que vols tancar la sessió?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "Estimat pels usuaris",
@@ -313,40 +277,13 @@ const caAuth: Record<string, TranslationEntry> = {
     message: "Redirigint a la pàgina d'inici de sessió...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "S'ha produït un error durant el registre",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "El registre ha fallat",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message:
-      "S'ha produït un error en enviar el correu de restabliment de contrasenya",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Restablir contrasenya",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Restablir contrasenya",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Introduïu la vostra adreça de correu electrònic per rebre un enllaç per restablir la contrasenya.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "S'ha enviat un correu a la vostra adreça de correu electrònic. Si us plau, comproveu el correu per restablir la contrasenya.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "S'ha produït un error en restablir la contrasenya",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Restableix la teva contrasenya",
@@ -368,10 +305,6 @@ const caAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Enviar enllaç de restabliment",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Envia correu per restablir contrasenya",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Enviant...",
@@ -426,10 +359,6 @@ const caAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Nom d'usuari",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "El nom d'usuari només pot contenir lletres i números",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -489,14 +418,6 @@ const caAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -510,5 +431,62 @@ const caAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "Autoritza l'accés de la CLI",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "La CLI de Beancount sol·licita accés al teu compte.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "Això permetrà a la CLI:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Llegir i escriure els teus llibres",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Accedir a la informació del teu compte",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Autoritza",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "S'està autoritzant...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Denega",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "S'està denegant...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "La sessió ha caducat o no s'ha trobat.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Autorització correcta",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "Pots tancar aquesta pestanya i tornar a la CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Accés denegat",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "Pots tancar aquesta pestanya.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default caAuth;

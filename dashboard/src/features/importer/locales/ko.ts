@@ -2,30 +2,8 @@ import type { TranslationEntry } from "@/i18n";
 
 const koImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "스마트 가져오기 출시 — 조기 액세스 무료",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "배너 닫기",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "AI 기반 파싱으로 PDF, OFX 파일, 이미지에서 은행 명세서를 몇 초 만에 가져오세요. 기간 한정 무료.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "파일 업로드",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "은행 명세서 또는 거래 파일을 업로드하세요. 지원 형식: CSV, PDF, OFX, 또는 이미지(PNG/JPG). 최대 10MB.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message: "이 파일은 10MB 제한을 초과합니다. 더 작은 파일을 사용해 주세요.",
     description: "Error message when file size exceeds limit",
@@ -38,10 +16,6 @@ const koImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "파일 읽는 중\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "다른 파일 선택",
@@ -121,10 +95,6 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "AI로 PDF, OFX, 이미지 파일을 자동 파싱",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "처리 중...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "지금 업그레이드",
     description: "Button text to start upgrade process",
@@ -192,10 +162,6 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "금액",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "상태",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "표시할 데이터가 없습니다",
     description: "Empty state message when no transactions",
@@ -237,14 +203,6 @@ const koImporter: Record<string, TranslationEntry> = {
     message: "클릭하여 편집",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "오류",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "유효",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "작업",
     description: "Table header for actions column",
@@ -252,10 +210,6 @@ const koImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "행 삭제",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "행이 삭제되었습니다",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "거래를 찾을 수 없습니다",
@@ -265,10 +219,6 @@ const koImporter: Record<string, TranslationEntry> = {
     message:
       "파일이 성공적으로 파싱되었지만 거래 데이터를 찾을 수 없습니다. 파일을 확인하고 다시 시도해 주세요.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message: "파일에 올바른 형식의 거래 데이터가 포함되어 있는지 확인하세요.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "다른 파일 시도",
@@ -446,11 +396,6 @@ const koImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "AI 분류에 실패했습니다",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "분류에 실패했습니다",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

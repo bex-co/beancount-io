@@ -63,10 +63,6 @@ const deCommits: Record<string, TranslationEntry> = {
     message: "Dateien",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "von",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

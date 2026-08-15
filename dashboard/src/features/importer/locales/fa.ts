@@ -5,30 +5,8 @@ export interface TranslationEntry {
 
 const faImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "واردات هوشمند فعال است — دسترسی زودهنگام رایگان",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "بستن بنر",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "صورت‌حساب‌های بانکی را از PDF، فایل‌های OFX و تصاویر در چند ثانیه با تجزیه هوشمند مصنوعی وارد کنید. برای مدت محدود رایگان.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "بارگذاری فایل",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "صورت‌حساب بانکی یا فایل تراکنش خود را بارگذاری کنید. فرمت‌های پشتیبانی‌شده: CSV، PDF، OFX یا تصاویر (PNG/JPG). حداکثر 10 مگابایت.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message:
       "این فایل از حد مجاز 10 مگابایت بیشتر است. لطفاً فایل کوچک‌تری امتحان کنید.",
@@ -42,10 +20,6 @@ const faImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "در حال خواندن فایل شما\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "انتخاب فایل دیگر",
@@ -126,10 +100,6 @@ const faImporter: Record<string, TranslationEntry> = {
       "فایل‌های PDF، OFX و تصاویر را به‌طور خودکار با هوش مصنوعی تجزیه کنید",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "در حال پردازش...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "اکنون ارتقا دهید",
     description: "Button text to start upgrade process",
@@ -197,10 +167,6 @@ const faImporter: Record<string, TranslationEntry> = {
     message: "مبلغ",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "وضعیت",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "داده‌ای برای نمایش وجود ندارد",
     description: "Empty state message when no transactions",
@@ -242,14 +208,6 @@ const faImporter: Record<string, TranslationEntry> = {
     message: "برای ویرایش کلیک کنید",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "خطا",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "معتبر",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "اقدامات",
     description: "Table header for actions column",
@@ -257,10 +215,6 @@ const faImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "حذف ردیف",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "ردیف حذف شد",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "هیچ تراکنشی یافت نشد",
@@ -270,10 +224,6 @@ const faImporter: Record<string, TranslationEntry> = {
     message:
       "فایل با موفقیت تجزیه شد، اما هیچ داده تراکنشی یافت نشد. لطفاً فایل خود را بررسی کنید و دوباره امتحان کنید.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message: "مطمئن شوید که فایل شما حاوی داده‌های تراکنش در قالب صحیح است.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "فایل دیگری را امتحان کنید",
@@ -451,11 +401,6 @@ const faImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "دسته‌بندی با هوش مصنوعی ناموفق بود",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "دسته‌بندی ناموفق بود",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

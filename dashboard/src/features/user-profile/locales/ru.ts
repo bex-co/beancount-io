@@ -4,18 +4,9 @@ export interface TranslationEntry {
 }
 
 const ruUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "Профиль пользователя",
-    description: "Header title for user profile page",
-  },
   "userProfile.errorLoadingProfile": {
     message: "Ошибка загрузки профиля",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "Произошла ошибка при загрузке этого профиля. Пожалуйста, попробуйте позже.",
-    description: "Generic error message for profile loading failures",
   },
   "userProfile.followError": {
     message: "Не удалось подписаться на пользователя",
@@ -24,14 +15,6 @@ const ruUserProfile: Record<string, TranslationEntry> = {
   "userProfile.followSuccess": {
     message: "Вы подписались на {username}",
     description: "Success toast message after following a user",
-  },
-  "userProfile.followers": {
-    message: "подписчики",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "подписки",
-    description: "Label for following count",
   },
   "userProfile.joined": {
     message: "Присоединился",
@@ -64,10 +47,6 @@ const ruUserProfile: Record<string, TranslationEntry> = {
   "userProfile.follow": {
     message: "Подписаться",
     description: "Button label to follow a user",
-  },
-  "userProfile.starredRepos": {
-    message: "отмеченные репозитории",
-    description: "Label for starred repositories count",
   },
   "userProfile.unfollowError": {
     message: "Не удалось отписаться от пользователя",

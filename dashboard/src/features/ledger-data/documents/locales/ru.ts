@@ -8,10 +8,6 @@ const ruDocuments: Record<string, TranslationEntry> = {
     message: "Документs",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "Не удалось загрузить документы",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "Имя файла",
     description: "Table column header for filename",

@@ -71,15 +71,6 @@ const koSeo: Record<string, TranslationEntry> = {
     message: "재무상태표 - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "{ledgerName}의 협력자를 관리합니다. 사용자를 초대하고 접근 권한을 제어할 수 있습니다.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "협력자 - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "{ledgerName}의 상품 목록과 가격. 통화, 주식, 기타 자산을 추적할 수 있습니다.",
@@ -291,14 +282,6 @@ const koSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "일반 설정",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message: "Beancount 계정 설정, 환경 설정, 구성을 관리하세요.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "계정 설정",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

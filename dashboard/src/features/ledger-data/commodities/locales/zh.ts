@@ -12,10 +12,6 @@ const zhCommodities: Record<string, TranslationEntry> = {
     message: "加载商品失败",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message: "加载商品数据时出错。请稍后重试。",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "未找到商品",
     description: "Empty state title when no commodities exist",

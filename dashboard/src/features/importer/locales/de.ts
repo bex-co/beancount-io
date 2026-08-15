@@ -5,30 +5,8 @@ export interface TranslationEntry {
 
 const deImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "Smart Import ist verfügbar — Kostenloser früher Zugang",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "Banner schließen",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "Importieren Sie Kontoauszüge aus PDFs, OFX-Dateien und Bildern in Sekunden mit KI-gestützter Analyse. Für begrenzte Zeit kostenlos.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "Datei hochladen",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "Laden Sie Ihren Kontoauszug oder Ihre Transaktionsdatei hoch. Unterstützte Formate: CSV, PDF, OFX oder Bilder (PNG/JPG). Maximal 10MB.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message:
       "Diese Datei überschreitet das Limit von 10 MB. Bitte versuchen Sie eine kleinere Datei.",
@@ -42,10 +20,6 @@ const deImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "Ihre Datei wird gelesen\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "Andere Datei wählen",
@@ -126,10 +100,6 @@ const deImporter: Record<string, TranslationEntry> = {
     message: "PDF-, OFX- und Bilddateien automatisch mit KI analysieren",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "Wird verarbeitet...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "Jetzt upgraden",
     description: "Button text to start upgrade process",
@@ -198,10 +168,6 @@ const deImporter: Record<string, TranslationEntry> = {
     message: "Betrag",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "Status",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "Keine Daten zum Anzeigen",
     description: "Empty state message when no transactions",
@@ -243,14 +209,6 @@ const deImporter: Record<string, TranslationEntry> = {
     message: "Zum Bearbeiten klicken",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "Fehler",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "Gültig",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "Aktionen",
     description: "Table header for actions column",
@@ -258,10 +216,6 @@ const deImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "Zeile löschen",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "Zeile gelöscht",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "Keine Transaktionen gefunden",
@@ -271,11 +225,6 @@ const deImporter: Record<string, TranslationEntry> = {
     message:
       "Die Datei wurde erfolgreich analysiert, aber es wurden keine Transaktionsdaten gefunden. Bitte überprüfen Sie Ihre Datei und versuchen Sie es erneut.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message:
-      "Stellen Sie sicher, dass Ihre Datei Transaktionsdaten im richtigen Format enthält.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "Andere Datei versuchen",
@@ -453,11 +402,6 @@ const deImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "KI-Kategorisierung fehlgeschlagen",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "Kategorisierung fehlgeschlagen",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

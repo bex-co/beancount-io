@@ -10,10 +10,6 @@ const bgDirectoryBrowse: Record<
     message: "Изтегляне като ZIP",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "Зареждане на съдържанието на директорията...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "Управление на SSH ключове",
     description: "Menu item for SSH key management",

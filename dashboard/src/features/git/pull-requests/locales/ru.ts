@@ -4,14 +4,6 @@ export interface TranslationEntry {
 }
 
 const ruPullRequests: Record<string, TranslationEntry> = {
-  "pullRequests.reviewPR": {
-    message: "Проверить запрос на слияние",
-    description: "Page title for PR review page",
-  },
-  "pullRequests.createPR": {
-    message: "Создать запрос на слияние",
-    description: "Page title for create PR page",
-  },
   "pullRequests.approve": {
     message: "Одобрить и слить",
     description: "Button text to approve and merge PR",
@@ -36,10 +28,6 @@ const ruPullRequests: Record<string, TranslationEntry> = {
     message: "Ошибка при закрытии запроса на слияние",
     description: "Error message when PR rejection fails",
   },
-  "pullRequests.changes": {
-    message: "Изменения",
-    description: "Label for diff viewer section",
-  },
   "pullRequests.filesChanged": {
     message: "Измененные файлы",
     description: "Label for changed files section",
@@ -47,10 +35,6 @@ const ruPullRequests: Record<string, TranslationEntry> = {
   "pullRequests.prNotFound": {
     message: "Запрос на слияние не найден",
     description: "Error message when PR doesn't exist",
-  },
-  "pullRequests.loadingPR": {
-    message: "Загрузка деталей запроса на слияние...",
-    description: "Loading message while fetching PR",
   },
 };
 

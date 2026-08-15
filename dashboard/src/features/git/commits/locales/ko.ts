@@ -62,10 +62,6 @@ const koCommits: Record<string, TranslationEntry> = {
     message: "파일",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "작성자",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

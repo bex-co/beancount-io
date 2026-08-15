@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const ruAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "Уже есть аккаунт? Войти",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "Уже есть учётная запись?",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const ruAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Аутентификация...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Ошибка аутентификации",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "Произошла ошибка при аутентификации",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "Ошибка входа",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Назад к входу",
@@ -104,10 +88,6 @@ const ruAuth: Record<string, TranslationEntry> = {
     message:
       "Мы отправили ссылку для сброса пароля на ваш адрес электронной почты. Пожалуйста, проверьте входящие письма и следуйте инструкциям для сброса пароля.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "Введите учётные данные для доступа к панели управления",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "Введите данные для начала работы с панелью управления",
@@ -195,10 +175,6 @@ const ruAuth: Record<string, TranslationEntry> = {
     message: "Войти / Регистрация",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "Произошла ошибка при входе",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "Ошибка входа",
     description: "Error title when login fails",
@@ -206,18 +182,6 @@ const ruAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Выход",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Отмена",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Выйти",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "Вы уверены, что хотите выйти?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "Любим пользователями",
@@ -310,39 +274,13 @@ const ruAuth: Record<string, TranslationEntry> = {
     message: "Перенаправление на страницу входа...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "Произошла ошибка при регистрации",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "Ошибка регистрации",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "Произошла ошибка при отправке письма для сброса пароля",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Сброс пароля",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Сбросить пароль",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Введите адрес электронной почты, чтобы получить ссылку для сброса пароля.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "Письмо отправлено на ваш адрес электронной почты. Пожалуйста, проверьте почту, чтобы сбросить пароль.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "Произошла ошибка при сбросе пароля",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Сброс пароля",
@@ -364,10 +302,6 @@ const ruAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Отправить ссылку для сброса",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Отправить письмо для сброса пароля",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Отправка...",
@@ -423,10 +357,6 @@ const ruAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Имя пользователя",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "Имя пользователя может содержать только буквы и цифры",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -486,14 +416,6 @@ const ruAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -507,5 +429,62 @@ const ruAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "Разрешить доступ CLI",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "Beancount CLI запрашивает доступ к вашей учётной записи.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "Это позволит CLI:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Читать и изменять ваши книги",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Получать доступ к данным вашей учётной записи",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Разрешить",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "Разрешение...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Отклонить",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "Отклонение...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "Сеанс истёк или не найден.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Авторизация выполнена",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "Можете закрыть эту вкладку и вернуться в CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Доступ отклонён",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "Можете закрыть эту вкладку.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default ruAuth;

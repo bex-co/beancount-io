@@ -10,10 +10,6 @@ const ukDirectoryBrowse: Record<
     message: "Вownload ZIP",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "Пoading directory contents...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "Керування SSH ключами",
     description: "Menu item for SSH key management",

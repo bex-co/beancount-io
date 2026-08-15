@@ -29,10 +29,6 @@ const ukBalanceSheet: Record<string, TranslationEntry> = {
     message: "Відстежуйте {ledgerName} зобов'язання в різних валютах з часом",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Місячний чистий капітал",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message: "Відстежуйте {ledgerName} чисту вартість в різних валютах з часом",
     description: "Description for net worth chart",

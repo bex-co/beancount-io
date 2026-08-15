@@ -2,6 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Check, Copy } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
 import { toast } from "sonner";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 interface CodeBlockProps {
   code: string;
@@ -10,6 +11,7 @@ interface CodeBlockProps {
 }
 
 export function CodeBlock({ code, language, inline }: CodeBlockProps) {
+  const { t } = useTranslations();
   const [copied, setCopied] = useState(false);
   const timerRef = useRef<NodeJS.Timeout | null>(null);
 
@@ -26,14 +28,14 @@ export function CodeBlock({ code, language, inline }: CodeBlockProps) {
     try {
       await navigator.clipboard.writeText(code);
       setCopied(true);
-      toast.success("Copied to clipboard");
+      toast.success(t("common.copiedToClipboard"));
       // Clear any existing timer
       if (timerRef.current) {
         clearTimeout(timerRef.current);
       }
       timerRef.current = setTimeout(() => setCopied(false), 2000);
     } catch {
-      toast.error("Failed to copy");
+      toast.error(t("common.copyFailed"));
     }
   };
 
@@ -61,7 +63,7 @@ export function CodeBlock({ code, language, inline }: CodeBlockProps) {
           size="icon"
           onClick={handleCopy}
           className="h-7 w-7 opacity-0 group-hover:opacity-100 transition-opacity"
-          aria-label="Copy code"
+          aria-label={t("common.copyCode")}
         >
           {copied ? (
             <Check className="h-4 w-4 text-green-600" />

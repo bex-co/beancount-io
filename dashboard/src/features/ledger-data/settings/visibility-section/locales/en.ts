@@ -16,14 +16,6 @@ const enVisibilitySection: Record<string, TranslationEntry> = {
     message: "Embed Code",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "Copy URL",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "Failed to update ledger visibility",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "Copied!",
     description: "Confirmation message when text is copied",
@@ -44,11 +36,6 @@ const enVisibilitySection: Record<string, TranslationEntry> = {
     message: "Shareable URL",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "Sharing is only available for public ledgers. Change your ledger visibility above to enable sharing.",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "Public Sharing",
     description: "Subsection title for public sharing options",
@@ -62,9 +49,18 @@ const enVisibilitySection: Record<string, TranslationEntry> = {
     message: "Private Ledger",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "Copy Code",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "View on Beancount.io",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "Failed to copy URL",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "Failed to copy code",
+    description: "Toast when copying the embed code failed",
   },
 };
 

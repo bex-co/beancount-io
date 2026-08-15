@@ -4,18 +4,9 @@ export interface TranslationEntry {
 }
 
 const bgUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "Потребителски профил",
-    description: "Header title for user profile page",
-  },
   "userProfile.errorLoadingProfile": {
     message: "Грешка при зареждане на профила",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "Нещо се обърка при зареждането на този профил. Моля, опитайте отново по-късно.",
-    description: "Generic error message for profile loading failures",
   },
   "userProfile.followError": {
     message: "Неуспешно следване на потребител",
@@ -24,14 +15,6 @@ const bgUserProfile: Record<string, TranslationEntry> = {
   "userProfile.followSuccess": {
     message: "Успешно последвахте {username}",
     description: "Success toast message after following a user",
-  },
-  "userProfile.followers": {
-    message: "последователи",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "следвани",
-    description: "Label for following count",
   },
   "userProfile.joined": {
     message: "Присъединен",
@@ -64,10 +47,6 @@ const bgUserProfile: Record<string, TranslationEntry> = {
   "userProfile.follow": {
     message: "Следвай",
     description: "Button label to follow a user",
-  },
-  "userProfile.starredRepos": {
-    message: "отбелязани хранилища",
-    description: "Label for starred repositories count",
   },
   "userProfile.unfollowError": {
     message: "Неуспешно спиране на следване",

@@ -32,7 +32,7 @@ export function AccountPrefixNavigation({
     >
       <div className="flex items-center gap-2">
         <span
-          className="min-w-0 truncate font-mono text-sm"
+          className="min-w-0 max-w-[55cqw] truncate font-mono text-sm @xl:max-w-none"
           onMouseLeave={() => setHoveredPrefixIndex(null)}
         >
           {segments.map((segment, index) => {

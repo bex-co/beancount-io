@@ -26,7 +26,11 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { LedgerAdminPermission } from "@/common/components/ledger-permission/admin";
 
-function buildEmbedCode(shareableUrl: string, ledgerName: string): string {
+function buildEmbedCode(
+  shareableUrl: string,
+  ledgerName: string,
+  viewOnBeancountLabel: string,
+): string {
   return `<div style="position: relative; padding-bottom: 75%; height: 0; overflow: hidden; max-width: 100%; margin-bottom: 2rem;">
   <iframe
     src="${shareableUrl}"
@@ -39,14 +43,14 @@ function buildEmbedCode(shareableUrl: string, ledgerName: string): string {
     href="${shareableUrl}"
     target="_blank"
     rel="noopener noreferrer"
-    aria-label="View on Beancount.io"
+    aria-label="${viewOnBeancountLabel}"
     style="position: absolute; bottom: 12px; left: 12px; z-index: 10; display: inline-flex; align-items: center; gap: 6px; padding: 8px 14px; background: rgba(0, 0, 0, 0.8); color: white; font-size: 13px; font-weight: 500; border: none; border-radius: 4px; cursor: pointer; text-decoration: none; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; letter-spacing: 0.3px; transition: background 0.2s ease;">
     <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
       <path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path>
       <polyline points="15 3 21 3 21 9"></polyline>
       <line x1="10" y1="14" x2="21" y2="3"></line>
     </svg>
-    <span>View on Beancount.io</span>
+    <span>${viewOnBeancountLabel}</span>
   </a>
 </div>`;
 }
@@ -103,7 +107,11 @@ export function VisibilitySection({
   };
 
   const shareableUrl = `${window.location.origin}/ledger/${ledger.fullName}`;
-  const embedCode = buildEmbedCode(shareableUrl, ledger.name);
+  const embedCode = buildEmbedCode(
+    shareableUrl,
+    ledger.name,
+    t("page.settings.embedViewOnBeancount"),
+  );
 
   const handleCopyUrl = async () => {
     try {
@@ -113,7 +121,7 @@ export function VisibilitySection({
       if (copiedUrlTimerRef.current) clearTimeout(copiedUrlTimerRef.current);
       copiedUrlTimerRef.current = setTimeout(() => setCopiedUrl(false), 2000);
     } catch {
-      toast.error("Failed to copy URL");
+      toast.error(t("page.settings.copyUrlFailed"));
     }
   };
 
@@ -125,7 +133,7 @@ export function VisibilitySection({
       if (copiedCodeTimerRef.current) clearTimeout(copiedCodeTimerRef.current);
       copiedCodeTimerRef.current = setTimeout(() => setCopiedCode(false), 2000);
     } catch {
-      toast.error("Failed to copy code");
+      toast.error(t("page.settings.copyCodeFailed"));
     }
   };
 

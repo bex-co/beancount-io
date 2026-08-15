@@ -12,11 +12,6 @@ const nlCommodities: Record<string, TranslationEntry> = {
     message: "Grondstoffen laden mislukt",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "Er is een fout opgetreden bij het laden van de grondstoffengegevens. Probeer het later opnieuw.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "Geen grondstoffen gevonden",
     description: "Empty state title when no commodities exist",

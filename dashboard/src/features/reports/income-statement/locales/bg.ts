@@ -21,10 +21,6 @@ const bgIncomeStatement: Record<string, TranslationEntry> = {
     message: "Проследяване на {ledgerName} доходи в различни стоки във времето",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Месечен нетен доход",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message:
       "Проследяване на {ledgerName} нетна печалба в различни стоки във времето",

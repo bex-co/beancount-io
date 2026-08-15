@@ -82,14 +82,6 @@ const caCollaboration: Record<string, TranslationEntry> = {
     message: "S'ha unit",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "Última activitat",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "Mai",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "Sense col·laboradors",
     description: "Empty state title when no collaborators exist",
@@ -141,10 +133,6 @@ const caCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "Escriviu per cercar usuaris...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "S'ha produït un error desconegut",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "Usuari desconegut",

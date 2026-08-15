@@ -31,10 +31,6 @@ const deBalanceSheet: Record<string, TranslationEntry> = {
       "Verfolgen Sie {ledgerName} Verbindlichkeiten über verschiedene Währungen im Zeitverlauf",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Monatliches Nettovermögen",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message:
       "Verfolgen Sie {ledgerName} Nettowert über verschiedene Währungen im Zeitverlauf",

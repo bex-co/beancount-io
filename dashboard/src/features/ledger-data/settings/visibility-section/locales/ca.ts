@@ -17,14 +17,6 @@ const caVisibilitySection: Record<string, TranslationEntry> = {
     message: "Codi d'incrustació",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "Copiar URL",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "Error en actualitzar la visibilitat del llibre",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "Copiat!",
     description: "Confirmation message when text is copied",
@@ -45,11 +37,6 @@ const caVisibilitySection: Record<string, TranslationEntry> = {
     message: "URL per compartir",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "La compartició només està disponible per a llibres públics. Canvia la visibilitat del teu llibre a dalt per activar la compartició.",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "Compartició pública",
     description: "Subsection title for public sharing options",
@@ -63,9 +50,18 @@ const caVisibilitySection: Record<string, TranslationEntry> = {
     message: "Llibre privat",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "Copiar codi",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "Mostra a Beancount.io",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "No s'ha pogut copiar l'URL",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "No s'ha pogut copiar el codi",
+    description: "Toast when copying the embed code failed",
   },
 };
 

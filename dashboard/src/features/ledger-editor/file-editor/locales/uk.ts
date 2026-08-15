@@ -13,10 +13,6 @@ const ukFileEditor: Record<string, { message: string; description: string }> = {
     message: "Видалити File",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Не вдалося видалити файл",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Не вдалося завантажити вміст файлу",
     description: "Error message when file content fails to load",

@@ -62,10 +62,6 @@ const nlCommits: Record<string, TranslationEntry> = {
     message: "bestanden",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "door",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

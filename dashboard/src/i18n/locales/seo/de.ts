@@ -83,15 +83,6 @@ const deSeo: Record<string, TranslationEntry> = {
     message: "Bilanz - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "Verwalten Sie Mitarbeiter für {ledgerName}. Laden Sie Benutzer ein und steuern Sie Zugriffsberechtigungen.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "Mitarbeiter - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "Warenliste und Preise für {ledgerName}. Verfolgen Sie Währungen, Aktien und andere Vermögenswerte.",
@@ -332,15 +323,6 @@ const deSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "Allgemeine Einstellungen",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "Verwalten Sie Ihre Beancount-Kontoeinstellungen, Präferenzen und Konfigurationen.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "Kontoeinstellungen",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

@@ -4,18 +4,9 @@ export interface TranslationEntry {
 }
 
 const caUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "Perfil d'usuari",
-    description: "Header title for user profile page",
-  },
   "userProfile.errorLoadingProfile": {
     message: "Error en carregar el perfil",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "Alguna cosa ha anat malament en carregar aquest perfil. Si us plau, torneu-ho a intentar més tard.",
-    description: "Generic error message for profile loading failures",
   },
   "userProfile.followError": {
     message: "No s'ha pogut seguir l'usuari",
@@ -24,14 +15,6 @@ const caUserProfile: Record<string, TranslationEntry> = {
   "userProfile.followSuccess": {
     message: "Heu seguit {username} correctament",
     description: "Success toast message after following a user",
-  },
-  "userProfile.followers": {
-    message: "seguidors",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "seguint",
-    description: "Label for following count",
   },
   "userProfile.joined": {
     message: "Unit",
@@ -64,10 +47,6 @@ const caUserProfile: Record<string, TranslationEntry> = {
   "userProfile.follow": {
     message: "Segueix",
     description: "Button label to follow a user",
-  },
-  "userProfile.starredRepos": {
-    message: "repositoris marcats amb estrella",
-    description: "Label for starred repositories count",
   },
   "userProfile.unfollowError": {
     message: "No s'ha pogut deixar de seguir l'usuari",

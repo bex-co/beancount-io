@@ -63,10 +63,6 @@ const enBudget: Record<string, TranslationEntry> = {
       "Budgets apply to one account, e.g. Expenses:Food:Groceries. A newer directive for the same account and currency takes effect on its date.",
     description: "Help text under the account field in the add-budget dialog",
   },
-  "page.budget.budgetFailedToLoad": {
-    message: "Failed to load budgets",
-    description: "Error message when budgets fail to load",
-  },
   "page.budget.budgetAccountRequired": {
     message: "Account is required",
     description: "Validation error when account field is empty",

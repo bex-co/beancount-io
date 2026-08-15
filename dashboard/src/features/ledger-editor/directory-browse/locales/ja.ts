@@ -10,10 +10,6 @@ const jaDirectoryBrowse: Record<
     message: "ZIPでダウンロード",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "ディレクトリの内容を読み込み中...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "SSHキーを管理",
     description: "Menu item for SSH key management",

@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const ptAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "Já tem uma conta? Entrar",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "Já tem uma conta?",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const ptAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Autenticando...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Erro de Autenticação",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "Ocorreu um erro durante a autenticação",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "Autenticação falhou",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Voltar ao login",
@@ -104,10 +88,6 @@ const ptAuth: Record<string, TranslationEntry> = {
     message:
       "Enviamos um link de redefinição de senha para seu endereço de e-mail. Verifique sua caixa de entrada e siga as instruções para redefinir sua senha.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "Digite suas credenciais para acessar seu painel",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "Digite seus dados para começar com seu painel",
@@ -195,10 +175,6 @@ const ptAuth: Record<string, TranslationEntry> = {
     message: "Entrar / Registrar",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "Ocorreu um erro during login",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "Login falhou",
     description: "Error title when login fails",
@@ -206,18 +182,6 @@ const ptAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Sair",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Cancelar",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Sair",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "Tem certeza de que deseja sair?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "Amado pelos usuários",
@@ -310,39 +274,13 @@ const ptAuth: Record<string, TranslationEntry> = {
     message: "Redirecionando para a página de login...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "Ocorreu um erro during registration",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "Registro falhou",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "Ocorreu um erro while sending the password reset email",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Redefinir senha",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Redefinir senha",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Digite seu endereço de e-mail para receber um link para redefinir sua senha.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "Um e-mail foi enviado para seu endereço de e-mail. Por favor, verifique seu e-mail para redefinir sua senha.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "Ocorreu um erro while resetting your password",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Redefina sua senha",
@@ -364,10 +302,6 @@ const ptAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Enviar link de redefinição",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Enviar e-mail de redefinição de senha",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Enviando...",
@@ -423,10 +357,6 @@ const ptAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Usuárioname",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "Usuárioname can only contain letters and numbers",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -486,14 +416,6 @@ const ptAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -507,5 +429,62 @@ const ptAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "Autorizar acesso da CLI",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "A CLI do Beancount está solicitando acesso à sua conta.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "Isso permitirá que a CLI:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Ler e gravar seus livros-razão",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Acessar as informações da sua conta",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Autorizar",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "Autorizando...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Negar",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "Negando...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "Sessão expirada ou não encontrada.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Autorização concluída",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "Você pode fechar esta aba e voltar para a CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Acesso negado",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "Você pode fechar esta aba.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default ptAuth;

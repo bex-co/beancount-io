@@ -28,10 +28,6 @@ const zhBalanceSheet: Record<string, TranslationEntry> = {
     message: "追踪{ledgerName}在不同商品上的负债随时间的变化",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "每月净资产",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message: "追踪{ledgerName}在不同商品上的净值随时间的变化",
     description: "Description for net worth chart",

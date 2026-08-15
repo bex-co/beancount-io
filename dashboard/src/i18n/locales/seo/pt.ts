@@ -83,15 +83,6 @@ const ptSeo: Record<string, TranslationEntry> = {
     message: "Balanço Patrimonial - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "Gerencie colaboradores de {ledgerName}. Convide usuários e controle permissões de acesso.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "Colaboradores - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "Lista de commodities e preços de {ledgerName}. Acompanhe moedas, ações e outros ativos.",
@@ -332,15 +323,6 @@ const ptSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "Configurações Gerais",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "Gerencie as configurações, preferências e ajustes da sua conta Beancount.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "Configurações da Conta",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

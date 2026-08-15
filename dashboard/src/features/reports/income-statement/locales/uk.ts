@@ -20,10 +20,6 @@ const ukIncomeStatement: Record<string, TranslationEntry> = {
     message: "Відстежуйте {ledgerName} доходи в різних валютах з часом",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Місячний чистий дохід",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message:
       "Відстежуйте {ledgerName} чистий прибуток в різних валютах з часом",

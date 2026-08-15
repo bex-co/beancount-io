@@ -12,11 +12,6 @@ const frCommodities: Record<string, TranslationEntry> = {
     message: "Échec du chargement des devises",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "Une erreur s'est produite lors du chargement des données des matières premières. Veuillez réessayer plus tard.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "Aucune devise trouvée",
     description: "Empty state title when no commodities exist",

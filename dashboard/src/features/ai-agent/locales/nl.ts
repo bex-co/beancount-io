@@ -8,21 +8,9 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     message: "Vraag Beancount.io",
     description: "Title for AI chat feature",
   },
-  "aiAgent.subtitle": {
-    message: "AI-hulp voor jouw grootboek",
-    description: "Subtitle for AI chat feature",
-  },
   "aiAgent.placeholder": {
     message: "Vraag me iets over Beancount...",
     description: "Input placeholder text",
-  },
-  "aiAgent.send": {
-    message: "Verzenden",
-    description: "Send button text",
-  },
-  "aiAgent.sending": {
-    message: "Verzenden...",
-    description: "Loading state text",
   },
   "aiAgent.welcome": {
     message:
@@ -35,14 +23,6 @@ const nlAiAgent: Record<string, TranslationEntry> = {
       "Wat wil je weten?",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.you": {
-    message: "Jij",
-    description: "Label for user messages",
-  },
-  "aiAgent.assistant": {
-    message: "AI Assistent",
-    description: "Label for AI assistant messages",
-  },
   "aiAgent.prCreated": {
     message: "✓ Pull Request aangemaakt",
     description: "Message shown when PR is created",
@@ -50,26 +30,6 @@ const nlAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.viewPR": {
     message: "Bekijk PR #",
     description: "Link text to view pull request",
-  },
-  "aiAgent.status.connecting": {
-    message: "Denken...",
-    description: "Status badge text when connecting to AI",
-  },
-  "aiAgent.status.streaming": {
-    message: "Streamen...",
-    description: "Status badge text when receiving AI response",
-  },
-  "aiAgent.status.finalizing": {
-    message: "Afronden...",
-    description: "Status badge text when finalizing AI response",
-  },
-  "aiAgent.status.complete": {
-    message: "Voltooid",
-    description: "Status badge text when AI response is complete",
-  },
-  "aiAgent.status.error": {
-    message: "Fout",
-    description: "Status badge text when an error occurs",
   },
   "aiAgent.quickAskPlaceholder": {
     message: "Vraag me iets over dit grootboek...",
@@ -159,19 +119,6 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
   },
-  "aiAgent.editApproval.binaryContent": {
-    message: "(binary content)",
-    description:
-      "Placeholder shown when file content is binary (image, PDF, etc.)",
-  },
-  "aiAgent.readFile.label": {
-    message: "Read",
-    description: "Label on the read-file tool step",
-  },
-  "aiAgent.listFiles.label": {
-    message: "List",
-    description: "Label on the list-files tool step",
-  },
   "aiAgent.suggestionsTitle": {
     message: "Probeer te vragen:",
     description:
@@ -212,6 +159,59 @@ const nlAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.retry": {
     message: "Opnieuw proberen",
     description: "Button to resubmit the last question after an error",
+  },
+  "aiAgent.receiptApproval.title": {
+    message: "Bontransactie vastleggen",
+    description: "Title of the receipt transaction approval card",
+  },
+  "aiAgent.receiptApproval.preparing": {
+    message: "Transactie voorbereiden…",
+    description: "Status while the receipt transaction is being prepared",
+  },
+  "aiAgent.receiptApproval.recorded": {
+    message: "Transactie vastgelegd",
+    description: "Status after the receipt transaction was recorded",
+  },
+  "aiAgent.receiptApproval.failed": {
+    message: "Vastleggen van transactie mislukt",
+    description: "Error when recording the receipt transaction failed",
+  },
+  "aiAgent.receiptApproval.date": {
+    message: "Datum",
+    description: "Label for the receipt transaction date",
+  },
+  "aiAgent.receiptApproval.payee": {
+    message: "Begunstigde",
+    description: "Label for the receipt transaction payee",
+  },
+  "aiAgent.receiptApproval.amount": {
+    message: "Bedrag",
+    description: "Label for the receipt transaction amount",
+  },
+  "aiAgent.receiptApproval.expense": {
+    message: "Uitgave",
+    description: "Label for the receipt expense account",
+  },
+  "aiAgent.receiptApproval.payment": {
+    message: "Betaling",
+    description: "Label for the receipt payment account",
+  },
+  "aiAgent.attachFile": {
+    message: "Bestand bijvoegen",
+    description: "Aria label for the attach file button in the chat input",
+  },
+  "aiAgent.removeAttachment": {
+    message: "{fileName} verwijderen",
+    description:
+      "Aria label for removing a staged attachment; {fileName} is the attachment file name",
+  },
+  "aiAgent.attachmentFailed": {
+    message: "mislukt",
+    description: "Chip label when an attachment failed to upload",
+  },
+  "aiAgent.scrollToBottom": {
+    message: "Naar beneden scrollen",
+    description: "Aria label for the scroll to bottom button in the chat",
   },
 };
 

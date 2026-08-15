@@ -13,10 +13,6 @@ const bgFileEditor: Record<string, { message: string; description: string }> = {
     message: "Изтриване на файл",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Неуспешно изтриване на файл",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Неуспешно зареждане на съдържанието на файла",
     description: "Error message when file content fails to load",

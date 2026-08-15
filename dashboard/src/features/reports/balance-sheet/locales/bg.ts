@@ -29,10 +29,6 @@ const bgBalanceSheet: Record<string, TranslationEntry> = {
     message: "Проследяване на {ledgerName} пасиви в различни стоки във времето",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Месечна нетна стойност",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message:
       "Проследяване на {ledgerName} нетна стойност в различни стоки във времето",

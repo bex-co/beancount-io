@@ -22,10 +22,6 @@ const ptIncomeStatement: Record<string, TranslationEntry> = {
       "Acompanhe {ledgerName} renda em diferentes commodities ao longo do tempo",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Renda líquida mensal",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message:
       "Acompanhe {ledgerName} lucro líquido em diferentes commodities ao longo do tempo",

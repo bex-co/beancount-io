@@ -54,14 +54,6 @@ const enDashboardPage: Record<string, TranslationEntry> = {
     message: "Enter ledger name",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Failed to create ledger",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Failed to delete ledger",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Failed to Load Ledgers",
     description: "Error title when ledgers fail to load",
@@ -70,10 +62,6 @@ const enDashboardPage: Record<string, TranslationEntry> = {
     message:
       "We couldn't retrieve your ledgers. Please check your connection and try again.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Failed to update ledger",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.ledgerCreatedSuccess": {
     message: "Ledger created successfully",

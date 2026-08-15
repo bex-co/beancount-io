@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const bgHoldings: Record<string, TranslationEntry> = {
-  "page.holdings.errorExecutingQuery": {
-    message: "Възникна грешка при изпълнението на заявката",
-    description: "Generic error message for query execution failure",
-  },
   "page.holdings.exportCsv": {
     message: "Експорт в CSV",
     description: "Button text to export data as CSV",

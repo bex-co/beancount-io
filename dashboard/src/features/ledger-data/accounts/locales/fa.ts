@@ -82,14 +82,6 @@ const faAccounts: Record<string, TranslationEntry> = {
     message: "ورودی‌ها",
     description: "Table column header for entry count",
   },
-  "page.accounts.failedToLoadAccounts": {
-    message: "بارگذاری حساب‌ها ناموفق بود",
-    description: "Error message when accounts fail to load",
-  },
-  "page.accounts.loadingAccounts": {
-    message: "در حال بارگذاری حساب‌ها...",
-    description: "Loading message when fetching accounts",
-  },
   "page.accounts.loadingEntryContent": {
     message: "در حال بارگذاری محتوای ورودی...",
     description: "Loading message when fetching entry content in delete dialog",
@@ -120,10 +112,6 @@ const faAccounts: Record<string, TranslationEntry> = {
     message: "تاریخ باز کردن",
     description: "Table column header and form label for account open date",
   },
-  "page.accounts.operation": {
-    message: "عملیات",
-    description: "Table column header for available operations on an account",
-  },
   "page.accounts.searchAccounts": {
     message: "جستجوی حساب‌ها...",
     description: "Placeholder text for accounts search input",
@@ -135,6 +123,11 @@ const faAccounts: Record<string, TranslationEntry> = {
   "page.accounts.type": {
     message: "Type",
     description: "Table column header for type",
+  },
+  "page.accounts.accountClosedToast": {
+    message: "حساب {account} بسته شد",
+    description:
+      "Toast shown after an account was closed; {account} is the account name",
   },
 };
 

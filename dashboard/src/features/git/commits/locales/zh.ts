@@ -62,10 +62,6 @@ const zhCommits: Record<string, TranslationEntry> = {
     message: "个文件",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "由",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

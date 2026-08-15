@@ -17,14 +17,6 @@ const faVisibilitySection: Record<string, TranslationEntry> = {
     message: "کد جاسازی",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "کپی URL",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "به‌روزرسانی سطح دسترسی دفتر ناموفق بود",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "کپی شد!",
     description: "Confirmation message when text is copied",
@@ -45,11 +37,6 @@ const faVisibilitySection: Record<string, TranslationEntry> = {
     message: "URL قابل اشتراک‌گذاری",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "اشتراک‌گذاری فقط برای دفاتر عمومی در دسترس است. سطح دسترسی دفتر خود را در بالا تغییر دهید تا اشتراک‌گذاری فعال شود.",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "اشتراک‌گذاری عمومی",
     description: "Subsection title for public sharing options",
@@ -63,9 +50,18 @@ const faVisibilitySection: Record<string, TranslationEntry> = {
     message: "دفتر خصوصی",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "کپی کد",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "مشاهده در Beancount.io",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "کپی URL ناموفق بود",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "کپی کد ناموفق بود",
+    description: "Toast when copying the embed code failed",
   },
 };
 

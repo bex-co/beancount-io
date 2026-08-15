@@ -13,10 +13,6 @@ const ruFileEditor: Record<string, { message: string; description: string }> = {
     message: "Удалить файл",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Не удалось удалить файл",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Не удалось загрузить содержимое файла",
     description: "Error message when file content fails to load",

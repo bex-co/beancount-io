@@ -12,10 +12,6 @@ const jaGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "設定が正常に更新されました",
     description: "Success message when settings are saved",
   },
-  "page.settings.failedToUpdateGeneral": {
-    message: "一般設定の更新に失敗しました",
-    description: "Error message when general settings update fails",
-  },
   "page.settings.ledgerNameDescription": {
     message: "この名前はアプリケーション全体に表示されます",
     description: "Help text for ledger name field",
@@ -36,10 +32,6 @@ const jaGeneralSettingsSection: Record<string, TranslationEntry> = {
   "page.settings.ledgerDescriptionPlaceholder": {
     message: "元帳の説明を入力（任意）",
     description: "Placeholder text for description field",
-  },
-  "page.settings.failedToRenameLedger": {
-    message: "元帳の名前変更に失敗しました",
-    description: "Error message when ledger rename fails",
   },
 };
 

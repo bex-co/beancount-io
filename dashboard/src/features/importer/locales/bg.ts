@@ -5,30 +5,8 @@ export interface TranslationEntry {
 
 const bgImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "Интелигентният импорт е активен — безплатен ранен достъп",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "Затвори банера",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "Импортирайте банкови извлечения от PDF, OFX файлове и изображения за секунди с AI анализ. Безплатно за ограничено време.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "Качване на файл",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "Качете вашето банково извлечение или файл с транзакции. Поддържани формати: CSV, PDF, OFX или изображения (PNG/JPG). Максимум 10MB.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message:
       "Този файл надвишава лимита от 10 MB. Моля, опитайте с по-малък файл.",
@@ -42,10 +20,6 @@ const bgImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "Четене на вашия файл\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "Избери друг файл",
@@ -126,10 +100,6 @@ const bgImporter: Record<string, TranslationEntry> = {
     message: "Анализирайте PDF, OFX и изображения автоматично с AI",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "Обработка...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "Надградете сега",
     description: "Button text to start upgrade process",
@@ -198,10 +168,6 @@ const bgImporter: Record<string, TranslationEntry> = {
     message: "Сума",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "Статус",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "Няма данни за показване",
     description: "Empty state message when no transactions",
@@ -243,14 +209,6 @@ const bgImporter: Record<string, TranslationEntry> = {
     message: "Кликнете за редактиране",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "Грешка",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "Валиден",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "Действия",
     description: "Table header for actions column",
@@ -258,10 +216,6 @@ const bgImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "Изтрий ред",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "Редът е изтрит",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "Не са намерени транзакции",
@@ -271,11 +225,6 @@ const bgImporter: Record<string, TranslationEntry> = {
     message:
       "Файлът беше успешно анализиран, но не бяха намерени данни за транзакции. Моля, проверете файла си и опитайте отново.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message:
-      "Уверете се, че файлът ви съдържа данни за транзакции в правилния формат.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "Опитайте друг файл",
@@ -453,11 +402,6 @@ const bgImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "AI категоризацията се провали",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "Неуспешна категоризация",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

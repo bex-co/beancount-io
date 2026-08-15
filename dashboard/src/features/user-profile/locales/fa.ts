@@ -4,18 +4,9 @@ export interface TranslationEntry {
 }
 
 const faUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "پروفایل کاربر",
-    description: "Header title for user profile page",
-  },
   "userProfile.errorLoadingProfile": {
     message: "خطا در بارگذاری پروفایل",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "مشکلی در بارگذاری این پروفایل پیش آمد. لطفاً بعداً دوباره تلاش کنید.",
-    description: "Generic error message for profile loading failures",
   },
   "userProfile.followError": {
     message: "دنبال کردن کاربر ناموفق بود",
@@ -24,14 +15,6 @@ const faUserProfile: Record<string, TranslationEntry> = {
   "userProfile.followSuccess": {
     message: "شما {username} را دنبال کردید",
     description: "Success toast message after following a user",
-  },
-  "userProfile.followers": {
-    message: "دنبال‌کنندگان",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "دنبال می‌کند",
-    description: "Label for following count",
   },
   "userProfile.joined": {
     message: "پیوسته",
@@ -64,10 +47,6 @@ const faUserProfile: Record<string, TranslationEntry> = {
   "userProfile.follow": {
     message: "دنبال کردن",
     description: "Button label to follow a user",
-  },
-  "userProfile.starredRepos": {
-    message: "مخزن‌های ستاره‌دار",
-    description: "Label for starred repositories count",
   },
   "userProfile.unfollowError": {
     message: "لغو دنبال کردن کاربر ناموفق بود",

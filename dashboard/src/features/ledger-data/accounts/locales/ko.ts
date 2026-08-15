@@ -81,14 +81,6 @@ const koAccounts: Record<string, TranslationEntry> = {
     message: "항목",
     description: "Table column header for entry count",
   },
-  "page.accounts.failedToLoadAccounts": {
-    message: "계정 불러오기 실패",
-    description: "Error message when accounts fail to load",
-  },
-  "page.accounts.loadingAccounts": {
-    message: "계정 불러오는 중...",
-    description: "Loading message when fetching accounts",
-  },
   "page.accounts.loadingEntryContent": {
     message: "항목 내용 불러오는 중...",
     description: "Loading message when fetching entry content in delete dialog",
@@ -119,10 +111,6 @@ const koAccounts: Record<string, TranslationEntry> = {
     message: "개설일",
     description: "Table column header and form label for account open date",
   },
-  "page.accounts.operation": {
-    message: "작업",
-    description: "Table column header for available operations on an account",
-  },
   "page.accounts.searchAccounts": {
     message: "계정 검색...",
     description: "Placeholder text for accounts search input",
@@ -134,6 +122,11 @@ const koAccounts: Record<string, TranslationEntry> = {
   "page.accounts.type": {
     message: "유형",
     description: "Table column header for type",
+  },
+  "page.accounts.accountClosedToast": {
+    message: "{account} 계정이 폐쇄되었습니다",
+    description:
+      "Toast shown after an account was closed; {account} is the account name",
   },
 };
 

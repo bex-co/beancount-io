@@ -17,14 +17,6 @@ const frVisibilitySection: Record<string, TranslationEntry> = {
     message: "Code d'intégration",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "Copier l'URL",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "Échec de la mise à jour de la visibilité du grand livre",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "Copié !",
     description: "Confirmation message when text is copied",
@@ -45,11 +37,6 @@ const frVisibilitySection: Record<string, TranslationEntry> = {
     message: "URL partageable",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "Le partage est uniquement disponible pour les grands livres publics. Modifiez la visibilité de votre grand livre ci-dessus pour activer le partage.",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "Partage public",
     description: "Subsection title for public sharing options",
@@ -63,9 +50,18 @@ const frVisibilitySection: Record<string, TranslationEntry> = {
     message: "Grand livre privé",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "Copier le code",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "Voir sur Beancount.io",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "Échec de la copie de l'URL",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "Échec de la copie du code",
+    description: "Toast when copying the embed code failed",
   },
 };
 

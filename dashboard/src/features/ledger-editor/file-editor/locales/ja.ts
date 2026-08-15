@@ -12,10 +12,6 @@ const jaFileEditor: Record<string, { message: string; description: string }> = {
     message: "ファイルを削除",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "ファイルの削除に失敗しました",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "ファイルの内容の読み込みに失敗しました",
     description: "Error message when file content fails to load",

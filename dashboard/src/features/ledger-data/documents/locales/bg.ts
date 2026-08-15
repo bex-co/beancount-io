@@ -8,10 +8,6 @@ const bgDocuments: Record<string, TranslationEntry> = {
     message: "Документи",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "Неуспешно зареждане на документи",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "Име на файл",
     description: "Table column header for filename",

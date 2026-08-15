@@ -20,10 +20,6 @@ const zhErrors: Record<string, TranslationEntry> = {
     message: "加载错误失败",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message: "加载错误数据时出错。请稍后重试。",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

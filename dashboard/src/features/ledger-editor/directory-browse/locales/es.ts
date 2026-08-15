@@ -10,10 +10,6 @@ const esDirectoryBrowse: Record<
     message: "Descargar ZIP",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "Cargando contenido del directorio...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "Administrar Claves SSH",
     description: "Menu item for SSH key management",

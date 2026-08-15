@@ -4,14 +4,6 @@ export interface TranslationEntry {
 }
 
 const dePullRequests: Record<string, TranslationEntry> = {
-  "pullRequests.reviewPR": {
-    message: "Pull Request überprüfen",
-    description: "Page title for PR review page",
-  },
-  "pullRequests.createPR": {
-    message: "Pull Request erstellen",
-    description: "Page title for create PR page",
-  },
   "pullRequests.approve": {
     message: "Genehmigen & zusammenführen",
     description: "Button text to approve and merge PR",
@@ -36,10 +28,6 @@ const dePullRequests: Record<string, TranslationEntry> = {
     message: "Fehler beim Schließen des Pull Requests",
     description: "Error message when PR rejection fails",
   },
-  "pullRequests.changes": {
-    message: "Änderungen",
-    description: "Label for diff viewer section",
-  },
   "pullRequests.filesChanged": {
     message: "Geänderte Dateien",
     description: "Label for changed files section",
@@ -47,10 +35,6 @@ const dePullRequests: Record<string, TranslationEntry> = {
   "pullRequests.prNotFound": {
     message: "Pull Request nicht gefunden",
     description: "Error message when PR doesn't exist",
-  },
-  "pullRequests.loadingPR": {
-    message: "Lade Pull Request Details...",
-    description: "Loading message while fetching PR",
   },
 };
 

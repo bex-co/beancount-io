@@ -54,14 +54,6 @@ const koDashboardPage: Record<string, TranslationEntry> = {
     message: "장부 이름 입력",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "장부 생성에 실패했습니다",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "장부 삭제에 실패했습니다",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "장부를 로드하지 못했습니다",
     description: "Error title when ledgers fail to load",
@@ -69,10 +61,6 @@ const koDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.failedToLoadLedgersDescription": {
     message: "장부를 가져올 수 없습니다. 연결을 확인하고 다시 시도해 주세요.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "장부 업데이트에 실패했습니다",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.ledgerCreatedSuccess": {
     message: "장부가 성공적으로 생성되었습니다",

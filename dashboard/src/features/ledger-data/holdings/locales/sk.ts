@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const skHoldings: Record<string, TranslationEntry> = {
-  "page.holdings.errorExecutingQuery": {
-    message: "Počas vykonávania dotazu nastala chyba",
-    description: "Generic error message for query execution failure",
-  },
   "page.holdings.exportCsv": {
     message: "Exportovať CSV",
     description: "Button text to export data as CSV",

@@ -10,10 +10,6 @@ const frDirectoryBrowse: Record<
     message: "Télécharger en ZIP",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "Chargement du contenu du répertoire...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "Gérer les clés SSH",
     description: "Menu item for SSH key management",

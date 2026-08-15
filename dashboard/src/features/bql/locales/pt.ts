@@ -12,14 +12,6 @@ const ptBql: Record<string, TranslationEntry> = {
     message: "Executando...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "Ocorreu um erro while executing the query",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Resultados da Consulta",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Pressione Cmd+Enter (Mac) ou Ctrl+Enter (Windows/Linux) para executar a consulta",

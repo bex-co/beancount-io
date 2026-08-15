@@ -8,10 +8,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "账户",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "账户选择",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "账户 (e.g., Assets:Bank:Checking)",
     description: "Placeholder for account field",
@@ -24,25 +20,9 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "账户",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "账户",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "添加新日记账条目",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "添加过账",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "添加事务",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "请输入金额",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "金额必须是有效数字",
@@ -55,10 +35,6 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "金额为必填项",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "至少需要一个过账",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "至少需要两个分录",
@@ -103,14 +79,6 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "关闭",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "关户",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "成本",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "为此账本创建新日记账条目",
@@ -209,14 +177,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "导出日记账失败",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "标记（例如：*）",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "从",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "流水",
     description: "Navigation label for journal/transaction history page",
@@ -224,38 +184,6 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "日记账导出成功",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "加载日记账失败：",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message: "使用'添加交易'按钮创建记录",
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "通过网页界面上传beancount文件",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "导入现有会计数据",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message: "添加交易后，它们会显示在这里。",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "开始使用：",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "你还没有任何日记账记录。",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "欢迎使用日记账！📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "链接",
@@ -269,25 +197,13 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "加载条目上下文...",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "加载更多...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "元数据",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "备注",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "备注",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "备注为必填项",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "新建条目",
@@ -300,10 +216,6 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "未找到符合当前筛选条件的日记账条目。",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "没有更多记录",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "未找到备注",
@@ -329,10 +241,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "开立",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "开户",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "其他",
     description: "Label for other transaction subtype filter",
@@ -345,10 +253,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "补平",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "收款方",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "收款人/备注",
     description: "Table header for payee and narration column",
@@ -356,10 +260,6 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "收款人",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "收款人为必填项",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "待处理",
@@ -369,14 +269,6 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "待处理的交易",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "请输入...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "过账",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "过账条目",
     description: "Label for postings toggle filter",
@@ -384,22 +276,6 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "价格",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "价格",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "快速添加",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "保存失败",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "保存成功!",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "选择账户...",
@@ -424,14 +300,6 @@ const zhJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "选择收款人...",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "选择交易日期",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "到",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "切换元数据",

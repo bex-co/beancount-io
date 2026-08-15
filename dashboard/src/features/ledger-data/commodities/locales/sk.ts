@@ -12,11 +12,6 @@ const skCommodities: Record<string, TranslationEntry> = {
     message: "Nepodarilo sa načítať komodity",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "Nastala chyba pri načítavaní údajov o komoditách. Prosím skúste to znova neskôr.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "Nenašli sa žiadne komodity",
     description: "Empty state title when no commodities exist",

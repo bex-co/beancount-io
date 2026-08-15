@@ -73,15 +73,6 @@ const jaSeo: Record<string, TranslationEntry> = {
     message: "貸借対照表 - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "{ledgerName}のコラボレーターを管理します。ユーザーを招待してアクセス権限を制御できます。",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "コラボレーター - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "{ledgerName}の商品リストと価格。通貨、株式、その他の資産を追跡できます。",
@@ -294,14 +285,6 @@ const jaSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "一般設定",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message: "Beancountアカウントの設定、プリファレンス、構成を管理します。",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "アカウント設定",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

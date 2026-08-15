@@ -13,10 +13,6 @@ const esWelcomePage: Record<string, TranslationEntry> = {
     message: "Cree su Primer Libro Mayor",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Error al crear el libro mayor",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Libro mayor creado exitosamente",
     description: "Toast notification when ledger created",

@@ -20,10 +20,6 @@ const faIncomeStatement: Record<string, TranslationEntry> = {
     message: "پیگیری درآمد {ledgerName} در ارزهای مختلف در طول زمان",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "درآمد خالص ماهانه",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message: "پیگیری سود خالص {ledgerName} در ارزهای مختلف در طول زمان",
     description: "Description for net profit chart",

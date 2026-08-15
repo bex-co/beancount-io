@@ -82,14 +82,6 @@ const ruCollaboration: Record<string, TranslationEntry> = {
     message: "Присоединился",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "Последняя активность",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "Никогда",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "Нет соавторов",
     description: "Empty state title when no collaborators exist",
@@ -141,10 +133,6 @@ const ruCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "Начните вводить для поиска пользователей...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "Произошла неизвестная ошибка",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "Неизвестный пользователь",

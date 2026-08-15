@@ -8,10 +8,6 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Compte",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "Sélecteur de compte",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "Compte (e.g., Assets:Bank:Checking)",
     description: "Placeholder for account field",
@@ -24,25 +20,9 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Comptes",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "comptes",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "Ajouter une nouvelle écriture de journal",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "Ajouter une écriture",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "Ajouter une transaction",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "Veuillez saisir le montant",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "Le montant doit être un nombre valide",
@@ -55,10 +35,6 @@ const frJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "Le montant est requis",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "Au moins une écriture est requise",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "Au moins deux écritures sont requises",
@@ -103,14 +79,6 @@ const frJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "Fermer",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "Fermer un compte",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "Coût",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "Créer une nouvelle écriture de journal pour ce grand livre",
@@ -210,14 +178,6 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Échec de l'exportation du journal",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "Indicateur (ex: *)",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "De",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "Journal",
     description: "Navigation label for journal/transaction history page",
@@ -225,40 +185,6 @@ const frJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "Journal exporté avec succès",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "Échec du chargement du journal : ",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message:
-      'Utilisez le bouton "Ajouter une transaction" pour créer des écritures',
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "Téléversez des fichiers beancount via l'interface web",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "Importez des données comptables existantes",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message:
-      "Une fois que vous aurez ajouté des transactions, elles apparaîtront ici.",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "Pour commencer :",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "Vous n'avez pas encore d'entrées de journal.",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "Bienvenue dans votre Journal ! 📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "L",
@@ -272,25 +198,13 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Chargement du contexte de l'écriture...",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "Chargement en cours...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "Métadonnées",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "Libellé",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "Libellé",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "Le libellé est requis",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "Nouvelle écriture",
@@ -303,10 +217,6 @@ const frJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "Aucune écriture de journal trouvée pour les filtres actuels.",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "Aucune autre entrée",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "Aucun libellé trouvé",
@@ -332,10 +242,6 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Ouverture",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "Ouvrir un compte",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "x",
     description: "Label for other transaction subtype filter",
@@ -348,10 +254,6 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Ajustement",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "Bénéficiaire",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "Bénéficiaire/Libellé",
     description: "Table header for payee and narration column",
@@ -359,10 +261,6 @@ const frJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "Bénéficiaire",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "Le bénéficiaire est requis",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "!",
@@ -372,14 +270,6 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Transactions en attente",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "Veuillez saisir...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "Écriture",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "Écritures",
     description: "Label for postings toggle filter",
@@ -387,22 +277,6 @@ const frJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "Prix",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "Prix",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "Ajout rapide",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "Échec de l'enregistrement",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "Transaction enregistrée !",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "Sélectionner un compte...",
@@ -427,14 +301,6 @@ const frJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "Sélectionner un bénéficiaire...",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "Sélectionner la date de transaction",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "À",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "Basculer les métadonnées",

@@ -83,15 +83,6 @@ const ruSeo: Record<string, TranslationEntry> = {
     message: "Баланс - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "Управляйте сотрудниками для {ledgerName}. Приглашайте пользователей и контролируйте права доступа.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "Сотрудники - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "Список товаров и цены для {ledgerName}. Отслеживайте валюты, акции и другие активы.",
@@ -332,15 +323,6 @@ const ruSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "Общие Настройки",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "Управляйте настройками, предпочтениями и конфигурациями вашего аккаунта Beancount.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "Настройки Аккаунта",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

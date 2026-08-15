@@ -20,11 +20,6 @@ const faErrors: Record<string, TranslationEntry> = {
     message: "بارگذاری خطاها ناموفق بود",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "خطایی در بارگذاری داده‌های خطا رخ داد. لطفاً بعداً دوباره تلاش کنید.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

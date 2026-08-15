@@ -16,14 +16,6 @@ const nlVisibilitySection: Record<string, TranslationEntry> = {
     message: "Insluitcode",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "URL kopiëren",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "Zichtbaarheid van grootboek bijwerken mislukt",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "Gekopieerd!",
     description: "Confirmation message when text is copied",
@@ -44,11 +36,6 @@ const nlVisibilitySection: Record<string, TranslationEntry> = {
     message: "Deelbare URL",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "Delen is alleen beschikbaar voor openbare grootboeken. Wijzig de zichtbaarheid van uw grootboek hierboven om delen in te schakelen.",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "Openbaar delen",
     description: "Subsection title for public sharing options",
@@ -62,9 +49,18 @@ const nlVisibilitySection: Record<string, TranslationEntry> = {
     message: "Privé grootboek",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "Code kopiëren",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "Bekijken op Beancount.io",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "Kopiëren van URL mislukt",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "Kopiëren van code mislukt",
+    description: "Toast when copying the embed code failed",
   },
 };
 

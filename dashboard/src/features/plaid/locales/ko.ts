@@ -353,10 +353,6 @@ const koPlaid: Record<string, TranslationEntry> = {
     description:
       "Section label for the account mapping list within a bank card",
   },
-  "plaid.accountMapping.mapped": {
-    message: "매핑됨",
-    description: "Badge text for mapped account",
-  },
   "plaid.accountMapping.currency": {
     message: "통화",
     description: "Label for the account's ledger currency selector",
@@ -634,38 +630,38 @@ const koPlaid: Record<string, TranslationEntry> = {
     description: "Toast description for submission failure",
   },
   "plaid.transactionReview.delete": {
-    message: "[TODO] Delete",
+    message: "삭제",
     description: "Delete button text",
   },
   "plaid.transactionReview.deleting": {
-    message: "[TODO] Deleting...",
+    message: "삭제 중...",
     description: "Button text while deleting",
   },
   "plaid.transactionReview.deleteConfirmTitle": {
-    message: "[TODO] Delete Transactions?",
+    message: "거래를 삭제할까요?",
     description: "Confirmation dialog title for bulk-deleting transactions",
   },
   "plaid.transactionReview.deleteConfirmDescription": {
     message:
-      "[TODO] This will permanently remove {count} selected transaction(s) from this list. This cannot be undone.",
+      "선택한 거래 {count}건이 이 목록에서 영구적으로 삭제됩니다. 이 작업은 취소할 수 없습니다.",
     description:
       "Confirmation dialog description for bulk-deleting transactions - interpolation: {count}",
   },
   "plaid.transactionReview.toast.transactionsDeleted": {
-    message: "[TODO] Transactions Deleted",
+    message: "거래 삭제됨",
     description: "Toast title when transactions are deleted",
   },
   "plaid.transactionReview.toast.transactionsDeletedDescription": {
-    message: "[TODO] {count} transaction(s) removed from this list.",
+    message: "이 목록에서 거래 {count}건을 삭제했습니다.",
     description:
       "Toast description for deleted transactions - interpolation: {count}",
   },
   "plaid.transactionReview.toast.deletionFailed": {
-    message: "[TODO] Deletion Failed",
+    message: "삭제 실패",
     description: "Toast title when deletion fails",
   },
   "plaid.transactionReview.toast.deletionFailedDescription": {
-    message: "[TODO] Failed to delete transactions. Please try again.",
+    message: "거래를 삭제하지 못했습니다. 다시 시도해 주세요.",
     description: "Toast description for deletion failure",
   },
 };

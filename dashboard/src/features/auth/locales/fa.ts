@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const faAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "قبلاً حساب کاربری دارید؟ وارد شوید",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "قبلاً حساب کاربری دارید؟",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const faAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "در حال احراز هویت...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "خطا در احراز هویت",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "خطایی در هنگام احراز هویت رخ داد",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "احراز هویت ناموفق بود",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "بازگشت به صفحه ورود",
@@ -104,10 +88,6 @@ const faAuth: Record<string, TranslationEntry> = {
     message:
       "لینک بازنشانی رمز عبور به آدرس ایمیل شما ارسال شد. لطفاً صندوق ورودی خود را بررسی کنید و دستورالعمل‌ها را برای بازنشانی رمز عبور دنبال کنید.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "اطلاعات ورود خود را برای دسترسی به داشبورد وارد کنید",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "اطلاعات خود را برای شروع کار با داشبورد وارد کنید",
@@ -195,10 +175,6 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "ورود / ثبت نام",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "خطایی در هنگام ورود رخ داد",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "ورود ناموفق بود",
     description: "Error title when login fails",
@@ -206,18 +182,6 @@ const faAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "خروج",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "لغو",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "خروج",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "آیا مطمئن هستید که می‌خواهید خروج کنید؟",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "محبوب کاربران",
@@ -309,39 +273,13 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "در حال هدایت به صفحه ورود...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "خطایی در هنگام ثبت نام رخ داد",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "ثبت نام ناموفق بود",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "خطایی در هنگام ارسال ایمیل بازنشانی رمز عبور رخ داد",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "بازنشانی رمز عبور",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "بازنشانی رمز عبور",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "آدرس ایمیل خود را وارد کنید تا لینک بازنشانی رمز عبور دریافت کنید.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "یک ایمیل به آدرس ایمیل شما ارسال شده است. لطفاً ایمیل خود را برای بازنشانی رمز عبور بررسی کنید.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "خطایی در هنگام بازنشانی رمز عبور شما رخ داد",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "رمز عبور خود را بازنشانی کنید",
@@ -362,10 +300,6 @@ const faAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "ارسال لینک بازنشانی",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "ارسال ایمیل بازنشانی رمز عبور",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "در حال ارسال...",
@@ -421,10 +355,6 @@ const faAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "نام کاربری",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "نام کاربری فقط می‌تواند شامل حروف و اعداد باشد",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message: "نام کاربری فقط می‌تواند شامل حروف کوچک، اعداد و خط زیرین باشد",
@@ -483,14 +413,6 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -504,5 +426,63 @@ const faAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "مجوز دسترسی CLI",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message:
+      "رابط خط فرمان Beancount درخواست دسترسی به حساب کاربری شما را دارد.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "این کار به CLI اجازه می‌دهد:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "خواندن و نوشتن دفاتر کل شما",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "دسترسی به اطلاعات حساب کاربری شما",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "مجاز کردن",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "در حال مجاز کردن...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "رد کردن",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "در حال رد کردن...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "جلسه منقضی شده یا یافت نشد.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "مجوز با موفقیت انجام شد",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "می‌توانید این برگه را ببندید و به CLI بازگردید.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "دسترسی رد شد",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "می‌توانید این برگه را ببندید.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default faAuth;

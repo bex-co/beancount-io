@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const zhAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "已有账号？登录",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "已有账户？",
     description: "Prompt asking if user has existing account",
@@ -19,18 +15,6 @@ const zhAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "验证中...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "验证错误",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "验证过程中发生错误",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "验证失败",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "返回登录",
@@ -104,10 +88,6 @@ const zhAuth: Record<string, TranslationEntry> = {
     message:
       "我们已向你的邮箱发送了密码重置链接。请检查你的收件箱并按照说明重置密码。",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "输入你的凭据以访问仪表板",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "输入你的详细信息以开始使用仪表板",
@@ -193,10 +173,6 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "登录 / 注册",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "登录过程中发生错误",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "登录失败",
     description: "Error title when login fails",
@@ -204,18 +180,6 @@ const zhAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "登出",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "取消",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "确认",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "你确认要登出吗？",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.lovedByUsers": {
     message: "深受用户喜爱",
@@ -306,37 +270,13 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "正在跳转到登录页面...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "注册过程中发生错误",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "注册失败",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "发送密码重置邮件时发生错误",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "重置密码",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "重置密码",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message: "输入你的邮箱地址以接收重置密码的链接。",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message: "已向你的邮箱地址发送邮件。请检查你的邮箱以重置密码。",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "重置密码时发生错误",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "重置你的密码",
@@ -357,10 +297,6 @@ const zhAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "发送重置链接",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "发送重置密码邮件",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "发送中...",
@@ -413,10 +349,6 @@ const zhAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "用户名",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "用户名只能包含字母和数字",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message: "用户名只能包含小写字母、数字和下划线",
@@ -475,14 +407,6 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -496,5 +420,62 @@ const zhAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "授权 CLI 访问",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "Beancount CLI 正在请求访问你的账户。",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "这将允许 CLI:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "读取和写入你的账本",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "访问你的账户信息",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "授权",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "授权中...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "拒绝",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "拒绝中...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "会话已过期或不存在。",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "授权成功",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "你可以关闭此标签页并返回 CLI。",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "访问被拒绝",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "你可以关闭此标签页。",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default zhAuth;

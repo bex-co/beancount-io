@@ -16,6 +16,7 @@ import {
 } from "@/graphql/definitions";
 import { DeviceAuthCard } from "./device-auth-card";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 interface CliAuthPendingViewProps {
   sessionId: string;
@@ -26,6 +27,7 @@ export function CliAuthPendingView({
   sessionId,
   onComplete,
 }: CliAuthPendingViewProps) {
+  const { t } = useTranslations();
   const formatError = useErrorMessage();
   const [error, setError] = useState("");
 
@@ -63,18 +65,20 @@ export function CliAuthPendingView({
           <Terminal className="w-8 h-8 text-primary" />
         </div>
         <div>
-          <CardTitle className="text-xl">Authorize CLI Access</CardTitle>
+          <CardTitle className="text-xl">{t("auth.cliAuthTitle")}</CardTitle>
           <CardDescription className="mt-2">
-            The Beancount CLI is requesting access to your account.
+            {t("auth.cliAuthDescription")}
           </CardDescription>
         </div>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
-          <p className="text-sm font-medium">This will allow the CLI to:</p>
+          <p className="text-sm font-medium">
+            {t("auth.cliAuthPermissionsIntro")}
+          </p>
           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
-            <li>Read and write your ledgers</li>
-            <li>Access your account information</li>
+            <li>{t("auth.cliAuthPermissionLedgers")}</li>
+            <li>{t("auth.cliAuthPermissionAccount")}</li>
           </ul>
         </div>
         {error && (
@@ -90,14 +94,16 @@ export function CliAuthPendingView({
           onClick={handleDeny}
           disabled={confirming || denying}
         >
-          {denying ? "Denying..." : "Deny"}
+          {denying ? t("auth.cliAuthDenying") : t("auth.cliAuthDeny")}
         </Button>
         <Button
           className="flex-1"
           onClick={handleAuthorize}
           disabled={confirming || denying}
         >
-          {confirming ? "Authorizing..." : "Authorize"}
+          {confirming
+            ? t("auth.cliAuthAuthorizing")
+            : t("auth.cliAuthAuthorize")}
         </Button>
       </CardFooter>
     </DeviceAuthCard>

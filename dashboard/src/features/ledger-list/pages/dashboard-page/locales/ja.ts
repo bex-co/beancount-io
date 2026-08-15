@@ -54,14 +54,6 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
     message: "台帳名を入力",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "台帳の作成に失敗しました",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "台帳の削除に失敗しました",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "台帳の読み込みに失敗しました",
     description: "Error title when ledgers fail to load",
@@ -70,10 +62,6 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
     message:
       "台帳を取得できませんでした。接続を確認してもう一度お試しください。",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "台帳の更新に失敗しました",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.ledgerCreatedSuccess": {
     message: "台帳が正常に作成されました",

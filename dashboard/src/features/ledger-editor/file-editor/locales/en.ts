@@ -13,10 +13,6 @@ const enFileEditor: Record<string, { message: string; description: string }> = {
     message: "Delete File",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "Failed to delete file",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "Failed to load file content",
     description: "Error message when file content fails to load",

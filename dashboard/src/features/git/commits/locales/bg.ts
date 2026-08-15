@@ -62,10 +62,6 @@ const bgCommits: Record<string, TranslationEntry> = {
     message: "файлове",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "от",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

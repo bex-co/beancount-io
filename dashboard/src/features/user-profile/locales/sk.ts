@@ -4,18 +4,9 @@ export interface TranslationEntry {
 }
 
 const skUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "Profil používateľa",
-    description: "Header title for user profile page",
-  },
   "userProfile.errorLoadingProfile": {
     message: "Chyba pri načítavaní profilu",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "Pri načítaní tohto profilu sa vyskytla chyba. Skúste to neskôr znova.",
-    description: "Generic error message for profile loading failures",
   },
   "userProfile.followError": {
     message: "Nepodarilo sa sledovať používateľa",
@@ -24,14 +15,6 @@ const skUserProfile: Record<string, TranslationEntry> = {
   "userProfile.followSuccess": {
     message: "Teraz sledujete {username}",
     description: "Success toast message after following a user",
-  },
-  "userProfile.followers": {
-    message: "sledovatelia",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "sleduje",
-    description: "Label for following count",
   },
   "userProfile.joined": {
     message: "Pridal sa",
@@ -64,10 +47,6 @@ const skUserProfile: Record<string, TranslationEntry> = {
   "userProfile.follow": {
     message: "Sledovať",
     description: "Button label to follow a user",
-  },
-  "userProfile.starredRepos": {
-    message: "repozitáre s hviezdičkou",
-    description: "Label for starred repositories count",
   },
   "userProfile.unfollowError": {
     message: "Nepodarilo sa prestať sledovať používateľa",

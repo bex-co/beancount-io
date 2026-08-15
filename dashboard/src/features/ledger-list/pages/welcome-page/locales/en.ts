@@ -12,10 +12,6 @@ const enWelcomePage: Record<string, TranslationEntry> = {
     message: "Create Your First Ledger",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Failed to create ledger",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Ledger created successfully",
     description: "Toast notification when ledger created",

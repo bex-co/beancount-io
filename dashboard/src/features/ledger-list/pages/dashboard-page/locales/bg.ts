@@ -59,14 +59,6 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
     message: "Въведете име на книгата",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Неуспешно създаване на книга",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Неуспешно изтриване на книга",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Неуспешно зареждане на книгите",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
     message:
       "Не можахме да извлечем вашите книги. Моля, проверете връзката си и опитайте отново.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Неуспешна актуализация на книгата",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Грешка при зареждане на емисията",

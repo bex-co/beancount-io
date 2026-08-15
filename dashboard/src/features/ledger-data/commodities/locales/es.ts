@@ -12,11 +12,6 @@ const esCommodities: Record<string, TranslationEntry> = {
     message: "Error al Cargar Productos",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "Hubo un error al cargar los datos de productos. Por favor, inténtelo de nuevo más tarde.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "No se Encontraron Productos",
     description: "Empty state title when no commodities exist",

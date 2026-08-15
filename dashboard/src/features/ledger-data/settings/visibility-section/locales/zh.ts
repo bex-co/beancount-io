@@ -16,14 +16,6 @@ const zhVisibilitySection: Record<string, TranslationEntry> = {
     message: "嵌入代码",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "复制链接",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "更新账本可见性失败",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "已复制！",
     description: "Confirmation message when text is copied",
@@ -44,10 +36,6 @@ const zhVisibilitySection: Record<string, TranslationEntry> = {
     message: "分享链接",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message: "只有公开账本才能分享。请在上方更改账本可见性以启用分享功能。",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "公开分享",
     description: "Subsection title for public sharing options",
@@ -60,9 +48,18 @@ const zhVisibilitySection: Record<string, TranslationEntry> = {
     message: "私有账本",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "复制代码",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "在 Beancount.io 上查看",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "复制 URL 失败",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "复制代码失败",
+    description: "Toast when copying the embed code failed",
   },
 };
 

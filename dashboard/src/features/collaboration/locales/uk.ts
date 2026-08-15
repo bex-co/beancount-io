@@ -82,14 +82,6 @@ const ukCollaboration: Record<string, TranslationEntry> = {
     message: "Приєднався",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "Пast Active",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "Ніколи",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "Немає співробітників",
     description: "Empty state title when no collaborators exist",
@@ -141,10 +133,6 @@ const ukCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "Тип to search users...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "Сталася невідома помилка",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "Невідомий користувач",

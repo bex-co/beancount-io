@@ -571,7 +571,7 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
             }}
             size="icon"
             className="absolute bottom-24 right-4 rounded-full shadow-lg z-10"
-            aria-label="Scroll to bottom"
+            aria-label={t("aiAgent.scrollToBottom")}
           >
             <ChevronDown className="h-5 w-5" />
           </Button>

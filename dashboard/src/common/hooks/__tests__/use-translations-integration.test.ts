@@ -62,8 +62,8 @@ describe("useTranslations Integration (with real i18n)", () => {
     it("should handle translation without interpolation", () => {
       const { result } = renderHook(() => useTranslations());
 
-      const translation = result.current.t("common.home");
-      expect(translation).toBe("Home");
+      const translation = result.current.t("common.cancel");
+      expect(translation).toBe("Cancel");
     });
 
     it("should preserve placeholder when parameter is missing", () => {

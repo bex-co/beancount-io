@@ -22,10 +22,6 @@ const nlIncomeStatement: Record<string, TranslationEntry> = {
       "Volg {ledgerName} inkomsten over verschillende grondstoffen in de tijd",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Maandelijks netto inkomen",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message:
       "Volg {ledgerName} nettowinst over verschillende grondstoffen in de tijd",

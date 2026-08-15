@@ -12,10 +12,6 @@ const skGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "Settings updated successfully",
     description: "Success message when settings are saved",
   },
-  "page.settings.failedToUpdateGeneral": {
-    message: "Failed to update general settings",
-    description: "Error message when general settings update fails",
-  },
   "page.settings.ledgerNameDescription": {
     message: "Tento názov sa zobrazí v celej aplikácii",
     description: "Help text for ledger name field",
@@ -36,10 +32,6 @@ const skGeneralSettingsSection: Record<string, TranslationEntry> = {
   "page.settings.ledgerDescriptionPlaceholder": {
     message: "Enter a description for your ledger (optional)",
     description: "Placeholder text for description field",
-  },
-  "page.settings.failedToRenameLedger": {
-    message: "Premenovanie knihy zlyhalo",
-    description: "Error message when ledger rename fails",
   },
 };
 

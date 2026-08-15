@@ -8,10 +8,6 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Сметка",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "Избор на сметка",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "Сметка (напр., Активи:Банка:Разплащателна)",
     description: "Placeholder for account field",
@@ -24,25 +20,9 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Сметки",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "сметки",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "Добавяне на нов запис в журнала",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "Добавяне на проводка",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "Добавяне на транзакция",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "Моля въведете сумата",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "Сумата трябва да бъде валидно число",
@@ -55,10 +35,6 @@ const bgJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "Сумата е задължителна",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "Изисква се поне една проводка",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "Изискват се поне две проводки",
@@ -103,14 +79,6 @@ const bgJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "Затваряне",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "Затвори сметка",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "Цена",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "Създаване на нов запис в журнала за тази книга",
@@ -209,14 +177,6 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Неуспешен експорт на журнал",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "Флаг (напр., *)",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "От",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "Журнал",
     description: "Navigation label for journal/transaction history page",
@@ -224,39 +184,6 @@ const bgJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "Журналът е експортиран успешно",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "Неуспешно зареждане на журнала: ",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message:
-      'Използвайте бутона "Добавяне на транзакция", за да създадете записи',
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "Качете beancount файлове чрез уеб интерфейса",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "Импортирайте съществуващи счетоводни данни",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message: "След като добавите някои транзакции, те ще се появят тук.",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "За да започнете:",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "Все още нямате записи в журнала.",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "Добре дошли в своя Журнал! 📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "С",
@@ -270,25 +197,13 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Зареждане на контекста на запис...",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "Зарежда се още...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "Метаданни",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "Описание",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "Описание",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "Описанието е задължително",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "Нов запис",
@@ -301,10 +216,6 @@ const bgJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "Няма намерени записи в журнала за текущите филтри.",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "Няма повече записи",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "Няма намерени описания",
@@ -330,10 +241,6 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Отваряне",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "Отвори сметка",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "д",
     description: "Label for other transaction subtype filter",
@@ -346,10 +253,6 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Попълване",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "Получател",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "Получател/Описание",
     description: "Table header for payee and narration column",
@@ -357,10 +260,6 @@ const bgJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "Получател",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "Получателят е задължителен",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "!",
@@ -370,14 +269,6 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Висящи транзакции",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "Моля въведете...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "Проводка",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "Публикации",
     description: "Label for postings toggle filter",
@@ -385,22 +276,6 @@ const bgJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "Цена",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "Цена",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "Бързо добавяне",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "Неуспешно запазване",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "Транзакцията е запазена!",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "Изберете сметка...",
@@ -425,14 +300,6 @@ const bgJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "Изберете получател...",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "Изберете дата на транзакцията",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "До",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "Превключване на метаданни",

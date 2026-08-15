@@ -59,14 +59,6 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     message: "Введіть назву книги",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Не вдалося створити книгу",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Не вдалося видалити книгу",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Не вдалося завантажити книгуs",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     message:
       "Не вдалося отримати ваші книги. Перевірте підключення та спробуйте ще раз.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Не вдалося оновити книгу",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Не вдалося завантажити стрічку",

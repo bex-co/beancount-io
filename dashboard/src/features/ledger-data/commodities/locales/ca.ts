@@ -12,10 +12,6 @@ const caCommodities: Record<string, TranslationEntry> = {
     message: "Error en carregar les entrades del compte",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message: "Error en carregar les monedes",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "Carregant esdeveniments...",
     description: "Empty state title when no commodities exist",

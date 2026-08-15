@@ -9,10 +9,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "アカウントが正常に削除されました",
     description: "Success message when account is deleted",
   },
-  "userSettings.accountSettings": {
-    message: "アカウント",
-    description: "Section header for account settings",
-  },
   "userSettings.addNewKey": {
     message: "新しいキーを追加",
     description: "Button text to add new key",
@@ -37,10 +33,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "すべての取引と記録",
     description: "Item in delete account list",
   },
-  "userSettings.appSettings": {
-    message: "アプリ設定",
-    description: "Section header for application settings",
-  },
   "userSettings.appearance": {
     message: "外観",
     description: "Appearance settings section label",
@@ -48,10 +40,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
   "userSettings.cannotBeUndone": {
     message: "この操作は元に戻せません。",
     description: "Warning that action is irreversible",
-  },
-  "userSettings.changeLanguage": {
-    message: "変更",
-    description: "Button to change language",
   },
   "userSettings.changeUsername": {
     message: "ユーザー名を変更",
@@ -81,14 +69,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "言語",
     description: "Label showing current language selection",
   },
-  "userSettings.currentPeriodEnds": {
-    message: "現在の期間終了日",
-    description: "Label for subscription period end date",
-  },
-  "userSettings.currentVersion": {
-    message: "バージョン",
-    description: "Label showing current app version",
-  },
   "userSettings.customizeAppearance": {
     message: "アプリケーションの外観をカスタマイズ",
     description: "Description for appearance settings",
@@ -105,39 +85,14 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "アカウントを削除",
     description: "Button or menu item to delete user account",
   },
-  "userSettings.deleteAccountAlertCancel": {
-    message: "キャンセル",
-    description: "Cancel button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertConfirm": {
-    message: "アカウントを削除",
-    description: "Confirm button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertMsg": {
-    message:
-      "アカウントを削除してよろしいですか？この操作は元に戻せず、すべてのデータが完全に削除されます。",
-    description: "Warning message in account deletion confirmation dialog",
-  },
   "userSettings.deleteAccountConfirmMessage": {
     message: "確認のため、下にユーザー名「{username}」を入力してください：",
     description:
       "Instructions for confirming account deletion by typing username",
   },
-  "userSettings.deleteAccountConfirmPhrase": {
-    message: "sudo delete my account",
-    description: "Exact phrase user must type to confirm deletion",
-  },
   "userSettings.deleteAccountConfirmPlaceholder": {
     message: "ユーザー名を入力",
     description: "Placeholder text for deletion confirmation input",
-  },
-  "userSettings.deleteAccountConfirmTitle": {
-    message: "アカウント削除の確認",
-    description: "Title of account deletion confirmation step",
-  },
-  "userSettings.deleteAccountDescription": {
-    message: "アカウントとデータを完全に削除",
-    description: "Description of what account deletion does",
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
@@ -185,14 +140,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "設定の読み込みエラー",
     description: "Error message when settings fail to load",
   },
-  "userSettings.failedToCreateKey": {
-    message: "キーの作成に失敗しました。もう一度お試しください。",
-    description: "Error message when key creation fails",
-  },
-  "userSettings.failedToDeleteAccount": {
-    message: "アカウントの削除に失敗しました",
-    description: "Error message when account deletion fails",
-  },
   "userSettings.failedToLoadKeys": {
     message: "キーの読み込みに失敗しました",
     description: "Error title when keys fail to load",
@@ -218,26 +165,9 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "一般",
     description: "General settings section label",
   },
-  "userSettings.helpCenter": {
-    message: "ヘルプセンター",
-    description: "Link to help center",
-  },
-  "userSettings.inputKeyword": {
-    message: "キーワードを入力してください",
-    description: "Placeholder prompting user to enter keyword",
-  },
   "userSettings.invite": {
     message: "招待",
     description: "Invite action button",
-  },
-  "userSettings.inviteFriends": {
-    message: "友達を招待",
-    description: "Button or section title for inviting friends",
-  },
-  "userSettings.inviteSummary": {
-    message:
-      "このプロフェッショナルな財務管理ツールを共有して、他の人が財務の未来を築く手助けをしましょう。",
-    description: "Summary description of invite feature",
   },
   "userSettings.irreversibleActions": {
     message: "元に戻せない破壊的な操作",
@@ -278,10 +208,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
   "userSettings.loadingAccountInformation": {
     message: "アカウント情報を読み込み中...",
     description: "Loading message for account information",
-  },
-  "userSettings.loadingAccountOptions": {
-    message: "アカウントオプションを読み込み中...",
-    description: "Loading message for account options",
   },
   "userSettings.loadingSessionInformation": {
     message: "セッション情報を読み込み中...",
@@ -329,16 +255,16 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to resume a subscription scheduled to cancel",
   },
   "userSettings.resumeSubscriptionTitle": {
-    message: "[TODO] Resume Subscription?",
+    message: "サブスクリプションを再開しますか？",
     description: "Confirmation dialog title for resuming subscription",
   },
   "userSettings.resumeSubscriptionDescription": {
     message:
-      "[TODO] Are you sure you want to resume your subscription? Your subscription will continue to renew automatically and you will be billed again at the end of your current billing period.",
+      "サブスクリプションを再開してもよろしいですか？サブスクリプションは引き続き自動更新され、現在の請求期間の終了時に再度請求されます。",
     description: "Confirmation dialog description for resuming subscription",
   },
   "userSettings.confirmResume": {
-    message: "[TODO] Yes, Resume Subscription",
+    message: "はい、サブスクリプションを再開します",
     description: "Button text to confirm subscription resumption",
   },
   "userSettings.resuming": {
@@ -357,10 +283,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message:
       "チェックアウトセッションの作成に失敗しました。もう一度お試しください。",
     description: "Error message when creating checkout session fails",
-  },
-  "userSettings.manage": {
-    message: "管理",
-    description: "Button to manage subscription",
   },
   "userSettings.manageBilling": {
     message: "請求を管理",
@@ -386,14 +308,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "新しいSSHキー",
     description: "Button text to create new SSH key",
   },
-  "userSettings.noActiveSubscription": {
-    message: "アクティブなサブスクリプションなし",
-    description: "Label when user has no subscription",
-  },
-  "userSettings.noContactPermission": {
-    message: "連絡先へのアクセス権限がありません。",
-    description: "Error when contacts permission is denied",
-  },
   "userSettings.noSshKeys": {
     message: "SSHキーなし",
     description: "Empty state title when no SSH keys exist",
@@ -407,17 +321,9 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "未設定",
     description: "Placeholder when a field has no value",
   },
-  "userSettings.off": {
-    message: "オフ",
-    description: "Off state for toggles or subscriptions",
-  },
   "userSettings.opening": {
     message: "開いています...",
     description: "Button text while opening billing portal",
-  },
-  "userSettings.processing": {
-    message: "処理中...",
-    description: "Button text while processing checkout",
   },
   "userSettings.publicKey": {
     message: "公開鍵",
@@ -437,31 +343,9 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "公開鍵は必須です",
     description: "Validation error for missing public key",
   },
-  "userSettings.recommend": {
-    message:
-      "財務を効果的に整理するのに役立っているプロフェッショナルな財務管理ツールをご紹介したいと思います。",
-    description: "Pre-written recommendation message for sharing",
-  },
-  "userSettings.referral": {
-    message: "紹介",
-    description: "Referral program label",
-  },
   "userSettings.renewsOn": {
     message: "更新日",
     description: "Label for subscription renewal date",
-  },
-  "userSettings.reviewApp": {
-    message: "気に入りましたか？レビューをお願いします :)",
-    description: "Prompt to review the app",
-  },
-  "userSettings.rewardDetail": {
-    message:
-      "このプロフェッショナルな財務管理ツールを共有して、他の人が財務の未来を築く手助けをしましょう。",
-    description: "Detailed description of referral rewards",
-  },
-  "userSettings.rewardSummary": {
-    message: "友達を招待",
-    description: "Summary of referral rewards",
   },
   "userSettings.selectColorTheme": {
     message: "お好みのカラーテーマを選択",
@@ -475,15 +359,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "セッション",
     description: "Session management section title",
   },
-  "userSettings.settingsErrorMessage": {
-    message:
-      "設定の読み込みエラーが発生しました。接続を確認してもう一度お試しください。",
-    description: "Detailed error message for settings loading failure",
-  },
-  "userSettings.shareError": {
-    message: "共有に失敗しました",
-    description: "Error message when sharing fails",
-  },
   "userSettings.signOutDescription": {
     message: "アカウントからサインアウトし、セッションをクリアします。",
     description: "Description for logout action",
@@ -491,10 +366,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
   "userSettings.sshKeys": {
     message: "SSHキー",
     description: "Page title for SSH keys",
-  },
-  "userSettings.subscribe": {
-    message: "メールレポート",
-    description: "Email report subscription feature label",
   },
   "userSettings.subscription": {
     message: "サブスクリプション",
@@ -518,10 +389,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     description:
       "Message when 3DS authentication is needed for subscription upgrade",
   },
-  "userSettings.supportSettings": {
-    message: "サポート",
-    description: "Section header for support settings",
-  },
   "userSettings.system": {
     message: "システム",
     description: "System theme option",
@@ -529,10 +396,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
   "userSettings.testMode": {
     message: "テストモード",
     description: "Label indicating Stripe is in test/development mode",
-  },
-  "userSettings.thanksShare": {
-    message: "シェアありがとうございます！！",
-    description: "Thank you message after sharing",
   },
   "userSettings.theme": {
     message: "テーマ",
@@ -558,14 +421,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "タイトルは必須です",
     description: "Validation error for missing title",
   },
-  "userSettings.trialProPlan": {
-    message: "プレミアムにアップグレード",
-    description: "Button text for premium subscription upgrade",
-  },
-  "userSettings.trialProPlanComingSoon": {
-    message: "トライアルプロプラン機能は近日公開予定！",
-    description: "Toast message when trial Pro plan is clicked",
-  },
   "userSettings.unableToOpenBillingPortal": {
     message: "請求ポータルを開けません。後でもう一度お試しください。",
     description: "Error message when billing portal fails to open",
@@ -574,22 +429,9 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "不明なプラン",
     description: "Fallback when plan name is not available",
   },
-  "userSettings.updateFailed": {
-    message: "サブスクリプションの更新に失敗しました",
-    description: "Error message when update fails",
-  },
-  "userSettings.updateSuccess": {
-    message: "サブスクリプションが正常に更新されました",
-    description: "Success message after updating subscription",
-  },
   "userSettings.usernameUpdatedSuccess": {
     message: "ユーザー名が正常に更新されました",
     description: "Success message after updating username",
-  },
-  "userSettings.upgradeToProDescription": {
-    message:
-      "プロにアップグレードしてプレミアム機能と無制限アクセスを解放しましょう。",
-    description: "Description encouraging subscription upgrade",
   },
   "userSettings.userProfile": {
     message: "ユーザープロフィール",
@@ -631,10 +473,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "AIリクエスト",
     description: "Label for AI CFO usage section",
   },
-  "userSettings.aiCfoUsageDescription": {
-    message: "現在の請求期間における月間AIリクエスト使用量",
-    description: "Description for AI CFO usage section",
-  },
   "userSettings.aiCfoUsageCount": {
     message: "今月 {used} / {max} リクエスト使用済み",
     description: "AI CFO usage count display",
@@ -655,10 +493,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "エンタープライズ",
     description: "Display name for the enterprise tier",
   },
-  "userSettings.customPricing": {
-    message: "カスタム価格",
-    description: "Price label for enterprise tier",
-  },
   "userSettings.usage": {
     message: "使用状況",
     description: "Section header for usage overview",
@@ -670,14 +504,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
   "userSettings.ledgerUsageCount": {
     message: "{used} / {max} 元帳",
     description: "Ledger usage count display",
-  },
-  "userSettings.collaboratorLimit": {
-    message: "元帳あたり最大 {max} 名のコラボレーター",
-    description: "Collaborator limit description",
-  },
-  "userSettings.collaboratorLimitUnlimited": {
-    message: "元帳あたりコラボレーター数無制限",
-    description: "Collaborator limit for unlimited tiers",
   },
   "userSettings.upgradeYourPlan": {
     message: "プランをアップグレード",
@@ -694,11 +520,6 @@ const jaUserSettings: Record<string, TranslationEntry> = {
   "userSettings.perMonth": {
     message: "/月",
     description: "Price interval suffix",
-  },
-  "userSettings.planFeatureSummary": {
-    message:
-      "{tokens} AIトークン · {ledgers} 元帳 · {collaborators} コラボレーター",
-    description: "Summary of plan features in the current plan banner",
   },
 };
 

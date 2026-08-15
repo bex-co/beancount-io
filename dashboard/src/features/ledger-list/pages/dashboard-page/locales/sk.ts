@@ -59,14 +59,6 @@ const skDashboardPage: Record<string, TranslationEntry> = {
     message: "Zadajte názov knihy",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Vytvorenie knihy zlyhalo",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Vymazanie knihy zlyhalo",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Načítanie kníh zlyhalo",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const skDashboardPage: Record<string, TranslationEntry> = {
     message:
       "Nepodarilo sa načítať vaše knihy. Skontrolujte prosím svoje pripojenie a skúste to znova.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Aktualizácia knihy zlyhala",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Nepodarilo sa načítať kanál",

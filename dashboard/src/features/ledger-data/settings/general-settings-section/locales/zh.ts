@@ -12,10 +12,6 @@ const zhGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "设置已成功更新",
     description: "Success message when settings are saved",
   },
-  "page.settings.failedToUpdateGeneral": {
-    message: "更新通用设置失败",
-    description: "Error message when general settings update fails",
-  },
   "page.settings.ledgerNameDescription": {
     message: "此名称将在应用程序中显示",
     description: "Help text for ledger name field",
@@ -35,10 +31,6 @@ const zhGeneralSettingsSection: Record<string, TranslationEntry> = {
   "page.settings.ledgerDescriptionPlaceholder": {
     message: "输入账本描述（可选）",
     description: "Placeholder text for description field",
-  },
-  "page.settings.failedToRenameLedger": {
-    message: "重命名账本失败",
-    description: "Error message when ledger rename fails",
   },
 };
 

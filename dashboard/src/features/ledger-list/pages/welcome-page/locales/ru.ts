@@ -12,10 +12,6 @@ const ruWelcomePage: Record<string, TranslationEntry> = {
     message: "Создать вашу первую книгу",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Не удалось создать книгу",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Книга успешно создана",
     description: "Toast notification when ledger created",

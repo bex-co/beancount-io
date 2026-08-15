@@ -83,14 +83,6 @@ const esAccounts: Record<string, TranslationEntry> = {
     message: "Entradas",
     description: "Table column header for entry count",
   },
-  "page.accounts.failedToLoadAccounts": {
-    message: "Error al cargar las cuentas",
-    description: "Error message when accounts fail to load",
-  },
-  "page.accounts.loadingAccounts": {
-    message: "Cargando cuentas...",
-    description: "Loading message when fetching accounts",
-  },
   "page.accounts.loadingEntryContent": {
     message: "Cargando contenido del registro...",
     description: "Loading message when fetching entry content in delete dialog",
@@ -121,10 +113,6 @@ const esAccounts: Record<string, TranslationEntry> = {
     message: "Fecha de apertura",
     description: "Table column header and form label for account open date",
   },
-  "page.accounts.operation": {
-    message: "Operación",
-    description: "Table column header for available operations on an account",
-  },
   "page.accounts.searchAccounts": {
     message: "Buscar cuentas...",
     description: "Placeholder text for accounts search input",
@@ -136,6 +124,11 @@ const esAccounts: Record<string, TranslationEntry> = {
   "page.accounts.type": {
     message: "Type",
     description: "Table column header for type",
+  },
+  "page.accounts.accountClosedToast": {
+    message: "Cuenta {account} cerrada",
+    description:
+      "Toast shown after an account was closed; {account} is the account name",
   },
 };
 

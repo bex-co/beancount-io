@@ -28,10 +28,6 @@ const jaBalanceSheet: Record<string, TranslationEntry> = {
     message: "{ledgerName}の負債を時系列でさまざまな商品にわたって追跡",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "月次純資産",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message: "{ledgerName}の純資産を時系列でさまざまな商品にわたって追跡",
     description: "Description for net worth chart",

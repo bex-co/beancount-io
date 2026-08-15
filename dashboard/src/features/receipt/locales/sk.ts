@@ -213,10 +213,6 @@ const skReceipt: Record<string, TranslationEntry> = {
     message: "Failed to parse receipt",
     description: "Error message when AI fails to parse the receipt",
   },
-  "receipt.workflow.failedToProcess": {
-    message: "Failed to process receipt",
-    description: "Generic fallback error message during receipt processing",
-  },
   "receipt.workflow.failedToRecord": {
     message: "Failed to record receipt transaction",
     description: "Error message when recording the transaction fails",

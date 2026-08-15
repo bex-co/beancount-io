@@ -13,10 +13,6 @@ const faFileEditor: Record<string, { message: string; description: string }> = {
     message: "حذف فایل",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "حذف فایل ناموفق بود",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "بارگذاری محتوای فایل ناموفق بود",
     description: "Error message when file content fails to load",

@@ -12,25 +12,9 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "交易记录",
     description: "Plural form of transaction",
   },
-  "common.adminPermissionRequired": {
-    message: "访问此页面需要管理员权限。",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "发生错误",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "返回",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "返回账本",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Beancount 仪表板",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Beancount 标志",
@@ -56,19 +40,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "协作者限制已达上限",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "你已达到 {max} 位协作者的上限。升级到 Premium 以向你的账本添加更多协作者。",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "已使用 {used}/{max} 位协作者",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "确定",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "已复制",
     description: "Status message indicating content was copied",
@@ -76,10 +47,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "复制",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "纯文本记账。强大、精确、可审计。",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "删除",
@@ -99,10 +66,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "完成",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "编辑",
@@ -128,10 +91,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "加载数据失败",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message: "无法检索你的账本信息。请检查你的连接并重试。",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "加载账本失败",
     description: "Error title when ledger fails to load",
@@ -151,18 +110,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "转到上一页",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "首页",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "权限不足",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message: "你没有访问此页面的必要权限。请联系账本管理员以获取访问权限。",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "导入",
@@ -215,10 +162,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "最后更新",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "账本",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "账本设置",
     description:
@@ -232,10 +175,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "账本限制已达上限",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "已使用 {used}/{max} 个账本",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "加载中...",
     description: "Loading state message",
@@ -243,10 +182,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "正在加载数据...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "我的",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "更多页面",
@@ -304,30 +239,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "分页",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "请稍后重试",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "每个账本最多添加 5 位协作者",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "最多创建 5 个账本而非 1 个",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "最多邀请 5 位协作者而非 2 位",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "访问高级功能和优先支持",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "Premium 权益",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "上一个",
     description: "Text label for previous page button",
@@ -344,10 +255,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "保存...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "搜索",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "相关页面",
     description: "Heading for related pages navigation section",
@@ -360,17 +267,9 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "选择日期",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "设置",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "设置",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "分享",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "侧边栏",
@@ -407,14 +306,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "更新...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "立即升级",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "升级到 Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "升级到 Pro",
@@ -457,10 +348,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.pageDescription.balanceSheet": {
     message: "查看{ledgerName}的资产负债表。在任何时间点分析资产、负债和权益。",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message: "管理{ledgerName}的协作者。邀请用户并控制访问权限。",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -538,25 +425,13 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "上传文件到{ledgerName}。导入现有的Beancount文件或文档。",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message: "查看{ledgerName}的提交历史。跟踪账本文件随时间的变化。",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "记账分录",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "账户",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "资产负债表",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "协作者",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "商品",
@@ -606,10 +481,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "查询",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "设置",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "统计",
     description: "Link label for statistics page",
@@ -638,10 +509,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "成功",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "金额",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "资产",
     description: "Assets category in accounting",
@@ -661,10 +528,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "高级",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "需要帮助？",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "帮助与支持",
@@ -694,17 +557,9 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "清除 all",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "商品",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "转换为",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "货币",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "每日",
@@ -804,10 +659,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "每季度",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "储蓄",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "搜索账户...",
     description: "Placeholder for account search",
@@ -819,10 +670,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "选择时间段",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "摘要",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "时间",
@@ -932,6 +779,18 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.errorBoundary.description": {
     message: "此区域无法显示，页面的其他部分应可正常使用。",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "复制代码",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "已复制到剪贴板",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "复制失败",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

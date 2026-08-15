@@ -357,10 +357,6 @@ const enPlaid: Record<string, TranslationEntry> = {
     description:
       "Section label for the account mapping list within a bank card",
   },
-  "plaid.accountMapping.mapped": {
-    message: "Mapped",
-    description: "Badge text for mapped account",
-  },
   "plaid.accountMapping.currency": {
     message: "Currency",
     description: "Label for the account's ledger currency selector",

@@ -12,11 +12,6 @@ const enCommodities: Record<string, TranslationEntry> = {
     message: "Failed to Load Commodities",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "There was an error loading the commodity data. Please try again later.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "No Commodities Found",
     description: "Empty state title when no commodities exist",

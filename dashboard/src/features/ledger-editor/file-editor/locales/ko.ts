@@ -13,10 +13,6 @@ const koFileEditor: Record<string, { message: string; description: string }> = {
     message: "파일 삭제",
     description: "Dialog title for file deletion",
   },
-  "ledgerEditor.failedToDeleteFile": {
-    message: "파일 삭제 실패",
-    description: "Error message when file deletion fails",
-  },
   "ledgerEditor.failedToLoadFileContent": {
     message: "파일 내용 불러오기 실패",
     description: "Error message when file content fails to load",

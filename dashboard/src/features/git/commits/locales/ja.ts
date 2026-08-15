@@ -62,10 +62,6 @@ const jaCommits: Record<string, TranslationEntry> = {
     message: "ファイル",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "作成者",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

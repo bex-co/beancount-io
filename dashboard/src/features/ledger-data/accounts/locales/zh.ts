@@ -81,14 +81,6 @@ const zhAccounts: Record<string, TranslationEntry> = {
     message: "条目",
     description: "Table column header for entry count",
   },
-  "page.accounts.failedToLoadAccounts": {
-    message: "加载账户失败",
-    description: "Error message when accounts fail to load",
-  },
-  "page.accounts.loadingAccounts": {
-    message: "加载账户中...",
-    description: "Loading message when fetching accounts",
-  },
   "page.accounts.loadingEntryContent": {
     message: "加载条目内容中...",
     description: "Loading message when fetching entry content in delete dialog",
@@ -119,10 +111,6 @@ const zhAccounts: Record<string, TranslationEntry> = {
     message: "开启日期",
     description: "Table column header and form label for account open date",
   },
-  "page.accounts.operation": {
-    message: "操作",
-    description: "Table column header for available operations on an account",
-  },
   "page.accounts.searchAccounts": {
     message: "搜索账户...",
     description: "Placeholder text for accounts search input",
@@ -134,6 +122,11 @@ const zhAccounts: Record<string, TranslationEntry> = {
   "page.accounts.type": {
     message: "Type",
     description: "Table column header for type",
+  },
+  "page.accounts.accountClosedToast": {
+    message: "账户 {account} 已关闭",
+    description:
+      "Toast shown after an account was closed; {account} is the account name",
   },
 };
 

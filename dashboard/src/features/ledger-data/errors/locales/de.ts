@@ -20,11 +20,6 @@ const deErrors: Record<string, TranslationEntry> = {
     message: "Fehler konnten nicht geladen werden",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "Beim Laden der Fehlerdaten ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

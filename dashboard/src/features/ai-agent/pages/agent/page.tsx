@@ -276,7 +276,7 @@ export function AgentPageImpl() {
           variant="outline"
           size="icon-sm"
           className="absolute bottom-24 left-1/2 z-50 -translate-x-1/2 rounded-full bg-background/95 shadow-md backdrop-blur sm:bottom-28"
-          aria-label="Scroll to bottom"
+          aria-label={t("aiAgent.scrollToBottom")}
         >
           <ChevronDown className="h-4 w-4" />
         </Button>

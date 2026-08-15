@@ -60,7 +60,9 @@ export function CloseAccountDialog({
         },
       });
       if (result.data?.bulkEntries.success) {
-        toast.success(`Account ${account.account} closed`);
+        toast.success(
+          t("page.accounts.accountClosedToast", { account: account.account }),
+        );
         onSuccess();
         handleOpenChange(false);
       } else {

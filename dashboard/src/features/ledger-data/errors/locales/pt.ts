@@ -20,11 +20,6 @@ const ptErrors: Record<string, TranslationEntry> = {
     message: "Falha ao Carregar Erros",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "Ocorreu um erro ao carregar os dados de erros. Por favor, tente novamente mais tarde.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

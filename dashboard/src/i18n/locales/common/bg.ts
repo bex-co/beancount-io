@@ -12,25 +12,9 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Транзакции",
     description: "Plural form of transaction",
   },
-  "common.adminPermissionRequired": {
-    message: "Изисква се администраторско право за достъп до тази страница.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "Възникна грешка",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "Назад",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "Обратно към книгата",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Табло на Beancount",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Лого на Beancount",
@@ -56,19 +40,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Лимитът на сътрудници е достигнат",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "Достигнахте лимита си от {max} сътрудници. Надградете до Premium, за да добавите повече сътрудници към вашата книга.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{used} от {max} сътрудници",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "Потвърждение",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "Копирано",
     description: "Status message indicating content was copied",
@@ -76,10 +47,6 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "Копиране",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "Текстово счетоводство. Мощно, точно, одитируемо.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "Изтриване",
@@ -99,10 +66,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "Готово",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "Редактиране",
@@ -129,11 +92,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Неуспешно зареждане на данни",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "Не можахме да извлечем информацията за вашата книга. Моля, проверете връзката си и опитайте отново.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "Неуспешно зареждане на книгата",
     description: "Error title when ledger fails to load",
@@ -153,19 +111,6 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "Към предишната страница",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "Начало",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "Недостатъчни права",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "Нямате необходимите права за достъп до тази страница. Моля, свържете се с администратора на книгата за достъп.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "Импорт",
@@ -219,10 +164,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Последно актуализирано",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "Книга",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "Настройки на книга",
     description:
@@ -236,10 +177,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Лимитът на регистри е достигнат",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{used} от {max} книги използвани",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "зареждане...",
     description: "Loading state message",
@@ -247,10 +184,6 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "Зареждане на данни...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "Моето",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "Още страници",
@@ -310,30 +243,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "страниране",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "Моля, опитайте отново по-късно",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "Добавете до 5 сътрудници на книга",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "Създайте до 5 книги вместо 1",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "Поканете до 5 сътрудници вместо 2",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "Достъп до разширени функции и приоритетна поддръжка",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "Предимства на Premium",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "Предишна",
     description: "Text label for previous page button",
@@ -350,10 +259,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Запазване...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "Търсене",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "Свързани страници",
     description: "Heading for related pages navigation section",
@@ -366,17 +271,9 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Изберете дата",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "Настройка",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "Настройки",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "Споделяне",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "Странична лента",
@@ -413,14 +310,6 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "актуализиране...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "Надградете сега",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "Надградете до Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Надстройте до Pro",
@@ -465,11 +354,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message:
       "Преглед на баланса за {ledgerName}. Анализирайте активи, пасиви и капитал за всеки момент.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "Управлявайте сътрудници за {ledgerName}. Поканете потребители и контролирайте разрешения за достъп.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -551,26 +435,13 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Качете файлове към {ledgerName}. Импортирайте съществуващи файлове или документи на Beancount.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "Преглед на историята на къмитите за {ledgerName}. Проследявайте промени във файловете на книгата във времето.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "Проводки",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "Сметка",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "Баланс",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "Сътрудници",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "Стоки",
@@ -620,10 +491,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Заявка",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "Настройки",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "Статистики",
     description: "Link label for statistics page",
@@ -652,10 +519,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Успех",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "Сума",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "Активи",
     description: "Assets category in accounting",
@@ -675,10 +538,6 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "Разширени",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "Нуждаете се от помощ?",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "Помощ и поддръжка",
@@ -708,17 +567,9 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Изчистване на всички",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "Стоки",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "Преобразувано в",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "Валута",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "Дневно",
@@ -819,10 +670,6 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Тримесечно",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "Спестявания",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "Търсене на сметки...",
     description: "Placeholder for account search",
@@ -834,10 +681,6 @@ const bgCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "Изберете времеви период",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "Резюме",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "Време",
@@ -953,6 +796,18 @@ const bgCommon: Record<string, TranslationEntry> = {
     message:
       "Тази секция не можа да бъде показана. Останалата част от страницата би трябвало да работи.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "Копиране на кода",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "Копирано в клипборда",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "Неуспешно копиране",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

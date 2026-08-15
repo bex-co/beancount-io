@@ -31,10 +31,6 @@ const esBalanceSheet: Record<string, TranslationEntry> = {
       "Seguimiento de {ledgerName} pasivos en diferentes productos a lo largo del tiempo",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "Patrimonio neto mensual",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message:
       "Seguimiento de {ledgerName} patrimonio neto en diferentes productos a lo largo del tiempo",

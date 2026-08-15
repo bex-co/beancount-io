@@ -28,10 +28,6 @@ const faBalanceSheet: Record<string, TranslationEntry> = {
     message: "پیگیری بدهی‌های {ledgerName} در ارزهای مختلف در طول زمان",
     description: "Description for liabilities chart",
   },
-  "page.balanceSheet.monthlyNetWorth": {
-    message: "ارزش خالص ماهانه",
-    description: "Net worth calculated monthly",
-  },
   "page.balanceSheet.netWorthDescription": {
     message: "پیگیری ارزش خالص {ledgerName} در ارزهای مختلف در طول زمان",
     description: "Description for net worth chart",

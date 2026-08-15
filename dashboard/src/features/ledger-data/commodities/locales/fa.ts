@@ -12,11 +12,6 @@ const faCommodities: Record<string, TranslationEntry> = {
     message: "بارگذاری کالاها و ارزها ناموفق بود",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "خطایی در بارگذاری داده‌های کالا و ارز رخ داد. لطفاً بعداً دوباره تلاش کنید.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "کالا یا ارزی یافت نشد",
     description: "Empty state title when no commodities exist",

@@ -5,30 +5,8 @@ export interface TranslationEntry {
 
 const ukImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "Розумний імпорт доступний — Безкоштовний ранній доступ",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "Закрити банер",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "Імпортуйте банківські виписки з PDF, OFX-файлів та зображень за секунди з аналізом ШІ. Безкоштовно протягом обмеженого часу.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "Завантажити файл",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "Завантажте свою банківську виписку або файл транзакцій. Підтримувані формати: CSV, PDF, OFX або зображення (PNG/JPG). Максимум 10МБ.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message:
       "Цей файл перевищує ліміт у 10 МБ. Будь ласка, спробуйте менший файл.",
@@ -42,10 +20,6 @@ const ukImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "Читання вашого файлу\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "Вибрати інший файл",
@@ -125,10 +99,6 @@ const ukImporter: Record<string, TranslationEntry> = {
     message: "Автоматично аналізуйте PDF, OFX та зображення за допомогою ШІ",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "Обробка...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "Оновити зараз",
     description: "Button text to start upgrade process",
@@ -195,10 +165,6 @@ const ukImporter: Record<string, TranslationEntry> = {
     message: "Сума",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "Статус",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "Немає даних для відображення",
     description: "Empty state message when no transactions",
@@ -240,14 +206,6 @@ const ukImporter: Record<string, TranslationEntry> = {
     message: "Натисніть для редагування",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "Помилка",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "Дійсний",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "Дії",
     description: "Table header for actions column",
@@ -255,10 +213,6 @@ const ukImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "Видалити рядок",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "Рядок видалено",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "Транзакції не знайдено",
@@ -268,11 +222,6 @@ const ukImporter: Record<string, TranslationEntry> = {
     message:
       "Файл був успішно проаналізований, але дані про транзакції не знайдено. Будь ласка, перевірте ваш файл і спробуйте знову.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message:
-      "Переконайтеся, що ваш файл містить дані про транзакції у правильному форматі.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "Спробувати інший файл",
@@ -450,11 +399,6 @@ const ukImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "Категоризація ШІ не вдалася",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "Не вдалося категоризувати",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

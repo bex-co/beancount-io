@@ -13,10 +13,6 @@ const faWelcomePage: Record<string, TranslationEntry> = {
     message: "ایجاد اولین دفتر",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "ایجاد دفتر ناموفق بود",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "دفتر با موفقیت ایجاد شد",
     description: "Toast notification when ledger created",

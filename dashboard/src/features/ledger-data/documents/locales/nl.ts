@@ -8,10 +8,6 @@ const nlDocuments: Record<string, TranslationEntry> = {
     message: "Documenten",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "Documenten laden mislukt",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "Bestandsnaam",
     description: "Table column header for filename",

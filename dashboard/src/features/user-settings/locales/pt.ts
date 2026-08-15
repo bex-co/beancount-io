@@ -12,10 +12,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Conta excluída com sucesso",
     description: "Success message when account is deleted",
   },
-  "userSettings.accountSettings": {
-    message: "Conta",
-    description: "Section header for account settings",
-  },
   "userSettings.addNewKey": {
     message: "Adicionar Nova Chave",
     description: "Button text to add new key",
@@ -39,10 +35,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   "userSettings.allTransactionsAndRecords": {
     message: "Todas as transações e registros",
     description: "Item in delete account list",
-  },
-  "userSettings.appSettings": {
-    message: "Configurações do aplicativo",
-    description: "Section header for application settings",
   },
   "userSettings.appearance": {
     message: "Aparência",
@@ -68,10 +60,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   "userSettings.cannotBeUndone": {
     message: "Esta ação não pode ser desfeita.",
     description: "Warning that action is irreversible",
-  },
-  "userSettings.changeLanguage": {
-    message: "Alterar",
-    description: "Button to change language",
   },
   "userSettings.changeName": {
     message: "Alterar nome",
@@ -110,14 +98,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Idioma",
     description: "Label showing current language selection",
   },
-  "userSettings.currentPeriodEnds": {
-    message: "Período atual termina em",
-    description: "Label for subscription period end date",
-  },
-  "userSettings.currentVersion": {
-    message: "Versão",
-    description: "Label showing current app version",
-  },
   "userSettings.customizeAppearance": {
     message: "Personalize a aparência e o comportamento da aplicação",
     description: "Description for appearance settings",
@@ -134,39 +114,14 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Excluir conta",
     description: "Button or menu item to delete user account",
   },
-  "userSettings.deleteAccountAlertCancel": {
-    message: "Cancelar",
-    description: "Cancel button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertConfirm": {
-    message: "Excluir conta",
-    description: "Confirm button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertMsg": {
-    message:
-      "Tem certeza de que deseja excluir sua conta? Esta ação não pode ser desfeita e excluirá permanentemente todos os seus dados.",
-    description: "Warning message in account deletion confirmation dialog",
-  },
   "userSettings.deleteAccountConfirmMessage": {
     message: 'Para confirmar, digite seu nome de usuário "{username}" abaixo:',
     description:
       "Instructions for confirming account deletion by typing username",
   },
-  "userSettings.deleteAccountConfirmPhrase": {
-    message: "sudo delete my account",
-    description: "Exact phrase user must type to confirm deletion",
-  },
   "userSettings.deleteAccountConfirmPlaceholder": {
     message: "Digite seu nome de usuário",
     description: "Placeholder text for deletion confirmation input",
-  },
-  "userSettings.deleteAccountConfirmTitle": {
-    message: "Confirmar exclusão da conta",
-    description: "Title of account deletion confirmation step",
-  },
-  "userSettings.deleteAccountDescription": {
-    message: "Remover permanentemente a conta e os dados",
-    description: "Description of what account deletion does",
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
@@ -227,16 +182,16 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to resume a subscription scheduled to cancel",
   },
   "userSettings.resumeSubscriptionTitle": {
-    message: "[TODO] Resume Subscription?",
+    message: "Retomar assinatura?",
     description: "Confirmation dialog title for resuming subscription",
   },
   "userSettings.resumeSubscriptionDescription": {
     message:
-      "[TODO] Are you sure you want to resume your subscription? Your subscription will continue to renew automatically and you will be billed again at the end of your current billing period.",
+      "Tem certeza de que deseja retomar sua assinatura? Ela continuará sendo renovada automaticamente e você receberá uma nova cobrança ao final do período de faturamento atual.",
     description: "Confirmation dialog description for resuming subscription",
   },
   "userSettings.confirmResume": {
-    message: "[TODO] Yes, Resume Subscription",
+    message: "Sim, retomar assinatura",
     description: "Button text to confirm subscription resumption",
   },
   "userSettings.resuming": {
@@ -254,14 +209,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   "userSettings.failedToCreateCheckoutSession": {
     message: "Falha ao criar sessão de checkout. Por favor, tente novamente.",
     description: "Error message when creating checkout session fails",
-  },
-  "userSettings.failedToCreateKey": {
-    message: "Falha ao criar chave. Por favor, tente novamente.",
-    description: "Error message when key creation fails",
-  },
-  "userSettings.failedToDeleteAccount": {
-    message: "Falha ao excluir conta",
-    description: "Error message when account deletion fails",
   },
   "userSettings.failedToLoadKeys": {
     message: "Falha ao carregar chaves",
@@ -292,26 +239,9 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Geral",
     description: "General settings section label",
   },
-  "userSettings.helpCenter": {
-    message: "Central de ajuda",
-    description: "Link to help center",
-  },
-  "userSettings.inputKeyword": {
-    message: "Por favor, insira uma palavra-chave",
-    description: "Placeholder prompting user to enter keyword",
-  },
   "userSettings.invite": {
     message: "Convidar",
     description: "Invite action button",
-  },
-  "userSettings.inviteFriends": {
-    message: "Convidar amigos",
-    description: "Button or section title for inviting friends",
-  },
-  "userSettings.inviteSummary": {
-    message:
-      "Compartilhe esta ferramenta profissional de gestão financeira e ajude outros a construir seu futuro financeiro.",
-    description: "Summary description of invite feature",
   },
   "userSettings.irreversibleActions": {
     message: "Ações irreversíveis e destrutivas",
@@ -358,10 +288,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Carregando informações da sua conta...",
     description: "Loading message for account information",
   },
-  "userSettings.loadingAccountOptions": {
-    message: "Carregando opções da conta...",
-    description: "Loading message for account options",
-  },
   "userSettings.loadingSessionInformation": {
     message: "Carregando informações da sessão...",
     description: "Loading message for session data",
@@ -377,10 +303,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   "userSettings.loadingThemePreferences": {
     message: "Carregando preferências de tema...",
     description: "Loading message for theme settings",
-  },
-  "userSettings.manage": {
-    message: "Gerenciar",
-    description: "Button to manage subscription",
   },
   "userSettings.manageActiveSession": {
     message: "Gerencie sua sessão ativa",
@@ -410,14 +332,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Nova chave SSH",
     description: "Button text to create new SSH key",
   },
-  "userSettings.noActiveSubscription": {
-    message: "Nenhuma Assinatura Ativa",
-    description: "Label when user has no subscription",
-  },
-  "userSettings.noContactPermission": {
-    message: "Permissão de contatos em falta.",
-    description: "Error when contacts permission is denied",
-  },
   "userSettings.noSshKeys": {
     message: "Nenhuma chave SSH",
     description: "Empty state title when no SSH keys exist",
@@ -431,17 +345,9 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Não definido",
     description: "Placeholder when a field has no value",
   },
-  "userSettings.off": {
-    message: "Desligado",
-    description: "Off state for toggles or subscriptions",
-  },
   "userSettings.opening": {
     message: "Abrindo...",
     description: "Button text while opening billing portal",
-  },
-  "userSettings.processing": {
-    message: "Processando...",
-    description: "Button text while processing checkout",
   },
   "userSettings.publicKey": {
     message: "Chave Pública",
@@ -461,31 +367,9 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Chave pública é obrigatória",
     description: "Validation error for missing public key",
   },
-  "userSettings.recommend": {
-    message:
-      "Gostaria de compartilhar esta ferramenta profissional de gestão financeira que me ajudou a organizar minhas finanças de forma eficaz.",
-    description: "Pre-written recommendation message for sharing",
-  },
-  "userSettings.referral": {
-    message: "Indicação",
-    description: "Referral program label",
-  },
   "userSettings.renewsOn": {
     message: "Renova em",
     description: "Label for subscription renewal date",
-  },
-  "userSettings.reviewApp": {
-    message: "Gostou? Deixe uma avaliação :)",
-    description: "Prompt to review the app",
-  },
-  "userSettings.rewardDetail": {
-    message:
-      "Compartilhe esta ferramenta profissional de gestão financeira e ajude outros a construir seu futuro financeiro.",
-    description: "Detailed description of referral rewards",
-  },
-  "userSettings.rewardSummary": {
-    message: "Convidar amigos",
-    description: "Summary of referral rewards",
   },
   "userSettings.selectColorTheme": {
     message: "Selecione seu tema de cores preferido",
@@ -499,15 +383,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Sessão",
     description: "Session management section title",
   },
-  "userSettings.settingsErrorMessage": {
-    message:
-      "Ocorreu um erro ao carregar suas configurações. Verifique sua conexão e tente novamente.",
-    description: "Detailed error message for settings loading failure",
-  },
-  "userSettings.shareError": {
-    message: "Falha ao compartilhar",
-    description: "Error message when sharing fails",
-  },
   "userSettings.signOutDescription": {
     message: "Sair da sua conta e limpar sua sessão.",
     description: "Description for logout action",
@@ -515,10 +390,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   "userSettings.sshKeys": {
     message: "Chaves SSH",
     description: "Page title for SSH keys",
-  },
-  "userSettings.subscribe": {
-    message: "Relatório por e-mail",
-    description: "Email report subscription feature label",
   },
   "userSettings.subscription": {
     message: "Assinatura",
@@ -542,10 +413,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     description:
       "Message when 3DS authentication is needed for subscription upgrade",
   },
-  "userSettings.supportSettings": {
-    message: "Suporte",
-    description: "Section header for support settings",
-  },
   "userSettings.system": {
     message: "Sistema",
     description: "System theme option",
@@ -553,10 +420,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   "userSettings.testMode": {
     message: "Modo de teste",
     description: "Label indicating Stripe is in test/development mode",
-  },
-  "userSettings.thanksShare": {
-    message: "Obrigado por compartilhar!!",
-    description: "Thank you message after sharing",
   },
   "userSettings.theme": {
     message: "Tema",
@@ -582,14 +445,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "O título é obrigatório",
     description: "Validation error for missing title",
   },
-  "userSettings.trialProPlan": {
-    message: "Atualizar para Premium",
-    description: "Button text for premium subscription upgrade",
-  },
-  "userSettings.trialProPlanComingSoon": {
-    message: "Funcionalidade do plano Pro de teste em breve!",
-    description: "Toast message when trial Pro plan is clicked",
-  },
   "userSettings.unableToOpenBillingPortal": {
     message:
       "Não foi possível abrir o portal de faturamento. Por favor, tente novamente mais tarde.",
@@ -598,19 +453,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   "userSettings.unknownPlan": {
     message: "Plano Desconhecido",
     description: "Fallback when plan name is not available",
-  },
-  "userSettings.updateFailed": {
-    message: "Falha ao atualizar assinatura",
-    description: "Error message when update fails",
-  },
-  "userSettings.updateSuccess": {
-    message: "Assinatura atualizada com sucesso",
-    description: "Success message after updating subscription",
-  },
-  "userSettings.upgradeToProDescription": {
-    message:
-      "Faça upgrade para Pro para desbloquear recursos premium e acesso ilimitado.",
-    description: "Description encouraging subscription upgrade",
   },
   "userSettings.userProfile": {
     message: "Perfil do Usuário",
@@ -636,10 +478,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "AI Tokens",
     description: "Label for AI CFO usage section",
   },
-  "userSettings.aiCfoUsageDescription": {
-    message: "Monthly AI token usage for your current billing period",
-    description: "Description for AI CFO usage section",
-  },
   "userSettings.aiCfoUsageCount": {
     message: "{used} / {max} tokens used this month",
     description: "AI CFO usage count display",
@@ -660,10 +498,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
     message: "Enterprise",
     description: "Display name for the enterprise tier",
   },
-  "userSettings.customPricing": {
-    message: "Custom pricing",
-    description: "Price label for enterprise tier",
-  },
   "userSettings.usage": {
     message: "Usage",
     description: "Section header for usage overview",
@@ -675,14 +509,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   "userSettings.ledgerUsageCount": {
     message: "{used} / {max} ledgers",
     description: "Ledger usage count display",
-  },
-  "userSettings.collaboratorLimit": {
-    message: "Up to {max} collaborators per ledger",
-    description: "Collaborator limit description",
-  },
-  "userSettings.collaboratorLimitUnlimited": {
-    message: "Unlimited collaborators per ledger",
-    description: "Collaborator limit for unlimited tiers",
   },
   "userSettings.upgradeYourPlan": {
     message: "Upgrade Your Plan",
@@ -699,11 +525,6 @@ const ptUserSettings: Record<string, TranslationEntry> = {
   "userSettings.perMonth": {
     message: "/month",
     description: "Price interval suffix",
-  },
-  "userSettings.planFeatureSummary": {
-    message:
-      "{tokens} AI tokens · {ledgers} ledgers · {collaborators} collaborators",
-    description: "Summary of plan features in the current plan banner",
   },
 };
 

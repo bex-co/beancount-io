@@ -10,10 +10,6 @@ const koDirectoryBrowse: Record<
     message: "ZIP 다운로드",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "디렉터리 내용 불러오는 중...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "SSH 키 관리",
     description: "Menu item for SSH key management",

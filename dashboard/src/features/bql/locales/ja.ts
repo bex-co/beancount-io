@@ -9,14 +9,6 @@ const jaBql: Record<string, TranslationEntry> = {
     message: "実行中...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "クエリの実行中にエラーが発生しました",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "クエリ結果",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message: "Cmd+Enter（Mac）またはCtrl+Enter（Windows/Linux）でクエリを実行",
     description: "Hint text for query keyboard shortcut",

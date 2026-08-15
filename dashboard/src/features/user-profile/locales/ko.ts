@@ -1,22 +1,6 @@
 import type { TranslationEntry } from "@/i18n";
 
 const koUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "사용자 프로필",
-    description: "Header title for user profile page",
-  },
-  "userProfile.followers": {
-    message: "팔로워",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "팔로잉",
-    description: "Label for following count",
-  },
-  "userProfile.starredRepos": {
-    message: "즐겨찾기 저장소",
-    description: "Label for starred repositories count",
-  },
   "userProfile.follow": {
     message: "팔로우",
     description: "Button label to follow a user",
@@ -84,11 +68,6 @@ const koUserProfile: Record<string, TranslationEntry> = {
   "userProfile.errorLoadingProfile": {
     message: "프로필 불러오기 오류",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "이 프로필을 불러오는 중 문제가 발생했습니다. 나중에 다시 시도해 주세요.",
-    description: "Generic error message for profile loading failures",
   },
   "seo.userProfile.title": {
     message: "{username} - 사용자 프로필",

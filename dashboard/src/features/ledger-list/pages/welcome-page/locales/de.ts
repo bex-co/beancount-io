@@ -13,10 +13,6 @@ const deWelcomePage: Record<string, TranslationEntry> = {
     message: "Erstellen Sie Ihr erstes Hauptbuch",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Hauptbuch konnte nicht erstellt werden",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Hauptbuch erfolgreich erstellt",
     description: "Toast notification when ledger created",

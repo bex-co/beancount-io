@@ -83,15 +83,6 @@ const ukSeo: Record<string, TranslationEntry> = {
     message: "Баланс - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "Керуйте співробітниками для {ledgerName}. Запрошуйте користувачів та контролюйте права доступу.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "Співробітники - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "Список товарів та ціни для {ledgerName}. Відстежуйте валюти, акції та інші активи.",
@@ -332,15 +323,6 @@ const ukSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "Загальні Налаштування",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "Керуйте налаштуваннями, уподобаннями та конфігураціями свого облікового запису Beancount.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "Налаштування Облікового Запису",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

@@ -79,14 +79,6 @@ const jaCollaboration: Record<string, TranslationEntry> = {
     message: "参加日",
     description: "Table column header for join date",
   },
-  "collaboration.lastActive": {
-    message: "最終アクティブ",
-    description: "Table column header for last activity",
-  },
-  "collaboration.never": {
-    message: "なし",
-    description: "Label for never used or logged in",
-  },
   "collaboration.noCollaborators": {
     message: "コラボレーターなし",
     description: "Empty state title when no collaborators exist",
@@ -138,10 +130,6 @@ const jaCollaboration: Record<string, TranslationEntry> = {
   "collaboration.typeToSearchUsers": {
     message: "ユーザーを検索する...",
     description: "Placeholder for user search input",
-  },
-  "collaboration.unknownErrorOccurred": {
-    message: "不明なエラーが発生しました",
-    description: "Generic error message for unknown errors",
   },
   "collaboration.unknownUser": {
     message: "不明なユーザー",

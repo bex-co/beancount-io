@@ -22,10 +22,6 @@ const caIncomeStatement: Record<string, TranslationEntry> = {
       "Seguir els {ledgerName} ingressos en diferents monedes al llarg del temps",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Ingressos nets mensuals",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message:
       "Seguir el {ledgerName} benefici net en diferents monedes al llarg del temps",

@@ -59,14 +59,6 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     message: "Ingrese el nombre del libro mayor",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Error al crear el libro mayor",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Error al eliminar el libro mayor",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Error al cargar el libro mayors",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     message:
       "No pudimos recuperar sus libros mayores. Por favor, verifique su conexión e inténtelo de nuevo.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Error al actualizar el libro mayor",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Error al cargar el feed",

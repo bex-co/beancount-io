@@ -83,15 +83,6 @@ const nlSeo: Record<string, TranslationEntry> = {
     message: "Balans - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "Beheer medewerkers voor {ledgerName}. Nodig gebruikers uit en beheer toegangsrechten.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "Medewerkers - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "Goederenlijst en prijzen voor {ledgerName}. Volg valuta, aandelen en andere activa.",
@@ -332,15 +323,6 @@ const nlSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "Algemene Instellingen",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "Beheer uw Beancount-accountinstellingen, voorkeuren en configuraties.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "Accountinstellingen",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

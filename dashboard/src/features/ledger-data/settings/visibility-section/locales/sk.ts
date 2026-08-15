@@ -16,14 +16,6 @@ const skVisibilitySection: Record<string, TranslationEntry> = {
     message: "Kód na vloženie",
     description: "Label for embed code field",
   },
-  "page.settings.copyUrl": {
-    message: "Kopírovať URL",
-    description: "Button text for copying URL",
-  },
-  "page.settings.failedToUpdateVisibility": {
-    message: "Aktualizácia viditeľnosti knihy zlyhala",
-    description: "Error message when visibility update fails",
-  },
   "page.settings.copied": {
     message: "Skopírované!",
     description: "Confirmation message when text is copied",
@@ -44,11 +36,6 @@ const skVisibilitySection: Record<string, TranslationEntry> = {
     message: "URL na zdieľanie",
     description: "Label for shareable URL field",
   },
-  "page.settings.sharingOnlyPublic": {
-    message:
-      "Zdieľanie je dostupné len pre verejné knihy. Zmeňte viditeľnosť vašej knihy vyššie, aby ste povolili zdieľanie.",
-    description: "Info message when ledger is private",
-  },
   "page.settings.sharing": {
     message: "Verejné zdieľanie",
     description: "Subsection title for public sharing options",
@@ -62,9 +49,18 @@ const skVisibilitySection: Record<string, TranslationEntry> = {
     message: "Súkromná kniha",
     description: "Label when ledger is private",
   },
-  "page.settings.copyCode": {
-    message: "Kopírovať kód",
-    description: "Button text for copying embed code",
+  "page.settings.embedViewOnBeancount": {
+    message: "Zobraziť na Beancount.io",
+    description:
+      "Link label in the generated embed code pointing back to Beancount.io",
+  },
+  "page.settings.copyUrlFailed": {
+    message: "URL sa nepodarilo skopírovať",
+    description: "Toast when copying the shareable URL failed",
+  },
+  "page.settings.copyCodeFailed": {
+    message: "Kód sa nepodarilo skopírovať",
+    description: "Toast when copying the embed code failed",
   },
 };
 

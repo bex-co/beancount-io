@@ -8,10 +8,6 @@ const enDocuments: Record<string, TranslationEntry> = {
     message: "Documents",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "Failed to load documents",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "Filename",
     description: "Table column header for filename",

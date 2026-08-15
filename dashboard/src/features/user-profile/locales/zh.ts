@@ -4,17 +4,9 @@ export interface TranslationEntry {
 }
 
 const zhUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "用户资料",
-    description: "Header title for user profile page",
-  },
   "userProfile.errorLoadingProfile": {
     message: "加载个人资料时出错",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message: "加载此个人资料时出现问题。请稍后再试。",
-    description: "Generic error message for profile loading failures",
   },
   "userProfile.followError": {
     message: "关注用户失败",
@@ -23,14 +15,6 @@ const zhUserProfile: Record<string, TranslationEntry> = {
   "userProfile.followSuccess": {
     message: "你现在关注了 {username}",
     description: "Success toast message after following a user",
-  },
-  "userProfile.followers": {
-    message: "关注者",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "正在关注",
-    description: "Label for following count",
   },
   "userProfile.joined": {
     message: "加入时间",
@@ -63,10 +47,6 @@ const zhUserProfile: Record<string, TranslationEntry> = {
   "userProfile.follow": {
     message: "关注",
     description: "Button label to follow a user",
-  },
-  "userProfile.starredRepos": {
-    message: "已加星标的仓库",
-    description: "Label for starred repositories count",
   },
   "userProfile.unfollowError": {
     message: "取消关注用户失败",

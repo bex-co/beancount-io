@@ -8,10 +8,6 @@ const koDocuments: Record<string, TranslationEntry> = {
     message: "문서",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "문서 불러오기 실패",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "파일명",
     description: "Table column header for filename",

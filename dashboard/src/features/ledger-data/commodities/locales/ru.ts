@@ -12,11 +12,6 @@ const ruCommodities: Record<string, TranslationEntry> = {
     message: "Не удалось загрузить товары",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "Произошла ошибка при загрузке данных товаров. Пожалуйста, попробуйте позже.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "Товары не найдены",
     description: "Empty state title when no commodities exist",

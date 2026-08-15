@@ -13,10 +13,6 @@ const ukWelcomePage: Record<string, TranslationEntry> = {
     message: "Створіть свою першу книгу",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Не вдалося створити книгу",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Пedger created successfully",
     description: "Toast notification when ledger created",

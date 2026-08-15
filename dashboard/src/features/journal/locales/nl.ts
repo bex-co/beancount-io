@@ -8,10 +8,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Account",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "Account kiezen",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "Rekening (e.g., Assets:Bank:Checking)",
     description: "Placeholder for account field",
@@ -24,25 +20,9 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Accounts",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "accounts",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "Nieuwe journaalpost toevoegen",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "Boeking toevoegen",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "Transactie toevoegen",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "Voer het bedrag in",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "Bedrag moet een geldig getal zijn",
@@ -55,10 +35,6 @@ const nlJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "Bedrag is verplicht",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "Minimaal één boeking is verplicht",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "Er zijn minstens twee boekingen vereist",
@@ -103,14 +79,6 @@ const nlJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "Sluiten",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "Account sluiten",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "Kosten",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "Maak een nieuwe journaalpost voor dit grootboek",
@@ -209,14 +177,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Journaal exporteren mislukt",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "Vlag (bijv. *)",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "Van",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "Journaal",
     description: "Navigation label for journal/transaction history page",
@@ -224,38 +184,6 @@ const nlJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "Journaal succesvol geëxporteerd",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "Laden van journaal mislukt: ",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message: 'Gebruik de "Transactie toevoegen" knop om boekingen aan te maken',
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "Upload beancount bestanden via de webinterface",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "Importeer bestaande boekhoudgegevens",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message: "Zodra u transacties toevoegt, verschijnen ze hier.",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "Om te beginnen:",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "Je hebt nog geen journaalvermeldingen.",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "Welkom bij je Journaal! 📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "G",
@@ -269,25 +197,13 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Context laden...",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "Meer laden...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "Metadata",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "Beschrijving",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "Omschrijving",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "Omschrijving is verplicht",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "Nieuwe boeking",
@@ -300,10 +216,6 @@ const nlJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "Geen journaalposten gevonden voor de huidige filters.",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "Geen verdere vermeldingen",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "Geen omschrijvingen gevonden",
@@ -329,10 +241,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Openen",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "Account openen",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "x",
     description: "Label for other transaction subtype filter",
@@ -345,10 +253,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Pad",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "Begunstigde",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "Begunstigde/Omschrijving",
     description: "Table header for payee and narration column",
@@ -356,10 +260,6 @@ const nlJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "Begunstigde",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "Begunstigde is verplicht",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "!",
@@ -369,14 +269,6 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "In behandeling transacties",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "Voer in...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "Boeking",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "Boekingen",
     description: "Label for postings toggle filter",
@@ -384,22 +276,6 @@ const nlJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "Prijs",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "Prijs",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "Snel toevoegen",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "Opslaan mislukt",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "Transactie opgeslagen!",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "Selecteer rekening...",
@@ -424,14 +300,6 @@ const nlJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "Selecteer begunstigde...",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "Selecteer transactiedatum",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "Naar",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "Metadata aan/uit",

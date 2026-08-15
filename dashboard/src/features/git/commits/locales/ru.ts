@@ -62,10 +62,6 @@ const ruCommits: Record<string, TranslationEntry> = {
     message: "файлов",
     description: "Plural form of file count",
   },
-  "commits.by": {
-    message: "от",
-    description: "Preposition before commit author name",
-  },
   "commits.additions": {
     message: "+{count}",
     description: "Label showing number of lines added",

@@ -8,21 +8,9 @@ const zhAiAgent: Record<string, TranslationEntry> = {
     message: "询问 Beancount.io",
     description: "Title for AI chat feature",
   },
-  "aiAgent.subtitle": {
-    message: "AI 助力的账本帮助",
-    description: "Subtitle for AI chat feature",
-  },
   "aiAgent.placeholder": {
     message: "询问我关于 Beancount 的任何问题...",
     description: "Input placeholder text",
-  },
-  "aiAgent.send": {
-    message: "发送",
-    description: "Send button text",
-  },
-  "aiAgent.sending": {
-    message: "发送中...",
-    description: "Loading state text",
   },
   "aiAgent.welcome": {
     message:
@@ -35,14 +23,6 @@ const zhAiAgent: Record<string, TranslationEntry> = {
       "你想知道什么？",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.you": {
-    message: "你",
-    description: "Label for user messages",
-  },
-  "aiAgent.assistant": {
-    message: "AI 助手",
-    description: "Label for AI assistant messages",
-  },
   "aiAgent.prCreated": {
     message: "✓ Pull Request 已创建",
     description: "Message shown when PR is created",
@@ -50,26 +30,6 @@ const zhAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.viewPR": {
     message: "查看 PR #",
     description: "Link text to view pull request",
-  },
-  "aiAgent.status.connecting": {
-    message: "思考中...",
-    description: "Status badge text when connecting to AI",
-  },
-  "aiAgent.status.streaming": {
-    message: "流式传输中...",
-    description: "Status badge text when receiving AI response",
-  },
-  "aiAgent.status.finalizing": {
-    message: "完成中...",
-    description: "Status badge text when finalizing AI response",
-  },
-  "aiAgent.status.complete": {
-    message: "完成",
-    description: "Status badge text when AI response is complete",
-  },
-  "aiAgent.status.error": {
-    message: "错误",
-    description: "Status badge text when an error occurs",
   },
   "aiAgent.quickAskPlaceholder": {
     message: "问我关于此账本的任何问题...",
@@ -158,19 +118,6 @@ const zhAiAgent: Record<string, TranslationEntry> = {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
   },
-  "aiAgent.editApproval.binaryContent": {
-    message: "(binary content)",
-    description:
-      "Placeholder shown when file content is binary (image, PDF, etc.)",
-  },
-  "aiAgent.readFile.label": {
-    message: "Read",
-    description: "Label on the read-file tool step",
-  },
-  "aiAgent.listFiles.label": {
-    message: "List",
-    description: "Label on the list-files tool step",
-  },
   "aiAgent.suggestionsTitle": {
     message: "试试提问：",
     description:
@@ -211,6 +158,59 @@ const zhAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.retry": {
     message: "重试",
     description: "Button to resubmit the last question after an error",
+  },
+  "aiAgent.receiptApproval.title": {
+    message: "记录收据交易",
+    description: "Title of the receipt transaction approval card",
+  },
+  "aiAgent.receiptApproval.preparing": {
+    message: "正在准备交易…",
+    description: "Status while the receipt transaction is being prepared",
+  },
+  "aiAgent.receiptApproval.recorded": {
+    message: "交易已记录",
+    description: "Status after the receipt transaction was recorded",
+  },
+  "aiAgent.receiptApproval.failed": {
+    message: "记录交易失败",
+    description: "Error when recording the receipt transaction failed",
+  },
+  "aiAgent.receiptApproval.date": {
+    message: "日期",
+    description: "Label for the receipt transaction date",
+  },
+  "aiAgent.receiptApproval.payee": {
+    message: "收款方",
+    description: "Label for the receipt transaction payee",
+  },
+  "aiAgent.receiptApproval.amount": {
+    message: "金额",
+    description: "Label for the receipt transaction amount",
+  },
+  "aiAgent.receiptApproval.expense": {
+    message: "支出",
+    description: "Label for the receipt expense account",
+  },
+  "aiAgent.receiptApproval.payment": {
+    message: "付款",
+    description: "Label for the receipt payment account",
+  },
+  "aiAgent.attachFile": {
+    message: "附加文件",
+    description: "Aria label for the attach file button in the chat input",
+  },
+  "aiAgent.removeAttachment": {
+    message: "移除 {fileName}",
+    description:
+      "Aria label for removing a staged attachment; {fileName} is the attachment file name",
+  },
+  "aiAgent.attachmentFailed": {
+    message: "失败",
+    description: "Chip label when an attachment failed to upload",
+  },
+  "aiAgent.scrollToBottom": {
+    message: "滚动到底部",
+    description: "Aria label for the scroll to bottom button in the chat",
   },
 };
 

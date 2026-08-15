@@ -12,14 +12,6 @@ const skBql: Record<string, TranslationEntry> = {
     message: "Vykonáva sa...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "Počas vykonávania dotazu nastala chyba",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Výsledky dotazu",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Stlačte Cmd+Enter (Mac) alebo Ctrl+Enter (Windows/Linux) pre vykonanie dotazu",

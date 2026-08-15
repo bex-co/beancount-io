@@ -4,14 +4,6 @@ export interface TranslationEntry {
 }
 
 const ukPullRequests: Record<string, TranslationEntry> = {
-  "pullRequests.reviewPR": {
-    message: "Переглянути запит на злиття",
-    description: "Page title for PR review page",
-  },
-  "pullRequests.createPR": {
-    message: "Створити запит на злиття",
-    description: "Page title for create PR page",
-  },
   "pullRequests.approve": {
     message: "Схвалити і злити",
     description: "Button text to approve and merge PR",
@@ -36,10 +28,6 @@ const ukPullRequests: Record<string, TranslationEntry> = {
     message: "Помилка при закритті запиту на злиття",
     description: "Error message when PR rejection fails",
   },
-  "pullRequests.changes": {
-    message: "Зміни",
-    description: "Label for diff viewer section",
-  },
   "pullRequests.filesChanged": {
     message: "Змінені файли",
     description: "Label for changed files section",
@@ -47,10 +35,6 @@ const ukPullRequests: Record<string, TranslationEntry> = {
   "pullRequests.prNotFound": {
     message: "Запит на злиття не знайдено",
     description: "Error message when PR doesn't exist",
-  },
-  "pullRequests.loadingPR": {
-    message: "Завантаження деталей запиту на злиття...",
-    description: "Loading message while fetching PR",
   },
 };
 

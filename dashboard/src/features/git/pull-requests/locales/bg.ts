@@ -4,14 +4,6 @@ export interface TranslationEntry {
 }
 
 const bgPullRequests: Record<string, TranslationEntry> = {
-  "pullRequests.reviewPR": {
-    message: "Преглед на заявка за сливане",
-    description: "Page title for PR review page",
-  },
-  "pullRequests.createPR": {
-    message: "Създаване на заявка за сливане",
-    description: "Page title for create PR page",
-  },
   "pullRequests.approve": {
     message: "Одобри и слей",
     description: "Button text to approve and merge PR",
@@ -36,10 +28,6 @@ const bgPullRequests: Record<string, TranslationEntry> = {
     message: "Неуспешно затваряне на заявката за сливане",
     description: "Error message when PR rejection fails",
   },
-  "pullRequests.changes": {
-    message: "Промени",
-    description: "Label for diff viewer section",
-  },
   "pullRequests.filesChanged": {
     message: "Променени файлове",
     description: "Label for changed files section",
@@ -47,10 +35,6 @@ const bgPullRequests: Record<string, TranslationEntry> = {
   "pullRequests.prNotFound": {
     message: "Заявката за сливане не е намерена",
     description: "Error message when PR doesn't exist",
-  },
-  "pullRequests.loadingPR": {
-    message: "Зареждане на детайли за заявката за сливане...",
-    description: "Loading message while fetching PR",
   },
 };
 

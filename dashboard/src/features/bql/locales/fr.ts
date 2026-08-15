@@ -12,14 +12,6 @@ const frBql: Record<string, TranslationEntry> = {
     message: "Exécution en cours...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "Une erreur est survenue lors de l'exécution de la requête",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Résultats de la requête",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Appuyez sur Cmd+Entrée (Mac) ou Ctrl+Entrée (Windows/Linux) pour exécuter la requête",

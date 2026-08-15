@@ -4,22 +4,6 @@ export interface TranslationEntry {
 }
 
 const enUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "User Profile",
-    description: "Header title for user profile page",
-  },
-  "userProfile.followers": {
-    message: "followers",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "following",
-    description: "Label for following count",
-  },
-  "userProfile.starredRepos": {
-    message: "starred repos",
-    description: "Label for starred repositories count",
-  },
   "userProfile.follow": {
     message: "Follow",
     description: "Button label to follow a user",
@@ -87,11 +71,6 @@ const enUserProfile: Record<string, TranslationEntry> = {
   "userProfile.errorLoadingProfile": {
     message: "Error loading profile",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "Something went wrong while loading this profile. Please try again later.",
-    description: "Generic error message for profile loading failures",
   },
   "seo.userProfile.title": {
     message: "{username} - User Profile",

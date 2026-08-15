@@ -4,14 +4,6 @@ export interface TranslationEntry {
 }
 
 const esPullRequests: Record<string, TranslationEntry> = {
-  "pullRequests.reviewPR": {
-    message: "Revisar solicitud de fusión",
-    description: "Page title for PR review page",
-  },
-  "pullRequests.createPR": {
-    message: "Crear solicitud de fusión",
-    description: "Page title for create PR page",
-  },
   "pullRequests.approve": {
     message: "Aprobar y fusionar",
     description: "Button text to approve and merge PR",
@@ -36,10 +28,6 @@ const esPullRequests: Record<string, TranslationEntry> = {
     message: "Error al cerrar la solicitud de fusión",
     description: "Error message when PR rejection fails",
   },
-  "pullRequests.changes": {
-    message: "Cambios",
-    description: "Label for diff viewer section",
-  },
   "pullRequests.filesChanged": {
     message: "Archivos modificados",
     description: "Label for changed files section",
@@ -47,10 +35,6 @@ const esPullRequests: Record<string, TranslationEntry> = {
   "pullRequests.prNotFound": {
     message: "Solicitud de fusión no encontrada",
     description: "Error message when PR doesn't exist",
-  },
-  "pullRequests.loadingPR": {
-    message: "Cargando detalles de la solicitud de fusión...",
-    description: "Loading message while fetching PR",
   },
 };
 

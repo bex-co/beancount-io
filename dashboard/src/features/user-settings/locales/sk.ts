@@ -12,10 +12,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Účet bol úspešne vymazaný",
     description: "Success message when account is deleted",
   },
-  "userSettings.accountSettings": {
-    message: "Účet",
-    description: "Section header for account settings",
-  },
   "userSettings.addNewKey": {
     message: "Pridať nový klúč",
     description: "Button text to add new key",
@@ -39,10 +35,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
   "userSettings.allTransactionsAndRecords": {
     message: "Všetky transakcie a záznamy",
     description: "Item in delete account list",
-  },
-  "userSettings.appSettings": {
-    message: "Nastavenia aplikácie",
-    description: "Section header for application settings",
   },
   "userSettings.appearance": {
     message: "Vzhľad",
@@ -68,10 +60,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
   "userSettings.cannotBeUndone": {
     message: "Túto akciu nie je možné vrátiť späť.",
     description: "Warning that action is irreversible",
-  },
-  "userSettings.changeLanguage": {
-    message: "Zmeniť",
-    description: "Button to change language",
   },
   "userSettings.changeName": {
     message: "Zmeniť meno",
@@ -109,14 +97,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Jazyk",
     description: "Label showing current language selection",
   },
-  "userSettings.currentPeriodEnds": {
-    message: "Aktuálne obdobie končí",
-    description: "Label for subscription period end date",
-  },
-  "userSettings.currentVersion": {
-    message: "Verzia",
-    description: "Label showing current app version",
-  },
   "userSettings.customizeAppearance": {
     message: "Prispôsobte si vzhľad a pocit aplikácie",
     description: "Description for appearance settings",
@@ -133,40 +113,15 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Vymazať účet",
     description: "Button or menu item to delete user account",
   },
-  "userSettings.deleteAccountAlertCancel": {
-    message: "Zrušiť",
-    description: "Cancel button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertConfirm": {
-    message: "Vymazať účet",
-    description: "Confirm button in account deletion dialog",
-  },
-  "userSettings.deleteAccountAlertMsg": {
-    message:
-      "Ste si istí, že chcete vymazať svoj účet? Táto akcia sa nedá vrátiť späť a natrvalo vymaže všetky vaše údaje.",
-    description: "Warning message in account deletion confirmation dialog",
-  },
   "userSettings.deleteAccountConfirmMessage": {
     message:
       'Pre potvrdenie zadajte svoje používateľské meno "{username}" nižšie:',
     description:
       "Instructions for confirming account deletion by typing username",
   },
-  "userSettings.deleteAccountConfirmPhrase": {
-    message: "sudo delete my account",
-    description: "Exact phrase user must type to confirm deletion",
-  },
   "userSettings.deleteAccountConfirmPlaceholder": {
     message: "Zadajte vaše používateľské meno",
     description: "Placeholder text for deletion confirmation input",
-  },
-  "userSettings.deleteAccountConfirmTitle": {
-    message: "Potvrdiť vymazanie účtu",
-    description: "Title of account deletion confirmation step",
-  },
-  "userSettings.deleteAccountDescription": {
-    message: "Trvalo odstrániť účet a údaje",
-    description: "Description of what account deletion does",
   },
   "userSettings.deleteAccountDialogDescription": {
     message:
@@ -227,16 +182,16 @@ const skUserSettings: Record<string, TranslationEntry> = {
     description: "Button text to resume a subscription scheduled to cancel",
   },
   "userSettings.resumeSubscriptionTitle": {
-    message: "[TODO] Resume Subscription?",
+    message: "Obnoviť predplatné?",
     description: "Confirmation dialog title for resuming subscription",
   },
   "userSettings.resumeSubscriptionDescription": {
     message:
-      "[TODO] Are you sure you want to resume your subscription? Your subscription will continue to renew automatically and you will be billed again at the end of your current billing period.",
+      "Naozaj chcete obnoviť predplatné? Bude sa naďalej automaticky obnovovať a na konci aktuálneho fakturačného obdobia vám bude znova účtovaný poplatok.",
     description: "Confirmation dialog description for resuming subscription",
   },
   "userSettings.confirmResume": {
-    message: "[TODO] Yes, Resume Subscription",
+    message: "Áno, obnoviť predplatné",
     description: "Button text to confirm subscription resumption",
   },
   "userSettings.resuming": {
@@ -254,14 +209,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
   "userSettings.failedToCreateCheckoutSession": {
     message: "Nepodarilo sa vytvoriť reláciu pokladne. Skúste to znova.",
     description: "Error message when creating checkout session fails",
-  },
-  "userSettings.failedToCreateKey": {
-    message: "Nepodarilo sa vytvoriť kľúč. Skúste to znova.",
-    description: "Error message when key creation fails",
-  },
-  "userSettings.failedToDeleteAccount": {
-    message: "Vymazanie účtu zlyhalo",
-    description: "Error message when account deletion fails",
   },
   "userSettings.failedToLoadKeys": {
     message: "Načítanie klúčov zlyhalo",
@@ -292,26 +239,9 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Všeobecné",
     description: "General settings section label",
   },
-  "userSettings.helpCenter": {
-    message: "Centrum pomoci",
-    description: "Link to help center",
-  },
-  "userSettings.inputKeyword": {
-    message: "Prosím zadajte kľúčové slovo",
-    description: "Placeholder prompting user to enter keyword",
-  },
   "userSettings.invite": {
     message: "Pozvať",
     description: "Invite action button",
-  },
-  "userSettings.inviteFriends": {
-    message: "Pozvať priateľov",
-    description: "Button or section title for inviting friends",
-  },
-  "userSettings.inviteSummary": {
-    message:
-      "Zdieľajte tento profesionálny nástroj na správu financií a pomôžte ostatným budovať ich finančnú budúcnosť.",
-    description: "Summary description of invite feature",
   },
   "userSettings.irreversibleActions": {
     message: "Nevratné a deštruktívne akcie",
@@ -358,10 +288,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Načítavam informácie o účte...",
     description: "Loading message for account information",
   },
-  "userSettings.loadingAccountOptions": {
-    message: "Načítavam možnosti účtu...",
-    description: "Loading message for account options",
-  },
   "userSettings.loadingSessionInformation": {
     message: "Načítavam informácie o relácii...",
     description: "Loading message for session data",
@@ -377,10 +303,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
   "userSettings.loadingThemePreferences": {
     message: "Načítavam nastavenia témy...",
     description: "Loading message for theme settings",
-  },
-  "userSettings.manage": {
-    message: "Spravovať",
-    description: "Button to manage subscription",
   },
   "userSettings.manageActiveSession": {
     message: "Spravujte svoju aktívnu reláciu",
@@ -410,14 +332,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Nový SSH klúč",
     description: "Button text to create new SSH key",
   },
-  "userSettings.noActiveSubscription": {
-    message: "Žiadne aktívne predplatné",
-    description: "Label when user has no subscription",
-  },
-  "userSettings.noContactPermission": {
-    message: "Chýba povolenie pre kontakty.",
-    description: "Error when contacts permission is denied",
-  },
   "userSettings.noSshKeys": {
     message: "Žiadne SSH klúče",
     description: "Empty state title when no SSH keys exist",
@@ -431,17 +345,9 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Nenastavené",
     description: "Placeholder when a field has no value",
   },
-  "userSettings.off": {
-    message: "Vypnuté",
-    description: "Off state for toggles or subscriptions",
-  },
   "userSettings.opening": {
     message: "Otváranie...",
     description: "Button text while opening billing portal",
-  },
-  "userSettings.processing": {
-    message: "Spracovanie...",
-    description: "Button text while processing checkout",
   },
   "userSettings.publicKey": {
     message: "Verejný klúč",
@@ -461,31 +367,9 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Verejný klúč je povinný",
     description: "Validation error for missing public key",
   },
-  "userSettings.recommend": {
-    message:
-      "Chcel by som sa podeliť o tento profesionálny nástroj na správu financií, ktorý mi pomohol efektívne organizovať moje finančné záležitosti.",
-    description: "Pre-written recommendation message for sharing",
-  },
-  "userSettings.referral": {
-    message: "Odporúčanie",
-    description: "Referral program label",
-  },
   "userSettings.renewsOn": {
     message: "Obnoví sa",
     description: "Label for subscription renewal date",
-  },
-  "userSettings.reviewApp": {
-    message: "Páči sa vám? Zanechajte recenziu :)",
-    description: "Prompt to review the app",
-  },
-  "userSettings.rewardDetail": {
-    message:
-      "Zdieľajte tento profesionálny nástroj na správu financií a pomôžte ostatným budovať ich finančnú budúcnosť.",
-    description: "Detailed description of referral rewards",
-  },
-  "userSettings.rewardSummary": {
-    message: "Pozvať priateľov",
-    description: "Summary of referral rewards",
   },
   "userSettings.selectColorTheme": {
     message: "Vyberte si preferovanú farebnú tému",
@@ -499,15 +383,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Relácia",
     description: "Session management section title",
   },
-  "userSettings.settingsErrorMessage": {
-    message:
-      "Pri načítavaní nastavení došlo k chybe. Skontrolujte prosím svoje pripojenie a skúste to znova.",
-    description: "Detailed error message for settings loading failure",
-  },
-  "userSettings.shareError": {
-    message: "Zdieľanie zlyhalo",
-    description: "Error message when sharing fails",
-  },
   "userSettings.signOutDescription": {
     message: "Odhláste sa zo svojho účtu a vymažte reláciu.",
     description: "Description for logout action",
@@ -515,10 +390,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
   "userSettings.sshKeys": {
     message: "SSH Klúče",
     description: "Page title for SSH keys",
-  },
-  "userSettings.subscribe": {
-    message: "E-mailový report",
-    description: "Email report subscription feature label",
   },
   "userSettings.subscription": {
     message: "Predplatné",
@@ -542,10 +413,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
     description:
       "Message when 3DS authentication is needed for subscription upgrade",
   },
-  "userSettings.supportSettings": {
-    message: "Podpora",
-    description: "Section header for support settings",
-  },
   "userSettings.system": {
     message: "Systémová",
     description: "System theme option",
@@ -553,10 +420,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
   "userSettings.testMode": {
     message: "Testovací režim",
     description: "Label indicating Stripe is in test/development mode",
-  },
-  "userSettings.thanksShare": {
-    message: "Ďakujeme za zdieľanie!!",
-    description: "Thank you message after sharing",
   },
   "userSettings.theme": {
     message: "Téma",
@@ -582,14 +445,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Názov je povinný",
     description: "Validation error for missing title",
   },
-  "userSettings.trialProPlan": {
-    message: "Prejsť na Premium",
-    description: "Button text for premium subscription upgrade",
-  },
-  "userSettings.trialProPlanComingSoon": {
-    message: "Funkcia skúšobného Pro plánu už čoskoro!",
-    description: "Toast message when trial Pro plan is clicked",
-  },
   "userSettings.unableToOpenBillingPortal": {
     message: "Nie je možné otvoriť fakturačný portál. Skúste to znova neskôr.",
     description: "Error message when billing portal fails to open",
@@ -597,19 +452,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
   "userSettings.unknownPlan": {
     message: "Neznámy plán",
     description: "Fallback when plan name is not available",
-  },
-  "userSettings.updateFailed": {
-    message: "Aktualizácia predplatného zlyhala",
-    description: "Error message when update fails",
-  },
-  "userSettings.updateSuccess": {
-    message: "Predplatné úspešne aktualizované",
-    description: "Success message after updating subscription",
-  },
-  "userSettings.upgradeToProDescription": {
-    message:
-      "Inovujte na Pro pre odomknutie prémiových funkcií a neobmedzeného prístupu.",
-    description: "Description encouraging subscription upgrade",
   },
   "userSettings.userProfile": {
     message: "Používateľský profil",
@@ -635,10 +477,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "AI Tokens",
     description: "Label for AI CFO usage section",
   },
-  "userSettings.aiCfoUsageDescription": {
-    message: "Monthly AI token usage for your current billing period",
-    description: "Description for AI CFO usage section",
-  },
   "userSettings.aiCfoUsageCount": {
     message: "{used} / {max} tokens used this month",
     description: "AI CFO usage count display",
@@ -659,10 +497,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
     message: "Enterprise",
     description: "Display name for the enterprise tier",
   },
-  "userSettings.customPricing": {
-    message: "Custom pricing",
-    description: "Price label for enterprise tier",
-  },
   "userSettings.usage": {
     message: "Usage",
     description: "Section header for usage overview",
@@ -674,14 +508,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
   "userSettings.ledgerUsageCount": {
     message: "{used} / {max} ledgers",
     description: "Ledger usage count display",
-  },
-  "userSettings.collaboratorLimit": {
-    message: "Up to {max} collaborators per ledger",
-    description: "Collaborator limit description",
-  },
-  "userSettings.collaboratorLimitUnlimited": {
-    message: "Unlimited collaborators per ledger",
-    description: "Collaborator limit for unlimited tiers",
   },
   "userSettings.upgradeYourPlan": {
     message: "Upgrade Your Plan",
@@ -698,11 +524,6 @@ const skUserSettings: Record<string, TranslationEntry> = {
   "userSettings.perMonth": {
     message: "/month",
     description: "Price interval suffix",
-  },
-  "userSettings.planFeatureSummary": {
-    message:
-      "{tokens} AI tokens · {ledgers} ledgers · {collaborators} collaborators",
-    description: "Summary of plan features in the current plan banner",
   },
 };
 

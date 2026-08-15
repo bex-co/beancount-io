@@ -20,11 +20,6 @@ const koErrors: Record<string, TranslationEntry> = {
     message: "오류 불러오기 실패",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "오류 데이터를 불러오는 중 오류가 발생했습니다. 나중에 다시 시도해 주세요.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "줄",
     description: "Table column header for line number",

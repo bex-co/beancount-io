@@ -20,10 +20,6 @@ const zhIncomeStatement: Record<string, TranslationEntry> = {
     message: "追踪{ledgerName}在不同商品上的收入随时间的变化",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "每月净收入",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message: "追踪{ledgerName}在不同商品上的净利润随时间的变化",
     description: "Description for net profit chart",

@@ -198,10 +198,6 @@ const koReceipt: Record<string, TranslationEntry> = {
     message: "영수증 파싱 실패",
     description: "Error message when AI fails to parse the receipt",
   },
-  "receipt.workflow.failedToProcess": {
-    message: "영수증 처리 실패",
-    description: "Generic fallback error message during receipt processing",
-  },
   "receipt.workflow.failedToRecord": {
     message: "영수증 거래 기록 실패",
     description: "Error message when recording the transaction fails",

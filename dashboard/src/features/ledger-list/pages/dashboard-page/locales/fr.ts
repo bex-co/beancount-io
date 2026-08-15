@@ -59,14 +59,6 @@ const frDashboardPage: Record<string, TranslationEntry> = {
     message: "Saisir le nom du grand livre",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Échec de la création du grand livre",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Échec de la suppression du grand livre",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Échec du chargement des grands livres",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const frDashboardPage: Record<string, TranslationEntry> = {
     message:
       "Nous n'avons pas pu récupérer vos grands livres. Veuillez vérifier votre connexion et réessayer.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Échec de la mise à jour du grand livre",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Échec du chargement du flux",

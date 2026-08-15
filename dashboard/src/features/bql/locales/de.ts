@@ -12,14 +12,6 @@ const deBql: Record<string, TranslationEntry> = {
     message: "Wird ausgeführt...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "Ein Fehler ist aufgetreten while executing the query",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Abfrageergebnisse",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Drücken Sie Cmd+Enter (Mac) oder Strg+Enter (Windows/Linux), um die Abfrage auszuführen",

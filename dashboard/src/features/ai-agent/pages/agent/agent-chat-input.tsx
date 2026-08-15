@@ -1,6 +1,7 @@
 import { useRef, useEffect } from "react";
 import { Button } from "@/common/components/ui/button";
 import { Textarea } from "@/common/components/ui/textarea";
+import { useTranslations } from "@/common/hooks/use-translations";
 import {
   CornerDownLeft,
   FileText,
@@ -55,6 +56,7 @@ function StagedFileChip({
   stagedFile: StagedFile;
   onRemove: () => void;
 }) {
+  const { t } = useTranslations();
   const isImage = stagedFile.file.type.startsWith("image/");
 
   return (
@@ -80,13 +82,17 @@ function StagedFileChip({
         {stagedFile.file.name}
       </span>
       {stagedFile.error && (
-        <span className="shrink-0 font-medium text-destructive">failed</span>
+        <span className="shrink-0 font-medium text-destructive">
+          {t("aiAgent.attachmentFailed")}
+        </span>
       )}
       <button
         type="button"
         onClick={onRemove}
         className="ml-0.5 shrink-0 cursor-pointer rounded-md p-0.5 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
-        aria-label={`Remove ${stagedFile.file.name}`}
+        aria-label={t("aiAgent.removeAttachment", {
+          fileName: stagedFile.file.name,
+        })}
       >
         <X className="h-3 w-3" />
       </button>
@@ -104,6 +110,7 @@ export function AgentChatInput({
   onFilesSelected,
   onRemoveFile,
 }: AgentChatInputProps) {
+  const { t } = useTranslations();
   const textareaRef = useRef<HTMLTextAreaElement>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
 
@@ -237,7 +244,7 @@ export function AgentChatInput({
           disabled={disabled}
           className="rounded-lg text-muted-foreground hover:text-foreground"
           onClick={() => fileInputRef.current?.click()}
-          aria-label="Attach file"
+          aria-label={t("aiAgent.attachFile")}
         >
           <Paperclip className="h-4 w-4" />
         </Button>

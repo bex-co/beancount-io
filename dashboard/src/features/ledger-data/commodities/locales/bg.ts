@@ -12,11 +12,6 @@ const bgCommodities: Record<string, TranslationEntry> = {
     message: "Неуспешно зареждане на стоките",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "Възникна грешка при зареждането на данните за стоките. Моля, опитайте отново по-късно.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "Няма намерени стоки",
     description: "Empty state title when no commodities exist",

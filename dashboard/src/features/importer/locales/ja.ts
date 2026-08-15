@@ -2,30 +2,8 @@ import type { TranslationEntry } from "@/i18n";
 
 const jaImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "スマートインポートが利用可能 — 早期アクセス無料",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "バナーを閉じる",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "AIによる解析でPDF、OFXファイル、画像から銀行明細を数秒でインポート。期間限定無料。",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "ファイルをアップロード",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "銀行明細またはトランザクションファイルをアップロードしてください。対応形式：CSV、PDF、OFX、または画像（PNG/JPG）。最大10MB。",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message:
       "このファイルは10MBの制限を超えています。小さいファイルをお試しください。",
@@ -39,10 +17,6 @@ const jaImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "ファイルを読み込み中\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "別のファイルを選択",
@@ -122,10 +96,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "AIでPDF、OFX、画像ファイルを自動解析",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "処理中...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "今すぐアップグレード",
     description: "Button text to start upgrade process",
@@ -194,10 +164,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "金額",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "ステータス",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "表示するデータがありません",
     description: "Empty state message when no transactions",
@@ -239,14 +205,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     message: "クリックして編集",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "エラー",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "有効",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "操作",
     description: "Table header for actions column",
@@ -254,10 +212,6 @@ const jaImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "行を削除",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "行が削除されました",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "トランザクションが見つかりません",
@@ -267,11 +221,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     message:
       "ファイルは正常に解析されましたが、トランザクションデータが見つかりませんでした。ファイルを確認してもう一度お試しください。",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message:
-      "ファイルに正しい形式のトランザクションデータが含まれていることを確認してください。",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "別のファイルを試す",
@@ -449,11 +398,6 @@ const jaImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "AIカテゴリ分類に失敗しました",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "カテゴリ分類に失敗しました",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

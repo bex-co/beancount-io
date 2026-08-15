@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const enAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "Already have an account? Sign in",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "Already have an account?",
     description: "Prompt asking if user has existing account",
@@ -15,18 +11,6 @@ const enAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "Authenticating...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "Authentication Error",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "An error occurred during authentication",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "Authentication failed",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "Back to Sign in",
@@ -92,10 +76,6 @@ const enAuth: Record<string, TranslationEntry> = {
     message:
       "We've sent a password reset link to your email address. Please check your inbox and follow the instructions to reset your password.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "Enter your credentials to access your dashboard",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "Enter your details to get started with your dashboard",
@@ -178,10 +158,6 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "Log In / Sign Up",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "An error occurred during login",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "Login failed",
     description: "Error title when login fails",
@@ -189,18 +165,6 @@ const enAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "Logout",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "Cancel",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "Log Out",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "Are you sure you want to log out?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.newPassword": {
     message: "New Password",
@@ -251,39 +215,13 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "Redirecting to login page...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "An error occurred during registration",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "Registration failed",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "An error occurred while sending the password reset email",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "Reset Password",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "Reset password",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message:
-      "Enter your email address to receive a link to reset your password.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "An email has been sent to your email address. Please check your email to reset your password.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "An error occurred while resetting your password",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "Reset your password",
@@ -296,10 +234,6 @@ const enAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "Send reset link",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "Send Reset Password Email",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "Sending...",
@@ -328,10 +262,6 @@ const enAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "Username",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "Username can only contain letters and numbers",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message:
@@ -481,14 +411,6 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -501,6 +423,62 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "Your session has expired. Please log in again.",
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
+  },
+  "auth.cliAuthTitle": {
+    message: "Authorize CLI Access",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "The Beancount CLI is requesting access to your account.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "This will allow the CLI to:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "Read and write your ledgers",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "Access your account information",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "Authorize",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "Authorizing...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "Deny",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "Denying...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "Session expired or not found.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "Authorization successful",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "You can close this tab and return to the CLI.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "Access denied",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "You can close this tab.",
+    description: "Hint shown after the CLI session was denied",
   },
 };
 

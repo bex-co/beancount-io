@@ -83,15 +83,6 @@ const bgSeo: Record<string, TranslationEntry> = {
     message: "Баланс - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
-  "seo.ledgerCollaborators.description": {
-    message:
-      "Управлявайте сътрудниците за {ledgerName}. Поканете потребители и контролирайте разрешенията за достъп.",
-    description: "Collaborators page meta description",
-  },
-  "seo.ledgerCollaborators.title": {
-    message: "Сътрудници - {ledgerName}",
-    description: "Collaborators page title with ledger name",
-  },
   "seo.ledgerCommodities.description": {
     message:
       "Списък на стоките и цени за {ledgerName}. Проследявайте валути, акции и други активи.",
@@ -332,15 +323,6 @@ const bgSeo: Record<string, TranslationEntry> = {
   "seo.settingsGeneral.title": {
     message: "Общи Настройки",
     description: "General settings page title",
-  },
-  "seo.settingsIndex.description": {
-    message:
-      "Управлявайте настройките, предпочитанията и конфигурациите на акаунта си в Beancount.",
-    description: "Settings index page meta description",
-  },
-  "seo.settingsIndex.title": {
-    message: "Настройки на Акаунта",
-    description: "Settings index page title",
   },
   "seo.settingsSshKeys.description": {
     message:

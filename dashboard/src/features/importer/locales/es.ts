@@ -5,30 +5,8 @@ export interface TranslationEntry {
 
 const esImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "Importación inteligente disponible — Acceso anticipado gratuito",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "Cerrar banner",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "Importe extractos bancarios desde PDF, archivos OFX e imágenes en segundos con análisis impulsado por IA. Gratis por tiempo limitado.",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "Subir archivo",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "Sube tu extracto bancario o archivo de transacciones. Formatos compatibles: CSV, PDF, OFX o imágenes (PNG/JPG). Máximo 10MB.",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message:
       "Este archivo supera el límite de 10 MB. Por favor, intente con un archivo más pequeño.",
@@ -42,10 +20,6 @@ const esImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "Leyendo tu archivo\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "Elegir otro archivo",
@@ -125,10 +99,6 @@ const esImporter: Record<string, TranslationEntry> = {
     message: "Analiza archivos PDF, OFX e imágenes automáticamente con IA",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "Procesando...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "Actualizar ahora",
     description: "Button text to start upgrade process",
@@ -196,10 +166,6 @@ const esImporter: Record<string, TranslationEntry> = {
     message: "Monto",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "Estado",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "No hay datos para mostrar",
     description: "Empty state message when no transactions",
@@ -241,14 +207,6 @@ const esImporter: Record<string, TranslationEntry> = {
     message: "Haz clic para editar",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "Error",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "Válido",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "Acciones",
     description: "Table header for actions column",
@@ -256,10 +214,6 @@ const esImporter: Record<string, TranslationEntry> = {
   "importer.preview.deleteRow": {
     message: "Eliminar fila",
     description: "Aria label for delete row button",
-  },
-  "importer.preview.rowDeleted": {
-    message: "Fila eliminada",
-    description: "Toast message when row is deleted",
   },
   "importer.preview.emptyFileTitle": {
     message: "No se encontraron transacciones",
@@ -269,11 +223,6 @@ const esImporter: Record<string, TranslationEntry> = {
     message:
       "El archivo se analizó correctamente, pero no se encontraron datos de transacciones. Por favor, revise su archivo e intente nuevamente.",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message:
-      "Asegúrese de que su archivo contenga datos de transacciones en el formato correcto.",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "Probar otro archivo",
@@ -452,11 +401,6 @@ const esImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "La categorización con IA falló",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "Error al categorizar",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

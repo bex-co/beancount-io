@@ -12,26 +12,9 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Transações",
     description: "Plural form of transaction",
   },
-  "common.adminPermissionRequired": {
-    message:
-      "Permissão de administrador é necessária para acessar esta página.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "Ocorreu um erro",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "Voltar",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "Voltar ao Livro-razão",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Painel do Beancount",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Logo do Beancount",
@@ -57,19 +40,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Limite de colaboradores atingido",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "Você atingiu seu limite de {max} colaboradores. Atualize para Premium para adicionar mais colaboradores ao seu livro-razão.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{used} de {max} colaboradores",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "Confirmar",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "Copiado",
     description: "Status message indicating content was copied",
@@ -77,10 +47,6 @@ const ptCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "Copiar",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "Contabilidade em Texto Simples. Poderosa, Precisa, Auditável.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "Excluir",
@@ -100,10 +66,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "Pronto",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "Editar",
@@ -130,11 +92,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Falha ao carregar dados",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "Não foi possível recuperar as informações do seu livro-razão. Verifique sua conexão e tente novamente.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "Falha ao carregar o livro-razão",
     description: "Error title when ledger fails to load",
@@ -154,19 +111,6 @@ const ptCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "Ir para a página anterior",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "Início",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "Permissões Insuficientes",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "Você não tem as permissões necessárias para acessar esta página. Entre em contato com o administrador do livro-razão para obter acesso.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "Importar",
@@ -220,10 +164,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Última atualização",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "Livro-razão",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "Configurações do livro",
     description:
@@ -237,10 +177,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Limite de livros atingido",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{used} de {max} livros-razão usados",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "carregando...",
     description: "Loading state message",
@@ -248,10 +184,6 @@ const ptCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "Carregando dados...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "Meu",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "Mais páginas",
@@ -311,30 +243,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "paginação",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "Por favor, tente novamente mais tarde",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "Adicione até 5 colaboradores por livro-razão",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "Crie até 5 livros-razão em vez de 1",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "Convide até 5 colaboradores em vez de 2",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "Acesso a recursos avançados e suporte prioritário",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "Benefícios Premium",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "Anterior",
     description: "Text label for previous page button",
@@ -351,10 +259,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Salvando...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "Buscar",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "Páginas relacionadas",
     description: "Heading for related pages navigation section",
@@ -367,17 +271,9 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Selecionar data",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "Configuração",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "Configurações",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "Compartilhar",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "Barra lateral",
@@ -414,14 +310,6 @@ const ptCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "atualizando...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "Atualizar Agora",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "Atualizar para Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Fazer upgrade para o Pro",
@@ -466,11 +354,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message:
       "Visualize o balanço patrimonial de {ledgerName}. Analise ativos, passivos e patrimônio líquido em qualquer momento.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "Gerencie colaboradores para {ledgerName}. Convide usuários e controle permissões de acesso.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -552,26 +435,13 @@ const ptCommon: Record<string, TranslationEntry> = {
       "Faça upload de arquivos para {ledgerName}. Importe arquivos ou documentos Beancount existentes.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "Visualize o histórico de commits para {ledgerName}. Acompanhe alterações em seus arquivos de livro-razão ao longo do tempo.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "Lançamentos",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "Conta",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "Balanço Patrimonial",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "Colaboradores",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "Commodities",
@@ -621,10 +491,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Consulta",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "Configurações",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "Estatísticas",
     description: "Link label for statistics page",
@@ -653,10 +519,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Sucesso",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "Quantia",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "Ativos",
     description: "Assets category in accounting",
@@ -676,10 +538,6 @@ const ptCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "Avançado",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "Precisa de ajuda?",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "Ajuda e suporte",
@@ -709,17 +567,9 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Limpar all",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "Mercadorias",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "Convertido para",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "Moeda",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "Diário",
@@ -820,10 +670,6 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Trimestral",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "Poupanças",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "Pesquisar contas...",
     description: "Placeholder for account search",
@@ -835,10 +681,6 @@ const ptCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "Selecionar período de tempo",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "Resumo",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "Tempo",
@@ -954,6 +796,18 @@ const ptCommon: Record<string, TranslationEntry> = {
     message:
       "Não foi possível exibir esta seção. O restante da página deve continuar funcionando.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "Copiar código",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "Copiado para a área de transferência",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "Falha ao copiar",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

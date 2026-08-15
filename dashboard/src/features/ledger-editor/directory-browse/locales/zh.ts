@@ -10,10 +10,6 @@ const zhDirectoryBrowse: Record<
     message: "下载 ZIP",
     description: "Menu item to download as ZIP",
   },
-  "ledgerEditor.loadingDirectoryContents": {
-    message: "加载目录内容中...",
-    description: "Loading message for directory",
-  },
   "ledgerEditor.manageSshKeys": {
     message: "管理 SSH 密钥",
     description: "Menu item for SSH key management",

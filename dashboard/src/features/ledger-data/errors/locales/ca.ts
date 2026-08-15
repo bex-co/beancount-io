@@ -20,10 +20,6 @@ const caErrors: Record<string, TranslationEntry> = {
     message: "No s'han pogut carregar els errors",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message: "Error en carregar els errors",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

@@ -12,14 +12,6 @@ const faBql: Record<string, TranslationEntry> = {
     message: "در حال اجرا...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "خطایی در هنگام اجرای پرسمان رخ داد",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "نتایج پرسمان",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "برای اجرای پرسمان Cmd+Enter (مک) یا Ctrl+Enter (ویندوز/لینوکس) را فشار دهید",

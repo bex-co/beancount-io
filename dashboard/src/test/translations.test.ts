@@ -1,4 +1,5 @@
 import { describe, it, expect } from "vitest";
+import ts from "typescript";
 
 /**
  * Translation entry interface matching the actual structure
@@ -6,6 +7,86 @@ import { describe, it, expect } from "vitest";
 interface TranslationEntry {
   message: string;
   description: string;
+}
+
+const TODO_MARKER = "[TODO]";
+
+function isIncompleteTranslation(message: string): boolean {
+  return message.trimStart().startsWith(TODO_MARKER);
+}
+
+const PLURAL_SUFFIX_PATTERN = /_(zero|one|two|few|many|other)$/;
+
+function isProductionSourceFile(filePath: string): boolean {
+  return !(
+    filePath.includes("__tests__") ||
+    filePath.includes(".test.") ||
+    filePath.includes(".spec.") ||
+    filePath.includes("locales/") ||
+    filePath.includes("generated") ||
+    filePath.includes("/test/")
+  );
+}
+
+function collectReferencedTranslationKeys(
+  sourceFiles: Record<string, unknown>,
+  validKeys: Set<string>,
+): Set<string> {
+  const referencedKeys = new Set<string>();
+
+  for (const [filePath, module] of Object.entries(sourceFiles)) {
+    if (!isProductionSourceFile(filePath)) continue;
+
+    const fileContent = (module as { default: string }).default;
+    const scriptKind = filePath.endsWith(".tsx")
+      ? ts.ScriptKind.TSX
+      : ts.ScriptKind.TS;
+    const sourceFile = ts.createSourceFile(
+      filePath,
+      fileContent,
+      ts.ScriptTarget.Latest,
+      true,
+      scriptKind,
+    );
+
+    const visit = (node: ts.Node): void => {
+      if (ts.isStringLiteralLike(node) && validKeys.has(node.text)) {
+        referencedKeys.add(node.text);
+      }
+
+      // LedgerPageSEO builds keys dynamically as `seo.${seoKey}.title` and
+      // `seo.${seoKey}.description`, so record both generated keys when the
+      // component receives a static seoKey prop.
+      if (
+        ts.isJsxAttribute(node) &&
+        ts.isIdentifier(node.name) &&
+        node.name.text === "seoKey" &&
+        node.initializer &&
+        ts.isStringLiteral(node.initializer)
+      ) {
+        referencedKeys.add(`seo.${node.initializer.text}.title`);
+        referencedKeys.add(`seo.${node.initializer.text}.description`);
+      }
+
+      ts.forEachChild(node, visit);
+    };
+
+    visit(sourceFile);
+  }
+
+  return referencedKeys;
+}
+
+function isReferencedTranslationKey(
+  key: string,
+  referencedKeys: Set<string>,
+): boolean {
+  if (referencedKeys.has(key)) return true;
+
+  // i18next selects CLDR plural variants from a base-key call such as
+  // t("items", { count }), so the suffixed locale entries are also in use.
+  const baseKey = key.replace(PLURAL_SUFFIX_PATTERN, "");
+  return baseKey !== key && referencedKeys.has(baseKey);
 }
 
 /**
@@ -156,6 +237,46 @@ describe("Translation Files Validation", () => {
       }
 
       expect(errors).toHaveLength(0);
+    });
+  });
+
+  describe("Completion Validation", () => {
+    it("should not contain TODO placeholders in non-English translations", async () => {
+      const locales = await loadAllLocales();
+      const incompleteByLanguage = new Map<string, string[]>();
+
+      for (const [lang, translations] of locales) {
+        if (lang === "en") continue;
+
+        const incompleteKeys = Object.entries(translations)
+          .filter(([, entry]) => isIncompleteTranslation(entry.message))
+          .map(([key]) => key);
+
+        if (incompleteKeys.length > 0) {
+          incompleteByLanguage.set(lang, incompleteKeys);
+        }
+      }
+
+      const totalIncomplete = [...incompleteByLanguage.values()].reduce(
+        (total, keys) => total + keys.length,
+        0,
+      );
+
+      if (totalIncomplete > 0) {
+        console.error("\nIncomplete translations found:");
+        for (const [lang, keys] of incompleteByLanguage) {
+          const preview = keys.slice(0, 5).join(", ");
+          const remaining = keys.length - 5;
+          console.error(
+            `  - [${lang}] ${keys.length} TODO placeholder(s): ${preview}${remaining > 0 ? `... and ${remaining} more` : ""}`,
+          );
+        }
+      }
+
+      expect(
+        totalIncomplete,
+        `Found ${totalIncomplete} unfinished translation(s). Replace every "${TODO_MARKER}" placeholder before merging.`,
+      ).toBe(0);
     });
   });
 
@@ -452,6 +573,41 @@ describe("Translation Files Validation", () => {
   });
 
   describe("Source Code Translation Key Validation", () => {
+    it("should not define translations that are unused by production code", async () => {
+      const locales = await loadAllLocales();
+      const enTranslations = locales.get("en");
+
+      if (!enTranslations) {
+        throw new Error("English translations not found");
+      }
+
+      const validKeys = new Set(Object.keys(enTranslations));
+      const tsFiles = import.meta.glob(
+        "../!(node_modules|dist|build|test)/**/*.{ts,tsx}",
+        { query: "?raw", eager: true },
+      );
+      const referencedKeys = collectReferencedTranslationKeys(
+        tsFiles,
+        validKeys,
+      );
+      const unusedKeys = [...validKeys]
+        .filter((key) => !isReferencedTranslationKey(key, referencedKeys))
+        .sort();
+
+      if (unusedKeys.length > 0) {
+        console.error("\nUnused English translation keys found:");
+        unusedKeys.slice(0, 20).forEach((key) => console.error(`  - ${key}`));
+        if (unusedKeys.length > 20) {
+          console.error(`  ... and ${unusedKeys.length - 20} more`);
+        }
+      }
+
+      expect(
+        unusedKeys.length,
+        `Found ${unusedKeys.length} translation key(s) that are not referenced by production TypeScript or TSX source files. Remove obsolete entries from every locale.`,
+      ).toBe(0);
+    });
+
     it("should only use namespaced keys in t() calls", async () => {
       const errors: string[] = [];
 

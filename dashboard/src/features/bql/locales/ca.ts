@@ -12,14 +12,6 @@ const caBql: Record<string, TranslationEntry> = {
     message: "Executant...",
     description: "Button text when query is executing",
   },
-  "bql.queryExecutionError": {
-    message: "S'ha produït un error en executar la consulta",
-    description: "Generic error message for query execution",
-  },
-  "bql.queryResults": {
-    message: "Resultats de la consulta",
-    description: "Section title for query results",
-  },
   "bql.queryShortcutHint": {
     message:
       "Premeu Cmd+Enter (Mac) o Ctrl+Enter (Windows/Linux) per executar la consulta",

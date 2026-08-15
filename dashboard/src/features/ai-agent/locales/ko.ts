@@ -5,21 +5,9 @@ const koAiAgent: Record<string, TranslationEntry> = {
     message: "Beancount.io에 질문하기",
     description: "Title for AI chat feature",
   },
-  "aiAgent.subtitle": {
-    message: "장부를 위한 AI 지원",
-    description: "Subtitle for AI chat feature",
-  },
   "aiAgent.placeholder": {
     message: "Beancount에 대해 무엇이든 물어보세요...",
     description: "Input placeholder text",
-  },
-  "aiAgent.send": {
-    message: "전송",
-    description: "Send button text",
-  },
-  "aiAgent.sending": {
-    message: "전송 중...",
-    description: "Loading state text",
   },
   "aiAgent.welcome": {
     message:
@@ -32,14 +20,6 @@ const koAiAgent: Record<string, TranslationEntry> = {
       "무엇을 알고 싶으신가요?",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.you": {
-    message: "나",
-    description: "Label for user messages",
-  },
-  "aiAgent.assistant": {
-    message: "AI 어시스턴트",
-    description: "Label for AI assistant messages",
-  },
   "aiAgent.prCreated": {
     message: "✓ 풀 리퀘스트가 생성되었습니다",
     description: "Message shown when PR is created",
@@ -47,26 +27,6 @@ const koAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.viewPR": {
     message: "PR # 보기",
     description: "Link text to view pull request",
-  },
-  "aiAgent.status.connecting": {
-    message: "생각 중...",
-    description: "Status badge text when connecting to AI",
-  },
-  "aiAgent.status.streaming": {
-    message: "스트리밍 중...",
-    description: "Status badge text when receiving AI response",
-  },
-  "aiAgent.status.finalizing": {
-    message: "완료 처리 중...",
-    description: "Status badge text when finalizing AI response",
-  },
-  "aiAgent.status.complete": {
-    message: "완료",
-    description: "Status badge text when AI response is complete",
-  },
-  "aiAgent.status.error": {
-    message: "오류",
-    description: "Status badge text when an error occurs",
   },
   "aiAgent.quickAskPlaceholder": {
     message: "이 장부에 대해 무엇이든 물어보세요...",
@@ -156,19 +116,6 @@ const koAiAgent: Record<string, TranslationEntry> = {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
   },
-  "aiAgent.editApproval.binaryContent": {
-    message: "(binary content)",
-    description:
-      "Placeholder shown when file content is binary (image, PDF, etc.)",
-  },
-  "aiAgent.readFile.label": {
-    message: "Read",
-    description: "Label on the read-file tool step",
-  },
-  "aiAgent.listFiles.label": {
-    message: "List",
-    description: "Label on the list-files tool step",
-  },
   "aiAgent.suggestionsTitle": {
     message: "이렇게 물어보세요:",
     description:
@@ -209,6 +156,59 @@ const koAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.retry": {
     message: "다시 시도",
     description: "Button to resubmit the last question after an error",
+  },
+  "aiAgent.receiptApproval.title": {
+    message: "영수증 거래 기록",
+    description: "Title of the receipt transaction approval card",
+  },
+  "aiAgent.receiptApproval.preparing": {
+    message: "거래 준비 중…",
+    description: "Status while the receipt transaction is being prepared",
+  },
+  "aiAgent.receiptApproval.recorded": {
+    message: "거래가 기록되었습니다",
+    description: "Status after the receipt transaction was recorded",
+  },
+  "aiAgent.receiptApproval.failed": {
+    message: "거래 기록에 실패했습니다",
+    description: "Error when recording the receipt transaction failed",
+  },
+  "aiAgent.receiptApproval.date": {
+    message: "날짜",
+    description: "Label for the receipt transaction date",
+  },
+  "aiAgent.receiptApproval.payee": {
+    message: "수취인",
+    description: "Label for the receipt transaction payee",
+  },
+  "aiAgent.receiptApproval.amount": {
+    message: "금액",
+    description: "Label for the receipt transaction amount",
+  },
+  "aiAgent.receiptApproval.expense": {
+    message: "지출",
+    description: "Label for the receipt expense account",
+  },
+  "aiAgent.receiptApproval.payment": {
+    message: "결제",
+    description: "Label for the receipt payment account",
+  },
+  "aiAgent.attachFile": {
+    message: "파일 첨부",
+    description: "Aria label for the attach file button in the chat input",
+  },
+  "aiAgent.removeAttachment": {
+    message: "{fileName} 제거",
+    description:
+      "Aria label for removing a staged attachment; {fileName} is the attachment file name",
+  },
+  "aiAgent.attachmentFailed": {
+    message: "실패",
+    description: "Chip label when an attachment failed to upload",
+  },
+  "aiAgent.scrollToBottom": {
+    message: "맨 아래로 스크롤",
+    description: "Aria label for the scroll to bottom button in the chat",
   },
 };
 

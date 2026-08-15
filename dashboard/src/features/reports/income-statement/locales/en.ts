@@ -46,10 +46,6 @@ const enIncomeStatement: Record<string, TranslationEntry> = {
     message: "Total net profit over the selected period",
     description: "Description for net profit summary table",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Monthly Net Income",
-    description: "Net income calculated monthly",
-  },
 };
 
 export default enIncomeStatement;

@@ -8,10 +8,6 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Compte",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "Selector de compte",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "Compte (p. ex., Actius:Banc:Corrent)",
     description: "Placeholder for account field",
@@ -24,25 +20,9 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Comptes",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "comptes",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "Afegir una entrada de diari nova",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "Afegir apunt",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "Afegir transacció",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "Si us plau, introdueix l'import",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "L'import ha de ser un número vàlid",
@@ -55,10 +35,6 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "L'import és obligatori",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "Es requereix almenys un apunt",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "Es requereixen com a mínim dues anotacions",
@@ -103,14 +79,6 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "Tancar",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "Tancar compte",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "Cost",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "Crea una entrada de diari nova per a aquest llibre",
@@ -210,14 +178,6 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Error en exportar el diari",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "Indicador (p. ex., *)",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "De",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "Diari",
     description: "Navigation label for journal/transaction history page",
@@ -225,38 +185,6 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "Diari exportat correctament",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "Error en carregar el diari: ",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message: 'Utilitzeu el botó "Afegir transacció" per crear entrades',
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "Pugeu fitxers de beancount a través de la interfície web",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "Importa dades comptables existents",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message: "Pugeu fitxers de beancount a través de la interfície web",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "Per començar:",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "Encara no tens entrades al diari.",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "Benvingut al teu Diari! 📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "Quan afegiu algunes transaccions, apareixeran aquí.",
@@ -270,25 +198,13 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Documents vinculats",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "Carregant més...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "Carregant el context de l'entrada...",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "Descripció",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "Metadades",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "Descripció",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "La descripció és obligatòria",
@@ -301,10 +217,6 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "No s'han trobat monedes",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "No hi ha més entrades",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "No s'han trobat entrades de diari per als filtres actuals.",
@@ -330,10 +242,6 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "El contingut de la nota és obligatori",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "Obrir compte",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "Obrir",
     description: "Label for other transaction subtype filter",
@@ -346,10 +254,6 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Altres transaccions",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "Beneficiari",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "Emplenar",
     description: "Table header for payee and narration column",
@@ -357,10 +261,6 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "Beneficiari/Descripció",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "Beneficiari",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "El beneficiari és obligatori",
@@ -370,14 +270,6 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "!",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "Si us plau, introdueix...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "Transaccions pendents",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "Entrades",
     description: "Label for postings toggle filter",
@@ -385,22 +277,6 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "Apunt",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "Preu",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "Afegir ràpid",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "Error al guardar",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "Transacció guardada!",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "Preu",
@@ -425,14 +301,6 @@ const caJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "Seleccionar data de la nota",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "Seleccionar beneficiari...",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "A",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "Seleccionar data de transacció",

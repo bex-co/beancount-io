@@ -20,10 +20,6 @@ const jaIncomeStatement: Record<string, TranslationEntry> = {
     message: "{ledgerName}の収入を時系列でさまざまな商品にわたって追跡",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "月次純収入",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message: "{ledgerName}の純利益を時系列でさまざまな商品にわたって追跡",
     description: "Description for net profit chart",

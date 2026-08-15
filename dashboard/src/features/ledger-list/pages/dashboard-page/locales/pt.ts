@@ -59,14 +59,6 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
     message: "Digite o nome do livro-razão",
     description: "Placeholder for ledger name input",
   },
-  "page.dashboard.failedToCreateLedger": {
-    message: "Falha ao criar livro-razão",
-    description: "Error message when ledger creation fails",
-  },
-  "page.dashboard.failedToDeleteLedger": {
-    message: "Falha ao excluir livro-razão",
-    description: "Error message when ledger deletion fails",
-  },
   "page.dashboard.failedToLoadLedgers": {
     message: "Falha ao carregar o livro-razãos",
     description: "Error title when ledgers fail to load",
@@ -75,10 +67,6 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
     message:
       "Não foi possível recuperar seus livros-razão. Verifique sua conexão e tente novamente.",
     description: "Detailed error description for ledger loading failure",
-  },
-  "page.dashboard.failedToUpdateLedger": {
-    message: "Falha ao atualizar livro-razão",
-    description: "Error message when ledger update fails",
   },
   "page.dashboard.feedError": {
     message: "Falha ao carregar o feed",

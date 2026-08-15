@@ -1,10 +1,6 @@
 import type { TranslationEntry } from "@/i18n";
 
 const koAuth: Record<string, TranslationEntry> = {
-  "auth.alreadyHaveAccount": {
-    message: "이미 계정이 있으신가요? 로그인",
-    description: "Prompt text asking if user already has account",
-  },
   "auth.alreadyHaveAccountQuestion": {
     message: "이미 계정이 있으신가요?",
     description: "Prompt asking if user has existing account",
@@ -12,18 +8,6 @@ const koAuth: Record<string, TranslationEntry> = {
   "auth.authenticating": {
     message: "인증 중...",
     description: "Message shown during authentication process",
-  },
-  "auth.authenticationError": {
-    message: "인증 오류",
-    description: "Title for authentication error dialog",
-  },
-  "auth.authenticationErrorOccurred": {
-    message: "인증 중 오류가 발생했습니다",
-    description: "Generic authentication error message",
-  },
-  "auth.authenticationFailed": {
-    message: "인증에 실패했습니다",
-    description: "Error message when authentication fails",
   },
   "auth.backToSignIn": {
     message: "로그인으로 돌아가기",
@@ -89,10 +73,6 @@ const koAuth: Record<string, TranslationEntry> = {
     message:
       "이메일 주소로 비밀번호 재설정 링크를 보냈습니다. 받은 편지함을 확인하고 안내에 따라 비밀번호를 재설정해 주세요.",
     description: "Detailed success message after reset email sent",
-  },
-  "auth.enterCredentials": {
-    message: "대시보드에 접근하기 위한 인증 정보를 입력하세요",
-    description: "Login page description",
   },
   "auth.enterDetailsToGetStarted": {
     message: "대시보드를 시작하기 위해 정보를 입력하세요",
@@ -174,10 +154,6 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "로그인 / 회원가입",
     description: "Button label for login or signup",
   },
-  "auth.loginError": {
-    message: "로그인 중 오류가 발생했습니다",
-    description: "Generic login error message",
-  },
   "auth.loginFailed": {
     message: "로그인에 실패했습니다",
     description: "Error title when login fails",
@@ -185,18 +161,6 @@ const koAuth: Record<string, TranslationEntry> = {
   "auth.logout": {
     message: "로그아웃",
     description: "Button label to log out",
-  },
-  "auth.logoutAlertCancel": {
-    message: "취소",
-    description: "Cancel button in logout confirmation dialog",
-  },
-  "auth.logoutAlertConfirm": {
-    message: "로그아웃",
-    description: "Confirm button in logout confirmation dialog",
-  },
-  "auth.logoutAlertMsg": {
-    message: "정말 로그아웃하시겠습니까?",
-    description: "Confirmation message asking user if they want to log out",
   },
   "auth.newPassword": {
     message: "새 비밀번호",
@@ -247,38 +211,13 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "로그인 페이지로 이동 중...",
     description: "Message shown after successful logout",
   },
-  "auth.registrationError": {
-    message: "등록 중 오류가 발생했습니다",
-    description: "Generic registration error",
-  },
   "auth.registrationFailed": {
     message: "등록에 실패했습니다",
     description: "Error when registration fails",
   },
-  "auth.resetEmailError": {
-    message: "비밀번호 재설정 이메일 전송 중 오류가 발생했습니다",
-    description: "Generic error for reset email sending",
-  },
-  "auth.resetPassword": {
-    message: "비밀번호 재설정",
-    description: "Page title or button for password reset",
-  },
   "auth.resetPasswordButton": {
     message: "비밀번호 재설정",
     description: "Button text to reset password",
-  },
-  "auth.resetPasswordDescription": {
-    message: "이메일 주소를 입력하면 비밀번호 재설정 링크를 보내드립니다.",
-    description: "Instructions for password reset process",
-  },
-  "auth.resetPasswordEmailSent": {
-    message:
-      "이메일 주소로 이메일을 보냈습니다. 이메일을 확인하여 비밀번호를 재설정해 주세요.",
-    description: "Success message after password reset email is sent",
-  },
-  "auth.resetPasswordError": {
-    message: "비밀번호 재설정 중 오류가 발생했습니다",
-    description: "Generic error message for password reset",
   },
   "auth.resetYourPassword": {
     message: "비밀번호를 재설정하세요",
@@ -291,10 +230,6 @@ const koAuth: Record<string, TranslationEntry> = {
   "auth.sendResetLink": {
     message: "재설정 링크 보내기",
     description: "Button to send password reset link",
-  },
-  "auth.sendResetPasswordEmail": {
-    message: "비밀번호 재설정 이메일 보내기",
-    description: "Button label to send password reset email",
   },
   "auth.sending": {
     message: "전송 중...",
@@ -324,10 +259,6 @@ const koAuth: Record<string, TranslationEntry> = {
   "auth.username": {
     message: "사용자 이름",
     description: "Username field label",
-  },
-  "auth.usernameAlphanumeric": {
-    message: "사용자 이름은 문자와 숫자만 포함할 수 있습니다",
-    description: "Validation error when username contains invalid characters",
   },
   "auth.usernameLowercaseAlphanumeric": {
     message: "사용자 이름은 소문자, 숫자, 밑줄만 포함할 수 있습니다",
@@ -476,14 +407,6 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "No ledgers found. Please create one first.",
     description: "OAuth consent page empty ledger state message",
   },
-  "auth.oauthDontHaveAccount": {
-    message: "Don't have an account?",
-    description: "OAuth consent page link to register",
-  },
-  "auth.oauthAlreadyHaveAccount": {
-    message: "Already have an account?",
-    description: "OAuth consent page link back to sign in",
-  },
   "auth.oauthRegisterToContinue": {
     message: "Create an account to continue",
     description: "OAuth consent page register step title",
@@ -497,5 +420,62 @@ const koAuth: Record<string, TranslationEntry> = {
     description:
       "Banner shown on the login page when redirected here because the previous session's token expired or was revoked",
   },
+  "auth.cliAuthTitle": {
+    message: "CLI 액세스 승인",
+    description: "Title of the CLI device authorization card",
+  },
+  "auth.cliAuthDescription": {
+    message: "Beancount CLI가 계정에 대한 액세스를 요청하고 있습니다.",
+    description: "Description under the CLI authorization title",
+  },
+  "auth.cliAuthPermissionsIntro": {
+    message: "CLI에 다음 작업이 허용됩니다:",
+    description: "Intro line above the list of CLI permissions",
+  },
+  "auth.cliAuthPermissionLedgers": {
+    message: "장부 읽기 및 쓰기",
+    description: "CLI permission list item for reading and writing ledgers",
+  },
+  "auth.cliAuthPermissionAccount": {
+    message: "계정 정보 액세스",
+    description: "CLI permission list item for accessing account information",
+  },
+  "auth.cliAuthAuthorize": {
+    message: "승인",
+    description: "Button to authorize the CLI session",
+  },
+  "auth.cliAuthAuthorizing": {
+    message: "승인 중...",
+    description: "Button text while the CLI session is being authorized",
+  },
+  "auth.cliAuthDeny": {
+    message: "거부",
+    description: "Button to deny the CLI session",
+  },
+  "auth.cliAuthDenying": {
+    message: "거부 중...",
+    description: "Button text while the CLI session is being denied",
+  },
+  "auth.cliAuthSessionExpired": {
+    message: "세션이 만료되었거나 찾을 수 없습니다.",
+    description: "Error shown when the CLI auth session is expired or missing",
+  },
+  "auth.cliAuthSuccessTitle": {
+    message: "승인이 완료되었습니다",
+    description: "Title shown after the CLI session was authorized",
+  },
+  "auth.cliAuthSuccessDescription": {
+    message: "이 탭을 닫고 CLI로 돌아갈 수 있습니다.",
+    description: "Hint shown after successful CLI authorization",
+  },
+  "auth.cliAuthDeniedTitle": {
+    message: "액세스가 거부되었습니다",
+    description: "Title shown after the CLI session was denied",
+  },
+  "auth.cliAuthDeniedDescription": {
+    message: "이 탭을 닫아도 됩니다.",
+    description: "Hint shown after the CLI session was denied",
+  },
 };
+
 export default koAuth;

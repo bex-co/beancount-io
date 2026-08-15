@@ -8,10 +8,6 @@ const jaDocuments: Record<string, TranslationEntry> = {
     message: "ドキュメント",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "ドキュメントの読み込みに失敗しました",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "ファイル名",
     description: "Table column header for filename",

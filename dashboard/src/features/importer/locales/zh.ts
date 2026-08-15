@@ -5,30 +5,8 @@ export interface TranslationEntry {
 
 const zhImporter: Record<string, TranslationEntry> = {
   // Premium Banner
-  "importer.premiumBannerTitle": {
-    message: "智能导入已上线 — 免费抢先体验",
-    description: "Title for premium feature banner",
-  },
-  "importer.premiumBannerDismiss": {
-    message: "关闭横幅",
-    description: "Aria label for dismiss banner button",
-  },
-  "importer.premiumBannerDescription": {
-    message:
-      "使用 AI 分析功能，在几秒钟内从 PDF、OFX 文件和图像导入银行对账单。限时免费。",
-    description: "Description of premium importer features",
-  },
 
   // File Upload
-  "importer.upload.title": {
-    message: "上传文件",
-    description: "Title for file upload card",
-  },
-  "importer.upload.description": {
-    message:
-      "上传你的银行对账单或交易文件。支持的格式：CSV、PDF、OFX或图像(PNG/JPG)。最大10MB。",
-    description: "Description of supported file formats and size limit",
-  },
   "importer.upload.fileSizeError": {
     message: "此文件超过 10 MB 限制。请尝试较小的文件。",
     description: "Error message when file size exceeds limit",
@@ -40,10 +18,6 @@ const zhImporter: Record<string, TranslationEntry> = {
   "importer.upload.parsingFile": {
     message: "正在读取你的文件\u2026",
     description: "Loading message while parsing file",
-  },
-  "importer.upload.fileSize": {
-    message: "{size} KB",
-    description: "Display file size in KB",
   },
   "importer.upload.chooseDifferentFile": {
     message: "选择其他文件",
@@ -121,10 +95,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "使用AI自动解析PDF、OFX和图像文件",
     description: "Description of premium parsing features",
   },
-  "importer.error.processing": {
-    message: "处理中...",
-    description: "Button text while processing upgrade",
-  },
   "importer.error.upgradeNow": {
     message: "立即升级",
     description: "Button text to start upgrade process",
@@ -190,10 +160,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "金额",
     description: "Table header for amount column",
   },
-  "importer.preview.status": {
-    message: "状态",
-    description: "Table header for status column",
-  },
   "importer.preview.noData": {
     message: "没有要显示的数据",
     description: "Empty state message when no transactions",
@@ -234,14 +200,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "点击编辑",
     description: "Placeholder text for editable cells",
   },
-  "importer.preview.errorStatus": {
-    message: "错误",
-    description: "Status label for invalid rows",
-  },
-  "importer.preview.validStatus": {
-    message: "有效",
-    description: "Status label for valid rows",
-  },
   "importer.preview.actions": {
     message: "操作",
     description: "Table header for actions column",
@@ -250,10 +208,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     message: "删除行",
     description: "Aria label for delete row button",
   },
-  "importer.preview.rowDeleted": {
-    message: "已删除行",
-    description: "Toast message when row is deleted",
-  },
   "importer.preview.emptyFileTitle": {
     message: "未找到交易",
     description: "Title when file is parsed but contains no data",
@@ -261,10 +215,6 @@ const zhImporter: Record<string, TranslationEntry> = {
   "importer.preview.emptyFileDescription": {
     message: "文件已成功解析，但未找到交易数据。请检查你的文件并重试。",
     description: "Description when file is parsed but contains no data",
-  },
-  "importer.preview.emptyFileHint": {
-    message: "确保你的文件包含正确格式的交易数据。",
-    description: "Hint for empty file state",
   },
   "importer.preview.retryUpload": {
     message: "尝试其他文件",
@@ -441,11 +391,6 @@ const zhImporter: Record<string, TranslationEntry> = {
   "importer.accountMapping.aiFailed": {
     message: "AI分类失败",
     description: "Toast title for failed AI categorization",
-  },
-  "importer.accountMapping.aiFailedDescription": {
-    message: "分类失败",
-    description:
-      "Toast description for failed AI categorization (will be replaced with actual error)",
   },
 
   // Importing Step

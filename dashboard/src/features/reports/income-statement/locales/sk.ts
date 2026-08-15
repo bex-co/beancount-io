@@ -20,10 +20,6 @@ const skIncomeStatement: Record<string, TranslationEntry> = {
     message: "Sledujte {ledgerName} príjmy v rôznych menách v čase",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Mesačný čistý príjem",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message: "Sledujte {ledgerName} čistý zisk v rôznych menách v čase",
     description: "Description for net profit chart",

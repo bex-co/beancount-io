@@ -8,10 +8,6 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Рахунок",
     description: "Singular form of account, used as tab label",
   },
-  "journal.accountPicker": {
-    message: "Вибір рахунку",
-    description: "Dialog or dropdown title for selecting account",
-  },
   "journal.accountPlaceholder": {
     message: "Рахунок (e.g., Assets:Bank:Checking)",
     description: "Placeholder for account field",
@@ -24,25 +20,9 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Рахунки",
     description: "Plural form of account",
   },
-  "journal.accountsPlural": {
-    message: "рахунки",
-    description: "Lowercase plural form of accounts",
-  },
   "journal.addNewJournalEntry": {
     message: "Додати новий запис журналу",
     description: "Aria label for add new journal entry button",
-  },
-  "journal.addPosting": {
-    message: "Додати проводку",
-    description: "Button text to add a new posting to transaction",
-  },
-  "journal.addTransaction": {
-    message: "Додати транзакцію",
-    description: "Button to add a new transaction",
-  },
-  "journal.amountEmptyError": {
-    message: "Будь ласка, введіть суму",
-    description: "Validation error when amount is not provided",
   },
   "journal.amountMustBeNumber": {
     message: "Сума має бути дійсним числом",
@@ -55,10 +35,6 @@ const ukJournal: Record<string, TranslationEntry> = {
   "journal.amountRequired": {
     message: "Сума обов'язкова",
     description: "Validation error when amount is missing",
-  },
-  "journal.atLeastOnePosting": {
-    message: "Потрібна хоча б одна проводка",
-    description: "Validation error when no postings exist",
   },
   "journal.atLeastTwoPostings": {
     message: "Потрібно щонайменше дві проводки",
@@ -103,14 +79,6 @@ const ukJournal: Record<string, TranslationEntry> = {
   "journal.close": {
     message: "Закрити",
     description: "Close account entry type filter",
-  },
-  "journal.closeAccount": {
-    message: "Закрити рахунок",
-    description: "Action to close an existing account",
-  },
-  "journal.cost": {
-    message: "Вартість",
-    description: "Table header for cost column",
   },
   "journal.createNewJournalEntry": {
     message: "Створити новий запис журналу для цієї книги",
@@ -209,14 +177,6 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Не вдалося експортувати журнал",
     description: "Error message when journal export fails",
   },
-  "journal.flagPlaceholder": {
-    message: "Прапорець (напр., *)",
-    description: "Placeholder for transaction flag",
-  },
-  "journal.from": {
-    message: "Від",
-    description: "Label for source account in transaction",
-  },
   "journal.journal": {
     message: "Журнал",
     description: "Navigation label for journal/transaction history page",
@@ -224,38 +184,6 @@ const ukJournal: Record<string, TranslationEntry> = {
   "journal.journalExportedSuccess": {
     message: "Журнал exported successfully",
     description: "Success message after exporting journal",
-  },
-  "journal.journalLoadError": {
-    message: "Помилка завантаження журналу: ",
-    description: "Error message prefix when journal fails to load",
-  },
-  "journal.journalWelcomeInstruction1": {
-    message: 'Використовуйте кнопку "Додати транзакцію" для створення записів',
-    description: "First instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction2": {
-    message: "Завантажте файли beancount через веб-інтерфейс",
-    description: "Second instruction for getting started",
-  },
-  "journal.journalWelcomeInstruction3": {
-    message: "Імпортуйте існуючі дані обліку",
-    description: "Third instruction for getting started",
-  },
-  "journal.journalWelcomeInstructionFinal": {
-    message: "Після додавання транзакцій вони з'являться тут.",
-    description: "Final instruction message",
-  },
-  "journal.journalWelcomeInstructions": {
-    message: "Щоб почати:",
-    description: "Header for getting started instructions",
-  },
-  "journal.journalWelcomeMessage": {
-    message: "У вас поки що немає записів у журналі.",
-    description: "Welcome message for empty journal",
-  },
-  "journal.journalWelcomeTitle": {
-    message: "Ласкаво просимо до вашого Журналу! 📔",
-    description: "Welcome title for empty journal page",
   },
   "journal.linked": {
     message: "П",
@@ -269,25 +197,13 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Пoading entry context...",
     description: "Loading message while fetching entry context",
   },
-  "journal.loadingMore": {
-    message: "Завантажується ще...",
-    description: "Loading message when fetching more entries",
-  },
   "journal.metadata": {
     message: "Метадані",
     description: "Label for metadata toggle filter",
   },
-  "journal.narration": {
-    message: "Опис",
-    description: "Label for transaction description/notes field",
-  },
   "journal.narrationPlaceholder": {
     message: "Опис",
     description: "Placeholder for narration field",
-  },
-  "journal.narrationRequired": {
-    message: "Опис is required",
-    description: "Validation error when narration is missing",
   },
   "journal.newEntry": {
     message: "Новий запис",
@@ -300,10 +216,6 @@ const ukJournal: Record<string, TranslationEntry> = {
   "journal.noJournalEntriesFound": {
     message: "Записів журналу для поточних фільтрів не знайдено.",
     description: "Message when journal has no entries matching filters",
-  },
-  "journal.noMoreEntries": {
-    message: "Більше записів немає",
-    description: "Message when no more entries to load",
   },
   "journal.noNarrationsFound": {
     message: "Описів не знайдено",
@@ -329,10 +241,6 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Відкрити",
     description: "Open account entry type filter",
   },
-  "journal.openAccount": {
-    message: "Відкрити рахунок",
-    description: "Action to open a new account",
-  },
   "journal.other": {
     message: "х",
     description: "Label for other transaction subtype filter",
@@ -345,10 +253,6 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Заповнення",
     description: "Pad entry type filter",
   },
-  "journal.payee": {
-    message: "Отримувач",
-    description: "Label for payee field in transaction",
-  },
   "journal.payeeNarration": {
     message: "Отримувач/Narration",
     description: "Table header for payee and narration column",
@@ -356,10 +260,6 @@ const ukJournal: Record<string, TranslationEntry> = {
   "journal.payeePlaceholder": {
     message: "Отримувач",
     description: "Placeholder for payee field",
-  },
-  "journal.payeeRequired": {
-    message: "Отримувач is required",
-    description: "Validation error when payee is missing",
   },
   "journal.pending": {
     message: "!",
@@ -369,14 +269,6 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Очікувані транзакції",
     description: "Filter tooltip for pending transactions",
   },
-  "journal.pleaseInput": {
-    message: "Будь ласка, введіть...",
-    description: "Placeholder text prompting user to input",
-  },
-  "journal.posting": {
-    message: "Проводка",
-    description: "Label for posting section in transaction form",
-  },
   "journal.postings": {
     message: "Проведення",
     description: "Label for postings toggle filter",
@@ -384,22 +276,6 @@ const ukJournal: Record<string, TranslationEntry> = {
   "journal.price": {
     message: "Ціна",
     description: "Price entry type filter",
-  },
-  "journal.priceHeader": {
-    message: "Ціна",
-    description: "Table header for price column",
-  },
-  "journal.quickAdd": {
-    message: "Швидке додавання",
-    description: "Button for quick transaction entry",
-  },
-  "journal.saveFailed": {
-    message: "Помилка збереження",
-    description: "Error message when save fails",
-  },
-  "journal.saveSuccess": {
-    message: "Транзакцію збережено!",
-    description: "Success message after saving transaction",
   },
   "journal.selectAccount": {
     message: "Виберіть рахунок...",
@@ -424,14 +300,6 @@ const ukJournal: Record<string, TranslationEntry> = {
   "journal.selectPayee": {
     message: "Виберіть отримувача...",
     description: "Placeholder for payee selection combobox",
-  },
-  "journal.selectTransactionDate": {
-    message: "Виберіть дату транзакції",
-    description: "Placeholder for date picker",
-  },
-  "journal.to": {
-    message: "До",
-    description: "Label for destination account in transaction",
   },
   "journal.toggleMetadata": {
     message: "Комуggle metadata",

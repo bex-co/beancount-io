@@ -22,10 +22,6 @@ const esIncomeStatement: Record<string, TranslationEntry> = {
       "Seguimiento de {ledgerName} ingresos en diferentes productos a lo largo del tiempo",
     description: "Description for income chart",
   },
-  "page.incomeStatement.monthlyNetIncome": {
-    message: "Ingresos netos mensuales",
-    description: "Net income calculated monthly",
-  },
   "page.incomeStatement.netProfitDescription": {
     message:
       "Seguimiento de {ledgerName} beneficio neto en diferentes productos a lo largo del tiempo",

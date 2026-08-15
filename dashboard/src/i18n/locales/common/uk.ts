@@ -12,25 +12,9 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Транзакції",
     description: "Plural form of transaction",
   },
-  "common.adminPermissionRequired": {
-    message: "Admin permission is required to access this page.",
-    description: "Specific message for admin-only pages",
-  },
-  "common.anErrorOccurred": {
-    message: "Сталася помилка",
-    description: "Generic error message",
-  },
   "common.back": {
     message: "Назад",
     description: "Button label to go back to previous page",
-  },
-  "common.backToLedger": {
-    message: "Back to Ledger",
-    description: "Button text to go back to ledger overview",
-  },
-  "common.beancountDashboard": {
-    message: "Панель Beancount",
-    description: "Main application title",
   },
   "common.beancountLogo": {
     message: "Логотип Beancount",
@@ -56,19 +40,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Ліміт співробітників досягнуто",
     description: "Title when collaborator limit is reached",
   },
-  "common.collaboratorsLimitReachedMessage": {
-    message:
-      "Ви досягли ліміту в {max} співробітників. Оновіться до Premium, щоб додати більше співробітників до вашої книги.",
-    description: "Message when collaborator limit is reached",
-  },
-  "common.collaboratorsUsed": {
-    message: "{used} з {max} співробітників",
-    description: "Shows current collaborator usage",
-  },
-  "common.confirm": {
-    message: "Підтвердити",
-    description: "Button label to confirm action",
-  },
   "common.copied": {
     message: "Скопійовано",
     description: "Status message indicating content was copied",
@@ -76,10 +47,6 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.copy": {
     message: "Копіювати",
     description: "Button label to copy content",
-  },
-  "common.dashboardTagline": {
-    message: "Текстовий облік. Потужний, Точний, Аудитований.",
-    description: "Tagline describing the application",
   },
   "common.delete": {
     message: "Видалити",
@@ -99,10 +66,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Free plan limit reached",
     description:
       "Secondary text shown when a ledger's directive usage is at or over the free-tier limit",
-  },
-  "common.done": {
-    message: "Готово",
-    description: "Button label indicating completion",
   },
   "common.edit": {
     message: "Редагувати",
@@ -129,11 +92,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Не вдалося завантажити дані",
     description: "Error title when data fails to load",
   },
-  "common.failedToLoadDataDescription": {
-    message:
-      "Не вдалося отримати інформацію про вашу книгу. Перевірте підключення та спробуйте ще раз.",
-    description: "Error description when data fails to load",
-  },
   "common.failedToLoadLedger": {
     message: "Не вдалося завантажити книгу",
     description: "Error title when ledger fails to load",
@@ -153,19 +111,6 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.goToPreviousPage": {
     message: "Перейти на попередню сторінку",
     description: "Aria label for previous page button",
-  },
-  "common.home": {
-    message: "Головна",
-    description: "Navigation label for home page",
-  },
-  "common.insufficientPermissions": {
-    message: "Insufficient Permissions",
-    description: "Error title when user lacks required permissions",
-  },
-  "common.insufficientPermissionsDescription": {
-    message:
-      "You don't have the necessary permissions to access this page. Please contact the ledger administrator for access.",
-    description: "Error description when user lacks required permissions",
   },
   "common.import": {
     message: "Імпорт",
@@ -219,10 +164,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Останнє оновлення",
     description: "Table column header for last update time",
   },
-  "common.ledger": {
-    message: "Книга",
-    description: "Navigation label for ledger page",
-  },
   "common.ledgerSettings": {
     message: "Налаштування книги",
     description:
@@ -236,10 +177,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Ліміт книг досягнуто",
     description: "Title when ledger limit is reached",
   },
-  "common.ledgersUsed": {
-    message: "{used} з {max} книг використано",
-    description: "Shows current ledger usage",
-  },
   "common.loading": {
     message: "завантаження...",
     description: "Loading state message",
@@ -247,10 +184,6 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.loadingData": {
     message: "Завантаження даних...",
     description: "Generic loading state message",
-  },
-  "common.mine": {
-    message: "Моє",
-    description: "Navigation label for user profile section",
   },
   "common.morePages": {
     message: "Більше сторінок",
@@ -310,30 +243,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "пагінація",
     description: "Aria label for pagination navigation",
   },
-  "common.pleaseRetryLater": {
-    message: "Спробуйте ще раз пізніше",
-    description: "Suggestion message after error",
-  },
-  "common.premiumBenefit.collaborators": {
-    message: "Додайте до 5 співробітників на книгу",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.ledgers": {
-    message: "Створіть до 5 книг замість 1",
-    description: "Premium benefit for more ledgers",
-  },
-  "common.premiumBenefit.moreCollaborators": {
-    message: "Запросіть до 5 співробітників замість 2",
-    description: "Premium benefit for more collaborators",
-  },
-  "common.premiumBenefit.unlimitedFeatures": {
-    message: "Доступ до розширених функцій та пріоритетної підтримки",
-    description: "Premium benefit for unlimited features",
-  },
-  "common.premiumBenefits": {
-    message: "Переваги Premium",
-    description: "Section title for list of premium benefits",
-  },
   "common.previous": {
     message: "Попередня",
     description: "Text label for previous page button",
@@ -350,10 +259,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Збереження...",
     description: "Saving state message",
   },
-  "common.search": {
-    message: "Пошук",
-    description: "Button or input label for search functionality",
-  },
   "common.seeAlso": {
     message: "Пов'язані сторінки",
     description: "Heading for related pages navigation section",
@@ -366,17 +271,9 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Виберіть дату",
     description: "Screen reader label for date picker button",
   },
-  "common.setting": {
-    message: "Налаштування",
-    description: "Singular form of settings",
-  },
   "common.settings": {
     message: "Налаштування",
     description: "Navigation label for settings page",
-  },
-  "common.share": {
-    message: "Поділитися",
-    description: "Button label to share content",
   },
   "common.sidebar": {
     message: "Бічна панель",
@@ -413,14 +310,6 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.updating": {
     message: "оновлення...",
     description: "Updating state message",
-  },
-  "common.upgradeNow": {
-    message: "Оновити Зараз",
-    description: "Button text to upgrade immediately",
-  },
-  "common.upgradeToPremium": {
-    message: "Оновити до Premium",
-    description: "Title for upgrade prompt dialog",
   },
   "common.upgradeToPro": {
     message: "Перейти на Pro",
@@ -465,11 +354,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message:
       "Перегляд балансу для {ledgerName}. Аналізуйте активи, зобов'язання та власний капітал у будь-який момент часу.",
     description: "Description for balance sheet page",
-  },
-  "common.pageDescription.collaborators": {
-    message:
-      "Керуйте співробітниками для {ledgerName}. Запрошуйте користувачів та контролюйте права доступу.",
-    description: "Description for collaborators page",
   },
   "common.pageDescription.commodities": {
     message:
@@ -551,26 +435,13 @@ const ukCommon: Record<string, TranslationEntry> = {
       "Завантажте файли до {ledgerName}. Імпортуйте існуючі файли або документи Beancount.",
     description: "Description for upload files page",
   },
-  "common.pageDescription.versionHistory": {
-    message:
-      "Перегляд історії комітів для {ledgerName}. Відстежуйте зміни у файлах книги з часом.",
-    description: "Description for version history page",
-  },
   "common.postings": {
     message: "Проводки",
     description: "Auto-generated from code usage",
   },
-  "common.relatedLinks.account": {
-    message: "Рахунок",
-    description: "Link label for account page",
-  },
   "common.relatedLinks.balanceSheet": {
     message: "Баланс",
     description: "Link label for balance sheet page",
-  },
-  "common.relatedLinks.collaborators": {
-    message: "Співробітники",
-    description: "Link label for collaborators page",
   },
   "common.relatedLinks.commodities": {
     message: "Товари",
@@ -620,10 +491,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Запит",
     description: "Link label for query page",
   },
-  "common.relatedLinks.settings": {
-    message: "Налаштування",
-    description: "Link label for settings page",
-  },
   "common.relatedLinks.statistics": {
     message: "Статистика",
     description: "Link label for statistics page",
@@ -652,10 +519,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Успіх",
     description: "Auto-generated from code usage",
   },
-  "common.amount": {
-    message: "Сума",
-    description: "Label for amount column in tables",
-  },
   "common.assets": {
     message: "Активи",
     description: "Assets category in accounting",
@@ -675,10 +538,6 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.advanced": {
     message: "Розширене",
     description: "Navigation group label for advanced ledger tools",
-  },
-  "common.needHelp": {
-    message: "Потрібна допомога?",
-    description: "Navigation label for the external help link",
   },
   "common.helpAndSupport": {
     message: "Допомога та підтримка",
@@ -708,17 +567,9 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Очистити all",
     description: "Button text to clear all filters",
   },
-  "common.commodities": {
-    message: "Товари",
-    description: "Label for commodities column in tables",
-  },
   "component.conversionSelect.convertedTo": {
     message: "Конвертовано в",
     description: "Prefix for currency conversion option",
-  },
-  "common.currency": {
-    message: "Валюта",
-    description: "Label for currency column in tables",
   },
   "component.intervalSelect.daily": {
     message: "Вaily",
@@ -819,10 +670,6 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Щокварталу",
     description: "Quarterly interval option",
   },
-  "common.savings": {
-    message: "Заощадження",
-    description: "Label for savings node in cash flow diagram",
-  },
   "component.accountCombobox.placeholder": {
     message: "Пошук accounts...",
     description: "Placeholder for account search",
@@ -834,10 +681,6 @@ const ukCommon: Record<string, TranslationEntry> = {
   "component.intervalSelect.placeholder": {
     message: "Виберіть часовий період",
     description: "Placeholder for interval select dropdown",
-  },
-  "common.summary": {
-    message: "Підсумок",
-    description: "Label for summary section or table",
   },
   "component.searchControls.time": {
     message: "Час",
@@ -951,6 +794,18 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.errorBoundary.description": {
     message: "Не вдалося відобразити цей розділ. Решта сторінки має працювати.",
     description: "Body of the error boundary fallback panel",
+  },
+  "common.copyCode": {
+    message: "Копіювати код",
+    description: "Aria label for the copy button on code blocks",
+  },
+  "common.copiedToClipboard": {
+    message: "Скопійовано до буфера обміну",
+    description: "Toast after content was copied to the clipboard",
+  },
+  "common.copyFailed": {
+    message: "Не вдалося скопіювати",
+    description: "Toast when copying to the clipboard failed",
   },
 };
 

@@ -13,10 +13,6 @@ const ptWelcomePage: Record<string, TranslationEntry> = {
     message: "Crie Seu Primeiro Livro-Razão",
     description: "Button text to create first ledger",
   },
-  "page.welcome.failedToCreateLedger": {
-    message: "Falha ao criar livro-razão",
-    description: "Error message when ledger creation fails",
-  },
   "page.welcome.ledgerCreatedSuccess": {
     message: "Livro-razão criado com sucesso",
     description: "Toast notification when ledger created",

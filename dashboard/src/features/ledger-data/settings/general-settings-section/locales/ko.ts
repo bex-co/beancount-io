@@ -12,10 +12,6 @@ const koGeneralSettingsSection: Record<string, TranslationEntry> = {
     message: "설정이 성공적으로 업데이트되었습니다",
     description: "Success message when settings are saved",
   },
-  "page.settings.failedToUpdateGeneral": {
-    message: "일반 설정 업데이트 실패",
-    description: "Error message when general settings update fails",
-  },
   "page.settings.ledgerNameDescription": {
     message: "이 이름은 애플리케이션 전체에 표시됩니다",
     description: "Help text for ledger name field",
@@ -36,10 +32,6 @@ const koGeneralSettingsSection: Record<string, TranslationEntry> = {
   "page.settings.ledgerDescriptionPlaceholder": {
     message: "장부 설명 입력 (선택사항)",
     description: "Placeholder text for description field",
-  },
-  "page.settings.failedToRenameLedger": {
-    message: "장부 이름 변경 실패",
-    description: "Error message when ledger rename fails",
   },
 };
 

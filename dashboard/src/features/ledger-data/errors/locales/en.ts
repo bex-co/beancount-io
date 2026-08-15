@@ -20,11 +20,6 @@ const enErrors: Record<string, TranslationEntry> = {
     message: "Failed to Load Errors",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "There was an error loading the error data. Please try again later.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",

@@ -8,10 +8,6 @@ const zhDocuments: Record<string, TranslationEntry> = {
     message: "文档",
     description: "Documents attached to ledger entries",
   },
-  "page.documents.failedToLoadDocuments": {
-    message: "加载文档失败",
-    description: "Error message when documents fail to load",
-  },
   "page.documents.filename": {
     message: "文件名",
     description: "Table column header for filename",

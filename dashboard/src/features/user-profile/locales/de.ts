@@ -4,18 +4,9 @@ export interface TranslationEntry {
 }
 
 const deUserProfile: Record<string, TranslationEntry> = {
-  "userProfile.title": {
-    message: "Benutzerprofil",
-    description: "Header title for user profile page",
-  },
   "userProfile.errorLoadingProfile": {
     message: "Fehler beim Laden des Profils",
     description: "Error title when profile fails to load",
-  },
-  "userProfile.errorMessage": {
-    message:
-      "Beim Laden dieses Profils ist ein Fehler aufgetreten. Bitte versuchen Sie es später erneut.",
-    description: "Generic error message for profile loading failures",
   },
   "userProfile.followError": {
     message: "Benutzer konnte nicht gefolgt werden",
@@ -24,14 +15,6 @@ const deUserProfile: Record<string, TranslationEntry> = {
   "userProfile.followSuccess": {
     message: "Sie folgen jetzt {username}",
     description: "Success toast message after following a user",
-  },
-  "userProfile.followers": {
-    message: "Follower",
-    description: "Label for followers count",
-  },
-  "userProfile.following": {
-    message: "gefolgt",
-    description: "Label for following count",
   },
   "userProfile.joined": {
     message: "Beigetreten",
@@ -64,10 +47,6 @@ const deUserProfile: Record<string, TranslationEntry> = {
   "userProfile.follow": {
     message: "Folgen",
     description: "Button label to follow a user",
-  },
-  "userProfile.starredRepos": {
-    message: "markierte Repos",
-    description: "Label for starred repositories count",
   },
   "userProfile.unfollowError": {
     message: "Benutzer konnte nicht entfolgt werden",

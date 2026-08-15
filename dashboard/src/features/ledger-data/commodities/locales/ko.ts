@@ -12,11 +12,6 @@ const koCommodities: Record<string, TranslationEntry> = {
     message: "상품 불러오기 실패",
     description: "Error title when commodities fail to load",
   },
-  "page.commodities.failedToLoadCommoditiesDescription": {
-    message:
-      "상품 데이터를 불러오는 중 오류가 발생했습니다. 나중에 다시 시도해 주세요.",
-    description: "Error description when commodities fail to load",
-  },
   "page.commodities.noCommoditiesFound": {
     message: "상품을 찾을 수 없습니다",
     description: "Empty state title when no commodities exist",

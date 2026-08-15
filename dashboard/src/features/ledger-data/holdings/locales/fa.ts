@@ -4,10 +4,6 @@ export interface TranslationEntry {
 }
 
 const faHoldings: Record<string, TranslationEntry> = {
-  "page.holdings.errorExecutingQuery": {
-    message: "خطایی در اجرای پرس‌وجو رخ داد",
-    description: "Generic error message for query execution failure",
-  },
   "page.holdings.exportCsv": {
     message: "خروجی CSV",
     description: "Button text to export data as CSV",

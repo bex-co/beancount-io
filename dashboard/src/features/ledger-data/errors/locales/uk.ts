@@ -20,11 +20,6 @@ const ukErrors: Record<string, TranslationEntry> = {
     message: "Не вдалося завантажити помилки",
     description: "Error title when errors fail to load",
   },
-  "page.errors.failedToLoadErrorsDescription": {
-    message:
-      "Сталася помилка під час завантаження даних про помилки. Спробуйте ще раз пізніше.",
-    description: "Error description when errors fail to load",
-  },
   "page.errors.line": {
     message: "Line",
     description: "Table column header for line number",
