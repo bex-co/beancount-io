@@ -93,10 +93,11 @@ describe("MarkdownRenderer", () => {
 
   it("renders bash code block with # comments as plain text, not [object Object]", () => {
     const markdown = "```bash\n# Install dependencies\nnpm install\n```";
-    render(<MarkdownRenderer content={markdown} />);
+    const { container } = render(<MarkdownRenderer content={markdown} />);
     const codeBlock = screen.getByTestId("code-block");
     expect(codeBlock).toHaveTextContent("# Install dependencies");
     expect(codeBlock.textContent).not.toContain("[object Object]");
+    expect(container.querySelector("pre")).not.toBeInTheDocument();
   });
 
   it("sanitizes script tags in markdown content", () => {
