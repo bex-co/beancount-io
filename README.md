@@ -159,6 +159,10 @@ If Beancount.io is the kind of open, programmable finance software you want to s
 - Chat: [Telegram](https://t.me/beancount)
 - Mobile: [App Store](https://apps.apple.com/us/app/beancount/id1527950512) · [Google Play](https://play.google.com/store/apps/details?id=io.beancount.android)
 
+## Acknowledgements
+
+Beancount.io stands on [Beancount](https://github.com/beancount/beancount) and [Fava](https://github.com/beancount/fava) — [`fava-slim/`](./fava-slim) is a derivative work of Fava's Python core, and the rest of the plain-text accounting stack ([beanquery](https://github.com/beancount/beanquery), [beangulp](https://github.com/beancount/beangulp), [rustledger](https://github.com/rustledger/rustledger)) is used as unmodified upstream dependencies. Full credits and how we comply with each upstream license: [ACKNOWLEDGEMENTS.md](./ACKNOWLEDGEMENTS.md).
+
 ## License
 
-[MIT](./LICENSE) © Beancount.io
+[MIT](./LICENSE) © Beancount.io — covers the code in this repository; upstream projects remain under their own licenses.
