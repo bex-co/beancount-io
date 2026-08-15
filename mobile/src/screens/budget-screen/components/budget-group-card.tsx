@@ -1,6 +1,8 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
 import { ColorTheme } from "@/types/theme-props";
 import {
+  durations,
   fontSizes,
   fontWeights,
   gutter,
@@ -15,7 +17,10 @@ import {
 } from "@/common/number-utils";
 import { AmountText, DashboardCard } from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
-import { BudgetBarChartD3 } from "@/common/d3/budget-bar-chart-d3";
+import {
+  BudgetBarChartD3,
+  LEGEND_HEIGHT,
+} from "@/common/d3/budget-bar-chart-d3";
 import { getCurrencySymbol } from "@/common/currency-util";
 import { useBudgetActuals } from "@/screens/budget-screen/hooks/use-budget-actuals";
 import {
@@ -247,20 +252,22 @@ export function BudgetGroupCard({
 
       <View style={styles.chartWrap}>
         {loading && series.length === 0 ? (
-          <LoadingTile height={CHART_HEIGHT} />
+          <LoadingTile height={CHART_HEIGHT + LEGEND_HEIGHT} />
         ) : error ? (
           <Text style={styles.errorText}>{t("budgetLoadFailed")}</Text>
         ) : (
-          <BudgetBarChartD3
-            labels={series.map((point) =>
-              periodAxisLabel(point.date, group.interval, t),
-            )}
-            actuals={series.map((point) => point.actual)}
-            budgets={series.map((point) => point.budget)}
-            favorables={favorables}
-            currencySymbol={getCurrencySymbol(currency)}
-            height={CHART_HEIGHT}
-          />
+          <Animated.View entering={FadeIn.duration(durations.base)}>
+            <BudgetBarChartD3
+              labels={series.map((point) =>
+                periodAxisLabel(point.date, group.interval, t),
+              )}
+              actuals={series.map((point) => point.actual)}
+              budgets={series.map((point) => point.budget)}
+              favorables={favorables}
+              currencySymbol={getCurrencySymbol(currency)}
+              height={CHART_HEIGHT}
+            />
+          </Animated.View>
         )}
       </View>
 

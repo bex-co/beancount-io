@@ -1,4 +1,4 @@
-import { useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import {
   GestureResponderEvent,
   PanResponder,
@@ -15,18 +15,32 @@ import Svg, {
   LinearGradient,
   Stop,
 } from "react-native-svg";
+import Animated, {
+  useAnimatedProps,
+  useSharedValue,
+  withTiming,
+} from "react-native-reanimated";
+import { scheduleOnRN } from "react-native-worklets";
 import { scaleLinear } from "d3-scale";
 import { line as d3Line, area as d3Area, curveMonotoneX } from "d3-shape";
 import * as Haptics from "expo-haptics";
 import { ErrorBoundary } from "react-error-boundary";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
-import { AmountText } from "@/components/amount-text";
+import { durations, fontSizes, fontWeights, useTheme } from "@/common/theme";
+import { easeStandard } from "@/common/theme/motion-easing";
+import { AmountText, AnimatedAmount } from "@/components/amount-text";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { ColorTheme } from "@/types/theme-props";
+import { polylineLength } from "./utils";
+import { useEntranceProgress } from "./use-entrance-progress";
+import { lerp, lerpSeries, resampleSeries, sameSeries } from "./series-morph";
+
+// Created once at module scope: building this inside the component would give
+// React a new component type on every render and remount the path each time.
+const AnimatedPath = Animated.createAnimatedComponent(Path);
 
 type InteractiveLineChartProps = {
   /**
@@ -58,6 +72,149 @@ const CHART_HEIGHT = 190;
 const PAD_X = 12;
 const PAD_TOP = 16;
 const PAD_BOTTOM = 16;
+
+/**
+ * Steps precomputed for a range-to-range morph. Twenty-four distinct positions
+ * across the transition reads as continuous (it is film's frame rate) while
+ * keeping the work — and the string payload copied to the UI thread — bounded.
+ */
+const MORPH_FRAMES = 24;
+
+type Domain = readonly [number, number];
+
+/**
+ * Padded y-domain for a series. The padding stops a flat-ish curve from
+ * hugging the top and bottom edges of the plot.
+ */
+function computeDomain(values: number[]): Domain {
+  const min = Math.min(...values);
+  const max = Math.max(...values);
+  const pad = (max - min) * 0.1 || Math.abs(max) * 0.1 || 1;
+  return [min - pad, max + pad];
+}
+
+type ChartGeometry = {
+  chartWidth: number;
+  height: number;
+};
+
+/**
+ * Line and area path strings for a series under a given domain.
+ *
+ * Shared by the resting render and by every morph frame, so an intermediate
+ * frame is built by exactly the same code as the resting one. (Matching the
+ * endpoints exactly takes one more step — see `buildMorphFrames`.)
+ *
+ * Stays on the JS thread by necessity: d3's scales and shape generators are
+ * closures over class instances, and the worklet serializer copies neither.
+ */
+function buildPaths(
+  values: number[],
+  domain: Domain,
+  { chartWidth, height }: ChartGeometry,
+): {
+  linePath: string;
+  areaPath: string;
+  xFor: (i: number) => number;
+  yFor: (v: number) => number;
+} {
+  const count = values.length;
+  const yScale = scaleLinear()
+    .domain([domain[0], domain[1]])
+    .range([height - PAD_BOTTOM, PAD_TOP]);
+  const x = (i: number) =>
+    count <= 1
+      ? chartWidth / 2
+      : PAD_X + (i / (count - 1)) * (chartWidth - PAD_X * 2);
+  const y = (v: number) => yScale(v);
+
+  return {
+    xFor: x,
+    yFor: y,
+    linePath:
+      d3Line<number>()
+        .x((_, i) => x(i))
+        .y((v) => y(v))
+        .curve(curveMonotoneX)(values) ?? "",
+    areaPath:
+      d3Area<number>()
+        .x((_, i) => x(i))
+        .y0(height - PAD_BOTTOM)
+        .y1((v) => y(v))
+        .curve(curveMonotoneX)(values) ?? "",
+  };
+}
+
+type MorphFrames = {
+  line: string[];
+  area: string[];
+  /** The resampled endpoints, kept so a mid-flight retarget can start from
+   *  whatever curve is currently on screen rather than from where this
+   *  transition began. */
+  fromGrid: number[];
+  toGrid: number[];
+};
+
+/** Stable empty arrays, so a non-morphing render keeps one closure identity. */
+const NO_FRAMES: string[] = [];
+
+/**
+ * Dash length used while morphing. The entrance draws the line by shortening a
+ * dash the exact length of the path; a morph has no such need, but the dash
+ * prop cannot be removed mid-flight without iOS dropping the transition (see
+ * the entrance comment below). A dash longer than any path the chart could
+ * produce leaves the stroke solid, whatever an intermediate frame's length is.
+ */
+const MORPH_DASH = 100000;
+
+/**
+ * Every intermediate path between two series, blended in both value and
+ * domain space so the curve and its axis rescale together. Interpolating only
+ * the values would make the line slide while the (invisible) scale snapped,
+ * which reads as the chart lurching at the start of the transition.
+ */
+function buildMorphFrames(
+  from: number[],
+  to: number[],
+  geometry: ChartGeometry,
+): MorphFrames {
+  const gridSize = Math.max(from.length, to.length);
+  const fromGrid = resampleSeries(from, gridSize);
+  const toGrid = resampleSeries(to, gridSize);
+  const fromDomain = computeDomain(from);
+  const toDomain = computeDomain(to);
+
+  const line: string[] = [];
+  const area: string[] = [];
+  for (let i = 0; i < MORPH_FRAMES; i++) {
+    const t = i / (MORPH_FRAMES - 1);
+    const paths = buildPaths(
+      lerpSeries(fromGrid, toGrid, t),
+      [
+        lerp(fromDomain[0], toDomain[0], t),
+        lerp(fromDomain[1], toDomain[1], t),
+      ],
+      geometry,
+    );
+    line.push(paths.linePath);
+    area.push(paths.areaPath);
+  }
+
+  // Pin the endpoints to the real resting paths. Every interior frame is drawn
+  // from a resampled grid, and a monotone cubic through a denser set of points
+  // is not quite the same curve as one through the originals — close enough to
+  // blend, but enough to pop on the handoff back to the static render. The two
+  // frames that have to match something else exactly are overwritten with the
+  // thing they have to match.
+  const restingFrom = buildPaths(from, fromDomain, geometry);
+  const restingTo = buildPaths(to, toDomain, geometry);
+  line[0] = restingFrom.linePath;
+  area[0] = restingFrom.areaPath;
+  line[MORPH_FRAMES - 1] = restingTo.linePath;
+  area[MORPH_FRAMES - 1] = restingTo.areaPath;
+
+  return { line, area, fromGrid, toGrid };
+}
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -144,46 +301,129 @@ function InteractiveLineChart({
   const [scrubIndex, setScrubIndex] = useState<number | null>(null);
   const lastIndexRef = useRef<number | null>(null);
 
-  const { xFor, yFor, linePath, areaPath, baselineY } = useMemo(() => {
-    const min = Math.min(...numbers);
-    const max = Math.max(...numbers);
-    // Pad the domain a touch so the line breathes vertically.
-    const pad = (max - min) * 0.1 || Math.abs(max) * 0.1 || 1;
-    const yScale = scaleLinear()
-      .domain([min - pad, max + pad])
-      .range([height - PAD_BOTTOM, PAD_TOP]);
-    const x = (i: number) =>
-      count <= 1
-        ? chartWidth / 2
-        : PAD_X + (i / (count - 1)) * (chartWidth - PAD_X * 2);
-    const y = (v: number) => yScale(v);
+  const geometry = useMemo(
+    () => ({ chartWidth, height }),
+    [chartWidth, height],
+  );
 
-    const linePathValue =
-      d3Line<number>()
-        .x((_, i) => x(i))
-        .y((v) => y(v))
-        .curve(curveMonotoneX)(numbers) ?? "";
-    const areaPathValue =
-      d3Area<number>()
-        .x((_, i) => x(i))
-        .y0(height - PAD_BOTTOM)
-        .y1((v) => y(v))
-        .curve(curveMonotoneX)(numbers) ?? "";
+  const { xFor, yFor, linePath, areaPath, baselineY, lineLength } =
+    useMemo(() => {
+      const paths = buildPaths(numbers, computeDomain(numbers), geometry);
+      return {
+        xFor: paths.xFor,
+        yFor: paths.yFor,
+        linePath: paths.linePath,
+        areaPath: paths.areaPath,
+        baselineY: paths.yFor(numbers[0]),
+        lineLength: polylineLength(
+          numbers.map((_, i) => paths.xFor(i)),
+          numbers.map((v) => paths.yFor(v)),
+        ),
+      };
+    }, [numbers, geometry]);
 
+  // Entrance progress, 0 → 1. The stroke carries a dash as long as the whole
+  // path, so animating the offset from that length down to zero walks the line
+  // on from the left.
+  const draw = useEntranceProgress(hasSeries);
+
+  // Populated only while a range-to-range transition is in flight. While it is
+  // empty the paths render exactly as they did before any of this existed,
+  // which keeps the morph's blast radius to the transition itself.
+  const [morphFrames, setMorphFrames] = useState<MorphFrames | null>(null);
+  const morph = useSharedValue(1);
+  const previousRef = useRef<number[] | null>(null);
+  const inFlightRef = useRef<MorphFrames | null>(null);
+
+  const clearMorph = useCallback(() => {
+    inFlightRef.current = null;
+    setMorphFrames(null);
+  }, []);
+
+  useEffect(() => {
+    const previous = previousRef.current;
+    previousRef.current = numbers;
+
+    // Nothing to morph from on the very first series — that is the entrance.
+    if (!previous || !hasSeries || previous.length < 2) {
+      return;
+    }
+    // Re-renders hand back equal-but-new arrays constantly (every scrub tick,
+    // every theme change). Only an actual change in the curve is a transition.
+    if (sameSeries(previous, numbers)) {
+      return;
+    }
+
+    // Retarget from whatever is on screen right now, not from where the
+    // previous transition started, so a third tap mid-flight continues from
+    // the curve the user is looking at instead of snapping backwards.
+    const inFlight = inFlightRef.current;
+    const startSeries = inFlight
+      ? lerpSeries(inFlight.fromGrid, inFlight.toGrid, morph.value)
+      : previous;
+
+    const frames = buildMorphFrames(startSeries, numbers, geometry);
+    inFlightRef.current = frames;
+    setMorphFrames(frames);
+    morph.value = 0;
+    morph.value = withTiming(
+      1,
+      { duration: durations.chart, easing: easeStandard },
+      (finished) => {
+        // Only the last transition standing clears the frames; a superseded one
+        // must not drop the render back to the resting path mid-flight.
+        if (finished) {
+          scheduleOnRN(clearMorph);
+        }
+      },
+    );
+  }, [numbers, hasSeries, geometry, morph, clearMorph]);
+
+  const morphLine = morphFrames?.line ?? NO_FRAMES;
+  const morphArea = morphFrames?.area ?? NO_FRAMES;
+  const morphing = morphLine.length > 0;
+
+  // Never zero: a zero-length dash array is not a valid stroke pattern.
+  const dashLength = morphing ? MORPH_DASH : Math.max(lineLength, 1);
+
+  const lineAnimatedProps = useAnimatedProps(() => {
+    const last = morphLine.length - 1;
     return {
-      xFor: x,
-      yFor: y,
-      linePath: linePathValue,
-      areaPath: areaPathValue,
-      baselineY: y(numbers[0]),
+      strokeDashoffset: dashLength * (1 - draw.value),
+      d:
+        last < 0
+          ? linePath
+          : morphLine[
+              Math.min(last, Math.max(0, Math.round(morph.value * last)))
+            ],
     };
-  }, [numbers, count, chartWidth, height]);
+  });
+
+  const areaAnimatedProps = useAnimatedProps(() => {
+    const last = morphArea.length - 1;
+    return {
+      opacity: draw.value,
+      d:
+        last < 0
+          ? areaPath
+          : morphArea[
+              Math.min(last, Math.max(0, Math.round(morph.value * last)))
+            ],
+    };
+  });
 
   const baseline = numbers[0] ?? 0;
   const shownIndex = scrubIndex ?? count - 1;
   const shownValue = numbers[shownIndex] ?? 0;
   const isUp = shownValue >= baseline;
   const lineColor = isUp ? theme.success : theme.error;
+
+  // Same formatter the resting frame uses, so the counting frames and the final
+  // one differ only in the number.
+  const formatHeadline = useCallback(
+    (value: number) => formatSignedMoneyWithCurrency(value, currency),
+    [currency],
+  );
 
   const change = shownValue - baseline;
   const changePct = baseline !== 0 ? (change / Math.abs(baseline)) * 100 : 0;
@@ -254,9 +494,14 @@ function InteractiveLineChart({
       <View>
         <View style={styles.header}>
           {label !== undefined && <Text style={styles.label}>{label}</Text>}
-          <AmountText style={styles.headline}>
-            {formatSignedMoneyWithCurrency(shownValue, currency)}
-          </AmountText>
+          <AnimatedAmount
+            value={shownValue}
+            format={formatHeadline}
+            // Bypassed while a finger is down: a scrubbed figure has to land on
+            // the exact point under the touch, and a tween there reads as lag.
+            animate={scrubIndex === null}
+            style={styles.headline}
+          />
           <View style={styles.changeRow}>
             <AmountText style={[styles.change, { color: lineColor }]}>
               {changeText}
@@ -279,7 +524,13 @@ function InteractiveLineChart({
               </LinearGradient>
             </Defs>
 
-            {hasSeries && <Path d={areaPath} fill="url(#netWorthFill)" />}
+            {hasSeries && (
+              <AnimatedPath
+                d={areaPath}
+                fill="url(#netWorthFill)"
+                animatedProps={areaAnimatedProps}
+              />
+            )}
 
             {/* Dashed baseline at the period-start value */}
             {hasSeries && (
@@ -295,11 +546,16 @@ function InteractiveLineChart({
             )}
 
             {hasSeries && (
-              <Path
+              <AnimatedPath
                 d={linePath}
                 fill="none"
                 stroke={lineColor}
                 strokeWidth={2.5}
+                // Numeric from the very first frame. Transitioning
+                // strokeDasharray/strokeDashoffset out of `undefined` silently
+                // does nothing on iOS, so the dash must never start unset.
+                strokeDasharray={[dashLength, dashLength]}
+                animatedProps={lineAnimatedProps}
               />
             )}
 

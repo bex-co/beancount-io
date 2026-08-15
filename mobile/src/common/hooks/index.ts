@@ -5,4 +5,5 @@ export { useTranslations } from "./use-translations";
 export { usePageView } from "./use-page-view";
 export { useDebouncedValue } from "./use-debounced-value";
 export { useLedgerMeta } from "./use-ledger-meta";
+export { useReduceMotion } from "./use-reduce-motion";
 export { useTheme } from "../theme";

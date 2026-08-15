@@ -1,14 +1,7 @@
 import { useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Svg, {
-  Circle,
-  G,
-  Line,
-  Path,
-  Rect,
-  Text as SvgText,
-} from "react-native-svg";
+import Svg, { Circle, G, Line, Path, Text as SvgText } from "react-native-svg";
 import { scaleBand, scaleLinear } from "d3-scale";
 import { curveMonotoneX, line as d3Line } from "d3-shape";
 import { ErrorBoundary } from "react-error-boundary";
@@ -18,6 +11,18 @@ import { fontSizes, space, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { shortNumber } from "@/common/number-utils";
+import { AnimatedBar } from "./animated-bar";
+import { useEntranceProgress } from "./use-entrance-progress";
+
+/** Default plot height, exported so callers can size a skeleton from it. */
+export const DEFAULT_CHART_HEIGHT = 220;
+
+/**
+ * Height the legend row adds below the plot: its `paddingTop` (`space.sm`) plus
+ * one line of `fontSizes.sm` label. A caller's skeleton has to include this or
+ * the card grows by a legend's worth the moment data lands.
+ */
+export const LEGEND_HEIGHT = 26;
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 
 type IncomeExpenseBarChartProps = {
@@ -105,7 +110,7 @@ function IncomeExpenseBarChart({
   expense,
   net,
   currencySymbol,
-  height = 220,
+  height = DEFAULT_CHART_HEIGHT,
 }: IncomeExpenseBarChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -127,6 +132,9 @@ function IncomeExpenseBarChart({
     availableWidth / Math.max(months.length, 1),
   );
   const plotWidth = groupWidth * months.length;
+
+  // Before the early return below: hooks cannot run conditionally.
+  const entrance = useEntranceProgress(months.length > 0);
 
   if (months.length === 0) {
     return (
@@ -160,6 +168,10 @@ function IncomeExpenseBarChart({
     x: number,
     key: string,
     fill: string,
+    // Both bars of a month share an index, so a month's income and expense
+    // grow together and the cascade reads left-to-right across the series
+    // rather than alternating within each pair.
+    index: number,
   ): JSX.Element => {
     const valueY = yScale(value);
     let barHeight = value >= 0 ? zeroY - valueY : valueY - zeroY;
@@ -169,14 +181,18 @@ function IncomeExpenseBarChart({
       barY = value >= 0 ? zeroY - 2 : zeroY;
     }
     return (
-      <Rect
+      <AnimatedBar
         key={key}
         x={x}
         y={barY}
         width={subBarWidth}
         height={Math.abs(barHeight)}
+        baselineY={zeroY}
         fill={fill}
         rx={2}
+        progress={entrance}
+        index={index}
+        count={months.length}
       />
     );
   };
@@ -260,12 +276,14 @@ function IncomeExpenseBarChart({
                       x0 + (subScale("income") ?? 0),
                       `inc-${month}`,
                       theme.success,
+                      i,
                     )}
                     {barRect(
                       expense[i],
                       x0 + (subScale("expense") ?? 0),
                       `exp-${month}`,
                       theme.error,
+                      i,
                     )}
                   </G>
                 );

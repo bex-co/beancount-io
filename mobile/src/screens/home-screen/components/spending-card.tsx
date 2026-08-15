@@ -6,7 +6,9 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
 import { DashboardCard } from "@/components";
-import { BarChartD3 } from "@/common/d3/bar-chart-d3";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { BAR_CHART_HEIGHT, BarChartD3 } from "@/common/d3/bar-chart-d3";
+import { durations } from "@/common/theme";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import {
   DirectiveType,
@@ -80,13 +82,15 @@ export function SpendingCard({
     <DashboardCard title={t("spending")} bleed>
       <Text style={styles.subtitle}>{t("spendingSubtitle")}</Text>
       {loading && entries.length === 0 ? (
-        <LoadingTile height={200} mx={16} />
+        <LoadingTile height={BAR_CHART_HEIGHT} mx={16} />
       ) : (
-        <BarChartD3
-          currencySymbol={currencySymbol}
-          labels={SPENDING_LABELS}
-          numbers={[lastMonth, thisMonth]}
-        />
+        <Animated.View entering={FadeIn.duration(durations.base)}>
+          <BarChartD3
+            currencySymbol={currencySymbol}
+            labels={SPENDING_LABELS}
+            numbers={[lastMonth, thisMonth]}
+          />
+        </Animated.View>
       )}
     </DashboardCard>
   );

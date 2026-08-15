@@ -74,7 +74,11 @@ export const HomeScreenImpl = (): JSX.Element => {
   );
   const [refreshing, setRefreshing] = useState(false);
   const [refreshSignal, setRefreshSignal] = useState(0);
-  const isLoading = balanceSheetLoading || refreshing;
+  // Skeleton only on first load. Folding `refreshing` in here meant every
+  // pull-to-refresh tore a perfectly good chart down to a pulsing tile — the
+  // inverse of the rule the rest of the app follows, where current content
+  // stays visible under the RefreshControl spinner.
+  const isLoading = balanceSheetLoading && !balanceSheet;
   const onRefresh = async () => {
     setRefreshing(true);
     setRefreshSignal((signal) => signal + 1);

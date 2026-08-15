@@ -1,7 +1,7 @@
 import { useRef } from "react";
 import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
-import Svg, { Line, Path, Rect, Text as SvgText } from "react-native-svg";
+import Svg, { Line, Path, Text as SvgText } from "react-native-svg";
 import { scaleLinear } from "d3-scale";
 import { ErrorBoundary } from "react-error-boundary";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
@@ -11,6 +11,15 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { shortNumber } from "@/common/number-utils";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
+import { AnimatedBar } from "./animated-bar";
+import { useEntranceProgress } from "./use-entrance-progress";
+
+/**
+ * Height the legend row adds below the plot: its `paddingTop` (`space.sm`) plus
+ * one line of `fontSizes.sm` label. A caller's skeleton has to include this or
+ * the card grows by a legend's worth the moment data lands.
+ */
+export const LEGEND_HEIGHT = 26;
 
 type BudgetBarChartProps = {
   /** Period labels, one per column (already display-ready). */
@@ -108,6 +117,9 @@ function BudgetBarChart({
 
   const chartHeight = height;
   const availableWidth = ScreenWidth - contentPadding * 2 - LEFT_PADDING;
+
+  // Before the early return below: hooks cannot run conditionally.
+  const entrance = useEntranceProgress(labels.length > 0);
 
   if (labels.length === 0) {
     return (
@@ -209,14 +221,18 @@ function BudgetBarChart({
                 const barY =
                   value >= 0 ? Math.min(valueY, zeroY - 2) : Math.max(zeroY, 0);
                 return (
-                  <Rect
+                  <AnimatedBar
                     key={`bar-${labels[i]}-${i}`}
                     x={columnX(i) + columnWidth * BAR_INSET}
                     y={barY}
                     width={barWidth}
                     height={barHeight}
+                    baselineY={zeroY}
                     fill={favorables[i] === false ? theme.error : theme.primary}
                     rx={2}
+                    progress={entrance}
+                    index={i}
+                    count={actuals.length}
                   />
                 );
               })}

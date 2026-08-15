@@ -1,5 +1,7 @@
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { durations } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { LoadingTile } from "@/components/loading-tile";
@@ -107,31 +109,34 @@ export function AccountChartsCard({
 
   return (
     <DashboardCard bleed>
-      <SegmentedPages
-        tabs={charts.map(({ key }) => t(key))}
-        pages={pages}
-        height={PAGE_HEIGHT}
-        onPageChange={(index) => {
-          setActiveIndex(index);
-          analytics.track("home_chart_page", {
-            index,
-            chart: charts[index].key,
-          });
-        }}
-      />
-      {/* Outside the pager: one row of pills driving whichever curve is shown,
-          so switching tabs keeps the selected range. */}
-      <TimeRangePills
-        value={range}
-        options={rangeOptions}
-        onChange={(next) => {
-          setRange(next);
-          analytics.track("home_chart_range", {
-            chart: charts[activeIndex].key,
-            range: next,
-          });
-        }}
-      />
+      {/* Crossfades in over the skeleton, which is sized to this same block. */}
+      <Animated.View entering={FadeIn.duration(durations.base)}>
+        <SegmentedPages
+          tabs={charts.map(({ key }) => t(key))}
+          pages={pages}
+          height={PAGE_HEIGHT}
+          onPageChange={(index) => {
+            setActiveIndex(index);
+            analytics.track("home_chart_page", {
+              index,
+              chart: charts[index].key,
+            });
+          }}
+        />
+        {/* Outside the pager: one row of pills driving whichever curve is
+            shown, so switching tabs keeps the selected range. */}
+        <TimeRangePills
+          value={range}
+          options={rangeOptions}
+          onChange={(next) => {
+            setRange(next);
+            analytics.track("home_chart_range", {
+              chart: charts[activeIndex].key,
+              range: next,
+            });
+          }}
+        />
+      </Animated.View>
     </DashboardCard>
   );
 }

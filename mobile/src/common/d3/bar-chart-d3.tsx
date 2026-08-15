@@ -1,17 +1,26 @@
 import { View } from "react-native";
-import Svg, { Rect, Text as SvgText, G, Line } from "react-native-svg";
+import Svg, { Text as SvgText, G, Line } from "react-native-svg";
 import { scaleBand, scaleLinear } from "d3-scale";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { shortNumber } from "@/common/number-utils";
 import { ErrorBoundary } from "react-error-boundary";
+import { AnimatedBar } from "./animated-bar";
+import { useEntranceProgress } from "./use-entrance-progress";
 
 type BarChartProps = {
   labels: string[];
   numbers: number[];
   currencySymbol: string;
 };
+
+/**
+ * Rendered height of the plot. Exported so a caller's loading skeleton can be
+ * sized from the real number instead of a copy of it — the spending card's
+ * skeleton and this chart had already drifted 20px apart.
+ */
+export const BAR_CHART_HEIGHT = 220;
 
 function BarChart({
   labels,
@@ -23,7 +32,7 @@ function BarChart({
 
   // Chart dimensions
   const chartWidth = ScreenWidth - contentPadding * 2;
-  const chartHeight = 220;
+  const chartHeight = BAR_CHART_HEIGHT;
   const barWidth = labels.length > 0 ? (chartWidth / labels.length) * 0.6 : 0;
   const axisFontSize = 12;
   const labelFontSize = 13;
@@ -47,6 +56,8 @@ function BarChart({
 
   // Y axis ticks
   const yTicks = yScale.ticks(5);
+
+  const entrance = useEntranceProgress(numbers.length > 0);
 
   return (
     <View>
@@ -106,14 +117,18 @@ function BarChart({
           }
 
           return (
-            <Rect
+            <AnimatedBar
               key={i}
               x={xScale(labels[i]) ?? 0}
               y={barY}
               width={barWidth}
               height={Math.abs(barHeight)}
+              baselineY={zeroY}
               fill={theme.primary}
               rx={3}
+              progress={entrance}
+              index={i}
+              count={numbers.length}
             />
           );
         })}

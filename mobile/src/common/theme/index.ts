@@ -32,6 +32,22 @@ export {
   sectionHeaderPaddingVertical,
 } from "./spacing";
 
+// Only the import-free half of the motion tokens is re-exported here.
+// `./motion-easing` imports Reanimated, and this barrel is reachable from the
+// unit-test runner, which cannot resolve it — import easing curves from
+// `@/common/theme/motion-easing` directly.
+export {
+  durations,
+  loopDurations,
+  easings,
+  springs,
+  clamp01,
+  staggeredProgress,
+  STAGGER_WINDOW,
+  MAX_TRANSITION_MS,
+  MAX_FEEDBACK_MS,
+} from "./motion";
+
 export const getSystemColorScheme = () => {
   const colorScheme = Appearance.getColorScheme();
   return colorScheme === "dark" ? "dark" : "light";

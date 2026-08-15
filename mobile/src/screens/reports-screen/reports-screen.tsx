@@ -6,13 +6,18 @@ import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
-import { gutter } from "@/common/theme";
+import { durations, gutter } from "@/common/theme";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer/ledger-drawer-header";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { DashboardCard } from "@/components/dashboard-card";
 import { DashboardScrollView } from "@/components/dashboard-scroll-view";
 import { LoadingTile } from "@/components/loading-tile";
-import { IncomeExpenseBarChartD3 } from "@/common/d3/income-expense-bar-chart";
+import Animated, { FadeIn } from "react-native-reanimated";
+import {
+  DEFAULT_CHART_HEIGHT,
+  IncomeExpenseBarChartD3,
+  LEGEND_HEIGHT,
+} from "@/common/d3/income-expense-bar-chart";
 import { TimeRangePills } from "@/components/time-range-pills";
 import {
   RANGE_LABEL_KEYS,
@@ -137,15 +142,20 @@ const ReportsScreenImpl = (): JSX.Element => {
       >
         <DashboardCard bleed>
           {isLoading ? (
-            <LoadingTile height={220} mx={gutter} />
-          ) : (
-            <IncomeExpenseBarChartD3
-              currencySymbol={currencySymbol}
-              months={chart.months}
-              income={chart.income}
-              expense={chart.expense}
-              net={chart.net}
+            <LoadingTile
+              height={DEFAULT_CHART_HEIGHT + LEGEND_HEIGHT}
+              mx={gutter}
             />
+          ) : (
+            <Animated.View entering={FadeIn.duration(durations.base)}>
+              <IncomeExpenseBarChartD3
+                currencySymbol={currencySymbol}
+                months={chart.months}
+                income={chart.income}
+                expense={chart.expense}
+                net={chart.net}
+              />
+            </Animated.View>
           )}
         </DashboardCard>
 

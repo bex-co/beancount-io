@@ -1,4 +1,6 @@
 import { useState } from "react";
+import Animated, { FadeIn } from "react-native-reanimated";
+import { durations } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
 import { DashboardCard } from "@/components/dashboard-card";
@@ -13,8 +15,21 @@ import {
   seriesToChartArray,
 } from "@/common/series-util";
 
-const CARD_HEIGHT = 240;
 const CHART_HEIGHT = 180;
+/**
+ * The chart's own header above the plot: caption, headline value and change
+ * row. `AccountChartsCard` budgets 70 for the same header without a caption
+ * (`PAGE_HEIGHT` 240 around a 170 plot); this card passes `label`, so it
+ * carries one extra line.
+ */
+const HEADER_HEIGHT = 90;
+/** Range pills below the plot, matching `AccountChartsCard`'s `PILLS_HEIGHT`. */
+const PILLS_HEIGHT = 40;
+/**
+ * Skeleton height, derived rather than guessed — the previous flat 240 was
+ * ~65px short of the loaded card, so every first load ended in a visible jump.
+ */
+const CARD_HEIGHT = HEADER_HEIGHT + CHART_HEIGHT + PILLS_HEIGHT;
 
 type BalanceChartCardProps = {
   /** Small caption above the headline (e.g. "Net Worth", "Balance"). */
@@ -65,13 +80,15 @@ export function BalanceChartCard({
 
   return (
     <DashboardCard bleed>
-      <InteractiveLineChartD3
-        label={label}
-        labels={chart.labels}
-        numbers={chart.numbers}
-        currency={currency}
-        height={CHART_HEIGHT}
-      />
+      <Animated.View entering={FadeIn.duration(durations.base)}>
+        <InteractiveLineChartD3
+          label={label}
+          labels={chart.labels}
+          numbers={chart.numbers}
+          currency={currency}
+          height={CHART_HEIGHT}
+        />
+      </Animated.View>
       <TimeRangePills
         value={range}
         options={rangeOptions}

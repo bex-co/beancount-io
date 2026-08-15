@@ -251,7 +251,10 @@ const AccountDetailScreenImpl = ({
             label={t("balance")}
             currency={currency}
             series={balanceSeries}
-            loading={reportLoading || refreshing}
+            // Skeleton only on first load: a pull-to-refresh keeps the chart
+            // visible under the RefreshControl spinner rather than collapsing
+            // it back to a tile.
+            loading={reportLoading && !reportData}
             error={Boolean(reportError)}
             onRangeChange={onBalanceRangeChange}
           />
@@ -264,7 +267,7 @@ const AccountDetailScreenImpl = ({
       currency,
       balanceSeries,
       reportLoading,
-      refreshing,
+      reportData,
       reportError,
       onBalanceRangeChange,
       styles.sectionTitle,

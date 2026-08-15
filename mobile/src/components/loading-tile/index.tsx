@@ -1,12 +1,14 @@
 import { useEffect } from "react";
 import { StyleSheet, ViewStyle } from "react-native";
-import { useTheme } from "@/common/theme";
+import { loopDurations, useTheme } from "@/common/theme";
+import { easeStandard } from "@/common/theme/motion-easing";
+import { useReduceMotion } from "@/common/hooks/use-reduce-motion";
 import Animated, {
+  cancelAnimation,
   useSharedValue,
   useAnimatedStyle,
   withRepeat,
   withTiming,
-  withSequence,
 } from "react-native-reanimated";
 
 const styles = StyleSheet.create({
@@ -42,17 +44,29 @@ export const LoadingTile = (props: LoadingTileProps) => {
   };
 
   const opacity = useSharedValue(1);
+  const reduceMotion = useReduceMotion();
 
   useEffect(() => {
+    // A repeating animation is the one case Reanimated's ReduceMotion.System
+    // default does not cover: it would keep looping at zero duration rather
+    // than stopping, so the loop has to be skipped outright.
+    if (reduceMotion) {
+      cancelAnimation(opacity);
+      opacity.value = 1;
+      return;
+    }
+    // Reversed rather than a two-step sequence back to 1 — same cycle, half the
+    // animation. A full breath is two of these; the old 300ms half-cycle read
+    // as a nervous throb.
     opacity.value = withRepeat(
-      withSequence(
-        withTiming(0.5, { duration: 300 }),
-        withTiming(1, { duration: 300 }),
-      ),
+      withTiming(0.5, {
+        duration: loopDurations.pulse,
+        easing: easeStandard,
+      }),
       -1,
       true,
     );
-  }, [opacity]);
+  }, [opacity, reduceMotion]);
 
   const animatedStyle = useAnimatedStyle(() => {
     return {

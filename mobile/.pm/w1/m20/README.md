@@ -1,21 +1,21 @@
 # w1 · m20 — Charts that animate: motion tokens, draw-in, and range morphs
 
-**Worker:** worker1 **Goal:** A shared motion vocabulary, then the four live charts draw themselves in, grow from their baseline, and morph between time ranges instead of snapping — with the app's first reduce-motion handling. **Status:** todo
+**Worker:** worker1 **Goal:** A shared motion vocabulary, then the four live charts draw themselves in, grow from their baseline, and morph between time ranges instead of snapping — with the app's first reduce-motion handling. **Status:** in progress (t001–t007, t010 done; t008 needs a device)
 
 ## Tasks (in order)
 
-| id   | title                                                              | est | depends_on             |
-| ---- | ------------------------------------------------------------------ | --- | ---------------------- |
-| t001 | `theme/motion.ts` tokens + `useReduceMotion()` hook                | 35m | —                      |
-| t002 | Net-worth line + area draw in on first paint                       | 50m | t001                   |
-| t003 | Headline figure counts up alongside the draw-in                    | 35m | t002                   |
-| t004 | Bars grow from the zero baseline, staggered                        | 50m | t001                   |
-| t005 | Range switch morphs the series instead of replacing it             | 50m | t002, t004             |
-| t006 | Animated selection indicator on `TimeRangePills`                   | 30m | t001                   |
-| t007 | Refresh keeps the chart; skeleton crossfades into the loaded chart | 35m | t002, t004             |
-| t008 | UX pass — light/dark, reduce-motion on device, i18n, safe area     | 40m | t003, t005, t006, t007 |
-| t009 | Simplify pass over the motion + chart code                         | 30m | t008                   |
-| t010 | Unit tests for motion tokens, reduce-motion, and path/series math  | 40m | t008                   |
+| id   | title                                                              | est | depends_on             |            |
+| ---- | ------------------------------------------------------------------ | --- | ---------------------- | ---------- |
+| t001 | `theme/motion.ts` tokens + `useReduceMotion()` hook                | 35m | —                      | — **DONE** |
+| t002 | Net-worth line + area draw in on first paint                       | 50m | t001                   | — **DONE** |
+| t003 | Headline figure counts up alongside the draw-in                    | 35m | t002                   | — **DONE** |
+| t004 | Bars grow from the zero baseline, staggered                        | 50m | t001                   | — **DONE** |
+| t005 | Range switch morphs the series instead of replacing it             | 50m | t002, t004             | — **DONE** |
+| t006 | Animated selection indicator on `TimeRangePills`                   | 30m | t001                   | — **DONE** |
+| t007 | Refresh keeps the chart; skeleton crossfades into the loaded chart | 35m | t002, t004             | — **DONE** |
+| t008 | UX pass — light/dark, reduce-motion on device, i18n, safe area     | 40m | t003, t005, t006, t007 |            |
+| t009 | Simplify pass over the motion + chart code                         | 30m | t008                   |            |
+| t010 | Unit tests for motion tokens, reduce-motion, and path/series math  | 40m | t008                   | — **DONE** |
 
 ## Definition of done
 
@@ -41,4 +41,5 @@ Correct in light **and** dark, any new strings via `useTranslations()` from the 
 - **Budget one animated node per series.** Any prop change on any node repaints the whole `<Svg>`, so one animated `Path` costs the same as two hundred. Keep the scrub cursor as the only other animated SVG node; move any tooltip as a plain `View` with `useAnimatedStyle`.
 - **Reanimated already defaults to `ReduceMotion.System`**, so `withTiming`/`withSpring` jump to their end state when the OS setting is on with no extra code. The hook in t001 exists for the things Reanimated does not own (looping shimmer, staggered reveal scheduling).
 - **No Skia migration.** It would solve whole-tree repaint, but costs ~+6MB iOS / ~+4MB Android and — decisively — canvas content is invisible to VoiceOver/TalkBack.
+- **The range morph uses precomputed keyframes, not the native `d` transition.** _Settled during t005._ Reanimated 4.5.1 does ship native C++ path morphing (`EXPERIMENTAL_CSS_ANIMATIONS_FOR_SVG_COMPONENTS` is on, and `processSVGPath` is in the installed build), and it was the first option considered. It was not taken, for two reasons: the task's own acceptance bar for it is a device judgement ("smooth for a 1M ↔ ALL switch in both directions") that could not be made in the implementing session, and it would have to share a `Path` with the entrance's `animatedProps`, which is untested territory. Instead, a range change precomputes 24 intermediate paths on the JS thread — blending the two series in **both** value and domain space, so the curve and its axis rescale together — and the UI thread only indexes into that array. The first and last frames are overwritten with the real resting paths, because a monotone cubic through a resampled grid is not quite the curve through the original points, and that difference would pop on the handoff back to the static render. When no morph is in flight the render path is byte-identical to what it was before the feature existed, so the blast radius is the transition itself. **The native route stays open** and is worth A/B-ing on a device during t008; if it wins, `buildMorphFrames` and `series-morph.ts` delete cleanly.
 - **Scrubbing is out of scope.** `src/common/d3/interactive-line-chart.tsx` already ships scrub-with-haptics; the gap is that it runs on the JS thread via `PanResponder` + `useState`. That migration needs its own sizing pass — tracked as inbox note `w1/019`.
