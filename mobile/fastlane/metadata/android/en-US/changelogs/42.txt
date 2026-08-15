@@ -1,0 +1,6 @@
+• Budgets: give any account a target, then track actuals with progress meters, period charts, and entry history
+• Home surfaces the budgets closest to — or past — their limit
+• Account picker rebuilt around search, with fuzzy matching and root-type filters
+• The ledger drawer now tracks your finger from the first frame, with no flicker
+• Every screen updates immediately after you add, edit, or delete
+• The file editor shows syntax errors for the file you're editing
