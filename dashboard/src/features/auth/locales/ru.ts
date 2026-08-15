@@ -485,6 +485,24 @@ const ruAuth: Record<string, TranslationEntry> = {
     message: "Можете закрыть эту вкладку.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message: "Приложение хочет, чтобы вы вошли с учётной записью Beancount.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Продолжить вход",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Это позволит приложению получить доступ к вашему имени, email и имени пользователя.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Вы вошли как {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default ruAuth;

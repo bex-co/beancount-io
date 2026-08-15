@@ -482,6 +482,25 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "Túto kartu môžete zavrieť.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message:
+      "Aplikácia chce, aby ste sa prihlásili pomocou svojho účtu Beancount.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Pokračovať v prihlásení",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Tým sa s aplikáciou zdieľa vaše meno, e-mail a používateľské meno.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Prihlásený ako {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default skAuth;

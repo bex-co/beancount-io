@@ -489,6 +489,25 @@ const esAuth: Record<string, TranslationEntry> = {
     message: "Puedes cerrar esta pestaña.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message:
+      "Una aplicación quiere que inicies sesión con tu cuenta de Beancount.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Continuar para iniciar sesión",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Esto compartirá tu nombre, correo electrónico y nombre de usuario con la aplicación.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Sesión iniciada como {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default esAuth;

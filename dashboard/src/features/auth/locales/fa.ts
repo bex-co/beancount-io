@@ -483,6 +483,24 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "می‌توانید این برگه را ببندید.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message: "یک برنامه می‌خواهد با حساب Beancount خود وارد شوید.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "ادامه برای ورود",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "این کار نام، ایمیل و نام کاربری شما را با برنامه به اشتراک می‌گذارد.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "وارد شده به‌عنوان {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default faAuth;

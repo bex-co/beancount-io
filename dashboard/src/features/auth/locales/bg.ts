@@ -484,6 +484,24 @@ const bgAuth: Record<string, TranslationEntry> = {
     message: "Можете да затворите този раздел.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message: "Приложение иска да влезете с акаунта си в Beancount.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Продължи към вход",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Това ще сподели вашето име, имейл и потребителско име с приложението.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Влязохте като {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default bgAuth;

@@ -487,6 +487,25 @@ const caAuth: Record<string, TranslationEntry> = {
     message: "Pots tancar aquesta pestanya.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message:
+      "Una aplicació vol que iniciïs sessió amb el teu compte de Beancount.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Continua per iniciar sessió",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Això compartirà el teu nom, correu electrònic i nom d'usuari amb l'aplicació.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Sessió iniciada com a {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default caAuth;

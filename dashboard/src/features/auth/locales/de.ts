@@ -485,6 +485,25 @@ const deAuth: Record<string, TranslationEntry> = {
     message: "Sie können diesen Tab schließen.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message:
+      "Eine App möchte, dass du dich mit deinem Beancount-Konto anmeldest.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Weiter zur Anmeldung",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Dadurch werden dein Name, deine E-Mail-Adresse und dein Benutzername an die App weitergegeben.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Angemeldet als {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default deAuth;

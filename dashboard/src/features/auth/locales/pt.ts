@@ -485,6 +485,24 @@ const ptAuth: Record<string, TranslationEntry> = {
     message: "Você pode fechar esta aba.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message: "Um aplicativo quer que você entre com sua conta Beancount.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Continuar para entrar",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Isso compartilhará seu nome, e-mail e nome de usuário com o aplicativo.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Conectado como {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default ptAuth;

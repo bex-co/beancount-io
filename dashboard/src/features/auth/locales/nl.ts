@@ -483,6 +483,24 @@ const nlAuth: Record<string, TranslationEntry> = {
     message: "U kunt dit tabblad sluiten.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message: "Een app wil dat je inlogt met je Beancount-account.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Doorgaan om in te loggen",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Hiermee worden je naam, e-mailadres en gebruikersnaam gedeeld met de app.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Ingelogd als {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default nlAuth;

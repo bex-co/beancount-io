@@ -489,6 +489,25 @@ const frAuth: Record<string, TranslationEntry> = {
     message: "Vous pouvez fermer cet onglet.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message:
+      "Une application souhaite que vous vous connectiez avec votre compte Beancount.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Continuer pour se connecter",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Cela partagera votre nom, votre e-mail et votre nom d'utilisateur avec l'application.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Connecté en tant que {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default frAuth;

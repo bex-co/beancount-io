@@ -480,6 +480,25 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "このタブを閉じて構いません。",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message:
+      "アプリがあなたのBeancountアカウントでのサインインを求めています。",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "サインインを続ける",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "これにより、あなたの名前、メールアドレス、ユーザー名がアプリと共有されます。",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "{email} としてサインイン中",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default jaAuth;

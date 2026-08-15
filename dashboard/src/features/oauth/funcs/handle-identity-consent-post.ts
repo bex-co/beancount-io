@@ -1,6 +1,6 @@
 import { proxyOauthInteractionLogin } from "@/common/lib/oauth/forward-to-backend";
 
-export async function handleConsentPost({
+export async function handleIdentityConsentPost({
   request,
 }: {
   request: Request;
@@ -8,6 +8,6 @@ export async function handleConsentPost({
   const uid = new URL(request.url).searchParams.get("uid") ?? "";
   return proxyOauthInteractionLogin(
     request,
-    `/api-gateway/oauth/interaction/${uid}/login`,
+    `/api-gateway/identity-oauth/interaction/${uid}/login`,
   );
 }

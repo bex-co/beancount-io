@@ -483,6 +483,25 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "Можете закрити цю вкладку.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message:
+      "Застосунок хоче, щоб ви увійшли за допомогою облікового запису Beancount.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "Продовжити вхід",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message:
+      "Це надасть застосунку доступ до вашого імені, електронної пошти та імені користувача.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "Ви увійшли як {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default ukAuth;

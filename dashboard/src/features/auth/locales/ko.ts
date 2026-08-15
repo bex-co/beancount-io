@@ -476,6 +476,23 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "이 탭을 닫아도 됩니다.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message: "앱이 Beancount 계정으로 로그인하기를 요청합니다.",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "계속해서 로그인",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message: "이름, 이메일, 사용자 이름이 앱과 공유됩니다.",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "{email}(으)로 로그인됨",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default koAuth;

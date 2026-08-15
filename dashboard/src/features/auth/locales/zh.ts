@@ -476,6 +476,23 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "你可以关闭此标签页。",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.oauthIdentityWantsAccess": {
+    message: "一个应用想要你使用 Beancount 账号登录。",
+    description: "Identity OAuth consent page login step description",
+  },
+  "auth.oauthIdentityApproveTitle": {
+    message: "继续登录",
+    description: "Identity OAuth consent page approve step title",
+  },
+  "auth.oauthIdentityApproveDescription": {
+    message: "这将与该应用共享你的姓名、邮箱和用户名。",
+    description: "Identity OAuth consent page approve step description",
+  },
+  "auth.oauthIdentitySignedInAs": {
+    message: "已登录为 {email}",
+    description:
+      "Identity OAuth consent page approve step — shows which account is authorizing",
+  },
 };
 
 export default zhAuth;
