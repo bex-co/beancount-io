@@ -1,4 +1,7 @@
-import { getAccountsAndCurrency, handleOptions } from "../ledger-meta-utils";
+import {
+  getAccountsAndCurrency,
+  groupAccountsByRoot,
+} from "../ledger-meta-utils";
 import { LedgerMeta } from "@/generated-graphql/graphql";
 
 // Helper to create minimal test data matching GraphQL types
@@ -285,218 +288,173 @@ describe("getAccountsAndCurrency", () => {
   });
 });
 
-describe("handleOptions", () => {
+describe("groupAccountsByRoot", () => {
   describe("basic functionality", () => {
-    test("should create tabs from simple options without colons", () => {
-      const options = ["Apple", "Banana", "Cherry"];
-      const result = handleOptions(options);
-
-      expect(result.length).toBe(4); // "All" tab + 3 individual tabs
-      expect(result[0].title).toBe("All");
-      expect(result[0].options).toEqual(["Apple", "Banana", "Cherry"]);
-      expect(result[1].title).toBe("Apple");
-      expect(result[1].options).toEqual(["Apple"]);
-    });
-
-    test("should group options by prefix when using colons", () => {
-      const options = [
+    test("should group accounts under their root segment", () => {
+      const result = groupAccountsByRoot([
         "Assets:Bank:Checking",
-        "Assets:Bank:Savings",
-        "Assets:Cash",
         "Expenses:Food",
-        "Expenses:Transport",
-      ];
-      const result = handleOptions(options);
-
-      expect(result.length).toBe(3); // "All", "Assets", "Expenses"
-      expect(result[0].title).toBe("All");
-      expect(result[0].options.length).toBe(5);
-
-      const assetsTab = result.find((tab) => tab.title === "Assets");
-      expect(assetsTab !== undefined).toBe(true);
-      expect(assetsTab?.options).toEqual([
-        "Assets:Bank:Checking",
-        "Assets:Bank:Savings",
         "Assets:Cash",
       ]);
 
-      const expensesTab = result.find((tab) => tab.title === "Expenses");
-      expect(expensesTab !== undefined).toBe(true);
-      expect(expensesTab?.options).toEqual([
-        "Expenses:Food",
-        "Expenses:Transport",
+      expect(result).toEqual([
+        { title: "Assets", data: ["Assets:Bank:Checking", "Assets:Cash"] },
+        { title: "Expenses", data: ["Expenses:Food"] },
       ]);
     });
 
-    test("should maintain order of first occurrence for tabs", () => {
-      const options = [
+    test("should order sections by first occurrence, not alphabetically", () => {
+      const result = groupAccountsByRoot([
         "Expenses:Food",
-        "Assets:Bank",
-        "Expenses:Transport",
         "Assets:Cash",
-      ];
-      const result = handleOptions(options);
+        "Income:Salary",
+      ]);
 
-      // "All" is always first, then tabs should be in order of first appearance
-      expect(result[0].title).toBe("All");
-      expect(result[1].title).toBe("Expenses");
-      expect(result[2].title).toBe("Assets");
+      expect(result.map((section) => section.title)).toEqual([
+        "Expenses",
+        "Assets",
+        "Income",
+      ]);
+    });
+
+    test("should preserve the input order within a section", () => {
+      const result = groupAccountsByRoot([
+        "Assets:Zulu",
+        "Assets:Alpha",
+        "Assets:Mike",
+      ]);
+
+      expect(result[0].data).toEqual([
+        "Assets:Zulu",
+        "Assets:Alpha",
+        "Assets:Mike",
+      ]);
+    });
+
+    test("should take only the first segment as the root", () => {
+      const result = groupAccountsByRoot([
+        "Assets:Bank:Checking:Sub:Deep",
+        "Assets:Bank:Savings",
+      ]);
+
+      expect(result.length).toBe(1);
+      expect(result[0].title).toBe("Assets");
+      expect(result[0].data.length).toBe(2);
     });
   });
 
   describe("edge cases", () => {
-    test("should handle empty options array", () => {
-      const options: string[] = [];
-      const result = handleOptions(options);
-
-      expect(result.length).toBe(1);
-      expect(result[0].title).toBe("All");
-      expect(result[0].options).toEqual([]);
+    test("should return an empty array for no accounts", () => {
+      expect(groupAccountsByRoot([])).toEqual([]);
     });
 
-    test("should handle single option", () => {
-      const options = ["Assets:Bank"];
-      const result = handleOptions(options);
-
-      expect(result.length).toBe(2);
-      expect(result[0].title).toBe("All");
-      expect(result[0].options).toEqual(["Assets:Bank"]);
-      expect(result[1].title).toBe("Assets");
-      expect(result[1].options).toEqual(["Assets:Bank"]);
-    });
-
-    test("should handle options with multiple colons", () => {
-      const options = [
-        "Assets:Bank:US:Checking",
-        "Assets:Bank:UK:Savings",
-        "Expenses:Food:Groceries",
-      ];
-      const result = handleOptions(options);
-
-      // Should split only on the first colon
-      const assetsTab = result.find((tab) => tab.title === "Assets");
-      expect(assetsTab?.options).toEqual([
-        "Assets:Bank:US:Checking",
-        "Assets:Bank:UK:Savings",
+    test("should handle a single account", () => {
+      expect(groupAccountsByRoot(["Assets:Cash"])).toEqual([
+        { title: "Assets", data: ["Assets:Cash"] },
       ]);
     });
 
-    test("should handle options with no colons", () => {
-      const options = ["SingleWord", "AnotherWord"];
-      const result = handleOptions(options);
-
-      // Each option without colon becomes its own tab
-      expect(result.length).toBe(3); // "All" + 2 individual tabs
-      expect(
-        result.find((tab) => tab.title === "SingleWord") !== undefined,
-      ).toBe(true);
-      expect(
-        result.find((tab) => tab.title === "AnotherWord") !== undefined,
-      ).toBe(true);
+    test("should treat a colon-free account as its own root", () => {
+      expect(groupAccountsByRoot(["Cash", "Assets:Bank"])).toEqual([
+        { title: "Cash", data: ["Cash"] },
+        { title: "Assets", data: ["Assets:Bank"] },
+      ]);
     });
 
-    test("should handle options with empty string prefix", () => {
-      const options = [":SomethingAfterColon"];
-      const result = handleOptions(options);
-
-      // Empty prefix becomes its own category
-      expect(result.length).toBe(2);
-      const emptyPrefixTab = result.find((tab) => tab.title === "");
-      expect(emptyPrefixTab !== undefined).toBe(true);
-      expect(emptyPrefixTab?.options).toEqual([":SomethingAfterColon"]);
-    });
-
-    test("should handle mixed options with and without colons", () => {
-      const options = [
-        "Assets:Bank",
-        "SimpleOption",
-        "Assets:Cash",
-        "AnotherSimple",
-      ];
-      const result = handleOptions(options);
-
-      const assetsTab = result.find((tab) => tab.title === "Assets");
-      expect(assetsTab?.options).toEqual(["Assets:Bank", "Assets:Cash"]);
-
-      const simpleTab1 = result.find((tab) => tab.title === "SimpleOption");
-      expect(simpleTab1?.options).toEqual(["SimpleOption"]);
-
-      const simpleTab2 = result.find((tab) => tab.title === "AnotherSimple");
-      expect(simpleTab2?.options).toEqual(["AnotherSimple"]);
+    test("should handle an empty root prefix", () => {
+      expect(groupAccountsByRoot([":Orphan"])).toEqual([
+        { title: "", data: [":Orphan"] },
+      ]);
     });
   });
 
-  describe("return type", () => {
-    test("should return array of OptionTab objects", () => {
-      const options = ["Assets:Bank"];
-      const result = handleOptions(options);
-
-      result.forEach((tab) => {
-        expect("title" in tab).toBe(true);
-        expect("options" in tab).toBe(true);
-        expect(typeof tab.title).toBe("string");
-        expect(Array.isArray(tab.options)).toBe(true);
-      });
-    });
-
-    test("All tab should always contain all options", () => {
-      const options = [
-        "Assets:Bank",
-        "Expenses:Food",
-        "Income:Salary",
-        "SimpleOption",
-      ];
-      const result = handleOptions(options);
-
-      expect(result[0].title).toBe("All");
-      expect(result[0].options).toEqual(options);
-    });
-  });
-
-  describe("complex scenarios", () => {
-    test("should handle real-world beancount account structure", () => {
-      const options = [
-        "Assets:Bank:BofA:Checking",
-        "Assets:Bank:BofA:Savings",
-        "Assets:Bank:Chase:Checking",
+  describe("real-world structure", () => {
+    test("should group a full beancount chart of accounts", () => {
+      const result = groupAccountsByRoot([
+        "Assets:Bank:Checking",
+        "Assets:Bank:Savings",
         "Liabilities:CreditCard:Visa",
-        "Liabilities:CreditCard:Mastercard",
+        "Income:Salary",
         "Expenses:Food:Groceries",
         "Expenses:Food:Restaurants",
-        "Expenses:Transport:Gas",
-        "Income:Salary:Company1",
-        "Income:Bonus",
-      ];
-      const result = handleOptions(options);
+        "Equity:OpeningBalances",
+      ]);
 
-      // Should have "All" + "Assets" + "Liabilities" + "Expenses" + "Income"
-      expect(result.length).toBe(5);
-
-      const assetsTab = result.find((tab) => tab.title === "Assets");
-      expect(assetsTab?.options.length).toBe(3);
-
-      const expensesTab = result.find((tab) => tab.title === "Expenses");
-      expect(expensesTab?.options.length).toBe(3);
-
-      const incomeTab = result.find((tab) => tab.title === "Income");
-      expect(incomeTab?.options.length).toBe(2);
+      expect(result.map((section) => section.title)).toEqual([
+        "Assets",
+        "Liabilities",
+        "Income",
+        "Expenses",
+        "Equity",
+      ]);
+      expect(result[0].data.length).toBe(2);
+      expect(result[3].data).toEqual([
+        "Expenses:Food:Groceries",
+        "Expenses:Food:Restaurants",
+      ]);
     });
 
-    test("should preserve original options array order within each tab", () => {
-      const options = [
-        "Assets:Cash",
-        "Assets:Bank",
-        "Assets:Investment",
+    test("should place every account in exactly one section", () => {
+      const accounts = [
+        "Assets:Bank:Checking",
         "Expenses:Food",
+        "Income:Salary",
       ];
-      const result = handleOptions(options);
+      const result = groupAccountsByRoot(accounts);
+      const grouped = result.reduce(
+        (all: string[], section) => all.concat(section.data),
+        [],
+      );
 
-      const assetsTab = result.find((tab) => tab.title === "Assets");
-      expect(assetsTab?.options).toEqual([
-        "Assets:Cash",
-        "Assets:Bank",
-        "Assets:Investment",
-      ]);
+      expect(grouped.length).toBe(accounts.length);
+      expect(grouped).toEqual(accounts);
+    });
+  });
+});
+
+describe("getAccountsAndCurrency — additional edge cases", () => {
+  describe("with edge cases", () => {
+    test("should handle duplicate account names", () => {
+      const mockData = {
+        accounts: ["Assets:Bank", "Assets:Bank"],
+        currencies: ["USD"],
+        errors: 0,
+        options: {
+          name_assets: "Assets",
+          name_expenses: "Expenses",
+          name_income: "Income",
+          name_liabilities: "Liabilities",
+          name_equity: "Equity",
+          operating_currency: ["USD"],
+        },
+      };
+
+      const result = getAccountsAndCurrency(mockData as unknown as LedgerMeta);
+
+      // Both should be in the array (duplicates preserved)
+      expect(result.assets.length).toBe(2);
+    });
+
+    test("should handle mixed case account names", () => {
+      const mockData = {
+        accounts: ["ASSETS:Bank", "assets:Cash"],
+        currencies: ["USD"],
+        errors: 0,
+        options: {
+          name_assets: "ASSETS",
+          name_expenses: "Expenses",
+          name_income: "Income",
+          name_liabilities: "Liabilities",
+          name_equity: "Equity",
+          operating_currency: ["USD"],
+        },
+      };
+
+      const result = getAccountsAndCurrency(mockData as unknown as LedgerMeta);
+
+      // Should preserve original casing
+      expect(result.assets[0]).toBe("ASSETS:Bank");
+      expect(result.assets[1]).toBe("assets:Cash");
     });
   });
 });

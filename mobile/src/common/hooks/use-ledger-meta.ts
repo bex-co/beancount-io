@@ -1,31 +1,39 @@
+import { useMemo } from "react";
+import type { WatchQueryFetchPolicy } from "@apollo/client";
 import { useLedgerMetaQuery } from "@/generated-graphql/graphql";
-import {
-  getAccountsAndCurrency,
-  handleOptions,
-  type OptionTab,
-} from "../ledger-meta-utils";
+import { getAccountsAndCurrency } from "../ledger-meta-utils";
 
-export type { OptionTab };
+interface UseLedgerMetaOptions {
+  /**
+   * Defaults to `network-only` so callers always see a fresh ledger. Screens
+   * that would otherwise skeleton over data another screen already fetched
+   * (the account picker) pass `cache-and-network` to render instantly.
+   */
+  fetchPolicy?: WatchQueryFetchPolicy;
+}
 
-export const useLedgerMeta = (userId: string, ledgerId?: string) => {
+export const useLedgerMeta = (
+  userId: string,
+  ledgerId?: string,
+  options?: UseLedgerMetaOptions,
+) => {
   const { data, error, loading, refetch } = useLedgerMetaQuery({
     variables: { userId, ledgerId },
-    fetchPolicy: "network-only",
+    fetchPolicy: options?.fetchPolicy ?? "network-only",
   });
 
-  const { assets, expenses, currencies } = getAccountsAndCurrency(
-    data?.ledgerMeta.data,
+  const meta = data?.ledgerMeta.data;
+  // Memoized so the derived arrays keep their identity between renders —
+  // downstream `useMemo`s (the picker's grouping and search) depend on it.
+  const { assets, expenses, currencies } = useMemo(
+    () => getAccountsAndCurrency(meta),
+    [meta],
   );
 
-  const assetsOptionTabs = handleOptions(assets);
-  const expensesOptionTabs = handleOptions(expenses);
-
   return {
-    data: data?.ledgerMeta.data,
+    data: meta,
     assets,
     expenses,
-    assetsOptionTabs,
-    expensesOptionTabs,
     currencies,
     error,
     loading,

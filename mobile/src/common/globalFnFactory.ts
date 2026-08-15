@@ -57,3 +57,10 @@ export const SelectedPostingAccount = createGlobalFn<(value: string) => void>(
 export const SelectedFilterAccount = createGlobalFn<(value: string) => void>(
   "SelectedFilterAccount",
 );
+
+// Budget picks an expense account too, but from its own screen — sharing
+// `SelectedExpenses` with the add-transaction TO row let one screen's stale
+// callback fire for the other's selection.
+export const SelectedBudgetAccount = createGlobalFn<(value: string) => void>(
+  "SelectedBudgetAccount",
+);

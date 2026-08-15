@@ -444,7 +444,7 @@ export const MultiPostingsTransactionScreenComponent = () => {
     });
     router.push({
       pathname: "/(app)/account-picker",
-      params: { type: "posting" },
+      params: { type: "posting", selectedItem: postings[index]?.account },
     });
   };
 

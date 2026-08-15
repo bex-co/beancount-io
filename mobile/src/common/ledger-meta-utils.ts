@@ -1,8 +1,11 @@
 import { LedgerMeta } from "@/generated-graphql/graphql";
+import { SEGMENT_SEPARATOR } from "./account-util";
 
-export interface OptionTab {
+export interface AccountSection {
+  /** Root account type — `Assets` for `Assets:Bank:Checking`. */
   title: string;
-  options: string[];
+  /** Accounts under that root, in the order the caller supplied them. */
+  data: string[];
 }
 
 export function getAccountsAndCurrency(data: LedgerMeta | undefined) {
@@ -61,16 +64,20 @@ export function getAccountsAndCurrency(data: LedgerMeta | undefined) {
   return { assets, expenses, currencies };
 }
 
-export function handleOptions(options: string[]) {
-  const optionTabs: OptionTab[] = [{ title: "All", options }];
-  options.forEach((val) => {
-    const prefix = val.split(":")[0];
-    const index = optionTabs.findIndex((opt) => opt.title === prefix);
-    if (index === -1) {
-      optionTabs.push({ title: prefix, options: [val] });
+/**
+ * Group accounts by root segment for a SectionList, preserving the caller's
+ * ordering both across roots (first seen wins) and within each root.
+ */
+export function groupAccountsByRoot(accounts: string[]): AccountSection[] {
+  const sections: AccountSection[] = [];
+  for (const account of accounts) {
+    const title = account.split(SEGMENT_SEPARATOR)[0];
+    const section = sections.find((candidate) => candidate.title === title);
+    if (section) {
+      section.data.push(account);
     } else {
-      optionTabs[index].options.push(val);
+      sections.push({ title, data: [account] });
     }
-  });
-  return optionTabs;
+  }
+  return sections;
 }

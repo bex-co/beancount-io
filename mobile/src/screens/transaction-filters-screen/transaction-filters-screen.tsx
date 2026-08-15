@@ -199,7 +199,7 @@ export const TransactionFiltersScreen = (): JSX.Element => {
     });
     router.push({
       pathname: "/(app)/account-picker",
-      params: { type: "filter" },
+      params: { type: "filter", selectedItem: draft.account },
     });
   };
 
