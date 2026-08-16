@@ -1,19 +1,19 @@
 # w1 · m21 — Moments that land: haptics, save confirmation, receipt payoff
 
-**Worker:** worker1 **Goal:** Every ledger write ends in a fast, consistent, felt confirmation — and the AI receipt flow, the most magical thing the app does, stops landing in silence. **Status:** todo
+**Worker:** worker1 **Goal:** Every ledger write ends in a fast, consistent, felt confirmation — and the AI receipt flow, the most magical thing the app does, stops landing in silence. **Status:** done — the haptics-by-hand pass, the one check a simulator cannot do, is carried as `w1/023`
 
 ## Tasks (in order)
 
-| id   | title                                                           | est | depends_on |
-| ---- | --------------------------------------------------------------- | --- | ---------- |
-| t001 | Delete the 2s post-save stall; one shared return-and-confirm    | 40m | —          |
-| t002 | `common/haptics.ts` — one wrapper, platform-gated and guarded   | 30m | —          |
-| t003 | Success/error haptics on every ledger write                     | 25m | t002       |
-| t004 | Receipt parse lands with a reveal, not a silent replace         | 50m | t001, t003 |
-| t005 | `PressableScale` primitive, adopted by `Button` and the tab bar | 40m | —          |
-| t006 | UX pass — light/dark, i18n, haptics on device, analytics        | 35m | t004, t005 |
-| t007 | Simplify pass over the confirmation + haptics code              | 25m | t006       |
-| t008 | Unit tests for the confirmation path and haptics wrapper        | 35m | t006       |
+| id   | title                                                           | est | depends_on |            |
+| ---- | --------------------------------------------------------------- | --- | ---------- | ---------- |
+| t001 | Delete the 2s post-save stall; one shared return-and-confirm    | 40m | —          | — **DONE** |
+| t002 | `common/haptics.ts` — one wrapper, platform-gated and guarded   | 30m | —          | — **DONE** |
+| t003 | Success/error haptics on every ledger write                     | 25m | t002       | — **DONE** |
+| t004 | Receipt parse lands with a reveal, not a silent replace         | 50m | t001, t003 | — **DONE** |
+| t005 | `PressableScale` primitive, adopted by `Button` and the tab bar | 40m | —          | — **DONE** |
+| t006 | UX pass — light/dark, i18n, haptics on device, analytics        | 35m | t004, t005 | — **DONE** |
+| t007 | Simplify pass over the confirmation + haptics code              | 25m | t006       | — **DONE** |
+| t008 | Unit tests for the confirmation path and haptics wrapper        | 35m | t006       | — **DONE** |
 
 ## Definition of done
 

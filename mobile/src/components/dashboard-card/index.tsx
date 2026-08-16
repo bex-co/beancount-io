@@ -1,12 +1,7 @@
 import { ReactNode } from "react";
-import {
-  StyleSheet,
-  Text,
-  TouchableOpacity,
-  View,
-  ViewStyle,
-} from "react-native";
+import { StyleSheet, Text, View, ViewStyle } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { PressableScale } from "@/components/pressable-scale";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import {
@@ -101,9 +96,10 @@ export function DashboardCard({
           )}
           {right}
           {onSeeAll && (
-            <TouchableOpacity
+            <PressableScale
               style={styles.seeAll}
               onPress={onSeeAll}
+              hitSlop={8}
               accessibilityRole="button"
               accessibilityLabel={t("seeAll")}
             >
@@ -113,7 +109,7 @@ export function DashboardCard({
                 size={16}
                 color={theme.primary}
               />
-            </TouchableOpacity>
+            </PressableScale>
           )}
         </View>
       )}

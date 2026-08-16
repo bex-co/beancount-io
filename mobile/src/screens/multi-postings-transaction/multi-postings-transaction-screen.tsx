@@ -34,11 +34,12 @@ import { ColorTheme } from "@/types/theme-props";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { LoadingTile } from "@/components/loading-tile";
 import {
-  AddTransactionCallback,
+  runAddTransactionCallback,
   SelectedPostingAccount,
   SelectedNarration,
   SelectedPayee,
 } from "@/common/globalFnFactory";
+import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useSession } from "@/common/hooks/use-session";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useAddEntriesToRemote } from "@/screens/multi-postings-transaction/hooks/use-add-entries-to-remote";
@@ -318,6 +319,7 @@ export const MultiPostingsTransactionScreenComponent = () => {
   const { t } = useTranslations();
   const router = useRouter();
   const toast = useToast();
+  const confirmWrite = useLedgerWrite();
   const ledgerId = useLedgerGuard();
   const { userId } = useSession();
   const {
@@ -409,38 +411,24 @@ export const MultiPostingsTransactionScreenComponent = () => {
 
     await analytics.track("tap_split_done", { legCount: postings.length });
 
-    try {
-      const cancel = toast.showToast({ message: t("saving"), type: "loading" });
-      const entry = buildEntryInput(postings, {
-        date,
-        payee,
-        narration,
-        currency,
-      });
-      const result = await mutate({
-        variables: { entriesInput: [entry], ledgerId },
-      });
-      cancel();
+    const entry = buildEntryInput(postings, {
+      date,
+      payee,
+      narration,
+      currency,
+    });
 
+    await confirmWrite({
+      perform: () => mutate({ variables: { entriesInput: [entry], ledgerId } }),
       // The mutation reports rejection in its payload. The hook's `error` field
       // is a render behind at this point, so a server-rejected split used to
       // toast success — branch on what the server actually returned.
-      if (result.data?.addEntries?.success) {
-        toast.showToast({ message: t("saveSuccess"), type: "success" });
-        setTimeout(async () => {
-          const callback = AddTransactionCallback.getFn();
-          if (callback) {
-            await callback();
-            AddTransactionCallback.deleteFn();
-          }
-          router.back();
-        }, 2000);
-      } else {
-        toast.showToast({ message: t("saveFailed"), type: "error" });
-      }
-    } catch {
-      toast.showToast({ message: t("saveFailed"), type: "error" });
-    }
+      didSucceed: (result) => Boolean(result.data?.addEntries?.success),
+      loadingMessage: t("saving"),
+      successMessage: t("saveSuccess"),
+      failureMessage: t("saveFailed"),
+      afterSuccess: runAddTransactionCallback,
+    });
   };
 
   const pickAccountForPosting = (index: number) => {

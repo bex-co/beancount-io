@@ -16,7 +16,8 @@ import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
-import { useThemeStyle, usePageView, useToast } from "@/common/hooks";
+import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import {
@@ -154,7 +155,7 @@ const TransactionDetailImpl = ({
   const theme = useTheme().colorTheme;
   usePageView("transaction_detail");
 
-  const toast = useToast();
+  const confirmWrite = useLedgerWrite();
   const stashed = useReactiveVar(selectedTransactionVar);
   const client = useApolloClient();
 
@@ -186,33 +187,25 @@ const TransactionDetailImpl = ({
         style: "destructive",
         onPress: async () => {
           analytics.track("transaction_detail_delete_confirm", {});
-          try {
-            await deleteMutation({
-              variables: {
-                input: { entryHash, sha256sum },
-                ledgerId,
-              },
-            });
-            void invalidateLedgerData(client, "entries");
-            toast.showToast({ message: t("deleteSuccess"), type: "success" });
-            router.back();
-          } catch (e: unknown) {
-            const msg = e instanceof Error ? e.message : t("deleteFailed");
-            toast.showToast({ message: msg, type: "error" });
-          }
+          await confirmWrite({
+            perform: () =>
+              deleteMutation({
+                variables: {
+                  input: { entryHash, sha256sum },
+                  ledgerId,
+                },
+              }),
+            successMessage: t("deleteSuccess"),
+            failureMessage: t("deleteFailed"),
+            // The server's reason is more useful than "delete failed".
+            failureMessageFor: (e) =>
+              e instanceof Error ? e.message : t("deleteFailed"),
+            afterSuccess: () => invalidateLedgerData(client, "entries"),
+          });
         },
       },
     ]);
-  }, [
-    sha256sum,
-    entryHash,
-    ledgerId,
-    deleteMutation,
-    client,
-    t,
-    toast,
-    router,
-  ]);
+  }, [sha256sum, entryHash, ledgerId, deleteMutation, client, t, confirmWrite]);
 
   const entry: JournalTransaction | null = useMemo(() => {
     if (stashed && stashed.entry_hash === entryHash) {

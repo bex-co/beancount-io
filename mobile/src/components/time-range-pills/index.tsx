@@ -11,8 +11,8 @@ import Animated, {
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
-import * as Haptics from "expo-haptics";
 import { ColorTheme } from "@/types/theme-props";
+import { haptics } from "@/common/haptics";
 import { durations, fontSizes, fontWeights, space } from "@/common/theme";
 import { easeStandard } from "@/common/theme/motion-easing";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -155,7 +155,7 @@ export function TimeRangePills<T extends string>({
             onLayout={handleLayout(option.key)}
             onPress={() => {
               if (!active) {
-                Haptics.selectionAsync().catch(() => undefined);
+                haptics.selection();
                 // Move on press rather than waiting for `value` to come back
                 // down: the indicator should already be travelling by the time
                 // the parent re-renders.

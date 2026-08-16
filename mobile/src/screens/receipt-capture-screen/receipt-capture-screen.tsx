@@ -7,6 +7,7 @@ import * as LegacyFS from "expo-file-system/legacy";
 import { usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
+import { haptics } from "@/common/haptics";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { useReceiptWorkflow } from "./use-receipt-workflow";
 import { receiptErrorKey, mimeToExt } from "./receipt-utils";
@@ -17,6 +18,16 @@ import { CHROME } from "./chrome";
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: CHROME.background },
 });
+
+/**
+ * How long the extracted fields stay up before the form takes over.
+ *
+ * Long enough to read three fields, short enough that a user scanning a stack
+ * of receipts never wants to dismiss it — which is why it self-dismisses and
+ * has no tap target at all. Above the motion budget on purpose: this is a dwell,
+ * not a transition; the animations inside it are what the budget governs.
+ */
+const REVEAL_DWELL_MS = 1200;
 
 // Minimal 1×1 white JPEG used in __DEV__ test mode to bypass the camera.
 // XCUITest (used by expo-mcp) dismisses native camera UI on attach.
@@ -33,6 +44,9 @@ const ReceiptCaptureScreenImpl = () => {
 
   const [shot, setShot] = useState<CapturedShot | null>(null);
   const launched = useRef(false);
+  const handedOff = useRef(false);
+  const failed = useRef(false);
+  const revealTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   const pickFromLibrary = async () => {
     const perm = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -64,6 +78,7 @@ const ReceiptCaptureScreenImpl = () => {
   const handleRetake = () => {
     workflow.reset();
     setShot(null);
+    failed.current = false;
   };
 
   const handleUpload = () => {
@@ -99,27 +114,57 @@ const ReceiptCaptureScreenImpl = () => {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  // Parse succeeded — hand the fields to the real transaction editor.
+  // Parse succeeded — show what was read, then hand the fields to the real
+  // transaction editor.
+  //
   // `replace`, not `push`: it drops the camera from the stack so the form's
   // own router.back() after saving returns to where the scan started.
+  //
+  // The reveal is why this is a timer and not a straight `replace`: the parse
+  // is the app's one piece of real magic and it used to land in silence. The
+  // handoff is deliberately guarded to fire once — a re-render must not
+  // re-track the event or queue a second navigation.
   useEffect(() => {
     const phase = workflow.phase;
-    if (phase.kind !== "parsed") return;
+    if (phase.kind !== "parsed" || handedOff.current) return;
+    handedOff.current = true;
+
+    // `receipt_parsed` also marks the reveal appearing — the two are the same
+    // instant, so a second event would only duplicate this one.
     analytics.track("receipt_parsed", { ledgerId });
-    router.replace({
-      pathname: "/(app)/add-transaction",
-      params: {
-        prefillDate: phase.date,
-        prefillPayee: phase.payee,
-        prefillNarration: phase.description,
-        prefillSourceAccount: phase.sourceAccount,
-        prefillTargetAccount: phase.targetAccount,
-        // Receipts are expenses; normalize so the form always seeds a clean
-        // positive total regardless of how the model signed it.
-        prefillAmount: Math.abs(phase.amount).toFixed(2),
-      },
-    });
+    haptics.success();
+
+    revealTimer.current = setTimeout(() => {
+      router.replace({
+        pathname: "/(app)/add-transaction",
+        params: {
+          prefillDate: phase.date,
+          prefillPayee: phase.payee,
+          prefillNarration: phase.description,
+          prefillSourceAccount: phase.sourceAccount,
+          prefillTargetAccount: phase.targetAccount,
+          // Receipts are expenses; normalize so the form always seeds a clean
+          // positive total regardless of how the model signed it.
+          prefillAmount: Math.abs(phase.amount).toFixed(2),
+        },
+      });
+    }, REVEAL_DWELL_MS);
   }, [workflow.phase, router, ledgerId]);
+
+  // A failed parse should feel different from a successful one, not just read
+  // differently. `PreviewView` already renders the reason.
+  useEffect(() => {
+    if (workflow.phase.kind !== "error" || failed.current) return;
+    failed.current = true;
+    haptics.error();
+  }, [workflow.phase]);
+
+  useEffect(
+    () => () => {
+      if (revealTimer.current) clearTimeout(revealTimer.current);
+    },
+    [],
+  );
 
   const renderBody = () => {
     if (!shot) {
@@ -133,17 +178,18 @@ const ReceiptCaptureScreenImpl = () => {
     }
 
     const { phase } = workflow;
-    // "parsed" keeps showing the parsing spinner: the navigation effect runs a
-    // frame later, and falling through to "preview" would flash the
-    // Retake/Upload buttons back up on the way out.
+    // "parsed" holds the reveal until the handoff fires; falling through to
+    // "preview" would flash the Retake/Upload buttons back up on the way out.
     const status =
       phase.kind === "uploading"
         ? "uploading"
-        : phase.kind === "parsing" || phase.kind === "parsed"
+        : phase.kind === "parsing"
           ? "parsing"
-          : phase.kind === "error"
-            ? "error"
-            : "preview";
+          : phase.kind === "parsed"
+            ? "revealed"
+            : phase.kind === "error"
+              ? "error"
+              : "preview";
 
     return (
       <PreviewView
@@ -151,6 +197,15 @@ const ReceiptCaptureScreenImpl = () => {
         status={status}
         errorMessage={
           phase.kind === "error" ? t(receiptErrorKey(phase.message)) : undefined
+        }
+        reveal={
+          phase.kind === "parsed"
+            ? {
+                payee: phase.payee,
+                amount: Math.abs(phase.amount).toFixed(2),
+                date: phase.date,
+              }
+            : undefined
         }
         onRetake={handleRetake}
         onUpload={handleUpload}

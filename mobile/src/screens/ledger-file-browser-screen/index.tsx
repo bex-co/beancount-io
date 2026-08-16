@@ -34,6 +34,7 @@ import { useLedgerGuard } from "@/components/ledger-guard";
 import { TextInputModal } from "@/components/text-input-modal";
 import { analytics } from "@/common/analytics";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
+import { haptics } from "@/common/haptics";
 import { encodeLedgerFileContent } from "@/common/ledger-file-content";
 import {
   buildLedgerFilePath,
@@ -367,6 +368,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
           },
         });
         const createdPath = result.data?.createLedgerFile.path ?? filePath;
+        haptics.success();
         toast.showToast({
           message: t("ledgerCreateFileSuccess", { name: filename }),
           type: "success",
@@ -379,6 +381,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
           params: { path: createdPath },
         });
       } catch (createError: unknown) {
+        haptics.error();
         const message =
           createError instanceof Error
             ? createError.message
@@ -416,6 +419,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
             message: `delete ${entry.path}`,
           },
         });
+        haptics.success();
         toast.showToast({
           message: t("ledgerDeleteFileSuccess", { name: entry.name }),
           type: "success",
@@ -424,6 +428,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         // gone, so a second tap can't resend the sha we just spent.
         await invalidateLedgerData(client, "file");
       } catch (deleteError: unknown) {
+        haptics.error();
         const message =
           deleteError instanceof Error
             ? deleteError.message

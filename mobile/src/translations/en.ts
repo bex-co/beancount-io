@@ -292,6 +292,11 @@ export const en = {
   receiptCancel: "Cancel",
   receiptUploading: "Uploading photo…",
   receiptParsing: "AI is reading your receipt…",
+  receiptRevealTitle: "Here's what we read",
+  // Deliberately a proposal: nothing is written to the ledger until the user
+  // saves on the next screen.
+  receiptRevealHint:
+    "Nothing saved yet — check the details on the next screen.",
   total: "Total",
   receiptQuotaExhausted: "AI quota exhausted. Please upgrade your plan.",
   receiptParseFailed: "Could not read receipt. Please try again.",

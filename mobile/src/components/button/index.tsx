@@ -1,9 +1,7 @@
-import React, { useCallback, useMemo } from "react";
+import React, { useCallback, useMemo, useState } from "react";
 import {
-  Pressable,
   Text,
   StyleSheet,
-  PressableStateCallbackType,
   StyleProp,
   ViewStyle,
   ActivityIndicator,
@@ -11,6 +9,7 @@ import {
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ColorTheme } from "@/types/theme-props";
 import { useTheme } from "@/common/theme";
+import { PressableScale } from "@/components/pressable-scale";
 
 type ButtonType = "primary" | "outline";
 
@@ -63,27 +62,32 @@ const getButtonStyles = (theme: ColorTheme) => {
 export const Button = (props: ButtonProps) => {
   const type = props.type || "primary";
   const styles = useThemeStyle(getButtonStyles);
-  const pressableStyle = useCallback(
-    ({ pressed }: PressableStateCallbackType) => {
-      switch (type) {
-        case "primary":
-          return [
-            props.style,
-            styles.buttonBase,
-            styles.buttonPrimary,
-            pressed && styles.buttonPrimaryPressed,
-          ];
-        case "outline":
-          return [
-            props.style,
-            styles.buttonBase,
-            styles.buttonOutline,
-            pressed && styles.buttonOutlinePressed,
-          ];
-      }
-    },
-    [styles, type, props.style],
-  );
+  // Tracked here rather than read from `Pressable`'s `({ pressed })` callback:
+  // `PressableScale` animates the style prop, and Reanimated cannot resolve the
+  // callback form. The colors below are unchanged either way.
+  const [pressed, setPressed] = useState(false);
+
+  const buttonStyle = useMemo(() => {
+    switch (type) {
+      case "primary":
+        return [
+          props.style,
+          styles.buttonBase,
+          styles.buttonPrimary,
+          pressed && styles.buttonPrimaryPressed,
+        ];
+      case "outline":
+        return [
+          props.style,
+          styles.buttonBase,
+          styles.buttonOutline,
+          pressed && styles.buttonOutlinePressed,
+        ];
+    }
+  }, [styles, type, props.style, pressed]);
+
+  const handlePressIn = useCallback(() => setPressed(true), []);
+  const handlePressOut = useCallback(() => setPressed(false), []);
 
   const buttonTextStyle = useMemo(() => {
     switch (type) {
@@ -97,9 +101,11 @@ export const Button = (props: ButtonProps) => {
   const theme = useTheme().colorTheme;
 
   return (
-    <Pressable
-      style={pressableStyle}
+    <PressableScale
+      style={buttonStyle}
       onPress={props.onPress}
+      onPressIn={handlePressIn}
+      onPressOut={handlePressOut}
       pointerEvents={props.onPress ? "auto" : "none"}
     >
       {props.loading ? (
@@ -109,6 +115,6 @@ export const Button = (props: ButtonProps) => {
         />
       ) : null}
       <Text style={buttonTextStyle}>{props.children}</Text>
-    </Pressable>
+    </PressableScale>
   );
 };

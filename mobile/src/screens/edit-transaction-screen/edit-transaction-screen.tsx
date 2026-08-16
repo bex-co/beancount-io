@@ -13,7 +13,8 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useApolloClient } from "@apollo/client";
 import { fonts, fontSizes, headerActionStyle, useTheme } from "@/common/theme";
-import { useThemeStyle, useToast, usePageView } from "@/common/hooks";
+import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
 import {
@@ -81,7 +82,7 @@ export const EditTransactionScreen = (): JSX.Element => {
   const { t } = useTranslations();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
-  const toast = useToast();
+  const confirmWrite = useLedgerWrite();
   const client = useApolloClient();
   const { entryHash, ledgerId } = useLocalSearchParams<{
     entryHash: string;
@@ -126,30 +127,31 @@ export const EditTransactionScreen = (): JSX.Element => {
     if (!sha256sum || saving) return;
     setSaveError(null);
     analytics.track("edit_transaction_save", {});
-    const cancelToast = toast.showToast({
-      message: t("saving"),
-      type: "loading",
-    });
-    try {
-      await updateMutation({
-        variables: {
-          input: {
-            entryHash: entryHash ?? "",
-            newContent: content,
-            sha256sum,
+    const outcome = await confirmWrite({
+      perform: () =>
+        updateMutation({
+          variables: {
+            input: {
+              entryHash: entryHash ?? "",
+              newContent: content,
+              sha256sum,
+            },
+            ledgerId: ledgerId ?? "",
           },
-          ledgerId: ledgerId ?? "",
-        },
-      });
-      cancelToast();
-      void invalidateLedgerData(client, "entries");
-      toast.showToast({ message: t("editSuccess"), type: "success" });
-      router.back();
-    } catch (e: unknown) {
-      cancelToast();
-      const msg = e instanceof Error ? e.message : t("editFailed");
-      setSaveError(msg);
-      toast.showToast({ message: t("editFailed"), type: "error" });
+        }),
+      loadingMessage: t("saving"),
+      successMessage: t("editSuccess"),
+      failureMessage: t("editFailed"),
+      afterSuccess: () => invalidateLedgerData(client, "entries"),
+    });
+
+    if (!outcome.ok) {
+      // The toast says "couldn't save"; the inline message says why.
+      setSaveError(
+        outcome.error instanceof Error
+          ? outcome.error.message
+          : outcome.message,
+      );
     }
   }, [
     sha256sum,
@@ -158,8 +160,7 @@ export const EditTransactionScreen = (): JSX.Element => {
     updateMutation,
     client,
     t,
-    toast,
-    router,
+    confirmWrite,
     entryHash,
     ledgerId,
   ]);

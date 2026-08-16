@@ -10,6 +10,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { fontSizes, fontWeights } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { CHROME } from "./chrome";
+import { RevealView, type ReceiptReveal } from "./reveal-view";
 import type { CapturedShot } from "./camera-view";
 
 const styles = StyleSheet.create({
@@ -69,13 +70,16 @@ export const PreviewView = ({
   shot,
   status,
   errorMessage,
+  reveal,
   onRetake,
   onUpload,
   onCancel,
 }: {
   shot: CapturedShot;
-  status: "preview" | "uploading" | "parsing" | "error";
+  status: "preview" | "uploading" | "parsing" | "revealed" | "error";
   errorMessage?: string;
+  /** What the parse extracted; required by the `revealed` status. */
+  reveal?: ReceiptReveal;
   onRetake: () => void;
   onUpload: () => void;
   onCancel: () => void;
@@ -129,6 +133,8 @@ export const PreviewView = ({
           <Text style={styles.scrimText}>{busyLabel}</Text>
         </View>
       ) : null}
+
+      {status === "revealed" && reveal ? <RevealView {...reveal} /> : null}
 
       {status === "error" ? (
         <View style={styles.scrim}>

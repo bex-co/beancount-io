@@ -11,7 +11,7 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import * as Haptics from "expo-haptics";
+import { haptics } from "@/common/haptics";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { usePageView } from "@/common/hooks/use-page-view";
 import { useSession } from "@/common/hooks/use-session";
@@ -233,13 +233,12 @@ export function AddBudgetScreenImpl(): JSX.Element {
 
     if (result.ok) {
       analytics.track("budget_add_submitted", { update: isUpdate, interval });
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(
-        () => undefined,
-      );
+      haptics.success();
       router.back();
       return;
     }
 
+    haptics.error();
     setSubmitError(result.message || t("budgetSaveFailed"));
   };
 

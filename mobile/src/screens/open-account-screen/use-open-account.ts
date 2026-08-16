@@ -2,6 +2,7 @@ import { useCallback } from "react";
 import { useApolloClient } from "@apollo/client";
 import { useBulkEntriesMutation } from "@/generated-graphql/graphql";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
+import { haptics } from "@/common/haptics";
 import {
   buildOpenAccountEntry,
   type OpenAccountInput,
@@ -31,13 +32,19 @@ export function useOpenAccount(ledgerId: string) {
           // — and it never rejects: the directive has already been committed,
           // and reporting a refresh failure as an open failure could get it
           // written twice.
+          // Fired here rather than at the call site so the screen cannot open an
+          // account without it, the same reason `runLedgerWrite` owns the
+          // haptic for the transaction flows.
+          haptics.success();
           await invalidateLedgerData(client, "entries");
           return { ok: true };
         }
 
+        haptics.error();
         const message = data?.bulkEntries.message?.trim() || null;
         return { ok: false, message };
       } catch (caught) {
+        haptics.error();
         const message = caught instanceof Error ? caught.message : null;
         return { ok: false, message };
       }

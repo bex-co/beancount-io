@@ -24,6 +24,7 @@ import {
   type AccountTypes,
 } from "@/screens/add-transaction-screen/hooks/use-payee-account-suggestions";
 import { useToast, usePageView } from "@/common/hooks";
+import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { DatePickerModal, LedgerGuard, useLedgerGuard } from "@/components";
 
 import {
@@ -31,7 +32,7 @@ import {
   SelectedExpenses,
   SelectedNarration,
   SelectedPayee,
-  AddTransactionCallback,
+  runAddTransactionCallback,
 } from "@/common/globalFnFactory";
 
 /** Keep only non-empty string arguments (drops undefined option names). */
@@ -114,6 +115,7 @@ export const AddTransactionNextScreenComponent = () => {
   const styles = getStyles(theme);
   const router = useRouter();
   const toast = useToast();
+  const confirmWrite = useLedgerWrite();
   const [assets, setAssets] = useState<string>(currentAsset);
   const [expenses, setExpenses] = useState<string>(currentExpense);
   // Seeded from the quick-add screen so a payee chosen early drives the
@@ -228,63 +230,39 @@ export const AddTransactionNextScreenComponent = () => {
       });
       return;
     }
-    const cancel = toast.showToast({
-      message: t("saving"),
-      type: "loading",
+    const params = [
+      {
+        date,
+        flag: "*",
+        narration,
+        payee,
+        type: "Transaction",
+        meta: {},
+        postings: [
+          {
+            amount: `-${currentMoney} ${currentCurrency}`,
+            account: assets,
+          },
+          {
+            amount: `${currentMoney} ${currentCurrency}`,
+            account: expenses,
+          },
+        ],
+      },
+    ];
+
+    const outcome = await confirmWrite({
+      perform: () => mutate({ variables: { entriesInput: params, ledgerId } }),
+      // `addEntries` reports rejection in its payload, not by throwing.
+      didSucceed: (result) => Boolean(result.data?.addEntries?.success),
+      loadingMessage: t("saving"),
+      successMessage: t("saveSuccess"),
+      failureMessage: t("saveFailed"),
+      afterSuccess: runAddTransactionCallback,
     });
-    try {
-      const params = [
-        {
-          date,
-          flag: "*",
-          narration,
-          payee,
-          type: "Transaction",
-          meta: {},
-          postings: [
-            {
-              amount: `-${currentMoney} ${currentCurrency}`,
-              account: assets,
-            },
-            {
-              amount: `${currentMoney} ${currentCurrency}`,
-              account: expenses,
-            },
-          ],
-        },
-      ];
 
-      const result = await mutate({
-        variables: { entriesInput: params, ledgerId },
-      });
-      cancel();
-
-      if (result.data?.addEntries?.success) {
-        toast.showToast({
-          message: t("saveSuccess"),
-          type: "success",
-        });
-        setTimeout(async () => {
-          const callback = AddTransactionCallback.getFn();
-          if (callback) {
-            await callback();
-            AddTransactionCallback.deleteFn();
-          }
-          router.back();
-        }, 2000);
-      } else {
-        toast.showToast({
-          message: t("saveFailed"),
-          type: "error",
-        });
-      }
-    } catch (e) {
-      cancel();
-      toast.showToast({
-        message: t("saveFailed"),
-        type: "error",
-      });
-      console.error(`failed to add transaction: ${e}`);
+    if (!outcome.ok && outcome.error) {
+      console.error(`failed to add transaction: ${outcome.error}`);
     }
   };
 

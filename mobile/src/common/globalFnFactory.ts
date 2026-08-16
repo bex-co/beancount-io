@@ -50,6 +50,24 @@ export const AddTransactionCallback = createGlobalFn<() => Promise<void>>(
   "AddTransactionCallback",
 );
 
+/**
+ * Run whatever the screen that opened the add flow registered as its refresh,
+ * then drop it — the registration is one-shot.
+ *
+ * Both entry points into the add flow (quick-add and split) go through this so
+ * neither can forget the `deleteFn`. It runs as the `afterSuccess` of the
+ * shared confirmation helper, i.e. immediately on a successful save and never
+ * on a failed one.
+ */
+export const runAddTransactionCallback = async (): Promise<void> => {
+  const callback = AddTransactionCallback.getFn();
+  if (!callback) {
+    return;
+  }
+  AddTransactionCallback.deleteFn();
+  await callback();
+};
+
 export const SelectedPostingAccount = createGlobalFn<(value: string) => void>(
   "SelectedPostingAccount",
 );

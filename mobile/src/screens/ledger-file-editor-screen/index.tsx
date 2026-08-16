@@ -24,6 +24,7 @@ import { useApolloClient } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { fonts, useTheme } from "@/common/theme";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
+import { haptics } from "@/common/haptics";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useSession } from "@/common/hooks/use-session";
@@ -373,6 +374,9 @@ export function LedgerFileEditorScreen(): JSX.Element {
           );
         }
         analytics.track("ledger_save_success", { path });
+        // This save stays on the screen and shows no toast, so the haptic is
+        // the only confirmation the user gets.
+        haptics.success();
         // Without this the banner keeps rendering the errors that existed
         // before the save — it is fetched once at mount, and this screen never
         // remounts while the user edits.
@@ -380,6 +384,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
         void invalidateLedgerData(client, "errors");
         return true;
       } catch (err: unknown) {
+        haptics.error();
         const msg = err instanceof Error ? err.message : String(err);
         if (isConflictError(msg)) {
           Alert.alert(

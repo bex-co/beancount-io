@@ -23,8 +23,8 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { scaleLinear } from "d3-scale";
 import { line as d3Line, area as d3Area, curveMonotoneX } from "d3-shape";
-import * as Haptics from "expo-haptics";
 import { ErrorBoundary } from "react-error-boundary";
+import { haptics } from "@/common/haptics";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { durations, fontSizes, fontWeights, useTheme } from "@/common/theme";
@@ -270,14 +270,6 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-function triggerScrubStart(): void {
-  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => undefined);
-}
-
-function triggerScrubTick(): void {
-  Haptics.selectionAsync().catch(() => undefined);
-}
-
 function InteractiveLineChart({
   label,
   labels,
@@ -443,7 +435,9 @@ function InteractiveLineChart({
     if (index !== lastIndexRef.current) {
       lastIndexRef.current = index;
       setScrubIndex(index);
-      triggerScrubTick();
+      // Gated on the index changing, not on the touch moving: at frame rate a
+      // selection tick reads as a buzz.
+      haptics.selection();
     }
   };
 
@@ -462,7 +456,7 @@ function InteractiveLineChart({
           const index = indexFromTouch(event);
           lastIndexRef.current = index;
           setScrubIndex(index);
-          triggerScrubStart();
+          haptics.press();
         },
         onPanResponderMove: (event) => updateScrub(event),
         onPanResponderRelease: () => {

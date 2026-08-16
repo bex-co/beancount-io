@@ -1,5 +1,6 @@
 export * from "./amount-text";
 export * from "./button";
+export * from "./pressable-scale";
 export * from "./dashboard-card";
 export * from "./dashboard-scroll-view";
 export * from "./balance-chart-card";

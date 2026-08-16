@@ -57,6 +57,51 @@ Run all from inside `mobile/`.
 | `yarn format` / `yarn format:check` | Prettier                                                    |
 | `yarn bump`                         | Bump app version (`package.json` + `app.json`)              |
 
+## Verifying in the iOS simulator
+
+UI changes can be driven and screenshotted headlessly — reach for this rather than
+asking someone to check by hand. Everything below is plain CLI, so it works the same
+for any agent.
+
+**The dev server writes to production.** `.env.local` points `EXPO_PUBLIC_SERVER_URL`
+at `https://beancount.io/` and the dev build is signed in, so **any save, edit, delete
+or file write commits to a real ledger**. Read-only verification needs no permission;
+**ask the user before writing**, and when they agree, delete what you created through
+the app afterwards so the ledger is left as found.
+
+```zsh
+UDID=$(xcrun simctl list devices booted -j | python3 -c 'import json,sys;print(next(d["udid"] for v in json.load(sys.stdin)["devices"].values() for d in v))')
+xcrun simctl launch $UDID io.beancount.ios          # the dev build; `expo start --ios` opens Expo Go instead
+xcrun simctl openurl $UDID "beancount:///(app)/<route>?param=value"   # params reach useLocalSearchParams
+xcrun simctl io $UDID screenshot shot.png           # 1206x2622 on iPhone 17 Pro (3x)
+xcrun simctl ui $UDID appearance dark|light         # verify both themes
+xcrun simctl spawn $UDID defaults write com.apple.Accessibility ReduceMotionEnabled -int 1
+```
+
+**Tapping** uses `expo-mcp` (a devDependency — no MCP session auth needed). Start Metro
+with `EXPO_UNSTABLE_MCP_SERVER=1 npx expo start`, then spawn
+`node node_modules/expo-mcp/bin/expo-mcp.mjs --dev-server-url http://localhost:8081 --root <mobile>`
+and speak JSON-RPC over stdin: `initialize` → `notifications/initialized` →
+`tools/call`. Tools: `automation_tap` (`{projectRoot, platform:"ios", x, y}` or
+`testID`), `automation_take_screenshot`, `automation_find_view`. Coordinates are
+**logical points** (402x874 on iPhone 17 Pro) — divide screenshot pixels by 3. Each tap
+is a real XCUITest event, so it drives native controls that synthetic events can't.
+
+Notes that keep costing time when forgotten:
+
+- **Haptics cannot be verified here** — a simulator has no Taptic Engine. Cover the
+  intent→call mapping with unit tests and hand the feel check to the user.
+- **Analytics cannot be verified here** — `analytics.track` returns early under
+  `__DEV__` (`src/common/analytics.ts`), so a dev build emits nothing. Prove
+  single-fire structurally (a ref guard) instead.
+- **A missing native permission at runtime means a stale dev build**, not a code bug:
+  the installed binary predates an `app.json` change. Rebuild the dev client
+  (`SENTRY_DISABLE_AUTO_UPLOAD=true npx expo run:ios`) or work around the screen.
+- **"Is this pre-existing?"** — stash the working tree (`git stash push -u -- src app`),
+  screenshot, then pop. Metro hot-reloads both ways in seconds.
+- To catch a sub-second overlay, fire screenshots back-to-back with no sleep (~2/s) and
+  diff by file size to find the frames that changed.
+
 ## Conventions
 
 ### Theme — always use tokens
