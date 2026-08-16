@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useSyncExternalStore } from "react";
 import { useMutation } from "@apollo/client/react";
 import { cn } from "@/common/lib/utils/utils";
 import {
@@ -55,6 +55,14 @@ function buildEmbedCode(
 </div>`;
 }
 
+// The page origin only exists in the browser: SSR has no `window`, and reading
+// it during the first client render would break hydration. The origin never
+// changes for a mounted page, so the store needs no subscription — React reads
+// the server snapshot for the SSR and hydration passes, then the real origin.
+const subscribeToOrigin = () => () => {};
+const getOriginSnapshot = () => window.location.origin;
+const getOriginServerSnapshot = () => "";
+
 export function VisibilitySection({
   ledger,
   ledgerId,
@@ -67,15 +75,13 @@ export function VisibilitySection({
   const [isPrivate, setIsPrivate] = useState(ledger.private);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
-  // Read on mount, not during render: there is no `window` during SSR, and
-  // rendering the origin on the first client pass would break hydration.
-  const [origin, setOrigin] = useState("");
+  const origin = useSyncExternalStore(
+    subscribeToOrigin,
+    getOriginSnapshot,
+    getOriginServerSnapshot,
+  );
   const copiedUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copiedCodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
-
-  useEffect(() => {
-    setOrigin(window.location.origin);
-  }, []);
 
   useEffect(() => {
     return () => {
