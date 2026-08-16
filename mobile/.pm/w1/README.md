@@ -31,7 +31,7 @@ Every open milestone and note was checked against the working tree. Two mileston
 
 **Open work, in order:**
 
-1. **m20** — `t011` (the indicator `t006` shipped renders beside the pills, not under them), then `t008` — which needs a **physical device** for the reduce-motion check and is the milestone's only real blocker — then `t009`.
+1. **m20** — `t011` (the indicator `t006` shipped renders beside the pills, not under them), then `t009`. `t008` was closed on 2026-08-16 on the owner's call without its device reduce-motion check; the risk is written down in the task's outcome note rather than left implied.
 2. **m18** — untouched in code (no `frecency`, `accountUsageVar`, or recents anywhere), still valid, and now unblocked: m17 shipped the list it composes with.
 
 **Notes now unblocked by shipped work:** `009` (inline `open` from the picker — m16 and m17 both landed), `017` (crossfade sweep — `m20/t007` established the pattern), `018` (tab icons — `m21/t005` landed `PressableScale`).

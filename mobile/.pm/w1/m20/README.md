@@ -1,22 +1,22 @@
 # w1 · m20 — Charts that animate: motion tokens, draw-in, and range morphs
 
-**Worker:** worker1 **Goal:** A shared motion vocabulary, then the four live charts draw themselves in, grow from their baseline, and morph between time ranges instead of snapping — with the app's first reduce-motion handling. **Status:** in progress (t001–t007, t010 done; t011 added 2026-08-16 — the indicator t006 shipped renders in the wrong place; t008 needs a device)
+**Worker:** worker1 **Goal:** A shared motion vocabulary, then the four live charts draw themselves in, grow from their baseline, and morph between time ranges instead of snapping — with the app's first reduce-motion handling. **Status:** in progress (t011 and t009 left. t008 closed 2026-08-16 on the owner's call **without** the device reduce-motion check — see its outcome note; the DoD's "verified on device" clause is therefore asserted, not demonstrated)
 
 ## Tasks (in order)
 
-| id   | title                                                              | est | depends_on                   |            |
-| ---- | ------------------------------------------------------------------ | --- | ---------------------------- | ---------- |
-| t001 | `theme/motion.ts` tokens + `useReduceMotion()` hook                | 35m | —                            | — **DONE** |
-| t002 | Net-worth line + area draw in on first paint                       | 50m | t001                         | — **DONE** |
-| t003 | Headline figure counts up alongside the draw-in                    | 35m | t002                         | — **DONE** |
-| t004 | Bars grow from the zero baseline, staggered                        | 50m | t001                         | — **DONE** |
-| t005 | Range switch morphs the series instead of replacing it             | 50m | t002, t004                   | — **DONE** |
-| t006 | Animated selection indicator on `TimeRangePills`                   | 30m | t001                         | — **DONE** |
-| t007 | Refresh keeps the chart; skeleton crossfades into the loaded chart | 35m | t002, t004                   | — **DONE** |
-| t011 | Fix the TimeRangePills indicator origin — lands beside the pills   | 25m | t006                         |            |
-| t008 | UX pass — light/dark, reduce-motion on device, i18n, safe area     | 40m | t003, t005, t006, t007, t011 |            |
-| t009 | Simplify pass over the motion + chart code                         | 30m | t008                         |            |
-| t010 | Unit tests for motion tokens, reduce-motion, and path/series math  | 40m | t008                         | — **DONE** |
+| id   | title                                                              | est | depends_on                   |                                            |
+| ---- | ------------------------------------------------------------------ | --- | ---------------------------- | ------------------------------------------ |
+| t001 | `theme/motion.ts` tokens + `useReduceMotion()` hook                | 35m | —                            | — **DONE**                                 |
+| t002 | Net-worth line + area draw in on first paint                       | 50m | t001                         | — **DONE**                                 |
+| t003 | Headline figure counts up alongside the draw-in                    | 35m | t002                         | — **DONE**                                 |
+| t004 | Bars grow from the zero baseline, staggered                        | 50m | t001                         | — **DONE**                                 |
+| t005 | Range switch morphs the series instead of replacing it             | 50m | t002, t004                   | — **DONE**                                 |
+| t006 | Animated selection indicator on `TimeRangePills`                   | 30m | t001                         | — **DONE**                                 |
+| t007 | Refresh keeps the chart; skeleton crossfades into the loaded chart | 35m | t002, t004                   | — **DONE**                                 |
+| t011 | Fix the TimeRangePills indicator origin — lands beside the pills   | 25m | t006                         |                                            |
+| t008 | UX pass — light/dark, reduce-motion on device, i18n, safe area     | 40m | t003, t005, t006, t007, t011 | — **DONE** (accepted, not device-verified) |
+| t009 | Simplify pass over the motion + chart code                         | 30m | t008                         |                                            |
+| t010 | Unit tests for motion tokens, reduce-motion, and path/series math  | 40m | t008                         | — **DONE**                                 |
 
 ## Definition of done
 
