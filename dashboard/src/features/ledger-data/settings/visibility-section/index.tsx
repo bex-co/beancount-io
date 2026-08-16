@@ -67,8 +67,15 @@ export function VisibilitySection({
   const [isPrivate, setIsPrivate] = useState(ledger.private);
   const [copiedUrl, setCopiedUrl] = useState(false);
   const [copiedCode, setCopiedCode] = useState(false);
+  // Read on mount, not during render: there is no `window` during SSR, and
+  // rendering the origin on the first client pass would break hydration.
+  const [origin, setOrigin] = useState("");
   const copiedUrlTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const copiedCodeTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  useEffect(() => {
+    setOrigin(window.location.origin);
+  }, []);
 
   useEffect(() => {
     return () => {
@@ -106,7 +113,7 @@ export function VisibilitySection({
     }
   };
 
-  const shareableUrl = `${window.location.origin}/ledger/${ledger.fullName}`;
+  const shareableUrl = `${origin}/ledger/${ledger.fullName}`;
   const embedCode = buildEmbedCode(
     shareableUrl,
     ledger.name,
