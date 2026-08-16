@@ -270,7 +270,7 @@ describe("translations", () => {
       expect(en.deleteAccountConfirmPhrase).toBe("sudo delete my account");
     });
 
-    it("has journal screen keys", () => {
+    it("has transactions screen keys", () => {
       expect(en.transactions).toBe("Transactions");
       expect(en.search).toBe("Search");
       expect(en.unknown).toBe("Unknown");

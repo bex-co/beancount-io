@@ -42,7 +42,8 @@ function expenseTotal(entry: JournalDirectiveType, currency: string): number {
  * month, derived client-side from journal transactions in the active currency.
  *
  * NOTE (backend gap): there is no expenses-only monthly time series in the API
- * today — `homeCharts` returns net profit (income − expenses) and
+ * today — the server's `homeCharts` field returns net profit (income −
+ * expenses), which is why the client stopped querying it, and
  * `accountHierarchy` is a current snapshot. This is an honest, clearly-labelled
  * interim computation; a proper per-month expenses series should come from a
  * backend/schema change. `referenceDate` is injectable for deterministic tests.

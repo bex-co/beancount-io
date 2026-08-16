@@ -131,17 +131,6 @@ export const bg: typeof en = {
   transaction: "Транзакция",
   loadingMore: "Зарежда се още...",
   noMoreEntries: "Няма повече записи",
-  journalWelcomeTitle: "Добре дошли в своя Журнал! 📔",
-  journalWelcomeMessage: "Все още нямате записи в журнала.",
-  journalWelcomeInstructions: "За да започнете:",
-  journalWelcomeInstruction1:
-    'Използвайте бутона "Добавяне на транзакция" за създаване на записи',
-  journalWelcomeInstruction2: "Качете beancount файлове чрез уеб интерфейса",
-  journalWelcomeInstruction3: "Импортирайте съществуващи счетоводни данни",
-  journalWelcomeInstructionFinal:
-    "След като добавите транзакции, те ще се появят тук.",
-  journalNoEntriesForFilters:
-    "Не са намерени записи в журнала за текущите филтри.",
   journalLoadError: "Неуспешно зареждане на журнала: ",
   accountsPlural: "сметки",
   // journal entry context

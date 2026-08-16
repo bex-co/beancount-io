@@ -1,5 +1,5 @@
 import { Tabs } from "expo-router";
-import { useEffect, useState } from "react";
+import { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { HapticTab } from "@/components/haptic-tab";
@@ -12,23 +12,20 @@ import { useReactiveVar } from "@apollo/client";
 export default function TabLayout() {
   const theme = useTheme().colorTheme;
   const locale = useReactiveVar(localeVar);
-  const [tabTitles, setTabTitles] = useState({
-    home: i18n.t("home"),
-    accounts: i18n.t("accounts"),
-    reports: i18n.t("reports"),
-    files: i18n.t("files"),
-    transactions: i18n.t("transactions"),
-  });
-
-  useEffect(() => {
-    setTabTitles({
+  // `i18n.t` reads whatever locale is current, so the titles only need to be
+  // recomputed when `localeVar` changes. State plus an effect did the same job
+  // in two renders — and shipped the previous locale's titles in the first one.
+  const tabTitles = useMemo(
+    () => ({
       home: i18n.t("home"),
       accounts: i18n.t("accounts"),
       reports: i18n.t("reports"),
       files: i18n.t("files"),
       transactions: i18n.t("transactions"),
-    });
-  }, [locale]);
+    }),
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+    [locale],
+  );
 
   return (
     <LedgerDrawerProvider>
@@ -46,7 +43,18 @@ export default function TabLayout() {
               backgroundColor: theme.white,
               borderTopColor: theme.black10,
             },
-            lazy: false,
+            // Mount a tab the first time it is focused, not at launch. With
+            // `false` all five screens mounted on start and fired their
+            // queries before the user had visited any of them — four screens'
+            // worth of network on the critical path to the first paint, and
+            // four page-view events for screens nobody looked at.
+            //
+            // The tab-switch flicker fix in `83bddba` does not depend on this:
+            // it lifted the single `SafeAreaView` to this layout, so the top
+            // inset is computed once here and a lazily-mounted screen inherits
+            // it already resolved. Every tab renders a themed skeleton while
+            // its first query is in flight.
+            lazy: true,
           }}
         >
           <Tabs.Screen

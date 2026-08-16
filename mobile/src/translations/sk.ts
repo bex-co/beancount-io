@@ -131,16 +131,6 @@ export const sk: typeof en = {
   transaction: "Transakcia",
   loadingMore: "Načítava sa viac...",
   noMoreEntries: "Žiadne ďalšie záznamy",
-  journalWelcomeTitle: "Vitajte vo vašom Denníku! 📔",
-  journalWelcomeMessage: "Zatiaľ nemáte žiadne záznamy v denníku.",
-  journalWelcomeInstructions: "Pre začiatok:",
-  journalWelcomeInstruction1:
-    'Použite tlačidlo "Pridať transakciu" na vytvorenie záznamov',
-  journalWelcomeInstruction2: "Nahrajte beancount súbory cez webové rozhranie",
-  journalWelcomeInstruction3: "Importujte existujúce účtovné údaje",
-  journalWelcomeInstructionFinal: "Akonáhle pridáte transakcie, objavia sa tu.",
-  journalNoEntriesForFilters:
-    "Pre aktuálne filtre sa nenašli žiadne záznamy v denníku.",
   journalLoadError: "Načítanie denníka zlyhalo: ",
   accountsPlural: "účty",
   // journal entry context

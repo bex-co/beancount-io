@@ -24,6 +24,9 @@
 - [x] **m19** — Cascading refetch after ledger writes (9 tasks) ← from `/pm` research request 2026-08-14 ("when files are saved in the Files tab, should we update relevant queries to refetch?"); the m15 editor writes the ledger and invalidates nothing
 - [ ] **m20** — Charts that animate: motion tokens, draw-in, and range morphs (11 tasks) ← from `/pm-brainstorm` 2026-08-14 ("learn from monarch app's animation, e.g. chart rendering animation"); no chart file imports an animation API today
 - [x] **m21** — Moments that land: haptics, save confirmation, receipt payoff (8 tasks) ← from `/pm-brainstorm` 2026-08-14 (same pass); two save paths stall 2s by design and the receipt parse lands silently
+- [x] **m22** — Delete what's dead: four unreferenced surfaces, then lazy tabs (8 tasks) ← inbox `002` + `012` + `013` + `025`, promoted and shipped 2026-08-16
+- [ ] **m23** — One loading and feedback vocabulary across the app (7 tasks) ← inbox `015` + `016` + `017` + `018`, promoted in the same pass; sequence after m20
+- [ ] **m24** — Controls you can see: fix the light neutral ramp, then share the primitives (8 tasks) ← inbox `010` + `011`, promoted in the same pass; `t004` waits on `m20/t011`
 
 ## Board triage — 2026-08-16
 
@@ -33,11 +36,14 @@ Every open milestone and note was checked against the working tree. Two mileston
 
 1. **m20** — `t011` (the indicator `t006` shipped renders beside the pills, not under them), then `t009`. `t008` was closed on 2026-08-16 on the owner's call without its device reduce-motion check; the risk is written down in the task's outcome note rather than left implied.
 2. **m18** — untouched in code (no `frecency`, `accountUsageVar`, or recents anywhere), still valid, and now unblocked: m17 shipped the list it composes with.
+3. **m23 / m24** — materialized 2026-08-16 from six inbox notes (see below). m23 waits on m20 closing; m24's `t004` waits on `m20/t011`.
 
-**Notes now unblocked by shipped work:** `009` (inline `open` from the picker — m16 and m17 both landed), `017` (crossfade sweep — `m20/t007` established the pattern), `018` (tab icons — `m21/t005` landed `PressableScale`).
+**m22 shipped the same day it was created.** Seven files left the tree, tabs now mount on first focus instead of at launch, and one pre-existing defect was filed rather than fixed (`026` — an unmatched tabs route renders black instead of `+not-found`). Two follow-on effects to remember: `m23/t004`'s cost argument ("all five tabs are already mounted, so a spring on `focused` is free") is no longer true, and `m24/t002` should not expect `src/common/progress-bar.tsx` to still exist if `m23/t003` runs first.
 
-**Notes still parked on a named blocker, deliberately:** `006` (schema reachability), `007` and `020` (new dependency, needs user approval), `008` (12–19 person-days).
+**Promoted out of the inbox 2026-08-16:** ten notes became three milestones — `002`/`012`/`013`/`025` → **m22** (deletions plus the lazy-tab flip), `015`/`016`/`017`/`018` → **m23** (one loading and feedback vocabulary), `010`/`011` → **m24** (the light-mode control boundary, then the shared search bar / pills / picker helper). They were grouped by shared verification loop, not by theme alone: m22 is proved by grep plus `yarn test`, m23 by a light/dark walk with reduce-motion toggled, m24 by measured contrast.
 
-**Verified-still-true cleanups:** `002` (`lazy: false` at `_layout.tsx:49`), `010`, `011`, `012` (`homeCharts.graphql` orphaned; only a comment in `invalidate-ledger.ts` mentions it), `013`, `015`, `016`, `022`, `023` (a device walkthrough, like `m20/t008`), plus new `024` and `025`.
+**Deliberately left in the inbox:** `006`, `007`, `008`, `020` are parked on a named blocker (schema reachability, dependency approval, cost); `009` and `019` say in their own text that they need a sizing pass first; `022` is twelve languages of translation work; `023` is a device walkthrough, not code; `024` is sub-hour, which the sizing rule keeps out of a milestone.
+
+**Unblocked by shipped work, still a note:** `009` — inline `open` from the picker; m16 and m17 both landed, so only its own sizing pass stands in the way.
 
 **Removed:** `014` (its own instruction — `m20/t007` landed and all four skeleton heights now derive from shared constants) and `021` (folded into `m20/t011`, where the bug belongs).

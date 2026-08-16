@@ -63,9 +63,6 @@ type InteractiveLineChartProps = {
    * a generic "not enough data" line.
    */
   placeholder?: string;
-  /** Called when the user starts scrubbing — lets the parent lock a pager. */
-  onScrubStart?: () => void;
-  onScrubEnd?: () => void;
 };
 
 const CHART_HEIGHT = 190;
@@ -277,8 +274,6 @@ function InteractiveLineChart({
   currency,
   height = CHART_HEIGHT,
   placeholder,
-  onScrubStart,
-  onScrubEnd,
 }: InteractiveLineChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
@@ -450,7 +445,6 @@ function InteractiveLineChart({
         // a scrub that reaches the edge of the plot is still a scrub.
         onPanResponderTerminationRequest: () => false,
         onPanResponderGrant: (event) => {
-          onScrubStart?.();
           // Light impact on initial touch (Robinhood-style "tap-in" feel),
           // then set the index directly — no tick on the first point.
           const index = indexFromTouch(event);
@@ -462,15 +456,13 @@ function InteractiveLineChart({
         onPanResponderRelease: () => {
           lastIndexRef.current = null;
           setScrubIndex(null);
-          onScrubEnd?.();
         },
         onPanResponderTerminate: () => {
           lastIndexRef.current = null;
           setScrubIndex(null);
-          onScrubEnd?.();
         },
       }),
-    // Recreate only when the series identity or handlers change.
+    // Recreate only when the series identity changes.
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [hasSeries, count, chartWidth],
   );

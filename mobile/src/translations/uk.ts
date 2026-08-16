@@ -132,18 +132,6 @@ export const uk: typeof en = {
   transaction: "Транзакція",
   loadingMore: "Завантажується ще...",
   noMoreEntries: "Більше записів немає",
-  journalWelcomeTitle: "Ласкаво просимо до вашого Журналу! 📔",
-  journalWelcomeMessage: "У вас поки що немає записів у журналі.",
-  journalWelcomeInstructions: "Щоб почати:",
-  journalWelcomeInstruction1:
-    'Використовуйте кнопку "Додати транзакцію" для створення записів',
-  journalWelcomeInstruction2:
-    "Завантажуйте файли beancount через веб-інтерфейс",
-  journalWelcomeInstruction3: "Імпортуйте існуючі дані обліку",
-  journalWelcomeInstructionFinal:
-    "Після додавання транзакцій вони з'являться тут.",
-  journalNoEntriesForFilters:
-    "Для поточних фільтрів записів журналу не знайдено.",
   journalLoadError: "Помилка завантаження журналу: ",
   accountsPlural: "рахунки",
   // journal entry context

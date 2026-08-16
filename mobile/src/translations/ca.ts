@@ -131,18 +131,6 @@ export const ca: typeof en = {
   transaction: "Transacció",
   loadingMore: "Carregant més...",
   noMoreEntries: "No hi ha més entrades",
-  journalWelcomeTitle: "Benvingut al teu Diari! 📔",
-  journalWelcomeMessage: "Encara no tens entrades al diari.",
-  journalWelcomeInstructions: "Per començar:",
-  journalWelcomeInstruction1:
-    'Usa el botó "Afegir transacció" per crear entrades',
-  journalWelcomeInstruction2:
-    "Puja fitxers beancount a través de la interfície web",
-  journalWelcomeInstruction3: "Importa dades comptables existents",
-  journalWelcomeInstructionFinal:
-    "Un cop afegeixis transaccions, apareixeran aquí.",
-  journalNoEntriesForFilters:
-    "No s'han trobat entrades del diari per als filtres actuals.",
   journalLoadError: "Error en carregar el diari: ",
   accountsPlural: "comptes",
   // journal entry context

@@ -138,18 +138,6 @@ export const de: typeof en = {
   transaction: "Transaktion",
   loadingMore: "Lädt mehr...",
   noMoreEntries: "Keine weiteren Einträge",
-  journalWelcomeTitle: "Willkommen in Ihrem Journal! 📔",
-  journalWelcomeMessage: "Sie haben noch keine Journaleinträge.",
-  journalWelcomeInstructions: "Um zu beginnen:",
-  journalWelcomeInstruction1:
-    'Verwenden Sie die Schaltfläche "Transaktion hinzufügen" zum Erstellen von Einträgen',
-  journalWelcomeInstruction2:
-    "Laden Sie Beancount-Dateien über die Web-Oberfläche hoch",
-  journalWelcomeInstruction3: "Importieren Sie vorhandene Buchhaltungsdaten",
-  journalWelcomeInstructionFinal:
-    "Sobald Sie Transaktionen hinzufügen, erscheinen sie hier.",
-  journalNoEntriesForFilters:
-    "Keine Journaleinträge für die aktuellen Filter gefunden.",
   journalLoadError: "Fehler beim Laden des Journals: ",
   accountsPlural: "Konten",
   // journal entry context

@@ -131,18 +131,6 @@ export const fa: typeof en = {
   transaction: "Transaction", // TODO: needs native speaker review
   loadingMore: "Loading more...", // TODO: needs native speaker review
   noMoreEntries: "No more entries", // TODO: needs native speaker review
-  journalWelcomeTitle: "Welcome to your Journal! 📔", // TODO: needs native speaker review
-  journalWelcomeMessage: "You don't have any journal entries yet.", // TODO: needs native speaker review
-  journalWelcomeInstructions: "To get started:", // TODO: needs native speaker review
-  journalWelcomeInstruction1:
-    'Use the "Add Transaction" button to create entries', // TODO: needs native speaker review
-  journalWelcomeInstruction2:
-    "Upload beancount files through the web interface", // TODO: needs native speaker review
-  journalWelcomeInstruction3: "Import existing accounting data", // TODO: needs native speaker review
-  journalWelcomeInstructionFinal:
-    "Once you add some transactions, they'll appear here.", // TODO: needs native speaker review
-  journalNoEntriesForFilters:
-    "No journal entries found for the current filters.", // TODO: needs native speaker review
   journalLoadError: "Failed to load journal: ", // TODO: needs native speaker review
   accountsPlural: "accounts", // TODO: needs native speaker review
   // journal entry context

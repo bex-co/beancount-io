@@ -131,17 +131,6 @@ export const nl: typeof en = {
   transaction: "Transactie",
   loadingMore: "Meer laden...",
   noMoreEntries: "Geen verdere vermeldingen",
-  journalWelcomeTitle: "Welkom bij je Journaal! 📔",
-  journalWelcomeMessage: "Je hebt nog geen journaalvermeldingen.",
-  journalWelcomeInstructions: "Om te beginnen:",
-  journalWelcomeInstruction1:
-    'Gebruik de "Transactie toevoegen" knop om vermeldingen aan te maken',
-  journalWelcomeInstruction2: "Upload beancount bestanden via de webinterface",
-  journalWelcomeInstruction3: "Importeer bestaande boekhoudgegevens",
-  journalWelcomeInstructionFinal:
-    "Zodra je transacties toevoegt, verschijnen ze hier.",
-  journalNoEntriesForFilters:
-    "Geen journaalvermeldingen gevonden voor de huidige filters.",
   journalLoadError: "Laden van journaal mislukt: ",
   accountsPlural: "accounts",
   // journal entry context

@@ -168,7 +168,7 @@ export const en = {
   endDate: "End",
   apply: "Apply",
   reset: "Reset",
-  // journal screen
+  // shared labels & the open-account flow
   transactions: "Transactions",
   search: "Search",
   unknown: "Unknown",
@@ -194,21 +194,9 @@ export const en = {
   loadingMore: "Loading more...",
   noMoreEntries: "No more entries",
   noEntries: "No entries",
-  journalWelcomeTitle: "Welcome to your Journal! 📔",
-  journalWelcomeMessage: "You don't have any journal entries yet.",
-  journalWelcomeInstructions: "To get started:",
-  journalWelcomeInstruction1:
-    'Use the "Add Transaction" button to create entries',
-  journalWelcomeInstruction2:
-    "Upload beancount files through the web interface",
-  journalWelcomeInstruction3: "Import existing accounting data",
-  journalWelcomeInstructionFinal:
-    "Once you add some transactions, they'll appear here.",
-  journalNoEntriesForFilters:
-    "No journal entries found for the current filters.",
   journalLoadError: "Failed to load journal: ",
   accountsPlural: "accounts",
-  // journal entry context
+  // entry context (transactions screen)
   journalLoadingEntryContext: "Loading entry context...",
   journalError: "Error",
   journalNoData: "No entry context data available",
@@ -217,7 +205,7 @@ export const en = {
   journalBalancesBefore: "Balances Before Entry",
   journalBalancesAfter: "Balances After Entry",
   journalSource: "Source Code",
-  // journal filters
+  // directive types & entry filters
   open: "Open",
   close: "Close",
   balance: "Balance",

@@ -132,18 +132,6 @@ export const pt: typeof en = {
   transaction: "Transação",
   loadingMore: "Carregando mais...",
   noMoreEntries: "Não há mais entradas",
-  journalWelcomeTitle: "Bem-vindo ao seu Diário! 📔",
-  journalWelcomeMessage: "Você ainda não tem entradas no diário.",
-  journalWelcomeInstructions: "Para começar:",
-  journalWelcomeInstruction1:
-    'Use o botão "Adicionar transação" para criar entradas',
-  journalWelcomeInstruction2:
-    "Carregue arquivos beancount através da interface web",
-  journalWelcomeInstruction3: "Importe dados contábeis existentes",
-  journalWelcomeInstructionFinal:
-    "Assim que adicionar transações, elas aparecerão aqui.",
-  journalNoEntriesForFilters:
-    "Nenhuma entrada no diário encontrada para os filtros atuais.",
   journalLoadError: "Falha ao carregar o diário: ",
   accountsPlural: "contas",
   // journal entry context

@@ -70,8 +70,9 @@ const FILE_FIELDS = [
  * `file` is a superset of `entries` is a superset of `errors`, by construction.
  *
  * Deliberately absent:
- * - `homeCharts` — nothing calls `useHomeChartsQuery`. It sat in two screens'
- *   refetch lists as a silent no-op; Home's net-worth chart reads
+ * - `homeCharts` — the client no longer defines this operation at all (the
+ *   `.graphql` file was deleted once nothing called `useHomeChartsQuery`); the
+ *   field still exists server-side. Home's net-worth chart reads
  *   `getLedgerBalanceSheet`, which is in `entries`.
  * - `getLedgerEntryContext` — evicting it after a *delete* would send the
  *   still-mounted detail screen back for an entry that no longer exists. The

@@ -199,14 +199,6 @@ export type GetLedgerPayeesQueryVariables = Exact<{
 
 export type GetLedgerPayeesQuery = { getLedgerPayees: Array<string> };
 
-export type HomeChartsQueryVariables = Exact<{
-  userId: string;
-  ledgerId?: string | null | undefined;
-}>;
-
-
-export type HomeChartsQuery = { homeCharts: { success: boolean, data: Array<{ type: string, label: string, data: Array<{ date: string, balance: Record<string, number | string>, budgets: Record<string, number | string> | null }> }> } };
-
 export type IncomeStatementQueryVariables = Exact<{
   ledgerId: string;
   time?: string | null | undefined;
@@ -1438,59 +1430,6 @@ export type GetLedgerPayeesQueryHookResult = ReturnType<typeof useGetLedgerPayee
 export type GetLedgerPayeesLazyQueryHookResult = ReturnType<typeof useGetLedgerPayeesLazyQuery>;
 export type GetLedgerPayeesSuspenseQueryHookResult = ReturnType<typeof useGetLedgerPayeesSuspenseQuery>;
 export type GetLedgerPayeesQueryResult = Apollo.QueryResult<GetLedgerPayeesQuery, GetLedgerPayeesQueryVariables>;
-export const HomeChartsDocument = gql`
-    query HomeCharts($userId: String!, $ledgerId: String) {
-  homeCharts(userId: $userId, ledgerId: $ledgerId) {
-    data {
-      type
-      label
-      data {
-        date
-        balance
-        budgets
-      }
-    }
-    success
-  }
-}
-    `;
-
-/**
- * __useHomeChartsQuery__
- *
- * To run a query within a React component, call `useHomeChartsQuery` and pass it any options that fit your needs.
- * When your component renders, `useHomeChartsQuery` returns an object from Apollo Client that contains loading, error, and data properties
- * you can use to render your UI.
- *
- * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
- *
- * @example
- * const { data, loading, error } = useHomeChartsQuery({
- *   variables: {
- *      userId: // value for 'userId'
- *      ledgerId: // value for 'ledgerId'
- *   },
- * });
- */
-export function useHomeChartsQuery(baseOptions: Apollo.QueryHookOptions<HomeChartsQuery, HomeChartsQueryVariables> & ({ variables: HomeChartsQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
-        const options = {...defaultOptions, ...baseOptions}
-        return Apollo.useQuery<HomeChartsQuery, HomeChartsQueryVariables>(HomeChartsDocument, options);
-      }
-export function useHomeChartsLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<HomeChartsQuery, HomeChartsQueryVariables>) {
-          const options = {...defaultOptions, ...baseOptions}
-          return Apollo.useLazyQuery<HomeChartsQuery, HomeChartsQueryVariables>(HomeChartsDocument, options);
-        }
-// @ts-ignore
-export function useHomeChartsSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<HomeChartsQuery, HomeChartsQueryVariables>): Apollo.UseSuspenseQueryResult<HomeChartsQuery, HomeChartsQueryVariables>;
-export function useHomeChartsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<HomeChartsQuery, HomeChartsQueryVariables>): Apollo.UseSuspenseQueryResult<HomeChartsQuery | undefined, HomeChartsQueryVariables>;
-export function useHomeChartsSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<HomeChartsQuery, HomeChartsQueryVariables>) {
-          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
-          return Apollo.useSuspenseQuery<HomeChartsQuery, HomeChartsQueryVariables>(HomeChartsDocument, options);
-        }
-export type HomeChartsQueryHookResult = ReturnType<typeof useHomeChartsQuery>;
-export type HomeChartsLazyQueryHookResult = ReturnType<typeof useHomeChartsLazyQuery>;
-export type HomeChartsSuspenseQueryHookResult = ReturnType<typeof useHomeChartsSuspenseQuery>;
-export type HomeChartsQueryResult = Apollo.QueryResult<HomeChartsQuery, HomeChartsQueryVariables>;
 export const IncomeStatementDocument = gql`
     query IncomeStatement($ledgerId: String!, $time: String, $interval: String, $conversion: String) {
   getLedgerIncomeStatement(
