@@ -26,7 +26,7 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 | `skills/` | active | Agent skills: init, import, importer-author, reconcile, migrate, ask, close, options (see `skills/CLAUDE.md`) |
 | `docs/` | active | Documentation content |
 
-There is no root `package.json`. Each package owns its own dependencies, scripts, and lockfile. CI is per-package and path-filtered: a change under `mobile/**` runs only the mobile job (see `.github/workflows/ci.yml`).
+There is no root `package.json`. Each package owns its own dependencies, scripts, and lockfile. CI is per-package and path-filtered — one workflow per package, so a change under `mobile/**` runs only the mobile job and nothing else (see [Tooling](#tooling) for the full list).
 
 When a new package gets real code, add a `<package>/CLAUDE.md` documenting its tech stack and conventions (with the `AGENTS.md` symlink per the compatibility rules above).
 
@@ -36,14 +36,14 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 
 ## Repo-wide rules
 
-### Never modify any `yarn.lock`
-- Each package owns its own `yarn.lock` (today, only `mobile/yarn.lock` exists).
-- Lock files are managed by Yarn — manual edits cause dependency drift.
-- If deps need updating, run `yarn install` / `yarn upgrade` from inside the package directory. Ask the user before adding new dependencies.
+### Never hand-edit a lockfile
+- Each package owns its own lockfile: `dashboard/yarn.lock`, `mobile/yarn.lock`, `cli/uv.lock`, `fava-slim/uv.lock`.
+- Lockfiles are generated — manual edits cause dependency drift.
+- If deps need updating, run the package's own tool from inside its directory: `yarn install` / `yarn upgrade` for `dashboard/` and `mobile/`, `uv sync` / `uv lock` for `cli/` and `fava-slim/`. Ask the user before adding new dependencies.
 
 ### Scope changes to one package
-- Always `cd` into the package directory before running scripts (`yarn`, `tsc`, etc.).
-- Don't introduce cross-package imports — packages are independent.
+- Always `cd` into the package directory before running scripts (`yarn`, `tsc`, `uv`, etc.).
+- Don't introduce new cross-package imports — packages are otherwise independent. The one sanctioned dependency is `cli/` → `fava-slim/`, declared in `cli/pyproject.toml` as an editable `[tool.uv.sources]` path.
 - If unsure which package a change belongs to, ask.
 
 ### Never commit secrets
@@ -55,13 +55,20 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 - See [`CONTRIBUTING.md`](./CONTRIBUTING.md) for the full policy.
 
 ### Temporary files
-- Use `mobile/tmp/` for scratch work while in the mobile package — it's gitignored.
+- Use the current package's `tmp/` for scratch work — the root `.gitignore` covers `tmp/` everywhere, and `dashboard/.gitignore` repeats it locally.
 - The repo root has a `.gitignore`; still, don't drop scratch files there — put them under a package's `tmp/`.
 - Clean up when no longer needed.
 
 ## Tooling
-- Node ≥ 20.
-- Yarn 1.22.x (Classic) — pinned via `mobile/package.json`'s `packageManager`.
-- CI: `.github/workflows/ci.yml` runs `yarn lint`, `yarn typecheck`, `yarn test:unit` inside `mobile/`, path-filtered on `mobile/**`, on push/PR to `main`. Add a job (or workflow) per package as `cli/` and `skills/` gain code.
+- Node ≥ 20 (`mobile/package.json` sets `engines.node >= 20.19.4`); both Node CI jobs run Node 22.
+- The two JS packages pin **different Yarn majors** via `packageManager` — always run Yarn from inside the package directory so Corepack picks the right one:
+  - `dashboard/` → Yarn 4.17.0 (Berry); installs with `yarn install --immutable`.
+  - `mobile/` → Yarn 1.22.22 (Classic); installs with `yarn install`.
+- Python packages (`cli/`, `fava-slim/`) use [uv](https://docs.astral.sh/uv/): `uv sync --all-groups`, then `make check-all`.
+- CI — one workflow per package, all on push/PR to `main`, each path-filtered to its own package plus its own workflow file:
+  - `.github/workflows/ci.yml` (`CI`) → `mobile/**`: `yarn lint`, `yarn typecheck`, `yarn test:unit`.
+  - `.github/workflows/ci-dashboard.yml` (`CI (dashboard)`) → `dashboard/**`: `yarn format:check`, `yarn lint`, `yarn test`, `yarn build`.
+  - `.github/workflows/ci-cli.yml` (`CI (cli)`) → `cli/**` **or** `fava-slim/**`: two jobs, each running `make check-all`. Either path triggers both, since `cli/` depends on `fava-slim/`.
+  - `skills/` has no CI job yet — add a workflow when it gains testable code.
 - Secret scan: `.github/workflows/secret-scan.yml` runs gitleaks over the whole tree on every push/PR — not path-filtered.
 - Release: `.github/workflows/deploy.yml` (workflow name `Release (mobile)`) runs on every `mobile/**` push to `main` and verifies checks, but deploys only when `mobile/package.json`'s version has no `mobile-v<version>` git tag yet (i.e. after `yarn bump`): it ships the OTA update, runs the Expo EAS build/submit, then pushes the tag and a GitHub Release. A push without a version bump deploys nothing. Tag-after-success makes failed releases retry automatically on the next push.
