@@ -27,6 +27,28 @@
 - [x] **m22** — Delete what's dead: four unreferenced surfaces, then lazy tabs (8 tasks) ← inbox `002` + `012` + `013` + `025`, promoted and shipped 2026-08-16
 - [x] **m23** — One loading and feedback vocabulary across the app (7 tasks) ← inbox `015` + `016` + `017` + `018`, promoted in the same pass; sequence after m20
 - [x] **m24** — Controls you can see: fix the light neutral ramp, then share the primitives (8 tasks) ← inbox `010` + `011`, promoted in the same pass; shipped 2026-08-17 on top of `m20/t011`
+- [ ] **m25** — Inline `open`-directive creation from the account picker (7 tasks) ← inbox `009`, promoted 2026-08-17 — m16 + m17 shipped both prerequisites
+- [ ] **m26** — UI-thread scrubbing for the interactive line chart (7 tasks) ← inbox `019`, promoted 2026-08-17 — sequenced after `m20/t009`, same file
+- [ ] **m27** — Localize the AI receipt capture flow (5 tasks) ← inbox `022`, promoted 2026-08-17
+- [ ] **m28** — Home cards tap through; bad routes fall back (8 tasks) ← inbox `024` + `026`, promoted 2026-08-17 — bundled by their shared tap/deep-link verification loop
+- ~~**008** — v2 native code-editor module (Runestone + sora-editor)~~ — **deleted 2026-08-17**: 12–19 person-days plus permanent maintenance of two native deps, gated on a product signal ("only if requirements outgrow the 7-color approach") that has not appeared since m15 shipped. The research survives in git history at this note's path.
+
+## Board triage — 2026-08-17
+
+Full inbox triage against the working tree (every claim re-verified by grep before acting). Four notes became four milestones, one was deleted, four stay parked.
+
+**Promoted:** `009` → **m25** (its two prerequisites, m16's open-account flow and m17's picker, are both in `done/`; the picker's zero-results state at `account-picker-screen.tsx:348` is still a dead end); `019` → **m26** (`interactive-line-chart.tsx` still runs scrub on `PanResponder` + `useState`; the note's hazard analysis is preserved in the milestone README); `022` → **m27** (still only `en.ts` declares any receipt key — twelve locales to go, then the parity test m21 couldn't ship); `024` + `026` → **m28**, grouped by verification loop like m22 was — both are proven by driving taps and deep links in the simulator. One drift caught during verification: `recent-transactions-card` now navigates too (024 said budget-card was the only door), which strengthens m28/t001's case for a shared affordance.
+
+**Deleted:** `008` (see the struck line above — speculative v2 with no why-now, which `DO_NOT_DO.md` names directly).
+
+**Still parked, each on a blocker this board cannot clear:**
+
+- `006` — Ask-AI parity. Re-verified 2026-08-17: the mobile schema still exposes **zero** chat/agent operations, so no task can name a concrete operation and the work cannot land in this repo yet.
+- `007` — Plaid bank sync. The schema side is fully present (61 Plaid mentions), but mobile Plaid Link needs `react-native-plaid-link-sdk` — a new native dependency, which is the owner's call. One "yes" away from a `/pm-brainstorm` scoping pass.
+- `020` — cash-flow Sankey. Same dependency gate (`d3-sankey` or hand-rolled layout) plus a phone-width design pass the note itself requires before a task breakdown.
+- `023` — m21 haptics hardware walkthrough. Sub-hour and not code: it needs a physical Taptic Engine, which only the owner's hands supply. m26/t003 adds one more row to that same walkthrough.
+
+**Open milestones after this pass, in order:** m20 (only `t009`, the simplify pass), m18 (re-verified untouched: no `frecency`/`accountUsageVar` in `src/`), then m25–m28 (m26 queued behind m20/t009 because they share `interactive-line-chart.tsx`).
 
 ## Board triage — 2026-08-16
 
