@@ -35,11 +35,14 @@ export function LayoutHeader({
   ledgerId: string;
   isCompact?: boolean;
 }) {
-  const { state, isMobile, openMobile } = useSidebar();
+  const { isMobile, openMobile } = useSidebar();
   const location = useLocation();
   const { t } = useTranslations();
 
-  const showTrigger = isMobile ? !openMobile : state === "collapsed";
+  // On desktop the sidebar now collapses to an icon rail (not fully off), so
+  // keep the toggle always visible to make collapsing discoverable. On mobile
+  // it opens the off-canvas sheet, so only show it while the sheet is closed.
+  const showTrigger = isMobile ? !openMobile : true;
 
   const isIndexRoute = /^\/ledger\/[^/]+\/[^/]+\/?$/.test(location.pathname);
   const shouldShowFilters =

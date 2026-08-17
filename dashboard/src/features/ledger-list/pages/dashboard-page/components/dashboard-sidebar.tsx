@@ -21,6 +21,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuSkeleton,
+  SidebarRail,
 } from "@/common/components/ui/sidebar.tsx";
 import {
   DropdownMenu,
@@ -377,6 +378,7 @@ export function DashboardSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         </SidebarContent>
+        <SidebarRail />
       </Sidebar>
 
       {/* Create Dialog */}

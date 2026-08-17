@@ -23,10 +23,21 @@ import {
   TooltipTrigger,
 } from "@/common/components/ui/tooltip.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
+import { useCookieStorageState } from "@/common/hooks/use-cookie-storage-state";
+import {
+  SIDEBAR_STATE_COOKIE,
+  SIDEBAR_WIDTH_COOKIE,
+  SIDEBAR_COOKIE_OPTIONS,
+  SIDEBAR_DEFAULT_WIDTH_PX,
+  SIDEBAR_MIN_WIDTH_PX,
+  SIDEBAR_MAX_WIDTH_PX,
+  SIDEBAR_COLLAPSE_AT_PX,
+  SIDEBAR_WIDTH_STEP_PX,
+  clampSidebarWidth,
+  serializeSidebarWidth,
+  deserializeSidebarWidth,
+} from "./sidebar-state.ts";
 
-const SIDEBAR_COOKIE_NAME = "sidebar_state";
-const SIDEBAR_COOKIE_MAX_AGE = 60 * 60 * 24 * 7;
-const SIDEBAR_WIDTH = "16rem";
 const SIDEBAR_WIDTH_MOBILE = "18rem";
 const SIDEBAR_WIDTH_ICON = "3rem";
 const SIDEBAR_KEYBOARD_SHORTCUT = "b";
@@ -39,6 +50,12 @@ type SidebarContextProps = {
   setOpenMobile: (open: boolean) => void;
   isMobile: boolean;
   toggleSidebar: () => void;
+  /** Current sidebar width in pixels (desktop, expanded). */
+  width: number;
+  /** Commit a new sidebar width; clamped and persisted to a cookie. */
+  setWidth: (px: number) => void;
+  /** Ref to the sidebar wrapper element that owns the `--sidebar-width` var. */
+  wrapperRef: React.RefObject<HTMLDivElement | null>;
 };
 
 const SidebarContext = React.createContext<SidebarContextProps | null>(null);
@@ -68,26 +85,44 @@ function SidebarProvider({
   // Pass isHydrated to useIsMobile
   const isMobile = useIsMobile();
   const [openMobile, setOpenMobile] = React.useState(false);
+  const wrapperRef = React.useRef<HTMLDivElement>(null);
 
-  // This is the internal state of the sidebar.
-  // We use openProp and setOpenProp for control from outside the component.
-  const [_open, _setOpen] = React.useState(defaultOpen);
+  // Internal open state, seeded from (and persisted to) the sidebar_state
+  // cookie so collapse/expand survives reloads. useCookieStorageState reads
+  // isomorphically, so SSR and the first client render agree.
+  const [_open, _setOpen] = useCookieStorageState<boolean>(
+    SIDEBAR_STATE_COOKIE,
+    defaultOpen,
+    { cookieOptions: SIDEBAR_COOKIE_OPTIONS },
+  );
   const open = openProp ?? _open;
   const setOpen = React.useCallback(
     (value: boolean | ((value: boolean) => boolean)) => {
-      const openState = typeof value === "function" ? value(open) : value;
+      // Controlled: notify the caller. Uncontrolled: persist via the cookie
+      // hook, which supports functional updaters against the latest value.
       if (setOpenProp) {
-        setOpenProp(openState);
+        setOpenProp(typeof value === "function" ? value(open) : value);
       } else {
-        _setOpen(openState);
-      }
-
-      // This sets the cookie to keep the sidebar state (client-only).
-      if (typeof document !== "undefined") {
-        document.cookie = `${SIDEBAR_COOKIE_NAME}=${openState}; path=/; max-age=${SIDEBAR_COOKIE_MAX_AGE}`;
+        _setOpen(value);
       }
     },
-    [setOpenProp, open],
+    [setOpenProp, _setOpen, open],
+  );
+
+  // Persisted, clamped sidebar width (px). The drag rail writes the live value
+  // straight to the CSS variable; only the committed value flows through here.
+  const [width, _setWidth] = useCookieStorageState<number>(
+    SIDEBAR_WIDTH_COOKIE,
+    SIDEBAR_DEFAULT_WIDTH_PX,
+    {
+      serializer: serializeSidebarWidth,
+      deserializer: deserializeSidebarWidth,
+      cookieOptions: SIDEBAR_COOKIE_OPTIONS,
+    },
+  );
+  const setWidth = React.useCallback(
+    (px: number) => _setWidth(clampSidebarWidth(px)),
+    [_setWidth],
   );
 
   // Helper to toggle the sidebar.
@@ -129,8 +164,21 @@ function SidebarProvider({
       openMobile,
       setOpenMobile,
       toggleSidebar,
+      width,
+      setWidth,
+      wrapperRef,
     }),
-    [state, open, setOpen, isMobile, openMobile, setOpenMobile, toggleSidebar],
+    [
+      state,
+      open,
+      setOpen,
+      isMobile,
+      openMobile,
+      setOpenMobile,
+      toggleSidebar,
+      width,
+      setWidth,
+    ],
   );
 
   // NOTE: suppressHydrationWarning is needed due to TanStack Router hydration issues
@@ -140,11 +188,12 @@ function SidebarProvider({
     <SidebarContext.Provider value={contextValue}>
       <TooltipProvider delayDuration={0}>
         <div
+          ref={wrapperRef}
           data-slot="sidebar-wrapper"
           suppressHydrationWarning
           style={
             {
-              "--sidebar-width": SIDEBAR_WIDTH,
+              "--sidebar-width": `${width}px`,
               "--sidebar-width-icon": SIDEBAR_WIDTH_ICON,
               ...style,
             } as React.CSSProperties
@@ -241,6 +290,7 @@ function Sidebar({
         data-slot="sidebar-gap"
         className={cn(
           "relative w-(--sidebar-width) bg-transparent transition-[width] duration-200 ease-linear",
+          "group-data-[dragging=true]/sidebar-wrapper:transition-none",
           "group-data-[collapsible=offcanvas]:w-0",
           "group-data-[side=right]:rotate-180",
           variant === "floating" || variant === "inset"
@@ -252,6 +302,7 @@ function Sidebar({
         data-slot="sidebar-container"
         className={cn(
           "fixed inset-y-0 z-10 hidden h-svh w-(--sidebar-width) transition-[left,right,width] duration-200 ease-linear md:flex",
+          "group-data-[dragging=true]/sidebar-wrapper:transition-none",
           side === "left"
             ? "left-0 group-data-[collapsible=offcanvas]:left-[calc(var(--sidebar-width)*-1)]"
             : "right-0 group-data-[collapsible=offcanvas]:right-[calc(var(--sidebar-width)*-1)]",
@@ -302,21 +353,122 @@ function SidebarTrigger({
   );
 }
 
-function SidebarRail({ className, ...props }: React.ComponentProps<"button">) {
-  const { toggleSidebar } = useSidebar();
+/**
+ * Drag-to-resize handle on the sidebar's trailing edge.
+ *
+ * Uses native Pointer Events. Drag-transient data lives in a ref so pointer
+ * moves cause zero React re-renders — the live width is written straight to the
+ * `--sidebar-width` CSS variable on the wrapper, and the clamped value is
+ * committed to state (and the cookie) once on release. A press that never
+ * moves is treated as a click and toggles the sidebar, preserving the plain
+ * toggle affordance. Assumes a left-anchored sidebar (the app's only layout).
+ */
+function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
+  const { toggleSidebar, open, setOpen, width, setWidth, wrapperRef, isMobile } =
+    useSidebar();
   const { t } = useTranslations();
+  const drag = React.useRef<{
+    pointerId: number;
+    startX: number;
+    left: number;
+    moved: boolean;
+    // Previewed collapse state, tracked on the ref so pointer moves toggle it
+    // only on threshold crossings (not on every event).
+    collapsed: boolean;
+    width: number;
+  } | null>(null);
+
+  const handlePointerDown = (event: React.PointerEvent<HTMLDivElement>) => {
+    // Left button only; the mobile sheet handles its own dismissal.
+    if (event.button !== 0 || isMobile) return;
+    const wrapper = wrapperRef.current;
+    if (!wrapper) return;
+    event.currentTarget.setPointerCapture(event.pointerId);
+    // Measure the wrapper's left edge once: it's fixed for the gesture, so
+    // re-reading it each move would force a synchronous reflow on the hot path.
+    drag.current = {
+      pointerId: event.pointerId,
+      startX: event.clientX,
+      left: wrapper.getBoundingClientRect().left,
+      moved: false,
+      collapsed: !open,
+      width,
+    };
+    wrapper.setAttribute("data-dragging", "true");
+  };
+
+  const handlePointerMove = (event: React.PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || d.pointerId !== event.pointerId) return;
+    if (Math.abs(event.clientX - d.startX) > 3) d.moved = true;
+    if (!d.moved) return;
+    const raw = event.clientX - d.left;
+    const collapsed = raw < SIDEBAR_COLLAPSE_AT_PX;
+    if (collapsed !== d.collapsed) {
+      // Preview the icon rail / re-expand only on threshold crossings.
+      d.collapsed = collapsed;
+      setOpen(!collapsed);
+    }
+    if (collapsed) return;
+    const next = clampSidebarWidth(raw);
+    // Skip identical writes while held at the min/max plateau.
+    if (next !== d.width) {
+      d.width = next;
+      wrapperRef.current?.style.setProperty("--sidebar-width", `${next}px`);
+    }
+  };
+
+  const endDrag = (event: React.PointerEvent<HTMLDivElement>) => {
+    const d = drag.current;
+    if (!d || d.pointerId !== event.pointerId) return;
+    if (event.currentTarget.hasPointerCapture(event.pointerId)) {
+      event.currentTarget.releasePointerCapture(event.pointerId);
+    }
+    wrapperRef.current?.removeAttribute("data-dragging");
+    drag.current = null;
+    if (!d.moved) {
+      // A click, not a drag — toggle.
+      toggleSidebar();
+    } else if (!d.collapsed) {
+      // Open/collapse state was already applied live during the drag; only the
+      // width needs committing to state + cookie here.
+      setWidth(d.width);
+    }
+  };
+
+  const handleKeyDown = (event: React.KeyboardEvent<HTMLDivElement>) => {
+    if (event.key === "Enter" || event.key === " ") {
+      event.preventDefault();
+      toggleSidebar();
+    } else if (open && event.key === "ArrowLeft") {
+      event.preventDefault();
+      setWidth(width - SIDEBAR_WIDTH_STEP_PX);
+    } else if (open && event.key === "ArrowRight") {
+      event.preventDefault();
+      setWidth(width + SIDEBAR_WIDTH_STEP_PX);
+    }
+  };
 
   return (
-    <button
+    <div
       data-sidebar="rail"
       data-slot="sidebar-rail"
+      role="separator"
+      aria-orientation="vertical"
       aria-label={t("common.toggleSidebar")}
-      tabIndex={-1}
-      onClick={toggleSidebar}
+      aria-valuemin={SIDEBAR_MIN_WIDTH_PX}
+      aria-valuemax={SIDEBAR_MAX_WIDTH_PX}
+      aria-valuenow={width}
+      tabIndex={0}
+      onPointerDown={handlePointerDown}
+      onPointerMove={handlePointerMove}
+      onPointerUp={endDrag}
+      onPointerCancel={endDrag}
+      onKeyDown={handleKeyDown}
       title={t("common.toggleSidebar")}
       className={cn(
         "hover:after:bg-sidebar-border absolute inset-y-0 z-20 hidden w-4 -translate-x-1/2 transition-all ease-linear group-data-[side=left]:-right-4 group-data-[side=right]:left-0 after:absolute after:inset-y-0 after:left-1/2 after:w-[2px] sm:flex",
-        "in-data-[side=left]:cursor-w-resize in-data-[side=right]:cursor-e-resize",
+        "cursor-col-resize touch-none select-none",
         "[[data-side=left][data-state=collapsed]_&]:cursor-e-resize [[data-side=right][data-state=collapsed]_&]:cursor-w-resize",
         "hover:group-data-[collapsible=offcanvas]:bg-sidebar group-data-[collapsible=offcanvas]:translate-x-0 group-data-[collapsible=offcanvas]:after:left-full",
         "[[data-side=left][data-collapsible=offcanvas]_&]:-right-2",

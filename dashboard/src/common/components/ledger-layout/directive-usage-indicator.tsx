@@ -21,10 +21,10 @@ import { cn } from "@/common/lib/utils/utils.ts";
  * component stays in amber/muted tones — no destructive/red, which is
  * reserved elsewhere for actual failures (sync errors, invalid data).
  *
- * No collapsed/icon-only variant: this sidebar's `collapsible` mode is the
- * default "offcanvas" (confirmed live), which hides the whole sidebar rather
- * than shrinking it to icons, so there's no partially-collapsed state to
- * design for here.
+ * No collapsed/icon-only variant: the sidebar collapses to an icon rail, and
+ * this usage card can't shrink to that width, so its wrapper in
+ * `ledger-sidebar.tsx` hides it (`group-data-[collapsible=icon]:hidden`) when
+ * collapsed rather than rendering a cramped partial state here.
  */
 export const DirectiveUsageIndicator = memo(
   ({ ledgerId }: { ledgerId: string }) => {

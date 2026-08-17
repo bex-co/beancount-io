@@ -31,6 +31,7 @@ import {
   SidebarMenuSub,
   SidebarMenuSubButton,
   SidebarMenuSubItem,
+  SidebarRail,
   useSidebar,
 } from "@/common/components/ui/sidebar.tsx";
 import { decodeLedgerId } from "@/common/lib/utils/encode.ts";
@@ -42,6 +43,7 @@ import { Authenticated } from "../authenticated";
 import { AccountCombobox } from "./go-to-account.tsx";
 import { AddDirectiveButton } from "./add-directive-button.tsx";
 import { DirectiveUsageIndicator } from "./directive-usage-indicator.tsx";
+import { LedgerGroupFlyout } from "./ledger-group-flyout.tsx";
 import { LedgerOwnerPermission } from "@/common/components/ledger-permission/owner";
 import { useQuery } from "@apollo/client/react";
 import {
@@ -95,7 +97,7 @@ function countUpcomingEvents(
  * the first level.
  */
 export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
-  const { setOpenMobile, isMobile } = useSidebar();
+  const { setOpenMobile, isMobile, state } = useSidebar();
   const { ledgerOwner, ledgerName } = decodeLedgerId(ledgerId);
   const { ledgerData } = useLedger();
   const { t } = useTranslations();
@@ -337,6 +339,23 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
     const hasActiveItem = visibleItems.some(
       (item) => item.path === currentPath,
     );
+
+    // Collapsed to the icon rail: the inline submenu is hidden, so surface the
+    // group's destinations through a hover/click flyout instead of a dead icon.
+    if (state === "collapsed" && !isMobile) {
+      return (
+        <LedgerGroupFlyout
+          key={group.id}
+          label={group.label}
+          icon={group.icon}
+          items={visibleItems}
+          currentPath={currentPath}
+          isActive={hasActiveItem}
+          onNavigate={handleNavigate}
+        />
+      );
+    }
+
     const isOpen = hasActiveItem || openGroups.has(group.id);
     const Icon = group.icon;
     const submenuId = `ledger-sidebar-${group.id}`;
@@ -391,7 +410,7 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
   };
 
   return (
-    <Sidebar>
+    <Sidebar collapsible="icon">
       <SidebarHeader className="h-16 shrink-0 border-b bg-background/95 backdrop-blur supports-backdrop-filter:bg-background/60 flex flex-row items-center p-2">
         <LedgerSwitcher
           currentLedgerId={ledgerId}
@@ -433,10 +452,14 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
             path: `${ledgerPath}/settings`,
           })}
         </SidebarMenu>
-        <LedgerOwnerPermission>
-          <DirectiveUsageIndicator ledgerId={ledgerId} />
-        </LedgerOwnerPermission>
+        {/* Usage card can't shrink to the icon rail; hide it when collapsed. */}
+        <div className="group-data-[collapsible=icon]:hidden">
+          <LedgerOwnerPermission>
+            <DirectiveUsageIndicator ledgerId={ledgerId} />
+          </LedgerOwnerPermission>
+        </div>
       </SidebarFooter>
+      <SidebarRail />
     </Sidebar>
   );
 }
