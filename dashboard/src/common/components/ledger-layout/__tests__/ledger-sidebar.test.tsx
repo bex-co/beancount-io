@@ -97,8 +97,10 @@ vi.mock("@/common/components/ui/sidebar.tsx", () => ({
   SidebarMenuSubItem: ({ children }: { children: React.ReactNode }) => (
     <li>{children}</li>
   ),
+  SidebarRail: () => null,
   useSidebar: () => ({
     isMobile: false,
+    state: "expanded",
     setOpenMobile: mocks.setOpenMobile,
   }),
 }));

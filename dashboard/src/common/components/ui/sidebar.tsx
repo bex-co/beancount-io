@@ -364,8 +364,15 @@ function SidebarTrigger({
  * toggle affordance. Assumes a left-anchored sidebar (the app's only layout).
  */
 function SidebarRail({ className, ...props }: React.ComponentProps<"div">) {
-  const { toggleSidebar, open, setOpen, width, setWidth, wrapperRef, isMobile } =
-    useSidebar();
+  const {
+    toggleSidebar,
+    open,
+    setOpen,
+    width,
+    setWidth,
+    wrapperRef,
+    isMobile,
+  } = useSidebar();
   const { t } = useTranslations();
   const drag = React.useRef<{
     pointerId: number;

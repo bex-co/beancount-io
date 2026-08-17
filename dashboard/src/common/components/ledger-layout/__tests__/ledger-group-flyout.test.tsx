@@ -34,7 +34,9 @@ const items = [
   { id: "balance", label: "Balance sheet", path: "/x/balance" },
 ];
 
-function renderFlyout(props?: Partial<Parameters<typeof LedgerGroupFlyout>[0]>) {
+function renderFlyout(
+  props?: Partial<Parameters<typeof LedgerGroupFlyout>[0]>,
+) {
   return render(
     <SidebarProvider>
       <LedgerGroupFlyout

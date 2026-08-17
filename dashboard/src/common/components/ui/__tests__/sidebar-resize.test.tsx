@@ -19,8 +19,11 @@ vi.mock("@/common/hooks/use-cookie-storage-state/cookie", async () => {
   const jsCookie = (await import("js-cookie")).default;
   return {
     getCookie: (key: string) => jsCookie.get(key),
-    setCookie: (key: string, value: string, options?: Cookies.CookieAttributes) =>
-      jsCookie.set(key, value, options),
+    setCookie: (
+      key: string,
+      value: string,
+      options?: Cookies.CookieAttributes,
+    ) => jsCookie.set(key, value, options),
     removeCookie: (key: string, options?: Cookies.CookieAttributes) =>
       jsCookie.remove(key, options),
   };
