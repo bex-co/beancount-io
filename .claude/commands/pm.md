@@ -34,6 +34,7 @@ This board exists to grow **adoption of Beancount.io in the open-source and agen
 - **Sizing rule.** A milestone must be **> ~1 hour of work across more than one task**. If a chunk is ≤ ~1h (tens of minutes, a task or two), do **NOT** create an `mN/` directory — record it as a loose inbox note `wN/NNN.md`. Tasks take tens of minutes; milestones take hours.
 - **IDs must match the path.** A task's `id: wN/mN/tNNN` frontmatter must equal the directory it lives in. Never create a milestone dir whose path disagrees with the IDs inside it; if you find drift, flag and repair it, don't copy it.
 - **Keep status in sync** across all three places it lives: the workstream `README.md` milestone checkbox, the milestone `README.md` `**Status:**` line + the `— DONE` marker in the task table, and each task's `status:` frontmatter.
+- **Completed work must exit the open tree.** Moving completed work into `done/` is a mandatory exit condition, not optional cleanup. A mutating subcommand must not report success while an affected task with `status: done` remains at `wN/mN/tNNN.md`, or while an affected milestone with no open tasks remains at `wN/mN/`. Move completed tasks to `wN/mN/done/` and completed milestones to `wN/done/mN/`, then verify the old open paths no longer exist.
 - **Numbering:** next free zero-padded 3-digit for inbox notes (`NNN`) and tasks (`tNNN`); next free `wN` / `mN`. Scan the tree first; don't reuse a number.
 - Use `worker: worker1` unless the workstream README names another worker.
 - **Milestones must be meaningful.** Every milestone must include direct pillar linkage (A1/A2/A3), an observable expected adoption outcome, and why this work matters now (dependency/risk/sequence rationale).
@@ -54,7 +55,8 @@ Read the tree (`find .pm -type f -name '*.md'`, skipping `done/`) and `.pm/DO_NO
 
 - items conflicting with `.pm/DO_NOT_DO.md`,
 - milestones missing `## Source + Goal linkage` or a pillar (A1/A2/A3),
-- milestones whose definition of done is vague/non-testable.
+- milestones whose definition of done is vague/non-testable,
+- completed tasks or milestones that still sit in the open tree instead of their applicable `done/` directory.
 
 Touch no files.
 
@@ -83,6 +85,7 @@ Create the next `tNNN.md` from the task template and add its row to the mileston
 2. In the milestone `README.md`: mark the row `— **DONE**` and update the `**Status:**` line (e.g. `todo (t001 done)`).
 3. **Move** the file to `wN/mN/done/tNNN.md`.
 4. If no open tasks remain in the milestone, **move the whole milestone** to `wN/done/mN/` and check its box (`- [x]`) in the workstream `README.md`.
+5. **Verify the exit condition before returning:** the completed task exists only under `done/`; and, when no open tasks remain, the milestone exists only at `wN/done/mN/`, its `README.md` says `**Status:** done`, and the workstream checkbox is checked. Do not report success until these moves and status updates are complete.
 
 Show the intended moves before mutating if the user passed `DRY_RUN=1`.
 

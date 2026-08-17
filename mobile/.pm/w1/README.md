@@ -26,7 +26,7 @@
 - [x] **m21** — Moments that land: haptics, save confirmation, receipt payoff (8 tasks) ← from `/pm-brainstorm` 2026-08-14 (same pass); two save paths stall 2s by design and the receipt parse lands silently
 - [x] **m22** — Delete what's dead: four unreferenced surfaces, then lazy tabs (8 tasks) ← inbox `002` + `012` + `013` + `025`, promoted and shipped 2026-08-16
 - [x] **m23** — One loading and feedback vocabulary across the app (7 tasks) ← inbox `015` + `016` + `017` + `018`, promoted in the same pass; sequence after m20
-- [ ] **m24** — Controls you can see: fix the light neutral ramp, then share the primitives (8 tasks) ← inbox `010` + `011`, promoted in the same pass; `t004` waits on `m20/t011`
+- [x] **m24** — Controls you can see: fix the light neutral ramp, then share the primitives (8 tasks) ← inbox `010` + `011`, promoted in the same pass; shipped 2026-08-17 on top of `m20/t011`
 
 ## Board triage — 2026-08-16
 
@@ -34,9 +34,9 @@ Every open milestone and note was checked against the working tree. Two mileston
 
 **Open work, in order:**
 
-1. **m20** — `t011` (the indicator `t006` shipped renders beside the pills, not under them), then `t009`. `t008` was closed on 2026-08-16 on the owner's call without its device reduce-motion check; the risk is written down in the task's outcome note rather than left implied.
+1. **m20** — `t009` (the simplify pass over the motion + chart diff) is all that is left. `t011` was closed 2026-08-17: its fix had already shipped as `d668411` and only the board entry was outstanding; `w1/m24` re-verified the indicator in both themes while generalizing the same component. `t008` was closed on 2026-08-16 on the owner's call without its device reduce-motion check; the risk is written down in the task's outcome note rather than left implied.
 2. **m18** — untouched in code (no `frecency`, `accountUsageVar`, or recents anywhere), still valid, and now unblocked: m17 shipped the list it composes with.
-3. **m23 / m24** — materialized 2026-08-16 from six inbox notes (see below). m23 waits on m20 closing; m24's `t004` waits on `m20/t011`.
+3. **m23 / m24** — materialized 2026-08-16 from six inbox notes (see below); both shipped. m24 closed 2026-08-17; its `t004` dependency on `m20/t011` was satisfied in the tree by `d668411`, and closing m24 is what surfaced that `t011`'s board entry was still open.
 
 **m22 shipped the same day it was created.** Seven files left the tree, tabs now mount on first focus instead of at launch, and one pre-existing defect was filed rather than fixed (`026` — an unmatched tabs route renders black instead of `+not-found`). Two follow-on effects to remember: `m23/t004`'s cost argument ("all five tabs are already mounted, so a spring on `focused` is free") is no longer true, and `m24/t002` should not expect `src/common/progress-bar.tsx` to still exist if `m23/t003` runs first.
 
