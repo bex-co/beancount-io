@@ -58,6 +58,7 @@ export const uk: typeof en = {
   accountPickerSearchPlaceholder: "Пошук рахунків",
   accountPickerAllTab: "Усі",
   accountPickerNoResults: "Немає відповідних рахунків",
+  accountPickerCreate: "Створити «%{name}»",
   next: "Далі",
   cancel: "Скасувати",
   confirm: "Підтвердити",

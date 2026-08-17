@@ -62,6 +62,8 @@ interface SearchBarProps {
    */
   style?: StyleProp<ViewStyle>;
   accessibilityLabel?: string;
+  /** Forwarded to the inner `TextInput` so automation can focus the field. */
+  testID?: string;
 }
 
 /**
@@ -80,6 +82,7 @@ export function SearchBar({
   right,
   style,
   accessibilityLabel,
+  testID,
 }: SearchBarProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -92,6 +95,7 @@ export function SearchBar({
         color={theme.controlPlaceholder}
       />
       <TextInput
+        testID={testID}
         style={styles.input}
         placeholder={placeholder}
         placeholderTextColor={theme.controlPlaceholder}

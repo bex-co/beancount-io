@@ -49,6 +49,30 @@ export const getGlobalFn = <T extends CallbackFunction>(key: string) => {
 export const SelectedAccount =
   createGlobalFn<(value: string) => void>("SelectedAccount");
 
+/**
+ * The account picker's create-flow return slot: who receives an account opened
+ * via the picker's "Create" row. Registered only by `pushOpenAccount`, so the
+ * registration and the push cannot be mismatched — the same argument as
+ * `SelectedAccount` above.
+ */
+export const AccountCreated =
+  createGlobalFn<(account: string) => void>("AccountCreated");
+
+/**
+ * Deliver a newly opened account to whatever registered for it, then drop the
+ * registration — one-shot, same shape as `runAddTransactionCallback`. A plain
+ * Accounts-tab open has nothing registered, making this a no-op, so the
+ * open-account screen needs no origin flag.
+ */
+export const runAccountCreatedCallback = (account: string): void => {
+  const callback = AccountCreated.getFn();
+  if (!callback) {
+    return;
+  }
+  AccountCreated.deleteFn();
+  callback(account);
+};
+
 export const SelectedCurrency =
   createGlobalFn<(value: string) => void>("SelectedCurrency");
 

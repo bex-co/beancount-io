@@ -57,6 +57,7 @@ export const sk: typeof en = {
   accountPickerSearchPlaceholder: "Hľadať účty",
   accountPickerAllTab: "Všetky",
   accountPickerNoResults: "Žiadne zodpovedajúce účty",
+  accountPickerCreate: "Vytvoriť „%{name}“",
   next: "Ďalej",
   cancel: "Zrušiť",
   confirm: "Potvrdiť",

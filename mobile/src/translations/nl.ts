@@ -57,6 +57,7 @@ export const nl: typeof en = {
   accountPickerSearchPlaceholder: "Rekeningen zoeken",
   accountPickerAllTab: "Alle",
   accountPickerNoResults: "Geen overeenkomende rekeningen",
+  accountPickerCreate: '"%{name}" aanmaken',
   next: "Volgende",
   cancel: "Annuleren",
   confirm: "Bevestigen",

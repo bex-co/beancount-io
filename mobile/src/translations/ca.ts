@@ -57,6 +57,7 @@ export const ca: typeof en = {
   accountPickerSearchPlaceholder: "Cerca comptes",
   accountPickerAllTab: "Tots",
   accountPickerNoResults: "Cap compte coincident",
+  accountPickerCreate: 'Crea "%{name}"',
   next: "Següent",
   cancel: "Cancel·lar",
   confirm: "Confirmar",

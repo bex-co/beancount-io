@@ -30,6 +30,7 @@ import {
 import { ColorTheme } from "@/types/theme-props";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { SelectedAccount } from "@/common/globalFnFactory";
+import { pushOpenAccount } from "@/screens/open-account-screen/push-open-account";
 import { accountOrderFor } from "./push-account-picker";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -118,6 +119,17 @@ const getStyles = (theme: ColorTheme) =>
       paddingVertical: space.xl,
       fontSize: fontSizes.md,
       color: theme.black80,
+    },
+    // Deltas only — the create row composes `listItem`/`listItemText` in the
+    // JSX so it cannot drift from the real rows it sits beneath.
+    createRow: {
+      borderTopWidth: StyleSheet.hairlineWidth,
+      borderTopColor: theme.black60,
+    },
+    createText: {
+      marginLeft: space.sm,
+      fontWeight: fontWeights.medium,
+      color: theme.primary,
     },
     // Mirrors the loaded layout: a `SearchBar`, then a `TimeRangePills` row.
     // Both mirror their component's own metrics rather than restating them, so
@@ -277,6 +289,44 @@ export function AccountPickerScreenComponent(): JSX.Element {
     [router],
   );
 
+  // The create row renders exactly when the empty state does while a query is
+  // active (a no-match search yields zero sections — see `picker-sections`).
+  const trimmedQuery = query.trim();
+  const showCreateRow = isSearching && visibleSections.length === 0;
+
+  // One impression per hidden→shown episode: the effect re-runs only when
+  // `showCreateRow` flips (`type` never changes while mounted), so the dep
+  // array itself is the single-fire guard — keystrokes that keep the row
+  // visible don't re-run it.
+  useEffect(() => {
+    if (showCreateRow) {
+      analytics.track("account_picker_create_shown", {
+        pickerType: type ?? "",
+      });
+    }
+  }, [showCreateRow, type]);
+
+  const onCreate = useCallback(async () => {
+    await analytics.track("account_picker_create_tap", {
+      pickerType: type ?? "",
+      query: trimmedQuery,
+    });
+    pushOpenAccount(router, {
+      prefill: trimmedQuery,
+      // Destination pickers are choosing where money went, so suggest the
+      // Expenses root for a rootless query; source pickers suggest Assets.
+      prefillRoot: accountOrderFor(type) === "to" ? "Expenses" : "Assets",
+      onCreated: (account) => {
+        analytics.track("account_picker_create_confirm", {
+          pickerType: type ?? "",
+          account,
+        });
+        onSelectedRef.current?.(account);
+        router.back();
+      },
+    });
+  }, [trimmedQuery, type, router]);
+
   if (loading && accounts.length === 0) {
     return (
       <View style={styles.container}>
@@ -301,6 +351,7 @@ export function AccountPickerScreenComponent(): JSX.Element {
   return (
     <FadeInView style={styles.container}>
       <SearchBar
+        testID="account-picker-search"
         style={styles.searchBar}
         value={query}
         onChangeText={setQuery}
@@ -345,7 +396,37 @@ export function AccountPickerScreenComponent(): JSX.Element {
           ) : null
         }
         ListEmptyComponent={
-          <Text style={styles.emptyText}>{t("accountPickerNoResults")}</Text>
+          <View>
+            <Text style={styles.emptyText}>{t("accountPickerNoResults")}</Text>
+            {showCreateRow && (
+              <TouchableOpacity
+                testID="account-picker-create-row"
+                style={[styles.listItem, styles.createRow]}
+                onPress={onCreate}
+                accessibilityRole="button"
+                accessibilityLabel={t("accountPickerCreate", {
+                  name: trimmedQuery,
+                })}
+              >
+                <Ionicons
+                  name="add-circle-outline"
+                  size={24}
+                  color={theme.primary}
+                />
+                <Text
+                  style={[styles.listItemText, styles.createText]}
+                  numberOfLines={1}
+                >
+                  {t("accountPickerCreate", { name: trimmedQuery })}
+                </Text>
+                <Ionicons
+                  name="chevron-forward"
+                  size={24}
+                  color={theme.black}
+                />
+              </TouchableOpacity>
+            )}
+          </View>
         }
         renderItem={({ item }) => (
           <AccountRow

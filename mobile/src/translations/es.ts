@@ -68,6 +68,7 @@ export const es: typeof en = {
   accountPickerSearchPlaceholder: "Buscar cuentas",
   accountPickerAllTab: "Todas",
   accountPickerNoResults: "No hay cuentas coincidentes",
+  accountPickerCreate: 'Crear "%{name}"',
   next: "Siguiente",
   cancel: "Cancelar",
   confirm: "Confirmar",

@@ -32,6 +32,31 @@ export function composeAccountName(
   return [rootPrefix, ...components].join(":");
 }
 
+/**
+ * Split a free-typed account string into the screen's root + sub-path state —
+ * the inverse of `composeAccountName` for prefilled input. A canonical root is
+ * matched case-insensitively so a lowercase search query still lands on the
+ * right prefix; everything after it stays verbatim, letting the screen's normal
+ * validation speak instead of silently rewriting what the user typed. A string
+ * with no recognizable root becomes the sub-path under `fallbackRoot`.
+ */
+export function splitPrefillAccountName(
+  input: string,
+  fallbackRoot: AccountRootPrefix = "Assets",
+): { rootPrefix: AccountRootPrefix; subPath: string } {
+  const trimmed = input.trim();
+  const lower = trimmed.toLowerCase();
+  for (const root of ACCOUNT_ROOT_PREFIXES) {
+    if (lower === root.toLowerCase()) {
+      return { rootPrefix: root, subPath: "" };
+    }
+    if (lower.startsWith(`${root.toLowerCase()}:`)) {
+      return { rootPrefix: root, subPath: trimmed.slice(root.length + 1) };
+    }
+  }
+  return { rootPrefix: fallbackRoot, subPath: trimmed };
+}
+
 /** Validate a full account name using Beancount's component naming rules. */
 export function validateAccountName(
   name: string,

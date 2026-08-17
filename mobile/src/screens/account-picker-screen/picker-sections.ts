@@ -32,7 +32,12 @@ export function visibleAccountSections(
   activeRoot: string | null,
 ): AccountSection[] {
   if (isSearchQuery(query)) {
-    return [{ title: "", data: filterAccounts(query, accounts) }];
+    const matches = filterAccounts(query, accounts);
+    // No sections at all, not one empty section: SectionList counts a section
+    // as two virtual items (header + footer) even with no data, so
+    // `ListEmptyComponent` — the no-results text and the create row — only
+    // renders when this array is itself empty.
+    return matches.length === 0 ? [] : [{ title: "", data: matches }];
   }
   const visible =
     activeRoot === ALL_ROOTS

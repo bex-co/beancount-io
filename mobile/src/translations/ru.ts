@@ -65,6 +65,7 @@ export const ru: typeof en = {
   accountPickerSearchPlaceholder: "Поиск счетов",
   accountPickerAllTab: "Все",
   accountPickerNoResults: "Нет подходящих счетов",
+  accountPickerCreate: "Создать «%{name}»",
   next: "Далее",
   cancel: "Отмена",
   confirm: "Подтвердить",

@@ -58,6 +58,7 @@ export const pt: typeof en = {
   accountPickerSearchPlaceholder: "Pesquisar contas",
   accountPickerAllTab: "Todas",
   accountPickerNoResults: "Nenhuma conta correspondente",
+  accountPickerCreate: 'Criar "%{name}"',
   next: "Próximo",
   cancel: "Cancelar",
   confirm: "Confirmar",

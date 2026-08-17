@@ -66,6 +66,7 @@ export const zh = {
   accountPickerSearchPlaceholder: "搜索账户",
   accountPickerAllTab: "全部",
   accountPickerNoResults: "没有匹配的账户",
+  accountPickerCreate: "创建“%{name}”",
   next: "下一步",
   cancel: "取消",
   confirm: "确定",

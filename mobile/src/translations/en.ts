@@ -77,6 +77,7 @@ export const en = {
   accountPickerSearchPlaceholder: "Search accounts",
   accountPickerAllTab: "All",
   accountPickerNoResults: "No matching accounts",
+  accountPickerCreate: 'Create "%{name}"',
   next: "Next",
   cancel: "Cancel",
   confirm: "Confirm",

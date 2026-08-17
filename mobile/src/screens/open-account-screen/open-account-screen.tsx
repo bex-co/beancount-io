@@ -9,8 +9,12 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { Stack, useRouter } from "expo-router";
+import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
+import {
+  AccountCreated,
+  runAccountCreatedCallback,
+} from "@/common/globalFnFactory";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { usePageView } from "@/common/hooks/use-page-view";
 import { useSession } from "@/common/hooks/use-session";
@@ -34,6 +38,7 @@ import type { ColorTheme } from "@/types/theme-props";
 import {
   ACCOUNT_ROOT_PREFIXES,
   composeAccountName,
+  splitPrefillAccountName,
   type AccountNameValidationReason,
   type AccountRootPrefix,
   validateAccountName,
@@ -182,8 +187,31 @@ export function OpenAccountScreenComponent(): JSX.Element {
   const { currencies, loading: metaLoading } = useLedgerMeta(userId, ledgerId);
   const { openAccount, loading } = useOpenAccount(ledgerId);
 
-  const [rootPrefix, setRootPrefix] = useState<AccountRootPrefix>("Assets");
-  const [subPath, setSubPath] = useState("");
+  // The account picker's "Create <typed>" row lands here with the typed query
+  // as `prefill` and its context root (destination pickers suggest Expenses)
+  // as `prefillRoot`; `pushOpenAccount` registers who receives the account.
+  // `prefillRoot` is validated because route params can arrive from any deep
+  // link, not just the picker.
+  const { prefill, prefillRoot } = useLocalSearchParams<{
+    prefill?: string;
+    prefillRoot?: string;
+  }>();
+  const [seed] = useState(() =>
+    splitPrefillAccountName(
+      prefill ?? "",
+      ACCOUNT_ROOT_PREFIXES.includes(prefillRoot as AccountRootPrefix)
+        ? (prefillRoot as AccountRootPrefix)
+        : "Assets",
+    ),
+  );
+
+  const [rootPrefix, setRootPrefix] = useState<AccountRootPrefix>(
+    seed.rootPrefix,
+  );
+  const [subPath, setSubPath] = useState(seed.subPath);
+
+  // A cancelled create must not leak its registration into a later visit.
+  useEffect(() => () => AccountCreated.deleteFn(), []);
   const [currency, setCurrency] = useState("");
   const [currencyInitialized, setCurrencyInitialized] = useState(false);
   const [date, setDate] = useState(() => new Date());
@@ -237,7 +265,12 @@ export function OpenAccountScreenComponent(): JSX.Element {
     });
 
     if (result.ok) {
+      // Pop only this screen, then hand the account to whatever registered via
+      // `pushOpenAccount` — the picker's callback delivers the pick and pops
+      // its own frame, so no screen ever pops a frame it doesn't own. A plain
+      // Accounts-tab open has nothing registered and this is just a back().
       router.back();
+      runAccountCreatedCallback(account);
       return;
     }
 

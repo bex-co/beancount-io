@@ -57,6 +57,7 @@ export const bg: typeof en = {
   accountPickerSearchPlaceholder: "Търсене на сметки",
   accountPickerAllTab: "Всички",
   accountPickerNoResults: "Няма съвпадащи сметки",
+  accountPickerCreate: "Създай „%{name}“",
   next: "Напред",
   cancel: "Отказ",
   confirm: "Потвърждение",

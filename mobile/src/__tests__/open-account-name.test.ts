@@ -1,6 +1,7 @@
 import {
   ACCOUNT_ROOT_PREFIXES,
   composeAccountName,
+  splitPrefillAccountName,
   type AccountNameValidationReason,
   validateAccountName,
 } from "../screens/open-account-screen/account-name";
@@ -44,6 +45,78 @@ describe("open account name", () => {
     expect(validateAccountName("Assets:US:PreTax401k")).toEqual({ ok: true });
     expect(validateAccountName("Equity:Opening-Balances")).toEqual({
       ok: true,
+    });
+  });
+});
+
+describe("splitPrefillAccountName", () => {
+  it("splits a canonical name into its root and verbatim sub-path", () => {
+    expect(splitPrefillAccountName("Expenses:Coffee")).toEqual({
+      rootPrefix: "Expenses",
+      subPath: "Coffee",
+    });
+    expect(splitPrefillAccountName("Assets:Bank:Checking")).toEqual({
+      rootPrefix: "Assets",
+      subPath: "Bank:Checking",
+    });
+  });
+
+  it("matches the root case-insensitively but keeps the sub-path verbatim", () => {
+    expect(splitPrefillAccountName("expenses:coffee")).toEqual({
+      rootPrefix: "Expenses",
+      subPath: "coffee",
+    });
+    expect(splitPrefillAccountName("LIABILITIES:Visa")).toEqual({
+      rootPrefix: "Liabilities",
+      subPath: "Visa",
+    });
+  });
+
+  it("treats a bare root as that root with an empty sub-path", () => {
+    for (const root of ACCOUNT_ROOT_PREFIXES) {
+      expect(splitPrefillAccountName(root.toLowerCase())).toEqual({
+        rootPrefix: root,
+        subPath: "",
+      });
+    }
+  });
+
+  it("puts a rootless string under the fallback root, trimmed but unrewritten", () => {
+    expect(splitPrefillAccountName("coffee shop", "Expenses")).toEqual({
+      rootPrefix: "Expenses",
+      subPath: "coffee shop",
+    });
+    expect(splitPrefillAccountName("  Coffee  ")).toEqual({
+      rootPrefix: "Assets",
+      subPath: "Coffee",
+    });
+  });
+
+  it("does not mistake a root-prefixed word for a root", () => {
+    expect(splitPrefillAccountName("Assetsy:Thing", "Expenses")).toEqual({
+      rootPrefix: "Expenses",
+      subPath: "Assetsy:Thing",
+    });
+  });
+
+  it("round-trips a valid typed name through composeAccountName", () => {
+    for (const name of ["Expenses:Coffee", "Assets:Bank:Checking"]) {
+      const { rootPrefix, subPath } = splitPrefillAccountName(name);
+      expect(composeAccountName(rootPrefix, subPath)).toBe(name);
+      expect(validateAccountName(name)).toEqual({ ok: true });
+    }
+  });
+
+  it("leaves an invalid sub-path for the screen's validation to reject", () => {
+    const { rootPrefix, subPath } = splitPrefillAccountName(
+      "coffee shop",
+      "Expenses",
+    );
+    const composed = composeAccountName(rootPrefix, subPath);
+    expect(composed).toBe("Expenses:coffee shop");
+    expect(validateAccountName(composed)).toEqual({
+      ok: false,
+      reason: "componentMustStartUppercase",
     });
   });
 });

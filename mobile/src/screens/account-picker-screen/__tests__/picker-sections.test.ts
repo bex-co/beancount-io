@@ -85,11 +85,12 @@ describe("visibleAccountSections", () => {
       expect(result[0].data).toEqual(["Income:Salary"]);
     });
 
-    test("should return an empty section when nothing matches", () => {
-      const result = sectionsFor(accounts, "zzzz", ALL_ROOTS);
-
-      expect(result.length).toBe(1);
-      expect(result[0].data).toEqual([]);
+    test("should return no sections when nothing matches", () => {
+      // Not one empty section: SectionList counts a section as two virtual
+      // items even with no data, so `ListEmptyComponent` — the no-results
+      // text and the create-account row — only renders for a truly empty
+      // sections array.
+      expect(sectionsFor(accounts, "zzzz", ALL_ROOTS)).toEqual([]);
     });
   });
 });

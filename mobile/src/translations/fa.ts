@@ -57,6 +57,7 @@ export const fa: typeof en = {
   accountPickerSearchPlaceholder: "جستجوی حساب‌ها",
   accountPickerAllTab: "همه",
   accountPickerNoResults: "حسابی مطابقت ندارد",
+  accountPickerCreate: "ایجاد «%{name}»",
   next: "بعدی",
   cancel: "لغو",
   confirm: "تأیید",
