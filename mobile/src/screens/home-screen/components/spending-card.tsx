@@ -6,9 +6,8 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
 import { DashboardCard } from "@/components";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { FadeInView } from "@/components/crossfade";
 import { BAR_CHART_HEIGHT, BarChartD3 } from "@/common/d3/bar-chart-d3";
-import { durations } from "@/common/theme";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import {
   DirectiveType,
@@ -84,13 +83,13 @@ export function SpendingCard({
       {loading && entries.length === 0 ? (
         <LoadingTile height={BAR_CHART_HEIGHT} mx={16} />
       ) : (
-        <Animated.View entering={FadeIn.duration(durations.base)}>
+        <FadeInView>
           <BarChartD3
             currencySymbol={currencySymbol}
             labels={SPENDING_LABELS}
             numbers={[lastMonth, thisMonth]}
           />
-        </Animated.View>
+        </FadeInView>
       )}
     </DashboardCard>
   );

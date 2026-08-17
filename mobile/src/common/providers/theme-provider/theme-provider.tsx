@@ -4,6 +4,7 @@ import {
   themes,
   ThemeProvider as CallStackThemeProvider,
   getSystemColorScheme,
+  effectiveThemeName,
 } from "@/common/theme";
 import { themeVar } from "@/common/vars";
 import { useReactiveVar } from "@apollo/client";
@@ -26,14 +27,10 @@ export const ThemeProvider = ({
     return () => subscription?.remove();
   }, []);
 
-  const getEffectiveTheme = () => {
-    if (currentThemeSetting === "system") {
-      return systemColorScheme;
-    }
-    return currentThemeSetting;
-  };
-
-  const effectiveTheme = getEffectiveTheme();
+  const effectiveTheme = effectiveThemeName(
+    currentThemeSetting,
+    systemColorScheme,
+  );
 
   return (
     <CallStackThemeProvider theme={themes[effectiveTheme]}>

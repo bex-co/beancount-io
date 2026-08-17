@@ -1,7 +1,6 @@
 import { useCallback, useState } from "react";
 import {
   FlatList,
-  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -24,8 +23,10 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { GetLedgerIntervalTotalsDocument } from "@/generated-graphql/graphql";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import { Button, DashboardCard, TimeRangePills } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
+import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { useBudgetGroups } from "@/screens/budget-screen/hooks/use-budget-groups";
 import { BudgetGroupCard } from "@/screens/budget-screen/components/budget-group-card";
 import {
@@ -199,51 +200,52 @@ export function BudgetScreenImpl(): JSX.Element {
           </DashboardCard>
         </View>
       ) : (
-        <FlatList
-          data={groups}
-          keyExtractor={(group) => `${group.account}::${group.currency}`}
-          contentContainerStyle={styles.list}
-          alwaysBounceVertical
-          showsVerticalScrollIndicator={false}
-          indicatorStyle={isDark ? "white" : "default"}
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={isDark ? "white" : "black"}
-            />
-          }
-          // Cards fetch their own actuals on mount, so an off-screen budget
-          // costs nothing until it scrolls into view.
-          initialNumToRender={3}
-          windowSize={5}
-          renderItem={renderItem}
-          ListEmptyComponent={
-            error ? (
-              <View style={styles.stateContainer}>
-                <Text style={styles.stateText}>{t("budgetLoadFailed")}</Text>
-              </View>
-            ) : (
-              <View style={styles.stateContainer}>
-                <Ionicons
-                  name="wallet-outline"
-                  size={48}
-                  color={theme.black60}
-                  style={styles.emptyIcon}
-                />
-                <Text style={styles.emptyTitle}>
-                  {t("budgetNoBudgetsFound")}
-                </Text>
-                <Text style={styles.emptyBody}>
-                  {t("budgetNoBudgetsFoundDescription")}
-                </Text>
-                <Button style={styles.cta} onPress={() => openAdd()}>
-                  {t("budgetEmptyStateCta")}
-                </Button>
-              </View>
-            )
-          }
-        />
+        <FadeInView fill>
+          <FlatList
+            data={groups}
+            keyExtractor={(group) => `${group.account}::${group.currency}`}
+            contentContainerStyle={styles.list}
+            alwaysBounceVertical
+            showsVerticalScrollIndicator={false}
+            indicatorStyle={isDark ? "white" : "default"}
+            refreshControl={
+              <ThemedRefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
+              />
+            }
+            // Cards fetch their own actuals on mount, so an off-screen budget
+            // costs nothing until it scrolls into view.
+            initialNumToRender={3}
+            windowSize={5}
+            renderItem={renderItem}
+            ListEmptyComponent={
+              error ? (
+                <View style={styles.stateContainer}>
+                  <Text style={styles.stateText}>{t("budgetLoadFailed")}</Text>
+                </View>
+              ) : (
+                <View style={styles.stateContainer}>
+                  <Ionicons
+                    name="wallet-outline"
+                    size={48}
+                    color={theme.black60}
+                    style={styles.emptyIcon}
+                  />
+                  <Text style={styles.emptyTitle}>
+                    {t("budgetNoBudgetsFound")}
+                  </Text>
+                  <Text style={styles.emptyBody}>
+                    {t("budgetNoBudgetsFoundDescription")}
+                  </Text>
+                  <Button style={styles.cta} onPress={() => openAdd()}>
+                    {t("budgetEmptyStateCta")}
+                  </Button>
+                </View>
+              )
+            }
+          />
+        </FadeInView>
       )}
     </SafeAreaView>
   );

@@ -21,6 +21,7 @@ import { usePageView } from "@/common/hooks/use-page-view";
 import { analytics } from "@/common/analytics";
 import { Ionicons } from "@expo/vector-icons";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 
 const MAX_SUGGESTIONS = 30;
 const SKELETON_ROW_WIDTHS = [176, 128, 200, 144];
@@ -224,27 +225,30 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
                   />
                 </View>
               ))}
-            {!showSkeleton &&
-              matches.map((suggestion, index) => (
-                <Pressable
-                  key={suggestion}
-                  style={({ pressed }) => [
-                    styles.suggestionRow,
-                    index > 0 && styles.suggestionRowDivider,
-                    pressed && styles.suggestionRowPressed,
-                  ]}
-                  onPress={() => commit(suggestion, "suggestion")}
-                >
-                  <Ionicons
-                    name="time-outline"
-                    size={16}
-                    color={theme.black60}
-                  />
-                  <Text style={styles.suggestionText} numberOfLines={1}>
-                    {suggestion}
-                  </Text>
-                </Pressable>
-              ))}
+            {!showSkeleton && (
+              <FadeInView>
+                {matches.map((suggestion, index) => (
+                  <Pressable
+                    key={suggestion}
+                    style={({ pressed }) => [
+                      styles.suggestionRow,
+                      index > 0 && styles.suggestionRowDivider,
+                      pressed && styles.suggestionRowPressed,
+                    ]}
+                    onPress={() => commit(suggestion, "suggestion")}
+                  >
+                    <Ionicons
+                      name="time-outline"
+                      size={16}
+                      color={theme.black60}
+                    />
+                    <Text style={styles.suggestionText} numberOfLines={1}>
+                      {suggestion}
+                    </Text>
+                  </Pressable>
+                ))}
+              </FadeInView>
+            )}
           </View>
         </ScrollView>
       )}

@@ -6,13 +6,13 @@ import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
-import { durations, gutter } from "@/common/theme";
+import { gutter } from "@/common/theme";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer/ledger-drawer-header";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { DashboardCard } from "@/components/dashboard-card";
 import { DashboardScrollView } from "@/components/dashboard-scroll-view";
 import { LoadingTile } from "@/components/loading-tile";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { FadeInView } from "@/components/crossfade";
 import {
   DEFAULT_CHART_HEIGHT,
   IncomeExpenseBarChartD3,
@@ -147,7 +147,7 @@ const ReportsScreenImpl = (): JSX.Element => {
               mx={gutter}
             />
           ) : (
-            <Animated.View entering={FadeIn.duration(durations.base)}>
+            <FadeInView>
               <IncomeExpenseBarChartD3
                 currencySymbol={currencySymbol}
                 months={chart.months}
@@ -155,38 +155,42 @@ const ReportsScreenImpl = (): JSX.Element => {
                 expense={chart.expense}
                 net={chart.net}
               />
-            </Animated.View>
+            </FadeInView>
           )}
         </DashboardCard>
 
         {isLoading ? (
           <CategoryBreakdownSkeleton />
         ) : (
-          <DashboardCard bleed>
-            <CategoryBreakdown
-              label={t("expenses")}
-              total={expense.total}
-              items={topNWithOther(expense.tree, BREAKDOWN_TOP_N, t("other"))}
-              currency={currency}
-              tone={(theme) => theme.error}
-              section="expenses"
-            />
-          </DashboardCard>
+          <FadeInView>
+            <DashboardCard bleed>
+              <CategoryBreakdown
+                label={t("expenses")}
+                total={expense.total}
+                items={topNWithOther(expense.tree, BREAKDOWN_TOP_N, t("other"))}
+                currency={currency}
+                tone={(theme) => theme.error}
+                section="expenses"
+              />
+            </DashboardCard>
+          </FadeInView>
         )}
 
         {isLoading ? (
           <CategoryBreakdownSkeleton />
         ) : (
-          <DashboardCard bleed>
-            <CategoryBreakdown
-              label={t("income")}
-              total={income.total}
-              items={topNWithOther(income.tree, BREAKDOWN_TOP_N, t("other"))}
-              currency={currency}
-              tone={(theme) => theme.success}
-              section="income"
-            />
-          </DashboardCard>
+          <FadeInView>
+            <DashboardCard bleed>
+              <CategoryBreakdown
+                label={t("income")}
+                total={income.total}
+                items={topNWithOther(income.tree, BREAKDOWN_TOP_N, t("other"))}
+                currency={currency}
+                tone={(theme) => theme.success}
+                section="income"
+              />
+            </DashboardCard>
+          </FadeInView>
         )}
 
         <AccountTransactionsCard

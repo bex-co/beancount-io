@@ -9,6 +9,7 @@ import { useReactiveVar } from "@apollo/client";
 import { ledgerVar } from "@/common/vars";
 import { useGetCommitDetailsQuery } from "@/generated-graphql/graphql";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import { LedgerGuard } from "@/components/ledger-guard";
 import { parseDiff, DiffLine } from "./diff-utils";
 
@@ -176,73 +177,83 @@ function CommitDetailScreenImpl(): JSX.Element {
         {loading && !commit ? (
           <SkeletonRows />
         ) : !commit ? (
-          <Text style={styles.emptyText}>{t("commitDetailNoDiff")}</Text>
+          <FadeInView>
+            <Text style={styles.emptyText}>{t("commitDetailNoDiff")}</Text>
+          </FadeInView>
         ) : (
-          <ScrollView>
-            {/* Summary */}
-            <View style={styles.section}>
-              <Text style={styles.messageLine}>{commit.message}</Text>
-              <Text style={styles.metaLine}>
-                {t("commitDetailAuthor")}: {commit.author.name}
-              </Text>
-            </View>
-            <View style={styles.divider} />
-
-            {/* Stats */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>{t("commitDetailStats")}</Text>
-              <View style={styles.statsRow}>
-                <Text style={styles.additions}>+{commit.stats.additions}</Text>
-                <Text style={styles.deletions}>−{commit.stats.deletions}</Text>
+          <FadeInView fill>
+            <ScrollView>
+              {/* Summary */}
+              <View style={styles.section}>
+                <Text style={styles.messageLine}>{commit.message}</Text>
+                <Text style={styles.metaLine}>
+                  {t("commitDetailAuthor")}: {commit.author.name}
+                </Text>
               </View>
-            </View>
-            <View style={styles.divider} />
+              <View style={styles.divider} />
 
-            {/* Files */}
-            {commit.files.length > 0 && (
-              <>
-                <View style={styles.section}>
-                  <Text style={styles.sectionLabel}>
-                    {t("commitDetailFiles")}
+              {/* Stats */}
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>
+                  {t("commitDetailStats")}
+                </Text>
+                <View style={styles.statsRow}>
+                  <Text style={styles.additions}>
+                    +{commit.stats.additions}
                   </Text>
-                  {commit.files.map((f) => (
-                    <View key={f.filename}>
-                      <View style={styles.fileRow}>
-                        <Text style={styles.fileName} numberOfLines={1}>
-                          {f.filename}
-                        </Text>
-                        <Text style={styles.fileStats}>
-                          +{f.additions} −{f.deletions}
-                        </Text>
-                      </View>
-                    </View>
-                  ))}
+                  <Text style={styles.deletions}>
+                    −{commit.stats.deletions}
+                  </Text>
                 </View>
-                <View style={styles.divider} />
-              </>
-            )}
-
-            {/* Diff */}
-            <View style={styles.section}>
-              <Text style={styles.sectionLabel}>{t("commitDetailDiff")}</Text>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator>
-              <View style={styles.diffContainer}>
-                {diffLines && diffLines.length > 0 ? (
-                  <FlatList
-                    data={diffLines}
-                    keyExtractor={(_, i) => String(i)}
-                    renderItem={({ item }) => <DiffLineView line={item} />}
-                    scrollEnabled={false}
-                  />
-                ) : (
-                  <Text style={styles.emptyText}>
-                    {t("commitDetailNoDiff")}
-                  </Text>
-                )}
               </View>
+              <View style={styles.divider} />
+
+              {/* Files */}
+              {commit.files.length > 0 && (
+                <>
+                  <View style={styles.section}>
+                    <Text style={styles.sectionLabel}>
+                      {t("commitDetailFiles")}
+                    </Text>
+                    {commit.files.map((f) => (
+                      <View key={f.filename}>
+                        <View style={styles.fileRow}>
+                          <Text style={styles.fileName} numberOfLines={1}>
+                            {f.filename}
+                          </Text>
+                          <Text style={styles.fileStats}>
+                            +{f.additions} −{f.deletions}
+                          </Text>
+                        </View>
+                      </View>
+                    ))}
+                  </View>
+                  <View style={styles.divider} />
+                </>
+              )}
+
+              {/* Diff */}
+              <View style={styles.section}>
+                <Text style={styles.sectionLabel}>{t("commitDetailDiff")}</Text>
+              </View>
+              <ScrollView horizontal showsHorizontalScrollIndicator>
+                <View style={styles.diffContainer}>
+                  {diffLines && diffLines.length > 0 ? (
+                    <FlatList
+                      data={diffLines}
+                      keyExtractor={(_, i) => String(i)}
+                      renderItem={({ item }) => <DiffLineView line={item} />}
+                      scrollEnabled={false}
+                    />
+                  ) : (
+                    <Text style={styles.emptyText}>
+                      {t("commitDetailNoDiff")}
+                    </Text>
+                  )}
+                </View>
+              </ScrollView>
             </ScrollView>
-          </ScrollView>
+          </FadeInView>
         )}
       </SafeAreaView>
     </>

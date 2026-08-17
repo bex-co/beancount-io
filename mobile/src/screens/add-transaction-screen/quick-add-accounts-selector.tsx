@@ -1,11 +1,5 @@
 import { useEffect, useState } from "react";
-import {
-  RefreshControl,
-  ScrollView,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
+import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useReactiveVar } from "@apollo/client";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { getPrimaryCurrency } from "@/common/currency-util";
@@ -22,6 +16,8 @@ import {
 } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
+import { FadeInView } from "@/components/crossfade";
+import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import {
   ListItem,
   ListItemSkeleton,
@@ -171,7 +167,7 @@ export const QuickAddAccountsSelector = (
       style={styles.container}
       alwaysBounceVertical
       refreshControl={
-        <RefreshControl
+        <ThemedRefreshControl
           refreshing={refreshing}
           onRefresh={async () => {
             try {
@@ -192,7 +188,7 @@ export const QuickAddAccountsSelector = (
             <ListItemSkeleton showDivider />
           </>
         ) : (
-          <>
+          <FadeInView>
             <ListItem
               title={i18n.t("payee").toUpperCase()}
               content={selectedPayee}
@@ -268,7 +264,7 @@ export const QuickAddAccountsSelector = (
                 onSelect={handleToChipPress}
               />
             )}
-          </>
+          </FadeInView>
         )}
       </View>
     </ScrollView>

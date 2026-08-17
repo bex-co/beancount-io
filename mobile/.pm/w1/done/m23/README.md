@@ -1,18 +1,18 @@
 # w1 · m23 — One loading and feedback vocabulary across the app
 
-**Worker:** worker1 **Goal:** Every skeleton fades into its content, every pull-to-refresh spinner looks the same, no screen still animates on the JS thread, and the tab bar answers a tap with more than a color change. **Status:** todo
+**Worker:** worker1 **Goal:** Every skeleton fades into its content, every pull-to-refresh spinner looks the same, no screen still animates on the JS thread, and the tab bar answers a tap with more than a color change. **Status:** done (2026-08-16)
 
 ## Tasks (in order)
 
 | id   | title                                                             | est | depends_on             |
 | ---- | ----------------------------------------------------------------- | --- | ---------------------- |
-| t001 | One `RefreshControl` convention, owned by `dashboard-scroll-view` | 45m | —                      |
-| t002 | Crossfade every skeleton into its content (~18 sites)             | 60m | —                      |
-| t003 | Retire the two legacy RN `Animated` files onto the motion tokens  | 45m | —                      |
-| t004 | Tab icons: outline when inactive, filled + spring on focus        | 40m | —                      |
-| t005 | UX pass — light/dark, reduce-motion, i18n, safe area              | 30m | t001, t002, t003, t004 |
-| t006 | Simplify pass over the loading/motion diff                        | 25m | t005                   |
-| t007 | Unit tests for the shared refresh config and icon state           | 30m | t005                   |
+| t001 | One `RefreshControl` convention, owned by `dashboard-scroll-view` | 45m | —                      | — **DONE** |
+| t002 | Crossfade every skeleton into its content (~18 sites)             | 60m | —                      | — **DONE** |
+| t003 | Retire the two legacy RN `Animated` files onto the motion tokens  | 45m | —                      | — **DONE** |
+| t004 | Tab icons: outline when inactive, filled + spring on focus        | 40m | —                      | — **DONE** |
+| t005 | UX pass — light/dark, reduce-motion, i18n, safe area              | 30m | t001, t002, t003, t004 | — **DONE** |
+| t006 | Simplify pass over the loading/motion diff                        | 25m | t005                   | — **DONE** |
+| t007 | Unit tests for the shared refresh config and icon state           | 30m | t005                   | — **DONE** |
 
 ## Definition of done
 

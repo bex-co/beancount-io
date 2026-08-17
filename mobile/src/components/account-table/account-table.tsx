@@ -1,7 +1,6 @@
 import { memo, useCallback, useMemo, useState } from "react";
 import {
   FlatList,
-  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -24,6 +23,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { AmountText } from "@/components/amount-text";
+import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import {
   CATEGORY_SIGN,
   type AccountCategory,
@@ -322,7 +322,6 @@ export function AccountTable({
   onPressAccount,
 }: AccountTableProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
-  const theme = useTheme().colorTheme;
   const { t } = useTranslations();
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
 
@@ -369,11 +368,7 @@ export function AccountTable({
       }
       ListEmptyComponent={<Text style={styles.empty}>{t("noAccounts")}</Text>}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={theme.primary}
-        />
+        <ThemedRefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
       removeClippedSubviews
       maxToRenderPerBatch={20}

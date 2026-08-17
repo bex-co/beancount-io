@@ -3,7 +3,7 @@ import { WebView } from "react-native-webview";
 import { useState } from "react";
 import { analytics } from "@/common/analytics";
 import { getEndpoint, headers } from "@/common/request";
-import { ProgressBar } from "@/common/progress-bar";
+import { Progress } from "@/components/progress";
 import { statusBarHeight } from "@/common/screen-util";
 import { router } from "expo-router";
 import { sessionVar, ledgerVar } from "@/common/vars";
@@ -11,6 +11,7 @@ import { createSession } from "@/common/session-utils";
 import { appendPreferenceParam } from "@/common/url-utils";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
+import { useTheme } from "@/common/theme";
 import { apolloClient } from "@/common/apollo/client";
 import { ListLedgersDocument } from "@/generated-graphql/graphql";
 
@@ -39,6 +40,7 @@ const getStyles = (theme: ColorTheme) => {
 export const LoginWebView = ({ isSignUp, onClose }: Props) => {
   const [progress, setProgress] = useState(0);
   const styles = useThemeStyle(getStyles);
+  const theme = useTheme().colorTheme;
   const uri = isSignUp
     ? getEndpoint("auth/sign-up")
     : getEndpoint("auth/login");
@@ -51,7 +53,11 @@ export const LoginWebView = ({ isSignUp, onClose }: Props) => {
 
   return (
     <View style={styles.container}>
-      <ProgressBar progress={progress} />
+      {/* The load bar is the only sign the web view is doing anything, so it
+          disappears the moment there is nothing left to report. */}
+      {progress < 1 && (
+        <Progress percent={progress * 100} trackColor={theme.black10} />
+      )}
       <WebView
         incognito
         injectedJavaScript={injectedJavascript}

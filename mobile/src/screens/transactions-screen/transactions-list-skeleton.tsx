@@ -1,5 +1,6 @@
 import { StyleSheet, View } from "react-native";
 import { useThemeStyle } from "@/common/hooks";
+import { FadeOutView } from "@/components/crossfade";
 import { LoadingTile } from "@/components/loading-tile";
 import { ColorTheme } from "@/types/theme-props";
 
@@ -51,7 +52,9 @@ export const TransactionsListSkeleton = () => {
   const styles = useThemeStyle(getStyles);
 
   return (
-    <View style={styles.container}>
+    // Fades out over the rows that replace it: the list renders those cells
+    // itself, so there is no loaded branch to fade in instead.
+    <FadeOutView style={styles.container}>
       {ROW_WIDTHS.map((width, index) => (
         <View key={width + index}>
           {index % ROWS_PER_SECTION === 0 && (
@@ -68,6 +71,6 @@ export const TransactionsListSkeleton = () => {
           </View>
         </View>
       ))}
-    </View>
+    </FadeOutView>
   );
 };

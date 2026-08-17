@@ -32,6 +32,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { useLedgerGuard } from "@/components/ledger-guard";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import {
   KeyboardAccessoryBar,
   KEYBOARD_ACCESSORY_BAR_HEIGHT,
@@ -560,21 +561,25 @@ export function LedgerFileEditorScreen(): JSX.Element {
             ))}
           </View>
         ) : fileError && !initialized ? (
-          <Text style={styles.loadErrorText}>
-            {t("ledgerEditorLoadFailed")}
-          </Text>
+          <FadeInView>
+            <Text style={styles.loadErrorText}>
+              {t("ledgerEditorLoadFailed")}
+            </Text>
+          </FadeInView>
         ) : initialized ? (
-          <CodeEditor
-            ref={editorRef}
-            documentSpec={documentSpec}
-            onEdit={handleEdit}
-            onSave={handleSave}
-            isDark={isDark}
-            keyboardInset={editorKeyboardInset}
-            insertSpec={insertSpec}
-            jumpToLine={jumpToLine}
-            dom={{ style: { flex: 1 } }}
-          />
+          <FadeInView fill>
+            <CodeEditor
+              ref={editorRef}
+              documentSpec={documentSpec}
+              onEdit={handleEdit}
+              onSave={handleSave}
+              isDark={isDark}
+              keyboardInset={editorKeyboardInset}
+              insertSpec={insertSpec}
+              jumpToLine={jumpToLine}
+              dom={{ style: { flex: 1 } }}
+            />
+          </FadeInView>
         ) : null}
 
         {isKeyboardVisible && initialized && (

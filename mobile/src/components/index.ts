@@ -3,6 +3,8 @@ export * from "./button";
 export * from "./pressable-scale";
 export * from "./dashboard-card";
 export * from "./dashboard-scroll-view";
+export * from "./crossfade";
+export * from "./tab-bar-icon";
 export * from "./balance-chart-card";
 export * from "./segmented-pages";
 export * from "./time-range-pills";

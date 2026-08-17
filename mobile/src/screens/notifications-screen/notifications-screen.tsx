@@ -1,5 +1,4 @@
 import {
-  RefreshControl,
   ScrollView,
   StyleSheet,
   Text,
@@ -20,6 +19,8 @@ import { ledgerVar } from "@/common/vars";
 import { useListCommitsQuery } from "@/generated-graphql/graphql";
 import { LoadingTile } from "@/components/loading-tile";
 import { LedgerGuard } from "@/components/ledger-guard";
+import { FadeInView } from "@/components/crossfade";
+import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { formatErrorLocation, formatShortSha, LedgerError } from "./formatting";
 
 const SKELETON_WIDTHS = [180, 220, 160, 200, 140, 190];
@@ -215,10 +216,9 @@ function NotificationsScreenImpl(): JSX.Element {
           contentContainerStyle={styles.scrollContent}
           alwaysBounceVertical
           refreshControl={
-            <RefreshControl
+            <ThemedRefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              tintColor={theme.primary}
             />
           }
         >
@@ -229,24 +229,28 @@ function NotificationsScreenImpl(): JSX.Element {
 
           {isFirstLoad ? (
             <SkeletonRows />
-          ) : errorCount === 0 ? (
-            <View style={styles.emptyRow}>
-              <Ionicons
-                name="checkmark-circle-outline"
-                size={18}
-                color={theme.success}
-              />
-              <Text style={styles.emptyText}>
-                {t("notificationsLedgerHealthy")}
-              </Text>
-            </View>
           ) : (
-            errors.map((err, i) => (
-              <View key={i}>
-                <ErrorRow err={err} />
-                <View style={styles.divider} />
-              </View>
-            ))
+            <FadeInView>
+              {errorCount === 0 ? (
+                <View style={styles.emptyRow}>
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={18}
+                    color={theme.success}
+                  />
+                  <Text style={styles.emptyText}>
+                    {t("notificationsLedgerHealthy")}
+                  </Text>
+                </View>
+              ) : (
+                errors.map((err, i) => (
+                  <View key={i}>
+                    <ErrorRow err={err} />
+                    <View style={styles.divider} />
+                  </View>
+                ))
+              )}
+            </FadeInView>
           )}
 
           <Text style={styles.sectionHeader}>
@@ -256,45 +260,49 @@ function NotificationsScreenImpl(): JSX.Element {
 
           {isFirstLoad ? (
             <SkeletonRows />
-          ) : commits.length === 0 ? (
-            <View style={styles.emptyRow}>
-              <Text style={styles.emptyText}>
-                {t("notificationsNoChanges")}
-              </Text>
-            </View>
           ) : (
-            commits.map((commit, i) => (
-              <View key={commit.sha}>
-                <TouchableOpacity
-                  style={styles.changeRow}
-                  activeOpacity={0.7}
-                  onPress={() =>
-                    router.push({
-                      pathname: "/(app)/commit-detail",
-                      params: { sha: commit.sha },
-                    })
-                  }
-                >
-                  <View style={styles.changeContent}>
-                    <Text style={styles.changeMessage} numberOfLines={2}>
-                      {commit.message}
-                    </Text>
-                    <Text style={styles.changeMeta}>
-                      {commit.author.name}{" "}
-                      <Text style={styles.changeSha}>
-                        {formatShortSha(commit.sha, commit.shortSha)}
-                      </Text>
-                    </Text>
+            <FadeInView>
+              {commits.length === 0 ? (
+                <View style={styles.emptyRow}>
+                  <Text style={styles.emptyText}>
+                    {t("notificationsNoChanges")}
+                  </Text>
+                </View>
+              ) : (
+                commits.map((commit, i) => (
+                  <View key={commit.sha}>
+                    <TouchableOpacity
+                      style={styles.changeRow}
+                      activeOpacity={0.7}
+                      onPress={() =>
+                        router.push({
+                          pathname: "/(app)/commit-detail",
+                          params: { sha: commit.sha },
+                        })
+                      }
+                    >
+                      <View style={styles.changeContent}>
+                        <Text style={styles.changeMessage} numberOfLines={2}>
+                          {commit.message}
+                        </Text>
+                        <Text style={styles.changeMeta}>
+                          {commit.author.name}{" "}
+                          <Text style={styles.changeSha}>
+                            {formatShortSha(commit.sha, commit.shortSha)}
+                          </Text>
+                        </Text>
+                      </View>
+                      <Ionicons
+                        name="chevron-forward"
+                        size={18}
+                        color={theme.black60}
+                      />
+                    </TouchableOpacity>
+                    {i < commits.length - 1 && <View style={styles.divider} />}
                   </View>
-                  <Ionicons
-                    name="chevron-forward"
-                    size={18}
-                    color={theme.black60}
-                  />
-                </TouchableOpacity>
-                {i < commits.length - 1 && <View style={styles.divider} />}
-              </View>
-            ))
+                ))
+              )}
+            </FadeInView>
           )}
         </ScrollView>
       </SafeAreaView>

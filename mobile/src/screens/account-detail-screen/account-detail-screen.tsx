@@ -2,25 +2,24 @@ import { useCallback, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   SectionList,
-  RefreshControl,
   StyleSheet,
   Text,
   View,
 } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
-import { NetworkStatus, useReactiveVar } from "@apollo/client";
+import { NetworkStatus } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
-import { themeVar } from "@/common/vars";
 import { getPrimaryCurrency } from "@/common/currency-util";
 import { TimeRange } from "@/common/series-util";
 import { BalanceChartCard } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
+import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useAccountReport } from "@/screens/accounts-screen/hooks/use-account-report";
 import {
@@ -96,8 +95,9 @@ const AccountDetailScreenImpl = ({
   const router = useRouter();
   const { t } = useTranslations();
   const styles = useThemeStyle(getStyles);
-  const theme = useTheme().colorTheme;
-  const currentTheme = useReactiveVar(themeVar);
+  // `.name` is the *resolved* theme — `themeVar` itself can hold "system", so
+  // comparing that to "dark" gave every system-theme user the light indicator.
+  const { colorTheme: theme, name: themeName } = useTheme();
   usePageView("account_detail", { account });
 
   const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(
@@ -288,16 +288,12 @@ const AccountDetailScreenImpl = ({
         contentContainerStyle={{ paddingBottom: 24, flexGrow: 1 }}
         alwaysBounceVertical
         showsVerticalScrollIndicator={false}
-        indicatorStyle={currentTheme === "dark" ? "white" : "default"}
+        indicatorStyle={themeName === "dark" ? "white" : "default"}
         stickySectionHeadersEnabled={false}
         onEndReached={loadMore}
         onEndReachedThreshold={0.5}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={currentTheme === "dark" ? "white" : "black"}
-          />
+          <ThemedRefreshControl refreshing={refreshing} onRefresh={onRefresh} />
         }
         ListEmptyComponent={
           isInitialLoading ? (

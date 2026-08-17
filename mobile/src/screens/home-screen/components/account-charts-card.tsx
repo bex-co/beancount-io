@@ -1,7 +1,6 @@
 import { useState } from "react";
 import { StyleSheet, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { durations } from "@/common/theme";
+import { FadeInView } from "@/components/crossfade";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { LoadingTile } from "@/components/loading-tile";
@@ -110,7 +109,7 @@ export function AccountChartsCard({
   return (
     <DashboardCard bleed>
       {/* Crossfades in over the skeleton, which is sized to this same block. */}
-      <Animated.View entering={FadeIn.duration(durations.base)}>
+      <FadeInView>
         <SegmentedPages
           tabs={charts.map(({ key }) => t(key))}
           pages={pages}
@@ -136,7 +135,7 @@ export function AccountChartsCard({
             });
           }}
         />
-      </Animated.View>
+      </FadeInView>
     </DashboardCard>
   );
 }

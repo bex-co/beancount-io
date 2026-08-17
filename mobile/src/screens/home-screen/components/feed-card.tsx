@@ -5,6 +5,7 @@ import { fontSizes, fontWeights } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import { DashboardCard } from "@/components/dashboard-card";
 import { analytics } from "@/common/analytics";
 import { useGetFeedQuery } from "@/generated-graphql/graphql";
@@ -130,7 +131,7 @@ export function FeedCard({ refreshSignal = 0 }: FeedCardProps): JSX.Element {
           />
         </>
       ) : (
-        <View style={{ paddingHorizontal: 16 }}>
+        <FadeInView style={{ paddingHorizontal: 16 }}>
           {items.map((item, index) => (
             <FeedRow
               key={item.id}
@@ -141,7 +142,7 @@ export function FeedCard({ refreshSignal = 0 }: FeedCardProps): JSX.Element {
               isFirst={index === 0}
             />
           ))}
-        </View>
+        </FadeInView>
       )}
     </DashboardCard>
   );

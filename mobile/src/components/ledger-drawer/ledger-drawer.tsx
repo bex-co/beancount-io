@@ -34,6 +34,7 @@ import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ledgerVar } from "@/common/vars";
 import { useListLedgersQuery } from "@/generated-graphql/graphql";
+import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { clampProgress, settleTarget } from "./drawer-motion";
 import { groupLedgersByOwner } from "./group-ledgers-by-owner";
 
@@ -386,8 +387,12 @@ export function LedgerDrawer({
               alwaysBounceVertical
               sections={ledgerSections}
               keyExtractor={(item) => item.id}
-              onRefresh={handleRefresh}
-              refreshing={refreshing}
+              refreshControl={
+                <ThemedRefreshControl
+                  refreshing={refreshing}
+                  onRefresh={handleRefresh}
+                />
+              }
               stickySectionHeadersEnabled={false}
               ListEmptyComponent={
                 <View style={styles.stateContainer}>

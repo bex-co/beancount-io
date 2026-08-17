@@ -3,7 +3,6 @@ import { useRouter } from "expo-router";
 import {
   ActivityIndicator,
   SectionList,
-  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -18,6 +17,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { NetworkStatus, useReactiveVar } from "@apollo/client";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
+import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { LedgerDrawerHeader } from "@/components";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
 import { TransactionsHeader } from "./transactions-header";
@@ -271,10 +271,9 @@ const TransactionList = () => {
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
         refreshControl={
-          <RefreshControl
+          <ThemedRefreshControl
             refreshing={isRefreshing}
             onRefresh={onRefresh}
-            tintColor={theme.primary}
           />
         }
         onEndReached={loadMore}

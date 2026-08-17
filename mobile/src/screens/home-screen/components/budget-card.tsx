@@ -8,6 +8,7 @@ import { analytics } from "@/common/analytics";
 import { formatMoneyWithCurrency } from "@/common/number-utils";
 import { AmountText, DashboardCard } from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import { BudgetMeter } from "@/screens/budget-screen/components/budget-meter";
 import { useBudgetGroups } from "@/screens/budget-screen/hooks/use-budget-groups";
 import { useBudgetPanel } from "@/screens/home-screen/hooks/use-budget-panel";
@@ -114,16 +115,18 @@ export function BudgetCard({
       // A brand-new feature people won't look for: the panel keeps a row that
       // says what a budget is for rather than disappearing.
       return (
-        <TouchableOpacity
-          style={styles.emptyRow}
-          onPress={openBudget}
-          accessibilityRole="button"
-        >
-          <Text style={styles.emptyText}>{t("budgetPanelEmpty")}</Text>
-        </TouchableOpacity>
+        <FadeInView>
+          <TouchableOpacity
+            style={styles.emptyRow}
+            onPress={openBudget}
+            accessibilityRole="button"
+          >
+            <Text style={styles.emptyText}>{t("budgetPanelEmpty")}</Text>
+          </TouchableOpacity>
+        </FadeInView>
       );
     }
-    return rows.map(renderRow);
+    return <FadeInView>{rows.map(renderRow)}</FadeInView>;
   };
 
   return (

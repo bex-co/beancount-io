@@ -3,7 +3,6 @@ import { useApolloClient } from "@apollo/client";
 import {
   Alert,
   FlatList,
-  RefreshControl,
   StyleSheet,
   Text,
   TouchableOpacity,
@@ -29,6 +28,8 @@ import {
   useGetLedgerDirContentQuery,
 } from "@/generated-graphql/graphql";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
+import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer";
 import { useLedgerGuard } from "@/components/ledger-guard";
 import { TextInputModal } from "@/components/text-input-modal";
@@ -520,58 +521,59 @@ export function LedgerFileBrowserScreen(): JSX.Element {
       {isFirstLoad ? (
         <SkeletonList />
       ) : (
-        <FlatList
-          data={sorted}
-          contentContainerStyle={styles.listContent}
-          alwaysBounceVertical
-          keyExtractor={(item) => item.path}
-          renderItem={({ item, index }) => (
-            <View>
-              <FileRow
-                entry={item}
-                deleting={deletingPath !== null}
-                onPress={() => handleEntryPress(item)}
-                onDelete={() => handleDelete(item)}
+        <FadeInView fill>
+          <FlatList
+            data={sorted}
+            contentContainerStyle={styles.listContent}
+            alwaysBounceVertical
+            keyExtractor={(item) => item.path}
+            renderItem={({ item, index }) => (
+              <View>
+                <FileRow
+                  entry={item}
+                  deleting={deletingPath !== null}
+                  onPress={() => handleEntryPress(item)}
+                  onDelete={() => handleDelete(item)}
+                />
+                {index < sorted.length - 1 && <View style={styles.divider} />}
+              </View>
+            )}
+            ListEmptyComponent={
+              <View style={styles.emptyContainer}>
+                <Ionicons
+                  name={error ? "cloud-offline-outline" : "folder-open-outline"}
+                  size={40}
+                  color={error ? theme.error : theme.black40}
+                />
+                <Text style={error ? styles.errorText : styles.emptyText}>
+                  {error ? t("ledgerLoadError") : t("ledgerEmpty")}
+                </Text>
+                <Text style={styles.stateHint}>
+                  {error ? t("ledgerRefreshHint") : t("ledgerEmptyHint")}
+                </Text>
+                {!error && (
+                  <TouchableOpacity
+                    style={styles.emptyAction}
+                    activeOpacity={0.7}
+                    disabled={creating}
+                    onPress={() => setCreateModalVisible(true)}
+                  >
+                    <Ionicons name="add" size={18} color={theme.white} />
+                    <Text style={styles.emptyActionText}>
+                      {t("ledgerCreateFile")}
+                    </Text>
+                  </TouchableOpacity>
+                )}
+              </View>
+            }
+            refreshControl={
+              <ThemedRefreshControl
+                refreshing={refreshing}
+                onRefresh={onRefresh}
               />
-              {index < sorted.length - 1 && <View style={styles.divider} />}
-            </View>
-          )}
-          ListEmptyComponent={
-            <View style={styles.emptyContainer}>
-              <Ionicons
-                name={error ? "cloud-offline-outline" : "folder-open-outline"}
-                size={40}
-                color={error ? theme.error : theme.black40}
-              />
-              <Text style={error ? styles.errorText : styles.emptyText}>
-                {error ? t("ledgerLoadError") : t("ledgerEmpty")}
-              </Text>
-              <Text style={styles.stateHint}>
-                {error ? t("ledgerRefreshHint") : t("ledgerEmptyHint")}
-              </Text>
-              {!error && (
-                <TouchableOpacity
-                  style={styles.emptyAction}
-                  activeOpacity={0.7}
-                  disabled={creating}
-                  onPress={() => setCreateModalVisible(true)}
-                >
-                  <Ionicons name="add" size={18} color={theme.white} />
-                  <Text style={styles.emptyActionText}>
-                    {t("ledgerCreateFile")}
-                  </Text>
-                </TouchableOpacity>
-              )}
-            </View>
-          }
-          refreshControl={
-            <RefreshControl
-              refreshing={refreshing}
-              onRefresh={onRefresh}
-              tintColor={theme.primary}
-            />
-          }
-        />
+            }
+          />
+        </FadeInView>
       )}
 
       <TextInputModal

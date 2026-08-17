@@ -5,6 +5,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import type { AccountSuggestion } from "@/common/suggestion-utils";
 
 const SKELETON_WIDTHS = [88, 120, 72];
@@ -94,7 +95,7 @@ export function SuggestionChips({
   }
 
   return (
-    <View style={styles.container}>
+    <FadeInView style={styles.container}>
       {chips.map((chip) => {
         const active = chip.account === selectedAccount;
         const label =
@@ -128,6 +129,6 @@ export function SuggestionChips({
           </Pressable>
         );
       })}
-    </View>
+    </FadeInView>
   );
 }

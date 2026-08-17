@@ -45,6 +45,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { Ionicons } from "@expo/vector-icons";
 import { LedgerGuard, useLedgerGuard } from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import { analytics } from "@/common/analytics";
 import { usePageView } from "@/common/hooks";
 
@@ -360,7 +361,7 @@ export function AccountPickerScreenComponent(): JSX.Element {
   }
 
   return (
-    <View style={styles.container}>
+    <FadeInView style={styles.container}>
       <View style={styles.searchBar}>
         <Ionicons name="search-outline" size={16} color={theme.black60} />
         <TextInput
@@ -440,7 +441,7 @@ export function AccountPickerScreenComponent(): JSX.Element {
           />
         )}
       />
-    </View>
+    </FadeInView>
   );
 }
 

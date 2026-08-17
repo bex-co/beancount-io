@@ -1,8 +1,9 @@
-import { StyleSheet, Text, View } from "react-native";
+import { StyleSheet, Text } from "react-native";
 import { useTheme } from "@/common/theme";
 import { ScreenWidth } from "@/common/screen-util";
 import { useUserProfile } from "./hooks/use-user-profile";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import { LedgerDrawerButton } from "@/components/ledger-drawer";
 import { ColorTheme } from "@/types/theme-props";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -60,11 +61,11 @@ export const EmailHeader = ({ userId }: { userId: string }) => {
     return <LoadingTile style={{ height: 24, width: ScreenWidth - 14 * 2 }} />;
   }
   return (
-    <View>
+    <FadeInView>
       <Text style={styles.nameText} numberOfLines={1}>
         {email}
       </Text>
-    </View>
+    </FadeInView>
   );
 };
 

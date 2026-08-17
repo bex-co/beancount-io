@@ -33,6 +33,7 @@ import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import {
   runAddTransactionCallback,
   SelectedPostingAccount,
@@ -517,23 +518,25 @@ export const MultiPostingsTransactionScreenComponent = () => {
               ))}
             </>
           ) : (
-            postings.map((posting, i) => (
-              <PostingRow
-                key={posting.id}
-                posting={posting}
-                index={i}
-                isLast={i === postings.length - 1}
-                canRemove={postings.length > 2}
-                onPickAccount={() => pickAccountForPosting(i)}
-                onChangeAmount={(input) =>
-                  setPostings((prev) => updatePostingAmount(prev, i, input))
-                }
-                onToggleAuto={() =>
-                  setPostings((prev) => toggleLastPostingAuto(prev))
-                }
-                onRemove={() => setPostings((prev) => removePosting(prev, i))}
-              />
-            ))
+            <FadeInView>
+              {postings.map((posting, i) => (
+                <PostingRow
+                  key={posting.id}
+                  posting={posting}
+                  index={i}
+                  isLast={i === postings.length - 1}
+                  canRemove={postings.length > 2}
+                  onPickAccount={() => pickAccountForPosting(i)}
+                  onChangeAmount={(input) =>
+                    setPostings((prev) => updatePostingAmount(prev, i, input))
+                  }
+                  onToggleAuto={() =>
+                    setPostings((prev) => toggleLastPostingAuto(prev))
+                  }
+                  onRemove={() => setPostings((prev) => removePosting(prev, i))}
+                />
+              ))}
+            </FadeInView>
           )}
           <TouchableOpacity
             style={styles.addPostingRow}

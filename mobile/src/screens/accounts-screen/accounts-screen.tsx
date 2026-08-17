@@ -11,6 +11,7 @@ import { useSession } from "@/common/hooks/use-session";
 import { getPrimaryCurrency } from "@/common/currency-util";
 import { LedgerDrawerHeader } from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import { AccountTable } from "@/components/account-table";
 import { selectTrialBalanceCategories } from "@/components/account-list";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -137,13 +138,15 @@ const AccountsScreenImpl = (): JSX.Element => {
           ))}
         </View>
       ) : (
-        <AccountTable
-          categories={categories}
-          currency={currency}
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          onPressAccount={handlePressAccount}
-        />
+        <FadeInView fill>
+          <AccountTable
+            categories={categories}
+            currency={currency}
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            onPressAccount={handlePressAccount}
+          />
+        </FadeInView>
       )}
     </View>
   );

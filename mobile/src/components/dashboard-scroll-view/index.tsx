@@ -1,14 +1,19 @@
 import { ReactNode } from "react";
 import {
   RefreshControl,
+  type RefreshControlProps,
   ScrollView,
   StyleProp,
   StyleSheet,
   ViewStyle,
 } from "react-native";
-import { useReactiveVar } from "@apollo/client";
-import { themeVar } from "@/common/vars";
-import { gutter } from "@/common/theme";
+import { useTheme, gutter } from "@/common/theme";
+import { refreshAppearance } from "./refresh-appearance";
+
+export {
+  refreshAppearance,
+  type RefreshAppearance,
+} from "./refresh-appearance";
 
 const styles = StyleSheet.create({
   content: {
@@ -31,6 +36,24 @@ type Props = {
 };
 
 /**
+ * Everything a list still decides. Appearance props are deliberately excluded:
+ * a per-site override is how the app ended up with three conventions.
+ */
+type ThemedRefreshControlProps = Omit<
+  RefreshControlProps,
+  "tintColor" | "colors" | "progressBackgroundColor" | "titleColor"
+>;
+
+/** The dashboard refresh appearance, reusable by lists with their own scroll. */
+export function ThemedRefreshControl(
+  props: ThemedRefreshControlProps,
+): JSX.Element {
+  const colorTheme = useTheme().colorTheme;
+
+  return <RefreshControl {...props} {...refreshAppearance(colorTheme)} />;
+}
+
+/**
  * Shared vertical scroll container for dashboard-style screens (Home, Reports):
  * consistent gutters, a dark-aware scroll indicator, and pull-to-refresh wired
  * to the screen's refresh state. Keeps the screens visually consistent and free
@@ -42,20 +65,19 @@ export function DashboardScrollView({
   contentContainerStyle,
   children,
 }: Props): JSX.Element {
-  const currentTheme = useReactiveVar(themeVar);
+  // The resolved theme, not `themeVar` — that holds the *setting*, which can be
+  // "system", and comparing it to "dark" gave every system-theme user the light
+  // indicator on a dark screen.
+  const themeName = useTheme().name;
 
   return (
     <ScrollView
       showsVerticalScrollIndicator={false}
       alwaysBounceVertical
       contentContainerStyle={[styles.content, contentContainerStyle]}
-      indicatorStyle={currentTheme === "dark" ? "white" : "default"}
+      indicatorStyle={themeName === "dark" ? "white" : "default"}
       refreshControl={
-        <RefreshControl
-          refreshing={refreshing}
-          onRefresh={onRefresh}
-          tintColor={currentTheme === "dark" ? "white" : "black"}
-        />
+        <ThemedRefreshControl refreshing={refreshing} onRefresh={onRefresh} />
       }
     >
       {children}

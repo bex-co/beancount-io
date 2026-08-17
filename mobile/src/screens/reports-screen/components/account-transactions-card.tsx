@@ -6,6 +6,7 @@ import { fontSizes } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
+import { FadeInView } from "@/components/crossfade";
 import { DashboardCard } from "@/components";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { EntryRow } from "@/screens/transactions-screen/entry-row";
@@ -99,20 +100,24 @@ export function AccountTransactionsCard({
     <DashboardCard title={t(titleKey)} bleed>
       {loading && entries.length === 0 ? (
         <LoadingTile height={160} mx={16} />
-      ) : entries.length === 0 ? (
-        <Text style={styles.empty}>{t(emptyKey)}</Text>
       ) : (
-        entries.map((entry, index) => (
-          <EntryRow
-            key={entry.entry_hash || index}
-            entry={entry}
-            onPress={
-              isJournalTransaction(entry)
-                ? () => openTransactionDetail(router, entry, "reports")
-                : undefined
-            }
-          />
-        ))
+        <FadeInView>
+          {entries.length === 0 ? (
+            <Text style={styles.empty}>{t(emptyKey)}</Text>
+          ) : (
+            entries.map((entry, index) => (
+              <EntryRow
+                key={entry.entry_hash || index}
+                entry={entry}
+                onPress={
+                  isJournalTransaction(entry)
+                    ? () => openTransactionDetail(router, entry, "reports")
+                    : undefined
+                }
+              />
+            ))
+          )}
+        </FadeInView>
       )}
     </DashboardCard>
   );

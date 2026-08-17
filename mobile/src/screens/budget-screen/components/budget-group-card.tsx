@@ -1,8 +1,7 @@
 import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
-import Animated, { FadeIn } from "react-native-reanimated";
+import { FadeInView } from "@/components/crossfade";
 import { ColorTheme } from "@/types/theme-props";
 import {
-  durations,
   fontSizes,
   fontWeights,
   gutter,
@@ -256,7 +255,7 @@ export function BudgetGroupCard({
         ) : error ? (
           <Text style={styles.errorText}>{t("budgetLoadFailed")}</Text>
         ) : (
-          <Animated.View entering={FadeIn.duration(durations.base)}>
+          <FadeInView>
             <BudgetBarChartD3
               labels={series.map((point) =>
                 periodAxisLabel(point.date, group.interval, t),
@@ -267,7 +266,7 @@ export function BudgetGroupCard({
               currencySymbol={getCurrencySymbol(currency)}
               height={CHART_HEIGHT}
             />
-          </Animated.View>
+          </FadeInView>
         )}
       </View>
 

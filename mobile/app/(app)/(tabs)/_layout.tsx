@@ -1,7 +1,7 @@
 import { Tabs } from "expo-router";
 import { useMemo } from "react";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { Ionicons } from "@expo/vector-icons";
+import { TabBarIcon } from "@/components/tab-bar-icon";
 import { HapticTab } from "@/components/haptic-tab";
 import { LedgerDrawerProvider } from "@/components/ledger-drawer";
 import { useTheme } from "@/common/theme";
@@ -29,7 +29,10 @@ export default function TabLayout() {
 
   return (
     <LedgerDrawerProvider>
-      <SafeAreaView edges={["top"]} style={{ flex: 1, backgroundColor: theme.white }}>
+      <SafeAreaView
+        edges={["top"]}
+        style={{ flex: 1, backgroundColor: theme.white }}
+      >
         <Tabs
           initialRouteName="index"
           screenOptions={{
@@ -62,11 +65,7 @@ export default function TabLayout() {
             options={{
               title: tabTitles.home,
               tabBarIcon: ({ color, focused }) => (
-                <Ionicons
-                  name="home"
-                  size={28}
-                  color={focused ? theme.primary : color}
-                />
+                <TabBarIcon route="index" color={color} focused={focused} />
               ),
             }}
           />
@@ -75,11 +74,7 @@ export default function TabLayout() {
             options={{
               title: tabTitles.accounts,
               tabBarIcon: ({ color, focused }) => (
-                <Ionicons
-                  name="copy"
-                  size={28}
-                  color={focused ? theme.primary : color}
-                />
+                <TabBarIcon route="accounts" color={color} focused={focused} />
               ),
             }}
           />
@@ -88,10 +83,10 @@ export default function TabLayout() {
             options={{
               title: tabTitles.transactions,
               tabBarIcon: ({ color, focused }) => (
-                <Ionicons
-                  name="document-text"
-                  size={28}
-                  color={focused ? theme.primary : color}
+                <TabBarIcon
+                  route="transactions"
+                  color={color}
+                  focused={focused}
                 />
               ),
             }}
@@ -101,11 +96,7 @@ export default function TabLayout() {
             options={{
               title: tabTitles.reports,
               tabBarIcon: ({ color, focused }) => (
-                <Ionicons
-                  name="stats-chart"
-                  size={28}
-                  color={focused ? theme.primary : color}
-                />
+                <TabBarIcon route="reports" color={color} focused={focused} />
               ),
             }}
           />
@@ -114,11 +105,7 @@ export default function TabLayout() {
             options={{
               title: tabTitles.files,
               tabBarIcon: ({ color, focused }) => (
-                <Ionicons
-                  name="folder"
-                  size={28}
-                  color={focused ? theme.primary : color}
-                />
+                <TabBarIcon route="ledger" color={color} focused={focused} />
               ),
             }}
           />

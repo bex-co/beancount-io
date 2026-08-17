@@ -1,6 +1,5 @@
 import { useState } from "react";
-import Animated, { FadeIn } from "react-native-reanimated";
-import { durations } from "@/common/theme";
+import { FadeInView } from "@/components/crossfade";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
 import { DashboardCard } from "@/components/dashboard-card";
@@ -80,7 +79,7 @@ export function BalanceChartCard({
 
   return (
     <DashboardCard bleed>
-      <Animated.View entering={FadeIn.duration(durations.base)}>
+      <FadeInView>
         <InteractiveLineChartD3
           label={label}
           labels={chart.labels}
@@ -88,7 +87,7 @@ export function BalanceChartCard({
           currency={currency}
           height={CHART_HEIGHT}
         />
-      </Animated.View>
+      </FadeInView>
       <TimeRangePills
         value={range}
         options={rangeOptions}
