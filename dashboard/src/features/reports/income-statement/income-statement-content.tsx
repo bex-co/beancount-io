@@ -28,10 +28,20 @@ import { HierarchyVisualizationCard } from "../balance-sheet/hierarchy-visualiza
 import { HierarchyListCard } from "../balance-sheet/hierarchy-list-card";
 import { filterAccountHierarchy } from "../balance-sheet/utils";
 import { ChartModeSelect, type ChartMode } from "./chart-mode-select";
+import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
+import { StatementExportMenu } from "../export/statement-export-menu";
+import {
+  buildProfitAndLossDocument,
+  sumBalanceRecords,
+  type ReportingEntitySource,
+} from "../export/model";
+import type { FiscalYearEnd } from "../export/reporting-period";
 
 interface IncomeStatementContentProps {
   incomeStatementData: GetLedgerIncomeStatementQuery["getLedgerIncomeStatement"];
   primaryCurrency: string;
+  reportingEntityName: string;
+  reportingEntitySource: ReportingEntitySource;
   ledgerDisplayName: string;
   ledgerOwner: string;
   ledgerNameParam: string;
@@ -45,11 +55,15 @@ interface IncomeStatementContentProps {
   collapsePatterns: string[];
   onConversionChange: (value: ConversionOption) => void;
   onTimeIntervalChange: (value: ChartInterval) => void;
+  filters: LedgerSearchParams;
+  fiscalYearEnd: FiscalYearEnd;
 }
 
 export function IncomeStatementContent({
   incomeStatementData,
   primaryCurrency,
+  reportingEntityName,
+  reportingEntitySource,
   ledgerDisplayName,
   ledgerOwner,
   ledgerNameParam,
@@ -63,6 +77,8 @@ export function IncomeStatementContent({
   collapsePatterns,
   onConversionChange,
   onTimeIntervalChange,
+  filters,
+  fiscalYearEnd,
 }: IncomeStatementContentProps) {
   const { t } = useTranslations();
   const [selectedTab, setSelectedTab] = useState<string>("netProfit");
@@ -90,30 +106,12 @@ export function IncomeStatementContent({
   );
   const toggleChartsVisible = () => setChartsVisible((prev) => !prev);
 
-  // Calculate total net profit by summing all balances across all periods
+  // Calculate totals using decimal strings so large and fractional accounting
+  // values never pass through IEEE-754 arithmetic.
   const totalNetProfit = useMemo(() => {
-    if (!incomeStatementData?.netProfitData) {
-      return {};
-    }
-
-    const totals: Record<string, number> = {};
-
-    incomeStatementData.netProfitData.forEach((item) => {
-      Object.entries(item.balance).forEach(([currency, value]) => {
-        if (value === null || value === undefined) {
-          return;
-        }
-
-        const numericValue =
-          typeof value === "string" ? parseFloat(value) : Number(value);
-
-        if (!isNaN(numericValue)) {
-          totals[currency] = (totals[currency] || 0) + numericValue;
-        }
-      });
-    });
-
-    return totals;
+    return sumBalanceRecords(
+      incomeStatementData.netProfitData.map((item) => item.balance),
+    );
   }, [incomeStatementData]);
 
   // Sort currencies with primary currency first
@@ -129,7 +127,7 @@ export function IncomeStatementContent({
 
     const balance: Record<string, unknown> = {};
     Object.entries(totalNetProfit).forEach(([currency, value]) => {
-      balance[currency] = String(value);
+      balance[currency] = value;
     });
 
     return {
@@ -173,6 +171,28 @@ export function IncomeStatementContent({
       hierarchyFilterOptions,
     );
   }, [hierarchyFilterOptions, incomeStatementData.expensesHierarchyData]);
+  const exportDocument = buildProfitAndLossDocument({
+    title: t("common.incomeStatement"),
+    reportingEntity: reportingEntityName,
+    reportingEntitySource,
+    ledgerName: ledgerDisplayName,
+    primaryCurrency,
+    conversion,
+    interval: timeInterval,
+    filters,
+    reportDates: incomeStatementData.netProfitData.map((item) => item.date),
+    fiscalYearEnd,
+    income: incomeHierarchy,
+    expenses: expensesHierarchy,
+    netProfitBalances: incomeStatementData.netProfitData.map(
+      (item) => item.balance,
+    ),
+    labels: {
+      income: t("common.income"),
+      expenses: t("common.expenses"),
+      net_profit: t("reports.export.netIncome"),
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -187,6 +207,7 @@ export function IncomeStatementContent({
         />
         <ClientOnly>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <StatementExportMenu document={exportDocument} />
             <Button
               variant="outline"
               size="icon-sm"

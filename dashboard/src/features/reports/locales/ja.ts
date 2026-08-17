@@ -3,6 +3,7 @@ import jaBalanceSheet from "../balance-sheet/locales/ja";
 import jaIncomeStatement from "../income-statement/locales/ja";
 import jaTrialBalance from "../trial-balance/locales/ja";
 import jaOverview from "../overview/locales/ja";
+import jaExport from "../export/locales/ja";
 
 const jaReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -40,6 +41,7 @@ const jaReports = {
   ...jaIncomeStatement,
   ...jaTrialBalance,
   ...jaOverview,
+  ...jaExport,
 };
 
 export default jaReports;

@@ -3,6 +3,7 @@ import ruBalanceSheet from "../balance-sheet/locales/ru";
 import ruIncomeStatement from "../income-statement/locales/ru";
 import ruTrialBalance from "../trial-balance/locales/ru";
 import ruOverview from "../overview/locales/ru";
+import ruExport from "../export/locales/ru";
 
 const ruReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -42,6 +43,7 @@ const ruReports = {
   ...ruIncomeStatement,
   ...ruTrialBalance,
   ...ruOverview,
+  ...ruExport,
 };
 
 export default ruReports;

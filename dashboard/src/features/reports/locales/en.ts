@@ -3,6 +3,7 @@ import enBalanceSheet from "../balance-sheet/locales/en";
 import enIncomeStatement from "../income-statement/locales/en";
 import enTrialBalance from "../trial-balance/locales/en";
 import enOverview from "../overview/locales/en";
+import enExport from "../export/locales/en";
 
 const enReportsShared = {
   "page.reports.hierarchyTitle": {
@@ -42,6 +43,7 @@ const enReports = {
   ...enIncomeStatement,
   ...enTrialBalance,
   ...enOverview,
+  ...enExport,
 };
 
 export default enReports;

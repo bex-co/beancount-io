@@ -3,6 +3,7 @@ import zhBalanceSheet from "../balance-sheet/locales/zh";
 import zhIncomeStatement from "../income-statement/locales/zh";
 import zhTrialBalance from "../trial-balance/locales/zh";
 import zhOverview from "../overview/locales/zh";
+import zhExport from "../export/locales/zh";
 
 const zhReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -40,6 +41,7 @@ const zhReports = {
   ...zhIncomeStatement,
   ...zhTrialBalance,
   ...zhOverview,
+  ...zhExport,
 };
 
 export default zhReports;

@@ -3,6 +3,7 @@ import frBalanceSheet from "../balance-sheet/locales/fr";
 import frIncomeStatement from "../income-statement/locales/fr";
 import frTrialBalance from "../trial-balance/locales/fr";
 import frOverview from "../overview/locales/fr";
+import frExport from "../export/locales/fr";
 
 const frReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -43,6 +44,7 @@ const frReports = {
   ...frIncomeStatement,
   ...frTrialBalance,
   ...frOverview,
+  ...frExport,
 };
 
 export default frReports;

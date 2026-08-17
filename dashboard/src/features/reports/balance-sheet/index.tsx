@@ -39,6 +39,7 @@ export default function LedgerBalanceSheetPage() {
     ledgerData,
   } = useLedger();
   const ledgerFilters = useLedgerSearchParams();
+  const reportingEntityTitle = (ledgerData.options.title ?? "").trim();
   const [timeInterval, setTimeInterval] = useState<ChartInterval>(
     balanceSheetQueryDefaults.interval,
   );
@@ -88,6 +89,12 @@ export default function LedgerBalanceSheetPage() {
     <BalanceSheetContent
       balanceSheetData={balanceSheetData}
       primaryCurrency={primaryCurrency}
+      reportingEntityName={
+        reportingEntityTitle || ledgerDisplayName || ledgerName
+      }
+      reportingEntitySource={
+        reportingEntityTitle ? "ledger_title" : "ledger_name"
+      }
       ledgerDisplayName={ledgerDisplayName ?? ledgerName}
       ledgerOwner={ledgerOwner}
       ledgerNameParam={ledgerName}
@@ -103,6 +110,8 @@ export default function LedgerBalanceSheetPage() {
       showClosedAccounts={getShowClosedAccounts(ledgerData)}
       closedAccountNames={closedAccountNames}
       collapsePatterns={getCollapsePatterns(ledgerData)}
+      filters={ledgerFilters.searchParams}
+      fiscalYearEnd={ledgerData.favaOptions.fiscalYearEnd}
     />
   );
 }

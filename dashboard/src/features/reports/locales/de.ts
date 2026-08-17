@@ -3,6 +3,7 @@ import deBalanceSheet from "../balance-sheet/locales/de";
 import deIncomeStatement from "../income-statement/locales/de";
 import deTrialBalance from "../trial-balance/locales/de";
 import deOverview from "../overview/locales/de";
+import deExport from "../export/locales/de";
 
 const deReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -42,6 +43,7 @@ const deReports = {
   ...deIncomeStatement,
   ...deTrialBalance,
   ...deOverview,
+  ...deExport,
 };
 
 export default deReports;

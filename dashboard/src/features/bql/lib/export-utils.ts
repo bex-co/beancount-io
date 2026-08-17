@@ -1,54 +1,8 @@
 import type { QueryResultTable } from "@/graphql/definitions";
-
-// Cells starting with =, @, tab, or CR — or +/- unless the whole cell is a
-// plain number — are executed as formulas by Excel/Sheets/LibreOffice.
-const FORMULA_PREFIX = /^[\t\r]|^\s*[=+\-@]/;
-const PLAIN_NUMBER = /^[+-]?\d+(\.\d+)?$/;
-
-/**
- * Force spreadsheet-dangerous text to inert text semantics.
- * CSV quoting alone does not stop formula evaluation (CWE-1236), so prefix
- * dangerous cells with an apostrophe, which spreadsheets treat as a text
- * marker. Plain numbers (including negative amounts) are left untouched.
- */
-function neutralizeSpreadsheetFormula(str: string): string {
-  if (!FORMULA_PREFIX.test(str) || PLAIN_NUMBER.test(str)) {
-    return str;
-  }
-  return `'${str}`;
-}
-
-/**
- * Escape CSV field value.
- * Fields containing quotes, commas, or newlines must be quoted.
- * Quotes inside fields must be escaped with double quotes.
- */
-function escapeCSVField(value: unknown): string {
-  if (value === null || value === undefined) {
-    return "";
-  }
-
-  let str = String(value);
-
-  // Handle objects by converting to JSON string
-  if (typeof value === "object") {
-    str = JSON.stringify(value);
-  }
-
-  str = neutralizeSpreadsheetFormula(str);
-
-  // Check if field needs quoting
-  const needsQuoting = /[",\n\r]/.test(str);
-
-  if (needsQuoting) {
-    // Escape quotes by doubling them
-    str = str.replace(/"/g, '""');
-    // Wrap in quotes
-    str = `"${str}"`;
-  }
-
-  return str;
-}
+import {
+  downloadCSV as downloadSecureCSV,
+  rowsToCSV,
+} from "@/common/lib/export/csv";
 
 /**
  * Convert query result table to CSV format.
@@ -60,17 +14,7 @@ export function tableToCSV(result: QueryResultTable): string {
     return "";
   }
 
-  // Header row: column names
-  const headers = types.map((type) => escapeCSVField(type.name));
-  const csvRows: string[] = [headers.join(",")];
-
-  // Data rows
-  rows.forEach((row) => {
-    const escapedRow = row.map((cell) => escapeCSVField(cell));
-    csvRows.push(escapedRow.join(","));
-  });
-
-  return csvRows.join("\n");
+  return rowsToCSV([types.map((type) => type.name), ...rows]);
 }
 
 /**
@@ -80,24 +24,7 @@ export function downloadCSV(
   csv: string,
   filename: string = "query_result.csv",
 ) {
-  // Create blob with UTF-8 BOM for Excel compatibility
-  const bom = "\uFEFF";
-  const blob = new Blob([bom + csv], { type: "text/csv;charset=utf-8;" });
-
-  // Create download link
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.style.display = "none";
-
-  // Trigger download
-  document.body.appendChild(link);
-  link.click();
-
-  // Cleanup
-  document.body.removeChild(link);
-  URL.revokeObjectURL(url);
+  downloadSecureCSV(csv, filename);
 }
 
 /**

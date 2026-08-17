@@ -40,6 +40,7 @@ export default function LedgerIncomeStatementPage() {
     primaryCurrency,
   } = useLedger();
   const ledgerFilters = useLedgerSearchParams();
+  const reportingEntityTitle = (ledgerData.options.title ?? "").trim();
   const [timeInterval, setTimeInterval] = useState<ChartInterval>(
     incomeStatementQueryDefaults.interval,
   );
@@ -100,6 +101,12 @@ export default function LedgerIncomeStatementPage() {
     <IncomeStatementContent
       incomeStatementData={incomeStatementData}
       primaryCurrency={primaryCurrency}
+      reportingEntityName={
+        reportingEntityTitle || ledgerDisplayName || ledgerName
+      }
+      reportingEntitySource={
+        reportingEntityTitle ? "ledger_title" : "ledger_name"
+      }
       ledgerDisplayName={ledgerDisplayName ?? ledgerName}
       ledgerOwner={ledgerOwner}
       ledgerNameParam={ledgerName}
@@ -113,6 +120,8 @@ export default function LedgerIncomeStatementPage() {
       showClosedAccounts={getShowClosedAccounts(ledgerData)}
       closedAccountNames={closedAccountNames}
       collapsePatterns={collapsePatterns}
+      filters={ledgerFilters.searchParams}
+      fiscalYearEnd={ledgerData.favaOptions.fiscalYearEnd}
     />
   );
 }

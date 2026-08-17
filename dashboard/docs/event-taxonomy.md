@@ -1,7 +1,7 @@
 # Event Taxonomy — Beancount Dashboard
 
 **Owner:** Product Analytics
-**Status:** live — **registration, login, page views** (v1 baseline) + activation/engagement events (`directive_added`, `file_edited`, `ai_agent_message_sent`, `bql_query_executed`) + first monetization-intent events (`upgrade_prompt_clicked`, `checkout_started`)
+**Status:** live — **registration, login, page views** (v1 baseline) + activation/engagement events (`directive_added`, `file_edited`, `ai_agent_message_sent`, `bql_query_executed`, financial-statement export lifecycle) + first monetization-intent events (`upgrade_prompt_clicked`, `checkout_started`)
 **Code:** `src/common/analytics/events.ts` (registry + typed `track()`)
 **Related:** `docs/product-analytics-review.md` (why these events)
 
@@ -60,7 +60,7 @@ Set via `setUserProperties(...)`. These enable cohort comparisons (retention by 
 | `signup_date` | ISO date | Cohort by signup week |
 | `ledger_count` | number | Power-user segmentation |
 | `has_linked_bank` | boolean | Activation-quality segmentation |
-| `preferred_language` | string | Language-cohort growth analysis (13 locales) |
+| `preferred_language` | string | Language-cohort growth analysis (15 locales) |
 
 ---
 
@@ -124,6 +124,9 @@ Exactly what ships now. The auth + activation events are in the typed registry; 
 | `file_edited` | custom | `features/ledger-editor/file-editor/components/ledger-file-view/index.tsx → handleSaveFile` (save mutation `onCompleted`) | — (no path sent, see §4) | Engagement: do users edit raw ledger files directly? |
 | `ai_agent_message_sent` | custom | `features/ai-agent/pages/agent/page.tsx` — `handleSubmit` (chat-input send, `surface=chat_input`) and the `?q=` auto-submit effect (`surface=deep_link`); NOT the SDK's post-approval auto-continuation | `has_attachment`, `surface` (no message text / file content, see §4) | Engagement: how often do users chat with the agent? (frequency per user / session; slice `has_attachment` for file-processing use) |
 | `bql_query_executed` | custom | `features/bql/pages/index.tsx → executeQueryAndCache` (single choke point for manual submit / history re-run / `?query=` deep-link; fires per execution, success and failure alike) | — (**bare by design**, see note) | Engagement: how often do users run BQL queries? (frequency per user, by `event_name`) |
+| `report_export_started` | custom | `features/reports/export/statement-export-menu.tsx → runAction` before CSV, Markdown, or print handoff | `report_type` (`balance_sheet \| profit_and_loss`), `format` (`csv \| markdown \| print`) | Adoption: which statement export paths do users invoke? |
+| `report_export_completed` | custom | Same handler, once after the browser accepts the download or print action | `report_type`, `format` | Reliability: which export actions reach browser handoff? |
+| `report_export_failed` | custom | Same handler's catch branch, at most once per action | `report_type`, `format`, `failure_category` (`csv_generation \| markdown_generation \| print_dialog`) | Reliability: which bounded failure class prevents export? |
 | `upgrade_prompt_clicked` | custom | Every in-app upgrade CTA that routes to the billing page instead of checking out inline: `common/components/ai-cfo-upgrade-panel.tsx` (`surface=ai_cfo_panel`), `features/importer/components/steps/upload/parse-error-display.tsx` (`surface=importer_paywall`), `common/components/limit-indicator.tsx` (`surface=ledgers_limit`/`collaborators_limit`), `common/components/ledger-layout/directive-usage-indicator.tsx` (`surface=directive_usage`) — fired on the `<Link>` click | `surface`, `target_tier?` | Monetization intent: which friction points drive upgrade interest (top of funnel) |
 | `checkout_started` | custom | `features/user-settings/pages/general/subscription-upgrade-cards.tsx` — plan card "Upgrade" button `onClick`, new-subscriber (`onUpgradeCheckout` → `createSubscriptionSession`) branch only | `target_tier`, `surface` (`settings_billing`) | Monetization: how many new subscribers begin Stripe Checkout, by target plan (funnel stage below `upgrade_prompt_clicked`) |
 
@@ -132,6 +135,12 @@ Exactly what ships now. The auth + activation events are in the typed registry; 
 > **Why `file_edited` sends no path.** A raw file path can encode ledger/account structure; §4 forbids it. The event fires in the save mutation's `onCompleted` only, and the editor guards against saving unchanged content (`text-file-view.tsx`), so one genuine save = one event.
 >
 > **Why `bql_query_executed` is bare (no `success`/`duration_ms`).** GA4 event-scoped custom dimensions are capped (50 on standard properties), and every event parameter you want to slice on consumes one slot — whereas `event_name` is a free, always-on dimension. So this event carries **no** parameters: it answers "how often does a user run BQL?" from the event count alone, at zero custom-dimension cost. The raw BQL text is also PII (embeds account names, §4) and must never be sent; `success`/`duration_ms` were deliberately dropped rather than spend two slots on a single event. If a success/latency breakdown is ever needed, prefer a separate `bql_query_failed` event name (still free) over adding a param.
+>
+> **Why statement export events use bounded dimensions only.** Ledger names,
+> filenames, time/account/advanced filters, account paths, currencies, and
+> amounts are all excluded. The report kind, output format, and two-value
+> failure category are sufficient to measure adoption and reliability without
+> exposing financial context or creating high-cardinality analytics data.
 
 **Why `sign_up` fires at OTP verification, not form submit.** The account is only confirmed after the email OTP step (`VerifySignUpOtp` returns the session token). Firing at form submit would inflate the signup count with abandoned/unverified attempts — the same metric-hygiene reasoning behind suppressing automatic page views. The register-form submit can be added later as a separate funnel-entry event (`sign_up_started`) if we want drop-off between submit and verification.
 

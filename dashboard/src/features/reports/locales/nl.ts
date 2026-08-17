@@ -3,6 +3,7 @@ import nlBalanceSheet from "../balance-sheet/locales/nl";
 import nlIncomeStatement from "../income-statement/locales/nl";
 import nlTrialBalance from "../trial-balance/locales/nl";
 import nlOverview from "../overview/locales/nl";
+import nlExport from "../export/locales/nl";
 
 const nlReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -42,6 +43,7 @@ const nlReports = {
   ...nlIncomeStatement,
   ...nlTrialBalance,
   ...nlOverview,
+  ...nlExport,
 };
 
 export default nlReports;

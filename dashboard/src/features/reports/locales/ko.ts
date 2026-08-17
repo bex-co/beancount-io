@@ -3,6 +3,7 @@ import koBalanceSheet from "../balance-sheet/locales/ko";
 import koIncomeStatement from "../income-statement/locales/ko";
 import koTrialBalance from "../trial-balance/locales/ko";
 import koOverview from "../overview/locales/ko";
+import koExport from "../export/locales/ko";
 
 const koReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -41,6 +42,7 @@ const koReports = {
   ...koIncomeStatement,
   ...koTrialBalance,
   ...koOverview,
+  ...koExport,
 };
 
 export default koReports;

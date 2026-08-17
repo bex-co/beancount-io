@@ -27,10 +27,19 @@ import { ResponsiveTabTriggerList } from "@/common/components/responsive-tab-tri
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { filterAccountHierarchy } from "./utils";
+import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
+import { StatementExportMenu } from "../export/statement-export-menu";
+import {
+  buildBalanceSheetDocument,
+  type ReportingEntitySource,
+} from "../export/model";
+import type { FiscalYearEnd } from "../export/reporting-period";
 
 interface BalanceSheetContentProps {
   balanceSheetData: GetLedgerBalanceSheetQuery["getLedgerBalanceSheet"];
   primaryCurrency: string;
+  reportingEntityName: string;
+  reportingEntitySource: ReportingEntitySource;
   ledgerDisplayName: string;
   ledgerOwner: string;
   ledgerNameParam: string;
@@ -44,11 +53,15 @@ interface BalanceSheetContentProps {
   showClosedAccounts: boolean;
   closedAccountNames: Set<string>;
   collapsePatterns: string[];
+  filters: LedgerSearchParams;
+  fiscalYearEnd: FiscalYearEnd;
 }
 
 export function BalanceSheetContent({
   balanceSheetData,
   primaryCurrency,
+  reportingEntityName,
+  reportingEntitySource,
   ledgerDisplayName,
   ledgerOwner,
   ledgerNameParam,
@@ -62,6 +75,8 @@ export function BalanceSheetContent({
   showClosedAccounts,
   closedAccountNames,
   collapsePatterns,
+  filters,
+  fiscalYearEnd,
 }: BalanceSheetContentProps) {
   const { t } = useTranslations();
   const [selectedTab, setSelectedTab] = useState<string>("netWorth");
@@ -106,6 +121,31 @@ export function BalanceSheetContent({
     balanceSheetData.equityHierarchyData as SerializableTreeNode,
     hierarchyFilterOptions,
   );
+  const exportDocument = buildBalanceSheetDocument({
+    title: t("common.balanceSheet"),
+    reportingEntity: reportingEntityName,
+    reportingEntitySource,
+    ledgerName: ledgerDisplayName,
+    primaryCurrency,
+    conversion,
+    interval: timeInterval,
+    filters,
+    reportDates: [
+      ...balanceSheetData.netWorthData,
+      ...balanceSheetData.assetsData,
+      ...balanceSheetData.liabilitiesData,
+      ...balanceSheetData.equityData,
+    ].map((item) => item.date),
+    fiscalYearEnd,
+    assets: assetsHierarchy,
+    liabilities: liabilitiesHierarchy,
+    equity: equityHierarchy,
+    labels: {
+      assets: t("common.assets"),
+      liabilities: t("common.liabilities"),
+      equity: t("common.equity"),
+    },
+  });
 
   return (
     <div className="space-y-6">
@@ -120,6 +160,7 @@ export function BalanceSheetContent({
         />
         <ClientOnly>
           <div className="flex items-center gap-2 shrink-0 flex-wrap">
+            <StatementExportMenu document={exportDocument} />
             <Button
               variant="outline"
               size="icon-sm"

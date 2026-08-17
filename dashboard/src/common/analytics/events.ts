@@ -35,6 +35,14 @@ export type AuthMethod = "password";
  */
 export type DirectiveType = "transaction" | "balance" | "note" | "open";
 
+/** Financial statement and browser output selected from a report page. */
+export type ReportExportType = "balance_sheet" | "profit_and_loss";
+export type ReportExportFormat = "csv" | "markdown" | "print";
+export type ReportExportFailure =
+  | "csv_generation"
+  | "markdown_generation"
+  | "print_dialog";
+
 /** Subscription tier. Mirrors UserTier so it stays in sync with billing. */
 export type PlanTier = UserTier;
 
@@ -117,6 +125,24 @@ export interface AnalyticsEvents {
    * free dimension, so this reports frequency with zero custom-dimension budget.
    */
   bql_query_executed: Record<string, never>;
+  /**
+   * A user invoked a financial-statement export. These events intentionally
+   * contain only bounded product dimensions: never ledger identifiers,
+   * filenames, filter expressions, account names, or amounts.
+   */
+  report_export_started: {
+    report_type: ReportExportType;
+    format: ReportExportFormat;
+  };
+  report_export_completed: {
+    report_type: ReportExportType;
+    format: ReportExportFormat;
+  };
+  report_export_failed: {
+    report_type: ReportExportType;
+    format: ReportExportFormat;
+    failure_category: ReportExportFailure;
+  };
 
   // --- Monetization ---
   /**

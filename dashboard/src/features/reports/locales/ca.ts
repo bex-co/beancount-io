@@ -3,6 +3,7 @@ import caBalanceSheet from "../balance-sheet/locales/ca";
 import caIncomeStatement from "../income-statement/locales/ca";
 import caTrialBalance from "../trial-balance/locales/ca";
 import caOverview from "../overview/locales/ca";
+import caExport from "../export/locales/ca";
 
 const caReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -42,6 +43,7 @@ const caReports = {
   ...caIncomeStatement,
   ...caTrialBalance,
   ...caOverview,
+  ...caExport,
 };
 
 export default caReports;

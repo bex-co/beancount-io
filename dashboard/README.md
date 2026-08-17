@@ -44,6 +44,34 @@ be prefixed with `VITE_`.
 | `yarn format:check` | Check formatting (Prettier)                    |
 | `yarn codegen`      | Regenerate GraphQL types from the schema       |
 
+## Exporting financial statements
+
+Open a ledger's Balance Sheet or Income Statement, apply the time, account,
+advanced, interval, and conversion controls you need, then choose **Download**
+in the report header. **Spreadsheet CSV** downloads the visible filtered
+hierarchy in a formula-safe, Excel-compatible file, including both source-ledger
+and statement-facing signs. **Markdown report** downloads a reviewable,
+pagination-independent management statement with consistent amount formatting.
+Income Statement exports put the conventional single-step summary first—total
+revenue, total expenses, and net income or loss—and move the complete account
+hierarchy into a supporting-detail appendix. Multi-unit results are explicitly
+labeled as a management schedule and must not be added across units; select a
+presentation currency for a single-currency statement.
+Balance Sheet exports similarly put an accounting-equation summary first—total
+assets, total liabilities, total equity, total liabilities and equity, and the
+reconciliation difference—then move the complete ledger hierarchy to a new-page
+supporting appendix with section totals at the bottom. A nonzero reconciliation
+difference keeps the statement labeled as an internal draft. Because the source
+hierarchy does not carry maturity classifications, the export discloses that
+current and non-current groupings are unavailable instead of guessing from
+account names.
+**Print / Save as PDF** opens the browser's print dialog with an unaudited
+management statement, reporting dates, scope notices, and ledger-unit
+disclosures; choose your browser's PDF destination to create a PDF. The
+reporting entity is taken from Beancount's `option "title"`; if it is missing,
+the export uses the source ledger name and displays a readiness notice. Other
+report pages do not expose this statement export menu.
+
 ## Tech stack
 
 React 19 · TypeScript · TanStack Start / Router (SSR) · Apollo Client · Tailwind

@@ -3,6 +3,7 @@ import esBalanceSheet from "../balance-sheet/locales/es";
 import esIncomeStatement from "../income-statement/locales/es";
 import esTrialBalance from "../trial-balance/locales/es";
 import esOverview from "../overview/locales/es";
+import esExport from "../export/locales/es";
 
 const esReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -43,6 +44,7 @@ const esReports = {
   ...esIncomeStatement,
   ...esTrialBalance,
   ...esOverview,
+  ...esExport,
 };
 
 export default esReports;

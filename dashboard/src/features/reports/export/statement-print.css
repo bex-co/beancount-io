@@ -1,0 +1,234 @@
+@media screen {
+  .statement-print-root {
+    display: none;
+  }
+}
+
+@media print {
+  @page {
+    size: auto;
+    margin: 12mm 12mm 22mm;
+  }
+
+  body > *:not(.statement-print-root) {
+    display: none !important;
+  }
+
+  .statement-print-root {
+    display: block !important;
+    position: static;
+    width: 100%;
+    color: #111;
+    background: #fff;
+    font-family: ui-sans-serif, system-ui, sans-serif;
+    font-size: 10pt;
+    line-height: 1.35;
+    padding-bottom: 8mm;
+  }
+
+  .statement-print-header {
+    border-bottom: 2px solid #111;
+    margin-bottom: 1rem;
+    padding-bottom: 0.75rem;
+  }
+
+  .statement-print-header h1 {
+    margin: 0.15rem 0;
+    font-size: 20pt;
+  }
+
+  .statement-print-ledger {
+    margin: 0;
+    font-size: 12pt;
+    font-weight: 600;
+  }
+
+  .statement-print-period {
+    margin: 0.15rem 0 0;
+    font-size: 10pt;
+  }
+
+  .statement-print-status {
+    display: inline-block;
+    border: 1px solid #777;
+    margin: 0.45rem 0 0;
+    padding: 0.15rem 0.4rem;
+    color: #555;
+    font-size: 8.5pt;
+    font-weight: 600;
+    letter-spacing: 0.02em;
+    text-transform: uppercase;
+  }
+
+  .statement-print-context {
+    border: 1px solid #bbb;
+    margin-bottom: 1rem;
+    padding: 0.65rem;
+  }
+
+  .statement-print-notices {
+    break-inside: avoid;
+    border-inline-start: 3px solid #777;
+    margin-bottom: 1rem;
+    padding: 0.25rem 0.65rem;
+  }
+
+  .statement-print-context h2,
+  .statement-print-notices h2,
+  .statement-print-section h2,
+  .statement-print-section h3 {
+    break-after: avoid-page;
+    margin: 0 0 0.4rem;
+    font-size: 12pt;
+  }
+
+  .statement-print-notices ul {
+    margin: 0;
+    padding-inline-start: 1.25rem;
+  }
+
+  .statement-print-notices li + li {
+    margin-top: 0.2rem;
+  }
+
+  .statement-print-context dl {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.35rem 1rem;
+    margin: 0;
+  }
+
+  .statement-print-context dl div {
+    min-width: 0;
+  }
+
+  .statement-print-context dt {
+    color: #555;
+    font-size: 8pt;
+    font-weight: 600;
+    text-transform: uppercase;
+  }
+
+  .statement-print-context dd {
+    overflow-wrap: anywhere;
+    margin: 0;
+  }
+
+  .statement-print-section {
+    margin-top: 1rem;
+  }
+
+  .statement-print-summary {
+    break-inside: avoid;
+  }
+
+  .statement-print-summary-row th,
+  .statement-print-summary-row td {
+    font-weight: 600;
+  }
+
+  .statement-print-summary-row-net_result th,
+  .statement-print-summary-row-net_result td {
+    border-top: 2px double #111;
+    border-bottom: 2px double #111;
+    font-weight: 700;
+  }
+
+  .statement-print-summary-row-total_assets th,
+  .statement-print-summary-row-total_assets td {
+    border-bottom: 1.5px solid #111;
+  }
+
+  .statement-print-summary-row-total_liabilities_and_equity th,
+  .statement-print-summary-row-total_liabilities_and_equity td {
+    border-top: 2px double #111;
+    border-bottom: 2px double #111;
+    font-weight: 700;
+  }
+
+  .statement-print-summary-row-reconciliation_difference th,
+  .statement-print-summary-row-reconciliation_difference td {
+    border-top: 1px dashed #777;
+    color: #444;
+    font-size: 9pt;
+    font-weight: 700;
+  }
+
+  .statement-print-supporting-detail {
+    break-before: page;
+  }
+
+  .statement-print-supporting-detail > h2 {
+    break-after: avoid-page;
+    border-bottom: 2px solid #111;
+    margin: 0 0 1rem;
+    padding-bottom: 0.5rem;
+    font-size: 15pt;
+  }
+
+  .statement-print-section table {
+    width: 100%;
+    border-collapse: collapse;
+    table-layout: fixed;
+  }
+
+  .statement-print-section th,
+  .statement-print-section td {
+    border-bottom: 1px solid #ccc;
+    overflow-wrap: anywhere;
+    padding: 0.3rem 0.5rem;
+    text-align: start;
+    vertical-align: top;
+  }
+
+  .statement-print-section thead {
+    display: table-header-group;
+  }
+
+  .statement-print-section thead th {
+    border-bottom: 1.5px solid #111;
+  }
+
+  .statement-print-section thead th:first-child {
+    width: 58%;
+  }
+
+  .statement-print-row {
+    break-inside: avoid;
+  }
+
+  .statement-print-row th[scope="row"] {
+    font-weight: 400;
+  }
+
+  .statement-print-row-total th,
+  .statement-print-row-total td {
+    border-top: 1.5px solid #111;
+    font-weight: 700 !important;
+  }
+
+  .statement-print-row-subtotal th,
+  .statement-print-row-subtotal td {
+    font-weight: 600 !important;
+  }
+
+  .statement-print-amount {
+    font-family: ui-monospace, SFMono-Regular, Menlo, monospace;
+    text-align: end !important;
+    white-space: nowrap;
+  }
+
+  .statement-print-footer {
+    break-inside: avoid;
+    border-top: 1px solid #aaa;
+    color: #555;
+    font-size: 7.5pt;
+    line-height: 1.25;
+    margin-top: 8mm;
+    padding-top: 2mm;
+  }
+
+  .statement-print-footer p {
+    margin: 0;
+  }
+}

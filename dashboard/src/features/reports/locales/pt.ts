@@ -3,6 +3,7 @@ import ptBalanceSheet from "../balance-sheet/locales/pt";
 import ptIncomeStatement from "../income-statement/locales/pt";
 import ptTrialBalance from "../trial-balance/locales/pt";
 import ptOverview from "../overview/locales/pt";
+import ptExport from "../export/locales/pt";
 
 const ptReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -42,6 +43,7 @@ const ptReports = {
   ...ptIncomeStatement,
   ...ptTrialBalance,
   ...ptOverview,
+  ...ptExport,
 };
 
 export default ptReports;

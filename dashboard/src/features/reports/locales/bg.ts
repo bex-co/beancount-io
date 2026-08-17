@@ -3,6 +3,7 @@ import bgBalanceSheet from "../balance-sheet/locales/bg";
 import bgIncomeStatement from "../income-statement/locales/bg";
 import bgTrialBalance from "../trial-balance/locales/bg";
 import bgOverview from "../overview/locales/bg";
+import bgExport from "../export/locales/bg";
 
 const bgReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -42,6 +43,7 @@ const bgReports = {
   ...bgIncomeStatement,
   ...bgTrialBalance,
   ...bgOverview,
+  ...bgExport,
 };
 
 export default bgReports;

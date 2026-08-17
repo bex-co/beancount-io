@@ -130,11 +130,13 @@ describe("CSV Export Utils", () => {
   describe("downloadCSV", () => {
     let createObjectURLSpy: ReturnType<typeof vi.fn>;
     let revokeObjectURLSpy: ReturnType<typeof vi.fn>;
+    let clickSpy: ReturnType<typeof vi.fn>;
 
     beforeEach(() => {
       // Mock URL.createObjectURL and URL.revokeObjectURL
       createObjectURLSpy = vi.fn().mockReturnValue("blob:mock-url");
       revokeObjectURLSpy = vi.fn();
+      clickSpy = vi.fn();
 
       // Assign to global URL
       global.URL.createObjectURL = createObjectURLSpy;
@@ -143,7 +145,7 @@ describe("CSV Export Utils", () => {
       // Mock document.createElement
       const mockLink = {
         setAttribute: vi.fn(),
-        click: vi.fn(),
+        click: clickSpy,
         style: { visibility: "" },
       } as unknown as HTMLAnchorElement;
 
@@ -223,6 +225,18 @@ describe("CSV Export Utils", () => {
       expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:mock-url");
     });
 
+    it("should clean up when the browser rejects the download click", () => {
+      clickSpy.mockImplementationOnce(() => {
+        throw new Error("download rejected");
+      });
+
+      expect(() => downloadCSV("data", "test.csv")).toThrow(
+        "download rejected",
+      );
+      expect(document.body.removeChild).toHaveBeenCalled();
+      expect(revokeObjectURLSpy).toHaveBeenCalledWith("blob:mock-url");
+    });
+
     it("should handle different filenames", () => {
       const csvContent = "data";
       const filename = "export-2024-01-01.csv";
@@ -241,7 +255,9 @@ describe("CSV Export Utils", () => {
 
       expect(createObjectURLSpy).toHaveBeenCalled();
       const blobArg = createObjectURLSpy.mock.calls[0][0] as Blob;
-      expect(blobArg.size).toBe(0);
+      // UTF-8 BOM is retained even for an empty data set so Excel detects
+      // Unicode reliably.
+      expect(blobArg.size).toBeGreaterThan(0);
     });
   });
 });

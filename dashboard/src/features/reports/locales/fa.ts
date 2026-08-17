@@ -3,6 +3,7 @@ import faBalanceSheet from "../balance-sheet/locales/fa";
 import faIncomeStatement from "../income-statement/locales/fa";
 import faTrialBalance from "../trial-balance/locales/fa";
 import faOverview from "../overview/locales/fa";
+import faExport from "../export/locales/fa";
 
 const faReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -42,6 +43,7 @@ const faReports = {
   ...faIncomeStatement,
   ...faTrialBalance,
   ...faOverview,
+  ...faExport,
 };
 
 export default faReports;

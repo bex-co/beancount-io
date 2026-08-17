@@ -3,6 +3,7 @@ import ukBalanceSheet from "../balance-sheet/locales/uk";
 import ukIncomeStatement from "../income-statement/locales/uk";
 import ukTrialBalance from "../trial-balance/locales/uk";
 import ukOverview from "../overview/locales/uk";
+import ukExport from "../export/locales/uk";
 
 const ukReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -42,6 +43,7 @@ const ukReports = {
   ...ukIncomeStatement,
   ...ukTrialBalance,
   ...ukOverview,
+  ...ukExport,
 };
 
 export default ukReports;

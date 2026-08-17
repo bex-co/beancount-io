@@ -3,6 +3,7 @@ import skBalanceSheet from "../balance-sheet/locales/sk";
 import skIncomeStatement from "../income-statement/locales/sk";
 import skTrialBalance from "../trial-balance/locales/sk";
 import skOverview from "../overview/locales/sk";
+import skExport from "../export/locales/sk";
 
 const skReportsShared = {
   "page.reports.hierarchyListDescription": {
@@ -42,6 +43,7 @@ const skReports = {
   ...skIncomeStatement,
   ...skTrialBalance,
   ...skOverview,
+  ...skExport,
 };
 
 export default skReports;
