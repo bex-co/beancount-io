@@ -49,8 +49,14 @@ const getStyles = (theme: ColorTheme) =>
     // The selected pill's fill is the sliding indicator below, not a style on
     // the pill itself — otherwise the fill would teleport while the indicator
     // travelled.
+    //
+    // `left: 0` is load-bearing: without a horizontal inset Yoga falls back to
+    // the static position, which in this `justifyContent: "center"` row is the
+    // row's centre — the measured `translateX` would then be added to a centred
+    // origin and park the fill off the right end of the pills.
     indicator: {
       position: "absolute",
+      left: 0,
       borderRadius: 14,
       backgroundColor: theme.primary,
     },
