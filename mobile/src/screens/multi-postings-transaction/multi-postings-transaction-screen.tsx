@@ -36,10 +36,10 @@ import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import {
   runAddTransactionCallback,
-  SelectedPostingAccount,
   SelectedNarration,
   SelectedPayee,
 } from "@/common/globalFnFactory";
+import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useSession } from "@/common/hooks/use-session";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
@@ -82,7 +82,7 @@ const getStyles = (theme: ColorTheme) =>
       marginHorizontal: 16,
       marginBottom: 12,
       borderWidth: 1,
-      borderColor: theme.black10,
+      borderColor: theme.controlBorder,
       borderRadius: 12,
       overflow: "hidden",
       backgroundColor: theme.white,
@@ -299,7 +299,7 @@ const PostingRow = ({
             onChangeText={handleAbsValueChange}
             keyboardType="decimal-pad"
             placeholder="0.00"
-            placeholderTextColor={theme.black60}
+            placeholderTextColor={theme.controlPlaceholder}
             selectTextOnFocus
           />
           {isLast && posting.isAuto ? (
@@ -433,12 +433,11 @@ export const MultiPostingsTransactionScreenComponent = () => {
   };
 
   const pickAccountForPosting = (index: number) => {
-    SelectedPostingAccount.setFn((account: string) => {
-      setPostings((prev) => updatePostingAccount(prev, index, account));
-    });
-    router.push({
-      pathname: "/(app)/account-picker",
-      params: { type: "posting", selectedItem: postings[index]?.account },
+    pushAccountPicker(router, {
+      type: "posting",
+      current: postings[index]?.account,
+      onSelect: (account) =>
+        setPostings((prev) => updatePostingAccount(prev, index, account)),
     });
   };
 

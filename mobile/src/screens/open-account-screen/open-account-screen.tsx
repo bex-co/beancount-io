@@ -119,9 +119,9 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       borderWidth: 1,
-      borderColor: theme.black40,
+      borderColor: theme.controlBorder,
       borderRadius: 8,
-      backgroundColor: theme.black10,
+      backgroundColor: theme.controlFill,
       overflow: "hidden",
     },
     prefixButton: {
@@ -317,7 +317,7 @@ export function OpenAccountScreenComponent(): JSX.Element {
                 }}
                 style={styles.input}
                 placeholder={t("openAccountNamePlaceholder")}
-                placeholderTextColor={theme.black60}
+                placeholderTextColor={theme.controlPlaceholder}
                 autoCapitalize="words"
                 autoCorrect={false}
                 returnKeyType="done"

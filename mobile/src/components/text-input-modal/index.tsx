@@ -181,7 +181,7 @@ export const TextInputModal: React.FC<TextInputModalProps> = ({
               value={inputText}
               onChangeText={setInputText}
               placeholder={placeholder}
-              placeholderTextColor={theme.black40}
+              placeholderTextColor={theme.controlPlaceholder}
               autoFocus
               autoCapitalize="none"
               autoCorrect={false}

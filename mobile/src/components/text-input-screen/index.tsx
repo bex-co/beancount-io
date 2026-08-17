@@ -58,7 +58,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     card: {
       borderWidth: 1,
-      borderColor: theme.black10,
+      borderColor: theme.controlBorder,
       borderRadius: 12,
       overflow: "hidden",
       backgroundColor: theme.white,
@@ -77,7 +77,7 @@ const getStyles = (theme: ColorTheme) =>
       borderTopColor: theme.black10,
     },
     suggestionRowPressed: {
-      backgroundColor: theme.black10,
+      backgroundColor: theme.controlSelected,
     },
     suggestionText: {
       flex: 1,
@@ -192,7 +192,7 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
           style={styles.input}
           value={value}
           placeholder={placeholder ?? i18n.t("pleaseInput")}
-          placeholderTextColor={theme.black60}
+          placeholderTextColor={theme.controlPlaceholder}
           underlineColorAndroid="transparent"
           clearButtonMode="while-editing"
           autoFocus

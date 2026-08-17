@@ -3,9 +3,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   SectionList,
-  TextInput,
   TouchableOpacity,
 } from "react-native";
 import {
@@ -16,7 +14,6 @@ import {
   sectionHeaderPaddingVertical,
   space,
   useTheme,
-  withAlpha,
 } from "@/common/theme";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import {
@@ -32,18 +29,24 @@ import {
 } from "./picker-sections";
 import { ColorTheme } from "@/types/theme-props";
 import { useLocalSearchParams, useRouter } from "expo-router";
-import {
-  SelectedAssets,
-  SelectedBudgetAccount,
-  SelectedExpenses,
-  SelectedFilterAccount,
-  SelectedPostingAccount,
-} from "@/common/globalFnFactory";
+import { SelectedAccount } from "@/common/globalFnFactory";
+import { accountOrderFor } from "./push-account-picker";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { Ionicons } from "@expo/vector-icons";
 import { LedgerGuard, useLedgerGuard } from "@/components";
+import {
+  SearchBar,
+  SEARCH_BAR_HEIGHT,
+  SEARCH_BAR_RADIUS,
+} from "@/components/search-bar";
+import {
+  TimeRangePills,
+  PILL_GAP,
+  PILL_HEIGHT,
+  PILL_RADIUS,
+} from "@/components/time-range-pills";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import { analytics } from "@/common/analytics";
@@ -51,96 +54,24 @@ import { usePageView } from "@/common/hooks";
 
 const SKELETON_ROW_WIDTHS = [200, 160, 220, 140, 180, 210, 150, 190];
 
-/**
- * Per-caller config: which global callback gets the pick, and which account
- * ordering to browse. Both lists hold every account (see
- * `getAccountsAndCurrency`) and differ only in which root sorts first, so
- * "from" suits any picker that isn't choosing a destination.
- *
- * One table rather than two switches on `type`, so a new caller can't be added
- * to the callback side and forgotten on the ordering side.
- */
-const PICKERS = {
-  assets: { selection: SelectedAssets, order: "from" },
-  posting: { selection: SelectedPostingAccount, order: "from" },
-  filter: { selection: SelectedFilterAccount, order: "from" },
-  expenses: { selection: SelectedExpenses, order: "to" },
-  budget: { selection: SelectedBudgetAccount, order: "to" },
-} as const;
-
-const pickerFor = (type?: string) =>
-  PICKERS[type as keyof typeof PICKERS] ?? PICKERS.expenses;
-
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     container: {
       flex: 1,
       backgroundColor: theme.white,
     },
-    // Metrics match the two other search fields (transactions, journal). The
-    // border is the one deliberate divergence: `black10` sits ~1.1:1 against
-    // the `white` surface, so without it the field reads as a smudge rather
-    // than a control. See the board note on the light neutral ramp.
+    // Outer spacing only — the field itself is `SearchBar`, which owns the
+    // metrics all three copies used to keep drifting apart, and the control
+    // token pair that gives it a visible edge in light mode.
     searchBar: {
-      flexDirection: "row",
-      alignItems: "center",
-      gap: space.sm,
       marginHorizontal: gutter,
       marginTop: space.md,
       marginBottom: space.xs,
-      paddingHorizontal: space.md,
-      height: 36,
-      borderRadius: 10,
-      borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.black40,
-      backgroundColor: theme.black10,
-    },
-    searchInput: {
-      flex: 1,
-      fontSize: fontSizes.lg,
-      color: theme.black90,
-      padding: 0,
-    },
-    // `flexShrink: 0` is the load-bearing half: a horizontal ScrollView
-    // defaults to grow+shrink, so an overflowing column squeezes this band
-    // until it clips its own chips. The list owns the free space instead.
-    chipScroll: {
-      flexGrow: 0,
-      flexShrink: 0,
     },
     // `flex: 1` so the list's basis is 0 and the column never overflows —
     // otherwise the bands above are the ones Yoga shrinks.
     list: {
       flex: 1,
-    },
-    chipRow: {
-      gap: space.sm,
-      alignItems: "center",
-      paddingHorizontal: gutter,
-      paddingVertical: space.md,
-    },
-    // Pill metrics match the transaction-filters chips — one tap away in the
-    // same flow, so the two rows should read as one control set.
-    chip: {
-      paddingHorizontal: space.md,
-      paddingVertical: space.xs + 2,
-      borderRadius: 14,
-      borderWidth: 1,
-      borderColor: theme.black40,
-      backgroundColor: theme.black10,
-    },
-    chipActive: {
-      backgroundColor: theme.primary,
-      borderColor: theme.primary,
-    },
-    chipText: {
-      fontSize: fontSizes.sm,
-      lineHeight: 18,
-      fontWeight: fontWeights.medium,
-      color: theme.black90,
-    },
-    chipTextActive: {
-      color: theme.white,
     },
     sectionHeader: {
       paddingHorizontal: gutter,
@@ -162,10 +93,8 @@ const getStyles = (theme: ColorTheme) =>
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black60,
     },
-    // A tinted fill rather than `black10`, which is ~1.1:1 on the light
-    // surface and would leave the checkmark doing all the work.
     listItemSelected: {
-      backgroundColor: withAlpha(theme.primary, 0.12),
+      backgroundColor: theme.controlSelected,
     },
     listItemText: {
       flex: 1,
@@ -190,24 +119,27 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       color: theme.black80,
     },
-    // Mirrors the loaded layout: a search field, then the chip band.
+    // Mirrors the loaded layout: a `SearchBar`, then a `TimeRangePills` row.
+    // Both mirror their component's own metrics rather than restating them, so
+    // nothing shifts when data lands.
     searchSkeleton: {
       marginHorizontal: gutter,
       marginTop: space.md,
       marginBottom: space.xs,
-      height: 36,
-      borderRadius: 10,
+      height: SEARCH_BAR_HEIGHT,
+      borderRadius: SEARCH_BAR_RADIUS,
     },
     chipRowSkeleton: {
       flexDirection: "row",
-      gap: space.sm,
+      // The pills carry 3pt side margins each, so neighbours sit 6pt apart.
+      gap: PILL_GAP,
       paddingHorizontal: gutter,
-      paddingVertical: space.md,
+      paddingVertical: space.sm,
     },
     chipTile: {
-      height: 30,
+      height: PILL_HEIGHT,
       width: 72,
-      borderRadius: 14,
+      borderRadius: PILL_RADIUS,
     },
     // marginVertical fills the same 24px line box as listItemText, keeping
     // skeleton and loaded rows the same height.
@@ -281,14 +213,14 @@ export function AccountPickerScreenComponent(): JSX.Element {
   const [query, setQuery] = useState("");
   const [activeRoot, setActiveRoot] = useState<string | null>(ALL_ROOTS);
 
-  const { selection, order } = pickerFor(type);
   // Held in a ref so the picker keeps working even after the store entry is
   // released, and released on unmount so a stale closure can't fire for
-  // whichever screen opens the picker next.
-  const onSelectedRef = useRef(selection.getFn());
-  useEffect(() => () => selection.deleteFn(), [selection]);
+  // whichever screen opens the picker next. This pair is what makes a single
+  // shared callback key safe — see `pushAccountPicker`.
+  const onSelectedRef = useRef(SelectedAccount.getFn());
+  useEffect(() => () => SelectedAccount.deleteFn(), []);
 
-  const accounts = order === "from" ? assets : expenses;
+  const accounts = accountOrderFor(type) === "from" ? assets : expenses;
 
   // Grouped once: the chips are its titles, and the browse list is a slice of
   // it — two derivations of "root of an account" would have to stay in sync.
@@ -296,9 +228,15 @@ export function AccountPickerScreenComponent(): JSX.Element {
     () => groupAccountsByRoot(accounts),
     [accounts],
   );
-  const roots = useMemo(
-    () => browseSections.map(({ title }) => title),
-    [browseSections],
+  // The "All" chip carries a `null` key — the sentinel `TimeRangePills` widened
+  // its value type to accept, so this row is the shared pill component rather
+  // than a second copy of it.
+  const rootOptions = useMemo(
+    () => [
+      { key: ALL_ROOTS, label: t("accountPickerAllTab") },
+      ...browseSections.map(({ title }) => ({ key: title, label: title })),
+    ],
+    [browseSections, t],
   );
 
   const isSearching = isSearchQuery(query);
@@ -362,47 +300,23 @@ export function AccountPickerScreenComponent(): JSX.Element {
 
   return (
     <FadeInView style={styles.container}>
-      <View style={styles.searchBar}>
-        <Ionicons name="search-outline" size={16} color={theme.black60} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={t("accountPickerSearchPlaceholder")}
-          placeholderTextColor={theme.black60}
-          value={query}
-          onChangeText={setQuery}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-      </View>
+      <SearchBar
+        style={styles.searchBar}
+        value={query}
+        onChangeText={setQuery}
+        placeholder={t("accountPickerSearchPlaceholder")}
+      />
 
       {!isSearching && (
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.chipScroll}
-          contentContainerStyle={styles.chipRow}
-        >
-          {[ALL_ROOTS, ...roots].map((root) => {
-            const active = activeRoot === root;
-            return (
-              <TouchableOpacity
-                key={root ?? "all"}
-                style={[styles.chip, active && styles.chipActive]}
-                onPress={() => setActiveRoot(root)}
-                accessibilityRole="button"
-                accessibilityState={{ selected: active }}
-              >
-                <Text
-                  style={[styles.chipText, active && styles.chipTextActive]}
-                >
-                  {root ?? t("accountPickerAllTab")}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
+        <TimeRangePills
+          value={activeRoot}
+          options={rootOptions}
+          onChange={setActiveRoot}
+          scrollable
+          // See the prop's own note: these chips filter a list that re-renders
+          // underneath, and the picker is a rapid browse surface.
+          haptics={false}
+        />
       )}
 
       <SectionList

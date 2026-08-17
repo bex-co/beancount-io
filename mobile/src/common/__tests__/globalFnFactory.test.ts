@@ -1,26 +1,26 @@
 import {
   AddTransactionCallback,
-  SelectedAssets,
+  SelectedAccount,
   getGlobalFn,
 } from "../globalFnFactory";
 
 describe("globalFnFactory helpers", () => {
   afterEach(() => {
-    SelectedAssets.deleteFn();
+    SelectedAccount.deleteFn();
     AddTransactionCallback.deleteFn();
   });
 
-  it("stores and retrieves callbacks with SelectedAssets", () => {
+  it("stores and retrieves callbacks with SelectedAccount", () => {
     const handler = () => 42;
-    SelectedAssets.setFn(handler);
+    SelectedAccount.setFn(handler);
 
-    const stored = SelectedAssets.getFn();
+    const stored = SelectedAccount.getFn();
     expect(stored).toBe(handler);
-    expect(SelectedAssets.hasFn()).toBe(true);
+    expect(SelectedAccount.hasFn()).toBe(true);
 
-    SelectedAssets.deleteFn();
-    expect(SelectedAssets.getFn()).toBe(undefined);
-    expect(SelectedAssets.hasFn()).toBe(false);
+    SelectedAccount.deleteFn();
+    expect(SelectedAccount.getFn()).toBe(undefined);
+    expect(SelectedAccount.hasFn()).toBe(false);
   });
 
   it("allows retrieving callbacks via getGlobalFn", async () => {
@@ -43,10 +43,10 @@ describe("globalFnFactory helpers", () => {
     const callback1 = (value: string) => console.log(value);
     const callback2 = async () => Promise.resolve();
 
-    SelectedAssets.setFn(callback1);
+    SelectedAccount.setFn(callback1);
     AddTransactionCallback.setFn(callback2);
 
-    expect(SelectedAssets.getFn()).toBe(callback1);
+    expect(SelectedAccount.getFn()).toBe(callback1);
     expect(AddTransactionCallback.getFn()).toBe(callback2);
   });
 
@@ -54,11 +54,11 @@ describe("globalFnFactory helpers", () => {
     const callback1 = (value: string) => console.log("first", value);
     const callback2 = (value: string) => console.log("second", value);
 
-    SelectedAssets.setFn(callback1);
-    expect(SelectedAssets.getFn()).toBe(callback1);
+    SelectedAccount.setFn(callback1);
+    expect(SelectedAccount.getFn()).toBe(callback1);
 
-    SelectedAssets.setFn(callback2);
-    expect(SelectedAssets.getFn()).toBe(callback2);
-    expect(SelectedAssets.getFn()).not.toBe(callback1);
+    SelectedAccount.setFn(callback2);
+    expect(SelectedAccount.getFn()).toBe(callback2);
+    expect(SelectedAccount.getFn()).not.toBe(callback1);
   });
 });

@@ -66,7 +66,7 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 16,
     },
     itemPressed: {
-      backgroundColor: theme.black10,
+      backgroundColor: theme.controlSelected,
     },
     itemDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,

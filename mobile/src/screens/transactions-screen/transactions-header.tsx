@@ -1,7 +1,8 @@
-import { StyleSheet, TextInput, View, TouchableOpacity } from "react-native";
+import { StyleSheet, View, TouchableOpacity } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useThemeStyle } from "@/common/hooks";
-import { fontSizes, gutter, space, useTheme } from "@/common/theme";
+import { gutter, space, useTheme } from "@/common/theme";
+import { SearchBar } from "@/components/search-bar";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
 
@@ -11,23 +12,8 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.white,
     },
     searchBar: {
-      flexDirection: "row",
-      alignItems: "center",
       marginHorizontal: gutter,
       marginBottom: space.sm,
-      backgroundColor: theme.black10,
-      borderRadius: 10,
-      paddingHorizontal: 10,
-      height: 36,
-    },
-    searchInput: {
-      flex: 1,
-      marginLeft: 6,
-      fontSize: fontSizes.lg,
-      color: theme.black90,
-    },
-    filterButton: {
-      paddingLeft: 6,
     },
     // Sits on the funnel's upper-right corner, so an active filter is visible
     // without opening the sheet.
@@ -68,30 +54,27 @@ export const TransactionsHeader = ({
 
   return (
     <View style={styles.header}>
-      <View style={styles.searchBar}>
-        <Ionicons name="search-outline" size={16} color={theme.black60} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder={t("search")}
-          placeholderTextColor={theme.black60}
-          value={searchQuery}
-          onChangeText={onSearchChange}
-          returnKeyType="search"
-          clearButtonMode="while-editing"
-          autoCorrect={false}
-          autoCapitalize="none"
-        />
-        <TouchableOpacity
-          style={styles.filterButton}
-          onPress={onOpenFilters}
-          hitSlop={8}
-          accessibilityRole="button"
-          accessibilityLabel={t("filters")}
-        >
-          <Ionicons name="options-outline" size={16} color={theme.black60} />
-          {activeFilterCount > 0 && <View style={styles.filterDot} />}
-        </TouchableOpacity>
-      </View>
+      <SearchBar
+        style={styles.searchBar}
+        value={searchQuery}
+        onChangeText={onSearchChange}
+        placeholder={t("search")}
+        right={
+          <TouchableOpacity
+            onPress={onOpenFilters}
+            hitSlop={8}
+            accessibilityRole="button"
+            accessibilityLabel={t("filters")}
+          >
+            <Ionicons
+              name="options-outline"
+              size={16}
+              color={theme.controlPlaceholder}
+            />
+            {activeFilterCount > 0 && <View style={styles.filterDot} />}
+          </TouchableOpacity>
+        }
+      />
     </View>
   );
 };

@@ -46,10 +46,10 @@ const getStyles = (theme: ColorTheme) =>
     },
     inputWrapper: {
       borderWidth: 1,
-      borderColor: theme.black10,
+      borderColor: theme.controlBorder,
       borderRadius: 8,
       overflow: "hidden",
-      backgroundColor: theme.black10,
+      backgroundColor: theme.controlFill,
     },
     input: {
       padding: 12,
@@ -217,7 +217,7 @@ export const EditTransactionScreen = (): JSX.Element => {
               autoCorrect={false}
               autoCapitalize="none"
               spellCheck={false}
-              placeholderTextColor={theme.black60}
+              placeholderTextColor={theme.controlPlaceholder}
             />
           </View>
           {saveError ? <Text style={styles.errorText}>{saveError}</Text> : null}

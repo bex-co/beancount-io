@@ -56,7 +56,7 @@ export const LoginWebView = ({ isSignUp, onClose }: Props) => {
       {/* The load bar is the only sign the web view is doing anything, so it
           disappears the moment there is nothing left to report. */}
       {progress < 1 && (
-        <Progress percent={progress * 100} trackColor={theme.black10} />
+        <Progress percent={progress * 100} trackColor={theme.controlFill} />
       )}
       <WebView
         incognito

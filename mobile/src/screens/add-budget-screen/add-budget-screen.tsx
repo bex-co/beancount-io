@@ -26,7 +26,7 @@ import {
   useTheme,
 } from "@/common/theme";
 import { analytics } from "@/common/analytics";
-import { SelectedBudgetAccount } from "@/common/globalFnFactory";
+import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 import { DatePickerModal } from "@/components/date-picker-modal";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { Picker } from "@/components/picker";
@@ -207,13 +207,13 @@ export function AddBudgetScreenImpl(): JSX.Element {
     !loading;
 
   const pickAccount = () => {
-    SelectedBudgetAccount.setFn((selected: string) => {
-      setAccount(selected);
-      setSubmitError(null);
-    });
-    router.push({
-      pathname: "/(app)/account-picker",
-      params: { type: "budget", selectedItem: account },
+    pushAccountPicker(router, {
+      type: "budget",
+      current: account,
+      onSelect: (selected) => {
+        setAccount(selected);
+        setSubmitError(null);
+      },
     });
   };
 
@@ -315,7 +315,7 @@ export function AddBudgetScreenImpl(): JSX.Element {
               }}
               style={styles.amountInput}
               placeholder="500"
-              placeholderTextColor={theme.black60}
+              placeholderTextColor={theme.controlPlaceholder}
               keyboardType="numbers-and-punctuation"
               returnKeyType="done"
             />

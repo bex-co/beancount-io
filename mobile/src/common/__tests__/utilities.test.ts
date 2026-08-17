@@ -183,26 +183,26 @@ describe("utility modules", () => {
 
     it("stores, retrieves, and deletes global callbacks", () => {
       const {
-        SelectedAssets,
+        SelectedAccount,
         SelectedCurrency,
         getGlobalFn,
       } = require("../globalFnFactory");
 
       const assetsFn = (value: string) => value.toUpperCase();
-      expect(SelectedAssets.hasFn()).toBe(false);
+      expect(SelectedAccount.hasFn()).toBe(false);
 
-      SelectedAssets.setFn(assetsFn);
-      expect(SelectedAssets.hasFn()).toBe(true);
-      expect(SelectedAssets.getFn()).toBe(assetsFn);
-      expect(getGlobalFn("SelectedAssets")).toBe(assetsFn);
+      SelectedAccount.setFn(assetsFn);
+      expect(SelectedAccount.hasFn()).toBe(true);
+      expect(SelectedAccount.getFn()).toBe(assetsFn);
+      expect(getGlobalFn("SelectedAccount")).toBe(assetsFn);
 
       const currencyFn = (value: string) => `currency:${value}`;
       SelectedCurrency.setFn(currencyFn);
       expect(getGlobalFn("SelectedCurrency")).toBe(currencyFn);
 
-      SelectedAssets.deleteFn();
-      expect(SelectedAssets.hasFn()).toBe(false);
-      expect(getGlobalFn("SelectedAssets")).toBe(undefined);
+      SelectedAccount.deleteFn();
+      expect(SelectedAccount.hasFn()).toBe(false);
+      expect(getGlobalFn("SelectedAccount")).toBe(undefined);
     });
   });
 });

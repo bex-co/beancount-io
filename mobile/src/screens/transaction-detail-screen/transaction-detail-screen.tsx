@@ -99,7 +99,7 @@ const getStyles = (theme: ColorTheme) =>
     },
     card: {
       borderWidth: 1,
-      borderColor: theme.black10,
+      borderColor: theme.controlBorder,
       borderRadius: 8,
       overflow: "hidden",
       backgroundColor: theme.white,

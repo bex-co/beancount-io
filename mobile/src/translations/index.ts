@@ -14,21 +14,30 @@ import { ru } from "@/translations/ru";
 import { sk } from "@/translations/sk";
 import { uk } from "@/translations/uk";
 
-const SUPPORTED_LOCALES = [
-  "en",
-  "zh",
-  "bg",
-  "ca",
-  "de",
-  "es",
-  "fa",
-  "fr",
-  "nl",
-  "pt",
-  "ru",
-  "sk",
-  "uk",
-];
+/**
+ * The one place the locale set is written down at runtime. Bundled code can't
+ * read the directory, so this object is it — and `SUPPORTED_LOCALES` is derived
+ * from it rather than repeated, which is how a hand-kept list and a real
+ * translation set drift apart. The test-side list is derived from the
+ * directory; `__tests__/index.test.ts` asserts the two agree.
+ */
+const translations = {
+  en,
+  zh,
+  bg,
+  ca,
+  de,
+  es,
+  fa,
+  fr,
+  nl,
+  pt,
+  ru,
+  sk,
+  uk,
+};
+
+export const SUPPORTED_LOCALES = Object.keys(translations);
 
 const getLocale = () => {
   const locales = Localization.getLocales();
@@ -44,21 +53,7 @@ const getLocale = () => {
   return "en";
 };
 
-export const i18n = new I18n({
-  en,
-  zh,
-  bg,
-  ca,
-  de,
-  es,
-  fa,
-  fr,
-  nl,
-  pt,
-  ru,
-  sk,
-  uk,
-});
+export const i18n = new I18n(translations);
 i18n.enableFallback = true;
 
 export const setLocale = (locale: string) => {

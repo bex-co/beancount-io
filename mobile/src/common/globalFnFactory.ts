@@ -33,10 +33,22 @@ export const getGlobalFn = <T extends CallbackFunction>(key: string) => {
   return globalFnStore.get(key) as T | undefined;
 };
 
-export const SelectedAssets =
-  createGlobalFn<(value: string) => void>("SelectedAssets");
-export const SelectedExpenses =
-  createGlobalFn<(value: string) => void>("SelectedExpenses");
+/**
+ * The account picker's one callback slot.
+ *
+ * Was five keys — `SelectedAssets`, `SelectedExpenses`, `SelectedPostingAccount`,
+ * `SelectedFilterAccount`, `SelectedBudgetAccount` — one per caller type, on the
+ * theory that separate names prevent one screen's stale callback firing for
+ * another's pick. They don't: two screens that share a key are equally
+ * mountable at once, which is why `SelectedAssets` needed a comment explaining
+ * that add-transaction and quick-add both use it. What actually prevents a
+ * stale fire is the picker capturing this into a ref on mount and releasing it
+ * on unmount, plus registering immediately before the push — which
+ * `pushAccountPicker` is now the only way to do.
+ */
+export const SelectedAccount =
+  createGlobalFn<(value: string) => void>("SelectedAccount");
+
 export const SelectedCurrency =
   createGlobalFn<(value: string) => void>("SelectedCurrency");
 
@@ -67,18 +79,3 @@ export const runAddTransactionCallback = async (): Promise<void> => {
   AddTransactionCallback.deleteFn();
   await callback();
 };
-
-export const SelectedPostingAccount = createGlobalFn<(value: string) => void>(
-  "SelectedPostingAccount",
-);
-
-export const SelectedFilterAccount = createGlobalFn<(value: string) => void>(
-  "SelectedFilterAccount",
-);
-
-// Budget picks an expense account too, but from its own screen — sharing
-// `SelectedExpenses` with the add-transaction TO row let one screen's stale
-// callback fire for the other's selection.
-export const SelectedBudgetAccount = createGlobalFn<(value: string) => void>(
-  "SelectedBudgetAccount",
-);

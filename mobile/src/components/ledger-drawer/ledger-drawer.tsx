@@ -111,7 +111,7 @@ const getStyles = (theme: ColorTheme) =>
       gap: 12,
     },
     listItemSelected: {
-      backgroundColor: theme.black10,
+      backgroundColor: theme.controlSelected,
     },
     listItemContent: {
       flex: 1,

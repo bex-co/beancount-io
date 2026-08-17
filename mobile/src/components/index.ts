@@ -10,6 +10,7 @@ export * from "./segmented-pages";
 export * from "./time-range-pills";
 export * from "./progress";
 export * from "./picker";
+export * from "./search-bar";
 export * from "./list";
 export * from "./flex-center";
 export * from "./text-input-modal";

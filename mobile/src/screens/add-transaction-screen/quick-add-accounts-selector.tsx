@@ -9,11 +9,8 @@ import { i18n } from "@/translations";
 import { ledgerVar } from "@/common/vars";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
-import {
-  SelectedAssets,
-  SelectedExpenses,
-  SelectedPayee,
-} from "@/common/globalFnFactory";
+import { SelectedPayee } from "@/common/globalFnFactory";
+import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { FadeInView } from "@/components/crossfade";
@@ -64,7 +61,7 @@ export const QuickAddAccountsSelector = (
         marginHorizontal: 16,
         marginBottom: 8,
         borderWidth: 1,
-        borderColor: theme.black10,
+        borderColor: theme.controlBorder,
         borderRadius: 12,
         overflow: "hidden",
         backgroundColor: theme.white,
@@ -216,15 +213,10 @@ export const QuickAddAccountsSelector = (
                 analytics.track("tap_assets_picker", {
                   originalOption: selectedAssets,
                 });
-                SelectedAssets.setFn((value: string) => {
-                  setSelectedAssets(value);
-                });
-                router.push({
-                  pathname: "/(app)/account-picker",
-                  params: {
-                    type: "assets",
-                    selectedItem: selectedAssets,
-                  },
+                pushAccountPicker(router, {
+                  type: "assets",
+                  current: selectedAssets,
+                  onSelect: setSelectedAssets,
                 });
               }}
             />
@@ -244,15 +236,10 @@ export const QuickAddAccountsSelector = (
                 analytics.track("tap_expenses_picker", {
                   originalOption: selectedExpenses,
                 });
-                SelectedExpenses.setFn((value: string) => {
-                  setSelectedExpenses(value);
-                });
-                router.push({
-                  pathname: "/(app)/account-picker",
-                  params: {
-                    type: "expenses",
-                    selectedItem: selectedExpenses,
-                  },
+                pushAccountPicker(router, {
+                  type: "expenses",
+                  current: selectedExpenses,
+                  onSelect: setSelectedExpenses,
                 });
               }}
             />

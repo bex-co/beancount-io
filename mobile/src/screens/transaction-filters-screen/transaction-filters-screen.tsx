@@ -12,7 +12,7 @@ import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { analytics } from "@/common/analytics";
 import { getFormatDate } from "@/common/format-util";
-import { SelectedFilterAccount } from "@/common/globalFnFactory";
+import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 import { usePageView, useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
@@ -194,12 +194,10 @@ export const TransactionFiltersScreen = (): JSX.Element => {
   };
 
   const pickAccount = () => {
-    SelectedFilterAccount.setFn((account: string) => {
-      setDraft((prev) => ({ ...prev, account }));
-    });
-    router.push({
-      pathname: "/(app)/account-picker",
-      params: { type: "filter", selectedItem: draft.account },
+    pushAccountPicker(router, {
+      type: "filter",
+      current: draft.account,
+      onSelect: (account) => setDraft((prev) => ({ ...prev, account })),
     });
   };
 

@@ -72,7 +72,7 @@ const getStyles = (theme: ColorTheme) =>
       borderRadius: 14,
     },
     keyPressed: {
-      backgroundColor: theme.black10,
+      backgroundColor: theme.controlSelected,
     },
     nextKey: {
       backgroundColor: theme.primary,

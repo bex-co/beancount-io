@@ -16,10 +16,10 @@ import { useTranslations } from "@/common/hooks/use-translations";
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     card: {
-      backgroundColor: theme.black10,
+      backgroundColor: theme.controlFill,
       borderRadius: gutter,
       borderWidth: StyleSheet.hairlineWidth,
-      borderColor: theme.black20,
+      borderColor: theme.controlBorder,
       paddingVertical: space.lg,
       marginBottom: space.lg,
       overflow: "hidden",

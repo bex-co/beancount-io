@@ -17,6 +17,18 @@ export interface ColorTheme {
   black40: string;
   black20: string;
   black10: string;
+  /**
+   * The control triple. Every interactive surface — search fields, chips,
+   * cards, drawers, menu buttons, pickers — fills with `controlFill` and draws
+   * its boundary in `controlBorder`; hint text inside one uses
+   * `controlPlaceholder`. See `palette.ts` for why these are separate tokens
+   * rather than steps of the neutral ramp, and for the measured ratios.
+   */
+  controlFill: string;
+  controlBorder: string;
+  controlPlaceholder: string;
+  /** Fill marking a selected or pressed row inside a control. */
+  controlSelected: string;
   text01: string;
   error: string;
   success: string;

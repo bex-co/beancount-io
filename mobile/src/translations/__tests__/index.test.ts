@@ -1,21 +1,13 @@
+import * as fs from "fs";
+import * as path from "path";
 import { I18n } from "i18n-js";
 import { en } from "../en";
+import { translationLocales } from "./locale-parity";
 
-const SUPPORTED_LOCALES = [
-  "en",
-  "zh",
-  "bg",
-  "ca",
-  "de",
-  "es",
-  "fa",
-  "fr",
-  "nl",
-  "pt",
-  "ru",
-  "sk",
-  "uk",
-];
+// Derived from the translations directory rather than written out again — the
+// same list used to sit in four places, so adding a language meant remembering
+// all four. English is the base and always leads.
+const SUPPORTED_LOCALES = ["en", ...translationLocales()];
 
 // Replicate the getLocale logic from translations/index.ts for testing
 // The actual module cannot be imported directly due to path alias resolution
@@ -186,6 +178,23 @@ describe("translations", () => {
 
     it("includes Persian", () => {
       expect(SUPPORTED_LOCALES.includes("fa")).toBe(true);
+    });
+
+    // The list above is derived from the directory; the app's is derived from
+    // the `translations` object in `../index.ts`. This is what ties the two
+    // together — the runner can't import that module (it uses `@/` aliases),
+    // so the check is at the source level, same as the parity suites.
+    it("registers every locale file in the i18n translations object", () => {
+      const source = fs.readFileSync(
+        path.join(__dirname, "..", "index.ts"),
+        "utf8",
+      );
+      const unregistered = SUPPORTED_LOCALES.filter(
+        (locale) =>
+          !new RegExp(`^import \\{ ${locale} \\}`, "m").test(source) ||
+          !new RegExp(`^  ${locale},$`, "m").test(source),
+      );
+      expect(unregistered).toEqual([]);
     });
   });
 

@@ -28,12 +28,11 @@ import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { DatePickerModal, LedgerGuard, useLedgerGuard } from "@/components";
 
 import {
-  SelectedAssets,
-  SelectedExpenses,
   SelectedNarration,
   SelectedPayee,
   runAddTransactionCallback,
 } from "@/common/globalFnFactory";
+import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 
 /** Keep only non-empty string arguments (drops undefined option names). */
 function pickDefined(...values: (string | undefined)[]): string[] {
@@ -87,7 +86,7 @@ const getStyles = (theme: ColorTheme) =>
     card: {
       marginHorizontal: 16,
       borderWidth: 1,
-      borderColor: theme.black10,
+      borderColor: theme.controlBorder,
       borderRadius: 12,
       overflow: "hidden",
       backgroundColor: theme.white,
@@ -319,15 +318,10 @@ export const AddTransactionNextScreenComponent = () => {
               await analytics.track("tap_assets_picker", {
                 originalOption: assets,
               });
-              SelectedAssets.setFn((value: string) => {
-                setAssets(value);
-              });
-              router.push({
-                pathname: "/(app)/account-picker",
-                params: {
-                  type: "assets",
-                  selectedItem: assets,
-                },
+              pushAccountPicker(router, {
+                type: "assets",
+                current: assets,
+                onSelect: setAssets,
               });
             }}
           />
@@ -347,15 +341,10 @@ export const AddTransactionNextScreenComponent = () => {
               analytics.track("tap_expenses_picker", {
                 originalOption: expenses,
               });
-              SelectedExpenses.setFn((value: string) => {
-                setExpenses(value);
-              });
-              router.push({
-                pathname: "/(app)/account-picker",
-                params: {
-                  type: "expenses",
-                  selectedItem: expenses,
-                },
+              pushAccountPicker(router, {
+                type: "expenses",
+                current: expenses,
+                onSelect: setExpenses,
               });
             }}
           />

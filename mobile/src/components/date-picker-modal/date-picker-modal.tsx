@@ -21,8 +21,8 @@ const ThemedCancelButton: React.FC<CustomCancelButtonPropTypes> = ({
   const { colorTheme } = useTheme();
   return (
     <TouchableHighlight
-      style={[styles.cancelButton, { backgroundColor: colorTheme.black10 }]}
-      underlayColor={colorTheme.black20}
+      style={[styles.cancelButton, { backgroundColor: colorTheme.controlFill }]}
+      underlayColor={colorTheme.controlSelected}
       onPress={onPress}
       accessible
       accessibilityRole="button"
@@ -61,7 +61,7 @@ export const DatePickerModal: React.FC<ReactNativeModalDateTimePickerProps> = (
       locale="en_US"
       isDarkModeEnabled={name === "dark"}
       buttonTextColorIOS={colorTheme.primary}
-      pickerContainerStyleIOS={{ backgroundColor: colorTheme.black10 }}
+      pickerContainerStyleIOS={{ backgroundColor: colorTheme.controlFill }}
       customCancelButtonIOS={ThemedCancelButton}
       {...props}
     />

@@ -51,6 +51,59 @@ const BONE = "#f1efe4"; // Bone — warm paper / dark-mode foreground
 const STONE = "#6b6e5f"; // Stone — secondary text, inactive tabs (light mode)
 const CHARCOAL = "#171a14"; // Charcoal — warm near-black — dark base + top bar
 
+/**
+ * ## The control triple — `controlFill` / `controlBorder` / `controlPlaceholder`
+ *
+ * A control has to look like a control. WCAG 1.4.11 puts the bar for the
+ * boundary of an interactive surface at **3:1** against what it sits on, and in
+ * light mode the neutral ramp cleared it nowhere: measured against `white`,
+ * `black10` is 1.10, `black20` 1.18, `black40` 1.34, `black60` 1.78 — four
+ * steps inside a 0.7 spread — and then `black80` jumps to 5.22. Search fields,
+ * chips and cards filled with `black10` read as smudges on the page. Dark mode
+ * was never affected (`black40` vs `white` = 4.07).
+ *
+ * The ramp is **not** re-tuned to fix this, because the ramp is doing two jobs
+ * at once. `black20`/`black40` are also list dividers and hairlines, which are
+ * decorative and explicitly exempt from 1.4.11 — darkening them to 3:1 would
+ * make every row separator in the app shout. Instead the control role gets its
+ * own named triple, so the two jobs can have two answers:
+ *
+ * | pair (light)                          | ratio | bar           |
+ * | ------------------------------------- | ----- | ------------- |
+ * | `controlBorder` vs `white`            | 3.67  | 3:1 (1.4.11)  |
+ * | `controlBorder` vs `controlFill`      | 3.33  | 3:1           |
+ * | `controlBorder` vs `black10`          | 3.33  | 3:1           |
+ * | `controlPlaceholder` vs `controlFill` | 4.74  | 4.5:1 (1.4.3) |
+ *
+ * | pair (dark)                           | ratio | bar   |
+ * | ------------------------------------- | ----- | ----- |
+ * | `controlBorder` vs `white`            | 4.07  | 3:1   |
+ * | `controlBorder` vs `controlFill`      | 3.37  | 3:1   |
+ * | `controlBorder` vs `black10`          | 3.37  | 3:1   |
+ * | `controlPlaceholder` vs `controlFill` | 5.21  | 4.5:1 |
+ *
+ * Dark keeps the values it already had (`black40`/`black10`/`black60`) — the
+ * triple renames the role there rather than changing any pixel.
+ *
+ * Light `controlPlaceholder` lands on Stone, the same value as `black80`. That
+ * is forced, not lazy: on a surface this bright, 4.5:1 leaves a ~0.2-ratio band
+ * between "readable" and "secondary text", so any compliant placeholder *is*
+ * Stone. The hierarchy that matters inside a field is placeholder vs the value
+ * the user typed — 4.74 vs 11.68 on the fill — and that one is wide.
+ *
+ * `controlSelected` is the fourth of the set and the one exception to "boundary,
+ * not fill": a selected drawer row or a pressed menu item is marked by a tint,
+ * and on `black10` that tint was the same invisible 1.10. It is the brand green
+ * at 12% flattened onto the base surface — the exact value the account picker
+ * already composed inline for its selected row, so that surface renders
+ * identically and the drawer and menu simply stop being invisible. Flattened
+ * rather than `withAlpha` so it is a measurable color and stacks predictably.
+ *
+ * `src/common/theme/__tests__/control-contrast.test.ts` asserts this table, so
+ * the ramp cannot drift back without the suite noticing.
+ */
+const CONTROL_BORDER_LIGHT = "#858777"; // warm khaki, between black60 and Stone
+
 const lightTheme: ColorTheme = {
   overlay: "rgba(0, 0, 0, 0.5)", // modal scrim
 
@@ -69,6 +122,12 @@ const lightTheme: ColorTheme = {
   black40: "#e0dfd3", //    borders / hairlines
   black20: "#eeece2", //    dividers / faint fills
   black10: "#f6f4ec", //    inset surfaces (nods to Bone)
+
+  // Control role — see the block comment above for the measured table.
+  controlFill: "#f6f4ec", //    same value as black10: fills were never the bug
+  controlBorder: CONTROL_BORDER_LIGHT,
+  controlPlaceholder: STONE, //    4.74 on the fill; see note on the thin band
+  controlSelected: "#e6efe1", //    GREEN_DARK @12% on white
 
   text01: "#40433a", //    primary text, body copy
 
@@ -111,6 +170,13 @@ const darkTheme: ColorTheme = {
   black40: "#797b6c", //    borders
   black20: "#585a4c", //    dividers
   black10: "#282a21", //    elevated surfaces / hairlines
+
+  // Control role — dark already cleared every bar, so these alias the values
+  // the controls were using and change no pixel.
+  controlFill: "#282a21", //    = black10
+  controlBorder: "#797b6c", //    = black40 — 4.07 on the surface, 3.37 on the fill
+  controlPlaceholder: "#9a9c8d", //    = black60 — 5.21 on the fill
+  controlSelected: "#202f18", //    GREEN @12% on Charcoal
 
   text01: "#ece9dd", //    primary text, body copy (soft, low-glare)
 
