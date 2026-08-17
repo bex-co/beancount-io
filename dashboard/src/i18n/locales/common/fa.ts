@@ -559,6 +559,14 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "از انجمن در تلگرام بپرسید",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "درخواست قابلیت جدید",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "اشتراک ایده‌ها یا گزارش خطاها در گیت‌هاب",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "ترازنامه",
     description: "Navigation label for balance sheet financial report",

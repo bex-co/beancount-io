@@ -549,6 +549,14 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "在 Telegram 上向社区提问",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "功能请求",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "在 GitHub 上分享想法或报告问题",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "资产负债表",
     description: "Navigation label for balance sheet financial report",

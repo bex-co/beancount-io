@@ -558,6 +558,14 @@ const esCommon: Record<string, TranslationEntry> = {
     message: "Pregunta a la comunidad en Telegram",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Sugerir una función",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Comparte ideas o reporta errores en GitHub",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "Balance General",
     description: "Navigation label for balance sheet financial report",

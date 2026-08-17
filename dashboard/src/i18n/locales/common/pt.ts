@@ -559,6 +559,14 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Pergunte à comunidade no Telegram",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Sugerir um recurso",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Compartilhe ideias ou relate bugs no GitHub",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "Balanço Patrimonial",
     description: "Navigation label for balance sheet financial report",

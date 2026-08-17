@@ -559,6 +559,14 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "Pregunta a la comunitat a Telegram",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Sol·licita una funció",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Comparteix idees o informa d'errors a GitHub",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "A valor de mercat",
     description: "Navigation label for balance sheet financial report",

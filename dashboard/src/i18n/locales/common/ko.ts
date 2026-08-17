@@ -558,6 +558,14 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "Telegram 커뮤니티에 질문하기",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "기능 요청",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "GitHub에서 아이디어 공유 또는 버그 신고",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "재무상태표",
     description: "Navigation label for balance sheet financial report",

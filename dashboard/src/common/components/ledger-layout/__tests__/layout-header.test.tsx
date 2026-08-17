@@ -29,6 +29,9 @@ vi.mock("@/common/hooks/use-translations.ts", () => ({
         "common.helpCenterDescription": "Browse guides and documentation",
         "common.communitySupport": "Community Support",
         "common.communitySupportDescription": "Ask the community on Telegram",
+        "common.requestFeature": "Request a Feature",
+        "common.requestFeatureDescription":
+          "Share ideas or report bugs on GitHub",
       })[key] ?? key,
   }),
 }));
@@ -77,6 +80,9 @@ describe("LayoutHeader", () => {
     const communitySupportLink = screen.getByRole("menuitem", {
       name: /Community Support/,
     });
+    const requestFeatureLink = screen.getByRole("menuitem", {
+      name: /Request a Feature/,
+    });
 
     expect(helpCenterLink).toHaveAttribute(
       "href",
@@ -86,8 +92,16 @@ describe("LayoutHeader", () => {
       "href",
       "https://t.me/beancount",
     );
+    expect(requestFeatureLink).toHaveAttribute(
+      "href",
+      "https://github.com/bex-co/beancount-io/issues",
+    );
 
-    for (const link of [helpCenterLink, communitySupportLink]) {
+    for (const link of [
+      helpCenterLink,
+      communitySupportLink,
+      requestFeatureLink,
+    ]) {
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
     }

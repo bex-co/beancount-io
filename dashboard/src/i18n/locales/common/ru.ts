@@ -558,6 +558,14 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Задайте вопрос сообществу в Telegram",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Предложить функцию",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Поделитесь идеями или сообщите об ошибках на GitHub",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "Баланс Sheet",
     description: "Navigation label for balance sheet financial report",

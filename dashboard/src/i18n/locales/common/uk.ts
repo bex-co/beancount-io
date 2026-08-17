@@ -559,6 +559,14 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Запитайте спільноту в Telegram",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Запропонувати функцію",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Поділіться ідеями або повідомте про помилки на GitHub",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "Баланс Sheet",
     description: "Navigation label for balance sheet financial report",

@@ -560,6 +560,14 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Stel je vraag aan de community op Telegram",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Functie aanvragen",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Deel ideeën of meld bugs op GitHub",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "Balans",
     description: "Navigation label for balance sheet financial report",

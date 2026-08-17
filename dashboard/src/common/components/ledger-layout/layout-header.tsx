@@ -3,6 +3,7 @@ import {
   BookOpen,
   CircleHelp,
   ExternalLink,
+  Github,
   LogIn,
   MessageCircle,
 } from "lucide-react";
@@ -130,6 +131,23 @@ export function LayoutHeader({
                       <span>{t("common.communitySupport")}</span>
                       <span className="text-xs text-muted-foreground">
                         {t("common.communitySupportDescription")}
+                      </span>
+                    </div>
+                    <ExternalLink className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />
+                  </a>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <a
+                    href="https://github.com/bex-co/beancount-io/issues"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="items-start"
+                  >
+                    <Github className="mt-0.5 h-4 w-4" />
+                    <div className="flex flex-1 flex-col">
+                      <span>{t("common.requestFeature")}</span>
+                      <span className="text-xs text-muted-foreground">
+                        {t("common.requestFeatureDescription")}
                       </span>
                     </div>
                     <ExternalLink className="mt-0.5 h-3.5 w-3.5 text-muted-foreground" />

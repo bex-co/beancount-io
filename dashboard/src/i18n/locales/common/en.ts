@@ -580,6 +580,14 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Ask the community on Telegram",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Request a Feature",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Share ideas or report bugs on GitHub",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "Balance Sheet",
     description: "Navigation label for balance sheet financial report",

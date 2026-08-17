@@ -560,6 +560,14 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Fragen Sie die Community auf Telegram",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Funktion vorschlagen",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Teilen Sie Ideen mit oder melden Sie Fehler auf GitHub",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "Bilanz",
     description: "Navigation label for balance sheet financial report",

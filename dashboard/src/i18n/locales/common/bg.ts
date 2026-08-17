@@ -559,6 +559,14 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Попитайте общността в Telegram",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Предложете функция",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Споделете идеи или докладвайте за грешки в GitHub",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "Баланс",
     description: "Navigation label for balance sheet financial report",

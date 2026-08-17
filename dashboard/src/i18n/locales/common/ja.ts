@@ -558,6 +558,14 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "Telegramでコミュニティに質問する",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "機能をリクエスト",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "GitHubでアイデアを共有したりバグを報告する",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "貸借対照表",
     description: "Navigation label for balance sheet financial report",

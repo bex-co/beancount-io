@@ -559,6 +559,14 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Opýtajte sa komunity na Telegrame",
     description: "Description for the community support menu item",
   },
+  "common.requestFeature": {
+    message: "Navrhnúť funkciu",
+    description: "Menu item linking to the feature request page on GitHub",
+  },
+  "common.requestFeatureDescription": {
+    message: "Zdieľajte nápady alebo nahlaste chyby na GitHube",
+    description: "Description for the request a feature menu item",
+  },
   "common.balanceSheet": {
     message: "Súvaha",
     description: "Navigation label for balance sheet financial report",
