@@ -262,7 +262,6 @@ export const de: typeof en = {
   range1Y: "1J",
   rangeLastYear: "VJ",
   rangeAll: "ALLE",
-  tes: "1",
   // edit / delete transaction
   editTransaction: "Transaktion bearbeiten",
   deleteTransaction: "Löschen",

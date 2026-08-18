@@ -257,7 +257,6 @@ export const en = {
   range1Y: "1Y",
   rangeLastYear: "LY",
   rangeAll: "ALL",
-  tes: "1",
   // edit / delete transaction
   editTransaction: "Edit Transaction",
   deleteTransaction: "Delete",

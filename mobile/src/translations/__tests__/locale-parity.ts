@@ -198,20 +198,24 @@ export const keyReportFor = (
   };
 };
 
-const reports = new Map<string, LocaleKeyReport>();
+const scans = new Map<string, { source: string; declared: string[] }>();
 
 /**
- * Memoised per locale: the suite asks for the same report once per rule, and
- * re-reading plus re-scanning a 330-key file three times per locale is the
+ * One read and one scan per locale, shared by every rule that needs them.
+ * Each rule used to re-read and re-parse the same 330-key file, which was the
  * whole cost of the suite. Files do not change mid-run.
  */
-export const keyReport = (locale: string): LocaleKeyReport => {
-  const cached = reports.get(locale);
+const scan = (locale: string): { source: string; declared: string[] } => {
+  const cached = scans.get(locale);
   if (cached) return cached;
-  const report = keyReportFor(declaredKeys(localeSource(locale)), baseKeys());
-  reports.set(locale, report);
-  return report;
+  const source = localeSource(locale);
+  const fresh = { source, declared: declaredKeys(source) };
+  scans.set(locale, fresh);
+  return fresh;
 };
+
+export const keyReport = (locale: string): LocaleKeyReport =>
+  keyReportFor(scan(locale).declared, baseKeys());
 
 /** The `{{token}}` names inside one string, deduplicated and sorted. */
 export const interpolationTokens = (text: string): string[] => {
@@ -294,9 +298,39 @@ export const tokenMismatchesFor = (
   return mismatches;
 };
 
+/**
+ * Keys a locale declares with the byte-identical English value.
+ *
+ * This is the gap key parity cannot see: the key is present, so `missing` is
+ * empty, but the user still reads English. It is also the likeliest way a
+ * hurried pass "completes" a locale. Compared after trimming, because trailing
+ * whitespace is a formatting difference, not a translation.
+ */
+export const englishCopiesFor = (
+  declared: string[],
+  translations: Record<string, TranslationValue>,
+  base: Record<string, TranslationValue>,
+): string[] => {
+  const flatten = (value: TranslationValue): string =>
+    valueBranches(value)
+      .map((branch) => `${branch.name}\u0000${(branch.text ?? "").trim()}`)
+      .join("\u0001");
+
+  return declared.filter(
+    (key) => key in base && flatten(translations[key]) === flatten(base[key]),
+  );
+};
+
+export const englishCopies = (locale: string): string[] =>
+  englishCopiesFor(
+    scan(locale).declared,
+    localeModules[locale],
+    en as Record<string, TranslationValue>,
+  );
+
 export const tokenMismatches = (locale: string): TokenMismatch[] =>
   tokenMismatchesFor(
-    declaredKeys(localeSource(locale)),
+    scan(locale).declared,
     localeModules[locale],
     en as Record<string, TranslationValue>,
   );

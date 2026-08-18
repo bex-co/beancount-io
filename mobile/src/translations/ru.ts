@@ -262,7 +262,6 @@ export const ru: typeof en = {
   range1Y: "1Г",
   rangeLastYear: "Пр. год",
   rangeAll: "ВСЁ",
-  tes: "1",
   // edit / delete transaction
   editTransaction: "Изменить транзакцию",
   deleteTransaction: "Удалить",

@@ -35,6 +35,7 @@ export const fa: typeof en = {
   deleteAccount: "حذف حساب",
   deleteAccountDescription: "حذف دائمی حساب و داده‌ها",
   ledgerDescription: "انتخاب یا تغییر بین دفترهای کل",
+  ledgers: "دفترهای کل",
   deleteAccountConfirmTitle: "تأیید حذف حساب",
   deleteAccountConfirmMessage:
     'برای تأیید، لطفاً "sudo delete my account" را در زیر بنویسید:',
@@ -47,12 +48,33 @@ export const fa: typeof en = {
   login: "ورود / ثبت نام",
   signIn: "ورود",
   signUp: "ثبت نام",
+  email: "ایمیل",
+  password: "گذرواژه",
+  forgotPassword: "گذرواژه را فراموش کرده‌اید؟",
+  dontHaveAccount: "حساب ندارید؟ ثبت‌نام کنید",
+  confirmPassword: "تأیید گذرواژه",
+  alreadyHaveAccount: "حساب دارید؟ وارد شوید",
+  backToSignIn: "بازگشت به ورود",
   resetPassword: "بازنشانی رمز عبور",
+  resetPasswordDescription:
+    "آدرس ایمیل خود را وارد کنید تا پیوندی برای بازنشانی رمز عبور دریافت کنید.",
+  resetPasswordEmailSent:
+    "ایمیلی به آدرس شما ارسال شده است. لطفاً ایمیل خود را بررسی کنید تا رمز عبور را بازنشانی کنید.",
   addTransaction: "افزودن تراکنش",
   assets: "دارایی‌ها",
+  sendResetPasswordEmail: "ارسال ایمیل بازنشانی رمز عبور",
   expenses: "هزینه‌ها",
   income: "درآمد",
   quickAdd: "افزودن سریع",
+  enterNewTransaction: "ثبت تراکنش جدید",
+  multiPostingsTitle: "تراکنش جدید",
+  addPosting: "+ افزودن ثبت",
+  remainderLabel: "باقی‌مانده",
+  autoLabel: "خودکار",
+  postingAccount: "انتخاب حساب",
+  multiPostingsInvalidBalance: "جمع ثبت‌ها باید صفر شود",
+  multiPostingsMissingAccount: "هر ثبت به یک حساب نیاز دارد",
+  multiPostingsZeroAmount: "هر ثبت به مبلغی غیر از صفر نیاز دارد",
   accountPicker: "انتخاب حساب",
   accountPickerSearchPlaceholder: "جستجوی حساب‌ها",
   accountPickerRecent: "اخیر",
@@ -65,15 +87,24 @@ export const fa: typeof en = {
   saving: "در حال ذخیره...",
   saveSuccess: "تراکنش ذخیره شد!",
   saveFailed: "ذخیره ناموفق",
+  amountEmptyError: "لطفاً مبلغ را وارد کنید",
+  accountEmptyError: "حساب مبدأ و مقصد را انتخاب کنید",
   netAssets: "دارایی‌های خالص",
   accounts: "حساب‌ها",
+  // Column headers for the Accounts tab's balance table. Separate from the
+  // journal's `balance` key, which names the beancount directive.
+  account: "حساب",
+  accountBalance: "مانده",
   monthlyNetIncome: "درآمد خالص ماهانه",
   liabilities: "بدهی‌ها",
   equity: "حقوق صاحبان سهام",
+  noDataCharts: "برای نمایش نمودارها سریع اضافه کنید",
+  notEnoughChartData: "هنوز داده کافی برای نمودار نیست",
   done: "تمام",
   payee: "دریافت‌کننده",
   narration: "شرح",
   suggestions: "پیشنهادها",
+  aiSuggestions: "پیشنهادهای هوش مصنوعی",
   from: "از",
   to: "به",
   date: "تاریخ",
@@ -89,13 +120,12 @@ export const fa: typeof en = {
   updateFailed: "به‌روزرسانی اشتراک ناموفق",
   inviteFriends: "دعوت دوستان",
   invite: "دعوت",
-  copy: "کپی",
-  copied: "کپی شد",
-  share: "اشتراک‌گذاری",
-  loading: "در حال بارگذاری...",
   inviteSummary:
     "این ابزار حرفه‌ای مدیریت مالی را به اشتراک بگذارید و به دیگران کمک کنید تا آینده مالی خود را بسازند.",
   referral: "معرفی",
+  copy: "کپی",
+  copied: "کپی شد",
+  share: "اشتراک‌گذاری",
   rewardSummary: "دعوت دوستان",
   rewardDetail:
     "این ابزار حرفه‌ای مدیریت مالی را به اشتراک بگذارید و به دیگران کمک کنید تا آینده مالی خود را بسازند.",
@@ -103,15 +133,9 @@ export const fa: typeof en = {
     "می‌خواهم این ابزار حرفه‌ای مدیریت مالی را که به من در سازماندهی مؤثر امور مالی‌ام کمک کرده است، به اشتراک بگذارم.",
   shareError: "اشتراک‌گذاری ناموفق",
   thanksShare: "از اشتراک‌گذاری متشکریم!!",
+  loading: "در حال بارگذاری...",
   noContactPermission: "مجوز دسترسی به مخاطبین وجود ندارد.",
   inputKeyword: "لطفاً کلمه کلیدی وارد کنید",
-  resetPasswordDescription:
-    "آدرس ایمیل خود را وارد کنید تا پیوندی برای بازنشانی رمز عبور دریافت کنید.",
-  resetPasswordEmailSent:
-    "ایمیلی به آدرس شما ارسال شده است. لطفاً ایمیل خود را بررسی کنید تا رمز عبور را بازنشانی کنید.",
-  sendResetPasswordEmail: "ارسال ایمیل بازنشانی رمز عبور",
-  amountEmptyError: "لطفاً مبلغ را وارد کنید",
-  noDataCharts: "برای نمایش نمودارها سریع اضافه کنید",
   "01": "ژان",
   "02": "فور",
   "03": "مار",
@@ -124,18 +148,58 @@ export const fa: typeof en = {
   "10": "اکت",
   "11": "نوا",
   "12": "دسا",
-  // journal screen
-  transactions: "Transactions", // TODO: needs native speaker review
-  search: "Search", // TODO: needs native speaker review
-  unknown: "Unknown", // TODO: needs native speaker review
-  openAccount: "Open Account", // TODO: needs native speaker review
-  closeAccount: "Close Account", // TODO: needs native speaker review
-  transaction: "Transaction", // TODO: needs native speaker review
-  loadingMore: "Loading more...", // TODO: needs native speaker review
-  noMoreEntries: "No more entries", // TODO: needs native speaker review
-  journalLoadError: "Failed to load journal: ", // TODO: needs native speaker review
-  accountsPlural: "accounts", // TODO: needs native speaker review
-  // journal entry context
+  // transactions screen
+  transactionsWelcomeTitle: "به تراکنش‌هایتان خوش آمدید! 🧾",
+  transactionsWelcomeMessage: "هنوز هیچ تراکنشی ثبت نکرده‌اید.",
+  transactionsWelcomeInstructions: "برای شروع:",
+  transactionsWelcomeInstruction1: 'با دکمهٔ "+" نخستین تراکنش خود را ثبت کنید',
+  transactionsWelcomeInstruction2:
+    "فایل‌های beancount را از رابط وب بارگذاری کنید",
+  transactionsWelcomeInstruction3: "داده‌های حسابداری موجود را وارد کنید",
+  transactionsWelcomeInstructionFinal:
+    "به‌محض افزودن تراکنش‌ها، اینجا نمایش داده می‌شوند.",
+  transactionsNoSearchResults:
+    "هیچ تراکنشی با جست‌وجو یا فیلترهای شما مطابقت ندارد.",
+  transactionsLoadError: "بارگذاری تراکنش‌ها ناموفق بود: ",
+  // transactions filter modal
+  filters: "فیلترها",
+  filterStatus: "وضعیت",
+  filterDateRange: "بازهٔ زمانی",
+  filterAccount: "حساب",
+  allAccounts: "همهٔ حساب‌ها",
+  rangeCustom: "دلخواه",
+  startDate: "از",
+  endDate: "تا",
+  apply: "اعمال",
+  reset: "بازنشانی",
+  // shared labels & the open-account flow
+  transactions: "تراکنش‌ها",
+  search: "جست‌وجو",
+  unknown: "نامشخص",
+  openAccount: "افتتاح حساب",
+  accountType: "نوع حساب",
+  currency: "واحد پول",
+  openDate: "تاریخ افتتاح",
+  chooseAccountType: "نوع حساب را انتخاب کنید",
+  chooseCurrency: "واحد پول را انتخاب کنید",
+  openAccountNamePlaceholder: "Bank:Checking",
+  openAccountNoCurrency: "بدون واحد پول",
+  openAccountSaving: "در حال افتتاح...",
+  openAccountFailed: "افتتاح حساب ناموفق بود. دوباره تلاش کنید.",
+  openAccountInvalidRoot: "یک نوع حساب معتبر انتخاب کنید.",
+  openAccountNameRequired: "دست‌کم یک بخش از نام حساب را وارد کنید.",
+  openAccountEmptyComponent: "بخش‌های نام حساب نمی‌توانند خالی باشند.",
+  openAccountUppercaseComponent: "هر بخش نام حساب باید با حرف بزرگ آغاز شود.",
+  openAccountInvalidCharacters:
+    "در نام حساب‌ها فقط از حروف، ارقام و خط تیره استفاده کنید.",
+  closeAccount: "بستن حساب",
+  transaction: "تراکنش",
+  loadingMore: "در حال بارگذاری بیشتر...",
+  noMoreEntries: "رکورد دیگری نیست",
+  noEntries: "بدون رکورد",
+  journalLoadError: "بارگذاری روزنامه ناموفق بود: ",
+  accountsPlural: "حساب",
+  // entry context (transactions screen)
   journalLoadingEntryContext: "در حال بارگذاری زمینه ورودی...", // TODO: needs native speaker review
   journalError: "خطا", // TODO: needs native speaker review
   journalNoData: "داده‌های زمینه ورودی در دسترس نیست", // TODO: needs native speaker review
@@ -144,7 +208,150 @@ export const fa: typeof en = {
   journalBalancesBefore: "موجودی قبل از ورودی", // TODO: needs native speaker review
   journalBalancesAfter: "موجودی بعد از ورودی", // TODO: needs native speaker review
   journalSource: "کد منبع", // TODO: needs native speaker review
-  // budget
+  // directive types & entry filters
+  open: "افتتاح",
+  close: "بستن",
+  balance: "مانده",
+  note: "یادداشت",
+  document: "سند",
+  pad: "تعدیل",
+  price: "قیمت",
+  custom: "سفارشی",
+  cleared: "تأییدشده",
+  pending: "در انتظار",
+  other: "سایر",
+  discovered: "یافت‌شده",
+  linked: "پیوندخورده",
+  budget: "بودجه",
+  metadata: "فراداده",
+  postings: "ثبت‌ها",
+  details: "جزئیات",
+  tags: "برچسب‌ها",
+  links: "پیوندها",
+  clearedTransactions: "تراکنش‌های تأییدشده",
+  pendingTransactions: "تراکنش‌های در انتظار",
+  otherTransactions: "سایر تراکنش‌ها",
+  discoveredDocuments: "اسناد یافت‌شده",
+  linkedDocuments: "اسناد پیوندخورده",
+  budgetEntries: "رکوردهای بودجه",
+  toggleMetadata: "نمایش یا پنهان‌سازی فراداده",
+  togglePostings: "نمایش یا پنهان‌سازی ثبت‌ها",
+  // reports tab
+  reports: "گزارش‌ها",
+  netProfit: "سود خالص",
+  // feed
+  latestUpdates: "آخرین تغییرات",
+  // home dashboard
+  seeAll: "دیدن همه",
+  netWorth: "ارزش خالص",
+  noAccounts: "بدون حساب",
+  recentTransactions: "تراکنش‌های اخیر",
+  recentTransactionsEmpty: "هنوز تراکنشی نیست",
+  spending: "هزینه‌ها",
+  spendingSubtitle: "این ماه در برابر ماه گذشته",
+  thisMonth: "این ماه",
+  lastMonth: "ماه گذشته",
+  range1M: "1م",
+  range3M: "3م",
+  range6M: "6م",
+  rangeYTD: "از آغاز سال",
+  range1Y: "1س",
+  rangeLastYear: "سال قبل",
+  rangeAll: "همه",
+  // edit / delete transaction
+  editTransaction: "ویرایش تراکنش",
+  deleteTransaction: "حذف",
+  deleteTransactionTitle: "حذف تراکنش",
+  deleteTransactionMessage:
+    "از حذف این تراکنش مطمئن هستید؟ این کار برگشت‌پذیر نیست.",
+  deleteSuccess: "تراکنش حذف شد",
+  deleteFailed: "حذف تراکنش ناموفق بود",
+  editSuccess: "تراکنش ذخیره شد",
+  editFailed: "ذخیرهٔ تراکنش ناموفق بود",
+  editTransactionSource:
+    "متن اصلی beancount را در زیر ویرایش کنید. جمع کنترلی منسوخ یا beancount نامعتبر با خطا رد می‌شود.",
+  editConflict:
+    "این تراکنش جای دیگری تغییر کرده است. دوباره بارگذاری کنید و تلاش کنید.",
+  // receipt capture
+  scanReceipt: "اسکن رسید",
+  receiptTakePhoto: "گرفتن عکس",
+  receiptChooseLibrary: "انتخاب از گالری",
+  receiptFlash: "فلاش",
+  receiptRetake: "عکس دوباره",
+  receiptUpload: "بارگذاری",
+  receiptOpenSettings: "باز کردن تنظیمات",
+  receiptCancel: "لغو",
+  receiptUploading: "در حال بارگذاری عکس…",
+  receiptParsing: "هوش مصنوعی رسید شما را می‌خواند…",
+  receiptRevealTitle: "این چیزی است که خواندیم",
+  // Deliberately a proposal: nothing is written to the ledger until the user
+  // saves on the next screen.
+  receiptRevealHint:
+    "هنوز چیزی ذخیره نشده — جزئیات را در صفحهٔ بعد بررسی کنید.",
+  total: "جمع کل",
+  receiptQuotaExhausted: "سهمیهٔ هوش مصنوعی تمام شد. طرح خود را ارتقا دهید.",
+  receiptParseFailed: "خواندن رسید ممکن نشد. دوباره تلاش کنید.",
+  receiptUploadFailed: "بارگذاری ناموفق بود. دوباره تلاش کنید.",
+  receiptCameraPermission:
+    "برای عکس‌گرفتن از رسید، دسترسی به دوربین لازم است. آن را در تنظیمات فعال کنید.",
+  receiptLibraryPermission:
+    "برای انتخاب رسید، دسترسی به گالری لازم است. آن را در تنظیمات فعال کنید.",
+  // notifications
+  notificationsBell: "اعلان‌ها",
+  notificationsTitle: "اعلان‌ها",
+  notificationsErrorsSection: "خطاهای دفتر کل",
+  notificationsChangesSection: "تغییرات اخیر",
+  notificationsLedgerHealthy: "دفتر کل سالم است — بدون خطا.",
+  notificationsNoChanges: "تغییر اخیری نیست.",
+  // commit detail
+  commitDetailAuthor: "نویسنده",
+  commitDetailStats: "آمار",
+  commitDetailFiles: "فایل‌ها",
+  commitDetailDiff: "تفاوت‌ها",
+  commitDetailNoDiff: "تفاوتی در دسترس نیست.",
+  commitDetailAdditions: "+{{count}} خط",
+  commitDetailDeletions: "-{{count}} خط",
+  // ledger file browser
+  ledgerLoadError: "بارگذاری ناموفق بود",
+  ledgerEmpty: "بدون فایل",
+  ledgerEmptyHint:
+    "اینجا یک فایل دفتر کل بسازید، یا برای تازه‌سازی به پایین بکشید.",
+  ledgerRefreshHint: "برای بارگذاری دوبارهٔ این پوشه به پایین بکشید.",
+  ledgerCreateFile: "ساخت فایل",
+  ledgerCreateFileTitle: "فایل جدید دفتر کل",
+  ledgerCreateFileMessage:
+    "یک نام یکتا برای فایل .bean یا .beancount وارد کنید. اگر پسوند را ننویسید، .bean افزوده می‌شود.",
+  ledgerCreateFilePlaceholder: "investments.bean",
+  ledgerCreateFileSuccess: "{{name}} ساخته شد",
+  ledgerCreateFileFailed: "ساخت فایل ناموفق بود",
+  ledgerDeleteFile: "حذف {{name}}",
+  ledgerDeleteFileTitle: "حذف فایل دفتر کل",
+  ledgerDeleteFileMessage: "«{{name}}» حذف شود؟ این کار برگشت‌پذیر نیست.",
+  ledgerDeleteFileConfirm: "حذف",
+  ledgerDeleteFileSuccess: "{{name}} حذف شد",
+  ledgerDeleteFileFailed: "حذف فایل ناموفق بود",
+  ledgerMainFileProtected: "main.bean را نمی‌توان حذف کرد",
+  // ledger file editor
+  ledgerEditorSave: "ذخیره",
+  ledgerEditorSaving: "در حال ذخیره...",
+  ledgerEditorSaveSuccess: "فایل ذخیره شد",
+  ledgerEditorSaveFailed: "ذخیره ناموفق بود",
+  ledgerEditorLoadFailed: "بارگذاری فایل ناموفق بود",
+  ledgerEditorUnsavedTitle: "تغییرات ذخیره‌نشده",
+  ledgerEditorUnsavedMessage: "تغییرات شما کنار گذاشته شود؟",
+  ledgerEditorDiscardChanges: "کنار گذاشتن",
+  ledgerEditorConflictTitle: "فایل تغییر کرد",
+  ledgerEditorConflictMessage:
+    "این فایل روی سرور تغییر کرده است. تغییرات محلی کنار گذاشته و فایل دوباره بارگذاری شود؟",
+  ledgerEditorReload: "بارگذاری دوباره",
+  ledgerEditorKeepEditing: "ادامهٔ ویرایش",
+  ledgerEditorErrorCount: {
+    one: "{{count}} خطا",
+    other: "{{count}} خطا",
+  },
+  // budget — dated spending/income targets per account, stored as
+  // `custom "budget"` directives. Copy mirrors the dashboard's page.budget.*
+  // namespace so the two clients speak the same language.
   budgetActual: "واقعی",
   budgetVariance: "اختلاف",
   budgetAboveTarget: "بالاتر از هدف",
@@ -165,14 +372,17 @@ export const fa: typeof en = {
   budgetIntervalMonthly: "ماهانه",
   budgetIntervalQuarterly: "فصلی",
   budgetIntervalYearly: "سالانه",
+  // add / update budget
   budgetAdd: "افزودن بودجه",
   budgetUpdate: "به‌روزرسانی بودجه",
+  budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountHelp:
     "هر بودجه برای یک حساب اعمال می‌شود. مورد جدیدتر برای همان حساب و ارز از تاریخ خود اعمال می‌شود.",
   budgetInterval: "بازه زمانی",
   budgetSelectInterval: "انتخاب بازه زمانی",
   budgetAmount: "مبلغ",
   budgetSaveFailed: "ذخیره بودجه ناموفق بود",
+  // delete
   budgetDelete: "حذف",
   budgetDeleteTitle: "حذف بودجه",
   budgetDeleteMessage:

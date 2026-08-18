@@ -251,7 +251,6 @@ export const zh: typeof en = {
   range1Y: "近1年",
   rangeLastYear: "去年",
   rangeAll: "全部",
-  tes: "1",
   // edit / delete transaction
   editTransaction: "编辑交易",
   deleteTransaction: "删除",

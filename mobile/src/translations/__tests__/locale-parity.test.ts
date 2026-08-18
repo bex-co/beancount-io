@@ -11,12 +11,19 @@ import {
   allTokens,
   blankLiterals,
   declaredKeys,
+  englishCopiesFor,
   interpolationTokens,
   keyReportFor,
   spreadsBase,
   tokenMismatchesFor,
   valueBranches,
 } from "./locale-parity";
+import {
+  allowedEnglishCopies,
+  SAME_AS_ENGLISH,
+  UNTRANSLATABLE,
+} from "./known-gaps";
+import { en } from "../en";
 
 const localeFile = (body: string) => `import { en } from "./en";
 
@@ -226,5 +233,104 @@ describe("tokenMismatchesFor", () => {
         wide,
       ),
     ).toEqual([]);
+  });
+});
+
+describe("englishCopiesFor", () => {
+  const base = {
+    save: "Save",
+    home: "Home",
+    errors: { one: "{{count}} error", other: "{{count}} errors" },
+  };
+
+  it("reports a value copied verbatim from English", () => {
+    expect(
+      englishCopiesFor(
+        ["save", "home"],
+        { save: "Opslaan", home: "Home" },
+        base,
+      ),
+    ).toEqual(["home"]);
+  });
+
+  it("reports nothing when every value is translated", () => {
+    expect(
+      englishCopiesFor(
+        ["save", "home"],
+        { save: "Opslaan", home: "Thuis" },
+        base,
+      ),
+    ).toEqual([]);
+  });
+
+  it("treats a whitespace-only difference as a copy", () => {
+    // Otherwise a trailing space silently launders an untranslated string.
+    expect(englishCopiesFor(["save"], { save: "Save  " }, base)).toEqual([
+      "save",
+    ]);
+  });
+
+  it("reports a plural form copied in every branch", () => {
+    const same = {
+      errors: { one: "{{count}} error", other: "{{count}} errors" },
+    };
+    expect(englishCopiesFor(["errors"], same, base)).toEqual(["errors"]);
+  });
+
+  it("does not report a plural form that differs in one branch", () => {
+    const partly = {
+      errors: { one: "{{count}} error", other: "{{count}} errores" },
+    };
+    expect(englishCopiesFor(["errors"], partly, base)).toEqual([]);
+  });
+
+  it("ignores keys the locale has not declared", () => {
+    expect(englishCopiesFor([], { home: "Home" }, base)).toEqual([]);
+  });
+
+  it("ignores a declared key the English base does not have", () => {
+    // Whoever owns `extra` is the key-parity rule, not this one.
+    expect(englishCopiesFor(["extra"], { extra: "Extra" }, base)).toEqual([]);
+  });
+});
+
+describe("the exception lists", () => {
+  const baseKeySet = new Set(Object.keys(en));
+
+  it("excuses only keys the English base actually has", () => {
+    const unknown = [
+      ...Object.keys(UNTRANSLATABLE),
+      ...Object.entries(SAME_AS_ENGLISH).flatMap(([locale, groups]) =>
+        groups.flatMap((group) => group.keys.map((key) => `${locale}.${key}`)),
+      ),
+    ].filter((entry) => !baseKeySet.has(entry.split(".").pop() ?? ""));
+    expect(unknown).toEqual([]);
+  });
+
+  it("gives every group a reason", () => {
+    const silent = Object.entries(SAME_AS_ENGLISH).flatMap(([locale, groups]) =>
+      groups.filter((group) => group.reason.trim() === "").map(() => locale),
+    );
+    expect(silent).toEqual([]);
+  });
+
+  it("lists no key twice within one locale", () => {
+    const duplicated = Object.entries(SAME_AS_ENGLISH).flatMap(
+      ([locale, groups]) => {
+        const keys = groups.flatMap((group) => group.keys);
+        return keys
+          .filter((key, index) => keys.indexOf(key) !== index)
+          .map((key) => `${locale}.${key}`);
+      },
+    );
+    expect(duplicated).toEqual([]);
+  });
+
+  it("gives an unknown locale only the globally untranslatable keys", () => {
+    // The per-locale half is data, not a hard-coded list: a thirteenth
+    // language starts with no exceptions rather than inheriting someone's.
+    expect(allowedEnglishCopies("xx")).toEqual(
+      Object.keys(UNTRANSLATABLE).sort(),
+    );
   });
 });
