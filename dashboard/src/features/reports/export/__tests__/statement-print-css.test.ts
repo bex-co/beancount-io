@@ -1,5 +1,5 @@
-import { readFileSync } from "node:fs";
-import { resolve } from "node:path";
+import { readdirSync, readFileSync, statSync } from "node:fs";
+import { join, resolve } from "node:path";
 import { describe, expect, it } from "vitest";
 
 const printStyles = readFileSync(
@@ -28,5 +28,43 @@ describe("statement print pagination", () => {
     expect(printStyles).toContain(
       ".statement-print-summary-row-reconciliation_difference",
     );
+  });
+});
+
+describe("statement print stylesheet delivery", () => {
+  it("rides the inline root stylesheet so the print tree stays hidden in production", () => {
+    // The app ships CSS exclusively via the `src/style.css?inline` <style> tag
+    // in routes/__root.tsx with `cssCodeSplit: false`. A bare `.css` import is
+    // extracted into an orphaned asset that no chunk loads, which left
+    // `.statement-print-root` visible on screen in production.
+    const rootStyles = readFileSync(
+      resolve(process.cwd(), "src/style.css"),
+      "utf8",
+    );
+    expect(rootStyles).toContain(
+      '@import "./features/reports/export/statement-print.css";',
+    );
+  });
+
+  it("has no bare .css imports outside the inline root stylesheet", () => {
+    const bareCssImports: string[] = [];
+    const walk = (dir: string) => {
+      for (const entry of readdirSync(dir)) {
+        const path = join(dir, entry);
+        if (statSync(path).isDirectory()) {
+          walk(path);
+        } else if (/\.(ts|tsx|js|jsx|mts|mjs)$/.test(entry)) {
+          const source = readFileSync(path, "utf8");
+          for (const match of source.matchAll(
+            /(?<!@)import\s+(?:[^"']*\sfrom\s+)?["']([^"']*\.css)["']/g,
+          )) {
+            bareCssImports.push(`${path}: ${match[1]}`);
+          }
+        }
+      }
+    };
+    walk(resolve(process.cwd(), "src"));
+
+    expect(bareCssImports).toEqual([]);
   });
 });

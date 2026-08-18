@@ -20,7 +20,6 @@ import {
   type BalanceSheetSummaryKey,
   type ProfitAndLossSummaryKey,
 } from "./presentation";
-import "./statement-print.css";
 
 function rowAmounts(row: StatementRow) {
   return row.amounts.length > 0 ? row.amounts : [null];

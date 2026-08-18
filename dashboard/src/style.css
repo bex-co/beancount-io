@@ -2,6 +2,7 @@
 @import "tw-animate-css";
 @import "./features/ai-agent/styles/chat-markdown.css";
 @import "./common/components/diff-viewer/diff-viewer.css";
+@import "./features/reports/export/statement-print.css";
 
 @custom-variant dark (&:is(.dark *));
 
