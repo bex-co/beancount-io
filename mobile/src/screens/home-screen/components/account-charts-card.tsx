@@ -33,7 +33,7 @@ const styles = StyleSheet.create({
   skeletonTab: {
     height: 28,
     borderRadius: 14,
-    marginRight: 8,
+    marginEnd: 8,
   },
 });
 

@@ -12,6 +12,7 @@ import {
   useTheme,
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -35,6 +36,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.xl,
       fontWeight: fontWeights.medium,
       color: theme.text01,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     seeAll: {
       flexDirection: "row",
@@ -44,7 +46,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.primary,
-      marginRight: space.xxs,
+      marginEnd: space.xxs,
     },
     content: {
       paddingHorizontal: gutter,
@@ -105,7 +107,7 @@ export function DashboardCard({
             >
               <Text style={styles.seeAllText}>{t("seeAll")}</Text>
               <Ionicons
-                name="chevron-forward"
+                name={directionalIcon("chevron-forward")}
                 size={16}
                 color={theme.primary}
               />

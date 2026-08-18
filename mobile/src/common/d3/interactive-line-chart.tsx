@@ -37,6 +37,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { polylineLength } from "./utils";
 import { useEntranceProgress } from "./use-entrance-progress";
 import { lerp, lerpSeries, resampleSeries, sameSeries } from "./series-morph";
+import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
 
 // Created once at module scope: building this inside the component would give
 // React a new component type on every render and remount the path each time.
@@ -219,10 +220,16 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 16,
       marginBottom: 8,
     },
+    // Both hold amounts and currency codes (`0.00 MUSD` — Latin), so the
+    // default `natural` alignment pinned them to the left of a Persian card
+    // while `changeRow` beneath them mirrored to the right, splitting one
+    // heading across both edges. See `LEADING_TEXT_ALIGN` for why the value is
+    // spelled `"left"`.
     label: {
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     headline: {
       fontSize: fontSizes.display,
@@ -241,13 +248,14 @@ const getStyles = (theme: ColorTheme) =>
     // Muted so the month reads as context for the change, not as a second
     // figure competing with it.
     scrubLabel: {
-      marginLeft: 6,
+      marginStart: 6,
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.black80,
     },
     chartContainer: {
       position: "relative",
+      ...LTR_PLOT,
     },
     // Centered over the plot area, which is empty whenever a line can't be drawn.
     placeholder: {

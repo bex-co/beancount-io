@@ -15,12 +15,12 @@ const getStyles = (theme: ColorTheme) =>
       marginHorizontal: gutter,
       marginBottom: space.sm,
     },
-    // Sits on the funnel's upper-right corner, so an active filter is visible
-    // without opening the sheet.
+    // Sits on the funnel's upper trailing corner, so an active filter is
+    // visible without opening the sheet.
     filterDot: {
       position: "absolute",
       top: -1,
-      right: -2,
+      end: -2,
       width: 8,
       height: 8,
       borderRadius: 4,

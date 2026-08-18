@@ -4,6 +4,7 @@ import {
   amountStyle,
   fonts,
 } from "@/common/theme";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 type AmountTextProps = TextProps & {
   /**
@@ -15,7 +16,18 @@ type AmountTextProps = TextProps & {
 };
 
 const styles = StyleSheet.create({
-  amount: amountStyle,
+  amount: {
+    ...amountStyle,
+    /**
+     * Every amount, aligned to the layout's leading edge rather than to its own
+     * digits. `0.00 MUSD` is strongly left-to-right, so React Native's default
+     * resolves the alignment from the string and pins the amount to the left of
+     * a right-to-left screen while the row around it mirrors. Layered before
+     * the caller's style, so a value column that wants its amounts at the
+     * trailing edge still says `textAlign: "right"` and still wins.
+     */
+    textAlign: LEADING_TEXT_ALIGN,
+  },
   monoRegular: { fontFamily: fonts.mono },
   monoMedium: { fontFamily: fonts.monoMedium },
 });

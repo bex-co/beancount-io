@@ -247,6 +247,58 @@ describe("common/vars logic", () => {
 
       expect(writes).toEqual([{ key: "theme", value: JSON.stringify("dark") }]);
     });
+
+    it("flush waits for the write the last set kicked off", async () => {
+      // The language picker awaits this before restarting the app to apply a
+      // right-to-left flip. Writes are fire-and-forget everywhere else, but a
+      // restart that outruns the write brings the app back holding the previous
+      // locale — so the promise has to still be pending when the write is.
+      let release: (() => void) | undefined;
+      const settled: string[] = [];
+      asyncStorageMock.setItem = (_key: string, value: string) =>
+        new Promise<void>((resolve) => {
+          release = () => {
+            settled.push(value);
+            resolve();
+          };
+        });
+
+      const persistentVarPath = require.resolve("../../apollo/persistent-var");
+      delete require.cache[persistentVarPath];
+      const { createPersistentVar } = require("../../apollo/persistent-var");
+
+      const [localeVar, , flushLocale] = createPersistentVar("locale", "en");
+      localeVar("fa");
+
+      let flushed = false;
+      const pending = flushLocale().then(() => {
+        flushed = true;
+      });
+
+      await Promise.resolve();
+      expect(flushed).toBe(false);
+      expect(settled).toEqual([]);
+
+      release?.();
+      await pending;
+      expect(flushed).toBe(true);
+      expect(settled).toEqual([JSON.stringify("fa")]);
+    });
+
+    it("flush resolves when nothing has been written yet", async () => {
+      const persistentVarPath = require.resolve("../../apollo/persistent-var");
+      delete require.cache[persistentVarPath];
+      const { createPersistentVar } = require("../../apollo/persistent-var");
+
+      const [, , flushLocale] = createPersistentVar("locale", "en");
+
+      let flushed = false;
+      await flushLocale().then(() => {
+        flushed = true;
+      });
+
+      expect(flushed).toBe(true);
+    });
   });
 
   describe("Number helper for toBeGreaterThan", () => {

@@ -37,6 +37,7 @@ import {
   intervalLabelKey,
 } from "@/screens/budget-screen/selectors/budget-labels";
 import { getFormatDate } from "@/common/format-util";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -76,6 +77,7 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       color: theme.black80,
       fontSize: fontSizes.md,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     value: {
       maxWidth: "58%",
@@ -88,7 +90,7 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black60,
     },
     chevron: {
-      marginLeft: space.xs,
+      marginStart: space.xs,
     },
     amountInput: {
       flex: 1,
@@ -152,7 +154,7 @@ function FormRow({
       {onPress && (
         <Ionicons
           style={styles.chevron}
-          name="chevron-forward"
+          name={directionalIcon("chevron-forward")}
           size={16}
           color={chevronColor}
         />

@@ -49,7 +49,7 @@ const getStyles = (theme: ColorTheme) =>
     badge: {
       position: "absolute",
       top: -4,
-      right: -6,
+      end: -6,
       minWidth: 16,
       height: 16,
       borderRadius: 8,

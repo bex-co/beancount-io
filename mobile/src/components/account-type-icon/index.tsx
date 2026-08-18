@@ -35,7 +35,7 @@ const styles = StyleSheet.create({
     alignItems: "center",
     justifyContent: "center",
     overflow: "hidden",
-    marginRight: 12,
+    marginEnd: 12,
     flexShrink: 0,
   },
   // The chip's background + hairline border are set inline from the theme so

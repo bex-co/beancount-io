@@ -52,6 +52,7 @@ import CodeEditor, {
   type InsertSpec,
 } from "@/components/code-editor/code-editor";
 import { isConflictError, filterFileErrors, getKeyboardOverlap } from "./utils";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
 
@@ -90,6 +91,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: 13,
       fontWeight: "600",
       color: theme.error,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     errorList: {
       maxHeight: 140,
@@ -108,6 +110,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: 12,
       color: theme.error,
       lineHeight: 16,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     errorLocation: {
       fontSize: 11,
@@ -218,7 +221,7 @@ function ErrorBanner({
                 </View>
                 {err.lineno != null && (
                   <Ionicons
-                    name="arrow-forward"
+                    name={directionalIcon("arrow-forward")}
                     size={14}
                     color={theme.black60}
                   />

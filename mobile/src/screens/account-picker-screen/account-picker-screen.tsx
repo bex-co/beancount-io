@@ -53,6 +53,7 @@ import { analytics } from "@/common/analytics";
 import { usePageView } from "@/common/hooks";
 import { accountUsageVar, recordAccountUsage } from "@/common/vars";
 import { usageFor, type RankingContext } from "@/common/account-frecency";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 const SKELETON_ROW_WIDTHS = [200, 160, 220, 140, 180, 210, 150, 190];
 
@@ -108,6 +109,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.xl,
       lineHeight: 24,
       color: theme.black,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     // The parent path is context; the leaf is what identifies the account, so
     // it carries weight as well as colour — hierarchy shouldn't be colour-only.
@@ -133,7 +135,7 @@ const getStyles = (theme: ColorTheme) =>
       borderTopColor: theme.black60,
     },
     createText: {
-      marginLeft: space.sm,
+      marginStart: space.sm,
       fontWeight: fontWeights.medium,
       color: theme.primary,
     },
@@ -205,7 +207,7 @@ const AccountRow = memo(function AccountRow({
         <Text style={styles.leaf}>{leaf}</Text>
       </Text>
       <Ionicons
-        name={selected ? "checkmark" : "chevron-forward"}
+        name={selected ? "checkmark" : directionalIcon("chevron-forward")}
         size={24}
         color={selected ? theme.primary : theme.black}
       />
@@ -384,7 +386,11 @@ export function AccountPickerScreenComponent(): JSX.Element {
             <LoadingTile
               style={StyleSheet.flatten([styles.rowTile, { width }])}
             />
-            <Ionicons name="chevron-forward" size={24} color={theme.black40} />
+            <Ionicons
+              name={directionalIcon("chevron-forward")}
+              size={24}
+              color={theme.black40}
+            />
           </View>
         ))}
       </View>
@@ -468,7 +474,7 @@ export function AccountPickerScreenComponent(): JSX.Element {
                   {t("accountPickerCreate", { name: trimmedQuery })}
                 </Text>
                 <Ionicons
-                  name="chevron-forward"
+                  name={directionalIcon("chevron-forward")}
                   size={24}
                   color={theme.black}
                 />

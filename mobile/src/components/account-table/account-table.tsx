@@ -29,6 +29,7 @@ import {
   type AccountCategory,
 } from "@/components/account-list/select-account-list";
 import { flattenRows, type TableRow } from "./flatten-rows";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 /**
  * One step of tree indent, and — deliberately the same number — the width of the
@@ -64,6 +65,7 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       fontSize: fontSizes.sm,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     columnLabelRight: {
       fontSize: fontSizes.sm,
@@ -72,7 +74,7 @@ const getStyles = (theme: ColorTheme) =>
     row: {
       flexDirection: "row",
       alignItems: "center",
-      paddingRight: GUTTER,
+      paddingEnd: GUTTER,
       paddingVertical: rowPaddingVertical,
       // Pins every row to the same height regardless of depth, and to the same
       // rhythm as the app's list rows. `minHeight` rather than a fixed
@@ -107,7 +109,8 @@ const getStyles = (theme: ColorTheme) =>
     },
     name: {
       flex: 1,
-      marginRight: 12,
+      marginEnd: 12,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     nameCategory: {
       fontSize: fontSizes.lg,
@@ -206,7 +209,7 @@ const AccountTableRow = memo(function AccountTableRow({
   const chevronIcon = row.hasChildren ? (
     <Ionicons
       style={styles.chevron}
-      name={row.expanded ? "chevron-down" : "chevron-forward"}
+      name={row.expanded ? "chevron-down" : directionalIcon("chevron-forward")}
       size={14}
       // Dimmer than the label in both themes, so the chevron reads as a control
       // rather than competing with the account name.
@@ -267,7 +270,7 @@ const AccountTableRow = memo(function AccountTableRow({
 
   const rowStyle = [
     styles.row,
-    { paddingLeft: GUTTER },
+    { paddingStart: GUTTER },
     isCategory && styles.categoryRow,
   ];
 

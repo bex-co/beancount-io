@@ -135,7 +135,7 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       gap: 12,
-      paddingRight: 4,
+      paddingEnd: 4,
     },
   });
 

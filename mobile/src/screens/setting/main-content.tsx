@@ -10,7 +10,9 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useDeleteAccountMutation } from "@/generated-graphql/graphql";
 import { useSession } from "@/common/hooks/use-session";
 import { actionLogout } from "./logout";
-import { localeVar, themeVar } from "@/common/vars";
+import { flushLocale, localeVar, themeVar } from "@/common/vars";
+import { applyLayoutDirection, layoutDirectionChanges } from "@/common/rtl";
+import { reloadApp } from "@/common/reload-app";
 import { useReactiveVar } from "@apollo/client";
 import { router } from "expo-router";
 import { useToast } from "@/common/hooks";
@@ -230,6 +232,35 @@ export const MainContent = () => {
           setLocale(changeTo);
           await analytics.track("tap_switch_language", { changeTo });
           setLanguageModalVisible(false);
+
+          // Crossing the left-to-right / right-to-left boundary is the only
+          // language change that costs a restart: `I18nManager.forceRTL` is
+          // read by the native side at startup, so until the app relaunches
+          // the layout and the text disagree. `de` → `fr` stays instant.
+          if (!layoutDirectionChanges(locale, changeTo)) {
+            return;
+          }
+          Alert.alert(
+            t("restartForLayoutTitle"),
+            t("restartForLayoutMessage", {
+              language: getLanguageLabel(changeTo),
+            }),
+            [
+              { text: t("cancel"), style: "cancel" },
+              {
+                text: t("restartNow"),
+                onPress: async () => {
+                  applyLayoutDirection(changeTo);
+                  // The restart kills the process, so the persisted locale has
+                  // to have actually landed first — otherwise the app comes
+                  // back in the previous language with the new direction.
+                  await flushLocale();
+                  await reloadApp();
+                },
+              },
+            ],
+            { cancelable: true },
+          );
         }}
         onCancel={() => {
           setLanguageModalVisible(false);

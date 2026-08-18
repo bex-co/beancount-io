@@ -22,6 +22,7 @@ import { analytics } from "@/common/analytics";
 import { Ionicons } from "@expo/vector-icons";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const MAX_SUGGESTIONS = 30;
 const SKELETON_ROW_WIDTHS = [176, 128, 200, 144];
@@ -84,6 +85,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.lg,
       lineHeight: 20,
       color: theme.text01,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     iconTile: {
       width: 16,

@@ -37,6 +37,7 @@ import {
 } from "@/screens/budget-screen/selectors/budget-labels";
 import { BudgetHistoryRows } from "@/screens/budget-screen/components/budget-history-rows";
 import { BudgetMeter } from "@/screens/budget-screen/components/budget-meter";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const CHART_HEIGHT = 190;
 
@@ -55,9 +56,10 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.lg,
       fontWeight: fontWeights.medium,
       color: theme.text01,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     updateButton: {
-      marginLeft: space.sm,
+      marginStart: space.sm,
       paddingVertical: space.xxs,
     },
     // Matches DashboardCard's "see all" action, the card-level affordance this
@@ -79,7 +81,7 @@ const getStyles = (theme: ColorTheme) =>
       borderColor: theme.black40,
       paddingHorizontal: space.sm,
       paddingVertical: 2,
-      marginRight: space.xs,
+      marginEnd: space.xs,
       marginTop: space.xxs,
     },
     badgeText: {
@@ -90,7 +92,7 @@ const getStyles = (theme: ColorTheme) =>
       borderRadius: 6,
       paddingHorizontal: space.sm,
       paddingVertical: 2,
-      marginRight: space.xs,
+      marginEnd: space.xs,
       marginTop: space.xxs,
     },
     statusText: {
@@ -109,6 +111,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.xs,
       color: theme.black80,
       marginBottom: space.xxs,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     statValue: {
       fontSize: fontSizes.lg,

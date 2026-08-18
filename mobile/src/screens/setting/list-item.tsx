@@ -4,6 +4,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/common/theme";
+import { directionalIcon, LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 type ListItemHorizontalProps = {
   onPress?: () => void;
@@ -33,7 +34,7 @@ export const ListItemHorizontal = ({
       topRow: {
         flexDirection: "row",
         alignItems: "center",
-        paddingLeft: 40, // Space for absolutely positioned icon
+        paddingStart: 40, // Space for the absolutely positioned leading icon
       },
       iconContainer: {
         width: 28,
@@ -41,34 +42,41 @@ export const ListItemHorizontal = ({
         justifyContent: "center",
         alignItems: "center",
         position: "absolute",
-        left: 0,
+        start: 0,
         top: 18, // Center vertically (64px - 28px) / 2 = 18px
       },
       titleContainer: {
         flex: 1,
       },
+      // The row's icon is pinned to the leading edge and the disclosure
+      // chevron to the trailing one, so the text between them has to commit to
+      // the leading edge too — left to `natural` it drifted to the opposite
+      // side and sat under the chevron. See `LEADING_TEXT_ALIGN`.
       title: {
         fontSize: 16,
         fontWeight: "500",
         color: theme.black90,
+        textAlign: LEADING_TEXT_ALIGN,
       },
       titleDestructive: {
         fontSize: 16,
         fontWeight: "500",
         color: theme.error,
+        textAlign: LEADING_TEXT_ALIGN,
       },
       secondaryText: {
         fontSize: 14,
         color: theme.black80,
         marginTop: 2,
+        textAlign: LEADING_TEXT_ALIGN,
       },
       bottomRow: {
         marginTop: 2,
-        marginLeft: 40, // Align with title (icon width + gap)
+        marginStart: 40, // Align with title (icon width + gap)
       },
       arrow: {
         position: "absolute",
-        right: 0,
+        end: 0,
         top: 22, // Center vertically (64px - 20px) / 2 = 22px
       },
     }),
@@ -98,7 +106,11 @@ export const ListItemHorizontal = ({
       </View>
       {onPress && (
         <View style={styles.arrow}>
-          <Ionicons name="chevron-forward" size={20} color={theme.black60} />
+          <Ionicons
+            name={directionalIcon("chevron-forward")}
+            size={20}
+            color={theme.black60}
+          />
         </View>
       )}
       {content && (

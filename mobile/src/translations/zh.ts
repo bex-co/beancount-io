@@ -19,6 +19,11 @@ export const zh: typeof en = {
   themeLight: "浅色",
   themeDark: "深色",
   themeSystem: "跟随系统",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "重启以切换布局",
+  restartForLayoutMessage:
+    "{{language}} 的阅读方向不同，Beancount 需要重启才能正确排布界面。跳过的话语言会立即切换，布局将在下次打开应用时生效。",
+  restartNow: "立即重启",
   // logout alert
   logoutAlertMsg: "你确认要登出吗？",
   logoutAlertCancel: "取消",

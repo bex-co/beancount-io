@@ -24,6 +24,7 @@ export const DEFAULT_CHART_HEIGHT = 220;
  */
 export const LEGEND_HEIGHT = 26;
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
+import { LTR_PLOT } from "@/common/rtl";
 
 type IncomeExpenseBarChartProps = {
   /**
@@ -56,6 +57,7 @@ const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     row: {
       flexDirection: "row",
+      ...LTR_PLOT,
     },
     placeholder: {
       alignItems: "center",
@@ -81,13 +83,13 @@ const getStyles = (theme: ColorTheme) =>
       width: 10,
       height: 10,
       borderRadius: 2,
-      marginRight: space.xs,
+      marginEnd: space.xs,
     },
     legendLine: {
       width: 14,
       height: 3,
       borderRadius: 2,
-      marginRight: space.xs,
+      marginEnd: space.xs,
     },
     legendText: {
       fontSize: fontSizes.sm,

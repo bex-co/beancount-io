@@ -4,6 +4,7 @@ import { useThemeStyle, useTheme } from "@/common/hooks";
 import { fontSizes, fontWeights } from "@/common/theme";
 import { ColorTheme } from "@/types/theme-props";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -52,12 +53,12 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "flex-start",
       marginBottom: 12,
-      paddingLeft: 4,
+      paddingStart: 4,
     },
     bullet: {
       fontSize: fontSizes.lg,
       color: theme.primary,
-      marginRight: 12,
+      marginEnd: 12,
       marginTop: 2,
     },
     instructionText: {
@@ -66,6 +67,7 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.regular,
       color: theme.black80,
       lineHeight: 22,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     finalMessage: {
       fontSize: fontSizes.md,

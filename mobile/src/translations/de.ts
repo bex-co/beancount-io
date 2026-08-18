@@ -19,6 +19,11 @@ export const de: typeof en = {
   themeLight: "Hell",
   themeDark: "Dunkel",
   themeSystem: "System",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "Zum Ändern des Layouts neu starten",
+  restartForLayoutMessage:
+    "{{language}} wird in die andere Richtung gelesen, daher muss Beancount neu starten, um sich korrekt anzuordnen. Wenn Sie das überspringen, wechselt die Sprache sofort — das Layout folgt beim nächsten Öffnen der App.",
+  restartNow: "Jetzt neu starten",
   // logout alert
   logoutAlertMsg: "Sind Sie sicher, dass Sie sich abmelden möchten?",
   logoutAlertCancel: "Abbrechen",

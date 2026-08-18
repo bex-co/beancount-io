@@ -66,7 +66,7 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.medium,
       marginTop: 9,
       letterSpacing: 0.5,
-      marginLeft: 1,
+      marginStart: 1,
     },
     moneyContainer: {
       flexDirection: "row",

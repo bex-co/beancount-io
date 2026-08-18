@@ -22,6 +22,7 @@ import { LedgerGuard } from "@/components/ledger-guard";
 import { FadeInView } from "@/components/crossfade";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { formatErrorLocation, formatShortSha, LedgerError } from "./formatting";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 const SKELETON_WIDTHS = [180, 220, 160, 200, 140, 190];
 
@@ -59,18 +60,20 @@ const getStyles = (theme: ColorTheme) =>
     },
     errorContent: {
       flex: 1,
-      marginRight: 8,
+      marginEnd: 8,
     },
     errorMessage: {
       fontSize: 14,
       color: theme.error,
       lineHeight: 20,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     errorLocation: {
       fontSize: 12,
       color: theme.black80,
       marginTop: 2,
       fontFamily: fonts.mono,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     emptyRow: {
       paddingHorizontal: 16,
@@ -94,17 +97,19 @@ const getStyles = (theme: ColorTheme) =>
     },
     changeContent: {
       flex: 1,
-      marginRight: 8,
+      marginEnd: 8,
     },
     changeMessage: {
       fontSize: 14,
       color: theme.black,
       lineHeight: 20,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     changeMeta: {
       fontSize: 12,
       color: theme.black80,
       marginTop: 2,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     changeSha: {
       fontFamily: fonts.mono,
@@ -293,7 +298,7 @@ function NotificationsScreenImpl(): JSX.Element {
                         </Text>
                       </View>
                       <Ionicons
-                        name="chevron-forward"
+                        name={directionalIcon("chevron-forward")}
                         size={18}
                         color={theme.black60}
                       />

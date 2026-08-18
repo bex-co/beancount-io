@@ -19,6 +19,11 @@ export const nl: typeof en = {
   themeLight: "Licht",
   themeDark: "Donker",
   themeSystem: "Systeem",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "Opnieuw starten om de indeling te wijzigen",
+  restartForLayoutMessage:
+    "{{language}} leest de andere kant op, dus Beancount moet opnieuw starten om zichzelf correct in te delen. Slaat u dit over, dan wijzigt de taal nu en volgt de indeling de volgende keer dat u de app opent.",
+  restartNow: "Nu opnieuw starten",
   // logout alert
   logoutAlertMsg: "Weet je zeker dat je wilt uitloggen?",
   logoutAlertCancel: "Annuleren",

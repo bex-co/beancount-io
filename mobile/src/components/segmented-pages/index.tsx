@@ -34,7 +34,7 @@ const getStyles = (theme: ColorTheme) =>
       paddingHorizontal: 12,
       paddingVertical: 6,
       borderRadius: 16,
-      marginRight: 4,
+      marginEnd: 4,
     },
     tabActive: {
       backgroundColor: theme.black20,

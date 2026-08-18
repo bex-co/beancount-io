@@ -17,6 +17,11 @@ export const en = {
   themeLight: "Light",
   themeDark: "Dark",
   themeSystem: "System",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "Restart to change layout",
+  restartForLayoutMessage:
+    "{{language}} reads in the other direction, so Beancount has to restart to lay itself out correctly. Skip it and the language changes now — the layout follows the next time you open the app.",
+  restartNow: "Restart now",
   // logout alert
   logoutAlertMsg: "Are you sure you want to log out?",
   logoutAlertCancel: "Cancel",

@@ -32,7 +32,7 @@ const getStyles = (theme: ColorTheme) =>
       width: 40,
       height: 40,
       borderRadius: 12,
-      marginRight: 12,
+      marginEnd: 12,
     },
     nameWrap: {
       flex: 1,
@@ -40,7 +40,7 @@ const getStyles = (theme: ColorTheme) =>
     amountTile: {
       height: 14,
       width: 68,
-      marginLeft: 8,
+      marginStart: 8,
     },
   });
 

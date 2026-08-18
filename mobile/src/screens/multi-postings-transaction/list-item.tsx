@@ -4,6 +4,7 @@ import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { LoadingTile } from "@/components/loading-tile";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 type ListItemProps = {
   onPress?: () => void;
@@ -37,12 +38,14 @@ const getStyles = (theme: ColorTheme) =>
       letterSpacing: 0.8,
       color: theme.black80,
       marginBottom: 2,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     content: {
       fontSize: fontSizes.lg,
       lineHeight: 20,
       fontWeight: fontWeights.medium,
       color: theme.text01,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     placeholder: {
       color: theme.black60,
@@ -90,7 +93,11 @@ export const ListItem = ({
           {content || "—"}
         </Text>
       </View>
-      <Ionicons name="chevron-forward" size={18} color={theme.black60} />
+      <Ionicons
+        name={directionalIcon("chevron-forward")}
+        size={18}
+        color={theme.black60}
+      />
     </TouchableOpacity>
   );
 };
@@ -108,7 +115,11 @@ export const ListItemSkeleton = ({
         <LoadingTile style={styles.titleTile} />
         <LoadingTile style={styles.contentTile} />
       </View>
-      <Ionicons name="chevron-forward" size={18} color={theme.black40} />
+      <Ionicons
+        name={directionalIcon("chevron-forward")}
+        size={18}
+        color={theme.black40}
+      />
     </View>
   );
 };

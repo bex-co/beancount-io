@@ -15,6 +15,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { Ionicons } from "@expo/vector-icons";
 import { analytics } from "@/common/analytics";
 import { ledgerVar } from "@/common/vars";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -36,17 +37,19 @@ const getStyles = (theme: ColorTheme) =>
     },
     listItemContent: {
       flex: 1,
-      marginRight: 12,
+      marginEnd: 12,
     },
     listItemName: {
       fontSize: 18,
       fontWeight: "600",
       color: theme.black,
       marginBottom: 4,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     listItemDescription: {
       fontSize: 14,
       color: theme.black60,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     emptyContainer: {
       flex: 1,
@@ -157,7 +160,7 @@ export function LedgerSelectionScreen() {
                   />
                 ) : (
                   <Ionicons
-                    name="chevron-forward"
+                    name={directionalIcon("chevron-forward")}
                     size={24}
                     color={theme.black40}
                   />

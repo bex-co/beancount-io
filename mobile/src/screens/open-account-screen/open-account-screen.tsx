@@ -45,6 +45,7 @@ import {
 } from "./account-name";
 import { formatOpenAccountDate } from "./open-account-entry";
 import { useOpenAccount } from "./use-open-account";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 const VALIDATION_KEYS: Record<AccountNameValidationReason, string> = {
   invalidRoot: "openAccountInvalidRoot",
@@ -92,6 +93,7 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       color: theme.black80,
       fontSize: fontSizes.md,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     value: {
       maxWidth: "58%",
@@ -101,7 +103,7 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: "right",
     },
     chevron: {
-      marginLeft: space.xs,
+      marginStart: space.xs,
     },
     rootIcon: {
       width: 30,
@@ -133,8 +135,8 @@ const getStyles = (theme: ColorTheme) =>
       alignSelf: "stretch",
       flexDirection: "row",
       alignItems: "center",
-      paddingLeft: space.sm,
-      paddingRight: space.xs,
+      paddingStart: space.sm,
+      paddingEnd: space.xs,
     },
     prefixIcon: {
       width: 24,
@@ -142,7 +144,7 @@ const getStyles = (theme: ColorTheme) =>
       borderRadius: 7,
       alignItems: "center",
       justifyContent: "center",
-      marginRight: space.xs,
+      marginEnd: space.xs,
     },
     prefixText: {
       color: theme.text01,
@@ -150,7 +152,7 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.medium,
     },
     prefixChevron: {
-      marginLeft: 2,
+      marginStart: 2,
     },
     inputDivider: {
       width: StyleSheet.hairlineWidth,
@@ -376,7 +378,7 @@ export function OpenAccountScreenComponent(): JSX.Element {
             </Text>
             <Ionicons
               style={styles.chevron}
-              name="chevron-forward"
+              name={directionalIcon("chevron-forward")}
               size={17}
               color={theme.black60}
             />
@@ -392,7 +394,7 @@ export function OpenAccountScreenComponent(): JSX.Element {
             <Text style={styles.value}>{formatOpenAccountDate(date)}</Text>
             <Ionicons
               style={styles.chevron}
-              name="chevron-forward"
+              name={directionalIcon("chevron-forward")}
               size={17}
               color={theme.black60}
             />

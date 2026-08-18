@@ -56,7 +56,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.black80,
-      marginRight: 8,
+      marginEnd: 8,
     },
     locationText: {
       fontSize: fontSizes.sm,

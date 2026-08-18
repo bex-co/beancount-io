@@ -20,6 +20,7 @@ import { AmountText } from "@/components/amount-text";
 import { DashboardCard } from "@/components/dashboard-card";
 import { LoadingTile } from "@/components/loading-tile";
 import { AccountNode } from "@/components/account-list/select-account-list";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 /** One step of tree indent for expanded sub-rows (matches AccountListPage). */
 const INDENT_STEP = 18;
@@ -34,6 +35,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     headline: {
       fontSize: fontSizes.display,
@@ -53,7 +55,8 @@ const getStyles = (theme: ColorTheme) =>
     },
     topName: {
       flex: 1,
-      marginRight: space.md,
+      marginEnd: space.md,
+      textAlign: LEADING_TEXT_ALIGN,
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.text01,
@@ -63,7 +66,7 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.text01,
     },
     chevron: {
-      marginLeft: space.xs,
+      marginStart: space.xs,
     },
     barLine: {
       flexDirection: "row",
@@ -82,7 +85,7 @@ const getStyles = (theme: ColorTheme) =>
       borderRadius: 3,
     },
     pctLabel: {
-      marginLeft: space.sm,
+      marginStart: space.sm,
       minWidth: 34,
       textAlign: "right",
       fontSize: fontSizes.xs,
@@ -92,13 +95,14 @@ const getStyles = (theme: ColorTheme) =>
     childRow: {
       flexDirection: "row",
       alignItems: "center",
-      paddingRight: gutter,
+      paddingEnd: gutter,
       paddingVertical: rowPaddingVertical,
       minHeight: rowMinHeight,
     },
     childName: {
       flex: 1,
-      marginRight: space.md,
+      marginEnd: space.md,
+      textAlign: LEADING_TEXT_ALIGN,
       fontSize: fontSizes.md,
       color: theme.black80,
     },
@@ -165,12 +169,12 @@ export function CategoryBreakdown({
   const renderChild = (node: AccountNode, depth: number): JSX.Element => {
     const hasChildren = node.children.length > 0;
     const isExpanded = overrides[node.account] ?? false;
-    const paddingLeft = gutter + depth * INDENT_STEP;
+    const paddingStart = gutter + depth * INDENT_STEP;
 
     const chevron = hasChildren ? (
       <Ionicons
         style={styles.leaf}
-        name={isExpanded ? "chevron-down" : "chevron-forward"}
+        name={isExpanded ? "chevron-down" : directionalIcon("chevron-forward")}
         size={14}
         color={theme.black60}
       />
@@ -194,7 +198,7 @@ export function CategoryBreakdown({
       <Fragment key={node.account}>
         {hasChildren ? (
           <TouchableOpacity
-            style={[styles.childRow, { paddingLeft }]}
+            style={[styles.childRow, { paddingStart }]}
             onPress={() => toggle(node.account, isExpanded)}
             accessibilityRole="button"
             accessibilityState={{ expanded: isExpanded }}
@@ -202,7 +206,7 @@ export function CategoryBreakdown({
             {rowContent}
           </TouchableOpacity>
         ) : (
-          <View style={[styles.childRow, { paddingLeft }]}>{rowContent}</View>
+          <View style={[styles.childRow, { paddingStart }]}>{rowContent}</View>
         )}
         {hasChildren &&
           isExpanded &&
@@ -230,7 +234,9 @@ export function CategoryBreakdown({
         {hasChildren && (
           <Ionicons
             style={styles.chevron}
-            name={isExpanded ? "chevron-down" : "chevron-forward"}
+            name={
+              isExpanded ? "chevron-down" : directionalIcon("chevron-forward")
+            }
             size={14}
             color={theme.black60}
           />

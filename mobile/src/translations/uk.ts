@@ -19,6 +19,11 @@ export const uk: typeof en = {
   themeLight: "Світла",
   themeDark: "Темна",
   themeSystem: "Системна",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "Перезапустити, щоб змінити розкладку",
+  restartForLayoutMessage:
+    "{{language}} читається в іншому напрямку, тому Beancount потрібно перезапустити, щоб правильно розташувати інтерфейс. Якщо пропустити, мова зміниться зараз, а розкладка — під час наступного відкриття застосунку.",
+  restartNow: "Перезапустити зараз",
   // logout alert
   logoutAlertMsg: "Ви впевнені, що хочете вийти?",
   logoutAlertCancel: "Скасувати",

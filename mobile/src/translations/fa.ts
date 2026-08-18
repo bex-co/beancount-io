@@ -19,6 +19,11 @@ export const fa: typeof en = {
   themeLight: "روشن",
   themeDark: "تیره",
   themeSystem: "سیستم",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "برای تغییر چیدمان، برنامه را دوباره اجرا کنید",
+  restartForLayoutMessage:
+    "{{language}} در جهت دیگری خوانده می‌شود، بنابراین Beancount باید دوباره اجرا شود تا چیدمان درست شود. اگر رد کنید، زبان همین حالا عوض می‌شود و چیدمان دفعهٔ بعد که برنامه را باز کنید اعمال می‌شود.",
+  restartNow: "اکنون دوباره اجرا کن",
   // logout alert
   logoutAlertMsg: "آیا مطمئن هستید که می‌خواهید خروج کنید؟",
   logoutAlertCancel: "لغو",

@@ -19,6 +19,11 @@ export const sk: typeof en = {
   themeLight: "Svetlá",
   themeDark: "Tmavá",
   themeSystem: "Systémová",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "Reštartovať kvôli zmene rozloženia",
+  restartForLayoutMessage:
+    "{{language}} sa číta opačným smerom, preto sa Beancount musí reštartovať, aby sa správne rozložil. Ak to preskočíte, jazyk sa zmení hneď a rozloženie až pri ďalšom otvorení aplikácie.",
+  restartNow: "Reštartovať teraz",
   // logout alert
   logoutAlertMsg: "Ste si istí, že sa chcete odhlásiť?",
   logoutAlertCancel: "Zrušiť",

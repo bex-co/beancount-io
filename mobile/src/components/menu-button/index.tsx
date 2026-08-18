@@ -10,6 +10,7 @@ import {
 import { fontSizes } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { ColorTheme } from "@/types/theme-props";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 export type MenuButtonItem = {
   label: string;
@@ -76,6 +77,7 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       fontSize: fontSizes.lg,
       color: theme.black,
+      textAlign: LEADING_TEXT_ALIGN,
     },
   });
 

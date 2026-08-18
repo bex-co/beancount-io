@@ -39,7 +39,7 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.primary,
       position: "absolute",
       bottom: 10,
-      right: 10,
+      end: 10,
     },
     closeText: {
       color: theme.white,

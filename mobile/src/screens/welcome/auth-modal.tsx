@@ -26,7 +26,7 @@ const getLoginOrSignUpStyles = (theme: ColorTheme) => {
       backgroundColor: theme.primary,
       position: "absolute",
       bottom: 10,
-      right: 10,
+      end: 10,
       alignItems: "center",
       justifyContent: "center",
       elevation: 5,

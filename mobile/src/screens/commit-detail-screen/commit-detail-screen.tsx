@@ -12,6 +12,7 @@ import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import { LedgerGuard } from "@/components/ledger-guard";
 import { parseDiff, DiffLine } from "./diff-utils";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const SKELETON_WIDTHS = [200, 160, 240, 180, 120, 220, 150, 190];
 
@@ -81,7 +82,8 @@ const getStyles = (theme: ColorTheme) =>
       color: theme.black,
       fontFamily: fonts.mono,
       flex: 1,
-      marginRight: 8,
+      marginEnd: 8,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     fileStats: {
       fontSize: 12,

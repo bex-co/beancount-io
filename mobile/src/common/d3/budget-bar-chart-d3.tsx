@@ -13,6 +13,7 @@ import { shortNumber } from "@/common/number-utils";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { AnimatedBar } from "./animated-bar";
 import { useEntranceProgress } from "./use-entrance-progress";
+import { LTR_PLOT } from "@/common/rtl";
 
 /**
  * Height the legend row adds below the plot: its `paddingTop` (`space.sm`) plus
@@ -50,6 +51,7 @@ const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     row: {
       flexDirection: "row",
+      ...LTR_PLOT,
     },
     placeholder: {
       alignItems: "center",
@@ -75,7 +77,7 @@ const getStyles = (theme: ColorTheme) =>
       width: 10,
       height: 10,
       borderRadius: 2,
-      marginRight: space.xs,
+      marginEnd: space.xs,
     },
     // Same swatch the income/expense chart uses for its net line. A dashed
     // border on a zero-height view draws nothing on iOS, so the legend marks
@@ -84,7 +86,7 @@ const getStyles = (theme: ColorTheme) =>
       width: 14,
       height: 3,
       borderRadius: 2,
-      marginRight: space.xs,
+      marginEnd: space.xs,
     },
     legendText: {
       fontSize: fontSizes.sm,

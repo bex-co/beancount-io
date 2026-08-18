@@ -19,6 +19,11 @@ export const ru: typeof en = {
   themeLight: "Светлая",
   themeDark: "Тёмная",
   themeSystem: "Системная",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "Перезапустить, чтобы изменить раскладку",
+  restartForLayoutMessage:
+    "{{language}} читается в другом направлении, поэтому Beancount нужно перезапустить, чтобы расположить интерфейс правильно. Если пропустить, язык изменится сейчас, а раскладка — при следующем открытии приложения.",
+  restartNow: "Перезапустить сейчас",
   // logout alert
   logoutAlertMsg: "Вы уверены, что хотите выйти?",
   logoutAlertCancel: "Отмена",

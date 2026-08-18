@@ -5,6 +5,7 @@ import { fonts, fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { PostingDisplayRow } from "../selectors/select-transaction-detail";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -26,6 +27,7 @@ const getStyles = (theme: ColorTheme) =>
       fontFamily: fonts.mono,
       fontWeight: fontWeights.medium,
       color: theme.primary,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     amount: {
       fontSize: fontSizes.md,
@@ -66,7 +68,11 @@ export function PostingRow({
       <AmountText mono="medium" style={[styles.amount, { color: amountColor }]}>
         {posting.amount}
       </AmountText>
-      <Ionicons name="chevron-forward" size={16} color={theme.black60} />
+      <Ionicons
+        name={directionalIcon("chevron-forward")}
+        size={16}
+        color={theme.black60}
+      />
     </TouchableOpacity>
   );
 }

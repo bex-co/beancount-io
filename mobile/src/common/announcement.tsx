@@ -52,7 +52,7 @@ const getStyles = (theme: ColorTheme) =>
       top: 10,
       alignItems: "center",
       justifyContent: "center",
-      right: 10,
+      end: 10,
     },
     closeText: {
       color: theme.white,

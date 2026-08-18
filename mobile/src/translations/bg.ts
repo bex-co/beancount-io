@@ -19,6 +19,11 @@ export const bg: typeof en = {
   themeLight: "Светла",
   themeDark: "Тъмна",
   themeSystem: "Системна",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "Рестарт за смяна на подредбата",
+  restartForLayoutMessage:
+    "{{language}} се чете в другата посока, затова Beancount трябва да се рестартира, за да подреди правилно интерфейса. Ако пропуснете, езикът се сменя веднага, а подредбата — при следващото отваряне на приложението.",
+  restartNow: "Рестартирай сега",
   // logout alert
   logoutAlertMsg: "Сигурни ли сте, че искате да излезете?",
   logoutAlertCancel: "Отказ",

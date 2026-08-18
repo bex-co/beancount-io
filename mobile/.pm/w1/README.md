@@ -33,7 +33,18 @@
 - [ ] **m28** — Home cards tap through; bad routes fall back (8 tasks) ← inbox `024` + `026`, promoted 2026-08-17 — bundled by their shared tap/deep-link verification loop
 - [x] **m29** — Translation integrity gate, then the six largest locales (11 tasks) ← from `/pm` request 2026-08-17 ("add tests to check translation integrity, en as the source … no missing, no extra, and then translate missing items"); supersedes m27; shipped 2026-08-17
 - [x] **m30** — The last six locales, and the gate goes unconditional (10 tasks) ← same request, split off by size — twelve locales at ~170 keys each is roughly ten hours; shipped 2026-08-17 — all thirteen locales now declare the same 329 keys, and the gate is unconditional
+- [x] **m31** — Right-to-left layout for Persian (10 tasks) ← from the `m30` outcome note, which names this gap and rules it out of scope in the same sentence; shipped 2026-08-17 — Persian now lays out right-to-left, English is unchanged, and two React Native RTL defaults that fight each other are written down in the milestone's outcome note
 - ~~**008** — v2 native code-editor module (Runestone + sora-editor)~~ — **deleted 2026-08-17**: 12–19 person-days plus permanent maintenance of two native deps, gated on a product signal ("only if requirements outgrow the 7-color approach") that has not appeared since m15 shipped. The research survives in git history at this note's path.
+
+## Persian right-to-left — 2026-08-17
+
+**m31**, straight out of m30's outcome note, which named the gap and ruled it out of scope in the same sentence: `fa` was fully translated but rendered inside a left-to-right shell. Shipped the same day — the app now flips at launch, the drawer opens from the right, and 63 physical spacing props plus 21 directional glyphs became direction-aware. English and the other eleven locales are pixel-unchanged, checked screen by screen against captures taken beforehand.
+
+Two React Native defaults turned out to pull in opposite directions, and both cost a debugging cycle before they were understood: `doLeftAndRightSwapInRTL` is **on**, so `left`/`right` silently become logical and break anything paired with unmirrored geometry (it sent the time-range pills' selected fill off the screen); while `textAlign` is **already** logical, so the obvious "fix" of branching it on `isRTL` double-flips it. The real defect underneath both was React Native's `natural` alignment, which reads direction from the string rather than the layout — which is why Latin ledger data drifted to the wrong edge and the account tree's indentation stopped reading as indentation. All three are written up in `done/m31/README.md`.
+
+**Not verified, and said so there:** the restart prompt's rendering (the language wheel cannot be driven headlessly), receipt capture (no camera permission, same as m29/m30), and Android (the `textAlign` behaviour is iOS platform code).
+
+**New inbox note:** `027` — dates still render in English in all thirteen locales. A formatting gap, not a translation or layout one, and gated on whether this build ships full ICU.
 
 ## Translation integrity — 2026-08-17
 

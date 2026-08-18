@@ -21,6 +21,7 @@ import {
   type BudgetGroup,
   type BudgetHistoryRow,
 } from "@/screens/budget-screen/selectors/budget-selectors";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -37,6 +38,7 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       fontSize: fontSizes.sm,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     row: {
       flexDirection: "row",
@@ -59,12 +61,13 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       fontSize: fontSizes.sm,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     amount: {
       fontSize: fontSizes.sm,
       fontWeight: fontWeights.medium,
       color: theme.text01,
-      marginRight: space.sm,
+      marginEnd: space.sm,
     },
     deleteButton: {
       padding: space.xs,

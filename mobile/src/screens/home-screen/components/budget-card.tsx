@@ -13,6 +13,7 @@ import { BudgetMeter } from "@/screens/budget-screen/components/budget-meter";
 import { useBudgetGroups } from "@/screens/budget-screen/hooks/use-budget-groups";
 import { useBudgetPanel } from "@/screens/home-screen/hooks/use-budget-panel";
 import type { BudgetPanelRow } from "@/screens/home-screen/selectors/select-budget-panel";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -31,7 +32,8 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       fontSize: fontSizes.md,
       color: theme.text01,
-      marginRight: space.sm,
+      marginEnd: space.sm,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     amounts: {
       fontSize: fontSizes.sm,

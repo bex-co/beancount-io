@@ -76,6 +76,10 @@ export const fontWeights = {
  * Compose into every style that renders a money amount: tabular figures give
  * each digit the same advance width, so stacked amounts align on the decimal
  * point and don't wobble as digits change.
+ *
+ * Figure spacing only — the layout-direction half of "how an amount is set"
+ * lives in `AmountText`, because it comes from `I18nManager` and this module is
+ * deliberately react-native-free so it loads under plain Node.
  */
 export const amountStyle: TextStyle = {
   fontVariant: ["tabular-nums"],

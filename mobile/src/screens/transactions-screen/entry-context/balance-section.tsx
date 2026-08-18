@@ -4,6 +4,7 @@ import { useThemeStyle } from "@/common/hooks";
 import { fonts, fontSizes, fontWeights } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { ColorTheme } from "@/types/theme-props";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -37,6 +38,7 @@ const getStyles = (theme: ColorTheme) =>
       fontFamily: fonts.mono,
       color: theme.text01,
       flex: 1,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     balanceAmount: {
       fontSize: fontSizes.sm,

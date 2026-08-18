@@ -4,6 +4,7 @@ import { sessionVar } from "@/common/vars";
 import { ColorValue, Pressable } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useTheme } from "@/common/theme";
+import { directionalIcon } from "@/common/rtl";
 
 // Hook-free so it can be used as a headerLeft render function without causing
 // hook-count mismatches when screens override headerLeft with their own function.
@@ -18,7 +19,11 @@ export const DefaultHeaderLeftBack = ({
     style={{ paddingHorizontal: 8, paddingVertical: 4 }}
     hitSlop={8}
   >
-    <Ionicons name="chevron-back" size={28} color={tintColor} />
+    <Ionicons
+      name={directionalIcon("chevron-back")}
+      size={28}
+      color={tintColor}
+    />
   </Pressable>
 );
 

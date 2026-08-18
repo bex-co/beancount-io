@@ -18,6 +18,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle, useToast, usePageView } from "@/common/hooks";
 import { buildReferralUrl } from "@/common/referral-url";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -55,6 +56,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: 16,
       color: theme.text01,
       flex: 1,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     copyBtn: {
       height: 48,

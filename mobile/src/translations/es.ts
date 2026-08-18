@@ -19,6 +19,11 @@ export const es: typeof en = {
   themeLight: "Claro",
   themeDark: "Oscuro",
   themeSystem: "Sistema",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "Reiniciar para cambiar la disposición",
+  restartForLayoutMessage:
+    "{{language}} se lee en la otra dirección, así que Beancount debe reiniciarse para organizarse correctamente. Si lo omites, el idioma cambia ahora y la disposición lo hará la próxima vez que abras la aplicación.",
+  restartNow: "Reiniciar ahora",
   // logout alert
   logoutAlertMsg: "¿Seguro que quieres salir?",
   logoutAlertCancel: "Cancelar",

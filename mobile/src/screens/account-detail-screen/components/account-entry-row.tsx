@@ -10,6 +10,7 @@ import {
   formatSignedMoneyWithCurrency,
 } from "@/common/number-utils";
 import { AccountJournalRow } from "@/screens/account-detail-screen/selectors/select-account-journal";
+import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -31,6 +32,7 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.medium,
       color: theme.black90,
       flexShrink: 1,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     badge: {
       paddingHorizontal: 5,
@@ -43,7 +45,7 @@ const getStyles = (theme: ColorTheme) =>
       fontWeight: fontWeights.medium,
       color: "#fff",
     },
-    right: {
+    trailing: {
       alignItems: "flex-end",
     },
     change: {
@@ -94,7 +96,7 @@ export function AccountEntryRow({
         )}
       </View>
 
-      <View style={styles.right}>
+      <View style={styles.trailing}>
         <AmountText
           mono="medium"
           style={[styles.change, { color: changeColor }]}

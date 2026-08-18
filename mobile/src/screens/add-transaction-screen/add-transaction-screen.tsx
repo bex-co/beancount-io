@@ -38,7 +38,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.display,
       fontWeight: fontWeights.medium,
       marginTop: 12,
-      marginRight: 2,
+      marginEnd: 2,
     },
     // Suffix shown when the currency has no symbol (e.g. "MUSD"): mirrors the
     // symbol's size, placed after the amount instead of before it.
@@ -46,7 +46,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.display,
       fontWeight: fontWeights.medium,
       marginTop: 12,
-      marginLeft: 4,
+      marginStart: 4,
     },
     txtMoney: {
       fontSize: fontSizes.hero,

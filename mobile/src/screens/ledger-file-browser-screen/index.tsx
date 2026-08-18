@@ -46,6 +46,7 @@ import {
   pushPathStack,
   sortEntries,
 } from "./utils";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -94,8 +95,7 @@ const getStyles = (theme: ColorTheme) =>
       flex: 1,
       flexDirection: "row",
       alignItems: "center",
-      paddingLeft: gutter,
-      paddingRight: gutter,
+      paddingHorizontal: gutter,
       paddingVertical: rowPaddingVertical,
       minHeight: rowMinHeight,
     },
@@ -110,6 +110,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: 15,
       color: theme.black,
       lineHeight: 20,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     rowAction: {
       paddingHorizontal: gutter,
@@ -122,7 +123,7 @@ const getStyles = (theme: ColorTheme) =>
       height: StyleSheet.hairlineWidth,
       backgroundColor: theme.black40,
       // Indented to the row's text start: gutter + the icon slot width.
-      marginLeft: gutter + 28,
+      marginStart: gutter + 28,
     },
     skeletonRow: {
       flexDirection: "row",
@@ -240,7 +241,11 @@ function FileRow({
           {entry.name}
         </Text>
         {tappable && (
-          <Ionicons name="chevron-forward" size={18} color={theme.black40} />
+          <Ionicons
+            name={directionalIcon("chevron-forward")}
+            size={18}
+            color={theme.black40}
+          />
         )}
       </TouchableOpacity>
 
@@ -510,7 +515,11 @@ export function LedgerFileBrowserScreen(): JSX.Element {
             onPress={handleBack}
             activeOpacity={0.7}
           >
-            <Ionicons name="chevron-back" size={20} color={theme.primary} />
+            <Ionicons
+              name={directionalIcon("chevron-back")}
+              size={20}
+              color={theme.primary}
+            />
           </TouchableOpacity>
           <Text style={styles.breadcrumbText} numberOfLines={1}>
             {breadcrumbLabel}

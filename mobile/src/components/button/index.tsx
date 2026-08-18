@@ -54,7 +54,7 @@ const getButtonStyles = (theme: ColorTheme) => {
       fontSize: 16,
     },
     buttonLoading: {
-      marginRight: 8,
+      marginEnd: 8,
     },
   });
 };

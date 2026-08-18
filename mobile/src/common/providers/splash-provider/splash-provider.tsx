@@ -8,7 +8,9 @@ import { loadLedger, ledgerVar } from "@/common/vars/ledger";
 import { loadTheme } from "@/common/vars/theme";
 import { loadSession } from "@/common/vars/session";
 import { loadAccountUsage } from "@/common/vars/account-usage";
-import { i18n } from "@/translations";
+import { i18n, setLocale } from "@/translations";
+import { applyLayoutDirection } from "@/common/rtl";
+import { reloadApp } from "@/common/reload-app";
 import Constants from "expo-constants";
 import { apolloClient } from "@/common/apollo/client";
 import { GetLedgerDocument } from "@/generated-graphql/graphql";
@@ -49,8 +51,26 @@ const SplashProviderComponent = ({
           loadAccountUsage(),
         ]);
         if (locale) {
-          i18n.locale = locale;
+          setLocale(locale);
         }
+
+        // Layout direction, before anything draws. `loadLocale()` returns null
+        // when nothing is persisted, in which case `i18n.locale` already holds
+        // the device-derived choice from `src/translations/index.ts` — so a
+        // Persian device flips on its very first launch, not only after the
+        // user visits Settings.
+        //
+        // `forceRTL` is read by the native side at startup, so when the flag
+        // moves the only honest thing to do is start over. Return before the
+        // ledger query and before `setAppIsReady`: a reload must not wait on
+        // the network, and the user must never see a frame laid out the wrong
+        // way. On the common launch the flag already agrees and this costs a
+        // comparison.
+        if (applyLayoutDirection(locale ?? i18n.locale)) {
+          await reloadApp();
+          return;
+        }
+
         // Validate ledger if both session and ledger are not null
         if (session && ledger) {
           try {
@@ -67,10 +87,12 @@ const SplashProviderComponent = ({
         }
       } catch (e) {
         console.warn(e);
-      } finally {
-        // Tell the application to render
-        setAppIsReady(true);
       }
+      // Deliberately not in a `finally`: the restart path above returns early,
+      // and must not hand the splash over to a tree laid out the wrong way for
+      // however long the reload takes to arrive. Every other path, thrown or
+      // not, falls through to here.
+      setAppIsReady(true);
     }
 
     prepare();

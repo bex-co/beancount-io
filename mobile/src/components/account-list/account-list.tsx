@@ -24,6 +24,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { groupThousands } from "@/common/number-utils";
 import { AccountNode } from "./select-account-list";
+import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 /**
  * One step of tree indent, and — deliberately the same number — the width of
@@ -52,6 +53,7 @@ const getStyles = (theme: ColorTheme) =>
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.black80,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     headline: {
       fontSize: fontSizes.display,
@@ -61,7 +63,7 @@ const getStyles = (theme: ColorTheme) =>
     row: {
       flexDirection: "row",
       alignItems: "center",
-      paddingRight: gutter,
+      paddingEnd: gutter,
       paddingVertical: rowPaddingVertical,
       // Pins every row to the same height regardless of depth (depth 0 renders
       // one size up, so its natural line box is taller), and to the same rhythm
@@ -78,7 +80,8 @@ const getStyles = (theme: ColorTheme) =>
     },
     name: {
       flex: 1,
-      marginRight: space.md,
+      marginEnd: space.md,
+      textAlign: LEADING_TEXT_ALIGN,
     },
     nameTop: {
       fontSize: fontSizes.lg,
@@ -164,7 +167,7 @@ export function AccountListPage({
     const hasChildren = node.children.length > 0;
     const isExpanded =
       overrides[node.account] ?? depth < DEFAULT_EXPANDED_LEVELS - 1;
-    const paddingLeft = gutter + depth * INDENT_STEP;
+    const paddingStart = gutter + depth * INDENT_STEP;
     const nameStyle = [
       styles.name,
       depth === 0 ? styles.nameTop : styles.nameChild,
@@ -174,7 +177,7 @@ export function AccountListPage({
     const chevronIcon = hasChildren ? (
       <Ionicons
         style={styles.chevron}
-        name={isExpanded ? "chevron-down" : "chevron-forward"}
+        name={isExpanded ? "chevron-down" : directionalIcon("chevron-forward")}
         size={14}
         // Dimmer than the label in both themes, so the chevron reads as a
         // control rather than competing with the account name.
@@ -220,7 +223,7 @@ export function AccountListPage({
     if (onPressAccount) {
       row = (
         <TouchableOpacity
-          style={[styles.row, { paddingLeft }]}
+          style={[styles.row, { paddingStart }]}
           onPress={() => onPressAccount(node.account)}
           accessibilityRole="button"
         >
@@ -230,7 +233,7 @@ export function AccountListPage({
     } else if (hasChildren) {
       row = (
         <TouchableOpacity
-          style={[styles.row, { paddingLeft }]}
+          style={[styles.row, { paddingStart }]}
           onPress={() => toggle(node.account, isExpanded)}
           accessibilityRole="button"
           accessibilityState={{ expanded: isExpanded }}
@@ -239,7 +242,7 @@ export function AccountListPage({
         </TouchableOpacity>
       );
     } else {
-      row = <View style={[styles.row, { paddingLeft }]}>{rowContent}</View>;
+      row = <View style={[styles.row, { paddingStart }]}>{rowContent}</View>;
     }
 
     return (

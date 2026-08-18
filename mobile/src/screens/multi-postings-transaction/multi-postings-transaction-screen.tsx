@@ -144,7 +144,7 @@ const getStyles = (theme: ColorTheme) =>
     postingAutoTag: {
       fontSize: fontSizes.xs,
       color: theme.black60,
-      marginLeft: 2,
+      marginStart: 2,
     },
     deleteAction: {
       backgroundColor: theme.error,

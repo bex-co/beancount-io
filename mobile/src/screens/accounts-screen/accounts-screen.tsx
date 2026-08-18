@@ -43,7 +43,7 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       justifyContent: "space-between",
-      paddingRight: gutter,
+      paddingEnd: gutter,
       minHeight: rowMinHeight,
       borderBottomWidth: StyleSheet.hairlineWidth,
       borderBottomColor: theme.black20,
@@ -129,7 +129,7 @@ const AccountsScreenImpl = (): JSX.Element => {
               style={[
                 styles.skeletonRow,
                 // gutter + one INDENT_STEP (18) per depth, mirroring AccountTable.
-                { paddingLeft: gutter + row.indent * 18 },
+                { paddingStart: gutter + row.indent * 18 },
               ]}
             >
               <LoadingTile width={row.labelWidth} height={14} />

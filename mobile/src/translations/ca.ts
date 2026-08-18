@@ -19,6 +19,11 @@ export const ca: typeof en = {
   themeLight: "Clar",
   themeDark: "Fosc",
   themeSystem: "Sistema",
+  // layout direction — only a switch that crosses it costs a restart
+  restartForLayoutTitle: "Reinicia per canviar la disposició",
+  restartForLayoutMessage:
+    "{{language}} es llegeix en l'altra direcció, així que el Beancount s'ha de reiniciar per disposar-se correctament. Si ho ometeu, l'idioma canvia ara i la disposició ho farà el pròxim cop que obriu l'aplicació.",
+  restartNow: "Reinicia ara",
   // logout alert
   logoutAlertMsg: "Estàs segur que vols tancar la sessió?",
   logoutAlertCancel: "Cancel·lar",

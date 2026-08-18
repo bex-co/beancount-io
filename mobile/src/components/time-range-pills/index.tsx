@@ -113,7 +113,12 @@ const getStyles = (theme: ColorTheme) =>
     // the pill itself — otherwise the fill would teleport while the indicator
     // travelled.
     //
-    // `left: 0` is load-bearing: without a horizontal inset Yoga falls back to
+    // `left: 0` is load-bearing, and deliberately physical rather than
+    // `start: 0`: `onLayout` reports x from the container's left edge and
+    // `translateX` is unmirrored, in right-to-left layout as in left-to-right,
+    // so the origin has to be the same edge the measurement came from.
+    //
+    // Without a horizontal inset Yoga falls back to
     // the static position, which in this `justifyContent: "center"` row is the
     // row's centre — the measured `translateX` would then be added to a centred
     // origin and park the fill off the right end of the pills.
