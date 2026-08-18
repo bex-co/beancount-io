@@ -24,6 +24,11 @@ const ruDashboardPage: Record<string, TranslationEntry> = {
     message: "Панель",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Перейти на панель",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Удалить книгу",
     description: "Button tooltip or action for deleting ledger",
@@ -124,6 +129,12 @@ const ruDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "Книги не найдены",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message:
+      "Создайте свою первую книгу, чтобы начать отслеживать свои финансы.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Приватная",

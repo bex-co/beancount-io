@@ -25,6 +25,11 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     message: "Panel",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Ir al panel",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Eliminar Ledger",
     description: "Button tooltip or action for deleting ledger",
@@ -125,6 +130,12 @@ const esDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "No se encontraron libros mayores",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message:
+      "Cree su primer libro mayor para comenzar a hacer un seguimiento de sus finanzas.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Privado",

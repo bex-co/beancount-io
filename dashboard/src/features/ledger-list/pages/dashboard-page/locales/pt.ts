@@ -25,6 +25,11 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
     message: "Painel",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Ir para o painel",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Excluir Ledger",
     description: "Button tooltip or action for deleting ledger",
@@ -125,6 +130,12 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "Nenhum livro-razão encontrado",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message:
+      "Crie seu primeiro livro-razão para começar a acompanhar suas finanças.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Privado",

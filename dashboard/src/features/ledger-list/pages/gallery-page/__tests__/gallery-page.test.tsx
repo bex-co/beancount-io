@@ -175,4 +175,116 @@ describe("GalleryPage", () => {
       to: "/ledger/un_test/test-ledger",
     });
   });
+
+  it("exposes listbox semantics with aria-controls and aria-activedescendant", async () => {
+    const mockData: SearchLedgersQuery = {
+      searchLedgers: [
+        {
+          id: "un_test/test-ledger",
+          name: "test-ledger",
+          fullName: "un_test/test-ledger",
+          description: "Test ledger",
+          __typename: "Ledger",
+        },
+        {
+          id: "un_test/another-ledger",
+          name: "another-ledger",
+          fullName: "un_test/another-ledger",
+          description: null,
+          __typename: "Ledger",
+        },
+      ],
+    };
+
+    const mockQueryTuple: SearchLedgersQueryTuple = createMockLazyQueryTuple(
+      mockSearchLedgers,
+      {
+        data: mockData,
+        loading: false,
+        error: undefined,
+      },
+    );
+
+    vi.mocked(apolloClient.useLazyQuery).mockReturnValue(mockQueryTuple);
+
+    const user = userEvent.setup();
+    render(<GalleryPage />);
+
+    const searchInput = screen.getByRole("combobox");
+    expect(searchInput).toHaveAttribute(
+      "aria-controls",
+      "ledger-search-listbox",
+    );
+
+    await user.type(searchInput, "test");
+
+    // Dropdown container is a listbox with the id aria-controls points to
+    const listbox = await screen.findByRole("listbox");
+    expect(listbox).toHaveAttribute("id", "ledger-search-listbox");
+
+    // Options carry stable ids
+    const options = screen.getAllByRole("option");
+    expect(options).toHaveLength(2);
+    expect(options[0]).toHaveAttribute("id", "ledger-search-option-0");
+    expect(options[1]).toHaveAttribute("id", "ledger-search-option-1");
+
+    // No highlight yet
+    expect(searchInput).not.toHaveAttribute("aria-activedescendant");
+
+    // ArrowDown highlights the first option and exposes it to screen readers
+    await user.keyboard("{ArrowDown}");
+    expect(searchInput).toHaveAttribute(
+      "aria-activedescendant",
+      "ledger-search-option-0",
+    );
+    expect(options[0]).toHaveAttribute("aria-selected", "true");
+
+    await user.keyboard("{ArrowDown}");
+    expect(searchInput).toHaveAttribute(
+      "aria-activedescendant",
+      "ledger-search-option-1",
+    );
+    expect(options[1]).toHaveAttribute("aria-selected", "true");
+  });
+
+  it("clear button is keyboard-reachable and clears the search", async () => {
+    const mockData: SearchLedgersQuery = {
+      searchLedgers: [
+        {
+          id: "un_test/test-ledger",
+          name: "test-ledger",
+          fullName: "un_test/test-ledger",
+          description: "Test ledger",
+          __typename: "Ledger",
+        },
+      ],
+    };
+
+    const mockQueryTuple: SearchLedgersQueryTuple = createMockLazyQueryTuple(
+      mockSearchLedgers,
+      {
+        data: mockData,
+        loading: false,
+        error: undefined,
+      },
+    );
+
+    vi.mocked(apolloClient.useLazyQuery).mockReturnValue(mockQueryTuple);
+
+    const user = userEvent.setup();
+    render(<GalleryPage />);
+
+    const searchInput = screen.getByRole("combobox");
+    await user.type(searchInput, "test");
+
+    const clearButton = screen.getByRole("button", { name: "Clear" });
+    expect(clearButton).not.toHaveAttribute("tabindex", "-1");
+
+    // Operable by keyboard: focus + Enter clears the input and refocuses it
+    clearButton.focus();
+    await user.keyboard("{Enter}");
+
+    expect(searchInput).toHaveValue("");
+    expect(searchInput).toHaveFocus();
+  });
 });

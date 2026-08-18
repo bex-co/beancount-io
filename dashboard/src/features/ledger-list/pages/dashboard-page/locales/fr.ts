@@ -25,6 +25,11 @@ const frDashboardPage: Record<string, TranslationEntry> = {
     message: "Tableau de bord",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Aller au tableau de bord",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Supprimer le grand livre",
     description: "Button tooltip or action for deleting ledger",
@@ -125,6 +130,12 @@ const frDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "Aucun grand livre trouvé",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message:
+      "Créez votre premier grand livre pour commencer à suivre vos finances.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Privé",

@@ -20,6 +20,11 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
     message: "ダッシュボード",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "ダッシュボードへ移動",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "台帳を削除",
     description: "Button tooltip or action for deleting ledger",
@@ -112,6 +117,11 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "台帳が見つかりません",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message: "最初の台帳を作成して、財務の記録を始めましょう。",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "プライベート",

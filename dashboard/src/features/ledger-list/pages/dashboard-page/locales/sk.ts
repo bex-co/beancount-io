@@ -25,6 +25,11 @@ const skDashboardPage: Record<string, TranslationEntry> = {
     message: "Dashboard",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Prejsť na dashboard",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Vymazať knihu",
     description: "Button tooltip or action for deleting ledger",
@@ -125,6 +130,11 @@ const skDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "Žiadne knihy neboli nájdené",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message: "Vytvorte si prvú knihu a začnite sledovať svoje financie.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Súkromné",

@@ -20,6 +20,11 @@ const koDashboardPage: Record<string, TranslationEntry> = {
     message: "대시보드",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "대시보드로 이동",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "장부 삭제",
     description: "Button tooltip or action for deleting ledger",
@@ -110,6 +115,11 @@ const koDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "장부를 찾을 수 없습니다",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message: "첫 번째 장부를 만들어 재무 추적을 시작하세요.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "비공개",

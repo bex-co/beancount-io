@@ -25,6 +25,11 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
     message: "Табло",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Към таблото",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Изтриване на книга",
     description: "Button tooltip or action for deleting ledger",
@@ -125,6 +130,12 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "Няма намерени книги",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message:
+      "Създайте първата си книга, за да започнете да следите финансите си.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Частна",

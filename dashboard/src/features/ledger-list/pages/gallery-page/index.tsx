@@ -207,6 +207,12 @@ export default function GalleryPage() {
                         role="combobox"
                         aria-expanded={isDropdownOpen}
                         aria-autocomplete="list"
+                        aria-controls="ledger-search-listbox"
+                        aria-activedescendant={
+                          isDropdownOpen && highlightedIndex >= 0
+                            ? `ledger-search-option-${highlightedIndex}`
+                            : undefined
+                        }
                         className="w-full pr-8 h-12 text-base"
                       />
                       {searchQuery && (
@@ -221,7 +227,6 @@ export default function GalleryPage() {
                           onMouseDown={(e) => e.preventDefault()}
                           className="absolute right-2 top-1/2 -translate-y-1/2 rounded-sm hover:bg-muted p-1 z-10 cursor-pointer"
                           aria-label={t("common.clearInput")}
-                          tabIndex={-1}
                         >
                           <X className="h-4 w-4 text-muted-foreground" />
                         </button>
@@ -232,6 +237,8 @@ export default function GalleryPage() {
                     {isDropdownOpen && (
                       <div
                         ref={dropdownRef}
+                        id="ledger-search-listbox"
+                        role="listbox"
                         className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground rounded-md border shadow-lg max-h-[300px] overflow-auto"
                       >
                         {loading && (
@@ -277,6 +284,7 @@ export default function GalleryPage() {
                               {data.searchLedgers.map((ledger, index) => (
                                 <div
                                   key={ledger.id}
+                                  id={`ledger-search-option-${index}`}
                                   data-index={index}
                                   className={cn(
                                     "flex items-center justify-between rounded-md px-3 py-2 cursor-pointer transition-colors",

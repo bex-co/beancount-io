@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useQuery } from "@apollo/client/react";
 import { Activity, AlertCircle, RefreshCw, Loader2 } from "lucide-react";
 import { Button } from "@/common/components/ui/button";
+import { Skeleton } from "@/common/components/ui/skeleton";
 import { FeedCard } from "./feed-card";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { GetFeedDocument, GetFeedQuery } from "@/graphql/definitions";
@@ -70,21 +71,22 @@ export function BlogFeed() {
     return (
       <div className="space-y-5">
         {heading}
-        <div className="space-y-3">
+        <div className="space-y-3" aria-busy="true">
           {[1, 2, 3].map((i) => (
             <div
               key={i}
-              className="border border-border bg-card p-5 animate-pulse"
+              className="border border-border bg-card p-4 sm:p-5"
+              aria-hidden="true"
             >
               <div className="flex items-center gap-3 mb-3">
-                <div className="h-10 w-10 rounded-full bg-muted" />
+                <Skeleton className="size-9 shrink-0 rounded-md" />
                 <div className="flex-1 space-y-2">
-                  <div className="h-4 w-24 bg-muted rounded" />
-                  <div className="h-3 w-16 bg-muted rounded" />
+                  <Skeleton className="h-4 w-24" />
+                  <Skeleton className="h-3 w-16" />
                 </div>
               </div>
-              <div className="h-5 w-3/4 bg-muted rounded mb-2" />
-              <div className="h-4 w-full bg-muted rounded" />
+              <Skeleton className="h-5 w-3/4 mb-2" />
+              <Skeleton className="h-4 w-full" />
             </div>
           ))}
         </div>

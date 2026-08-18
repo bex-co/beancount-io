@@ -24,6 +24,11 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
     message: "仪表板",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "前往仪表板",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "删除账本",
     description: "Button tooltip or action for deleting ledger",
@@ -120,6 +125,11 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "未找到账本",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message: "创建你的第一个账本，开始记录你的财务。",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "私有",

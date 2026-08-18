@@ -25,6 +25,11 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
     message: "Dashboard",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Naar het dashboard",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Grootboek verwijderen",
     description: "Button tooltip or action for deleting ledger",
@@ -125,6 +130,11 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "Geen grootboeken gevonden",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message: "Maak uw eerste grootboek aan om uw financiën bij te houden.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Privé",

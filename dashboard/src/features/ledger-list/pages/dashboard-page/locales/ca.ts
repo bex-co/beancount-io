@@ -25,6 +25,11 @@ const caDashboardPage: Record<string, TranslationEntry> = {
     message: "Tauler",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Vés al tauler",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Eliminar llibre",
     description: "Button tooltip or action for deleting ledger",
@@ -125,6 +130,12 @@ const caDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "No s'han trobat llibres",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message:
+      "Crea el teu primer llibre per començar a fer un seguiment de les teves finances.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Privat",

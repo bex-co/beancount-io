@@ -25,6 +25,11 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     message: "Панель",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Перейти на панель",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Видалити Ledger",
     description: "Button tooltip or action for deleting ledger",
@@ -125,6 +130,11 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "Книги не знайдено",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message: "Створіть свою першу книгу, щоб почати відстежувати свої фінанси.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Приватний",

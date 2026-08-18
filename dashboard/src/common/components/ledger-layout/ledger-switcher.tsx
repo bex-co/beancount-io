@@ -31,6 +31,7 @@ import {
   DialogTitle,
 } from "@/common/components/ui/dialog";
 import { LedgerForm } from "@/features/ledger-list/components/ledger-form";
+import { LedgerVisibilityIcon } from "./ledger-visibility-icon";
 import { toast } from "sonner";
 import { cn } from "@/common/lib/utils/utils";
 import { decodeLedgerId, parseLedgerFullName } from "@/common/lib/utils/encode";
@@ -65,7 +66,7 @@ function LedgerSwitcherButtonContent({
     <div className="w-full flex items-center justify-between gap-2 min-w-0">
       <div className="flex items-center gap-2 min-w-0">
         <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
-          <img src="/lgasset/logo.png" alt="Logo" className="h-8 w-8 rounded" />
+          <img src="/lgasset/logo.png" alt="" className="h-8 w-8 rounded" />
         </div>
         <div className="flex flex-col items-start min-w-0 group-data-[collapsible=icon]:hidden">
           <Link
@@ -187,13 +188,13 @@ function LedgerAuthenticatedSwitcher({
     <>
       <div className="w-full flex items-center gap-2 min-w-0">
         {/* Part 1: Logo - Link to /ledger */}
-        <Link to="/ledger" className="shrink-0 cursor-pointer">
+        <Link
+          to="/ledger"
+          aria-label={t("page.dashboard.goToDashboard")}
+          className="shrink-0 cursor-pointer"
+        >
           <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground hover:opacity-80 transition-opacity">
-            <img
-              src="/lgasset/logo.png"
-              alt="Logo"
-              className="h-8 w-8 rounded"
-            />
+            <img src="/lgasset/logo.png" alt="" className="h-8 w-8 rounded" />
           </div>
         </Link>
 
@@ -271,6 +272,10 @@ function LedgerAuthenticatedSwitcher({
                               <span className="text-sm truncate">
                                 {repo || ledger.name}
                               </span>
+                              <LedgerVisibilityIcon
+                                isPrivate={ledger.private}
+                                className="ml-auto"
+                              />
                             </CommandItem>
                           );
                         })}

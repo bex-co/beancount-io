@@ -20,6 +20,11 @@ const enDashboardPage: Record<string, TranslationEntry> = {
     message: "Dashboard",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "Go to dashboard",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "Delete Ledger",
     description: "Button tooltip or action for deleting ledger",
@@ -111,6 +116,11 @@ const enDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "No ledgers found",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message: "Create your first ledger to start tracking your finances.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "Private",

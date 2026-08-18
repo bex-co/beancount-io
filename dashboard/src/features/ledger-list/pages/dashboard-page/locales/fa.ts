@@ -25,6 +25,11 @@ const faDashboardPage: Record<string, TranslationEntry> = {
     message: "داشبورد",
     description: "Dashboard page title shown in sidebar header",
   },
+  "page.dashboard.goToDashboard": {
+    message: "رفتن به داشبورد",
+    description:
+      "Aria label for the home/logo button navigating to the dashboard",
+  },
   "page.dashboard.deleteLedger": {
     message: "حذف دفتر",
     description: "Button tooltip or action for deleting ledger",
@@ -125,6 +130,12 @@ const faDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.noLedgersFound": {
     message: "دفتری یافت نشد",
     description: "Message when user has no ledgers",
+  },
+  "page.dashboard.noLedgersDescription": {
+    message:
+      "اولین دفتر خود را ایجاد کنید تا پیگیری امور مالی خود را آغاز کنید.",
+    description:
+      "Empty state description prompting the user to create their first ledger",
   },
   "page.dashboard.private": {
     message: "خصوصی",
