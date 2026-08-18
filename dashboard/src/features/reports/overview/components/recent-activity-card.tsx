@@ -220,7 +220,7 @@ export function RecentActivityCard({
                     <button
                       type="button"
                       key={transaction.entry_hash}
-                      className="grid w-full grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none sm:grid-cols-[5rem_auto_minmax(0,1fr)_minmax(8rem,auto)_auto] sm:px-5"
+                      className="grid w-full cursor-pointer grid-cols-[auto_minmax(0,1fr)_auto] items-center gap-3 px-4 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none sm:grid-cols-[5rem_auto_minmax(0,1fr)_minmax(8rem,auto)_auto] sm:px-5"
                       onClick={() => {
                         setSelectedEntry(transaction);
                         setIsEntryOpen(true);
