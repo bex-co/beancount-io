@@ -55,6 +55,7 @@ export const bg: typeof en = {
   quickAdd: "Бързо добавяне",
   accountPicker: "Избор на сметка",
   accountPickerSearchPlaceholder: "Търсене на сметки",
+  accountPickerRecent: "Скорошни",
   accountPickerAllTab: "Всички",
   accountPickerNoResults: "Няма съвпадащи сметки",
   accountPickerCreate: "Създай „%{name}“",

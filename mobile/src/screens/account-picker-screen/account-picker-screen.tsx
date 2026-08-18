@@ -16,16 +16,15 @@ import {
   useTheme,
 } from "@/common/theme";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
-import {
-  groupAccountsByRoot,
-  type AccountSection,
-} from "@/common/ledger-meta-utils";
+import { groupAccountsByRoot } from "@/common/ledger-meta-utils";
 import { splitAccountLeaf } from "@/common/account-util";
 import {
   ALL_ROOTS,
   findAccountLocation,
   isSearchQuery,
   visibleAccountSections,
+  type PickerSection,
+  type SelectionSource,
 } from "./picker-sections";
 import { ColorTheme } from "@/types/theme-props";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -52,6 +51,8 @@ import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import { analytics } from "@/common/analytics";
 import { usePageView } from "@/common/hooks";
+import { accountUsageVar, recordAccountUsage } from "@/common/vars";
+import { usageFor, type RankingContext } from "@/common/account-frecency";
 
 const SKELETON_ROW_WIDTHS = [200, 160, 220, 140, 180, 210, 150, 190];
 
@@ -74,7 +75,12 @@ const getStyles = (theme: ColorTheme) =>
     list: {
       flex: 1,
     },
+    // A row, so the Recent header can seat its clock on the baseline of the
+    // label; a root header simply has nothing to put beside the text.
     sectionHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.xs,
       paddingHorizontal: gutter,
       paddingVertical: sectionHeaderPaddingVertical,
       backgroundColor: theme.black10,
@@ -165,7 +171,9 @@ const getStyles = (theme: ColorTheme) =>
 interface AccountRowProps {
   account: string;
   selected: boolean;
-  onPress: (account: string) => void;
+  /** Which block the row sits in, reported with the confirm event. */
+  source: SelectionSource;
+  onPress: (account: string, source: SelectionSource) => void;
 }
 
 /**
@@ -173,11 +181,13 @@ interface AccountRowProps {
  * so its own cell PureComponent can never bail out — without this, every
  * mounted row re-renders on each keystroke. The theme hooks are called here
  * rather than passed down (`useThemeStyle` memoizes per theme), matching
- * `AccountTableRow` and keeping the memo comparison to three primitives.
+ * `AccountTableRow` and keeping the memo comparison to primitives — `source`
+ * is passed in rather than closed over for the same reason.
  */
 const AccountRow = memo(function AccountRow({
   account,
   selected,
+  source,
   onPress,
 }: AccountRowProps) {
   const theme = useTheme().colorTheme;
@@ -186,7 +196,7 @@ const AccountRow = memo(function AccountRow({
   return (
     <TouchableOpacity
       style={[styles.listItem, selected && styles.listItemSelected]}
-      onPress={() => onPress(account)}
+      onPress={() => onPress(account, source)}
       accessibilityRole="button"
       accessibilityState={{ selected }}
     >
@@ -225,6 +235,16 @@ export function AccountPickerScreenComponent(): JSX.Element {
   const [query, setQuery] = useState("");
   const [activeRoot, setActiveRoot] = useState<string | null>(ALL_ROOTS);
 
+  // One snapshot for the screen's whole life: this ledger's habits (a chart of
+  // accounts belongs to its ledger) and the instant they are ranked against.
+  // Read rather than subscribed, so confirming a pick can't reshuffle the list
+  // under the user as the screen dismisses; `now` doubles as the baseline for
+  // the time-to-select the confirm event reports.
+  const [ranking] = useState<RankingContext>(() => ({
+    usage: usageFor(accountUsageVar(), ledgerId),
+    now: Date.now(),
+  }));
+
   // Held in a ref so the picker keeps working even after the store entry is
   // released, and released on unmount so a stale closure can't fire for
   // whichever screen opens the picker next. This pair is what makes a single
@@ -253,12 +273,19 @@ export function AccountPickerScreenComponent(): JSX.Element {
 
   const isSearching = isSearchQuery(query);
 
-  const visibleSections: AccountSection[] = useMemo(
-    () => visibleAccountSections(browseSections, accounts, query, activeRoot),
-    [browseSections, accounts, query, activeRoot],
+  // The string, not `t` — `useTranslations` hands back a fresh closure every
+  // render, and one unstable dep would make this memo recompute on all of them.
+  const recentTitle = t("accountPickerRecent");
+  const visibleSections: PickerSection[] = useMemo(
+    () =>
+      visibleAccountSections(browseSections, accounts, query, activeRoot, {
+        ranking,
+        recentTitle,
+      }),
+    [browseSections, accounts, query, activeRoot, ranking, recentTitle],
   );
 
-  const listRef = useRef<SectionList<string, AccountSection>>(null);
+  const listRef = useRef<SectionList<string, PickerSection>>(null);
   const hasScrolledToSelected = useRef(false);
 
   // Bring the caller's current account into view once, on the browse list.
@@ -278,15 +305,32 @@ export function AccountPickerScreenComponent(): JSX.Element {
     });
   }, [selectedItem, isSearching, visibleSections]);
 
-  const onPick = useCallback(
-    async (account: string) => {
-      await analytics.track("tap_account_picker_confirm", {
-        selectedAccount: account,
-      });
+  // The one exit, so every way out of the picker records the pick — a created
+  // account is the likeliest of all to be wanted again, and used to leave no
+  // trace because its path had its own hand-rolled copy of these three lines.
+  const confirmSelection = useCallback(
+    (account: string, at: number) => {
+      recordAccountUsage(ledgerId, account, at);
       onSelectedRef.current?.(account);
       router.back();
     },
-    [router],
+    [ledgerId, router],
+  );
+
+  const onPick = useCallback(
+    async (account: string, source: SelectionSource) => {
+      const pickedAt = Date.now();
+      await analytics.track("tap_account_picker_confirm", {
+        selectedAccount: account,
+        // Which of the three routes to an account earned this pick, and how
+        // long it took — the pair that says whether recents and search are
+        // actually saving anyone time.
+        source,
+        timeToSelectMs: pickedAt - ranking.now,
+      });
+      confirmSelection(account, pickedAt);
+    },
+    [confirmSelection, ranking],
   );
 
   // The create row renders exactly when the empty state does while a query is
@@ -321,11 +365,10 @@ export function AccountPickerScreenComponent(): JSX.Element {
           pickerType: type ?? "",
           account,
         });
-        onSelectedRef.current?.(account);
-        router.back();
+        confirmSelection(account, Date.now());
       },
     });
-  }, [trimmedQuery, type, router]);
+  }, [trimmedQuery, type, router, confirmSelection]);
 
   if (loading && accounts.length === 0) {
     return (
@@ -391,6 +434,11 @@ export function AccountPickerScreenComponent(): JSX.Element {
         renderSectionHeader={({ section }) =>
           section.title ? (
             <View style={styles.sectionHeader}>
+              {section.source === "recents" && (
+                // The same clock the history suggestion chips wear, so "we saw
+                // you use this" reads the same wherever it appears.
+                <Ionicons name="time-outline" size={14} color={theme.black80} />
+              )}
               <Text style={styles.sectionHeaderText}>{section.title}</Text>
             </View>
           ) : null
@@ -428,10 +476,11 @@ export function AccountPickerScreenComponent(): JSX.Element {
             )}
           </View>
         }
-        renderItem={({ item }) => (
+        renderItem={({ item, section }) => (
           <AccountRow
             account={item}
             selected={item === selectedItem}
+            source={section.source}
             onPress={onPick}
           />
         )}

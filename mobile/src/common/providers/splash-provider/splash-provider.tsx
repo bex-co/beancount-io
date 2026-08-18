@@ -7,6 +7,7 @@ import { loadLocale } from "@/common/vars/locale";
 import { loadLedger, ledgerVar } from "@/common/vars/ledger";
 import { loadTheme } from "@/common/vars/theme";
 import { loadSession } from "@/common/vars/session";
+import { loadAccountUsage } from "@/common/vars/account-usage";
 import { i18n } from "@/translations";
 import Constants from "expo-constants";
 import { apolloClient } from "@/common/apollo/client";
@@ -45,6 +46,7 @@ const SplashProviderComponent = ({
           loadSession(),
           loadLedger(),
           loadTheme(),
+          loadAccountUsage(),
         ]);
         if (locale) {
           i18n.locale = locale;

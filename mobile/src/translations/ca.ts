@@ -55,6 +55,7 @@ export const ca: typeof en = {
   quickAdd: "Afegir ràpid",
   accountPicker: "Selector de compte",
   accountPickerSearchPlaceholder: "Cerca comptes",
+  accountPickerRecent: "Recents",
   accountPickerAllTab: "Tots",
   accountPickerNoResults: "Cap compte coincident",
   accountPickerCreate: 'Crea "%{name}"',

@@ -75,6 +75,7 @@ export const en = {
   multiPostingsZeroAmount: "All postings need a non-zero amount",
   accountPicker: "Account Picker",
   accountPickerSearchPlaceholder: "Search accounts",
+  accountPickerRecent: "Recent",
   accountPickerAllTab: "All",
   accountPickerNoResults: "No matching accounts",
   accountPickerCreate: 'Create "%{name}"',

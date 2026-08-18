@@ -1,4 +1,5 @@
 import { filterAccounts, fuzzyMatch } from "../account-search";
+import type { AccountUsage } from "../account-frecency";
 
 // The runner only ships toBe/toEqual/toBeCloseTo/toBeTruthy/toBeFalsy/toThrow,
 // so score comparisons are asserted as booleans.
@@ -100,5 +101,55 @@ describe("filterAccounts", () => {
   test("searches across every root type", () => {
     const result = filterAccounts("a", accounts);
     expect(result.length > 1).toBe(true);
+  });
+
+  describe("frecency tiebreak", () => {
+    const NOW = 1_700_000_000_000;
+    const DAY = 24 * 60 * 60 * 1000;
+    // Same length, same match shape — nothing but the tiebreak separates them.
+    const tied = ["Expenses:Aaa:Outdoors", "Expenses:Bbb:Outdoors"];
+
+    test("scores the pair identically, so only the tiebreak can order it", () => {
+      expect(fuzzyMatch("outdoors", tied[0])).toBe(
+        fuzzyMatch("outdoors", tied[1]),
+      );
+    });
+
+    test("orders equally-good matches by usage", () => {
+      const usage: AccountUsage = {
+        "Expenses:Bbb:Outdoors": { count: 4, lastUsedAt: NOW },
+      };
+      expect(filterAccounts("outdoors", tied, { usage, now: NOW })[0]).toBe(
+        "Expenses:Bbb:Outdoors",
+      );
+    });
+
+    test("prefers the more recently used at equal counts", () => {
+      const usage: AccountUsage = {
+        "Expenses:Aaa:Outdoors": { count: 2, lastUsedAt: NOW - 60 * DAY },
+        "Expenses:Bbb:Outdoors": { count: 2, lastUsedAt: NOW },
+      };
+      expect(filterAccounts("outdoors", tied, { usage, now: NOW })[0]).toBe(
+        "Expenses:Bbb:Outdoors",
+      );
+    });
+
+    test("keeps the alphabetical fallback when no usage is supplied", () => {
+      expect(filterAccounts("outdoors", [...tied].reverse())).toEqual(tied);
+    });
+
+    test("never lets usage outrank a better match", () => {
+      const usage: AccountUsage = {
+        "Expenses:Fun:Outdoors": { count: 99, lastUsedAt: NOW },
+      };
+      // `food` matches `Expenses:Food` exactly and `Expenses:Fun:Outdoors`
+      // only as a scattered subsequence, so no amount of usage reorders them.
+      expect(
+        filterAccounts("food", [...accounts, "Expenses:Fun:Outdoors"], {
+          usage,
+          now: NOW,
+        })[0],
+      ).toBe("Expenses:Food");
+    });
   });
 });

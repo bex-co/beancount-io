@@ -64,6 +64,7 @@ export const zh = {
   quickAdd: "快速添加",
   accountPicker: "账户选择",
   accountPickerSearchPlaceholder: "搜索账户",
+  accountPickerRecent: "最近使用",
   accountPickerAllTab: "全部",
   accountPickerNoResults: "没有匹配的账户",
   accountPickerCreate: "创建“%{name}”",

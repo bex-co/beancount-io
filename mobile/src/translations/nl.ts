@@ -55,6 +55,7 @@ export const nl: typeof en = {
   quickAdd: "Snel toevoegen",
   accountPicker: "Account kiezen",
   accountPickerSearchPlaceholder: "Rekeningen zoeken",
+  accountPickerRecent: "Recent",
   accountPickerAllTab: "Alle",
   accountPickerNoResults: "Geen overeenkomende rekeningen",
   accountPickerCreate: '"%{name}" aanmaken',

@@ -55,6 +55,7 @@ export const fa: typeof en = {
   quickAdd: "افزودن سریع",
   accountPicker: "انتخاب حساب",
   accountPickerSearchPlaceholder: "جستجوی حساب‌ها",
+  accountPickerRecent: "اخیر",
   accountPickerAllTab: "همه",
   accountPickerNoResults: "حسابی مطابقت ندارد",
   accountPickerCreate: "ایجاد «%{name}»",

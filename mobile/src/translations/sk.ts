@@ -55,6 +55,7 @@ export const sk: typeof en = {
   quickAdd: "Rýchle pridanie",
   accountPicker: "Výber účtu",
   accountPickerSearchPlaceholder: "Hľadať účty",
+  accountPickerRecent: "Nedávne",
   accountPickerAllTab: "Všetky",
   accountPickerNoResults: "Žiadne zodpovedajúce účty",
   accountPickerCreate: "Vytvoriť „%{name}“",

@@ -63,6 +63,7 @@ export const ru: typeof en = {
   quickAdd: "Быстрое добавление",
   accountPicker: "Выбор счёта",
   accountPickerSearchPlaceholder: "Поиск счетов",
+  accountPickerRecent: "Недавние",
   accountPickerAllTab: "Все",
   accountPickerNoResults: "Нет подходящих счетов",
   accountPickerCreate: "Создать «%{name}»",

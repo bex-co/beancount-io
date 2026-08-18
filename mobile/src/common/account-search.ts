@@ -14,6 +14,7 @@
  */
 
 import { SEGMENT_SEPARATOR } from "./account-util";
+import { frecencyScore, type RankingContext } from "./account-frecency";
 
 /** Extra score per pattern character that lands on a segment boundary. */
 const SEGMENT_MATCH_BONUS = 2;
@@ -118,21 +119,49 @@ export function fuzzyMatch(pattern: string, text: string): number {
  * Accounts matching `pattern`, best first. An empty pattern returns the input
  * order untouched, so the caller can hand back its browse ordering unchanged.
  *
- * Ties break on the shorter account, then alphabetically, so equally-good
- * matches land in a stable, predictable order rather than query-order chance.
+ * Match quality always dominates — a better match outranks a more-used weaker
+ * one. Only once two accounts match equally well does `usage` decide, so the
+ * ones the user actually books against come first; remaining ties break on the
+ * shorter account, then alphabetically, so equally-good matches land in a
+ * stable, predictable order rather than query-order chance.
  */
-export function filterAccounts(pattern: string, accounts: string[]): string[] {
+export function filterAccounts(
+  pattern: string,
+  accounts: string[],
+  ranking?: RankingContext,
+): string[] {
   const trimmed = pattern.trim();
   if (trimmed.length === 0) {
     return [...accounts];
   }
 
-  return accounts
-    .map((account) => ({ account, score: fuzzyMatch(trimmed, account) }))
-    .filter((scored) => scored.score > 0)
+  const matches: Array<{
+    account: string;
+    score: number;
+    frecency: number;
+  }> = [];
+  for (const account of accounts) {
+    const score = fuzzyMatch(trimmed, account);
+    if (score === 0) {
+      continue;
+    }
+    // Frecency is scored here rather than in the comparator, which would
+    // re-derive it O(n log n) times per keystroke — and only for accounts that
+    // survived the match, which on a real chart of accounts is few of them.
+    matches.push({
+      account,
+      score,
+      frecency: ranking
+        ? frecencyScore(ranking.usage[account], ranking.now)
+        : 0,
+    });
+  }
+
+  return matches
     .sort(
       (a, b) =>
         b.score - a.score ||
+        b.frecency - a.frecency ||
         a.account.length - b.account.length ||
         a.account.localeCompare(b.account),
     )

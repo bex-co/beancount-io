@@ -56,6 +56,7 @@ export const uk: typeof en = {
   quickAdd: "Швидке додавання",
   accountPicker: "Вибір рахунку",
   accountPickerSearchPlaceholder: "Пошук рахунків",
+  accountPickerRecent: "Нещодавні",
   accountPickerAllTab: "Усі",
   accountPickerNoResults: "Немає відповідних рахунків",
   accountPickerCreate: "Створити «%{name}»",

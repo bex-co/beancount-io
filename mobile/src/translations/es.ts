@@ -66,6 +66,7 @@ export const es: typeof en = {
   quickAdd: "Añadir rápido",
   accountPicker: "Selector de cuenta",
   accountPickerSearchPlaceholder: "Buscar cuentas",
+  accountPickerRecent: "Recientes",
   accountPickerAllTab: "Todas",
   accountPickerNoResults: "No hay cuentas coincidentes",
   accountPickerCreate: 'Crear "%{name}"',
