@@ -1,4 +1,4 @@
-import { en } from "@/translations/en";
+import { en } from "./en";
 
 export const fr: typeof en = {
   ...en,
@@ -14,7 +14,6 @@ export const fr: typeof en = {
   reviewApp: "Vous aimez ? Laissez un avis :)",
   helpCenter: "Centre d'aide",
   currentLanguage: "Langue",
-
   currentVersion: "Version",
   theme: "Thème",
   themeLight: "Clair",
@@ -37,6 +36,7 @@ export const fr: typeof en = {
   deleteAccount: "Supprimer le compte",
   deleteAccountDescription: "Supprimer définitivement votre compte et données",
   ledgerDescription: "Sélectionner ou changer de grand livre",
+  ledgers: "Grands livres",
   deleteAccountConfirmTitle: "Confirmer la suppression du compte",
   deleteAccountConfirmMessage:
     'Pour confirmer, veuillez saisir "sudo delete my account" ci-dessous :',
@@ -53,6 +53,9 @@ export const fr: typeof en = {
   password: "Mot de passe",
   forgotPassword: "Mot de passe oublié ?",
   dontHaveAccount: "Pas de compte ? S'inscrire",
+  confirmPassword: "Confirmer le mot de passe",
+  alreadyHaveAccount: "Vous avez déjà un compte ? Connectez-vous",
+  backToSignIn: "Retour à la connexion",
   resetPassword: "Réinitialiser le mot de passe",
   resetPasswordDescription:
     "Entrez votre e-mail pour recevoir un lien de réinitialisation de mot de passe.",
@@ -64,6 +67,15 @@ export const fr: typeof en = {
   expenses: "Dépenses",
   income: "Revenus",
   quickAdd: "Ajout rapide",
+  enterNewTransaction: "Saisir une transaction",
+  multiPostingsTitle: "Nouvelle transaction",
+  addPosting: "+ Ajouter une écriture",
+  remainderLabel: "Solde restant",
+  autoLabel: "auto",
+  postingAccount: "Choisir un compte",
+  multiPostingsInvalidBalance: "La somme des écritures doit être nulle",
+  multiPostingsMissingAccount: "Chaque écriture doit avoir un compte",
+  multiPostingsZeroAmount: "Chaque écriture doit avoir un montant non nul",
   accountPicker: "Sélecteur de compte",
   accountPickerSearchPlaceholder: "Rechercher des comptes",
   accountPickerRecent: "Récents",
@@ -77,16 +89,23 @@ export const fr: typeof en = {
   saveSuccess: "Transaction enregistrée !",
   saveFailed: "Échec de l'enregistrement",
   amountEmptyError: "Veuillez saisir le montant",
+  accountEmptyError: "Choisissez le compte de départ et le compte d'arrivée",
   netAssets: "Actif net",
   accounts: "Comptes",
+  // Column headers for the Accounts tab's balance table. Separate from the
+  // journal's `balance` key, which names the beancount directive.
+  account: "Compte",
+  accountBalance: "Solde",
   monthlyNetIncome: "Revenu net mensuel",
   liabilities: "Passifs",
   equity: "Capitaux propres",
   noDataCharts: "Ajoutez rapidement pour afficher les graphiques",
+  notEnoughChartData: "Pas encore assez de données pour le graphique",
   done: "Terminé",
   payee: "Bénéficiaire",
   narration: "Libellé",
   suggestions: "Suggestions",
+  aiSuggestions: "Suggestions de l'IA",
   from: "De",
   to: "À",
   date: "Date",
@@ -130,18 +149,61 @@ export const fr: typeof en = {
   "10": "OCT",
   "11": "NOV",
   "12": "DÉC",
-  // journal screen
+  // transactions screen
+  transactionsWelcomeTitle: "Bienvenue dans vos transactions ! 🧾",
+  transactionsWelcomeMessage:
+    "Vous n'avez encore enregistré aucune transaction.",
+  transactionsWelcomeInstructions: "Pour commencer :",
+  transactionsWelcomeInstruction1:
+    'Appuyez sur "+" pour enregistrer votre première transaction',
+  transactionsWelcomeInstruction2:
+    "Importez des fichiers beancount depuis l'interface web",
+  transactionsWelcomeInstruction3: "Importez vos données comptables existantes",
+  transactionsWelcomeInstructionFinal:
+    "Dès que vous ajoutez des transactions, elles apparaissent ici.",
+  transactionsNoSearchResults:
+    "Aucune transaction ne correspond à votre recherche ou à vos filtres.",
+  transactionsLoadError: "Échec du chargement des transactions : ",
+  // transactions filter modal
+  filters: "Filtres",
+  filterStatus: "Statut",
+  filterDateRange: "Période",
+  filterAccount: "Compte",
+  allAccounts: "Tous les comptes",
+  rangeCustom: "Personnalisée",
+  startDate: "Du",
+  endDate: "Au",
+  apply: "Appliquer",
+  reset: "Réinitialiser",
+  // shared labels & the open-account flow
   transactions: "Transactions",
   search: "Rechercher",
   unknown: "Inconnu",
   openAccount: "Ouvrir un compte",
+  accountType: "Type de compte",
+  currency: "Devise",
+  openDate: "Date d'ouverture",
+  chooseAccountType: "Choisir le type de compte",
+  chooseCurrency: "Choisir la devise",
+  openAccountNamePlaceholder: "Bank:Checking",
+  openAccountNoCurrency: "Aucune devise",
+  openAccountSaving: "Ouverture...",
+  openAccountFailed: "Impossible d'ouvrir le compte. Veuillez réessayer.",
+  openAccountInvalidRoot: "Choisissez un type de compte valide.",
+  openAccountNameRequired: "Saisissez au moins un élément du nom.",
+  openAccountEmptyComponent: "Les éléments du nom ne peuvent pas être vides.",
+  openAccountUppercaseComponent:
+    "Chaque élément du nom doit commencer par une majuscule.",
+  openAccountInvalidCharacters:
+    "N'utilisez que des lettres, des chiffres et des traits d'union dans les noms de compte.",
   closeAccount: "Fermer un compte",
   transaction: "Transaction",
   loadingMore: "Chargement en cours...",
   noMoreEntries: "Aucune autre entrée",
+  noEntries: "Aucune entrée",
   journalLoadError: "Échec du chargement du journal : ",
   accountsPlural: "comptes",
-  // journal entry context
+  // entry context (transactions screen)
   journalLoadingEntryContext: "Chargement du contexte de l'entrée...",
   journalError: "Erreur",
   journalNoData: "Aucune donnée de contexte d'entrée disponible",
@@ -150,7 +212,153 @@ export const fr: typeof en = {
   journalBalancesBefore: "Soldes avant l'entrée",
   journalBalancesAfter: "Soldes après l'entrée",
   journalSource: "Code source",
-  // budget
+  // directive types & entry filters
+  open: "Ouverture",
+  close: "Clôture",
+  balance: "Solde",
+  note: "Note",
+  document: "Document",
+  pad: "Ajustement",
+  price: "Cours",
+  custom: "Personnalisée",
+  cleared: "Pointée",
+  pending: "En attente",
+  other: "Autres",
+  discovered: "Trouvés",
+  linked: "Liés",
+  budget: "Budget",
+  metadata: "Métadonnées",
+  postings: "Écritures",
+  details: "Détails",
+  tags: "Étiquettes",
+  links: "Liens",
+  clearedTransactions: "Transactions pointées",
+  pendingTransactions: "Transactions en attente",
+  otherTransactions: "Autres transactions",
+  discoveredDocuments: "Documents trouvés",
+  linkedDocuments: "Documents liés",
+  budgetEntries: "Lignes de budget",
+  toggleMetadata: "Afficher ou masquer les métadonnées",
+  togglePostings: "Afficher ou masquer les écritures",
+  // reports tab
+  reports: "Rapports",
+  netProfit: "Résultat net",
+  // feed
+  latestUpdates: "Dernières modifications",
+  // home dashboard
+  seeAll: "Tout voir",
+  netWorth: "Patrimoine net",
+  noAccounts: "Aucun compte",
+  recentTransactions: "Transactions récentes",
+  recentTransactionsEmpty: "Pas encore de transactions",
+  spending: "Dépenses",
+  spendingSubtitle: "Ce mois-ci par rapport au mois dernier",
+  thisMonth: "Ce mois-ci",
+  lastMonth: "Mois dernier",
+  range1M: "1M",
+  range3M: "3M",
+  range6M: "6M",
+  rangeYTD: "ANN",
+  range1Y: "1A",
+  rangeLastYear: "AP",
+  rangeAll: "TOUT",
+  tes: "1",
+  // edit / delete transaction
+  editTransaction: "Modifier la transaction",
+  deleteTransaction: "Supprimer",
+  deleteTransactionTitle: "Supprimer la transaction",
+  deleteTransactionMessage:
+    "Voulez-vous vraiment supprimer cette transaction ? Cette action est irréversible.",
+  deleteSuccess: "Transaction supprimée",
+  deleteFailed: "Échec de la suppression de la transaction",
+  editSuccess: "Transaction enregistrée",
+  editFailed: "Échec de l'enregistrement de la transaction",
+  editTransactionSource:
+    "Modifiez le source beancount ci-dessous. Une somme de contrôle obsolète ou un beancount invalide sera refusé avec une erreur.",
+  editConflict:
+    "La transaction a été modifiée ailleurs. Rechargez puis réessayez.",
+  // receipt capture
+  scanReceipt: "Scanner un reçu",
+  receiptTakePhoto: "Prendre une photo",
+  receiptChooseLibrary: "Choisir dans la galerie",
+  receiptFlash: "Flash",
+  receiptRetake: "Reprendre",
+  receiptUpload: "Envoyer",
+  receiptOpenSettings: "Ouvrir Réglages",
+  receiptCancel: "Annuler",
+  receiptUploading: "Envoi de la photo…",
+  receiptParsing: "L'IA lit votre reçu…",
+  receiptRevealTitle: "Voici ce que nous avons lu",
+  // Deliberately a proposal: nothing is written to the ledger until the user
+  // saves on the next screen.
+  receiptRevealHint:
+    "Rien n'est encore enregistré — vérifiez les détails à l'écran suivant.",
+  total: "Total",
+  receiptQuotaExhausted:
+    "Quota d'IA épuisé. Veuillez passer à une offre supérieure.",
+  receiptParseFailed: "Impossible de lire le reçu. Veuillez réessayer.",
+  receiptUploadFailed: "Échec de l'envoi. Veuillez réessayer.",
+  receiptCameraPermission:
+    "L'accès à l'appareil photo est nécessaire pour photographier votre reçu. Activez-le dans Réglages.",
+  receiptLibraryPermission:
+    "L'accès à la galerie est nécessaire pour choisir un reçu. Activez-le dans Réglages.",
+  // notifications
+  notificationsBell: "Notifications",
+  notificationsTitle: "Notifications",
+  notificationsErrorsSection: "Erreurs du grand livre",
+  notificationsChangesSection: "Modifications récentes",
+  notificationsLedgerHealthy: "Le grand livre est sain — aucune erreur.",
+  notificationsNoChanges: "Aucune modification récente.",
+  // commit detail
+  commitDetailAuthor: "Auteur",
+  commitDetailStats: "Statistiques",
+  commitDetailFiles: "Fichiers",
+  commitDetailDiff: "Différences",
+  commitDetailNoDiff: "Aucune différence disponible.",
+  commitDetailAdditions: "+{{count}} lignes",
+  commitDetailDeletions: "-{{count}} lignes",
+  // ledger file browser
+  ledgerLoadError: "Échec du chargement",
+  ledgerEmpty: "Aucun fichier",
+  ledgerEmptyHint:
+    "Créez ici un fichier de grand livre, ou tirez vers le bas pour actualiser.",
+  ledgerRefreshHint: "Tirez vers le bas pour recharger ce dossier.",
+  ledgerCreateFile: "Créer un fichier",
+  ledgerCreateFileTitle: "Nouveau fichier de grand livre",
+  ledgerCreateFileMessage:
+    "Saisissez un nom de fichier .bean ou .beancount unique. Sans extension, .bean est ajouté.",
+  ledgerCreateFilePlaceholder: "investments.bean",
+  ledgerCreateFileSuccess: "{{name}} créé",
+  ledgerCreateFileFailed: "Échec de la création du fichier",
+  ledgerDeleteFile: "Supprimer {{name}}",
+  ledgerDeleteFileTitle: "Supprimer le fichier de grand livre",
+  ledgerDeleteFileMessage:
+    'Supprimer "{{name}}" ? Cette action est irréversible.',
+  ledgerDeleteFileConfirm: "Supprimer",
+  ledgerDeleteFileSuccess: "{{name}} supprimé",
+  ledgerDeleteFileFailed: "Échec de la suppression du fichier",
+  ledgerMainFileProtected: "main.bean ne peut pas être supprimé",
+  // ledger file editor
+  ledgerEditorSave: "Enregistrer",
+  ledgerEditorSaving: "Enregistrement...",
+  ledgerEditorSaveSuccess: "Fichier enregistré",
+  ledgerEditorSaveFailed: "Échec de l'enregistrement",
+  ledgerEditorLoadFailed: "Échec du chargement du fichier",
+  ledgerEditorUnsavedTitle: "Modifications non enregistrées",
+  ledgerEditorUnsavedMessage: "Abandonner vos modifications ?",
+  ledgerEditorDiscardChanges: "Abandonner",
+  ledgerEditorConflictTitle: "Fichier modifié",
+  ledgerEditorConflictMessage:
+    "Ce fichier a été modifié à distance. Abandonner les modifications locales et recharger ?",
+  ledgerEditorReload: "Recharger",
+  ledgerEditorKeepEditing: "Continuer",
+  ledgerEditorErrorCount: {
+    one: "{{count}} erreur",
+    other: "{{count}} erreurs",
+  },
+  // budget — dated spending/income targets per account, stored as
+  // `custom "budget"` directives. Copy mirrors the dashboard's page.budget.*
+  // namespace so the two clients speak the same language.
   budgetActual: "Réel",
   budgetVariance: "Écart",
   budgetAboveTarget: "Au-dessus de l’objectif",
@@ -171,14 +379,17 @@ export const fr: typeof en = {
   budgetIntervalMonthly: "Mensuel",
   budgetIntervalQuarterly: "Trimestriel",
   budgetIntervalYearly: "Annuel",
+  // add / update budget
   budgetAdd: "Ajouter un budget",
   budgetUpdate: "Mettre à jour le budget",
+  budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountHelp:
     "Un budget s’applique à un seul compte. Une entrée plus récente pour le même compte et la même devise prend effet à sa date.",
   budgetInterval: "Intervalle",
   budgetSelectInterval: "Choisir un intervalle",
   budgetAmount: "Montant",
   budgetSaveFailed: "Échec de l’enregistrement du budget",
+  // delete
   budgetDelete: "Supprimer",
   budgetDeleteTitle: "Supprimer le budget",
   budgetDeleteMessage:

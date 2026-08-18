@@ -1,4 +1,4 @@
-import { en } from "@/translations/en";
+import { en } from "./en";
 
 export const ca: typeof en = {
   ...en,

@@ -29,9 +29,28 @@
 - [x] **m24** — Controls you can see: fix the light neutral ramp, then share the primitives (8 tasks) ← inbox `010` + `011`, promoted in the same pass; shipped 2026-08-17 on top of `m20/t011`
 - [ ] **m25** — Inline `open`-directive creation from the account picker (7 tasks) ← inbox `009`, promoted 2026-08-17 — m16 + m17 shipped both prerequisites
 - [ ] **m26** — UI-thread scrubbing for the interactive line chart (7 tasks) ← inbox `019`, promoted 2026-08-17 — sequenced after `m20/t009`, same file
-- [ ] **m27** — Localize the AI receipt capture flow (5 tasks) ← inbox `022`, promoted 2026-08-17
+- ~~**m27** — Localize the AI receipt capture flow~~ — **deleted 2026-08-17**: strictly subsumed by **m29**. Its ~21 receipt keys are part of the 148 keys missing in _all twelve_ locales, so every m27 task is a subset of an m29 locale task; its receipt-flow UX walk survives as a named step in `m29/t009`. Its research is preserved in git history at this path.
 - [ ] **m28** — Home cards tap through; bad routes fall back (8 tasks) ← inbox `024` + `026`, promoted 2026-08-17 — bundled by their shared tap/deep-link verification loop
+- [x] **m29** — Translation integrity gate, then the six largest locales (11 tasks) ← from `/pm` request 2026-08-17 ("add tests to check translation integrity, en as the source … no missing, no extra, and then translate missing items"); supersedes m27; shipped 2026-08-17
+- [ ] **m30** — The last six locales, and the gate goes unconditional (10 tasks) ← same request, split off by size — twelve locales at ~170 keys each is roughly ten hours; unblocked by m29, whose `KNOWN_GAPS` now lists exactly m30's six locales
 - ~~**008** — v2 native code-editor module (Runestone + sora-editor)~~ — **deleted 2026-08-17**: 12–19 person-days plus permanent maintenance of two native deps, gated on a product signal ("only if requirements outgrow the 7-color approach") that has not appeared since m15 shipped. The research survives in git history at this note's path.
+
+## Translation integrity — 2026-08-17
+
+`/pm` request: make English the enforced source of truth for translations, then close the gap. Measured before writing anything, at the source level (locale files are `{ ...en, <overrides> }`, so a runtime lookup can never reveal a missing key — an untranslated string silently serves English):
+
+|               | `en` | `zh` | `de` | `ru` | `es` | `fr` | `pt` | `bg` `ca` `fa` `nl` `sk` `uk` |
+| ------------- | ---- | ---- | ---- | ---- | ---- | ---- | ---- | ----------------------------- |
+| declared keys | 318  | 170  | 150  | 150  | 147  | 147  | 143  | 143 each                      |
+| missing       | —    | 148  | 168  | 168  | 171  | 171  | 175  | 175 each                      |
+
+**2051 missing declarations across twelve locales; 148 keys missing in all twelve; zero extra keys anywhere.** So "no extra" is a guard against future drift, not a cleanup — the whole cost is in "no missing".
+
+Split into two milestones because ~170 keys × 12 locales is roughly ten hours: **m29** builds the gate (missing / extra / duplicate / interpolation-token parity, with a shrinking `KNOWN_GAPS` baseline so it lands green and fails on any _new_ gap) and closes the six largest locales; **m30** closes the remaining six, empties the baseline, and adds the rule that a byte-identical English value is not a translation.
+
+**m27 deleted, not duplicated.** It translated the receipt group into twelve locales — a strict subset: those keys are among the 148 missing everywhere, so each m27 task is contained in an m29 locale task. Its one non-overlapping piece, the receipt-flow UX walk in the longest locales, is written into `m29/t009` by name.
+
+**Consequence the owner should see coming:** after `m30/t007` the baseline is empty, so every future feature adding an `en` key must ship twelve translations or add an explicit `KNOWN_GAPS` entry naming what it deferred. The escape hatch is kept deliberately rather than deleted — a red build on an honest deferral would just get worked around.
 
 ## Board triage — 2026-08-17
 

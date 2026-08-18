@@ -1,4 +1,4 @@
-import { en } from "@/translations/en";
+import { en } from "./en";
 
 export const de: typeof en = {
   ...en,
@@ -35,6 +35,7 @@ export const de: typeof en = {
   deleteAccount: "Konto löschen",
   deleteAccountDescription: "Konto und Daten dauerhaft entfernen",
   ledgerDescription: "Wählen oder wechseln Sie zwischen Ihren Hauptbüchern",
+  ledgers: "Hauptbücher",
   deleteAccountConfirmTitle: "Kontolöschung bestätigen",
   deleteAccountConfirmMessage:
     'Bitte geben Sie "sudo delete my account" ein, um zu bestätigen:',
@@ -55,11 +56,25 @@ export const de: typeof en = {
   alreadyHaveAccount: "Bereits ein Konto? Anmelden",
   backToSignIn: "Zurück zur Anmeldung",
   resetPassword: "Passwort zurücksetzen",
+  resetPasswordDescription:
+    "Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen Ihres Passworts zu erhalten.",
+  resetPasswordEmailSent:
+    "Eine E-Mail wurde an Ihre E-Mail-Adresse gesendet. Bitte überprüfen Sie Ihre E-Mail, um Ihr Passwort zurückzusetzen.",
   addTransaction: "Transaktion hinzufügen",
   assets: "Vermögen",
+  sendResetPasswordEmail: "Passwort-Reset-E-Mail senden",
   expenses: "Ausgaben",
   income: "Einnahmen",
   quickAdd: "Schnell hinzufügen",
+  enterNewTransaction: "Neue Transaktion erfassen",
+  multiPostingsTitle: "Neue Transaktion",
+  addPosting: "+ Buchung hinzufügen",
+  remainderLabel: "Restbetrag",
+  autoLabel: "auto",
+  postingAccount: "Konto wählen",
+  multiPostingsInvalidBalance: "Die Buchungen müssen in Summe null ergeben",
+  multiPostingsMissingAccount: "Jede Buchung braucht ein Konto",
+  multiPostingsZeroAmount: "Jede Buchung braucht einen Betrag ungleich null",
   accountPicker: "Kontoauswahl",
   accountPickerSearchPlaceholder: "Konten suchen",
   accountPickerRecent: "Zuletzt verwendet",
@@ -72,15 +87,24 @@ export const de: typeof en = {
   saving: "Speichern...",
   saveSuccess: "Transaktion gespeichert!",
   saveFailed: "Speichern fehlgeschlagen",
+  amountEmptyError: "Bitte geben Sie den Betrag ein",
+  accountEmptyError: "Bitte wählen Sie das Quell- und das Zielkonto",
   netAssets: "Nettovermögen",
   accounts: "Konten",
+  // Column headers for the Accounts tab's balance table. Separate from the
+  // journal's `balance` key, which names the beancount directive.
+  account: "Konto",
+  accountBalance: "Saldo",
   monthlyNetIncome: "Monatliches Nettoeinkommen",
   liabilities: "Verbindlichkeiten",
   equity: "Eigenkapital",
+  noDataCharts: "Schnell hinzufügen, um Diagramme anzuzeigen",
+  notEnoughChartData: "Noch nicht genug Daten für ein Diagramm",
   done: "Fertig",
   payee: "Zahlungsempfänger",
   narration: "Beschreibung",
   suggestions: "Vorschläge",
+  aiSuggestions: "KI-Vorschläge",
   from: "Von",
   to: "An",
   date: "Datum",
@@ -96,13 +120,12 @@ export const de: typeof en = {
   updateFailed: "Aktualisierung des Abonnements fehlgeschlagen",
   inviteFriends: "Freunde einladen",
   invite: "Einladen",
-  copy: "Kopieren",
-  copied: "Kopiert",
-  share: "Teilen",
-  loading: "laden...",
   inviteSummary:
     "Teilen Sie dieses professionelle Finanzmanagement-Tool und helfen Sie anderen, ihre finanzielle Zukunft aufzubauen.",
   referral: "Empfehlung",
+  copy: "Kopieren",
+  copied: "Kopiert",
+  share: "Teilen",
   rewardSummary: "Freunde einladen",
   rewardDetail:
     "Teilen Sie dieses professionelle Finanzmanagement-Tool und helfen Sie anderen, ihre finanzielle Zukunft aufzubauen.",
@@ -110,15 +133,9 @@ export const de: typeof en = {
     "Ich möchte dieses professionelle Finanzmanagement-Tool teilen, das mir geholfen hat, meine Finanzen effektiv zu organisieren.",
   shareError: "Teilen fehlgeschlagen",
   thanksShare: "Danke fürs Teilen!!",
+  loading: "laden...",
   noContactPermission: "Kontakte-Berechtigung fehlt.",
   inputKeyword: "Bitte geben Sie ein Stichwort ein",
-  resetPasswordDescription:
-    "Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen Ihres Passworts zu erhalten.",
-  resetPasswordEmailSent:
-    "Eine E-Mail wurde an Ihre E-Mail-Adresse gesendet. Bitte überprüfen Sie Ihre E-Mail, um Ihr Passwort zurückzusetzen.",
-  sendResetPasswordEmail: "Passwort-Reset-E-Mail senden",
-  amountEmptyError: "Bitte geben Sie den Betrag ein",
-  noDataCharts: "Schnell hinzufügen, um Diagramme anzuzeigen",
   "01": "JAN",
   "02": "FEB",
   "03": "MÄR",
@@ -131,18 +148,62 @@ export const de: typeof en = {
   "10": "OKT",
   "11": "NOV",
   "12": "DEZ",
-  // journal screen
+  // transactions screen
+  transactionsWelcomeTitle: "Willkommen bei Ihren Transaktionen! 🧾",
+  transactionsWelcomeMessage: "Sie haben noch keine Transaktionen erfasst.",
+  transactionsWelcomeInstructions: "So starten Sie:",
+  transactionsWelcomeInstruction1:
+    'Erfassen Sie mit der Schaltfläche "+" Ihre erste Transaktion',
+  transactionsWelcomeInstruction2:
+    "Laden Sie beancount-Dateien über die Weboberfläche hoch",
+  transactionsWelcomeInstruction3:
+    "Importieren Sie vorhandene Buchhaltungsdaten",
+  transactionsWelcomeInstructionFinal:
+    "Sobald Sie Transaktionen hinzufügen, erscheinen sie hier.",
+  transactionsNoSearchResults:
+    "Keine Transaktionen entsprechen Ihrer Suche oder Ihren Filtern.",
+  transactionsLoadError: "Transaktionen konnten nicht geladen werden: ",
+  // transactions filter modal
+  filters: "Filter",
+  filterStatus: "Status",
+  filterDateRange: "Zeitraum",
+  filterAccount: "Konto",
+  allAccounts: "Alle Konten",
+  rangeCustom: "Benutzerdefiniert",
+  startDate: "Von",
+  endDate: "Bis",
+  apply: "Anwenden",
+  reset: "Zurücksetzen",
+  // shared labels & the open-account flow
   transactions: "Transaktionen",
   search: "Suchen",
   unknown: "Unbekannt",
   openAccount: "Konto eröffnen",
+  accountType: "Kontotyp",
+  currency: "Währung",
+  openDate: "Eröffnungsdatum",
+  chooseAccountType: "Kontotyp wählen",
+  chooseCurrency: "Währung wählen",
+  openAccountNamePlaceholder: "Bank:Checking",
+  openAccountNoCurrency: "Keine Währung",
+  openAccountSaving: "Wird eröffnet...",
+  openAccountFailed:
+    "Konto konnte nicht eröffnet werden. Bitte erneut versuchen.",
+  openAccountInvalidRoot: "Wählen Sie einen gültigen Kontotyp.",
+  openAccountNameRequired: "Geben Sie mindestens einen Namensbestandteil ein.",
+  openAccountEmptyComponent: "Namensbestandteile dürfen nicht leer sein.",
+  openAccountUppercaseComponent:
+    "Jeder Namensbestandteil muss mit einem Großbuchstaben beginnen.",
+  openAccountInvalidCharacters:
+    "Verwenden Sie in Kontonamen nur Buchstaben, Ziffern und Bindestriche.",
   closeAccount: "Konto schließen",
   transaction: "Transaktion",
   loadingMore: "Lädt mehr...",
   noMoreEntries: "Keine weiteren Einträge",
+  noEntries: "Keine Einträge",
   journalLoadError: "Fehler beim Laden des Journals: ",
   accountsPlural: "Konten",
-  // journal entry context
+  // entry context (transactions screen)
   journalLoadingEntryContext: "Lade Eintragskontext...",
   journalError: "Fehler",
   journalNoData: "Keine Eintragskontextdaten verfügbar",
@@ -151,7 +212,154 @@ export const de: typeof en = {
   journalBalancesBefore: "Salden vor Eintrag",
   journalBalancesAfter: "Salden nach Eintrag",
   journalSource: "Quellcode",
-  // budget
+  // directive types & entry filters
+  open: "Eröffnen",
+  close: "Schließen",
+  balance: "Saldo",
+  note: "Notiz",
+  document: "Beleg",
+  pad: "Ausgleich",
+  price: "Kurs",
+  custom: "Eigene",
+  cleared: "Bestätigt",
+  pending: "Offen",
+  other: "Sonstige",
+  discovered: "Gefunden",
+  linked: "Verknüpft",
+  budget: "Budget",
+  metadata: "Metadaten",
+  postings: "Buchungen",
+  details: "Details",
+  tags: "Tags",
+  links: "Links",
+  clearedTransactions: "Bestätigte Transaktionen",
+  pendingTransactions: "Offene Transaktionen",
+  otherTransactions: "Sonstige Transaktionen",
+  discoveredDocuments: "Gefundene Belege",
+  linkedDocuments: "Verknüpfte Belege",
+  budgetEntries: "Budgeteinträge",
+  toggleMetadata: "Metadaten ein-/ausblenden",
+  togglePostings: "Buchungen ein-/ausblenden",
+  // reports tab
+  reports: "Berichte",
+  netProfit: "Gewinn",
+  // feed
+  latestUpdates: "Neueste Änderungen",
+  // home dashboard
+  seeAll: "Alle ansehen",
+  netWorth: "Nettovermögen",
+  noAccounts: "Keine Konten",
+  recentTransactions: "Letzte Transaktionen",
+  recentTransactionsEmpty: "Noch keine Transaktionen",
+  spending: "Ausgaben",
+  spendingSubtitle: "Dieser Monat vs. Vormonat",
+  thisMonth: "Dieser Monat",
+  lastMonth: "Vormonat",
+  range1M: "1M",
+  range3M: "3M",
+  range6M: "6M",
+  rangeYTD: "YTD",
+  range1Y: "1J",
+  rangeLastYear: "VJ",
+  rangeAll: "ALLE",
+  tes: "1",
+  // edit / delete transaction
+  editTransaction: "Transaktion bearbeiten",
+  deleteTransaction: "Löschen",
+  deleteTransactionTitle: "Transaktion löschen",
+  deleteTransactionMessage:
+    "Möchten Sie diese Transaktion wirklich löschen? Diese Aktion kann nicht rückgängig gemacht werden.",
+  deleteSuccess: "Transaktion gelöscht",
+  deleteFailed: "Transaktion konnte nicht gelöscht werden",
+  editSuccess: "Transaktion gespeichert",
+  editFailed: "Transaktion konnte nicht gespeichert werden",
+  editTransactionSource:
+    "Bearbeiten Sie unten den beancount-Quelltext. Eine veraltete Prüfsumme oder ungültiges beancount wird mit einem Fehler abgelehnt.",
+  editConflict:
+    "Die Transaktion wurde anderswo geändert. Bitte neu laden und erneut versuchen.",
+  // receipt capture
+  scanReceipt: "Beleg scannen",
+  receiptTakePhoto: "Foto aufnehmen",
+  receiptChooseLibrary: "Aus Mediathek wählen",
+  receiptFlash: "Blitz",
+  receiptRetake: "Neu",
+  receiptUpload: "Hochladen",
+  receiptOpenSettings: "Einstellungen öffnen",
+  receiptCancel: "Abbrechen",
+  receiptUploading: "Foto wird hochgeladen…",
+  receiptParsing: "Die KI liest Ihren Beleg…",
+  receiptRevealTitle: "Das haben wir gelesen",
+  // Deliberately a proposal: nothing is written to the ledger until the user
+  // saves on the next screen.
+  receiptRevealHint:
+    "Noch nichts gespeichert — prüfen Sie die Details im nächsten Schritt.",
+  total: "Summe",
+  receiptQuotaExhausted:
+    "KI-Kontingent aufgebraucht. Bitte upgraden Sie Ihren Tarif.",
+  receiptParseFailed:
+    "Beleg konnte nicht gelesen werden. Bitte erneut versuchen.",
+  receiptUploadFailed: "Hochladen fehlgeschlagen. Bitte erneut versuchen.",
+  receiptCameraPermission:
+    "Für das Foto Ihres Belegs wird Kamerazugriff benötigt. Aktivieren Sie ihn in den Einstellungen.",
+  receiptLibraryPermission:
+    "Für die Auswahl eines Belegs wird Zugriff auf die Mediathek benötigt. Aktivieren Sie ihn in den Einstellungen.",
+  // notifications
+  notificationsBell: "Mitteilungen",
+  notificationsTitle: "Mitteilungen",
+  notificationsErrorsSection: "Hauptbuch-Fehler",
+  notificationsChangesSection: "Letzte Änderungen",
+  notificationsLedgerHealthy: "Hauptbuch in Ordnung — keine Fehler.",
+  notificationsNoChanges: "Keine aktuellen Änderungen.",
+  // commit detail
+  commitDetailAuthor: "Autor",
+  commitDetailStats: "Statistik",
+  commitDetailFiles: "Dateien",
+  commitDetailDiff: "Diff",
+  commitDetailNoDiff: "Kein Diff verfügbar.",
+  commitDetailAdditions: "+{{count}} Zeilen",
+  commitDetailDeletions: "-{{count}} Zeilen",
+  // ledger file browser
+  ledgerLoadError: "Laden fehlgeschlagen",
+  ledgerEmpty: "Keine Dateien",
+  ledgerEmptyHint:
+    "Legen Sie hier eine Hauptbuchdatei an oder ziehen Sie zum Aktualisieren nach unten.",
+  ledgerRefreshHint: "Ziehen Sie nach unten, um diesen Ordner erneut zu laden.",
+  ledgerCreateFile: "Datei anlegen",
+  ledgerCreateFileTitle: "Neue Hauptbuchdatei",
+  ledgerCreateFileMessage:
+    "Geben Sie einen eindeutigen .bean- oder .beancount-Dateinamen ein. Ohne Endung wird .bean ergänzt.",
+  ledgerCreateFilePlaceholder: "investments.bean",
+  ledgerCreateFileSuccess: "{{name}} angelegt",
+  ledgerCreateFileFailed: "Datei konnte nicht angelegt werden",
+  ledgerDeleteFile: "{{name}} löschen",
+  ledgerDeleteFileTitle: "Hauptbuchdatei löschen",
+  ledgerDeleteFileMessage:
+    '"{{name}}" löschen? Das kann nicht rückgängig gemacht werden.',
+  ledgerDeleteFileConfirm: "Löschen",
+  ledgerDeleteFileSuccess: "{{name}} gelöscht",
+  ledgerDeleteFileFailed: "Datei konnte nicht gelöscht werden",
+  ledgerMainFileProtected: "main.bean kann nicht gelöscht werden",
+  // ledger file editor
+  ledgerEditorSave: "Speichern",
+  ledgerEditorSaving: "Speichern...",
+  ledgerEditorSaveSuccess: "Datei gespeichert",
+  ledgerEditorSaveFailed: "Speichern fehlgeschlagen",
+  ledgerEditorLoadFailed: "Datei konnte nicht geladen werden",
+  ledgerEditorUnsavedTitle: "Nicht gespeicherte Änderungen",
+  ledgerEditorUnsavedMessage: "Änderungen verwerfen?",
+  ledgerEditorDiscardChanges: "Verwerfen",
+  ledgerEditorConflictTitle: "Datei geändert",
+  ledgerEditorConflictMessage:
+    "Diese Datei wurde entfernt geändert. Lokale Änderungen verwerfen und neu laden?",
+  ledgerEditorReload: "Neu laden",
+  ledgerEditorKeepEditing: "Weiter bearbeiten",
+  ledgerEditorErrorCount: {
+    one: "{{count}} Fehler",
+    other: "{{count}} Fehler",
+  },
+  // budget — dated spending/income targets per account, stored as
+  // `custom "budget"` directives. Copy mirrors the dashboard's page.budget.*
+  // namespace so the two clients speak the same language.
   budgetActual: "Ist",
   budgetVariance: "Abweichung",
   budgetAboveTarget: "Über dem Ziel",
@@ -172,14 +380,17 @@ export const de: typeof en = {
   budgetIntervalMonthly: "Monatlich",
   budgetIntervalQuarterly: "Vierteljährlich",
   budgetIntervalYearly: "Jährlich",
+  // add / update budget
   budgetAdd: "Budget hinzufügen",
   budgetUpdate: "Budget aktualisieren",
+  budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountHelp:
     "Budgets gelten für ein Konto. Ein neuerer Eintrag für dasselbe Konto und dieselbe Währung gilt ab seinem Datum.",
   budgetInterval: "Intervall",
   budgetSelectInterval: "Intervall auswählen",
   budgetAmount: "Betrag",
   budgetSaveFailed: "Budget konnte nicht gespeichert werden",
+  // delete
   budgetDelete: "Löschen",
   budgetDeleteTitle: "Budget löschen",
   budgetDeleteMessage:

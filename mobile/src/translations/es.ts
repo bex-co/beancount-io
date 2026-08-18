@@ -1,4 +1,4 @@
-import { en } from "@/translations/en";
+import { en } from "./en";
 
 export const es: typeof en = {
   ...en,
@@ -14,7 +14,6 @@ export const es: typeof en = {
   reviewApp: "¿Te gusta? Deja una reseña :)",
   helpCenter: "Centro de ayuda",
   currentLanguage: "Idioma",
-
   currentVersion: "Versión",
   theme: "Tema",
   themeLight: "Claro",
@@ -37,6 +36,7 @@ export const es: typeof en = {
   deleteAccount: "Eliminar cuenta",
   deleteAccountDescription: "Eliminar permanentemente tu cuenta y datos",
   ledgerDescription: "Selecciona o cambia entre tus libros",
+  ledgers: "Libros",
   deleteAccountConfirmTitle: "Confirmar eliminación de cuenta",
   deleteAccountConfirmMessage:
     'Para confirmar, escribe "sudo delete my account" a continuación:',
@@ -53,6 +53,9 @@ export const es: typeof en = {
   password: "Contraseña",
   forgotPassword: "¿Olvidaste tu contraseña?",
   dontHaveAccount: "¿No tienes cuenta? Regístrate",
+  confirmPassword: "Confirmar contraseña",
+  alreadyHaveAccount: "¿Ya tienes una cuenta? Inicia sesión",
+  backToSignIn: "Volver a iniciar sesión",
   resetPassword: "Restablecer contraseña",
   resetPasswordDescription:
     "Introduce tu correo electrónico para recibir un enlace y restablecer la contraseña.",
@@ -64,6 +67,15 @@ export const es: typeof en = {
   expenses: "Gastos",
   income: "Ingresos",
   quickAdd: "Añadir rápido",
+  enterNewTransaction: "Registrar una transacción",
+  multiPostingsTitle: "Nueva transacción",
+  addPosting: "+ Añadir apunte",
+  remainderLabel: "Resto",
+  autoLabel: "auto",
+  postingAccount: "Elegir cuenta",
+  multiPostingsInvalidBalance: "Los apuntes deben sumar cero",
+  multiPostingsMissingAccount: "Cada apunte necesita una cuenta",
+  multiPostingsZeroAmount: "Cada apunte necesita un importe distinto de cero",
   accountPicker: "Selector de cuenta",
   accountPickerSearchPlaceholder: "Buscar cuentas",
   accountPickerRecent: "Recientes",
@@ -77,16 +89,23 @@ export const es: typeof en = {
   saveSuccess: "¡Transacción guardada!",
   saveFailed: "Error al guardar",
   amountEmptyError: "Por favor ingrese el monto",
+  accountEmptyError: "Elige la cuenta de origen y la de destino",
   netAssets: "Activos netos",
   accounts: "Cuentas",
+  // Column headers for the Accounts tab's balance table. Separate from the
+  // journal's `balance` key, which names the beancount directive.
+  account: "Cuenta",
+  accountBalance: "Saldo",
   monthlyNetIncome: "Ingresos netos mensuales",
   liabilities: "Pasivos",
   equity: "Patrimonio",
   noDataCharts: "Agregue datos rápidamente para mostrar gráficos",
+  notEnoughChartData: "Aún no hay datos suficientes para el gráfico",
   done: "Hecho",
   payee: "Beneficiario",
   narration: "Descripción",
   suggestions: "Sugerencias",
+  aiSuggestions: "Sugerencias de IA",
   from: "De",
   to: "A",
   date: "Fecha",
@@ -130,18 +149,61 @@ export const es: typeof en = {
   "10": "OCT",
   "11": "NOV",
   "12": "DIC",
-  // journal screen
+  // transactions screen
+  transactionsWelcomeTitle: "¡Bienvenido a tus transacciones! 🧾",
+  transactionsWelcomeMessage: "Todavía no has registrado ninguna transacción.",
+  transactionsWelcomeInstructions: "Para empezar:",
+  transactionsWelcomeInstruction1:
+    'Usa el botón "+" para registrar tu primera transacción',
+  transactionsWelcomeInstruction2:
+    "Sube archivos beancount desde la interfaz web",
+  transactionsWelcomeInstruction3: "Importa datos contables existentes",
+  transactionsWelcomeInstructionFinal:
+    "En cuanto añadas transacciones, aparecerán aquí.",
+  transactionsNoSearchResults:
+    "Ninguna transacción coincide con tu búsqueda o tus filtros.",
+  transactionsLoadError: "Error al cargar las transacciones: ",
+  // transactions filter modal
+  filters: "Filtros",
+  filterStatus: "Estado",
+  filterDateRange: "Periodo",
+  filterAccount: "Cuenta",
+  allAccounts: "Todas las cuentas",
+  rangeCustom: "Personalizado",
+  startDate: "Desde",
+  endDate: "Hasta",
+  apply: "Aplicar",
+  reset: "Restablecer",
+  // shared labels & the open-account flow
   transactions: "Transacciones",
   search: "Buscar",
   unknown: "Desconocido",
   openAccount: "Abrir cuenta",
+  accountType: "Tipo de cuenta",
+  currency: "Moneda",
+  openDate: "Fecha de apertura",
+  chooseAccountType: "Elige el tipo de cuenta",
+  chooseCurrency: "Elige la moneda",
+  openAccountNamePlaceholder: "Bank:Checking",
+  openAccountNoCurrency: "Sin moneda",
+  openAccountSaving: "Abriendo...",
+  openAccountFailed: "No se pudo abrir la cuenta. Inténtalo de nuevo.",
+  openAccountInvalidRoot: "Elige un tipo de cuenta válido.",
+  openAccountNameRequired: "Escribe al menos un componente del nombre.",
+  openAccountEmptyComponent:
+    "Los componentes del nombre no pueden estar vacíos.",
+  openAccountUppercaseComponent:
+    "Cada componente del nombre debe empezar por mayúscula.",
+  openAccountInvalidCharacters:
+    "Usa solo letras, números y guiones en los nombres de cuenta.",
   closeAccount: "Cerrar cuenta",
   transaction: "Transacción",
   loadingMore: "Cargando más...",
   noMoreEntries: "No hay más entradas",
+  noEntries: "Sin entradas",
   journalLoadError: "Error al cargar el diario: ",
   accountsPlural: "cuentas",
-  // journal entry context
+  // entry context (transactions screen)
   journalLoadingEntryContext: "Cargando contexto de entrada...",
   journalError: "Error",
   journalNoData: "No hay datos de contexto de entrada disponibles",
@@ -150,7 +212,151 @@ export const es: typeof en = {
   journalBalancesBefore: "Saldos antes de la entrada",
   journalBalancesAfter: "Saldos después de la entrada",
   journalSource: "Código fuente",
-  // budget
+  // directive types & entry filters
+  open: "Apertura",
+  close: "Cierre",
+  balance: "Saldo",
+  note: "Nota",
+  document: "Documento",
+  pad: "Ajuste",
+  price: "Precio",
+  custom: "Personalizada",
+  cleared: "Conciliada",
+  pending: "Pendiente",
+  other: "Otras",
+  discovered: "Encontrados",
+  linked: "Vinculados",
+  budget: "Presupuesto",
+  metadata: "Metadatos",
+  postings: "Apuntes",
+  details: "Detalles",
+  tags: "Etiquetas",
+  links: "Enlaces",
+  clearedTransactions: "Transacciones conciliadas",
+  pendingTransactions: "Transacciones pendientes",
+  otherTransactions: "Otras transacciones",
+  discoveredDocuments: "Documentos encontrados",
+  linkedDocuments: "Documentos vinculados",
+  budgetEntries: "Entradas de presupuesto",
+  toggleMetadata: "Mostrar u ocultar metadatos",
+  togglePostings: "Mostrar u ocultar apuntes",
+  // reports tab
+  reports: "Informes",
+  netProfit: "Beneficio neto",
+  // feed
+  latestUpdates: "Últimos cambios",
+  // home dashboard
+  seeAll: "Ver todo",
+  netWorth: "Patrimonio neto",
+  noAccounts: "Sin cuentas",
+  recentTransactions: "Transacciones recientes",
+  recentTransactionsEmpty: "Todavía no hay transacciones",
+  spending: "Gastos",
+  spendingSubtitle: "Este mes frente al anterior",
+  thisMonth: "Este mes",
+  lastMonth: "Mes pasado",
+  range1M: "1M",
+  range3M: "3M",
+  range6M: "6M",
+  rangeYTD: "AÑO",
+  range1Y: "1A",
+  rangeLastYear: "AA",
+  rangeAll: "TODO",
+  tes: "1",
+  // edit / delete transaction
+  editTransaction: "Editar transacción",
+  deleteTransaction: "Eliminar",
+  deleteTransactionTitle: "Eliminar transacción",
+  deleteTransactionMessage:
+    "¿Seguro que quieres eliminar esta transacción? Esta acción no se puede deshacer.",
+  deleteSuccess: "Transacción eliminada",
+  deleteFailed: "Error al eliminar la transacción",
+  editSuccess: "Transacción guardada",
+  editFailed: "Error al guardar la transacción",
+  editTransactionSource:
+    "Edita el código beancount original abajo. Una suma de comprobación caducada o un beancount no válido se rechazará con un error.",
+  editConflict:
+    "La transacción se modificó en otro sitio. Vuelve a cargarla e inténtalo de nuevo.",
+  // receipt capture
+  scanReceipt: "Escanear recibo",
+  receiptTakePhoto: "Hacer una foto",
+  receiptChooseLibrary: "Elegir de la galería",
+  receiptFlash: "Flash",
+  receiptRetake: "Repetir",
+  receiptUpload: "Subir",
+  receiptOpenSettings: "Abrir Ajustes",
+  receiptCancel: "Cancelar",
+  receiptUploading: "Subiendo la foto…",
+  receiptParsing: "La IA está leyendo tu recibo…",
+  receiptRevealTitle: "Esto es lo que hemos leído",
+  // Deliberately a proposal: nothing is written to the ledger until the user
+  // saves on the next screen.
+  receiptRevealHint:
+    "Todavía no se ha guardado nada: revisa los detalles en la pantalla siguiente.",
+  total: "Total",
+  receiptQuotaExhausted: "Has agotado tu cuota de IA. Mejora tu plan.",
+  receiptParseFailed: "No se pudo leer el recibo. Inténtalo de nuevo.",
+  receiptUploadFailed: "Error al subir. Inténtalo de nuevo.",
+  receiptCameraPermission:
+    "Se necesita acceso a la cámara para fotografiar tu recibo. Actívalo en Ajustes.",
+  receiptLibraryPermission:
+    "Se necesita acceso a la galería para elegir un recibo. Actívalo en Ajustes.",
+  // notifications
+  notificationsBell: "Notificaciones",
+  notificationsTitle: "Notificaciones",
+  notificationsErrorsSection: "Errores del libro",
+  notificationsChangesSection: "Cambios recientes",
+  notificationsLedgerHealthy: "El libro está en orden: sin errores.",
+  notificationsNoChanges: "Sin cambios recientes.",
+  // commit detail
+  commitDetailAuthor: "Autor",
+  commitDetailStats: "Estadísticas",
+  commitDetailFiles: "Archivos",
+  commitDetailDiff: "Diferencias",
+  commitDetailNoDiff: "No hay diferencias disponibles.",
+  commitDetailAdditions: "+{{count}} líneas",
+  commitDetailDeletions: "-{{count}} líneas",
+  // ledger file browser
+  ledgerLoadError: "Error al cargar",
+  ledgerEmpty: "Sin archivos",
+  ledgerEmptyHint:
+    "Crea aquí un archivo del libro o desliza hacia abajo para actualizar.",
+  ledgerRefreshHint: "Desliza hacia abajo para volver a cargar esta carpeta.",
+  ledgerCreateFile: "Crear archivo",
+  ledgerCreateFileTitle: "Nuevo archivo del libro",
+  ledgerCreateFileMessage:
+    "Escribe un nombre único de archivo .bean o .beancount. Si omites la extensión, se añade .bean.",
+  ledgerCreateFilePlaceholder: "investments.bean",
+  ledgerCreateFileSuccess: "{{name}} creado",
+  ledgerCreateFileFailed: "Error al crear el archivo",
+  ledgerDeleteFile: "Eliminar {{name}}",
+  ledgerDeleteFileTitle: "Eliminar archivo del libro",
+  ledgerDeleteFileMessage: '¿Eliminar "{{name}}"? Esto no se puede deshacer.',
+  ledgerDeleteFileConfirm: "Eliminar",
+  ledgerDeleteFileSuccess: "{{name}} eliminado",
+  ledgerDeleteFileFailed: "Error al eliminar el archivo",
+  ledgerMainFileProtected: "main.bean no se puede eliminar",
+  // ledger file editor
+  ledgerEditorSave: "Guardar",
+  ledgerEditorSaving: "Guardando...",
+  ledgerEditorSaveSuccess: "Archivo guardado",
+  ledgerEditorSaveFailed: "Error al guardar",
+  ledgerEditorLoadFailed: "Error al cargar el archivo",
+  ledgerEditorUnsavedTitle: "Cambios sin guardar",
+  ledgerEditorUnsavedMessage: "¿Descartar tus cambios?",
+  ledgerEditorDiscardChanges: "Descartar",
+  ledgerEditorConflictTitle: "Archivo modificado",
+  ledgerEditorConflictMessage:
+    "Este archivo cambió en el servidor. ¿Descartar los cambios locales y volver a cargar?",
+  ledgerEditorReload: "Recargar",
+  ledgerEditorKeepEditing: "Seguir editando",
+  ledgerEditorErrorCount: {
+    one: "{{count}} error",
+    other: "{{count}} errores",
+  },
+  // budget — dated spending/income targets per account, stored as
+  // `custom "budget"` directives. Copy mirrors the dashboard's page.budget.*
+  // namespace so the two clients speak the same language.
   budgetActual: "Real",
   budgetVariance: "Diferencia",
   budgetAboveTarget: "Por encima del objetivo",
@@ -171,14 +377,17 @@ export const es: typeof en = {
   budgetIntervalMonthly: "Mensual",
   budgetIntervalQuarterly: "Trimestral",
   budgetIntervalYearly: "Anual",
+  // add / update budget
   budgetAdd: "Agregar presupuesto",
   budgetUpdate: "Actualizar presupuesto",
+  budgetAccountPlaceholder: "Expenses:Groceries",
   budgetAccountHelp:
     "Los presupuestos se aplican a una cuenta. Una entrada más reciente para la misma cuenta y moneda entra en vigor en su fecha.",
   budgetInterval: "Intervalo",
   budgetSelectInterval: "Seleccionar intervalo",
   budgetAmount: "Monto",
   budgetSaveFailed: "Error al guardar el presupuesto",
+  // delete
   budgetDelete: "Eliminar",
   budgetDeleteTitle: "Eliminar presupuesto",
   budgetDeleteMessage:
