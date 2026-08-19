@@ -1,12 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import {
-  GestureResponderEvent,
-  PanResponder,
-  StyleSheet,
-  Text,
-  View,
-} from "react-native";
-import { GestureDetector } from "react-native-gesture-handler";
+import { StyleSheet, Text, View } from "react-native";
+import { Gesture, GestureDetector } from "react-native-gesture-handler";
 import Svg, {
   Path,
   Circle,
@@ -16,7 +10,9 @@ import Svg, {
   Stop,
 } from "react-native-svg";
 import Animated, {
+  SharedValue,
   useAnimatedProps,
+  useAnimatedReaction,
   useSharedValue,
   withTiming,
 } from "react-native-reanimated";
@@ -37,11 +33,27 @@ import { ColorTheme } from "@/types/theme-props";
 import { polylineLength } from "./utils";
 import { useEntranceProgress } from "./use-entrance-progress";
 import { lerp, lerpSeries, resampleSeries, sameSeries } from "./series-morph";
+import {
+  SCRUB_IDLE,
+  activeScrubIndex,
+  scrubIndexForX,
+  scrubbedValue,
+  shouldTickHaptic,
+  shownScrubIndex,
+} from "./scrub";
 import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
 
-// Created once at module scope: building this inside the component would give
-// React a new component type on every render and remount the path each time.
+// Created once at module scope: building these inside the component would give
+// React a new component type on every render and remount the node each time.
 const AnimatedPath = Animated.createAnimatedComponent(Path);
+const AnimatedLine = Animated.createAnimatedComponent(Line);
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+// Module scope for the same reason the animated components are: `scheduleOnRN`
+// captures the function into the worklet, and a fresh closure per render would
+// re-upload the gesture's worklets on every re-render.
+const fireTouchInHaptic = () => haptics.press();
+const fireScrubTick = () => haptics.selection();
 
 type InteractiveLineChartProps = {
   /**
@@ -275,6 +287,101 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
+type ScrubHeaderProps = {
+  labels: string[];
+  numbers: number[];
+  currency: string;
+  /** Trend color for the change row, resolved by the chart so the line and the figure can never disagree. */
+  color: string;
+  scrub: SharedValue<number>;
+};
+
+/**
+ * The figure under the finger: headline value, change against the period start,
+ * and the scrubbed month.
+ *
+ * Its own component, and that is the point. Text is the one part of a scrub
+ * React still has to draw — the alternative, an animated `TextInput` `value`,
+ * was weighed and rejected for this headline in `w1/m20/t003`: it announces
+ * itself to VoiceOver as an editable field, and driving it would put a second
+ * copy of the currency-formatting rules on the UI thread to drift from
+ * `number-utils`. So the render stays, and what changes is its blast radius.
+ * Subscribing here rather than in the chart keeps it to three `Text` nodes
+ * instead of the whole card — crucially not the sibling `<Svg>`, where any
+ * prop change repaints every node in the tree.
+ *
+ * It is also gated on the *index*, not the frame: the state only moves when the
+ * cursor crosses to another data point, so there is no frame on which this
+ * re-renders and the pixels come out the same.
+ */
+function ScrubHeader({
+  labels,
+  numbers,
+  currency,
+  color,
+  scrub,
+}: ScrubHeaderProps): JSX.Element {
+  const styles = useThemeStyle(getStyles);
+  const { t } = useTranslations();
+
+  const [index, setIndex] = useState(SCRUB_IDLE);
+  useAnimatedReaction(
+    () => scrub.value,
+    (current, previous) => {
+      if (current !== previous) {
+        scheduleOnRN(setIndex, current);
+      }
+    },
+  );
+
+  const count = numbers.length;
+  const shownIndex = shownScrubIndex(index, count);
+  const shownValue = scrubbedValue(numbers, index);
+  const scrubbing = index !== SCRUB_IDLE && count > 0;
+
+  // Same formatter the resting frame uses, so the counting frames and the final
+  // one differ only in the number.
+  const formatHeadline = useCallback(
+    (value: number) => formatSignedMoneyWithCurrency(value, currency),
+    [currency],
+  );
+
+  const baseline = numbers[0] ?? 0;
+  const change = shownValue - baseline;
+  const changePct = baseline !== 0 ? (change / Math.abs(baseline)) * 100 : 0;
+  const changeText = `${formatSignedMoneyWithCurrency(change, currency, true)} (${
+    change >= 0 ? "+" : ""
+  }${changePct.toFixed(2)}%)`;
+
+  // The heading stays put while scrubbing: where it is the card's only title,
+  // swapping it for a month would leave the card unlabeled mid-gesture. The
+  // scrubbed month rides along with the change row instead, where it reads as
+  // "period start → this month" rather than as a replacement identity.
+  const scrubLabel =
+    scrubbing && labels[shownIndex] !== undefined
+      ? t(labels[shownIndex])
+      : null;
+
+  return (
+    <>
+      <AnimatedAmount
+        value={shownValue}
+        format={formatHeadline}
+        // Bypassed while a finger is down: a scrubbed figure has to land on
+        // the exact point under the touch, and a tween there reads as lag.
+        animate={!scrubbing}
+        style={styles.headline}
+      />
+      <View style={styles.changeRow}>
+        <AmountText style={[styles.change, { color }]}>{changeText}</AmountText>
+        {scrubLabel !== null && (
+          <Text style={styles.scrubLabel}>{`· ${scrubLabel}`}</Text>
+        )}
+      </View>
+    </>
+  );
+}
+
 function InteractiveLineChart({
   label,
   labels,
@@ -292,30 +399,35 @@ function InteractiveLineChart({
   const count = numbers.length;
   const hasSeries = count > 1;
 
-  // Active scrub index (null when the finger is lifted).
-  const [scrubIndex, setScrubIndex] = useState<number | null>(null);
-  const lastIndexRef = useRef<number | null>(null);
+  // Active scrub index, `SCRUB_IDLE` when no finger is down. A shared value
+  // rather than React state: the gesture writes it on the UI thread and every
+  // scrub visual reads it there, so a finger moving across the plot never
+  // enters React at all.
+  const scrub = useSharedValue(SCRUB_IDLE);
 
   const geometry = useMemo(
     () => ({ chartWidth, height }),
     [chartWidth, height],
   );
 
-  const { xFor, yFor, linePath, areaPath, baselineY, lineLength } =
-    useMemo(() => {
-      const paths = buildPaths(numbers, computeDomain(numbers), geometry);
-      return {
-        xFor: paths.xFor,
-        yFor: paths.yFor,
-        linePath: paths.linePath,
-        areaPath: paths.areaPath,
-        baselineY: paths.yFor(numbers[0]),
-        lineLength: polylineLength(
-          numbers.map((_, i) => paths.xFor(i)),
-          numbers.map((v) => paths.yFor(v)),
-        ),
-      };
-    }, [numbers, geometry]);
+  // `pointXs` / `pointYs` are the whole reason the scrub can run on the UI
+  // thread: the d3 scales that produced them cannot cross to it (see
+  // `buildPaths`), but two `number[]`s of plotted positions can, and indexing
+  // them is all a cursor needs.
+  const { linePath, areaPath, pointXs, pointYs, lineLength } = useMemo(() => {
+    const paths = buildPaths(numbers, computeDomain(numbers), geometry);
+    const xs = numbers.map((_, i) => paths.xFor(i));
+    const ys = numbers.map((v) => paths.yFor(v));
+    return {
+      linePath: paths.linePath,
+      areaPath: paths.areaPath,
+      pointXs: xs,
+      pointYs: ys,
+      lineLength: polylineLength(xs, ys),
+    };
+  }, [numbers, geometry]);
+
+  const baselineY = pointYs[0] ?? 0;
 
   // Entrance progress, 0 → 1. The stroke carries a dash as long as the whole
   // path, so animating the offset from that length down to zero walks the line
@@ -343,8 +455,8 @@ function InteractiveLineChart({
     if (!previous || !hasSeries || previous.length < 2) {
       return;
     }
-    // Re-renders hand back equal-but-new arrays constantly (every scrub tick,
-    // every theme change). Only an actual change in the curve is a transition.
+    // Re-renders hand back equal-but-new arrays constantly (a theme switch, a
+    // parent's refetch). Only an actual change in the curve is a transition.
     if (sameSeries(previous, numbers)) {
       return;
     }
@@ -408,78 +520,108 @@ function InteractiveLineChart({
   });
 
   const baseline = numbers[0] ?? 0;
-  const shownIndex = scrubIndex ?? count - 1;
-  const shownValue = numbers[shownIndex] ?? 0;
-  const isUp = shownValue >= baseline;
-  const lineColor = isUp ? theme.success : theme.error;
 
-  // Same formatter the resting frame uses, so the counting frames and the final
-  // one differ only in the number.
-  const formatHeadline = useCallback(
-    (value: number) => formatSignedMoneyWithCurrency(value, currency),
-    [currency],
+  // Whether the shown point is up on the period start — `null` while no finger
+  // is down, so the resting direction is used.
+  //
+  // The one piece of the scrub that still goes through React, and deliberately.
+  // The trend color reaches the gradient under the area, and a `<Stop>` renders
+  // no native node at all (`Stop.render()` returns `null`; `LinearGradient`
+  // flattens its children into one prop), so no animated prop can touch it.
+  // What keeps that honest is the gate: this fires when the scrub *crosses the
+  // baseline*, not per frame and not per point. Every render it causes is a
+  // color change that had to be painted anyway.
+  const [scrubUp, setScrubUp] = useState<boolean | null>(null);
+  const restingUp = (numbers[count - 1] ?? 0) >= baseline;
+  const lineColor = (scrubUp ?? restingUp) ? theme.success : theme.error;
+
+  // Read off the plotted y positions rather than the values behind them: the
+  // cursor worklets already hold `pointYs`, so asking it here costs no second
+  // array on the UI thread — and neither call site memoizes the `numbers` prop,
+  // so capturing that one would re-upload the whole series to the UI runtime on
+  // every unrelated re-render of the card. SVG y grows downward, so "above the
+  // period start" is the *smaller* y.
+  useAnimatedReaction(
+    () => {
+      const index = activeScrubIndex(scrub.value, pointYs.length);
+      return index === SCRUB_IDLE ? null : pointYs[index] <= baselineY;
+    },
+    (up, previous) => {
+      if (up !== previous) {
+        scheduleOnRN(setScrubUp, up);
+      }
+    },
   );
 
-  const change = shownValue - baseline;
-  const changePct = baseline !== 0 ? (change / Math.abs(baseline)) * 100 : 0;
-  const changeText = `${formatSignedMoneyWithCurrency(change, currency, true)} (${
-    change >= 0 ? "+" : ""
-  }${changePct.toFixed(2)}%)`;
+  // Per-data-point selection tick. `expo-haptics` is an async native module and
+  // cannot run in a worklet, so the reaction decides on the UI thread and only
+  // the firing hops to JS.
+  useAnimatedReaction(
+    () => scrub.value,
+    (current, previous) => {
+      if (shouldTickHaptic(previous, current)) {
+        scheduleOnRN(fireScrubTick);
+      }
+    },
+  );
 
-  const indexFromTouch = (event: GestureResponderEvent): number => {
-    const x = event.nativeEvent.locationX;
-    const clamped = Math.max(PAD_X, Math.min(chartWidth - PAD_X, x));
-    const ratio = (clamped - PAD_X) / (chartWidth - PAD_X * 2);
-    return Math.max(0, Math.min(count - 1, Math.round(ratio * (count - 1))));
-  };
-
-  const updateScrub = (event: GestureResponderEvent) => {
-    const index = indexFromTouch(event);
-    if (index !== lastIndexRef.current) {
-      lastIndexRef.current = index;
-      setScrubIndex(index);
-      // Gated on the index changing, not on the touch moving: at frame rate a
-      // selection tick reads as a buzz.
-      haptics.selection();
-    }
-  };
-
-  const panResponder = useMemo(
+  const scrubGesture = useMemo(
     () =>
-      PanResponder.create({
-        onStartShouldSetPanResponder: () => hasSeries,
-        onMoveShouldSetPanResponder: () => hasSeries,
-        // Once a scrub owns the touch, refuse handoff requests from ancestors:
-        // a scrub that reaches the edge of the plot is still a scrub.
-        onPanResponderTerminationRequest: () => false,
-        onPanResponderGrant: (event) => {
-          // Light impact on initial touch (Robinhood-style "tap-in" feel),
-          // then set the index directly — no tick on the first point.
-          const index = indexFromTouch(event);
-          lastIndexRef.current = index;
-          setScrubIndex(index);
-          haptics.press();
-        },
-        onPanResponderMove: (event) => updateScrub(event),
-        onPanResponderRelease: () => {
-          lastIndexRef.current = null;
-          setScrubIndex(null);
-        },
-        onPanResponderTerminate: () => {
-          lastIndexRef.current = null;
-          setScrubIndex(null);
-        },
-      }),
-    // Recreate only when the series identity changes.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-    [hasSeries, count, chartWidth],
+      Gesture.Pan()
+        .enabled(hasSeries)
+        // Claims the touch on contact, the way the `PanResponder` this replaces
+        // did: a scrub starts at the point you put your finger on, not after a
+        // threshold, and the plot keeps owning vertical drags that begin on it.
+        .minDistance(0)
+        // The swipe-owner marker sits on an ancestor and must stay in BEGAN for
+        // the life of the touch — it is what stands the ledger drawer's edge
+        // swipe down. Without this relation, activating the scrub would cancel
+        // the marker and hand the drawer back a gesture mid-scrub.
+        .simultaneousWithExternalGesture(swipeOwner)
+        .onBegin((event) => {
+          // Light impact on initial touch (Robinhood-style "tap-in" feel), and
+          // no tick for the point it lands on — the impact already announced it.
+          scrub.value = scrubIndexForX(event.x, chartWidth, count, PAD_X);
+          scheduleOnRN(fireTouchInHaptic);
+        })
+        .onUpdate((event) => {
+          scrub.value = scrubIndexForX(event.x, chartWidth, count, PAD_X);
+        })
+        // `onFinalize` rather than `onEnd`: a touch that never moved enough to
+        // activate still put a cursor on the plot in `onBegin`, and it has to
+        // come back off.
+        .onFinalize(() => {
+          scrub.value = SCRUB_IDLE;
+        }),
+    [hasSeries, chartWidth, count, scrub, swipeOwner],
   );
 
-  // The heading stays put while scrubbing: where it is the card's only title,
-  // swapping it for a month would leave the card unlabeled mid-gesture. The
-  // scrubbed month rides along with the change row instead, where it reads as
-  // "period start → this month" rather than as a replacement identity.
-  const scrubLabel = scrubIndex !== null ? t(labels[scrubIndex]) : null;
+  const guideAnimatedProps = useAnimatedProps(() => {
+    const index = activeScrubIndex(scrub.value, pointXs.length);
+    const active = index !== SCRUB_IDLE;
+    // Show/hide as opacity rather than as conditional JSX: mounting a node
+    // mid-gesture is a React render, which is the thing this is avoiding.
+    return {
+      opacity: active ? 1 : 0,
+      x1: active ? pointXs[index] : 0,
+      x2: active ? pointXs[index] : 0,
+    };
+  });
+
+  const cursorAnimatedProps = useAnimatedProps(() => {
+    const index = activeScrubIndex(scrub.value, pointXs.length);
+    const active = index !== SCRUB_IDLE;
+    return {
+      opacity: active ? 1 : 0,
+      cx: active ? pointXs[index] : 0,
+      cy: active ? pointYs[index] : 0,
+    };
+  });
+
+  // The resting end dot and the cursor are never on screen together.
+  const endDotAnimatedProps = useAnimatedProps(() => ({
+    opacity: scrub.value === SCRUB_IDLE ? 1 : 0,
+  }));
 
   return (
     // Owner marker covers the header/labels too, so swipes starting above the
@@ -488,114 +630,105 @@ function InteractiveLineChart({
       <View>
         <View style={styles.header}>
           {label !== undefined && <Text style={styles.label}>{label}</Text>}
-          <AnimatedAmount
-            value={shownValue}
-            format={formatHeadline}
-            // Bypassed while a finger is down: a scrubbed figure has to land on
-            // the exact point under the touch, and a tween there reads as lag.
-            animate={scrubIndex === null}
-            style={styles.headline}
+          <ScrubHeader
+            labels={labels}
+            numbers={numbers}
+            currency={currency}
+            color={lineColor}
+            scrub={scrub}
           />
-          <View style={styles.changeRow}>
-            <AmountText style={[styles.change, { color: lineColor }]}>
-              {changeText}
-            </AmountText>
-            {scrubLabel !== null && (
-              <Text style={styles.scrubLabel}>{`· ${scrubLabel}`}</Text>
-            )}
-          </View>
         </View>
 
-        <View
-          style={[styles.chartContainer, { width: chartWidth, height }]}
-          {...panResponder.panHandlers}
-        >
-          <Svg width={chartWidth} height={height}>
-            <Defs>
-              <LinearGradient id="netWorthFill" x1="0" y1="0" x2="0" y2="1">
-                <Stop offset="0" stopColor={lineColor} stopOpacity={0.22} />
-                <Stop offset="1" stopColor={lineColor} stopOpacity={0} />
-              </LinearGradient>
-            </Defs>
+        <GestureDetector gesture={scrubGesture}>
+          <View style={[styles.chartContainer, { width: chartWidth, height }]}>
+            <Svg width={chartWidth} height={height}>
+              <Defs>
+                <LinearGradient id="netWorthFill" x1="0" y1="0" x2="0" y2="1">
+                  <Stop offset="0" stopColor={lineColor} stopOpacity={0.22} />
+                  <Stop offset="1" stopColor={lineColor} stopOpacity={0} />
+                </LinearGradient>
+              </Defs>
 
-            {hasSeries && (
-              <AnimatedPath
-                d={areaPath}
-                fill="url(#netWorthFill)"
-                animatedProps={areaAnimatedProps}
-              />
-            )}
+              {hasSeries && (
+                <AnimatedPath
+                  d={areaPath}
+                  fill="url(#netWorthFill)"
+                  animatedProps={areaAnimatedProps}
+                />
+              )}
 
-            {/* Dashed baseline at the period-start value */}
-            {hasSeries && (
-              <Line
-                x1={PAD_X}
-                x2={chartWidth - PAD_X}
-                y1={baselineY}
-                y2={baselineY}
-                stroke={theme.black40}
-                strokeDasharray="4,3"
-                strokeWidth={1}
-              />
-            )}
-
-            {hasSeries && (
-              <AnimatedPath
-                d={linePath}
-                fill="none"
-                stroke={lineColor}
-                strokeWidth={2.5}
-                // Numeric from the very first frame. Transitioning
-                // strokeDasharray/strokeDashoffset out of `undefined` silently
-                // does nothing on iOS, so the dash must never start unset.
-                strokeDasharray={[dashLength, dashLength]}
-                animatedProps={lineAnimatedProps}
-              />
-            )}
-
-            {/* Scrub cursor: vertical guide + dot on the line */}
-            {scrubIndex !== null && (
-              <>
+              {/* Dashed baseline at the period-start value */}
+              {hasSeries && (
                 <Line
-                  x1={xFor(scrubIndex)}
-                  x2={xFor(scrubIndex)}
-                  y1={PAD_TOP}
-                  y2={height - PAD_BOTTOM}
+                  x1={PAD_X}
+                  x2={chartWidth - PAD_X}
+                  y1={baselineY}
+                  y2={baselineY}
                   stroke={theme.black40}
+                  strokeDasharray="4,3"
                   strokeWidth={1}
                 />
-                <Circle
-                  cx={xFor(scrubIndex)}
-                  cy={yFor(numbers[scrubIndex])}
-                  r={5}
+              )}
+
+              {hasSeries && (
+                <AnimatedPath
+                  d={linePath}
+                  fill="none"
+                  stroke={lineColor}
+                  strokeWidth={2.5}
+                  // Numeric from the very first frame. Transitioning
+                  // strokeDasharray/strokeDashoffset out of `undefined` silently
+                  // does nothing on iOS, so the dash must never start unset.
+                  strokeDasharray={[dashLength, dashLength]}
+                  animatedProps={lineAnimatedProps}
+                />
+              )}
+
+              {/* Scrub cursor: vertical guide + dot on the line. Mounted for
+                  the life of the chart and hidden with opacity — a node that
+                  appears when the finger lands is a React render mid-gesture. */}
+              {hasSeries && (
+                <>
+                  <AnimatedLine
+                    y1={PAD_TOP}
+                    y2={height - PAD_BOTTOM}
+                    stroke={theme.black40}
+                    strokeWidth={1}
+                    animatedProps={guideAnimatedProps}
+                  />
+                  <AnimatedCircle
+                    r={5}
+                    fill={lineColor}
+                    stroke={theme.white}
+                    strokeWidth={2}
+                    animatedProps={cursorAnimatedProps}
+                  />
+                </>
+              )}
+
+              {/* Resting end dot showing the latest value */}
+              {hasSeries && (
+                <AnimatedCircle
+                  cx={pointXs[count - 1]}
+                  cy={pointYs[count - 1]}
+                  r={4}
                   fill={lineColor}
                   stroke={theme.white}
                   strokeWidth={2}
+                  animatedProps={endDotAnimatedProps}
                 />
-              </>
-            )}
+              )}
+            </Svg>
 
-            {/* Resting end dot showing the latest value */}
-            {hasSeries && scrubIndex === null && (
-              <Circle
-                cx={xFor(count - 1)}
-                cy={yFor(numbers[count - 1])}
-                r={4}
-                fill={lineColor}
-                stroke={theme.white}
-                strokeWidth={2}
-              />
+            {!hasSeries && (
+              <View style={styles.placeholder} pointerEvents="none">
+                <Text style={styles.placeholderText}>
+                  {placeholder ?? t("notEnoughChartData")}
+                </Text>
+              </View>
             )}
-          </Svg>
-
-          {!hasSeries && (
-            <View style={styles.placeholder} pointerEvents="none">
-              <Text style={styles.placeholderText}>
-                {placeholder ?? t("notEnoughChartData")}
-              </Text>
-            </View>
-          )}
-        </View>
+          </View>
+        </GestureDetector>
       </View>
     </GestureDetector>
   );

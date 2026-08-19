@@ -1,18 +1,18 @@
 # w1 · m26 — UI-thread scrubbing for the interactive line chart
 
-**Worker:** worker1 **Goal:** The chart scrub that already ships — guide line, cursor dot, per-point haptic tick, headline swap — stops re-rendering the card in React on every finger move and runs on the UI thread, Monarch/Robinhood-smooth. **Status:** todo
+**Worker:** worker1 **Goal:** The chart scrub that already ships — guide line, cursor dot, per-point haptic tick, headline swap — stops re-rendering the card in React on every finger move and runs on the UI thread, Monarch/Robinhood-smooth. **Status:** **done** 2026-08-18 — scrub runs on the UI thread with no React render per frame; drag behaviour A/B-identical to the PanResponder it replaces; 1341 unit tests green
 
 ## Tasks (in order)
 
-| id   | title                                                             | est | depends_on       |
-| ---- | ----------------------------------------------------------------- | --- | ---------------- |
-| t001 | Migrate `PanResponder` + state to `Gesture.Pan()` + shared values | 50m | w1/m20/t009      |
-| t002 | Guide line and cursor dot via `useAnimatedProps`                  | 40m | t001             |
-| t003 | Haptic ticks from `useAnimatedReaction` via `scheduleOnRN`        | 30m | t001             |
-| t004 | Scrubbed headline value driven from the UI thread                 | 40m | t002             |
-| t005 | UX pass — light/dark, reduce-motion, gesture arbitration          | 30m | t002, t003, t004 |
-| t006 | Simplify pass over the scrub diff                                 | 25m | t005             |
-| t007 | Unit tests for the scrub math                                     | 40m | t005             |
+| id   | title                                                             | est | depends_on                  |
+| ---- | ----------------------------------------------------------------- | --- | --------------------------- |
+| t001 | Migrate `PanResponder` + state to `Gesture.Pan()` + shared values | 50m | w1/m20/t009 — **DONE**      |
+| t002 | Guide line and cursor dot via `useAnimatedProps`                  | 40m | t001 — **DONE**             |
+| t003 | Haptic ticks from `useAnimatedReaction` via `scheduleOnRN`        | 30m | t001 — **DONE**             |
+| t004 | Scrubbed headline value driven from the UI thread                 | 40m | t002 — **DONE**             |
+| t005 | UX pass — light/dark, reduce-motion, gesture arbitration          | 30m | t002, t003, t004 — **DONE** |
+| t006 | Simplify pass over the scrub diff                                 | 25m | t005 — **DONE**             |
+| t007 | Unit tests for the scrub math                                     | 40m | t005 — **DONE**             |
 
 ## Definition of done
 

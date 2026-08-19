@@ -28,7 +28,7 @@
 - [x] **m23** — One loading and feedback vocabulary across the app (7 tasks) ← inbox `015` + `016` + `017` + `018`, promoted in the same pass; sequence after m20
 - [x] **m24** — Controls you can see: fix the light neutral ramp, then share the primitives (8 tasks) ← inbox `010` + `011`, promoted in the same pass; shipped 2026-08-17 on top of `m20/t011`
 - [ ] **m25** — Inline `open`-directive creation from the account picker (7 tasks) ← inbox `009`, promoted 2026-08-17 — m16 + m17 shipped both prerequisites
-- [ ] **m26** — UI-thread scrubbing for the interactive line chart (7 tasks) ← inbox `019`, promoted 2026-08-17 — sequenced after `m20/t009`, same file
+- [x] **m26** — UI-thread scrubbing for the interactive line chart (7 tasks) ← inbox `019`, promoted 2026-08-17 — sequenced after `m20/t009`, same file
 - ~~**m27** — Localize the AI receipt capture flow~~ — **deleted 2026-08-17**: strictly subsumed by **m29**. Its ~21 receipt keys are part of the 148 keys missing in _all twelve_ locales, so every m27 task is a subset of an m29 locale task; its receipt-flow UX walk survives as a named step in `m29/t009`. Its research is preserved in git history at this path.
 - [ ] **m28** — Home cards tap through; bad routes fall back (8 tasks) ← inbox `024` + `026`, promoted 2026-08-17 — bundled by their shared tap/deep-link verification loop
 - [x] **m29** — Translation integrity gate, then the six largest locales (11 tasks) ← from `/pm` request 2026-08-17 ("add tests to check translation integrity, en as the source … no missing, no extra, and then translate missing items"); supersedes m27; shipped 2026-08-17
