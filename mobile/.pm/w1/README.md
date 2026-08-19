@@ -35,6 +35,31 @@
 - [x] **m30** — The last six locales, and the gate goes unconditional (10 tasks) ← same request, split off by size — twelve locales at ~170 keys each is roughly ten hours; shipped 2026-08-17 — all thirteen locales now declare the same 329 keys, and the gate is unconditional
 - [x] **m31** — Right-to-left layout for Persian (10 tasks) ← from the `m30` outcome note, which names this gap and rules it out of scope in the same sentence; shipped 2026-08-17 — Persian now lays out right-to-left, English is unchanged, and two React Native RTL defaults that fight each other are written down in the milestone's outcome note
 - ~~**008** — v2 native code-editor module (Runestone + sora-editor)~~ — **deleted 2026-08-17**: 12–19 person-days plus permanent maintenance of two native deps, gated on a product signal ("only if requirements outgrow the 7-color approach") that has not appeared since m15 shipped. The research survives in git history at this note's path.
+- [ ] **m32** — Ask Beancount.io on mobile: core agent chat (10 tasks) ← inbox `006`, promoted 2026-08-18 after its blocker dissolved; scoped by `docs/ADR002-mobile-ai-assistant.md` (P0 + P1)
+
+## Ask-AI unblocked, promoted — 2026-08-18
+
+`006` sat parked on "no agent/chat operations in the mobile schema" — a correct
+observation at the wrong layer. The agent surface is not GraphQL: it is
+`POST /api-gateway/agent`, REST + SSE speaking the AI SDK UIMessage stream, and
+its auth resolves `Authorization: Bearer` **first** — a header path that exists
+expressly for API clients and the mobile app. Which is why enumerating the
+GraphQL roots (74/60/9) could never find it.
+
+The full design landed the same day as `docs/ADR002-mobile-ai-assistant.md`:
+protocol notes, the two-dependency decision (`ai` + `@ai-sdk/react`,
+dashboard-matched), phasing P0–P4, and the security posture from its review —
+deep links **prefill, never auto-submit**, and write tools are refused with a
+"continue on the web" notice until approval cards can render the real diff (P2).
+Entry design (2026-08-18 owner discussion): no sixth tab — a Home ask card with
+preset chips is the primary entry, a Home header icon the persistent one.
+
+`006` → **m32**, scoped to ADR P0 + P1: a thirty-minute Bearer/streaming smoke
+gates everything, then core chat, dead-end-free states, the guard, and the
+entries. Approvals (P2), attachments (P3), and per-screen contextual entries
+stay in the ADR until the transport is proven. In this milestone the agent
+cannot write to the ledger from mobile at all — "AI proposes, the user
+confirms" in its strongest form.
 
 ## Persian right-to-left — 2026-08-17
 
