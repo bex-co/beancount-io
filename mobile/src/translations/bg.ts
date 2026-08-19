@@ -249,6 +249,10 @@ export const bg: typeof en = {
   netProfit: "Нетна печалба",
   // feed
   latestUpdates: "Последни промени",
+  // unmatched route fallback
+  notFoundTitle: "Страницата не е намерена",
+  notFoundBody: "Тази връзка не води доникъде в приложението.",
+  notFoundGoHome: "Към началния екран",
   // home dashboard
   seeAll: "Виж всички",
   netWorth: "Нетна стойност",

@@ -246,6 +246,10 @@ export const fa: typeof en = {
   netProfit: "سود خالص",
   // feed
   latestUpdates: "آخرین تغییرات",
+  // unmatched route fallback
+  notFoundTitle: "صفحه پیدا نشد",
+  notFoundBody: "این پیوند به هیچ جایی در برنامه نمی‌رسد.",
+  notFoundGoHome: "رفتن به خانه",
   // home dashboard
   seeAll: "دیدن همه",
   netWorth: "ارزش خالص",

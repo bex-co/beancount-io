@@ -1,10 +1,12 @@
 import { useState } from "react";
+import { useRouter } from "expo-router";
 import { StyleSheet, View } from "react-native";
 import { FadeInView } from "@/components/crossfade";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { LoadingTile } from "@/components/loading-tile";
-import { DashboardCard, SegmentedPages, TimeRangePills } from "@/components";
+import { SegmentedPages, TimeRangePills } from "@/components";
+import { HomeDashboardCard } from "./home-dashboard-card";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
 import {
   RANGE_LABEL_KEYS,
@@ -62,20 +64,35 @@ export function AccountChartsCard({
   error,
 }: AccountChartsCardProps): JSX.Element {
   const { t } = useTranslations();
+  const router = useRouter();
   const [range, setRange] = useState<TimeRange>("6M");
   // Tracked so a range change reports which curve the user was looking at.
   const [activeIndex, setActiveIndex] = useState(0);
 
+  // One door for all three pages: the affordance lives on the card header, above
+  // the tab strip, so it means the same thing whichever curve is showing. There
+  // is no per-page destination to send it to — Accounts has no liabilities
+  // filter route.
+  // Hoisted so the skeleton and the loaded card cannot drift apart: they must
+  // render the same header or the card changes height when the data lands.
+  const tapThrough = {
+    onSeeAll: () => router.navigate({ pathname: "/accounts" }),
+    card: "accounts",
+  } as const;
+
   if (loading || error) {
     return (
-      <DashboardCard bleed>
+      // Same header as the loaded card: without it the card grows by a header
+      // row when the data lands. Accounts is reachable whether or not this
+      // card's series arrived, so the door is honest while loading.
+      <HomeDashboardCard bleed {...tapThrough}>
         <View style={styles.skeletonTabs}>
           {TAB_TILE_WIDTHS.map((width) => (
             <LoadingTile key={width} width={width} style={styles.skeletonTab} />
           ))}
         </View>
         <LoadingTile height={PAGE_HEIGHT + PILLS_HEIGHT} mx={16} />
-      </DashboardCard>
+      </HomeDashboardCard>
     );
   }
 
@@ -107,7 +124,7 @@ export function AccountChartsCard({
   });
 
   return (
-    <DashboardCard bleed>
+    <HomeDashboardCard bleed {...tapThrough}>
       {/* Crossfades in over the skeleton, which is sized to this same block. */}
       <FadeInView>
         <SegmentedPages
@@ -136,6 +153,6 @@ export function AccountChartsCard({
           }}
         />
       </FadeInView>
-    </DashboardCard>
+    </HomeDashboardCard>
   );
 }

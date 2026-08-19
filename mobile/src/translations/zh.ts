@@ -239,6 +239,10 @@ export const zh: typeof en = {
   netProfit: "净利润",
   // feed
   latestUpdates: "最近更新",
+  // unmatched route fallback
+  notFoundTitle: "页面未找到",
+  notFoundBody: "该链接在应用中无法打开。",
+  notFoundGoHome: "返回首页",
   // home dashboard
   seeAll: "查看全部",
   netWorth: "净资产",

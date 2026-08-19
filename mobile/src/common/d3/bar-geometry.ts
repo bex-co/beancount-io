@@ -42,3 +42,35 @@ export function barRectAt(
     y: barGrowsUp(y, baselineY) ? baselineY - grown : baselineY,
   };
 }
+
+/**
+ * Smallest height a bar is drawn at, so a period worth almost nothing still
+ * reads as a bar rather than as missing data.
+ */
+export const MIN_BAR_HEIGHT = 2;
+
+/**
+ * A bar's resting rectangle: where it sits and how tall it is once fully grown.
+ *
+ * The counterpart to `barRectAt`, which only knew how to interpolate a rect
+ * that something else had already computed. All three bar charts derived this
+ * themselves, in three different shapes — and one of them returned a *negative*
+ * height for a near-zero negative value, which SVG declines to draw at all.
+ * Height here is always positive; direction lives in `y`.
+ */
+export function restingBarRect(
+  value: number,
+  valueY: number,
+  zeroY: number,
+  minHeight: number = MIN_BAR_HEIGHT,
+): BarRect {
+  "worklet";
+  const growsUp = value >= 0;
+  const spanned = growsUp ? zeroY - valueY : valueY - zeroY;
+  return {
+    height: Math.max(Math.abs(spanned), minHeight),
+    // Clamped so a bar shorter than the minimum still starts at the baseline
+    // instead of hanging `minHeight` above wherever its value landed.
+    y: growsUp ? Math.min(valueY, zeroY - minHeight) : zeroY,
+  };
+}

@@ -22,15 +22,15 @@
 - [x] **m17** — Account picker: fuzzy search + instant open (9 tasks) ← from `/pm-brainstorm` 2026-08-14 ("polish the account picker"; moved from the monorepo root board)
 - [x] **m18** — Account picker: recents & frecency ranking (8 tasks) ← from `/pm-brainstorm` 2026-08-14 — sequenced after m17; shipped 2026-08-17
 - [x] **m19** — Cascading refetch after ledger writes (9 tasks) ← from `/pm` research request 2026-08-14 ("when files are saved in the Files tab, should we update relevant queries to refetch?"); the m15 editor writes the ledger and invalidates nothing
-- [ ] **m20** — Charts that animate: motion tokens, draw-in, and range morphs (11 tasks) ← from `/pm-brainstorm` 2026-08-14 ("learn from monarch app's animation, e.g. chart rendering animation"); no chart file imports an animation API today
+- [x] **m20** — Charts that animate: motion tokens, draw-in, and range morphs (11 tasks) ← from `/pm-brainstorm` 2026-08-14 ("learn from monarch app's animation, e.g. chart rendering animation"); no chart file imports an animation API today
 - [x] **m21** — Moments that land: haptics, save confirmation, receipt payoff (8 tasks) ← from `/pm-brainstorm` 2026-08-14 (same pass); two save paths stall 2s by design and the receipt parse lands silently
 - [x] **m22** — Delete what's dead: four unreferenced surfaces, then lazy tabs (8 tasks) ← inbox `002` + `012` + `013` + `025`, promoted and shipped 2026-08-16
 - [x] **m23** — One loading and feedback vocabulary across the app (7 tasks) ← inbox `015` + `016` + `017` + `018`, promoted in the same pass; sequence after m20
 - [x] **m24** — Controls you can see: fix the light neutral ramp, then share the primitives (8 tasks) ← inbox `010` + `011`, promoted in the same pass; shipped 2026-08-17 on top of `m20/t011`
-- [ ] **m25** — Inline `open`-directive creation from the account picker (7 tasks) ← inbox `009`, promoted 2026-08-17 — m16 + m17 shipped both prerequisites
+- [x] **m25** — Inline `open`-directive creation from the account picker (7 tasks) ← inbox `009`, promoted 2026-08-17 — m16 + m17 shipped both prerequisites
 - [x] **m26** — UI-thread scrubbing for the interactive line chart (7 tasks) ← inbox `019`, promoted 2026-08-17 — sequenced after `m20/t009`, same file
 - ~~**m27** — Localize the AI receipt capture flow~~ — **deleted 2026-08-17**: strictly subsumed by **m29**. Its ~21 receipt keys are part of the 148 keys missing in _all twelve_ locales, so every m27 task is a subset of an m29 locale task; its receipt-flow UX walk survives as a named step in `m29/t009`. Its research is preserved in git history at this path.
-- [ ] **m28** — Home cards tap through; bad routes fall back (8 tasks) ← inbox `024` + `026`, promoted 2026-08-17 — bundled by their shared tap/deep-link verification loop
+- [x] **m28** — Home cards tap through; bad routes fall back (8 tasks) ← inbox `024` + `026`, promoted 2026-08-17 — bundled by their shared tap/deep-link verification loop
 - [x] **m29** — Translation integrity gate, then the six largest locales (11 tasks) ← from `/pm` request 2026-08-17 ("add tests to check translation integrity, en as the source … no missing, no extra, and then translate missing items"); supersedes m27; shipped 2026-08-17
 - [x] **m30** — The last six locales, and the gate goes unconditional (10 tasks) ← same request, split off by size — twelve locales at ~170 keys each is roughly ten hours; shipped 2026-08-17 — all thirteen locales now declare the same 329 keys, and the gate is unconditional
 - [x] **m31** — Right-to-left layout for Persian (10 tasks) ← from the `m30` outcome note, which names this gap and rules it out of scope in the same sentence; shipped 2026-08-17 — Persian now lays out right-to-left, English is unchanged, and two React Native RTL defaults that fight each other are written down in the milestone's outcome note
@@ -62,6 +62,45 @@ Split into two milestones because ~170 keys × 12 locales is roughly ten hours: 
 **m27 deleted, not duplicated.** It translated the receipt group into twelve locales — a strict subset: those keys are among the 148 missing everywhere, so each m27 task is contained in an m29 locale task. Its one non-overlapping piece, the receipt-flow UX walk in the longest locales, is written into `m29/t009` by name.
 
 **Consequence, now live:** the baseline is empty, so every future feature adding an `en` key must ship twelve translations or add an explicit `KNOWN_GAPS` entry naming what it deferred. The escape hatch is kept deliberately rather than deleted — a red build on an honest deferral would just get worked around. Both milestones shipped 2026-08-17; the sweep translated 3101 strings across twelve languages, and **none of it has been reviewed by a native speaker** — the pre-existing `// TODO: needs native speaker review` markers in `fa`, `bg`, and `sk` are the only per-string caveats the files carry.
+
+## Board triage — 2026-08-18
+
+Every milestone in this workstream is now closed. The two that were still open
+were each down to one task:
+
+- **m20** — `t009`, the deferred simplify pass over the motion + chart code, run
+  as a four-angle review. Landed a shared `chart-chrome.tsx` (the error boundary,
+  placeholder, legend and styles all four charts had copied) and `restingBarRect`
+  in `bar-geometry.ts`, which also fixed a latent defect: one chart returned a
+  negative bar height for a near-zero negative value, which SVG will not draw.
+  Two findings were deliberately **not** applied and are now `028` and `029`.
+- **m25** — `t003` was implemented with its cancel path verified; only the
+  success path was unexercised, because it writes a real `open` directive to the
+  production ledger. Closed with the walk split out to `030`, the same treatment
+  `w1/023` got when `m21/t006` closed.
+
+**Inbox, after this pass:**
+
+- `027` **consumed** — its blocking question ("is Hermes shipping full ICU?") was
+  answered on device: yes. Locale-aware dates shipped; Persian now reads
+  `۸ سپتامبر ۲۰۱۷` instead of `September 8, 2017`. The Jalali-calendar question it
+  deferred is now `031`.
+- `006` **still blocked, now definitively** — enumerated the mobile schema's
+  roots: 74 queries, 60 mutations, 9 subscriptions, and zero agent/chat
+  operations. The dashboard does talk to a larger gateway, as suspected.
+- `007` **still blocked on a dependency** — re-confirmed the Plaid surface is
+  fully present in the mobile schema (18 operations), so nothing is missing
+  server-side; it needs the `react-native-plaid-link-sdk` decision and its own
+  scoping pass.
+- `020` **still blocked** — `d3-sankey` dependency decision plus a phone-width
+  design pass.
+- `023` **still owner-only** — hardware haptics; a simulator has no Taptic Engine.
+- `028`, `029`, `030`, `031` **new**, all with their blocker or their reason for
+  deferral written down.
+
+Nothing was deleted: every parked note is blocked on something real — a
+dependency, a server-side capability, a physical device, or a product decision —
+rather than stale.
 
 ## Board triage — 2026-08-17
 

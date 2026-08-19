@@ -93,7 +93,7 @@ const AccountDetailScreenImpl = ({
   const { userId } = useSession();
   const ledgerId = useLedgerGuard();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
   // `.name` is the *resolved* theme — `themeVar` itself can hold "system", so
   // comparing that to "dark" gave every system-theme user the light indicator.
@@ -137,8 +137,8 @@ const AccountDetailScreenImpl = ({
     [currency, items],
   );
   const sections = useMemo(
-    () => groupAccountJournalRowsToSections(rows, currency),
-    [rows, currency],
+    () => groupAccountJournalRowsToSections(rows, currency, locale),
+    [rows, currency, locale],
   );
 
   // Display rows carry only shaped fields; index the raw items by the same

@@ -19,7 +19,6 @@ import Animated, {
 import { scheduleOnRN } from "react-native-worklets";
 import { scaleLinear } from "d3-scale";
 import { line as d3Line, area as d3Area, curveMonotoneX } from "d3-shape";
-import { ErrorBoundary } from "react-error-boundary";
 import { haptics } from "@/common/haptics";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
@@ -42,6 +41,7 @@ import {
   shownScrubIndex,
 } from "./scrub";
 import { LEADING_TEXT_ALIGN, LTR_PLOT } from "@/common/rtl";
+import { ChartErrorBoundary } from "./chart-chrome";
 
 // Created once at module scope: building these inside the component would give
 // React a new component type on every render and remount the node each time.
@@ -736,13 +736,8 @@ function InteractiveLineChart({
 
 export const InteractiveLineChartD3 = (props: InteractiveLineChartProps) => {
   return (
-    <ErrorBoundary
-      fallback={null}
-      onError={(error) => {
-        console.error(error);
-      }}
-    >
+    <ChartErrorBoundary>
       <InteractiveLineChart {...props} />
-    </ErrorBoundary>
+    </ChartErrorBoundary>
   );
 };

@@ -250,6 +250,10 @@ export const de: typeof en = {
   netProfit: "Gewinn",
   // feed
   latestUpdates: "Neueste Änderungen",
+  // unmatched route fallback
+  notFoundTitle: "Seite nicht gefunden",
+  notFoundBody: "Dieser Link führt nirgendwohin in der App.",
+  notFoundGoHome: "Zur Startseite",
   // home dashboard
   seeAll: "Alle ansehen",
   netWorth: "Nettovermögen",

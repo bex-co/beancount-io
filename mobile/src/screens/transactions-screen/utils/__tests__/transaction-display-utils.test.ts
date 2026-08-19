@@ -1,5 +1,4 @@
 import {
-  formatDisplayDate,
   formatAmount,
   selectTransactionAmount,
   groupToSections,
@@ -54,28 +53,6 @@ const makeClose = (account: string): JournalClose => ({
   date: "2026-06-01",
   directive_type: DirectiveType.CLOSE,
   account,
-});
-
-// ---------------------------------------------------------------------------
-// formatDisplayDate
-// ---------------------------------------------------------------------------
-
-describe("formatDisplayDate", () => {
-  it("formats a standard ISO date to long locale string", () => {
-    expect(formatDisplayDate("2026-07-06")).toBe("July 6, 2026");
-  });
-
-  it("formats the first of a month without padding artefacts", () => {
-    expect(formatDisplayDate("2026-01-01")).toBe("January 1, 2026");
-  });
-
-  it("handles end-of-year dates correctly", () => {
-    expect(formatDisplayDate("2025-12-31")).toBe("December 31, 2025");
-  });
-
-  it("returns the raw string when the input is not a valid date", () => {
-    expect(formatDisplayDate("not-a-date")).toBe("not-a-date");
-  });
 });
 
 // ---------------------------------------------------------------------------

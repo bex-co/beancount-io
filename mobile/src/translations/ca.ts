@@ -248,6 +248,10 @@ export const ca: typeof en = {
   netProfit: "Benefici net",
   // feed
   latestUpdates: "Darrers canvis",
+  // unmatched route fallback
+  notFoundTitle: "Pàgina no trobada",
+  notFoundBody: "Aquest enllaç no porta enlloc dins l'aplicació.",
+  notFoundGoHome: "Ves a l'inici",
   // home dashboard
   seeAll: "Mostra-ho tot",
   netWorth: "Patrimoni net",

@@ -249,6 +249,10 @@ export const uk: typeof en = {
   netProfit: "Чистий прибуток",
   // feed
   latestUpdates: "Останні зміни",
+  // unmatched route fallback
+  notFoundTitle: "Сторінку не знайдено",
+  notFoundBody: "Це посилання нікуди не веде в застосунку.",
+  notFoundGoHome: "На головну",
   // home dashboard
   seeAll: "Показати всі",
   netWorth: "Чисті активи",

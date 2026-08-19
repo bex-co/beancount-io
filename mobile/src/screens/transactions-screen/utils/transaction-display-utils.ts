@@ -1,3 +1,4 @@
+import { formatLedgerDate } from "../../../common/date-format";
 import {
   JournalDirectiveType,
   JournalPosting,
@@ -9,22 +10,6 @@ export type JournalSection = {
   isoDate: string;
   displayDate: string;
   data: JournalDirectiveType[];
-};
-
-export const formatDisplayDate = (isoDate: string): string => {
-  try {
-    const [year, month, day] = isoDate.split("-").map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    if (isNaN(date.getTime())) return isoDate;
-    return date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      timeZone: "UTC",
-    });
-  } catch {
-    return isoDate;
-  }
 };
 
 export const formatAmount = (value: number, currency: string): string => {
@@ -134,6 +119,7 @@ export const selectTransactionAmount = (
 export const groupToSections = (
   entries: JournalDirectiveType[],
   searchQuery = "",
+  locale = "en",
 ): JournalSection[] => {
   const q = searchQuery.toLowerCase().trim();
   const filtered = q
@@ -158,7 +144,7 @@ export const groupToSections = (
 
   return Array.from(groups.entries()).map(([isoDate, items]) => ({
     isoDate,
-    displayDate: formatDisplayDate(isoDate),
+    displayDate: formatLedgerDate(isoDate, locale),
     data: items,
   }));
 };

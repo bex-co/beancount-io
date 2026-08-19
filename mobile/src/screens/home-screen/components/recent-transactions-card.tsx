@@ -8,7 +8,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
-import { DashboardCard } from "@/components";
+import { HomeDashboardCard } from "./home-dashboard-card";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { EntryRow } from "@/screens/transactions-screen/entry-row";
 import {
@@ -70,7 +70,12 @@ export function RecentTransactionsCard({
   };
 
   return (
-    <DashboardCard title={t("recentTransactions")} onSeeAll={onSeeAll} bleed>
+    <HomeDashboardCard
+      title={t("recentTransactions")}
+      onSeeAll={onSeeAll}
+      card="recent_transactions"
+      bleed
+    >
       {loading && entries.length === 0 ? (
         <LoadingTile height={160} mx={16} />
       ) : (
@@ -92,6 +97,6 @@ export function RecentTransactionsCard({
           )}
         </FadeInView>
       )}
-    </DashboardCard>
+    </HomeDashboardCard>
   );
 }

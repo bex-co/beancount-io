@@ -251,6 +251,10 @@ export const pt: typeof en = {
   netProfit: "Lucro líquido",
   // feed
   latestUpdates: "Últimas alterações",
+  // unmatched route fallback
+  notFoundTitle: "Página não encontrada",
+  notFoundBody: "Esse link não leva a lugar nenhum no app.",
+  notFoundGoHome: "Ir para o início",
   // home dashboard
   seeAll: "Ver tudo",
   netWorth: "Patrimônio líquido",

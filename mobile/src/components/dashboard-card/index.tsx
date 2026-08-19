@@ -53,10 +53,17 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-type DashboardCardProps = {
+export type DashboardCardProps = {
   /** Optional header title rendered on the left of the header row. */
   title?: string;
-  /** When set, renders a right-aligned "see all →" affordance. */
+  /**
+   * When set, renders a right-aligned "see all →" affordance.
+   *
+   * Deliberately knows nothing about analytics: this card is shared with
+   * Reports, Budget and the feed, and a screen's event vocabulary has no
+   * business in its prop types. Home pairs the handler with its identifier in
+   * `HomeDashboardCard`.
+   */
   onSeeAll?: () => void;
   /** Optional actions slot rendered before the "see all" affordance. */
   right?: ReactNode;

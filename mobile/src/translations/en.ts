@@ -245,6 +245,10 @@ export const en = {
   netProfit: "Net Profit",
   // feed
   latestUpdates: "Latest Updates",
+  // unmatched route fallback
+  notFoundTitle: "Page not found",
+  notFoundBody: "That link doesn't lead anywhere in the app.",
+  notFoundGoHome: "Go to Home",
   // home dashboard
   seeAll: "See all",
   netWorth: "Net Worth",

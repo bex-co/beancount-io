@@ -10,6 +10,7 @@ import { DashboardCard } from "@/components/dashboard-card";
 import { analytics } from "@/common/analytics";
 import { useGetFeedQuery } from "@/generated-graphql/graphql";
 import { FeedSource } from "@/generated-graphql/types";
+import { formatFeedDate } from "@/common/date-format";
 
 const FEED_LIMIT = 5;
 
@@ -38,20 +39,6 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-function formatFeedDate(publishedAt: unknown): string {
-  try {
-    const d = new Date(publishedAt as string);
-    if (isNaN(d.getTime())) return "";
-    return d.toLocaleDateString("en-US", {
-      month: "short",
-      day: "numeric",
-      year: "numeric",
-    });
-  } catch {
-    return "";
-  }
-}
-
 type FeedRowProps = {
   title: string;
   link: string;
@@ -62,6 +49,7 @@ type FeedRowProps = {
 
 function FeedRow({ title, link, publishedAt, source, isFirst }: FeedRowProps) {
   const styles = useThemeStyle(getStyles);
+  const { locale } = useTranslations();
   const isExternal = link.startsWith("http");
 
   const handlePress = () => {
@@ -72,7 +60,7 @@ function FeedRow({ title, link, publishedAt, source, isFirst }: FeedRowProps) {
   };
 
   const sourceLabel = source === FeedSource.LedgerRss ? "Ledger" : "Blog";
-  const date = formatFeedDate(publishedAt);
+  const date = formatFeedDate(publishedAt, locale);
   const metaText = date ? `${sourceLabel} · ${date}` : sourceLabel;
 
   return (

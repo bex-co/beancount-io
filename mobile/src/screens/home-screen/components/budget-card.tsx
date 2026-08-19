@@ -6,7 +6,8 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { formatMoneyWithCurrency } from "@/common/number-utils";
-import { AmountText, DashboardCard } from "@/components";
+import { AmountText } from "@/components";
+import { HomeDashboardCard } from "./home-dashboard-card";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import { BudgetMeter } from "@/screens/budget-screen/components/budget-meter";
@@ -132,8 +133,8 @@ export function BudgetCard({
   };
 
   return (
-    <DashboardCard title={t("budget")} onSeeAll={openBudget}>
+    <HomeDashboardCard title={t("budget")} onSeeAll={openBudget} card="budget">
       {renderBody()}
-    </DashboardCard>
+    </HomeDashboardCard>
   );
 }

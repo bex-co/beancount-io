@@ -5,9 +5,10 @@ import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { shortNumber } from "@/common/number-utils";
-import { ErrorBoundary } from "react-error-boundary";
 import { AnimatedBar } from "./animated-bar";
 import { useEntranceProgress } from "./use-entrance-progress";
+import { restingBarRect } from "./bar-geometry";
+import { ChartErrorBoundary } from "./chart-chrome";
 
 type BarChartProps = {
   labels: string[];
@@ -57,15 +58,15 @@ function BarChart({
   // Y axis ticks
   const yTicks = yScale.ticks(5);
 
+  // Loop-invariant: the baseline every bar grows from, hoisted out of the map
+  // the way the two sibling charts already do it.
+  const zeroY = yScale(0);
+
   const entrance = useEntranceProgress(numbers.length > 0);
 
   return (
     <View>
-      <Svg
-        width={chartWidth}
-        height={chartHeight}
-        // style={{ backgroundColor: "blue" }}
-      >
+      <Svg width={chartWidth} height={chartHeight}>
         {/* Y axis grid lines and labels */}
         {yTicks.map((tick: number, i: number) => (
           <G key={i}>
@@ -92,29 +93,11 @@ function BarChart({
 
         {/* Bars */}
         {numbers.map((num, i) => {
-          const zeroY = yScale(0);
-          const valueY = yScale(num);
-          const minHeight = 2; // Minimum height for visibility
-
-          // Calculate bar height and position
-          let barHeight: number;
-          let barY: number;
-
-          if (num >= 0) {
-            // Positive values: bar goes from value to zero
-            barHeight = zeroY - valueY;
-            barY = valueY;
-          } else {
-            // Negative values: bar goes from zero to value
-            barHeight = valueY - zeroY;
-            barY = zeroY;
-          }
-
-          // Ensure minimum height for visibility
-          if (Math.abs(barHeight) < minHeight) {
-            barHeight = num >= 0 ? minHeight : -minHeight;
-            barY = num >= 0 ? zeroY - minHeight : zeroY;
-          }
+          const { y: barY, height: barHeight } = restingBarRect(
+            num,
+            yScale(num),
+            zeroY,
+          );
 
           return (
             <AnimatedBar
@@ -153,13 +136,8 @@ function BarChart({
 
 export const BarChartD3 = (props: BarChartProps) => {
   return (
-    <ErrorBoundary
-      fallback={null}
-      onError={(error) => {
-        console.error(error);
-      }}
-    >
+    <ChartErrorBoundary>
       <BarChart {...props} />
-    </ErrorBoundary>
+    </ChartErrorBoundary>
   );
 };

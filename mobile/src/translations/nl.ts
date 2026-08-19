@@ -248,6 +248,10 @@ export const nl: typeof en = {
   netProfit: "Nettowinst",
   // feed
   latestUpdates: "Laatste wijzigingen",
+  // unmatched route fallback
+  notFoundTitle: "Pagina niet gevonden",
+  notFoundBody: "Die link leidt nergens heen in de app.",
+  notFoundGoHome: "Ga naar start",
   // home dashboard
   seeAll: "Alles bekijken",
   netWorth: "Nettovermogen",

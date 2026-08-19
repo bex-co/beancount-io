@@ -15,7 +15,12 @@ import { AccessibilityInfo } from "react-native";
  *   and must be skipped outright rather than sped up — the skeleton pulse in
  *   `components/loading-tile` is the case that motivated this;
  * - anything driven by `useFrameCallback` or a JS timer;
- * - staggered reveals whose scheduling we compute ourselves.
+ * - staggered reveals whose scheduling we compute ourselves — meaning ones that
+ *   start their own animations. The bar charts' stagger is **not** one of
+ *   these and must not be wired to this hook: `staggeredProgress` derives every
+ *   bar from the single `withTiming` value in `use-entrance-progress`, so when
+ *   Reanimated snaps that value to 1, every bar lands grown in the same frame
+ *   (asserted in `theme/__tests__/motion.test.ts`).
  *
  * Reanimated also exports a `useReducedMotion()`, but its own docs note it is
  * an app-start snapshot that does not re-render when the setting changes. This

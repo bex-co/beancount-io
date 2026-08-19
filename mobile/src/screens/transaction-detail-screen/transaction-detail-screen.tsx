@@ -32,7 +32,7 @@ import {
   JournalTransaction,
   isJournalTransaction,
 } from "@/screens/transactions-screen/types";
-import { formatDisplayDate } from "@/screens/transactions-screen/utils/transaction-display-utils";
+import { formatLedgerDate } from "@/common/date-format";
 import { selectedTransactionVar } from "./open-transaction-detail";
 import {
   selectHeroAmount,
@@ -150,7 +150,7 @@ const TransactionDetailImpl = ({
 }): JSX.Element => {
   const ledgerId = useLedgerGuard();
   const router = useRouter();
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   usePageView("transaction_detail");
@@ -251,7 +251,10 @@ const TransactionDetailImpl = ({
   const isPending = entry.flag === "!";
 
   const detailRows: DetailRow[] = [
-    { label: t("date"), value: formatDisplayDate(entry.date.slice(0, 10)) },
+    {
+      label: t("date"),
+      value: formatLedgerDate(entry.date.slice(0, 10), locale),
+    },
     ...(entry.payee ? [{ label: t("payee"), value: entry.payee }] : []),
     ...(entry.narration
       ? [{ label: t("narration"), value: entry.narration }]

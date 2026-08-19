@@ -1,19 +1,19 @@
 # w1 · m28 — Home cards tap through; bad routes fall back
 
-**Worker:** worker1 **Goal:** Every Home dashboard card that summarizes a deeper view is a door to it — with one shared, visible tap affordance and an analytics event per door — and a deep link that matches no route lands on `+not-found` instead of an unrecoverable black screen. **Status:** todo
+**Worker:** worker1 **Goal:** Every Home dashboard card that summarizes a deeper view is a door to it — with one shared, visible tap affordance and an analytics event per door — and a deep link that matches no route lands on `+not-found` instead of an unrecoverable black screen. **Status:** **done** 2026-08-18 — four Home cards are doors with one shared affordance and one event; an unmatched deep link is readable and recoverable in both themes; 1346 unit tests green
 
 ## Tasks (in order)
 
-| id   | title                                                   | est | depends_on |
-| ---- | ------------------------------------------------------- | --- | ---------- |
-| t001 | Shared tap affordance in the `DashboardCard` header     | 30m | —          |
-| t002 | Spending card taps through to `/reports`                | 25m | t001       |
-| t003 | Liabilities carousel page taps through to `/accounts`   | 35m | t001       |
-| t004 | One analytics event shape for card tap-throughs         | 20m | t002, t003 |
-| t005 | Unmatched `(app)/(tabs)` deep link renders `+not-found` | 45m | —          |
-| t006 | UX pass — light/dark, deep-link drive of every door     | 30m | t004, t005 |
-| t007 | Simplify pass over the navigation diff                  | 25m | t006       |
-| t008 | Unit tests for tap guards and the event shape           | 35m | t006       |
+| id   | title                                                   | est | depends_on            |
+| ---- | ------------------------------------------------------- | --- | --------------------- |
+| t001 | Shared tap affordance in the `DashboardCard` header     | 30m | — — **DONE**          |
+| t002 | Spending card taps through to `/reports`                | 25m | t001 — **DONE**       |
+| t003 | Liabilities carousel page taps through to `/accounts`   | 35m | t001 — **DONE**       |
+| t004 | One analytics event shape for card tap-throughs         | 20m | t002, t003 — **DONE** |
+| t005 | Unmatched `(app)/(tabs)` deep link renders `+not-found` | 45m | — — **DONE**          |
+| t006 | UX pass — light/dark, deep-link drive of every door     | 30m | t004, t005 — **DONE** |
+| t007 | Simplify pass over the navigation diff                  | 25m | t006 — **DONE**       |
+| t008 | Unit tests for tap guards and the event shape           | 35m | t006 — **DONE**       |
 
 ## Definition of done
 

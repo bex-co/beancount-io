@@ -1,11 +1,12 @@
 import { useEffect } from "react";
+import { useRouter } from "expo-router";
 import { StyleSheet, Text } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
-import { DashboardCard } from "@/components";
+import { HomeDashboardCard } from "./home-dashboard-card";
 import { FadeInView } from "@/components/crossfade";
 import { BAR_CHART_HEIGHT, BarChartD3 } from "@/common/d3/bar-chart-d3";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
@@ -53,6 +54,13 @@ export function SpendingCard({
 }: SpendingCardProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
+  const router = useRouter();
+
+  // `navigate` rather than `push`: Reports is a tab, so this switches to it and
+  // leaves Home on its own stack with its scroll position intact.
+  const openReports = () => {
+    router.navigate({ pathname: "/reports" });
+  };
 
   const { data, loading, refetch } = useGetLedgerJournalQuery({
     variables: {
@@ -78,7 +86,12 @@ export function SpendingCard({
   const { thisMonth, lastMonth } = selectSpendingCompare(entries, currency);
 
   return (
-    <DashboardCard title={t("spending")} bleed>
+    <HomeDashboardCard
+      title={t("spending")}
+      onSeeAll={openReports}
+      card="spending"
+      bleed
+    >
       <Text style={styles.subtitle}>{t("spendingSubtitle")}</Text>
       {loading && entries.length === 0 ? (
         <LoadingTile height={BAR_CHART_HEIGHT} mx={16} />
@@ -91,6 +104,6 @@ export function SpendingCard({
           />
         </FadeInView>
       )}
-    </DashboardCard>
+    </HomeDashboardCard>
   );
 }

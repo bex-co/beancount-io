@@ -1,6 +1,6 @@
 # w1 · m20 — Charts that animate: motion tokens, draw-in, and range morphs
 
-**Worker:** worker1 **Goal:** A shared motion vocabulary, then the four live charts draw themselves in, grow from their baseline, and morph between time ranges instead of snapping — with the app's first reduce-motion handling. **Status:** in progress (t009 left. t011 shipped as `d668411` and was closed 2026-08-17 after re-verification during `w1/m24`. t008 closed 2026-08-16 on the owner's call **without** the device reduce-motion check — see its outcome note; the DoD's "verified on device" clause is therefore asserted, not demonstrated)
+**Worker:** worker1 **Goal:** A shared motion vocabulary, then the four live charts draw themselves in, grow from their baseline, and morph between time ranges instead of snapping — with the app's first reduce-motion handling. **Status:** **done** 2026-08-18 — charts animate on a shared motion token layer; the deferred simplify pass landed a shared chart-chrome module and unified the resting-bar geometry
 
 ## Tasks (in order)
 
@@ -15,7 +15,7 @@
 | t007 | Refresh keeps the chart; skeleton crossfades into the loaded chart | 35m | t002, t004                   | — **DONE**                                 |
 | t011 | Fix the TimeRangePills indicator origin — lands beside the pills   | 25m | t006                         | — **DONE**                                 |
 | t008 | UX pass — light/dark, reduce-motion on device, i18n, safe area     | 40m | t003, t005, t006, t007, t011 | — **DONE** (accepted, not device-verified) |
-| t009 | Simplify pass over the motion + chart code                         | 30m | t008                         |                                            |
+| t009 | Simplify pass over the motion + chart code                         | 30m | t008                         | — **DONE**                                 |
 | t010 | Unit tests for motion tokens, reduce-motion, and path/series math  | 40m | t008                         | — **DONE**                                 |
 
 ## Definition of done

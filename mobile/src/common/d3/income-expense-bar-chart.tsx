@@ -1,13 +1,11 @@
 import { useRef } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Circle, G, Line, Path, Text as SvgText } from "react-native-svg";
 import { scaleBand, scaleLinear } from "d3-scale";
 import { curveMonotoneX, line as d3Line } from "d3-shape";
-import { ErrorBoundary } from "react-error-boundary";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
-import { ColorTheme } from "@/types/theme-props";
-import { fontSizes, space, useTheme } from "@/common/theme";
+import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { shortNumber } from "@/common/number-utils";
@@ -17,14 +15,21 @@ import { useEntranceProgress } from "./use-entrance-progress";
 /** Default plot height, exported so callers can size a skeleton from it. */
 export const DEFAULT_CHART_HEIGHT = 220;
 
-/**
- * Height the legend row adds below the plot: its `paddingTop` (`space.sm`) plus
- * one line of `fontSizes.sm` label. A caller's skeleton has to include this or
- * the card grows by a legend's worth the moment data lands.
- */
-export const LEGEND_HEIGHT = 26;
+export { LEGEND_HEIGHT } from "./chart-chrome";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
-import { LTR_PLOT } from "@/common/rtl";
+import { restingBarRect } from "./bar-geometry";
+import { ChartErrorBoundary } from "./chart-chrome";
+import {
+  AXIS_FONT_SIZE,
+  BOTTOM_PADDING,
+  ChartLegend,
+  ChartPlaceholder,
+  LABEL_FONT_SIZE,
+  LEFT_PADDING,
+  LegendItem,
+  TOP_PADDING,
+  getChromeStyles,
+} from "./chart-chrome";
 
 type IncomeExpenseBarChartProps = {
   /**
@@ -46,56 +51,7 @@ type IncomeExpenseBarChartProps = {
 // Chart geometry. `LEFT_PADDING` is the fixed y-axis gutter; `MIN_GROUP_WIDTH`
 // is the smallest a month column shrinks to before the plot starts scrolling
 // horizontally instead (keeps bars and labels readable at long spans).
-const LEFT_PADDING = 50;
 const MIN_GROUP_WIDTH = 44;
-const BOTTOM_PADDING = 30;
-const TOP_PADDING = 20;
-const AXIS_FONT_SIZE = 12;
-const LABEL_FONT_SIZE = 13;
-
-const getStyles = (theme: ColorTheme) =>
-  StyleSheet.create({
-    row: {
-      flexDirection: "row",
-      ...LTR_PLOT,
-    },
-    placeholder: {
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    placeholderText: {
-      fontSize: fontSizes.md,
-      color: theme.black60,
-    },
-    legend: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      flexWrap: "wrap",
-      paddingTop: space.sm,
-    },
-    legendItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginHorizontal: space.md,
-    },
-    legendSwatch: {
-      width: 10,
-      height: 10,
-      borderRadius: 2,
-      marginEnd: space.xs,
-    },
-    legendLine: {
-      width: 14,
-      height: 3,
-      borderRadius: 2,
-      marginEnd: space.xs,
-    },
-    legendText: {
-      fontSize: fontSizes.sm,
-      color: theme.black80,
-    },
-  });
 
 /**
  * Combined monthly chart for the Reports page: grouped Income (green) vs Expense
@@ -115,7 +71,7 @@ function IncomeExpenseBarChart({
   height = DEFAULT_CHART_HEIGHT,
 }: IncomeExpenseBarChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
-  const styles = useThemeStyle(getStyles);
+  const styles = useThemeStyle(getChromeStyles);
   const { t } = useTranslations();
   const swipeOwner = useHorizontalSwipeOwnerGesture();
   const scrollRef = useRef<ScrollView>(null);
@@ -139,11 +95,7 @@ function IncomeExpenseBarChart({
   const entrance = useEntranceProgress(months.length > 0);
 
   if (months.length === 0) {
-    return (
-      <View style={[styles.placeholder, { height: chartHeight }]}>
-        <Text style={styles.placeholderText}>{t("notEnoughChartData")}</Text>
-      </View>
-    );
+    return <ChartPlaceholder height={chartHeight} />;
   }
 
   const subScale = scaleBand<string>()
@@ -175,13 +127,11 @@ function IncomeExpenseBarChart({
     // rather than alternating within each pair.
     index: number,
   ): JSX.Element => {
-    const valueY = yScale(value);
-    let barHeight = value >= 0 ? zeroY - valueY : valueY - zeroY;
-    let barY = value >= 0 ? valueY : zeroY;
-    if (Math.abs(barHeight) < 2) {
-      barHeight = 2; // keep a sliver visible for near-zero months
-      barY = value >= 0 ? zeroY - 2 : zeroY;
-    }
+    const { y: barY, height: barHeight } = restingBarRect(
+      value,
+      yScale(value),
+      zeroY,
+    );
     return (
       <AnimatedBar
         key={key}
@@ -327,36 +277,18 @@ function IncomeExpenseBarChart({
           </ScrollView>
         </View>
 
-        <View style={styles.legend}>
-          <View style={styles.legendItem}>
-            <View
-              style={[styles.legendSwatch, { backgroundColor: theme.success }]}
-            />
-            <Text style={styles.legendText}>{t("income")}</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View
-              style={[styles.legendSwatch, { backgroundColor: theme.error }]}
-            />
-            <Text style={styles.legendText}>{t("expenses")}</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View style={[styles.legendLine, { backgroundColor: netColor }]} />
-            <Text style={styles.legendText}>{t("netProfit")}</Text>
-          </View>
-        </View>
+        <ChartLegend>
+          <LegendItem color={theme.success} label={t("income")} />
+          <LegendItem color={theme.error} label={t("expenses")} />
+          <LegendItem mark="line" color={netColor} label={t("netProfit")} />
+        </ChartLegend>
       </View>
     </GestureDetector>
   );
 }
 
 export const IncomeExpenseBarChartD3 = (props: IncomeExpenseBarChartProps) => (
-  <ErrorBoundary
-    fallback={null}
-    onError={(error) => {
-      console.error(error);
-    }}
-  >
+  <ChartErrorBoundary>
     <IncomeExpenseBarChart {...props} />
-  </ErrorBoundary>
+  </ChartErrorBoundary>
 );

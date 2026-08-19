@@ -93,7 +93,7 @@ const TransactionList = () => {
   const router = useRouter();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
-  const { t } = useTranslations();
+  const { t, locale } = useTranslations();
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
 
@@ -140,7 +140,10 @@ const TransactionList = () => {
   const hasMore = transactions.length < total;
   const isLoadingMore = networkStatus === NetworkStatus.fetchMore;
 
-  const sections = useMemo(() => groupToSections(transactions), [transactions]);
+  const sections = useMemo(
+    () => groupToSections(transactions, "", locale),
+    [transactions, locale],
+  );
 
   const loadMore = useCallback(async () => {
     if (isLoadingMore || !hasMore || loading || !ledgerId) return;

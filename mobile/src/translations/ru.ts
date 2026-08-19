@@ -250,6 +250,10 @@ export const ru: typeof en = {
   netProfit: "Чистая прибыль",
   // feed
   latestUpdates: "Последние изменения",
+  // unmatched route fallback
+  notFoundTitle: "Страница не найдена",
+  notFoundBody: "Эта ссылка никуда не ведёт в приложении.",
+  notFoundGoHome: "На главную",
   // home dashboard
   seeAll: "Показать все",
   netWorth: "Чистые активы",

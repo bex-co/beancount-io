@@ -247,6 +247,10 @@ export const sk: typeof en = {
   netProfit: "Čistý zisk",
   // feed
   latestUpdates: "Najnovšie zmeny",
+  // unmatched route fallback
+  notFoundTitle: "Stránka sa nenašla",
+  notFoundBody: "Tento odkaz nikam v aplikácii nevedie.",
+  notFoundGoHome: "Prejsť na domov",
   // home dashboard
   seeAll: "Zobraziť všetko",
   netWorth: "Čisté imanie",

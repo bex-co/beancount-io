@@ -1,26 +1,31 @@
 import { useRef } from "react";
-import { ScrollView, StyleSheet, Text, View } from "react-native";
+import { ScrollView, View } from "react-native";
 import { GestureDetector } from "react-native-gesture-handler";
 import Svg, { Line, Path, Text as SvgText } from "react-native-svg";
 import { scaleLinear } from "d3-scale";
-import { ErrorBoundary } from "react-error-boundary";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
-import { ColorTheme } from "@/types/theme-props";
-import { fontSizes, space, useTheme } from "@/common/theme";
+import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { shortNumber } from "@/common/number-utils";
 import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { AnimatedBar } from "./animated-bar";
 import { useEntranceProgress } from "./use-entrance-progress";
-import { LTR_PLOT } from "@/common/rtl";
+import { restingBarRect } from "./bar-geometry";
+import { ChartErrorBoundary } from "./chart-chrome";
+import {
+  AXIS_FONT_SIZE,
+  BOTTOM_PADDING,
+  ChartLegend,
+  ChartPlaceholder,
+  LABEL_FONT_SIZE,
+  LEFT_PADDING,
+  LegendItem,
+  TOP_PADDING,
+  getChromeStyles,
+} from "./chart-chrome";
 
-/**
- * Height the legend row adds below the plot: its `paddingTop` (`space.sm`) plus
- * one line of `fontSizes.sm` label. A caller's skeleton has to include this or
- * the card grows by a legend's worth the moment data lands.
- */
-export const LEGEND_HEIGHT = 26;
+export { LEGEND_HEIGHT } from "./chart-chrome";
 
 type BudgetBarChartProps = {
   /** Period labels, one per column (already display-ready). */
@@ -39,60 +44,8 @@ type BudgetBarChartProps = {
   height?: number;
 };
 
-const LEFT_PADDING = 50;
 const MIN_COLUMN_WIDTH = 44;
-const BOTTOM_PADDING = 30;
-const TOP_PADDING = 20;
-const AXIS_FONT_SIZE = 12;
-const LABEL_FONT_SIZE = 13;
 const BAR_INSET = 0.22; // fraction of the column left empty on each side
-
-const getStyles = (theme: ColorTheme) =>
-  StyleSheet.create({
-    row: {
-      flexDirection: "row",
-      ...LTR_PLOT,
-    },
-    placeholder: {
-      alignItems: "center",
-      justifyContent: "center",
-    },
-    placeholderText: {
-      fontSize: fontSizes.md,
-      color: theme.black60,
-    },
-    legend: {
-      flexDirection: "row",
-      justifyContent: "center",
-      alignItems: "center",
-      flexWrap: "wrap",
-      paddingTop: space.sm,
-    },
-    legendItem: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginHorizontal: space.md,
-    },
-    legendSwatch: {
-      width: 10,
-      height: 10,
-      borderRadius: 2,
-      marginEnd: space.xs,
-    },
-    // Same swatch the income/expense chart uses for its net line. A dashed
-    // border on a zero-height view draws nothing on iOS, so the legend marks
-    // the series by color, as the rest of the app does.
-    legendLine: {
-      width: 14,
-      height: 3,
-      borderRadius: 2,
-      marginEnd: space.xs,
-    },
-    legendText: {
-      fontSize: fontSizes.sm,
-      color: theme.black80,
-    },
-  });
 
 /**
  * Budget-vs-actual chart: one bar per period for actual activity, with the
@@ -112,7 +65,7 @@ function BudgetBarChart({
   height = 200,
 }: BudgetBarChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
-  const styles = useThemeStyle(getStyles);
+  const styles = useThemeStyle(getChromeStyles);
   const { t } = useTranslations();
   const swipeOwner = useHorizontalSwipeOwnerGesture();
   const scrollRef = useRef<ScrollView>(null);
@@ -124,11 +77,7 @@ function BudgetBarChart({
   const entrance = useEntranceProgress(labels.length > 0);
 
   if (labels.length === 0) {
-    return (
-      <View style={[styles.placeholder, { height: chartHeight }]}>
-        <Text style={styles.placeholderText}>{t("notEnoughChartData")}</Text>
-      </View>
-    );
+    return <ChartPlaceholder height={chartHeight} />;
   }
 
   const columnWidth = Math.max(
@@ -217,11 +166,11 @@ function BudgetBarChart({
               />
 
               {actuals.map((value, i) => {
-                const valueY = yScale(value);
-                const rawHeight = value >= 0 ? zeroY - valueY : valueY - zeroY;
-                const barHeight = Math.max(Math.abs(rawHeight), 2);
-                const barY =
-                  value >= 0 ? Math.min(valueY, zeroY - 2) : Math.max(zeroY, 0);
+                const { y: barY, height: barHeight } = restingBarRect(
+                  value,
+                  yScale(value),
+                  zeroY,
+                );
                 return (
                   <AnimatedBar
                     key={`bar-${labels[i]}-${i}`}
@@ -264,32 +213,17 @@ function BudgetBarChart({
           </ScrollView>
         </View>
 
-        <View style={styles.legend}>
-          <View style={styles.legendItem}>
-            <View
-              style={[styles.legendSwatch, { backgroundColor: theme.primary }]}
-            />
-            <Text style={styles.legendText}>{t("budgetActual")}</Text>
-          </View>
-          <View style={styles.legendItem}>
-            <View
-              style={[styles.legendLine, { backgroundColor: theme.secondary }]}
-            />
-            <Text style={styles.legendText}>{t("budget")}</Text>
-          </View>
-        </View>
+        <ChartLegend>
+          <LegendItem color={theme.primary} label={t("budgetActual")} />
+          <LegendItem mark="line" color={theme.secondary} label={t("budget")} />
+        </ChartLegend>
       </View>
     </GestureDetector>
   );
 }
 
 export const BudgetBarChartD3 = (props: BudgetBarChartProps) => (
-  <ErrorBoundary
-    fallback={null}
-    onError={(error) => {
-      console.error(error);
-    }}
-  >
+  <ChartErrorBoundary>
     <BudgetBarChart {...props} />
-  </ErrorBoundary>
+  </ChartErrorBoundary>
 );

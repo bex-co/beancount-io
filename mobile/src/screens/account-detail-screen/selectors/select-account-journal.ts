@@ -2,6 +2,7 @@ import { AccountJournalQuery } from "@/generated-graphql/graphql";
 import { PostingLite } from "@/common/tx-category";
 import { resolveCurrencyBalance } from "../../../common/balance-util";
 import { formatMoneyWithCurrency } from "../../../common/number-utils";
+import { formatLedgerDate } from "../../../common/date-format";
 
 /** One `{ entry, change, balance }` row from the account journal response. */
 export type AccountJournalItem =
@@ -108,22 +109,6 @@ export type AccountJournalSection = {
   data: AccountJournalRow[];
 };
 
-function formatSectionDate(isoDate: string): string {
-  try {
-    const [year, month, day] = isoDate.split("-").map(Number);
-    const date = new Date(Date.UTC(year, month - 1, day));
-    if (isNaN(date.getTime())) return isoDate;
-    return date.toLocaleDateString("en-US", {
-      month: "long",
-      day: "numeric",
-      year: "numeric",
-      timeZone: "UTC",
-    });
-  } catch {
-    return isoDate;
-  }
-}
-
 /**
  * Group display rows into date sections for the SectionList, with a net-change
  * total per section matching Journal's section-header layout.
@@ -131,6 +116,7 @@ function formatSectionDate(isoDate: string): string {
 export function groupAccountJournalRowsToSections(
   rows: AccountJournalRow[],
   currency: string,
+  locale = "en",
 ): AccountJournalSection[] {
   const groups = new Map<string, AccountJournalRow[]>();
   for (const row of rows) {
@@ -145,7 +131,7 @@ export function groupAccountJournalRowsToSections(
     const totalChange = `${sign}${formatMoneyWithCurrency(net, currency)}`;
     return {
       isoDate,
-      displayDate: formatSectionDate(isoDate),
+      displayDate: formatLedgerDate(isoDate, locale),
       totalChange,
       data,
     };
