@@ -71,3 +71,27 @@ describe("config", () => {
     });
   });
 });
+
+describe("agent chat feature flag", () => {
+  it("is off", () => {
+    // The feature is gated off until approval cards ship (ADR002 P2): it can
+    // spend a user's AI quota and cannot yet review its own ledger writes.
+    const { config } = require("../config");
+    expect(config.features.agentChat).toBeFalsy();
+  });
+
+  it("is a plain boolean, not something read from the environment", () => {
+    // A constant is visible in the diff of whoever flips it. An env-var switch
+    // can turn the feature on in a build because of what was in someone's
+    // shell, which is not a thing that should be able to happen quietly.
+    const fs = require("fs");
+    const path = require("path");
+    const source = fs.readFileSync(
+      path.join(__dirname, "..", "config.ts"),
+      "utf8",
+    );
+    const features = source.slice(source.indexOf("features:"));
+    expect(/agentChat:\s*(true|false)\s*,/.test(features)).toBeTruthy();
+    expect(/agentChat:.*process\.env/.test(features)).toBeFalsy();
+  });
+});

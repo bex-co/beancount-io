@@ -404,4 +404,29 @@ export const de: typeof en = {
   budgetDeleteMessage:
     "Das {{interval}} Budget von {{amount}} für {{account}} mit Wirkung zum {{date}} löschen? Dies entfernt einen einzelnen Eintrag und kann nicht rückgängig gemacht werden.",
   budgetDeleteFailed: "Budget konnte nicht gelöscht werden",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Beancount.io fragen",
+  agentWelcome:
+    "Frag mich alles über dein Hauptbuch – Salden, Ausgaben oder wie eine Zahl zustande kam.",
+  agentPlaceholder: "Frag zu deinem Hauptbuch",
+  agentThinking: "Denkt nach …",
+  agentWorking: "Dein Hauptbuch wird durchsucht …",
+  agentSend: "Senden",
+  agentStop: "Stoppen",
+  agentNewChat: "Neuer Chat",
+  agentRetry: "Erneut versuchen",
+  agentErrorBody: "Diese Frage ist nicht durchgekommen.",
+  agentNoAnswerBody:
+    "Ich habe dein Hauptbuch durchsucht, aber die Schritte waren aufgebraucht, bevor ich antworten konnte. Eine gezieltere Frage führt meist zum Ziel.",
+  agentQuotaTitle: "Monatliches KI-Limit erreicht",
+  agentQuotaBody:
+    "Du hast das KI-Kontingent dieses Monats aufgebraucht. Es wird nächsten Monat zurückgesetzt, oder du kannst upgraden.",
+  agentApprovalTitle: "Im Web bestätigen",
+  agentApprovalBody:
+    "Diese Änderung muss geprüft werden, bevor sie in dein Hauptbuch gelangt, und die App kann den vollständigen Diff noch nicht anzeigen. Öffne dieses Hauptbuch auf beancount.io, um sie zu bestätigen.",
+  agentAskCard: "Frag zu deinem Hauptbuch",
+  agentPresetNetWorth: "Wie hoch ist mein Nettovermögen?",
+  agentPresetTopSpending: "Wofür habe ich diesen Monat am meisten ausgegeben?",
+  agentPresetThisMonth: "Wie ist dieser Monat im Vergleich zum letzten?",
 };

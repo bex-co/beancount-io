@@ -397,4 +397,29 @@ export const fa: typeof en = {
   budgetDeleteMessage:
     "بودجه {{interval}} به مبلغ {{amount}} برای {{account}} با اعتبار از {{date}} حذف شود؟ این کار تنها یک مورد را حذف می‌کند و قابل بازگشت نیست.",
   budgetDeleteFailed: "حذف بودجه ناموفق بود",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "از Beancount.io بپرس",
+  agentWelcome:
+    "هر چه می‌خواهی درباره دفترت بپرس — مانده‌ها، هزینه‌ها، یا اینکه یک عدد از کجا آمده است.",
+  agentPlaceholder: "درباره دفترت بپرس",
+  agentThinking: "در حال فکر کردن…",
+  agentWorking: "در حال بررسی دفترت…",
+  agentSend: "ارسال",
+  agentStop: "توقف",
+  agentNewChat: "گفت‌وگوی جدید",
+  agentRetry: "تلاش دوباره",
+  agentErrorBody: "این پرسش ارسال نشد.",
+  agentNoAnswerBody:
+    "دفترت را بررسی کردم، اما پیش از رسیدن به پاسخ گام‌هایم تمام شد. پرسش مشخص‌تر معمولاً به نتیجه می‌رسد.",
+  agentQuotaTitle: "سقف ماهانه هوش مصنوعی پر شد",
+  agentQuotaBody:
+    "سهم هوش مصنوعی این ماه را مصرف کرده‌ای. ماه آینده بازنشانی می‌شود، یا می‌توانی طرحت را ارتقا دهی.",
+  agentApprovalTitle: "در وب تأیید کن",
+  agentApprovalBody:
+    "این تغییر پیش از آنکه به دفترت اعمال شود نیاز به بازبینی تو دارد و برنامه هنوز نمی‌تواند تفاوت کامل را نشان دهد. این دفتر را در beancount.io باز کن تا تأییدش کنی.",
+  agentAskCard: "درباره دفترت بپرس",
+  agentPresetNetWorth: "ارزش خالص دارایی من چقدر است؟",
+  agentPresetTopSpending: "این ماه بیشترین هزینه‌ام صرف چه چیزی شد؟",
+  agentPresetThisMonth: "این ماه در مقایسه با ماه گذشته چطور بوده است؟",
 };

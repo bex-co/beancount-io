@@ -400,4 +400,29 @@ export const nl: typeof en = {
   budgetDeleteMessage:
     "Het {{interval}} budget van {{amount}} voor {{account}} met ingang van {{date}} verwijderen? Dit verwijdert één regel en kan niet ongedaan worden gemaakt.",
   budgetDeleteFailed: "Budget kon niet worden verwijderd",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Vraag het Beancount.io",
+  agentWelcome:
+    "Vraag me alles over je grootboek — saldi, uitgaven, of hoe een bedrag tot stand kwam.",
+  agentPlaceholder: "Vraag over je grootboek",
+  agentThinking: "Aan het denken…",
+  agentWorking: "Je grootboek doorzoeken…",
+  agentSend: "Verstuur",
+  agentStop: "Stoppen",
+  agentNewChat: "Nieuwe chat",
+  agentRetry: "Opnieuw proberen",
+  agentErrorBody: "Die vraag is niet doorgekomen.",
+  agentNoAnswerBody:
+    "Ik heb je grootboek doorzocht, maar mijn stappen waren op voordat ik kon antwoorden. Een specifiekere vraag lukt meestal wel.",
+  agentQuotaTitle: "Maandelijkse AI-limiet bereikt",
+  agentQuotaBody:
+    "Je AI-tegoed van deze maand is op. Het wordt volgende maand hersteld, of je kunt upgraden.",
+  agentApprovalTitle: "Keur dit goed op het web",
+  agentApprovalBody:
+    "Deze wijziging moet je eerst nakijken voordat ze je grootboek raakt, en de app kan de volledige diff nog niet tonen. Open dit grootboek op beancount.io om goed te keuren.",
+  agentAskCard: "Vraag over je grootboek",
+  agentPresetNetWorth: "Wat is mijn nettovermogen?",
+  agentPresetTopSpending: "Waaraan gaf ik deze maand het meeste uit?",
+  agentPresetThisMonth: "Hoe verhoudt deze maand zich tot vorige maand?",
 };

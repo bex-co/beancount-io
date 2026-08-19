@@ -394,4 +394,31 @@ export const en = {
   budgetDeleteMessage:
     "Delete the {{interval}} budget of {{amount}} for {{account}} effective {{date}}? This removes a single entry and cannot be undone.",
   budgetDeleteFailed: "Failed to delete budget",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Ask Beancount.io",
+  agentWelcome:
+    "Ask me anything about your ledger — balances, spending, or how a number came to be.",
+  agentPlaceholder: "Ask about your ledger",
+  agentThinking: "Thinking…",
+  agentWorking: "Looking through your ledger…",
+  agentSend: "Send",
+  agentStop: "Stop",
+  agentNewChat: "New chat",
+  agentRetry: "Try again",
+  agentErrorBody: "That question didn't go through.",
+  agentNoAnswerBody:
+    "I looked through your ledger but ran out of steps before answering. A more specific question usually gets there.",
+  agentQuotaTitle: "Monthly AI limit reached",
+  agentQuotaBody:
+    "You've used this month's AI allowance. It resets next month, or you can upgrade for more.",
+  agentApprovalTitle: "Approve this on the web",
+  agentApprovalBody:
+    "This change needs your review before it touches your ledger, and the app can't show you the full diff yet. Open this ledger on beancount.io to approve it.",
+  // Home entry point
+  agentAskCard: "Ask about your ledger",
+  // Empty-state chips — read-only questions on purpose
+  agentPresetNetWorth: "What is my net worth?",
+  agentPresetTopSpending: "What did I spend the most on this month?",
+  agentPresetThisMonth: "How does this month compare to last month?",
 };

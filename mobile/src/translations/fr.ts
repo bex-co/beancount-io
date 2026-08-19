@@ -403,4 +403,29 @@ export const fr: typeof en = {
   budgetDeleteMessage:
     "Supprimer le budget {{interval}} de {{amount}} pour {{account}} en vigueur au {{date}} ? Cela supprime une seule entrée et est irréversible.",
   budgetDeleteFailed: "Échec de la suppression du budget",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Demander à Beancount.io",
+  agentWelcome:
+    "Posez-moi n'importe quelle question sur votre livre : soldes, dépenses, ou d'où vient un chiffre.",
+  agentPlaceholder: "Interrogez votre livre",
+  agentThinking: "Réflexion…",
+  agentWorking: "Consultation de votre livre…",
+  agentSend: "Envoyer",
+  agentStop: "Arrêter",
+  agentNewChat: "Nouvelle discussion",
+  agentRetry: "Réessayer",
+  agentErrorBody: "Cette question n'est pas passée.",
+  agentNoAnswerBody:
+    "J'ai parcouru votre livre, mais je n'avais plus d'étapes avant de pouvoir répondre. Une question plus précise aboutit généralement.",
+  agentQuotaTitle: "Limite mensuelle d'IA atteinte",
+  agentQuotaBody:
+    "Vous avez épuisé votre quota d'IA du mois. Il se réinitialise le mois prochain, ou vous pouvez passer à une offre supérieure.",
+  agentApprovalTitle: "À valider sur le web",
+  agentApprovalBody:
+    "Cette modification doit être vérifiée avant de toucher votre livre, et l'application ne peut pas encore afficher le diff complet. Ouvrez ce livre sur beancount.io pour la valider.",
+  agentAskCard: "Interrogez votre livre",
+  agentPresetNetWorth: "Quelle est ma valeur nette ?",
+  agentPresetTopSpending: "Dans quoi ai-je le plus dépensé ce mois-ci ?",
+  agentPresetThisMonth: "Comment ce mois se compare-t-il au précédent ?",
 };

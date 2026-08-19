@@ -401,4 +401,29 @@ export const bg: typeof en = {
   budgetDeleteMessage:
     "Да се изтрие ли {{interval}} бюджет от {{amount}} за {{account}}, в сила от {{date}}? Това премахва един запис и не може да бъде отменено.",
   budgetDeleteFailed: "Неуспешно изтриване на бюджета",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Попитай Beancount.io",
+  agentWelcome:
+    "Питай ме каквото искаш за счетоводната си книга — салда, разходи или как се е получило дадено число.",
+  agentPlaceholder: "Питай за книгата си",
+  agentThinking: "Мисля…",
+  agentWorking: "Преглеждам книгата ти…",
+  agentSend: "Изпрати",
+  agentStop: "Спри",
+  agentNewChat: "Нов чат",
+  agentRetry: "Опитай отново",
+  agentErrorBody: "Този въпрос не беше изпратен.",
+  agentNoAnswerBody:
+    "Прегледах книгата ти, но изчерпах стъпките, преди да отговоря. По-конкретен въпрос обикновено помага.",
+  agentQuotaTitle: "Месечният лимит за ИИ е достигнат",
+  agentQuotaBody:
+    "Изчерпа ИИ лимита за този месец. Той се възстановява следващия месец или можеш да надградиш плана си.",
+  agentApprovalTitle: "Потвърди в уеб версията",
+  agentApprovalBody:
+    "Тази промяна трябва да бъде прегледана, преди да засегне книгата ти, а приложението още не може да покаже пълната разлика. Отвори книгата в beancount.io, за да я потвърдиш.",
+  agentAskCard: "Питай за книгата си",
+  agentPresetNetWorth: "Какво е нетното ми състояние?",
+  agentPresetTopSpending: "За какво похарчих най-много този месец?",
+  agentPresetThisMonth: "Как се сравнява този месец с предишния?",
 };

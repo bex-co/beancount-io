@@ -1,6 +1,6 @@
 # ADR 002: Mobile AI Assistant
 
-- Status: Proposed
+- Status: Accepted — P0/P1 implemented 2026-08-19 (`.pm/w1/done/m32/`); see [Implementation notes](#implementation-notes-2026-08-19)
 - Date: 2026-08-18
 - Decision owners: Mobile (client); Backend (no changes required)
 - Scope: Adding the platform's agent chat — "Ask Beancount.io" — to the mobile app: which endpoint and protocol to use, which client mechanism to adopt, how attachments and tool approvals work, and what stays out of scope.
@@ -35,7 +35,7 @@ Build the assistant as a **native screen that is a protocol-faithful sibling of 
   - `fetch: expo/fetch` (streaming-capable)
   - `headers`: `Authorization: Bearer <token from sessionVar>` and `Accept-Language` from the active locale (as the dashboard sends)
   - `body: { ledgerId, sessionId }` with `ledgerId` from the selected-ledger reactive var
-- **New screen + route**: `src/screens/agent-screen/` mounted from `app/(app)/agent.tsx`. Message list with markdown-lite rendering, input bar, streaming indicator, stop, inline error + retry. Entry points: a Home-screen "Ask" affordance and the deep link `beancount:///(app)/agent?q=…` with auto-submit — parity with the dashboard's `?q=`.
+- **New screen + route**: `src/screens/agent-screen/` mounted from `app/(app)/agent.tsx`. Message list rendering agent answers as markdown (via `react-native-marked` — see [Rendering markdown](#rendering-markdown-react-native-marked)), input bar, streaming indicator, stop, inline error + retry. Entry points: a Home-screen "Ask" affordance and the deep link `beancount:///(app)/agent?q=…`, which **prefills the input and never submits** — deliberately unlike the dashboard's `?q=`, because any app can open a URL scheme with text it chose (see [Implementation notes](#implementation-notes-2026-08-19)).
 - **Tool approvals**: port the dashboard's approval-card pattern to React Native — a file-edit card showing the change description and diff, and a receipt-insert card showing the proposed transaction — wired to `addToolApprovalResponse` with `sendAutomaticallyWhen` completing the round-trip.
 - **Attachments**: reuse the receipt-capture upload leg (`generateTempAssetUploadUrl` → presigned PUT), then send `file` parts plus `data-file-upload` parts `{ objectKey, filename }`, exactly as the dashboard does. Camera capture can feed the same staging path later.
 - **Conversation state is client-held** (the server is stateless per request): keep the `UIMessage[]` in memory for the app session with a New-chat reset. **Durable, cross-device history is explicitly deferred** to the backend-owned persistence design (see `dashboard/docs/ADR001-chat-history-persistence.md`); when its history endpoints exist, this screen hydrates from them without a transport change.
@@ -151,6 +151,57 @@ The backend-owned history design (dashboard ADR 001) is orthogonal: this client 
 - Client-held history means a killed app forgets the conversation until backend persistence lands — accepted interim state.
 - The approval cards are real RN UI work (diff rendering on small screens) and must be built before write-capable prompts feel safe.
 - `expo/fetch` streaming behavior differs from browser fetch in edge cases (backgrounding, connection loss); needs explicit testing on both platforms.
+
+## Implementation notes (2026-08-19)
+
+P0 and P1 shipped as `w1/m32`. The decision held; four things it did not anticipate are recorded here because they change what a reader should do next.
+
+### `credentials: "omit"` is required, not hygiene
+
+The P0 smoke ran four cases from inside the app. Bearer with cookies suppressed → **200**, streaming. A deliberately invalid Bearer → **401** (so the header is read and preferred, as `getTokenFromCtx` promises). **No header with cookies allowed → 200**: `expo/fetch` shares the native cookie store, the app holds a session cookie for the same origin, and the route falls back to it. No header with `credentials: "omit"` → 401.
+
+That third case is the one to remember. Without `credentials: "omit"`, a client whose `Authorization` header broke would go on working — until the cookie expired, on a fresh install, or on someone else's device. The transport therefore omits cookies so the Bearer token is the only credential and an auth defect fails loudly and immediately.
+
+### The error envelope is JSON, not a stream frame
+
+Failures arrive as `application/json` with `{"ok":false,"error":{"code":"…","message":"…"}}` — `UNAUTHENTICATED` (401) and `RATE_LIMITED` (429, the AI-CFO quota). Clients should classify on `code` and treat quota as terminal for that turn: retrying a refusal earns a second refusal, so the quota case offers the upgrade path instead of a retry button.
+
+### A turn can end without an answer
+
+The server caps the agent at ten steps. A vague write request ("add a $5 coffee expense") spent all ten on `listLedgerFiles` + `readLedgerFiles` and finished with no text at all. Any client rendering this stream needs a state for _finished, ran tools, said nothing_ — otherwise the screen simply falls silent. This is separate from the error and approval states and easy to miss, because it only appears on questions that send the agent exploring.
+
+### The approval refusal works, and the model's narration does not track it
+
+Reaching `approval-requested` took a request naming the target file; vaguer phrasing exhausted the step budget first. When it was reached, the agent's own text said _"Proceeding with this operation"_ while the tool sat unexecuted, and the ledger's git history was identical before and after. The refusal is structural — `sendAutomaticallyWhen` is never passed to `useChat` and `addToolApprovalResponse` is never called — and it is what makes P2 safe to defer. It also means **a client must not infer that a write happened from what the model says about it.**
+
+### Rendering markdown: `react-native-marked`
+
+Agent answers are markdown, and the app renders them with **`react-native-marked`** (v8.1.1) rather than a hand-written reader. Adopted 2026-08-19, after the first implementation shipped a bespoke parser and the question "is there an off-the-shelf option for this stack?" was asked directly.
+
+**Why this one.** `react-markdown` — what the dashboard uses — emits DOM and cannot cross to React Native, which is why mobile could not simply copy the web client. Of the RN options, `react-native-markdown-display` has been untouched since 2023 and its maintained fork carries the usual fork risk; `react-native-marked` is current, is built on `marked`, renders to real RN components, and its `react-native-svg` peer was **already installed** for the d3 charts.
+
+**How it is wired.** The default export renders into a `FlatList`, which must not nest inside the chat's `ScrollView`; the library's `useMarkdown(value, { styles })` hook returns `ReactNode[]` instead and is what the message bubble uses. All colours are passed in from our theme tokens rather than using the library's own light/dark palette, so there is one source of truth for colour.
+
+**What it bought, measured on device.** Correct hanging indents on wrapped list items, real heading weight, and — the one that matters — **correct list-marker placement under RTL for free**. The hand-rolled version had a Persian defect there that took a device walk to find and a layout fix to close; the library simply gets it right. It also brings tables, links and blockquotes, none of which the bespoke reader supported and all of which a BQL result could plausibly want.
+
+**What it costs.** Seven transitive dependencies, and the bundle went from 3124 to 3175 modules.
+
+**One accepted rough edge.** LaTeX preprocessing needs matched delimiters, so mid-stream a display block whose closing `\]` has not arrived yet shows its opening bracket as an escaped character for a moment. It resolves on the next delta; a test pins the behaviour so it reads as understood rather than missed.
+
+### The feature ships gated off
+
+`config.features.agentChat` in `src/config.ts` is a plain `false`. It gates **both** the Home entry card and the `/agent` route, so with it off the screen is unreachable even through a `beancount:///(app)/agent` deep link — gating only the card would leave the route open to anything that can fire a URL scheme.
+
+Deliberately a constant rather than an `EXPO_PUBLIC_*` variable: the switch is then visible in the diff of whoever changes it, and no build can end up shipping the feature because of what happened to be in someone's shell. Turning it on is a code change, reviewed like one. (`__DEV__` was also rejected — it is false in TestFlight, which would hide the feature from exactly the people meant to try it.)
+
+The gate stays until at least the P2 approval cards land: until then the surface can spend a user's AI quota and cannot review its own ledger writes.
+
+### Amendments to the plan above
+
+- **Deep links prefill and never submit, whatever opened them.** The P4 sketch had Home chips submitting on tap; that needs a signal a deep link cannot forge, and every Expo Router param is forgeable. The submitting chips live on the agent screen's empty state instead, where a tap is unambiguously human, and Home is a door. One rule, no second channel. (A related bug: reading `?q=` only in a `useState` initializer drops the question when the screen is already on the stack — it needs an effect, still prefill-only.)
+- **Markdown is not optional, and it is not ours to write.** "Render text parts plainly" produced `**Cash/Assets**: 906.58 USD` on screen. That was first answered with a hand-rolled ~100-line reader; it has since been **replaced by `react-native-marked`** — see [Rendering markdown](#rendering-markdown-react-native-marked) below. What stays hand-written is only the part that is _not_ markdown: the LaTeX the model wraps arithmetic in.
+- **Multiple text parts mean multiple steps** and must be joined as paragraphs, or the answer reads as `Let me try again.It seems…`.
+- **Metro caches resolution across installs.** The first bundle after adding the SDK failed on a transitive `@opentelemetry/api` path that exists on disk; `npx expo start --clear` fixed it. Do not debug that error as a packaging problem.
 
 ## Open Questions
 

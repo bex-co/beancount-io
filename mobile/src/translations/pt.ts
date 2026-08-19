@@ -402,4 +402,29 @@ export const pt: typeof en = {
   budgetDeleteMessage:
     "Excluir o orçamento {{interval}} de {{amount}} para {{account}} em vigor em {{date}}? Isso remove uma única entrada e não pode ser desfeito.",
   budgetDeleteFailed: "Falha ao excluir o orçamento",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Pergunte ao Beancount.io",
+  agentWelcome:
+    "Pergunte-me qualquer coisa sobre o seu livro: saldos, gastos ou como um número foi obtido.",
+  agentPlaceholder: "Pergunte sobre o seu livro",
+  agentThinking: "A pensar…",
+  agentWorking: "A consultar o seu livro…",
+  agentSend: "Enviar",
+  agentStop: "Parar",
+  agentNewChat: "Nova conversa",
+  agentRetry: "Tentar de novo",
+  agentErrorBody: "Essa pergunta não foi enviada.",
+  agentNoAnswerBody:
+    "Consultei o seu livro, mas fiquei sem passos antes de responder. Uma pergunta mais específica costuma resolver.",
+  agentQuotaTitle: "Limite mensal de IA atingido",
+  agentQuotaBody:
+    "Esgotou a utilização de IA deste mês. É reposta no próximo mês, ou pode fazer upgrade.",
+  agentApprovalTitle: "Aprove na web",
+  agentApprovalBody:
+    "Esta alteração precisa da sua revisão antes de tocar no seu livro, e a aplicação ainda não consegue mostrar o diff completo. Abra este livro em beancount.io para aprovar.",
+  agentAskCard: "Pergunte sobre o seu livro",
+  agentPresetNetWorth: "Qual é o meu património líquido?",
+  agentPresetTopSpending: "Em que gastei mais este mês?",
+  agentPresetThisMonth: "Como está este mês em comparação com o anterior?",
 };

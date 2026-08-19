@@ -399,4 +399,29 @@ export const sk: typeof en = {
   budgetDeleteMessage:
     "Odstrániť {{interval}} rozpočet {{amount}} pre {{account}} platný od {{date}}? Odstráni sa jeden záznam a nedá sa to vrátiť späť.",
   budgetDeleteFailed: "Odstránenie rozpočtu zlyhalo",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Opýtaj sa Beancount.io",
+  agentWelcome:
+    "Opýtaj sa ma na čokoľvek o svojej účtovnej knihe — zostatky, výdavky alebo ako vzniklo dané číslo.",
+  agentPlaceholder: "Opýtaj sa na svoju knihu",
+  agentThinking: "Premýšľam…",
+  agentWorking: "Prezerám tvoju knihu…",
+  agentSend: "Odoslať",
+  agentStop: "Zastaviť",
+  agentNewChat: "Nový chat",
+  agentRetry: "Skúsiť znova",
+  agentErrorBody: "Táto otázka neprešla.",
+  agentNoAnswerBody:
+    "Prezrel som tvoju knihu, ale minuli sa mi kroky skôr, než som odpovedal. Konkrétnejšia otázka zvyčajne pomôže.",
+  agentQuotaTitle: "Mesačný limit AI je vyčerpaný",
+  agentQuotaBody:
+    "Vyčerpal si limit AI na tento mesiac. Obnoví sa budúci mesiac, alebo si môžeš plán vylepšiť.",
+  agentApprovalTitle: "Schváľ to na webe",
+  agentApprovalBody:
+    "Túto zmenu treba skontrolovať skôr, než sa dotkne tvojej knihy, a aplikácia zatiaľ nevie zobraziť celý rozdiel. Otvor túto knihu na beancount.io a schváľ ju.",
+  agentAskCard: "Opýtaj sa na svoju knihu",
+  agentPresetNetWorth: "Aké je moje čisté imanie?",
+  agentPresetTopSpending: "Za čo som tento mesiac minul najviac?",
+  agentPresetThisMonth: "Ako je na tom tento mesiac oproti minulému?",
 };

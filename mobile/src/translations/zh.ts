@@ -383,4 +383,28 @@ export const zh: typeof en = {
   budgetDeleteMessage:
     "确定删除 {{account}} 自 {{date}} 起生效的{{interval}}预算 {{amount}} 吗？此操作仅删除一条记录且无法撤销。",
   budgetDeleteFailed: "删除预算失败",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "问问 Beancount.io",
+  agentWelcome:
+    "关于你的账本，什么都可以问我——余额、支出，或者某个数字是怎么来的。",
+  agentPlaceholder: "询问你的账本",
+  agentThinking: "思考中…",
+  agentWorking: "正在查阅你的账本…",
+  agentSend: "发送",
+  agentStop: "停止",
+  agentNewChat: "新对话",
+  agentRetry: "重试",
+  agentErrorBody: "这个问题没有发送成功。",
+  agentNoAnswerBody:
+    "我查阅了你的账本，但在给出答案前用完了步骤。问得更具体一些通常就能得到结果。",
+  agentQuotaTitle: "本月 AI 额度已用完",
+  agentQuotaBody: "你已用完本月的 AI 额度。下月会重置，也可以升级获得更多。",
+  agentApprovalTitle: "请在网页端确认",
+  agentApprovalBody:
+    "这项改动需要你先确认才能写入账本，而 App 暂时还无法展示完整差异。请在 beancount.io 上打开此账本进行确认。",
+  agentAskCard: "询问你的账本",
+  agentPresetNetWorth: "我的净资产是多少？",
+  agentPresetTopSpending: "这个月我在什么上花得最多？",
+  agentPresetThisMonth: "这个月和上个月相比如何？",
 };

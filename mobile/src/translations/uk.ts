@@ -399,4 +399,29 @@ export const uk: typeof en = {
   budgetDeleteMessage:
     "Видалити {{interval}} бюджет {{amount}} для {{account}}, що діє з {{date}}? Буде видалено один запис, скасувати неможливо.",
   budgetDeleteFailed: "Не вдалося видалити бюджет",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Запитати Beancount.io",
+  agentWelcome:
+    "Питайте будь-що про вашу книгу — залишки, витрати або звідки взялося те чи інше число.",
+  agentPlaceholder: "Запитайте про вашу книгу",
+  agentThinking: "Думаю…",
+  agentWorking: "Переглядаю вашу книгу…",
+  agentSend: "Надіслати",
+  agentStop: "Зупинити",
+  agentNewChat: "Новий чат",
+  agentRetry: "Спробувати ще раз",
+  agentErrorBody: "Це запитання не надіслалося.",
+  agentNoAnswerBody:
+    "Я переглянув вашу книгу, але вичерпав кроки, перш ніж відповісти. Конкретніше запитання зазвичай спрацьовує.",
+  agentQuotaTitle: "Місячний ліміт ШІ вичерпано",
+  agentQuotaBody:
+    "Ви вичерпали ліміт ШІ на цей місяць. Він оновиться наступного місяця, або можна перейти на вищий тариф.",
+  agentApprovalTitle: "Підтвердьте у вебверсії",
+  agentApprovalBody:
+    "Цю зміну потрібно переглянути, перш ніж вона торкнеться вашої книги, а застосунок поки не вміє показувати повну різницю. Відкрийте цю книгу на beancount.io, щоб підтвердити.",
+  agentAskCard: "Запитайте про вашу книгу",
+  agentPresetNetWorth: "Який мій чистий капітал?",
+  agentPresetTopSpending: "На що я витратив найбільше цього місяця?",
+  agentPresetThisMonth: "Як цей місяць порівняно з минулим?",
 };

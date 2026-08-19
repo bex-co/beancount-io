@@ -35,7 +35,47 @@
 - [x] **m30** — The last six locales, and the gate goes unconditional (10 tasks) ← same request, split off by size — twelve locales at ~170 keys each is roughly ten hours; shipped 2026-08-17 — all thirteen locales now declare the same 329 keys, and the gate is unconditional
 - [x] **m31** — Right-to-left layout for Persian (10 tasks) ← from the `m30` outcome note, which names this gap and rules it out of scope in the same sentence; shipped 2026-08-17 — Persian now lays out right-to-left, English is unchanged, and two React Native RTL defaults that fight each other are written down in the milestone's outcome note
 - ~~**008** — v2 native code-editor module (Runestone + sora-editor)~~ — **deleted 2026-08-17**: 12–19 person-days plus permanent maintenance of two native deps, gated on a product signal ("only if requirements outgrow the 7-color approach") that has not appeared since m15 shipped. The research survives in git history at this note's path.
-- [ ] **m32** — Ask Beancount.io on mobile: core agent chat (10 tasks) ← inbox `006`, promoted 2026-08-18 after its blocker dissolved; scoped by `docs/ADR002-mobile-ai-assistant.md` (P0 + P1)
+- [x] **m32** — Ask Beancount.io on mobile: core agent chat (10 tasks) ← inbox `006`, promoted 2026-08-18 after its blocker dissolved; scoped by `docs/ADR002-mobile-ai-assistant.md` (P0 + P1); shipped 2026-08-19 — the app's first AI surface, on the dashboard's own agent route with no backend change
+
+## Ask Beancount.io shipped on mobile — 2026-08-19
+
+**m32** landed the same day it started. The app has an AI surface for the first
+time: ask a question about the selected ledger, watch the answer stream in, stop
+it, start over. It is a second client of the route the dashboard already uses —
+same UIMessage stream, **no backend change** — and it authenticates with the
+Bearer token already in the keychain.
+
+Three things are worth remembering past this milestone:
+
+- **`expo/fetch` shares the native cookie store.** The smoke's negative control
+  (no `Authorization` header) returned 200 and streamed a real answer, because
+  the app holds a session cookie for the same origin and the route tries the
+  header first, the cookie second. The transport sets `credentials: "omit"` so
+  the token is the only credential — otherwise a client that lost its header
+  keeps working until the cookie expires somewhere else, later.
+- **The model announces writes it has not made.** Asked to append a
+  transaction it said "Proceeding with this operation" and nothing happened, the
+  edit tool being approval-gated server-side and this client never answering the
+  request. Git history identical before and after. What the model says and what
+  the tool does are separate facts.
+- **A turn can finish having said nothing** — ten server-side steps spent
+  reading files, no text. That silence was a dead end until it got its own
+  notice; it was found only because the first attempt to reach an approval
+  failed to reach one.
+
+The UX pass found six defects, every one by looking at a real answer rather than
+at the diff: raw `**asterisks**` beside the user's money, LaTeX where the model
+showed its arithmetic, backticks around account names, steps running together,
+the silent turn, and — visible only in Persian — a bullet glued to its word,
+because the gap lived in a `"• "` string and a trailing space collapses when the
+row mirrors. Same class of bug m31 wrote up: spacing that is really layout
+belongs in the layout.
+
+**Deliberately not built:** approval cards with a real diff (ADR002 P2 — every
+write is still a trip to the web), attachments through chat (P3), and durable
+history (backend-owned). **Not verified:** Android, haptics, analytics, and
+hand-typed input — the automation taps but cannot type, so every message sent
+came from a preset chip or a `?q=` prefill.
 
 ## Ask-AI unblocked, promoted — 2026-08-18
 

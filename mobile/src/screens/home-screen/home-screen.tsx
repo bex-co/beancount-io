@@ -14,6 +14,8 @@ import { RecentTransactionsCard } from "@/screens/home-screen/components/recent-
 import { SpendingCard } from "@/screens/home-screen/components/spending-card";
 import { BudgetCard } from "@/screens/home-screen/components/budget-card";
 import { FeedCard } from "@/screens/home-screen/components/feed-card";
+import { AskAiCard } from "@/screens/home-screen/components/ask-ai-card";
+import { config } from "@/config";
 import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
 import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
@@ -135,6 +137,7 @@ export const HomeScreenImpl = (): JSX.Element => {
         }
       />
       <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
+        {config.features.agentChat && <AskAiCard />}
         <AccountChartsCard
           currency={currency}
           netWorthSeries={netWorthSeries}

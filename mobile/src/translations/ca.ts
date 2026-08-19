@@ -400,4 +400,29 @@ export const ca: typeof en = {
   budgetDeleteMessage:
     "Vols eliminar el pressupost {{interval}} de {{amount}} per a {{account}} vigent des del {{date}}? Això elimina una sola entrada i no es pot desfer.",
   budgetDeleteFailed: "No s'ha pogut eliminar el pressupost",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Pregunta a Beancount.io",
+  agentWelcome:
+    "Pregunta'm el que vulguis sobre el teu llibre: saldos, despeses o d'on surt una xifra.",
+  agentPlaceholder: "Pregunta sobre el teu llibre",
+  agentThinking: "Pensant…",
+  agentWorking: "Consultant el teu llibre…",
+  agentSend: "Envia",
+  agentStop: "Atura",
+  agentNewChat: "Xat nou",
+  agentRetry: "Torna-ho a provar",
+  agentErrorBody: "Aquesta pregunta no s'ha enviat.",
+  agentNoAnswerBody:
+    "He consultat el teu llibre, però m'he quedat sense passos abans de respondre. Una pregunta més concreta sol funcionar.",
+  agentQuotaTitle: "Límit mensual d'IA exhaurit",
+  agentQuotaBody:
+    "Has exhaurit l'ús d'IA d'aquest mes. Es restableix el mes vinent, o pots millorar el pla.",
+  agentApprovalTitle: "Aprova-ho al web",
+  agentApprovalBody:
+    "Aquest canvi necessita la teva revisió abans de tocar el llibre, i l'aplicació encara no pot mostrar-te el diff complet. Obre aquest llibre a beancount.io per aprovar-lo.",
+  agentAskCard: "Pregunta sobre el teu llibre",
+  agentPresetNetWorth: "Quin és el meu patrimoni net?",
+  agentPresetTopSpending: "En què he gastat més aquest mes?",
+  agentPresetThisMonth: "Com va aquest mes comparat amb l'anterior?",
 };

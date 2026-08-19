@@ -401,4 +401,29 @@ export const es: typeof en = {
   budgetDeleteMessage:
     "¿Eliminar el presupuesto {{interval}} de {{amount}} para {{account}} vigente desde {{date}}? Esto elimina una sola entrada y no se puede deshacer.",
   budgetDeleteFailed: "Error al eliminar el presupuesto",
+
+  // Ask Beancount.io — the agent chat
+  agentTitle: "Pregunta a Beancount.io",
+  agentWelcome:
+    "Pregúntame lo que quieras sobre tu libro contable: saldos, gastos o cómo se obtuvo una cifra.",
+  agentPlaceholder: "Pregunta sobre tu libro",
+  agentThinking: "Pensando…",
+  agentWorking: "Revisando tu libro contable…",
+  agentSend: "Enviar",
+  agentStop: "Detener",
+  agentNewChat: "Nuevo chat",
+  agentRetry: "Reintentar",
+  agentErrorBody: "Esa pregunta no llegó a enviarse.",
+  agentNoAnswerBody:
+    "He revisado tu libro contable, pero me quedé sin pasos antes de responder. Una pregunta más concreta suele funcionar.",
+  agentQuotaTitle: "Límite mensual de IA alcanzado",
+  agentQuotaBody:
+    "Has agotado el uso de IA de este mes. Se restablece el mes que viene, o puedes mejorar tu plan.",
+  agentApprovalTitle: "Apruébalo en la web",
+  agentApprovalBody:
+    "Este cambio necesita tu revisión antes de tocar tu libro contable, y la aplicación aún no puede mostrarte el diff completo. Abre este libro en beancount.io para aprobarlo.",
+  agentAskCard: "Pregunta sobre tu libro",
+  agentPresetNetWorth: "¿Cuál es mi patrimonio neto?",
+  agentPresetTopSpending: "¿En qué gasté más este mes?",
+  agentPresetThisMonth: "¿Cómo va este mes comparado con el anterior?",
 };
