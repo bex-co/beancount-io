@@ -79,13 +79,21 @@ xcrun simctl spawn $UDID defaults write com.apple.Accessibility ReduceMotionEnab
 ```
 
 **Tapping** uses `expo-mcp` (a devDependency — no MCP session auth needed). Start Metro
-with `EXPO_UNSTABLE_MCP_SERVER=1 npx expo start`, then spawn
+with plain `npx expo start`, then spawn
 `node node_modules/expo-mcp/bin/expo-mcp.mjs --dev-server-url http://localhost:8081 --root <mobile>`
 and speak JSON-RPC over stdin: `initialize` → `notifications/initialized` →
 `tools/call`. Tools: `automation_tap` (`{projectRoot, platform:"ios", x, y}` or
-`testID`), `automation_take_screenshot`, `automation_find_view`. Coordinates are
+`testID`), `automation_take_screenshot`, `automation_find_view`, `collect_app_logs`,
+`expo_router_sitemap`. Coordinates are
 **logical points** (402x874 on iPhone 17 Pro) — divide screenshot pixels by 3. Each tap
 is a real XCUITest event, so it drives native controls that synthetic events can't.
+
+Do **not** set `EXPO_UNSTABLE_MCP_SERVER=1` (2026-08-19): it makes `expo start` dial the
+remote MCP tunnel, which times out and kills the dev server — the same `mcp.expo.dev`
+breakage that makes the hosted server unusable. The local binary above talks to a plain
+dev server and needs no flag. There is **no text-entry tool**, so a flow that requires
+typing has to be reached another way (a `testID` tap, or a deep-link parameter that
+prefills the field).
 
 Notes that keep costing time when forgotten:
 
