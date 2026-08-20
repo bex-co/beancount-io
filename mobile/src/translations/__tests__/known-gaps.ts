@@ -33,6 +33,8 @@ export const UNTRANSLATABLE: Record<string, string> = {
     "A literal Beancount account name (Expenses:Groceries) — the same text in every language.",
   ledgerCreateFilePlaceholder:
     "An example filename; the .bean extension is part of the format.",
+  merchantDetailDateRange:
+    "Date span template; the filled-in dates are already locale-formatted, and the en-dash separator is the same in every language.",
 };
 
 /**
@@ -58,6 +60,7 @@ export const SAME_AS_ENGLISH: Record<
         "total",
         "budgetInterval",
         "ledgerEditorErrorCount",
+        "merchantsCadenceIrregular",
       ],
     },
     {
@@ -100,7 +103,12 @@ export const SAME_AS_ENGLISH: Record<
   es: [
     {
       reason: "Spanish spells these the same as English.",
-      keys: ["journalError", "receiptFlash", "total"],
+      keys: [
+        "journalError",
+        "receiptFlash",
+        "total",
+        "merchantsCadenceIrregular",
+      ],
     },
     {
       reason: "Month abbreviations that coincide with the English ones.",
@@ -178,7 +186,14 @@ export const SAME_AS_ENGLISH: Record<
   pt: [
     {
       reason: "Portuguese spells these the same as English.",
-      keys: ["filterStatus", "tags", "links", "receiptFlash", "total"],
+      keys: [
+        "filterStatus",
+        "tags",
+        "links",
+        "receiptFlash",
+        "total",
+        "merchantsCadenceIrregular",
+      ],
     },
     {
       reason: "Month abbreviations that coincide with the English ones.",

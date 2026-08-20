@@ -8,6 +8,7 @@ import { loadLedger, ledgerVar } from "@/common/vars/ledger";
 import { loadTheme } from "@/common/vars/theme";
 import { loadSession } from "@/common/vars/session";
 import { loadAccountUsage } from "@/common/vars/account-usage";
+import { loadMerchantRecurringOverrides } from "@/common/vars/merchant-recurring-overrides";
 import { i18n, setLocale } from "@/translations";
 import { applyLayoutDirection } from "@/common/rtl";
 import { reloadApp } from "@/common/reload-app";
@@ -53,6 +54,7 @@ const SplashProviderComponent = ({
           loadLedger(),
           loadTheme(),
           loadAccountUsage(),
+          loadMerchantRecurringOverrides(),
           restoreApolloCache(),
         ]);
         if (locale) {

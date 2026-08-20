@@ -39,8 +39,8 @@
 - [x] **m33** — Cash-flow Sankey on Reports (10 tasks) ← inbox `020`, promoted 2026-08-19 — its two blockers (the `d3-sankey` decision, a phone-width design pass) are the milestone's first two tasks; with the agent-chat track closed by anti-goal the same day, this is the largest open analytics parity gap, and the web ships the tested data transformer in-repo; shipped 2026-08-19
 - [x] **m34** — Offline-tolerant cold start: persist the Apollo cache (8 tasks) ← from `/pm-brainstorm` 2026-08-19, materialized in the same hand-off; sequenced after m33 — feature before infrastructure
 - [x] **m35** — Merchants directory in the drawer (9 tasks) ← from `/pm` hand-off 2026-08-19 (Monarch Merchants parity research: Mobbin iOS captures + help.monarch.com + monarchmoney GraphQL clients)
-- [ ] **m36** — Merchant view: stats and transaction history (8 tasks) ← same hand-off; sequenced after m35 — navigates from its list, reuses its `queryShell` plumbing
-- [ ] **m37** — Recurring merchants: detection and grouping (9 tasks) ← same hand-off; sequenced after m35 + m36 — the directory is its surface, the merchant view hosts its toggle
+- [x] **m36** — Merchant view: stats and transaction history (8 tasks) ← same hand-off; sequenced after m35 — navigates from its list, reuses its `queryShell` plumbing
+- [x] **m37** — Recurring merchants: detection and grouping (9 tasks) ← same hand-off; sequenced after m35 + m36 — the directory is its surface, the merchant view hosts its toggle
 
 ## Merchants hand-off — 2026-08-19
 

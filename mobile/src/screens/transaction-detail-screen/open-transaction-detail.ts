@@ -14,7 +14,12 @@ type Router = ReturnType<typeof useRouter>;
 export const selectedTransactionVar = makeVar<JournalTransaction | null>(null);
 
 export type TransactionDetailSource =
-  "home" | "transactions" | "journal" | "account_detail" | "reports";
+  | "home"
+  | "transactions"
+  | "journal"
+  | "account_detail"
+  | "reports"
+  | "merchants";
 
 export function openTransactionDetail(
   router: Router,

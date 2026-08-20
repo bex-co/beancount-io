@@ -1,17 +1,20 @@
 import { useCallback, useMemo, useState } from "react";
 import {
-  FlatList,
+  SectionList,
   StyleSheet,
   Text,
   TouchableOpacity,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import { useReactiveVar } from "@apollo/client";
+import { useRouter } from "expo-router";
 import { analytics } from "@/common/analytics";
 import {
   fontSizes,
   fontWeights,
   gutter,
+  sectionHeaderPaddingVertical,
   space,
   useTheme,
 } from "@/common/theme";
@@ -22,16 +25,23 @@ import { useQueryShellQuery } from "@/generated-graphql/graphql";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { SearchBar, SEARCH_BAR_HEIGHT } from "@/components/search-bar";
+import {
+  merchantRecurringOverridesVar,
+  overrideFor,
+} from "@/common/vars/merchant-recurring-overrides";
 import { MerchantRow } from "./merchant-row";
 import { MerchantsListSkeleton } from "./merchants-list-skeleton";
 import {
   aggregatePayees,
-  filterMerchants,
-  sortMerchants,
   PAYEE_ROLLUP_BQL,
-  type MerchantAggregate,
   type MerchantSort,
 } from "./selectors/aggregate-payees";
+import {
+  buildMerchantSections,
+  type MerchantListItem,
+  type MerchantSection,
+} from "./selectors/merchant-sections";
+import { usePayeeRecurrence } from "./use-payee-recurrence";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -65,6 +75,20 @@ const getStyles = (theme: ColorTheme) =>
     },
     listContent: {
       flexGrow: 1,
+    },
+    sectionHeader: {
+      paddingHorizontal: gutter,
+      paddingTop: space.md,
+      paddingBottom: sectionHeaderPaddingVertical,
+      backgroundColor: theme.white,
+    },
+    sectionHeaderText: {
+      fontSize: fontSizes.sm,
+      lineHeight: 18,
+      fontWeight: fontWeights.medium,
+      color: theme.black60,
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
     },
     emptyContainer: {
       flex: 1,
@@ -112,13 +136,20 @@ function MerchantsDirectory() {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
+  const router = useRouter();
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sort, setSort] = useState<MerchantSort>("count");
+  const overrides = useReactiveVar(merchantRecurringOverridesVar);
 
   usePageView("merchants");
 
-  const { data, loading, error, refetch } = useQueryShellQuery({
+  const {
+    data: rollupData,
+    loading: rollupLoading,
+    error: rollupError,
+    refetch: refetchRollup,
+  } = useQueryShellQuery({
     variables: {
       ledgerId: ledgerId!,
       query: PAYEE_ROLLUP_BQL,
@@ -126,32 +157,48 @@ function MerchantsDirectory() {
     skip: !ledgerId,
   });
 
+  const {
+    detections,
+    loading: seriesLoading,
+    error: seriesError,
+    refetch: refetchSeries,
+  } = usePayeeRecurrence(ledgerId);
+
   const merchants = useMemo(
-    () => aggregatePayees(data?.queryShell?.table ?? null),
-    [data?.queryShell?.table],
+    () => aggregatePayees(rollupData?.queryShell?.table ?? null),
+    [rollupData?.queryShell?.table],
   );
 
-  const visibleMerchants = useMemo(
-    () => sortMerchants(filterMerchants(merchants, searchQuery), sort),
-    [merchants, searchQuery, sort],
+  const sections = useMemo(
+    () =>
+      buildMerchantSections(
+        merchants,
+        detections,
+        (payee) => overrideFor(overrides, ledgerId!, payee),
+        searchQuery,
+        sort,
+      ),
+    [merchants, detections, overrides, ledgerId, searchQuery, sort],
   );
 
-  const isInitialLoading = loading && !data && !error;
+  const loading = rollupLoading || seriesLoading;
+  const error = rollupError ?? seriesError;
+  const isInitialLoading = loading && !rollupData && !error;
   const showBlankEmpty = !isInitialLoading && !error && merchants.length === 0;
   const showNoResults =
     !isInitialLoading &&
     !error &&
     merchants.length > 0 &&
-    visibleMerchants.length === 0;
+    sections.every((section) => section.data.length === 0);
 
   const onRefresh = useCallback(async () => {
     setIsRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([refetchRollup(), refetchSeries()]);
     } finally {
       setIsRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetchRollup, refetchSeries]);
 
   const onToggleSort = useCallback(() => {
     setSort((current) => {
@@ -160,6 +207,19 @@ function MerchantsDirectory() {
       return next;
     });
   }, []);
+
+  const onPressRow = useCallback(
+    (item: MerchantListItem) => {
+      analytics.track("merchants_tap_row", {
+        recurring: item.resolved.isRecurring,
+      });
+      router.push({
+        pathname: "/merchant-detail",
+        params: { payee: item.merchant.payee },
+      });
+    },
+    [router],
+  );
 
   const searchPlaceholder = t("merchantsSearchPlaceholder", {
     count: merchants.length,
@@ -170,8 +230,24 @@ function MerchantsDirectory() {
       : t("merchantsSortAlphabetical");
 
   const renderItem = useCallback(
-    ({ item }: { item: MerchantAggregate }) => <MerchantRow merchant={item} />,
-    [],
+    ({ item }: { item: MerchantListItem }) => (
+      <MerchantRow item={item} onPress={() => onPressRow(item)} />
+    ),
+    [onPressRow],
+  );
+
+  const renderSectionHeader = useCallback(
+    ({ section }: { section: MerchantSection }) => {
+      if (!section.titleKey) {
+        return null;
+      }
+      return (
+        <View style={styles.sectionHeader}>
+          <Text style={styles.sectionHeaderText}>{t(section.titleKey)}</Text>
+        </View>
+      );
+    },
+    [styles.sectionHeader, styles.sectionHeaderText, t],
   );
 
   const listEmpty = () => {
@@ -218,12 +294,16 @@ function MerchantsDirectory() {
 
   return (
     <View style={styles.container}>
-      <FlatList
+      <SectionList
         style={styles.list}
         contentContainerStyle={styles.listContent}
-        data={isInitialLoading || error ? [] : visibleMerchants}
-        keyExtractor={(item) => item.payee}
+        sections={isInitialLoading || error ? [] : sections}
+        keyExtractor={(item, index) =>
+          `${item.inRecurringSection ? "r" : "a"}:${item.merchant.payee}:${index}`
+        }
         renderItem={renderItem}
+        renderSectionHeader={renderSectionHeader}
+        stickySectionHeadersEnabled={false}
         alwaysBounceVertical
         keyboardDismissMode="on-drag"
         keyboardShouldPersistTaps="handled"
