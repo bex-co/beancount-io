@@ -33,6 +33,7 @@
   <a href="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml"><img src="https://github.com/bex-co/beancount-io/actions/workflows/ci.yml/badge.svg?branch=main" alt="Mobile CI"></a>
   <a href="https://github.com/bex-co/beancount-io/actions/workflows/ci-dashboard.yml"><img src="https://github.com/bex-co/beancount-io/actions/workflows/ci-dashboard.yml/badge.svg?branch=main" alt="Dashboard CI"></a>
   <a href="https://github.com/bex-co/beancount-io/actions/workflows/ci-cli.yml"><img src="https://github.com/bex-co/beancount-io/actions/workflows/ci-cli.yml/badge.svg?branch=main" alt="Python CI"></a>
+  <a href="https://github.com/bex-co/beancount-io/actions/workflows/ci-skills.yml"><img src="https://github.com/bex-co/beancount-io/actions/workflows/ci-skills.yml/badge.svg?branch=main" alt="Skills CI"></a>
   <a href="https://github.com/bex-co/beancount-io/actions/workflows/secret-scan.yml"><img src="https://github.com/bex-co/beancount-io/actions/workflows/secret-scan.yml/badge.svg?branch=main" alt="Secret scan"></a>
   <a href="./LICENSE"><img src="https://img.shields.io/badge/license-MIT-blue.svg" alt="MIT license"></a>
 </p>
@@ -141,9 +142,10 @@ Every active package has path-filtered CI so unrelated changes stay fast:
 | Package | Run before opening a PR |
 | --- | --- |
 | Dashboard | `cd dashboard && yarn format:check && yarn lint && yarn test && yarn build` |
-| Mobile | `cd mobile && yarn lint && yarn typecheck && yarn test:unit` |
+| Mobile | `cd mobile && yarn format:check && yarn lint && yarn typecheck && yarn test:unit` |
 | CLI | `cd cli && make check-all` |
 | fava-slim | `cd fava-slim && make check-all` |
+| Skills | `python3 skills/scripts/ci-check.py` |
 
 A repository-wide secret scan also gates every push and pull request.
 

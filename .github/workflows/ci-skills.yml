@@ -1,0 +1,35 @@
+name: CI (skills)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - ".agents/skills"
+      - ".github/workflows/ci-skills.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "skills/**"
+      - ".agents/skills"
+      - ".github/workflows/ci-skills.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  skills:
+    name: skills
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: fava-slim/uv.lock
+      - name: Install bean-check (via fava-slim)
+        working-directory: fava-slim
+        run: uv sync --all-groups
+      - name: Run skills checks
+        run: python3 skills/scripts/ci-check.py

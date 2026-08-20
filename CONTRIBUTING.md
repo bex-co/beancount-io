@@ -9,9 +9,10 @@ repository is a monorepo of independent packages; read this guide and the root
 | Path         | Description                                       |
 | ------------ | ------------------------------------------------- |
 | `mobile/`    | React Native iOS & Android app (Expo, Apollo, TS) |
+| `dashboard/` | Web client (React 19, TanStack Start, Apollo, TS) |
 | `cli/`       | CLI tool (Python/uv)                              |
 | `fava-slim/` | Beancount parsing and reporting library (Python)  |
-| `skills/`    | Skills package (placeholder until code lands)     |
+| `skills/`    | Agent skills (SKILL.md + evals + fixtures)        |
 
 Each package owns its own dependencies, scripts, and `yarn.lock`/`uv.lock`.
 Packages are independent — do not add cross-package imports. Scope every change to

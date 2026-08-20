@@ -1,8 +1,7 @@
 name: CI
 
-# Per-package CI. Each package has its own path-filtered job so an unrelated
-# change does not run another package's checks. Add a new job (or workflow) per
-# package as `cli/` and `skills/` gain real code.
+# Mobile package CI. Other packages use their own path-filtered workflows:
+# ci-dashboard.yml, ci-cli.yml, ci-skills.yml, secret-scan.yml.
 
 on:
   push:
@@ -36,7 +35,8 @@ jobs:
           node-version: 22
           cache: yarn
           cache-dependency-path: mobile/yarn.lock
-      - run: yarn install
+      - run: yarn install --frozen-lockfile
+      - run: yarn format:check
       - run: yarn lint
       - run: yarn typecheck
       - run: yarn test:unit

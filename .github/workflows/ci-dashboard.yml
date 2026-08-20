@@ -36,4 +36,8 @@ jobs:
       - run: yarn format:check
       - run: yarn lint
       - run: yarn test
+      # Explicit public API URL so production builds are deterministic without a
+      # checked-in .env (VITE_API_URL is required for the browser Apollo client).
       - run: yarn build
+        env:
+          VITE_API_URL: https://beancount.io/api-gateway/
