@@ -156,6 +156,11 @@ const caAiAgent: Record<string, TranslationEntry> = {
     message: "Aturat",
     description: "Label shown on an AI response the user stopped",
   },
+  "aiAgent.answeredIn": {
+    message: "Respost en {duration}",
+    description:
+      "Shown under a completed AI answer; {duration} is a formatted elapsed time like 12.3s or 1m 5s",
+  },
   "aiAgent.retry": {
     message: "Torna-ho a provar",
     description: "Button to resubmit the last question after an error",

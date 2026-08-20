@@ -9,18 +9,19 @@ const searchSchema = z.object({
 });
 
 export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/ask")({
-  // Ask AI ("Ask me anything about this ledger…") now lives in agent mode.
-  // The legacy /ask surface POSTed to /api-gateway/chat, which the backend
-  // unregistered in #1656 ("use agent mode as primary mode") — so redirect the
-  // whole route to /agent, carrying the ?q= deep-link through (the agent page
-  // auto-submits it).
+  // Ask AI posts to /api-gateway/chat, re-registered on the backend alongside
+  // the restored Cloudflare-sandbox path (?mode=sandbox streams through the
+  // claude-code-sandbox worker; ?mode=bql keeps the local LLM+BQL handler).
+  // Plain ?q= deep-links (no explicit mode) still belong to agent mode.
   beforeLoad: ({ params, search }) => {
-    throw redirect({
-      to: "/ledger/$ledgerOwner/$ledgerName/agent",
-      params,
-      search: search.q ? { q: search.q } : {},
-      replace: true,
-    });
+    if (!search.mode) {
+      throw redirect({
+        to: "/ledger/$ledgerOwner/$ledgerName/agent",
+        params,
+        search: search.q ? { q: search.q } : {},
+        replace: true,
+      });
+    }
   },
   component: AskAIPage,
   validateSearch: searchSchema,

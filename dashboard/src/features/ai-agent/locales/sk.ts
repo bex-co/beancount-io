@@ -156,6 +156,11 @@ const skAiAgent: Record<string, TranslationEntry> = {
     message: "Zastavené",
     description: "Label shown on an AI response the user stopped",
   },
+  "aiAgent.answeredIn": {
+    message: "Zodpovedané za {duration}",
+    description:
+      "Shown under a completed AI answer; {duration} is a formatted elapsed time like 12.3s or 1m 5s",
+  },
   "aiAgent.retry": {
     message: "Skúsiť znova",
     description: "Button to resubmit the last question after an error",

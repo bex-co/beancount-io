@@ -156,6 +156,11 @@ const bgAiAgent: Record<string, TranslationEntry> = {
     message: "Спрян",
     description: "Label shown on an AI response the user stopped",
   },
+  "aiAgent.answeredIn": {
+    message: "Отговор за {duration}",
+    description:
+      "Shown under a completed AI answer; {duration} is a formatted elapsed time like 12.3s or 1m 5s",
+  },
   "aiAgent.retry": {
     message: "Опитай отново",
     description: "Button to resubmit the last question after an error",

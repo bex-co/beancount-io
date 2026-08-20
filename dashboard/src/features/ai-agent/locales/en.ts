@@ -155,6 +155,11 @@ const enAiAgent: Record<string, TranslationEntry> = {
     message: "Stopped",
     description: "Label shown on an AI response the user stopped",
   },
+  "aiAgent.answeredIn": {
+    message: "Answered in {duration}",
+    description:
+      "Shown under a completed AI answer; {duration} is a formatted elapsed time like 12.3s or 1m 5s",
+  },
   "aiAgent.retry": {
     message: "Retry",
     description: "Button to resubmit the last question after an error",

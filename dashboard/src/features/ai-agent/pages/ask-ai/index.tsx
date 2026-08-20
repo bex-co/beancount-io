@@ -36,7 +36,16 @@ interface Message {
     isQuestion?: boolean;
     stopped?: boolean;
     retryable?: boolean;
+    durationMs?: number;
   };
+}
+
+function formatDuration(ms: number): string {
+  const totalSeconds = ms / 1000;
+  if (totalSeconds < 60) return `${totalSeconds.toFixed(1)}s`;
+  const minutes = Math.floor(totalSeconds / 60);
+  const seconds = Math.round(totalSeconds % 60);
+  return `${minutes}m ${seconds}s`;
 }
 
 interface AskAIPageProps {
@@ -130,6 +139,7 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
     if (!trimmed || isLoading) return;
 
     lastQuestionRef.current = trimmed;
+    const startedAt = Date.now();
 
     const userMessage: Message = {
       id: Date.now().toString(),
@@ -365,7 +375,19 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
         }
       }
 
-      // After the stream completes
+      // After the stream completes: stamp how long the answer took so the
+      // bubble can show it (only on turns that ended without an error).
+      if (!hasError && assistantMessage.content) {
+        const durationMs = Date.now() - startedAt;
+        setMessages((prev) =>
+          prev.map((m) =>
+            m.id === assistantMessage.id
+              ? { ...m, data: { ...m.data, durationMs } }
+              : m,
+          ),
+        );
+      }
+
       if (hasFinalAnswer && !hasError) {
         setStreamingState("complete");
         // Auto-fade to idle after 2 seconds
@@ -494,6 +516,15 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
                 {message.data?.stopped && (
                   <div className="mt-2 text-xs italic opacity-70">
                     {t("aiAgent.stopped")}
+                  </div>
+                )}
+
+                {/* Response duration */}
+                {message.data?.durationMs !== undefined && (
+                  <div className="mt-2 text-xs opacity-60">
+                    {t("aiAgent.answeredIn", {
+                      duration: formatDuration(message.data.durationMs),
+                    })}
                   </div>
                 )}
 
