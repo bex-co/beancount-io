@@ -13,7 +13,9 @@ import { applyLayoutDirection } from "@/common/rtl";
 import { reloadApp } from "@/common/reload-app";
 import Constants from "expo-constants";
 import { apolloClient } from "@/common/apollo/client";
+import { restoreApolloCache } from "@/common/apollo/cache-persist";
 import { GetLedgerDocument } from "@/generated-graphql/graphql";
+import { isApolloError } from "@apollo/client";
 
 SplashScreen.preventAutoHideAsync();
 
@@ -41,7 +43,9 @@ const SplashProviderComponent = ({
   useEffect(() => {
     async function prepare() {
       try {
-        // Pre-load fonts, make any API calls you need to do here
+        // Restore the Apollo cache before any query mounts — SplashProvider
+        // is the single startup gate, and queries only mount after `appIsReady`.
+        // Fonts / session vars run in parallel; restore shares that await.
         await Font.loadAsync(Ionicons.font);
         const [locale, session, ledger] = await Promise.all([
           loadLocale(),
@@ -49,6 +53,7 @@ const SplashProviderComponent = ({
           loadLedger(),
           loadTheme(),
           loadAccountUsage(),
+          restoreApolloCache(),
         ]);
         if (locale) {
           setLocale(locale);
@@ -71,18 +76,34 @@ const SplashProviderComponent = ({
           return;
         }
 
-        // Validate ledger if both session and ledger are not null
+        // Validate ledger if both session and ledger are not null.
+        // network-only: splash must learn about deleted ledgers when online.
         if (session && ledger) {
           try {
             await apolloClient.query({
               query: GetLedgerDocument,
               variables: { ledgerId: ledger },
+              // network-only: confirm the selection still exists when reachable.
               fetchPolicy: "network-only",
             });
           } catch (e) {
-            // If GetLedger query fails, clear the ledgerVar
-            console.warn("Failed to validate ledger, clearing ledgerVar:", e);
-            ledgerVar(null);
+            // Offline / transport failure: keep the persisted selection so a
+            // cold start can still render cached Home/Accounts/Reports data.
+            // Clear only when the server rejects the ledger.
+            const err = e instanceof Error ? e : new Error(String(e));
+            const networkOnly =
+              isApolloError(err) &&
+              err.networkError != null &&
+              (err.graphQLErrors?.length ?? 0) === 0;
+            if (networkOnly) {
+              console.warn("Offline at launch; keeping ledger selection:", err);
+            } else {
+              console.warn(
+                "Failed to validate ledger, clearing ledgerVar:",
+                err,
+              );
+              ledgerVar(null);
+            }
           }
         }
       } catch (e) {

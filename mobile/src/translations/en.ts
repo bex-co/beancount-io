@@ -30,6 +30,8 @@ export const en = {
   loggingOut: "Logging out",
   loggingOutMessage: "Please wait while we securely log you out...",
   loggingOutProgress: "Signing out...",
+  // Offline / stale cache
+  staleDataNotice: "Showing cached numbers — they may be out of date",
   // delete account alert
   deleteAccountAlertMsg:
     "Are you sure you want to delete your account? This action cannot be undone and will permanently delete all your data.",

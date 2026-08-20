@@ -263,6 +263,8 @@ export function LedgerFileEditorScreen(): JSX.Element {
     refetch,
   } = useGetLedgerFileQuery({
     variables: { ledgerId, path },
+    // network-only: editing must open authoritative source, never a stale
+    // cached file that could overwrite newer server content on save.
     fetchPolicy: "network-only",
   });
 

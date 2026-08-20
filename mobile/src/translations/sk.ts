@@ -32,6 +32,9 @@ export const sk: typeof en = {
   loggingOut: "Odhlasovanie",
   loggingOutMessage: "Počkajte, kým vás bezpečne odhlásime...",
   loggingOutProgress: "Odhlasovanie...",
+  // Offline / stale cache
+  staleDataNotice:
+    "Zobrazujú sa údaje z vyrovnávacej pamäte — môžu byť neaktuálne",
   // delete account alert
   deleteAccountAlertMsg:
     "Ste si istí, že chcete vymazať svoj účet? Táto akcia sa nedá vrátiť späť a natrvalo vymaže všetky vaše údaje.",

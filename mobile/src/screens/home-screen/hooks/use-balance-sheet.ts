@@ -1,6 +1,9 @@
 import { useBalanceSheetQuery } from "@/generated-graphql/graphql";
 import { BALANCE_CONVERSION } from "@/common/balance-util";
 
+/** Pinned for offline cold start — see m34 fetch-policy audit. */
+export const BALANCE_SHEET_FETCH_POLICY = "cache-and-network" as const;
+
 /**
  * Balance sheet for a ledger: net-worth / assets / liabilities series plus the
  * assets & liabilities hierarchy trees, with commodity holdings valued per
@@ -11,7 +14,7 @@ export const useBalanceSheet = (ledgerId: string, time?: string) => {
   const { loading, data, error, refetch } = useBalanceSheetQuery({
     variables: { ledgerId, time, conversion: BALANCE_CONVERSION },
     skip: !ledgerId,
-    fetchPolicy: "network-only",
+    fetchPolicy: BALANCE_SHEET_FETCH_POLICY,
   });
   return { loading, data, error, refetch };
 };

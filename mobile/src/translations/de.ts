@@ -32,6 +32,8 @@ export const de: typeof en = {
   loggingOut: "Abmelden",
   loggingOutMessage: "Bitte warten Sie, während wir Sie sicher abmelden...",
   loggingOutProgress: "Abmelden...",
+  // Offline / stale cache
+  staleDataNotice: "Zwischengespeicherte Zahlen — möglicherweise veraltet",
   // delete account alert
   deleteAccountAlertMsg:
     "Sind Sie sicher, dass Sie Ihr Konto löschen möchten? Diese Aktion kann nicht rückgängig gemacht werden und löscht alle Ihre Daten dauerhaft.",

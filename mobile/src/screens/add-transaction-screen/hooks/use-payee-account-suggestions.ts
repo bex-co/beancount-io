@@ -85,6 +85,7 @@ export function usePayeeAccountSuggestions(
   const llmRes = useSuggestTransactionCategoriesQuery({
     variables: { ledgerId, transactions: [transaction] },
     skip: !enableLlm || !historyEmpty || !ledgerId,
+    // network-only: LLM fallback must not reuse another session's cached reply.
     fetchPolicy: "network-only",
   });
 

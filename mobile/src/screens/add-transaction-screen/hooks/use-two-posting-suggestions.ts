@@ -35,6 +35,8 @@ export function useTwoPostingSuggestions(
   const { data, loading } = useGetLedgerJournalQuery({
     variables: { ledgerId, query: { filter: payee, limit: 50 } },
     skip: !hasPayee || !ledgerId,
+    // network-only: account suggestions from history must be current, not a
+    // persisted cold-start snapshot that could mis-fill the form.
     fetchPolicy: "network-only",
   });
 

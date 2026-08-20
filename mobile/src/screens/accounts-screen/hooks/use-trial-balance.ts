@@ -1,6 +1,9 @@
 import { useTrialBalanceQuery } from "@/generated-graphql/graphql";
 import { BALANCE_CONVERSION } from "@/common/balance-util";
 
+/** Pinned for offline cold start — see m34 fetch-policy audit. */
+export const TRIAL_BALANCE_FETCH_POLICY = "cache-and-network" as const;
+
 /**
  * Trial balance for a ledger: all five root categories with their account trees,
  * commodity holdings valued per {@link BALANCE_CONVERSION}. This is the query the
@@ -12,7 +15,7 @@ export const useTrialBalance = (ledgerId: string, time?: string) => {
   const { loading, data, error, refetch } = useTrialBalanceQuery({
     variables: { ledgerId, time, conversion: BALANCE_CONVERSION },
     skip: !ledgerId,
-    fetchPolicy: "network-only",
+    fetchPolicy: TRIAL_BALANCE_FETCH_POLICY,
   });
   return { loading, data, error, refetch };
 };

@@ -32,6 +32,8 @@ export const bg: typeof en = {
   loggingOut: "Излизане",
   loggingOutMessage: "Моля, изчакайте, докато ви изведем безопасно...",
   loggingOutProgress: "Излизане...",
+  // Offline / stale cache
+  staleDataNotice: "Показват се кеширани данни — може да не са актуални",
   // delete account alert
   deleteAccountAlertMsg:
     "Сигурни ли сте, че искате да изтриете акаунта си? Това действие не може да бъде отменено и ще изтрие завинаги всички ваши данни.",

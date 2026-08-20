@@ -85,6 +85,8 @@ export const LoginWebView = ({ isSignUp, onClose }: Props) => {
               try {
                 const { data } = await apolloClient.query({
                   query: ListLedgersDocument,
+                  // network-only: post-login must see this account's ledgers,
+                  // not another account's cached list from before purge.
                   fetchPolicy: "network-only",
                 });
                 const ledgers = data?.listLedgers || [];

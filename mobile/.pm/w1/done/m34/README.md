@@ -1,19 +1,19 @@
 # w1 · m34 — Offline-tolerant cold start: persist the Apollo cache
 
-**Worker:** worker1 **Goal:** the app opens to the user's own numbers even with no network — the Apollo cache survives relaunch, staleness is shown honestly, and sign-out purges everything. **Status:** todo
+**Worker:** worker1 **Goal:** the app opens to the user's own numbers even with no network — the Apollo cache survives relaunch, staleness is shown honestly, and sign-out purges everything. **Status:** **done** 2026-08-19 — Apollo cache persists across relaunch; Home/Accounts/Reports cold-start offline with a translated stale banner; sign-out purges
 
 ## Tasks (in order)
 
-| id   | title                                                                        | est | depends_on |
-| ---- | ---------------------------------------------------------------------------- | --- | ---------- |
-| t001 | Add `apollo3-cache-persist` (new dependency — owner-approved); restore first | 45m | —          |
-| t002 | Fetch-policy audit: cached data renders while refetching                     | 40m | t001       |
-| t003 | Purge the persisted cache on sign-out and account switch                     | 30m | t001       |
-| t004 | Honest staleness: offline indicator; airplane-mode cold-start walk           | 40m | t002, t003 |
-| t005 | UX pass — light/dark, translations gate, loading states                      | 30m | t004       |
-| t006 | Simplify pass over the persistence diff                                      | 20m | t005       |
-| t007 | Test coverage — purge rules, fetch policies, staleness state                 | 40m | t006       |
-| t008 | Closeout — move completed tasks and milestone into done/                     | 10m | t007       |
+| id   | title                                                                        | est | depends_on            |
+| ---- | ---------------------------------------------------------------------------- | --- | --------------------- |
+| t001 | Add `apollo3-cache-persist` (new dependency — owner-approved); restore first | 45m | — — **DONE**          |
+| t002 | Fetch-policy audit: cached data renders while refetching                     | 40m | t001 — **DONE**       |
+| t003 | Purge the persisted cache on sign-out and account switch                     | 30m | t001 — **DONE**       |
+| t004 | Honest staleness: offline indicator; airplane-mode cold-start walk           | 40m | t002, t003 — **DONE** |
+| t005 | UX pass — light/dark, translations gate, loading states                      | 30m | t004 — **DONE**       |
+| t006 | Simplify pass over the persistence diff                                      | 20m | t005 — **DONE**       |
+| t007 | Test coverage — purge rules, fetch policies, staleness state                 | 40m | t006 — **DONE**       |
+| t008 | Closeout — move completed tasks and milestone into done/                     | 10m | t007 — **DONE**       |
 
 ## Definition of done
 

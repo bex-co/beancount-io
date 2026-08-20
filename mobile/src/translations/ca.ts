@@ -32,6 +32,9 @@ export const ca: typeof en = {
   loggingOut: "Tancant sessió",
   loggingOutMessage: "Espereu mentre tanquem la sessió de forma segura...",
   loggingOutProgress: "Tancant sessió...",
+  // Offline / stale cache
+  staleDataNotice:
+    "Es mostren xifres en memòria cau — poden no estar actualitzades",
   // delete account alert
   deleteAccountAlertMsg:
     "Estàs segur que vols eliminar el teu compte? Aquesta acció no es pot desfer i eliminarà permanentment totes les teves dades.",

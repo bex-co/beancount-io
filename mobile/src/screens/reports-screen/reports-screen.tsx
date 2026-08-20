@@ -8,6 +8,7 @@ import { useSession } from "@/common/hooks/use-session";
 import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
 import { gutter } from "@/common/theme";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer/ledger-drawer-header";
+import { StaleDataBanner } from "@/components/stale-data-banner";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { DashboardCard } from "@/components/dashboard-card";
 import { DashboardScrollView } from "@/components/dashboard-scroll-view";
@@ -28,6 +29,7 @@ import {
   pointsToMonthlySeries,
 } from "@/common/series-util";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
+import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 import { useIncomeStatement } from "./hooks/use-income-statement";
 import { selectRangedAccountTree } from "./selectors/select-ranged-account-tree";
 import { topNWithOther } from "./selectors/select-breakdown-rows";
@@ -63,7 +65,11 @@ const ReportsScreenImpl = (): JSX.Element => {
   const [timeRange, setTimeRange] = useState<TimeRange>("6M");
   const [refreshing, setRefreshing] = useState(false);
 
-  const { currencies } = useLedgerMeta(userId, ledgerId);
+  const {
+    currencies,
+    data: ledgerMeta,
+    error: ledgerMetaError,
+  } = useLedgerMeta(userId, ledgerId);
   const currency = getPrimaryCurrency(currencies);
   const currencySymbol = getCurrencySymbol(currency);
 
@@ -71,6 +77,7 @@ const ReportsScreenImpl = (): JSX.Element => {
     data: incomeData,
     loading: incomeLoading,
     refetch: incomeRefetch,
+    error: incomeError,
   } = useIncomeStatement(ledgerId);
   const stmt = incomeData?.getLedgerIncomeStatement;
 
@@ -130,10 +137,15 @@ const ReportsScreenImpl = (): JSX.Element => {
   );
 
   const isLoading = incomeLoading && !incomeData;
+  const showStale = isShowingStaleDataFromQueries([
+    { data: incomeData, error: incomeError },
+    { data: ledgerMeta, error: ledgerMetaError },
+  ]);
 
   return (
     <View style={styles.container}>
       <LedgerDrawerHeader title={t("reports")} />
+      {showStale ? <StaleDataBanner /> : null}
       <TimeRangePills
         value={timeRange}
         options={rangeOptions}

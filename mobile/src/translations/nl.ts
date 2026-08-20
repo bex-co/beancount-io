@@ -32,6 +32,8 @@ export const nl: typeof en = {
   loggingOut: "Uitloggen",
   loggingOutMessage: "Even geduld terwijl we u veilig uitloggen...",
   loggingOutProgress: "Uitloggen...",
+  // Offline / stale cache
+  staleDataNotice: "Opgeslagen cijfers worden getoond — mogelijk verouderd",
   // delete account alert
   deleteAccountAlertMsg:
     "Weet je zeker dat je je account wilt verwijderen? Deze actie kan niet ongedaan worden gemaakt en zal al je gegevens permanent verwijderen.",

@@ -33,6 +33,8 @@ export const uk: typeof en = {
   loggingOutMessage:
     "Будь ласка, зачекайте, поки ми безпечно вийдемо з системи...",
   loggingOutProgress: "Вихід...",
+  // Offline / stale cache
+  staleDataNotice: "Показано кешовані дані — вони можуть бути застарілими",
   // delete account alert
   deleteAccountAlertMsg:
     "Ви впевнені, що хочете видалити свій обліковий запис? Цю дію неможливо скасувати, і вона назавжди видалить усі ваші дані.",

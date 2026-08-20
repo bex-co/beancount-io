@@ -32,6 +32,9 @@ export const fa: typeof en = {
   loggingOut: "در حال خروج",
   loggingOutMessage: "لطفاً صبر کنید، در حال خروج امن شما هستیم...",
   loggingOutProgress: "در حال خروج...",
+  // Offline / stale cache
+  staleDataNotice:
+    "اعداد ذخیره‌شده نمایش داده می‌شوند — ممکن است به‌روز نباشند",
   // delete account alert
   deleteAccountAlertMsg:
     "آیا مطمئن هستید که می‌خواهید حساب خود را حذف کنید؟ این عمل قابل بازگشت نیست و تمام داده‌های شما را برای همیشه حذف خواهد کرد.",

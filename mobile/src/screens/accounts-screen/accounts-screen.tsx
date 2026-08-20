@@ -9,7 +9,7 @@ import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { getPrimaryCurrency } from "@/common/currency-util";
-import { LedgerDrawerHeader } from "@/components";
+import { LedgerDrawerHeader, StaleDataBanner } from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import { AccountTable } from "@/components/account-table";
@@ -17,6 +17,7 @@ import { selectTrialBalanceCategories } from "@/components/account-list";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useTrialBalance } from "@/screens/accounts-screen/hooks/use-trial-balance";
+import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 
 // Skeleton rows sized to the loaded table's rhythm: each tile plus its vertical
 // margins fills the same line box a real row occupies (rowMinHeight), so nothing
@@ -71,6 +72,7 @@ const AccountsScreenImpl = (): JSX.Element => {
     data: ledgerMeta,
     currencies,
     refetch: ledgerMetaRefetch,
+    error: ledgerMetaError,
   } = useLedgerMeta(userId, ledgerId);
   const currency = getPrimaryCurrency(currencies);
 
@@ -80,6 +82,7 @@ const AccountsScreenImpl = (): JSX.Element => {
     data: accountData,
     loading: accountsLoading,
     refetch: accountsRefetch,
+    error: accountsError,
   } = useTrialBalance(ledgerId);
 
   const categories = useMemo(
@@ -104,6 +107,10 @@ const AccountsScreenImpl = (): JSX.Element => {
   };
 
   const accountsPending = accountsLoading && !accountData;
+  const showStale = isShowingStaleDataFromQueries([
+    { data: accountData, error: accountsError },
+    { data: ledgerMeta, error: ledgerMetaError },
+  ]);
 
   return (
     <View style={styles.container}>
@@ -121,6 +128,7 @@ const AccountsScreenImpl = (): JSX.Element => {
           </TouchableOpacity>
         }
       />
+      {showStale ? <StaleDataBanner /> : null}
       {accountsPending ? (
         <View>
           {SKELETON_ROWS.map((row, index) => (

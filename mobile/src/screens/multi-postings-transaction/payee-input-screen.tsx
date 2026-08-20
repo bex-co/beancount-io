@@ -32,6 +32,8 @@ export function PayeeInputScreen(): JSX.Element {
   const journalRes = useGetLedgerJournalQuery({
     variables: { ledgerId: ledgerId ?? "", query: { limit: 500 } },
     skip: !ledgerId || !onlySimple,
+    // network-only: payee suggestions must reflect the latest journal, not a
+    // cold-start cache that may omit today's entries.
     fetchPolicy: "network-only",
   });
 

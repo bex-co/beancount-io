@@ -33,6 +33,8 @@ export const ru: typeof en = {
   loggingOutMessage:
     "Пожалуйста, подождите, пока мы безопасно выйдем из системы...",
   loggingOutProgress: "Выход...",
+  // Offline / stale cache
+  staleDataNotice: "Показаны кэшированные данные — они могут быть устаревшими",
   // delete account alert
   deleteAccountAlertMsg:
     "Вы уверены, что хотите удалить свой аккаунт? Это действие нельзя отменить, и оно навсегда удалит все ваши данные.",

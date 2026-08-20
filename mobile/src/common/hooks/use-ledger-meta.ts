@@ -3,11 +3,14 @@ import type { WatchQueryFetchPolicy } from "@apollo/client";
 import { useLedgerMetaQuery } from "@/generated-graphql/graphql";
 import { getAccountsAndCurrency } from "../ledger-meta-utils";
 
+/** Default for screen mounts — render cache, refetch in background (m34). */
+export const LEDGER_META_FETCH_POLICY = "cache-and-network" as const;
+
 interface UseLedgerMetaOptions {
   /**
-   * Defaults to `network-only` so callers always see a fresh ledger. Screens
-   * that would otherwise skeleton over data another screen already fetched
-   * (the account picker) pass `cache-and-network` to render instantly.
+   * Defaults to `cache-and-network` so cold starts render from the persisted
+   * cache while a background refetch settles. Callers that genuinely need a
+   * blank-slate read (rare) can still pass `network-only`.
    */
   fetchPolicy?: WatchQueryFetchPolicy;
 }
@@ -19,7 +22,7 @@ export const useLedgerMeta = (
 ) => {
   const { data, error, loading, refetch } = useLedgerMetaQuery({
     variables: { userId, ledgerId },
-    fetchPolicy: options?.fetchPolicy ?? "network-only",
+    fetchPolicy: options?.fetchPolicy ?? LEDGER_META_FETCH_POLICY,
   });
 
   const meta = data?.ledgerMeta.data;

@@ -33,6 +33,8 @@ export const pt: typeof en = {
   loggingOutMessage:
     "Por favor, aguarde enquanto fazemos logout com segurança...",
   loggingOutProgress: "Saindo...",
+  // Offline / stale cache
+  staleDataNotice: "Mostrando números em cache — podem estar desatualizados",
   // delete account alert
   deleteAccountAlertMsg:
     "Tem certeza de que deseja excluir sua conta? Esta ação não pode ser desfeita e excluirá permanentemente todos os seus dados.",

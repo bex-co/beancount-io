@@ -28,8 +28,10 @@ import {
   DashboardScrollView,
   LedgerDrawerHeader,
   MenuButton,
+  StaleDataBanner,
 } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
+import { isShowingStaleDataFromQueries } from "@/common/apollo/stale-data";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -47,10 +49,12 @@ export const HomeScreenImpl = (): JSX.Element => {
   const styles = useThemeStyle(getStyles);
   const router = useRouter();
   const ledgerId = useLedgerGuard();
-  const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(
-    userId,
-    ledgerId,
-  );
+  const {
+    currencies,
+    refetch: ledgerMetaRefetch,
+    data: ledgerMeta,
+    error: ledgerMetaError,
+  } = useLedgerMeta(userId, ledgerId);
 
   const currency = getPrimaryCurrency(currencies);
   const currencySymbol = getCurrencySymbol(currency);
@@ -81,6 +85,13 @@ export const HomeScreenImpl = (): JSX.Element => {
   // inverse of the rule the rest of the app follows, where current content
   // stays visible under the RefreshControl spinner.
   const isLoading = balanceSheetLoading && !balanceSheet;
+  // First-load failure (error, no cache) keeps the chart skeleton; cached
+  // data with a failed refetch shows the numbers + stale banner instead.
+  const chartError = Boolean(balanceSheetError) && !balanceSheet;
+  const showStale = isShowingStaleDataFromQueries([
+    { data: balanceSheet, error: balanceSheetError },
+    { data: ledgerMeta, error: ledgerMetaError },
+  ]);
   const onRefresh = async () => {
     setRefreshing(true);
     setRefreshSignal((signal) => signal + 1);
@@ -136,6 +147,7 @@ export const HomeScreenImpl = (): JSX.Element => {
           />
         }
       />
+      {showStale ? <StaleDataBanner /> : null}
       <DashboardScrollView refreshing={refreshing} onRefresh={onRefresh}>
         {config.features.agentChat && <AskAiCard />}
         <AccountChartsCard
@@ -144,7 +156,7 @@ export const HomeScreenImpl = (): JSX.Element => {
           assetsSeries={assetsSeries}
           liabilitiesSeries={liabilitiesSeries}
           loading={isLoading}
-          error={Boolean(balanceSheetError)}
+          error={chartError}
         />
 
         <RecentTransactionsCard

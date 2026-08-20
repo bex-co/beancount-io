@@ -30,6 +30,7 @@ export function useDeleteBudgetEntry(ledgerId: string) {
         >({
           query: GetLedgerEntryContextDocument,
           variables: { entryHash, ledgerId },
+          // network-only: delete needs a fresh sha256sum lock, not a cached one.
           fetchPolicy: "network-only",
         });
 

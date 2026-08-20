@@ -22,3 +22,4 @@ export * from "./account-table";
 export * from "./menu-button";
 export * from "./account-type-icon";
 export * from "./date-picker-modal";
+export * from "./stale-data-banner";

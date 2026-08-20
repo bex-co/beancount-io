@@ -32,6 +32,8 @@ export const zh: typeof en = {
   loggingOut: "正在登出",
   loggingOutMessage: "请稍候，我们正在安全地为您登出...",
   loggingOutProgress: "正在退出...",
+  // Offline / stale cache
+  staleDataNotice: "显示的是缓存数据 — 可能不是最新的",
   // delete account alert
   deleteAccountAlertMsg:
     "你确认要删除账号吗？此操作无法撤销，将永久删除你的所有数据。",
