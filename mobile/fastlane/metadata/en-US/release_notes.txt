@@ -1,8 +1,8 @@
-What's New in Version 1.20260814.42:
+What's New in Version 1.20260820.43:
 
-• Budgets: give any account a target, then track actuals with progress meters, period-by-period charts, and full entry history
-• Home now surfaces the budgets closest to — or past — their limit
-• Account picker rebuilt around search: fuzzy matching (type "exfo" for Expenses:Food), root-type filters, and instant open
-• The ledger drawer tracks your finger from the first frame — no more flicker on drag or edge-swipe
-• Add, edit, or delete anything and every screen updates immediately, with no pull-to-refresh
-• The file editor now shows syntax errors for the file you're editing
+• Merchants: browse every payee from the ledger drawer, with auto-detected recurring subscriptions pinned at the top
+• Open any merchant for spend totals, date range, and a full transaction history
+• Reports: cash-flow Sankey shows how money moves between accounts
+• Cold starts keep the last-seen ledger on screen while the network catches up
+• Account picker pins recent accounts and ranks search by how often you use them
+• Create a missing account inline from the picker's no-match search

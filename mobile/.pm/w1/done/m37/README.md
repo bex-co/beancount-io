@@ -4,17 +4,17 @@
 
 ## Tasks (in order)
 
-| id   | title                                                  | est | depends_on              |
-| ---- | ------------------------------------------------------ | --- | ----------------------- |
-| t001 | `detect-recurrence` pure selector                      | 60m | — — **DONE**            |
-| t002 | Windowed per-payee series fetch                        | 45m | t001 — **DONE**         |
-| t003 | Device-local recurring overrides store                 | 30m | — — **DONE**            |
+| id   | title                                                  | est | depends_on                  |
+| ---- | ------------------------------------------------------ | --- | --------------------------- |
+| t001 | `detect-recurrence` pure selector                      | 60m | — — **DONE**                |
+| t002 | Windowed per-payee series fetch                        | 45m | t001 — **DONE**             |
+| t003 | Device-local recurring overrides store                 | 30m | — — **DONE**                |
 | t004 | Recurring section + badges in the directory            | 45m | t001, t002, t003 — **DONE** |
-| t005 | Mark/unmark toggle + cadence chip in the merchant view | 30m | t003, t004 — **DONE**   |
-| t006 | UX pass (light/dark, RTL, translations, analytics)     | 30m | t005 — **DONE**         |
-| t007 | Simplify pass over the milestone's diff                | 30m | t006 — **DONE**         |
-| t008 | Test coverage for detection edge cases                 | 60m | t006 — **DONE**         |
-| t009 | Closeout                                               | 15m | t008 — **DONE**         |
+| t005 | Mark/unmark toggle + cadence chip in the merchant view | 30m | t003, t004 — **DONE**       |
+| t006 | UX pass (light/dark, RTL, translations, analytics)     | 30m | t005 — **DONE**             |
+| t007 | Simplify pass over the milestone's diff                | 30m | t006 — **DONE**             |
+| t008 | Test coverage for detection edge cases                 | 60m | t006 — **DONE**             |
+| t009 | Closeout                                               | 15m | t008 — **DONE**             |
 
 ## Definition of done
 

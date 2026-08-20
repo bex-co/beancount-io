@@ -1,0 +1,6 @@
+• Merchants: browse every payee, with auto-detected recurring subscriptions pinned at the top
+• Open any merchant for spend totals, date range, and transaction history
+• Reports: cash-flow Sankey shows how money moves between accounts
+• Cold starts keep the last-seen ledger on screen while the network catches up
+• Account picker pins recent accounts and ranks search by frecency
+• Create a missing account inline from the picker's no-match search
