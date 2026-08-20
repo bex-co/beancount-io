@@ -12,6 +12,8 @@ export const OTHER_ACCOUNT = "__other__";
  * Passthrough when there would be at most one extra row (`items.length <= n + 1`):
  * bucketing a single leftover into "Other" only hides a row behind a tap for no
  * gain. `otherLabel` is injected (kept i18n-free so this stays a pure function).
+ * `otherAccount` defaults to `OTHER_ACCOUNT`; the Sankey passes distinct ids so
+ * the income and expense tails do not collide as one node.
  *
  * Input is assumed already sorted by magnitude descending (as
  * `selectRangedAccountTree` returns), so the head is the largest `n`.
@@ -20,6 +22,7 @@ export function topNWithOther(
   items: AccountNode[],
   n: number,
   otherLabel: string,
+  otherAccount: string = OTHER_ACCOUNT,
 ): AccountNode[] {
   if (items.length <= n + 1) {
     return items;
@@ -29,6 +32,6 @@ export function topNWithOther(
   const value = rest.reduce((sum, row) => sum + row.value, 0);
   return [
     ...head,
-    { account: OTHER_ACCOUNT, name: otherLabel, value, children: rest },
+    { account: otherAccount, name: otherLabel, value, children: rest },
   ];
 }

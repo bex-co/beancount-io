@@ -23,11 +23,14 @@ The board conventions — mission and pillars, hierarchy, sizing rule, milestone
    Prefer compounding assets (docs, skills, examples, install paths that every future adopter benefits from) over one-off promotion. Prefer removing an onboarding cliff over adding a power feature.
 5. **Discuss & decompose.** Talk the topic through with the user: pressure-test scope, surface dependencies and risks, and break it into candidate tasks, each with a rough estimate and `depends_on` links.
 6. **Size and gate** each cluster of work using `/pm`'s sizing rule and milestone quality gate. Undersized work → propose an inbox note instead of a milestone, and say so. Work that fails the quality gate → mark it **not meaningful**, do not propose it as a milestone, and suggest a better-scoped alternative.
-7. **Emit the proposal as text only.** Give the full detail first: the target workstream, each proposed milestone (task table + definition of done + source + pillar linkage + expected outcome + why-now rationale) and/or inbox note, numbered in proposed priority order. Propose **implementation tasks only**: `/pm` appends the standing closing tasks (Adoption surface when the milestone ships a user- or agent-facing change, then Simplify, then Test coverage, then Closeout) itself when it materializes, so do not include them — but do flag in the proposal whether you expect Adoption surface to apply, so `/pm` and the user aren't guessing. Close with a **"Summary (priority order)"** section: a numbered list of every candidate (milestones and inbox notes together) using the same numbers as above — one line each: `N. <title> (wN, ~size) — one-line outcome` — so the user can scan and pick by number without rereading the detail. Do **not** write files.
-8. **Hand off to `/pm`.** End by giving the exact `/pm` command(s) to materialize the proposal, e.g.:
-   - `/pm new milestone w1 <title>` (then the tasks), or
-   - `/pm add w1 <idea>` for sub-hour work, or
-   - `/pm promote w1/NNN` to promote an existing inbox note.
+7. **Emit the proposal as text only.** Give the full detail first: the target workstream, each proposed milestone (task table + definition of done + source + pillar linkage + expected outcome + why-now rationale) and/or inbox note, numbered in proposed priority order. Propose **implementation tasks only**: `/pm` appends the standing closing tasks (Adoption surface when the milestone ships a user- or agent-facing change, then Simplify, then Test coverage, then Closeout) itself when it materializes, so do not include them — but do flag in the proposal whether you expect Adoption surface to apply, so `/pm` and the user aren't guessing. Do **not** write files.
+8. **End with the summary and handoff.** The response must **end** with these two blocks, in this order, so the user can scan the close without rereading the detail:
+   1. A **"Summary (priority order)"** section: a numbered list of every candidate (milestones and inbox notes together) using the same numbers as the detail above — one line each: `N. <title> (wN, ~size) — one-line outcome`.
+   2. The exact `/pm` command(s) to materialize the proposal, e.g.:
+      - `/pm new milestone w1 <title>` (then the tasks), or
+      - `/pm add w1 <idea>` for sub-hour work, or
+      - `/pm promote w1/NNN` to promote an existing inbox note.
+   Nothing comes after these blocks — no trailing analysis or caveats.
 
 ## Topic
 

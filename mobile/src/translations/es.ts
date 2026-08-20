@@ -248,6 +248,9 @@ export const es: typeof en = {
   // reports tab
   reports: "Informes",
   netProfit: "Beneficio neto",
+  cashFlow: "Flujo de caja",
+  cashFlowEmpty: "Sin flujo de caja en este período",
+  savings: "Ahorros",
   // feed
   latestUpdates: "Últimos cambios",
   // unmatched route fallback

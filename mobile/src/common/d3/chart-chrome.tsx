@@ -81,12 +81,21 @@ export const getChromeStyles = (theme: ColorTheme) =>
   });
 
 /** Shown in place of the plot when there is nothing to draw. */
-export function ChartPlaceholder({ height }: { height: number }): JSX.Element {
+export function ChartPlaceholder({
+  height,
+  label,
+}: {
+  height: number;
+  /** Overrides the default "not enough data" copy (e.g. a range with no flows). */
+  label?: string;
+}): JSX.Element {
   const styles = useThemeStyle(getChromeStyles);
   const { t } = useTranslations();
   return (
     <View style={[styles.placeholder, { height }]}>
-      <Text style={styles.placeholderText}>{t("notEnoughChartData")}</Text>
+      <Text style={styles.placeholderText}>
+        {label ?? t("notEnoughChartData")}
+      </Text>
     </View>
   );
 }

@@ -246,6 +246,9 @@ export const ca: typeof en = {
   // reports tab
   reports: "Informes",
   netProfit: "Benefici net",
+  cashFlow: "Flux de caixa",
+  cashFlowEmpty: "Sense flux de caixa en aquest període",
+  savings: "Estalvis",
   // feed
   latestUpdates: "Darrers canvis",
   // unmatched route fallback

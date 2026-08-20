@@ -249,6 +249,9 @@ export const pt: typeof en = {
   // reports tab
   reports: "Relatórios",
   netProfit: "Lucro líquido",
+  cashFlow: "Fluxo de caixa",
+  cashFlowEmpty: "Sem fluxo de caixa neste período",
+  savings: "Poupança",
   // feed
   latestUpdates: "Últimas alterações",
   // unmatched route fallback

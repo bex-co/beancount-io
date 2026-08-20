@@ -247,6 +247,9 @@ export const bg: typeof en = {
   // reports tab
   reports: "Справки",
   netProfit: "Нетна печалба",
+  cashFlow: "Паричен поток",
+  cashFlowEmpty: "Няма паричен поток за този период",
+  savings: "Спестявания",
   // feed
   latestUpdates: "Последни промени",
   // unmatched route fallback

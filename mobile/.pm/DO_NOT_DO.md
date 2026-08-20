@@ -16,6 +16,7 @@ Use this file as a hard constraint when running `/pm-brainstorm` and `/pm`. If a
 - Do not include tasks that cannot name the concrete files/screens/GraphQL operations they touch.
 - Do not treat speculative ideas as committed roadmap items without explicit source context.
 - Do not build a BQL console or raw-query surface on mobile (`queryShell` / `queryShellText`). Typing queries on a phone is a poor fit; Reports and AI-powered features are the mobile way to answer ad-hoc questions. (Owner decision 2026-07-14; superseded inbox note `w1/003` and the rejected 2026-07-13 `/pm-brainstorm` m15 proposal.)
+- Do not do further work on the mobile agent-chat surface ("Ask Beancount.io"): no ADR002 P2 approval cards, P3 attachments, or P4 polish, and no un-gating — the shipped m32 screen stays behind `config.features.agentChat: false`. Non-chat AI (receipt capture, smart account suggestions) remains in scope under the AI-powered-ease pillar. (Owner decision 2026-08-19; rejected the 2026-08-19 `/pm-brainstorm` m33/m34 proposals.)
 
 ## Minimum bar for a meaningful milestone
 

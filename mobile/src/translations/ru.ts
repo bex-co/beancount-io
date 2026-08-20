@@ -248,6 +248,9 @@ export const ru: typeof en = {
   // reports tab
   reports: "Отчёты",
   netProfit: "Чистая прибыль",
+  cashFlow: "Денежный поток",
+  cashFlowEmpty: "Нет денежного потока за этот период",
+  savings: "Сбережения",
   // feed
   latestUpdates: "Последние изменения",
   // unmatched route fallback

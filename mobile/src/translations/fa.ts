@@ -244,6 +244,9 @@ export const fa: typeof en = {
   // reports tab
   reports: "گزارش‌ها",
   netProfit: "سود خالص",
+  cashFlow: "جریان نقدی",
+  cashFlowEmpty: "در این بازه جریان نقدی نیست",
+  savings: "پس‌انداز",
   // feed
   latestUpdates: "آخرین تغییرات",
   // unmatched route fallback

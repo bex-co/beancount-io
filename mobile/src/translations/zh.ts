@@ -237,6 +237,9 @@ export const zh: typeof en = {
   // reports tab
   reports: "报表",
   netProfit: "净利润",
+  cashFlow: "现金流",
+  cashFlowEmpty: "此区间没有现金流",
+  savings: "储蓄",
   // feed
   latestUpdates: "最近更新",
   // unmatched route fallback

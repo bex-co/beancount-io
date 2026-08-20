@@ -34,4 +34,16 @@ describe("topNWithOther", () => {
   it("returns an empty array unchanged", () => {
     expect(topNWithOther([], 7, "Other")).toEqual([]);
   });
+
+  it("uses a caller-supplied account id for the Other row", () => {
+    const items = [
+      node("Food", 100),
+      node("Rent", 90),
+      node("Transport", 30),
+      node("Utilities", 20),
+    ];
+    const result = topNWithOther(items, 2, "Other", "__other_expenses__");
+    expect(result[2].account).toBe("__other_expenses__");
+    expect(result[2].value).toBe(50);
+  });
 });

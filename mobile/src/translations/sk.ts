@@ -245,6 +245,9 @@ export const sk: typeof en = {
   // reports tab
   reports: "Prehľady",
   netProfit: "Čistý zisk",
+  cashFlow: "Peňažný tok",
+  cashFlowEmpty: "V tomto období nie je peňažný tok",
+  savings: "Úspory",
   // feed
   latestUpdates: "Najnovšie zmeny",
   // unmatched route fallback

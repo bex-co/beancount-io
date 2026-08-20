@@ -247,6 +247,9 @@ export const uk: typeof en = {
   // reports tab
   reports: "Звіти",
   netProfit: "Чистий прибуток",
+  cashFlow: "Грошовий потік",
+  cashFlowEmpty: "Немає грошового потоку за цей період",
+  savings: "Заощадження",
   // feed
   latestUpdates: "Останні зміни",
   // unmatched route fallback

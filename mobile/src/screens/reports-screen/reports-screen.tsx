@@ -35,6 +35,10 @@ import {
   CategoryBreakdown,
   CategoryBreakdownSkeleton,
 } from "./components/category-breakdown";
+import {
+  CashFlowSankey,
+  CashFlowSankeySkeleton,
+} from "./components/cash-flow-sankey";
 import { AccountTransactionsCard } from "./components/account-transactions-card";
 import { reportScrollStyles } from "./components/report-scroll-style";
 
@@ -155,6 +159,16 @@ const ReportsScreenImpl = (): JSX.Element => {
                 expense={chart.expense}
                 net={chart.net}
               />
+            </FadeInView>
+          )}
+        </DashboardCard>
+
+        <DashboardCard bleed title={t("cashFlow")}>
+          {isLoading ? (
+            <CashFlowSankeySkeleton />
+          ) : (
+            <FadeInView>
+              <CashFlowSankey income={income.tree} expenses={expense.tree} />
             </FadeInView>
           )}
         </DashboardCard>

@@ -243,6 +243,9 @@ export const en = {
   // reports tab
   reports: "Reports",
   netProfit: "Net Profit",
+  cashFlow: "Cash flow",
+  cashFlowEmpty: "No cash flow in this range",
+  savings: "Savings",
   // feed
   latestUpdates: "Latest Updates",
   // unmatched route fallback

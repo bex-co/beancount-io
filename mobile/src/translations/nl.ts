@@ -246,6 +246,9 @@ export const nl: typeof en = {
   // reports tab
   reports: "Rapporten",
   netProfit: "Nettowinst",
+  cashFlow: "Kasstroom",
+  cashFlowEmpty: "Geen kasstroom in deze periode",
+  savings: "Spaargeld",
   // feed
   latestUpdates: "Laatste wijzigingen",
   // unmatched route fallback

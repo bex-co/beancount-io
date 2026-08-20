@@ -36,6 +36,8 @@
 - [x] **m31** — Right-to-left layout for Persian (10 tasks) ← from the `m30` outcome note, which names this gap and rules it out of scope in the same sentence; shipped 2026-08-17 — Persian now lays out right-to-left, English is unchanged, and two React Native RTL defaults that fight each other are written down in the milestone's outcome note
 - ~~**008** — v2 native code-editor module (Runestone + sora-editor)~~ — **deleted 2026-08-17**: 12–19 person-days plus permanent maintenance of two native deps, gated on a product signal ("only if requirements outgrow the 7-color approach") that has not appeared since m15 shipped. The research survives in git history at this note's path.
 - [x] **m32** — Ask Beancount.io on mobile: core agent chat (10 tasks) ← inbox `006`, promoted 2026-08-18 after its blocker dissolved; scoped by `docs/ADR002-mobile-ai-assistant.md` (P0 + P1); shipped 2026-08-19 — the app's first AI surface, on the dashboard's own agent route with no backend change
+- [ ] **m33** — Cash-flow Sankey on Reports (9 tasks) ← inbox `020`, promoted 2026-08-19 — its two blockers (the `d3-sankey` decision, a phone-width design pass) are the milestone's first two tasks; with the agent-chat track closed by anti-goal the same day, this is the largest open analytics parity gap, and the web ships the tested data transformer in-repo
+- [ ] **m34** — Offline-tolerant cold start: persist the Apollo cache (7 tasks) ← from `/pm-brainstorm` 2026-08-19, materialized in the same hand-off; sequenced after m33 — feature before infrastructure
 
 ## Ask Beancount.io shipped on mobile — 2026-08-19
 
