@@ -139,6 +139,7 @@ describe("invalidate-ledger", () => {
         "ledgerMeta",
         "getLedgerErrors",
         "listCommits",
+        "queryShell",
       ];
 
       expect(

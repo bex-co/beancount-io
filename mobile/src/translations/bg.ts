@@ -8,6 +8,22 @@ export const bg: typeof en = {
   files: "Файлове",
   journal: "Журнал",
   settings: "Настройки",
+  merchants: "Търговци",
+  merchantsSearchPlaceholder: {
+    one: "Търсене в {{count}} търговец…",
+    other: "Търсене в {{count}} търговци…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} транзакция",
+    other: "{{count}} транзакции",
+  },
+  merchantsEmptyTitle: "Все още няма търговци",
+  merchantsEmptyMessage:
+    "Получателите от вашите транзакции ще се появят тук като директория за търсене.",
+  merchantsNoSearchResults: "Няма търговци, които да съвпадат с търсенето.",
+  merchantsLoadError: "Неуспешно зареждане на търговци: ",
+  merchantsSortByCount: "Сортиране по брой транзакции",
+  merchantsSortAlphabetical: "Сортиране по азбучен ред",
   mine: "Моето",
   setting: "Настройка",
   // mine

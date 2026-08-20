@@ -8,6 +8,22 @@ export const de: typeof en = {
   files: "Dateien",
   journal: "Journal",
   settings: "Einstellungen",
+  merchants: "Händler",
+  merchantsSearchPlaceholder: {
+    one: "{{count}} Händler suchen…",
+    other: "{{count}} Händler suchen…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} Transaktion",
+    other: "{{count}} Transaktionen",
+  },
+  merchantsEmptyTitle: "Noch keine Händler",
+  merchantsEmptyMessage:
+    "Zahlungsempfänger aus Ihren Transaktionen erscheinen hier als durchsuchbares Verzeichnis.",
+  merchantsNoSearchResults: "Keine Händler entsprechen Ihrer Suche.",
+  merchantsLoadError: "Händler konnten nicht geladen werden: ",
+  merchantsSortByCount: "Nach Transaktionsanzahl sortieren",
+  merchantsSortAlphabetical: "Alphabetisch sortieren",
   mine: "Meine",
   setting: "Einstellung",
   // mine

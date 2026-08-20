@@ -130,6 +130,7 @@ export const SAME_AS_ENGLISH: Record<
         "total",
         "notificationsBell",
         "notificationsTitle",
+        "merchantsTransactionCount",
       ],
     },
     {

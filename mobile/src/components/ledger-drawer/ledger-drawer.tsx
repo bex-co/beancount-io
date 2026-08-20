@@ -380,6 +380,12 @@ export function LedgerDrawer({
     onClose();
   };
 
+  const handleMerchantsPress = () => {
+    analytics.track("drawer_tap_merchants", {});
+    onClose();
+    router.push("/(app)/merchants");
+  };
+
   const handleSettingsPress = () => {
     analytics.track("drawer_tap_settings", {});
     onClose();
@@ -481,6 +487,19 @@ export function LedgerDrawer({
         </View>
 
         <View style={styles.menuSection}>
+          <TouchableOpacity
+            testID="drawer-merchants-row"
+            style={styles.menuItem}
+            onPress={handleMerchantsPress}
+            activeOpacity={0.7}
+          >
+            <Ionicons
+              name="storefront-outline"
+              size={22}
+              color={theme.black60}
+            />
+            <Text style={styles.menuItemText}>{t("merchants")}</Text>
+          </TouchableOpacity>
           <TouchableOpacity
             testID="drawer-settings-row"
             style={styles.menuItem}

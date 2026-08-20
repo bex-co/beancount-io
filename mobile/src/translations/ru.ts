@@ -8,6 +8,22 @@ export const ru: typeof en = {
   files: "Файлы",
   journal: "Журнал",
   settings: "Настройки",
+  merchants: "Получатели",
+  merchantsSearchPlaceholder: {
+    one: "Поиск по {{count}} получателю…",
+    other: "Поиск по {{count}} получателям…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} транзакция",
+    other: "{{count}} транзакций",
+  },
+  merchantsEmptyTitle: "Пока нет получателей",
+  merchantsEmptyMessage:
+    "Получатели из ваших транзакций появятся здесь в виде каталога с поиском.",
+  merchantsNoSearchResults: "Нет получателей, соответствующих поиску.",
+  merchantsLoadError: "Не удалось загрузить получателей: ",
+  merchantsSortByCount: "Сортировать по числу транзакций",
+  merchantsSortAlphabetical: "Сортировать по алфавиту",
   mine: "Мой",
   setting: "Настройка",
   // mine

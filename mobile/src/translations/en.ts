@@ -5,6 +5,22 @@ export const en = {
   files: "Files",
   journal: "Journal",
   settings: "Settings",
+  merchants: "Merchants",
+  merchantsSearchPlaceholder: {
+    one: "Search {{count}} merchant…",
+    other: "Search {{count}} merchants…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} transaction",
+    other: "{{count}} transactions",
+  },
+  merchantsEmptyTitle: "No merchants yet",
+  merchantsEmptyMessage:
+    "Payees from your transactions will show up here as a searchable directory.",
+  merchantsNoSearchResults: "No merchants match your search.",
+  merchantsLoadError: "Failed to load merchants: ",
+  merchantsSortByCount: "Sort by transaction count",
+  merchantsSortAlphabetical: "Sort alphabetically",
   mine: "Mine",
   setting: "Setting",
   // mine

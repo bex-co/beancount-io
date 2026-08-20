@@ -8,6 +8,22 @@ export const es: typeof en = {
   files: "Archivos",
   journal: "Diario",
   settings: "Configuración",
+  merchants: "Comerciantes",
+  merchantsSearchPlaceholder: {
+    one: "Buscar {{count}} comerciante…",
+    other: "Buscar {{count}} comerciantes…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} transacción",
+    other: "{{count}} transacciones",
+  },
+  merchantsEmptyTitle: "Aún no hay comerciantes",
+  merchantsEmptyMessage:
+    "Los beneficiarios de tus transacciones aparecerán aquí como un directorio buscable.",
+  merchantsNoSearchResults: "Ningún comerciante coincide con tu búsqueda.",
+  merchantsLoadError: "Error al cargar comerciantes: ",
+  merchantsSortByCount: "Ordenar por número de transacciones",
+  merchantsSortAlphabetical: "Ordenar alfabéticamente",
   mine: "Mío",
   setting: "Ajustes",
   // mine

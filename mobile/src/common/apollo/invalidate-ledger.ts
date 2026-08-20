@@ -53,6 +53,9 @@ const ENTRIES_FIELDS = [
   "ledgerMeta",
   // Every write is a git commit, so the notifications history moves too.
   "listCommits",
+  // Fixed app-authored BQL aggregations (Merchants directory and later
+  // merchant/recurring views). Evict on every entry write so rollups stay exact.
+  "queryShell",
 ] as const;
 
 const FILE_FIELDS = [

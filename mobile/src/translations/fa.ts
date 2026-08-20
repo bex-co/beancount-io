@@ -8,6 +8,22 @@ export const fa: typeof en = {
   files: "فایل‌ها",
   journal: "روزنامه",
   settings: "تنظیمات",
+  merchants: "پذیرندگان",
+  merchantsSearchPlaceholder: {
+    one: "جستجوی {{count}} پذیرنده…",
+    other: "جستجوی {{count}} پذیرنده…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} تراکنش",
+    other: "{{count}} تراکنش",
+  },
+  merchantsEmptyTitle: "هنوز پذیرنده‌ای نیست",
+  merchantsEmptyMessage:
+    "طرف‌حساب‌های تراکنش‌هایتان اینجا به‌صورت فهرست قابل جستجو ظاهر می‌شوند.",
+  merchantsNoSearchResults: "هیچ پذیرنده‌ای با جستجوی شما مطابقت ندارد.",
+  merchantsLoadError: "بارگذاری پذیرندگان ناموفق بود: ",
+  merchantsSortByCount: "مرتب‌سازی بر اساس تعداد تراکنش",
+  merchantsSortAlphabetical: "مرتب‌سازی الفبایی",
   mine: "من",
   setting: "تنظیم",
   // mine

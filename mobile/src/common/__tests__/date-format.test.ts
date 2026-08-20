@@ -1,4 +1,8 @@
-import { formatLedgerDate, formatFeedDate } from "../date-format";
+import {
+  formatLedgerDate,
+  formatLedgerDateShort,
+  formatFeedDate,
+} from "../date-format";
 
 describe("formatLedgerDate", () => {
   it("formats an ISO ledger date in English", () => {
@@ -30,6 +34,17 @@ describe("formatLedgerDate", () => {
   it("returns the raw string when the input is not a valid date", () => {
     expect(formatLedgerDate("not-a-date", "en")).toBe("not-a-date");
     expect(formatLedgerDate("", "en")).toBe("");
+  });
+});
+
+describe("formatLedgerDateShort", () => {
+  it("formats a ledger day in short form", () => {
+    expect(formatLedgerDateShort("2026-08-17", "en")).toBe("Aug 17, 2026");
+    expect(formatLedgerDateShort("2025-12-31", "en")).toBe("Dec 31, 2025");
+  });
+
+  it("returns the raw string when the input is not a valid date", () => {
+    expect(formatLedgerDateShort("not-a-date", "en")).toBe("not-a-date");
   });
 });
 

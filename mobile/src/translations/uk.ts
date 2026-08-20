@@ -8,6 +8,22 @@ export const uk: typeof en = {
   files: "Файли",
   journal: "Журнал",
   settings: "Налаштування",
+  merchants: "Отримувачі",
+  merchantsSearchPlaceholder: {
+    one: "Пошук серед {{count}} отримувача…",
+    other: "Пошук серед {{count}} отримувачів…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} транзакція",
+    other: "{{count}} транзакцій",
+  },
+  merchantsEmptyTitle: "Поки немає отримувачів",
+  merchantsEmptyMessage:
+    "Отримувачі з ваших транзакцій з’являться тут як каталог із пошуком.",
+  merchantsNoSearchResults: "Немає отримувачів, що відповідають пошуку.",
+  merchantsLoadError: "Не вдалося завантажити отримувачів: ",
+  merchantsSortByCount: "Сортувати за кількістю транзакцій",
+  merchantsSortAlphabetical: "Сортувати за алфавітом",
   mine: "Моє",
   setting: "Налаштування",
   // mine

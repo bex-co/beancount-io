@@ -8,6 +8,22 @@ export const sk: typeof en = {
   files: "Súbory",
   journal: "Denník",
   settings: "Nastavenia",
+  merchants: "Obchodníci",
+  merchantsSearchPlaceholder: {
+    one: "Hľadať {{count}} obchodníka…",
+    other: "Hľadať {{count}} obchodníkov…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} transakcia",
+    other: "{{count}} transakcií",
+  },
+  merchantsEmptyTitle: "Zatiaľ žiadni obchodníci",
+  merchantsEmptyMessage:
+    "Príjemcovia z vašich transakcií sa tu zobrazia ako prehľadávateľný adresár.",
+  merchantsNoSearchResults: "Žiadni obchodníci nezodpovedajú vášmu hľadaniu.",
+  merchantsLoadError: "Nepodarilo sa načítať obchodníkov: ",
+  merchantsSortByCount: "Zoradiť podľa počtu transakcií",
+  merchantsSortAlphabetical: "Zoradiť abecedne",
   mine: "Moje",
   setting: "Nastavenie",
   // mine

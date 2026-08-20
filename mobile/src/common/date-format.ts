@@ -63,6 +63,30 @@ export function formatLedgerDate(isoDate: string, locale: string): string {
 }
 
 /**
+ * A ledger date in short form — "Aug 17, 2026", "17.08.2026" — for dense list
+ * rows (Merchants directory) where the long form wastes the trailing column.
+ *
+ * Same UTC / Gregorian rules as `formatLedgerDate`.
+ */
+export function formatLedgerDateShort(isoDate: string, locale: string): string {
+  try {
+    const [year, month, day] = isoDate.split("-").map(Number);
+    const date = new Date(Date.UTC(year, month - 1, day));
+    if (isNaN(date.getTime())) {
+      return isoDate;
+    }
+    return date.toLocaleDateString(gregorian(locale), {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      timeZone: "UTC",
+    });
+  } catch {
+    return isoDate;
+  }
+}
+
+/**
  * A timestamp in short form — "Aug 17, 2026" — for feed items, which carry a
  * real instant rather than a ledger day and so are shown in the device's zone.
  *

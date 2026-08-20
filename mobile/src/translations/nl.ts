@@ -8,6 +8,22 @@ export const nl: typeof en = {
   files: "Bestanden",
   journal: "Journaal",
   settings: "Instellingen",
+  merchants: "Winkels",
+  merchantsSearchPlaceholder: {
+    one: "{{count}} winkel zoeken…",
+    other: "{{count}} winkels zoeken…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} transactie",
+    other: "{{count}} transacties",
+  },
+  merchantsEmptyTitle: "Nog geen winkels",
+  merchantsEmptyMessage:
+    "Begunstigden uit je transacties verschijnen hier als een doorzoekbare directory.",
+  merchantsNoSearchResults: "Geen winkels komen overeen met je zoekopdracht.",
+  merchantsLoadError: "Winkels laden mislukt: ",
+  merchantsSortByCount: "Sorteren op aantal transacties",
+  merchantsSortAlphabetical: "Alfabetisch sorteren",
   mine: "Mijn",
   setting: "Instelling",
   // mine

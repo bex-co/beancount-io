@@ -8,6 +8,22 @@ export const fr: typeof en = {
   files: "Fichiers",
   journal: "Journal",
   settings: "Paramètres",
+  merchants: "Commerçants",
+  merchantsSearchPlaceholder: {
+    one: "Rechercher {{count}} commerçant…",
+    other: "Rechercher {{count}} commerçants…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} transaction",
+    other: "{{count}} transactions",
+  },
+  merchantsEmptyTitle: "Aucun commerçant pour l'instant",
+  merchantsEmptyMessage:
+    "Les bénéficiaires de vos transactions apparaîtront ici sous forme d'annuaire consultable.",
+  merchantsNoSearchResults: "Aucun commerçant ne correspond à votre recherche.",
+  merchantsLoadError: "Échec du chargement des commerçants : ",
+  merchantsSortByCount: "Trier par nombre de transactions",
+  merchantsSortAlphabetical: "Trier par ordre alphabétique",
   mine: "Moi",
   setting: "Réglage",
   // mine

@@ -38,6 +38,39 @@
 - [x] **m32** — Ask Beancount.io on mobile: core agent chat (10 tasks) ← inbox `006`, promoted 2026-08-18 after its blocker dissolved; scoped by `docs/ADR002-mobile-ai-assistant.md` (P0 + P1); shipped 2026-08-19 — the app's first AI surface, on the dashboard's own agent route with no backend change
 - [x] **m33** — Cash-flow Sankey on Reports (10 tasks) ← inbox `020`, promoted 2026-08-19 — its two blockers (the `d3-sankey` decision, a phone-width design pass) are the milestone's first two tasks; with the agent-chat track closed by anti-goal the same day, this is the largest open analytics parity gap, and the web ships the tested data transformer in-repo; shipped 2026-08-19
 - [x] **m34** — Offline-tolerant cold start: persist the Apollo cache (8 tasks) ← from `/pm-brainstorm` 2026-08-19, materialized in the same hand-off; sequenced after m33 — feature before infrastructure
+- [x] **m35** — Merchants directory in the drawer (9 tasks) ← from `/pm` hand-off 2026-08-19 (Monarch Merchants parity research: Mobbin iOS captures + help.monarch.com + monarchmoney GraphQL clients)
+- [ ] **m36** — Merchant view: stats and transaction history (8 tasks) ← same hand-off; sequenced after m35 — navigates from its list, reuses its `queryShell` plumbing
+- [ ] **m37** — Recurring merchants: detection and grouping (9 tasks) ← same hand-off; sequenced after m35 + m36 — the directory is its surface, the merchant view hosts its toggle
+
+## Merchants hand-off — 2026-08-19
+
+Owner request: "learn from monarch mobile and introduce a feature 'Merchants'
+from the left sidebar bottom for viewing merchants and group recurring ones."
+Research ran first (Mobbin captures of Monarch iOS v2.0.37, help.monarch.com,
+the reverse-engineered monarchmoney GraphQL clients, and a full sweep of our
+own payee/navigation surface); the hand-off materialized its three phases as
+m35 → m36 → m37 and parked the rest as inbox `032`.
+
+What the research settled, worth keeping past the milestones:
+
+- **The payee is already the merchant entity.** Monarch's hardest problem —
+  cleaning statement text into names — doesn't exist here; payees are typed by
+  the user. m13's brand-matcher gives the directory logos for free.
+- **No payee aggregate exists server-side.** All 73 query roots checked:
+  names only (`getLedgerPayees`), and `getLedgerPayeeTransactions` is typed as
+  returning a _singular_ `Transaction!` — an apparent server schema bug, unused
+  by any client. The aggregation path is `queryShell` with **fixed
+  app-authored BQL** — reconciled against the 2026-07-14 anti-goal in m35's
+  README: that decision bans a user-facing query surface ("typing queries on a
+  phone"), not internal plumbing; no screen will accept or display BQL.
+- **Recurring is greenfield.** Nothing recurring-shaped exists in schema or
+  client. Detection is a pure selector (cadence bands over date gaps, amount
+  stability); manual overrides are device-local preferences, with the
+  ledger-native `custom` directive alternative recorded in `032` as an owner
+  decision, deliberately not assumed.
+- **Deliberately not planned:** rename/merge (a ledger-source rewrite),
+  Monarch's review queue and pre-charge notifications, logo upload, bill sync
+  — see `032` for what's parked and on which blocker.
 
 ## Ask Beancount.io shipped on mobile — 2026-08-19
 

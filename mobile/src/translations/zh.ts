@@ -8,6 +8,21 @@ export const zh: typeof en = {
   files: "文件",
   journal: "流水",
   settings: "设置",
+  merchants: "商户",
+  merchantsSearchPlaceholder: {
+    one: "搜索 {{count}} 个商户…",
+    other: "搜索 {{count}} 个商户…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} 笔交易",
+    other: "{{count}} 笔交易",
+  },
+  merchantsEmptyTitle: "还没有商户",
+  merchantsEmptyMessage: "交易中的收款方会出现在这里，方便搜索和浏览。",
+  merchantsNoSearchResults: "没有匹配的商户。",
+  merchantsLoadError: "加载商户失败：",
+  merchantsSortByCount: "按交易次数排序",
+  merchantsSortAlphabetical: "按名称排序",
   mine: "我的",
   setting: "设置",
   // mine

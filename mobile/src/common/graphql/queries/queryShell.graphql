@@ -1,0 +1,12 @@
+query QueryShell($ledgerId: String!, $query: String!) {
+  queryShell(ledgerId: $ledgerId, query: $query) {
+    resultType
+    table {
+      rows
+      types {
+        name
+        dtype
+      }
+    }
+  }
+}

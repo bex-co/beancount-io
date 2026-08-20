@@ -287,6 +287,14 @@ export type ParseReceiptMutationVariables = Exact<{
 
 export type ParseReceiptMutation = { parseReceipt: { date: string | null, payee: string, description: string, amount: number, sourceAccount: string | null, targetAccount: string | null } };
 
+export type QueryShellQueryVariables = Exact<{
+  ledgerId: string;
+  query: string;
+}>;
+
+
+export type QueryShellQuery = { queryShell: { resultType: string, table: { rows: Array<Array<unknown>>, types: Array<{ name: string, dtype: string }> } | null } | null };
+
 export type SubscriptionStatusQueryVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -1944,6 +1952,57 @@ export function useParseReceiptMutation(baseOptions?: Apollo.MutationHookOptions
 export type ParseReceiptMutationHookResult = ReturnType<typeof useParseReceiptMutation>;
 export type ParseReceiptMutationResult = Apollo.MutationResult<ParseReceiptMutation>;
 export type ParseReceiptMutationOptions = Apollo.BaseMutationOptions<ParseReceiptMutation, ParseReceiptMutationVariables>;
+export const QueryShellDocument = gql`
+    query QueryShell($ledgerId: String!, $query: String!) {
+  queryShell(ledgerId: $ledgerId, query: $query) {
+    resultType
+    table {
+      rows
+      types {
+        name
+        dtype
+      }
+    }
+  }
+}
+    `;
+
+/**
+ * __useQueryShellQuery__
+ *
+ * To run a query within a React component, call `useQueryShellQuery` and pass it any options that fit your needs.
+ * When your component renders, `useQueryShellQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useQueryShellQuery({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *      query: // value for 'query'
+ *   },
+ * });
+ */
+export function useQueryShellQuery(baseOptions: Apollo.QueryHookOptions<QueryShellQuery, QueryShellQueryVariables> & ({ variables: QueryShellQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<QueryShellQuery, QueryShellQueryVariables>(QueryShellDocument, options);
+      }
+export function useQueryShellLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<QueryShellQuery, QueryShellQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<QueryShellQuery, QueryShellQueryVariables>(QueryShellDocument, options);
+        }
+// @ts-ignore
+export function useQueryShellSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<QueryShellQuery, QueryShellQueryVariables>): Apollo.UseSuspenseQueryResult<QueryShellQuery, QueryShellQueryVariables>;
+export function useQueryShellSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<QueryShellQuery, QueryShellQueryVariables>): Apollo.UseSuspenseQueryResult<QueryShellQuery | undefined, QueryShellQueryVariables>;
+export function useQueryShellSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<QueryShellQuery, QueryShellQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<QueryShellQuery, QueryShellQueryVariables>(QueryShellDocument, options);
+        }
+export type QueryShellQueryHookResult = ReturnType<typeof useQueryShellQuery>;
+export type QueryShellLazyQueryHookResult = ReturnType<typeof useQueryShellLazyQuery>;
+export type QueryShellSuspenseQueryHookResult = ReturnType<typeof useQueryShellSuspenseQuery>;
+export type QueryShellQueryResult = Apollo.QueryResult<QueryShellQuery, QueryShellQueryVariables>;
 export const SubscriptionStatusDocument = gql`
     query SubscriptionStatus {
   subscriptionStatus {

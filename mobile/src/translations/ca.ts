@@ -8,6 +8,22 @@ export const ca: typeof en = {
   files: "Fitxers",
   journal: "Diari",
   settings: "Configuració",
+  merchants: "Comerciants",
+  merchantsSearchPlaceholder: {
+    one: "Cerca {{count}} comerciant…",
+    other: "Cerca {{count}} comerciants…",
+  },
+  merchantsTransactionCount: {
+    one: "{{count}} transacció",
+    other: "{{count}} transaccions",
+  },
+  merchantsEmptyTitle: "Encara no hi ha comerciants",
+  merchantsEmptyMessage:
+    "Els beneficiaris de les teves transaccions apareixeran aquí com un directori cercable.",
+  merchantsNoSearchResults: "Cap comerciant coincideix amb la cerca.",
+  merchantsLoadError: "No s'han pogut carregar els comerciants: ",
+  merchantsSortByCount: "Ordena per nombre de transaccions",
+  merchantsSortAlphabetical: "Ordena alfabèticament",
   mine: "El meu",
   setting: "Configuració",
   // mine
