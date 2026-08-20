@@ -342,6 +342,7 @@ export const UnknownFileView = ({
   };
 
   const renderUnknownContent = () => {
+    const ext = getFileExtension(filename);
     return (
       <div className="flex items-center justify-center py-8">
         <div className="text-center">
@@ -350,8 +351,9 @@ export const UnknownFileView = ({
             {t("ledgerEditor.unsupportedFileFormat")}
           </p>
           <p className="text-sm text-muted-foreground">
-            This file type ({getFileExtension(filename)}) is not supported for
-            preview
+            {ext
+              ? `This file type (${ext}) is not supported for preview`
+              : "This file type is not supported for preview"}
           </p>
         </div>
       </div>

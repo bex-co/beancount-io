@@ -267,6 +267,45 @@ describe("Files Utility", () => {
     it("should return false for empty filename", () => {
       expect(isTextFile("")).toBe(false);
     });
+
+    it("should return true for well-known extensionless text basenames", () => {
+      expect(isTextFile("LICENSE")).toBe(true);
+      expect(isTextFile("LICENCE")).toBe(true);
+      expect(isTextFile("COPYING")).toBe(true);
+      expect(isTextFile("Makefile")).toBe(true);
+      expect(isTextFile("Dockerfile")).toBe(true);
+      expect(isTextFile("CONTRIBUTING")).toBe(true);
+      expect(isTextFile("CODE_OF_CONDUCT")).toBe(true);
+      expect(isTextFile("CHANGELOG")).toBe(true);
+      expect(isTextFile("README")).toBe(true);
+    });
+
+    it("should return true for dotfiles", () => {
+      expect(isTextFile(".gitignore")).toBe(true);
+      expect(isTextFile(".gitattributes")).toBe(true);
+      expect(isTextFile(".editorconfig")).toBe(true);
+      expect(isTextFile(".env.example")).toBe(true);
+    });
+
+    it("should be case-insensitive for basenames", () => {
+      expect(isTextFile("license")).toBe(true);
+      expect(isTextFile("License")).toBe(true);
+      expect(isTextFile("MAKEFILE")).toBe(true);
+      expect(isTextFile("dockerfile")).toBe(true);
+      expect(isTextFile(".GITIGNORE")).toBe(true);
+    });
+
+    it("should handle paths with directories for basenames", () => {
+      expect(isTextFile("a/b/LICENSE")).toBe(true);
+      expect(isTextFile("src/Makefile")).toBe(true);
+      expect(isTextFile("deep/nested/.gitignore")).toBe(true);
+    });
+
+    it("should return false for unknown extensionless files", () => {
+      expect(isTextFile("archive.zip")).toBe(false);
+      expect(isTextFile("binary")).toBe(false);
+      expect(isTextFile("file.unknown")).toBe(false);
+    });
   });
 
   describe("isPDFFile", () => {
@@ -373,6 +412,30 @@ describe("Files Utility", () => {
     it("should return plaintext for empty filename", () => {
       expect(getFileLanguage("")).toBe("plaintext");
     });
+
+    it("should return makefile for Makefile and GNUmakefile", () => {
+      expect(getFileLanguage("Makefile")).toBe("makefile");
+      expect(getFileLanguage("GNUmakefile")).toBe("makefile");
+      expect(getFileLanguage("makefile")).toBe("makefile");
+      expect(getFileLanguage("src/Makefile")).toBe("makefile");
+    });
+
+    it("should return dockerfile for Dockerfile and Containerfile", () => {
+      expect(getFileLanguage("Dockerfile")).toBe("dockerfile");
+      expect(getFileLanguage("Containerfile")).toBe("dockerfile");
+      expect(getFileLanguage("dockerfile")).toBe("dockerfile");
+    });
+
+    it("should return markdown for extensionless README", () => {
+      expect(getFileLanguage("README")).toBe("markdown");
+      expect(getFileLanguage("readme")).toBe("markdown");
+      expect(getFileLanguage("a/b/README")).toBe("markdown");
+    });
+
+    it("should return plaintext for LICENSE and other text basenames", () => {
+      expect(getFileLanguage("LICENSE")).toBe("plaintext");
+      expect(getFileLanguage(".gitignore")).toBe("plaintext");
+    });
   });
 
   describe("getFilename", () => {
@@ -457,6 +520,13 @@ describe("Files Utility", () => {
       );
       expect(getMimeTypeFromExtension("file")).toBe("application/octet-stream");
     });
+
+    it("should return text/plain for well-known basenames", () => {
+      expect(getMimeTypeFromExtension("LICENSE")).toBe("text/plain");
+      expect(getMimeTypeFromExtension("Makefile")).toBe("text/plain");
+      expect(getMimeTypeFromExtension(".gitignore")).toBe("text/plain");
+      expect(getMimeTypeFromExtension("a/b/Dockerfile")).toBe("text/plain");
+    });
   });
 
   describe("getFileType", () => {
@@ -488,6 +558,20 @@ describe("Files Utility", () => {
       expect(getFileType("file.xyz")).toBe("unknown");
       expect(getFileType("archive.zip")).toBe("unknown");
       expect(getFileType("file")).toBe("unknown");
+    });
+
+    it("should return 'text' for well-known extensionless files", () => {
+      expect(getFileType("LICENSE")).toBe("text");
+      expect(getFileType("Makefile")).toBe("text");
+      expect(getFileType("Dockerfile")).toBe("text");
+      expect(getFileType(".gitignore")).toBe("text");
+      expect(getFileType("a/b/CONTRIBUTING")).toBe("text");
+      expect(getFileType("README")).toBe("text");
+    });
+
+    it("should return 'unknown' for truly unknown extensionless binaries", () => {
+      expect(getFileType("binary")).toBe("unknown");
+      expect(getFileType("randomfile")).toBe("unknown");
     });
   });
 

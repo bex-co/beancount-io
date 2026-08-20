@@ -37,6 +37,49 @@ export const getFileExtension = (filename: string): string => {
 };
 
 /**
+ * Extract filename from file path
+ * @param filePath - The full file path
+ * @returns The filename (last part of the path)
+ */
+export const getFilename = (filePath: string): string => {
+  return filePath.split("/").pop() || "";
+};
+
+/**
+ * Well-known text basenames (extensionless or dotfiles) that should be treated
+ * as text even though they have no extension. Lowercased, leading dot stripped.
+ * Inspired by GitHub Linguist well-known filenames.
+ */
+export const TEXT_BASENAMES = new Set<string>([
+  "license",
+  "licence",
+  "copying",
+  "copyright",
+  "readme",
+  "contributing",
+  "code_of_conduct",
+  "changelog",
+  "history",
+  "authors",
+  "makefile",
+  "gnumakefile",
+  "dockerfile",
+  "containerfile",
+  "gemfile",
+  "rakefile",
+  "vagrantfile",
+  "procfile",
+  "gitignore",
+  "gitattributes",
+  "editorconfig",
+  "env",
+  "env.example",
+]);
+
+const getNormalizedBasename = (filename: string): string =>
+  getFilename(filename).toLowerCase().replace(/^\./, "");
+
+/**
  * Check if file is an image based on extension
  */
 export const isImageFile = (filename: string): boolean => {
@@ -45,7 +88,7 @@ export const isImageFile = (filename: string): boolean => {
 };
 
 /**
- * Check if file is a text file based on extension
+ * Check if file is a text file based on extension or well-known basename
  */
 export const isTextFile = (filename: string): boolean => {
   const textExtensions = [
@@ -72,7 +115,10 @@ export const isTextFile = (filename: string): boolean => {
     "beancount",
     "bean",
   ];
-  return textExtensions.includes(getFileExtension(filename));
+  const ext = getFileExtension(filename);
+  if (textExtensions.includes(ext)) return true;
+  if (TEXT_BASENAMES.has(getNormalizedBasename(filename))) return true;
+  return false;
 };
 
 /**
@@ -107,8 +153,21 @@ export const getFileType = (filename: string): FileType => {
 
 /**
  * Get Monaco editor language from filename
+ * Checks well-known basenames before extension map so extensionless files
+ * like Makefile/Dockerfile get proper highlighting.
  */
 export const getFileLanguage = (filename: string): string => {
+  const base = getNormalizedBasename(filename);
+  const basenameLanguageMap: Record<string, string> = {
+    makefile: "makefile",
+    gnumakefile: "makefile",
+    dockerfile: "dockerfile",
+    containerfile: "dockerfile",
+    readme: "markdown",
+    // licenselike and other text basenames fall through to plaintext
+  };
+  if (basenameLanguageMap[base]) return basenameLanguageMap[base];
+
   const ext = getFileExtension(filename);
   const languageMap: Record<string, string> = {
     js: "javascript",
@@ -133,9 +192,12 @@ export const getFileLanguage = (filename: string): string => {
 };
 
 /**
- * Get MIME type from file extension
+ * Get MIME type from file extension or well-known basename
  */
 export const getMimeTypeFromExtension = (filename: string): string => {
+  // Well-known extensionless text files should be treated as text/plain
+  if (TEXT_BASENAMES.has(getNormalizedBasename(filename))) return "text/plain";
+
   const ext = getFileExtension(filename);
   switch (ext) {
     case "txt":
@@ -175,15 +237,6 @@ export const getMimeTypeFromExtension = (filename: string): string => {
     default:
       return "application/octet-stream";
   }
-};
-
-/**
- * Extract filename from file path
- * @param filePath - The full file path
- * @returns The filename (last part of the path)
- */
-export const getFilename = (filePath: string): string => {
-  return filePath.split("/").pop() || "";
 };
 
 /**
