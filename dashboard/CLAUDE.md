@@ -131,6 +131,19 @@ import { Button } from "@/common/components/ui/button";
 import { LedgerSwitcher } from "@/common/components/ledger-layout/ledger-switcher";
 ```
 
+## Growth planning and Search Console
+
+The public roadmap is maintained in the parent repository's .pm board. Use the canonical
+$pm-brainstorm workflow at ../.claude/commands/pm-brainstorm.md before proposing dashboard
+milestones; it is a text-only discovery step, while $pm materializes the board.
+
+For Search Console evidence, run yarn search-console-report --markdown --days 28. This dashboard
+utility uses the fixed https://beancount.io/ property and ranks only dashboard-owned paths:
+/ledger, /login, /sign-up, /auth, /settings, /lgasset, and /oauth. The public host also fronts
+the CMS, forum, and API services, so /forum/**, /api/**, /.well-known, and CMS content paths
+must not be treated as dashboard opportunities. Confirm route ownership before proposing work and
+never put credentials or report user data on the public .pm board.
+
 ## Development Commands
 
 ```bash

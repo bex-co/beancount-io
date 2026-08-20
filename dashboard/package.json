@@ -30,7 +30,8 @@
     "test:translations:watch": "vitest watch src/test/translations.test.ts",
     "kill": "lsof -n -i4TCP:5173 | grep LISTEN | awk '{ print $2 }' | xargs kill",
     "i18n:prepare": "tsx scripts/prepare-translations.ts",
-    "i18n:flatten": "tsx scripts/flatten-translation-keys.ts"
+    "i18n:flatten": "tsx scripts/flatten-translation-keys.ts",
+    "search-console-report": "node --import tsx scripts/search-console-report.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.187",

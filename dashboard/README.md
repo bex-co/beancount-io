@@ -1,5 +1,21 @@
 # Beancount Dashboard
 
+## Search Console growth report
+
+The dashboard package includes a read-only Search Console report for URLs owned by the dashboard.
+It deliberately excludes CMS, forum, and API paths from its opportunity ranking.
+
+Set GOOGLE_SERVICE_ACCOUNT_JSON_B64 in the local .env or CI secret, then run:
+
+    yarn search-console-report --markdown --days 28 --inspect-limit 5
+
+The report covers dashboard paths such as /ledger, /login, /sign-up, /auth, /settings, /lgasset,
+and /oauth. It does not treat /forum, /api, or CMS content paths as dashboard opportunities.
+
+Roadmap ideas should go through the repository-level $pm-brainstorm workflow and public .pm board
+in the parent repository. Search Console rows are evidence only after route ownership is verified;
+do not turn CMS/forum/API rows into dashboard milestones.
+
 The web dashboard for [Beancount.io](https://beancount.io/) — a browser UI for
 double-entry bookkeeping: ledgers, reports, journals, an in-app editor, bank
 account linking, and an AI assistant.
