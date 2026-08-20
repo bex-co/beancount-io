@@ -1,20 +1,21 @@
 # w1 · m33 — Cash-flow Sankey on Reports
 
-**Worker:** worker1 **Goal:** Reports answers "where did my money come from and where did it go" in one picture — a cash-flow Sankey for the selected time range, readable at phone width. **Status:** todo
+**Worker:** worker1 **Goal:** Reports answers "where did my money come from and where did it go" in one picture — a cash-flow Sankey for the selected time range, readable at phone width. **Status:** **done** 2026-08-19 — cash-flow Sankey ships on Reports with `d3-sankey`, top-N + Other rollup, skeleton/empty/draw-in, and transformer unit tests
 
 ## Tasks (in order)
 
-| id   | title                                                                      | est | depends_on |
-| ---- | -------------------------------------------------------------------------- | --- | ---------- |
-| t001 | Phone-width design pass: orientation, top-N + "Other" rollup, RTL behavior | 40m | —          |
-| t002 | Add `d3-sankey` + `@types/d3-sankey` (new dependency — owner-approved)     | 10m | t001       |
-| t003 | Port the Sankey data transformer, fed by the income-statement hierarchy    | 60m | t002       |
-| t004 | Render the Sankey: nodes + curved ribbons on `react-native-svg`            | 90m | t003       |
-| t005 | States and motion: time-range pills, skeleton, empty state, draw-in        | 45m | t004       |
-| t006 | Wire into the Reports screen; reconcile totals with the income statement   | 30m | t005       |
-| t007 | UX pass — light/dark, translations gate, RTL, loading states               | 40m | t006       |
-| t008 | Simplify pass over the Sankey diff                                         | 20m | t007       |
-| t009 | Test coverage — transformer, rollup, reconciliation                        | 40m | t008       |
+| id   | title                                                                      | est | depends_on      |
+| ---- | -------------------------------------------------------------------------- | --- | --------------- |
+| t001 | Phone-width design pass: orientation, top-N + "Other" rollup, RTL behavior | 40m | — — **DONE**    |
+| t002 | Add `d3-sankey` + `@types/d3-sankey` (new dependency — owner-approved)     | 10m | t001 — **DONE** |
+| t003 | Port the Sankey data transformer, fed by the income-statement hierarchy    | 60m | t002 — **DONE** |
+| t004 | Render the Sankey: nodes + curved ribbons on `react-native-svg`            | 90m | t003 — **DONE** |
+| t005 | States and motion: time-range pills, skeleton, empty state, draw-in        | 45m | t004 — **DONE** |
+| t006 | Wire into the Reports screen; reconcile totals with the income statement   | 30m | t005 — **DONE** |
+| t007 | UX pass — light/dark, translations gate, RTL, loading states               | 40m | t006 — **DONE** |
+| t008 | Simplify pass over the Sankey diff                                         | 20m | t007 — **DONE** |
+| t009 | Test coverage — transformer, rollup, reconciliation                        | 40m | t008 — **DONE** |
+| t010 | Closeout — move completed tasks and milestone into done/                   | 10m | t009 — **DONE** |
 
 ## Definition of done
 

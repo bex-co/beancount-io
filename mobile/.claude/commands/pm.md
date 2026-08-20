@@ -29,6 +29,7 @@ Beancount Mobile exists to make accounting **super easy** for beancount.io users
 - **Sizing rule.** A milestone must be **> ~1 hour of work across more than one task**. If a chunk is ≤ ~1h (tens of minutes, a task or two), do **NOT** create an `mN/` directory — record it as a loose inbox note `wN/NNN.md`. Tasks take tens of minutes; milestones take hours.
 - **IDs must match the path.** A task's `id: wN/mN/tNNN` frontmatter must equal the directory it lives in. Never create a milestone dir whose path disagrees with the IDs inside it — if you find drift, flag/repair, don't copy it.
 - **Keep status in sync** across all three places it lives: the workstream `README.md` milestone checkbox, the milestone `README.md` `**Status:**` line + the `— DONE` marker in the task table, and each task's `status:` frontmatter.
+- **Completed work must exit the open tree.** Moving completed work into `done/` is a mandatory exit condition, not optional cleanup. A mutating subcommand must not report success while an affected task with `status: done` remains at `wN/mN/tNNN.md`, or while an affected milestone with no open tasks remains at `wN/mN/`. Move completed tasks to `wN/mN/done/` and completed milestones to `wN/done/mN/`, then verify the old open paths no longer exist.
 - **Numbering:** next free zero-padded 3-digit for inbox notes (`NNN`) and tasks (`tNNN`); next free `wN` / `mN`. Scan the tree first; don't reuse a number.
 - Use `worker: worker1` unless the workstream README names another worker.
 - **Milestones must be meaningful.** Every milestone must include direct pillar linkage (`.pm/GOAL.md`), an observable expected outcome for the app user, and why this work matters now (dependency/risk/sequence rationale).
@@ -38,8 +39,9 @@ Beancount Mobile exists to make accounting **super easy** for beancount.io users
   1. **UX pass** — only when the milestone touches user-facing screens/components. Verify light **and** dark themes (tokens via `useTheme()`, no hard-coded colors), all new strings in the English base under `src/translations/` and rendered via `useTranslations()`, background colors set on loading states, `SafeAreaView` spacing, and analytics tracking on new screen mounts.
   2. **Simplify** — run `/simplify` over the code this milestone changed (reuse / simplification / efficiency; behavior-preserving).
   3. **Test coverage** — add meaningful unit tests under `src/__tests__/` for the behavior this milestone shipped; they must pass with `yarn test:unit`. Tests must assert real behavior and failure modes; never game coverage with trivial, tautological, or snapshot-everything tests.
+  4. **Closeout** — the final task, added last. When the milestone's other tasks are all complete **and its definition of done is actually met**, close the milestone: set every remaining task's `status: done`, move each `tNNN.md` to `wN/mN/done/`, mark every row `— **DONE**` and set `**Status:** done` in the milestone `README.md`, move the whole `wN/mN/` directory to `wN/done/mN/`, and check `- [x]` in the workstream `README.md`. Completing this task _is_ the move — running `/pm done <wN/mN/tNNN>` on it last triggers the milestone move (the `done` subcommand's step 4). Do **not** run it until the DoD holds: a milestone lands in `done/` when its observable end state is real, not merely when the code is written.
 
-  Non-UI milestones get closing tasks 2–3 only. Closing tasks `depends_on` the last implementation task(s) and count toward the `(N tasks)` total. `add-task` inserts new work **before** the closing tasks and updates their `depends_on`.
+  Non-UI milestones get closing tasks 2–4 only (no UX pass). Closing tasks `depends_on` the last implementation task(s) (Simplify and Test coverage depend on UX pass when it's present; Closeout depends on Test coverage) and count toward the `(N tasks)` total. `add-task` inserts new work **before** these (before Closeout) and updates their `depends_on`.
 
 - After editing any `.md`, run `npx prettier --write ".pm/**/*.md"` from inside `mobile/`.
 
@@ -51,7 +53,8 @@ Read the tree (`find .pm -type f -name '*.md'`, skipping `done/`), `.pm/GOAL.md`
 
 - items conflicting with `.pm/DO_NOT_DO.md`,
 - milestones missing `## Source + Goal linkage` or linking to no `.pm/GOAL.md` pillar,
-- milestones whose definition of done is vague/non-testable.
+- milestones whose definition of done is vague/non-testable,
+- completed tasks or milestones that still sit in the open tree instead of their applicable `done/` directory.
 
 Touch no files.
 
@@ -67,12 +70,12 @@ Create the next free inbox note `wN/NNN.md` with the idea as plain terse markdow
 
 Apply the **sizing rule first.**
 
-- If the work is **> ~1h and splits into more than one task**: create `wN/mN/` with `README.md` (milestone template) + one `tNNN.md` per task (task template) **+ the standing closing tasks (UX pass if UI-facing, Simplify, Test coverage)**, add the `- [ ] **mN** — …` line to the workstream `README.md`, and fill `## Source + Goal linkage` with source + pillar linkage + expected outcome + why-now rationale.
+- If the work is **> ~1h and splits into more than one task**: create `wN/mN/` with `README.md` (milestone template) + one `tNNN.md` per task (task template) **+ the standing closing tasks (UX pass if UI-facing, Simplify, Test coverage, then Closeout)**, add the `- [ ] **mN** — …` line to the workstream `README.md`, and fill `## Source + Goal linkage` with source + pillar linkage + expected outcome + why-now rationale.
 - If it is **≤ ~1h**: do NOT create a milestone. Keep/append it as an inbox note `wN/NNN.md` and tell the user why (too small for a milestone).
 
 ### `add-task <wN/mN> <title>`
 
-Create the next `tNNN.md` from the task template and add its row to the milestone `README.md` table **before the standing closing tasks**, updating their `depends_on` to include it. Update the `(N tasks)` count in the workstream README.
+Create the next `tNNN.md` from the task template and add its row to the milestone `README.md` table **before the standing closing tasks** (before Closeout), updating their `depends_on` to include it. Update the `(N tasks)` count in the workstream README.
 
 ### `done <wN/mN/tNNN>`
 
@@ -80,6 +83,7 @@ Create the next `tNNN.md` from the task template and add its row to the mileston
 2. In the milestone `README.md`: mark the row `— **DONE**` and update the `**Status:**` line (e.g. `todo (t001 done)`).
 3. **Move** the file to `wN/mN/done/tNNN.md`.
 4. If no open tasks remain in the milestone, **move the whole milestone** to `wN/done/mN/` and check its box (`- [x]`) in the workstream `README.md`.
+5. **Verify the exit condition before returning:** the completed task exists only under `done/`; and, when no open tasks remain, the milestone exists only at `wN/done/mN/`, its `README.md` says `**Status:** done`, and the workstream checkbox is checked. Do not report success until these moves and status updates are complete.
 
 Show the intended moves before mutating if the user passed `DRY_RUN=1`.
 

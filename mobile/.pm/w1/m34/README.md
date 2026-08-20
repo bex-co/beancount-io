@@ -13,6 +13,7 @@
 | t005 | UX pass — light/dark, translations gate, loading states                      | 30m | t004       |
 | t006 | Simplify pass over the persistence diff                                      | 20m | t005       |
 | t007 | Test coverage — purge rules, fetch policies, staleness state                 | 40m | t006       |
+| t008 | Closeout — move completed tasks and milestone into done/                     | 10m | t007       |
 
 ## Definition of done
 
