@@ -571,9 +571,7 @@ describe("LedgerSEO Component", () => {
         />,
       );
 
-      expect(
-        document.head.querySelector('meta[name="robots"]'),
-      ).toBeNull();
+      expect(document.head.querySelector('meta[name="robots"]')).toBeNull();
       expect(
         document.head.querySelector('[data-testid="hreflang"]'),
       ).not.toBeNull();

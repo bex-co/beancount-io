@@ -119,13 +119,15 @@ describe("getSEOMetadata", () => {
 
   it("should interpolate ledgerCommit shortSha and ledgerName", () => {
     const mockI18n = vi.mocked(i18n.t);
-    mockI18n.mockImplementation((key: string, params?: Record<string, string>) => {
-      if (key === "seo.ledgerCommit.title")
-        return `Commit ${params?.shortSha} - ${params?.ledgerName}`;
-      if (key === "seo.ledgerCommit.description")
-        return `Changes in commit ${params?.shortSha} for ${params?.ledgerName}. Review modified files and diffs.`;
-      return key;
-    });
+    mockI18n.mockImplementation(
+      (key: string, params?: Record<string, string>) => {
+        if (key === "seo.ledgerCommit.title")
+          return `Commit ${params?.shortSha} - ${params?.ledgerName}`;
+        if (key === "seo.ledgerCommit.description")
+          return `Changes in commit ${params?.shortSha} for ${params?.ledgerName}. Review modified files and diffs.`;
+        return key;
+      },
+    );
 
     const result = getSEOMetadata(
       "seo.ledgerCommit.title",

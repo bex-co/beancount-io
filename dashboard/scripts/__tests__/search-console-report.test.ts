@@ -44,7 +44,9 @@ describe("dashboard Search Console report core", () => {
       classifyDashboardPath("https://beancount.io/ledger/open_ledger/example"),
     ).toBe("dashboard");
     expect(
-      classifyDashboardPath("https://beancount.io/ledger/open_ledger/example?lang=uk"),
+      classifyDashboardPath(
+        "https://beancount.io/ledger/open_ledger/example?lang=uk",
+      ),
     ).toBe("dashboard");
     expect(classifyDashboardPath("https://beancount.io/login")).toBe(
       "dashboard",

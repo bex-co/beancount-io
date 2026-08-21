@@ -52,9 +52,7 @@ describe("getLedgerCommitCanonicalUrl", () => {
         ledgerName: "my/ledger",
         commitSha: "abc123",
       }),
-    ).toBe(
-      "https://beancount.io/ledger/alice%20bob/my%2Fledger/commit/abc123",
-    );
+    ).toBe("https://beancount.io/ledger/alice%20bob/my%2Fledger/commit/abc123");
   });
 
   it("is distinct from the commits list URL", () => {
