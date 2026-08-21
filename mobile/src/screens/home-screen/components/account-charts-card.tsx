@@ -1,13 +1,18 @@
 import { useState } from "react";
 import { useRouter } from "expo-router";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, Text, View } from "react-native";
+import { Ionicons } from "@expo/vector-icons";
 import { FadeInView } from "@/components/crossfade";
+import { PressableScale } from "@/components/pressable-scale";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { analytics } from "@/common/analytics";
 import { LoadingTile } from "@/components/loading-tile";
 import { SegmentedPages, TimeRangePills } from "@/components";
 import { HomeDashboardCard } from "./home-dashboard-card";
+import { createHomeCardTapHandler } from "./home-card-tap";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
+import { fontSizes, fontWeights, space, useTheme } from "@/common/theme";
+import { directionalIcon } from "@/common/rtl";
 import {
   RANGE_LABEL_KEYS,
   SeriesPoint,
@@ -27,15 +32,32 @@ const PILLS_HEIGHT = 40;
 const TAB_TILE_WIDTHS = [88, 64, 72];
 
 const styles = StyleSheet.create({
-  skeletonTabs: {
+  skeletonTabsRow: {
     flexDirection: "row",
-    paddingHorizontal: 16,
+    alignItems: "center",
     marginBottom: 12,
+    paddingHorizontal: 16,
+  },
+  skeletonTabs: {
+    flex: 1,
+    flexDirection: "row",
   },
   skeletonTab: {
     height: 28,
     borderRadius: 14,
     marginEnd: 8,
+  },
+  seeAll: {
+    // Match SegmentedPages tab padding so the label shares the tab row's
+    // vertical center instead of sitting a few pixels higher.
+    flexDirection: "row",
+    alignItems: "center",
+    paddingVertical: 6,
+  },
+  seeAllText: {
+    fontSize: fontSizes.md,
+    fontWeight: fontWeights.medium,
+    marginEnd: space.xxs,
   },
 });
 
@@ -64,32 +86,59 @@ export function AccountChartsCard({
   error,
 }: AccountChartsCardProps): JSX.Element {
   const { t } = useTranslations();
+  const theme = useTheme().colorTheme;
   const router = useRouter();
   const [range, setRange] = useState<TimeRange>("6M");
   // Tracked so a range change reports which curve the user was looking at.
   const [activeIndex, setActiveIndex] = useState(0);
 
-  // One door for all three pages: the affordance lives on the card header, above
-  // the tab strip, so it means the same thing whichever curve is showing. There
-  // is no per-page destination to send it to — Accounts has no liabilities
-  // filter route.
-  // Hoisted so the skeleton and the loaded card cannot drift apart: they must
-  // render the same header or the card changes height when the data lands.
-  const tapThrough = {
-    onSeeAll: () => router.navigate({ pathname: "/accounts" }),
-    card: "accounts",
-  } as const;
+  // One door for all three pages: pinned to the tab row (not a lone header
+  // above it), so it means the same thing whichever curve is showing. There
+  // is no per-page destination — Accounts has no liabilities filter route.
+  // Wired through createHomeCardTapHandler directly because the affordance
+  // lives inside SegmentedPages, not DashboardCard's header slot.
+  const onSeeAll = createHomeCardTapHandler(
+    (event, properties) => analytics.track(event, properties),
+    "accounts",
+    () => router.navigate({ pathname: "/accounts" }),
+  );
+
+  const seeAll = onSeeAll ? (
+    <PressableScale
+      style={styles.seeAll}
+      onPress={onSeeAll}
+      hitSlop={8}
+      accessibilityRole="button"
+      accessibilityLabel={t("seeAll")}
+    >
+      <Text style={[styles.seeAllText, { color: theme.primary }]}>
+        {t("seeAll")}
+      </Text>
+      <Ionicons
+        name={directionalIcon("chevron-forward")}
+        size={16}
+        color={theme.primary}
+      />
+    </PressableScale>
+  ) : null;
 
   if (loading || error) {
     return (
-      // Same header as the loaded card: without it the card grows by a header
-      // row when the data lands. Accounts is reachable whether or not this
+      // Same tab-row + see-all as the loaded card: without both the card
+      // grows when the data lands. Accounts is reachable whether or not this
       // card's series arrived, so the door is honest while loading.
-      <HomeDashboardCard bleed {...tapThrough}>
-        <View style={styles.skeletonTabs}>
-          {TAB_TILE_WIDTHS.map((width) => (
-            <LoadingTile key={width} width={width} style={styles.skeletonTab} />
-          ))}
+      <HomeDashboardCard bleed>
+        <View style={styles.skeletonTabsRow}>
+          <View style={styles.skeletonTabs}>
+            {TAB_TILE_WIDTHS.map((width) => (
+              <LoadingTile
+                key={width}
+                width={width}
+                style={styles.skeletonTab}
+              />
+            ))}
+          </View>
+          {seeAll}
         </View>
         <LoadingTile height={PAGE_HEIGHT + PILLS_HEIGHT} mx={16} />
       </HomeDashboardCard>
@@ -124,13 +173,14 @@ export function AccountChartsCard({
   });
 
   return (
-    <HomeDashboardCard bleed {...tapThrough}>
+    <HomeDashboardCard bleed>
       {/* Crossfades in over the skeleton, which is sized to this same block. */}
       <FadeInView>
         <SegmentedPages
           tabs={charts.map(({ key }) => t(key))}
           pages={pages}
           height={PAGE_HEIGHT}
+          trailing={seeAll}
           onPageChange={(index) => {
             setActiveIndex(index);
             analytics.track("home_chart_page", {

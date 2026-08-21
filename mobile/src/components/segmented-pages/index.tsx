@@ -20,15 +20,33 @@ interface PageSelectedEvent {
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
+    // Tabs + optional trailing (e.g. "See all") share one row so the door sits
+    // with the labels instead of on an empty header above them.
+    headerRow: {
+      flexDirection: "row",
+      alignItems: "center",
+      marginBottom: 12,
+    },
     // The tab strip scrolls horizontally: at 16px three labels can outrun the
     // screen in longer locales (de: "Net Worth" + "Vermögen" +
     // "Verbindlichkeiten"), and truncating a tab name reads worse than a nudge.
-    tabsRow: {
-      flexGrow: 0,
-      marginBottom: 12,
+    tabsScroll: {
+      flex: 1,
     },
     tabsContent: {
-      paddingHorizontal: 16,
+      alignItems: "center",
+      paddingStart: 16,
+      // Trailing owns the end inset when present; keep 16 when it is not.
+      paddingEnd: 16,
+    },
+    tabsContentWithTrailing: {
+      paddingEnd: 8,
+    },
+    trailing: {
+      flexShrink: 0,
+      justifyContent: "center",
+      paddingEnd: 16,
+      paddingStart: 4,
     },
     tab: {
       paddingHorizontal: 12,
@@ -62,6 +80,11 @@ type SegmentedPagesProps = {
   height: number;
   initialIndex?: number;
   onPageChange?: (index: number) => void;
+  /**
+   * Optional control pinned to the trailing edge of the tab row (Home's
+   * account-charts "See all"). Stays visible while the tabs scroll.
+   */
+  trailing?: ReactNode;
 };
 
 /**
@@ -76,6 +99,7 @@ export function SegmentedPages({
   height,
   initialIndex = 0,
   onPageChange,
+  trailing,
 }: SegmentedPagesProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const swipeOwner = useHorizontalSwipeOwnerGesture();
@@ -106,35 +130,43 @@ export function SegmentedPages({
     <View>
       {/* Owner marker: a horizontal drag across the tab strip scrolls it,
           never opens the ledger drawer's edge swipe. */}
-      <GestureDetector gesture={swipeOwner}>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          style={styles.tabsRow}
-          contentContainerStyle={styles.tabsContent}
-          accessibilityRole="tablist"
-        >
-          {tabs.map((tab, index) => {
-            const active = index === activeIndex;
-            return (
-              <TouchableOpacity
-                key={tab}
-                style={[styles.tab, active && styles.tabActive]}
-                onPress={() => handleTabPress(index)}
-                accessibilityRole="tab"
-                accessibilityState={{ selected: active }}
-              >
-                <Text
-                  style={[styles.label, active && styles.labelActive]}
-                  numberOfLines={1}
+      <View style={styles.headerRow}>
+        <GestureDetector gesture={swipeOwner}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.tabsScroll}
+            contentContainerStyle={[
+              styles.tabsContent,
+              trailing != null && styles.tabsContentWithTrailing,
+            ]}
+            accessibilityRole="tablist"
+          >
+            {tabs.map((tab, index) => {
+              const active = index === activeIndex;
+              return (
+                <TouchableOpacity
+                  key={tab}
+                  style={[styles.tab, active && styles.tabActive]}
+                  onPress={() => handleTabPress(index)}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: active }}
                 >
-                  {tab}
-                </Text>
-              </TouchableOpacity>
-            );
-          })}
-        </ScrollView>
-      </GestureDetector>
+                  <Text
+                    style={[styles.label, active && styles.labelActive]}
+                    numberOfLines={1}
+                  >
+                    {tab}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </ScrollView>
+        </GestureDetector>
+        {trailing != null ? (
+          <View style={styles.trailing}>{trailing}</View>
+        ) : null}
+      </View>
       <PagerView
         ref={pagerRef}
         style={[styles.pager, { height }]}
