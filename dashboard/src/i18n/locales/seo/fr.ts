@@ -101,6 +101,16 @@ const frSeo: Record<string, TranslationEntry> = {
     message: "Commits - {ledgerName}",
     description: "Commits page title with ledger name",
   },
+  "seo.ledgerCommit.description": {
+    message:
+      "Changes in commit {shortSha} for {ledgerName}. Review modified files and diffs.",
+    description: "Commit detail page meta description",
+  },
+  "seo.ledgerCommit.title": {
+    message: "Commit {shortSha} - {ledgerName}",
+    description: "Commit detail page title with short hash and ledger name",
+  },
+
   "seo.ledgerDashboard.description": {
     message:
       "Visualisez et gérez tous vos livres comptables Beancount. Créez de nouveaux livres, accédez aux existants et organisez vos registres financiers.",

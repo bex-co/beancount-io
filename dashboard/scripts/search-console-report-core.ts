@@ -59,6 +59,25 @@ const cmsPrefixes = [
   "/tools",
 ];
 
+const supportedLangs = [
+  "bg",
+  "ca",
+  "de",
+  "en",
+  "es",
+  "fa",
+  "fr",
+  "ja",
+  "ko",
+  "nl",
+  "pt",
+  "ru",
+  "sk",
+  "uk",
+  "zh",
+  "it",
+];
+
 function hasPrefix(pathname: string, prefix: string): boolean {
   return pathname === prefix || pathname.startsWith(prefix + "/");
 }
@@ -77,12 +96,24 @@ export function classifyDashboardPath(page: string): DashboardRouteOwner {
   if (forumPrefixes.some((prefix) => hasPrefix(pathname, prefix)))
     return "forum";
   if (apiPrefixes.some((prefix) => hasPrefix(pathname, prefix))) return "api";
+  const stripped = stripLocalePrefix(pathname);
   if (
-    cmsPrefixes.some((prefix) => hasPrefix(pathname, prefix)) ||
+    cmsPrefixes.some((prefix) => hasPrefix(stripped, prefix)) ||
+    stripped === "/" ||
     pathname === "/"
   )
     return "cms";
   return "unknown";
+}
+
+function stripLocalePrefix(pathname: string): string {
+  const segments = pathname.split("/").filter(Boolean);
+  if (segments.length === 0) return "/";
+  if (supportedLangs.includes(segments[0]!)) {
+    const rest = segments.slice(1).join("/");
+    return rest ? `/${rest}` : "/";
+  }
+  return pathname;
 }
 
 export function aggregateSearchRows(

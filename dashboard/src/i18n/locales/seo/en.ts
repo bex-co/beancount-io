@@ -341,6 +341,15 @@ const enSeo: Record<string, TranslationEntry> = {
     message: "Commits - {ledgerName}",
     description: "Commits page title with ledger name",
   },
+  "seo.ledgerCommit.description": {
+    message:
+      "Changes in commit {shortSha} for {ledgerName}. Review modified files and diffs.",
+    description: "Commit detail page meta description",
+  },
+  "seo.ledgerCommit.title": {
+    message: "Commit {shortSha} - {ledgerName}",
+    description: "Commit detail page title with short hash and ledger name",
+  },
   "seo.ledgerPullRequest.description": {
     message:
       "Review pull request changes for {ledgerName}. Approve or reject proposed modifications to your ledger.",

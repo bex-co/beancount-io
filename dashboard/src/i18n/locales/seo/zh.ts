@@ -94,6 +94,16 @@ const zhSeo: Record<string, TranslationEntry> = {
     message: "提交记录 - {ledgerName}",
     description: "Commits page title with ledger name",
   },
+  "seo.ledgerCommit.description": {
+    message:
+      "Changes in commit {shortSha} for {ledgerName}. Review modified files and diffs.",
+    description: "Commit detail page meta description",
+  },
+  "seo.ledgerCommit.title": {
+    message: "Commit {shortSha} - {ledgerName}",
+    description: "Commit detail page title with short hash and ledger name",
+  },
+
   "seo.ledgerDashboard.description": {
     message:
       "查看和管理你的所有Beancount账本。创建新账本、访问现有账本并整理你的财务记录。",

@@ -101,6 +101,16 @@ const bgSeo: Record<string, TranslationEntry> = {
     message: "Комити - {ledgerName}",
     description: "Commits page title with ledger name",
   },
+  "seo.ledgerCommit.description": {
+    message:
+      "Changes in commit {shortSha} for {ledgerName}. Review modified files and diffs.",
+    description: "Commit detail page meta description",
+  },
+  "seo.ledgerCommit.title": {
+    message: "Commit {shortSha} - {ledgerName}",
+    description: "Commit detail page title with short hash and ledger name",
+  },
+
   "seo.ledgerDashboard.description": {
     message:
       "Преглеждайте и управлявайте всички ваши книги в Beancount. Създавайте нови книги, достъпвайте съществуващи и организирайте финансовите си записи.",

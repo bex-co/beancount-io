@@ -116,6 +116,31 @@ describe("getSEOMetadata", () => {
     expect(result.title).toBe("");
     expect(result.description).toBe("");
   });
+
+  it("should interpolate ledgerCommit shortSha and ledgerName", () => {
+    const mockI18n = vi.mocked(i18n.t);
+    mockI18n.mockImplementation((key: string, params?: Record<string, string>) => {
+      if (key === "seo.ledgerCommit.title")
+        return `Commit ${params?.shortSha} - ${params?.ledgerName}`;
+      if (key === "seo.ledgerCommit.description")
+        return `Changes in commit ${params?.shortSha} for ${params?.ledgerName}. Review modified files and diffs.`;
+      return key;
+    });
+
+    const result = getSEOMetadata(
+      "seo.ledgerCommit.title",
+      "seo.ledgerCommit.description",
+      { ledgerName: "amazon", shortSha: "c121e11" },
+    );
+
+    expect(result.title).toBe("Commit c121e11 - amazon");
+    expect(result.title).toContain("c121e11");
+    expect(result.title).toContain("amazon");
+    expect(result.description).toContain("c121e11");
+    expect(result.description).not.toBe(
+      "View commit history and version control for amazon. Track changes to your ledger files over time.",
+    );
+  });
 });
 
 describe("createHeadMeta", () => {

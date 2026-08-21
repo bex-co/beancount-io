@@ -335,6 +335,16 @@ const koSeo: Record<string, TranslationEntry> = {
     message: "커밋 - {ledgerName}",
     description: "Commits page title with ledger name",
   },
+  "seo.ledgerCommit.description": {
+    message:
+      "Changes in commit {shortSha} for {ledgerName}. Review modified files and diffs.",
+    description: "Commit detail page meta description",
+  },
+  "seo.ledgerCommit.title": {
+    message: "Commit {shortSha} - {ledgerName}",
+    description: "Commit detail page title with short hash and ledger name",
+  },
+
   "seo.ledgerPullRequest.description": {
     message:
       "{ledgerName}의 풀 리퀘스트 변경 사항을 검토합니다. 장부에 대한 제안된 수정 사항을 승인하거나 거절할 수 있습니다.",

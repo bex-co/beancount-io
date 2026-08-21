@@ -25,6 +25,32 @@ describe("dashboard Search Console report core", () => {
     );
   });
 
+  it("classifies locale-prefixed CMS paths as cms", () => {
+    expect(classifyDashboardPath("https://beancount.io/zh/blog")).toBe("cms");
+    expect(classifyDashboardPath("https://beancount.io/ja/docs")).toBe("cms");
+    expect(classifyDashboardPath("https://beancount.io/en/research-logs")).toBe(
+      "cms",
+    );
+    expect(classifyDashboardPath("https://beancount.io/it/tools")).toBe("cms");
+    expect(classifyDashboardPath("https://beancount.io/sk/open-ledger")).toBe(
+      "cms",
+    );
+    expect(classifyDashboardPath("https://beancount.io/zh")).toBe("cms");
+    expect(classifyDashboardPath("https://beancount.io/")).toBe("cms");
+  });
+
+  it("does not misclassify dashboard paths with similar prefix as cms", () => {
+    expect(
+      classifyDashboardPath("https://beancount.io/ledger/open_ledger/example"),
+    ).toBe("dashboard");
+    expect(
+      classifyDashboardPath("https://beancount.io/ledger/open_ledger/example?lang=uk"),
+    ).toBe("dashboard");
+    expect(classifyDashboardPath("https://beancount.io/login")).toBe(
+      "dashboard",
+    );
+  });
+
   it("aggregates device rows and only ranks dashboard-owned opportunities", () => {
     const rows = aggregateSearchRows([
       {

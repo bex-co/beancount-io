@@ -53,3 +53,16 @@ export function getLedgerFileCanonicalUrl({
   const encodedFilePath = encodePath(filePath);
   return encodedFilePath ? `${base}/${encodedFilePath}` : base;
 }
+
+/** Canonical URL for a public ledger commit detail page. */
+export function getLedgerCommitCanonicalUrl({
+  ledgerOwner,
+  ledgerName,
+  commitSha,
+}: {
+  ledgerOwner: string;
+  ledgerName: string;
+  commitSha: string;
+}): string {
+  return `${PRODUCTION_ORIGIN}/ledger/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/commit/${encodeURIComponent(commitSha)}`;
+}

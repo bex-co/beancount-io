@@ -8,7 +8,10 @@ export default function CommitDetailPage() {
   });
   return (
     <>
-      <LedgerPageSEO seoKey="ledgerCommits" />
+      <LedgerPageSEO
+        seoKey="ledgerCommit"
+        params={{ shortSha: commitSha.slice(0, 7) }}
+      />
       <CommitsSplitView
         ledgerId={`${ledgerOwner}/${ledgerName}`}
         selectedCommitSha={commitSha}
