@@ -1,6 +1,5 @@
 import { useCallback, useMemo } from "react";
 import {
-  ActivityIndicator,
   Alert,
   Pressable,
   ScrollView,
@@ -14,8 +13,18 @@ import { useApolloClient, useReactiveVar } from "@apollo/client";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { analytics } from "@/common/analytics";
-import { fontSizes, fontWeights, useTheme } from "@/common/theme";
+import {
+  fontSizes,
+  fontWeights,
+  gutter,
+  space,
+  useTheme,
+  withAlpha,
+} from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
+import { AccountTypeIcon } from "@/components/account-type-icon";
+import { LoadingTile } from "@/components/loading-tile";
+import { MenuButton } from "@/components/menu-button";
 import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -48,15 +57,14 @@ const getStyles = (theme: ColorTheme) =>
       backgroundColor: theme.white,
     },
     scrollContent: {
-      paddingHorizontal: 16,
-      paddingBottom: 32,
+      paddingHorizontal: gutter,
+      paddingBottom: 40,
     },
     stateContainer: {
       flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
       backgroundColor: theme.white,
-      paddingVertical: 40,
+      paddingHorizontal: gutter,
+      paddingTop: 32,
     },
     stateText: {
       fontSize: fontSizes.md,
@@ -66,80 +74,166 @@ const getStyles = (theme: ColorTheme) =>
     hero: {
       alignItems: "center",
       paddingTop: 24,
-      paddingBottom: 8,
+      paddingBottom: 20,
+    },
+    heroIcon: {
+      marginBottom: 12,
+    },
+    heroTitle: {
+      maxWidth: "92%",
+      fontSize: fontSizes.xxl,
+      fontWeight: fontWeights.medium,
+      color: theme.black90,
+      textAlign: "center",
     },
     heroAmount: {
+      marginTop: 10,
       fontSize: fontSizes.heroSm,
       fontWeight: fontWeights.medium,
     },
     heroSubtitle: {
       marginTop: 6,
-      fontSize: fontSizes.md,
-      color: theme.black60,
+      fontSize: fontSizes.lg,
+      color: theme.black80,
       textAlign: "center",
+      maxWidth: "92%",
     },
-    pill: {
-      marginTop: 10,
-      paddingHorizontal: 10,
-      paddingVertical: 3,
+    heroMeta: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.sm,
+      marginTop: 12,
+    },
+    heroDate: {
+      fontSize: fontSizes.sm,
+      color: theme.black80,
+    },
+    statusBadge: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: space.xs,
+      paddingHorizontal: 8,
+      paddingVertical: 4,
       borderRadius: 999,
+      backgroundColor: withAlpha(theme.warning, 0.14),
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: withAlpha(theme.warning, 0.5),
+    },
+    statusDot: {
+      width: 6,
+      height: 6,
+      borderRadius: 3,
       backgroundColor: theme.warning,
     },
-    pillText: {
+    statusText: {
       fontSize: fontSizes.xs,
       fontWeight: fontWeights.medium,
-      color: "#fff",
+      color: theme.warning,
     },
     sectionTitle: {
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.black80,
-      marginTop: 20,
+      marginTop: 8,
       marginBottom: 8,
     },
     card: {
       borderWidth: 1,
       borderColor: theme.controlBorder,
-      borderRadius: 8,
+      borderRadius: 12,
       overflow: "hidden",
       backgroundColor: theme.white,
     },
-    detailRow: {
+    flowCard: {
+      backgroundColor: theme.controlFill,
+    },
+    metadataRow: {
       flexDirection: "row",
-      justifyContent: "space-between",
       alignItems: "flex-start",
       paddingHorizontal: 16,
-      paddingVertical: 12,
+      paddingVertical: 14,
       gap: 12,
     },
-    detailRowDivider: {
+    metadataRowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.black10,
     },
-    detailLabel: {
-      fontSize: fontSizes.md,
-      color: theme.black60,
-      flexShrink: 0,
+    metadataIcon: {
+      width: 20,
+      marginTop: 1,
     },
-    detailValue: {
+    metadataBody: {
       flex: 1,
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-      color: theme.text01,
-      textAlign: "right",
+      minWidth: 0,
     },
-    sourceSection: {
-      marginTop: 20,
+    metadataLabel: {
+      fontSize: fontSizes.xs,
+      fontWeight: fontWeights.medium,
+      color: theme.black80,
+      marginBottom: 5,
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+    },
+    chipRow: {
+      flexDirection: "row",
+      flexWrap: "wrap",
+      gap: 6,
+    },
+    chip: {
+      paddingHorizontal: 9,
+      paddingVertical: 5,
+      borderRadius: 999,
+      backgroundColor: theme.controlFill,
+      borderWidth: StyleSheet.hairlineWidth,
+      borderColor: theme.controlBorder,
+    },
+    chipText: {
+      fontSize: fontSizes.sm,
+      color: theme.primary,
+    },
+    detailSkeleton: {
+      alignItems: "center",
+      paddingTop: 24,
+    },
+    skeletonIcon: {
+      width: 48,
+      height: 48,
+      borderRadius: 14,
+    },
+    skeletonTitle: {
+      width: 150,
+      height: 22,
+      marginTop: 12,
+    },
+    skeletonAmount: {
+      width: 118,
+      height: 38,
+      marginTop: 14,
+    },
+    skeletonMeta: {
+      width: 170,
+      height: 14,
+      marginTop: 12,
+    },
+    skeletonSection: {
+      alignSelf: "stretch",
+      height: 120,
+      marginTop: 32,
+      borderRadius: 12,
     },
     headerActions: {
       flexDirection: "row",
       alignItems: "center",
-      gap: 12,
+      gap: 4,
       paddingEnd: 4,
     },
+    headerIconButton: {
+      width: 44,
+      height: 44,
+      alignItems: "center",
+      justifyContent: "center",
+    },
   });
-
-type DetailRow = { label: string; value: string };
 
 const TransactionDetailImpl = ({
   entryHash,
@@ -161,7 +255,7 @@ const TransactionDetailImpl = ({
 
   // Also serves as the fallback entry source when the stash is cold (deep
   // link or remount) — the context payload carries the full entry JSON.
-  const { data, loading } = useGetLedgerEntryContextQuery({
+  const { data, loading, error } = useGetLedgerEntryContextQuery({
     variables: { entryHash, ledgerId },
     skip: !entryHash,
   });
@@ -236,7 +330,13 @@ const TransactionDetailImpl = ({
         <Stack.Screen options={{ title: t("transaction") }} />
         <View style={styles.stateContainer}>
           {loading ? (
-            <ActivityIndicator size="large" color={theme.primary} />
+            <View style={styles.detailSkeleton}>
+              <LoadingTile style={styles.skeletonIcon} />
+              <LoadingTile style={styles.skeletonTitle} />
+              <LoadingTile style={styles.skeletonAmount} />
+              <LoadingTile style={styles.skeletonMeta} />
+              <LoadingTile style={styles.skeletonSection} />
+            </View>
           ) : (
             <Text style={styles.stateText}>{t("journalNoData")}</Text>
           )}
@@ -249,59 +349,66 @@ const TransactionDetailImpl = ({
   const postingRows = selectPostingRows(entry);
   const title = selectTransactionTitle(entry) || t("transaction");
   const isPending = entry.flag === "!";
-
-  const detailRows: DetailRow[] = [
-    {
-      label: t("date"),
-      value: formatLedgerDate(entry.date.slice(0, 10), locale),
-    },
-    ...(entry.payee ? [{ label: t("payee"), value: entry.payee }] : []),
-    ...(entry.narration
-      ? [{ label: t("narration"), value: entry.narration }]
-      : []),
-    ...(entry.tags?.length
-      ? [{ label: t("tags"), value: entry.tags.map((x) => `#${x}`).join("  ") }]
-      : []),
-    ...(entry.links?.length
-      ? [
-          {
-            label: t("links"),
-            value: entry.links.map((x) => `^${x}`).join("  "),
-          },
-        ]
-      : []),
-  ];
+  const formattedDate = formatLedgerDate(entry.date.slice(0, 10), locale);
+  const hasCashPosting = entry.postings.some(
+    (posting) =>
+      posting.account.startsWith("Assets:") ||
+      posting.account.startsWith("Liabilities:"),
+  );
+  const displayHeroAmount =
+    hero.isPositive === false && hero.text && hasCashPosting
+      ? `-${hero.text}`
+      : hero.text;
+  const iconPostings = entry.postings.map((posting) => ({
+    account: posting.account,
+    amount: Number.parseFloat(posting.units.number),
+  }));
+  const hasMetadata = Boolean(entry.tags?.length || entry.links?.length);
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
       <Stack.Screen
         options={{
-          title,
+          title: t("transaction"),
           headerRight: sha256sum
             ? () => (
                 <View style={styles.headerActions}>
                   <Pressable
+                    style={styles.headerIconButton}
                     onPress={handleEdit}
-                    hitSlop={8}
                     disabled={deleting}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("editTransaction")}
                   >
                     <Ionicons
                       name="pencil-outline"
                       size={22}
-                      color={theme.black}
+                      color={theme.primary}
                     />
                   </Pressable>
-                  <Pressable
-                    onPress={handleDelete}
-                    hitSlop={8}
-                    disabled={deleting}
-                  >
-                    <Ionicons
-                      name="trash-outline"
-                      size={22}
-                      color={theme.error}
-                    />
-                  </Pressable>
+                  <MenuButton
+                    accessibilityLabel={t("details")}
+                    icon={
+                      <Ionicons
+                        name="ellipsis-horizontal"
+                        size={22}
+                        color={theme.black}
+                      />
+                    }
+                    items={[
+                      {
+                        label: t("deleteTransaction"),
+                        icon: (
+                          <Ionicons
+                            name="trash-outline"
+                            size={22}
+                            color={theme.error}
+                          />
+                        ),
+                        onPress: handleDelete,
+                      },
+                    ]}
+                  />
                 </View>
               )
             : undefined,
@@ -312,32 +419,52 @@ const TransactionDetailImpl = ({
         showsVerticalScrollIndicator={false}
       >
         <View style={styles.hero}>
+          <View style={styles.heroIcon}>
+            <AccountTypeIcon postings={iconPostings} />
+          </View>
+          <Text style={styles.heroTitle} numberOfLines={2}>
+            {title}
+          </Text>
           <AmountText
             style={[
               styles.heroAmount,
-              { color: hero.isPositive ? theme.success : theme.text01 },
+              {
+                color: hero.isPositive === true ? theme.success : theme.text01,
+              },
             ]}
           >
-            {hero.text || title}
+            {displayHeroAmount}
           </AmountText>
           {entry.payee && entry.narration ? (
             <Text style={styles.heroSubtitle}>{entry.narration}</Text>
           ) : null}
-          {isPending && (
-            <View style={styles.pill}>
-              <Text style={styles.pillText}>{t("pending")}</Text>
-            </View>
-          )}
+          <View style={styles.heroMeta}>
+            <Ionicons name="calendar-outline" size={16} color={theme.black80} />
+            <Text style={styles.heroDate}>{formattedDate}</Text>
+            {isPending && (
+              <View style={styles.statusBadge}>
+                <View style={styles.statusDot} />
+                <Text style={styles.statusText}>{t("pending")}</Text>
+              </View>
+            )}
+          </View>
         </View>
 
         {postingRows.length > 0 && (
           <>
-            <Text style={styles.sectionTitle}>{t("postings")}</Text>
-            <View style={styles.card}>
+            <Text style={styles.sectionTitle}>{t("moneyFlow")}</Text>
+            <View style={[styles.card, styles.flowCard]}>
               {postingRows.map((posting, index) => (
                 <PostingRow
                   key={`${posting.account}-${index}`}
                   posting={posting}
+                  directionLabel={
+                    posting.sign < 0
+                      ? t("from")
+                      : posting.sign > 0
+                        ? t("to")
+                        : undefined
+                  }
                   showDivider={index > 0}
                   onPress={() => handlePressAccount(posting.account)}
                 />
@@ -346,21 +473,67 @@ const TransactionDetailImpl = ({
           </>
         )}
 
-        <Text style={styles.sectionTitle}>{t("details")}</Text>
-        <View style={styles.card}>
-          {detailRows.map((row, index) => (
-            <View
-              key={row.label}
-              style={[styles.detailRow, index > 0 && styles.detailRowDivider]}
-            >
-              <Text style={styles.detailLabel}>{row.label}</Text>
-              <Text style={styles.detailValue}>{row.value}</Text>
+        {hasMetadata && (
+          <>
+            <Text style={styles.sectionTitle}>{t("details")}</Text>
+            <View style={styles.card}>
+              {entry.tags?.length ? (
+                <View style={styles.metadataRow}>
+                  <Ionicons
+                    name="pricetag-outline"
+                    size={20}
+                    color={theme.black80}
+                    style={styles.metadataIcon}
+                  />
+                  <View style={styles.metadataBody}>
+                    <Text style={styles.metadataLabel}>{t("tags")}</Text>
+                    <View style={styles.chipRow}>
+                      {entry.tags.map((tag) => (
+                        <View style={styles.chip} key={tag}>
+                          <Text style={styles.chipText}>#{tag}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              ) : null}
+              {entry.links?.length ? (
+                <View
+                  style={[
+                    styles.metadataRow,
+                    Boolean(entry.tags?.length) && styles.metadataRowDivider,
+                  ]}
+                >
+                  <Ionicons
+                    name="link-outline"
+                    size={20}
+                    color={theme.black80}
+                    style={styles.metadataIcon}
+                  />
+                  <View style={styles.metadataBody}>
+                    <Text style={styles.metadataLabel}>{t("links")}</Text>
+                    <View style={styles.chipRow}>
+                      {entry.links.map((link) => (
+                        <View style={styles.chip} key={link}>
+                          <Text style={styles.chipText}>^{link}</Text>
+                        </View>
+                      ))}
+                    </View>
+                  </View>
+                </View>
+              ) : null}
             </View>
-          ))}
-        </View>
+          </>
+        )}
 
-        <View style={styles.sourceSection}>
-          <EntryContext entry={entry} ledgerId={ledgerId} />
+        <View>
+          <EntryContext
+            entry={entry}
+            ledgerId={ledgerId}
+            contextData={data?.getLedgerEntryContext}
+            contextLoading={loading}
+            contextError={error}
+          />
         </View>
       </ScrollView>
     </SafeAreaView>

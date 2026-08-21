@@ -287,6 +287,7 @@ export const uk: typeof en = {
   reports: "Звіти",
   netProfit: "Чистий прибуток",
   cashFlow: "Грошовий потік",
+  moneyFlow: "Рух грошей",
   cashFlowEmpty: "Немає грошового потоку за цей період",
   savings: "Заощадження",
   // feed

@@ -288,6 +288,7 @@ export const de: typeof en = {
   reports: "Berichte",
   netProfit: "Gewinn",
   cashFlow: "Cashflow",
+  moneyFlow: "Geldbewegung",
   cashFlowEmpty: "Kein Cashflow in diesem Zeitraum",
   savings: "Ersparnisse",
   // feed

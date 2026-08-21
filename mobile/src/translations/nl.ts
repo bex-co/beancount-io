@@ -286,6 +286,7 @@ export const nl: typeof en = {
   reports: "Rapporten",
   netProfit: "Nettowinst",
   cashFlow: "Kasstroom",
+  moneyFlow: "Geldstroom",
   cashFlowEmpty: "Geen kasstroom in deze periode",
   savings: "Spaargeld",
   // feed

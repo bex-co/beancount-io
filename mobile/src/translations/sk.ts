@@ -286,6 +286,7 @@ export const sk: typeof en = {
   reports: "Prehľady",
   netProfit: "Čistý zisk",
   cashFlow: "Peňažný tok",
+  moneyFlow: "Pohyb peňazí",
   cashFlowEmpty: "V tomto období nie je peňažný tok",
   savings: "Úspory",
   // feed

@@ -282,6 +282,7 @@ export const en = {
   reports: "Reports",
   netProfit: "Net Profit",
   cashFlow: "Cash flow",
+  moneyFlow: "Money flow",
   cashFlowEmpty: "No cash flow in this range",
   savings: "Savings",
   // feed

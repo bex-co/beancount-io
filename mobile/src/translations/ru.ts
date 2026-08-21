@@ -288,6 +288,7 @@ export const ru: typeof en = {
   reports: "Отчёты",
   netProfit: "Чистая прибыль",
   cashFlow: "Денежный поток",
+  moneyFlow: "Движение денег",
   cashFlowEmpty: "Нет денежного потока за этот период",
   savings: "Сбережения",
   // feed

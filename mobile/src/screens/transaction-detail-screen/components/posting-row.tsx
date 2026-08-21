@@ -1,4 +1,4 @@
-import { StyleSheet, Text, TouchableOpacity } from "react-native";
+import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { fonts, fontSizes, fontWeights, useTheme } from "@/common/theme";
@@ -13,59 +13,72 @@ const getStyles = (theme: ColorTheme) =>
       flexDirection: "row",
       alignItems: "center",
       paddingHorizontal: 16,
-      paddingVertical: 14,
-      gap: 8,
-      backgroundColor: theme.white,
+      paddingVertical: 13,
+      gap: 12,
+      backgroundColor: theme.controlFill,
     },
     rowDivider: {
       borderTopWidth: StyleSheet.hairlineWidth,
       borderTopColor: theme.black10,
     },
-    account: {
+    accountColumn: {
       flex: 1,
-      fontSize: fontSizes.md,
-      fontFamily: fonts.mono,
+      minWidth: 0,
+    },
+    direction: {
+      fontSize: fontSizes.xs,
       fontWeight: fontWeights.medium,
-      color: theme.primary,
+      color: theme.black80,
+      marginBottom: 3,
+      textTransform: "uppercase",
+      letterSpacing: 0.4,
+    },
+    account: {
+      fontSize: fontSizes.sm,
+      fontFamily: fonts.mono,
+      color: theme.text01,
       textAlign: LEADING_TEXT_ALIGN,
     },
     amount: {
       fontSize: fontSizes.md,
       flexShrink: 0,
+      color: theme.text01,
     },
   });
 
 type PostingRowProps = {
   posting: PostingDisplayRow;
+  directionLabel?: string;
   showDivider: boolean;
   onPress: () => void;
 };
 
 export function PostingRow({
   posting,
+  directionLabel,
   showDivider,
   onPress,
 }: PostingRowProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
 
-  const amountColor =
-    posting.sign > 0
-      ? theme.success
-      : posting.sign < 0
-        ? theme.error
-        : theme.black60;
-
   return (
     <TouchableOpacity
       style={[styles.row, showDivider && styles.rowDivider]}
       onPress={onPress}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={`${directionLabel ? `${directionLabel}: ` : ""}${posting.account}, ${posting.amount}`}
     >
-      <Text style={styles.account} numberOfLines={1} ellipsizeMode="middle">
-        {posting.account}
-      </Text>
-      <AmountText mono="medium" style={[styles.amount, { color: amountColor }]}>
+      <View style={styles.accountColumn}>
+        {directionLabel ? (
+          <Text style={styles.direction}>{directionLabel}</Text>
+        ) : null}
+        <Text style={styles.account} numberOfLines={1} ellipsizeMode="middle">
+          {posting.account}
+        </Text>
+      </View>
+      <AmountText mono="medium" style={styles.amount}>
         {posting.amount}
       </AmountText>
       <Ionicons

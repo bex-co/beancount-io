@@ -284,6 +284,7 @@ export const fa: typeof en = {
   reports: "گزارش‌ها",
   netProfit: "سود خالص",
   cashFlow: "جریان نقدی",
+  moneyFlow: "جریان پول",
   cashFlowEmpty: "در این بازه جریان نقدی نیست",
   savings: "پس‌انداز",
   // feed

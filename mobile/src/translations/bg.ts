@@ -287,6 +287,7 @@ export const bg: typeof en = {
   reports: "Справки",
   netProfit: "Нетна печалба",
   cashFlow: "Паричен поток",
+  moneyFlow: "Движение на пари",
   cashFlowEmpty: "Няма паричен поток за този период",
   savings: "Спестявания",
   // feed

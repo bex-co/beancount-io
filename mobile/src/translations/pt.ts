@@ -289,6 +289,7 @@ export const pt: typeof en = {
   reports: "Relatórios",
   netProfit: "Lucro líquido",
   cashFlow: "Fluxo de caixa",
+  moneyFlow: "Fluxo de dinheiro",
   cashFlowEmpty: "Sem fluxo de caixa neste período",
   savings: "Poupança",
   // feed

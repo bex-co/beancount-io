@@ -287,6 +287,7 @@ export const ca: typeof en = {
   reports: "Informes",
   netProfit: "Benefici net",
   cashFlow: "Flux de caixa",
+  moneyFlow: "Flux monetari",
   cashFlowEmpty: "Sense flux de caixa en aquest període",
   savings: "Estalvis",
   // feed

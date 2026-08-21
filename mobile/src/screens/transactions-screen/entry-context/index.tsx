@@ -4,79 +4,117 @@ import {
   View,
   ScrollView,
   TouchableOpacity,
-  ActivityIndicator,
   StyleSheet,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { fonts, fontSizes, fontWeights } from "@/common/theme";
 import { useTheme, useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useGetLedgerEntryContextQuery } from "@/generated-graphql/graphql";
+import {
+  GetLedgerEntryContextQuery,
+  useGetLedgerEntryContextQuery,
+} from "@/generated-graphql/graphql";
 import { ColorTheme } from "@/types/theme-props";
 import { JournalDirectiveType } from "../types";
 import { BalanceSection } from "./balance-section";
+import { LoadingTile } from "@/components/loading-tile";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
     loadingContainer: {
-      flex: 1,
-      alignItems: "center",
-      justifyContent: "center",
-      paddingVertical: 40,
+      marginTop: 20,
+      borderWidth: 1,
+      borderColor: theme.controlBorder,
+      borderRadius: 12,
+      overflow: "hidden",
+      backgroundColor: theme.white,
     },
-    loadingText: {
-      fontSize: fontSizes.lg,
-      color: theme.black60,
-      marginTop: 12,
+    loadingHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 16,
+      backgroundColor: theme.controlFill,
+    },
+    loadingIcon: {
+      width: 22,
+      height: 22,
+      borderRadius: 11,
+    },
+    loadingCopy: {
+      flex: 1,
+      gap: 7,
+    },
+    loadingTitle: {
+      height: 16,
+      width: 120,
+    },
+    loadingMeta: {
+      height: 12,
+      width: 90,
+    },
+    loadingChevron: {
+      width: 18,
+      height: 18,
+      borderRadius: 9,
     },
     errorContainer: {
-      paddingVertical: 20,
-      alignItems: "center",
+      marginTop: 20,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.controlBorder,
+      borderRadius: 12,
+      backgroundColor: theme.controlFill,
     },
     errorText: {
-      fontSize: fontSizes.lg,
+      fontSize: fontSizes.md,
       color: theme.error,
       textAlign: "center",
     },
+    contextCard: {
+      marginTop: 20,
+      borderWidth: 1,
+      borderColor: theme.controlBorder,
+      borderRadius: 12,
+      overflow: "hidden",
+      backgroundColor: theme.white,
+    },
+    contextHeader: {
+      flexDirection: "row",
+      alignItems: "center",
+      gap: 12,
+      paddingHorizontal: 16,
+      paddingVertical: 15,
+      backgroundColor: theme.controlFill,
+    },
+    contextHeaderCopy: {
+      flex: 1,
+      minWidth: 0,
+    },
+    contextHeaderText: {
+      fontSize: fontSizes.md,
+      fontWeight: fontWeights.medium,
+      color: theme.black80,
+    },
+    contextLocation: {
+      marginTop: 4,
+      fontSize: fontSizes.xs,
+      fontFamily: fonts.mono,
+      color: theme.black80,
+    },
+    contextContent: {
+      padding: 12,
+      backgroundColor: theme.white,
+    },
     section: {
-      marginBottom: 24,
+      marginBottom: 16,
     },
     sectionTitle: {
       fontSize: fontSizes.md,
       fontWeight: fontWeights.medium,
       color: theme.black80,
       marginBottom: 8,
-    },
-    locationContainer: {
-      flexDirection: "row",
-      alignItems: "center",
-      marginBottom: 16,
-    },
-    locationLabel: {
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-      color: theme.black80,
-      marginEnd: 8,
-    },
-    locationText: {
-      fontSize: fontSizes.sm,
-      fontFamily: fonts.mono,
-      color: theme.black80,
-    },
-    contextHeader: {
-      flexDirection: "row",
-      alignItems: "center",
-      justifyContent: "space-between",
-      paddingVertical: 12,
-      paddingHorizontal: 16,
-      backgroundColor: theme.black10,
-      borderRadius: 8,
-      marginBottom: 8,
-    },
-    contextHeaderText: {
-      fontSize: fontSizes.md,
-      fontWeight: fontWeights.medium,
-      color: theme.black80,
     },
     balancesContainer: {
       backgroundColor: theme.white,
@@ -90,7 +128,6 @@ const getStyles = (theme: ColorTheme) =>
       borderColor: theme.controlBorder,
       borderRadius: 8,
       overflow: "hidden",
-      marginBottom: 12,
     },
     sourceText: {
       minHeight: 100,
@@ -99,14 +136,18 @@ const getStyles = (theme: ColorTheme) =>
       lineHeight: 20,
       fontFamily: fonts.mono,
       color: theme.text01,
-      backgroundColor: theme.black10,
+      backgroundColor: theme.controlFill,
     },
     emptyState: {
-      paddingVertical: 40,
-      alignItems: "center",
+      marginTop: 20,
+      padding: 16,
+      borderWidth: 1,
+      borderColor: theme.controlBorder,
+      borderRadius: 12,
+      backgroundColor: theme.controlFill,
     },
     emptyStateText: {
-      fontSize: fontSizes.lg,
+      fontSize: fontSizes.md,
       color: theme.black60,
       textAlign: "center",
     },
@@ -122,6 +163,9 @@ interface EntryContextEntry {
 interface EntryContextProps {
   entry: JournalDirectiveType | null;
   ledgerId: string;
+  contextData?: GetLedgerEntryContextQuery["getLedgerEntryContext"] | null;
+  contextLoading?: boolean;
+  contextError?: Error;
 }
 
 /**
@@ -132,19 +176,25 @@ interface EntryContextProps {
 export const EntryContext: React.FC<EntryContextProps> = ({
   entry,
   ledgerId,
+  contextData,
+  contextLoading = false,
+  contextError,
 }) => {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
-  const [isContextOpen, setIsContextOpen] = useState(true);
+  const [isContextOpen, setIsContextOpen] = useState(false);
 
-  // Fetch entry context data
+  // The detail screen already fetches this context to resolve the source
+  // checksum and deep-link fallback entry. Reuse it there; the journal sheet
+  // still fetches its own data when no context is supplied.
   const { data, loading, error } = useGetLedgerEntryContextQuery({
     variables: {
       entryHash: entry?.entry_hash || "",
       ledgerId: ledgerId,
     },
-    skip: !entry?.entry_hash || !ledgerId,
+    skip:
+      Boolean(contextData) || contextLoading || !entry?.entry_hash || !ledgerId,
   });
 
   // Helper function to format balances for display
@@ -165,7 +215,9 @@ export const EntryContext: React.FC<EntryContextProps> = ({
     }));
   };
 
-  const entryContext = data?.getLedgerEntryContext;
+  const entryContext = contextData ?? data?.getLedgerEntryContext;
+  const isLoading = contextLoading || (loading && !entryContext);
+  const entryError = contextError ?? error;
   const entryMeta = (entryContext?.entry as unknown as EntryContextEntry)?.meta;
   const entryFilename = entryMeta?.filename ?? "";
   const entryLineNumber = entryMeta?.lineno ?? "";
@@ -178,22 +230,26 @@ export const EntryContext: React.FC<EntryContextProps> = ({
     : [];
   const hasBalances = balancesBefore.length > 0 || balancesAfter.length > 0;
 
-  if (loading) {
+  if (isLoading) {
     return (
       <View style={styles.loadingContainer}>
-        <ActivityIndicator size="large" color={theme.primary} />
-        <Text style={styles.loadingText}>
-          {t("journalLoadingEntryContext")}
-        </Text>
+        <View style={styles.loadingHeader}>
+          <LoadingTile style={styles.loadingIcon} />
+          <View style={styles.loadingCopy}>
+            <LoadingTile style={styles.loadingTitle} />
+            <LoadingTile style={styles.loadingMeta} />
+          </View>
+          <LoadingTile style={styles.loadingChevron} />
+        </View>
       </View>
     );
   }
 
-  if (error) {
+  if (entryError) {
     return (
       <View style={styles.errorContainer}>
         <Text style={styles.errorText}>
-          {t("journalError")}: {error.message}
+          {t("journalError")}: {entryError.message}
         </Text>
       </View>
     );
@@ -208,59 +264,61 @@ export const EntryContext: React.FC<EntryContextProps> = ({
   }
 
   return (
-    <View>
-      {/* Location Display */}
-      {entryFilename && entryLineNumber && (
-        <View style={styles.locationContainer}>
-          <Text style={styles.locationLabel}>{t("journalLocation")}:</Text>
-          <Text style={styles.locationText}>
-            {entryFilename}:{entryLineNumber}
+    <View style={styles.contextCard}>
+      <TouchableOpacity
+        style={styles.contextHeader}
+        onPress={() => setIsContextOpen((open) => !open)}
+        activeOpacity={0.7}
+        accessibilityRole="button"
+        accessibilityState={{ expanded: isContextOpen }}
+      >
+        <Ionicons name="code-slash-outline" size={20} color={theme.black80} />
+        <View style={styles.contextHeaderCopy}>
+          <Text style={styles.contextHeaderText}>
+            {t("journalEntryContext")}
           </Text>
-        </View>
-      )}
-
-      {/* Balances Context */}
-      {hasBalances && (
-        <View style={styles.section}>
-          <TouchableOpacity
-            style={styles.contextHeader}
-            onPress={() => setIsContextOpen(!isContextOpen)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.contextHeaderText}>
-              {t("journalEntryContext")}
+          {entryFilename && entryLineNumber ? (
+            <Text style={styles.contextLocation} numberOfLines={1}>
+              {entryFilename}:{entryLineNumber}
             </Text>
-            <Ionicons
-              name={isContextOpen ? "chevron-up" : "chevron-down"}
-              size={20}
-              color={theme.black80}
-            />
-          </TouchableOpacity>
+          ) : null}
+        </View>
+        <Ionicons
+          name={isContextOpen ? "chevron-up" : "chevron-down"}
+          size={20}
+          color={theme.black80}
+        />
+      </TouchableOpacity>
 
-          {isContextOpen && (
-            <View style={styles.balancesContainer}>
-              <BalanceSection
-                title={t("journalBalancesBefore")}
-                balances={balancesBefore}
-              />
-              <BalanceSection
-                title={t("journalBalancesAfter")}
-                balances={balancesAfter}
-              />
+      {isContextOpen && (
+        <View style={styles.contextContent}>
+          {hasBalances && (
+            <View style={styles.section}>
+              <View style={styles.balancesContainer}>
+                <BalanceSection
+                  title={t("journalBalancesBefore")}
+                  balances={balancesBefore}
+                />
+                <BalanceSection
+                  title={t("journalBalancesAfter")}
+                  balances={balancesAfter}
+                />
+              </View>
             </View>
           )}
+
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>{t("journalSource")}</Text>
+            <View style={styles.sourceContainer}>
+              <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+                <Text style={styles.sourceText}>
+                  {entryContext.slice || ""}
+                </Text>
+              </ScrollView>
+            </View>
+          </View>
         </View>
       )}
-
-      {/* Entry Source */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>{t("journalSource")}</Text>
-        <View style={styles.sourceContainer}>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
-            <Text style={styles.sourceText}>{entryContext?.slice || ""}</Text>
-          </ScrollView>
-        </View>
-      </View>
     </View>
   );
 };
