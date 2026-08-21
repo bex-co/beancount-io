@@ -36,34 +36,51 @@ const read = (file: string) => fs.readFileSync(file, "utf8");
 
 describe("the shared pull-to-refresh appearance (w1/m23/t001)", () => {
   describe("resolves entirely from the palette it is handed", () => {
-    it("tints the spinner with the theme's own primary in light", () => {
-      const light = refreshAppearance(themes.light.colorTheme);
-      expect(light.tintColor).toBe(themes.light.colorTheme.primary);
-      expect(light.colors[0]).toBe(themes.light.colorTheme.primary);
+    it("tints the spinner with quiet secondary text in light", () => {
+      const light = refreshAppearance(themes.light.colorTheme, "light");
+      expect(light.tintColor).toBe(themes.light.colorTheme.black80);
+      expect(light.colors[0]).toBe(themes.light.colorTheme.black80);
       expect(light.progressBackgroundColor).toBe(themes.light.colorTheme.white);
     });
 
-    it("tints the spinner with the theme's own primary in dark", () => {
-      const dark = refreshAppearance(themes.dark.colorTheme);
-      expect(dark.tintColor).toBe(themes.dark.colorTheme.primary);
-      expect(dark.colors[0]).toBe(themes.dark.colorTheme.primary);
+    it("tints the spinner with inverted foreground in dark", () => {
+      // Bone on charcoal — bright enough that iOS refresh darkening still
+      // leaves a readable gray, without borrowing brand green.
+      const dark = refreshAppearance(themes.dark.colorTheme, "dark");
+      expect(dark.tintColor).toBe(themes.dark.colorTheme.black);
+      expect(dark.colors[0]).toBe(themes.dark.colorTheme.black);
       expect(dark.progressBackgroundColor).toBe(themes.dark.colorTheme.white);
+    });
+
+    it("stays off the brand greens", () => {
+      (["light", "dark"] as const).forEach((name) => {
+        const appearance = refreshAppearance(themes[name].colorTheme, name);
+        expect(appearance.tintColor === themes[name].colorTheme.primary).toBe(
+          false,
+        );
+        expect(
+          appearance.tintColor === themes[name].colorTheme.primaryLight,
+        ).toBe(false);
+        expect(
+          appearance.tintColor === themes[name].colorTheme.primaryDark,
+        ).toBe(false);
+      });
     });
 
     it("actually differs between the two themes", () => {
       // A resolver that returned one constant would pass every assertion above
       // and still be the bug this task removed.
-      const light = refreshAppearance(themes.light.colorTheme);
-      const dark = refreshAppearance(themes.dark.colorTheme);
+      const light = refreshAppearance(themes.light.colorTheme, "light");
+      const dark = refreshAppearance(themes.dark.colorTheme, "dark");
       expect(light.tintColor === dark.tintColor).toBe(false);
       expect(
         light.progressBackgroundColor === dark.progressBackgroundColor,
       ).toBe(false);
     });
 
-    it("never falls back to the hard-coded black/white it replaced", () => {
-      [themes.light, themes.dark].forEach((theme) => {
-        const appearance = refreshAppearance(theme.colorTheme);
+    it("never falls back to the hard-coded black/white string literals", () => {
+      (["light", "dark"] as const).forEach((name) => {
+        const appearance = refreshAppearance(themes[name].colorTheme, name);
         expect(appearance.tintColor === "white").toBe(false);
         expect(appearance.tintColor === "black").toBe(false);
       });
@@ -72,8 +89,8 @@ describe("the shared pull-to-refresh appearance (w1/m23/t001)", () => {
     it("gives Android the same tint it gives iOS", () => {
       // Three of the old sites set `tintColor` and none set `colors`, so the
       // Android spinner ignored the app's tint entirely.
-      [themes.light, themes.dark].forEach((theme) => {
-        const appearance = refreshAppearance(theme.colorTheme);
+      (["light", "dark"] as const).forEach((name) => {
+        const appearance = refreshAppearance(themes[name].colorTheme, name);
         expect(appearance.colors.length).toBe(1);
         expect(appearance.colors[0]).toBe(appearance.tintColor);
       });
@@ -87,29 +104,29 @@ describe("the shared pull-to-refresh appearance (w1/m23/t001)", () => {
     const appearanceFor = (
       setting: "light" | "dark" | "system",
       systemScheme: "light" | "dark",
-    ) =>
-      refreshAppearance(
-        themes[effectiveThemeName(setting, systemScheme)].colorTheme,
-      );
+    ) => {
+      const name = effectiveThemeName(setting, systemScheme);
+      return refreshAppearance(themes[name].colorTheme, name);
+    };
 
     it("uses the dark appearance for a system user on a dark device", () => {
       expect(appearanceFor("system", "dark").tintColor).toBe(
-        themes.dark.colorTheme.primary,
+        themes.dark.colorTheme.black,
       );
     });
 
     it("uses the light appearance for a system user on a light device", () => {
       expect(appearanceFor("system", "light").tintColor).toBe(
-        themes.light.colorTheme.primary,
+        themes.light.colorTheme.black80,
       );
     });
 
     it("lets an explicit setting override the device", () => {
       expect(appearanceFor("dark", "light").tintColor).toBe(
-        themes.dark.colorTheme.primary,
+        themes.dark.colorTheme.black,
       );
       expect(appearanceFor("light", "dark").tintColor).toBe(
-        themes.light.colorTheme.primary,
+        themes.light.colorTheme.black80,
       );
     });
   });

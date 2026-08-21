@@ -48,9 +48,15 @@ type ThemedRefreshControlProps = Omit<
 export function ThemedRefreshControl(
   props: ThemedRefreshControlProps,
 ): JSX.Element {
-  const colorTheme = useTheme().colorTheme;
+  const { colorTheme, name } = useTheme();
+  const themeName = name === "dark" ? "dark" : "light";
 
-  return <RefreshControl {...props} {...refreshAppearance(colorTheme)} />;
+  return (
+    <RefreshControl
+      {...props}
+      {...refreshAppearance(colorTheme, themeName)}
+    />
+  );
 }
 
 /**
