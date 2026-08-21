@@ -52,10 +52,7 @@ export function ThemedRefreshControl(
   const themeName = name === "dark" ? "dark" : "light";
 
   return (
-    <RefreshControl
-      {...props}
-      {...refreshAppearance(colorTheme, themeName)}
-    />
+    <RefreshControl {...props} {...refreshAppearance(colorTheme, themeName)} />
   );
 }
 
