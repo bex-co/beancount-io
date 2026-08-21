@@ -4,9 +4,15 @@ import { LedgerSEO } from "./ledger-seo";
 export function LedgerPageSEO({
   seoKey,
   params,
+  noIndex = false,
 }: {
   seoKey: string;
   params?: Record<string, string>;
+  /**
+   * When true, emit robots noindex and skip hreflang. Overview keeps default false.
+   * See `@/common/lib/seo/indexability`.
+   */
+  noIndex?: boolean;
 }) {
   const { ledgerDisplayName, ledgerDescription } = useLedger();
   return (
@@ -16,6 +22,7 @@ export function LedgerPageSEO({
       ledgerName={ledgerDisplayName}
       ledgerDescription={ledgerDescription}
       params={{ ledgerName: ledgerDisplayName, ...params }}
+      noIndex={noIndex}
     />
   );
 }

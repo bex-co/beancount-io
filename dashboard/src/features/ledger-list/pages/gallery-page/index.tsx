@@ -164,6 +164,7 @@ export default function GalleryPage() {
       <PageSEO
         titleKey="seo.ledgerGallery.title"
         descriptionKey="seo.ledgerGallery.description"
+        noIndex
       />
       <div className="min-h-screen bg-background flex flex-col">
         <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex-1 flex flex-col">

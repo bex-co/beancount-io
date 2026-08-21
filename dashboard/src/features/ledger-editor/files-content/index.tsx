@@ -20,7 +20,7 @@ export default function FilesContentPage() {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      <LedgerPageSEO seoKey="ledgerFiles" />
+      <LedgerPageSEO seoKey="ledgerFiles" noIndex />
       <PageHeader
         title={t("ledgerEditor.files")}
         description={t("common.pageDescription.files", {

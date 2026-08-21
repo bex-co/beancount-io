@@ -14,6 +14,7 @@ export const Route = createFileRoute("/auth/callback")({
   head: () =>
     createHeadMeta(
       getSEOMetadata("seo.authCallback.title", "seo.authCallback.description"),
+      { noIndex: true },
     ),
   ssr: false,
 });

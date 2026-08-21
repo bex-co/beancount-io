@@ -43,7 +43,7 @@ export default function LedgerFilePage() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <LedgerPageSEO seoKey="ledgerFiles" />
+      <LedgerPageSEO seoKey="ledgerFiles" noIndex={Boolean(search.editMode)} />
       <ClientOnly>
         <LedgerFileView
           ledgerId={ledgerId}

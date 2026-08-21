@@ -7,5 +7,6 @@ export const Route = createFileRoute("/$")({
   head: () =>
     createHeadMeta(
       getSEOMetadata("seo.notFound.title", "seo.notFound.description"),
+      { noIndex: true },
     ),
 });

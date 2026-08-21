@@ -25,17 +25,12 @@ export function HreflangLinks() {
   const location = useLocation();
 
   /**
-   * Generate the hreflang URL for a given language
-   * Preserves the current path and replaces/adds the lang query parameter
-   *
-   * Note: TanStack Router's location.searchStr gives the raw query string (e.g., "?foo=bar")
-   * while location.search is the parsed search params object.
+   * Generate the hreflang URL for a given language.
+   * UI state (editMode, lineNumber, filters, queries, tokens) is deliberately
+   * omitted so alternate links describe the stable page, not crawl variants.
    */
   const getHreflangUrl = (lang: string): string => {
-    const url = new URL(
-      location.pathname + (location.searchStr || ""),
-      BASE_URL,
-    );
+    const url = new URL(location.pathname, BASE_URL);
     url.searchParams.set("lang", lang);
     return url.toString();
   };
@@ -44,12 +39,7 @@ export function HreflangLinks() {
    * Get the base URL without the lang query parameter (for x-default)
    */
   const getDefaultUrl = (): string => {
-    const url = new URL(
-      location.pathname + (location.searchStr || ""),
-      BASE_URL,
-    );
-    url.searchParams.delete("lang");
-    return url.toString();
+    return new URL(location.pathname, BASE_URL).toString();
   };
 
   return (

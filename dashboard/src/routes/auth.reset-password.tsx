@@ -10,5 +10,6 @@ export const Route = createFileRoute("/auth/reset-password")({
         "seo.resetPassword.title",
         "seo.resetPassword.description",
       ),
+      { noIndex: true },
     ),
 });

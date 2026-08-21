@@ -1,5 +1,6 @@
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getOgLocale } from "@/common/lib/seo/locale-map";
+import { NOINDEX_ROBOTS_CONTENT } from "@/common/lib/seo/indexability";
 import { HreflangLinks } from "./hreflang-links";
 
 interface PageSEOProps {
@@ -15,6 +16,11 @@ interface PageSEOProps {
    * Optional parameters for i18n interpolation
    */
   params?: Record<string, string>;
+  /**
+   * When true, emit robots noindex and skip hreflang (auth / gated app shells).
+   * See `@/common/lib/seo/indexability`.
+   */
+  noIndex?: boolean;
 }
 
 /**
@@ -35,7 +41,12 @@ interface PageSEOProps {
  * />
  * ```
  */
-export function PageSEO({ titleKey, descriptionKey, params }: PageSEOProps) {
+export function PageSEO({
+  titleKey,
+  descriptionKey,
+  params,
+  noIndex = false,
+}: PageSEOProps) {
   const { t, i18n } = useTranslations();
 
   // Generate the title with interpolated params
@@ -59,6 +70,7 @@ export function PageSEO({ titleKey, descriptionKey, params }: PageSEOProps) {
     <>
       <title>{title}</title>
       {description && <meta name="description" content={description} />}
+      {noIndex ? <meta name="robots" content={NOINDEX_ROBOTS_CONTENT} /> : null}
 
       {/* Open Graph meta tags for social sharing */}
       <meta property="og:title" content={title} />
@@ -72,8 +84,7 @@ export function PageSEO({ titleKey, descriptionKey, params }: PageSEOProps) {
       {description && <meta name="twitter:description" content={description} />}
       <meta name="twitter:image" content={ogImageUrl} />
 
-      {/* hreflang links for international SEO */}
-      <HreflangLinks />
+      {noIndex ? null : <HreflangLinks />}
     </>
   );
 }

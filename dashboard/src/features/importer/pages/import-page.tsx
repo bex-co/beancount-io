@@ -19,7 +19,7 @@ export default function ImportPage() {
 
   return (
     <div className="space-y-6">
-      <LedgerPageSEO seoKey="ledgerImport" />
+      <LedgerPageSEO seoKey="ledgerImport" noIndex />
       {/* Header */}
       <PageHeader
         title={t("page.importer.title")}

@@ -46,7 +46,7 @@ export default function LedgerErrorsPage() {
 
   return (
     <div className="space-y-4">
-      <LedgerPageSEO seoKey="ledgerErrors" />
+      <LedgerPageSEO seoKey="ledgerErrors" noIndex />
       <PageHeader
         title={t("page.errors.errors")}
         description={t("common.pageDescription.errors", {

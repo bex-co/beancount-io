@@ -26,6 +26,7 @@ export const Route = createFileRoute(
       getSEOMetadata("seo.ledgerFiles.title", "seo.ledgerFiles.description", {
         ledgerName: params.ledgerName,
       }),
+      { noIndex: true },
     ),
   ssr: false, // Disable SSR - dedicated route for webview with client-side auth
 });

@@ -137,9 +137,8 @@ const faSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "فایل‌های دفتر را برای {ledgerName} ویرایش کنید. فایل‌های حسابداری Beancount خود را مشاهده و تغییر دهید.",
-    description: "File editor page meta description",
+    message: "فایل‌های حسابداری Beancount مربوط به {ledgerName} را مرور کنید.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "فایل‌ها - {ledgerName}",

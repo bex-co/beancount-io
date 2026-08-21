@@ -10,5 +10,6 @@ export const Route = createFileRoute("/settings/ssh-keys")({
         "seo.settingsSshKeys.title",
         "seo.settingsSshKeys.description",
       ),
+      { noIndex: true },
     ),
 });

@@ -138,9 +138,8 @@ const bgSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "Редактирайте файлове на книгата за {ledgerName}. Преглеждайте и модифицирайте вашите счетоводни файлове на Beancount.",
-    description: "File editor page meta description",
+    message: "Преглеждайте счетоводните файлове на Beancount за {ledgerName}.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "Файлове - {ledgerName}",

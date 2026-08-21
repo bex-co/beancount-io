@@ -11,6 +11,7 @@ export default function DangerZoneSettingsPage() {
       <PageSEO
         titleKey="seo.settingsDangerZone.title"
         descriptionKey="seo.settingsDangerZone.description"
+        noIndex
       />
       <div className="space-y-4">
         <DangerZoneSection />

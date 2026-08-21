@@ -138,9 +138,8 @@ const skSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "Upravujte súbory knihy pre {ledgerName}. Zobrazujte a upravujte svoje účtovné súbory Beancount.",
-    description: "File editor page meta description",
+    message: "Prehliadajte účtovné súbory Beancount pre {ledgerName}.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "Súbory - {ledgerName}",

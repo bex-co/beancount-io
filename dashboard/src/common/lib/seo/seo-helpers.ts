@@ -1,5 +1,6 @@
 import i18n from "@/i18n/init";
 import { getOgLocale } from "./locale-map";
+import { NOINDEX_ROBOTS_CONTENT } from "./indexability";
 
 interface SEOMetadata {
   title: string;
@@ -53,12 +54,17 @@ interface HeadMetaOptions {
    * For SSR, pass the request-scoped language from I18nextProvider.
    */
   language?: string;
+  /**
+   * When true, emit robots noindex (see `./indexability.ts` policy).
+   * Default false — public ledger overview / user profile stay indexable.
+   */
+  noIndex?: boolean;
 }
 
 /**
  * Create head meta configuration for TanStack Router
  * @param metadata - SEO metadata with title and description
- * @param options - Optional configuration allowing an explicit language
+ * @param options - Optional configuration allowing an explicit language and noIndex
  * @returns Head configuration object for route's head property
  */
 export function createHeadMeta(
@@ -69,19 +75,35 @@ export function createHeadMeta(
   const resolvedLanguage = options?.language ?? i18n.language;
   const ogLocale = getOgLocale(resolvedLanguage);
 
+  const meta: Array<Record<string, string>> = [
+    {
+      title: metadata.title,
+    },
+    {
+      name: "description",
+      content: metadata.description,
+    },
+    {
+      property: "og:locale",
+      content: ogLocale,
+    },
+  ];
+
+  if (options?.noIndex) {
+    meta.push({
+      name: "robots",
+      content: NOINDEX_ROBOTS_CONTENT,
+    });
+  }
+
+  return { meta };
+}
+
+/** Add noindex to routes that have no dedicated translated SEO metadata. */
+export function createNoIndexHead() {
   return {
-    meta: [
-      {
-        title: metadata.title,
-      },
-      {
-        name: "description",
-        content: metadata.description,
-      },
-      {
-        property: "og:locale",
-        content: ogLocale,
-      },
-    ],
+    meta: [{ name: "robots", content: NOINDEX_ROBOTS_CONTENT }],
   };
 }
+
+export { NOINDEX_ROBOTS_CONTENT } from "./indexability";

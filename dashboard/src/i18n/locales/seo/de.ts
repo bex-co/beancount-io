@@ -139,8 +139,8 @@ const deSeo: Record<string, TranslationEntry> = {
   },
   "seo.ledgerFiles.description": {
     message:
-      "Bearbeiten Sie Hauptbuchdateien für {ledgerName}. Zeigen Sie Ihre Beancount-Buchhaltungsdateien an und ändern Sie sie.",
-    description: "File editor page meta description",
+      "Durchsuchen Sie die Beancount-Buchhaltungsdateien für {ledgerName}.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "Dateien - {ledgerName}",

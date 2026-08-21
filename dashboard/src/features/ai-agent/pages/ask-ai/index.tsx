@@ -462,7 +462,7 @@ export default function AskAIPage({ mode: modeProp = "bql" }: AskAIPageProps) {
 
   return (
     <>
-      <LedgerPageSEO seoKey="ledgerAsk" />
+      <LedgerPageSEO seoKey="ledgerAsk" noIndex={Boolean(initialQuestion)} />
 
       <div className="flex flex-col h-full w-full max-w-3xl mx-auto">
         {/* Scrollable area: header + messages */}

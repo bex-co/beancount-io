@@ -67,6 +67,7 @@ export default function LogoutPage() {
       <PageSEO
         titleKey="seo.logout.title"
         descriptionKey="seo.logout.description"
+        noIndex
       />
       <div className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-background to-muted/20">
         <div className="space-y-8">

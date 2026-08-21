@@ -12,6 +12,17 @@ Set GOOGLE_SERVICE_ACCOUNT_JSON_B64 in the local .env or CI secret, then run:
 The report covers dashboard paths such as /ledger, /login, /sign-up, /auth, /settings, /lgasset,
 and /oauth. It does not treat /forum, /api, or CMS content paths as dashboard opportunities.
 
+Indexability (crawlers): public ledger **read/social** surfaces, user profiles,
+the base Ask/agent landing page, and acquisition pages (login, sign-up, forgot
+password) are indexable by default. Token/session flows, OTP/welcome, private
+settings, parameterized query/error pages, write/editor UIs, bank-link screens,
+auth-gated shells, and error pages emit `noindex` via
+`src/common/lib/seo/indexability.ts`. Ask deep links with a prefilled question
+are noindexed; Ask URLs canonicalize to the base agent page. Following GitHub's
+crawl boundary, file directory (`tree`) and write routes stay noindex, while
+read-only file (`blob`) pages are indexable with stable canonicals that omit
+edit/line query parameters.
+
 Roadmap ideas should go through the repository-level $pm-brainstorm workflow and public .pm board
 in the parent repository. Search Console rows are evidence only after route ownership is verified;
 do not turn CMS/forum/API rows into dashboard milestones.

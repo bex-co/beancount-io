@@ -55,14 +55,17 @@ vi.mock("@/common/lib/seo/locale-map", () => ({
   }),
 }));
 
-// Mock HreflangLinks to avoid window issues in tests
+// Mock HreflangLinks to a detectable stub (avoids window issues in tests)
 vi.mock("../hreflang-links", () => ({
-  HreflangLinks: () => null,
+  HreflangLinks: () => (
+    <link data-testid="hreflang" rel="alternate" hrefLang="en" href="/" />
+  ),
 }));
 
 describe("PageSEO Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    document.head.innerHTML = "";
   });
 
   describe("Basic Props", () => {
@@ -259,6 +262,43 @@ describe("PageSEO Component", () => {
 
       // Component should render without errors
       expect(container).toBeDefined();
+    });
+  });
+
+  describe("Indexability", () => {
+    it("should emit robots noindex and skip hreflang when noIndex is true", () => {
+      render(
+        <PageSEO
+          titleKey="seo.login.title"
+          descriptionKey="seo.login.description"
+          noIndex
+        />,
+      );
+
+      expect(
+        document.head
+          .querySelector('meta[name="robots"]')
+          ?.getAttribute("content"),
+      ).toBe("noindex, follow");
+      expect(
+        document.head.querySelector('[data-testid="hreflang"]'),
+      ).toBeNull();
+    });
+
+    it("should keep hreflang when noIndex is unset", () => {
+      render(
+        <PageSEO
+          titleKey="seo.test.title"
+          descriptionKey="seo.test.description"
+        />,
+      );
+
+      expect(
+        document.head.querySelector('meta[name="robots"]'),
+      ).toBeNull();
+      expect(
+        document.head.querySelector('[data-testid="hreflang"]'),
+      ).not.toBeNull();
     });
   });
 });

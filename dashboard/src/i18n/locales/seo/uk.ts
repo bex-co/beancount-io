@@ -138,9 +138,8 @@ const ukSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "Редагуйте файли книги для {ledgerName}. Переглядайте та змінюйте свої облікові файли Beancount.",
-    description: "File editor page meta description",
+    message: "Переглядайте облікові файли Beancount для {ledgerName}.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "Файли - {ledgerName}",

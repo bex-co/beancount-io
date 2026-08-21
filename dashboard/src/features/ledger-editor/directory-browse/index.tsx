@@ -14,7 +14,7 @@ export default function LedgerDirectoryPage() {
 
   return (
     <div className="flex flex-col h-full space-y-4">
-      <LedgerPageSEO seoKey="ledgerFiles" />
+      <LedgerPageSEO seoKey="ledgerFiles" noIndex />
       <div className="flex-1">
         <LedgerDirectoryView ledgerId={ledgerId} currentPath={dirPath} />
       </div>

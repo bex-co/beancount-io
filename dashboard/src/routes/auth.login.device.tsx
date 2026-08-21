@@ -26,5 +26,6 @@ export const Route = createFileRoute("/auth/login/device")({
   head: () =>
     createHeadMeta(
       getSEOMetadata("seo.deviceAuth.title", "seo.deviceAuth.description"),
+      { noIndex: true },
     ),
 });

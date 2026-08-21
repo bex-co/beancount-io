@@ -10,5 +10,6 @@ export const Route = createFileRoute("/settings/danger-zone")({
         "seo.settingsDangerZone.title",
         "seo.settingsDangerZone.description",
       ),
+      { noIndex: true },
     ),
 });

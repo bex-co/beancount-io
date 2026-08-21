@@ -169,7 +169,7 @@ export default function LedgerQueryPage() {
 
   return (
     <div className="container mx-auto space-y-6">
-      <LedgerPageSEO seoKey="ledgerQuery" />
+      <LedgerPageSEO seoKey="ledgerQuery" noIndex />
       <PageHeader
         title={t("page.bql.query")}
         description={t("common.pageDescription.query", {

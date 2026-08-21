@@ -12,6 +12,7 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/import")(
           "seo.ledgerImport.description",
           { ledgerName: params.ledgerName },
         ),
+        { noIndex: true },
       ),
   },
 );

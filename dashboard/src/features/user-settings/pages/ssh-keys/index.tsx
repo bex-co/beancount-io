@@ -104,6 +104,7 @@ export default function KeysSettingsPage() {
         <PageSEO
           titleKey="seo.settingsSshKeys.title"
           descriptionKey="seo.settingsSshKeys.description"
+          noIndex
         />
         <SshKeysSkeleton />
       </>
@@ -116,6 +117,7 @@ export default function KeysSettingsPage() {
         <PageSEO
           titleKey="seo.settingsSshKeys.title"
           descriptionKey="seo.settingsSshKeys.description"
+          noIndex
         />
         <SshKeysError />
       </>
@@ -127,6 +129,7 @@ export default function KeysSettingsPage() {
       <PageSEO
         titleKey="seo.settingsSshKeys.title"
         descriptionKey="seo.settingsSshKeys.description"
+        noIndex
       />
       <div className="space-y-6">
         <div className="flex items-center justify-start ">

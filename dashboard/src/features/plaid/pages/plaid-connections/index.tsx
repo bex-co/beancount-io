@@ -83,7 +83,7 @@ export function PlaidConnectionsPage() {
   if (loading) {
     return (
       <div className="container mx-auto">
-        <LedgerPageSEO seoKey="plaidConnections" />
+        <LedgerPageSEO seoKey="plaidConnections" noIndex />
         <PlaidLoadingState />
       </div>
     );
@@ -92,7 +92,7 @@ export function PlaidConnectionsPage() {
   if (error) {
     return (
       <div className="container mx-auto">
-        <LedgerPageSEO seoKey="plaidConnections" />
+        <LedgerPageSEO seoKey="plaidConnections" noIndex />
         <PlaidErrorState onRetry={() => refetch()} />
       </div>
     );
@@ -100,7 +100,7 @@ export function PlaidConnectionsPage() {
 
   return (
     <div className="container mx-auto space-y-8">
-      <LedgerPageSEO seoKey="plaidConnections" />
+      <LedgerPageSEO seoKey="plaidConnections" noIndex />
       <div>
         <Link
           to="/ledger/$ledgerOwner/$ledgerName/link"

@@ -20,6 +20,7 @@ export function DeviceAuthCard({
       <PageSEO
         titleKey="seo.deviceAuth.title"
         descriptionKey="seo.deviceAuth.description"
+        noIndex
       />
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <Card className="w-full max-w-md">

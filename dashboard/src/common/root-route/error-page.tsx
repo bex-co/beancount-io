@@ -52,6 +52,7 @@ export default function ErrorPage({ error, reset }: ErrorComponentProps) {
       <PageSEO
         titleKey="seo.error.title"
         descriptionKey="seo.error.description"
+        noIndex
       />
       <div className="min-h-screen flex items-center justify-center bg-background px-4 sm:px-6 lg:px-8">
         <div className="w-full max-w-2xl text-center space-y-8">

@@ -11,3 +11,4 @@
 - [x] **m5** — beancount-close: month-end close ritual (8 tasks) ← from /pm-brainstorm 2026-07-31 (skills-market research) — sequenced after m1
 - [x] **m6** — beancount-import: bank CSV/OFX to verified, deduplicated entries (10 tasks) ← from import-architecture design 2026-07-31
 - [x] **m7** — Extensionless text preview: LICENSE and common repo files (9 tasks) ← from user report 2026-08-19 (TinySnow LICENSE shows `Unsupported file format ()`)
+- [x] **m8** — Public-ledger index hygiene (9 tasks) ← from /pm-brainstorm 2026-08-20 (Search Console); policy corrected for social-accounting visibility 2026-08-20

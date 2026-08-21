@@ -12,5 +12,6 @@ export const Route = createFileRoute("/ledger/")({
         "seo.ledgerDashboard.title",
         "seo.ledgerDashboard.description",
       ),
+      { noIndex: true },
     ),
 });

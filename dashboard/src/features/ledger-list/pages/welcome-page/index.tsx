@@ -59,6 +59,7 @@ function WelcomeContent() {
       <PageSEO
         titleKey="seo.welcome.title"
         descriptionKey="seo.welcome.description"
+        noIndex
       />
       <div className="flex min-h-screen items-center justify-center p-4">
         <Card className="w-full max-w-2xl">

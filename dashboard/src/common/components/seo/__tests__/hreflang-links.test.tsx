@@ -8,7 +8,7 @@ vi.mock("@tanstack/react-router", () => ({
   useLocation: vi.fn(() => ({
     pathname: "/ledger/test",
     search: {}, // TanStack Router's search is a parsed object
-    searchStr: "", // TanStack Router's searchStr is the raw query string
+    searchStr: "?editMode=true&lineNumber=12&lang=fr",
     hash: "",
   })),
 }));
@@ -74,6 +74,16 @@ describe("HreflangLinks", () => {
     const href = enLink?.getAttribute("href");
 
     expect(href).toContain("/ledger/test");
+  });
+
+  it("should omit UI-state query parameters from alternate URLs", () => {
+    render(<HreflangLinks />);
+    const enLink = document.querySelector('link[hreflang="en"]');
+    const href = enLink?.getAttribute("href");
+
+    expect(href).not.toContain("editMode");
+    expect(href).not.toContain("lineNumber");
+    expect(href).toContain("lang=en");
   });
 
   it("should use production base URL in hreflang hrefs", () => {

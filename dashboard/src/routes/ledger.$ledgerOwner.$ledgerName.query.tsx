@@ -16,5 +16,6 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/query")({
       getSEOMetadata("seo.ledgerQuery.title", "seo.ledgerQuery.description", {
         ledgerName: params.ledgerName,
       }),
+      { noIndex: true },
     ),
 });

@@ -138,9 +138,8 @@ const esSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "Edite archivos del libro contable de {ledgerName}. Vea y modifique sus archivos contables de Beancount.",
-    description: "File editor page meta description",
+    message: "Explore los archivos contables de Beancount de {ledgerName}.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "Archivos - {ledgerName}",

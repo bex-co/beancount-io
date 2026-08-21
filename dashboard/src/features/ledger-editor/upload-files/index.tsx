@@ -201,7 +201,7 @@ const UploadFilesPage = () => {
 
   return (
     <div className="h-full flex flex-col space-y-4">
-      <LedgerPageSEO seoKey="ledgerFilesUpload" />
+      <LedgerPageSEO seoKey="ledgerFilesUpload" noIndex />
       <PageHeader
         title={t("ledgerEditor.uploadFiles")}
         description={t("common.pageDescription.uploadFiles", {

@@ -1,5 +1,6 @@
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getOgLocale } from "@/common/lib/seo/locale-map";
+import { NOINDEX_ROBOTS_CONTENT } from "@/common/lib/seo/indexability";
 import { HreflangLinks } from "./hreflang-links";
 
 interface LedgerSEOProps {
@@ -24,6 +25,11 @@ interface LedgerSEOProps {
    * Optional additional parameters for i18n interpolation (e.g., accountName)
    */
   params?: Record<string, string>;
+  /**
+   * When true, emit robots noindex and skip hreflang (deep app routes).
+   * See `@/common/lib/seo/indexability`.
+   */
+  noIndex?: boolean;
 }
 
 /**
@@ -49,6 +55,7 @@ export function LedgerSEO({
   ledgerName,
   ledgerDescription,
   params,
+  noIndex = false,
 }: LedgerSEOProps) {
   const { t, i18n } = useTranslations();
 
@@ -71,6 +78,7 @@ export function LedgerSEO({
     <>
       <title>{title}</title>
       <meta name="description" content={description} />
+      {noIndex ? <meta name="robots" content={NOINDEX_ROBOTS_CONTENT} /> : null}
 
       {/* Open Graph meta tags for social sharing */}
       <meta property="og:title" content={title} />
@@ -84,8 +92,8 @@ export function LedgerSEO({
       <meta name="twitter:description" content={description} />
       <meta name="twitter:image" content={ogImageUrl} />
 
-      {/* hreflang links for international SEO */}
-      <HreflangLinks />
+      {/* hreflang only on indexable pages — avoids ?lang= alternate explosion */}
+      {noIndex ? null : <HreflangLinks />}
     </>
   );
 }

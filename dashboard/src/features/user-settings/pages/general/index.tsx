@@ -174,6 +174,7 @@ export default function GeneralSettingsPage() {
         <PageSEO
           titleKey="seo.settingsGeneral.title"
           descriptionKey="seo.settingsGeneral.description"
+          noIndex
         />
         <GeneralSettingsSkeleton />
       </>
@@ -186,6 +187,7 @@ export default function GeneralSettingsPage() {
         <PageSEO
           titleKey="seo.settingsGeneral.title"
           descriptionKey="seo.settingsGeneral.description"
+          noIndex
         />
         <GeneralSettingsError error={error} />
       </>
@@ -197,6 +199,7 @@ export default function GeneralSettingsPage() {
       <PageSEO
         titleKey="seo.settingsGeneral.title"
         descriptionKey="seo.settingsGeneral.description"
+        noIndex
       />
       <div className="space-y-4">
         {!isReactNative && <SubscriptionSection />}

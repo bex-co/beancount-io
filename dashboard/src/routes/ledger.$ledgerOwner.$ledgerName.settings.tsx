@@ -13,5 +13,6 @@ export const Route = createFileRoute(
         "seo.ledgerSettings.description",
         { ledgerName: params.ledgerName },
       ),
+      { noIndex: true },
     ),
 });

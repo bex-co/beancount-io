@@ -138,9 +138,8 @@ const caSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "Editeu fitxers de llibre comptable de {ledgerName}. Visualitzeu i modifiqueu els vostres fitxers comptables de Beancount.",
-    description: "File editor page meta description",
+    message: "Exploreu els fitxers comptables de Beancount de {ledgerName}.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "Fitxers - {ledgerName}",

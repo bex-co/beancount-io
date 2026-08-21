@@ -25,11 +25,18 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/ask")({
   },
   component: AskAIPage,
   validateSearch: searchSchema,
-  head: ({ params }) => ({
+  head: ({ params, match }) => ({
     ...createHeadMeta(
       getSEOMetadata("seo.ledgerAsk.title", "seo.ledgerAsk.description", {
         ledgerName: params.ledgerName,
       }),
+      { noIndex: Boolean(match.search.q) },
     ),
+    links: [
+      {
+        rel: "canonical",
+        href: `https://beancount.io/ledger/${encodeURIComponent(params.ledgerOwner)}/${encodeURIComponent(params.ledgerName)}/agent`,
+      },
+    ],
   }),
 });

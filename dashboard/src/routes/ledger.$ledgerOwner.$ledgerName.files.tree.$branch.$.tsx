@@ -11,5 +11,6 @@ export const Route = createFileRoute(
       getSEOMetadata("seo.ledgerFiles.title", "seo.ledgerFiles.description", {
         ledgerName: params.ledgerName,
       }),
+      { noIndex: true },
     ),
 });

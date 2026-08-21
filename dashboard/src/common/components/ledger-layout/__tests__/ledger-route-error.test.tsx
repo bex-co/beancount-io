@@ -44,6 +44,7 @@ describe("LedgerRouteError", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     mocks.unauthenticated = false;
+    document.head.innerHTML = "";
   });
 
   it("keeps parent-loader failures inside the ledger-scoped experience", async () => {
@@ -60,6 +61,11 @@ describe("LedgerRouteError", () => {
     expect(screen.getByTestId("ledger-layout-error")).toHaveTextContent(
       "ledger unavailable",
     );
+    expect(
+      document.head
+        .querySelector('meta[name="robots"]')
+        ?.getAttribute("content"),
+    ).toBe("noindex, follow");
     await user.click(screen.getByRole("button", { name: "Retry" }));
     expect(reset).toHaveBeenCalledOnce();
   });

@@ -128,8 +128,8 @@ const zhSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message: "编辑{ledgerName}的账本文件。查看和修改你的Beancount会计文件。",
-    description: "File editor page meta description",
+    message: "浏览{ledgerName}的 Beancount 会计文件。",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "文件 - {ledgerName}",

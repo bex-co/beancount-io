@@ -138,9 +138,8 @@ const ptSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "Edite arquivos de livro-razão de {ledgerName}. Visualize e modifique seus arquivos contábeis Beancount.",
-    description: "File editor page meta description",
+    message: "Explore os arquivos contábeis Beancount de {ledgerName}.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "Arquivos - {ledgerName}",

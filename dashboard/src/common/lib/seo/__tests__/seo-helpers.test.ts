@@ -1,5 +1,9 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { getSEOMetadata, createHeadMeta } from "../seo-helpers";
+import {
+  getSEOMetadata,
+  createHeadMeta,
+  createNoIndexHead,
+} from "../seo-helpers";
 import i18n from "@/i18n/init";
 
 // Mock i18n module
@@ -210,5 +214,41 @@ describe("createHeadMeta", () => {
     const result = createHeadMeta(metadata);
 
     expect(result.meta[2]).toHaveProperty("property", "og:locale");
+  });
+
+  it("should omit robots meta when noIndex is unset", () => {
+    const result = createHeadMeta({
+      title: "Overview",
+      description: "Public overview",
+    });
+
+    expect(
+      result.meta.find((meta) => "name" in meta && meta.name === "robots"),
+    ).toBeUndefined();
+    expect(result.meta).toHaveLength(3);
+  });
+
+  it("should emit robots noindex when noIndex is true", () => {
+    const result = createHeadMeta(
+      {
+        title: "Account",
+        description: "Deep route",
+      },
+      { noIndex: true },
+    );
+
+    expect(result.meta).toHaveLength(4);
+    expect(result.meta[3]).toEqual({
+      name: "robots",
+      content: "noindex, follow",
+    });
+  });
+});
+
+describe("createNoIndexHead", () => {
+  it("emits noindex for transactional routes without dedicated metadata", () => {
+    expect(createNoIndexHead()).toEqual({
+      meta: [{ name: "robots", content: "noindex, follow" }],
+    });
   });
 });

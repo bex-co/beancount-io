@@ -89,6 +89,7 @@ const AuthWithOneTimeToken = ({
       <PageSEO
         titleKey="seo.authCallback.title"
         descriptionKey="seo.authCallback.description"
+        noIndex
       />
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-md">

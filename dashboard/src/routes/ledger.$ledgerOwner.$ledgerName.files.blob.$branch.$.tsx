@@ -2,6 +2,7 @@ import { createFileRoute } from "@tanstack/react-router";
 import LedgerFilePage from "@/features/ledger-editor/file-editor";
 import { z } from "zod";
 import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
+import { getLedgerFileCanonicalUrl } from "@/common/lib/seo/indexability";
 
 const blobSearchSchema = z.object({
   editMode: z.boolean().optional(),
@@ -13,10 +14,35 @@ export const Route = createFileRoute(
 )({
   component: LedgerFilePage,
   validateSearch: (search) => blobSearchSchema.parse(search),
-  head: ({ params }) =>
-    createHeadMeta(
-      getSEOMetadata("seo.ledgerFiles.title", "seo.ledgerFiles.description", {
+  head: ({ params, match }) => {
+    const filePath = params._splat || "";
+    const metadata = getSEOMetadata(
+      "seo.ledgerFiles.title",
+      "seo.ledgerFiles.description",
+      {
         ledgerName: params.ledgerName,
-      }),
-    ),
+      },
+    );
+
+    return {
+      ...createHeadMeta(
+        {
+          ...metadata,
+          title: filePath ? `${filePath} · ${metadata.title}` : metadata.title,
+        },
+        { noIndex: Boolean(match.search.editMode) },
+      ),
+      links: [
+        {
+          rel: "canonical",
+          href: getLedgerFileCanonicalUrl({
+            ledgerOwner: params.ledgerOwner,
+            ledgerName: params.ledgerName,
+            branch: params.branch,
+            filePath,
+          }),
+        },
+      ],
+    };
+  },
 });

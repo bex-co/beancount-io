@@ -55,14 +55,17 @@ vi.mock("@/common/lib/seo/locale-map", () => ({
   }),
 }));
 
-// Mock HreflangLinks to avoid window issues in tests
+// Mock HreflangLinks to a detectable stub (avoids window issues in tests)
 vi.mock("../hreflang-links", () => ({
-  HreflangLinks: () => null,
+  HreflangLinks: () => (
+    <link data-testid="hreflang" rel="alternate" hrefLang="en" href="/" />
+  ),
 }));
 
 describe("LedgerSEO Component", () => {
   beforeEach(() => {
     vi.clearAllMocks();
+    document.head.innerHTML = "";
   });
 
   describe("Basic Props", () => {
@@ -537,6 +540,43 @@ describe("LedgerSEO Component", () => {
         ledgerName: "params-ledger",
         accountName: "Assets:Bank",
       });
+    });
+  });
+
+  describe("Indexability", () => {
+    it("should emit robots noindex and skip hreflang when noIndex is true", () => {
+      render(
+        <LedgerSEO
+          titleKey="seo.ledgerAccount.title"
+          descriptionKey="seo.ledgerAccount.description"
+          ledgerName="my-ledger"
+          params={{ accountName: "Assets:Bank" }}
+          noIndex
+        />,
+      );
+
+      const robots = document.head.querySelector('meta[name="robots"]');
+      expect(robots?.getAttribute("content")).toBe("noindex, follow");
+      expect(
+        document.head.querySelector('[data-testid="hreflang"]'),
+      ).toBeNull();
+    });
+
+    it("should keep hreflang and omit robots when noIndex is false", () => {
+      render(
+        <LedgerSEO
+          titleKey="seo.ledgerOverview.title"
+          descriptionKey="seo.ledgerOverview.description"
+          ledgerName="my-ledger"
+        />,
+      );
+
+      expect(
+        document.head.querySelector('meta[name="robots"]'),
+      ).toBeNull();
+      expect(
+        document.head.querySelector('[data-testid="hreflang"]'),
+      ).not.toBeNull();
     });
   });
 });

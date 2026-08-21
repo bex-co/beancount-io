@@ -3,6 +3,7 @@ import { useNavigate, useRouterState } from "@tanstack/react-router";
 import type { ErrorComponentProps } from "@tanstack/react-router";
 import { isUnauthenticatedError } from "@/common/apollo/links/auth-error-link";
 import { LedgerLayoutError } from "./ledger-layout-error";
+import { NOINDEX_ROBOTS_CONTENT } from "@/common/lib/seo/indexability";
 
 /**
  * Keeps errors thrown by the ledger route loader inside the ledger error
@@ -30,10 +31,13 @@ export function LedgerRouteError({ error, reset }: ErrorComponentProps) {
   };
 
   return (
-    <LedgerLayoutError
-      error={error}
-      onBackToDashboard={handleBackToDashboard}
-      onRetry={reset}
-    />
+    <>
+      <meta name="robots" content={NOINDEX_ROBOTS_CONTENT} />
+      <LedgerLayoutError
+        error={error}
+        onBackToDashboard={handleBackToDashboard}
+        onRetry={reset}
+      />
+    </>
   );
 }

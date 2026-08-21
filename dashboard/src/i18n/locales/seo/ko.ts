@@ -117,9 +117,8 @@ const koSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "{ledgerName}의 장부 파일을 편집합니다. Beancount 회계 파일을 보고 수정할 수 있습니다.",
-    description: "File editor page meta description",
+    message: "{ledgerName}의 Beancount 회계 파일을 찾아봅니다.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "파일 - {ledgerName}",

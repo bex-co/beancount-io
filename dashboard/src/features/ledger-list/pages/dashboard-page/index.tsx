@@ -12,6 +12,7 @@ export default function DashboardPage() {
       <PageSEO
         titleKey="seo.dashboard.title"
         descriptionKey="seo.dashboard.description"
+        noIndex
       />
       <DashboardLayout>
         <div className="flex-1 overflow-auto p-4 sm:p-6">

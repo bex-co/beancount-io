@@ -138,9 +138,8 @@ const nlSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "Bewerk grootboekbestanden voor {ledgerName}. Bekijk en wijzig uw Beancount-boekhoudbestanden.",
-    description: "File editor page meta description",
+    message: "Blader door de Beancount-boekhoudbestanden voor {ledgerName}.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "Bestanden - {ledgerName}",

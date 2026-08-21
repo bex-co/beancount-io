@@ -7,5 +7,6 @@ export const Route = createFileRoute("/auth/logout")({
   head: () =>
     createHeadMeta(
       getSEOMetadata("seo.logout.title", "seo.logout.description"),
+      { noIndex: true },
     ),
 });

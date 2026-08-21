@@ -9,5 +9,6 @@ export const Route = createFileRoute("/auth/welcome")({
   head: () =>
     createHeadMeta(
       getSEOMetadata("seo.welcome.title", "seo.welcome.description"),
+      { noIndex: true },
     ),
 });

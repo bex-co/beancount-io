@@ -10,5 +10,6 @@ export const Route = createFileRoute("/settings/general")({
         "seo.settingsGeneral.title",
         "seo.settingsGeneral.description",
       ),
+      { noIndex: true },
     ),
 });

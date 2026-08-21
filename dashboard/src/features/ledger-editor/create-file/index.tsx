@@ -115,7 +115,7 @@ const CreateFilePage = () => {
 
   return (
     <div className="h-full flex flex-col space-y-4">
-      <LedgerPageSEO seoKey="ledgerFilesCreate" />
+      <LedgerPageSEO seoKey="ledgerFilesCreate" noIndex />
       <PageHeader
         title={t("ledgerEditor.createFile")}
         description={t("common.pageDescription.createFile", {

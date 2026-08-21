@@ -19,7 +19,7 @@ export function PlaidSettingsPage() {
   if (loading) {
     return (
       <div className="container mx-auto py-8">
-        <LedgerPageSEO seoKey="plaidSettings" />
+        <LedgerPageSEO seoKey="plaidSettings" noIndex />
         <PlaidLoadingState />
       </div>
     );
@@ -28,7 +28,7 @@ export function PlaidSettingsPage() {
   if (error) {
     return (
       <div className="container mx-auto py-8">
-        <LedgerPageSEO seoKey="plaidSettings" />
+        <LedgerPageSEO seoKey="plaidSettings" noIndex />
         <PlaidErrorState onRetry={() => refetch()} />
       </div>
     );
@@ -37,7 +37,7 @@ export function PlaidSettingsPage() {
   if (items.length === 0) {
     return (
       <>
-        <LedgerPageSEO seoKey="plaidSettings" />
+        <LedgerPageSEO seoKey="plaidSettings" noIndex />
         <PlaidOnboardingState ledgerId={ledgerId} />
       </>
     );
@@ -45,7 +45,7 @@ export function PlaidSettingsPage() {
 
   return (
     <>
-      <LedgerPageSEO seoKey="plaidSettings" />
+      <LedgerPageSEO seoKey="plaidSettings" noIndex />
       <PlaidManagementState items={items} ledgerId={ledgerId} />
     </>
   );

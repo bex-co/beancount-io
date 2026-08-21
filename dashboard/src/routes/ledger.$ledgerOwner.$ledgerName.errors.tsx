@@ -12,6 +12,7 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/errors")(
           "seo.ledgerErrors.description",
           { ledgerName: params.ledgerName },
         ),
+        { noIndex: true },
       ),
   },
 );

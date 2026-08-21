@@ -119,9 +119,8 @@ const jaSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "{ledgerName}の台帳ファイルを編集します。Beancountの会計ファイルを表示・変更できます。",
-    description: "File editor page meta description",
+    message: "{ledgerName}のBeancount会計ファイルを閲覧します。",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "ファイル - {ledgerName}",

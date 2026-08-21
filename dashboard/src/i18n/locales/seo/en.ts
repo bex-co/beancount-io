@@ -120,9 +120,8 @@ const enSeo: Record<string, TranslationEntry> = {
     description: "Events page title with ledger name",
   },
   "seo.ledgerFiles.description": {
-    message:
-      "Edit ledger files for {ledgerName}. View and modify your Beancount accounting files.",
-    description: "File editor page meta description",
+    message: "Browse Beancount accounting files for {ledgerName}.",
+    description: "Ledger file browser meta description",
   },
   "seo.ledgerFiles.title": {
     message: "Files - {ledgerName}",

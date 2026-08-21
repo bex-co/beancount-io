@@ -11,5 +11,6 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/link")({
         "seo.plaidSettings.description",
         { ledgerName: params.ledgerName },
       ),
+      { noIndex: true },
     ),
 });

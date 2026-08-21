@@ -62,7 +62,7 @@ function LedgerSettingsContent({
 
   return (
     <div className="space-y-6 max-w-4xl">
-      <LedgerPageSEO seoKey="ledgerSettings" />
+      <LedgerPageSEO seoKey="ledgerSettings" noIndex />
       <PageHeader
         title={t("common.ledgerSettings")}
         description={t("common.pageDescription.settings", {
