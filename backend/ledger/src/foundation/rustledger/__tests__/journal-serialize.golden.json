@@ -552,7 +552,7 @@
       },
       "entry_hash": "9b4aa20e4c088041c262e9473f76192f",
       "directive_type": "Document",
-      "filename": "/Users/tianpan/projects/web-beancount/backend-cluster/beancount-ledger/statement.pdf",
+      "filename": "/tmp/statement.pdf",
       "account": "Assets:Checking",
       "tags": [
         "discovered"
@@ -656,7 +656,7 @@
     },
     {
       "type": "Document",
-      "text": "2024-02-04 document Assets:Checking \"/Users/tianpan/projects/web-beancount/backend-cluster/beancount-ledger/statement.pdf\" #discovered\n"
+      "text": "2024-02-04 document Assets:Checking \"/tmp/statement.pdf\" #discovered\n"
     },
     {
       "type": "Pad",

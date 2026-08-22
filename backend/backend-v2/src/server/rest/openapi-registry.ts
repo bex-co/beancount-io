@@ -78,10 +78,10 @@ export function generatePublicOpenAPIDocument() {
   return generator.generateDocument({
     openapi: "3.0.0",
     info: {
-      title: "Web Beancount Backend API",
+      title: "Beancount.io Backend API",
       version: "2.0.0",
       description: `
-Backend REST API for Web Beancount - a web-based interface for managing Beancount accounting files.
+Backend REST API for Beancount.io - a web-based interface for managing Beancount accounting files.
 
 ## Features
 - User authentication and authorization
@@ -96,8 +96,8 @@ The API supports multiple authentication methods:
 Admin operations are documented separately at \`/api-admin-docs\`.
       `.trim(),
       contact: {
-        name: "Web Beancount",
-        url: "https://github.com/stargately/web-beancount",
+        name: "Beancount.io",
+        url: "https://github.com/bex-co/beancount-io",
       },
     },
     ...getServerConfig(),
@@ -137,17 +137,17 @@ export function generateAdminOpenAPIDocument() {
   return generator.generateDocument({
     openapi: "3.0.0",
     info: {
-      title: "Web Beancount Admin API",
+      title: "Beancount.io Admin API",
       version: "2.0.0",
       description: `
-Administrative REST API for Web Beancount support/ops tooling.
+Administrative REST API for Beancount.io support/ops tooling.
 
 ## Authentication
 All admin endpoints require the **Admin Token** (\`x-admin-token\` header).
       `.trim(),
       contact: {
-        name: "Web Beancount",
-        url: "https://github.com/stargately/web-beancount",
+        name: "Beancount.io",
+        url: "https://github.com/bex-co/beancount-io",
       },
     },
     ...getServerConfig(),
@@ -175,10 +175,10 @@ export function generateCombinedOpenAPIDocument() {
   return generator.generateDocument({
     openapi: "3.0.0",
     info: {
-      title: "Web Beancount Backend API",
+      title: "Beancount.io Backend API",
       version: "2.0.0",
       description: `
-Backend REST API for Web Beancount - a web-based interface for managing Beancount accounting files.
+Backend REST API for Beancount.io - a web-based interface for managing Beancount accounting files.
 
 ## Features
 - User authentication and authorization
@@ -193,8 +193,8 @@ The API supports multiple authentication methods:
 - **API Key**: API key for authenticated endpoints
       `.trim(),
       contact: {
-        name: "Web Beancount",
-        url: "https://github.com/stargately/web-beancount",
+        name: "Beancount.io",
+        url: "https://github.com/bex-co/beancount-io",
       },
     },
     ...getServerConfig(),

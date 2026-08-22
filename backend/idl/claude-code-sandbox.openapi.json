@@ -7,7 +7,7 @@
   },
   "servers": [
     {
-      "url": "https://claude-code-sandbox.puncsky.workers.dev",
+      "url": "https://sandbox.beancount.io",
       "description": "Production server"
     },
     {

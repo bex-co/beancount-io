@@ -1,6 +1,6 @@
 # IDL — Interface Definition Layer
 
-OpenAPI specs and generated TypeScript CLI clients for all Web Beancount services.
+OpenAPI specs and generated TypeScript CLI clients for all Beancount.io services.
 
 ## Structure
 

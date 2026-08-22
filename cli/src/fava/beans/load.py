@@ -13,7 +13,7 @@ if TYPE_CHECKING:  # pragma: no cover
     from .types import LoaderResult
 
 
-# Apply Web Beancount's platform-wide overrides of Beancount option defaults
+# Apply Beancount.io's platform-wide overrides of Beancount option defaults
 # (see beancount_defaults.py) before any ledger is loaded.
 apply_platform_option_defaults()
 

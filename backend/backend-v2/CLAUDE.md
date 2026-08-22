@@ -1,4 +1,4 @@
-# Backend - Web Beancount
+# Backend - Beancount.io
 
 Node.js backend providing GraphQL and REST APIs for Beancount accounting with feature-based architecture.
 

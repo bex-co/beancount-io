@@ -52,7 +52,7 @@ export function setOpenApiRoutes(
   router.get("/api-docs", (ctx) => {
     ctx.type = "html";
     ctx.body = renderSwaggerUiHtml(
-      "Web Beancount API Docs",
+      "Beancount.io API Docs",
       "/api-docs/swagger.json",
     );
   });
@@ -64,7 +64,7 @@ export function setOpenApiRoutes(
   router.get("/api-admin-docs", (ctx) => {
     ctx.type = "html";
     ctx.body = renderSwaggerUiHtml(
-      "Web Beancount Admin API Docs",
+      "Beancount.io Admin API Docs",
       "/api-admin-docs/swagger.json",
     );
   });

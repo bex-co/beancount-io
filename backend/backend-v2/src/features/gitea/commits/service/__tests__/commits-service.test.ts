@@ -6,7 +6,7 @@ import {
 describe("stripCommitMetadata", () => {
   it("should extract clean diff from full git patch", () => {
     const gitPatch = `commit 283b786cb66dd85e0c767dcdc5565bcbe620d7aa
-Author: un_ht7hcm3zq3yb <puncsky@gmail.com>
+Author: un_ht7hcm3zq3yb <user@example.com>
 Date:   Thu Dec 25 08:31:58 2025 +0000
 
     Add main.bean

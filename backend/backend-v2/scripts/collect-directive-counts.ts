@@ -47,7 +47,7 @@ import { trustedIdentity } from "@/server/api/identity";
 
 const POSTGRES_URI =
   process.env.POSTGRES_BACKEND_URI ||
-  "postgresql://localhost:5432/web-beancount";
+  "postgresql://localhost:5432/beancount";
 const USER_PAGE_SIZE = 50;
 const LEDGER_PAGE_SIZE = 50;
 const PROGRESS_EVERY = 50;

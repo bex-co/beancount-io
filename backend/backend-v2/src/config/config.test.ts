@@ -13,7 +13,7 @@ describe("config", () => {
   });
 
   it("should have correct default values", () => {
-    expect(config.project).toBe("web-beancount");
+    expect(config.project).toBe("beancount-io");
     expect(config.jwt.expMins).toBe(525600);
     expect(config.analytics.gaMeasurementId).toBe("G-94TFG6X2Q5");
   });

@@ -6,7 +6,7 @@ import { PaidCustomerPostgresModel } from "@/features/stripe/data/paid-customer-
 
 // Configuration from environment variables
 const POSTGRES_URI =
-  process.env.POSTGRES_BACKEND_URI || "postgresql://localhost:5432/web-beancount";
+  process.env.POSTGRES_BACKEND_URI || "postgresql://localhost:5432/beancount";
 
 /**
  * Parse command-line arguments

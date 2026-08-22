@@ -45,7 +45,7 @@ describe("openapi-registry", () => {
       const doc = generatePublicOpenAPIDocument();
 
       expect(doc.openapi).toBe("3.0.0");
-      expect(doc.info.title).toBe("Web Beancount Backend API");
+      expect(doc.info.title).toBe("Beancount.io Backend API");
       expect(doc.info.version).toBe("2.0.0");
     });
 
@@ -82,7 +82,7 @@ describe("openapi-registry", () => {
       const doc = generatePublicOpenAPIDocument();
 
       expect(doc.info.description).toBeDefined();
-      expect(doc.info.description).toContain("Web Beancount");
+      expect(doc.info.description).toContain("Beancount.io");
     });
 
     it("should list both the development and production servers", () => {
@@ -100,7 +100,7 @@ describe("openapi-registry", () => {
       const doc = generateAdminOpenAPIDocument();
 
       expect(doc.openapi).toBe("3.0.0");
-      expect(doc.info.title).toBe("Web Beancount Admin API");
+      expect(doc.info.title).toBe("Beancount.io Admin API");
       expect(doc.tags?.map((tag) => tag.name)).toEqual(["Admin API"]);
     });
 

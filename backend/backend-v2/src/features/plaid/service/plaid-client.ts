@@ -74,7 +74,7 @@ export class PlaidClient implements IPlaidClient {
   async createLinkToken(userId: string): Promise<string> {
     const request: LinkTokenCreateRequest = {
       user: { client_user_id: userId },
-      client_name: "Web Beancount",
+      client_name: "Beancount.io",
       products: [Products.Transactions],
       country_codes: PLAID_COUNTRY_CODES,
       language: "en",
@@ -102,7 +102,7 @@ export class PlaidClient implements IPlaidClient {
   ): Promise<string> {
     const request: LinkTokenCreateRequest = {
       user: { client_user_id: userId },
-      client_name: "Web Beancount",
+      client_name: "Beancount.io",
       access_token: accessToken,
       country_codes: PLAID_COUNTRY_CODES,
       language: "en",

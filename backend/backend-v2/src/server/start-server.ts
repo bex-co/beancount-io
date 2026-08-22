@@ -100,11 +100,6 @@ export async function startServer(): Promise<void> {
             return origin;
           }
 
-          // Allow Render.com deployments (for SSR dashboard)
-          if (hostname.endsWith(".onrender.com")) {
-            return origin;
-          }
-
           // Allow localhost for development (any port)
           if (hostname === "localhost" || hostname === "127.0.0.1") {
             return origin;

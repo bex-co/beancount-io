@@ -42,7 +42,7 @@ describe("FeedCard", () => {
       summary: "Reconcile checking account",
       link: "/ledger/un_ubrekqsrhlbp/my-book/commit/0df5296bc0b8b18020082d7b98bc3d5ef7008b92",
       publishedAt: "2026-07-27T12:00:00Z",
-      author: "tianpan",
+      author: "testuser",
       authorAvatar: null,
       source: FeedSource.LedgerRss,
     };

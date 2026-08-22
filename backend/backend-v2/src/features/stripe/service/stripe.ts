@@ -151,47 +151,47 @@ export const SUBSCRIPTION_CONFIG: SubscriptionConfigMap = {
       {
         priceId: "price_1L9ccEEqsEqs2tLVKPRV17wb",
         type: PaymentType.RECURRING,
-        description: "Web Beancount Basic - Monthly - $9.99/month (Legacy)",
+        description: "Beancount.io Basic - Monthly - $9.99/month (Legacy)",
         tier: SubscriptionTier.PREMIUM,
       },
       {
         priceId: "price_1L9ccEEqsEqs2tLVbeBgHm9p",
         type: PaymentType.RECURRING,
-        description: "Web Beancount Basic - Yearly - $99.99/year (Legacy)",
+        description: "Beancount.io Basic - Yearly - $99.99/year (Legacy)",
         tier: SubscriptionTier.PREMIUM,
       },
       {
         priceId: "price_1RrSOGEqsEqs2tLVFnyB34qG",
         type: PaymentType.RECURRING,
-        description: "Web Beancount Premium - Monthly - $14.99/month",
+        description: "Beancount.io Premium - Monthly - $14.99/month",
         tier: SubscriptionTier.PREMIUM,
       },
       {
         priceId: "price_1SyPdaEqsEqs2tLViLPUDoVi",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Growth - Monthly - $99.99/month (Smart Automation)",
+          "Beancount.io Growth - Monthly - $99.99/month (Smart Automation)",
         tier: SubscriptionTier.GROWTH,
       },
       {
         priceId: "price_1SyPdbEqsEqs2tLV7PJyWZed",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Growth - Yearly - $79.99/month billed yearly (Smart Automation)",
+          "Beancount.io Growth - Yearly - $79.99/month billed yearly (Smart Automation)",
         tier: SubscriptionTier.GROWTH,
       },
       {
         priceId: "price_1SyPdcEqsEqs2tLVCWEgU1PZ",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Organization - Monthly - $499.99/month (Multi-Entity)",
+          "Beancount.io Organization - Monthly - $499.99/month (Multi-Entity)",
         tier: SubscriptionTier.ORGANIZATION,
       },
       {
         priceId: "price_1SyPdfEqsEqs2tLVmK6zCrP6",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Organization - Yearly - $399.99/month billed yearly (Multi-Entity)",
+          "Beancount.io Organization - Yearly - $399.99/month billed yearly (Multi-Entity)",
         tier: SubscriptionTier.ORGANIZATION,
       },
     ],
@@ -224,48 +224,48 @@ export const SUBSCRIPTION_CONFIG: SubscriptionConfigMap = {
         priceId: "price_1L9cmbEqsEqs2tLVuCG0AcO8",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Basic - Monthly - $9.99/month (Legacy, Test)",
+          "Beancount.io Basic - Monthly - $9.99/month (Legacy, Test)",
         tier: SubscriptionTier.PREMIUM,
       },
       {
         priceId: "price_1L9cmbEqsEqs2tLVsGOgOQYg",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Basic - Yearly - $99.99/year (Legacy, Test)",
+          "Beancount.io Basic - Yearly - $99.99/year (Legacy, Test)",
         tier: SubscriptionTier.PREMIUM,
       },
       {
         priceId: "price_1RrSU7EqsEqs2tLVCQiyqgQy",
         type: PaymentType.RECURRING,
-        description: "Web Beancount Premium - Monthly - $14.99/month (Test)",
+        description: "Beancount.io Premium - Monthly - $14.99/month (Test)",
         tier: SubscriptionTier.PREMIUM,
       },
       {
         priceId: "price_1SyPCpEqsEqs2tLVb89308vB",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Growth - Monthly - $99.99/month (Test, Smart Automation)",
+          "Beancount.io Growth - Monthly - $99.99/month (Test, Smart Automation)",
         tier: SubscriptionTier.GROWTH,
       },
       {
         priceId: "price_1SyPCqEqsEqs2tLV16VV8qR1",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Growth - Yearly - $79.99/month billed yearly (Test, Smart Automation)",
+          "Beancount.io Growth - Yearly - $79.99/month billed yearly (Test, Smart Automation)",
         tier: SubscriptionTier.GROWTH,
       },
       {
         priceId: "price_1SyPCsEqsEqs2tLVTVk0nzEM",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Organization - Monthly - $499.99/month (Test, Multi-Entity)",
+          "Beancount.io Organization - Monthly - $499.99/month (Test, Multi-Entity)",
         tier: SubscriptionTier.ORGANIZATION,
       },
       {
         priceId: "price_1SyPCtEqsEqs2tLV3tquQGTA",
         type: PaymentType.RECURRING,
         description:
-          "Web Beancount Organization - Yearly - $399.99/month billed yearly (Test, Multi-Entity)",
+          "Beancount.io Organization - Yearly - $399.99/month billed yearly (Test, Multi-Entity)",
         tier: SubscriptionTier.ORGANIZATION,
       },
     ],

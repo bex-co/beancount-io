@@ -6,6 +6,7 @@
  */
 
 import fs from "fs";
+import path from "path";
 import { renderWelcomeHtml } from "../templates/welcome.template";
 import { renderPasswordResetHtml } from "../templates/password-reset.template";
 
@@ -219,8 +220,7 @@ function generatePreviews() {
   `.trim();
 
   // Write to file
-  const outputPath =
-    "/Users/tianpan/projects/web-beancount/backend-cluster/backend-v2/src/shared/email-templates/__tests__/all-templates.html";
+  const outputPath = path.join(__dirname, "all-templates.html");
   fs.writeFileSync(outputPath, combinedHtml);
   console.log(`Preview generated successfully at: ${outputPath}`);
   console.log(`Total templates: ${previews.length}`);

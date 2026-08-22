@@ -1,7 +1,7 @@
 {
-  "name": "web-beancount",
+  "name": "backend-v2",
   "version": "1.1.0",
-  "description": "Web Beancount Backend",
+  "description": "Beancount.io Backend",
   "main": "dist/..js",
   "scripts": {
     "dev": "ts-node -r tsconfig-paths/register --transpile-only ./server.ts",

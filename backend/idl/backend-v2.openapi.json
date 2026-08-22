@@ -1,12 +1,12 @@
 {
   "openapi": "3.0.0",
   "info": {
-    "title": "Web Beancount Backend API",
+    "title": "Beancount.io Backend API",
     "version": "2.0.0",
-    "description": "Backend REST API for Web Beancount - a web-based interface for managing Beancount accounting files.\n\n## Features\n- User authentication and authorization\n- Ledger file management with Git-based version control\n- Admin operations for user and ledger management\n- Stripe webhook integration for payment processing\n\n## Authentication\nThe API supports multiple authentication methods:\n- **Bearer Token**: JWT-based authentication for user endpoints\n- **Admin Token**: Special admin API key for administrative operations\n- **API Key**: API key for authenticated endpoints",
+    "description": "Backend REST API for Beancount.io - a web-based interface for managing Beancount accounting files.\n\n## Features\n- User authentication and authorization\n- Ledger file management with Git-based version control\n- Admin operations for user and ledger management\n- Stripe webhook integration for payment processing\n\n## Authentication\nThe API supports multiple authentication methods:\n- **Bearer Token**: JWT-based authentication for user endpoints\n- **Admin Token**: Special admin API key for administrative operations\n- **API Key**: API key for authenticated endpoints",
     "contact": {
-      "name": "Web Beancount",
-      "url": "https://github.com/stargately/web-beancount"
+      "name": "Beancount.io",
+      "url": "https://github.com/bex-co/beancount-io"
     }
   },
   "servers": [

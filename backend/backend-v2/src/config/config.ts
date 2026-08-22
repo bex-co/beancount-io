@@ -191,7 +191,7 @@ function getPlaidEnvironment(env: unknown): PlaidEnvironment {
 
 export const config: AppConfig = {
   env: getEnvironment(process.env.NODE_ENV),
-  project: "web-beancount",
+  project: "beancount-io",
   jwt: {
     secret: process.env.AUTH_SECRET || "",
     expMins: parseInt(process.env.AUTH_JWT_EXP_MINUTES || "525600", 10),
@@ -233,9 +233,7 @@ export const config: AppConfig = {
     accessKey: process.env.BLOCKEDEN_ACCESS_KEY || "",
   },
   claudeCodeSandbox: {
-    apiUrl:
-      process.env.CLAUDE_CODE_SANDBOX_URL ||
-      "https://claude-code-sandbox.puncsky.workers.dev",
+    apiUrl: process.env.CLAUDE_CODE_SANDBOX_URL || "",
   },
   askAiMode: process.env.ASK_AI_MODE === "sandbox" ? "sandbox" : "bql",
   agent: {

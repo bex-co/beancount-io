@@ -20,7 +20,7 @@ function getClient(opts: { baseUrl: string; token: string }) {
 }
 
 const program = new Command("gitea")
-  .description("Web Beancount Gitea admin CLI")
+  .description("Beancount.io Gitea admin CLI")
   .option("--env <env>", "environment to use: prod | dev (default: prod)")
   .option(
     "--base-url <url>",

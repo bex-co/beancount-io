@@ -1,8 +1,4 @@
-# Web Beancount Backend
-
-![Node.js CI](https://github.com/puncsky/web-beancount/workflows/Node.js%20CI/badge.svg)
-
-[Architecture Diagram](https://whimsical.com/fava-web-beancount-WaNbbjv7Lnby8jHv243xcN)
+# Beancount.io Backend
 
 ## Overview
 
@@ -46,8 +42,8 @@ This guide assumes a Unix-like environment. If you are on Windows, see [Run on W
 1. Clone the repository:
 
 ```bash
-git clone git@github.com:puncsky/web-beancount.git
-cd web-beancount/backend
+git clone git@github.com:bex-co/beancount-io.git
+cd beancount-io/backend/backend-v2
 ```
 
 2. Install dependencies:
@@ -61,7 +57,7 @@ yarn install
 Create a `.env` file in the backend directory with the necessary environment variables. Required variables include:
 
 ```dotenv
-POSTGRES_BACKEND_URI=postgresql://user:password@localhost:5432/web-beancount
+POSTGRES_BACKEND_URI=postgresql://user:password@localhost:5432/beancount
 REDIS_URI=redis://localhost:6379
 FAVA_API_URL=http://localhost:8000
 FAVA_API_ADMIN_USER=admin
@@ -140,27 +136,6 @@ Background jobs are scheduled using node-cron and run automatically when the ser
 - **Dev Test Job**: Runs every 5 minutes in development mode (console.log test)
 
 See `src/scheduler/` for implementation details and `src/scheduler/README.md` for information on adding new jobs.
-
-## Deployment
-
-### Staging Environment
-
-The backend is currently deployed to the following staging environments:
-
-- https://fava117.onrender.com
-- https://beancount.tianpan.co/
-
-Staging environment configuration:
-
-```dotenv
-POSTGRES_BACKEND_URI=postgresql://[redacted]
-REDIS_URI=redis://[redacted]
-FAVA_API_URL=http://ledger:8000
-FAVA_API_ADMIN_USER=admin
-FAVA_API_ADMIN_PASSWORD=[redacted]
-AUTH_SECRET=[redacted]
-NODE_CONFIG_ENV=staging
-```
 
 ## API Documentation
 

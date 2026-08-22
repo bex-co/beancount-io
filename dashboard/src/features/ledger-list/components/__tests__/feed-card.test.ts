@@ -12,7 +12,7 @@ function createFeedItem(overrides: Partial<FeedItem> = {}): FeedItem {
     summary: "Reconcile checking account",
     link: "/ledger/un_ubrekqsrhlbp/my-book",
     publishedAt: "2026-07-27T12:00:00Z",
-    author: "tianpan",
+    author: "testuser",
     authorAvatar: null,
     source: FeedSource.LedgerRss,
     ...overrides,

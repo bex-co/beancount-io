@@ -80,7 +80,7 @@ describe("setOpenApiRoutes", () => {
     expect(mockCtx.body).toEqual(
       expect.objectContaining({
         openapi: "3.0.0",
-        info: expect.objectContaining({ title: "Web Beancount Admin API" }),
+        info: expect.objectContaining({ title: "Beancount.io Admin API" }),
       }),
     );
   });

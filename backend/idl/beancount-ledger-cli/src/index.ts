@@ -20,7 +20,7 @@ function getClient(opts: { baseUrl: string; token: string }) {
 }
 
 const program = new Command("ledger")
-  .description("Web Beancount ledger service admin CLI")
+  .description("Beancount.io ledger service admin CLI")
   .option("--env <env>", "environment to use: prod | dev (default: prod)")
   .option(
     "--base-url <url>",

@@ -102,10 +102,10 @@ describe("evaluateDirectiveLimit", () => {
 
   it("asks ledger-v2 for the repository actually being pushed to", async () => {
     const d = deps({ count: 1 });
-    await evaluateDirectiveLimit(d, "puncsky", "example");
+    await evaluateDirectiveLimit(d, "alice", "example");
     expect(d.ledgerClient.request).toHaveBeenCalledWith(
       expect.objectContaining({
-        path: "/ledgers/puncsky/example/directive-count",
+        path: "/ledgers/alice/example/directive-count",
         method: "GET",
       }),
     );
