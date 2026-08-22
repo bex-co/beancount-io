@@ -1,0 +1,19 @@
+option "name_assets" "Actifs"
+option "name_income" "Revenus"
+option "name_expenses" "Depenses"
+
+2024-01-10 * "Market" "Buy stock"
+  Actifs:Brokerage  10 HOOL {20 USD}
+  Actifs:Cash      -200 USD
+
+2024-01-20 * "Cafe" "Lunch" #food
+  Depenses:Food      25.50 USD
+  Actifs:Cash       -25.50 USD
+
+2024-02-15 * "Employer" "Salary new" #work ^pay
+  Actifs:Cash       1200 USD
+  Revenus:Salary   -1200 USD
+
+2024-03-01 * "Cafe" "Lunch again" #food
+  Depenses:Food      30 USD
+  Actifs:Cash       -30 USD

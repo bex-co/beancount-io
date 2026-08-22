@@ -1,0 +1,21 @@
+option "title" "Rustledger shadow corpus"
+option "operating_currency" "USD"
+option "name_assets" "Actifs"
+option "name_liabilities" "Dettes"
+option "name_equity" "Capital"
+option "name_income" "Revenus"
+option "name_expenses" "Depenses"
+
+include "books/*.bean"
+
+2000-01-01 open Actifs:Cash USD
+2000-01-01 open Actifs:Brokerage USD, HOOL
+2000-01-01 open Dettes:Card USD
+2000-01-01 open Capital:Opening USD
+2000-01-01 open Revenus:Salary USD
+2000-01-01 open Depenses:Food USD
+
+2024-02-01 price HOOL 30 USD
+
+2024-02-10 event "location" "Paris"
+2024-02-20 document Actifs:Cash "receipts/lunch.pdf" #receipt ^paper

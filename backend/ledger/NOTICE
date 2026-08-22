@@ -1,0 +1,10 @@
+beancount-ledger-v2 — Third-party licenses
+
+This service's own source is MIT-licensed (see /LICENSE). It depends on
+@rustledger/wasm 0.21.0, which is GPL-3.0-only. Installing dependencies with
+`yarn install` (or building the Docker image, which runs `yarn install
+--immutable`) fetches and links GPL-licensed code. A built image is therefore
+a derivative of GPL code; distributing the image requires complying with the
+GPL-3.0 terms (provide source + build instructions, which this repository and
+its committed yarn.lock satisfy). See src/foundation/rustledger/README.md for
+the containment rationale.

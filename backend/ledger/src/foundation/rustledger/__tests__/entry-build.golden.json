@@ -1,0 +1,18 @@
+{
+  "transaction_full": "2024-01-15 * \"Employer\" \"Salary\" #income ^ref-1\n  Assets:Checking                                   3000.00 USD\n  Income:Salary                                    -3000.00 USD\n\n",
+  "transaction_narration_only": "2024-01-20 * \"Groceries\"\n  Assets:Checking                                    -50.00 USD\n  Expenses:Food                                       50.00 USD\n\n",
+  "transaction_payee_only_pending": "2024-02-01 ! \"Store\" \"\"\n  Assets:Cash                                        -10.00 USD\n  Expenses:Misc                                       10.00 USD\n\n",
+  "transaction_price_flag_meta": "2024-03-01 * \"FX trade\"\n  key1: \"value1\"\n  num: \"note\"\n  ! Assets:USD                                       100.00 USD @ 1.35 CAD\n  Assets:CAD                                        -135.00 CAD\n\n",
+  "transaction_escaping": "2024-04-01 * \"Quote\\\"Co\" \"Line\\\\back\"\n  Assets:Cash                                         -5.00 USD\n  Expenses:X                                           5.00 USD\n\n",
+  "commodity": "2024-01-01 commodity USD\n\n",
+  "price": "2024-01-01 price AAPL                                150.25 USD\n\n",
+  "note": "2024-01-01 note Assets:Cash \"hello world\"\n\n",
+  "balance": "2024-01-01 balance Assets:Checking                  1000.00 USD\n\n",
+  "open_multi": "2024-01-01 open Assets:Checking                                 USD,EUR\n\n",
+  "open_none": "2024-01-01 open Assets:Checking\n\n",
+  "close": "2024-01-01 close Assets:Checking\n\n",
+  "event": "2024-01-01 event \"location\" \"Paris, France\"\n\n",
+  "document": "2024-01-01 document Assets:Cash \"/path/to/doc.pdf\"\n\n",
+  "document_tags_links": "2024-01-01 document Assets:Cash \"/path/to/doc.pdf\" #taga#tagb^link1\n\n",
+  "budget": "2024-01-01 custom \"budget\" Expenses:Food \"monthly\" 500.00 USD\n\n"
+}

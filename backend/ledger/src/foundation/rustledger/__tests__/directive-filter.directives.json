@@ -1,0 +1,227 @@
+[
+  {
+    "type": "open",
+    "date": "2023-01-01",
+    "account": "Assets:Checking",
+    "currencies": ["USD"]
+  },
+  {
+    "type": "open",
+    "date": "2023-01-01",
+    "account": "Assets:Savings",
+    "currencies": ["USD"]
+  },
+  {
+    "type": "open",
+    "date": "2023-01-01",
+    "account": "Income:Salary",
+    "currencies": ["USD"]
+  },
+  {
+    "type": "open",
+    "date": "2023-01-01",
+    "account": "Income:Bonus",
+    "currencies": ["USD"]
+  },
+  {
+    "type": "open",
+    "date": "2023-01-01",
+    "account": "Expenses:Food",
+    "currencies": ["USD"]
+  },
+  {
+    "type": "open",
+    "date": "2023-01-01",
+    "account": "Expenses:Rent",
+    "currencies": ["USD"]
+  },
+  {
+    "type": "open",
+    "date": "2023-01-01",
+    "account": "Liabilities:Card",
+    "currencies": ["USD"]
+  },
+  {
+    "type": "transaction",
+    "date": "2023-06-15",
+    "flag": "*",
+    "payee": "Employer",
+    "narration": "Salary June",
+    "tags": ["income"],
+    "links": ["pay-1"],
+    "postings": [
+      {
+        "account": "Assets:Checking",
+        "units": {
+          "number": "3000.00",
+          "currency": "USD"
+        }
+      },
+      {
+        "account": "Income:Salary",
+        "units": {
+          "number": "-3000.00",
+          "currency": "USD"
+        }
+      }
+    ]
+  },
+  {
+    "type": "transaction",
+    "date": "2023-07-20",
+    "flag": "*",
+    "payee": "Grocery Store",
+    "narration": "Weekly groceries",
+    "tags": ["food"],
+    "links": [],
+    "postings": [
+      {
+        "account": "Assets:Checking",
+        "units": {
+          "number": "-80.50",
+          "currency": "USD"
+        }
+      },
+      {
+        "account": "Expenses:Food",
+        "units": {
+          "number": "80.50",
+          "currency": "USD"
+        }
+      }
+    ]
+  },
+  {
+    "type": "transaction",
+    "date": "2023-12-01",
+    "flag": "*",
+    "payee": "Landlord",
+    "narration": "December rent",
+    "tags": [],
+    "links": ["rent-dec"],
+    "postings": [
+      {
+        "account": "Assets:Checking",
+        "units": {
+          "number": "-1200.00",
+          "currency": "USD"
+        }
+      },
+      {
+        "account": "Expenses:Rent",
+        "units": {
+          "number": "1200.00",
+          "currency": "USD"
+        }
+      }
+    ]
+  },
+  {
+    "type": "transaction",
+    "date": "2024-01-10",
+    "flag": "*",
+    "payee": "Employer",
+    "narration": "Salary January",
+    "tags": ["income"],
+    "links": ["pay-2"],
+    "postings": [
+      {
+        "account": "Assets:Checking",
+        "units": {
+          "number": "3200.00",
+          "currency": "USD"
+        }
+      },
+      {
+        "account": "Income:Salary",
+        "units": {
+          "number": "-3200.00",
+          "currency": "USD"
+        }
+      }
+    ]
+  },
+  {
+    "type": "transaction",
+    "date": "2024-02-14",
+    "flag": "!",
+    "payee": "Coffee Shop",
+    "narration": "coffee with friends",
+    "tags": ["food", "social"],
+    "links": [],
+    "postings": [
+      {
+        "account": "Liabilities:Card",
+        "units": {
+          "number": "-12.00",
+          "currency": "USD"
+        }
+      },
+      {
+        "account": "Expenses:Food",
+        "units": {
+          "number": "12.00",
+          "currency": "USD"
+        }
+      }
+    ]
+  },
+  {
+    "type": "transaction",
+    "date": "2024-03-01",
+    "flag": "*",
+    "payee": "Employer",
+    "narration": "Q1 bonus",
+    "tags": ["income"],
+    "links": [],
+    "postings": [
+      {
+        "account": "Assets:Savings",
+        "units": {
+          "number": "5000.00",
+          "currency": "USD"
+        }
+      },
+      {
+        "account": "Income:Bonus",
+        "units": {
+          "number": "-5000.00",
+          "currency": "USD"
+        }
+      }
+    ],
+    "meta": {
+      "meta-key": "special"
+    }
+  },
+  {
+    "type": "balance",
+    "date": "2024-03-05",
+    "account": "Assets:Checking",
+    "amount": {
+      "number": "4919.50",
+      "currency": "USD"
+    }
+  },
+  {
+    "type": "note",
+    "date": "2024-03-10",
+    "account": "Assets:Checking",
+    "comment": "checking note"
+  },
+  {
+    "type": "event",
+    "date": "2024-03-15",
+    "event_type": "location",
+    "value": "New York"
+  },
+  {
+    "type": "price",
+    "date": "2024-03-20",
+    "currency": "USD",
+    "amount": {
+      "number": "1.00",
+      "currency": "USD"
+    }
+  }
+]

@@ -1,0 +1,37 @@
+# Dependencies
+node_modules
+.yarn
+
+# Testing
+coverage
+*.test.ts
+__tests__
+parity
+
+# Build artifacts
+dist
+*.tsbuildinfo
+
+# Environment
+.env
+.env.*
+
+# Logs
+*.log
+
+# Editor / OS
+.idea
+.vscode
+.DS_Store
+
+# Git
+.git
+.gitignore
+
+# Docker
+Dockerfile
+.dockerignore
+docker-compose*.yml
+
+# Docs
+*.md

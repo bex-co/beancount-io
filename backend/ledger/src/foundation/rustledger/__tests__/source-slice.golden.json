@@ -1,0 +1,534 @@
+{
+  "files": {
+    "main.beancount": "option \"operating_currency\" \"USD\"\ninclude \"accounts.beancount\"\n\n2024-01-15 * \"Employer\" \"Salary\" #income ^ref-1\n  Assets:Checking   3000.00 USD\n  Income:Salary    -3000.00 USD\n\n2024-01-20 * \"Store\" \"Groceries\"\n  Assets:Checking    -50.00 USD\n  Expenses:Food       50.00 USD\n\n2024-02-01 balance Assets:Checking  2950.00 USD\n\n2024-02-05 * \"Broker\" \"Buy stock\"\n  Assets:Brokerage    10 HOOL {100.00 USD}\n  Assets:Checking  -1000.00 USD\n\n2024-03-01 note Assets:Checking \"Reviewed the account\"\n\n2024-03-10 event \"location\" \"New York\"\n",
+    "accounts.beancount": "2024-01-01 open Assets:Checking USD\n2024-01-01 open Income:Salary USD\n2024-01-01 open Expenses:Food USD\n2024-01-01 open Assets:Brokerage HOOL,USD\n"
+  },
+  "entryPoint": "main.beancount",
+  "entries": [
+    {
+      "hash": "ecb7ac8f1c759bc9b667eedbdfd69f62",
+      "type": "Open",
+      "slice": "2024-01-01 open Assets:Checking USD",
+      "sha256": "e3e1411168f17cfaa4ad9f94b249c837f6628e43a372ab940e814382bbb72bc0",
+      "before": null,
+      "after": null
+    },
+    {
+      "hash": "4a9fbde795a75fdad17a12114a5c9dc0",
+      "type": "Open",
+      "slice": "2024-01-01 open Income:Salary USD",
+      "sha256": "a03119ec518bd21793b8fcb65c1ba7501b2da29b4abe78442e622f1d6ffa713a",
+      "before": null,
+      "after": null
+    },
+    {
+      "hash": "f5e84abcaf8551c118da554f7e7778cc",
+      "type": "Open",
+      "slice": "2024-01-01 open Expenses:Food USD",
+      "sha256": "aaa0021093f584c1906965f65fcec6c78a8c26a98a16101cb6437ace4eedabf1",
+      "before": null,
+      "after": null
+    },
+    {
+      "hash": "2a81ea4e45d5fe2da7f6be436e74b524",
+      "type": "Open",
+      "slice": "2024-01-01 open Assets:Brokerage HOOL,USD",
+      "sha256": "a2c2ba53f4be65580cd41d13e62464b69c0cfa9d82382a2ae7289b24bf112ae5",
+      "before": null,
+      "after": null
+    },
+    {
+      "hash": "0aeb9b920d416432d69759e911e494c4",
+      "type": "Transaction",
+      "slice": "2024-01-15 * \"Employer\" \"Salary\" #income ^ref-1\n  Assets:Checking   3000.00 USD\n  Income:Salary    -3000.00 USD",
+      "sha256": "3344ef4563873d38e7a7f79a6d05d0c7e9e2945fef00bfa34f2adf724e761df1",
+      "before": {
+        "Income:Salary": [],
+        "Assets:Checking": []
+      },
+      "after": {
+        "Income:Salary": [
+          "-3000.00 USD"
+        ],
+        "Assets:Checking": [
+          "3000.00 USD"
+        ]
+      }
+    },
+    {
+      "hash": "b87ce04ef342817995f549015a5d6ae4",
+      "type": "Transaction",
+      "slice": "2024-01-20 * \"Store\" \"Groceries\"\n  Assets:Checking    -50.00 USD\n  Expenses:Food       50.00 USD",
+      "sha256": "1fc4a8e05583a683ec657a6d0a5ef0be1103042ac15001696edf5d56fb76b4cf",
+      "before": {
+        "Expenses:Food": [],
+        "Assets:Checking": [
+          "3000.00 USD"
+        ]
+      },
+      "after": {
+        "Expenses:Food": [
+          "50.00 USD"
+        ],
+        "Assets:Checking": [
+          "2950.00 USD"
+        ]
+      }
+    },
+    {
+      "hash": "b2f0c59cc1e49c30230161f717f8c608",
+      "type": "Balance",
+      "slice": "2024-02-01 balance Assets:Checking  2950.00 USD",
+      "sha256": "110225abef568fe49b03d3fd0d14141d72a183990b8c60edbb3dc0e2f6de7b3b",
+      "before": {
+        "Assets:Checking": [
+          "2950.00 USD"
+        ]
+      },
+      "after": null
+    },
+    {
+      "hash": "4aa9f92d763b4d46875a2f274ec9a530",
+      "type": "Transaction",
+      "slice": "2024-02-05 * \"Broker\" \"Buy stock\"\n  Assets:Brokerage    10 HOOL {100.00 USD}\n  Assets:Checking  -1000.00 USD",
+      "sha256": "20fc1b19277c017043ca0f5af442f37565a8cb7f77a826b2594aff16397af357",
+      "before": {
+        "Assets:Checking": [
+          "2950.00 USD"
+        ],
+        "Assets:Brokerage": []
+      },
+      "after": {
+        "Assets:Checking": [
+          "1950.00 USD"
+        ],
+        "Assets:Brokerage": [
+          "10 HOOL {100.00 USD, 2024-02-05}"
+        ]
+      }
+    },
+    {
+      "hash": "6b383bf5a523bf09763357c40a30854b",
+      "type": "Note",
+      "slice": "2024-03-01 note Assets:Checking \"Reviewed the account\"",
+      "sha256": "5f8b80e15a092a6b483d0decacc23ec8e3b49c301937a7b0b27fec69b1fd4094",
+      "before": null,
+      "after": null
+    },
+    {
+      "hash": "e5ad52273bd9ffebf07299d2f88260fd",
+      "type": "Event",
+      "slice": "2024-03-10 event \"location\" \"New York\"",
+      "sha256": "099a45c4e62e9d83946fdbf2aa856d248d33559d18a77ac4035811fb52d913ad",
+      "before": null,
+      "after": null
+    }
+  ],
+  "delete_groceries": {
+    "hash": "b87ce04ef342817995f549015a5d6ae4",
+    "sha256": "1fc4a8e05583a683ec657a6d0a5ef0be1103042ac15001696edf5d56fb76b4cf",
+    "new_main_content": "option \"operating_currency\" \"USD\"\ninclude \"accounts.beancount\"\n\n2024-01-15 * \"Employer\" \"Salary\" #income ^ref-1\n  Assets:Checking   3000.00 USD\n  Income:Salary    -3000.00 USD\n\n\n2024-02-01 balance Assets:Checking  2950.00 USD\n\n2024-02-05 * \"Broker\" \"Buy stock\"\n  Assets:Brokerage    10 HOOL {100.00 USD}\n  Assets:Checking  -1000.00 USD\n\n2024-03-01 note Assets:Checking \"Reviewed the account\"\n\n2024-03-10 event \"location\" \"New York\"\n"
+  },
+  "update_groceries": {
+    "hash": "b87ce04ef342817995f549015a5d6ae4",
+    "sha256": "1fc4a8e05583a683ec657a6d0a5ef0be1103042ac15001696edf5d56fb76b4cf",
+    "new_content": "2024-01-20 * \"Store\" \"Groceries updated\"\n  Assets:Checking    -60.00 USD\n  Expenses:Food       60.00 USD",
+    "new_sha256": "4bd993b52326afcb28a847498c38e59f681559eee59cda038f79aa82d7d22fb6",
+    "new_main_content": "option \"operating_currency\" \"USD\"\ninclude \"accounts.beancount\"\n\n2024-01-15 * \"Employer\" \"Salary\" #income ^ref-1\n  Assets:Checking   3000.00 USD\n  Income:Salary    -3000.00 USD\n\n2024-01-20 * \"Store\" \"Groceries updated\"\n  Assets:Checking    -60.00 USD\n  Expenses:Food       60.00 USD\n\n2024-02-01 balance Assets:Checking  2950.00 USD\n\n2024-02-05 * \"Broker\" \"Buy stock\"\n  Assets:Brokerage    10 HOOL {100.00 USD}\n  Assets:Checking  -1000.00 USD\n\n2024-03-01 note Assets:Checking \"Reviewed the account\"\n\n2024-03-10 event \"location\" \"New York\"\n"
+  },
+  "fullDirectives": [
+    {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Assets:Checking",
+      "currencies": [
+        "USD"
+      ]
+    },
+    {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Income:Salary",
+      "currencies": [
+        "USD"
+      ]
+    },
+    {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Expenses:Food",
+      "currencies": [
+        "USD"
+      ]
+    },
+    {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Assets:Brokerage",
+      "currencies": [
+        "HOOL",
+        "USD"
+      ]
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-15",
+      "flag": "*",
+      "payee": "Employer",
+      "narration": "Salary",
+      "tags": [
+        "income"
+      ],
+      "links": [
+        "ref-1"
+      ],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "3000.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "account": "Income:Salary",
+          "units": {
+            "number": "-3000.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-20",
+      "flag": "*",
+      "payee": "Store",
+      "narration": "Groceries",
+      "tags": [],
+      "links": [],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "-50.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "account": "Expenses:Food",
+          "units": {
+            "number": "50.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "balance",
+      "date": "2024-02-01",
+      "account": "Assets:Checking",
+      "amount": {
+        "number": "2950.00",
+        "currency": "USD"
+      }
+    },
+    {
+      "type": "transaction",
+      "date": "2024-02-05",
+      "flag": "*",
+      "payee": "Broker",
+      "narration": "Buy stock",
+      "tags": [],
+      "links": [],
+      "postings": [
+        {
+          "account": "Assets:Brokerage",
+          "units": {
+            "number": "10",
+            "currency": "HOOL"
+          },
+          "cost": {
+            "number": {
+              "kind": "per_unit",
+              "value": "100.00"
+            },
+            "currency": "USD",
+            "date": "2024-02-05"
+          }
+        },
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "-1000.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "note",
+      "date": "2024-03-01",
+      "account": "Assets:Checking",
+      "comment": "Reviewed the account"
+    },
+    {
+      "type": "event",
+      "date": "2024-03-10",
+      "event_type": "location",
+      "value": "New York"
+    }
+  ],
+  "blockParses": {
+    "2024-01-15 * \"Employer\" \"Salary\" #income ^ref-1\n  Assets:Checking   3000.00 USD\n  Income:Salary    -3000.00 USD": {
+      "type": "transaction",
+      "date": "2024-01-15",
+      "flag": "*",
+      "payee": "Employer",
+      "narration": "Salary",
+      "tags": [
+        "income"
+      ],
+      "links": [
+        "ref-1"
+      ],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "3000.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "account": "Income:Salary",
+          "units": {
+            "number": "-3000.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    "2024-01-20 * \"Store\" \"Groceries\"\n  Assets:Checking    -50.00 USD\n  Expenses:Food       50.00 USD": {
+      "type": "transaction",
+      "date": "2024-01-20",
+      "flag": "*",
+      "payee": "Store",
+      "narration": "Groceries",
+      "tags": [],
+      "links": [],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "-50.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "account": "Expenses:Food",
+          "units": {
+            "number": "50.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    "2024-02-01 balance Assets:Checking  2950.00 USD": {
+      "type": "balance",
+      "date": "2024-02-01",
+      "account": "Assets:Checking",
+      "amount": {
+        "number": "2950.00",
+        "currency": "USD"
+      }
+    },
+    "2024-02-05 * \"Broker\" \"Buy stock\"\n  Assets:Brokerage    10 HOOL {100.00 USD}\n  Assets:Checking  -1000.00 USD": {
+      "type": "transaction",
+      "date": "2024-02-05",
+      "flag": "*",
+      "payee": "Broker",
+      "narration": "Buy stock",
+      "tags": [],
+      "links": [],
+      "postings": [
+        {
+          "account": "Assets:Brokerage",
+          "units": {
+            "number": "10",
+            "currency": "HOOL"
+          },
+          "cost": {
+            "number": {
+              "kind": "per_unit",
+              "value": "100.00"
+            },
+            "currency": "USD"
+          }
+        },
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "-1000.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    "2024-03-01 note Assets:Checking \"Reviewed the account\"": {
+      "type": "note",
+      "date": "2024-03-01",
+      "account": "Assets:Checking",
+      "comment": "Reviewed the account"
+    },
+    "2024-03-10 event \"location\" \"New York\"": {
+      "type": "event",
+      "date": "2024-03-10",
+      "event_type": "location",
+      "value": "New York"
+    },
+    "2024-01-01 open Assets:Checking USD": {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Assets:Checking",
+      "currencies": [
+        "USD"
+      ]
+    },
+    "2024-01-01 open Income:Salary USD": {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Income:Salary",
+      "currencies": [
+        "USD"
+      ]
+    },
+    "2024-01-01 open Expenses:Food USD": {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Expenses:Food",
+      "currencies": [
+        "USD"
+      ]
+    },
+    "2024-01-01 open Assets:Brokerage HOOL,USD": {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Assets:Brokerage",
+      "currencies": [
+        "HOOL",
+        "USD"
+      ]
+    }
+  },
+  "costSpecCases": [
+    {
+      "source": "2024-02-01 * \"total cost\"\n  Assets:Broker 10 HOOL {{1000.00 USD}}\n  Assets:Cash -1000.00 USD",
+      "rawDirective": {
+        "type": "transaction",
+        "date": "2024-02-01",
+        "flag": "*",
+        "narration": "total cost",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Broker",
+            "units": { "number": "10", "currency": "HOOL" },
+            "cost": {
+              "number": { "kind": "total", "value": "1000.00" },
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:Cash",
+            "units": { "number": "-1000.00", "currency": "USD" }
+          }
+        ]
+      },
+      "bookedDirective": {
+        "type": "transaction",
+        "date": "2024-02-01",
+        "flag": "*",
+        "narration": "total cost",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Broker",
+            "units": { "number": "10", "currency": "HOOL" },
+            "cost": {
+              "number": {
+                "kind": "per_unit_from_total",
+                "per_unit": "100.00",
+                "total": "1000.00"
+              },
+              "currency": "USD",
+              "date": "2024-02-01"
+            }
+          },
+          {
+            "account": "Assets:Cash",
+            "units": { "number": "-1000.00", "currency": "USD" }
+          }
+        ]
+      }
+    },
+    {
+      "source": "2024-02-01 * \"compound cost\"\n  Assets:Broker 10 HOOL {10 # 900.00 USD}\n  Assets:Cash -1000.00 USD",
+      "rawDirective": {
+        "type": "transaction",
+        "date": "2024-02-01",
+        "flag": "*",
+        "narration": "compound cost",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Broker",
+            "units": { "number": "10", "currency": "HOOL" },
+            "cost": {
+              "number": {
+                "kind": "compound",
+                "per_unit": "10",
+                "total": "900.00"
+              },
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:Cash",
+            "units": { "number": "-1000.00", "currency": "USD" }
+          }
+        ]
+      },
+      "bookedDirective": {
+        "type": "transaction",
+        "date": "2024-02-01",
+        "flag": "*",
+        "narration": "compound cost",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Broker",
+            "units": { "number": "10", "currency": "HOOL" },
+            "cost": {
+              "number": {
+                "kind": "per_unit_from_total",
+                "per_unit": "100.00",
+                "total": "1000.00"
+              },
+              "currency": "USD",
+              "date": "2024-02-01"
+            }
+          },
+          {
+            "account": "Assets:Cash",
+            "units": { "number": "-1000.00", "currency": "USD" }
+          }
+        ]
+      }
+    }
+  ]
+}

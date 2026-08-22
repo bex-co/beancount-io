@@ -1,0 +1,388 @@
+{
+  "all": [
+    "open|2023-01-01|Assets:Checking",
+    "open|2023-01-01|Assets:Savings",
+    "open|2023-01-01|Income:Salary",
+    "open|2023-01-01|Income:Bonus",
+    "open|2023-01-01|Expenses:Food",
+    "open|2023-01-01|Expenses:Rent",
+    "open|2023-01-01|Liabilities:Card",
+    "transaction|2023-06-15|Salary June|Assets:Checking",
+    "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+    "transaction|2023-12-01|December rent|Assets:Checking",
+    "transaction|2024-01-10|Salary January|Assets:Checking",
+    "transaction|2024-02-14|coffee with friends|Liabilities:Card",
+    "transaction|2024-03-01|Q1 bonus|Assets:Savings",
+    "balance|2024-03-05|Assets:Checking",
+    "note|2024-03-10|Assets:Checking",
+    "event|2024-03-15|location",
+    "price|2024-03-20|USD"
+  ],
+  "account": {
+    "Expenses:Food": [
+      "open|2023-01-01|Expenses:Food",
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+    ],
+    "Assets": [
+      "open|2023-01-01|Assets:Checking",
+      "open|2023-01-01|Assets:Savings",
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2023-12-01|December rent|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking",
+      "transaction|2024-03-01|Q1 bonus|Assets:Savings",
+      "balance|2024-03-05|Assets:Checking",
+      "note|2024-03-10|Assets:Checking"
+    ],
+    "Income:Salary": [
+      "open|2023-01-01|Income:Salary",
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking"
+    ],
+    "Checking": [
+      "open|2023-01-01|Assets:Checking",
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2023-12-01|December rent|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking",
+      "balance|2024-03-05|Assets:Checking",
+      "note|2024-03-10|Assets:Checking"
+    ],
+    "Food": [
+      "open|2023-01-01|Expenses:Food",
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+    ],
+    "Expenses:.*": [
+      "open|2023-01-01|Expenses:Food",
+      "open|2023-01-01|Expenses:Rent",
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2023-12-01|December rent|Assets:Checking",
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+    ],
+    "Nonexistent": [],
+    "Assets:.*ing$": [
+      "open|2023-01-01|Assets:Checking",
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2023-12-01|December rent|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking",
+      "balance|2024-03-05|Assets:Checking",
+      "note|2024-03-10|Assets:Checking"
+    ]
+  },
+  "filter": {
+    "#food": [
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+    ],
+    "#income": [
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking",
+      "transaction|2024-03-01|Q1 bonus|Assets:Savings"
+    ],
+    "^pay-1": [
+      "transaction|2023-06-15|Salary June|Assets:Checking"
+    ],
+    "^pay-2": [
+      "transaction|2024-01-10|Salary January|Assets:Checking"
+    ],
+    "#food #social": [
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+    ],
+    "#food, #income": [
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking",
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card",
+      "transaction|2024-03-01|Q1 bonus|Assets:Savings"
+    ],
+    "-#food": [
+      "open|2023-01-01|Assets:Checking",
+      "open|2023-01-01|Assets:Savings",
+      "open|2023-01-01|Income:Salary",
+      "open|2023-01-01|Income:Bonus",
+      "open|2023-01-01|Expenses:Food",
+      "open|2023-01-01|Expenses:Rent",
+      "open|2023-01-01|Liabilities:Card",
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2023-12-01|December rent|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking",
+      "transaction|2024-03-01|Q1 bonus|Assets:Savings",
+      "balance|2024-03-05|Assets:Checking",
+      "note|2024-03-10|Assets:Checking",
+      "event|2024-03-15|location",
+      "price|2024-03-20|USD"
+    ],
+    "Salary": [
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking"
+    ],
+    "\"Salary\"": [
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking"
+    ],
+    "coffee": [
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+    ],
+    "Employer": [
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking",
+      "transaction|2024-03-01|Q1 bonus|Assets:Savings"
+    ],
+    "#food -#social": [
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking"
+    ],
+    "(#food, #income) -^pay-2": [
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card",
+      "transaction|2024-03-01|Q1 bonus|Assets:Savings"
+    ],
+    "any(account:Expenses)": [
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2023-12-01|December rent|Assets:Checking",
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+    ],
+    "all(account:Assets)": [
+      "open|2023-01-01|Assets:Checking",
+      "open|2023-01-01|Assets:Savings",
+      "open|2023-01-01|Income:Salary",
+      "open|2023-01-01|Income:Bonus",
+      "open|2023-01-01|Expenses:Food",
+      "open|2023-01-01|Expenses:Rent",
+      "open|2023-01-01|Liabilities:Card",
+      "balance|2024-03-05|Assets:Checking",
+      "note|2024-03-10|Assets:Checking",
+      "event|2024-03-15|location",
+      "price|2024-03-20|USD"
+    ],
+    ">1000": [
+      "transaction|2023-06-15|Salary June|Assets:Checking",
+      "transaction|2023-12-01|December rent|Assets:Checking",
+      "transaction|2024-01-10|Salary January|Assets:Checking",
+      "transaction|2024-03-01|Q1 bonus|Assets:Savings"
+    ],
+    "<100": [
+      "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+    ],
+    "meta-key:special": [
+      "transaction|2024-03-01|Q1 bonus|Assets:Savings"
+    ],
+    ">=5000": [
+      "transaction|2024-03-01|Q1 bonus|Assets:Savings"
+    ],
+    "<=12": [
+      "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+    ]
+  },
+  "time": {
+    "2023": {
+      "range": [
+        "2023-01-01",
+        "2024-01-01"
+      ],
+      "keys": [
+        "open|2023-01-01|Assets:Checking",
+        "open|2023-01-01|Assets:Savings",
+        "open|2023-01-01|Income:Salary",
+        "open|2023-01-01|Income:Bonus",
+        "open|2023-01-01|Expenses:Food",
+        "open|2023-01-01|Expenses:Rent",
+        "open|2023-01-01|Liabilities:Card",
+        "transaction|2023-06-15|Salary June|Assets:Checking",
+        "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+        "transaction|2023-12-01|December rent|Assets:Checking"
+      ]
+    },
+    "2024": {
+      "range": [
+        "2024-01-01",
+        "2025-01-01"
+      ],
+      "keys": [
+        "transaction|2024-01-10|Salary January|Assets:Checking",
+        "transaction|2024-02-14|coffee with friends|Liabilities:Card",
+        "transaction|2024-03-01|Q1 bonus|Assets:Savings",
+        "balance|2024-03-05|Assets:Checking",
+        "note|2024-03-10|Assets:Checking",
+        "event|2024-03-15|location",
+        "price|2024-03-20|USD"
+      ]
+    },
+    "2023-07": {
+      "range": [
+        "2023-07-01",
+        "2023-08-01"
+      ],
+      "keys": [
+        "transaction|2023-07-20|Weekly groceries|Assets:Checking"
+      ]
+    },
+    "2024-02": {
+      "range": [
+        "2024-02-01",
+        "2024-03-01"
+      ],
+      "keys": [
+        "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+      ]
+    },
+    "2023-06-15": {
+      "range": [
+        "2023-06-15",
+        "2023-06-16"
+      ],
+      "keys": [
+        "transaction|2023-06-15|Salary June|Assets:Checking"
+      ]
+    },
+    "2023 to 2024": {
+      "range": [
+        "2023-01-01",
+        "2025-01-01"
+      ],
+      "keys": [
+        "open|2023-01-01|Assets:Checking",
+        "open|2023-01-01|Assets:Savings",
+        "open|2023-01-01|Income:Salary",
+        "open|2023-01-01|Income:Bonus",
+        "open|2023-01-01|Expenses:Food",
+        "open|2023-01-01|Expenses:Rent",
+        "open|2023-01-01|Liabilities:Card",
+        "transaction|2023-06-15|Salary June|Assets:Checking",
+        "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+        "transaction|2023-12-01|December rent|Assets:Checking",
+        "transaction|2024-01-10|Salary January|Assets:Checking",
+        "transaction|2024-02-14|coffee with friends|Liabilities:Card",
+        "transaction|2024-03-01|Q1 bonus|Assets:Savings",
+        "balance|2024-03-05|Assets:Checking",
+        "note|2024-03-10|Assets:Checking",
+        "event|2024-03-15|location",
+        "price|2024-03-20|USD"
+      ]
+    },
+    "2023-06 - 2024-02": {
+      "range": [
+        "2023-06-01",
+        "2024-03-01"
+      ],
+      "keys": [
+        "transaction|2023-06-15|Salary June|Assets:Checking",
+        "transaction|2023-07-20|Weekly groceries|Assets:Checking",
+        "transaction|2023-12-01|December rent|Assets:Checking",
+        "transaction|2024-01-10|Salary January|Assets:Checking",
+        "transaction|2024-02-14|coffee with friends|Liabilities:Card"
+      ]
+    },
+    "2024-Q1": {
+      "range": [
+        "2024-01-01",
+        "2024-04-01"
+      ],
+      "keys": [
+        "transaction|2024-01-10|Salary January|Assets:Checking",
+        "transaction|2024-02-14|coffee with friends|Liabilities:Card",
+        "transaction|2024-03-01|Q1 bonus|Assets:Savings",
+        "balance|2024-03-05|Assets:Checking",
+        "note|2024-03-10|Assets:Checking",
+        "event|2024-03-15|location",
+        "price|2024-03-20|USD"
+      ]
+    },
+    "FY2024": {
+      "range": [
+        "2024-01-01",
+        "2025-01-01"
+      ],
+      "keys": [
+        "transaction|2024-01-10|Salary January|Assets:Checking",
+        "transaction|2024-02-14|coffee with friends|Liabilities:Card",
+        "transaction|2024-03-01|Q1 bonus|Assets:Savings",
+        "balance|2024-03-05|Assets:Checking",
+        "note|2024-03-10|Assets:Checking",
+        "event|2024-03-15|location",
+        "price|2024-03-20|USD"
+      ]
+    },
+    "2023-W02": {
+      "range": [
+        "2023-01-09",
+        "2023-01-16"
+      ],
+      "keys": []
+    }
+  },
+  "parse_date": {
+    "2023": [
+      "2023-01-01",
+      "2024-01-01"
+    ],
+    "2024": [
+      "2024-01-01",
+      "2025-01-01"
+    ],
+    "2023-07": [
+      "2023-07-01",
+      "2023-08-01"
+    ],
+    "2024-02": [
+      "2024-02-01",
+      "2024-03-01"
+    ],
+    "2023-06-15": [
+      "2023-06-15",
+      "2023-06-16"
+    ],
+    "2023-W02": [
+      "2023-01-09",
+      "2023-01-16"
+    ],
+    "2024-Q1": [
+      "2024-01-01",
+      "2024-04-01"
+    ],
+    "2024-q3": [
+      "2024-07-01",
+      "2024-10-01"
+    ],
+    "FY2024": [
+      "2024-01-01",
+      "2025-01-01"
+    ],
+    "2023 to 2024": [
+      "2023-01-01",
+      "2025-01-01"
+    ],
+    "2023-06 - 2024-02": [
+      "2023-06-01",
+      "2024-03-01"
+    ],
+    "": [
+      null,
+      null
+    ],
+    "  ": [
+      null,
+      null
+    ],
+    "garbage": [
+      null,
+      null
+    ],
+    "2024-Q5": [
+      null,
+      null
+    ],
+    "2020-02": [
+      "2020-02-01",
+      "2020-03-01"
+    ],
+    "2020-02-29": [
+      "2020-02-29",
+      "2020-03-01"
+    ]
+  }
+}

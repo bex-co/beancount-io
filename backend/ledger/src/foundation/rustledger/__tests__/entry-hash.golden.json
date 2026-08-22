@@ -1,0 +1,642 @@
+{
+  "cases": [
+    {
+      "name": "simple_txn",
+      "source": "2024-01-15 * \"Employer\" \"Salary\"\n  Assets:Checking   3000.00 USD\n  Income:Salary    -3000.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "transaction",
+            "date": "2024-01-15",
+            "flag": "*",
+            "payee": "Employer",
+            "narration": "Salary",
+            "tags": [],
+            "links": [],
+            "postings": [
+              {
+                "account": "Assets:Checking",
+                "units": {
+                  "number": "3000.00",
+                  "currency": "USD"
+                }
+              },
+              {
+                "account": "Income:Salary",
+                "units": {
+                  "number": "-3000.00",
+                  "currency": "USD"
+                }
+              }
+            ]
+          },
+          "expectedHash": "3f170b1cc95b4d3fcadebd16097f016e",
+          "beancountType": "Transaction"
+        }
+      ]
+    },
+    {
+      "name": "txn_tags_links_meta",
+      "source": "2024-01-20 * \"Store\" \"Groceries\" #food #grocery ^ref-1 ^ref-2\n  key1: \"value1\"\n  Assets:Checking    -50.00 USD\n    posting-key: \"pv\"\n  Expenses:Food       50.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "transaction",
+            "date": "2024-01-20",
+            "flag": "*",
+            "payee": "Store",
+            "narration": "Groceries",
+            "tags": [
+              "food",
+              "grocery"
+            ],
+            "links": [
+              "ref-1",
+              "ref-2"
+            ],
+            "postings": [
+              {
+                "account": "Assets:Checking",
+                "units": {
+                  "number": "-50.00",
+                  "currency": "USD"
+                },
+                "meta": {
+                  "posting-key": "pv"
+                }
+              },
+              {
+                "account": "Expenses:Food",
+                "units": {
+                  "number": "50.00",
+                  "currency": "USD"
+                }
+              }
+            ],
+            "meta": {
+              "key1": "value1"
+            }
+          },
+          "expectedHash": "231b9e27bbceb21239cedd895da335aa",
+          "beancountType": "Transaction"
+        }
+      ]
+    },
+    {
+      "name": "txn_cost",
+      "source": "2024-02-01 * \"Broker\" \"Buy stock\"\n  Assets:Stocks    10 HOOL {100.00 USD}\n  Assets:Cash   -1000.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "transaction",
+            "date": "2024-02-01",
+            "flag": "*",
+            "payee": "Broker",
+            "narration": "Buy stock",
+            "tags": [],
+            "links": [],
+            "postings": [
+              {
+                "account": "Assets:Stocks",
+                "units": {
+                  "number": "10",
+                  "currency": "HOOL"
+                },
+                "cost": {
+                  "number": {
+                    "kind": "per_unit",
+                    "value": "100.00"
+                  },
+                  "currency": "USD",
+                  "date": "2024-02-01"
+                }
+              },
+              {
+                "account": "Assets:Cash",
+                "units": {
+                  "number": "-1000.00",
+                  "currency": "USD"
+                }
+              }
+            ]
+          },
+          "expectedHash": "75630bf33f9e7d5239b15aae198a6653",
+          "beancountType": "Transaction"
+        }
+      ]
+    },
+    {
+      "name": "txn_cost_label",
+      "source": "2024-02-01 * \"Broker\" \"Buy\"\n  Assets:Stocks    10 HOOL {100.00 USD, \"lot-a\"}\n  Assets:Cash   -1000.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "transaction",
+            "date": "2024-02-01",
+            "flag": "*",
+            "payee": "Broker",
+            "narration": "Buy",
+            "tags": [],
+            "links": [],
+            "postings": [
+              {
+                "account": "Assets:Stocks",
+                "units": {
+                  "number": "10",
+                  "currency": "HOOL"
+                },
+                "cost": {
+                  "number": {
+                    "kind": "per_unit",
+                    "value": "100.00"
+                  },
+                  "currency": "USD",
+                  "date": "2024-02-01",
+                  "label": "lot-a"
+                }
+              },
+              {
+                "account": "Assets:Cash",
+                "units": {
+                  "number": "-1000.00",
+                  "currency": "USD"
+                }
+              }
+            ]
+          },
+          "expectedHash": "73b4dce3a9b921b8ee2b1f1876874a98",
+          "beancountType": "Transaction"
+        }
+      ]
+    },
+    {
+      "name": "txn_price_anno",
+      "source": "2024-02-01 * \"Broker\" \"Buy\"\n  Assets:Stocks    10 HOOL @ 100.00 USD\n  Assets:Cash   -1000.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "transaction",
+            "date": "2024-02-01",
+            "flag": "*",
+            "payee": "Broker",
+            "narration": "Buy",
+            "tags": [],
+            "links": [],
+            "postings": [
+              {
+                "account": "Assets:Stocks",
+                "units": {
+                  "number": "10",
+                  "currency": "HOOL"
+                },
+                "price": {
+                  "number": "100.00",
+                  "currency": "USD"
+                }
+              },
+              {
+                "account": "Assets:Cash",
+                "units": {
+                  "number": "-1000.00",
+                  "currency": "USD"
+                }
+              }
+            ]
+          },
+          "expectedHash": "f70031c67b77f3aba597bfc5f6829328",
+          "beancountType": "Transaction"
+        }
+      ]
+    },
+    {
+      "name": "txn_posting_flag",
+      "source": "2024-02-01 * \"Broker\" \"Buy\"\n  ! Assets:Stocks    10 HOOL\n  Assets:Cash   -1000.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "transaction",
+            "date": "2024-02-01",
+            "flag": "*",
+            "payee": "Broker",
+            "narration": "Buy",
+            "tags": [],
+            "links": [],
+            "postings": [
+              {
+                "account": "Assets:Stocks",
+                "units": {
+                  "number": "10",
+                  "currency": "HOOL"
+                },
+                "flag": "!"
+              },
+              {
+                "account": "Assets:Cash",
+                "units": {
+                  "number": "-1000.00",
+                  "currency": "USD"
+                }
+              }
+            ]
+          },
+          "expectedHash": "04414025038d2a667973a1a27a217e7c",
+          "beancountType": "Transaction"
+        }
+      ]
+    },
+    {
+      "name": "txn_no_payee",
+      "source": "2024-01-15 * \"Just narration\"\n  Assets:Checking   100.00 USD\n  Income:Salary    -100.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "transaction",
+            "date": "2024-01-15",
+            "flag": "*",
+            "narration": "Just narration",
+            "tags": [],
+            "links": [],
+            "postings": [
+              {
+                "account": "Assets:Checking",
+                "units": {
+                  "number": "100.00",
+                  "currency": "USD"
+                }
+              },
+              {
+                "account": "Income:Salary",
+                "units": {
+                  "number": "-100.00",
+                  "currency": "USD"
+                }
+              }
+            ]
+          },
+          "expectedHash": "cec363137a84114834d2fb6f8d8778d2",
+          "beancountType": "Transaction"
+        }
+      ]
+    },
+    {
+      "name": "txn_empty_narr",
+      "source": "2024-01-15 * \"Payee\" \"\"\n  Assets:Checking   100.00 USD\n  Income:Salary    -100.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "transaction",
+            "date": "2024-01-15",
+            "flag": "*",
+            "payee": "Payee",
+            "tags": [],
+            "links": [],
+            "postings": [
+              {
+                "account": "Assets:Checking",
+                "units": {
+                  "number": "100.00",
+                  "currency": "USD"
+                }
+              },
+              {
+                "account": "Income:Salary",
+                "units": {
+                  "number": "-100.00",
+                  "currency": "USD"
+                }
+              }
+            ]
+          },
+          "expectedHash": "acff3507734f183f6237a1a6d387cc5f",
+          "beancountType": "Transaction"
+        }
+      ]
+    },
+    {
+      "name": "txn_flag_bang",
+      "source": "2024-01-15 ! \"P\" \"N\"\n  Assets:Checking   100.00 USD\n  Income:Salary    -100.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "transaction",
+            "date": "2024-01-15",
+            "flag": "!",
+            "payee": "P",
+            "narration": "N",
+            "tags": [],
+            "links": [],
+            "postings": [
+              {
+                "account": "Assets:Checking",
+                "units": {
+                  "number": "100.00",
+                  "currency": "USD"
+                }
+              },
+              {
+                "account": "Income:Salary",
+                "units": {
+                  "number": "-100.00",
+                  "currency": "USD"
+                }
+              }
+            ]
+          },
+          "expectedHash": "6ee4a8406234d868fcc56bde1007f93f",
+          "beancountType": "Transaction"
+        }
+      ]
+    },
+    {
+      "name": "balance",
+      "source": "2024-01-01 open Assets:Checking USD\n2024-03-01 balance Assets:Checking   2950.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "open",
+            "date": "2024-01-01",
+            "account": "Assets:Checking",
+            "currencies": [
+              "USD"
+            ]
+          },
+          "expectedHash": "ecb7ac8f1c759bc9b667eedbdfd69f62",
+          "beancountType": "Open"
+        },
+        {
+          "directive": {
+            "type": "balance",
+            "date": "2024-03-01",
+            "account": "Assets:Checking",
+            "amount": {
+              "number": "2950.00",
+              "currency": "USD"
+            }
+          },
+          "expectedHash": "7f3b6454e14d80c0227c04a0ef1608c0",
+          "beancountType": "Balance"
+        }
+      ]
+    },
+    {
+      "name": "balance_tol",
+      "source": "2024-01-01 open Assets:Checking USD\n2024-03-01 balance Assets:Checking   2950.00 ~ 0.05 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "open",
+            "date": "2024-01-01",
+            "account": "Assets:Checking",
+            "currencies": [
+              "USD"
+            ]
+          },
+          "expectedHash": "ecb7ac8f1c759bc9b667eedbdfd69f62",
+          "beancountType": "Open"
+        },
+        {
+          "directive": {
+            "type": "balance",
+            "date": "2024-03-01",
+            "account": "Assets:Checking",
+            "amount": {
+              "number": "2950.00",
+              "currency": "USD"
+            },
+            "tolerance": "0.05"
+          },
+          "expectedHash": "93405cbd713df6bf0799db07bd05fbf2",
+          "beancountType": "Balance"
+        }
+      ]
+    },
+    {
+      "name": "open",
+      "source": "2024-01-01 open Assets:Checking USD,EUR\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "open",
+            "date": "2024-01-01",
+            "account": "Assets:Checking",
+            "currencies": [
+              "USD",
+              "EUR"
+            ]
+          },
+          "expectedHash": "202f7a3658060cf1818ada3eceefe03f",
+          "beancountType": "Open"
+        }
+      ]
+    },
+    {
+      "name": "price",
+      "source": "2024-02-15 price HOOL   120.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "price",
+            "date": "2024-02-15",
+            "currency": "HOOL",
+            "amount": {
+              "number": "120.00",
+              "currency": "USD"
+            }
+          },
+          "expectedHash": "76f51e8047c0333c38ce0e7ae793a1e0",
+          "beancountType": "Price"
+        }
+      ]
+    },
+    {
+      "name": "note",
+      "source": "2024-01-01 open Assets:Checking USD\n2024-01-05 note Assets:Checking \"Called bank\"\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "open",
+            "date": "2024-01-01",
+            "account": "Assets:Checking",
+            "currencies": [
+              "USD"
+            ]
+          },
+          "expectedHash": "ecb7ac8f1c759bc9b667eedbdfd69f62",
+          "beancountType": "Open"
+        },
+        {
+          "directive": {
+            "type": "note",
+            "date": "2024-01-05",
+            "account": "Assets:Checking",
+            "comment": "Called bank"
+          },
+          "expectedHash": "6400ac953feb0adcfa2ff25f1a35c4ef",
+          "beancountType": "Note"
+        }
+      ]
+    },
+    {
+      "name": "pad",
+      "source": "2024-01-01 open Assets:Checking USD\n2024-01-01 open Equity:Opening USD\n2024-01-02 pad Assets:Checking Equity:Opening\n2024-01-03 balance Assets:Checking 100.00 USD\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "open",
+            "date": "2024-01-01",
+            "account": "Assets:Checking",
+            "currencies": [
+              "USD"
+            ]
+          },
+          "expectedHash": "ecb7ac8f1c759bc9b667eedbdfd69f62",
+          "beancountType": "Open"
+        },
+        {
+          "directive": {
+            "type": "open",
+            "date": "2024-01-01",
+            "account": "Equity:Opening",
+            "currencies": [
+              "USD"
+            ]
+          },
+          "expectedHash": "1b704c6c92c2a000da5dcc5a334bbd18",
+          "beancountType": "Open"
+        },
+        {
+          "directive": {
+            "type": "pad",
+            "date": "2024-01-02",
+            "account": "Assets:Checking",
+            "source_account": "Equity:Opening"
+          },
+          "expectedHash": "f826d80c8787511bdf53c83f432967e3",
+          "beancountType": "Pad"
+        },
+        {
+          "directive": {
+            "type": "balance",
+            "date": "2024-01-03",
+            "account": "Assets:Checking",
+            "amount": {
+              "number": "100.00",
+              "currency": "USD"
+            }
+          },
+          "expectedHash": "a0c2ca78388679d129ec2d03726a4e96",
+          "beancountType": "Balance"
+        }
+      ]
+    },
+    {
+      "name": "event",
+      "source": "2024-01-01 event \"location\" \"New York\"\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "event",
+            "date": "2024-01-01",
+            "event_type": "location",
+            "value": "New York"
+          },
+          "expectedHash": "ad60d7355a1288c2abb33929f7d60c50",
+          "beancountType": "Event"
+        }
+      ]
+    },
+    {
+      "name": "commodity",
+      "source": "2024-01-01 commodity HOOL\n  name: \"Hooli Inc\"\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "commodity",
+            "date": "2024-01-01",
+            "currency": "HOOL",
+            "meta": {
+              "name": "Hooli Inc"
+            }
+          },
+          "expectedHash": "6fffd9d9ed1a2aa61c0b88e4e15ac54f",
+          "beancountType": "Commodity"
+        }
+      ]
+    },
+    {
+      "name": "close",
+      "source": "2024-01-01 open Assets:Checking USD\n2024-06-01 close Assets:Checking\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "open",
+            "date": "2024-01-01",
+            "account": "Assets:Checking",
+            "currencies": [
+              "USD"
+            ]
+          },
+          "expectedHash": "ecb7ac8f1c759bc9b667eedbdfd69f62",
+          "beancountType": "Open"
+        },
+        {
+          "directive": {
+            "type": "close",
+            "date": "2024-06-01",
+            "account": "Assets:Checking"
+          },
+          "expectedHash": "05f879479d6428975ceb4ed4f9f123de",
+          "beancountType": "Close"
+        }
+      ]
+    },
+    {
+      "name": "query",
+      "source": "2024-01-01 query \"income\" \"SELECT account, sum(position) WHERE account ~ 'Income'\"\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "query",
+            "date": "2024-01-01",
+            "name": "income",
+            "query_string": "SELECT account, sum(position) WHERE account ~ 'Income'"
+          },
+          "expectedHash": "8a6a30be17e0a0313e4d9dd82082ba31",
+          "beancountType": "Query"
+        }
+      ]
+    },
+    {
+      "name": "open_without_currencies",
+      "source": "2024-01-01 open Assets:X\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "open",
+            "date": "2024-01-01",
+            "account": "Assets:X",
+            "currencies": []
+          },
+          "expectedHash": "48f5a453423da9be2d05839251f20320",
+          "beancountType": "Open"
+        }
+      ]
+    },
+    {
+      "name": "document_without_tags_or_links",
+      "source": "2024-01-01 document Assets:X \"receipt.pdf\"\n",
+      "entries": [
+        {
+          "directive": {
+            "type": "document",
+            "date": "2024-01-01",
+            "account": "Assets:X",
+            "path": "receipt.pdf"
+          },
+          "expectedHash": "60856ec00df7c42d74dab4c6cc7ccc33",
+          "beancountType": "Document"
+        }
+      ]
+    }
+  ]
+}

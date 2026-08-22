@@ -1,0 +1,2714 @@
+{
+  "oracle": {
+    "commit": "29c97937bbba620f7a19e484987ddc244e96007d",
+    "service": "backend-cluster/beancount-ledger"
+  },
+  "responses": {
+    "getAccountJournal": {
+      "account": "Actifs:Cash",
+      "items": [
+        {
+          "balance": {
+            "USD": "1944.50"
+          },
+          "change": {
+            "USD": "-30"
+          },
+          "entry": {
+            "date": "2024-03-01",
+            "directive_type": "Transaction",
+            "entry_hash": "2e7ddc6129addc0c4ef35da5bacad174",
+            "flag": "*",
+            "links": [],
+            "meta": {
+              "filename": "books/2024.bean",
+              "lineno": 17
+            },
+            "narration": "Lunch again",
+            "payee": "Cafe",
+            "postings": [
+              {
+                "account": "Depenses:Food",
+                "cost": null,
+                "flag": null,
+                "meta": {
+                  "filename": "books/2024.bean",
+                  "lineno": 18
+                },
+                "price": null,
+                "units": {
+                  "currency": "USD",
+                  "number": "30"
+                }
+              },
+              {
+                "account": "Actifs:Cash",
+                "cost": null,
+                "flag": null,
+                "meta": {
+                  "filename": "books/2024.bean",
+                  "lineno": 19
+                },
+                "price": null,
+                "units": {
+                  "currency": "USD",
+                  "number": "-30"
+                }
+              }
+            ],
+            "tags": [
+              "food"
+            ]
+          }
+        },
+        {
+          "balance": {
+            "USD": "1974.50"
+          },
+          "change": {},
+          "entry": {
+            "account": "Actifs:Cash",
+            "date": "2024-02-20",
+            "directive_type": "Document",
+            "entry_hash": "468f235bada075b455ae7e3ef6a64780",
+            "filename": "receipts/lunch.pdf",
+            "links": [
+              "paper"
+            ],
+            "meta": {
+              "filename": "main.bean",
+              "lineno": 21
+            },
+            "tags": [
+              "receipt"
+            ]
+          }
+        },
+        {
+          "balance": {
+            "USD": "1974.50"
+          },
+          "change": {
+            "USD": "1200"
+          },
+          "entry": {
+            "date": "2024-02-15",
+            "directive_type": "Transaction",
+            "entry_hash": "47903b15836fff48e5b2ddcd78401c2e",
+            "flag": "*",
+            "links": [
+              "pay"
+            ],
+            "meta": {
+              "filename": "books/2024.bean",
+              "lineno": 13
+            },
+            "narration": "Salary new",
+            "payee": "Employer",
+            "postings": [
+              {
+                "account": "Actifs:Cash",
+                "cost": null,
+                "flag": null,
+                "meta": {
+                  "filename": "books/2024.bean",
+                  "lineno": 14
+                },
+                "price": null,
+                "units": {
+                  "currency": "USD",
+                  "number": "1200"
+                }
+              },
+              {
+                "account": "Revenus:Salary",
+                "cost": null,
+                "flag": null,
+                "meta": {
+                  "filename": "books/2024.bean",
+                  "lineno": 15
+                },
+                "price": null,
+                "units": {
+                  "currency": "USD",
+                  "number": "-1200"
+                }
+              }
+            ],
+            "tags": [
+              "work"
+            ]
+          }
+        },
+        {
+          "balance": {
+            "USD": "774.50"
+          },
+          "change": {
+            "USD": "-25.50"
+          },
+          "entry": {
+            "date": "2024-01-20",
+            "directive_type": "Transaction",
+            "entry_hash": "3ff3fac7160bbddcc8a83ae856ec4ed8",
+            "flag": "*",
+            "links": [],
+            "meta": {
+              "filename": "books/2024.bean",
+              "lineno": 9
+            },
+            "narration": "Lunch",
+            "payee": "Cafe",
+            "postings": [
+              {
+                "account": "Depenses:Food",
+                "cost": null,
+                "flag": null,
+                "meta": {
+                  "filename": "books/2024.bean",
+                  "lineno": 10
+                },
+                "price": null,
+                "units": {
+                  "currency": "USD",
+                  "number": "25.50"
+                }
+              },
+              {
+                "account": "Actifs:Cash",
+                "cost": null,
+                "flag": null,
+                "meta": {
+                  "filename": "books/2024.bean",
+                  "lineno": 11
+                },
+                "price": null,
+                "units": {
+                  "currency": "USD",
+                  "number": "-25.50"
+                }
+              }
+            ],
+            "tags": [
+              "food"
+            ]
+          }
+        },
+        {
+          "balance": {
+            "USD": "800.00"
+          },
+          "change": {
+            "USD": "-200"
+          },
+          "entry": {
+            "date": "2024-01-10",
+            "directive_type": "Transaction",
+            "entry_hash": "a270164d4dc703082cd60bdb420d51e0",
+            "flag": "*",
+            "links": [],
+            "meta": {
+              "filename": "books/2024.bean",
+              "lineno": 5
+            },
+            "narration": "Buy stock",
+            "payee": "Market",
+            "postings": [
+              {
+                "account": "Actifs:Brokerage",
+                "cost": {
+                  "currency": "USD",
+                  "date": "2024-01-10",
+                  "label": null,
+                  "number": "20"
+                },
+                "flag": null,
+                "meta": {
+                  "filename": "books/2024.bean",
+                  "lineno": 6
+                },
+                "price": null,
+                "units": {
+                  "currency": "HOOL",
+                  "number": "10"
+                }
+              },
+              {
+                "account": "Actifs:Cash",
+                "cost": null,
+                "flag": null,
+                "meta": {
+                  "filename": "books/2024.bean",
+                  "lineno": 7
+                },
+                "price": null,
+                "units": {
+                  "currency": "USD",
+                  "number": "-200"
+                }
+              }
+            ],
+            "tags": []
+          }
+        },
+        {
+          "balance": {
+            "USD": "1000.00"
+          },
+          "change": {
+            "USD": "1000.00"
+          },
+          "entry": {
+            "date": "2023-12-31",
+            "directive_type": "Transaction",
+            "entry_hash": "7369114695a6bf9e6f25fd779fd5e5d0",
+            "flag": "S",
+            "links": [],
+            "meta": {
+              "filename": "<summarize>",
+              "lineno": 0
+            },
+            "narration": "Opening balance for 'Actifs:Cash' (Summarization)",
+            "payee": null,
+            "postings": [
+              {
+                "account": "Actifs:Cash",
+                "cost": null,
+                "flag": null,
+                "meta": null,
+                "price": null,
+                "units": {
+                  "currency": "USD",
+                  "number": "1000.00"
+                }
+              },
+              {
+                "account": "Capital:Opening-Balances",
+                "cost": null,
+                "flag": null,
+                "meta": null,
+                "price": null,
+                "units": {
+                  "currency": "USD",
+                  "number": "-1000.00"
+                }
+              }
+            ],
+            "tags": []
+          }
+        },
+        {
+          "balance": {},
+          "change": {},
+          "entry": {
+            "account": "Actifs:Cash",
+            "booking": null,
+            "currencies": [
+              "USD"
+            ],
+            "date": "2000-01-01",
+            "directive_type": "Open",
+            "entry_hash": "fe96de960b84a2a6dd03095cf155b014",
+            "meta": {
+              "filename": "main.bean",
+              "lineno": 11
+            }
+          }
+        }
+      ],
+      "total": 7,
+      "with_children": true
+    },
+    "getJournal": {
+      "is_empty": false,
+      "items": [
+        {
+          "date": "2024-03-01",
+          "directive_type": "Transaction",
+          "entry_hash": "2e7ddc6129addc0c4ef35da5bacad174",
+          "flag": "*",
+          "links": [],
+          "meta": {
+            "filename": "books/2024.bean",
+            "lineno": 17
+          },
+          "narration": "Lunch again",
+          "payee": "Cafe",
+          "postings": [
+            {
+              "account": "Depenses:Food",
+              "cost": null,
+              "flag": null,
+              "meta": {
+                "filename": "books/2024.bean",
+                "lineno": 18
+              },
+              "price": null,
+              "units": {
+                "currency": "USD",
+                "number": "30"
+              }
+            },
+            {
+              "account": "Actifs:Cash",
+              "cost": null,
+              "flag": null,
+              "meta": {
+                "filename": "books/2024.bean",
+                "lineno": 19
+              },
+              "price": null,
+              "units": {
+                "currency": "USD",
+                "number": "-30"
+              }
+            }
+          ],
+          "tags": [
+            "food"
+          ]
+        },
+        {
+          "account": "Actifs:Cash",
+          "date": "2024-02-20",
+          "directive_type": "Document",
+          "entry_hash": "468f235bada075b455ae7e3ef6a64780",
+          "filename": "receipts/lunch.pdf",
+          "links": [
+            "paper"
+          ],
+          "meta": {
+            "filename": "main.bean",
+            "lineno": 21
+          },
+          "tags": [
+            "receipt"
+          ]
+        },
+        {
+          "date": "2024-02-15",
+          "directive_type": "Transaction",
+          "entry_hash": "47903b15836fff48e5b2ddcd78401c2e",
+          "flag": "*",
+          "links": [
+            "pay"
+          ],
+          "meta": {
+            "filename": "books/2024.bean",
+            "lineno": 13
+          },
+          "narration": "Salary new",
+          "payee": "Employer",
+          "postings": [
+            {
+              "account": "Actifs:Cash",
+              "cost": null,
+              "flag": null,
+              "meta": {
+                "filename": "books/2024.bean",
+                "lineno": 14
+              },
+              "price": null,
+              "units": {
+                "currency": "USD",
+                "number": "1200"
+              }
+            },
+            {
+              "account": "Revenus:Salary",
+              "cost": null,
+              "flag": null,
+              "meta": {
+                "filename": "books/2024.bean",
+                "lineno": 15
+              },
+              "price": null,
+              "units": {
+                "currency": "USD",
+                "number": "-1200"
+              }
+            }
+          ],
+          "tags": [
+            "work"
+          ]
+        },
+        {
+          "date": "2024-02-10",
+          "description": "Paris",
+          "directive_type": "Event",
+          "entry_hash": "69ee5721ca396fdfea907b22f656caf5",
+          "meta": {
+            "filename": "main.bean",
+            "lineno": 20
+          },
+          "type": "location"
+        },
+        {
+          "amount": {
+            "currency": "USD",
+            "number": "30"
+          },
+          "currency": "HOOL",
+          "date": "2024-02-01",
+          "directive_type": "Price",
+          "entry_hash": "d28c3056b45a1fe3281ad7fa3ecc1a9f",
+          "meta": {
+            "filename": "main.bean",
+            "lineno": 18
+          }
+        },
+        {
+          "date": "2024-01-20",
+          "directive_type": "Transaction",
+          "entry_hash": "3ff3fac7160bbddcc8a83ae856ec4ed8",
+          "flag": "*",
+          "links": [],
+          "meta": {
+            "filename": "books/2024.bean",
+            "lineno": 9
+          },
+          "narration": "Lunch",
+          "payee": "Cafe",
+          "postings": [
+            {
+              "account": "Depenses:Food",
+              "cost": null,
+              "flag": null,
+              "meta": {
+                "filename": "books/2024.bean",
+                "lineno": 10
+              },
+              "price": null,
+              "units": {
+                "currency": "USD",
+                "number": "25.50"
+              }
+            },
+            {
+              "account": "Actifs:Cash",
+              "cost": null,
+              "flag": null,
+              "meta": {
+                "filename": "books/2024.bean",
+                "lineno": 11
+              },
+              "price": null,
+              "units": {
+                "currency": "USD",
+                "number": "-25.50"
+              }
+            }
+          ],
+          "tags": [
+            "food"
+          ]
+        },
+        {
+          "date": "2024-01-10",
+          "directive_type": "Transaction",
+          "entry_hash": "a270164d4dc703082cd60bdb420d51e0",
+          "flag": "*",
+          "links": [],
+          "meta": {
+            "filename": "books/2024.bean",
+            "lineno": 5
+          },
+          "narration": "Buy stock",
+          "payee": "Market",
+          "postings": [
+            {
+              "account": "Actifs:Brokerage",
+              "cost": {
+                "currency": "USD",
+                "date": "2024-01-10",
+                "label": null,
+                "number": "20"
+              },
+              "flag": null,
+              "meta": {
+                "filename": "books/2024.bean",
+                "lineno": 6
+              },
+              "price": null,
+              "units": {
+                "currency": "HOOL",
+                "number": "10"
+              }
+            },
+            {
+              "account": "Actifs:Cash",
+              "cost": null,
+              "flag": null,
+              "meta": {
+                "filename": "books/2024.bean",
+                "lineno": 7
+              },
+              "price": null,
+              "units": {
+                "currency": "USD",
+                "number": "-200"
+              }
+            }
+          ],
+          "tags": []
+        },
+        {
+          "account": "Depenses:Food",
+          "booking": null,
+          "currencies": [
+            "USD"
+          ],
+          "date": "2000-01-01",
+          "directive_type": "Open",
+          "entry_hash": "a1c6a4885f4e78cdae066a3ed46b1e7b",
+          "meta": {
+            "filename": "main.bean",
+            "lineno": 16
+          }
+        },
+        {
+          "account": "Revenus:Salary",
+          "booking": null,
+          "currencies": [
+            "USD"
+          ],
+          "date": "2000-01-01",
+          "directive_type": "Open",
+          "entry_hash": "1ed85f85f054f833eee1e2bc631952fc",
+          "meta": {
+            "filename": "main.bean",
+            "lineno": 15
+          }
+        },
+        {
+          "account": "Capital:Opening",
+          "booking": null,
+          "currencies": [
+            "USD"
+          ],
+          "date": "2000-01-01",
+          "directive_type": "Open",
+          "entry_hash": "954735961b6ac352741ea02bb6a59a2e",
+          "meta": {
+            "filename": "main.bean",
+            "lineno": 14
+          }
+        },
+        {
+          "account": "Dettes:Card",
+          "booking": null,
+          "currencies": [
+            "USD"
+          ],
+          "date": "2000-01-01",
+          "directive_type": "Open",
+          "entry_hash": "c167f636a10db640f8256b3569d13473",
+          "meta": {
+            "filename": "main.bean",
+            "lineno": 13
+          }
+        },
+        {
+          "account": "Actifs:Brokerage",
+          "booking": null,
+          "currencies": [
+            "USD",
+            "HOOL"
+          ],
+          "date": "2000-01-01",
+          "directive_type": "Open",
+          "entry_hash": "c9d32d22305d9fa3a9f59691e9062e04",
+          "meta": {
+            "filename": "main.bean",
+            "lineno": 12
+          }
+        },
+        {
+          "account": "Actifs:Cash",
+          "booking": null,
+          "currencies": [
+            "USD"
+          ],
+          "date": "2000-01-01",
+          "directive_type": "Open",
+          "entry_hash": "fe96de960b84a2a6dd03095cf155b014",
+          "meta": {
+            "filename": "main.bean",
+            "lineno": 11
+          }
+        }
+      ],
+      "total": 13
+    },
+    "getLedgerAccountLastEntries": [
+      {
+        "account": "Actifs:Cash",
+        "balance": {
+          "USD": "1944.50"
+        },
+        "date": "2024-03-01"
+      },
+      {
+        "account": "Actifs:Brokerage",
+        "balance": {
+          "HOOL": "10"
+        },
+        "date": "2024-01-10"
+      },
+      {
+        "account": "Dettes:Card",
+        "balance": {},
+        "date": "2000-01-01"
+      }
+    ],
+    "getLedgerAccountReport": {
+      "account_balance_data": [
+        {
+          "balance": {
+            "HOOL": "10",
+            "USD": "774.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "2274.50"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-12-31"
+        }
+      ],
+      "interval_totals_data": [
+        {
+          "balance": {
+            "HOOL": "10",
+            "USD": "-225.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "1200"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "-30"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-12-31"
+        }
+      ],
+      "linechart_data": [
+        {
+          "balance": {
+            "USD": "1000.00"
+          },
+          "date": "2023-12-31"
+        },
+        {
+          "balance": {
+            "HOOL": "10",
+            "USD": "800.00"
+          },
+          "date": "2024-01-10"
+        },
+        {
+          "balance": {
+            "HOOL": "10",
+            "USD": "774.50"
+          },
+          "date": "2024-01-20"
+        },
+        {
+          "balance": {
+            "HOOL": "0",
+            "USD": "2274.50"
+          },
+          "date": "2024-02-15"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-03-01"
+        }
+      ]
+    },
+    "getLedgerAccounts": {
+      "Actifs:Brokerage": {
+        "balance_string": null,
+        "close_date": null,
+        "last_entry": {
+          "date": "2024-01-10",
+          "entry_hash": "a270164d4dc703082cd60bdb420d51e0"
+        },
+        "meta": {
+          "filename": "main.bean",
+          "lineno": 12
+        },
+        "uptodate_status": null
+      },
+      "Actifs:Cash": {
+        "balance_string": null,
+        "close_date": null,
+        "last_entry": {
+          "date": "2024-03-01",
+          "entry_hash": "2e7ddc6129addc0c4ef35da5bacad174"
+        },
+        "meta": {
+          "filename": "main.bean",
+          "lineno": 11
+        },
+        "uptodate_status": null
+      },
+      "Capital:Opening": {
+        "balance_string": null,
+        "close_date": null,
+        "last_entry": {
+          "date": "2000-01-01",
+          "entry_hash": "954735961b6ac352741ea02bb6a59a2e"
+        },
+        "meta": {
+          "filename": "main.bean",
+          "lineno": 14
+        },
+        "uptodate_status": null
+      },
+      "Depenses:Food": {
+        "balance_string": null,
+        "close_date": null,
+        "last_entry": {
+          "date": "2024-03-01",
+          "entry_hash": "2e7ddc6129addc0c4ef35da5bacad174"
+        },
+        "meta": {
+          "filename": "main.bean",
+          "lineno": 16
+        },
+        "uptodate_status": null
+      },
+      "Dettes:Card": {
+        "balance_string": null,
+        "close_date": null,
+        "last_entry": {
+          "date": "2000-01-01",
+          "entry_hash": "c167f636a10db640f8256b3569d13473"
+        },
+        "meta": {
+          "filename": "main.bean",
+          "lineno": 13
+        },
+        "uptodate_status": null
+      },
+      "Revenus:Salary": {
+        "balance_string": null,
+        "close_date": null,
+        "last_entry": {
+          "date": "2024-02-15",
+          "entry_hash": "47903b15836fff48e5b2ddcd78401c2e"
+        },
+        "meta": {
+          "filename": "main.bean",
+          "lineno": 15
+        },
+        "uptodate_status": null
+      }
+    },
+    "getLedgerAttributes": {
+      "accounts": [
+        "Actifs:Cash",
+        "Depenses:Food",
+        "Revenus:Salary",
+        "Actifs:Brokerage",
+        "Capital:Opening",
+        "Dettes:Card"
+      ],
+      "currencies": [
+        "USD",
+        "HOOL"
+      ],
+      "links": [
+        "paper",
+        "pay"
+      ],
+      "payees": [
+        "Cafe",
+        "Employer",
+        "Market"
+      ],
+      "tags": [
+        "food",
+        "receipt",
+        "work"
+      ],
+      "years": [
+        "2024",
+        "2023",
+        "2000"
+      ]
+    },
+    "getLedgerBalanceSheet": {
+      "assets_data": [
+        {
+          "balance": {
+            "HOOL": "10",
+            "USD": "774.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "2274.50"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-12-31"
+        }
+      ],
+      "assets_hierarchy_data": {
+        "account": "Actifs",
+        "balance": {},
+        "balance_children": {
+          "USD": "2244.50"
+        },
+        "children": [
+          {
+            "account": "Actifs:Brokerage",
+            "balance": {
+              "USD": "300"
+            },
+            "balance_children": {
+              "USD": "300"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          },
+          {
+            "account": "Actifs:Cash",
+            "balance": {
+              "USD": "1944.50"
+            },
+            "balance_children": {
+              "USD": "1944.50"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "equity_data": [
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {
+            "USD": "-1000.00"
+          },
+          "date": "2024-12-31"
+        }
+      ],
+      "equity_hierarchy_data": {
+        "account": "Capital",
+        "balance": {},
+        "balance_children": {
+          "USD": "-1000.00"
+        },
+        "children": [
+          {
+            "account": "Capital:Earnings",
+            "balance": {},
+            "balance_children": {
+              "USD": "-1000.00"
+            },
+            "children": [
+              {
+                "account": "Capital:Earnings:Previous",
+                "balance": {
+                  "USD": "-1000.00"
+                },
+                "balance_children": {
+                  "USD": "-1000.00"
+                },
+                "children": [],
+                "cost": null,
+                "cost_children": null,
+                "has_txns": true
+              }
+            ],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": false
+          },
+          {
+            "account": "Capital:Opening",
+            "balance": {},
+            "balance_children": {},
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": false
+          },
+          {
+            "account": "Capital:Opening-Balances",
+            "balance": {},
+            "balance_children": {},
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "liabilities_data": [
+        {
+          "balance": {},
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {},
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-12-31"
+        }
+      ],
+      "liabilities_hierarchy_data": {
+        "account": "Dettes",
+        "balance": {},
+        "balance_children": {},
+        "children": [
+          {
+            "account": "Dettes:Card",
+            "balance": {},
+            "balance_children": {},
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": false
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "net_worth_data": [
+        {
+          "balance": {
+            "HOOL": "10",
+            "USD": "774.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "2274.50"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-12-31"
+        }
+      ]
+    },
+    "getLedgerBcioOptions": {
+      "account_file": null,
+      "balance_file": null,
+      "budget_file": null,
+      "default_file": "main.bean",
+      "document_file": null,
+      "note_file": null,
+      "pad_file": null,
+      "price_file": null,
+      "receipt_base_folder": null,
+      "receipt_storage": null,
+      "transaction_file": null
+    },
+    "getLedgerCommodities": [
+      {
+        "base": "HOOL",
+        "prices": [
+          {
+            "date": "2024-02-01",
+            "value": "30"
+          }
+        ],
+        "quote": "USD"
+      }
+    ],
+    "getLedgerCurrencies": [
+      "USD",
+      "HOOL"
+    ],
+    "getLedgerDocuments": [
+      {
+        "account": "Actifs:Cash",
+        "date": "2024-02-20",
+        "filename": "receipts/lunch.pdf",
+        "links": [
+          "paper"
+        ],
+        "meta": {},
+        "tags": [
+          "receipt"
+        ]
+      }
+    ],
+    "getLedgerEntriesCountPerType": [
+      {
+        "number": 0,
+        "type": "Balance"
+      },
+      {
+        "number": 0,
+        "type": "Close"
+      },
+      {
+        "number": 0,
+        "type": "Commodity"
+      },
+      {
+        "number": 0,
+        "type": "Custom"
+      },
+      {
+        "number": 1,
+        "type": "Document"
+      },
+      {
+        "number": 1,
+        "type": "Event"
+      },
+      {
+        "number": 0,
+        "type": "Note"
+      },
+      {
+        "number": 6,
+        "type": "Open"
+      },
+      {
+        "number": 0,
+        "type": "Pad"
+      },
+      {
+        "number": 1,
+        "type": "Price"
+      },
+      {
+        "number": 0,
+        "type": "Query"
+      },
+      {
+        "number": 6,
+        "type": "Transaction"
+      }
+    ],
+    "getLedgerErrors": [],
+    "getLedgerEvents": [
+      {
+        "date": "2024-02-10",
+        "description": "Paris",
+        "type": "location"
+      }
+    ],
+    "getLedgerFavaOptions": {
+      "account_journal_include_children": true,
+      "auto_reload": false,
+      "collapse_pattern": [],
+      "conversion_currencies": [],
+      "currency_column": 61,
+      "default_page": "income_statement/",
+      "fiscal_year_end": {
+        "day": 31,
+        "month": 12
+      },
+      "indent": 2,
+      "invert_income_liabilities_equity": false,
+      "language": null,
+      "locale": null,
+      "show_accounts_with_zero_balance": true,
+      "show_accounts_with_zero_transactions": true,
+      "show_closed_accounts": false,
+      "sidebar_show_queries": 5,
+      "unrealized": "Unrealized",
+      "upcoming_events": 7,
+      "uptodate_indicator_grey_lookback_days": 60,
+      "use_external_editor": false
+    },
+    "getLedgerHierarchy": {
+      "account": "Actifs",
+      "balance": {},
+      "balance_children": {
+        "USD": "2244.50"
+      },
+      "children": [
+        {
+          "account": "Actifs:Brokerage",
+          "balance": {
+            "USD": "300"
+          },
+          "balance_children": {
+            "USD": "300"
+          },
+          "children": [],
+          "cost": null,
+          "cost_children": null,
+          "has_txns": true
+        },
+        {
+          "account": "Actifs:Cash",
+          "balance": {
+            "USD": "1944.50"
+          },
+          "balance_children": {
+            "USD": "1944.50"
+          },
+          "children": [],
+          "cost": null,
+          "cost_children": null,
+          "has_txns": true
+        }
+      ],
+      "cost": null,
+      "cost_children": null,
+      "has_txns": false
+    },
+    "getLedgerIncomeStatement": {
+      "expenses_data": [
+        {
+          "account_balances": {
+            "Depenses:Food": {
+              "USD": "25.50"
+            }
+          },
+          "balance": {
+            "USD": "25.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-02-29"
+        },
+        {
+          "account_balances": {
+            "Depenses:Food": {
+              "USD": "30"
+            }
+          },
+          "balance": {
+            "USD": "30"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-04-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-05-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-06-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-07-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-08-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-09-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-10-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-11-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-12-31"
+        }
+      ],
+      "expenses_hierarchy_data": {
+        "account": "Depenses",
+        "balance": {},
+        "balance_children": {
+          "USD": "55.50"
+        },
+        "children": [
+          {
+            "account": "Depenses:Food",
+            "balance": {
+              "USD": "55.50"
+            },
+            "balance_children": {
+              "USD": "55.50"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "income_data": [
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-01-31"
+        },
+        {
+          "account_balances": {
+            "Revenus:Salary": {
+              "USD": "-1200"
+            }
+          },
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-03-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-04-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-05-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-06-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-07-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-08-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-09-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-10-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-11-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-12-31"
+        }
+      ],
+      "income_hierarchy_data": {
+        "account": "Revenus",
+        "balance": {},
+        "balance_children": {
+          "USD": "-1200"
+        },
+        "children": [
+          {
+            "account": "Revenus:Salary",
+            "balance": {
+              "USD": "-1200"
+            },
+            "balance_children": {
+              "USD": "-1200"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "net_profit_data": [
+        {
+          "balance": {
+            "USD": "25.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "30"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-12-31"
+        }
+      ]
+    },
+    "getLedgerIntervalTotals": [
+      {
+        "account_balances": {
+          "Depenses:Food": {
+            "USD": "25.50"
+          }
+        },
+        "balance": {
+          "USD": "25.50"
+        },
+        "date": "2024-01-31"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-02-29"
+      },
+      {
+        "account_balances": {
+          "Depenses:Food": {
+            "USD": "30"
+          }
+        },
+        "balance": {
+          "USD": "30"
+        },
+        "date": "2024-03-31"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-04-30"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-05-31"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-06-30"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-07-31"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-08-31"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-09-30"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-10-31"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-11-30"
+      },
+      {
+        "account_balances": {},
+        "balance": {},
+        "date": "2024-12-31"
+      }
+    ],
+    "getLedgerLinks": [
+      "paper",
+      "pay"
+    ],
+    "getLedgerNarrationTransactions": {
+      "date": "2024-01-20",
+      "narration": "Lunch",
+      "payee": "Cafe",
+      "postings": [
+        {
+          "account": "Depenses:Food",
+          "amount": "25.50",
+          "commodity": "USD",
+          "price": null
+        },
+        {
+          "account": "Actifs:Cash",
+          "amount": "-25.50",
+          "commodity": "USD",
+          "price": null
+        }
+      ]
+    },
+    "getLedgerNarrations": [
+      "Lunch again",
+      "Salary new",
+      "Lunch",
+      "Buy stock",
+      "Salary old"
+    ],
+    "getLedgerOptions": {
+      "account_current_conversions": "Conversions:Current",
+      "account_current_earnings": "Earnings:Current",
+      "name_assets": "Actifs",
+      "name_equity": "Capital",
+      "name_expenses": "Depenses",
+      "name_income": "Revenus",
+      "name_liabilities": "Dettes",
+      "operating_currency": [
+        "USD"
+      ],
+      "render_commas": true,
+      "title": "Rustledger shadow corpus"
+    },
+    "getLedgerOverview": {
+      "assets_data": [
+        {
+          "balance": {
+            "HOOL": "10",
+            "USD": "774.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "2274.50"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-12-31"
+        }
+      ],
+      "assets_hierarchy_data": {
+        "account": "Actifs",
+        "balance": {},
+        "balance_children": {
+          "USD": "2244.50"
+        },
+        "children": [
+          {
+            "account": "Actifs:Brokerage",
+            "balance": {
+              "USD": "300"
+            },
+            "balance_children": {
+              "USD": "300"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          },
+          {
+            "account": "Actifs:Cash",
+            "balance": {
+              "USD": "1944.50"
+            },
+            "balance_children": {
+              "USD": "1944.50"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "expenses_data": [
+        {
+          "balance": {
+            "USD": "25.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "25.50"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {
+            "USD": "55.50"
+          },
+          "date": "2024-12-31"
+        }
+      ],
+      "expenses_hierarchy_data": {
+        "account": "Depenses",
+        "balance": {},
+        "balance_children": {
+          "USD": "55.50"
+        },
+        "children": [
+          {
+            "account": "Depenses:Food",
+            "balance": {
+              "USD": "55.50"
+            },
+            "balance_children": {
+              "USD": "55.50"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "expenses_interval_data": [
+        {
+          "account_balances": {
+            "Depenses:Food": {
+              "USD": "25.50"
+            }
+          },
+          "balance": {
+            "USD": "25.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-02-29"
+        },
+        {
+          "account_balances": {
+            "Depenses:Food": {
+              "USD": "30"
+            }
+          },
+          "balance": {
+            "USD": "30"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-04-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-05-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-06-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-07-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-08-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-09-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-10-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-11-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-12-31"
+        }
+      ],
+      "income_data": [
+        {
+          "balance": {},
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-12-31"
+        }
+      ],
+      "income_hierarchy_data": {
+        "account": "Revenus",
+        "balance": {},
+        "balance_children": {
+          "USD": "-1200"
+        },
+        "children": [
+          {
+            "account": "Revenus:Salary",
+            "balance": {
+              "USD": "-1200"
+            },
+            "balance_children": {
+              "USD": "-1200"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "income_interval_data": [
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-01-31"
+        },
+        {
+          "account_balances": {
+            "Revenus:Salary": {
+              "USD": "-1200"
+            }
+          },
+          "balance": {
+            "USD": "-1200"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-03-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-04-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-05-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-06-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-07-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-08-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-09-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-10-31"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-11-30"
+        },
+        {
+          "account_balances": {},
+          "balance": {},
+          "date": "2024-12-31"
+        }
+      ],
+      "liabilities_data": [
+        {
+          "balance": {},
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {},
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {},
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {},
+          "date": "2024-12-31"
+        }
+      ],
+      "liabilities_hierarchy_data": {
+        "account": "Dettes",
+        "balance": {},
+        "balance_children": {},
+        "children": [
+          {
+            "account": "Dettes:Card",
+            "balance": {},
+            "balance_children": {},
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": false
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "net_worth_data": [
+        {
+          "balance": {
+            "HOOL": "10",
+            "USD": "774.50"
+          },
+          "date": "2024-01-31"
+        },
+        {
+          "balance": {
+            "USD": "2274.50"
+          },
+          "date": "2024-02-29"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-03-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-04-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-05-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-06-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-07-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-08-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-09-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-10-31"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-11-30"
+        },
+        {
+          "balance": {
+            "USD": "2244.50"
+          },
+          "date": "2024-12-31"
+        }
+      ]
+    },
+    "getLedgerPayeeAccounts": [
+      "Actifs:Cash",
+      "Depenses:Food",
+      "Revenus:Salary",
+      "Actifs:Brokerage",
+      "Capital:Opening",
+      "Dettes:Card"
+    ],
+    "getLedgerPayeeTransactions": {
+      "date": "2024-03-01",
+      "narration": "Lunch again",
+      "payee": "Cafe",
+      "postings": [
+        {
+          "account": "Depenses:Food",
+          "amount": "30",
+          "commodity": "USD",
+          "price": null
+        },
+        {
+          "account": "Actifs:Cash",
+          "amount": "-30",
+          "commodity": "USD",
+          "price": null
+        }
+      ]
+    },
+    "getLedgerPayees": [
+      "Cafe",
+      "Employer",
+      "Market"
+    ],
+    "getLedgerPlugins": [],
+    "getLedgerSourceFiles": [
+      "books/2023.bean",
+      "books/2024.bean",
+      "main.bean"
+    ],
+    "getLedgerTags": [
+      "food",
+      "receipt",
+      "work"
+    ],
+    "getLedgerTrialBalance": {
+      "assets_hierarchy_data": {
+        "account": "Actifs",
+        "balance": {},
+        "balance_children": {
+          "USD": "2244.50"
+        },
+        "children": [
+          {
+            "account": "Actifs:Brokerage",
+            "balance": {
+              "USD": "300"
+            },
+            "balance_children": {
+              "USD": "300"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          },
+          {
+            "account": "Actifs:Cash",
+            "balance": {
+              "USD": "1944.50"
+            },
+            "balance_children": {
+              "USD": "1944.50"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "equity_hierarchy_data": {
+        "account": "Capital",
+        "balance": {},
+        "balance_children": {
+          "USD": "-1000.00"
+        },
+        "children": [
+          {
+            "account": "Capital:Earnings",
+            "balance": {},
+            "balance_children": {
+              "USD": "-1000.00"
+            },
+            "children": [
+              {
+                "account": "Capital:Earnings:Previous",
+                "balance": {
+                  "USD": "-1000.00"
+                },
+                "balance_children": {
+                  "USD": "-1000.00"
+                },
+                "children": [],
+                "cost": null,
+                "cost_children": null,
+                "has_txns": true
+              }
+            ],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": false
+          },
+          {
+            "account": "Capital:Opening",
+            "balance": {},
+            "balance_children": {},
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": false
+          },
+          {
+            "account": "Capital:Opening-Balances",
+            "balance": {},
+            "balance_children": {},
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "expenses_hierarchy_data": {
+        "account": "Depenses",
+        "balance": {},
+        "balance_children": {
+          "USD": "55.50"
+        },
+        "children": [
+          {
+            "account": "Depenses:Food",
+            "balance": {
+              "USD": "55.50"
+            },
+            "balance_children": {
+              "USD": "55.50"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "income_hierarchy_data": {
+        "account": "Revenus",
+        "balance": {},
+        "balance_children": {
+          "USD": "-1200"
+        },
+        "children": [
+          {
+            "account": "Revenus:Salary",
+            "balance": {
+              "USD": "-1200"
+            },
+            "balance_children": {
+              "USD": "-1200"
+            },
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": true
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      },
+      "liabilities_hierarchy_data": {
+        "account": "Dettes",
+        "balance": {},
+        "balance_children": {},
+        "children": [
+          {
+            "account": "Dettes:Card",
+            "balance": {},
+            "balance_children": {},
+            "children": [],
+            "cost": null,
+            "cost_children": null,
+            "has_txns": false
+          }
+        ],
+        "cost": null,
+        "cost_children": null,
+        "has_txns": false
+      }
+    },
+    "getLedgerYears": [
+      "2024",
+      "2023",
+      "2000"
+    ],
+    "plaintextJournal": {
+      "content": ";; -*- mode: org; mode: beancount; -*-\n\noption \"title\" \"Rustledger shadow corpus - Journal Export\"\n\noption \"operating_currency\" \"USD\"\n\noption \"name_assets\" \"Actifs\"\noption \"name_liabilities\" \"Dettes\"\noption \"name_equity\" \"Capital\"\noption \"name_income\" \"Revenus\"\noption \"name_expenses\" \"Depenses\"\nplugin \"beancount.plugins.auto_accounts\"\n\n2024-01-10 * \"Market\" \"Buy stock\"\n  Actifs:Brokerage                                       10 HOOL {20 USD, 2024-01-10}\n  Actifs:Cash                                          -200 USD\n\n2024-01-20 * \"Cafe\" \"Lunch\" #food\n  Depenses:Food                                       25.50 USD\n  Actifs:Cash                                        -25.50 USD\n\n2024-02-15 * \"Employer\" \"Salary new\" #work ^pay\n  Actifs:Cash                                          1200 USD\n  Revenus:Salary                                      -1200 USD\n\n2024-03-01 * \"Cafe\" \"Lunch again\" #food\n  Depenses:Food                                          30 USD\n  Actifs:Cash                                           -30 USD\n\n"
+    },
+    "queryShell": {
+      "result": {
+        "rows": [
+          [
+            "2024-01-20",
+            "Depenses:Food",
+            "25.50"
+          ],
+          [
+            "2024-03-01",
+            "Depenses:Food",
+            "30"
+          ]
+        ],
+        "t": "table",
+        "types": [
+          {
+            "dtype": "date",
+            "name": "date"
+          },
+          {
+            "dtype": "str",
+            "name": "account"
+          },
+          {
+            "dtype": "Decimal",
+            "name": "number"
+          }
+        ]
+      }
+    },
+    "queryShellText": {
+      "text": "   date        account     numbe\n----------  -------------  -----\n2024-01-20  Depenses:Food  25.50\n2024-03-01  Depenses:Food  30   \n"
+    }
+  },
+  "schema_version": 1
+}

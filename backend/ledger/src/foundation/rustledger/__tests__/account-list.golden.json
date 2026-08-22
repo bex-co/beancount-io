@@ -1,0 +1,17 @@
+{
+  "_comment": "GOLDEN close_date + account SET captured from the REAL fava_api path: fava-slim's AccountsModule.load_file over beancount.loader.load_string entries, projected onto AccountDataPublic (server/app/schemas/report.py). Generated via backend-cluster/beancount-ledger/.venv/bin/python replicating load_file's Open-then-Close two-pass. Only the account keys + close_date are byte-exact vs. fava (the load-bearing outputs); meta/last_entry/uptodate_status/balance_string are best-effort per the account-list.ts ACCEPTED GAP note.",
+  "explicit": {
+    "Assets:Checking": { "close_date": null },
+    "Expenses:Food": { "close_date": null },
+    "Income:Salary": { "close_date": "2020-03-01" },
+    "Assets:Savings": { "close_date": "2021-01-01" }
+  },
+  "auto_accounts": {
+    "Assets:Checking": { "close_date": "2020-03-01" },
+    "Expenses:Food": { "close_date": null }
+  },
+  "close_no_open": {
+    "Assets:Checking": { "close_date": null },
+    "Assets:NeverOpened": { "close_date": "2020-05-01" }
+  }
+}

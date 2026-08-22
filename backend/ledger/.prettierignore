@@ -1,0 +1,13 @@
+# Generated clients — regenerate, never hand-edit or reformat
+src/features/gitea/client/gitea-api.ts
+
+# Golden fixtures captured byte-for-byte from the Python oracle
+*.golden.json
+scripts/rustledger-shadow/python-oracle.json
+
+dist
+coverage
+node_modules
+
+# Donor scripts kept byte-aligned with the rustledger-port branch
+scripts/

@@ -1,0 +1,674 @@
+{
+  "_comment": "Golden fixtures for journal-serialize.test.ts. rustledger = @rustledger/wasm getDirectives() output; pythonSerialized = fava-slim serialize_directive() output (Pydantic model_dump json); pythonPlaintext = fava.beans.str.to_string(entry,_indent=2). Both sides parse the SAME source below. Regenerate via scratchpad scripts jsz_dump/jsz_golden.",
+  "source": "option \"operating_currency\" \"USD\"\n\n2024-01-01 open Assets:Checking USD\n2024-01-01 open Income:Salary USD\n2024-01-01 open Expenses:Food USD\n2024-01-01 open Equity:Opening USD\n\n2024-01-05 commodity USD\n  name: \"US Dollar\"\n\n2024-01-08 balance Assets:Checking   0.00 USD\n\n2024-01-15 * \"Employer\" \"Salary\" #income ^ref-1\n  cleared: TRUE\n  Assets:Checking   3000.00 USD\n    posting-note: \"pay\"\n  Income:Salary    -3000.00 USD\n\n2024-01-20 ! \"Store\" \"Groceries\"\n  Assets:Checking    -50.00 USD\n  Expenses:Food       50.00 USD\n\n2024-01-21 txn \"Bank\" \"no-flag\"\n  Assets:Checking  -5.00 USD\n  Expenses:Food     5.00 USD\n\n2024-01-16 * \"Broker\" \"Buy stock\"\n  Assets:Broker    10 AAPL {150.00 USD, 2024-01-16, \"lot1\"}\n  Assets:Checking  -1500.00 USD\n\n2024-02-01 note Assets:Checking \"a note\"\n2024-02-02 event \"location\" \"Paris\"\n2024-02-03 price USD 0.85 EUR\n2024-02-04 document Assets:Checking \"statement.pdf\" #discovered\n2024-02-05 pad Assets:Checking Equity:Opening\n2024-02-06 custom \"budget\" Expenses:Food \"monthly\" 100.00 USD TRUE 2024-01-01\n2024-03-01 close Assets:Checking\n",
+  "rustledger": [
+    {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Assets:Checking",
+      "currencies": [
+        "USD"
+      ]
+    },
+    {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Income:Salary",
+      "currencies": [
+        "USD"
+      ]
+    },
+    {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Expenses:Food",
+      "currencies": [
+        "USD"
+      ]
+    },
+    {
+      "type": "open",
+      "date": "2024-01-01",
+      "account": "Equity:Opening",
+      "currencies": [
+        "USD"
+      ]
+    },
+    {
+      "type": "commodity",
+      "date": "2024-01-05",
+      "currency": "USD",
+      "meta": {
+        "name": "US Dollar"
+      }
+    },
+    {
+      "type": "balance",
+      "date": "2024-01-08",
+      "account": "Assets:Checking",
+      "amount": {
+        "number": "0.00",
+        "currency": "USD"
+      }
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-15",
+      "flag": "*",
+      "payee": "Employer",
+      "narration": "Salary",
+      "tags": [
+        "income"
+      ],
+      "links": [
+        "ref-1"
+      ],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "3000.00",
+            "currency": "USD"
+          },
+          "meta": {
+            "posting-note": "pay"
+          }
+        },
+        {
+          "account": "Income:Salary",
+          "units": {
+            "number": "-3000.00",
+            "currency": "USD"
+          }
+        }
+      ],
+      "meta": {
+        "cleared": true
+      }
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-16",
+      "flag": "*",
+      "payee": "Broker",
+      "narration": "Buy stock",
+      "tags": [],
+      "links": [],
+      "postings": [
+        {
+          "account": "Assets:Broker",
+          "units": {
+            "number": "10",
+            "currency": "AAPL"
+          },
+          "cost": {
+            "number": {
+              "kind": "per_unit",
+              "value": "150.00"
+            },
+            "currency": "USD",
+            "date": "2024-01-16",
+            "label": "lot1"
+          }
+        },
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "-1500.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-20",
+      "flag": "!",
+      "payee": "Store",
+      "narration": "Groceries",
+      "tags": [],
+      "links": [],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "-50.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "account": "Expenses:Food",
+          "units": {
+            "number": "50.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "transaction",
+      "date": "2024-01-21",
+      "flag": "*",
+      "payee": "Bank",
+      "narration": "no-flag",
+      "tags": [],
+      "links": [],
+      "postings": [
+        {
+          "account": "Assets:Checking",
+          "units": {
+            "number": "-5.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "account": "Expenses:Food",
+          "units": {
+            "number": "5.00",
+            "currency": "USD"
+          }
+        }
+      ]
+    },
+    {
+      "type": "note",
+      "date": "2024-02-01",
+      "account": "Assets:Checking",
+      "comment": "a note"
+    },
+    {
+      "type": "event",
+      "date": "2024-02-02",
+      "event_type": "location",
+      "value": "Paris"
+    },
+    {
+      "type": "price",
+      "date": "2024-02-03",
+      "currency": "USD",
+      "amount": {
+        "number": "0.85",
+        "currency": "EUR"
+      }
+    },
+    {
+      "type": "document",
+      "date": "2024-02-04",
+      "account": "Assets:Checking",
+      "path": "statement.pdf",
+      "tags": [
+        "discovered"
+      ]
+    },
+    {
+      "type": "pad",
+      "date": "2024-02-05",
+      "account": "Assets:Checking",
+      "source_account": "Equity:Opening"
+    },
+    {
+      "type": "custom",
+      "date": "2024-02-06",
+      "custom_type": "budget",
+      "values": [
+        {
+          "type": "account",
+          "value": "Expenses:Food"
+        },
+        {
+          "type": "string",
+          "value": "monthly"
+        },
+        {
+          "type": "amount",
+          "value": {
+            "number": "100.00",
+            "currency": "USD"
+          }
+        },
+        {
+          "type": "bool",
+          "value": true
+        },
+        {
+          "type": "date",
+          "value": "2024-01-01"
+        }
+      ]
+    },
+    {
+      "type": "close",
+      "date": "2024-03-01",
+      "account": "Assets:Checking"
+    }
+  ],
+  "pythonSerialized": [
+    {
+      "date": "2024-01-01",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 3
+      },
+      "entry_hash": "583fa02fbb20ef598fcbbb5859c7dbfb",
+      "directive_type": "Open",
+      "account": "Assets:Checking",
+      "currencies": [
+        "USD"
+      ],
+      "booking": null
+    },
+    {
+      "date": "2024-01-01",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 4
+      },
+      "entry_hash": "8324958eae06af342278a99baf29b53f",
+      "directive_type": "Open",
+      "account": "Income:Salary",
+      "currencies": [
+        "USD"
+      ],
+      "booking": null
+    },
+    {
+      "date": "2024-01-01",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 5
+      },
+      "entry_hash": "e48b02650722e45aae9d3bf30a628479",
+      "directive_type": "Open",
+      "account": "Expenses:Food",
+      "currencies": [
+        "USD"
+      ],
+      "booking": null
+    },
+    {
+      "date": "2024-01-01",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 6
+      },
+      "entry_hash": "542881994bc6cbbb6d29164c75c90274",
+      "directive_type": "Open",
+      "account": "Equity:Opening",
+      "currencies": [
+        "USD"
+      ],
+      "booking": null
+    },
+    {
+      "date": "2024-01-05",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 8,
+        "name": "US Dollar"
+      },
+      "entry_hash": "aeb985e94f09a9e0c78c29a05a0ffbe1",
+      "directive_type": "Commodity",
+      "currency": "USD"
+    },
+    {
+      "date": "2024-01-08",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 11
+      },
+      "entry_hash": "31f308e1da280c9b03ec65baa39906d3",
+      "directive_type": "Balance",
+      "account": "Assets:Checking",
+      "diff_amount": null
+    },
+    {
+      "date": "2024-01-15",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 13,
+        "cleared": true
+      },
+      "entry_hash": "cb99ea8d74226541ac5658fc1c201ca4",
+      "directive_type": "Transaction",
+      "flag": "*",
+      "payee": "Employer",
+      "narration": "Salary",
+      "postings": [
+        {
+          "units": {
+            "number": "3000.00",
+            "currency": "USD"
+          },
+          "cost": null,
+          "account": "Assets:Checking",
+          "price": null,
+          "meta": {
+            "filename": "<string>",
+            "lineno": 15,
+            "posting-note": "pay"
+          },
+          "flag": null
+        },
+        {
+          "units": {
+            "number": "-3000.00",
+            "currency": "USD"
+          },
+          "cost": null,
+          "account": "Income:Salary",
+          "price": null,
+          "meta": {
+            "filename": "<string>",
+            "lineno": 17
+          },
+          "flag": null
+        }
+      ],
+      "tags": [
+        "income"
+      ],
+      "links": [
+        "ref-1"
+      ]
+    },
+    {
+      "date": "2024-01-16",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 27
+      },
+      "entry_hash": "0a073cbe3a0d7006d3572850438934dd",
+      "directive_type": "Transaction",
+      "flag": "*",
+      "payee": "Broker",
+      "narration": "Buy stock",
+      "postings": [
+        {
+          "units": {
+            "number": "10",
+            "currency": "AAPL"
+          },
+          "cost": {
+            "number": "150.00",
+            "currency": "USD",
+            "date": "2024-01-16",
+            "label": "lot1"
+          },
+          "account": "Assets:Broker",
+          "price": null,
+          "meta": {
+            "filename": "<string>",
+            "lineno": 28
+          },
+          "flag": null
+        },
+        {
+          "units": {
+            "number": "-1500.00",
+            "currency": "USD"
+          },
+          "cost": null,
+          "account": "Assets:Checking",
+          "price": null,
+          "meta": {
+            "filename": "<string>",
+            "lineno": 29
+          },
+          "flag": null
+        }
+      ],
+      "tags": [],
+      "links": []
+    },
+    {
+      "date": "2024-01-20",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 19
+      },
+      "entry_hash": "e4a15724ae6947afb4016330a2da3fcf",
+      "directive_type": "Transaction",
+      "flag": "!",
+      "payee": "Store",
+      "narration": "Groceries",
+      "postings": [
+        {
+          "units": {
+            "number": "-50.00",
+            "currency": "USD"
+          },
+          "cost": null,
+          "account": "Assets:Checking",
+          "price": null,
+          "meta": {
+            "filename": "<string>",
+            "lineno": 20
+          },
+          "flag": null
+        },
+        {
+          "units": {
+            "number": "50.00",
+            "currency": "USD"
+          },
+          "cost": null,
+          "account": "Expenses:Food",
+          "price": null,
+          "meta": {
+            "filename": "<string>",
+            "lineno": 21
+          },
+          "flag": null
+        }
+      ],
+      "tags": [],
+      "links": []
+    },
+    {
+      "date": "2024-01-21",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 23
+      },
+      "entry_hash": "ec690294fa39635a1566ee3cd5ffccf4",
+      "directive_type": "Transaction",
+      "flag": "*",
+      "payee": "Bank",
+      "narration": "no-flag",
+      "postings": [
+        {
+          "units": {
+            "number": "-5.00",
+            "currency": "USD"
+          },
+          "cost": null,
+          "account": "Assets:Checking",
+          "price": null,
+          "meta": {
+            "filename": "<string>",
+            "lineno": 24
+          },
+          "flag": null
+        },
+        {
+          "units": {
+            "number": "5.00",
+            "currency": "USD"
+          },
+          "cost": null,
+          "account": "Expenses:Food",
+          "price": null,
+          "meta": {
+            "filename": "<string>",
+            "lineno": 25
+          },
+          "flag": null
+        }
+      ],
+      "tags": [],
+      "links": []
+    },
+    {
+      "date": "2024-02-01",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 31
+      },
+      "entry_hash": "4d839f220aa0bae90cbd5960bbde7f69",
+      "directive_type": "Note",
+      "account": "Assets:Checking",
+      "comment": "a note"
+    },
+    {
+      "date": "2024-02-02",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 32
+      },
+      "entry_hash": "3b19dfee24a911841032f5aab5cf1f1b",
+      "directive_type": "Event",
+      "type": "location",
+      "description": "Paris"
+    },
+    {
+      "date": "2024-02-03",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 33
+      },
+      "entry_hash": "70f8e24537a9e52d283efa01d86d32be",
+      "directive_type": "Price",
+      "currency": "USD",
+      "amount": {
+        "number": "0.85",
+        "currency": "EUR"
+      }
+    },
+    {
+      "date": "2024-02-04",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 34
+      },
+      "entry_hash": "9b4aa20e4c088041c262e9473f76192f",
+      "directive_type": "Document",
+      "filename": "/Users/tianpan/projects/web-beancount/backend-cluster/beancount-ledger/statement.pdf",
+      "account": "Assets:Checking",
+      "tags": [
+        "discovered"
+      ],
+      "links": []
+    },
+    {
+      "date": "2024-02-05",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 35
+      },
+      "entry_hash": "ef8178b9a6f0dbe4213689771db76815",
+      "directive_type": "Pad",
+      "account": "Assets:Checking",
+      "source_account": "Equity:Opening"
+    },
+    {
+      "date": "2024-02-06",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 36
+      },
+      "entry_hash": "1782f95c5f743203120d5f26026bdd9a",
+      "directive_type": "Custom",
+      "type": "budget",
+      "values": [
+        "Expenses:Food",
+        "monthly",
+        {
+          "number": "100.00",
+          "currency": "USD"
+        },
+        true,
+        "2024-01-01"
+      ]
+    },
+    {
+      "date": "2024-03-01",
+      "meta": {
+        "filename": "<string>",
+        "lineno": 37
+      },
+      "entry_hash": "bd3a12510c4413b3abf1eb45e7f6a428",
+      "directive_type": "Close",
+      "account": "Assets:Checking"
+    }
+  ],
+  "pythonPlaintext": [
+    {
+      "type": "Open",
+      "text": "2024-01-01 open Assets:Checking                                 USD\n"
+    },
+    {
+      "type": "Open",
+      "text": "2024-01-01 open Income:Salary                                   USD\n"
+    },
+    {
+      "type": "Open",
+      "text": "2024-01-01 open Expenses:Food                                   USD\n"
+    },
+    {
+      "type": "Open",
+      "text": "2024-01-01 open Equity:Opening                                  USD\n"
+    },
+    {
+      "type": "Commodity",
+      "text": "2024-01-05 commodity USD\n  name: \"US Dollar\"\n"
+    },
+    {
+      "type": "Balance",
+      "text": "2024-01-08 balance Assets:Checking                     0.00 USD\n"
+    },
+    {
+      "type": "Transaction",
+      "text": "2024-01-15 * \"Employer\" \"Salary\" #income ^ref-1\n  cleared: TRUE\n  Assets:Checking                                   3000.00 USD\n    posting-note: \"pay\"\n  Income:Salary                                    -3000.00 USD\n"
+    },
+    {
+      "type": "Transaction",
+      "text": "2024-01-16 * \"Broker\" \"Buy stock\"\n  Assets:Broker                                          10 AAPL {150.00 USD, 2024-01-16, \"lot1\"}\n  Assets:Checking                                  -1500.00 USD\n"
+    },
+    {
+      "type": "Transaction",
+      "text": "2024-01-20 ! \"Store\" \"Groceries\"\n  Assets:Checking                                    -50.00 USD\n  Expenses:Food                                       50.00 USD\n"
+    },
+    {
+      "type": "Transaction",
+      "text": "2024-01-21 * \"Bank\" \"no-flag\"\n  Assets:Checking                                     -5.00 USD\n  Expenses:Food                                        5.00 USD\n"
+    },
+    {
+      "type": "Note",
+      "text": "2024-02-01 note Assets:Checking \"a note\"\n"
+    },
+    {
+      "type": "Event",
+      "text": "2024-02-02 event \"location\" \"Paris\"\n"
+    },
+    {
+      "type": "Price",
+      "text": "2024-02-03 price USD                                   0.85 EUR\n"
+    },
+    {
+      "type": "Document",
+      "text": "2024-02-04 document Assets:Checking \"/Users/tianpan/projects/web-beancount/backend-cluster/beancount-ledger/statement.pdf\" #discovered\n"
+    },
+    {
+      "type": "Pad",
+      "text": "2024-02-05 pad Assets:Checking Equity:Opening\n"
+    },
+    {
+      "type": "Custom",
+      "text": "2024-02-06 custom \"budget\" Expenses:Food \"monthly\" 100.00 USD TRUE 2024-01-01\n"
+    },
+    {
+      "type": "Close",
+      "text": "2024-03-01 close Assets:Checking\n"
+    }
+  ]
+}

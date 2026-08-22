@@ -1,0 +1,13 @@
+{
+  "_comment": "GOLDEN plugin lists captured from the REAL beancount 3.2.0 parser — exactly what fava's `ledger.options.get('plugin', [])` (and thus getLedgerPlugins) reads. Generated via backend-cluster/beancount-ledger/.venv/bin/python: `entries, errors, options_map = beancount.parser.parser.parse_string(SOURCE); [name for name, cfg in options_map.get('plugin', [])]`. parse_string populates options_map['plugin'] at parse time regardless of plugin loadability, so these are the effective parse semantics collectLedgerPlugins must mirror.",
+  "single": ["beancount.plugins.auto_accounts"],
+  "with_config": ["beancount.plugins.leafonly"],
+  "multiple": ["beancount.plugins.auto_accounts", "beancount.plugins.leafonly"],
+  "duplicate": ["p.a", "p.a"],
+  "indented": ["p.indented"],
+  "comment_line": ["p.real"],
+  "trailing_comment": ["p.real"],
+  "trailing_junk": [],
+  "empty": [],
+  "empty_name": [""]
+}

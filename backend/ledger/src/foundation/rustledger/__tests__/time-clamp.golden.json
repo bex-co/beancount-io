@@ -1,0 +1,2832 @@
+{
+  "nocost": {
+    "directives": [
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Assets:Checking",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Assets:Savings",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Assets:Brokerage",
+        "currencies": []
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Liabilities:CreditCard",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Income:Salary",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Income:Dividends",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Expenses:Food",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Expenses:Rent",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Equity:Opening",
+        "currencies": []
+      },
+      {
+        "type": "transaction",
+        "date": "2021-06-01",
+        "flag": "*",
+        "narration": "Opening deposit",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "10000.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Equity:Opening",
+            "units": {
+              "number": "-10000.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2022-01-15",
+        "flag": "*",
+        "narration": "Salary Jan 2022",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "5000.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Income:Salary",
+            "units": {
+              "number": "-5000.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2022-02-10",
+        "flag": "*",
+        "narration": "Groceries",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Expenses:Food",
+            "units": {
+              "number": "300.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "-300.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2022-03-01",
+        "flag": "*",
+        "narration": "Rent",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Expenses:Rent",
+            "units": {
+              "number": "1500.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "-1500.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2022-06-20",
+        "flag": "*",
+        "narration": "Move to savings",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Savings",
+            "units": {
+              "number": "2000.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "-2000.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2023-01-15",
+        "flag": "*",
+        "narration": "Salary Jan 2023",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "5200.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Income:Salary",
+            "units": {
+              "number": "-5200.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2023-02-14",
+        "flag": "*",
+        "narration": "Groceries + card",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Expenses:Food",
+            "units": {
+              "number": "420.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Liabilities:CreditCard",
+            "units": {
+              "number": "-420.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2023-03-01",
+        "flag": "*",
+        "narration": "Rent",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Expenses:Rent",
+            "units": {
+              "number": "1600.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "-1600.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2023-06-15",
+        "flag": "*",
+        "narration": "Salary June 2023",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "5300.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Income:Salary",
+            "units": {
+              "number": "-5300.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2023-09-10",
+        "flag": "*",
+        "narration": "Pay credit card",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Liabilities:CreditCard",
+            "units": {
+              "number": "420.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "-420.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2024-01-15",
+        "flag": "*",
+        "narration": "Salary Jan 2024",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "5500.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Income:Salary",
+            "units": {
+              "number": "-5500.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2024-02-20",
+        "flag": "*",
+        "narration": "Groceries",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Expenses:Food",
+            "units": {
+              "number": "380.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "-380.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2024-03-01",
+        "flag": "*",
+        "narration": "Rent",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Expenses:Rent",
+            "units": {
+              "number": "1700.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:Checking",
+            "units": {
+              "number": "-1700.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      }
+    ],
+    "clamp": {
+      "2023": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Brokerage"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Checking"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Savings"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Food"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Rent"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Dividends"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Liabilities:CreditCard"
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "1.12E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1.12E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Savings",
+              "units": {
+                "number": "2E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-2E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Earnings:Previous",
+              "units": {
+                "number": "-3.2E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "3.2E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-01-15",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "5.2E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-5.2E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-02-14",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Expenses:Food",
+              "units": {
+                "number": "4.2E+2",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Liabilities:CreditCard",
+              "units": {
+                "number": "-4.2E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-03-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "-1.6E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Expenses:Rent",
+              "units": {
+                "number": "1.6E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-06-15",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "5.3E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-5.3E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-09-10",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "-4.2E+2",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Liabilities:CreditCard",
+              "units": {
+                "number": "4.2E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ],
+      "2023-06": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Brokerage"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Checking"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Savings"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Food"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Rent"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Dividends"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Liabilities:CreditCard"
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-05-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "1.48E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1.48E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-05-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Savings",
+              "units": {
+                "number": "2E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-2E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-05-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Earnings:Previous",
+              "units": {
+                "number": "-6.38E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "6.38E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-05-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-05-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "4.2E+2",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Liabilities:CreditCard",
+              "units": {
+                "number": "-4.2E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-06-15",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "5.3E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-5.3E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ],
+      "2022-2023": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Brokerage"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Checking"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Savings"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Food"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Rent"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Dividends"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Liabilities:CreditCard"
+        },
+        {
+          "type": "Transaction",
+          "date": "2021-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2021-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-01-15",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "5E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-5E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-02-10",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "-3E+2",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Expenses:Food",
+              "units": {
+                "number": "3E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-03-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "-1.5E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Expenses:Rent",
+              "units": {
+                "number": "1.5E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-06-20",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "-2E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Assets:Savings",
+              "units": {
+                "number": "2E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-01-15",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "5.2E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-5.2E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-02-14",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Expenses:Food",
+              "units": {
+                "number": "4.2E+2",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Liabilities:CreditCard",
+              "units": {
+                "number": "-4.2E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-03-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "-1.6E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Expenses:Rent",
+              "units": {
+                "number": "1.6E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-06-15",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "5.3E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-5.3E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-09-10",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "-4.2E+2",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Liabilities:CreditCard",
+              "units": {
+                "number": "4.2E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ],
+      "2024": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Brokerage"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Checking"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Savings"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Food"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Rent"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Dividends"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Liabilities:CreditCard"
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "1.968E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1.968E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Savings",
+              "units": {
+                "number": "2E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-2E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Earnings:Previous",
+              "units": {
+                "number": "-1.168E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "1.168E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2024-01-15",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "5.5E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-5.5E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2024-02-20",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "-3.8E+2",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Expenses:Food",
+              "units": {
+                "number": "3.8E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2024-03-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "-1.7E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Expenses:Rent",
+              "units": {
+                "number": "1.7E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ],
+      "2021": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Brokerage"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Checking"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Savings"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Food"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Rent"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Dividends"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Liabilities:CreditCard"
+        },
+        {
+          "type": "Transaction",
+          "date": "2021-06-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Checking",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "cost": {
+    "directives": [
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Assets:Cash",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Assets:Brokerage",
+        "currencies": []
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Income:Salary",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Income:PnL",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Equity:Opening",
+        "currencies": []
+      },
+      {
+        "type": "transaction",
+        "date": "2021-06-01",
+        "flag": "*",
+        "narration": "Opening",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Cash",
+            "units": {
+              "number": "50000.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Equity:Opening",
+            "units": {
+              "number": "-50000.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2022-03-10",
+        "flag": "*",
+        "narration": "Buy HOOL",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Brokerage",
+            "units": {
+              "number": "10",
+              "currency": "HOOL"
+            },
+            "cost": {
+              "number": {
+                "kind": "per_unit",
+                "value": "100.00"
+              },
+              "currency": "USD",
+              "date": "2022-03-10"
+            }
+          },
+          {
+            "account": "Assets:Cash",
+            "units": {
+              "number": "-1000.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2022-08-15",
+        "flag": "*",
+        "narration": "Salary",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Cash",
+            "units": {
+              "number": "4000.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Income:Salary",
+            "units": {
+              "number": "-4000.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "price",
+        "date": "2023-02-01",
+        "currency": "HOOL",
+        "amount": {
+          "number": "120.00",
+          "currency": "USD"
+        }
+      },
+      {
+        "type": "transaction",
+        "date": "2023-04-10",
+        "flag": "*",
+        "narration": "Buy more HOOL",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Brokerage",
+            "units": {
+              "number": "5",
+              "currency": "HOOL"
+            },
+            "cost": {
+              "number": {
+                "kind": "per_unit",
+                "value": "130.00"
+              },
+              "currency": "USD",
+              "date": "2023-04-10"
+            }
+          },
+          {
+            "account": "Assets:Cash",
+            "units": {
+              "number": "-650.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2023-06-15",
+        "flag": "*",
+        "narration": "Salary 2023",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Cash",
+            "units": {
+              "number": "4200.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Income:Salary",
+            "units": {
+              "number": "-4200.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "price",
+        "date": "2023-11-20",
+        "currency": "HOOL",
+        "amount": {
+          "number": "140.00",
+          "currency": "USD"
+        }
+      },
+      {
+        "type": "transaction",
+        "date": "2024-01-10",
+        "flag": "*",
+        "narration": "Sell some HOOL",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:Brokerage",
+            "units": {
+              "number": "-3",
+              "currency": "HOOL"
+            },
+            "cost": {
+              "number": {
+                "kind": "per_unit",
+                "value": "100.00"
+              },
+              "currency": "USD",
+              "date": "2022-03-10"
+            }
+          },
+          {
+            "account": "Assets:Cash",
+            "units": {
+              "number": "420.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Income:PnL",
+            "units": {
+              "number": "-120.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      }
+    ],
+    "clamp": {
+      "2023": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Brokerage"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Cash"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:PnL"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Price",
+          "date": "2023-02-01",
+          "currency": "HOOL",
+          "amount": {
+            "number": "1.2E+2",
+            "currency": "USD"
+          }
+        },
+        {
+          "type": "Price",
+          "date": "2023-11-20",
+          "currency": "HOOL",
+          "amount": {
+            "number": "1.4E+2",
+            "currency": "USD"
+          }
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Brokerage",
+              "units": {
+                "number": "1E+1",
+                "currency": "HOOL"
+              },
+              "cost": {
+                "number": "1E+2",
+                "currency": "USD",
+                "date": "2022-03-10"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "5.3E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-5.3E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Earnings:Previous",
+              "units": {
+                "number": "-4E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "4E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-5E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "5E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-04-10",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Brokerage",
+              "units": {
+                "number": "5",
+                "currency": "HOOL"
+              },
+              "cost": {
+                "number": "1.3E+2",
+                "currency": "USD",
+                "date": "2023-04-10"
+              }
+            },
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "-6.5E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-06-15",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "4.2E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-4.2E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ],
+      "2023-04": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Brokerage"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Cash"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:PnL"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Price",
+          "date": "2023-02-01",
+          "currency": "HOOL",
+          "amount": {
+            "number": "1.2E+2",
+            "currency": "USD"
+          }
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-03-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Brokerage",
+              "units": {
+                "number": "1E+1",
+                "currency": "HOOL"
+              },
+              "cost": {
+                "number": "1E+2",
+                "currency": "USD",
+                "date": "2022-03-10"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-03-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "5.3E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-5.3E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-03-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Earnings:Previous",
+              "units": {
+                "number": "-4E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "4E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-03-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-5E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "5E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-04-10",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Brokerage",
+              "units": {
+                "number": "5",
+                "currency": "HOOL"
+              },
+              "cost": {
+                "number": "1.3E+2",
+                "currency": "USD",
+                "date": "2023-04-10"
+              }
+            },
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "-6.5E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ],
+      "2024": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Brokerage"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Cash"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:PnL"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Price",
+          "date": "2023-11-20",
+          "currency": "HOOL",
+          "amount": {
+            "number": "1.4E+2",
+            "currency": "USD"
+          }
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Brokerage",
+              "units": {
+                "number": "1E+1",
+                "currency": "HOOL"
+              },
+              "cost": {
+                "number": "1E+2",
+                "currency": "USD",
+                "date": "2022-03-10"
+              }
+            },
+            {
+              "account": "Assets:Brokerage",
+              "units": {
+                "number": "5",
+                "currency": "HOOL"
+              },
+              "cost": {
+                "number": "1.3E+2",
+                "currency": "USD",
+                "date": "2023-04-10"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-6.5E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "5.655E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-5.655E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Earnings:Previous",
+              "units": {
+                "number": "-8.2E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "8.2E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-5E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "5E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2024-01-10",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Brokerage",
+              "units": {
+                "number": "-3",
+                "currency": "HOOL"
+              },
+              "cost": {
+                "number": "1E+2",
+                "currency": "USD",
+                "date": "2022-03-10"
+              }
+            },
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "4.2E+2",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:PnL",
+              "units": {
+                "number": "-1.2E+2",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ],
+      "2022": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Brokerage"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:Cash"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:PnL"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Transaction",
+          "date": "2021-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "5E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-5E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2021-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-5E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "5E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-03-10",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Brokerage",
+              "units": {
+                "number": "1E+1",
+                "currency": "HOOL"
+              },
+              "cost": {
+                "number": "1E+2",
+                "currency": "USD",
+                "date": "2022-03-10"
+              }
+            },
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "-1E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-08-15",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:Cash",
+              "units": {
+                "number": "4E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-4E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "mc": {
+    "directives": [
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Assets:USD",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Assets:EUR",
+        "currencies": [
+          "EUR"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Income:Salary",
+        "currencies": [
+          "USD"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Expenses:Travel",
+        "currencies": [
+          "EUR"
+        ]
+      },
+      {
+        "type": "open",
+        "date": "2021-01-01",
+        "account": "Equity:Opening",
+        "currencies": []
+      },
+      {
+        "type": "transaction",
+        "date": "2021-03-01",
+        "flag": "*",
+        "narration": "Opening USD",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:USD",
+            "units": {
+              "number": "10000.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Equity:Opening",
+            "units": {
+              "number": "-10000.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2022-05-01",
+        "flag": "*",
+        "narration": "Buy EUR with USD @ price",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:EUR",
+            "units": {
+              "number": "1000.00",
+              "currency": "EUR"
+            },
+            "price": {
+              "number": "1.10",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Assets:USD",
+            "units": {
+              "number": "-1100.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2022-09-01",
+        "flag": "*",
+        "narration": "Salary",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:USD",
+            "units": {
+              "number": "3000.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Income:Salary",
+            "units": {
+              "number": "-3000.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2023-04-01",
+        "flag": "*",
+        "narration": "Travel in EUR",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Expenses:Travel",
+            "units": {
+              "number": "200.00",
+              "currency": "EUR"
+            }
+          },
+          {
+            "account": "Assets:EUR",
+            "units": {
+              "number": "-200.00",
+              "currency": "EUR"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2023-08-01",
+        "flag": "*",
+        "narration": "Salary 2023",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Assets:USD",
+            "units": {
+              "number": "3100.00",
+              "currency": "USD"
+            }
+          },
+          {
+            "account": "Income:Salary",
+            "units": {
+              "number": "-3100.00",
+              "currency": "USD"
+            }
+          }
+        ]
+      },
+      {
+        "type": "transaction",
+        "date": "2024-02-01",
+        "flag": "*",
+        "narration": "More travel",
+        "tags": [],
+        "links": [],
+        "postings": [
+          {
+            "account": "Expenses:Travel",
+            "units": {
+              "number": "150.00",
+              "currency": "EUR"
+            }
+          },
+          {
+            "account": "Assets:EUR",
+            "units": {
+              "number": "-150.00",
+              "currency": "EUR"
+            }
+          }
+        ]
+      }
+    ],
+    "clamp": {
+      "2022": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:EUR"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:USD"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Travel"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Transaction",
+          "date": "2021-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:USD",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2021-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-05-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:EUR",
+              "units": {
+                "number": "1E+3",
+                "currency": "EUR"
+              },
+              "price": {
+                "number": "1.1",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Assets:USD",
+              "units": {
+                "number": "-1.1E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-09-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:USD",
+              "units": {
+                "number": "3E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-3E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "C",
+          "postings": [
+            {
+              "account": "Equity:Conversions:Current",
+              "units": {
+                "number": "-1E+3",
+                "currency": "EUR"
+              },
+              "price": {
+                "number": "0",
+                "currency": "NOTHING"
+              }
+            },
+            {
+              "account": "Equity:Conversions:Current",
+              "units": {
+                "number": "1.1E+3",
+                "currency": "USD"
+              },
+              "price": {
+                "number": "0",
+                "currency": "NOTHING"
+              }
+            }
+          ]
+        }
+      ],
+      "2023": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:EUR"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:USD"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Travel"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:EUR",
+              "units": {
+                "number": "1E+3",
+                "currency": "EUR"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1E+3",
+                "currency": "EUR"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:USD",
+              "units": {
+                "number": "1.19E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1.19E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Earnings:Previous",
+              "units": {
+                "number": "-3E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "3E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2022-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-04-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:EUR",
+              "units": {
+                "number": "-2E+2",
+                "currency": "EUR"
+              }
+            },
+            {
+              "account": "Expenses:Travel",
+              "units": {
+                "number": "2E+2",
+                "currency": "EUR"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-08-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:USD",
+              "units": {
+                "number": "3.1E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Income:Salary",
+              "units": {
+                "number": "-3.1E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        }
+      ],
+      "2024": [
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:EUR"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Assets:USD"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Equity:Opening"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Expenses:Travel"
+        },
+        {
+          "type": "Open",
+          "date": "2021-01-01",
+          "account": "Income:Salary"
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:EUR",
+              "units": {
+                "number": "8E+2",
+                "currency": "EUR"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-8E+2",
+                "currency": "EUR"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Assets:USD",
+              "units": {
+                "number": "1.5E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-1.5E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Earnings:Previous",
+              "units": {
+                "number": "2E+2",
+                "currency": "EUR"
+              }
+            },
+            {
+              "account": "Equity:Earnings:Previous",
+              "units": {
+                "number": "-6.1E+3",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "-2E+2",
+                "currency": "EUR"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "6.1E+3",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2023-12-31",
+          "flag": "S",
+          "postings": [
+            {
+              "account": "Equity:Opening",
+              "units": {
+                "number": "-1E+4",
+                "currency": "USD"
+              }
+            },
+            {
+              "account": "Equity:Opening-Balances",
+              "units": {
+                "number": "1E+4",
+                "currency": "USD"
+              }
+            }
+          ]
+        },
+        {
+          "type": "Transaction",
+          "date": "2024-02-01",
+          "flag": "*",
+          "postings": [
+            {
+              "account": "Assets:EUR",
+              "units": {
+                "number": "-1.5E+2",
+                "currency": "EUR"
+              }
+            },
+            {
+              "account": "Expenses:Travel",
+              "units": {
+                "number": "1.5E+2",
+                "currency": "EUR"
+              }
+            }
+          ]
+        }
+      ]
+    }
+  }
+}

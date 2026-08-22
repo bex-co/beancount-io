@@ -1,0 +1,68 @@
+{
+  "name": "beancount-ledger-v2",
+  "version": "0.1.0",
+  "private": false,
+  "description": "Standalone TypeScript ledger service on the rustledger WASM engine, contract-compatible with the Python beancount-ledger service it replaced and decommissioned",
+  "license": "MIT",
+  "engines": {
+    "node": ">= 20"
+  },
+  "scripts": {
+    "dev": "ts-node -r tsconfig-paths/register --transpile-only ./server.ts",
+    "start": "ts-node -r tsconfig-paths/register --transpile-only ./server.ts",
+    "dist:start": "node dist/server.js",
+    "build": "tsc -b && tsc-alias -p tsconfig.json",
+    "test": "jest --testPathIgnorePatterns='\\.integration\\.test\\.ts$'",
+    "test:integration": "jest --testMatch='**/*.integration.test.ts'",
+    "test:parity": "jest -c jest.parity.config.js",
+    "test:watch": "jest --watch --testPathIgnorePatterns='\\.integration\\.test\\.ts$'",
+    "lint": "eslint src server.ts --fix --quiet",
+    "typecheck": "tsc --noEmit --skipLibCheck",
+    "format": "prettier --write .",
+    "verify:rustledger": "NODE_OPTIONS=--experimental-vm-modules ts-node -r tsconfig-paths/register --transpile-only scripts/verify-rustledger.ts",
+    "verify:rustledger:shadow": "echo 'shadow verify returns with the service layer (w1/003)' && exit 0",
+    "kill": "lsof -ti tcp:8000 | xargs kill -9 || true"
+  },
+  "dependencies": {
+    "@koa/multer": "^4.0.0",
+    "@koa/router": "^14.0.0",
+    "@rustledger/wasm": "0.21.0",
+    "async-lock": "^1.4.1",
+    "bignumber.js": "9.3.1",
+    "cache-manager": "^7.2.8",
+    "koa": "^3.0.1",
+    "koa-bodyparser": "^4.4.1",
+    "multer": "^2.2.0",
+    "prom-client": "^15.1.3",
+    "winston": "3.19.0",
+    "winston-loki": "^6.1.3",
+    "zod": "4.4.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "9.39.2",
+    "@types/async-lock": "^1",
+    "@types/jest": "^30.0.0",
+    "@types/koa": "2.11.6",
+    "@types/koa-bodyparser": "^4.3.12",
+    "@types/koa__multer": "^2.0.8",
+    "@types/koa__router": "^12.0.4",
+    "@types/multer": "^2.2.0",
+    "@types/node": "25.0.10",
+    "@types/tar": "^7.0.87",
+    "eslint": "9.39.2",
+    "globals": "^17.2.0",
+    "jest": "^30.2.0",
+    "jiti": "^2.6.0",
+    "prettier": "3.8.1",
+    "tar": "^7",
+    "ts-jest": "29.4.6",
+    "ts-node": "^10.9.2",
+    "tsc-alias": "^1.8.16",
+    "tsconfig-paths": "3.9.0",
+    "typescript": "^5.0.0",
+    "typescript-eslint": "^8.54.0"
+  },
+  "resolutions": {
+    "zod": "4.4.3"
+  }
+}

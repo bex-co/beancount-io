@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+.yarn/
+.pnp.*
+.pm/
+
+# yarn.lock IS committed here (tracked, see root .gitignore exception) for
+# reproducible Docker builds — unlike the rest of this repo's JS/TS projects.
+package-lock.json
+
+# Build
+dist/
+*.tsbuildinfo
+coverage/
+
+# Environment
+.env
+.env.local
+
+# Logs
+*.log
+
+# OS
+.DS_Store

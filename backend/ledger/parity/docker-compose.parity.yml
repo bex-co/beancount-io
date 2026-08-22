@@ -1,0 +1,74 @@
+# Parity stack (Python oracle retired at ledger-v2 decommission of v1 — see
+# docs/ledger-v2-cutover-runbook.md and parity/COVERAGE.md, archived):
+#   parity-gitea      :13801  (sqlite-backed, disposable volume)
+#   parity-ledger-v2  :18002  (this service)
+# Ports are deliberately distinct from _infra-mac so both stacks can coexist.
+# Bring up with ./up.sh (builds, waits for health, seeds fixture repos).
+
+networks:
+  parity:
+    driver: bridge
+
+services:
+  gitea:
+    image: gitea/gitea:1.24
+    container_name: parity-gitea
+    restart: unless-stopped
+    networks:
+      - parity
+    ports:
+      - "13801:3000"
+    volumes:
+      - parity-gitea-data:/data
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=sqlite3
+      - GITEA__server__DOMAIN=localhost
+      - GITEA__server__HTTP_PORT=3000
+      - GITEA__server__ROOT_URL=http://localhost:13801/
+      - GITEA__security__INSTALL_LOCK=true
+      - GITEA__webhook__ALLOWED_HOST_LIST=parity-ledger-v2
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/healthz"]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+  ledger-v2:
+    build:
+      context: ..
+      dockerfile: Dockerfile
+    image: beancount-ledger-v2:parity
+    container_name: parity-ledger-v2
+    restart: unless-stopped
+    networks:
+      - parity
+    ports:
+      - "18002:8000"
+    depends_on:
+      gitea:
+        condition: service_healthy
+    environment:
+      GITEA_HOST_NAME: gitea
+      GITEA_HTTP_PORT: 3000
+      WEBHOOK_TOKEN: parity-webhook-token
+      NODE_ENV: development
+    healthcheck:
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8000/healthz",
+        ]
+      interval: 10s
+      timeout: 5s
+      retries: 6
+      start_period: 30s
+
+volumes:
+  parity-gitea-data:

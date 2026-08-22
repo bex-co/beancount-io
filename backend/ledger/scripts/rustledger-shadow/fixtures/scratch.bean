@@ -1,0 +1,3 @@
+; Deliberately not included by main.bean. This must not be returned by
+; getLedgerSourceFiles and must never become a valid Plaid target.
+2025-01-01 open Actifs:Scratch USD

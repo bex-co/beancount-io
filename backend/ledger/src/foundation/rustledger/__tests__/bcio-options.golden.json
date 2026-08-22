@@ -1,0 +1,93 @@
+{
+  "empty": {
+    "default_file": "main.bean",
+    "transaction_file": null,
+    "account_file": null,
+    "price_file": null,
+    "balance_file": null,
+    "note_file": null,
+    "pad_file": null,
+    "budget_file": null,
+    "receipt_base_folder": null,
+    "receipt_storage": null,
+    "document_file": null
+  },
+  "full": {
+    "default_file": "ledger.bean",
+    "transaction_file": "txns/{year}.bean",
+    "account_file": "accounts.bean",
+    "price_file": "prices.bean",
+    "balance_file": "balances.bean",
+    "note_file": "notes.bean",
+    "pad_file": "pads.bean",
+    "budget_file": "budget.bean",
+    "receipt_base_folder": "receipts",
+    "receipt_storage": "s3",
+    "document_file": "documents.bean"
+  },
+  "partial": {
+    "default_file": "main.bean",
+    "transaction_file": "t/{month}.bean",
+    "account_file": "acc.bean",
+    "price_file": null,
+    "balance_file": null,
+    "note_file": null,
+    "pad_file": null,
+    "budget_file": null,
+    "receipt_base_folder": null,
+    "receipt_storage": null,
+    "document_file": null
+  },
+  "unknown": {
+    "default_file": "root.bean",
+    "transaction_file": null,
+    "account_file": null,
+    "price_file": null,
+    "balance_file": null,
+    "note_file": null,
+    "pad_file": null,
+    "budget_file": null,
+    "receipt_base_folder": null,
+    "receipt_storage": null,
+    "document_file": null
+  },
+  "dup": {
+    "default_file": "second.bean",
+    "transaction_file": null,
+    "account_file": null,
+    "price_file": null,
+    "balance_file": null,
+    "note_file": null,
+    "pad_file": null,
+    "budget_file": null,
+    "receipt_base_folder": null,
+    "receipt_storage": null,
+    "document_file": null
+  },
+  "missing": {
+    "default_file": "",
+    "transaction_file": null,
+    "account_file": null,
+    "price_file": null,
+    "balance_file": null,
+    "note_file": null,
+    "pad_file": null,
+    "budget_file": null,
+    "receipt_base_folder": null,
+    "receipt_storage": null,
+    "document_file": null
+  },
+  "nonstring_value": {
+    "default_file": "main.bean",
+    "transaction_file": null,
+    "account_file": null,
+    "price_file": null,
+    "balance_file": null,
+    "note_file": null,
+    "pad_file": null,
+    "budget_file": null,
+    "receipt_base_folder": null,
+    "receipt_storage": null,
+    "document_file": null
+  }
+}

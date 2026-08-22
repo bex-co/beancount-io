@@ -1,0 +1,179 @@
+{
+  "conv_single": {
+    "account_journal_include_children": true,
+    "auto_reload": false,
+    "collapse_pattern": [],
+    "conversion_currencies": [
+      "USD"
+    ],
+    "currency_column": 61,
+    "default_page": "income_statement/",
+    "fiscal_year_end": {
+      "day": 31,
+      "month": 12
+    },
+    "indent": 2,
+    "invert_income_liabilities_equity": false,
+    "language": null,
+    "locale": null,
+    "show_accounts_with_zero_balance": true,
+    "show_accounts_with_zero_transactions": true,
+    "show_closed_accounts": false,
+    "sidebar_show_queries": 5,
+    "unrealized": "Unrealized",
+    "upcoming_events": 7,
+    "uptodate_indicator_grey_lookback_days": 60,
+    "use_external_editor": false
+  },
+  "empty": {
+    "account_journal_include_children": true,
+    "auto_reload": false,
+    "collapse_pattern": [],
+    "conversion_currencies": [],
+    "currency_column": 61,
+    "default_page": "income_statement/",
+    "fiscal_year_end": {
+      "day": 31,
+      "month": 12
+    },
+    "indent": 2,
+    "invert_income_liabilities_equity": false,
+    "language": null,
+    "locale": null,
+    "show_accounts_with_zero_balance": true,
+    "show_accounts_with_zero_transactions": true,
+    "show_closed_accounts": false,
+    "sidebar_show_queries": 5,
+    "unrealized": "Unrealized",
+    "upcoming_events": 7,
+    "uptodate_indicator_grey_lookback_days": 60,
+    "use_external_editor": false
+  },
+  "full": {
+    "account_journal_include_children": false,
+    "auto_reload": true,
+    "collapse_pattern": [
+      "Assets:.*",
+      "Expenses:Food"
+    ],
+    "conversion_currencies": [
+      "USD",
+      "EUR",
+      "CAD"
+    ],
+    "currency_column": 80,
+    "default_page": "balance_sheet/",
+    "fiscal_year_end": {
+      "day": 1,
+      "month": 4
+    },
+    "indent": 4,
+    "invert_income_liabilities_equity": true,
+    "language": "de",
+    "locale": "en_US",
+    "show_accounts_with_zero_balance": false,
+    "show_accounts_with_zero_transactions": false,
+    "show_closed_accounts": true,
+    "sidebar_show_queries": 10,
+    "unrealized": "MyUnrealized",
+    "upcoming_events": 14,
+    "uptodate_indicator_grey_lookback_days": 30,
+    "use_external_editor": true
+  },
+  "fye_feb28": {
+    "account_journal_include_children": true,
+    "auto_reload": false,
+    "collapse_pattern": [],
+    "conversion_currencies": [],
+    "currency_column": 61,
+    "default_page": "income_statement/",
+    "fiscal_year_end": {
+      "day": 28,
+      "month": 2
+    },
+    "indent": 2,
+    "invert_income_liabilities_equity": false,
+    "language": null,
+    "locale": null,
+    "show_accounts_with_zero_balance": true,
+    "show_accounts_with_zero_transactions": true,
+    "show_closed_accounts": false,
+    "sidebar_show_queries": 5,
+    "unrealized": "Unrealized",
+    "upcoming_events": 7,
+    "uptodate_indicator_grey_lookback_days": 60,
+    "use_external_editor": false
+  },
+  "fye_feb29": {
+    "account_journal_include_children": true,
+    "auto_reload": false,
+    "collapse_pattern": [],
+    "conversion_currencies": [],
+    "currency_column": 61,
+    "default_page": "income_statement/",
+    "fiscal_year_end": {
+      "day": 31,
+      "month": 12
+    },
+    "indent": 2,
+    "invert_income_liabilities_equity": false,
+    "language": null,
+    "locale": null,
+    "show_accounts_with_zero_balance": true,
+    "show_accounts_with_zero_transactions": true,
+    "show_closed_accounts": false,
+    "sidebar_show_queries": 5,
+    "unrealized": "Unrealized",
+    "upcoming_events": 7,
+    "uptodate_indicator_grey_lookback_days": 60,
+    "use_external_editor": false
+  },
+  "mixed": {
+    "account_journal_include_children": true,
+    "auto_reload": false,
+    "collapse_pattern": [],
+    "conversion_currencies": [],
+    "currency_column": 61,
+    "default_page": "income_statement/",
+    "fiscal_year_end": {
+      "day": 31,
+      "month": 12
+    },
+    "indent": 2,
+    "invert_income_liabilities_equity": false,
+    "language": "zz",
+    "locale": null,
+    "show_accounts_with_zero_balance": true,
+    "show_accounts_with_zero_transactions": true,
+    "show_closed_accounts": false,
+    "sidebar_show_queries": 7,
+    "unrealized": "Unrealized",
+    "upcoming_events": 7,
+    "uptodate_indicator_grey_lookback_days": 60,
+    "use_external_editor": false
+  },
+  "nonstring": {
+    "account_journal_include_children": true,
+    "auto_reload": false,
+    "collapse_pattern": [],
+    "conversion_currencies": [],
+    "currency_column": 61,
+    "default_page": "income_statement/",
+    "fiscal_year_end": {
+      "day": 31,
+      "month": 12
+    },
+    "indent": 2,
+    "invert_income_liabilities_equity": false,
+    "language": null,
+    "locale": null,
+    "show_accounts_with_zero_balance": true,
+    "show_accounts_with_zero_transactions": true,
+    "show_closed_accounts": false,
+    "sidebar_show_queries": 5,
+    "unrealized": "Unrealized",
+    "upcoming_events": 7,
+    "uptodate_indicator_grey_lookback_days": 60,
+    "use_external_editor": false
+  }
+}

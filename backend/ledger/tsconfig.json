@@ -1,0 +1,28 @@
+{
+  "compilerOptions": {
+    "target": "es2018",
+    "outDir": "dist",
+    "rootDir": ".",
+    "moduleResolution": "node",
+    "module": "commonjs",
+    "declaration": false,
+    "esModuleInterop": true,
+    "strict": true,
+    "strictPropertyInitialization": false,
+    "noUnusedLocals": true,
+    "noUnusedParameters": true,
+    "noImplicitReturns": true,
+    "noFallthroughCasesInSwitch": true,
+    "lib": ["es2018", "esnext"],
+    "resolveJsonModule": true,
+    "types": ["node", "jest"],
+    "skipLibCheck": true,
+    "baseUrl": ".",
+    "paths": {
+      "@/*": ["src/*"]
+    }
+  },
+  "include": ["src/**/*.ts", "server.ts", "scripts/**/*.*", "parity/**/*.ts"],
+  "exclude": ["node_modules/**", "dist/**"],
+  "compileOnSave": false
+}

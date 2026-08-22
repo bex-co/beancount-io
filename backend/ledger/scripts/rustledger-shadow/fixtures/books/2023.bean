@@ -1,0 +1,6 @@
+option "name_assets" "Actifs"
+option "name_income" "Revenus"
+
+2023-12-15 * "Employer" "Salary old" #work ^pay
+  Actifs:Cash       1000.00 USD
+  Revenus:Salary   -1000.00 USD

@@ -1,0 +1,1 @@
+export { lock } from "./lock";
