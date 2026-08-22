@@ -1,16 +1,60 @@
 import { Tabs } from "expo-router";
 import { useMemo } from "react";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { StyleSheet, Text, type ColorValue, View } from "react-native";
+import {
+  SafeAreaView,
+  useSafeAreaInsets,
+} from "react-native-safe-area-context";
 import { TabBarIcon } from "@/components/tab-bar-icon";
 import { HapticTab } from "@/components/haptic-tab";
 import { LedgerDrawerProvider } from "@/components/ledger-drawer";
-import { useTheme } from "@/common/theme";
+import { fontSizes, fontWeights, useTheme, withAlpha } from "@/common/theme";
 import { i18n } from "@/translations";
 import { localeVar } from "@/common/vars";
 import { useReactiveVar } from "@apollo/client";
 
+const TAB_BAR_CONTENT_HEIGHT = 80;
+const TAB_BAR_PILL_INSET = 6;
+const TAB_BAR_SIDE_INSET = 12;
+
+const styles = StyleSheet.create({
+  tabBarLabel: {
+    fontSize: fontSizes.xs,
+    fontWeight: fontWeights.medium,
+    lineHeight: fontSizes.xs + 2,
+    marginTop: 2,
+  },
+  tabBarBackground: {
+    position: "absolute",
+    borderRadius: 36,
+    borderCurve: "continuous",
+    borderWidth: StyleSheet.hairlineWidth,
+    shadowOffset: { width: 0, height: 5 },
+    shadowRadius: 18,
+    elevation: 10,
+  },
+});
+
+const renderTabBarLabel = ({
+  children,
+  color,
+}: {
+  children: string;
+  color: ColorValue;
+}) => (
+  <Text
+    adjustsFontSizeToFit
+    minimumFontScale={0.78}
+    numberOfLines={1}
+    style={[styles.tabBarLabel, { color }]}
+  >
+    {children}
+  </Text>
+);
+
 export default function TabLayout() {
-  const theme = useTheme().colorTheme;
+  const { colorTheme: theme, name: themeName } = useTheme();
+  const insets = useSafeAreaInsets();
   const locale = useReactiveVar(localeVar);
   // `i18n.t` reads whatever locale is current, so the titles only need to be
   // recomputed when `localeVar` changes. State plus an effect did the same job
@@ -42,10 +86,44 @@ export default function TabLayout() {
             // Without an explicit inactive tint, react-navigation falls back to
             // its light-theme gray, which is unreadable on the dark tab bar.
             tabBarInactiveTintColor: theme.black80,
-            tabBarStyle: {
-              backgroundColor: theme.white,
-              borderTopColor: theme.black10,
+            tabBarShowLabel: true,
+            tabBarLabel: renderTabBarLabel,
+            tabBarInactiveBackgroundColor: "transparent",
+            tabBarItemStyle: {
+              minWidth: 0,
+              marginHorizontal: 3,
+              marginVertical: 7,
             },
+            tabBarStyle: {
+              position: "absolute",
+              backgroundColor: "transparent",
+              borderTopWidth: 0,
+              borderTopColor: "transparent",
+              elevation: 0,
+              height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
+            },
+            tabBarBackground: () => (
+              <View
+                pointerEvents="none"
+                style={[
+                  StyleSheet.absoluteFill,
+                  styles.tabBarBackground,
+                  {
+                    top: TAB_BAR_PILL_INSET,
+                    right: TAB_BAR_SIDE_INSET,
+                    bottom: insets.bottom + TAB_BAR_PILL_INSET,
+                    left: TAB_BAR_SIDE_INSET,
+                    backgroundColor: withAlpha(
+                      theme.white,
+                      themeName === "dark" ? 0.94 : 0.9,
+                    ),
+                    borderColor: withAlpha(theme.black40, 0.6),
+                    shadowColor: theme.nav01,
+                    shadowOpacity: themeName === "dark" ? 0.4 : 0.16,
+                  },
+                ]}
+              />
+            ),
             // Mount a tab the first time it is focused, not at launch. With
             // `false` all five screens mounted on start and fired their
             // queries before the user had visited any of them — four screens'
