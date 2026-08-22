@@ -1,6 +1,5 @@
 interface Config {
   apiUrl: string;
-  ssrApiUrl: string;
   /**
    * Google Analytics 4 Measurement ID for the current environment's data stream.
    * Set per-environment (separate dev/staging vs. production streams) via
@@ -22,7 +21,6 @@ interface Config {
 
 // Add runtime validation (only in development mode)
 const apiUrl = import.meta.env.VITE_API_URL;
-const ssrApiUrl = import.meta.env.VITE_SSR_API_URL || apiUrl;
 const gaMeasurementId = import.meta.env.VITE_GA_MEASUREMENT_ID || undefined;
 // const gaMeasurementId = "G-Y0WGKFHE3E";
 const gaDebugMode = !import.meta.env.PROD;
@@ -33,7 +31,6 @@ if (import.meta.env.MODE === "development" && !apiUrl) {
 
 export const config: Config = {
   apiUrl,
-  ssrApiUrl,
   gaMeasurementId,
   analyticsEnabled: Boolean(gaMeasurementId),
   gaDebugMode,

@@ -1,0 +1,188 @@
+# render.yaml — beancount.io on bex (Render-compatible Blueprint).
+#
+# ADR049 makes render.yaml the canonical filename; bex.yml is only a
+# deprecated alias and there is no application-level bex.yaml.
+#
+# This stack carries NO persistent disks. Every stateful piece is a managed
+# datastore:
+#
+#   deploy/mac compose      ->  here
+#   ------------------------    ---------------------------------------------
+#   dashboard               ->  beancount-dashboard   (web)
+#   backend-v2              ->  beancount-api         (web)
+#   ledger                  ->  beancount-ledger      (pserv, no public port)
+#   postgres-backend        ->  beancount-backend-db  (managed Postgres)
+#   redis                   ->  beancount-cache       (managed Key Value)
+#   gitea + its postgres    ->  NOT deployed — Gitea needs a filesystem for bare
+#                               repos, and service disks are a platform
+#                               non-goal. Point GITEA_HOST_NAME at a Gitea that
+#                               lives elsewhere.
+#
+# Secrets are declared `sync: false` (seed once, then edit in the dashboard) or
+# `generateValue`. Nothing secret is committed here. Until the Gitea admin
+# credentials are seeded the API cannot authenticate to Gitea at all, so a
+# fresh deploy cannot touch ledger data by accident.
+
+services:
+  # ---------------------------------------------------------------- dashboard
+  - name: beancount-dashboard
+    type: web
+    runtime: docker
+    repo: https://github.com/bex-co/beancount-io
+    branch: bex-deploy
+    rootDir: dashboard
+    plan: starter
+    healthCheckPath: /
+    envVars:
+      # Read at RUNTIME by src/config/config.server.ts. Must be the internal
+      # address: an SSR pod cannot reach the backend through its own ingress.
+      # The browser-facing URL is baked from dashboard/.env.production instead,
+      # because Docker builds get no build args.
+      - key: SSR_API_URL
+        value: http://beancount-api:4104/api-gateway/
+
+  # ---------------------------------------------------------------- backend-v2
+  - name: beancount-api
+    type: web
+    runtime: docker
+    repo: https://github.com/bex-co/beancount-io
+    branch: bex-deploy
+    rootDir: backend-cluster/backend-v2
+    plan: starter
+    # No healthCheckPath on purpose: /healthz is a DEEP check that 500s when
+    # any dependency (including Gitea) is unreachable. As a platform probe it
+    # would turn a transient Redis blip into a dead service. The port check is
+    # the right liveness signal here.
+    preDeployCommand: yarn migrate:deploy
+    envVars:
+      - key: SERVER_URL
+        value: https://beancount-api.onbex.co
+      - key: DASHBOARD_URL
+        value: https://beancount-dashboard.onbex.co
+
+      # --- datastores -----------------------------------------------------
+      - key: POSTGRES_BACKEND_URI
+        fromDatabase:
+          name: beancount-backend-db
+          property: connectionString
+      - key: REDIS_URI
+        fromService:
+          name: beancount-cache
+          type: keyvalue
+          property: connectionString
+
+      # --- ledger service (private, same namespace) -----------------------
+      - key: FAVA_API_URL
+        value: http://beancount-ledger:8000
+
+      # --- generated secrets ----------------------------------------------
+      - key: AUTH_SECRET
+        generateValue: true
+      - key: COOKIE_SECRETS
+        generateValue: true
+      # sync:false rather than generateValue: the ledger has to present the SAME
+      # token, and fromService.envVarKey cannot reference a generated value
+      # ("no such plainly-defined variable"). Seed one strong value into BOTH
+      # this and beancount-ledger's BACKEND_V2_ADMIN_TOKEN.
+      - key: ADMIN_TOKEN
+        sync: false
+      - key: METRICS_API_TOKEN
+        generateValue: true
+
+      # --- Gitea ------------------------------------------------------------
+      # Host is configured; credentials are not. Port 443 selects https via the
+      # scheme derivation in src/config/config.ts, so an off-cluster Gitea works
+      # (the old code hardcoded http://<host>:3000 and could not reach one).
+      - key: GITEA_HOST_NAME
+        value: git.beancount.io
+      - key: GITEA_HTTP_PORT
+        value: "443"
+      - key: EXTERNAL_GITEA_HOST_NAME
+        value: git.beancount.io
+      - key: EXTERNAL_GITEA_HTTP_PORT
+        value: "443"
+      - key: FAVA_API_ADMIN_USER
+        value: beancount_admin
+      - key: FAVA_API_ADMIN_PASSWORD
+        sync: false
+
+      # Git-over-SSH terminates in this service's SSH proxy, which needs a TCP
+      # listener the platform does not route to. Keep it off.
+      - key: SSH_PROXY_ENABLED
+        value: "false"
+
+      # --- LLM / integrations (seed once, then edit in the dashboard) --------
+      # ANTHROPIC_BASE_URL is deliberately NOT declared: an empty string is
+      # fatal at import time (@ai-sdk/anthropic rejects a non-string baseURL).
+      - key: BLOCKEDEN_ACCESS_KEY
+        sync: false
+      - key: ANTHROPIC_API_KEY
+        sync: false
+      - key: OPENAI_API_KEY
+        sync: false
+
+      # --- asset storage ----------------------------------------------------
+      # A region is required even when unset: the S3 client is built at startup
+      # and throws "Region is missing" without one.
+      - key: TEMP_ASSETS_AWS_S3_REGION
+        value: us-east-1
+      - key: PERM_ASSETS_AWS_S3_REGION
+        value: us-east-1
+      - key: TEMP_ASSETS_AWS_S3_BUCKET
+        sync: false
+      - key: TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID
+        sync: false
+      - key: TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY
+        sync: false
+      - key: PERM_ASSETS_AWS_S3_BUCKET
+        sync: false
+      - key: PERM_ASSETS_AWS_S3_ACCESS_KEY_ID
+        sync: false
+      - key: PERM_ASSETS_AWS_S3_SECRET_ACCESS_KEY
+        sync: false
+
+      - key: LOG_LEVEL
+        value: info
+
+  # ------------------------------------------------------------------- ledger
+  - name: beancount-ledger
+    type: pserv
+    runtime: docker
+    repo: https://github.com/bex-co/beancount-io
+    branch: bex-deploy
+    rootDir: backend-cluster/ledger
+    plan: starter
+    # Shallow by design (src/api/healthz.ts checks nothing downstream), so it
+    # is safe as a platform probe — unlike the API's deep /healthz.
+    healthCheckPath: /healthz
+    envVars:
+      - key: GITEA_HOST_NAME
+        value: git.beancount.io
+      - key: GITEA_HTTP_PORT
+        value: "443"
+      - key: BACKEND_V2_HOST_NAME
+        value: beancount-api
+      - key: BACKEND_V2_HTTP_PORT
+        value: "4104"
+      # Must be byte-identical to beancount-api's ADMIN_TOKEN. Left empty the
+      # directive-limit check fails OPEN (silently skipped), so seed it.
+      - key: BACKEND_V2_ADMIN_TOKEN
+        sync: false
+      - key: LOG_LEVEL
+        value: info
+
+  # --------------------------------------------------------------- Key Value
+  - name: beancount-cache
+    type: keyvalue
+    plan: starter
+    # noeviction, NOT an LRU policy: this store holds auth tokens, so evicting
+    # under memory pressure would silently log users out.
+    maxmemoryPolicy: noeviction
+    persistenceMode: journal-snapshot
+    ipAllowList: []
+
+databases:
+  - name: beancount-backend-db
+    plan: basic-256mb
+    databaseName: backend
+    postgresMajorVersion: "16"

@@ -423,7 +423,7 @@ ${urlEntries}
    */
   private createUnauthenticatedGiteaClient(): GiteaApi<unknown> {
     // Use port 3000 for internal Docker communication (container internal port)
-    const baseUrl = `http://${this.config.gitea.internalHostname}:3000/api/v1`;
+    const baseUrl = `${this.config.gitea.internalBaseUrl}/api/v1`;
     return new GiteaApi({ baseUrl });
   }
 }

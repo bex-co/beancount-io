@@ -620,7 +620,7 @@ export function setGitProxyHandler(
       }
 
       // Construct the Gitea URL (include query string for git smart HTTP protocol)
-      const giteaBaseUrl = `http://${config.gitea.internalHostname}:${config.gitea.httpPort}`;
+      const giteaBaseUrl = config.gitea.internalBaseUrl;
       const queryString = ctx.querystring ? `?${ctx.querystring}` : "";
       const giteaUrl = `${giteaBaseUrl}${path}${queryString}`;
 
