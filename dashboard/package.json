@@ -34,7 +34,7 @@
     "search-console-report": "node --import tsx scripts/search-console-report.ts"
   },
   "dependencies": {
-    "@ai-sdk/react": "^3.0.187",
+    "@ai-sdk/react": "^4.0.73",
     "@apollo/client": "^4.1.3",
     "@hookform/resolvers": "^5.2.1",
     "@monaco-editor/react": "^4.7.0",
@@ -61,7 +61,7 @@
     "@tanstack/react-router-ssr-query": "^1.166.7",
     "@tanstack/react-start": "^1.166.11",
     "@types/react-window": "^2.0.0",
-    "ai": "^6.0.57",
+    "ai": "^7.0.70",
     "ai-elements": "^1.9.0",
     "class-variance-authority": "^0.7.1",
     "clsx": "^2.1.1",

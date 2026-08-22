@@ -23,14 +23,6 @@ const enAiAgent: Record<string, TranslationEntry> = {
       "What would you like to know?",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.prCreated": {
-    message: "✓ Pull Request Created",
-    description: "Message shown when PR is created",
-  },
-  "aiAgent.viewPR": {
-    message: "View PR #",
-    description: "Link text to view pull request",
-  },
   "aiAgent.quickAskPlaceholder": {
     message: "Ask me anything about this ledger...",
     description: "Placeholder for quick ask input on overview page",
@@ -38,17 +30,6 @@ const enAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.ask": {
     message: "Ask",
     description: "Button text to submit quick question",
-  },
-  "aiAgent.limitReached": {
-    message:
-      "You've reached your monthly AI token limit ({max} tokens). Please upgrade your plan for more AI tokens, or wait until next month.",
-    description: "Message when user hits AI CFO monthly limit",
-  },
-  "aiAgent.serviceUnavailable": {
-    message:
-      "The AI service is temporarily unavailable. Please try again in a few minutes.",
-    description:
-      "Message when AI CFO service is down or usage check fails (503)",
   },
   "aiAgent.upgradeTitle": {
     message: "Running low on AI tokens",
@@ -117,52 +98,6 @@ const enAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.editApproval.deleteFile": {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
-  },
-  "aiAgent.suggestionsTitle": {
-    message: "Try asking:",
-    description:
-      "Heading above suggested example questions in the empty chat state",
-  },
-  "aiAgent.suggestions.diningLastMonth": {
-    message: "How much did I spend on dining last month?",
-    description: "Suggested question: dining spend last month",
-  },
-  "aiAgent.suggestions.netWorth": {
-    message: "What's my current net worth?",
-    description: "Suggested question: current net worth",
-  },
-  "aiAgent.suggestions.topCategories": {
-    message: "Show my top 5 expense categories this year",
-    description: "Suggested question: top 5 expense categories this year",
-  },
-  "aiAgent.suggestions.uncategorized": {
-    message: "Any transactions I haven't categorized?",
-    description: "Suggested question: uncategorized transactions",
-  },
-  "aiAgent.suggestions.monthOverMonth": {
-    message: "Compare this month's spending to last month",
-    description: "Suggested question: compare this month to last month",
-  },
-  "aiAgent.suggestions.largestExpense": {
-    message: "What's my largest single expense this quarter?",
-    description: "Suggested question: largest single expense this quarter",
-  },
-  "aiAgent.stop": {
-    message: "Stop",
-    description: "Button to stop an in-flight AI response",
-  },
-  "aiAgent.stopped": {
-    message: "Stopped",
-    description: "Label shown on an AI response the user stopped",
-  },
-  "aiAgent.answeredIn": {
-    message: "Answered in {duration}",
-    description:
-      "Shown under a completed AI answer; {duration} is a formatted elapsed time like 12.3s or 1m 5s",
-  },
-  "aiAgent.retry": {
-    message: "Retry",
-    description: "Button to resubmit the last question after an error",
   },
   "aiAgent.receiptApproval.title": {
     message: "Record receipt transaction",

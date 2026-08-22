@@ -20,14 +20,6 @@ const jaAiAgent: Record<string, TranslationEntry> = {
       "何を知りたいですか？",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.prCreated": {
-    message: "✓ プルリクエストが作成されました",
-    description: "Message shown when PR is created",
-  },
-  "aiAgent.viewPR": {
-    message: "PR # を表示",
-    description: "Link text to view pull request",
-  },
   "aiAgent.quickAskPlaceholder": {
     message: "この台帳について何でも聞いてください...",
     description: "Placeholder for quick ask input on overview page",
@@ -35,16 +27,6 @@ const jaAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.ask": {
     message: "質問する",
     description: "Button text to submit quick question",
-  },
-  "aiAgent.limitReached": {
-    message:
-      "月間AIリクエスト上限（{max}リクエスト）に達しました。より多くのAIリクエストをご利用いただくにはプランをアップグレードするか、来月までお待ちください。",
-    description: "Message when user hits AI CFO monthly limit",
-  },
-  "aiAgent.serviceUnavailable": {
-    message: "AIサービスは一時的に利用できません。数分後に再度お試しください。",
-    description:
-      "Message when AI CFO service is down or usage check fails (503)",
   },
   "aiAgent.upgradeTitle": {
     message: "AIリクエスト残数が少なくなっています",
@@ -114,52 +96,6 @@ const jaAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.editApproval.deleteFile": {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
-  },
-  "aiAgent.suggestionsTitle": {
-    message: "質問してみましょう:",
-    description:
-      "Heading above suggested example questions in the empty chat state",
-  },
-  "aiAgent.suggestions.diningLastMonth": {
-    message: "先月の食費はいくらでしたか？",
-    description: "Suggested question: dining spend last month",
-  },
-  "aiAgent.suggestions.netWorth": {
-    message: "現在の純資産はいくらですか？",
-    description: "Suggested question: current net worth",
-  },
-  "aiAgent.suggestions.topCategories": {
-    message: "今年の支出カテゴリ上位5件を見せて",
-    description: "Suggested question: top 5 expense categories this year",
-  },
-  "aiAgent.suggestions.uncategorized": {
-    message: "未分類の取引はありますか？",
-    description: "Suggested question: uncategorized transactions",
-  },
-  "aiAgent.suggestions.monthOverMonth": {
-    message: "今月の支出を先月と比較して",
-    description: "Suggested question: compare this month to last month",
-  },
-  "aiAgent.suggestions.largestExpense": {
-    message: "今四半期で最大の支出は何ですか？",
-    description: "Suggested question: largest single expense this quarter",
-  },
-  "aiAgent.stop": {
-    message: "停止",
-    description: "Button to stop an in-flight AI response",
-  },
-  "aiAgent.stopped": {
-    message: "停止しました",
-    description: "Label shown on an AI response the user stopped",
-  },
-  "aiAgent.answeredIn": {
-    message: "回答時間: {duration}",
-    description:
-      "Shown under a completed AI answer; {duration} is a formatted elapsed time like 12.3s or 1m 5s",
-  },
-  "aiAgent.retry": {
-    message: "再試行",
-    description: "Button to resubmit the last question after an error",
   },
   "aiAgent.receiptApproval.title": {
     message: "レシートの取引を記録",

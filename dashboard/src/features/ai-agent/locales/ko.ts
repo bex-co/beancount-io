@@ -20,14 +20,6 @@ const koAiAgent: Record<string, TranslationEntry> = {
       "무엇을 알고 싶으신가요?",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.prCreated": {
-    message: "✓ 풀 리퀘스트가 생성되었습니다",
-    description: "Message shown when PR is created",
-  },
-  "aiAgent.viewPR": {
-    message: "PR # 보기",
-    description: "Link text to view pull request",
-  },
   "aiAgent.quickAskPlaceholder": {
     message: "이 장부에 대해 무엇이든 물어보세요...",
     description: "Placeholder for quick ask input on overview page",
@@ -35,17 +27,6 @@ const koAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.ask": {
     message: "질문",
     description: "Button text to submit quick question",
-  },
-  "aiAgent.limitReached": {
-    message:
-      "월간 AI 요청 한도({max}건)에 도달했습니다. 더 많은 AI 요청을 사용하려면 플랜을 업그레이드하거나 다음 달까지 기다려 주세요.",
-    description: "Message when user hits AI CFO monthly limit",
-  },
-  "aiAgent.serviceUnavailable": {
-    message:
-      "AI 서비스를 일시적으로 사용할 수 없습니다. 몇 분 후 다시 시도해 주세요.",
-    description:
-      "Message when AI CFO service is down or usage check fails (503)",
   },
   "aiAgent.upgradeTitle": {
     message: "AI 요청이 얼마 남지 않았습니다",
@@ -115,52 +96,6 @@ const koAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.editApproval.deleteFile": {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
-  },
-  "aiAgent.suggestionsTitle": {
-    message: "이렇게 물어보세요:",
-    description:
-      "Heading above suggested example questions in the empty chat state",
-  },
-  "aiAgent.suggestions.diningLastMonth": {
-    message: "지난달에 외식비로 얼마를 썼나요?",
-    description: "Suggested question: dining spend last month",
-  },
-  "aiAgent.suggestions.netWorth": {
-    message: "현재 순자산은 얼마인가요?",
-    description: "Suggested question: current net worth",
-  },
-  "aiAgent.suggestions.topCategories": {
-    message: "올해 지출 상위 5개 카테고리를 보여줘",
-    description: "Suggested question: top 5 expense categories this year",
-  },
-  "aiAgent.suggestions.uncategorized": {
-    message: "분류하지 않은 거래가 있나요?",
-    description: "Suggested question: uncategorized transactions",
-  },
-  "aiAgent.suggestions.monthOverMonth": {
-    message: "이번 달 지출을 지난달과 비교해줘",
-    description: "Suggested question: compare this month to last month",
-  },
-  "aiAgent.suggestions.largestExpense": {
-    message: "이번 분기에 가장 큰 지출은 뭐야?",
-    description: "Suggested question: largest single expense this quarter",
-  },
-  "aiAgent.stop": {
-    message: "중지",
-    description: "Button to stop an in-flight AI response",
-  },
-  "aiAgent.stopped": {
-    message: "중지됨",
-    description: "Label shown on an AI response the user stopped",
-  },
-  "aiAgent.answeredIn": {
-    message: "답변 시간: {duration}",
-    description:
-      "Shown under a completed AI answer; {duration} is a formatted elapsed time like 12.3s or 1m 5s",
-  },
-  "aiAgent.retry": {
-    message: "다시 시도",
-    description: "Button to resubmit the last question after an error",
   },
   "aiAgent.receiptApproval.title": {
     message: "영수증 거래 기록",

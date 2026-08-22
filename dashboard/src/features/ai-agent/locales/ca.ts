@@ -23,14 +23,6 @@ const caAiAgent: Record<string, TranslationEntry> = {
       "Què vols saber?",
     description: "Welcome message shown when chat loads",
   },
-  "aiAgent.prCreated": {
-    message: "✓ Pull Request creat",
-    description: "Message shown when PR is created",
-  },
-  "aiAgent.viewPR": {
-    message: "Veure PR #",
-    description: "Link text to view pull request",
-  },
   "aiAgent.quickAskPlaceholder": {
     message: "Pregunta'm qualsevol cosa sobre aquest llibre major...",
     description: "Placeholder for quick ask input on overview page",
@@ -38,17 +30,6 @@ const caAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.ask": {
     message: "Preguntar",
     description: "Button text to submit quick question",
-  },
-  "aiAgent.limitReached": {
-    message:
-      "You've reached your monthly AI token limit ({max} tokens). Please upgrade your plan for more AI tokens, or wait until next month.",
-    description: "Message when user hits AI CFO monthly limit",
-  },
-  "aiAgent.serviceUnavailable": {
-    message:
-      "The AI service is temporarily unavailable. Please try again in a few minutes.",
-    description:
-      "Message when AI CFO service is down or usage check fails (503)",
   },
   "aiAgent.upgradeTitle": {
     message: "Les sol·licituds d'IA s'estan esgotant",
@@ -118,52 +99,6 @@ const caAiAgent: Record<string, TranslationEntry> = {
   "aiAgent.editApproval.deleteFile": {
     message: "Delete file",
     description: "Label in diff block when deleting a file",
-  },
-  "aiAgent.suggestionsTitle": {
-    message: "Prova de preguntar:",
-    description:
-      "Heading above suggested example questions in the empty chat state",
-  },
-  "aiAgent.suggestions.diningLastMonth": {
-    message: "Quant vaig gastar en restauració el mes passat?",
-    description: "Suggested question: dining spend last month",
-  },
-  "aiAgent.suggestions.netWorth": {
-    message: "Quin és el meu patrimoni net actual?",
-    description: "Suggested question: current net worth",
-  },
-  "aiAgent.suggestions.topCategories": {
-    message: "Mostra'm les meves 5 categories de despeses principals d'enguany",
-    description: "Suggested question: top 5 expense categories this year",
-  },
-  "aiAgent.suggestions.uncategorized": {
-    message: "Tinc transaccions sense categoritzar?",
-    description: "Suggested question: uncategorized transactions",
-  },
-  "aiAgent.suggestions.monthOverMonth": {
-    message: "Compara la despesa d'aquest mes amb la del mes passat",
-    description: "Suggested question: compare this month to last month",
-  },
-  "aiAgent.suggestions.largestExpense": {
-    message: "Quina és la meva despesa més gran d'aquest trimestre?",
-    description: "Suggested question: largest single expense this quarter",
-  },
-  "aiAgent.stop": {
-    message: "Atura",
-    description: "Button to stop an in-flight AI response",
-  },
-  "aiAgent.stopped": {
-    message: "Aturat",
-    description: "Label shown on an AI response the user stopped",
-  },
-  "aiAgent.answeredIn": {
-    message: "Respost en {duration}",
-    description:
-      "Shown under a completed AI answer; {duration} is a formatted elapsed time like 12.3s or 1m 5s",
-  },
-  "aiAgent.retry": {
-    message: "Torna-ho a provar",
-    description: "Button to resubmit the last question after an error",
   },
   "aiAgent.receiptApproval.title": {
     message: "Registra la transacció del rebut",

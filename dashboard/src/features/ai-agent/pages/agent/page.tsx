@@ -25,13 +25,35 @@ import type { StagedFile } from "./attachment";
 import { useAgentSession } from "../../hooks/use-agent-session";
 import { ChevronDown } from "lucide-react";
 
-export function AgentPageImpl() {
-  const { ledgerOwner, ledgerName } = useParams({
-    from: "/ledger/$ledgerOwner/$ledgerName/agent",
-  });
-  const searchParams = useSearch({
-    from: "/ledger/$ledgerOwner/$ledgerName/agent",
-  });
+export interface AgentPageImplProps {
+  /**
+   * Backend endpoint suffix appended to config.apiUrl. Defaults to "agent"
+   * (the in-process ToolLoopAgent). The sandbox surface passes "ask-agent" to
+   * hit the harness-backed Cloudflare-sandbox route (ADR 0005 / m17).
+   */
+  chatApi?: string;
+  /**
+   * Route suffix used for the login-return path. Defaults to "agent".
+   */
+  routeSuffix?: string;
+  /**
+   * Extra fields merged into the request body — e.g. { conversationId, mode }
+   * for the ask-agent route.
+   */
+  bodyExtra?: Record<string, unknown>;
+}
+
+export function AgentPageImpl({
+  chatApi = "agent",
+  routeSuffix = "agent",
+  bodyExtra,
+}: AgentPageImplProps = {}) {
+  // strict:false so this component works under both the /agent and /ask routes.
+  const { ledgerOwner, ledgerName } = useParams({ strict: false }) as {
+    ledgerOwner: string;
+    ledgerName: string;
+  };
+  const searchParams = useSearch({ strict: false });
   const initialQuestion = (searchParams as { q?: string }).q;
   const { t, i18n } = useTranslations();
   const formatError = useErrorMessage();
@@ -55,20 +77,24 @@ export function AgentPageImpl() {
   const transport = useMemo(
     () =>
       new DefaultChatTransport({
-        api: `${config.apiUrl}agent`,
+        api: `${config.apiUrl}${chatApi}`,
         credentials: "include",
         headers: () => ({ "Accept-Language": i18nRef.current.language }),
-        body: { ledgerId: `${ledgerOwner}/${ledgerName}`, sessionId },
+        body: {
+          ledgerId: `${ledgerOwner}/${ledgerName}`,
+          sessionId,
+          ...bodyExtra,
+        },
         fetch: async (url, options) => {
           const response = await fetch(url as string, options as RequestInit);
           if (response.status === 401 || response.status === 403) {
-            const currentPath = `/ledger/${ledgerOwner}/${ledgerName}/agent`;
+            const currentPath = `/ledger/${ledgerOwner}/${ledgerName}/${routeSuffix}`;
             window.location.href = `/auth/login?next=${encodeURIComponent(currentPath)}`;
           }
           return response;
         },
       }),
-    [ledgerOwner, ledgerName, sessionId],
+    [ledgerOwner, ledgerName, sessionId, chatApi, routeSuffix, bodyExtra],
   );
 
   const initialMessages = useMemo<AgentUIMessage[]>(
@@ -106,6 +132,39 @@ export function AgentPageImpl() {
       (part) => isToolUIPart(part) && part.state === "approval-requested",
     );
   }, [messages]);
+
+  // Per-response timer, for evaluating how long each agent turn takes. Measures
+  // wall-clock from the user's submit (status → submitted) to the turn settling
+  // (status → ready), keyed by the assistant message that just completed.
+  const responseStartRef = useRef<number | null>(null);
+  const prevStatusRef = useRef(status);
+  const [responseDurationsMs, setResponseDurationsMs] = useState<
+    Record<string, number>
+  >({});
+
+  useEffect(() => {
+    const prev = prevStatusRef.current;
+    prevStatusRef.current = status;
+    const active = status === "submitted" || status === "streaming";
+    const wasActive = prev === "submitted" || prev === "streaming";
+    if (!wasActive && active) {
+      responseStartRef.current = performance.now();
+    } else if (
+      wasActive &&
+      status === "ready" &&
+      responseStartRef.current != null
+    ) {
+      const elapsed = performance.now() - responseStartRef.current;
+      responseStartRef.current = null;
+      const lastAssistant = [...messages]
+        .reverse()
+        .find((m) => m.role === "assistant");
+      if (lastAssistant) {
+        const id = lastAssistant.id;
+        setResponseDurationsMs((prevDur) => ({ ...prevDur, [id]: elapsed }));
+      }
+    }
+  }, [status, messages]);
 
   useEffect(() => {
     if (initialQuestion?.trim() && !hasAutoSubmittedRef.current) {
@@ -260,6 +319,7 @@ export function AgentPageImpl() {
             messages={messages}
             isLoading={isLoading}
             addToolApprovalResponse={addToolApprovalResponse}
+            durations={responseDurationsMs}
           />
         </div>
       </div>

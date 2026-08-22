@@ -11,7 +11,7 @@ import { TypingIndicator } from "../../../components/typing-indicator";
 import { FileEditApproval } from "../file-edit-approval";
 import { ReceiptInsertApproval } from "../receipt-insert-approval";
 import type { AgentUITools } from "../../../types/agent-tool-types";
-import { Bot } from "lucide-react";
+import { Bot, Timer } from "lucide-react";
 import { ToolActivityGroup } from "./tool-activity-group";
 import { DynamicToolActivityGroup } from "./dynamic-tool-activity-group";
 import { DynamicToolApproval } from "./dynamic-tool-approval";
@@ -113,6 +113,11 @@ function buildMessageDisplayBlocks(
   return blocks;
 }
 
+// Compact latency label for the per-response timer (sub-second in ms, else s).
+function formatResponseDuration(ms: number): string {
+  return ms < 1000 ? `${Math.round(ms)}ms` : `${(ms / 1000).toFixed(1)}s`;
+}
+
 interface AgentMessageListProps {
   messages: AgentUIMessage[];
   isLoading: boolean;
@@ -120,12 +125,15 @@ interface AgentMessageListProps {
     id: string;
     approved: boolean;
   }) => void | PromiseLike<void>;
+  /** Wall-clock response time (ms) per completed assistant message id. */
+  durations?: Record<string, number>;
 }
 
 export function AgentMessageList({
   messages,
   isLoading,
   addToolApprovalResponse,
+  durations,
 }: AgentMessageListProps) {
   return (
     <div className="space-y-6 pb-2">
@@ -251,6 +259,16 @@ export function AgentMessageList({
                 />
               );
             })}
+
+            {message.role === "assistant" &&
+              durations?.[message.id] != null && (
+                <div className="mt-1.5 flex items-center gap-1 text-xs text-muted-foreground/60">
+                  <Timer className="h-3 w-3" />
+                  <span className="tabular-nums">
+                    {formatResponseDuration(durations[message.id])}
+                  </span>
+                </div>
+              )}
           </div>
         </div>
       ))}
