@@ -5,7 +5,7 @@
  *
  * Reads the inputSchema and outputSchema of each agent tool, converts them to
  * TypeScript type strings via z.toJsonSchema(), and writes a zero-dependency
- * output file that can be copied to any consumer (e.g. beancount-dashboard)
+ * output file that can be copied to any consumer (e.g. dashboard/)
  * without adding server-side imports.
  */
 
@@ -138,10 +138,10 @@ function generate(): string {
 
   return [
     "// GENERATED FILE — do not edit manually.",
-    "// Run: yarn generate-agent-tool-types (from backend-cluster/backend-v2)",
+    "// Run: yarn generate-agent-tool-types (from backend/backend-v2)",
     "// Source: src/features/ai-agent/tools/*-tool.ts",
     "//",
-    "// Zero runtime dependencies — safe to copy to any consumer (e.g. beancount-dashboard).",
+    "// Zero runtime dependencies — safe to copy to any consumer (e.g. dashboard/).",
     "",
     "/** Maps tool name → its input argument type (what the AI model sends). */",
     "export type AgentToolInputs = {",
@@ -167,7 +167,7 @@ const output = generate();
 
 const dashboardPath = resolve(
   __dirname,
-  "../../../beancount-dashboard/src/features/ai-agent/types/agent-tool-types.ts",
+  "../../../dashboard/src/features/ai-agent/types/agent-tool-types.ts",
 );
 
 writeFileSync(dashboardPath, output, "utf-8");
