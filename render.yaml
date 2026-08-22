@@ -58,7 +58,15 @@ services:
     # any dependency (including Gitea) is unreachable. As a platform probe it
     # would turn a transient Redis blip into a dead service. The port check is
     # the right liveness signal here.
-    preDeployCommand: yarn migrate:deploy
+    # NO preDeployCommand. Render's canonical use for it is a database
+    # migration, but on bex the pre-deploy Job runs in BEX_BUILD_NAMESPACE
+    # while the managed Postgres lives in the workspace namespace, and
+    # cross-namespace traffic to a datastore ClusterIP is denied (ADR043 D8:
+    # "A datastore ClusterIP is RFC1918, so it is denied -- connection
+    # timeouts"). It fails with `connect ETIMEDOUT <clusterIP>:5432` after
+    # burning the whole pre-deploy budget. Run `yarn migrate:deploy` from
+    # inside a running instance instead (`bex ssh`), where the same-namespace
+    # allow applies.
     envVars:
       - key: SERVER_URL
         value: https://beancount-api.onbex.co

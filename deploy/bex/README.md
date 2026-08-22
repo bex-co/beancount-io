@@ -79,6 +79,18 @@ and need no action. Gitea admin user creation is still a one-time
   validation rejects it as "no such plainly-defined variable".
 - **Auto-deploy on push did not fire** for this repo; trigger a deploy with
   `POST /v1/services/{id}/deploys`.
+- **`preDeployCommand` cannot reach your own managed Postgres.** The pre-deploy
+  Job runs in `BEX_BUILD_NAMESPACE`, the database lives in the workspace
+  namespace, and cross-namespace traffic to a datastore ClusterIP is denied
+  (ADR043 D8: *"A datastore ClusterIP is RFC1918, so it is denied — connection
+  timeouts"*). A migration there dies with `connect ETIMEDOUT <clusterIP>:5432`
+  after consuming the whole pre-deploy budget, and fails the deploy. Run
+  migrations from a live instance instead:
+
+  ```zsh
+  bex ssh srv-<id>          # lands in the workspace namespace
+  yarn migrate:deploy
+  ```
 
 ## Not available on bex
 
