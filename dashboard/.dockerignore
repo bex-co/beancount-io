@@ -25,7 +25,10 @@ build
 .env.local
 .env.development
 .env.test
-.env.production
+# .env.production is deliberately NOT ignored: it is the only source of the
+# browser-facing VITE_* values inside the image build, because the deploy
+# platform passes no --build-arg. Everything in it is public and non-secret;
+# real secrets are runtime env vars, never build inputs.
 
 # Logs
 logs
