@@ -1,0 +1,5 @@
+node_modules/
+src/generated/
+.env.prod
+.env.dev
+.bv2-env

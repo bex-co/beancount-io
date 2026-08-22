@@ -1,0 +1,23 @@
+{
+  "name": "gitea-cli",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "codegen": "sh codegen.sh",
+    "dev": "tsx src/index.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "commander": "^12.1.0",
+    "dotenv": "^16.4.5",
+    "openapi-fetch": "^0.13.5"
+  },
+  "devDependencies": {
+    "@types/node": "^25.6.0",
+    "openapi-typescript": "^7.6.1",
+    "swagger2openapi": "^7.0.8",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}

@@ -1,0 +1,68 @@
+# Configuration Management Rules
+
+## Centralized Configuration
+All configuration for this project must be centralized in the `src/config/` directory.
+
+## Configuration Files Structure
+- **`src/config/config.ts`** - Main application configuration (preferred location for new configs)
+- **`src/config/stripe.ts`** - Legacy Stripe payment configuration (keep for historical reasons)
+- **Additional config files** - Add new config files here as needed, but prefer adding to `config.ts` when possible
+
+## Import Rules
+
+### ✅ CORRECT - Import from config directory
+```typescript
+// Import main config
+import { config } from '@/config/config';
+import { SUBSCRIPTION_CONFIG } from '@/config/stripe';
+
+// Use config values
+const port = config.server.port;
+const stripeConfig = SUBSCRIPTION_CONFIG['beancount-web-prod'];
+```
+
+### ❌ WRONG - Direct process.env imports
+```typescript
+// NEVER do this
+const port = process.env.PORT;
+const stripeKey = process.env.STRIPE_PRIVATE_KEY;
+const dbUri = process.env.POSTGRES_BACKEND_URI;
+```
+
+## Configuration Principles
+
+1. **Single Source of Truth**: All environment variables must be read only in config files
+2. **Type Safety**: All config values must be properly typed with interfaces
+3. **Default Values**: Provide sensible defaults for all configuration values
+4. **Environment Separation**: Use different configs for dev/prod environments
+5. **Validation**: Validate required environment variables at startup
+
+## Adding New Configuration
+
+When adding new configuration:
+
+1. **Prefer adding to `config.ts`** - This is the main configuration file
+2. **Only create new config files** if the configuration is very large or domain-specific
+3. **Define TypeScript interfaces** for type safety
+4. **Read from process.env** only in config files
+5. **Export the config** for use in other modules
+6. **Keep `stripe.ts` as-is** - It's legacy configuration that should not be moved
+
+## Environment Variables
+
+Environment variables should be:
+- Read only in config files
+- Have default values where appropriate
+- Be properly typed in TypeScript interfaces
+- Documented in README or environment setup docs
+
+## Example Structure
+```
+src/config/
+├── config.ts          # Main app config (preferred for new configs)
+├── stripe.ts          # Legacy Stripe payment config (keep as-is)
+└── [other].ts         # Only create if config is very large/domain-specific
+```
+
+## Legacy Files
+- **`stripe.ts`** - Keep this file as-is for historical reasons. Do not move its contents to `config.ts`.

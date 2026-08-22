@@ -1,0 +1,99 @@
+description: "extract-transactions-from-file: benchmark extractTransactionsFromFile() prompt + model behavior for text and image formats"
+
+prompts:
+  - id: file://adapter.ts
+    label: extract-transactions-from-file-prompt
+
+providers:
+  - id: file://../providers/llm-workflow-provider.ts
+    label: extract-transactions-from-file
+    config:
+      workflow: extract-transactions-from-file
+
+defaultTest:
+  options:
+    provider: file://../providers/llm-text-provider.ts
+
+# `fileContent` (text-category formats: csv/ofx/txt/json/xml) is plain text;
+# the provider wraps it in a `data:` URI so extractTransactionsFromFile()'s
+# own `fetch(fileUrl)` (prepare-llm-message.ts's "text" category branch)
+# resolves it with zero network dependency — Node's fetch supports `data:`
+# URLs. `imagePath` (image/pdf-category formats) is a path to a real fixture
+# file, relative to evals/ — the provider reads it and passes the bare
+# base64 payload (no `data:` prefix) as fileUrl instead.
+tests:
+  - description: "simple CSV bank statement extracts each row correctly"
+    vars:
+      params:
+        format: "csv"
+        fileContent: |
+          Date,Description,Amount
+          2024-01-15,STARBUCKS #1234,-5.75
+          2024-01-16,AMZN*AB123CD45,-42.10
+          2024-01-20,PAYROLL DEPOSIT,2500.00
+    assert:
+      - type: javascript
+        value: |
+          const { transactions } = JSON.parse(output);
+          return transactions.length === 3;
+      - type: javascript
+        value: |
+          const { transactions } = JSON.parse(output);
+          return transactions.every((t) => /^\d{4}-\d{2}-\d{2}$/.test(t.date));
+      - type: javascript
+        value: |
+          const { transactions } = JSON.parse(output);
+          const amounts = transactions.map((t) => t.amount).sort((a, b) => a - b);
+          return JSON.stringify(amounts) === JSON.stringify([-42.1, -5.75, 2500]);
+      - type: llm-rubric
+        value: "The extracted payees are cleaned merchant names (e.g. the Amazon order code is normalized to something like 'Amazon', not left as the raw transaction code)."
+
+  - description: "header and footer Total row must not be extracted as transactions"
+    vars:
+      params:
+        format: "csv"
+        fileContent: |
+          Date,Description,Amount
+          2024-02-01,Grocery Store,-85.32
+          2024-02-03,Gas Station,-40.00
+          Total,,-125.32
+    assert:
+      - type: javascript
+        value: |
+          const { transactions } = JSON.parse(output);
+          return transactions.length === 2;
+
+  - description: "parenthesized amount means negative"
+    vars:
+      params:
+        format: "csv"
+        fileContent: |
+          Date,Description,Amount
+          2024-03-01,Overdraft Fee,($25.00)
+    assert:
+      - type: javascript
+        value: |
+          const { transactions } = JSON.parse(output);
+          return transactions.length === 1 && transactions[0].amount === -25;
+
+  - description: "receipt image is summarized as ONE transaction using the printed total"
+    vars:
+      params:
+        format: "webp"
+        mediaType: "image/webp"
+        imagePath: "extract-transactions-from-file/receipt.webp"
+    assert:
+      - type: javascript
+        value: |
+          const { transactions } = JSON.parse(output);
+          return transactions.length === 1;
+      - type: javascript
+        value: |
+          const { transactions } = JSON.parse(output);
+          return transactions[0].amount === -27.35;
+      - type: javascript
+        value: |
+          const { transactions } = JSON.parse(output);
+          return /^\d{4}-\d{2}-\d{2}$/.test(transactions[0].date);
+      - type: llm-rubric
+        value: "The single extracted transaction represents a grocery purchase from a supermarket called something like 'Green Supermarket', not itemized per grocery item (no separate apple/banana/etc. line items)."

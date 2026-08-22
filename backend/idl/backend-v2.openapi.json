@@ -1,0 +1,1894 @@
+{
+  "openapi": "3.0.0",
+  "info": {
+    "title": "Web Beancount Backend API",
+    "version": "2.0.0",
+    "description": "Backend REST API for Web Beancount - a web-based interface for managing Beancount accounting files.\n\n## Features\n- User authentication and authorization\n- Ledger file management with Git-based version control\n- Admin operations for user and ledger management\n- Stripe webhook integration for payment processing\n\n## Authentication\nThe API supports multiple authentication methods:\n- **Bearer Token**: JWT-based authentication for user endpoints\n- **Admin Token**: Special admin API key for administrative operations\n- **API Key**: API key for authenticated endpoints",
+    "contact": {
+      "name": "Web Beancount",
+      "url": "https://github.com/stargately/web-beancount"
+    }
+  },
+  "servers": [
+    {
+      "url": "http://localhost:4104",
+      "description": "Development server"
+    },
+    {
+      "url": "https://api.v3.beancount.io",
+      "description": "Production server"
+    }
+  ],
+  "tags": [
+    {
+      "name": "Authentication",
+      "description": "User authentication and account management endpoints"
+    },
+    {
+      "name": "Admin API",
+      "description": "Administrative operations requiring admin token authentication"
+    },
+    {
+      "name": "Ledger",
+      "description": "Ledger file operations and editor access"
+    },
+    {
+      "name": "Stripe Webhooks",
+      "description": "Stripe payment webhook handlers"
+    },
+    {
+      "name": "Health",
+      "description": "Service health check endpoints"
+    },
+    {
+      "name": "SEO",
+      "description": "Search Engine Optimization endpoints"
+    }
+  ],
+  "components": {
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT Bearer token for authenticated user endpoints"
+      },
+      "adminToken": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-admin-token",
+        "description": "Admin API token for administrative operations"
+      },
+      "apiKey": {
+        "type": "apiKey",
+        "in": "header",
+        "name": "x-api-key",
+        "description": "API key for authenticated endpoints"
+      }
+    },
+    "schemas": {
+      "HealthCheckResponse": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "healthy",
+              "unhealthy"
+            ]
+          },
+          "services": {
+            "type": "object",
+            "properties": {
+              "postgres": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "healthy",
+                      "unhealthy"
+                    ]
+                  },
+                  "latency_ms": {
+                    "type": "number"
+                  },
+                  "error": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "latency_ms"
+                ]
+              },
+              "redis": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "healthy",
+                      "unhealthy"
+                    ]
+                  },
+                  "latency_ms": {
+                    "type": "number"
+                  },
+                  "error": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "latency_ms"
+                ]
+              },
+              "ledger": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "healthy",
+                      "unhealthy"
+                    ]
+                  },
+                  "latency_ms": {
+                    "type": "number"
+                  },
+                  "error": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "latency_ms"
+                ]
+              },
+              "gitea": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "healthy",
+                      "unhealthy"
+                    ]
+                  },
+                  "latency_ms": {
+                    "type": "number"
+                  },
+                  "error": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "latency_ms"
+                ]
+              },
+              "aiFeature": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "healthy",
+                      "unhealthy",
+                      "unchecked"
+                    ]
+                  },
+                  "latency_ms": {
+                    "type": "number"
+                  },
+                  "lastChecked": {
+                    "type": "string"
+                  },
+                  "error": {
+                    "type": "string"
+                  }
+                },
+                "required": [
+                  "status",
+                  "latency_ms"
+                ]
+              }
+            },
+            "required": [
+              "postgres",
+              "redis",
+              "ledger",
+              "gitea",
+              "aiFeature"
+            ]
+          }
+        },
+        "required": [
+          "status",
+          "services"
+        ],
+        "description": "Health check response with per-service dependency status and latency"
+      },
+      "LoginAsResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "redirectUrl": {
+            "type": "string",
+            "format": "uri",
+            "description": "Dashboard URL with one-time token for auto login via /auth/callback",
+            "example": "https://beancount.io/auth/callback?oneTimeToken=abc123"
+          }
+        },
+        "required": [
+          "ok",
+          "redirectUrl"
+        ],
+        "description": "Response containing a one-time redirect URL to auto-login to the dashboard"
+      },
+      "ErrorResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              false
+            ],
+            "description": "Indicates request failed"
+          },
+          "error": {
+            "type": "object",
+            "properties": {
+              "code": {
+                "type": "string",
+                "description": "Error code",
+                "example": "UNAUTHORIZED"
+              },
+              "message": {
+                "type": "string",
+                "description": "Human-readable error message",
+                "example": "invalid api token"
+              }
+            },
+            "required": [
+              "code",
+              "message"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "error"
+        ]
+      },
+      "LoginAsRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email of the user to login as",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "Request body for logging in as a specific user"
+      },
+      "UnblockUserResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success message",
+            "example": "User unblocked successfully"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
+        ],
+        "description": "Response confirming the user has been unblocked"
+      },
+      "UnblockUserRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email of the user to unblock",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "Request body for unblocking a specific user"
+      },
+      "RunMigrationsResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "message": {
+            "type": "string",
+            "description": "Result message",
+            "example": "Migrations applied successfully"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
+        ],
+        "description": "Response confirming migrations were applied"
+      },
+      "GetSignupOtpResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "otp": {
+            "type": "string",
+            "description": "4-digit OTP validation code for the pending signup session",
+            "example": "4821"
+          },
+          "expireAt": {
+            "type": "string",
+            "description": "ISO timestamp when the signup session expires",
+            "example": "2026-05-03T12:30:00.000Z"
+          }
+        },
+        "required": [
+          "ok",
+          "otp",
+          "expireAt"
+        ],
+        "description": "Response containing the OTP code for the user's pending signup session"
+      },
+      "GetSignupOtpRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address of the user with a pending signup session",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "Request body for retrieving a pending signup OTP by email"
+      },
+      "ListRecentUsersResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/RecentUser"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer"
+              },
+              "offset": {
+                "type": "integer"
+              },
+              "count": {
+                "type": "integer",
+                "description": "Number of users returned in this response"
+              }
+            },
+            "required": [
+              "limit",
+              "offset",
+              "count"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "users",
+          "pagination"
+        ]
+      },
+      "RecentUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "abc123"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Jane"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "username": {
+            "type": "string",
+            "example": "jane_doe"
+          },
+          "isBlocked": {
+            "type": "boolean",
+            "example": false
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-15T10:00:00.000Z"
+          },
+          "createAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "isBlocked"
+        ]
+      },
+      "ListActivePaidUsersResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "users": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ActivePaidUser"
+            }
+          },
+          "pagination": {
+            "type": "object",
+            "properties": {
+              "limit": {
+                "type": "integer"
+              },
+              "offset": {
+                "type": "integer"
+              },
+              "total": {
+                "type": "integer",
+                "description": "Total number of active paid users"
+              }
+            },
+            "required": [
+              "limit",
+              "offset",
+              "total"
+            ]
+          }
+        },
+        "required": [
+          "ok",
+          "users",
+          "pagination"
+        ]
+      },
+      "ActivePaidUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "abc123"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Jane"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "username": {
+            "type": "string",
+            "example": "jane_doe"
+          },
+          "isBlocked": {
+            "type": "boolean",
+            "example": false
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-15T10:00:00.000Z"
+          },
+          "createAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00.000Z"
+          },
+          "stripeCustomerId": {
+            "type": "string",
+            "example": "cus_abc123"
+          },
+          "currentPeriodEnd": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-12-31T00:00:00.000Z"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "isBlocked",
+          "stripeCustomerId",
+          "currentPeriodEnd"
+        ]
+      },
+      "AdminStatsResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "totalUsers": {
+            "type": "integer",
+            "description": "Total number of registered users",
+            "example": 1234
+          },
+          "activePaidUsers": {
+            "type": "integer",
+            "description": "Number of users with an active Stripe subscription",
+            "example": 56
+          }
+        },
+        "required": [
+          "ok",
+          "totalUsers",
+          "activePaidUsers"
+        ]
+      },
+      "FixUserEmailResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "message": {
+            "type": "string",
+            "description": "Success message",
+            "example": "User email updated from kwoktungdev@gmail.com to kwoktung.dev@gmail.com"
+          }
+        },
+        "required": [
+          "ok",
+          "message"
+        ],
+        "description": "Response confirming the user's email has been corrected"
+      },
+      "FixUserEmailRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "The user's current, incorrectly-stored email address",
+            "example": "kwoktungdev@gmail.com"
+          },
+          "expectedEmail": {
+            "type": "string",
+            "format": "email",
+            "description": "The correct email address to set for the user",
+            "example": "kwoktung.dev@gmail.com"
+          }
+        },
+        "required": [
+          "email",
+          "expectedEmail"
+        ],
+        "description": "Request body for correcting a user's stored email address"
+      },
+      "GetUserDetailResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "user": {
+            "$ref": "#/components/schemas/UserDetailUser"
+          },
+          "paidCustomers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDetailPaidCustomer"
+            }
+          },
+          "subscriptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDetailSubscription"
+            }
+          }
+        },
+        "required": [
+          "ok",
+          "user",
+          "paidCustomers",
+          "subscriptions"
+        ]
+      },
+      "UserDetailUser": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "abc123"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "firstName": {
+            "type": "string",
+            "example": "Jane"
+          },
+          "lastName": {
+            "type": "string",
+            "example": "Doe"
+          },
+          "username": {
+            "type": "string",
+            "example": "jane_doe"
+          },
+          "isBlocked": {
+            "type": "boolean",
+            "example": false
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-15T10:00:00.000Z"
+          },
+          "createAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00.000Z"
+          },
+          "avatarUrl": {
+            "type": "string",
+            "example": "gravatar.com/avatar/abc123"
+          },
+          "locale": {
+            "type": "string",
+            "example": "en"
+          }
+        },
+        "required": [
+          "id",
+          "email",
+          "username",
+          "isBlocked",
+          "avatarUrl",
+          "locale"
+        ]
+      },
+      "UserDetailPaidCustomer": {
+        "type": "object",
+        "properties": {
+          "clientId": {
+            "type": "string",
+            "example": "beancount-web-prod"
+          },
+          "stripeCustomerId": {
+            "type": "string",
+            "example": "cus_abc123"
+          },
+          "email": {
+            "type": "string",
+            "example": "user@example.com"
+          },
+          "name": {
+            "type": "string",
+            "example": "Jane Doe"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "currentPeriodEnd": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-12-31T00:00:00.000Z"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "clientId",
+          "stripeCustomerId",
+          "createdAt",
+          "updatedAt"
+        ]
+      },
+      "UserDetailSubscription": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "sub_abc123"
+          },
+          "clientId": {
+            "type": "string",
+            "example": "beancount-web-prod"
+          },
+          "status": {
+            "type": "string",
+            "example": "active"
+          },
+          "currentPeriodStart": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "currentPeriodEnd": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "cancelAtPeriodEnd": {
+            "type": "boolean"
+          },
+          "cancelAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "canceledAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UserDetailSubscriptionItem"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "clientId",
+          "status",
+          "currentPeriodStart",
+          "currentPeriodEnd",
+          "cancelAtPeriodEnd",
+          "items"
+        ]
+      },
+      "UserDetailSubscriptionItem": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "si_abc123"
+          },
+          "priceId": {
+            "type": "string",
+            "example": "price_abc123"
+          },
+          "productId": {
+            "type": "string",
+            "example": "prod_abc123"
+          },
+          "quantity": {
+            "type": "integer"
+          },
+          "unitAmount": {
+            "type": "number",
+            "example": 1999
+          },
+          "currency": {
+            "type": "string",
+            "example": "usd"
+          },
+          "interval": {
+            "type": "string",
+            "example": "month"
+          }
+        },
+        "required": [
+          "id",
+          "priceId",
+          "quantity",
+          "currency",
+          "interval"
+        ]
+      },
+      "GetUserDetailRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address of the user to look up",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ],
+        "description": "Request body for fetching a user's full detail by email"
+      },
+      "StripeWebhookSuccessResponse": {
+        "type": "object",
+        "properties": {
+          "received": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Webhook was received"
+          },
+          "processed": {
+            "type": "boolean",
+            "description": "Whether the webhook was processed (false if ignored due to missing metadata)"
+          },
+          "reason": {
+            "type": "string",
+            "description": "Reason for not processing the webhook if processed=false",
+            "example": "No client ID in metadata"
+          }
+        },
+        "required": [
+          "received",
+          "processed"
+        ]
+      },
+      "StripeWebhookErrorResponse": {
+        "type": "object",
+        "properties": {
+          "error": {
+            "type": "string",
+            "description": "Error message describing what went wrong",
+            "example": "Webhook Error: Invalid signature"
+          }
+        },
+        "required": [
+          "error"
+        ]
+      },
+      "StripeEventExample": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "evt_1234567890abcdef"
+          },
+          "object": {
+            "type": "string",
+            "enum": [
+              "event"
+            ]
+          },
+          "type": {
+            "type": "string",
+            "description": "Event type",
+            "example": "customer.subscription.created"
+          },
+          "data": {
+            "type": "object",
+            "properties": {
+              "object": {
+                "type": "object",
+                "additionalProperties": {
+                  "nullable": true
+                },
+                "description": "Event-specific data object containing metadata.clientId and metadata.userId"
+              },
+              "previous_attributes": {
+                "type": "object",
+                "additionalProperties": {
+                  "nullable": true
+                },
+                "description": "Previous attribute values for update events"
+              }
+            },
+            "required": [
+              "object"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "object",
+          "type",
+          "data"
+        ],
+        "description": "Example structure of a Stripe webhook event. See Stripe API docs for complete event schemas."
+      },
+      "StripeWebhookHealthResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates the webhook endpoint is operational"
+          }
+        },
+        "required": [
+          "ok"
+        ]
+      },
+      "LedgerEditorRedirect": {
+        "type": "object",
+        "properties": {
+          "location": {
+            "type": "string",
+            "format": "uri",
+            "description": "Dashboard URL with one-time authentication token",
+            "example": "https://beancount.io/auth?oneTimeToken=507f1f77bcf86cd799439011"
+          }
+        },
+        "required": [
+          "location"
+        ],
+        "description": "Redirect response to dashboard with one-time token for seamless authentication"
+      },
+      "LedgerEditorError": {
+        "type": "object",
+        "properties": {
+          "message": {
+            "type": "string",
+            "description": "Error message",
+            "example": "token not found"
+          }
+        },
+        "required": [
+          "message"
+        ],
+        "description": "Error response when authentication token is missing or invalid"
+      },
+      "SitemapXmlResponse": {
+        "type": "string",
+        "description": "XML sitemap document following the sitemaps.org protocol",
+        "example": "<?xml version=\"1.0\" encoding=\"UTF-8\"?>\n<urlset xmlns=\"http://www.sitemaps.org/schemas/sitemap/0.9\">\n  <url>\n    <loc>https://beancount.io/ledger/john/</loc>\n    <changefreq>weekly</changefreq>\n    <priority>0.6</priority>\n  </url>\n  <url>\n    <loc>https://beancount.io/ledger/john/my-ledger/</loc>\n    <lastmod>2025-01-10T12:00:00Z</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.8</priority>\n  </url>\n  <url>\n    <loc>https://beancount.io/ledger/john/my-ledger/journal</loc>\n    <lastmod>2025-01-10T12:00:00Z</lastmod>\n    <changefreq>daily</changefreq>\n    <priority>0.7</priority>\n  </url>\n</urlset>"
+      }
+    },
+    "parameters": {}
+  },
+  "paths": {
+    "/healthz": {
+      "get": {
+        "summary": "Health check endpoint",
+        "description": "Deep health check that verifies connectivity to all backend dependencies (PostgreSQL, Redis, Ledger, Gitea) and reads cached AI feature health. Returns 200 when infrastructure services are healthy, 500 when any is unhealthy. Use ?strict=true to also fail on unhealthy AI feature.",
+        "tags": [
+          "Health"
+        ],
+        "responses": {
+          "200": {
+            "description": "All services are healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "One or more services are unhealthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HealthCheckResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/login-as": {
+      "post": {
+        "summary": "Generate a one-time login URL for a user by email",
+        "description": "Allows administrators to generate a one-time redirect URL that auto-logs into the dashboard as the specified user.\n\nThe returned URL points to /auth/callback?oneTimeToken=... and expires in 5 minutes.\n\nThe endpoint will return an error if:\n- The user with the provided email does not exist (404)\n- The user is blocked (400)",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LoginAsRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "One-time login URL generated successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LoginAsResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - user is blocked or invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/unblock-user": {
+      "post": {
+        "summary": "Unblock a user by email",
+        "description": "Allows administrators to unblock a user by providing their email address.\n\nThis endpoint will:\n- Find the user by email\n- Set their isBlocked status to false\n- Return a success message\n\nThe endpoint will return an error if:\n- The user with the provided email does not exist (404)\n\nIf the user is already unblocked, the operation succeeds and returns a message indicating the user was already unblocked.",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UnblockUserRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User unblocked successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UnblockUserResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/run-migrations": {
+      "post": {
+        "summary": "Apply pending database migrations",
+        "description": "Runs all pending Drizzle migrations against the PostgreSQL database.",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Migrations applied successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RunMigrationsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/get-signup-otp": {
+      "post": {
+        "summary": "Get signup OTP code by email",
+        "description": "Retrieves the current registration validation code (OTP) for a user with a pending signup session.\n\nUseful for support and debugging when a user reports not receiving or misplacing their OTP email.\n\nReturns 404 if no active signup session exists for the given email (session may have expired or the user may have already completed signup).",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetSignupOtpRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "OTP retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetSignupOtpResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No active signup session found for this email",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/recent-users": {
+      "get": {
+        "summary": "List recently active users",
+        "description": "Returns users who have made at least one authenticated request within the specified time window, ordered by most-recently-seen first.",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Maximum number of users to return",
+              "example": 50
+            },
+            "required": false,
+            "description": "Maximum number of users to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of users to skip for pagination",
+              "example": 0
+            },
+            "required": false,
+            "description": "Number of users to skip for pagination",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 8760,
+              "default": 24,
+              "description": "Return users seen within the last N hours",
+              "example": 24
+            },
+            "required": false,
+            "description": "Return users seen within the last N hours",
+            "name": "sinceHours",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of recently seen users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListRecentUsersResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — invalid query params",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/active-paid-users": {
+      "get": {
+        "summary": "List active paid users",
+        "description": "Returns users with an active Stripe subscription (currentPeriodEnd in the future), ordered by subscription end date descending.",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 200,
+              "default": 50,
+              "description": "Maximum number of users to return",
+              "example": 50
+            },
+            "required": false,
+            "description": "Maximum number of users to return",
+            "name": "limit",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "nullable": true,
+              "minimum": 0,
+              "default": 0,
+              "description": "Number of users to skip for pagination",
+              "example": 0
+            },
+            "required": false,
+            "description": "Number of users to skip for pagination",
+            "name": "offset",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "prod",
+                "dev"
+              ],
+              "default": "prod",
+              "description": "Environment to filter paid users by",
+              "example": "prod"
+            },
+            "required": false,
+            "description": "Environment to filter paid users by",
+            "name": "env",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "List of active paid users",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ListActivePaidUsersResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request — invalid query params",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/stats": {
+      "get": {
+        "summary": "Get admin stats",
+        "description": "Returns the total number of registered users and the number of users with an active Stripe subscription.",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Admin stats",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStatsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/fix-user-email": {
+      "post": {
+        "summary": "Fix a user's incorrectly-stored email address",
+        "description": "Allows administrators to correct a user's stored email address by\nproviding the current (incorrectly-stored) email and the expected (correct)\nemail. Updates both the user's Postgres record and their Gitea-backed ledger\naccount so the two stores stay in sync.\n\nThis endpoint only fixes Gmail dot-stripping mismatches: `expectedEmail` must\nbe the same Gmail/Googlemail address as `email`, differing only by dots in\nthe local part (e.g. `kwoktungdev@gmail.com` → `kwoktung.dev@gmail.com`). It\nis not a general-purpose email-change tool.\n\nThis endpoint will:\n- Find the user by their current stored email\n- Update the email in Postgres and in the Gitea-backed ledger account\n- Return a success message\n\nThe endpoint will return an error if:\n- `expectedEmail` is not a dot-variant of the same Gmail address as `email` (400)\n- The user with the current email does not exist (404)\n- The expected email is already in use by a different user (409)\n\nIf the user's email is already correct, the operation succeeds and returns a\nmessage indicating no change was needed.",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FixUserEmailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User email fixed successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FixUserEmailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "Expected email is already in use by another user",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/user-detail": {
+      "post": {
+        "summary": "Get a user's full detail by email",
+        "description": "Returns a complete picture of a user for support/debugging: basic\naccount info, all of their `paidCustomer` records (one per Stripe `clientId`,\ncovering prod and dev environments), and their live Stripe subscriptions.\n\nThe endpoint will return an error if:\n- The user with the provided email does not exist (404)",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/GetUserDetailRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User detail retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GetUserDetailResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api-gateway/stripe/webhook": {
+      "post": {
+        "summary": "Handle Stripe webhook events",
+        "description": "Receives and processes webhook events from Stripe for payment and subscription management.\n\n**Important**: This endpoint expects raw request body for signature verification.\n\n**Event Processing**:\n- Verifies webhook signature using client-specific webhook secret\n- Extracts clientId and userId from event metadata\n- Processes events: customer.created, customer.updated, checkout.session.completed\n- Returns 200 even for ignored events (missing metadata) to prevent retries\n\n**Multi-tenant Support**:\nThe endpoint supports multiple Stripe accounts via clientId in event metadata.\n\n**Security**:\n- Signature verification prevents unauthorized events\n- Events without clientId in metadata are ignored\n- Optional user existence validation (currently disabled)",
+        "tags": [
+          "Stripe Webhooks"
+        ],
+        "requestBody": {
+          "description": "Raw Stripe webhook event payload (JSON). Must include metadata.clientId and optionally metadata.userId.\n\n**Required Headers**:\n- 'stripe-signature': Stripe webhook signature for verification (required)\n- 'stripe-event-id': Optional Stripe event ID for tracking (optional)",
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StripeEventExample"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Webhook received and processed (or acknowledged)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeWebhookSuccessResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Invalid signature, missing body, or webhook processing error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeWebhookErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "Stripe webhook health check",
+        "description": "Simple health check endpoint to verify the webhook endpoint is accessible. Used by Stripe and monitoring systems.",
+        "tags": [
+          "Stripe Webhooks"
+        ],
+        "responses": {
+          "200": {
+            "description": "Webhook endpoint is healthy",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StripeWebhookHealthResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ledger/editor/": {
+      "get": {
+        "summary": "Redirect to dashboard with one-time authentication token",
+        "description": "Generates a one-time authentication token for the logged-in user and redirects to the dashboard.\n\nThis endpoint facilitates seamless authentication between the backend and dashboard by:\n1. Verifying the user's JWT token from cookies or Authorization header\n2. Creating a one-time authentication token\n3. Redirecting to the dashboard with the one-time token in the URL\n\nIf an optional ledgerId query parameter is provided:\n1. Validates the ledgerId query parameter\n2. Validates that the user owns the specified ledger\n3. Redirects to the dashboard ledger editor for the specific ledger\n\nThe one-time token can be exchanged for a full JWT token on the dashboard.",
+        "tags": [
+          "Ledger"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Optional ledger identifier in owner/name format (e.g., 'user123/main-ledger'). Legacy base64url format is also accepted. If provided, redirects to the specific ledger editor.",
+              "example": "user123/main-ledger"
+            },
+            "required": false,
+            "description": "Optional ledger identifier in owner/name format (e.g., 'user123/main-ledger'). Legacy base64url format is also accepted. If provided, redirects to the specific ledger editor.",
+            "name": "ledgerId",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "Redirect to dashboard with one-time token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerEditorRedirect"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Token not found, invalid token, or invalid ledgerId format",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerEditorError"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "User not found or token invalid",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerEditorError"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "User does not have access to this ledger",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LedgerEditorError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/ledgers/{ledgerId}/archive/{archive}": {
+      "get": {
+        "summary": "Download ledger archive file",
+        "description": "Downloads a ledger archive in the specified format (e.g., tar.gz, zip).\n\nThis endpoint acts as a proxy to the Python ledger service, forwarding the request with the user's credentials.\n\nThe user must be authenticated and have access to the specified ledger.\n\nCommon archive formats:\n- 'gitea-main.zip' - Git archive from Gitea repository (main branch)\n- 'tar.gz' - Tarball archive\n- 'zip' - ZIP archive",
+        "tags": [
+          "Ledger"
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "Ledger identifier in format 'owner/repo' (e.g., 'user123/main-ledger')",
+              "example": "user123/main-ledger"
+            },
+            "required": true,
+            "description": "Ledger identifier in format 'owner/repo' (e.g., 'user123/main-ledger')",
+            "name": "ledgerId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "Archive format to download. Common formats: 'tar.gz', 'zip'. For Git archives, use 'gitea-<branch>.zip'",
+              "example": "gitea-main.zip"
+            },
+            "required": true,
+            "description": "Archive format to download. Common formats: 'tar.gz', 'zip'. For Git archives, use 'gitea-<branch>.zip'",
+            "name": "archive",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "JWT authentication token for verifying user access",
+              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1MDdmMWY3N2JjZjg2Y2Q3OTk0MzkwMTEifQ.abc123"
+            },
+            "required": true,
+            "description": "JWT authentication token for verifying user access",
+            "name": "token",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Archive file download stream",
+            "content": {
+              "application/zip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/x-tar": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing token"
+          },
+          "404": {
+            "description": "Archive or ledger not found"
+          },
+          "500": {
+            "description": "Failed to download archive from upstream service"
+          }
+        }
+      }
+    },
+    "/api-gateway/sitemap.xml": {
+      "get": {
+        "summary": "Get sitemap.xml for SEO",
+        "description": "Returns a sitemap.xml file containing all public ledger pages for search engine indexing.\n\nThe sitemap includes:\n- User profile pages (/ledger/{username}/)\n- Repository pages (/ledger/{username}/{repoName}/)\n- Repository subpages (journal, balance-sheet, income-statement, trial-balance, statistics, holdings)\n\nOnly public repositories and active users are included.\n\nThe sitemap is cached for 1 hour to optimize performance.",
+        "tags": [
+          "SEO"
+        ],
+        "responses": {
+          "200": {
+            "description": "Sitemap XML document",
+            "content": {
+              "application/xml": {
+                "schema": {
+                  "$ref": "#/components/schemas/SitemapXmlResponse"
+                }
+              }
+            }
+          },
+          "500": {
+            "description": "Internal server error"
+          }
+        }
+      }
+    }
+  }
+}

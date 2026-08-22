@@ -1,0 +1,1 @@
+DROP TABLE "gitea_relay_keys" CASCADE;

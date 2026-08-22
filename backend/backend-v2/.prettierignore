@@ -1,0 +1,12 @@
+# Ignore artifacts:
+build
+dist
+coverage
+scripts
+migrations
+yarn.lock
+api-gateway.graphql
+openapi.json
+src/features/gitea/client
+src/drizzle/migrations
+src/service/fava/Api.ts

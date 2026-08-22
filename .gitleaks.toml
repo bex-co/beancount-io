@@ -25,3 +25,14 @@ targetRules = ["curl-auth-header"]
 paths = [
   '''.*\.md$''',
 ]
+
+# Email/Gitea test fixtures use synthetic tokens (e.g. abc-123_XYZ.456,
+# abc123def456...) that trigger generic-api-key on entropy alone.
+# Scoped to that rule AND test/HTML paths — real secrets elsewhere still caught.
+[[allowlists]]
+description = "test fixtures - generic-api-key in email/Gitea tests"
+targetRules = ["generic-api-key"]
+paths = [
+  '''.*__tests__/.*''',
+  '''.*\.html$''',
+]

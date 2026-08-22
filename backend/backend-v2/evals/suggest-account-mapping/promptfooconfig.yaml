@@ -1,0 +1,106 @@
+description: "suggest-account-mapping: benchmark suggestAccountMapping() prompt + model behavior"
+
+prompts:
+  - id: file://adapter.ts
+    label: suggest-account-mapping-prompt
+
+providers:
+  - id: file://../providers/llm-workflow-provider.ts
+    label: suggest-account-mapping
+    config:
+      workflow: suggest-account-mapping
+
+defaultTest:
+  options:
+    provider: file://../providers/llm-text-provider.ts
+
+# Each test case's fields are nested under one object-typed `params` var.
+# promptfoo treats a top-level var whose value is a string array as a
+# combinatorial dimension (one test run per element, not a literal list) —
+# nesting everything under `params` avoids that entirely, since only
+# top-level var values are inspected for that expansion.
+tests:
+  - description: "single account matches an existing account (autoAccounts omitted)"
+    vars:
+      params:
+        institutionName: "Chase"
+        existingAccounts:
+          - "Assets:Chase:Checking"
+        accounts:
+          - accountId: "pacc_1"
+            accountName: "Chase Total Checking"
+            accountType: "depository"
+            accountSubtype: "checking"
+    assert:
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return parsed.suggestions[0]?.suggestedAccount === "Assets:Chase:Checking";
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return parsed.suggestions.every((s) => s.confidence >= 0 && s.confidence <= 1);
+
+  - description: "autoAccounts=false forces picking closest existing account, never invents one"
+    vars:
+      params:
+        institutionName: "Wise"
+        existingAccounts:
+          - "Assets:Wise:USD"
+        accounts:
+          - accountId: "pacc_2"
+            accountName: "Wise EUR Balance"
+            accountType: "depository"
+            accountSubtype: "checking"
+        autoAccounts: false
+    assert:
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return parsed.suggestions[0]?.suggestedAccount === "Assets:Wise:USD";
+
+  - description: "autoAccounts=true allows suggesting a brand new account"
+    vars:
+      params:
+        institutionName: "Wise"
+        existingAccounts:
+          - "Assets:Checking"
+        accounts:
+          - accountId: "pacc_3"
+            accountName: "Wise EUR Balance"
+            accountType: "depository"
+            accountSubtype: "checking"
+        autoAccounts: true
+    assert:
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return /^Assets:Wise:/.test(parsed.suggestions[0]?.suggestedAccount ?? "");
+
+  - description: "multiple bank accounts must each get a DISTINCT suggestion"
+    vars:
+      params:
+        institutionName: "Wise"
+        existingAccounts:
+          - "Assets:Wise:USD"
+          - "Assets:Wise:EUR"
+          - "Assets:Wise:GBP"
+        accounts:
+          - accountId: "pacc_4"
+            accountName: "Wise USD Balance"
+            accountType: "depository"
+            accountSubtype: "checking"
+          - accountId: "pacc_5"
+            accountName: "Wise EUR Balance"
+            accountType: "depository"
+            accountSubtype: "checking"
+          - accountId: "pacc_6"
+            accountName: "Wise GBP Balance"
+            accountType: "depository"
+            accountSubtype: "checking"
+    assert:
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          const suggested = parsed.suggestions.map((s) => s.suggestedAccount);
+          return suggested.length === 3 && new Set(suggested).size === 3;

@@ -1,0 +1,1 @@
+ALTER TABLE "plaid_accounts" ADD COLUMN "currency" text DEFAULT 'USD' NOT NULL;

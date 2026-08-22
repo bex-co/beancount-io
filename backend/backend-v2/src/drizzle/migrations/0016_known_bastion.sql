@@ -1,0 +1,1 @@
+DROP TABLE "ssh_key_index" CASCADE;

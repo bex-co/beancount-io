@@ -1,0 +1,93 @@
+description: "recommend-accounts: benchmark recommendAccounts() prompt + model behavior"
+
+prompts:
+  - id: file://adapter.ts
+    label: recommend-accounts-prompt
+
+providers:
+  - id: file://../providers/llm-workflow-provider.ts
+    label: recommend-accounts
+    config:
+      workflow: recommend-accounts
+
+defaultTest:
+  options:
+    provider: file://../providers/llm-text-provider.ts
+
+# Each test case's fields are nested under one object-typed `params` var —
+# see evals/categorize-transactions/promptfooconfig.yaml for why (a top-level
+# string-array var is treated by promptfoo as a combinatorial dimension, not
+# a literal list).
+tests:
+  - description: "expense with a clear existing match"
+    vars:
+      params:
+        transaction:
+          date: "2024-01-15"
+          payee: "Starbucks"
+          description: "Coffee purchase"
+          amount: -5.75
+        accounts:
+          - "Assets:Checking"
+          - "Expenses:Food:Coffee"
+    assert:
+      - type: javascript
+        value: |
+          const { recommendation } = JSON.parse(output);
+          const allowed = ["Assets:Checking", "Expenses:Food:Coffee"];
+          return (
+            (recommendation.sourceAccount === null || allowed.includes(recommendation.sourceAccount)) &&
+            (recommendation.targetAccount === null || allowed.includes(recommendation.targetAccount))
+          );
+      - type: javascript
+        value: |
+          const { recommendation } = JSON.parse(output);
+          return recommendation.confidence >= 0 && recommendation.confidence <= 1;
+      - type: llm-rubric
+        value: "For this Starbucks coffee expense, sourceAccount should be the payment method (a checking/cash-style account) and targetAccount should be a food/coffee expense category."
+
+  - description: "income transaction picks the opposite direction"
+    vars:
+      params:
+        transaction:
+          date: "2024-02-01"
+          payee: "Acme Corp"
+          description: "Paycheck"
+          amount: 2500.00
+        accounts:
+          - "Assets:Checking"
+          - "Income:Salary"
+    assert:
+      - type: javascript
+        value: |
+          const { recommendation } = JSON.parse(output);
+          const allowed = ["Assets:Checking", "Income:Salary"];
+          return (
+            (recommendation.sourceAccount === null || allowed.includes(recommendation.sourceAccount)) &&
+            (recommendation.targetAccount === null || allowed.includes(recommendation.targetAccount))
+          );
+      - type: llm-rubric
+        value: "For this paycheck income, sourceAccount should be the income source (like a salary account) and targetAccount should be the receiving asset account (like checking) — the opposite direction from an expense."
+
+  - description: "no suitable target account in the list must be null, not invented"
+    vars:
+      params:
+        transaction:
+          date: "2024-02-01"
+          payee: "Random Shop"
+          description: "Purchase"
+          amount: -15.00
+        accounts:
+          - "Assets:Checking"
+    assert:
+      - type: javascript
+        value: |
+          const { recommendation } = JSON.parse(output);
+          return recommendation.targetAccount === null;
+      - type: javascript
+        value: |
+          const { recommendation } = JSON.parse(output);
+          return (
+            recommendation.sourceAccount === null ||
+            recommendation.sourceAccount === "Assets:Checking"
+          );

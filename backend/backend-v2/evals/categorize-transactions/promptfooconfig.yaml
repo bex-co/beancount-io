@@ -1,0 +1,135 @@
+description: "categorize-transactions: benchmark categorizeTransactions() prompt + model behavior"
+
+prompts:
+  - id: file://adapter.ts
+    label: categorize-transactions-prompt
+
+providers:
+  - id: file://../providers/llm-workflow-provider.ts
+    label: categorize-transactions
+    config:
+      workflow: categorize-transactions
+
+defaultTest:
+  options:
+    provider: file://../providers/llm-text-provider.ts
+
+# Each test case's fields are nested under one object-typed `params` var.
+# promptfoo treats a top-level var whose value is a string array as a
+# combinatorial dimension (one test run per element, not a literal list) —
+# nesting everything under `params` avoids that entirely, since only
+# top-level var values are inspected for that expansion.
+tests:
+  - description: "common merchant matches an existing account"
+    vars:
+      params:
+        existingAccounts:
+          - "Expenses:Food:Coffee"
+          - "Assets:Checking"
+        transactions:
+          - rowIndex: 1
+            date: "2024-01-15"
+            payee: "Starbucks"
+            description: "Coffee purchase"
+            amount: -5.75
+        autoAccounts: false
+    assert:
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return parsed.suggestions.every((s) =>
+            ["Expenses:Food:Coffee", "Assets:Checking"].includes(s.targetAccount)
+          );
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return parsed.suggestions.every((s) => s.confidence >= 0 && s.confidence <= 1);
+      - type: llm-rubric
+        value: "The suggested account for the Starbucks coffee purchase is a sensible food/coffee expense category."
+
+  - description: "no existing accounts and autoAccounts=false must skip, not invent"
+    vars:
+      params:
+        existingAccounts: []
+        transactions:
+          - rowIndex: 1
+            date: "2024-02-01"
+            payee: "Trader Joe's"
+            description: "Groceries"
+            amount: -42.10
+        autoAccounts: false
+    assert:
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return parsed.suggestions.length === 0;
+
+  - description: "autoAccounts=true allows suggesting a brand new account"
+    vars:
+      params:
+        existingAccounts:
+          - "Assets:Checking"
+        transactions:
+          - rowIndex: 1
+            date: "2024-02-01"
+            payee: "Trader Joe's"
+            description: "Groceries"
+            amount: -42.10
+        autoAccounts: true
+    assert:
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return (
+            parsed.suggestions.length === 1 &&
+            /^Expenses:/.test(parsed.suggestions[0].targetAccount)
+          );
+
+  - description: "few-shot recentExamples nudge categorization toward the established pattern"
+    vars:
+      params:
+        existingAccounts:
+          - "Expenses:Food:Coffee"
+          - "Expenses:Food:Groceries"
+        recentExamples:
+          - payee: "Starbucks"
+            narration: "Latte"
+            account: "Expenses:Food:Coffee"
+        transactions:
+          - rowIndex: 1
+            date: "2024-03-01"
+            payee: "Starbucks"
+            description: "Cappuccino"
+            amount: -6.25
+        autoAccounts: false
+    assert:
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          return parsed.suggestions[0]?.targetAccount === "Expenses:Food:Coffee";
+
+  - description: "batch of multiple unambiguous transactions - no invented rowIndex"
+    vars:
+      params:
+        existingAccounts:
+          - "Expenses:Food:Coffee"
+          - "Expenses:Transport:Rideshare"
+          - "Assets:Checking"
+        transactions:
+          - rowIndex: 1
+            date: "2024-03-05"
+            payee: "Starbucks"
+            description: "Coffee"
+            amount: -4.50
+          - rowIndex: 2
+            date: "2024-03-05"
+            payee: "Uber"
+            description: "Ride"
+            amount: -18.20
+        autoAccounts: false
+    assert:
+      - type: javascript
+        value: |
+          const parsed = JSON.parse(output);
+          const inputRowIndexes = new Set([1, 2]);
+          return parsed.suggestions.every((s) => inputRowIndexes.has(s.rowIndex));

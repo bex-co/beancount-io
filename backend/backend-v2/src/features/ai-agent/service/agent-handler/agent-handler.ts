@@ -1,0 +1,25 @@
+import type { UIMessage } from "ai";
+import type { ServerResponse } from "node:http";
+import type { Identity } from "@/server/api/identity";
+import type { ToolServices } from "../../tools/types";
+
+export interface AgentHandlerContext {
+  messages: UIMessage[];
+  ledgerId: string;
+  userId: string;
+  /**
+   * The ledger services + caller identity a locally-run agent
+   * (`SelfHostedAgentHandler`) needs to build its `ToolContext`.
+   * `SandboxProxyAgentHandler` never reads these — it forwards `mcpToken` and
+   * lets the sandboxed agent authenticate its own MCP calls instead.
+   */
+  services: ToolServices;
+  identity: Identity;
+  mcpToken: string;
+  mcpUrl: string;
+  sessionId?: string;
+}
+
+export interface IAgentHandler {
+  handle(ctx: AgentHandlerContext, res: ServerResponse): Promise<void>;
+}

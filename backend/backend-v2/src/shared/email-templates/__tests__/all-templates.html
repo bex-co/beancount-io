@@ -1,0 +1,195 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Beancount.io Email Templates Preview</title>
+    <style>
+      body {
+        font-family:
+          -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen, Ubuntu,
+          Cantarell, sans-serif;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        padding: 40px 20px;
+        margin: 0;
+      }
+      .container {
+        max-width: 1600px;
+        margin: 0 auto;
+      }
+      h1 {
+        color: white;
+        text-align: center;
+        margin-bottom: 40px;
+        font-size: 2.5em;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+      }
+      .template-section {
+        background: white;
+        border-radius: 12px;
+        padding: 30px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+      }
+      .template-title {
+        color: #2563eb;
+        font-size: 1.8em;
+        margin-bottom: 20px;
+        padding-bottom: 10px;
+        border-bottom: 3px solid #2563eb;
+      }
+      .template-content {
+        display: grid;
+        grid-template-columns: 300px 1fr;
+        gap: 30px;
+        align-items: start;
+      }
+      .template-params {
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        position: sticky;
+        top: 200px;
+      }
+      .template-params h3 {
+        margin: 0 0 15px 0;
+        color: #2563eb;
+        font-size: 1.1em;
+      }
+      .template-params pre {
+        margin: 0;
+        background: #2d3748;
+        color: #e2e8f0;
+        padding: 12px;
+        border-radius: 6px;
+        font-size: 11px;
+        line-height: 1.4;
+        overflow-x: auto;
+        font-family: "Monaco", "Menlo", "Consolas", monospace;
+        word-wrap: break-word;
+      }
+      .template-preview {
+        background: #f5f5f5;
+        border-radius: 8px;
+        padding: 0;
+        overflow: hidden;
+        min-height: 600px;
+      }
+      .template-preview iframe {
+        width: 100%;
+        min-height: 600px;
+        border: none;
+        display: block;
+      }
+      @media (max-width: 1024px) {
+        .template-content {
+          grid-template-columns: 1fr;
+        }
+        .template-params {
+          position: static;
+        }
+      }
+      .nav {
+        background: white;
+        border-radius: 12px;
+        padding: 20px;
+        margin-bottom: 40px;
+        box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+        position: sticky;
+        top: 20px;
+        z-index: 100;
+      }
+      .nav h2 {
+        margin: 0 0 15px 0;
+        color: #2563eb;
+        font-size: 1.3em;
+      }
+      .nav a {
+        display: inline-block;
+        margin: 5px 10px 5px 0;
+        padding: 8px 16px;
+        background: linear-gradient(135deg, #2563eb 0%, #1e40af 100%);
+        color: white;
+        text-decoration: none;
+        border-radius: 6px;
+        font-weight: 500;
+        transition:
+          transform 0.2s,
+          box-shadow 0.2s;
+      }
+      .nav a:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+      }
+      .generated-date {
+        text-align: center;
+        color: white;
+        margin-top: 40px;
+        font-size: 0.9em;
+        opacity: 0.9;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Beancount.io Email Templates</h1>
+
+      <div class="nav">
+        <h2>Quick Navigation</h2>
+        <a href="#template-0">Welcome Email</a
+        ><a href="#template-1">Password Reset Email</a>
+      </div>
+
+      <div class="template-section" id="template-0">
+        <h2 class="template-title">Welcome Email</h2>
+        <div class="template-content">
+          <div class="template-params">
+            <h3>Template Data</h3>
+            <pre>
+{
+  "firstName": "Alice",
+  "dashboardUrl": "https://beancount.io/ledger",
+  "mobileAppUrl": "http://onelink.to/v3rz2v",
+  "helpCenterUrl": "https://beancount.io/docs/help-center"
+}</pre
+            >
+          </div>
+          <div class="template-preview">
+            <iframe
+              srcdoc='<!DOCTYPE html>     <html>       <head>         <meta charset="utf-8">         <meta name="viewport" content="width=device-width, initial-scale=1.0">         <title>Welcome to Beancount.io!</title>         <style>           @media only screen and (max-width: 100%) {             .email-content { padding: 20px !important; }             h2 { font-size: 22px !important; }           }         </style>       </head>       <body class="email-body" style="font-family: -apple-system, BlinkMacSystemFont, &apos;Segoe UI&apos;, Roboto, &apos;Helvetica Neue&apos;, Arial, sans-serif; line-height: 1.7; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f7fa;">              <div style="background: #ffffff; padding: 35px 30px; text-align: center; border-radius: 12px 12px 0 0; border-bottom: 2px solid #e5e7eb;">       <h1 style="color: #1a1a1a; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">Beancount.io</h1>     </div>             <div class="email-content" style="background: #ffffff; padding: 40px; border: 1px solid #e8eaf0; border-top: none; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">                <h2 style="margin-top: 0; color: #1e293b;">Welcome, Alice!</h2>      <p style="margin-bottom: 24px; font-size: 16px;">       Your account is ready. Start tracking your finances in under 2 minutes.     </p>      <div style="text-align: center; margin: 28px 0;">       <a href="https://beancount.io/ledger" style="display: inline-block; background: #2563eb; color: #ffffff; text-decoration: none; font-weight: 600; font-size: 16px; padding: 14px 32px; border-radius: 8px;">         Open Your Dashboard       </a>     </div>      <div style="background: #f8fafc; border: 1px solid #e2e8f0; border-radius: 6px; padding: 0 16px; margin: 24px 0;">       <table style="width: 100%; border-collapse: collapse;">         <tr>           <td style="padding: 12px 0;">             <a href="http://onelink.to/v3rz2v" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 14px;">               Download Mobile App             </a>             <span style="color: #64748b; font-size: 13px;"> &mdash; Track your finances on the go</span>           </td>         </tr>         <tr>           <td style="padding: 12px 0; border-top: 1px solid #e2e8f0;">             <a href="https://beancount.io/docs/help-center" style="color: #2563eb; text-decoration: none; font-weight: 600; font-size: 14px;">               Help Center             </a>             <span style="color: #64748b; font-size: 13px;"> &mdash; Guides and tutorials to get you started</span>           </td>         </tr>       </table>     </div>      <p style="text-align: center; color: #64748b; font-size: 14px; margin-top: 28px;">       Happy accounting!     </p>            </div>               <div style="text-align: center; margin-top: 30px; padding: 25px 20px; background: #f8f9fa; border-radius: 8px; border-top: 2px solid #e5e7eb;">       <p style="color: #6b7280; font-size: 12px; margin: 0; line-height: 1.6;">         Powered by Beancount.io       </p>     </div>          </body>     </html>'
+              onload="
+                this.style.height =
+                  this.contentWindow.document.body.scrollHeight + 'px'
+              "
+            ></iframe>
+          </div>
+        </div>
+      </div>
+
+      <div class="template-section" id="template-1">
+        <h2 class="template-title">Password Reset Email</h2>
+        <div class="template-content">
+          <div class="template-params">
+            <h3>Template Data</h3>
+            <pre>
+{
+  "resetLink": "https://beancount.io/reset-password/?token=abc123def456ghi789jkl012mno345"
+}</pre
+            >
+          </div>
+          <div class="template-preview">
+            <iframe
+              srcdoc='<!DOCTYPE html>     <html>       <head>         <meta charset="utf-8">         <meta name="viewport" content="width=device-width, initial-scale=1.0">         <title>Reset Your Password - Beancount.io</title>         <style>           @media only screen and (max-width: 100%) {             .email-content { padding: 20px !important; }             h2 { font-size: 22px !important; }           }         </style>       </head>       <body class="email-body" style="font-family: -apple-system, BlinkMacSystemFont, &apos;Segoe UI&apos;, Roboto, &apos;Helvetica Neue&apos;, Arial, sans-serif; line-height: 1.7; color: #333; max-width: 600px; margin: 0 auto; padding: 20px; background: #f5f7fa;">              <div style="background: #ffffff; padding: 35px 30px; text-align: center; border-radius: 12px 12px 0 0; border-bottom: 2px solid #e5e7eb;">       <h1 style="color: #1a1a1a; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">Beancount.io</h1>     </div>             <div class="email-content" style="background: #ffffff; padding: 40px; border: 1px solid #e8eaf0; border-top: none; border-radius: 0 0 12px 12px; box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);">                <h2 style="margin-top: 0; color: #1e293b;">Reset Your Password</h2>      <p style="margin-bottom: 16px; font-size: 16px;">       Hi, we&apos;ve received a request to reset your password. If you didn&apos;t make the request, just ignore this message.     </p>      <p style="margin-bottom: 16px; font-size: 16px;">       Otherwise, you can reset your password using the button below:     </p>      <div style="text-align: center; margin: 30px 0;">       <a href="https://beancount.io/reset-password/?token=abc123def456ghi789jkl012mno345" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">         Reset Password       </a>     </div>      <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin: 20px 0;">       <p style="margin: 0 0 12px 0; color: #1e293b; font-size: 14px; font-weight: 600;">         Security Note       </p>       <p style="margin: 0; color: #64748b; font-size: 14px;">         This link will expire in 24 hours. Don&apos;t share this link with anyone.       </p>     </div>      <p style="margin-bottom: 16px; color: #64748b; font-size: 15px;">       If the button doesn&apos;t work, copy and paste this link into your browser:     </p>      <p style="margin-bottom: 16px; color: #64748b; font-size: 13px; word-break: break-all;">       https://beancount.io/reset-password/?token=abc123def456ghi789jkl012mno345     </p>            </div>               <div style="text-align: center; margin-top: 30px; padding: 25px 20px; background: #f8f9fa; border-radius: 8px; border-top: 2px solid #e5e7eb;">       <p style="color: #6b7280; font-size: 12px; margin: 0; line-height: 1.6;">         Powered by Beancount.io       </p>     </div>          </body>     </html>'
+              onload="
+                this.style.height =
+                  this.contentWindow.document.body.scrollHeight + 'px'
+              "
+            ></iframe>
+          </div>
+        </div>
+      </div>
+
+      <div class="generated-date">Generated on 3/6/2026, 7:49:05 PM</div>
+    </div>
+  </body>
+</html>

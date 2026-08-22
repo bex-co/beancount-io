@@ -1,0 +1,1 @@
+ALTER TABLE "plaid_items" ALTER COLUMN "ledger_repo_id" SET NOT NULL;
