@@ -1,0 +1,269 @@
+# Full-stack local deployment for beancount.io on macOS (Docker Desktop / OrbStack).
+#
+#   cp .env.example .env
+#   docker compose up -d --build
+#   ./post-docker-compose-up-build.sh
+#
+# Only three host ports are published (42600-42602); everything else —
+# postgres ×2, redis, ledger — stays internal to the compose network and is
+# reachable via `docker compose exec`. See README.md.
+
+name: beancount-io
+
+networks:
+  beancount:
+    driver: bridge
+
+services:
+  dashboard:
+    build:
+      context: ../../dashboard
+      dockerfile: Dockerfile
+      args:
+        # Baked into the client bundle at build time: the URL the BROWSER uses.
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:42601/api-gateway/}
+        # Internal URL the SSR server uses from inside the compose network.
+        VITE_SSR_API_URL: ${VITE_SSR_API_URL:-http://backend-v2:4104/api-gateway/}
+        # Leave unset to ship without analytics (never bake the prod stream id).
+        VITE_GA_MEASUREMENT_ID: ${VITE_GA_MEASUREMENT_ID:-}
+    image: beancount-io/dashboard:local
+    restart: always
+    networks:
+      - beancount
+    ports:
+      - "42600:3000"
+    depends_on:
+      backend-v2:
+        condition: service_healthy
+    healthcheck:
+      # wget, not curl: node:22-alpine ships busybox wget only.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  backend-v2:
+    build:
+      context: ../../backend-cluster/backend-v2
+      dockerfile: Dockerfile
+    image: beancount-io/backend-v2:local
+    restart: always
+    networks:
+      - beancount
+    ports:
+      - "42601:4104"
+      # Git-over-SSH proxy (off by default). Uncomment together with
+      # SSH_PROXY_ENABLED=true in .env; see README.md "Git over SSH".
+      # - "42607:42607"
+    depends_on:
+      postgres-backend:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      gitea:
+        condition: service_healthy
+      ledger:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4104/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+    environment:
+      NODE_ENV: development
+      PORT: 4104
+      SERVER_URL: ${SERVER_URL:-http://localhost:42601}
+      DASHBOARD_URL: ${DASHBOARD_URL:-http://localhost:42600}
+      # Secrets — set real values in .env (see .env.example).
+      AUTH_SECRET: ${AUTH_SECRET:-}
+      COOKIE_SECRETS: ${COOKIE_SECRETS:-}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      METRICS_API_TOKEN: ${METRICS_API_TOKEN:-}
+      AUTH_JWT_EXP_MINUTES: ${AUTH_JWT_EXP_MINUTES:-525600}
+      # Data stores (service-name addressing inside the compose network).
+      POSTGRES_BACKEND_URI: ${POSTGRES_BACKEND_URI:-postgresql://postgres:password@postgres-backend:5432/backend}
+      REDIS_URI: ${REDIS_URI:-redis://redis:6379}
+      # Ledger service.
+      FAVA_API_URL: ${FAVA_API_URL:-http://ledger:8000}
+      FAVA_API_ADMIN_USER: ${FAVA_API_ADMIN_USER:-beancount_admin}
+      FAVA_API_ADMIN_PASSWORD: ${FAVA_API_ADMIN_PASSWORD:-change-me-local-only}
+      # Gitea. GITEA_HOST_NAME must be set explicitly for BOTH backend-v2 and
+      # ledger: their in-code defaults differ (`gitea` vs `beancount-gitea`).
+      # Internal HTTP port stays 3000 — parts of backend-v2 hardcode it.
+      GITEA_HOST_NAME: gitea
+      GITEA_HTTP_PORT: 3000
+      # External host/port — used when generating user-facing Git clone URLs.
+      EXTERNAL_GITEA_HOST_NAME: ${EXTERNAL_GITEA_HOST_NAME:-localhost}
+      EXTERNAL_GITEA_HTTP_PORT: ${EXTERNAL_GITEA_HTTP_PORT:-42602}
+      GITEA_SSH_PORT: ${GITEA_SSH_PORT:-42607}
+      # Git-over-SSH proxy (git write policy terminates here, not in Gitea).
+      # Off by default; needs BOTH the flag and the host key to listen.
+      SSH_PROXY_ENABLED: ${SSH_PROXY_ENABLED:-false}
+      SSH_PROXY_PORT: 42607
+      SSH_PROXY_HOST_KEY: ${SSH_PROXY_HOST_KEY:-}
+      # LLM access. REQUIRED to boot: the LLM client is constructed at startup
+      # and throws "LLM is not configured" on an empty key. The placeholder
+      # only gets the server up — set a real key to use the AI features.
+      BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-local-dev-placeholder}
+      # No default on purpose: point this at your own Claude Code sandbox
+      # deployment if you use the sandboxed ask-agent mode.
+      CLAUDE_CODE_SANDBOX_URL: ${CLAUDE_CODE_SANDBOX_URL:-}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Null mapping on purpose: pass through only when set in .env. An EMPTY
+      # string is fatal — @ai-sdk/anthropic validates baseURL at import time
+      # and "" crashes the server ("baseURL must be a non-empty string").
+      ANTHROPIC_BASE_URL:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      # Asset storage (S3). A region is REQUIRED even when the rest is unset:
+      # the S3 client is constructed at startup and throws "Region is missing"
+      # without one. Uploads only work once bucket + credentials are set.
+      TEMP_ASSETS_AWS_S3_REGION: ${TEMP_ASSETS_AWS_S3_REGION:-us-east-1}
+      TEMP_ASSETS_AWS_S3_BUCKET: ${TEMP_ASSETS_AWS_S3_BUCKET:-}
+      TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID: ${TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID:-}
+      TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY: ${TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY:-}
+      TEMP_ASSETS_AWS_S3_ENDPOINT: ${TEMP_ASSETS_AWS_S3_ENDPOINT:-}
+      PERM_ASSETS_AWS_S3_REGION: ${PERM_ASSETS_AWS_S3_REGION:-us-east-1}
+      PERM_ASSETS_AWS_S3_BUCKET: ${PERM_ASSETS_AWS_S3_BUCKET:-}
+      PERM_ASSETS_AWS_S3_ACCESS_KEY_ID: ${PERM_ASSETS_AWS_S3_ACCESS_KEY_ID:-}
+      PERM_ASSETS_AWS_S3_SECRET_ACCESS_KEY: ${PERM_ASSETS_AWS_S3_SECRET_ACCESS_KEY:-}
+      PERM_ASSETS_AWS_S3_ENDPOINT: ${PERM_ASSETS_AWS_S3_ENDPOINT:-}
+      # Optional integrations — unset keys disable the feature.
+      SEND_GRID_API_KEY: ${SEND_GRID_API_KEY:-}
+      STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY:-}
+      STRIPE_PRIVATE_KEY: ${STRIPE_PRIVATE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_DEV_PUBLIC_KEY: ${STRIPE_DEV_PUBLIC_KEY:-}
+      STRIPE_DEV_PRIVATE_KEY: ${STRIPE_DEV_PRIVATE_KEY:-}
+      STRIPE_DEV_WEBHOOK_SECRET: ${STRIPE_DEV_WEBHOOK_SECRET:-}
+      PLAID_CLIENT_ID: ${PLAID_CLIENT_ID:-}
+      PLAID_SECRET: ${PLAID_SECRET:-}
+      PLAID_ENVIRONMENT: ${PLAID_ENVIRONMENT:-sandbox}
+      PLAID_WEBHOOK_URL: ${PLAID_WEBHOOK_URL:-}
+      LOKI_HOST: ${LOKI_HOST:-}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+
+  ledger:
+    build:
+      context: ../../backend-cluster/ledger
+      dockerfile: Dockerfile
+    image: beancount-io/ledger:local
+    restart: always
+    networks:
+      - beancount
+    # Deliberately no published host port: only backend-v2 talks to the ledger
+    # service, matching the production no-published-port invariant
+    # (backend-cluster/ledger/src/server/__tests__/no-published-port.test.ts).
+    expose:
+      - "8000"
+    depends_on:
+      gitea:
+        condition: service_healthy
+    environment:
+      GITEA_HOST_NAME: gitea
+      GITEA_HTTP_PORT: 3000
+      BACKEND_V2_HOST_NAME: backend-v2
+      BACKEND_V2_HTTP_PORT: 4104
+      # Empty token ⇒ directive-limit checks fail open (skipped).
+      BACKEND_V2_ADMIN_TOKEN: ${ADMIN_TOKEN:-}
+      LOG_LEVEL: ${LOG_LEVEL:-debug}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  gitea:
+    image: gitea/gitea:1.24
+    restart: always
+    networks:
+      - beancount
+    ports:
+      - "42602:3000"
+    volumes:
+      - ./data/gitea:/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      - USER_UID=1000
+      - USER_GID=1000
+      - GITEA__database__DB_TYPE=postgres
+      - GITEA__database__HOST=postgres:5432
+      - GITEA__database__NAME=${POSTGRES_DB:-gitea}
+      - GITEA__database__USER=${POSTGRES_USER:-postgres}
+      - GITEA__database__PASSWD=${POSTGRES_PASSWORD:-password}
+      - GITEA__server__DOMAIN=${GITEA__server__DOMAIN:-localhost}
+      - GITEA__server__HTTP_PORT=3000
+      - GITEA__server__ROOT_URL=${GITEA__server__ROOT_URL:-http://localhost:42602/}
+      - GITEA__server__SSH_PORT=${GITEA__server__SSH_PORT:-22}
+      - GITEA__server__SSH_LISTEN_PORT=${GITEA__server__SSH_LISTEN_PORT:-22}
+      - GITEA__security__INSTALL_LOCK=${GITEA__security__INSTALL_LOCK:-true}
+      - GITEA__security__SECRET_KEY=${GITEA__security__SECRET_KEY:-}
+      - GITEA__security__INTERNAL_TOKEN=${GITEA__security__INTERNAL_TOKEN:-}
+      - GITEA__server__LFS_JWT_SECRET=${GITEA__server__LFS_JWT_SECRET:-}
+      - GITEA__oauth2__JWT_SECRET=${GITEA__oauth2__JWT_SECRET:-}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres:
+    image: postgres:16
+    restart: always
+    networks:
+      - beancount
+    # Internal only. Debug with: docker compose exec postgres psql -U postgres gitea
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_DB:-gitea}
+    volumes:
+      - ./data/postgres:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-gitea}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  postgres-backend:
+    image: postgres:16
+    restart: always
+    networks:
+      - beancount
+    # Internal only. Debug with: docker compose exec postgres-backend psql -U postgres backend
+    environment:
+      POSTGRES_USER: ${POSTGRES_BACKEND_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_BACKEND_PASSWORD:-password}
+      POSTGRES_DB: ${POSTGRES_BACKEND_DB:-backend}
+    volumes:
+      - ./data/postgres-backend:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_BACKEND_USER:-postgres} -d ${POSTGRES_BACKEND_DB:-backend}"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  redis:
+    image: redis:7-alpine
+    restart: always
+    networks:
+      - beancount
+    # Internal only — Redis also persists auth tokens, hence AOF + volume.
+    # Debug with: docker compose exec redis redis-cli
+    volumes:
+      - ./data/redis:/data
+    command: redis-server --appendonly yes
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s

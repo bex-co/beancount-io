@@ -21,7 +21,9 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 | `dashboard/` | active | Web client (React 19, TanStack Start, Apollo, TypeScript) |
 | `mobile/` | active | React Native iOS/Android app (Expo, Apollo, TypeScript) |
 | `cli/` | active | `beancount-cli` — directives, bean-check/format, BQL queries, reports, local-ledger chat (Python, Typer) — includes vendored `fava` reporting library |
+| `backend-cluster/` | active | Backend services: `backend-v2` (GraphQL/REST API), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients) |
 | `skills/` | active | Agent skills: init, import, importer-author, reconcile, migrate, ask, close, options (see `skills/CLAUDE.md`) |
+| `deploy/` | active | Docker Compose stacks that run the full service locally (`deploy/mac/` for macOS) |
 | `docs/` | active | Documentation content |
 
 There is no root `package.json`. Each package owns its own dependencies, scripts, and lockfile. CI is per-package and path-filtered — one workflow per package, so a change under `mobile/**` runs only the mobile job and nothing else (see [Tooling](#tooling) for the full list).

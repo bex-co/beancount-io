@@ -43,7 +43,7 @@ This guide assumes a Unix-like environment. If you are on Windows, see [Run on W
 
 ```bash
 git clone git@github.com:bex-co/beancount-io.git
-cd beancount-io/backend/backend-v2
+cd beancount-io/backend-cluster/backend-v2
 ```
 
 2. Install dependencies:

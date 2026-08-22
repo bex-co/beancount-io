@@ -1,9 +1,9 @@
 {
   "name": "beancount-ledger-v2",
   "version": "0.1.0",
-  "private": false,
   "description": "Standalone TypeScript ledger service on the rustledger WASM engine, contract-compatible with the Python beancount-ledger service it replaced and decommissioned",
   "license": "MIT",
+  "packageManager": "yarn@4.17.0",
   "engines": {
     "node": ">= 20"
   },

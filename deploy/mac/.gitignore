@@ -1,0 +1,6 @@
+# Service data (postgres, gitea, redis) lives here — never commit it.
+data/
+
+# Local overrides and secrets.
+.env
+docker-compose.override.yml

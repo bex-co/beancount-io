@@ -1,5 +1,5 @@
 // GENERATED FILE — do not edit manually.
-// Run: yarn generate-agent-tool-types (from backend/backend-v2)
+// Run: yarn generate-agent-tool-types (from backend-cluster/backend-v2)
 // Source: src/features/ai-agent/tools/*-tool.ts
 //
 // Zero runtime dependencies — safe to copy to any consumer (e.g. dashboard/).
