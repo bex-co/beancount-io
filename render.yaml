@@ -36,10 +36,15 @@ services:
     envVars:
       # Read at RUNTIME by src/config/config.server.ts. Must be the internal
       # address: an SSR pod cannot reach the backend through its own ingress.
+      #
+      # Port 3000, not the Dockerfile's 4104: the platform injects PORT (App
+      # CRD `port`, default 3000) and a runtime env var beats the image ENV, so
+      # every service listens on 3000 and its internal address is <slug>:3000.
+      # The Blueprint schema rejects a `port` field, so 3000 is not negotiable.
       # The browser-facing URL is baked from dashboard/.env.production instead,
       # because Docker builds get no build args.
       - key: SSR_API_URL
-        value: http://beancount-api:4104/api-gateway/
+        value: http://beancount-api:3000/api-gateway/
 
   # ---------------------------------------------------------------- backend-v2
   - name: beancount-api
@@ -72,8 +77,9 @@ services:
           property: connectionString
 
       # --- ledger service (private, same namespace) -----------------------
+      # :3000 for the same injected-PORT reason as SSR_API_URL above.
       - key: FAVA_API_URL
-        value: http://beancount-ledger:8000
+        value: http://beancount-ledger:3000
 
       # --- generated secrets ----------------------------------------------
       - key: AUTH_SECRET
@@ -163,7 +169,7 @@ services:
       - key: BACKEND_V2_HOST_NAME
         value: beancount-api
       - key: BACKEND_V2_HTTP_PORT
-        value: "4104"
+        value: "3000"
       # Must be byte-identical to beancount-api's ADMIN_TOKEN. Left empty the
       # directive-limit check fails OPEN (silently skipped), so seed it.
       - key: BACKEND_V2_ADMIN_TOKEN
