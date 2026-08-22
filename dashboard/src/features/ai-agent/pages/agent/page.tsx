@@ -18,6 +18,8 @@ import { track } from "@/common/analytics";
 import { config } from "@/config/config";
 import { AgentChatInput } from "./agent-chat-input";
 import { AgentMessageList, type AgentUIMessage } from "./agent-message-list";
+import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import { getLedgerAgentCanonicalUrl } from "@/common/lib/seo/indexability";
 
 import { useTempAssetUpload } from "@/features/importer/hooks/use-temp-asset-upload";
 import { useTempAssetDownloadUrl } from "./use-temp-asset-download-url";
@@ -300,7 +302,16 @@ export function AgentPageImpl({
   };
 
   return (
-    <div className="relative flex h-full min-h-0 w-full flex-col">
+    <>
+      <LedgerPageSEO
+        seoKey="ledgerAsk"
+        noIndex={Boolean(initialQuestion)}
+        canonicalUrl={getLedgerAgentCanonicalUrl({
+          ledgerOwner,
+          ledgerName,
+        })}
+      />
+      <div className="relative flex h-full min-h-0 w-full flex-col">
       <div
         ref={messagesContainerRef}
         onScroll={handleScroll}
@@ -359,6 +370,7 @@ export function AgentPageImpl({
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </>
   );
 }

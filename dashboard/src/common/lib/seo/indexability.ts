@@ -28,7 +28,16 @@
  * - Error surfaces: not-found / error pages
  *
  * When noIndex is set, also skip hreflang alternates.
+ *
+ * Canonical policy (w2/m10): every indexable page emits exactly one
+ * self-referencing canonical — production origin + pathname, preserving only a
+ * supported `lang` query param so each hreflang alternate self-canonicalizes.
+ * UI state (editMode, line numbers, filters, modes) never appears in a
+ * canonical. Pages with a bespoke canonical (commit detail, blob, ask → agent)
+ * pass it explicitly instead.
  */
+import { SUPPORTED_LANGUAGES } from "@/i18n/config";
+
 export const NOINDEX_ROBOTS_CONTENT = "noindex, follow";
 
 const PRODUCTION_ORIGIN = "https://beancount.io";
@@ -52,6 +61,53 @@ export function getLedgerFileCanonicalUrl({
   const base = `${PRODUCTION_ORIGIN}/ledger/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/files/blob/${encodeURIComponent(branch)}`;
   const encodedFilePath = encodePath(filePath);
   return encodedFilePath ? `${base}/${encodedFilePath}` : base;
+}
+
+function readSupportedLang(
+  search?: string | Record<string, unknown>,
+): string | undefined {
+  const value =
+    typeof search === "string"
+      ? new URLSearchParams(
+          search.startsWith("?") ? search.slice(1) : search,
+        ).get("lang")
+      : search?.lang;
+  return typeof value === "string" &&
+    (SUPPORTED_LANGUAGES as readonly string[]).includes(value)
+    ? value
+    : undefined;
+}
+
+/**
+ * Self-referencing canonical URL for the current page: production origin +
+ * pathname, keeping only a supported `lang` query param and dropping all
+ * UI-state params. An unsupported `lang` canonicalizes to the clean path.
+ */
+export function getSelfCanonicalUrl({
+  pathname,
+  search,
+}: {
+  pathname: string;
+  /** Raw search string ("?lang=uk&x=1") or a parsed search object. */
+  search?: string | Record<string, unknown>;
+}): string {
+  const url = new URL(pathname, PRODUCTION_ORIGIN);
+  url.search = "";
+  url.hash = "";
+  const lang = readSupportedLang(search);
+  if (lang) url.searchParams.set("lang", lang);
+  return url.toString();
+}
+
+/** Canonical URL for a ledger's Ask/agent surface (ask deep links resolve here). */
+export function getLedgerAgentCanonicalUrl({
+  ledgerOwner,
+  ledgerName,
+}: {
+  ledgerOwner: string;
+  ledgerName: string;
+}): string {
+  return `${PRODUCTION_ORIGIN}/ledger/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/agent`;
 }
 
 /** Canonical URL for a public ledger commit detail page. */

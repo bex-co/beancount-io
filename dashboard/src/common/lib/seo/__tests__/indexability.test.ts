@@ -1,7 +1,9 @@
 import { describe, expect, it } from "vitest";
 import {
+  getLedgerAgentCanonicalUrl,
   getLedgerCommitCanonicalUrl,
   getLedgerFileCanonicalUrl,
+  getSelfCanonicalUrl,
 } from "../indexability";
 
 describe("getLedgerFileCanonicalUrl", () => {
@@ -65,5 +67,111 @@ describe("getLedgerCommitCanonicalUrl", () => {
       "https://beancount.io/ledger/open_ledger/example/commits",
     );
     expect(commitUrl).toContain("/commit/");
+  });
+});
+
+describe("getLedgerAgentCanonicalUrl", () => {
+  it("builds canonical for agent surface", () => {
+    expect(
+      getLedgerAgentCanonicalUrl({
+        ledgerOwner: "open_ledger",
+        ledgerName: "example",
+      }),
+    ).toBe("https://beancount.io/ledger/open_ledger/example/agent");
+  });
+});
+
+describe("getSelfCanonicalUrl", () => {
+  it("returns clean path with no params", () => {
+    expect(
+      getSelfCanonicalUrl({ pathname: "/ledger/open_ledger/example" }),
+    ).toBe("https://beancount.io/ledger/open_ledger/example");
+    expect(
+      getSelfCanonicalUrl({
+        pathname: "/ledger/open_ledger/example/account/Expenses:Financial:Fees",
+        search: "",
+      }),
+    ).toBe(
+      "https://beancount.io/ledger/open_ledger/example/account/Expenses:Financial:Fees",
+    );
+  });
+
+  it("preserves supported lang param (string search)", () => {
+    expect(
+      getSelfCanonicalUrl({
+        pathname: "/ledger/open_ledger/example/account/Expenses:Financial:Fees",
+        search: "?lang=uk",
+      }),
+    ).toBe(
+      "https://beancount.io/ledger/open_ledger/example/account/Expenses:Financial:Fees?lang=uk",
+    );
+    expect(
+      getSelfCanonicalUrl({
+        pathname: "/login",
+        search: "lang=ca",
+      }),
+    ).toBe("https://beancount.io/login?lang=ca");
+  });
+
+  it("preserves supported lang when passed as object", () => {
+    expect(
+      getSelfCanonicalUrl({
+        pathname: "/ledger/open_ledger/example",
+        search: { lang: "uk" } as Record<string, unknown>,
+      }),
+    ).toBe("https://beancount.io/ledger/open_ledger/example?lang=uk");
+  });
+
+  it("strips unsupported lang", () => {
+    expect(
+      getSelfCanonicalUrl({
+        pathname: "/ledger/open_ledger/example",
+        search: "?lang=zz",
+      }),
+    ).toBe("https://beancount.io/ledger/open_ledger/example");
+    expect(
+      getSelfCanonicalUrl({
+        pathname: "/ledger/open_ledger/example",
+        search: { lang: "zz" } as Record<string, unknown>,
+      }),
+    ).toBe("https://beancount.io/ledger/open_ledger/example");
+  });
+
+  it("strips UI-state params and keeps only valid lang", () => {
+    expect(
+      getSelfCanonicalUrl({
+        pathname: "/ledger/open_ledger/example/files/blob/main/books.beancount",
+        search: "?editMode=true&lang=uk&lineNumber=12",
+      }),
+    ).toBe(
+      "https://beancount.io/ledger/open_ledger/example/files/blob/main/books.beancount?lang=uk",
+    );
+    expect(
+      getSelfCanonicalUrl({
+        pathname: "/ledger/a/b",
+        search: "?editMode=true&lang=xx&foo=bar",
+      }),
+    ).toBe("https://beancount.io/ledger/a/b");
+  });
+
+  it("strips hash", () => {
+    expect(
+      getSelfCanonicalUrl({
+        pathname: "/ledger/open_ledger/example#section",
+        search: "?lang=uk",
+      }),
+    ).toBe(
+      "https://beancount.io/ledger/open_ledger/example?lang=uk",
+    );
+  });
+
+  it("handles encoded account paths without double-encoding", () => {
+    const pathname =
+      "/ledger/open_ledger/example/account/Expenses%3AFinancial%3AFees";
+    expect(
+      getSelfCanonicalUrl({ pathname, search: "?lang=ca" }),
+    ).toBe(
+      "https://beancount.io/ledger/open_ledger/example/account/Expenses%3AFinancial%3AFees?lang=ca",
+    );
   });
 });

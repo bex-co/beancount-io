@@ -55,6 +55,15 @@ vi.mock("@/common/lib/seo/locale-map", () => ({
   }),
 }));
 
+// Mock TanStack Router location (SSR-safe pattern used by HreflangLinks)
+vi.mock("@tanstack/react-router", () => ({
+  useLocation: vi.fn(() => ({
+    pathname: "/test",
+    search: {},
+    hash: "",
+  })),
+}));
+
 // Mock HreflangLinks to a detectable stub (avoids window issues in tests)
 vi.mock("../hreflang-links", () => ({
   HreflangLinks: () => (
@@ -299,4 +308,73 @@ describe("PageSEO Component", () => {
       ).not.toBeNull();
     });
   });
+
+  describe("Canonical", () => {
+    it("should emit exactly one self-canonical on indexable pages", async () => {
+      const { unmount } = render(
+        <PageSEO
+          titleKey="seo.login.title"
+          descriptionKey="seo.login.description"
+          
+        />,
+      );
+      const links = document.head.querySelectorAll('link[rel="canonical"]');
+      expect(links.length).toBe(1);
+      expect(links[0]?.getAttribute("href")).toBe("https://beancount.io/test");
+      unmount();
+    });
+
+    it("should emit no canonical when noIndex is true", async () => {
+      const { unmount } = render(
+        <PageSEO
+          titleKey="seo.login.title"
+          descriptionKey="seo.login.description"
+          
+          noIndex
+        />,
+      );
+      expect(document.head.querySelector('link[rel="canonical"]')).toBeNull();
+      unmount();
+    });
+
+    it("should honor canonicalUrl override even with noIndex", async () => {
+      const custom = "https://beancount.io/ledger/open_ledger/example/commit/abc123";
+      const { unmount } = render(
+        <PageSEO
+          titleKey="seo.login.title"
+          descriptionKey="seo.login.description"
+          
+          canonicalUrl={custom}
+        />,
+      );
+      const link = document.head.querySelector('link[rel="canonical"]');
+      expect(link?.getAttribute("href")).toBe(custom);
+      unmount();
+      const { unmount: u2 } = render(
+        <PageSEO
+          titleKey="seo.login.title"
+          descriptionKey="seo.login.description"
+          
+          noIndex
+          canonicalUrl={custom}
+        />,
+      );
+      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe(custom);
+      u2();
+    });
+
+    it("should never emit two canonical tags", async () => {
+      const { unmount } = render(
+        <PageSEO
+          titleKey="seo.login.title"
+          descriptionKey="seo.login.description"
+          
+          canonicalUrl="https://beancount.io/ledger/open_ledger/example/agent"
+        />,
+      );
+      expect(document.head.querySelectorAll('link[rel="canonical"]').length).toBe(1);
+      unmount();
+    });
+  });
+
 });

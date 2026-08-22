@@ -8,6 +8,7 @@ import { useEffect } from "react";
 import LedgerFileView from "./components/ledger-file-view";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
+import { getLedgerFileCanonicalUrl } from "@/common/lib/seo/indexability";
 
 export default function LedgerFilePage() {
   const params = useParams({
@@ -43,7 +44,16 @@ export default function LedgerFilePage() {
 
   return (
     <div className="flex flex-col h-full min-h-0">
-      <LedgerPageSEO seoKey="ledgerFiles" noIndex={Boolean(search.editMode)} />
+      <LedgerPageSEO
+        seoKey="ledgerFiles"
+        noIndex={Boolean(search.editMode)}
+        canonicalUrl={getLedgerFileCanonicalUrl({
+          ledgerOwner,
+          ledgerName,
+          branch: branch || "main",
+          filePath,
+        })}
+      />
       <ClientOnly>
         <LedgerFileView
           ledgerId={ledgerId}

@@ -14,12 +14,27 @@ export interface SearchAnalyticsRow {
   impressions: number;
   ctr: number;
   position: number;
+  variantCount?: number;
 }
 
 export interface DashboardOpportunity extends SearchAnalyticsRow {
   kind: "low-ctr" | "near-page-one";
   routeOwner: DashboardRouteOwner;
   score: number;
+  variantCount?: number;
+}
+
+export function canonicalizeReportPage(page: string): string {
+  const isRelative = page.startsWith("/") && !page.startsWith("//");
+  try {
+    const url = new URL(page, SEARCH_CONSOLE_SITE_URL);
+    url.search = "";
+    url.hash = "";
+    if (isRelative) return url.pathname || "/";
+    return url.toString();
+  } catch {
+    return (page.split("?")[0] || page).split("#")[0] || "/";
+  }
 }
 
 export interface ReportThresholds {
@@ -120,16 +135,21 @@ export function aggregateSearchRows(
   rows: SearchAnalyticsRow[],
 ): SearchAnalyticsRow[] {
   const grouped = new Map<string, SearchAnalyticsRow>();
+  const variantSets = new Map<string, Set<string>>();
   for (const row of rows) {
-    const key = row.query + "\u0000" + row.page;
+    const canonicalPage = canonicalizeReportPage(row.page);
+    const key = row.query + "\u0000" + canonicalPage;
     const current = grouped.get(key) ?? {
       query: row.query,
-      page: row.page,
+      page: canonicalPage,
       clicks: 0,
       impressions: 0,
       ctr: 0,
       position: 0,
+      variantCount: 0,
     };
+    if (!variantSets.has(key)) variantSets.set(key, new Set());
+    variantSets.get(key)!.add(row.page);
     const previousImpressions = current.impressions;
     const totalImpressions = previousImpressions + row.impressions;
     current.clicks += row.clicks;
@@ -140,6 +160,7 @@ export function aggregateSearchRows(
         totalImpressions
       : 0;
     current.ctr = totalImpressions ? current.clicks / totalImpressions : 0;
+    current.variantCount = variantSets.get(key)!.size;
     grouped.set(key, current);
   }
   return [...grouped.values()];
@@ -227,14 +248,18 @@ export function renderDashboardReport(input: {
       : "Search Analytics unavailable: " +
         (input.analyticsError || "unknown error"),
     "",
-    "| Kind | Query | Page | Clicks | Impressions | CTR | Position |",
-    "| --- | --- | --- | ---: | ---: | ---: | ---: |",
+    "| Kind | Query | Page | Clicks | Impressions | CTR | Position | Variants |",
+    "| --- | --- | --- | ---: | ---: | ---: | ---: | ---: |",
   ];
   if (input.opportunities.length === 0)
     lines.push(
-      "| — | No qualifying dashboard opportunities | — | 0 | 0 | 0.00% | — |",
+      "| — | No qualifying dashboard opportunities | — | 0 | 0 | 0.00% | — | — |",
     );
   for (const opportunity of input.opportunities.slice(0, 50)) {
+    const variantLabel =
+      opportunity.variantCount && opportunity.variantCount > 1
+        ? String(opportunity.variantCount)
+        : "—";
     lines.push(
       "| " +
         opportunity.kind +
@@ -250,6 +275,8 @@ export function renderDashboardReport(input: {
         percentage(opportunity.ctr) +
         " | " +
         opportunity.position.toFixed(1) +
+        " | " +
+        variantLabel +
         " |",
     );
   }

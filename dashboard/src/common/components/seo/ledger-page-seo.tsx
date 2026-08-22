@@ -5,6 +5,7 @@ export function LedgerPageSEO({
   seoKey,
   params,
   noIndex = false,
+  canonicalUrl,
 }: {
   seoKey: string;
   params?: Record<string, string>;
@@ -13,6 +14,8 @@ export function LedgerPageSEO({
    * See `@/common/lib/seo/indexability`.
    */
   noIndex?: boolean;
+  /** Bespoke canonical URL — see `LedgerSEO`'s prop of the same name. */
+  canonicalUrl?: string;
 }) {
   const { ledgerDisplayName, ledgerDescription } = useLedger();
   return (
@@ -23,6 +26,7 @@ export function LedgerPageSEO({
       ledgerDescription={ledgerDescription}
       params={{ ledgerName: ledgerDisplayName, ...params }}
       noIndex={noIndex}
+      canonicalUrl={canonicalUrl}
     />
   );
 }

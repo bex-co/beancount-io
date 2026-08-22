@@ -1,6 +1,10 @@
+import { useLocation } from "@tanstack/react-router";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getOgLocale } from "@/common/lib/seo/locale-map";
-import { NOINDEX_ROBOTS_CONTENT } from "@/common/lib/seo/indexability";
+import {
+  NOINDEX_ROBOTS_CONTENT,
+  getSelfCanonicalUrl,
+} from "@/common/lib/seo/indexability";
 import { HreflangLinks } from "./hreflang-links";
 
 interface LedgerSEOProps {
@@ -30,6 +34,12 @@ interface LedgerSEOProps {
    * See `@/common/lib/seo/indexability`.
    */
   noIndex?: boolean;
+  /**
+   * Bespoke canonical URL (e.g. commit detail, blob, ask → agent). Emitted
+   * even with noIndex. When omitted, indexable pages self-canonicalize via
+   * `getSelfCanonicalUrl` (path + supported `lang` only).
+   */
+  canonicalUrl?: string;
 }
 
 /**
@@ -56,8 +66,18 @@ export function LedgerSEO({
   ledgerDescription,
   params,
   noIndex = false,
+  canonicalUrl,
 }: LedgerSEOProps) {
   const { t, i18n } = useTranslations();
+  const location = useLocation();
+  const canonicalHref =
+    canonicalUrl ??
+    (noIndex
+      ? undefined
+      : getSelfCanonicalUrl({
+          pathname: location.pathname,
+          search: location.search,
+        }));
 
   // Generate the title with interpolated ledger name and additional params
   const title = t(titleKey, { ledgerName, ...params });
@@ -79,6 +99,7 @@ export function LedgerSEO({
       <title>{title}</title>
       <meta name="description" content={description} />
       {noIndex ? <meta name="robots" content={NOINDEX_ROBOTS_CONTENT} /> : null}
+      {canonicalHref ? <link rel="canonical" href={canonicalHref} /> : null}
 
       {/* Open Graph meta tags for social sharing */}
       <meta property="og:title" content={title} />

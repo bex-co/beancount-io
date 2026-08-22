@@ -139,10 +139,14 @@ milestones; it is a text-only discovery step, while $pm materializes the board.
 
 For Search Console evidence, run yarn search-console-report --markdown --days 28. This dashboard
 utility uses the fixed https://beancount.io/ property and ranks only dashboard-owned paths:
-/ledger, /login, /sign-up, /auth, /settings, /lgasset, and /oauth. The public host also fronts
-the CMS, forum, and API services, so /forum/**, /api/**, /.well-known, and CMS content paths
-must not be treated as dashboard opportunities. Confirm route ownership before proposing work and
-never put credentials or report user data on the public .pm board.
+/ledger, /login, /sign-up, /auth, /settings, /lgasset, and /oauth. Rows that differ only by
+query params (e.g. `?lang=uk` / `?lang=ca` variants of the same account page) are aggregated
+under their canonical page (query stripped, hash stripped) with summed clicks/impressions,
+impression-weighted position, and a Variants count, so the opportunities table ranks real pages
+instead of crawl variants. The public host also fronts the CMS, forum, and API services, so
+/forum/**, /api/**, /.well-known, and CMS content paths must not be treated as dashboard
+opportunities. Confirm route ownership before proposing work and never put credentials or report
+user data on the public .pm board.
 
 ## Development Commands
 

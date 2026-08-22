@@ -1,7 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import CommitDetailPage from "@/features/git/commits/pages/commit-detail-page";
 import { createHeadMeta, getSEOMetadata } from "@/common/lib/seo/seo-helpers";
-import { getLedgerCommitCanonicalUrl } from "@/common/lib/seo/indexability";
 
 export const Route = createFileRoute(
   "/ledger/$ledgerOwner/$ledgerName/commit/$commitSha",
@@ -14,18 +13,6 @@ export const Route = createFileRoute(
       "seo.ledgerCommit.description",
       { ledgerName: params.ledgerName, shortSha },
     );
-    return {
-      ...createHeadMeta(metadata),
-      links: [
-        {
-          rel: "canonical",
-          href: getLedgerCommitCanonicalUrl({
-            ledgerOwner: params.ledgerOwner,
-            ledgerName: params.ledgerName,
-            commitSha: params.commitSha,
-          }),
-        },
-      ],
-    };
+    return createHeadMeta(metadata);
   },
 });
