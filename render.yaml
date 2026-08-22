@@ -120,7 +120,14 @@ services:
       # --- LLM / integrations (seed once, then edit in the dashboard) --------
       # ANTHROPIC_BASE_URL is deliberately NOT declared: an empty string is
       # fatal at import time (@ai-sdk/anthropic rejects a non-string baseURL).
+      #
+      # BLOCKEDEN_ACCESS_KEY is REQUIRED TO BOOT, not just to use AI: LlmClient
+      # builds the model in its constructor and an empty key throws
+      # LoadAPIKeyError("LLM is not configured"). Seeded with the placeholder
+      # from .env.example -- it only gets the server up; replace it with a real
+      # key to enable the AI features. sync:false so that replacement sticks.
       - key: BLOCKEDEN_ACCESS_KEY
+        value: local-dev-placeholder
         sync: false
       - key: ANTHROPIC_API_KEY
         sync: false
