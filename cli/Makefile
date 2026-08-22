@@ -37,16 +37,30 @@ lint:
 	uv run ruff check src/ tests/
 
 format:
-	uv run ruff format src/ tests/
+	uv run ruff format src/cli tests/
 
 format-check:
-	uv run ruff format --check src/ tests/
+	uv run ruff format --check src/cli tests/
 
 typecheck:
-	uv run mypy src/
+	uv run mypy src/cli
 
 test:
 	uv run pytest tests/ -v
+
+test-cov:
+	uv run pytest tests/ --cov=fava --cov=cli --cov-report=term-missing --cov-report=html --cov-report=json
+	@echo "📊 Coverage report generated in htmlcov/index.html"
+
+clean:
+	find . -type f -name "*.pyc" -delete
+	find . -type d -name "__pycache__" -delete
+	find . -type d -name "*.egg-info" -exec rm -rf {} +
+	find . -type f -name ".coverage" -delete
+	find . -type d -name "htmlcov" -exec rm -rf {} +
+	find . -type d -name ".pytest_cache" -exec rm -rf {} +
+	find . -type d -name ".mypy_cache" -exec rm -rf {} +
+	find . -type d -name ".ruff_cache" -exec rm -rf {} +
 
 codegen:
 	@echo "Fetching schema from https://beancount.io/api-gateway/schema.graphql ..."

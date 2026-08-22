@@ -105,7 +105,6 @@ def check_python() -> None:
 def find_bean_check() -> list[str]:
     for candidate in (
         ["bean-check"],
-        ["uv", "run", "--project", str(REPO_ROOT / "fava-slim"), "bean-check"],
         ["uv", "run", "--project", str(REPO_ROOT / "cli"), "bean-check"],
     ):
         try:
@@ -117,7 +116,7 @@ def find_bean_check() -> list[str]:
             return candidate
         except (FileNotFoundError, subprocess.CalledProcessError):
             continue
-    fail("bean-check not found (install beancount, or sync fava-slim/cli)")
+    fail("bean-check not found (install beancount, or sync cli)")
 
 
 def check_ledgers() -> None:

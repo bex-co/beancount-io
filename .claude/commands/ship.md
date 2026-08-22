@@ -92,7 +92,7 @@ If the push is rejected as non-fast-forward, re-run Step 3, resolve conflicts us
 
 Use the paths pushed in this invocation and the triggered workflow list to select a tier:
 
-- **Substantial:** package code under `mobile/**`, `dashboard/**`, `cli/**`, or `fava-slim/**`, or changes under `.github/workflows/**`. Fully monitor every run and continue to Step 7 on failure.
+- **Substantial:** package code under `mobile/**`, `dashboard/**`, `cli/**`, or changes under `.github/workflows/**`. Fully monitor every run and continue to Step 7 on failure.
 - **Production release:** the shipped HEAD's `mobile/package.json` version has no `mobile-v<version>` tag on `origin` (check with `git ls-remote --tags origin "mobile-v*"`). This matches `deploy.yml`'s release detector; it is substantial, and the `Release (mobile)` workflow's `Build and submit` and `Tag and create GitHub release` steps must succeed before reporting completion. The detector is state-based, so a previously failed release re-runs on any later mobile push even without a new bump.
 - **Trivial:** documentation, roadmap, agent guidance, Claude commands, skills, formatting-only changes, or other changes with no package CI. Take a run snapshot; optionally recheck fast runs once, but do not enter a long watch loop.
 
@@ -109,7 +109,7 @@ The expected workflows are:
 | --- | --- | --- |
 | `mobile/**` | `CI` | `cd mobile && yarn lint && yarn typecheck && yarn test:unit` |
 | `dashboard/**` | `CI (dashboard)` | `cd dashboard && yarn format:check && yarn lint && yarn test && yarn build` |
-| `cli/**`, `fava-slim/**` | `CI (cli)` | `cd fava-slim && make check-all`, then `cd cli && make check-all` |
+| `cli/**` | `CI (cli)` | `cd cli && make check-all` |
 | any path | `Secret scan` | `gitleaks dir . --redact --verbose` |
 | `mobile/**` | `Release (mobile)` | OTA update on every mobile push; EAS build/submit + `mobile-v<version>` tag + GitHub Release when the version is untagged |
 

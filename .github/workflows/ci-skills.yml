@@ -27,9 +27,9 @@ jobs:
       - uses: astral-sh/setup-uv@v5
         with:
           enable-cache: true
-          cache-dependency-glob: fava-slim/uv.lock
-      - name: Install bean-check (via fava-slim)
-        working-directory: fava-slim
+          cache-dependency-glob: cli/uv.lock
+      - name: Install bean-check (via cli)
+        working-directory: cli
         run: uv sync --all-groups
       - name: Run skills checks
         run: python3 skills/scripts/ci-check.py

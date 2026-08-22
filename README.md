@@ -87,11 +87,10 @@ Review your finances, add transactions, scan receipts, and edit ledger files fro
 | --- | --- | --- |
 | [`dashboard/`](./dashboard) | Active web client | Ledgers, journal, reports, Monaco editor, imports, collaboration, and an AI assistant. React 19 + TanStack Start + Apollo. |
 | [`mobile/`](./mobile) | Active iOS & Android client | Native transaction entry, account views, budgets, receipt capture, ledger editing, light/dark themes, and 13 locales. Expo + React Native + Apollo. |
-| [`cli/`](./cli) | `0.1.0` | Read and write directives, check and format files, run BQL and reports, manage remote ledgers, or chat with a local-ledger agent. Python + Typer. |
-| [`fava-slim/`](./fava-slim) | `0.1.0` | Load and filter ledgers, build account trees, query data, and generate financial statements without the Fava web UI. Typed Python. |
+| [`cli/`](./cli) | `0.1.0` | Read and write directives, check and format files, run BQL and reports, manage remote ledgers, or chat with a local-ledger agent. Python + Typer. Includes vendored `fava` reporting library. |
 | [`skills/`](./skills) | Active skills | The agent-native accounting loop: scaffold a ledger, import bank exports with dedup, author tested beangulp importers, reconcile against statements, migrate from Mint/Monarch/QuickBooks, query your finances in plain language, run a month-end close, and record options trades — all confirm-gated and `bean-check`-verified. |
 
-The dashboard and mobile app are clients for the hosted Beancount.io API. The **backend** behind that API will be open-sourced soon. The CLI, `fava-slim`, and ledger skills also support local-first workflows that do not require the hosted service.
+The dashboard and mobile app are clients for the hosted Beancount.io API. The **backend** behind that API will be open-sourced soon. The CLI and ledger skills also support local-first workflows that do not require the hosted service.
 
 ## Choose your entry point
 
@@ -133,7 +132,7 @@ uv sync --all-groups
 uv run beancount-cli --help
 ```
 
-The [CLI reference](./cli/docs/USAGE.md) covers local reads and writes, validation, formatting, queries, reports, authentication, and ledger management. Library contributors can start independently in [`fava-slim/`](./fava-slim).
+The [CLI reference](./cli/docs/USAGE.md) covers local reads and writes, validation, formatting, queries, reports, authentication, and ledger management.
 
 ## Quality bar
 
@@ -144,7 +143,6 @@ Every active package has path-filtered CI so unrelated changes stay fast:
 | Dashboard | `cd dashboard && yarn format:check && yarn lint && yarn test && yarn build` |
 | Mobile | `cd mobile && yarn format:check && yarn lint && yarn typecheck && yarn test:unit` |
 | CLI | `cd cli && make check-all` |
-| fava-slim | `cd fava-slim && make check-all` |
 | Skills | `python3 skills/scripts/ci-check.py` |
 
 A repository-wide secret scan also gates every push and pull request.
@@ -163,7 +161,7 @@ If Beancount.io is the kind of open, programmable finance software you want to s
 
 ## Acknowledgements
 
-Beancount.io stands on [Beancount](https://github.com/beancount/beancount) and [Fava](https://github.com/beancount/fava) — [`fava-slim/`](./fava-slim) is a derivative work of Fava's Python core, and the rest of the plain-text accounting stack ([beanquery](https://github.com/beancount/beanquery), [beangulp](https://github.com/beancount/beangulp), [rustledger](https://github.com/rustledger/rustledger)) is used as unmodified upstream dependencies. Full credits and how we comply with each upstream license: [ACKNOWLEDGEMENTS.md](./ACKNOWLEDGEMENTS.md).
+Beancount.io stands on [Beancount](https://github.com/beancount/beancount) and [Fava](https://github.com/beancount/fava) — the vendored `fava` package inside `cli/src/fava` is a derivative work of Fava's Python core, and the rest of the plain-text accounting stack ([beanquery](https://github.com/beancount/beanquery), [beangulp](https://github.com/beancount/beangulp), [rustledger](https://github.com/rustledger/rustledger)) is used as unmodified upstream dependencies. Full credits and how we comply with each upstream license: [ACKNOWLEDGEMENTS.md](./ACKNOWLEDGEMENTS.md).
 
 ## License
 

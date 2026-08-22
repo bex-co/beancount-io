@@ -73,13 +73,13 @@ Cross-skill contracts every `beancount-*` skill follows (each has one canonical 
 
 For any skill that emits beancount, run `bean-check` on the resulting file before declaring success. The `beancount-options` skill bakes this into its workflow as a "Verify" phase.
 
-`bean-check` lives in a venv at `/tmp/beancount_venv/bin/bean-check` from the iter-2/3 dev work; install via `pip install beancount` if missing. CI installs it via `uv sync` in `fava-slim/`.
+`bean-check` lives in a venv at `/tmp/beancount_venv/bin/bean-check` from the iter-2/3 dev work; install via `pip install beancount` if missing. CI installs it via `uv sync` in `cli/`.
 
 Before opening a skills PR, run the structural suite locally:
 
 ```zsh
-# from repo root (needs fava-slim deps for bean-check)
-cd fava-slim && uv sync --all-groups && cd ..
+# from repo root (needs cli deps for bean-check)
+cd cli && uv sync --all-groups && cd ..
 python3 skills/scripts/ci-check.py
 ```
 

@@ -12,11 +12,13 @@ dependencies = [
     "pydantic-settings>=2.0",
     "beancount>=3.2",
     "beanquery>=0.2",
+    "ply>=3.11",
+    "pyexcel>=0.7.3",
+    "python-dateutil>=2.9.0",
     "openai>=1.0",
     "pydantic-ai>=0.3",
     "prompt-toolkit>=3.0",
     "python-frontmatter>=1.1",
-    "fava-slim",
 ]
 
 [project.urls]
@@ -30,19 +32,18 @@ beancount-cli = "cli.main:app"
 requires = ["hatchling"]
 build-backend = "hatchling.build"
 
-[tool.uv.sources]
-fava-slim = { path = "../fava-slim", editable = true }
-
 [tool.hatch.build.targets.wheel]
-packages = ["src/cli"]
+packages = ["src/cli", "src/fava"]
 
 [dependency-groups]
 dev = [
     "pytest>=8",
     "pytest-httpx>=0.30",
-    "ruff>=0.4",
-    "mypy>=1.10",
+    "pytest-cov>=7.0.0",
+    "ruff>=0.12.12",
+    "mypy>=1.17.1",
     "ariadne-codegen>=0.14",
+    "types-python-dateutil>=2.9.0.20251008",
 ]
 
 [tool.ariadne-codegen]
@@ -63,6 +64,7 @@ ignore = ["B008"]
 
 [tool.ruff.lint.per-file-ignores]
 "src/cli/directives/writer.py" = ["I001"]
+"src/fava/**/*.py" = ["E501", "I001"]
 
 [tool.mypy]
 python_version = "3.12"

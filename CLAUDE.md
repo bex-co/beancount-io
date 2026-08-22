@@ -5,7 +5,6 @@ Monorepo for [Beancount.io](https://beancount.io/) — double-entry bookkeeping 
 This file holds repo-wide rules. Per-package guidance lives next to the code:
 - `dashboard/CLAUDE.md` — web client
 - `mobile/CLAUDE.md` — React Native app
-- `fava-slim/CLAUDE.md` — typed Python reporting library
 - `skills/CLAUDE.md` — agent skills package
 
 ## Codex and Claude Code compatibility
@@ -21,8 +20,7 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 |------|--------|-------------|
 | `dashboard/` | active | Web client (React 19, TanStack Start, Apollo, TypeScript) |
 | `mobile/` | active | React Native iOS/Android app (Expo, Apollo, TypeScript) |
-| `cli/` | active | `beancount-cli` — directives, bean-check/format, BQL queries, reports, local-ledger chat (Python, Typer) |
-| `fava-slim/` | active | Ledger loading, account trees, queries, financial statements without the Fava web UI (typed Python) |
+| `cli/` | active | `beancount-cli` — directives, bean-check/format, BQL queries, reports, local-ledger chat (Python, Typer) — includes vendored `fava` reporting library |
 | `skills/` | active | Agent skills: init, import, importer-author, reconcile, migrate, ask, close, options (see `skills/CLAUDE.md`) |
 | `docs/` | active | Documentation content |
 
@@ -37,13 +35,13 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 ## Repo-wide rules
 
 ### Never hand-edit a lockfile
-- Each package owns its own lockfile: `dashboard/yarn.lock`, `mobile/yarn.lock`, `cli/uv.lock`, `fava-slim/uv.lock`.
+- Each package owns its own lockfile: `dashboard/yarn.lock`, `mobile/yarn.lock`, `cli/uv.lock`.
 - Lockfiles are generated — manual edits cause dependency drift.
-- If deps need updating, run the package's own tool from inside its directory: `yarn install` / `yarn upgrade` for `dashboard/` and `mobile/`, `uv sync` / `uv lock` for `cli/` and `fava-slim/`. Ask the user before adding new dependencies.
+- If deps need updating, run the package's own tool from inside its directory: `yarn install` / `yarn upgrade` for `dashboard/` and `mobile/`, `uv sync` / `uv lock` for `cli/`. Ask the user before adding new dependencies.
 
 ### Scope changes to one package
 - Always `cd` into the package directory before running scripts (`yarn`, `tsc`, `uv`, etc.).
-- Don't introduce new cross-package imports — packages are otherwise independent. The one sanctioned dependency is `cli/` → `fava-slim/`, declared in `cli/pyproject.toml` as an editable `[tool.uv.sources]` path.
+- Don't introduce new cross-package imports — packages are otherwise independent.
 - If unsure which package a change belongs to, ask.
 
 ### Never commit secrets
@@ -64,11 +62,11 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 - The two JS packages pin **different Yarn majors** via `packageManager` — always run Yarn from inside the package directory so Corepack picks the right one:
   - `dashboard/` → Yarn 4.17.0 (Berry); installs with `yarn install --immutable`.
   - `mobile/` → Yarn 1.22.22 (Classic); installs with `yarn install --frozen-lockfile`.
-- Python packages (`cli/`, `fava-slim/`) use [uv](https://docs.astral.sh/uv/): `uv sync --all-groups`, then `make check-all`.
+- Python package `cli/` uses [uv](https://docs.astral.sh/uv/): `uv sync --all-groups`, then `make check-all`.
 - CI — one workflow per package, all on push/PR to `main`, each path-filtered to its own package plus its own workflow file:
   - `.github/workflows/ci.yml` (`CI`) → `mobile/**`: `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`.
   - `.github/workflows/ci-dashboard.yml` (`CI (dashboard)`) → `dashboard/**`: `yarn format:check`, `yarn lint`, `yarn test`, `yarn build`.
-  - `.github/workflows/ci-cli.yml` (`CI (cli)`) → `cli/**` **or** `fava-slim/**`: two jobs, each running `make check-all`. Either path triggers both, since `cli/` depends on `fava-slim/`.
+  - `.github/workflows/ci-cli.yml` (`CI (cli)`) → `cli/**`: `make check-all`.
   - `.github/workflows/ci-skills.yml` (`CI (skills)`) → `skills/**`: `python3 skills/scripts/ci-check.py` (SKILL.md frontmatter, evals.json, fixture paths, Python syntax, bean-check on `*ledger.beancount`).
 - Secret scan: `.github/workflows/secret-scan.yml` runs gitleaks over the whole tree on every push/PR — not path-filtered.
 - Release: `.github/workflows/deploy.yml` (workflow name `Release (mobile)`) runs on every `mobile/**` push to `main` and verifies checks, but deploys only when `mobile/package.json`'s version has no `mobile-v<version>` git tag yet (i.e. after `yarn bump`): it ships the OTA update, runs the Expo EAS build/submit, then pushes the tag and a GitHub Release. A push without a version bump deploys nothing. Tag-after-success makes failed releases retry automatically on the next push.

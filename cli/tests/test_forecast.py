@@ -17,7 +17,6 @@ from beancount.loader import load_string
 
 from fava.plugins.forecast import forecast_plugin
 
-
 OPENS = """\
     2010-01-01 open Assets:Checking
     2010-01-01 open Expenses:Electricity
