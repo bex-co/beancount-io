@@ -315,7 +315,6 @@ describe("PageSEO Component", () => {
         <PageSEO
           titleKey="seo.login.title"
           descriptionKey="seo.login.description"
-          
         />,
       );
       const links = document.head.querySelectorAll('link[rel="canonical"]');
@@ -329,7 +328,6 @@ describe("PageSEO Component", () => {
         <PageSEO
           titleKey="seo.login.title"
           descriptionKey="seo.login.description"
-          
           noIndex
         />,
       );
@@ -338,12 +336,12 @@ describe("PageSEO Component", () => {
     });
 
     it("should honor canonicalUrl override even with noIndex", async () => {
-      const custom = "https://beancount.io/ledger/open_ledger/example/commit/abc123";
+      const custom =
+        "https://beancount.io/ledger/open_ledger/example/commit/abc123";
       const { unmount } = render(
         <PageSEO
           titleKey="seo.login.title"
           descriptionKey="seo.login.description"
-          
           canonicalUrl={custom}
         />,
       );
@@ -354,12 +352,15 @@ describe("PageSEO Component", () => {
         <PageSEO
           titleKey="seo.login.title"
           descriptionKey="seo.login.description"
-          
           noIndex
           canonicalUrl={custom}
         />,
       );
-      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe(custom);
+      expect(
+        document.head
+          .querySelector('link[rel="canonical"]')
+          ?.getAttribute("href"),
+      ).toBe(custom);
       u2();
     });
 
@@ -368,13 +369,13 @@ describe("PageSEO Component", () => {
         <PageSEO
           titleKey="seo.login.title"
           descriptionKey="seo.login.description"
-          
           canonicalUrl="https://beancount.io/ledger/open_ledger/example/agent"
         />,
       );
-      expect(document.head.querySelectorAll('link[rel="canonical"]').length).toBe(1);
+      expect(
+        document.head.querySelectorAll('link[rel="canonical"]').length,
+      ).toBe(1);
       unmount();
     });
   });
-
 });

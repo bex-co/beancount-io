@@ -160,17 +160,13 @@ describe("getSelfCanonicalUrl", () => {
         pathname: "/ledger/open_ledger/example#section",
         search: "?lang=uk",
       }),
-    ).toBe(
-      "https://beancount.io/ledger/open_ledger/example?lang=uk",
-    );
+    ).toBe("https://beancount.io/ledger/open_ledger/example?lang=uk");
   });
 
   it("handles encoded account paths without double-encoding", () => {
     const pathname =
       "/ledger/open_ledger/example/account/Expenses%3AFinancial%3AFees";
-    expect(
-      getSelfCanonicalUrl({ pathname, search: "?lang=ca" }),
-    ).toBe(
+    expect(getSelfCanonicalUrl({ pathname, search: "?lang=ca" })).toBe(
       "https://beancount.io/ledger/open_ledger/example/account/Expenses%3AFinancial%3AFees?lang=ca",
     );
   });

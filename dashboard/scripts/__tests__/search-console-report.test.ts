@@ -192,7 +192,9 @@ describe("dashboard Search Console report core", () => {
         },
       ],
       sitemapLines: ["- ok: /sitemap.xml (errors 0, warnings 0)"],
-      inspectionLines: ["- https://beancount.io/ledger/open_ledger/example: ok"],
+      inspectionLines: [
+        "- https://beancount.io/ledger/open_ledger/example: ok",
+      ],
     });
     expect(report).toContain("| Variants |");
     expect(report).toContain("| 3 |");

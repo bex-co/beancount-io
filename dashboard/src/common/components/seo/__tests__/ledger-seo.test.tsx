@@ -598,7 +598,9 @@ describe("LedgerSEO Component", () => {
       );
       const links = document.head.querySelectorAll('link[rel="canonical"]');
       expect(links.length).toBe(1);
-      expect(links[0]?.getAttribute("href")).toBe("https://beancount.io/ledger/test");
+      expect(links[0]?.getAttribute("href")).toBe(
+        "https://beancount.io/ledger/test",
+      );
       unmount();
     });
 
@@ -616,7 +618,8 @@ describe("LedgerSEO Component", () => {
     });
 
     it("should honor canonicalUrl override even with noIndex", async () => {
-      const custom = "https://beancount.io/ledger/open_ledger/example/commit/abc123";
+      const custom =
+        "https://beancount.io/ledger/open_ledger/example/commit/abc123";
       const { unmount } = render(
         <LedgerSEO
           titleKey="seo.ledgerOverview.title"
@@ -637,7 +640,11 @@ describe("LedgerSEO Component", () => {
           canonicalUrl={custom}
         />,
       );
-      expect(document.head.querySelector('link[rel="canonical"]')?.getAttribute("href")).toBe(custom);
+      expect(
+        document.head
+          .querySelector('link[rel="canonical"]')
+          ?.getAttribute("href"),
+      ).toBe(custom);
       u2();
     });
 
@@ -650,9 +657,10 @@ describe("LedgerSEO Component", () => {
           canonicalUrl="https://beancount.io/ledger/open_ledger/example/agent"
         />,
       );
-      expect(document.head.querySelectorAll('link[rel="canonical"]').length).toBe(1);
+      expect(
+        document.head.querySelectorAll('link[rel="canonical"]').length,
+      ).toBe(1);
       unmount();
     });
   });
-
 });
