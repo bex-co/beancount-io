@@ -46,8 +46,8 @@ export type AuthMethod = "session" | "oauth" | "apikey";
 /**
  * The API scope vocabulary. Deliberately closed and only three wide (ADR 0006
  * D3): a finer-grained list is one nobody chooses correctly, so every client
- * ends up requesting all of it. Enforcement (the op-class matrix) lands in
- * w1/m20; until then these are carried and advertised but not yet checked.
+ * ends up requesting all of it. What each one unlocks is decided by the op-class
+ * matrix in `op-class.ts`, which every surface consults.
  */
 export const API_SCOPES = [
   "ledger.read",

@@ -1,0 +1,1116 @@
+import type { ApiScope, Identity } from "./identity";
+import { ForbiddenError } from "@/shared/errors";
+import { logger } from "@/shared/logger";
+
+const scopeLogger = logger.child({ module: "op-class" });
+
+/**
+ * How much authority an operation needs, expressed in the closed scope
+ * vocabulary of ADR 0006 D3 plus the two classes that vocabulary cannot
+ * express.
+ *
+ * - `read` / `write` / `admin` map onto `ledger.read` / `ledger.write` /
+ *   `ledger.admin`. `admin` is the ledger's own control plane: its existence,
+ *   its collaborators, its keys, its bank bindings — and the reads of those,
+ *   because an access-control list is not ledger content.
+ * - `session-only` is the honest name for an op no scope can unlock. The
+ *   vocabulary is deliberately three ledger scopes wide, so account lifecycle,
+ *   billing, and credential minting simply have no scope that describes them.
+ *   Filing them under `admin` would mean a token granted "manage my ledger"
+ *   could also delete the account — so they get a class that never matches.
+ * - `public` is for the handful of ops that carry no authority at all (a
+ *   liveness probe, the feature-flag bootstrap). It exists so "needs nothing"
+ *   is stated rather than approximated by `read`.
+ *
+ * An op absent from the table is treated as `write`, not as an error — see
+ * {@link classifyOp}. That is the fail-closed default; the coverage test
+ * (`op-class-coverage.test.ts`) is what keeps it from ever firing in
+ * production.
+ */
+export type OpClass = "read" | "write" | "admin" | "session-only" | "public";
+
+/** The scope that satisfies each class, or null when no scope can. */
+const SCOPE_FOR_CLASS: Record<OpClass, ApiScope | null> = {
+  read: "ledger.read",
+  write: "ledger.write",
+  admin: "ledger.admin",
+  "session-only": null,
+  public: null,
+};
+
+/**
+ * Scopes are cumulative, not orthogonal: `ledger.admin` implies `ledger.write`
+ * implies `ledger.read`.
+ *
+ * The alternative — exact match — produces credentials that make no sense: a
+ * grant that may rewrite a ledger's contents but is refused a look at them, or
+ * one that may delete the ledger outright yet cannot list its files. Every real
+ * write flow reads first, so exact match would only teach clients to request
+ * all three scopes every time, which is the outcome the deliberately-small
+ * vocabulary exists to avoid.
+ */
+const IMPLIED_SCOPES: Record<ApiScope, readonly ApiScope[]> = {
+  "ledger.read": ["ledger.read", "ledger.write", "ledger.admin"],
+  "ledger.write": ["ledger.write", "ledger.admin"],
+  "ledger.admin": ["ledger.admin"],
+};
+
+/**
+ * Whether enforcement denies or merely records. Shadow mode logs the requests
+ * that *would* be refused so coverage can be confirmed against real traffic
+ * before anyone is actually turned away (ADR 0006 Consequences / risk 2).
+ */
+export type ScopeEnforcementMode = "shadow" | "enforce";
+
+// ---------------------------------------------------------------------------
+// Op ids
+// ---------------------------------------------------------------------------
+
+/**
+ * Stable op ids, the keys this whole table is written against (ADR 0006 D3):
+ *
+ * ```
+ * REST <METHOD> <path>     REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}
+ * GQL Query.<field>        GQL Query.queryShellText
+ * GQL Mutation.<field>     GQL Mutation.upsertEntry
+ * MCP <tool>               MCP runBqlQuery
+ * ```
+ *
+ * They are checked into this file and asserted against the live registrations
+ * by `op-class-coverage.test.ts`, which is what makes them stable rather than
+ * merely conventional.
+ */
+export const restOpId = (method: string, path: string): string =>
+  `REST ${method} ${path}`;
+export const gqlOpId = (field: string): string => `GQL ${field}`;
+export const mcpOpId = (tool: string): string => `MCP ${tool}`;
+
+// ---------------------------------------------------------------------------
+// The verb table
+// ---------------------------------------------------------------------------
+
+/**
+ * One verb, and where it is reachable.
+ *
+ * A verb is the unit parity is judged on: the same capability may appear as a
+ * GraphQL field, a REST route, and an MCP tool, and those three op ids belong
+ * to one row. A surface a verb does not reach must carry a reason string in the
+ * matching `*Exempt` field — `surface-parity.test.ts` fails on a bare absence,
+ * so "we never got round to it" has to be written down as such.
+ */
+export interface VerbEntry {
+  /** Stable identifier for the verb itself, independent of any surface. */
+  readonly verb: string;
+  readonly class: OpClass;
+  /** GraphQL root field, e.g. `Query.getLedger`. */
+  readonly gql?: string;
+  /** REST route as `<METHOD> <path>`, path in `{param}` form. */
+  readonly rest?: string;
+  /** MCP tool name. */
+  readonly mcp?: string;
+  readonly gqlExempt?: string;
+  readonly restExempt?: string;
+  readonly mcpExempt?: string;
+}
+
+/**
+ * Why a verb has no REST route. These are categories, not boilerplate: each one
+ * is an argument that can be disagreed with, which is the point — the parity
+ * test's job is to make the absence arguable rather than invisible.
+ */
+const R = {
+  sessionCeremony:
+    "Session-only ceremony: login, signup, OTP, and password reset are browser-shaped (cookies, redirects, one-time links). A REST twin would be a second authentication system to keep correct, not a convenience.",
+  accountProfile:
+    "Identity, not ledger content: a token client already gets these facts from the OIDC userinfo endpoint, so a REST twin would be a second source of the same data, free to drift.",
+  credentialMinting:
+    "Credential minting is deliberately unreachable by a token credential (ADR 0006 D6: an API key may not create an API key), so a REST twin would exist only to be refused.",
+  billing:
+    "Billing verbs return Stripe-hosted URLs a human must visit in a browser; a curl client cannot complete checkout or the customer portal, so the endpoint would hand back a link to nowhere.",
+  restV1Planned:
+    "In the v1 REST table of ADR 0006 D7 but not yet built: the endpoint lands in w1/m21, at which point this exemption is replaced by a `rest` op id.",
+  dashboardShaped:
+    "Dashboard-shaped read: the response is assembled for one screen (chart series, account trees, screen-tuned paging). v1 REST publishes ledger resources, not screens (ADR 0006 D7).",
+  giteaSocial:
+    "The Gitea-backed social graph (feeds, followers, stars) is a web-UI product surface, outside the ledger resource model the Beancount API promises.",
+  pullRequest:
+    "Ledger pull-request review is a dashboard workflow layered on Gitea's own API; publishing it as REST would commit us to Gitea's review model as public contract.",
+  plaidBinding:
+    "Plaid binding runs through Link, a browser widget: the link token and its public-token exchange are only meaningful as callbacks from that widget.",
+  llm: "LLM-assisted helper whose contract is a prompt and its response shape, both still moving. Publishing it as REST would freeze what we are still iterating on.",
+  assetStorage:
+    "Pre-signed S3 URL minting is an implementation detail of the dashboard's upload widget, not a ledger resource.",
+  legacy:
+    "Legacy resolver retained for older mobile clients and on the removal path; a public REST twin would extend its life rather than end it.",
+  internalProbe:
+    "Already reachable over REST in its own right — `GET /healthz` for liveness, the dashboard bootstrap for flags — so a second spelling would only be another thing to keep in step.",
+  streamingOnly:
+    "Server-sent streaming: the response is an event stream tied to one long-lived HTTP request, which is what the dedicated AI routes already are.",
+} as const;
+
+/**
+ * Why a verb has no MCP tool. Tool count is the dominant cost in an agent's
+ * tool selection, so "an agent could conceivably call this" is not sufficient
+ * reason to add one — the bar is a workflow that needs it.
+ */
+const M = {
+  notAgentShaped:
+    "Not agent-shaped: no agent workflow reaches for it, and every additional tool measurably degrades selection accuracy for the four that matter (ADR 0006 Alternatives: agents are highly sensitive to tool naming and count).",
+  sessionCeremony:
+    "Authentication ceremony: an MCP client arrives already holding a token, so it can neither need nor complete these.",
+  credentialMinting:
+    "Credential minting is deliberately unreachable by a token credential (ADR 0006 D6), and an agent minting its own successor credential is precisely the loop that rule closes.",
+  billing:
+    "Billing is a human decision with a hosted checkout page; an agent has nothing to do with the URL it would receive.",
+  plaidBinding:
+    "Bank binding runs through the Plaid Link browser widget, which an agent cannot drive.",
+  dashboardShaped:
+    "Screen-shaped payload: an agent wants the underlying ledger data, which `runBqlQuery` already gives it in a form it can reason about.",
+  coveredByBql:
+    "Already reachable through `runBqlQuery`: BQL expresses this query directly, so a dedicated tool would be a second, narrower way to ask the same question.",
+  transportOnly:
+    "This *is* the MCP surface's own transport or one of its siblings — a tool for reaching it would be circular.",
+} as const;
+
+/** Why a verb has no GraphQL field. */
+const G = {
+  bytesNotFields:
+    "Serves bytes, not fields: a GraphQL response cannot stream an archive, so the field mints the ticket and the REST route serves the download.",
+  streamingOnly:
+    "Server-sent streaming over a long-lived HTTP request; GraphQL's request/response shape cannot carry it, and the dashboard consumes the stream directly.",
+  wireCompat:
+    "Exists to speak a foreign wire format (OpenAI / Anthropic / MCP) so third-party clients work unchanged; a GraphQL twin would have no client.",
+} as const;
+
+/** A verb that lives only on GraphQL. */
+const gqlOnly = (
+  gql: string,
+  opClass: OpClass,
+  restExempt: string,
+  mcpExempt: string,
+): VerbEntry => ({
+  verb: gql,
+  class: opClass,
+  gql,
+  restExempt,
+  mcpExempt,
+});
+
+const ACCOUNT_VERBS: readonly VerbEntry[] = [
+  gqlOnly(
+    "Query.userProfile",
+    "session-only",
+    R.accountProfile,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Query.getUserByExactMatch",
+    "session-only",
+    R.accountProfile,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.deleteAccount",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.updateUsername",
+    "session-only",
+    R.accountProfile,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.updateProfile",
+    "session-only",
+    R.accountProfile,
+    M.notAgentShaped,
+  ),
+];
+
+const AUTH_VERBS: readonly VerbEntry[] = [
+  gqlOnly(
+    "Query.validateEmailToken",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.logout",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.signIn",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.refreshToken",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.signInWithOneTimeToken",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.createOneTimeToken",
+    "session-only",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Mutation.sendForgotPasswordLink",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.resetPassword",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.signUp",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.verifySignUpOtp",
+    "session-only",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  // The CLI auth ceremony mints session credentials. It is the one flow whose
+  // whole purpose is to hand a token to a non-browser client, which is exactly
+  // why a non-browser client must not be able to drive it (ADR 0006 D6).
+  gqlOnly(
+    "Query.getCliAuthSession",
+    "session-only",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Mutation.createCliAuthSession",
+    "session-only",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Mutation.confirmCliAuthSession",
+    "session-only",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Mutation.denyCliAuthSession",
+    "session-only",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Mutation.consumeCliAuthSession",
+    "session-only",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+];
+
+const BILLING_VERBS: readonly VerbEntry[] = [
+  gqlOnly("Query.allTierQuotas", "session-only", R.billing, M.billing),
+  gqlOnly("Query.subscriptionStatus", "session-only", R.billing, M.billing),
+  gqlOnly(
+    "Mutation.createSubscriptionSession",
+    "session-only",
+    R.billing,
+    M.billing,
+  ),
+  gqlOnly(
+    "Mutation.createStripePortalSession",
+    "session-only",
+    R.billing,
+    M.billing,
+  ),
+  gqlOnly("Mutation.cancelSubscription", "session-only", R.billing, M.billing),
+  gqlOnly("Mutation.resumeSubscription", "session-only", R.billing, M.billing),
+  gqlOnly("Mutation.upgradeSubscription", "session-only", R.billing, M.billing),
+];
+
+const PROBE_VERBS: readonly VerbEntry[] = [
+  gqlOnly("Query.health", "public", R.internalProbe, M.notAgentShaped),
+  gqlOnly("Query.featureFlags", "public", R.internalProbe, M.notAgentShaped),
+];
+
+/**
+ * The ledger's own control plane. Both the writes and the reads are `admin`:
+ * a collaborator list and a deploy key are access-control artefacts, not ledger
+ * content, and a grant that says "read my books" should not also enumerate who
+ * else can reach them.
+ */
+const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
+  gqlOnly("Mutation.createLedger", "admin", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Mutation.updateLedger", "admin", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Mutation.deleteLedger", "admin", R.restV1Planned, M.notAgentShaped),
+  gqlOnly(
+    "Query.listPublicKeys",
+    "admin",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Query.getPublicKey",
+    "admin",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Mutation.createPublicKey",
+    "admin",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Mutation.deletePublicKey",
+    "admin",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
+    "Query.listLedgerCollaborators",
+    "admin",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Query.getLedgerCollaboratorPermission",
+    "admin",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.addOrUpdateLedgerCollaborator",
+    "admin",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.deleteLedgerCollaborator",
+    "admin",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly("Mutation.leaveLedger", "admin", R.restV1Planned, M.notAgentShaped),
+];
+
+const LEDGER_READ_VERBS: readonly VerbEntry[] = [
+  gqlOnly("Query.listLedgers", "read", R.restV1Planned, M.notAgentShaped),
+  gqlOnly(
+    "Query.listUserOwnedLedgers",
+    "read",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly("Query.searchLedgers", "read", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Query.getLedger", "read", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Query.getLedgerOverview", "read", R.dashboardShaped, M.coveredByBql),
+  gqlOnly(
+    "Query.getLedgerIncomeStatement",
+    "read",
+    R.restV1Planned,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerBalanceSheet",
+    "read",
+    R.restV1Planned,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerTrialBalance",
+    "read",
+    R.restV1Planned,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerAttributes",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerCommodities",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly("Query.getLedgerEvents", "read", R.dashboardShaped, M.coveredByBql),
+  gqlOnly(
+    "Query.getLedgerDocuments",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerPayeeTransactions",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerNarrationTransactions",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerPayeeAccounts",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly("Query.getLedgerErrors", "read", R.dashboardShaped, M.notAgentShaped),
+  gqlOnly(
+    "Query.getLedgerCurrencies",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerSourceFiles",
+    "read",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly("Query.getLedgerTags", "read", R.dashboardShaped, M.coveredByBql),
+  gqlOnly("Query.getLedgerYears", "read", R.dashboardShaped, M.coveredByBql),
+  gqlOnly("Query.getLedgerLinks", "read", R.dashboardShaped, M.coveredByBql),
+  gqlOnly(
+    "Query.getLedgerNarrations",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly("Query.getLedgerPayees", "read", R.dashboardShaped, M.coveredByBql),
+  gqlOnly(
+    "Query.getLedgerAccountLastEntries",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerEntriesCountPerType",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerAccountReport",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerIntervalTotals",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly("Query.getLedgerJournal", "read", R.restV1Planned, M.coveredByBql),
+  gqlOnly(
+    "Query.getLedgerEntryContext",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerPlaintextJournal",
+    "read",
+    R.restV1Planned,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerAccountJournal",
+    "read",
+    R.restV1Planned,
+    M.coveredByBql,
+  ),
+  gqlOnly("Query.getLedgerAccounts", "read", R.restV1Planned, M.coveredByBql),
+  gqlOnly(
+    "Query.getLedgerAccountDirectives",
+    "read",
+    R.dashboardShaped,
+    M.coveredByBql,
+  ),
+  gqlOnly(
+    "Query.getLedgerAssetDownloadUrl",
+    "read",
+    R.assetStorage,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Query.getLedgerArchiveDownloadUrl",
+    "read",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Query.getLatestLedgerCommit",
+    "read",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly("Query.listCommits", "read", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Query.getCommitDetails", "read", R.restV1Planned, M.notAgentShaped),
+  // Legacy resolvers, kept for older mobile builds.
+  gqlOnly("Query.ledgerMeta", "read", R.legacy, M.notAgentShaped),
+  gqlOnly("Query.accountHierarchy", "read", R.legacy, M.dashboardShaped),
+  gqlOnly("Query.homeCharts", "read", R.legacy, M.dashboardShaped),
+  gqlOnly("Query.journalEntries", "read", R.legacy, M.coveredByBql),
+];
+
+const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
+  gqlOnly("Mutation.starLedger", "write", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Mutation.unstarLedger", "write", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Mutation.bulkEntries", "write", R.restV1Planned, M.coveredByBql),
+  gqlOnly(
+    "Mutation.insertReceiptTransaction",
+    "write",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.deleteLedgerEntrySourceSlice",
+    "write",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.deleteMultipleLedgerEntrySourceSlices",
+    "write",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.updateLedgerEntrySourceSlice",
+    "write",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+  gqlOnly("Mutation.addEntries", "write", R.restV1Planned, M.notAgentShaped),
+  gqlOnly(
+    "Mutation.renameLedgerFile",
+    "write",
+    R.restV1Planned,
+    M.notAgentShaped,
+  ),
+];
+
+/**
+ * The verbs that reach more than one surface.
+ *
+ * `ledger.queryShellText` is the worked example of ADR 0006 D1: one service
+ * method (`LedgerShellService.queryShellText`) with two adapters, so the
+ * GraphQL field and the MCP tool cannot disagree about authorization or data.
+ *
+ * The file verbs are NOT there yet, and this table should not be read as
+ * claiming they are. w1/m19 moved the MCP tools onto `LedgerRepoService`
+ * (which authorizes through `authorizeLedger`), but the GraphQL twins still go
+ * through `LedgerWorkflow`, which reaches Fava via the client factory on its
+ * own. Two implementations of one verb is exactly problem 1 in ADR 0006 — the
+ * rows below are honest about the verb being reachable from both surfaces, and
+ * this comment is the honest part about it being reachable two different ways.
+ * Converging them belongs with the service-layer work, not with classification.
+ */
+const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
+  {
+    verb: "ledger.queryShellText",
+    class: "read",
+    gql: "Query.queryShellText",
+    mcp: "runBqlQuery",
+    restExempt: R.restV1Planned,
+  },
+  {
+    verb: "ledger.queryShell",
+    class: "read",
+    gql: "Query.queryShell",
+    restExempt: R.restV1Planned,
+    mcpExempt: M.coveredByBql,
+  },
+  {
+    verb: "ledger.listDirContent",
+    class: "read",
+    gql: "Query.getLedgerDirContent",
+    mcp: "listLedgerFiles",
+    restExempt: R.restV1Planned,
+  },
+  {
+    verb: "ledger.readFiles",
+    class: "read",
+    gql: "Query.getLedgerFile",
+    mcp: "readLedgerFiles",
+    restExempt: R.restV1Planned,
+  },
+  // One MCP tool, three GraphQL mutations: `editLedgerFiles` takes create /
+  // update / delete as an operation argument, while GraphQL spells each out as
+  // its own field. The verb row is anchored on the create field and the other
+  // two carry their own rows pointing back at the same tool.
+  {
+    verb: "ledger.editFiles.create",
+    class: "write",
+    gql: "Mutation.createLedgerFile",
+    mcp: "editLedgerFiles",
+    restExempt: R.restV1Planned,
+  },
+  {
+    verb: "ledger.editFiles.update",
+    class: "write",
+    gql: "Mutation.updateLedgerFile",
+    mcp: "editLedgerFiles",
+    restExempt: R.restV1Planned,
+  },
+  {
+    verb: "ledger.editFiles.delete",
+    class: "write",
+    gql: "Mutation.deleteLedgerFile",
+    mcp: "editLedgerFiles",
+    restExempt: R.restV1Planned,
+  },
+  {
+    verb: "ledger.downloadArchive",
+    class: "read",
+    rest: "GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
+    gqlExempt: G.bytesNotFields,
+    mcpExempt: M.notAgentShaped,
+  },
+];
+
+const GITEA_SOCIAL_VERBS: readonly VerbEntry[] = [
+  gqlOnly("Query.getFeed", "session-only", R.giteaSocial, M.notAgentShaped),
+  gqlOnly(
+    "Query.getUserProfile",
+    "session-only",
+    R.giteaSocial,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Query.getUserFollowers",
+    "session-only",
+    R.giteaSocial,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Query.getUserFollowing",
+    "session-only",
+    R.giteaSocial,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Query.getUserStarredRepos",
+    "session-only",
+    R.giteaSocial,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.followUser",
+    "session-only",
+    R.giteaSocial,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.unfollowUser",
+    "session-only",
+    R.giteaSocial,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Query.getPullRequestDetails",
+    "read",
+    R.pullRequest,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.createPullRequestFromPatch",
+    "write",
+    R.pullRequest,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.approvePullRequest",
+    "write",
+    R.pullRequest,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.rejectPullRequest",
+    "write",
+    R.pullRequest,
+    M.notAgentShaped,
+  ),
+];
+
+const LLM_VERBS: readonly VerbEntry[] = [
+  gqlOnly(
+    "Query.suggestTransactionCategories",
+    "read",
+    R.llm,
+    M.notAgentShaped,
+  ),
+  // Mutations by TypeGraphQL, and left at `write` deliberately: they spend the
+  // account's LLM budget, which a read-scoped credential has no business doing
+  // even though no ledger bytes change.
+  gqlOnly("Mutation.parseFile", "write", R.llm, M.notAgentShaped),
+  gqlOnly("Mutation.parseReceipt", "write", R.llm, M.notAgentShaped),
+  gqlOnly("Query.aiCfoUsage", "read", R.llm, M.notAgentShaped),
+];
+
+const ASSET_VERBS: readonly VerbEntry[] = [
+  gqlOnly(
+    "Query.generateTempAssetDownloadUrl",
+    "read",
+    R.assetStorage,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.generateTempAssetUploadUrl",
+    "write",
+    R.assetStorage,
+    M.notAgentShaped,
+  ),
+];
+
+/**
+ * Plaid. The binding itself is `admin` — it attaches a bank credential to a
+ * ledger — and so are the reads of it, which echo institution and item status.
+ * The transaction verbs on the other side of the binding are ordinary
+ * read/write ledger data.
+ */
+const PLAID_VERBS: readonly VerbEntry[] = [
+  gqlOnly("Query.getPlaidItems", "admin", R.plaidBinding, M.plaidBinding),
+  gqlOnly("Query.getPlaidItem", "admin", R.plaidBinding, M.plaidBinding),
+  gqlOnly("Query.getPlaidAccounts", "admin", R.plaidBinding, M.plaidBinding),
+  gqlOnly(
+    "Query.getPlaidAccountsForLedger",
+    "admin",
+    R.plaidBinding,
+    M.plaidBinding,
+  ),
+  gqlOnly(
+    "Mutation.createPlaidLinkToken",
+    "admin",
+    R.plaidBinding,
+    M.plaidBinding,
+  ),
+  gqlOnly(
+    "Mutation.createPlaidUpdateModeLinkToken",
+    "admin",
+    R.plaidBinding,
+    M.plaidBinding,
+  ),
+  gqlOnly(
+    "Mutation.exchangePlaidPublicToken",
+    "admin",
+    R.plaidBinding,
+    M.plaidBinding,
+  ),
+  gqlOnly("Mutation.unlinkPlaidItem", "admin", R.plaidBinding, M.plaidBinding),
+  gqlOnly(
+    "Mutation.reconcilePlaidAccounts",
+    "admin",
+    R.plaidBinding,
+    M.plaidBinding,
+  ),
+  gqlOnly(
+    "Mutation.updatePlaidAccountMapping",
+    "admin",
+    R.plaidBinding,
+    M.plaidBinding,
+  ),
+  gqlOnly(
+    "Mutation.updatePlaidAccountCurrency",
+    "admin",
+    R.plaidBinding,
+    M.plaidBinding,
+  ),
+  gqlOnly(
+    "Mutation.refreshPlaidItemStatus",
+    "admin",
+    R.plaidBinding,
+    M.plaidBinding,
+  ),
+  gqlOnly(
+    "Query.getUnsyncedPlaidTransactions",
+    "read",
+    R.dashboardShaped,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Query.suggestPlaidTransactionCategories",
+    "read",
+    R.llm,
+    M.notAgentShaped,
+  ),
+  gqlOnly("Query.suggestPlaidAccountMapping", "read", R.llm, M.notAgentShaped),
+  gqlOnly(
+    "Mutation.syncPlaidTransactions",
+    "write",
+    R.dashboardShaped,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.submitPlaidTransactionsToLedger",
+    "write",
+    R.dashboardShaped,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.deletePlaidTransactions",
+    "write",
+    R.dashboardShaped,
+    M.notAgentShaped,
+  ),
+];
+
+/**
+ * The AI routes. All `write`: each one hands an agent a tool belt that includes
+ * `editLedgerFiles`, so the class has to describe what the agent may end up
+ * doing, not what the HTTP request looks like.
+ */
+const AI_ROUTE_VERBS: readonly VerbEntry[] = [
+  {
+    verb: "ai.agent",
+    class: "write",
+    rest: "POST /api-gateway/agent",
+    gqlExempt: G.streamingOnly,
+    mcpExempt: M.transportOnly,
+  },
+  {
+    verb: "ai.askAgent",
+    class: "write",
+    rest: "POST /api-gateway/ask-agent",
+    gqlExempt: G.streamingOnly,
+    mcpExempt: M.transportOnly,
+  },
+  {
+    verb: "ai.openaiChatCompletions",
+    class: "write",
+    rest: "POST /api-gateway/ai/openai/chat/completions",
+    gqlExempt: G.wireCompat,
+    mcpExempt: M.transportOnly,
+  },
+  {
+    verb: "ai.anthropicMessages",
+    class: "write",
+    rest: "POST /api-gateway/ai/anthropic/v1/messages",
+    gqlExempt: G.wireCompat,
+    mcpExempt: M.transportOnly,
+  },
+];
+
+/** The whole matrix, in one list. */
+export const VERB_TABLE: readonly VerbEntry[] = [
+  ...ACCOUNT_VERBS,
+  ...AUTH_VERBS,
+  ...BILLING_VERBS,
+  ...PROBE_VERBS,
+  ...LEDGER_ADMIN_VERBS,
+  ...LEDGER_READ_VERBS,
+  ...LEDGER_WRITE_VERBS,
+  ...CROSS_SURFACE_VERBS,
+  ...GITEA_SOCIAL_VERBS,
+  ...LLM_VERBS,
+  ...ASSET_VERBS,
+  ...PLAID_VERBS,
+  ...AI_ROUTE_VERBS,
+];
+
+// ---------------------------------------------------------------------------
+// Lookup
+// ---------------------------------------------------------------------------
+
+function buildOpIndex(): ReadonlyMap<string, VerbEntry> {
+  const index = new Map<string, VerbEntry>();
+  const claim = (opId: string, entry: VerbEntry) => {
+    const existing = index.get(opId);
+    // One op id, one class. `editLedgerFiles` legitimately appears on three
+    // rows; two rows disagreeing about its class would make enforcement depend
+    // on table order, so that is a startup error rather than a coin toss.
+    if (existing && existing.class !== entry.class) {
+      throw new Error(
+        `op-class: ${opId} is classified both "${existing.class}" (${existing.verb}) and "${entry.class}" (${entry.verb})`,
+      );
+    }
+    index.set(opId, entry);
+  };
+  for (const entry of VERB_TABLE) {
+    if (entry.gql) claim(gqlOpId(entry.gql), entry);
+    if (entry.rest) claim(restOpId(...splitRest(entry.rest)), entry);
+    if (entry.mcp) claim(mcpOpId(entry.mcp), entry);
+  }
+  return index;
+}
+
+function splitRest(rest: string): [string, string] {
+  const at = rest.indexOf(" ");
+  if (at < 0) {
+    throw new Error(`op-class: malformed rest entry "${rest}"`);
+  }
+  return [rest.slice(0, at), rest.slice(at + 1)];
+}
+
+const OP_INDEX = buildOpIndex();
+
+/** Every op id the table classifies, for the coverage test's reverse check. */
+export const classifiedOpIds = (): readonly string[] => [...OP_INDEX.keys()];
+
+export interface OpClassification {
+  readonly class: OpClass;
+  /** False when the op is absent from the table and defaulted to `write`. */
+  readonly found: boolean;
+  readonly verb?: string;
+}
+
+/**
+ * Classify an op id, defaulting an unknown one to `write` (ADR 0006 D3).
+ *
+ * The default is not a mechanical GET/Query heuristic applied at runtime: the
+ * heuristic's job was to seed the table, and once seeded, guessing again at
+ * request time would only make a forgotten entry look handled. An unclassified
+ * op is a bug, so it gets the strictest ordinary class and a warning, and the
+ * coverage test turns it red long before it reaches production.
+ */
+export function classifyOp(opId: string): OpClassification {
+  const entry = OP_INDEX.get(opId);
+  if (!entry) {
+    return { class: "write", found: false };
+  }
+  return { class: entry.class, found: true, verb: entry.verb };
+}
+
+// ---------------------------------------------------------------------------
+// Enforcement
+// ---------------------------------------------------------------------------
+
+export interface ScopeDecision {
+  readonly opId: string;
+  readonly opClass: OpClass;
+  /** False when the op was defaulted rather than looked up. */
+  readonly classified: boolean;
+  /** The scope that would satisfy this op, or null when none can. */
+  readonly requiredScope: ApiScope | null;
+  readonly allowed: boolean;
+  /** Human-readable refusal, present only when `allowed` is false. */
+  readonly denyReason?: string;
+}
+
+function satisfies(scopes: ReadonlySet<string>, required: ApiScope): boolean {
+  return IMPLIED_SCOPES[required].some((scope) => scopes.has(scope));
+}
+
+/**
+ * Decide, without acting. Separated from {@link requireScopeClass} so shadow
+ * mode, the surfaces' differing refusal dialects, and the tests all read the
+ * same decision rather than three lookalikes.
+ *
+ * An absent identity is allowed through: authentication is a separate question
+ * from authorization, and the route or resolver behind this gate is the thing
+ * that knows whether it needs a caller at all. Denying here would turn every
+ * public route into a 403.
+ */
+export function evaluateScope(
+  identity: Identity | undefined,
+  opId: string,
+): ScopeDecision {
+  const { class: opClass, found } = classifyOp(opId);
+  const requiredScope = SCOPE_FOR_CLASS[opClass];
+  const base = { opId, opClass, classified: found, requiredScope };
+
+  if (!identity) {
+    return { ...base, allowed: true };
+  }
+  // A browser session is full-power by construction — the user is driving the
+  // product directly — so narrowing it by scope would express nothing.
+  if (identity.capabilityExempt) {
+    return { ...base, allowed: true };
+  }
+  if (opClass === "public") {
+    return { ...base, allowed: true };
+  }
+  if (requiredScope === null) {
+    return {
+      ...base,
+      allowed: false,
+      denyReason:
+        "This operation is not part of the API scope vocabulary and is reachable only from a browser session",
+    };
+  }
+  if (!satisfies(identity.scopes, requiredScope)) {
+    return {
+      ...base,
+      allowed: false,
+      denyReason: `This operation requires the "${requiredScope}" scope`,
+    };
+  }
+  return { ...base, allowed: true };
+}
+
+/**
+ * Apply the matrix, throwing {@link ForbiddenError} on refusal.
+ *
+ * In `shadow` mode the refusal is logged and the request proceeds, so coverage
+ * can be measured against real traffic before anyone is actually turned away.
+ * Each surface catches the throw and dresses it in its own dialect: a GraphQL
+ * error, a REST 403 `{ ok: false }`, an MCP `isError` result.
+ */
+export function requireScopeClass(
+  identity: Identity | undefined,
+  opId: string,
+  mode: ScopeEnforcementMode,
+): ScopeDecision {
+  const decision = evaluateScope(identity, opId);
+
+  if (!decision.classified && identity && !identity.capabilityExempt) {
+    scopeLogger.warn("Unclassified op treated as write", {
+      opId: decision.opId,
+      userId: identity.userId,
+    });
+  }
+
+  if (decision.allowed) {
+    return decision;
+  }
+
+  if (mode === "shadow") {
+    scopeLogger.info("Scope check would deny", {
+      opId: decision.opId,
+      class: decision.opClass,
+      requiredScope: decision.requiredScope,
+      classified: decision.classified,
+      userId: identity?.userId,
+      tokenId: identity?.tokenId,
+      wouldDeny: true,
+    });
+    return { ...decision, allowed: true };
+  }
+
+  scopeLogger.info("Scope check denied", {
+    opId: decision.opId,
+    class: decision.opClass,
+    requiredScope: decision.requiredScope,
+    classified: decision.classified,
+    userId: identity?.userId,
+    tokenId: identity?.tokenId,
+  });
+  throw new ForbiddenError(
+    `${decision.denyReason} (${decision.opId})`,
+    decision.opId,
+  );
+}

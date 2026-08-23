@@ -76,6 +76,7 @@ The application dependency graph is explicit:
 - `src/foundation/composition/builder.ts` constructs services and workflows bottom-up.
 - `src/server/graphql/resolver-registry.ts` constructs resolvers and is the only GraphQL resolver registration list.
 - `src/server/graphql/api-gateway.ts` passes the resolver container to TypeGraphQL.
+- `src/server/api/composition-root.ts` assembles the transport surfaces: one REST router, one GraphQL schema, and one MCP registry, built from per-feature registration fragments (ADR 0006). There is no `server-routes.ts`, `rest/rest-routes.ts`, or `graphql/index.ts`; a feature exposes itself by registering a fragment, not by being wired into a route list.
 
 When adding a constructor-injected resolver, register both its class and instance in `resolver-registry.ts`. The container intentionally throws if a resolver with constructor parameters was not wired.
 
@@ -132,9 +133,19 @@ Prompt and agent-routing evals live entirely under `evals/`. Use the focused `ya
 ## API surfaces
 
 - GraphQL: `src/server/graphql/`; resolver list and DI are in `resolver-registry.ts`.
-- REST: `src/server/rest/rest-routes.ts` composes feature handlers.
+- REST: feature handlers register fragments consumed by `src/server/api/composition-root.ts`.
+- MCP: `src/features/ai-agent/api/mcp-tools.ts`, registered through the same composition root.
 - OpenAPI: development-only Swagger UI at `/api-docs` and JSON at `/api-docs/swagger.json`.
 - New documented REST endpoints use Zod schemas, `zodValidator()`, and central route registration. Import the shared `@/shared/zod-openapi-setup`; never call `extendZodWithOpenApi()` in individual schema files.
+
+### Identity and op classes
+
+Every surface authenticates through one gate and classifies every operation:
+
+- `src/server/api/identity.ts` (`resolveIdentity`) is the single authentication seam; the REST side publishes it via `rest/identity-middleware.ts`.
+- `src/server/api/op-class.ts` holds the scope vocabulary and the op-class matrix: a stable op id per operation, classified `read` / `write` / `admin`. `graphql/scope-middleware.ts`, `rest/scope-middleware.ts`, and the MCP registry all gate on it. `config.api.scopeEnforcement` is `"shadow"` while coverage is confirmed against live traffic — it logs what it *would* refuse; flipping it to `"enforce"` is a reviewed code edit here, never an environment switch.
+- `src/server/api/always-public.ts` is the census of mounts that sit outside the scope gate. Each entry carries a written reason.
+- Three drift guards in `src/server/api/__tests__/` fail CI on divergence: `surface-parity` (a verb appears on every surface or carries an excuse), `op-class-coverage` (runtime ops ↔ matrix, both directions), and `always-public` (no unexplained outside-gate mount). Adding an operation means classifying it — the coverage test will not let you skip.
 
 ## Environment and deployment
 

@@ -1,124 +1,24 @@
 import type { ServerResponse } from "node:http";
 import Router from "@koa/router";
-import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
+import type { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/streamableHttp.js";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
-import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
 import { logger } from "@/shared/logger";
 import { type AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
-import {
-  bqlQueryInputSchema,
-  executeBqlQuery,
-  description as bqlDescription,
-} from "../tools/bql-query-tool";
-import {
-  listLedgerFilesInputSchema,
-  executeListLedgerFiles,
-  description as listDescription,
-} from "../tools/list-ledger-files-tool";
-import {
-  readLedgerFilesInputSchema,
-  executeReadLedgerFiles,
-  description as readDescription,
-} from "../tools/read-ledger-files-tool";
-import {
-  editLedgerFilesInputSchema,
-  executeEditLedgerFiles,
-  description as editDescription,
-} from "../tools/edit-ledger-files-tool";
-import type { ZodTypeAny } from "zod";
 import type { ToolContext } from "../tools/types";
 import { type Identity, resolveIdentity } from "@/server/api/identity";
 import { ForbiddenError } from "@/shared/errors";
 
 const mcpLogger = logger.child({ module: "mcp-handler" });
 
-function makeMcpToolHandler<TInput extends Record<string, unknown>>(
-  toolCtx: ToolContext,
-  toolName: string,
-  execute: (toolCtx: ToolContext, input: TInput) => Promise<unknown>,
-) {
-  return async (input: TInput): Promise<CallToolResult> => {
-    mcpLogger.info("MCP tool invoked", {
-      tool: toolName,
-      ledgerId: toolCtx.ledgerId,
-      userId: toolCtx.identity.userId,
-    });
-    try {
-      const result = await execute(toolCtx, input);
-      return {
-        content: [{ type: "text", text: JSON.stringify(result) }],
-        structuredContent: result as Record<string, unknown>,
-      };
-    } catch (err) {
-      const text = err instanceof Error ? err.message : "Tool execution failed";
-      mcpLogger.error("MCP tool execution failed", {
-        tool: toolName,
-        error: text,
-      });
-      return { isError: true, content: [{ type: "text", text }] };
-    }
-  };
-}
-
-function buildMcpServer(toolCtx: ToolContext): McpServer {
-  const server = new McpServer({ name: "beancount-mcp", version: "1.0.0" });
-
-  const register = <T extends Record<string, unknown>>({
-    name,
-    title,
-    description,
-    inputSchema,
-    execute,
-  }: {
-    name: string;
-    title: string;
-    description: string;
-    inputSchema: ZodTypeAny;
-    execute: (toolCtx: ToolContext, input: T) => Promise<unknown>;
-  }) =>
-    server.registerTool(
-      name,
-      { title, description, inputSchema },
-      makeMcpToolHandler(
-        toolCtx,
-        name,
-        execute,
-      ) as unknown as ToolCallback<ZodTypeAny>,
-    );
-
-  register({
-    name: "runBqlQuery",
-    title: "Run Beancount Query (BQL)",
-    description: bqlDescription,
-    inputSchema: bqlQueryInputSchema,
-    execute: executeBqlQuery,
-  });
-  register({
-    name: "listLedgerFiles",
-    title: "List Ledger Files & Directories",
-    description: listDescription,
-    inputSchema: listLedgerFilesInputSchema,
-    execute: executeListLedgerFiles,
-  });
-  register({
-    name: "readLedgerFiles",
-    title: "Read Ledger File Contents",
-    description: readDescription,
-    inputSchema: readLedgerFilesInputSchema,
-    execute: executeReadLedgerFiles,
-  });
-  register({
-    name: "editLedgerFiles",
-    title: "Edit Ledger Files (Create / Update / Delete)",
-    description: editDescription,
-    inputSchema: editLedgerFilesInputSchema,
-    execute: executeEditLedgerFiles,
-  });
-
-  return server;
-}
+/**
+ * Builds the one MCP registry for a request's caller. Injected rather than
+ * imported: the registry is assembled by the composition root, from this
+ * feature's `MCP_TOOLS` fragment and with the scope gate wrapped round each
+ * handler, and a feature that reached back into the root to get it would put a
+ * cycle where the whole point is that there is none (ADR 0006 D1/参考实现 2).
+ */
+export type McpServerFactory = (toolCtx: ToolContext) => McpServer;
 
 /**
  * The one ledger this MCP session may touch. MCP requires a ledger-pinned
@@ -163,6 +63,7 @@ async function handleMcpRequest(
   ctx: Router.RouterContext,
   layers: AppLayers,
   config: AppConfig,
+  buildMcpServer: McpServerFactory,
 ): Promise<void> {
   // Authentication itself happens in the one shared gate (ADR 0006 D2); this
   // route only decides what an unacceptable MCP credential looks like on the
@@ -221,9 +122,10 @@ export function setMcpRoute(
   router: Router,
   layers: AppLayers,
   config: AppConfig,
+  buildMcpServer: McpServerFactory,
 ): void {
-  const handler = (ctx: Router.RouterContext) =>
-    handleMcpRequest(ctx, layers, config);
+  const handler: Router.Middleware = (ctx) =>
+    handleMcpRequest(ctx, layers, config, buildMcpServer);
   router.post("/api-gateway/mcp", handler);
   router.get("/api-gateway/mcp", handler);
   router.delete("/api-gateway/mcp", handler);

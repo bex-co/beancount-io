@@ -1,4 +1,5 @@
 import { getJwks } from "./jwks";
+import type { ScopeEnforcementMode } from "@/server/api/op-class";
 
 // Type definitions for configuration
 interface ServerConfig {
@@ -62,7 +63,6 @@ export interface SshProxyConfig {
   port: number;
   hostKey: string;
 }
-
 
 interface BlockEdenConfig {
   accessKey: string;
@@ -138,7 +138,27 @@ interface OAuthConfig {
   discourseClient: OAuthDiscourseClientConfig;
 }
 
+/**
+ * The API suite's own settings (ADR 0006). Hardcoded rather than env-sourced,
+ * per the repo's env-var policy: this is not a credential and not something a
+ * deployment should differ on by accident.
+ */
+export interface ApiConfig {
+  /**
+   * Whether the op-class matrix denies or only records.
+   *
+   * Starts at `shadow`: the matrix classifies 130-odd live ops, and a
+   * misclassification would refuse a real client for a reason nobody can see
+   * from the outside. Shadow mode logs every request that *would* be refused
+   * (`Scope check would deny`), so coverage is confirmed against real traffic
+   * first. Flipping it to `enforce` is a deliberate edit here, reviewed like
+   * any other code change — not a switch someone can flick in an environment.
+   */
+  scopeEnforcement: ScopeEnforcementMode;
+}
+
 export interface AppConfig {
+  api: ApiConfig;
   sshProxy: SshProxyConfig;
   env: Environment;
   project: string;
@@ -213,6 +233,9 @@ const giteaInternalHostname = process.env.GITEA_HOST_NAME || "gitea";
 const giteaHttpPort = parseInt(process.env.GITEA_HTTP_PORT || "3000", 10);
 
 export const config: AppConfig = {
+  api: {
+    scopeEnforcement: "shadow",
+  },
   env: getEnvironment(process.env.NODE_ENV),
   project: "beancount-io",
   jwt: {

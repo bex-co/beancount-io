@@ -16,7 +16,7 @@ import { createOrphanedHostCookieMiddleware } from "./middleware/orphaned-host-c
 
 import { buildAppLayers } from "@/foundation";
 import { type AppLayers } from "@/foundation/composition";
-import { setServerRoutes } from "./server-routes";
+import { assembleApi } from "./api/composition-root";
 import { JobScheduler } from "@/scheduler";
 import { SshProxyServer } from "@/features/gitea/ssh/ssh-proxy-server";
 import { SshAuthenticator } from "@/features/gitea/ssh/ssh-authenticator";
@@ -141,7 +141,10 @@ export async function startServer(): Promise<void> {
   const scheduler = new JobScheduler(layers, config);
   scheduler.start();
 
-  await setServerRoutes(httpServer, router, layers, config);
+  // One composition root assembles all three surfaces onto this router
+  // (ADR 0006 D1); the manifest it returns is what the drift guards in
+  // `server/api/__tests__/` check the op-class table against.
+  await assembleApi(httpServer, router, { layers, config });
 
   app.use(router.routes());
   app.use(router.allowedMethods());
