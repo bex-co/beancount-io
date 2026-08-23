@@ -1,0 +1,35 @@
+name: CI (agent guidance)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "CLAUDE.md"
+      - "AGENTS.md"
+      - "**/CLAUDE.md"
+      - "**/AGENTS.md"
+      - ".agents/skills"
+      - "scripts/check-agent-guidance.py"
+      - ".github/workflows/ci-agent-guidance.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "CLAUDE.md"
+      - "AGENTS.md"
+      - "**/CLAUDE.md"
+      - "**/AGENTS.md"
+      - ".agents/skills"
+      - "scripts/check-agent-guidance.py"
+      - ".github/workflows/ci-agent-guidance.yml"
+
+concurrency:
+  group: agent-guidance-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  links:
+    name: canonical links
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - run: python3 scripts/check-agent-guidance.py

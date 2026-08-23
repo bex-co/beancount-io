@@ -1,66 +1,37 @@
 # Plaid Feature
 
-## Purpose
+Plaid bank linking, account reconciliation, cursor-based transaction sync, webhook processing, and submission of reviewed transactions to a ledger.
 
-Plaid bank account integration — sync transactions from financial institutions.
+## Layout
 
-## Data Flow
+- `api/resolvers/` — GraphQL queries and mutations.
+- `api/rest/plaid-webhook-handler.ts` and `plaid-webhook-schemas.ts` — webhook transport and Zod schema.
+- `data/` — item, account, transaction, sync-log, and webhook-event PostgreSQL models.
+- `service/plaid-client.ts` — Plaid SDK wrapper.
+- `service/plaid-item-service.ts` — link/account/item lifecycle and reconciliation.
+- `service/plaid-sync-service.ts` — cursor sync, categorization, locking, and ledger submission.
+- `service/plaid-webhook-service.ts` — webhook event behavior.
+- `utils/` — encryption, mapping, webhook parsing/verification, and reconciliation helpers.
 
-```
-Plaid API → PlaidClient → PlaidSyncService → 5 Postgres tables → Beancount entries
-```
+## Data and security
 
-## Data Models
+| Model               | Prefix  |
+| ------------------- | ------- |
+| plaid-item          | `pitm_` |
+| plaid-account       | `pacc_` |
+| plaid-transaction   | `ptxn_` |
+| plaid-sync-log      | `pslg_` |
+| plaid-webhook-event | `pwe_`  |
 
-| Model               | Prefix  | Description                  |
-| ------------------- | ------- | ---------------------------- |
-| plaid-item          | `pitm_` | Linked financial institution |
-| plaid-account       | `pacc_` | Bank account under an item   |
-| plaid-transaction   | `ptxn_` | Individual transaction       |
-| plaid-sync-log      | `pslg_` | Sync cursor tracking         |
-| plaid-webhook-event | `pwe_`  | Incoming webhook events      |
+- Access tokens are encrypted at rest with `encryptToken`/`decryptToken` from `utils/encryption.ts`. Never persist or log a raw Plaid token.
+- Verify webhook signatures before parsing/dispatching business behavior.
+- Keep cursor advancement, transaction persistence, and sync-log updates consistent under the existing distributed lock.
+- `PlaidSyncService` maps unsynced rows to `TransactionToCategorize` from `src/features/llm/types.ts`; keep LLM categorization policy outside the Plaid persistence/sync layer.
 
-## Target File Selection
+## Ledger target files
 
-`submitPlaidTransactionsToLedger` takes an optional `filename`. It must name a file the
-ledger already has — `PlaidSyncService.submitTransactionsToLedger` checks it via
-`favaApiClient.ledgers.getLedgerFile` and throws `BadUserInputError` otherwise, **never**
-creating one (a file nothing `include`s would swallow the entries silently). Omitted, the
-ledger's bulk endpoint falls back to `main.bean`.
+`submitPlaidTransactionsToLedger` may receive a `filename`. `PlaidSyncService` verifies that the file already exists through the ledger API and rejects an invalid target; it never creates a new source file. If omitted, ledger-v2 defaults the bulk write to `main.bean`.
 
-The dashboard populates its picker from `getLedgerSourceFiles`
-(`features/ledger/service/ledger-data-service.ts` → ledger `GET /reports/…/source-files`),
-which returns `main.bean` plus everything it transitively includes.
+The dashboard obtains valid choices through `LedgerDataService.getLedgerSourceFiles`, which returns the main file and transitively included sources. This path intentionally differs from `LedgerEntryService`'s bcio-option routing used by the general importer.
 
-Note this path deliberately does **not** use bcio (`beancountio-option`) routing — unlike
-`LedgerEntryService.addBulkEntries`, which the CSV importer goes through.
-
-## Key Services
-
-- **`plaid-client.ts`** — Wraps Plaid SDK, handles all API calls
-- **`plaid-sync-service.ts`** (~535 LOC) — Cursor-based transaction sync with distributed lock (`lock()` from `@/shared/lock`), categorization via `ICategorizationService`
-- **`plaid-webhook-service.ts`** — Processes incoming webhooks
-
-## Webhook Flow
-
-```
-REST endpoint (api/rest/plaid-webhook-handler.ts)
-  → verification (utils/plaid-webhook-verification.ts)
-  → parsing (utils/plaid-webhook-parser.ts)
-  → PlaidWebhookService
-```
-
-## Security
-
-Access tokens are encrypted at rest via `utils/encryption.ts` (AES-256-GCM).
-**Always use `encryptToken`/`decryptToken` — never store raw tokens.**
-
-## Cross-Feature Dependency
-
-Uses `ICategorizationService` from `features/importer/` for AI-powered transaction categorization.
-
-## Testing
-
-- Service tests mock the Plaid SDK client
-- Webhook tests verify signature validation and event processing
-- Sync tests cover cursor pagination and lock contention
+Service tests mock Plaid and external clients. Preserve coverage for cursor pagination, lock contention, webhook signature/event behavior, encrypted-token handling, and target-file validation.

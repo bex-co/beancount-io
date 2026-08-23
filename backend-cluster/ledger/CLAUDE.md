@@ -2,8 +2,7 @@
 
 Standalone TypeScript ledger service on the `@rustledger/wasm` engine, serving the
 same HTTP contract as the Python `beancount-ledger` service it replaced and
-decommissioned. The OpenAPI spec is pinned in the donor repo's
-`backend-cluster/idl/beancount-ledger.openapi.json`.
+decommissioned. The OpenAPI contract is `../idl/beancount-ledger.openapi.json`.
 
 ## Hard rules
 
@@ -30,8 +29,7 @@ decommissioned. The OpenAPI spec is pinned in the donor repo's
 
 - `yarn dev` — run on :8000 (ts-node)
 - `yarn test` — unit tests (WASM-free; live engine path via `yarn verify:rustledger`)
-- `yarn lint && yarn typecheck` — lint + types
-- `make ci-ledger-v2` — full CI from repo root
+- `yarn lint && yarn typecheck && yarn build` — lint, types, and compile check
 - Parity harness: retired (the Python oracle it compared against is gone —
   see `parity/README.md`); `parity/COVERAGE.md` is kept as the historical
   record that all 75 contract rows were green at cutover.
@@ -42,8 +40,8 @@ Directory paths deliberately mirror the donor branch's aliases so transplanted
 files need no import rewrites (decision: keep `foundation/rustledger`, not
 `src/engine/`):
 
-- `src/foundation/rustledger/` — the transplanted engine (43 files + `plugins/`;
-  donor: `rustledger-port` branch `foundation/rustledger/`, verbatim)
+- `src/foundation/rustledger/` — the engine adapter, report builders, and
+  `plugins/`
 - `src/foundation/ledger-api-types/` — wire DTOs + `ledger-entry-input.ts`
 - `src/foundation/clients/` — `load-cached-ledger-file-map.ts` (HEAD-SHA-keyed
   FileMap cache) + client factories
@@ -55,6 +53,6 @@ files need no import rewrites (decision: keep `foundation/rustledger`, not
 - `src/api/` — route handlers by endpoint family
 - `src/shared/` — errors (no postgres-error: this service has no DB), logger,
   cache, lock, safe-repo-path, async-context
-- `parity/` — dual-target parity harness + `COVERAGE.md` (endpoint status ledger)
+- `parity/` — retired dual-target parity harness + `COVERAGE.md` historical record
 - `scripts/` — `verify-rustledger.ts` (live WASM checks, `yarn verify:rustledger`),
   `rustledger-shadow/` fixtures + Python oracle

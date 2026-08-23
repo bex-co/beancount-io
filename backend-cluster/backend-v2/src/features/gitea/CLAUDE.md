@@ -1,39 +1,27 @@
 # Gitea Feature
 
-## Purpose
+Git-server integration for API reads, commits and pull requests, user activity, smart-HTTP proxying, SSH proxying, and push policy.
 
-Git server integration — wraps Gitea API for commits, PRs, user profiles, and activity feed.
+## Layout
 
-## Sub-Domain Architecture
+- `client/gitea-api.ts` — generated Gitea API client. Never hand-edit; regenerate from the backend package with `yarn generate-gitea-client`.
+- `service/gitea-client-factory.ts` — low-level Basic Auth, token, and anonymous clients.
+- `commits/`, `pull-request/`, `feed/`, `user-profile/` — GraphQL resolvers and domain services.
+- `api/git-proxy-handler.ts` — allowlisted smart-HTTP transport. It is not a general Gitea REST proxy.
+- `ssh/` — SSH authentication and git-over-HTTP bridge.
+- `policy/` — shared push-policy logic used by both HTTP and SSH transports.
 
-Each sub-domain has its own `api/` + `service/` directories:
+Application services should depend on `IGiteaClientFactory` from `src/foundation/clients/gitea-client-factory.ts`; it provisions the appropriate low-level client without exposing user credentials.
 
-| Sub-domain      | Description                                                       |
-| --------------- | ----------------------------------------------------------------- |
-| `commits/`      | Commit history resolver + service                                 |
-| `pull-request/` | PR list/detail resolver + service                                 |
-| `feed/`         | Activity feed with caching, HTML parsing, activity transformation |
-| `user-profile/` | Gitea user profile resolver + service (with test fixtures)        |
+## Push policy
 
-## Shared Infrastructure
+- HTTP and SSH must enforce the same repository-path grammar, `refs/heads/main` rule, and directive-limit decision. Shared decisions belong in `policy/`; transport files should only parse/encode their protocol.
+- The directive-limit gate asks about the ledger's current count, not the contents of the incoming pack. It deliberately fails open when the limit/count service cannot answer so users are not locked out of shrinking a ledger through the app.
+- Keep refusal wording and sideband behavior aligned across both transports.
+- The SSH proxy remains disabled unless both `SSH_PROXY_ENABLED` and `SSH_PROXY_HOST_KEY` are configured. The host key must be the existing Gitea host key or clients will receive a host-key-changed warning.
 
-- **`client/gitea-api.ts`** — Auto-generated Gitea API client. **DO NOT MODIFY** — regenerate with `yarn generate-gitea-client`
-- **`service/gitea-client-factory.ts`** — Creates authenticated Gitea clients (Basic Auth or token-based)
-- **`api/git-proxy-handler.ts`** — Proxies raw Git HTTP requests to Gitea
+## Feed caching
 
-## Feed Caching
+`feed/service/feed-service.ts` caches parsed activity feeds through `CacheHelper` using `CACHE_KEYS.feed.*` and `TTL.MIN_5`. Keep parsing in `activity-content-parser.ts` / `html-utils.ts`, transformation in `activity-transformer.ts`, and Redis cache policy in the service.
 
-`feed-service.ts` caches parsed activity feeds in Redis via the shared
-`cacheHelper` (`@/shared/cache`), keyed with `CACHE_KEYS.feed.*` and a `TTL.MIN_5`
-TTL. Redis (not in-process) keeps the feed consistent across server instances.
-
-### Feed Pipeline
-
-```
-Gitea RSS → cacheHelper (Redis) → html-utils.ts (parse HTML) → activity-transformer.ts → GraphQL response
-```
-
-## Adding a New Sub-Domain
-
-1. Create `gitea/[name]/api/` + `gitea/[name]/service/`
-2. Register resolver in `api-gateway.ts`
+When adding a GraphQL sub-domain, keep its resolver and service together and register the resolver in `src/server/graphql/resolver-registry.ts`.

@@ -36,10 +36,12 @@ upload → preview → configure → importing → finish
 - **`row-edit-schema.ts`** — Zod validation for editable rows
 - **`is-premium-required.ts`** — Tier gating for import limits
 
+These files live under `utils/`; workflow step labels/order live in `lib/import-step-config.ts`.
+
 ## Premium Gating
 
-`is-premium-required.ts` checks feature-usage limits before allowing import. See `features/subscription/` for tier definitions.
+`is-premium-required.ts` classifies GraphQL error codes/messages so the upload step can show the upgrade state. Shared tier display configuration lives under `common/lib/subscription/`.
 
 ## Locales
 
-13 language files in `locales/` — follow existing key structure when adding new strings.
+15 language files in `locales/` — follow the English key structure for every supported locale.

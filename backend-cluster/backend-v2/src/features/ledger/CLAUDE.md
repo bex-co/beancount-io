@@ -1,47 +1,33 @@
 # Ledger Feature
 
-## Purpose
+Core ledger GraphQL and REST behavior: repository lifecycle, entries, journal, reports/data, accounts, assets, collaborators, receipts, public keys, and shell/BQL queries.
 
-Core ledger operations — CRUD for entries, journal, reports, shell access, collaborators, public keys.
+## Layout
 
-## Resolver Domains
+- `api/resolvers/` — query/mutation transport adapters split by domain.
+- `api/rest/` — archive download and ledger REST handlers.
+- `service/` — single-domain ledger capabilities backed by Fava/ledger-v2 and Gitea.
+- `workflow/` — multi-service orchestration for ledger lifecycle, collaborators, and receipts.
+- `operations/` — small injected domain operations reused by services/workflows, including tier/directive-limit behavior.
+- `types/fava-api.types.ts` — ledger-service response types; keep aligned with the generated Fava client and ledger contract.
+- `utils/` — authorization, caller resolution, mapping, entry-file routing, and templates.
 
-Each domain has its own query + mutation + types + tests:
+`ledger-legacy-resolver.*` preserves the v1 GraphQL shape. Do not add new product behavior there; use the standard resolver/service/workflow surface.
 
-| Resolver                        | Scope                                                              |
-| ------------------------------- | ------------------------------------------------------------------ |
-| `ledger-resolver`               | Ledger CRUD, list, metadata                                        |
-| `ledger-entry-resolver`         | Individual entry operations                                        |
-| `ledger-journal-resolver`       | Journal/transaction operations                                     |
-| `ledger-report-resolver`        | Financial reports (balance sheet, income statement, trial balance) |
-| `ledger-collaborators-resolver` | Collaborator invite/remove                                         |
-| `ledger-public-key-resolver`    | SSH public key management                                          |
-| `ledger-shell-resolver`         | Shell/BQL query execution                                          |
-| `ledger-legacy-resolver`        | V1 compatibility — **do not add new features here**                |
+## Authorization and identity
 
-## Authorization
+- Resolve the authenticated caller and requested ledger separately; never assume the ledger owner is the caller.
+- Use `utils/authorize-ledger.ts`, `ledger-caller-resolver.ts`, and `ledger-access-check.ts` rather than duplicating owner/collaborator/public checks.
+- Preserve the three-party cases covered by the access tests: owner, collaborator, and anonymous/public access.
+- Pass `userId`/ledger ID as method input. Resolvers do not access models or provision clients themselves.
 
-`utils/ledger-access-check.ts` — Two-level access check:
+## Writes and files
 
-1. Owner match by username
-2. Collaborator check via Fava API
+- `LedgerEntryService` owns entry construction and file routing. Respect explicit `filename` values and the existing bcio-option fallback behavior.
+- A target file supplied by a caller must already exist in the ledger unless the operation explicitly creates a complete ledger template. Never write to an un-included file silently.
+- Receipt writes belong in `LedgerReceiptWorkflow` because they coordinate temporary assets, permanent storage, and ledger entries.
+- Preserve directive-limit bypass/cache invalidation behavior when changing entry or repository writes.
 
-Returns `LedgerAccessCheckResult` with reason enum.
+## Wiring and tests
 
-## REST API
-
-`api/rest/ledger-api-handler.ts` with Zod schemas in `ledger-api-schema.ts`.
-
-## Key Utils
-
-- **`mappers.ts`** — Fava → GraphQL type mapping
-- **`account-entries.ts`** — Account entry helpers
-- **`ledger-template.ts`** — New ledger scaffolding
-
-## Types
-
-`fava-api.types.ts` — Fava REST API response types. Keep in sync with `beancount-ledger-v2` service.
-
-## Legacy
-
-`ledger-legacy-resolver.*` wraps the old V1 API shape for backward compatibility. All new features should use the standard resolvers above.
+New simple capabilities are services; cross-service use cases are workflows. Add constructor-injected resolvers to `src/server/graphql/resolver-registry.ts`. Keep tests beside each layer in `__tests__/`, with resolver tests mocking service/workflow interfaces and workflow/service tests using narrow dependency stubs.

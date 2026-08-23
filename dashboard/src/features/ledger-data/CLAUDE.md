@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Data views for ledger metadata — accounts, budget, commodities, documents, events, holdings, statistics, errors.
+Data views for ledger metadata — accounts, budget, commodities, documents, events, holdings, settings, statistics, and errors.
 
 ## Sub-Domain Structure
 
@@ -16,6 +16,7 @@ Each sub-domain is a self-contained directory with `index.tsx`:
 | `documents/`   | Document list                                                                             |
 | `events/`      | Event list with loading state                                                             |
 | `holdings/`    | Holdings table, statement generation, utility functions                                   |
+| `settings/`    | Ledger, collaborator, visibility, and Beancount/Fava/bcio option sections                 |
 | `statistics/`  | Three chart components: postings-per-account, entries-count-by-type, account-last-entries |
 | `errors/`      | Beancount error display                                                                   |
 
@@ -30,4 +31,4 @@ Account and budget sub-domains use dialog components for mutations (open/close/d
 
 ## Locales
 
-13 language files in `locales/` — shared across all sub-domains.
+Each localized sub-domain has 15 locale files. Keep its English keys and all supported locale modules in sync.

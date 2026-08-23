@@ -1,12 +1,12 @@
 # Beancount Mobile (CE)
 
-React Native iOS/Android app for [Beancount.io](https://beancount.io/), built with Expo. Currently the only active package in the monorepo (see root `CLAUDE.md` for repo-wide rules).
+React Native iOS/Android app for [Beancount.io](https://beancount.io/), built with Expo (see root `CLAUDE.md` for repo-wide rules).
 
 ## Tech stack
 
-- **Framework**: React Native 0.81 + Expo 54
+- **Framework**: React Native 0.86 + Expo 57 + React 19
 - **Routing**: Expo Router (file-based, in `app/`)
-- **Data**: Apollo Client 3.13 + GraphQL Code Generator
+- **Data**: Apollo Client 3.14 + GraphQL Code Generator
 - **State**: Apollo reactive variables (no Redux/Zustand)
 - **Forms**: React Hook Form + Zod
 - **Styling**: StyleSheet + custom theme system (light / dark / system)
@@ -36,7 +36,7 @@ mobile/
     translations/       i18n locale files (en is the base; others extend)
     generated-graphql/  Apollo codegen output — do not hand-edit
     __tests__/          Unit tests (run by yarn test:unit)
-  fastlane/             iOS App Store metadata
+  metadata/             Canonical App Store listing JSON and generated screenshots
   scripts/              Build helpers (e.g. jest-lite-runner.js)
 ```
 
@@ -47,12 +47,12 @@ Run all from inside `mobile/`.
 | Command                             | What it does                                                |
 | ----------------------------------- | ----------------------------------------------------------- |
 | `yarn start`                        | Expo dev server (`--tunnel`)                                |
-| `yarn ios` / `yarn android`         | Start in simulator/emulator                                 |
+| `yarn ios` / `yarn android`         | Build and run the native app in simulator/emulator          |
 | `yarn ios:device`                   | Build and install on a connected iOS device                 |
 | `yarn lint`                         | `tsc --noEmit` + ESLint with autofix                        |
 | `yarn typecheck`                    | `tsc --noEmit` only                                         |
 | `yarn test:unit`                    | Custom Jest-lite runner in `scripts/`                       |
-| `yarn test`                         | lint + typecheck + unit tests (CI uses this)                |
+| `yarn test`                         | Aggregate lint + typecheck + unit-test gate                 |
 | `yarn codegen`                      | Regenerate `src/generated-graphql/` from the GraphQL schema |
 | `yarn format` / `yarn format:check` | Prettier                                                    |
 | `yarn bump`                         | Bump app version (`package.json` + `app.json`)              |
@@ -258,8 +258,8 @@ Conventions live canonically in `.claude/commands/pm.md`. Product pillars are in
 
 ## CI / Deploy
 
-- CI (`.github/workflows/ci.yml`) runs `yarn lint`, `yarn typecheck`, `yarn test:unit` on push/PR to `main`.
-- Release (`.github/workflows/deploy.yml`, workflow name `Release (mobile)`) runs on every `mobile/**` push to `main` and verifies checks, but deploys only if `package.json`'s version has no `mobile-v<version>` git tag yet: it sends the OTA update and runs the EAS build/submit, then pushes the tag and a GitHub Release. A push without a version bump deploys nothing — use `yarn bump` to cut a release; a failed release retries automatically on the next push because the tag is only created after success.
+- CI (`../.github/workflows/ci.yml`) runs `yarn format:check`, `yarn lint`, `yarn typecheck`, and `yarn test:unit` on push/PR to `main`.
+- Release (`../.github/workflows/deploy.yml`, workflow name `Release (mobile)`) runs on every `mobile/**` push to `main` and verifies checks, but deploys only if `package.json`'s version has no `mobile-v<version>` git tag yet: it sends the OTA update and runs the EAS build/submit, then pushes the tag and a GitHub Release. A push without a version bump deploys nothing — use `yarn bump` to cut a release; a failed release retries automatically on the next push because the tag is only created after success.
 
 ## Repo
 

@@ -10,7 +10,7 @@ Each sub-report is a self-contained directory:
 
 | Sub-report          | Key Components                                                                                          |
 | ------------------- | ------------------------------------------------------------------------------------------------------- |
-| `overview/`         | Sankey cash flow chart (`cash-flow-sankey.tsx`), data transformation pipeline                           |
+| `overview/`         | Dashboard cards and Sankey cash flow chart (`overview/components/cash-flow-sankey.tsx`), data pipeline  |
 | `balance-sheet/`    | Tree maps (`hierarchy-tree-map.tsx`), lists (`hierarchy-list.tsx`), line charts (`line-chart.tsx`)      |
 | `income-statement/` | Date-balance charts with single/stacked variants, SSR-safe loader                                       |
 | `trial-balance/`    | Simple tabular report                                                                                   |
@@ -76,7 +76,7 @@ GraphQL hierarchy data
 
 ## Route Loaders
 
-`overview/loader.ts` and `income-statement/loader.ts` use TanStack Router loaders for SSR-safe data fetching.
+Report directories with `loader.ts` use TanStack Router loaders for SSR-safe data fetching. Keep query/filter resolution in those loaders and rendering in report content/components.
 
 ## Locales
 

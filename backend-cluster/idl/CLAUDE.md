@@ -1,6 +1,6 @@
 # IDL — Interface Definition Layer
 
-OpenAPI specs and generated TypeScript CLI clients for all Beancount.io services.
+OpenAPI contracts plus small generated TypeScript CLI clients for Beancount.io services.
 
 ## Structure
 
@@ -9,6 +9,7 @@ idl/
 ├── beancount-ledger.openapi.json   # Ledger service (exported from the retired Python service; served today by beancount-ledger-v2)
 ├── backend-v2.openapi.json         # Backend-v2 REST admin API (Node.js)
 ├── gitea.swagger.v1.json           # Gitea git service (upstream Swagger)
+├── claude-code-sandbox.openapi.json # External sandbox contract (spec only)
 ├── beancount-ledger-cli/           # CLI for ledger service
 ├── backend-v2-admin-cli/           # CLI for backend-v2 admin endpoints
 └── gitea-cli/                      # CLI for Gitea admin API
@@ -31,6 +32,8 @@ yarn dev           # Run CLI (tsx src/index.ts)
 yarn typecheck     # TypeScript check
 ```
 
+There is no package or lockfile at `idl/` itself. Run installs and scripts from the affected CLI sub-package.
+
 ### Environment selection
 
 Pass `--env dev` (or set `LEDGER_ENV` / `BV2_ENV` / `GITEA_ENV`) to load `.env.dev`.
@@ -40,7 +43,7 @@ Copy `.env.example` to `.env.prod` and `.env.dev` and fill in credentials.
 
 ## Updating specs
 
-1. Export the updated OpenAPI JSON from the service.
+1. Export or obtain the updated OpenAPI JSON from the authoritative service.
 2. Replace the corresponding `.openapi.json` / `.swagger.json` file.
 3. Run `yarn codegen` in any affected CLI package to regenerate types.
 4. Run `yarn typecheck` to verify nothing broke.
@@ -48,5 +51,6 @@ Copy `.env.example` to `.env.prod` and `.env.dev` and fill in credentials.
 ## Conventions
 
 - All CLI commands print JSON to stdout (`JSON.stringify(data, null, 2)`).
-- Destructive commands (delete, purge) are explicit in their description — no confirmation prompt.
+- Keep destructive commands (delete, purge) explicit in their command name and help text; callers are responsible for confirmation before invoking them.
 - New commands go in `src/index.ts`; client helpers go in `src/client.ts`.
+- Treat every `src/generated/api.ts` as generated output. Change the source spec and run `yarn codegen`; never patch generated types directly.
