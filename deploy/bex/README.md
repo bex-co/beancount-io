@@ -92,6 +92,10 @@ and need no action. Gitea admin user creation is still a one-time
   yarn migrate:deploy
   ```
 
+  Note that **removing the line from the Blueprint does not unset it** — an
+  omitted field preserves the service's existing value. Write
+  `preDeployCommand: ""` explicitly.
+
 ## Not available on bex
 
 Persistent disks, PR preview environments, external log/metric drains, object

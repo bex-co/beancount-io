@@ -58,7 +58,11 @@ services:
     # any dependency (including Gitea) is unreachable. As a platform probe it
     # would turn a transient Redis blip into a dead service. The port check is
     # the right liveness signal here.
-    # NO preDeployCommand. Render's canonical use for it is a database
+    # Explicitly EMPTY, not omitted: an omitted field preserves whatever the
+    # service already has (Render's create-vs-existing omission semantics), so
+    # deleting the line would silently keep a previously-set command.
+    preDeployCommand: ""
+    # Render's canonical use for preDeployCommand is a database
     # migration, but on bex the pre-deploy Job runs in BEX_BUILD_NAMESPACE
     # while the managed Postgres lives in the workspace namespace, and
     # cross-namespace traffic to a datastore ClusterIP is denied (ADR043 D8:
