@@ -1,10 +1,7 @@
-import { serverConfig } from "@/config/config.server";
-
 export function getBackendBase(): string {
-  // Server-side proxy: use the SSR (internal) API URL, never the public one.
-  // This runs inside the SSR server, where dialing the public origin would
-  // hairpin back through our own ingress.
-  return new URL(serverConfig.apiUrl).origin;
+  const sseApiUrl =
+    import.meta.env.VITE_API_URL ?? "http://localhost:4104/api-gateway/";
+  return new URL(sseApiUrl).origin;
 }
 
 export async function forwardToBackend(

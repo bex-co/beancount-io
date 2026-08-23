@@ -7,9 +7,9 @@
  * anyway), but wrong for the API URL the SSR server dials:
  *
  *   - it is an in-cluster address that differs per environment, and
- *   - a deployed SSR server must NOT reach the backend over the public URL —
- *     hairpinning from a pod back through its own ingress is blocked on
- *     Kubernetes platforms that deny pod->node egress.
+ *   - a deployed SSR server should not have to reach the backend over the
+ *     public URL — hairpinning from a pod back through its own ingress is
+ *     blocked outright on Kubernetes platforms that deny pod->node egress.
  *
  * So the SSR API URL is read from `process.env` at boot. `import.meta.env`
  * remains the fallback so `yarn dev` keeps working from `.env` unchanged.
@@ -29,7 +29,7 @@ function resolveSsrApiUrl(): string {
 }
 
 export interface ServerConfig {
-  /** API base URL used by SSR and by server-side proxying. Internal address. */
+  /** API base URL the SSR server dials for its own data fetching. */
   apiUrl: string;
 }
 
