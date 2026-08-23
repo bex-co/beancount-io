@@ -31,11 +31,11 @@ const jaSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "メールアドレスを入力してBeancountアカウントのパスワードをリセットします。",
+      "Beancount.ioのパスワードを安全にリセットします。メールでワンタイムリンクをお送りします — その後すぐに台帳に戻り、作業を再開できます。安全に保護されています。",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "パスワードを忘れた場合",
+    message: "Beancountパスワードをリセット — 安全なアクセスと再設定",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -236,11 +236,11 @@ const jaSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "Beancountアカウントにサインインして、財務台帳と会計記録を管理します。",
+      "Beancount.ioにサインイン — オープンソース、Git対応のプレーンテキスト会計。台帳を管理し、銀行取引を取り込み、帳簿を常に監査可能で正確に保ちます。セキュリティとバージョン管理を備えています。",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "サインイン",
+    message: "Beancountにサインイン — 無料のオープンソース・プレーンテキスト会計",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -296,11 +296,11 @@ const jaSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "無料のBeancountアカウントを作成して、プレーンテキスト会計で財務管理を始めましょう。",
+      "無料のBeancount.ioアカウントを作成しましょう。プレーンテキスト台帳、Favaレポート、銀行インポート、バージョン管理で財務を追跡し、ロックインなしで管理 — いつでもエクスポート可能です。",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "アカウントを作成",
+    message: "無料のBeancountアカウントを作成 — Git対応の会計管理",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

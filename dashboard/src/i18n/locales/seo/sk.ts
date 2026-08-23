@@ -40,11 +40,11 @@ const skSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "Obnovte heslo svojho účtu Beancount zadaním svojej emailovej adresy.",
+      "Bezpečne obnovte svoje heslo Beancount.io. Pošleme vám jednorazový odkaz — potom späť ku knihám.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "Zabudnuté Heslo",
+    message: "Obnoviť heslo Beancount — Bezpečný prístup a obnova",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -292,11 +292,11 @@ const skSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "Prihláste sa do svojho účtu Beancount na správu finančných kníh a účtovných záznamov.",
+      "Prihláste sa do Beancount.io — open-source účtovníctvo v čistom texte s Git. Spravujte knihy, importujte banky a udržiavajte svoje knihy overiteľné.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Prihlásiť sa",
+    message: "Prihlásiť sa do Beancount — Bezplatné účtovníctvo v čistom texte",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -353,11 +353,11 @@ const skSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "Vytvorte si bezplatný účet Beancount a začnite sledovať svoje financie s účtovníctvom v čistom texte.",
+      "Vytvorte si bezplatný účet Beancount.io. Sledujte svoje financie s knihami v čistom texte, reportmi Fava, importom bánk a správou verzií — bez viazanosti.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "Vytvoriť Účet",
+    message: "Vytvoriť bezplatný účet Beancount — Účtovníctvo s Git",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

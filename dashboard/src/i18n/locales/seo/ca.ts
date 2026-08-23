@@ -40,11 +40,11 @@ const caSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "Restabliu la contrasenya del vostre compte de Beancount introduint la vostra adreça de correu electrònic.",
+      "Restableix la teva contrasenya de Beancount.io de forma segura. T'enviarem un enllaç únic — després torna als teus llibres.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "He Oblidat la Contrasenya",
+    message: "Restableix la contrasenya de Beancount — Accés segur",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -292,11 +292,11 @@ const caSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "Inicieu sessió al vostre compte de Beancount per gestionar els vostres llibres comptables i registres financers.",
+      "Inicia sessió a Beancount.io — comptabilitat en text pla de codi obert amb Git. Gestiona llibres, importa bancs i mantén els teus llibres auditables.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Iniciar Sessió",
+    message: "Inicia sessió a Beancount — Comptabilitat en text pla gratuïta",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -353,11 +353,11 @@ const caSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "Creeu el vostre compte gratuït de Beancount per començar a seguir les vostres finances amb comptabilitat en text pla.",
+      "Crea el teu compte Beancount.io gratuït. Fes seguiment de les teves finances amb llibres en text pla, informes Fava, importació bancària i control de versions — sense dependència.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "Crear Compte",
+    message: "Crea un compte Beancount gratuït — Comptabilitat amb Git",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

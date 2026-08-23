@@ -37,11 +37,11 @@ const zhSeo: Record<string, TranslationEntry> = {
     description: "Error page title",
   },
   "seo.forgotPassword.description": {
-    message: "输入你的邮箱地址以重置Beancount账户密码。",
+    message: "安全地重置你的 Beancount.io 账户密码。我们将向你的注册邮箱发送一次性安全验证链接 — 验证通过后即可立即返回你的账本继续记账工作，整个过程安全加密。",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "忘记密码",
+    message: "重置 Beancount 密码 — 安全访问、快速恢复与重设",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -270,11 +270,11 @@ const zhSeo: Record<string, TranslationEntry> = {
     description: "Trial balance page title with ledger name",
   },
   "seo.login.description": {
-    message: "登录你的Beancount账户以管理你的财务账本和会计记录。",
+    message: "登录 Beancount.io — 开源、基于 Git 的纯文本记账系统。轻松管理账本、批量导入银行流水，并保持每一笔账目都清晰可审计、安全可靠且易于版本控制。",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "登录",
+    message: "登录 Beancount — 免费开源纯文本记账系统，基于 Git 版本控制",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -326,11 +326,11 @@ const zhSeo: Record<string, TranslationEntry> = {
     description: "Danger zone settings page meta description",
   },
   "seo.signUp.description": {
-    message: "创建免费的Beancount账户，开始使用纯文本记账跟踪你的财务。",
+    message: "创建免费的 Beancount.io 账户。使用纯文本账本、Fava 财务报表、银行流水导入和 Git 版本控制来全面跟踪个人与家庭财务 — 无任何锁定，随时可导出与备份。",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "创建账户",
+    message: "创建免费 Beancount 账户 — 基于 Git 的纯文本记账",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

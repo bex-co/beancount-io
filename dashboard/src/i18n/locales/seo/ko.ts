@@ -29,11 +29,11 @@ const koSeo: Record<string, TranslationEntry> = {
     description: "Dashboard page title",
   },
   "seo.forgotPassword.description": {
-    message: "이메일 주소를 입력하여 Beancount 계정 비밀번호를 재설정하세요.",
+    message: "Beancount.io 비밀번호를 안전하게 재설정하세요. 일회성 보안 링크를 이메일로 보내드립니다 — 그런 다음 즉시 장부로 돌아가 작업을 계속하세요.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "비밀번호 찾기",
+    message: "Beancount 비밀번호 재설정 — 안전한 액세스와 복구",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -233,11 +233,11 @@ const koSeo: Record<string, TranslationEntry> = {
     description: "Trial balance page title with ledger name",
   },
   "seo.login.description": {
-    message: "Beancount 계정에 로그인하여 재무 장부와 회계 기록을 관리하세요.",
+    message: "Beancount.io에 로그인 — 오픈 소스, Git 기반 일반 텍스트 회계. 장부를 관리하고 은행을 가져오며 장부를 감사 가능하게 유지하세요.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "로그인",
+    message: "Beancount에 로그인 — 무료 오픈소스 일반 텍스트 회계",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -293,11 +293,11 @@ const koSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "무료 Beancount 계정을 만들어 일반 텍스트 회계로 재무 관리를 시작하세요.",
+      "무료 Beancount.io 계정을 만드세요. 일반 텍스트 장부, Fava 보고서, 은행 가져오기 및 버전 관리로 재정을 추적하세요 — 종속 없음.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "계정 만들기",
+    message: "무료 Beancount 계정 만들기 — Git 기반 회계 시스템",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

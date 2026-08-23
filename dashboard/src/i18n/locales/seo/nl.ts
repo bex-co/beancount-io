@@ -40,11 +40,11 @@ const nlSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "Reset uw Beancount-accountwachtwoord door uw e-mailadres in te voeren.",
+      "Reset je Beancount.io-wachtwoord veilig. We sturen je een eenmalige link — daarna terug naar je grootboeken.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "Wachtwoord Vergeten",
+    message: "Beancount-wachtwoord resetten — Veilige toegang en herstel",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -292,11 +292,11 @@ const nlSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "Log in op uw Beancount-account om uw financiële grootboeken en boekhoudgegevens te beheren.",
+      "Log in bij Beancount.io — open-source, Git-ondersteunde plain-tekst boekhouding. Beheer grootboeken, importeer banken en houd je boeken controleerbaar.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Inloggen",
+    message: "Inloggen bij Beancount — Gratis open-source plain-tekst boekhouding",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -353,11 +353,11 @@ const nlSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "Maak uw gratis Beancount-account aan om uw financiën te volgen met platte-tekst boekhouding.",
+      "Maak je gratis Beancount.io-account aan. Volg je financiën met plain-tekst grootboeken, Fava-rapporten, bankimport en versiebeheer — zonder lock-in.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "Account Aanmaken",
+    message: "Gratis Beancount-account aanmaken — Git-ondersteunde boekhouding",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

@@ -40,11 +40,11 @@ const faSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "با وارد کردن آدرس ایمیل خود، رمز عبور حساب Beancount خود را بازنشانی کنید.",
+      "رمز عبور Beancount.io خود را به صورت امن بازنشانی کنید. ما یک لینک یک‌بار مصرف برایتان ارسال می‌کنیم — سپس به دفترهای خود بازگردید.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "رمز عبور را فراموش کرده‌اید",
+    message: "بازنشانی رمز عبور Beancount — دسترسی امن",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -291,11 +291,11 @@ const faSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "برای مدیریت دفاتر مالی و سوابق حسابداری خود، به حساب Beancount خود وارد شوید.",
+      "وارد Beancount.io شوید — حسابداری متن ساده متن‌باز با Git. دفترها را مدیریت کنید، بانک‌ها را وارد کنید و دفاتر خود را قابل حسابرسی نگه دارید.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "ورود",
+    message: "ورود به Beancount — حسابداری متن ساده رایگان",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -352,11 +352,11 @@ const faSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "حساب رایگان Beancount خود را ایجاد کنید تا پیگیری مالی خود را با حسابداری متن ساده شروع کنید.",
+      "حساب رایگان Beancount.io خود را بسازید. امور مالی خود را با دفترهای متن ساده، گزارش‌های Fava، واردات بانکی و کنترل نسخه پیگیری کنید — بدون وابستگی.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "ایجاد حساب",
+    message: "ایجاد حساب رایگان Beancount — حسابداری با Git",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

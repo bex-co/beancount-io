@@ -40,11 +40,11 @@ const ptSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "Redefina a senha da sua conta Beancount inserindo seu endereço de e-mail.",
+      "Redefina sua senha do Beancount.io com segurança. Enviaremos um link único — depois volte aos seus livros.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "Esqueci a Senha",
+    message: "Redefinir senha do Beancount — Acesso seguro e recuperação",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -292,11 +292,11 @@ const ptSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "Entre na sua conta Beancount para gerenciar seus livros-razão financeiros e registros contábeis.",
+      "Entre no Beancount.io — contabilidade em texto simples open-source com Git. Gerencie livros, importe bancos e mantenha seus livros auditáveis.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Entrar",
+    message: "Entrar no Beancount — Contabilidade em texto simples grátis",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -353,11 +353,11 @@ const ptSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "Crie sua conta Beancount gratuita para começar a acompanhar suas finanças com contabilidade em texto simples.",
+      "Crie sua conta gratuita no Beancount.io. Acompanhe suas finanças com livros em texto simples, relatórios Fava, importação bancária e controle de versão — sem dependência.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "Criar Conta",
+    message: "Criar conta gratuita no Beancount — Contabilidade com Git",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

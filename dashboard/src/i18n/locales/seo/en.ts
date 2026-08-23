@@ -31,11 +31,11 @@ const enSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "Reset your Beancount account password by entering your email address.",
+      "Reset your Beancount.io password securely. We'll email a one-time link — then get back to your ledgers.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "Forgot Password",
+    message: "Reset Beancount Password — Secure Access",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -237,11 +237,11 @@ const enSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "Sign in to your Beancount account to manage your financial ledgers and accounting records.",
+      "Sign in to Beancount.io — open-source, Git-backed plain-text accounting. Manage ledgers, import banks, and keep your books auditable.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Sign In",
+    message: "Sign In to Beancount — Free Plain-Text Accounting",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -298,11 +298,11 @@ const enSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "Create your free Beancount account to start tracking your finances with plain-text accounting.",
+      "Create your free Beancount.io account. Track finances with plain-text ledgers, Fava reports, bank import, and version control — no lock-in.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "Create Account",
+    message: "Create Free Beancount Account — Git-Backed Accounting",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

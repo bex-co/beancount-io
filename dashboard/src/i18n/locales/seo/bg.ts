@@ -40,11 +40,11 @@ const bgSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "Нулирайте паролата на акаунта си в Beancount, като въведете имейл адреса си.",
+      "Нулирайте сигурно паролата си за Beancount.io. Ще ви изпратим еднократна връзка — след това се върнете към книгите си.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "Забравена Парола",
+    message: "Нулиране на парола за Beancount — Сигурен достъп",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -292,11 +292,11 @@ const bgSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "Влезте в акаунта си в Beancount, за да управлявате финансовите си книги и счетоводни записи.",
+      "Влезте в Beancount.io — счетоводство с обикновен текст с отворен код, поддържано от Git. Управлявайте книги, импортирайте банки и поддържайте книгите си проверими.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Вход",
+    message: "Вход в Beancount — Безплатно счетоводство с обикновен текст",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -353,11 +353,11 @@ const bgSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "Създайте безплатен акаунт в Beancount, за да започнете да проследявате финансите си със счетоводство с обикновен текст.",
+      "Създайте своя безплатен акаунт в Beancount.io. Проследявайте финансите си с книги с обикновен текст, отчети на Fava, банков импорт и контрол на версиите — без обвързване.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "Създай Акаунт",
+    message: "Създаване на безплатен Beancount акаунт — Счетоводство с Git",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

@@ -40,11 +40,11 @@ const deSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "Setzen Sie Ihr Beancount-Kontopasswort zurück, indem Sie Ihre E-Mail-Adresse eingeben.",
+      "Setze dein Beancount.io-Passwort sicher zurück. Wir senden dir einen einmaligen Link — dann zurück zu deinen Hauptbüchern.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "Passwort Vergessen",
+    message: "Beancount-Passwort zurücksetzen — Sicherer Zugriff",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -293,11 +293,11 @@ const deSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "Melden Sie sich bei Ihrem Beancount-Konto an, um Ihre Finanzbücher und Buchhaltungsunterlagen zu verwalten.",
+      "Bei Beancount.io anmelden — Open-Source, Git-gestützte Klartextbuchhaltung. Verwalte Hauptbücher, importiere Banken und halte deine Bücher prüfbar.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Anmelden",
+    message: "Bei Beancount anmelden — Kostenlose Klartextbuchhaltung",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -354,11 +354,11 @@ const deSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "Erstellen Sie Ihr kostenloses Beancount-Konto, um Ihre Finanzen mit Klartextbuchhaltung zu verfolgen.",
+      "Erstelle dein kostenloses Beancount.io-Konto. Verfolge deine Finanzen mit Klartext-Hauptbüchern, Fava-Berichten, Bankimport und Versionskontrolle — ohne Lock-in.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "Konto Erstellen",
+    message: "Kostenloses Beancount-Konto erstellen — Git-gestützte Buchhaltung",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

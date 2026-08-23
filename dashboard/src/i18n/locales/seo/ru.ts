@@ -40,11 +40,11 @@ const ruSeo: Record<string, TranslationEntry> = {
   },
   "seo.forgotPassword.description": {
     message:
-      "Сбросьте пароль вашего аккаунта Beancount, введя ваш адрес электронной почты.",
+      "Безопасно сбросьте пароль Beancount.io. Мы отправим одноразовую ссылку — затем вернитесь к своим книгам.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
-    message: "Забыли Пароль",
+    message: "Сбросить пароль Beancount — Безопасный доступ и восстановление",
     description: "Forgot password page title",
   },
   "seo.home.description": {
@@ -292,11 +292,11 @@ const ruSeo: Record<string, TranslationEntry> = {
   },
   "seo.login.description": {
     message:
-      "Войдите в свой аккаунт Beancount для управления финансовыми книгами и бухгалтерскими записями.",
+      "Войдите в Beancount.io — учет в текстовом формате с открытым исходным кодом и Git. Управляйте книгами, импортируйте банки и держите книги проверяемыми.",
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Войти",
+    message: "Войти в Beancount — Бесплатный учет в текстовом формате",
     description: "Login page title",
   },
   "seo.logout.description": {
@@ -353,11 +353,11 @@ const ruSeo: Record<string, TranslationEntry> = {
   },
   "seo.signUp.description": {
     message:
-      "Создайте бесплатный аккаунт Beancount, чтобы начать отслеживать финансы с учетом в текстовом формате.",
+      "Создайте бесплатный аккаунт Beancount.io. Отслеживайте финансы с книгами в текстовом формате, отчетами Fava, импортом банков и контролем версий — без привязки.",
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "Создать Аккаунт",
+    message: "Создать бесплатный аккаунт Beancount — Учет с Git и Fava",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

@@ -14,3 +14,4 @@
 - [x] **m8** — Public-ledger index hygiene (9 tasks) ← from /pm-brainstorm 2026-08-20 (Search Console); policy corrected for social-accounting visibility 2026-08-20
 - [x] **m9** — Search Console CTR hygiene for commit detail (7 tasks) ← from Search Console report 2026-08-21 (28-day window: near-page-one amazon commit 0% CTR)
 - [x] **m10** — Self-canonical hygiene for all indexable dashboard pages (7 tasks) ← from /pm-brainstorm 2026-08-21 (Search Console: ?lang= variant dilution on account pages, no canonical on most indexable routes)
+- [x] **m11** — Acquisition snippet CTR for login, sign-up and forgot-password (7 tasks) ← from Search Console Diagnosis C 2026-08-22 (generic `Sign In`/`Create Account` predict <3% CTR at position 4–20)
