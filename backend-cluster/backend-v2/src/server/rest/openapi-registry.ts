@@ -32,6 +32,13 @@ registry.registerComponent("securitySchemes", "apiKey", {
 
 const ADMIN_TAG = "Admin API";
 
+/**
+ * The tag that marks a route as part of the public v1 contract. Set by
+ * `registerV1Route`, so a route is in the published spec exactly when it is
+ * mounted by the v1 fragment — not because someone remembered to tag it.
+ */
+export const V1_TAG = "Ledger v1";
+
 function isAdminRouteDefinition(
   def: (typeof registry.definitions)[number],
 ): boolean {
@@ -223,6 +230,59 @@ The API supports multiple authentication methods:
       {
         name: "SEO",
         description: "Search Engine Optimization endpoints",
+      },
+    ],
+  });
+}
+
+/**
+ * Generate the public v1 OpenAPI document — the contract we publish.
+ *
+ * Filtered to the `Ledger v1` tag rather than to "everything non-admin": the
+ * pre-v1 REST routes (`/api-gateway/...`) are internal surface we have not
+ * promised anybody, and a public spec that documents them is a public spec that
+ * promises them. `scripts/generate-v1-openapi.ts` writes this document to
+ * `docs/openapi/v1.json`, and `openapi-completeness.test.ts` fails when the
+ * snapshot and the live document disagree.
+ */
+export function generateV1OpenAPIDocument() {
+  const definitions = registry.definitions.filter(
+    (def) => def.type !== "route" || (def.route.tags ?? []).includes(V1_TAG),
+  );
+  const generator = new OpenApiGeneratorV3(definitions);
+
+  return generator.generateDocument({
+    openapi: "3.0.0",
+    info: {
+      title: "Beancount.io v1 API",
+      version: "1.0.0",
+      description: `
+The public REST API for Beancount.io ledgers.
+
+Every endpoint addresses a ledger as two path segments — \`/v1/ledgers/{owner}/{name}\` —
+and returns JSON. Errors share one shape: \`{ "ok": false, "error": { "code", "message" } }\`.
+
+## Authentication
+
+Send a bearer token: an OAuth 2.1 access token from this server's OIDC provider,
+or a session token. Each operation is classified \`read\`, \`write\`, or \`admin\`, and a
+token is refused when its scopes (\`ledger.read\`, \`ledger.write\`, \`ledger.admin\`)
+do not cover the operation's class.
+
+The one exception is the archive download, which takes a single-use ticket in the
+query string instead — a browser following a download link cannot send a header.
+      `.trim(),
+      contact: {
+        name: "Beancount.io",
+        url: "https://github.com/bex-co/beancount-io",
+      },
+    },
+    ...getServerConfig(),
+    tags: [
+      {
+        name: V1_TAG,
+        description:
+          "Ledger resources: query, journal, accounts, statements, files, entries, archives",
       },
     ],
   });

@@ -29,6 +29,10 @@ import { setStripeWebhookHandler } from "@/features/stripe/api/stripe-webhook-ha
 import { setPlaidWebhookHandler } from "@/features/plaid/api/rest/plaid-webhook-handler";
 import { setV1CompatRedirectRoutes } from "@/features/v1-compat/api/redirect-handler";
 import { setLedgerApiHandler } from "@/features/ledger/api/rest/ledger-api-handler";
+import {
+  setLedgerV1Routes,
+  setLedgerV1TicketRoutes,
+} from "@/features/ledger/api/rest/v1";
 import { setSitemapHandler } from "@/features/sitemap/api/sitemap-handler";
 import { setMcpRoute, setupAiAgentRoutes } from "@/features/ai-agent/api";
 import { setGitProxyHandler } from "@/features/gitea/api/git-proxy-handler";
@@ -66,13 +70,20 @@ export interface ApiDeps {
  * Whether a mount sits under the scope gate.
  *
  * - `scoped` — the op-class matrix applies; the caller's scopes are checked
- *   against the op's class.
+ *   against the op's class, at whatever strength `config.api.scopeEnforcement`
+ *   is currently set to.
+ * - `enforced` — the matrix applies and *denies*, whatever the global setting.
+ *   For a surface with no clients yet: shadow mode exists so that
+ *   misclassifying a live op cannot refuse somebody's working integration, and
+ *   a surface published for the first time has no working integrations to
+ *   protect. Publishing a documented scope model that does not actually refuse
+ *   would be the worse risk (w1/m21, the v1 REST surface).
  * - `outside` — the matrix does not apply, and the mount owes the always-public
  *   census a reason why (ADR 0006 D9 test 3). Webhooks authenticated by
  *   signature, the OIDC ceremony, liveness probes, and the surface transports
  *   whose own ops are gated one level in all live here.
  */
-export type ApiGate = "scoped" | "outside";
+export type ApiGate = "scoped" | "enforced" | "outside";
 
 /** A feature's REST contribution: routes, plus where they sit w.r.t. the gate. */
 export interface RestFragment {
@@ -152,6 +163,25 @@ export const REST_FRAGMENTS: readonly RestFragment[] = [
     gate: "scoped",
     register: (router, { layers, config }) =>
       setLedgerApiHandler(router, layers, config),
+  },
+  {
+    // The v1 REST surface (ADR 0006 D7). Enforced rather than shadowed: it is
+    // published with a documented scope model and has no existing clients that
+    // a misclassification could break.
+    feature: "ledger-v1",
+    gate: "enforced",
+    register: (router, { layers, config }) =>
+      setLedgerV1Routes(router, layers, config),
+  },
+  {
+    // The archive download. Outside the gate because the request carries a
+    // single-use ticket instead of a caller identity — a browser following a
+    // download link cannot attach a bearer token. The authenticated,
+    // scope-checked half is the mint endpoint in the fragment above.
+    feature: "ledger-v1-archive",
+    gate: "outside",
+    register: (router, { layers, config }) =>
+      setLedgerV1TicketRoutes(router, layers, config),
   },
   {
     feature: "sitemap",

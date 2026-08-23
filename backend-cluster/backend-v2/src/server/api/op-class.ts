@@ -127,8 +127,18 @@ const R = {
     "Credential minting is deliberately unreachable by a token credential (ADR 0006 D6: an API key may not create an API key), so a REST twin would exist only to be refused.",
   billing:
     "Billing verbs return Stripe-hosted URLs a human must visit in a browser; a curl client cannot complete checkout or the customer portal, so the endpoint would hand back a link to nowhere.",
-  restV1Planned:
-    "In the v1 REST table of ADR 0006 D7 but not yet built: the endpoint lands in w1/m21, at which point this exemption is replaced by a `rest` op id.",
+  coveredByV1List:
+    "Covered by `GET /v1/ledgers`, which already returns every ledger the caller can reach. Owner-filtering and search are paging concerns of one screen; a client holding the list can do both itself.",
+  coveredByV1Journal:
+    "Covered by `GET /v1/ledgers/{owner}/{name}/journal`, which takes the same account/filter/time narrowing and answers with structured entries rather than a screen-tuned or plaintext rendering.",
+  coveredByV1Entries:
+    "Covered by `POST /v1/ledgers/{owner}/{name}/entries`, which calls the same `addBulkEntries` service and routes each directive to its file the same way.",
+  coveredByV1Files:
+    "Expressible over the v1 file endpoints: `GET`, `PUT`, and `DELETE` on `/v1/ledgers/{owner}/{name}/files/{path}` cover reading, writing, and moving content. A dedicated verb would be a second way to spell the same commit.",
+  ledgerControlPlane:
+    "The ledger control plane — creating, renaming, deleting a ledger, and who may reach it — is `admin` class and deliberately outside D7's v1 table. v1 publishes ledger *content*; granting a token the power to delete a ledger is a decision to take deliberately alongside API keys (w1/m22), not to inherit from publishing reads.",
+  notInV1Table:
+    "Not in ADR 0006 D7's v1 table. v1 is deliberately small — the bar is the handful of things a curl user does in their first ten minutes — so this waits for a client that asks for it rather than shipping as a default.",
   dashboardShaped:
     "Dashboard-shaped read: the response is assembled for one screen (chart series, account trees, screen-tuned paging). v1 REST publishes ledger resources, not screens (ADR 0006 D7).",
   giteaSocial:
@@ -181,6 +191,20 @@ const G = {
   wireCompat:
     "Exists to speak a foreign wire format (OpenAI / Anthropic / MCP) so third-party clients work unchanged; a GraphQL twin would have no client.",
 } as const;
+
+/** A verb on GraphQL and REST, but not MCP. */
+const gqlAndRest = (
+  gql: string,
+  opClass: OpClass,
+  rest: string,
+  mcpExempt: string,
+): VerbEntry => ({
+  verb: gql,
+  class: opClass,
+  gql,
+  rest,
+  mcpExempt,
+});
 
 /** A verb that lives only on GraphQL. */
 const gqlOnly = (
@@ -357,9 +381,24 @@ const PROBE_VERBS: readonly VerbEntry[] = [
  * else can reach them.
  */
 const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
-  gqlOnly("Mutation.createLedger", "admin", R.restV1Planned, M.notAgentShaped),
-  gqlOnly("Mutation.updateLedger", "admin", R.restV1Planned, M.notAgentShaped),
-  gqlOnly("Mutation.deleteLedger", "admin", R.restV1Planned, M.notAgentShaped),
+  gqlOnly(
+    "Mutation.createLedger",
+    "admin",
+    R.ledgerControlPlane,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.updateLedger",
+    "admin",
+    R.ledgerControlPlane,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.deleteLedger",
+    "admin",
+    R.ledgerControlPlane,
+    M.notAgentShaped,
+  ),
   gqlOnly(
     "Query.listPublicKeys",
     "admin",
@@ -387,57 +426,67 @@ const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
   gqlOnly(
     "Query.listLedgerCollaborators",
     "admin",
-    R.restV1Planned,
+    R.ledgerControlPlane,
     M.notAgentShaped,
   ),
   gqlOnly(
     "Query.getLedgerCollaboratorPermission",
     "admin",
-    R.restV1Planned,
+    R.ledgerControlPlane,
     M.notAgentShaped,
   ),
   gqlOnly(
     "Mutation.addOrUpdateLedgerCollaborator",
     "admin",
-    R.restV1Planned,
+    R.ledgerControlPlane,
     M.notAgentShaped,
   ),
   gqlOnly(
     "Mutation.deleteLedgerCollaborator",
     "admin",
-    R.restV1Planned,
+    R.ledgerControlPlane,
     M.notAgentShaped,
   ),
-  gqlOnly("Mutation.leaveLedger", "admin", R.restV1Planned, M.notAgentShaped),
+  gqlOnly(
+    "Mutation.leaveLedger",
+    "admin",
+    R.ledgerControlPlane,
+    M.notAgentShaped,
+  ),
 ];
 
 const LEDGER_READ_VERBS: readonly VerbEntry[] = [
-  gqlOnly("Query.listLedgers", "read", R.restV1Planned, M.notAgentShaped),
+  gqlAndRest("Query.listLedgers", "read", "GET /v1/ledgers", M.notAgentShaped),
   gqlOnly(
     "Query.listUserOwnedLedgers",
     "read",
-    R.restV1Planned,
+    R.coveredByV1List,
     M.notAgentShaped,
   ),
-  gqlOnly("Query.searchLedgers", "read", R.restV1Planned, M.notAgentShaped),
-  gqlOnly("Query.getLedger", "read", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Query.searchLedgers", "read", R.coveredByV1List, M.notAgentShaped),
+  gqlAndRest(
+    "Query.getLedger",
+    "read",
+    "GET /v1/ledgers/{owner}/{name}",
+    M.notAgentShaped,
+  ),
   gqlOnly("Query.getLedgerOverview", "read", R.dashboardShaped, M.coveredByBql),
-  gqlOnly(
+  gqlAndRest(
     "Query.getLedgerIncomeStatement",
     "read",
-    R.restV1Planned,
+    "GET /v1/ledgers/{owner}/{name}/statements/{statement}",
     M.coveredByBql,
   ),
-  gqlOnly(
+  gqlAndRest(
     "Query.getLedgerBalanceSheet",
     "read",
-    R.restV1Planned,
+    "GET /v1/ledgers/{owner}/{name}/statements/{statement}",
     M.coveredByBql,
   ),
   gqlOnly(
     "Query.getLedgerTrialBalance",
     "read",
-    R.restV1Planned,
+    R.notInV1Table,
     M.coveredByBql,
   ),
   gqlOnly(
@@ -487,7 +536,7 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
   gqlOnly(
     "Query.getLedgerSourceFiles",
     "read",
-    R.restV1Planned,
+    R.coveredByV1Files,
     M.notAgentShaped,
   ),
   gqlOnly("Query.getLedgerTags", "read", R.dashboardShaped, M.coveredByBql),
@@ -524,7 +573,12 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     R.dashboardShaped,
     M.coveredByBql,
   ),
-  gqlOnly("Query.getLedgerJournal", "read", R.restV1Planned, M.coveredByBql),
+  gqlAndRest(
+    "Query.getLedgerJournal",
+    "read",
+    "GET /v1/ledgers/{owner}/{name}/journal",
+    M.coveredByBql,
+  ),
   gqlOnly(
     "Query.getLedgerEntryContext",
     "read",
@@ -534,16 +588,21 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
   gqlOnly(
     "Query.getLedgerPlaintextJournal",
     "read",
-    R.restV1Planned,
+    R.coveredByV1Journal,
     M.coveredByBql,
   ),
   gqlOnly(
     "Query.getLedgerAccountJournal",
     "read",
-    R.restV1Planned,
+    R.coveredByV1Journal,
     M.coveredByBql,
   ),
-  gqlOnly("Query.getLedgerAccounts", "read", R.restV1Planned, M.coveredByBql),
+  gqlAndRest(
+    "Query.getLedgerAccounts",
+    "read",
+    "GET /v1/ledgers/{owner}/{name}/accounts",
+    M.coveredByBql,
+  ),
   gqlOnly(
     "Query.getLedgerAccountDirectives",
     "read",
@@ -556,20 +615,20 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     R.assetStorage,
     M.notAgentShaped,
   ),
-  gqlOnly(
+  gqlAndRest(
     "Query.getLedgerArchiveDownloadUrl",
     "read",
-    R.restV1Planned,
+    "POST /v1/ledgers/{owner}/{name}/archive-tickets",
     M.notAgentShaped,
   ),
   gqlOnly(
     "Query.getLatestLedgerCommit",
     "read",
-    R.restV1Planned,
+    R.notInV1Table,
     M.notAgentShaped,
   ),
-  gqlOnly("Query.listCommits", "read", R.restV1Planned, M.notAgentShaped),
-  gqlOnly("Query.getCommitDetails", "read", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Query.listCommits", "read", R.notInV1Table, M.notAgentShaped),
+  gqlOnly("Query.getCommitDetails", "read", R.notInV1Table, M.notAgentShaped),
   // Legacy resolvers, kept for older mobile builds.
   gqlOnly("Query.ledgerMeta", "read", R.legacy, M.notAgentShaped),
   gqlOnly("Query.accountHierarchy", "read", R.legacy, M.dashboardShaped),
@@ -578,38 +637,43 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
 ];
 
 const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
-  gqlOnly("Mutation.starLedger", "write", R.restV1Planned, M.notAgentShaped),
-  gqlOnly("Mutation.unstarLedger", "write", R.restV1Planned, M.notAgentShaped),
-  gqlOnly("Mutation.bulkEntries", "write", R.restV1Planned, M.coveredByBql),
+  gqlOnly("Mutation.starLedger", "write", R.giteaSocial, M.notAgentShaped),
+  gqlOnly("Mutation.unstarLedger", "write", R.giteaSocial, M.notAgentShaped),
+  gqlAndRest(
+    "Mutation.bulkEntries",
+    "write",
+    "POST /v1/ledgers/{owner}/{name}/entries",
+    M.coveredByBql,
+  ),
   gqlOnly(
     "Mutation.insertReceiptTransaction",
     "write",
-    R.restV1Planned,
+    R.notInV1Table,
     M.notAgentShaped,
   ),
   gqlOnly(
     "Mutation.deleteLedgerEntrySourceSlice",
     "write",
-    R.restV1Planned,
+    R.notInV1Table,
     M.notAgentShaped,
   ),
   gqlOnly(
     "Mutation.deleteMultipleLedgerEntrySourceSlices",
     "write",
-    R.restV1Planned,
+    R.notInV1Table,
     M.notAgentShaped,
   ),
   gqlOnly(
     "Mutation.updateLedgerEntrySourceSlice",
     "write",
-    R.restV1Planned,
+    R.notInV1Table,
     M.notAgentShaped,
   ),
-  gqlOnly("Mutation.addEntries", "write", R.restV1Planned, M.notAgentShaped),
+  gqlOnly("Mutation.addEntries", "write", R.legacy, M.notAgentShaped),
   gqlOnly(
     "Mutation.renameLedgerFile",
     "write",
-    R.restV1Planned,
+    R.coveredByV1Files,
     M.notAgentShaped,
   ),
 ];
@@ -636,13 +700,21 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     class: "read",
     gql: "Query.queryShellText",
     mcp: "runBqlQuery",
-    restExempt: R.restV1Planned,
+    // Read-classed despite being a POST. The class comes from this table, not
+    // from the method, and it has to: an op absent from the table defaults to
+    // `write`, so a BQL query — which changes nothing — would demand
+    // `ledger.write` on the strength of its verb alone. The body is a POST
+    // because a BQL statement does not belong in a URL, not because it writes.
+    rest: "POST /v1/ledgers/{owner}/{name}/query",
   },
   {
     verb: "ledger.queryShell",
     class: "read",
     gql: "Query.queryShell",
-    restExempt: R.restV1Planned,
+    // Same endpoint as `queryShellText`, chosen by `Accept`: JSON returns the
+    // typed table, `text/plain` the shell's own rendering. One route, one
+    // service call, two representations — so both verbs point at it.
+    rest: "POST /v1/ledgers/{owner}/{name}/query",
     mcpExempt: M.coveredByBql,
   },
   {
@@ -650,14 +722,14 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     class: "read",
     gql: "Query.getLedgerDirContent",
     mcp: "listLedgerFiles",
-    restExempt: R.restV1Planned,
+    rest: "GET /v1/ledgers/{owner}/{name}/files",
   },
   {
     verb: "ledger.readFiles",
     class: "read",
     gql: "Query.getLedgerFile",
     mcp: "readLedgerFiles",
-    restExempt: R.restV1Planned,
+    rest: "GET /v1/ledgers/{owner}/{name}/files/{*path}",
   },
   // One MCP tool, three GraphQL mutations: `editLedgerFiles` takes create /
   // update / delete as an operation argument, while GraphQL spells each out as
@@ -668,24 +740,34 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     class: "write",
     gql: "Mutation.createLedgerFile",
     mcp: "editLedgerFiles",
-    restExempt: R.restV1Planned,
+    rest: "PUT /v1/ledgers/{owner}/{name}/files/{*path}",
   },
   {
     verb: "ledger.editFiles.update",
     class: "write",
     gql: "Mutation.updateLedgerFile",
     mcp: "editLedgerFiles",
-    restExempt: R.restV1Planned,
+    rest: "PUT /v1/ledgers/{owner}/{name}/files/{*path}",
   },
   {
     verb: "ledger.editFiles.delete",
     class: "write",
     gql: "Mutation.deleteLedgerFile",
     mcp: "editLedgerFiles",
-    restExempt: R.restV1Planned,
+    rest: "DELETE /v1/ledgers/{owner}/{name}/files/{*path}",
   },
   {
     verb: "ledger.downloadArchive",
+    class: "read",
+    rest: "GET /v1/ledgers/{owner}/{name}/archive/{archive}",
+    gqlExempt: G.bytesNotFields,
+    mcpExempt: M.notAgentShaped,
+  },
+  {
+    // The pre-v1 spelling, superseded and marked deprecated in the spec. Kept
+    // classified while it is still mounted: a route nobody classifies is a
+    // route the coverage test has to be told to ignore, which is worse.
+    verb: "ledger.downloadArchive.legacy",
     class: "read",
     rest: "GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
     gqlExempt: G.bytesNotFields,

@@ -79,6 +79,17 @@ export const CACHE_KEYS = {
      * pre-receive hook's webhook check — see
      * `features/ledger/operations/directive-limit-bypass.ts`.
      */
+
+    /**
+     * Unclaimed archive download ticket, by nonce.
+     *
+     * A Redis-backed record, not a cache: it is the single-use half of the
+     * download credential (ADR 0006 security repair 1), so it persists through
+     * the strict helpers that throw rather than fail open. Written when a
+     * ticket is minted, deleted when it is redeemed — a second redemption
+     * finds nothing and is refused.
+     */
+    archiveTicketNonce: (nonce: string) => `ledger:archive_ticket:${nonce}`,
   },
 
   /**

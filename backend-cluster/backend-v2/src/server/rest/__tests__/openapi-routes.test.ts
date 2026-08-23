@@ -11,10 +11,18 @@ describe("setOpenApiRoutes", () => {
     router.get = jest.fn();
   });
 
-  it("should not register any routes in production", () => {
+  it("serves the public v1 contract in production, and nothing else", () => {
     setOpenApiRoutes(router, { env: "production" } as Pick<AppConfig, "env">);
 
-    expect(router.get).not.toHaveBeenCalled();
+    // The v1 spec is the published contract (ADR 0006 D8), so it is the one
+    // document that must exist in production. The internal `/api-docs` pair
+    // stays out: it describes surface we have promised nobody, and it renders
+    // its UI from a CDN.
+    expect(router.get).toHaveBeenCalledWith(
+      "/v1/openapi.json",
+      expect.any(Function),
+    );
+    expect(router.get).toHaveBeenCalledTimes(1);
   });
 
   it("should register the public and admin doc routes in development", () => {
@@ -33,7 +41,8 @@ describe("setOpenApiRoutes", () => {
       "/api-admin-docs",
       expect.any(Function),
     );
-    expect(router.get).toHaveBeenCalledTimes(4);
+    // The four internal doc routes, plus the v1 spec that is served everywhere.
+    expect(router.get).toHaveBeenCalledTimes(5);
   });
 
   it("should serve the public OpenAPI document as JSON", () => {

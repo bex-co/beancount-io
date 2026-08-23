@@ -1,13 +1,29 @@
 import Router from "@koa/router";
-import fetch from "node-fetch";
 import { z } from "@/shared/zod-openapi-setup";
-import { parseLedgerId } from "@/shared/str";
 import { registerRoute } from "@/server/rest/openapi-registry";
 import { type AppLayers } from "@/foundation/composition";
 import { AppConfig } from "@/config/config";
 import { getTokenFromCtx } from "@/features/auth/utils/auth";
 import { resolveLedgerCaller } from "../../utils/ledger-caller-resolver";
+import { streamLedgerArchive } from "./archive-proxy";
+import { parseLedgerId } from "@/shared/str";
 
+/**
+ * The pre-v1 archive download. Superseded, kept for existing clients.
+ *
+ * Two things are wrong with it, both fixed by
+ * `GET /v1/ledgers/{owner}/{name}/archive/{archive}`:
+ *
+ * 1. It accepts `?token=<JWT>` — the caller's long-lived session credential in
+ *    a URL, and therefore in access logs, Referer headers, browser history, and
+ *    CDN logs. v1 takes a single-use 60-second ticket instead.
+ * 2. `:ledgerId` is one path segment holding `owner/name`, which only works
+ *    while an encoded `%2F` survives Cloudflare and Caddy unchanged. v1 splits
+ *    it into two segments.
+ *
+ * Removal is a separate, dated decision once clients have moved; until then it
+ * is marked `deprecated` in the spec so nobody adopts it by accident.
+ */
 export const downloadArchiveParamsSchema = z
   .object({
     ledgerId: z.string().openapi({
@@ -27,10 +43,9 @@ export const downloadArchiveParamsSchema = z
 
 export const downloadArchiveQuerySchema = z
   .object({
-    token: z.string().openapi({
-      description: "JWT authentication token for verifying user access",
-      example:
-        "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1MDdmMWY3N2JjZjg2Y2Q3OTk0MzkwMTEifQ.abc123",
+    token: z.string().optional().openapi({
+      description:
+        "DEPRECATED. JWT in the query string; prefer `Authorization: Bearer`, or move to the v1 archive endpoint's single-use ticket.",
     }),
   })
   .openapi("DownloadArchiveQuery", {
@@ -44,9 +59,10 @@ export function registerDownloadArchiveRoute(
 ): void {
   router.get("/api-gateway/ledgers/:ledgerId/archive/:archive", async (ctx) => {
     const { ledgerId, archive } = ctx.params;
-    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    // Parsed here purely to reject a malformed id before anything downstream
+    // assumes it splits.
+    parseLedgerId(ledgerId);
 
-    // Auth check outside the proxy try/catch so HTTP errors aren't re-wrapped
     const token =
       (ctx.query.token as string | undefined) || getTokenFromCtx(ctx);
     const userId = await resolveLedgerCaller(ledgerId, token, {
@@ -55,77 +71,28 @@ export function registerDownloadArchiveRoute(
       db: layers.database.db,
     });
 
-    try {
-      // For authenticated users use their own credentials; for public ledgers
-      // fall back to the ledger owner's credentials.
-      const user = userId
-        ? await layers.database.models.user.getById(layers.database.db, userId)
-        : await layers.database.models.user.getUserByUsername(
-            layers.database.db,
-            ledgerOwner,
-          );
-
-      if (!user) {
-        ctx.throw(401, "User not found");
-        return;
-      }
-
-      const baseUrl = config.favaApi.baseUrl.replace(/\/$/, "");
-      const proxyUrl = `${baseUrl}/ledgers/${ledgerOwner}/${ledgerName}/archive/${archive}`;
-
-      const basicAuth = Buffer.from(
-        `${user.ledger_username}:${user.ledger_password}`,
-      ).toString("base64");
-
-      const response = await fetch(proxyUrl, {
-        method: "GET",
-        headers: {
-          Authorization: `Basic ${basicAuth}`,
-        },
-      });
-
-      if (!response.ok) {
-        if (response.status === 404) {
-          ctx.throw(404, "Archive not found");
-        } else {
-          ctx.throw(
-            response.status,
-            `Failed to download archive: ${response.statusText}`,
-          );
-        }
-        return;
-      }
-
-      const contentType = response.headers.get("content-type");
-      if (contentType) {
-        ctx.set("Content-Type", contentType);
-      }
-
-      const contentDisposition = response.headers.get("content-disposition");
-      if (contentDisposition) {
-        ctx.set("Content-Disposition", contentDisposition);
-      }
-
-      ctx.body = response.body;
-    } catch (error) {
-      const err = error as Error & { status?: number };
-      if (err.status === 404) {
-        ctx.throw(404, "Archive not found");
-      } else {
-        ctx.throw(500, `Failed to download archive: ${err.message}`);
-      }
-    }
+    await streamLedgerArchive(ctx, layers, config, {
+      ledgerId,
+      archive,
+      userId,
+    });
   });
 
   registerRoute({
     method: "get",
-    path: "/ledgers/{ledgerId}/archive/{archive}",
-    summary: "Download ledger archive file",
+    // The mounted path, not a prettier one: this route previously declared
+    // `/ledgers/{ledgerId}/...` while mounting `/api-gateway/ledgers/...`, so
+    // the published spec named a URL that 404s. `openapi-completeness.test.ts`
+    // now fails on that class of drift.
+    path: "/api-gateway/ledgers/{ledgerId}/archive/{archive}",
+    deprecated: true,
+    summary: "Download ledger archive file (deprecated)",
     description: `Downloads a ledger archive in the specified format (e.g., tar.gz, zip).
 
-This endpoint acts as a proxy to the Python ledger service, forwarding the request with the user's credentials.
-
-The user must be authenticated and have access to the specified ledger.
+**Deprecated.** Use \`POST /v1/ledgers/{owner}/{name}/archive-tickets\` followed by
+\`GET /v1/ledgers/{owner}/{name}/archive/{archive}?ticket=...\` instead. This route
+accepts a JWT in the query string, which puts a long-lived credential into logs and
+browser history, and addresses the ledger as a single \`owner%2Fname\` path segment.
 
 Common archive formats:
 - 'gitea-main.zip' - Git archive from Gitea repository (main branch)

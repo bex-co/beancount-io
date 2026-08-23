@@ -25,6 +25,7 @@
     "codegen": "yarn generate-backend-v2-openapi && yarn generate-fava-client && yarn generate-gitea-client && yarn generate-agent-tool-types",
     "generate-agent-tool-types": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-agent-tool-types.ts",
     "generate-backend-v2-openapi": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-openapi-spec.ts",
+    "generate-v1-openapi": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-v1-openapi.ts",
     "generate-fava-client": "npx swagger-typescript-api generate --path ../idl/beancount-ledger.openapi.json -o src/foundation/fava",
     "generate-gitea-client": "npx swagger-typescript-api generate -p ../idl/gitea.swagger.v1.json -o src/features/gitea/client -n gitea-api.ts",
     "migrate:deploy": "node scripts/migrate-deploy.js"

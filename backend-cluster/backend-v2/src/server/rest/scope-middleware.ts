@@ -34,11 +34,15 @@ export function restScopeMiddleware(
 ): Router.Middleware {
   return async (ctx: RouterContext, next: () => Promise<void>) => {
     const opId = matchedOpId(ctx);
-    if (opId && gates.get(opId) !== "outside") {
+    const gate = opId ? gates.get(opId) : undefined;
+    if (opId && gate !== "outside") {
+      // An `enforced` mount denies regardless of the global mode: shadow exists
+      // to protect working integrations from a misclassification, and a surface
+      // with no clients yet has none to protect (w1/m21's v1 routes).
       requireScopeClass(
         identityFromState(ctx),
         opId,
-        config.api.scopeEnforcement,
+        gate === "enforced" ? "enforce" : config.api.scopeEnforcement,
       );
     }
     await next();

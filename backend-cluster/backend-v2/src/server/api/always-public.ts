@@ -30,7 +30,13 @@ const ADMIN_TOKEN =
   "Support/ops route behind `x-admin-token` (`apiTokenRequired`), a shared operator secret with no user identity and therefore no scopes to check.";
 
 const DEV_ONLY_DOCS =
-  "Documentation route registered only outside production (`setOpenApiRoutes` returns early there); it publishes the contract, never data. w1/m21 makes the public half production-visible and it stays outside the gate then.";
+  "Documentation route registered only outside production (`setOpenApiRoutes` returns early there); it publishes the contract, never data.";
+
+const PUBLIC_CONTRACT =
+  "The published v1 contract (ADR 0006 D8), served in every environment. It describes endpoints rather than exposing any, and requiring a credential to read it would mean a client had to already be integrated in order to learn how to integrate.";
+
+const TICKET_IS_THE_CREDENTIAL =
+  "The request carries a single-use, 60-second download ticket instead of a caller identity, because a browser following a download link cannot attach a bearer token. The ticket is minted by an authenticated, scope-checked call and is bound to one user, ledger, and archive; there is no identity here for the scope gate to check.";
 
 const MCP_TRANSPORT =
   "The MCP transport. One HTTP request carries a whole JSON-RPC conversation, so the request has no single class; the gate runs per tool call inside the assembled registry, which is also what makes a mid-session revocation bite on the next call.";
@@ -75,6 +81,11 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
     opId: "REST GET /metrics/ledger",
     reason:
       "Prometheus scrape behind its own `x-api-key` (`metricsAuthRequired`), proxied from ledger-v2; same reasoning as `/metrics/backend`.",
+  },
+  { opId: "REST GET /v1/openapi.json", reason: PUBLIC_CONTRACT },
+  {
+    opId: "REST GET /v1/ledgers/{owner}/{name}/archive/{archive}",
+    reason: TICKET_IS_THE_CREDENTIAL,
   },
   { opId: "REST GET /api-docs", reason: DEV_ONLY_DOCS },
   { opId: "REST GET /api-docs/swagger.json", reason: DEV_ONLY_DOCS },

@@ -50,7 +50,7 @@ describe("always-public census", () => {
       .filter((mount) => mount.gate === "outside")
       .map((mount) => mount.opId);
     scopedOpIds = mounts
-      .filter((mount) => mount.gate === "scoped")
+      .filter((mount) => mount.gate !== "outside")
       .map((mount) => mount.opId);
   });
 

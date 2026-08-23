@@ -135,15 +135,25 @@ Prompt and agent-routing evals live entirely under `evals/`. Use the focused `ya
 - GraphQL: `src/server/graphql/`; resolver list and DI are in `resolver-registry.ts`.
 - REST: feature handlers register fragments consumed by `src/server/api/composition-root.ts`.
 - MCP: `src/features/ai-agent/api/mcp-tools.ts`, registered through the same composition root.
-- OpenAPI: development-only Swagger UI at `/api-docs` and JSON at `/api-docs/swagger.json`.
+- OpenAPI: `GET /v1/openapi.json` is the published v1 contract and is served in every environment. The internal `/api-docs` and `/api-admin-docs` Swagger UI pages stay development-only.
 - New documented REST endpoints use Zod schemas, `zodValidator()`, and central route registration. Import the shared `@/shared/zod-openapi-setup`; never call `extendZodWithOpenApi()` in individual schema files.
+
+### The v1 REST surface
+
+`src/features/ledger/api/rest/v1/` is the public API (ADR 0006 D7). It is deliberately small: the bar for an endpoint is that a caller who has never read the GraphQL schema can do the thing with curl in ten minutes. Everything else stays GraphQL-only with a written `restExempt` reason in the op-class table.
+
+- **Add an endpoint** by declaring a `v1Route({...})` in the relevant `*-handler.ts` and listing it in `v1/index.ts`. `registerV1Route` mounts it, validates it, and registers it with the spec from that one declaration, so the mounted path, the enforced schema, and the documented contract cannot disagree.
+- **Paths address a ledger as `{owner}/{name}`,** two segments, never one `{ledgerId}`. A single segment needs `%2F` to survive Cloudflare and Caddy unchanged.
+- **Classify the new op** in `op-class.ts` — the coverage test fails otherwise — and remember the class comes from the table, not the HTTP method: `POST .../query` is `read`.
+- **Regenerate the snapshot** with `yarn generate-v1-openapi`; `openapi-completeness.test.ts` fails when `docs/openapi/v1.json` and the live document disagree, so a contract change shows up as a reviewable diff.
+- The v1 fragments are gated `enforced`, so scopes are denied on this surface regardless of `config.api.scopeEnforcement`. The archive download is the one v1 route outside the identity gate: it carries a single-use HMAC ticket instead, because a browser following a download link cannot send a header.
 
 ### Identity and op classes
 
 Every surface authenticates through one gate and classifies every operation:
 
 - `src/server/api/identity.ts` (`resolveIdentity`) is the single authentication seam; the REST side publishes it via `rest/identity-middleware.ts`.
-- `src/server/api/op-class.ts` holds the scope vocabulary and the op-class matrix: a stable op id per operation, classified `read` / `write` / `admin`. `graphql/scope-middleware.ts`, `rest/scope-middleware.ts`, and the MCP registry all gate on it. `config.api.scopeEnforcement` is `"shadow"` while coverage is confirmed against live traffic — it logs what it *would* refuse; flipping it to `"enforce"` is a reviewed code edit here, never an environment switch.
+- `src/server/api/op-class.ts` holds the scope vocabulary and the op-class matrix: a stable op id per operation, classified `read` / `write` / `admin`. `graphql/scope-middleware.ts`, `rest/scope-middleware.ts`, and the MCP registry all gate on it. `config.api.scopeEnforcement` is `"shadow"` while coverage is confirmed against live traffic — it logs what it _would_ refuse; flipping it to `"enforce"` is a reviewed code edit here, never an environment switch.
 - `src/server/api/always-public.ts` is the census of mounts that sit outside the scope gate. Each entry carries a written reason.
 - Three drift guards in `src/server/api/__tests__/` fail CI on divergence: `surface-parity` (a verb appears on every surface or carries an excuse), `op-class-coverage` (runtime ops ↔ matrix, both directions), and `always-public` (no unexplained outside-gate mount). Adding an operation means classifying it — the coverage test will not let you skip.
 

@@ -397,6 +397,12 @@ describe("scope enforcement through the real schema", () => {
  * argument for putting it in front of live REST routes at all, so it is worth
  * a test rather than a paragraph — checked against every mount the composition
  * root actually produces, with the least-privileged caller there is.
+ *
+ * With one deliberate exception, checked below: a fragment marked `enforced`
+ * denies whatever the global mode says. Shadow mode protects working
+ * integrations from a misclassification, and the v1 surface has none to
+ * protect — it is published with a documented scope model, so a gate that does
+ * not actually refuse would be a documented lie.
  */
 describe("shadow mode over the whole live REST surface", () => {
   it("is what the committed config says", () => {
@@ -415,6 +421,7 @@ describe("shadow mode over the whole live REST surface", () => {
 
     const touched: string[] = [];
     for (const mount of restMounts) {
+      if (mount.gate === "enforced") continue;
       const ctx = {
         method: mount.method === "ALL" ? "POST" : mount.method,
         path: mount.path,
@@ -433,5 +440,33 @@ describe("shadow mode over the whole live REST surface", () => {
     }
     expect(touched).toEqual([]);
     expect(restMounts.length).toBeGreaterThan(30);
+  });
+
+  it("still refuses on a mount whose fragment asked to be enforced", async () => {
+    const { restMounts } = await assembleTestApi();
+    const gates = new Map<string, ApiGate>(
+      restMounts.map((mount) => [mount.opId, mount.gate]),
+    );
+    const middleware = restScopeMiddleware(shadowing, gates);
+    const scopeless: Identity = { ...readOnlyToken, scopes: new Set() };
+
+    const enforced = restMounts.filter((mount) => mount.gate === "enforced");
+    // If this is ever empty the test above silently becomes the only one, and
+    // v1 could lose its enforcement without anything failing.
+    expect(enforced.length).toBeGreaterThan(0);
+
+    for (const mount of enforced) {
+      const ctx = {
+        method: mount.method === "ALL" ? "POST" : mount.method,
+        path: mount.path,
+        status: 404,
+        body: undefined,
+        state: { identity: scopeless },
+        matched: [{ methods: [mount.method], path: mount.path }],
+      } as unknown as RouterContext;
+      await expect(middleware(ctx, async () => {})).rejects.toThrow(
+        ForbiddenError,
+      );
+    }
   });
 });
