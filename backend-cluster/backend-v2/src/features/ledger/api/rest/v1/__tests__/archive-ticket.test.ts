@@ -5,7 +5,7 @@ import {
   redeemArchiveTicket,
   TICKET_LIFETIME_MS,
 } from "../archive-ticket";
-import { makeFakeCache } from "./harness";
+import { makeFakeCache } from "@/server/rest/__tests__/v1-test-server";
 
 /**
  * The credential that replaced `?token=<JWT>`.

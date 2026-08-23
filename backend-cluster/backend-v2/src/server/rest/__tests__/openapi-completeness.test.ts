@@ -7,10 +7,12 @@ import fs from "node:fs";
 import path from "node:path";
 
 import { assembleTestApi } from "@/server/api/__tests__/api-surface";
-import type { RestMount } from "@/server/api/composition-root";
+import {
+  V1_DECLARED_ROUTES,
+  type RestMount,
+} from "@/server/api/composition-root";
 import { registry, generateV1OpenAPIDocument } from "../openapi-registry";
-import { V1_ROUTES } from "@/features/ledger/api/rest/v1";
-import { toKoaPath, toOpenApiPath } from "@/features/ledger/api/rest/v1/route";
+import { toKoaPath, toOpenApiPath } from "../v1-route";
 import { normalizeRestPath } from "@/server/api/rest-op-id";
 
 /**
@@ -107,7 +109,7 @@ describe("openapi completeness", () => {
   });
 
   it("mounts every /v1 route it documents", () => {
-    const unmounted = V1_ROUTES.map(
+    const unmounted = V1_DECLARED_ROUTES.map(
       (route) =>
         `${route.method.toUpperCase()} ${normalizeRestPath(toKoaPath(route.path))}`,
     ).filter((key) => !mounted.has(key));

@@ -2,6 +2,12 @@ import type { Identity } from "@/server/api/identity";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import { ForbiddenError, UnauthenticatedError } from "@/shared/errors";
 import {
+  auditSubject,
+  emitAuditEvent,
+  shouldAudit,
+  type AuditOutcome,
+} from "@/server/api/audit";
+import {
   assertLedgerAccess,
   type AssertLedgerAccessDeps,
 } from "./ledger-access-check";
@@ -105,20 +111,66 @@ export async function authorizeLedger(
   rel: LedgerRel,
   deps: AuthorizeLedgerDeps,
 ): Promise<AuthorizedLedger> {
-  assertLedgerScope(identity, ledgerId);
+  try {
+    assertLedgerScope(identity, ledgerId);
 
-  if (!identity) {
-    if (rel !== "read") {
-      throw new UnauthenticatedError("Authentication required");
+    if (!identity) {
+      if (rel !== "read") {
+        throw new UnauthenticatedError("Authentication required");
+      }
+      const { permission, ledgerOwnerId, ledgerRepoId } =
+        await assertLedgerAccess(ledgerId, undefined, deps);
+      const authorized = authorizeRank(
+        rel,
+        permission,
+        ledgerOwnerId,
+        ledgerRepoId,
+      );
+      auditLedgerAccess(identity, ledgerId, rel, "allowed");
+      return authorized;
     }
-    const { permission, ledgerOwnerId, ledgerRepoId } =
-      await assertLedgerAccess(ledgerId, undefined, deps);
-    return authorizeRank(rel, permission, ledgerOwnerId, ledgerRepoId);
-  }
 
-  const { permission, ledgerOwnerId, ledgerRepoId } =
-    await memoizedAssertLedgerAccess(identity, ledgerId, deps);
-  return authorizeRank(rel, permission, ledgerOwnerId, ledgerRepoId);
+    const { permission, ledgerOwnerId, ledgerRepoId } =
+      await memoizedAssertLedgerAccess(identity, ledgerId, deps);
+    const authorized = authorizeRank(
+      rel,
+      permission,
+      ledgerOwnerId,
+      ledgerRepoId,
+    );
+    auditLedgerAccess(identity, ledgerId, rel, "allowed");
+    return authorized;
+  } catch (err) {
+    // The one place a per-ledger refusal is decided, so the one place it has to
+    // be recorded. Catch-audit-rethrow rather than a wrapper at each call site:
+    // there are dozens of call sites and one of this function.
+    auditLedgerAccess(identity, ledgerId, rel, "denied");
+    throw err;
+  }
+}
+
+/**
+ * Record a ledger-access decision (w1/m22 t005).
+ *
+ * Allowed reads are skipped — they are most of the traffic, and burying the
+ * interesting events under them is how an audit trail stops being read. What is
+ * recorded is the ledger's name and the caller's ids: never a path, a query, or
+ * anything a caller supplied.
+ */
+function auditLedgerAccess(
+  identity: Identity | undefined,
+  ledgerId: string,
+  rel: LedgerRel,
+  outcome: AuditOutcome,
+): void {
+  if (!shouldAudit(outcome, rel)) return;
+  emitAuditEvent({
+    op: `LEDGER ${rel}`,
+    ...auditSubject(identity),
+    ledgerId,
+    outcome,
+    at: new Date(),
+  });
 }
 
 function authorizeRank(

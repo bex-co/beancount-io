@@ -3,6 +3,7 @@ import type { AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
 import { logger } from "@/shared/logger";
 import { createJwtCleanupJob } from "./jobs/jwt-cleanup-job";
+import { createAuditRetentionJob } from "./jobs/audit-retention-job";
 import { createOauthAdapterCleanupJob } from "./jobs/oauth-adapter-cleanup-job";
 import { createDevTestJob } from "./jobs/dev-test-job";
 import { createPlaidSyncJob } from "./jobs/plaid-sync-job";
@@ -59,6 +60,7 @@ export class JobScheduler {
   private getJobConfigs(): ScheduledJob[] {
     const devTest = createDevTestJob(this.layers, this.config);
     const jwtCleanup = createJwtCleanupJob(this.layers, this.config);
+    const auditRetention = createAuditRetentionJob(this.layers, this.config);
     const oauthAdapterCleanup = createOauthAdapterCleanupJob(
       this.layers,
       this.config,
@@ -78,6 +80,12 @@ export class JobScheduler {
         schedule: devTest.schedule,
         task: devTest.task,
         enabled: this.config.env !== "production", // Dev/test only
+      },
+      {
+        name: "audit-retention",
+        schedule: auditRetention.schedule,
+        task: auditRetention.task,
+        enabled: true, // 90-day audit retention sweep
       },
       {
         name: "jwt-cleanup",

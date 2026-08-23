@@ -8,10 +8,14 @@ import type { ApiGate } from "@/server/api/composition-root";
 import type { Identity } from "@/server/api/identity";
 import { restOpId } from "@/server/api/op-class";
 import { normalizeRestPath, opMethodsForLayer } from "@/server/api/rest-op-id";
-import { restErrorMiddleware } from "@/server/rest/error-middleware";
-import { restScopeMiddleware } from "@/server/rest/scope-middleware";
+import { restErrorMiddleware } from "../error-middleware";
+import { restScopeMiddleware } from "../scope-middleware";
 
-import { setLedgerV1Routes, setLedgerV1TicketRoutes } from "..";
+import {
+  setLedgerV1Routes,
+  setLedgerV1TicketRoutes,
+} from "@/features/ledger/api/rest/v1";
+import { setApiKeyRoutes } from "@/features/apikeys/api/api-key-rest";
 
 /**
  * A real Koa server over the real v1 fragment.
@@ -60,6 +64,15 @@ export function makeFakeCache() {
   };
 }
 
+/**
+ * Which fragments the server under test should mount. Defaults to all of them,
+ * because most tests want the surface as it actually ships.
+ */
+export interface V1TestFragments {
+  ledger?: boolean;
+  apiKeys?: boolean;
+}
+
 export interface V1TestServer {
   url: string;
   /** The caller every subsequent request is made as; `undefined` for anonymous. */
@@ -70,6 +83,7 @@ export interface V1TestServer {
 export async function startV1TestServer(
   layers: AppLayers,
   config: AppConfig,
+  fragments: V1TestFragments = { ledger: true, apiKeys: true },
 ): Promise<V1TestServer> {
   const router = new Router();
   let identity: Identity | undefined;
@@ -83,9 +97,13 @@ export async function startV1TestServer(
   router.use(restScopeMiddleware(config, gates));
 
   const before = router.stack.length;
-  setLedgerV1Routes(router, layers, config);
+  if (fragments.ledger !== false) setLedgerV1Routes(router, layers, config);
+  if (fragments.apiKeys !== false) setApiKeyRoutes(router, layers, config);
+  // Everything registered so far is scope-enforced; the ticket fragment that
+  // follows deliberately sits outside the identity gate.
   const scopedUntil = router.stack.length;
-  setLedgerV1TicketRoutes(router, layers, config);
+  if (fragments.ledger !== false)
+    setLedgerV1TicketRoutes(router, layers, config);
 
   // The gate index the composition root builds at assembly time, rebuilt here
   // the same way — off the router, not off a second list that could disagree.

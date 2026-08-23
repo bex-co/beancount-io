@@ -79,15 +79,18 @@ describe("op-class coverage", () => {
     // silently shrank would leave this test green on a table full of stale
     // rows the reverse check would then have to catch alone.
     expect(graphqlOps.filter((op) => op.startsWith("GQL Query.")).length).toBe(
-      74,
+      75,
     );
     expect(
       graphqlOps.filter((op) => op.startsWith("GQL Mutation.")).length,
-    ).toBe(60);
+    ).toBe(62);
   });
 
-  it("covers all four MCP tools", () => {
-    expect(mcpOps).toHaveLength(4);
+  it("covers every MCP tool", () => {
+    // Four ledger tools plus the three key-management tools w1/m22 added. The
+    // count is asserted because tool count is the dominant cost in an agent's
+    // tool selection — growing it should be a decision, not a drift.
+    expect(mcpOps).toHaveLength(7);
   });
 });
 

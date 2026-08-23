@@ -1,6 +1,12 @@
 import type { ApiScope, Identity } from "./identity";
 import { ForbiddenError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
+import {
+  auditSubject,
+  emitAuditEvent,
+  shouldAudit,
+  type AuditOutcome,
+} from "./audit";
 
 const scopeLogger = logger.child({ module: "op-class" });
 
@@ -694,6 +700,39 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
  * this comment is the honest part about it being reachable two different ways.
  * Converging them belongs with the service-layer work, not with classification.
  */
+/**
+ * API-key management, on all three surfaces (ADR 0006 D6, w1/m22).
+ *
+ * Classified `admin`: a key is the ledger's access control, not its content, so
+ * minting one needs the same authority as adding a collaborator. That is also
+ * what stops a `ledger.write` grant from quietly upgrading itself — the service
+ * additionally refuses any mint from a caller whose own credential is an API
+ * key, and refuses to grant scopes the minter does not hold.
+ */
+const API_KEY_VERBS: readonly VerbEntry[] = [
+  {
+    verb: "apikeys.list",
+    class: "admin",
+    gql: "Query.apiKeys",
+    rest: "GET /v1/api-keys",
+    mcp: "listApiKeys",
+  },
+  {
+    verb: "apikeys.create",
+    class: "admin",
+    gql: "Mutation.createApiKey",
+    rest: "POST /v1/api-keys",
+    mcp: "createApiKey",
+  },
+  {
+    verb: "apikeys.revoke",
+    class: "admin",
+    gql: "Mutation.revokeApiKey",
+    rest: "DELETE /v1/api-keys/{id}",
+    mcp: "revokeApiKey",
+  },
+];
+
 const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ledger.queryShellText",
@@ -999,6 +1038,7 @@ const AI_ROUTE_VERBS: readonly VerbEntry[] = [
 
 /** The whole matrix, in one list. */
 export const VERB_TABLE: readonly VerbEntry[] = [
+  ...API_KEY_VERBS,
   ...ACCOUNT_VERBS,
   ...AUTH_VERBS,
   ...BILLING_VERBS,
@@ -1167,6 +1207,7 @@ export function requireScopeClass(
   }
 
   if (decision.allowed) {
+    audit(identity, decision, "allowed");
     return decision;
   }
 
@@ -1176,10 +1217,9 @@ export function requireScopeClass(
       class: decision.opClass,
       requiredScope: decision.requiredScope,
       classified: decision.classified,
-      userId: identity?.userId,
-      tokenId: identity?.tokenId,
       wouldDeny: true,
     });
+    audit(identity, decision, "shadow-denied");
     return { ...decision, allowed: true };
   }
 
@@ -1188,11 +1228,34 @@ export function requireScopeClass(
     class: decision.opClass,
     requiredScope: decision.requiredScope,
     classified: decision.classified,
-    userId: identity?.userId,
-    tokenId: identity?.tokenId,
   });
+  audit(identity, decision, "denied");
   throw new ForbiddenError(
     `${decision.denyReason} (${decision.opId})`,
     decision.opId,
   );
+}
+
+/**
+ * The audit hook on the scope seam (w1/m22 t005).
+ *
+ * Placed here rather than in each surface's middleware for the same reason the
+ * gate itself is: this is the one place all three surfaces converge, so
+ * coverage does not depend on anybody remembering. The caller's identity is
+ * projected through `auditSubject`, which is the only way user fields reach an
+ * event — and the event type has no field an argument value could occupy.
+ */
+function audit(
+  identity: Identity | undefined,
+  decision: ScopeDecision,
+  outcome: AuditOutcome,
+): void {
+  if (!shouldAudit(outcome, decision.opClass)) return;
+  emitAuditEvent({
+    op: decision.opId,
+    ...auditSubject(identity),
+    ledgerId: identity?.ledgerScope,
+    outcome,
+    at: new Date(),
+  });
 }

@@ -6,14 +6,11 @@ import type { ZodType } from "zod";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
-import { identityFromState } from "@/server/rest/identity-middleware";
-import { registerRoute, V1_TAG } from "@/server/rest/openapi-registry";
-import {
-  validateRequest,
-  validatedFromState,
-} from "@/server/rest/validation-middleware";
+import { identityFromState } from "./identity-middleware";
+import { registerRoute, V1_TAG } from "./openapi-registry";
+import { validateRequest, validatedFromState } from "./validation-middleware";
 import { UnauthenticatedError } from "@/shared/errors";
-import { errorSchema, json } from "./schemas";
+import { errorSchema, json } from "./v1-schemas";
 
 /**
  * One declaration per v1 endpoint, mounted and documented from the same object.

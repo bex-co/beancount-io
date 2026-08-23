@@ -155,7 +155,21 @@ Every surface authenticates through one gate and classifies every operation:
 - `src/server/api/identity.ts` (`resolveIdentity`) is the single authentication seam; the REST side publishes it via `rest/identity-middleware.ts`.
 - `src/server/api/op-class.ts` holds the scope vocabulary and the op-class matrix: a stable op id per operation, classified `read` / `write` / `admin`. `graphql/scope-middleware.ts`, `rest/scope-middleware.ts`, and the MCP registry all gate on it. `config.api.scopeEnforcement` is `"shadow"` while coverage is confirmed against live traffic — it logs what it _would_ refuse; flipping it to `"enforce"` is a reviewed code edit here, never an environment switch.
 - `src/server/api/always-public.ts` is the census of mounts that sit outside the scope gate. Each entry carries a written reason.
+- `src/server/api/rate-limit.ts` is the one rate limiter, shared by all three surfaces. Budgets are keyed on the credential (`tokenId`, else `userId`, else IP), so a client cannot get three budgets by spreading load across GraphQL, REST, and MCP. Writes get a much smaller budget than reads; per-op exceptions live in `OP_BUDGETS`. It fails open when Redis is unreachable — a limiter that refuses everything when its store is down is a worse outage than briefly unmetered traffic.
+- `src/server/api/audit.ts` records write-class ops and every denial, hooked at `requireScopeClass` and `authorizeLedger` so coverage does not depend on each verb remembering. The event type deliberately has **no field an argument value could occupy**; if you need to record more, widen the interface in a diff a reviewer will see. Retention is 90 days, swept by `audit-retention-job`.
 - Three drift guards in `src/server/api/__tests__/` fail CI on divergence: `surface-parity` (a verb appears on every surface or carries an excuse), `op-class-coverage` (runtime ops ↔ matrix, both directions), and `always-public` (no unexplained outside-gate mount). Adding an operation means classifying it — the coverage test will not let you skip.
+
+### API keys
+
+`src/features/apikeys/` issues durable `bcio_` credentials for CI, cron, CLI, and agents (ADR 0006 D6). Three rules live in the service, not the adapters, so they hold identically on all three surfaces:
+
+- **A key cannot mint a key.** Checked on `Identity.method`. A credential that can create its own successor cannot really be revoked.
+- **Minting requires a paid plan.** A pricing decision confirmed in w1/m22; existing keys keep working if a subscription lapses, because breaking a running integration is a support incident rather than a nudge.
+- **A key can only narrow what its minter held,** never widen it.
+
+Only a sha256 digest is stored, plus a display prefix. The plaintext is returned by the mint response and is unrecoverable afterwards.
+
+A key reaches GraphQL and `/v1` unconditionally. **MCP additionally requires the key to be ledger-scoped**, because `mcp-route.ts` refuses any credential not bound to one ledger — mint with `ledgerScope: "owner/name"` for an agent client.
 
 ## Environment and deployment
 

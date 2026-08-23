@@ -11,22 +11,7 @@ import {
 import { ReportStatus } from "@/features/auth/utils/report-status";
 import { IContext } from "@/server/graphql/context";
 import type { IAccountService } from "@/features/auth/service/account-service";
-import { GraphQLRateLimiter } from "@/shared/graphql-rate-limiter";
 import { UnauthenticatedError } from "@/shared/errors";
-
-// Rate limiter for getUserByExactMatch: 20 requests per minute per user
-const getUserRateLimiter = new GraphQLRateLimiter({
-  windowMs: 60 * 1000, // 1 minute
-  max: 20, // 20 requests per minute
-  message: "Too many user lookup requests. Please try again in a moment.",
-  keyGenerator: (ctx: IContext) => {
-    try {
-      return ctx.getCurrentUserId();
-    } catch {
-      return "anonymous";
-    }
-  },
-});
 
 @ArgsType()
 class UserProfileRequest {
@@ -159,7 +144,6 @@ export class AccountResolver {
     @Ctx() ctx: IContext,
     @Args() args: SearchUserInput,
   ): Promise<SearchUser[]> {
-    getUserRateLimiter.check(ctx);
 
     const users = await this.accountService.findUsersByEmailOrUsername(
       args.keyword,

@@ -1,6 +1,7 @@
 import { z } from "@/shared/zod-openapi-setup";
-import { json, ledgerPathSchema } from "./schemas";
-import { v1Route } from "./route";
+import { ledgerPathSchema } from "./schemas";
+import { json } from "@/server/rest/v1-schemas";
+import { v1Route } from "@/server/rest/v1-route";
 
 const amountSchema = z.object({
   number: z

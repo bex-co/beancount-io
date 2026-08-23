@@ -42,6 +42,7 @@ import {
   PlaidMutationResolver,
 } from "@/features/plaid/api/resolvers";
 import { AiCfoUsageResolver } from "@/features/feature-usage/api/ai-cfo-usage-resolver";
+import { ApiKeyResolver } from "@/features/apikeys/api/api-key-resolver";
 import { ReportStatus } from "@/features/auth/utils/report-status";
 
 // ReportStatus is exposed by UserProfileResponse.emailReportStatus (account
@@ -80,6 +81,7 @@ export const resolvers: Resolvers = [
   LedgerCollaboratorsMutationResolver,
   LedgerEntryMutationResolver,
   LedgerReceiptMutationResolver,
+  ApiKeyResolver,
   LedgerShellQueryResolver,
   LedgerJournalQueryResolver,
   LedgerJournalMutationResolver,
@@ -158,6 +160,7 @@ export function buildResolverContainer(
       LedgerEntryMutationResolver,
       new LedgerEntryMutationResolver(services.ledgerEntry),
     ],
+    [ApiKeyResolver, new ApiKeyResolver(services.apiKey)],
     [
       LedgerJournalMutationResolver,
       new LedgerJournalMutationResolver(services.ledgerJournal),

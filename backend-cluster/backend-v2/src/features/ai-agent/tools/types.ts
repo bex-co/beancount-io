@@ -9,7 +9,10 @@ import type { Identity } from "@/server/api/identity";
  * dashboard's GraphQL resolvers call, so a tool and a resolver invoking the
  * same verb get identical authorization and identical data (ADR 0006 D1).
  */
-export type ToolServices = Pick<ServiceLayer, "ledgerShell" | "ledgerRepo">;
+export type ToolServices = Pick<
+  ServiceLayer,
+  "ledgerShell" | "ledgerRepo" | "apiKey"
+>;
 
 export interface ToolContext {
   services: ToolServices;

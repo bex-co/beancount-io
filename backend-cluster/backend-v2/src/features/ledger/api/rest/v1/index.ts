@@ -11,7 +11,7 @@ import {
   ARCHIVE_DOWNLOAD_ROUTES,
   ARCHIVE_TICKET_ROUTES,
 } from "./archive-handler";
-import { registerV1Routes, type V1Route } from "./route";
+import { registerV1Routes, type V1Route } from "@/server/rest/v1-route";
 
 /**
  * The v1 REST surface (ADR 0006 D7) — deliberately small.

@@ -21,6 +21,7 @@ import { formatError } from "./format-error";
 import { setAuthCookie, getAuthCookieFromCtx } from "@/shared/cookie-utils";
 import { verifyJwt } from "@/features/auth/utils/jwt-crypto-utils";
 import type { ScopeEnforcementMode } from "@/server/api/op-class";
+import { graphqlRateLimitMiddleware } from "./rate-limit-middleware";
 
 /**
  * Build the one GraphQL schema.
@@ -39,6 +40,9 @@ export async function buildGraphqlSchema(options?: {
     ...(options?.container ? { container: options.container } : {}),
     authChecker: customAuthChecker,
     globalMiddlewares: [
+      // Budget first, then authorization: refusing an over-budget caller
+      // before doing the authorization work is the point of having a limiter.
+      graphqlRateLimitMiddleware(),
       graphqlScopeMiddleware(options?.scopeEnforcement ?? "shadow"),
     ],
     validate: true,

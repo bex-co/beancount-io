@@ -221,26 +221,10 @@ describe("AccountResolver", () => {
       ).toHaveBeenCalledWith("john@example.com", "user-123");
     });
 
-    it("should apply rate limiting and throw error when exceeded", async () => {
-      const rateLimitTestContext = {
-        ...mockContext,
-        userId: "rate-limit-test-user-unique-id-2",
-        getCurrentUserId: jest
-          .fn()
-          .mockReturnValue("rate-limit-test-user-unique-id-2"),
-      };
-      const args = { keyword: "test@example.com" };
-
-      mockAccountService.findUsersByEmailOrUsername.mockResolvedValue([]);
-
-      for (let i = 0; i < 20; i += 1) {
-        await resolver.getUserByExactMatch(rateLimitTestContext, args);
-      }
-
-      await expect(
-        resolver.getUserByExactMatch(rateLimitTestContext, args),
-      ).rejects.toThrow("Too many user lookup requests");
-    });
+    // Rate limiting moved off this resolver in w1/m22: one Redis-backed
+    // limiter now serves all three surfaces, and the per-op budget this test
+    // exercised lives in `OP_BUDGETS`. Its behaviour is tested in
+    // `src/server/api/__tests__/rate-limit.test.ts`.
   });
 
   describe("updateUsername", () => {

@@ -19,6 +19,17 @@ import {
   executeEditLedgerFiles,
   description as editDescription,
 } from "../tools/edit-ledger-files-tool";
+import {
+  createApiKeyDescription,
+  createApiKeyInputSchema,
+  executeCreateApiKey,
+  executeListApiKeys,
+  executeRevokeApiKey,
+  listApiKeysDescription,
+  listApiKeysInputSchema,
+  revokeApiKeyDescription,
+  revokeApiKeyInputSchema,
+} from "../tools/api-key-tools";
 import type { ToolContext } from "../tools/types";
 
 /**
@@ -68,5 +79,29 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     description: editDescription,
     inputSchema: editLedgerFilesInputSchema,
     execute: executeEditLedgerFiles,
+  },
+  // Key management (ADR 0006 D6). Not ledger verbs, but the same credential
+  // reaches them, and leaving them off MCP would mean an agent could use a key
+  // and never revoke one.
+  {
+    name: "listApiKeys",
+    title: "List API Keys",
+    description: listApiKeysDescription,
+    inputSchema: listApiKeysInputSchema,
+    execute: executeListApiKeys,
+  },
+  {
+    name: "createApiKey",
+    title: "Mint an API Key",
+    description: createApiKeyDescription,
+    inputSchema: createApiKeyInputSchema,
+    execute: executeCreateApiKey,
+  },
+  {
+    name: "revokeApiKey",
+    title: "Revoke an API Key",
+    description: revokeApiKeyDescription,
+    inputSchema: revokeApiKeyInputSchema,
+    execute: executeRevokeApiKey,
   },
 ];

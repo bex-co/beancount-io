@@ -1,4 +1,6 @@
 import { IPaidCustomerModel } from "@/features/stripe/data/paid-customer-model";
+import type { IApiKeyModel } from "@/features/apikeys/data/api-key-model";
+import type { IAuditEventModel } from "@/features/audit/data/audit-event-model";
 import { IJwtModel } from "@/features/auth/data/jwt-model";
 import { IEmailTokenModel } from "@/features/auth/data/email-token-model";
 import { IMagicLinkTokenModel } from "@/features/auth/data/magic-link-token-model";
@@ -20,6 +22,8 @@ import { ICliAuthSessionModel } from "@/features/auth/data/cli-auth-session-mode
  */
 export interface IModels {
   paidCustomer: IPaidCustomerModel;
+  apiKey: IApiKeyModel;
+  auditEvent: IAuditEventModel;
   cliAuthSession: ICliAuthSessionModel;
   jwt: IJwtModel;
   emailToken: IEmailTokenModel;

@@ -2,6 +2,8 @@ import { type NodePgDatabase } from "drizzle-orm/node-postgres";
 import { type Cache } from "cache-manager";
 import { AppConfig } from "@/config/config";
 import { PaidCustomerPostgresModel } from "@/features/stripe/data/paid-customer-model";
+import { ApiKeyPostgresModel } from "@/features/apikeys/data/api-key-model";
+import { AuditEventPostgresModel } from "@/features/audit/data/audit-event-model";
 import { JwtPostgresModel } from "@/features/auth/data/jwt-model";
 import { EmailTokenRedisModel } from "@/features/auth/data/email-token-model";
 import { MagicLinkTokenRedisModel } from "@/features/auth/data/magic-link-token-model";
@@ -17,6 +19,8 @@ import { IModels } from "./types";
 
 export class PostgresRedisImpl implements IModels {
   public paidCustomer: PaidCustomerPostgresModel;
+  public apiKey: ApiKeyPostgresModel;
+  public auditEvent: AuditEventPostgresModel;
 
   public jwt: JwtPostgresModel;
 
@@ -53,6 +57,8 @@ export class PostgresRedisImpl implements IModels {
 
     this.user = new UserPostgresModel();
     this.paidCustomer = new PaidCustomerPostgresModel();
+    this.apiKey = new ApiKeyPostgresModel();
+    this.auditEvent = new AuditEventPostgresModel();
 
     this.jwt = new JwtPostgresModel({
       secret: this.config.jwt.secret,

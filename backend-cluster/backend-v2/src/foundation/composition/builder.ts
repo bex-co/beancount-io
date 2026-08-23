@@ -8,6 +8,9 @@ import { PlaidItemService } from "@/features/plaid/service/plaid-item-service";
 import { PlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
 import { AssetStorageService } from "@/features/s3/service/asset-storage-service";
 import { StripeService } from "@/features/stripe/service/stripe-service";
+import { ApiKeyService } from "@/features/apikeys/service/api-key-service";
+import { getUserTier } from "@/features/stripe/operations/get-user-tier";
+import { SubscriptionTier } from "@/features/stripe/service/stripe";
 import { FeatureUsageService } from "@/features/feature-usage/service/feature-usage-service";
 import { AiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import { LLMService } from "@/features/llm/service/llm-service";
@@ -76,6 +79,20 @@ export function buildServiceLayer(input: {
   config: AppConfig;
 }): ServiceLayer {
   const stripe = new StripeService(input.database.models, input.database.db);
+  const apiKey = new ApiKeyService({
+    db: input.database.db,
+    models: input.database.models,
+    // Minting is a paid feature (w1/m22). Injected as a predicate rather than
+    // reached for inside the service, so the key service depends on a question
+    // rather than on billing.
+    isPremium: async (userId: string) =>
+      (await getUserTier({
+        stripe,
+        models: input.database.models,
+        postgresDb: input.database.db,
+        userId,
+      })) !== SubscriptionTier.FREE,
+  });
   const assetStorage = new AssetStorageService(input.config.tempAssetS3);
   const featureUsage = new FeatureUsageService(
     input.database.models,
@@ -89,6 +106,7 @@ export function buildServiceLayer(input: {
   );
   return {
     stripe,
+    apiKey,
     assetStorage,
     featureUsage,
     aiCfoUsage,

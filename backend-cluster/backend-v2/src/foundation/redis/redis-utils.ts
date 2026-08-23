@@ -78,6 +78,25 @@ export async function createRedisCache(
 }
 
 /**
+ * The raw Redis client behind the cache, or `null` before the cache is created.
+ *
+ * Almost nothing should want this — the cache helper is the interface for
+ * storing values. It exists for the operations Keyv cannot express because they
+ * must be atomic across instances (`INCR` for rate-limit counters). Anything
+ * reached through here fails open: it is by definition not on the correctness
+ * path for reading or writing user data.
+ */
+export function getRedisClient(): {
+  incr(key: string): Promise<number>;
+  pExpire(key: string, ms: number): Promise<unknown>;
+  pTTL(key: string): Promise<number>;
+} | null {
+  const client = (keyvRedisStore as unknown as { client?: unknown } | null)
+    ?.client;
+  return (client ?? null) as ReturnType<typeof getRedisClient>;
+}
+
+/**
  * Closes the Redis cache connection and cleans up resources
  */
 export async function closeRedisCache(): Promise<void> {

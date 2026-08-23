@@ -3,6 +3,12 @@ import type { AppConfig } from "@/config/config";
 import type { DatabaseLayer } from "@/foundation/composition";
 import { getTokenFromCtx } from "@/features/auth/utils/auth";
 import { resolveOidcIdentity } from "@/features/oauth/utils/oidc-verify";
+import {
+  API_KEY_PLAINTEXT_PREFIX,
+  apiKeyDigest,
+  apiKeyDigestsMatch,
+  isApiKeyLive,
+} from "@/features/apikeys/service/api-key-service";
 import { logger } from "@/shared/logger";
 
 const identityLogger = logger.child({ module: "identity" });
@@ -125,11 +131,84 @@ export async function resolveIdentity(
 
   return (
     (await resolveOAuthIdentity(token, config)) ??
-    // API-key path (`bcio_` prefix) slots in here — see w1/m22/t003. It belongs
-    // between OAuth and session: keys are bearer-presented like OAuth tokens,
+    // Between OAuth and session: keys are bearer-presented like OAuth tokens,
     // but are cheap to reject on their prefix before any verification work.
+    (await resolveApiKeyIdentity(token, database)) ??
     (await resolveSessionIdentity(token, database))
   );
+}
+
+/** At most one `lastUsedAt` write per key per window, per process. */
+const LAST_USED_THROTTLE_MS = 5 * 60 * 1000;
+const lastUsedThrottle = new Map<string, number>();
+
+/**
+ * The API-key path: a durable `bcio_` credential for clients that cannot do a
+ * browser ceremony (ADR 0006 D6).
+ *
+ * Revoked, expired, and never-existed all return `undefined` — the same answer
+ * a garbage token gets. A caller that could tell them apart could enumerate
+ * which keys were once real, and learn when one was revoked.
+ */
+async function resolveApiKeyIdentity(
+  token: string,
+  database: DatabaseLayer,
+): Promise<Identity | undefined> {
+  if (!token.startsWith(API_KEY_PLAINTEXT_PREFIX)) {
+    return undefined;
+  }
+
+  const candidate = apiKeyDigest(token);
+  const key = await database.models.apiKey.findByDigest(database.db, candidate);
+  if (
+    !key ||
+    !apiKeyDigestsMatch(key.keyDigest, candidate) ||
+    !isApiKeyLive(key, new Date())
+  ) {
+    return undefined;
+  }
+
+  void stampLastUsed(key.id, database);
+
+  return {
+    userId: key.userId,
+    method: "apikey",
+    scopes: new Set(key.scopes),
+    ledgerScope: key.ledgerScope,
+    tokenId: key.id,
+    capabilityExempt: false,
+  };
+}
+
+/**
+ * Record that a key was used, off the request path and at most once per window.
+ *
+ * `lastUsedAt` exists so a person can look at their key list and see which key
+ * their cron job is actually using — five-minute resolution answers that, and a
+ * synchronous write per request would put the database in front of every
+ * authenticated API call to buy precision nobody reads.
+ */
+async function stampLastUsed(
+  keyId: string,
+  database: DatabaseLayer,
+): Promise<void> {
+  const last = lastUsedThrottle.get(keyId) ?? 0;
+  if (Date.now() - last <= LAST_USED_THROTTLE_MS) {
+    return;
+  }
+  lastUsedThrottle.set(keyId, Date.now());
+  try {
+    await database.models.apiKey.touchLastUsedAt(
+      database.db,
+      keyId,
+      new Date(),
+    );
+  } catch (err) {
+    identityLogger.error("Failed to stamp API key lastUsedAt", {
+      keyId,
+      error: err instanceof Error ? err.message : String(err),
+    });
+  }
 }
 
 /**

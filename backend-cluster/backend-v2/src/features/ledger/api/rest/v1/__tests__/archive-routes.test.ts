@@ -12,7 +12,7 @@ import {
   scopelessToken,
   startV1TestServer,
   type V1TestServer,
-} from "./harness";
+} from "@/server/rest/__tests__/v1-test-server";
 
 /**
  * The two-step archive download, over HTTP.

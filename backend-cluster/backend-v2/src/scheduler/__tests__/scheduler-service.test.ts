@@ -114,8 +114,10 @@ describe("JobScheduler", () => {
       scheduler = new JobScheduler(mockLayers, mockConfig);
       scheduler.start();
 
-      // Should schedule enabled jobs: dev-test + jwt-cleanup + oauth-adapter-cleanup + plaid-webhook-processor + plaid-webhook-cleanup (plaid-sync is disabled)
-      expect(cron.schedule).toHaveBeenCalledTimes(5);
+      // Should schedule enabled jobs: dev-test + audit-retention + jwt-cleanup +
+      // oauth-adapter-cleanup + plaid-webhook-processor + plaid-webhook-cleanup
+      // (plaid-sync is disabled)
+      expect(cron.schedule).toHaveBeenCalledTimes(6);
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Started job:"),
       );
@@ -129,8 +131,10 @@ describe("JobScheduler", () => {
       scheduler = new JobScheduler(mockLayers, mockConfig);
       scheduler.start();
 
-      // Should schedule jwt-cleanup + oauth-adapter-cleanup + plaid-webhook-processor + plaid-webhook-cleanup (dev-test disabled in production, plaid-sync always disabled)
-      expect(cron.schedule).toHaveBeenCalledTimes(4);
+      // Should schedule audit-retention + jwt-cleanup + oauth-adapter-cleanup +
+      // plaid-webhook-processor + plaid-webhook-cleanup (dev-test disabled in
+      // production, plaid-sync always disabled)
+      expect(cron.schedule).toHaveBeenCalledTimes(5);
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Skipping disabled job: dev-test"),
       );
@@ -159,9 +163,10 @@ describe("JobScheduler", () => {
         mockLayers,
         mockConfig,
       );
-      // 5 jobs scheduled in dev (dev-test + jwt-cleanup + oauth-adapter-cleanup +
-      // plaid-webhook-processor + plaid-webhook-cleanup), plaid-sync is disabled
-      expect(cron.schedule).toHaveBeenCalledTimes(5);
+      // 6 jobs scheduled in dev (dev-test + audit-retention + jwt-cleanup +
+      // oauth-adapter-cleanup + plaid-webhook-processor + plaid-webhook-cleanup),
+      // plaid-sync is disabled
+      expect(cron.schedule).toHaveBeenCalledTimes(6);
     });
   });
 

@@ -17,6 +17,8 @@ import { createOrphanedHostCookieMiddleware } from "./middleware/orphaned-host-c
 import { buildAppLayers } from "@/foundation";
 import { type AppLayers } from "@/foundation/composition";
 import { assembleApi } from "./api/composition-root";
+import { setAuditSink } from "./api/audit";
+import { prefixedNanoidBase58 } from "@/shared/nanoid-base58";
 import { JobScheduler } from "@/scheduler";
 import { SshProxyServer } from "@/features/gitea/ssh/ssh-proxy-server";
 import { SshAuthenticator } from "@/features/gitea/ssh/ssh-authenticator";
@@ -144,6 +146,22 @@ export async function startServer(): Promise<void> {
   // One composition root assembles all three surfaces onto this router
   // (ADR 0006 D1); the manifest it returns is what the drift guards in
   // `server/api/__tests__/` check the op-class table against.
+  // The audit trail's durable sink (ADR 0006 审计). Installed here rather than
+  // constructed inside the emitter so that unit tests — and anything else that
+  // never calls this — record to the log alone and need no database.
+  setAuditSink(async (event) => {
+    await layers.database.models.auditEvent.create(layers.database.db, {
+      id: prefixedNanoidBase58("aud_"),
+      op: event.op,
+      userId: event.userId,
+      method: event.method,
+      tokenId: event.tokenId,
+      ledgerId: event.ledgerId,
+      outcome: event.outcome,
+      at: event.at,
+    });
+  });
+
   await assembleApi(httpServer, router, { layers, config });
 
   app.use(router.routes());

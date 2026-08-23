@@ -251,7 +251,7 @@ describe("scope enforcement across surfaces", () => {
       // `mcp-route` refuses a session before this point; the matrix would too
       // only by exemption, so this documents that the two do not disagree.
       const handlers = captureMcpHandlers(sessionIdentity, enforcing);
-      expect([...handlers.keys()]).toHaveLength(4);
+      expect([...handlers.keys()]).toHaveLength(7);
     });
   });
 

@@ -13,6 +13,7 @@ import { logger } from "@/shared/logger";
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { restIdentityMiddleware } from "@/server/rest/identity-middleware";
 import { restScopeMiddleware } from "@/server/rest/scope-middleware";
+import { restRateLimitMiddleware } from "@/server/rest/rate-limit-middleware";
 import { setOpenApiRoutes } from "@/server/rest/openapi-routes";
 import {
   buildGraphqlSchema,
@@ -32,7 +33,12 @@ import { setLedgerApiHandler } from "@/features/ledger/api/rest/ledger-api-handl
 import {
   setLedgerV1Routes,
   setLedgerV1TicketRoutes,
+  V1_ROUTES as LEDGER_V1_ROUTES,
 } from "@/features/ledger/api/rest/v1";
+import {
+  setApiKeyRoutes,
+  API_KEY_V1_ROUTES,
+} from "@/features/apikeys/api/api-key-rest";
 import { setSitemapHandler } from "@/features/sitemap/api/sitemap-handler";
 import { setMcpRoute, setupAiAgentRoutes } from "@/features/ai-agent/api";
 import { setGitProxyHandler } from "@/features/gitea/api/git-proxy-handler";
@@ -40,6 +46,7 @@ import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import type { ToolContext } from "@/features/ai-agent/tools/types";
 
 import { gqlOpId, mcpOpId, requireScopeClass, restOpId } from "./op-class";
+import { enforceRateLimit } from "./rate-limit";
 import { normalizeRestPath, opMethodsForLayer } from "./rest-op-id";
 
 const mcpLogger = logger.child({ module: "mcp-registry" });
@@ -174,6 +181,15 @@ export const REST_FRAGMENTS: readonly RestFragment[] = [
       setLedgerV1Routes(router, layers, config),
   },
   {
+    // API-key management. Enforced with the rest of v1; the rule that a key
+    // cannot mint a key lives in the service, so it holds on all three
+    // surfaces rather than in this adapter.
+    feature: "apikeys",
+    gate: "enforced",
+    register: (router, { layers, config }) =>
+      setApiKeyRoutes(router, layers, config),
+  },
+  {
     // The archive download. Outside the gate because the request carries a
     // single-use ticket instead of a caller identity — a browser following a
     // download link cannot attach a bearer token. The authenticated,
@@ -223,6 +239,18 @@ export const REST_FRAGMENTS: readonly RestFragment[] = [
   },
 ];
 
+/**
+ * Every v1 route declaration, from every feature that contributes one.
+ *
+ * `openapi-completeness.test.ts` reads this to check the other direction —
+ * that a documented route is actually mounted. It sits beside `REST_FRAGMENTS`
+ * so adding a v1 fragment without adding it here is visible in the same diff.
+ */
+export const V1_DECLARED_ROUTES = [
+  ...LEDGER_V1_ROUTES,
+  ...API_KEY_V1_ROUTES,
+] as const;
+
 // ---------------------------------------------------------------------------
 // REST assembly + enumeration
 // ---------------------------------------------------------------------------
@@ -248,6 +276,8 @@ export function assembleRestRouter(router: Router, deps: ApiDeps): RestMount[] {
   // the scope gate, which needs the identity the previous one published.
   router.use(restErrorMiddleware());
   router.use(restIdentityMiddleware(deps.layers, deps.config));
+  // Budget before authorization, and both before any handler reads a body.
+  router.use(restRateLimitMiddleware());
   router.use(restScopeMiddleware(deps.config, gates));
 
   const mounts: RestMount[] = [];
@@ -361,6 +391,14 @@ function makeMcpToolHandler(
       // status: the client is an agent mid-conversation, and a thrown HTTP
       // error would end the session instead of telling it what it lacks. The
       // catch below turns the ForbiddenError into exactly that.
+      await enforceRateLimit({
+        opId: mcpOpId(descriptor.name),
+        identity: toolCtx.identity,
+        // MCP conversations arrive over one long-lived HTTP request, so there
+        // is no per-call socket to read; the credential is the budget key here,
+        // and MCP always has one.
+        ip: "mcp",
+      });
       requireScopeClass(
         toolCtx.identity,
         mcpOpId(descriptor.name),

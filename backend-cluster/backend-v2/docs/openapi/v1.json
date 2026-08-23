@@ -647,6 +647,119 @@
           "archive"
         ],
         "description": "Which archive the ticket should authorize"
+      },
+      "ApiKey": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "keyPrefix": {
+            "type": "string",
+            "description": "The first characters of the key, for telling keys apart",
+            "example": "bcio_7wXzK9mN"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "ledgerScope": {
+            "type": "string"
+          },
+          "lastUsedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "revokedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "keyPrefix",
+          "scopes",
+          "createdAt"
+        ],
+        "description": "An API key as it can be shown — never the key itself"
+      },
+      "MintedApiKey": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "$ref": "#/components/schemas/ApiKey"
+          },
+          "plaintext": {
+            "type": "string",
+            "description": "The key. Returned exactly once, by this response, and never recoverable afterwards — store it now.",
+            "example": "bcio_7wXzK9mNpQrSt2VxYaBcDeF3gH4jK5mN"
+          }
+        },
+        "required": [
+          "key",
+          "plaintext"
+        ],
+        "description": "A newly minted key, including its one and only plaintext"
+      },
+      "CreateApiKey": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 200,
+            "description": "What this key is for — shown in the key list",
+            "example": "CI: nightly ledger export"
+          },
+          "scopes": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "ledger.read",
+                "ledger.write",
+                "ledger.admin"
+              ],
+              "description": "One of the three ledger scopes",
+              "example": "ledger.read"
+            },
+            "minItems": 1,
+            "description": "What the key may do. A key can never hold more than its creator did.",
+            "example": [
+              "ledger.read"
+            ]
+          },
+          "ledgerScope": {
+            "type": "string",
+            "description": "Confine the key to one ledger, as `owner/name`. Omit for all the caller's ledgers.",
+            "example": "alice/main-ledger"
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time",
+            "description": "When the key stops working (ISO 8601). Omit for no expiry."
+          }
+        },
+        "required": [
+          "name",
+          "scopes"
+        ],
+        "description": "A new API key to mint"
       }
     },
     "parameters": {}
@@ -2092,6 +2205,277 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ArchiveTicket"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the scope this operation's class requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api-keys": {
+      "get": {
+        "summary": "List your API keys",
+        "description": "Every key you have minted, newest first, including revoked and expired ones. Keys are shown by prefix — the key itself was returned once, when it was created.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Your API keys",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/ApiKey"
+                  }
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the scope this operation's class requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "Mint an API key",
+        "description": "Creates a key and returns its plaintext, which is shown here and never again. Requires a paid plan, and cannot be called with an API key — sign in, or use an OAuth grant.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateApiKey"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "The new key, with its one-time plaintext",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MintedApiKey"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Request failed validation against the documented schema",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "No credential, or a credential that no longer resolves",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "402": {
+            "description": "Minting API keys requires a paid plan",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "nullable": true
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "The credential lacks the scope this operation's class requires",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "No such ledger, or no access to it",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Rate limited",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/V1Error"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/v1/api-keys/{id}": {
+      "delete": {
+        "summary": "Revoke an API key",
+        "description": "Stops the key working from the next request onward. Revoking twice is not an error, and a key id you do not own reads as not found.",
+        "tags": [
+          "Ledger v1"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          },
+          {
+            "apiKey": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "description": "The key's id (`akey_…`), not the key itself",
+              "example": "akey_7wXzK9mNpQrSt2VxYaBc"
+            },
+            "required": true,
+            "description": "The key's id (`akey_…`), not the key itself",
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "The revoked key",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ApiKey"
                 }
               }
             }

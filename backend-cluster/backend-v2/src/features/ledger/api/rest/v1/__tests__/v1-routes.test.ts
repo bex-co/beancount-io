@@ -8,7 +8,7 @@ import {
   startV1TestServer,
   writeToken,
   type V1TestServer,
-} from "./harness";
+} from "@/server/rest/__tests__/v1-test-server";
 
 /**
  * The v1 surface's behaviour and its failure modes.

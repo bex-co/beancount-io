@@ -1,11 +1,7 @@
 import { z } from "@/shared/zod-openapi-setup";
-import {
-  json,
-  ledgerIdOf,
-  ledgerPathSchema,
-  paginationSchema,
-} from "./schemas";
-import { v1Route } from "./route";
+import { ledgerIdOf, ledgerPathSchema } from "./schemas";
+import { json, paginationSchema } from "@/server/rest/v1-schemas";
+import { v1Route } from "@/server/rest/v1-route";
 
 /**
  * `GET /v1/ledgers` and `GET /v1/ledgers/{owner}/{name}` — the entry points of

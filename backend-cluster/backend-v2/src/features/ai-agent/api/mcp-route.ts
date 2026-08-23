@@ -84,6 +84,7 @@ async function handleMcpRequest(
     services: {
       ledgerShell: layers.services.ledgerShell,
       ledgerRepo: layers.services.ledgerRepo,
+      apiKey: layers.services.apiKey,
     },
     identity,
     ledgerId,

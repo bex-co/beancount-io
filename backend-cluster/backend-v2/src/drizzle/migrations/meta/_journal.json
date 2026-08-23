@@ -127,6 +127,20 @@
       "when": 1787039513559,
       "tag": "0017_dazzling_sprite",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1787526333442,
+      "tag": "0018_rare_kabuki",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1787527070724,
+      "tag": "0019_fearless_human_cannonball",
+      "breakpoints": true
     }
   ]
 }

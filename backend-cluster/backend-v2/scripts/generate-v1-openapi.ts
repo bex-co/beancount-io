@@ -11,23 +11,26 @@
  * Usage: yarn generate-v1-openapi
  */
 
-// Must be first — extends Zod with OpenAPI methods before any schema imports
+// Importing the composition root pulls in TypeGraphQL-decorated resolvers, so
+// the metadata polyfill has to be loaded before anything else.
+import "reflect-metadata";
+// Extends Zod with OpenAPI methods before any schema imports.
 import "@/shared/zod-openapi-setup";
 
 import Router from "@koa/router";
 import fs from "fs";
 import path from "path";
 
-import {
-  setLedgerV1Routes,
-  setLedgerV1TicketRoutes,
-} from "@/features/ledger/api/rest/v1";
+import { config } from "@/config/config";
+import { REST_FRAGMENTS } from "@/server/api/composition-root";
 import { generateV1OpenAPIDocument } from "@/server/rest/openapi-registry";
 
 /**
- * Registration only closes over layers and config; nothing reads them until a
- * request arrives. A proxy that answers every access with itself is therefore
- * enough, and keeps the script from needing a database.
+ * Registration only closes over the service layers; nothing calls into them
+ * until a request arrives, so a proxy that answers every access with itself is
+ * enough and the script needs no database. The real `config` is used, because
+ * a few fragments do read it during setup (the OIDC provider validates its
+ * issuer) — and because the spec's `servers` block comes from it.
  */
 const stub = new Proxy(function stub() {} as never, {
   get: (_target, prop) => (prop === "then" ? undefined : stub),
@@ -35,9 +38,15 @@ const stub = new Proxy(function stub() {} as never, {
   construct: () => stub,
 }) as never;
 
+// Every REST fragment, not a hand-kept list of the v1 ones: the document is
+// filtered by tag, so registering everything and filtering is the same result
+// with none of the drift. A fragment added without being listed here is
+// exactly the bug `openapi-completeness.test.ts` exists to catch, and this
+// script should not be able to cause it.
 const router = new Router();
-setLedgerV1Routes(router, stub, stub);
-setLedgerV1TicketRoutes(router, stub, stub);
+for (const fragment of REST_FRAGMENTS) {
+  fragment.register(router, { layers: stub, config });
+}
 
 const outputPath = path.resolve(__dirname, "../docs/openapi/v1.json");
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });

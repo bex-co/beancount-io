@@ -1,6 +1,6 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
-import { v1Route } from "./route";
+import { v1Route } from "@/server/rest/v1-route";
 
 const queryBodySchema = z
   .object({
