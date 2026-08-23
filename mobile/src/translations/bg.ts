@@ -92,6 +92,29 @@ export const bg: typeof en = {
   login: "Вход / Регистрация",
   signIn: "Вход",
   signUp: "Регистрация",
+  serverSettings: "Сървър",
+  serverSettingsDescription:
+    "Свържете се със съвместим сървър на Beancount.io. Използвайте само сървър, на който имате доверие; той получава данните ви за вход.",
+  serverUrl: "URL адрес на сървъра",
+  serverUrlHelper:
+    "Въведете основния URL адрес, например https://ledger.example.com/. HTTPS е задължителен извън локална разработка.",
+  serverUrlEmpty: "Въведете URL адрес на сървър.",
+  serverUrlInvalid: "Въведете пълен HTTP или HTTPS URL адрес.",
+  serverUrlCredentials:
+    "URL адресите на сървъри не могат да съдържат потребителско име или парола.",
+  serverUrlQuery:
+    "URL адресите на сървъри не могат да съдържат заявка или фрагмент.",
+  serverUrlInsecure:
+    "Използвайте HTTPS. HTTP е наличен само за localhost в разработки.",
+  testConnection: "Тест на връзката",
+  serverConnectionSuccess: "Свързано със съвместим сървър на Beancount.io.",
+  serverConnectionTimeout: "Сървърът не отговори навреме.",
+  serverConnectionUnreachable: "Неуспешно свързване със сървъра.",
+  serverConnectionIncompatible:
+    "Този сървър не предоставя необходимия API на Beancount.io.",
+  serverConnectionAdvisory:
+    "Все пак можете да запазите URL адреса и да влезете, когато сървърът е достъпен.",
+  restoreDefaultServer: "Възстановяване на Beancount.io по подразбиране",
   email: "Имейл",
   password: "Парола",
   forgotPassword: "Забравена парола?",

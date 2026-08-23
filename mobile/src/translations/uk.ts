@@ -93,6 +93,28 @@ export const uk: typeof en = {
   login: "Увійти / Реєстрація",
   signIn: "Увійти",
   signUp: "Реєстрація",
+  serverSettings: "Сервер",
+  serverSettingsDescription:
+    "Підключіться до сумісного сервера Beancount.io. Використовуйте лише сервер, якому довіряєте: він отримає ваші дані для входу.",
+  serverUrl: "URL сервера",
+  serverUrlHelper:
+    "Введіть базовий URL, наприклад https://ledger.example.com/. Поза локальною розробкою потрібен HTTPS.",
+  serverUrlEmpty: "Введіть URL сервера.",
+  serverUrlInvalid: "Введіть повний URL HTTP або HTTPS.",
+  serverUrlCredentials:
+    "URL сервера не може містити ім'я користувача чи пароль.",
+  serverUrlQuery: "URL сервера не може містити запит або фрагмент.",
+  serverUrlInsecure:
+    "Використовуйте HTTPS. HTTP доступний лише для localhost у збірках розробки.",
+  testConnection: "Перевірити з’єднання",
+  serverConnectionSuccess: "Підключено до сумісного сервера Beancount.io.",
+  serverConnectionTimeout: "Сервер не відповів вчасно.",
+  serverConnectionUnreachable: "Не вдалося зв’язатися з цим сервером.",
+  serverConnectionIncompatible:
+    "Цей сервер не надає потрібний API Beancount.io.",
+  serverConnectionAdvisory:
+    "Ви все одно можете зберегти цей URL і ввійти, коли сервер стане доступним.",
+  restoreDefaultServer: "Відновити типовий сервер Beancount.io",
   email: "Електронна пошта",
   password: "Пароль",
   forgotPassword: "Забули пароль?",

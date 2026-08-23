@@ -93,6 +93,28 @@ export const ru: typeof en = {
   login: "Войти / Регистрация",
   signIn: "Войти",
   signUp: "Регистрация",
+  serverSettings: "Сервер",
+  serverSettingsDescription:
+    "Подключитесь к совместимому серверу Beancount.io. Используйте только сервер, которому доверяете: он получит ваши данные для входа.",
+  serverUrl: "URL сервера",
+  serverUrlHelper:
+    "Введите базовый URL, например https://ledger.example.com/. Вне локальной разработки требуется HTTPS.",
+  serverUrlEmpty: "Введите URL сервера.",
+  serverUrlInvalid: "Введите полный URL HTTP или HTTPS.",
+  serverUrlCredentials:
+    "URL сервера не может содержать имя пользователя или пароль.",
+  serverUrlQuery: "URL сервера не может содержать запрос или фрагмент.",
+  serverUrlInsecure:
+    "Используйте HTTPS. HTTP доступен только для localhost в сборках разработки.",
+  testConnection: "Проверить подключение",
+  serverConnectionSuccess: "Подключено к совместимому серверу Beancount.io.",
+  serverConnectionTimeout: "Сервер не ответил вовремя.",
+  serverConnectionUnreachable: "Не удалось подключиться к этому серверу.",
+  serverConnectionIncompatible:
+    "Этот сервер не предоставляет необходимый API Beancount.io.",
+  serverConnectionAdvisory:
+    "Вы всё равно можете сохранить этот URL и войти, когда сервер станет доступен.",
+  restoreDefaultServer: "Восстановить сервер Beancount.io по умолчанию",
   email: "Эл. почта",
   password: "Пароль",
   forgotPassword: "Забыли пароль?",

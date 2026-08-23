@@ -5,11 +5,13 @@
  */
 export async function teardownSessionCaches(opts: {
   clearSession: () => void;
+  flushSession?: () => Promise<void>;
   purgePersistedCache: () => Promise<void>;
   clearInMemoryStore: () => Promise<unknown>;
 }): Promise<void> {
   opts.clearSession();
   await Promise.all([
+    opts.flushSession?.().catch(() => {}),
     opts.purgePersistedCache().catch(() => {}),
     opts.clearInMemoryStore().catch(() => {}),
   ]);

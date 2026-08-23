@@ -1,3 +1,10 @@
+/**
+ * The build-time default remains useful for development and branded builds.
+ * `serverUrlVar` may override it at runtime for a self-hosted deployment.
+ */
+export const defaultServerUrl =
+  process.env.EXPO_PUBLIC_SERVER_URL || "https://beancount.io/";
+
 export const config = {
   project: require("../package.json").name,
   sentryDsn: "", // TODO
@@ -5,7 +12,7 @@ export const config = {
     googleTid: "UA-143353833-1",
     mixpanelProjectToken: "", // TODO
   },
-  serverUrl: process.env.EXPO_PUBLIC_SERVER_URL || "https://beancount.io/",
+  serverUrl: defaultServerUrl,
   // Brand logos on transaction rows are proxied + cached through our
   // opengraph-image service, so the app has no direct third-party (logo.dev)
   // dependency and logo.dev is hit at most once per brand across all users.

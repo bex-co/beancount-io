@@ -106,17 +106,25 @@ describe("utility modules", () => {
     it("derives a session object from the JWT subject", () => {
       const { createSession } = require("../session-utils");
       const token = "abc.def";
-      const session = createSession(token);
-      expect(session).toEqual({ userId: `${token}-subject`, authToken: token });
+      const serverUrl = "https://ledger.example.com/";
+      const session = createSession(token, serverUrl);
+      expect(session).toEqual({
+        userId: `${token}-subject`,
+        authToken: token,
+        serverUrl,
+      });
     });
   });
 
   describe("request helpers", () => {
     const Module = require("module");
     const configPath = path.resolve(__dirname, "../../config.ts");
+    const serverUrlPath = path.resolve(__dirname, "../server-url.ts");
+    const serverUrlVarPath = path.resolve(__dirname, "../vars/server-url.ts");
     let restoreResolve: (() => void) | undefined;
     const constantsPath = require.resolve("expo-constants");
     let originalConstants: NodeModule | undefined;
+    let originalServerUrlVar: NodeModule | undefined;
 
     beforeAll(() => {
       const originalResolve = Module._resolveFilename;
@@ -128,6 +136,12 @@ describe("utility modules", () => {
       ) {
         if (request === "@/config") {
           return configPath;
+        }
+        if (request === "@/common/server-url") {
+          return serverUrlPath;
+        }
+        if (request === "@/common/vars/server-url") {
+          return serverUrlVarPath;
         }
         return originalResolve.call(this, request, parent, isMain, options);
       };
@@ -142,10 +156,16 @@ describe("utility modules", () => {
 
     beforeEach(() => {
       originalConstants = require.cache[constantsPath];
+      originalServerUrlVar = require.cache[serverUrlVarPath];
       require.cache[constantsPath] = {
         exports: {
           default: { nativeAppVersion: "9.9.9" },
           nativeAppVersion: "9.9.9",
+        },
+      } as NodeModule;
+      require.cache[serverUrlVarPath] = {
+        exports: {
+          getServerUrl: () => require("../../config").config.serverUrl,
         },
       } as NodeModule;
       delete require.cache[require.resolve("../request")];
@@ -157,6 +177,11 @@ describe("utility modules", () => {
         require.cache[constantsPath] = originalConstants;
       } else {
         delete require.cache[constantsPath];
+      }
+      if (originalServerUrlVar) {
+        require.cache[serverUrlVarPath] = originalServerUrlVar;
+      } else {
+        delete require.cache[serverUrlVarPath];
       }
     });
 

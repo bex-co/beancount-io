@@ -2,6 +2,7 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 import { CachePersistor, AsyncStorageWrapper } from "apollo3-cache-persist";
 
 import { cache } from "@/common/apollo/cache";
+import { getServerUrl } from "@/common/vars/server-url";
 
 /** Storage key — exported so purge tests can assert the key is gone. */
 export const APOLLO_CACHE_PERSIST_KEY = "apollo-cache-persist";
@@ -12,9 +13,48 @@ export const APOLLO_CACHE_PERSIST_KEY = "apollo-cache-persist";
  */
 export const APOLLO_CACHE_MAX_SIZE = 1024 * 1024;
 
+type ScopedCacheEnvelope = {
+  serverUrl: string;
+  cache: string;
+};
+
+/**
+ * Apollo uses one fixed persistence key. Wrap its payload with the server that
+ * created it so a stale cache is never restored after the user selects another
+ * deployment. Older unscoped payloads are intentionally ignored once.
+ */
+class ServerScopedAsyncStorage extends AsyncStorageWrapper {
+  async getItem(key: string): Promise<string | null> {
+    const stored = await super.getItem(key);
+    if (!stored) {
+      return null;
+    }
+    try {
+      const parsed = JSON.parse(stored) as Partial<ScopedCacheEnvelope>;
+      return parsed.serverUrl === getServerUrl() &&
+        typeof parsed.cache === "string"
+        ? parsed.cache
+        : null;
+    } catch {
+      return null;
+    }
+  }
+
+  async setItem(key: string, value: string | null): Promise<void> {
+    if (value === null) {
+      await super.setItem(key, null);
+      return;
+    }
+    await super.setItem(
+      key,
+      JSON.stringify({ serverUrl: getServerUrl(), cache: value }),
+    );
+  }
+}
+
 export const cachePersistor = new CachePersistor({
   cache,
-  storage: new AsyncStorageWrapper(AsyncStorage),
+  storage: new ServerScopedAsyncStorage(AsyncStorage),
   key: APOLLO_CACHE_PERSIST_KEY,
   maxSize: APOLLO_CACHE_MAX_SIZE,
   trigger: "write",

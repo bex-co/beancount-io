@@ -97,7 +97,9 @@ Expo will guide you to an iOS simulator, Android emulator, or connected device.
 | `yarn test`      | Run lint, typecheck, and unit tests |
 | `yarn codegen`   | Regenerate GraphQL types and hooks  |
 
-The mobile client connects to the hosted Beancount.io API. Set `EXPO_PUBLIC_SERVER_URL` in `.env.local`; never commit credentials or private configuration.
+The mobile client defaults to the hosted Beancount.io API. A signed-out user can tap the server icon on the welcome screen to connect the standard app to a compatible self-hosted Beancount.io deployment; enter its base URL (for example `https://ledger.example.com/`) and use **Test connection** for an advisory compatibility check. HTTPS is required in release builds. Development builds may use `http://localhost` for a local stack.
+
+`EXPO_PUBLIC_SERVER_URL` remains the build-time default for development and branded builds. It is not a credential; keep actual credentials and private configuration out of committed `.env` files.
 
 ## Languages
 

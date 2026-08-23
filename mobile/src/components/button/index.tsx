@@ -18,7 +18,10 @@ type ButtonProps = {
   style?: StyleProp<ViewStyle>;
   children: React.ReactNode;
   loading?: boolean;
+  disabled?: boolean;
   onPress?: () => void;
+  testID?: string;
+  accessibilityLabel?: string;
 };
 
 const getButtonStyles = (theme: ColorTheme) => {
@@ -106,7 +109,12 @@ export const Button = (props: ButtonProps) => {
       onPress={props.onPress}
       onPressIn={handlePressIn}
       onPressOut={handlePressOut}
-      pointerEvents={props.onPress ? "auto" : "none"}
+      disabled={props.disabled || props.loading}
+      testID={props.testID}
+      accessibilityLabel={props.accessibilityLabel}
+      pointerEvents={
+        props.onPress && !props.disabled && !props.loading ? "auto" : "none"
+      }
     >
       {props.loading ? (
         <ActivityIndicator

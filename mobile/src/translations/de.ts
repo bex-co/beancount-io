@@ -92,6 +92,30 @@ export const de: typeof en = {
   login: "Anmelden / Registrieren",
   signIn: "Anmelden",
   signUp: "Registrieren",
+  serverSettings: "Servereinstellungen",
+  serverSettingsDescription:
+    "Verbinde dich mit einem kompatiblen Beancount.io-Server. Verwende nur einen Server, dem du vertraust; er erhält deine Anmeldedaten.",
+  serverUrl: "Server-URL",
+  serverUrlHelper:
+    "Gib die Basis-URL ein, zum Beispiel https://ledger.example.com/. Außerhalb der lokalen Entwicklung ist HTTPS erforderlich.",
+  serverUrlEmpty: "Gib eine Server-URL ein.",
+  serverUrlInvalid: "Gib eine vollständige HTTP- oder HTTPS-URL ein.",
+  serverUrlCredentials:
+    "Server-URLs dürfen keinen Benutzernamen oder kein Passwort enthalten.",
+  serverUrlQuery:
+    "Server-URLs dürfen keine Abfrage oder kein Fragment enthalten.",
+  serverUrlInsecure:
+    "Verwende HTTPS. HTTP ist nur für localhost in Entwicklungs-Builds verfügbar.",
+  testConnection: "Verbindung testen",
+  serverConnectionSuccess:
+    "Mit einem kompatiblen Beancount.io-Server verbunden.",
+  serverConnectionTimeout: "Der Server hat nicht rechtzeitig geantwortet.",
+  serverConnectionUnreachable: "Dieser Server ist nicht erreichbar.",
+  serverConnectionIncompatible:
+    "Dieser Server stellt die erforderliche Beancount.io-API nicht bereit.",
+  serverConnectionAdvisory:
+    "Du kannst diese URL trotzdem speichern und dich anmelden, wenn der Server verfügbar ist.",
+  restoreDefaultServer: "Beancount.io-Standard wiederherstellen",
   email: "E-Mail",
   password: "Passwort",
   forgotPassword: "Passwort vergessen?",

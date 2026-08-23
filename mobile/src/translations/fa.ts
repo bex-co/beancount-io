@@ -92,6 +92,27 @@ export const fa: typeof en = {
   login: "ورود / ثبت نام",
   signIn: "ورود",
   signUp: "ثبت نام",
+  serverSettings: "سرور",
+  serverSettingsDescription:
+    "به یک سرور سازگار با Beancount.io وصل شوید. فقط از سروری که به آن اعتماد دارید استفاده کنید؛ اطلاعات ورود شما را دریافت می‌کند.",
+  serverUrl: "نشانی سرور",
+  serverUrlHelper:
+    "نشانی پایه را وارد کنید، مانند https://ledger.example.com/. خارج از توسعهٔ محلی، HTTPS الزامی است.",
+  serverUrlEmpty: "یک نشانی سرور وارد کنید.",
+  serverUrlInvalid: "یک نشانی کامل HTTP یا HTTPS وارد کنید.",
+  serverUrlCredentials: "نشانی سرور نمی‌تواند شامل نام کاربری یا گذرواژه باشد.",
+  serverUrlQuery: "نشانی سرور نمی‌تواند شامل پرس‌وجو یا قطعه باشد.",
+  serverUrlInsecure:
+    "از HTTPS استفاده کنید. HTTP فقط برای localhost در نسخه‌های توسعه در دسترس است.",
+  testConnection: "آزمون اتصال",
+  serverConnectionSuccess: "به یک سرور سازگار با Beancount.io متصل شد.",
+  serverConnectionTimeout: "سرور به‌موقع پاسخ نداد.",
+  serverConnectionUnreachable: "دسترسی به این سرور ممکن نبود.",
+  serverConnectionIncompatible:
+    "این سرور API لازم Beancount.io را ارائه نمی‌کند.",
+  serverConnectionAdvisory:
+    "می‌توانید همچنان این نشانی را ذخیره کنید و وقتی سرور در دسترس است وارد شوید.",
+  restoreDefaultServer: "بازگرداندن پیش‌فرض Beancount.io",
   email: "ایمیل",
   password: "گذرواژه",
   forgotPassword: "گذرواژه را فراموش کرده‌اید؟",

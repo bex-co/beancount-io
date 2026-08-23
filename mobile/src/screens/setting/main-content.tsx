@@ -126,6 +126,7 @@ export const MainContent = () => {
           }}
         />
         <ListItemHorizontal
+          testID="setting-theme"
           icon={<Ionicons name="contrast" size={22} color={theme.black80} />}
           title={t("theme")}
           content={getThemeLabel(currentTheme)}

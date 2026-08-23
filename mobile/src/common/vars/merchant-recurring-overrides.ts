@@ -16,11 +16,14 @@ export type MerchantRecurringOverrides = Record<
   Record<string, RecurringOverride>
 >;
 
-export const [merchantRecurringOverridesVar, loadMerchantRecurringOverrides] =
-  createPersistentVar<MerchantRecurringOverrides>(
-    "merchantRecurringOverrides",
-    {},
-  );
+export const [
+  merchantRecurringOverridesVar,
+  loadMerchantRecurringOverrides,
+  flushMerchantRecurringOverrides,
+] = createPersistentVar<MerchantRecurringOverrides>(
+  "merchantRecurringOverrides",
+  {},
+);
 
 export function setRecurringOverride(
   ledgerId: string,

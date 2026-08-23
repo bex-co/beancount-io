@@ -6,7 +6,12 @@ import { View, StyleSheet } from "react-native";
 import { loadLocale } from "@/common/vars/locale";
 import { loadLedger, ledgerVar } from "@/common/vars/ledger";
 import { loadTheme } from "@/common/vars/theme";
-import { loadSession } from "@/common/vars/session";
+import { loadSession, sessionVar } from "@/common/vars/session";
+import {
+  getServerUrl,
+  loadServerUrlOverride,
+  serverUrlOverrideVar,
+} from "@/common/vars/server-url";
 import { loadAccountUsage } from "@/common/vars/account-usage";
 import { loadMerchantRecurringOverrides } from "@/common/vars/merchant-recurring-overrides";
 import { i18n, setLocale } from "@/translations";
@@ -15,6 +20,7 @@ import { reloadApp } from "@/common/reload-app";
 import Constants from "expo-constants";
 import { apolloClient } from "@/common/apollo/client";
 import { restoreApolloCache } from "@/common/apollo/cache-persist";
+import { clearServerScopedState } from "@/common/server-url-actions";
 import { GetLedgerDocument } from "@/generated-graphql/graphql";
 import { isApolloError } from "@apollo/client";
 
@@ -44,19 +50,39 @@ const SplashProviderComponent = ({
   useEffect(() => {
     async function prepare() {
       try {
-        // Restore the Apollo cache before any query mounts — SplashProvider
-        // is the single startup gate, and queries only mount after `appIsReady`.
-        // Fonts / session vars run in parallel; restore shares that await.
-        await Font.loadAsync(Ionicons.font);
-        const [locale, session, ledger] = await Promise.all([
+        // The server determines both endpoint routing and session/cache scope,
+        // so it is the one required dependency before all other startup work.
+        // Nothing below can mount a query until this provider is ready.
+        await loadServerUrlOverride();
+        const [, locale, loadedSession, loadedLedger] = await Promise.all([
+          Font.loadAsync(Ionicons.font),
           loadLocale(),
           loadSession(),
           loadLedger(),
           loadTheme(),
           loadAccountUsage(),
           loadMerchantRecurringOverrides(),
-          restoreApolloCache(),
         ]);
+        let session = loadedSession;
+        let ledger = loadedLedger;
+
+        // Sessions created before runtime server selection have no origin. They
+        // can only be migrated when there is no user override, meaning this
+        // build's original server remains in force. A selected custom server
+        // instead forces an isolated fresh sign-in.
+        if (session && !session.serverUrl && serverUrlOverrideVar() === null) {
+          session = { ...session, serverUrl: getServerUrl() };
+          sessionVar(session);
+        }
+        if (session && session.serverUrl !== getServerUrl()) {
+          await clearServerScopedState();
+          session = null;
+          ledger = null;
+        }
+
+        // The scoped wrapper restores only a cache created by this exact
+        // server. This must happen after the session-origin decision above.
+        await restoreApolloCache();
         if (locale) {
           setLocale(locale);
         }

@@ -89,6 +89,27 @@ export const en = {
   login: "Log In / Sign Up",
   signIn: "Sign In",
   signUp: "Sign Up",
+  serverSettings: "Server",
+  serverSettingsDescription:
+    "Connect to a compatible Beancount.io server. Only use a server you trust; it receives your sign-in details.",
+  serverUrl: "Server URL",
+  serverUrlHelper:
+    "Enter the base URL, for example https://ledger.example.com/. HTTPS is required outside local development.",
+  serverUrlEmpty: "Enter a server URL.",
+  serverUrlInvalid: "Enter a complete HTTP or HTTPS URL.",
+  serverUrlCredentials: "Server URLs cannot include a username or password.",
+  serverUrlQuery: "Server URLs cannot include a query or fragment.",
+  serverUrlInsecure:
+    "Use HTTPS. HTTP is available only for localhost in development builds.",
+  testConnection: "Test connection",
+  serverConnectionSuccess: "Connected to a compatible Beancount.io server.",
+  serverConnectionTimeout: "The server did not respond in time.",
+  serverConnectionUnreachable: "Could not reach that server.",
+  serverConnectionIncompatible:
+    "This server does not expose the required Beancount.io API.",
+  serverConnectionAdvisory:
+    "You can still save this URL and try signing in when the server is available.",
+  restoreDefaultServer: "Restore Beancount.io default",
   email: "Email",
   password: "Password",
   forgotPassword: "Forgot Password?",

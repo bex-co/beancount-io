@@ -1,5 +1,7 @@
 import { config } from "@/config";
 import Constants from "expo-constants";
+import { endpointFor } from "@/common/server-url";
+import { getServerUrl } from "@/common/vars/server-url";
 
 export const headers: { [key: string]: string } = {
   "x-app-id": config.project,
@@ -7,6 +9,5 @@ export const headers: { [key: string]: string } = {
 };
 
 export const getEndpoint = (path: string) => {
-  const baseUrl = `${config.serverUrl.replace(/\/+$/, "")}/`;
-  return new URL(path.replace(/^\/+/, ""), baseUrl).toString();
+  return endpointFor(getServerUrl(), path);
 };

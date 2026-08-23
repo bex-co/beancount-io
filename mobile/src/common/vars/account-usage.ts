@@ -12,7 +12,7 @@ import {
  * after the app is killed. Keyed by ledger because a chart of accounts is a
  * property of the ledger: switching ledgers must not carry habits across.
  */
-export const [accountUsageVar, loadAccountUsage] =
+export const [accountUsageVar, loadAccountUsage, flushAccountUsage] =
   createPersistentVar<LedgerAccountUsage>("accountUsage", {});
 
 /** Record one pick of `account` on `ledgerId`, made at `now` (epoch ms). */

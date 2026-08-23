@@ -8,6 +8,7 @@ import { directionalIcon, LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 type ListItemHorizontalProps = {
   onPress?: () => void;
+  testID?: string;
   title: string | React.ReactNode;
   description?: string;
   content?: string | React.ReactNode;
@@ -17,6 +18,7 @@ type ListItemHorizontalProps = {
 
 export const ListItemHorizontal = ({
   onPress,
+  testID,
   title,
   content,
   description,
@@ -88,6 +90,7 @@ export const ListItemHorizontal = ({
       activeOpacity={0.8}
       onPress={onPress}
       disabled={!onPress}
+      testID={testID}
     >
       {icon && <View style={styles.iconContainer}>{icon}</View>}
       <View style={styles.topRow}>

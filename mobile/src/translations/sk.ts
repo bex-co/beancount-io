@@ -93,6 +93,28 @@ export const sk: typeof en = {
   login: "Prihlásiť / Registrovať",
   signIn: "Prihlásiť",
   signUp: "Registrovať",
+  serverSettings: "Nastavenia servera",
+  serverSettingsDescription:
+    "Pripojte sa ku kompatibilnému serveru Beancount.io. Používajte iba server, ktorému dôverujete; dostane vaše prihlasovacie údaje.",
+  serverUrl: "Adresa servera",
+  serverUrlHelper:
+    "Zadajte základnú adresu, napríklad https://ledger.example.com/. Mimo lokálneho vývoja sa vyžaduje HTTPS.",
+  serverUrlEmpty: "Zadajte adresu servera.",
+  serverUrlInvalid: "Zadajte úplnú adresu HTTP alebo HTTPS.",
+  serverUrlCredentials:
+    "Adresy servera nemôžu obsahovať používateľské meno ani heslo.",
+  serverUrlQuery: "Adresy servera nemôžu obsahovať dopyt ani fragment.",
+  serverUrlInsecure:
+    "Použite HTTPS. HTTP je v vývojových zostaveniach dostupné iba pre localhost.",
+  testConnection: "Otestovať pripojenie",
+  serverConnectionSuccess: "Pripojené ku kompatibilnému serveru Beancount.io.",
+  serverConnectionTimeout: "Server neodpovedal včas.",
+  serverConnectionUnreachable: "Tento server sa nepodarilo kontaktovať.",
+  serverConnectionIncompatible:
+    "Tento server neposkytuje požadované API Beancount.io.",
+  serverConnectionAdvisory:
+    "Túto adresu môžete aj tak uložiť a prihlásiť sa, keď bude server dostupný.",
+  restoreDefaultServer: "Obnoviť predvolený server Beancount.io",
   email: "E-mail",
   password: "Heslo",
   forgotPassword: "Zabudli ste heslo?",

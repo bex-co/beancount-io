@@ -92,6 +92,28 @@ export const nl: typeof en = {
   login: "Inloggen / Registreren",
   signIn: "Inloggen",
   signUp: "Registreren",
+  serverSettings: "Serverinstellingen",
+  serverSettingsDescription:
+    "Maak verbinding met een compatibele Beancount.io-server. Gebruik alleen een server die je vertrouwt; deze ontvangt je inloggegevens.",
+  serverUrl: "Server-URL",
+  serverUrlHelper:
+    "Voer de basis-URL in, bijvoorbeeld https://ledger.example.com/. HTTPS is verplicht buiten lokale ontwikkeling.",
+  serverUrlEmpty: "Voer een server-URL in.",
+  serverUrlInvalid: "Voer een volledige HTTP- of HTTPS-URL in.",
+  serverUrlCredentials:
+    "Server-URL's mogen geen gebruikersnaam of wachtwoord bevatten.",
+  serverUrlQuery: "Server-URL's mogen geen query of fragment bevatten.",
+  serverUrlInsecure:
+    "Gebruik HTTPS. HTTP is alleen beschikbaar voor localhost in ontwikkelbuilds.",
+  testConnection: "Verbinding testen",
+  serverConnectionSuccess: "Verbonden met een compatibele Beancount.io-server.",
+  serverConnectionTimeout: "De server reageerde niet op tijd.",
+  serverConnectionUnreachable: "Deze server kan niet worden bereikt.",
+  serverConnectionIncompatible:
+    "Deze server biedt niet de vereiste Beancount.io-API.",
+  serverConnectionAdvisory:
+    "Je kunt deze URL toch opslaan en inloggen wanneer de server beschikbaar is.",
+  restoreDefaultServer: "Standaardinstelling van Beancount.io herstellen",
   email: "E-mail",
   password: "Wachtwoord",
   forgotPassword: "Wachtwoord vergeten?",

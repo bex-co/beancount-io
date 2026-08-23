@@ -1,5 +1,5 @@
 import { analytics } from "@/common/analytics";
-import { sessionVar } from "@/common/vars";
+import { flushSession, sessionVar } from "@/common/vars";
 import { apolloClient } from "@/common/apollo/client";
 import { purgeApolloCache } from "@/common/apollo/cache-persist";
 import { teardownSessionCaches } from "@/common/apollo/session-teardown";
@@ -23,6 +23,7 @@ export async function actionLogout(authToken: string) {
   } finally {
     await teardownSessionCaches({
       clearSession: () => sessionVar(null),
+      flushSession,
       purgePersistedCache: purgeApolloCache,
       clearInMemoryStore: () => apolloClient.clearStore(),
     });

@@ -1,5 +1,5 @@
 import { onError } from "@apollo/client/link/error";
-import { sessionVar } from "@/common/vars";
+import { flushSession, sessionVar } from "@/common/vars";
 import { router } from "expo-router";
 import { purgeApolloCache } from "@/common/apollo/cache-persist";
 import { teardownSessionCaches } from "@/common/apollo/session-teardown";
@@ -14,6 +14,7 @@ export const onErrorLink = onError(({ graphQLErrors, networkError }) => {
         void import("@/common/apollo/client").then(({ apolloClient }) =>
           teardownSessionCaches({
             clearSession: () => sessionVar(null),
+            flushSession,
             purgePersistedCache: purgeApolloCache,
             clearInMemoryStore: () => apolloClient.clearStore(),
           }),

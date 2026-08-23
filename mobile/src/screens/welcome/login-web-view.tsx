@@ -7,6 +7,7 @@ import { Progress } from "@/components/progress";
 import { statusBarHeight } from "@/common/screen-util";
 import { router } from "expo-router";
 import { sessionVar, ledgerVar } from "@/common/vars";
+import { getServerUrl } from "@/common/vars/server-url";
 import { createSession } from "@/common/session-utils";
 import { appendPreferenceParam } from "@/common/url-utils";
 import { ColorTheme } from "@/types/theme-props";
@@ -76,7 +77,7 @@ export const LoginWebView = ({ isSignUp, onClose }: Props) => {
             );
             const msgObj = JSON.parse(msg);
             if (msgObj.authToken) {
-              const session = createSession(msgObj.authToken);
+              const session = createSession(msgObj.authToken, getServerUrl());
               analytics.identify(session.userId);
               analytics.track(isSignUp ? "signed_up" : "logged_in", {});
               sessionVar(session);

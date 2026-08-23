@@ -93,6 +93,30 @@ export const pt: typeof en = {
   login: "Entrar / Registrar",
   signIn: "Entrar",
   signUp: "Registrar",
+  serverSettings: "Servidor",
+  serverSettingsDescription:
+    "Conecte-se a um servidor compatível com o Beancount.io. Use apenas um servidor em que confia; ele receberá os seus dados de início de sessão.",
+  serverUrl: "URL do servidor",
+  serverUrlHelper:
+    "Introduza o URL base, por exemplo https://ledger.example.com/. HTTPS é obrigatório fora do desenvolvimento local.",
+  serverUrlEmpty: "Introduza um URL de servidor.",
+  serverUrlInvalid: "Introduza um URL HTTP ou HTTPS completo.",
+  serverUrlCredentials:
+    "Os URL de servidor não podem incluir nome de utilizador nem palavra-passe.",
+  serverUrlQuery:
+    "Os URL de servidor não podem incluir consulta nem fragmento.",
+  serverUrlInsecure:
+    "Use HTTPS. HTTP só está disponível para localhost em versões de desenvolvimento.",
+  testConnection: "Testar ligação",
+  serverConnectionSuccess:
+    "Ligado a um servidor compatível com o Beancount.io.",
+  serverConnectionTimeout: "O servidor não respondeu a tempo.",
+  serverConnectionUnreachable: "Não foi possível contactar este servidor.",
+  serverConnectionIncompatible:
+    "Este servidor não expõe a API necessária do Beancount.io.",
+  serverConnectionAdvisory:
+    "Ainda pode guardar este URL e iniciar sessão quando o servidor estiver disponível.",
+  restoreDefaultServer: "Restaurar o predefinido do Beancount.io",
   email: "E-mail",
   password: "Senha",
   forgotPassword: "Esqueceu a senha?",
