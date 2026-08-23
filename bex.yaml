@@ -1,7 +1,13 @@
-# render.yaml — beancount.io on bex (Render-compatible Blueprint).
+# bex.yaml — beancount.io on bex (Render-compatible Blueprint).
 #
-# ADR049 makes render.yaml the canonical filename; bex.yml is only a
-# deprecated alias and there is no application-level bex.yaml.
+# NOTE ON THE FILENAME. bex's own ADR049 makes `render.yaml` the canonical
+# name and `bex.yml` (a .yml alias) the deprecated fallback; it states there
+# is no application-level `bex.yaml`. So this name is NOT auto-discovered.
+# It works because the deploy path posts the manifest inline --
+# `POST /v1/blueprints/deploy` takes the file's CONTENTS, not its path -- and
+# because an explicitly configured Blueprint path always wins over discovery.
+# A Git-connected Blueprint left on default discovery would not find this
+# file; point it at bex.yaml explicitly, or rename to render.yaml/bex.yml.
 #
 # This stack carries NO persistent disks. Every stateful piece is a managed
 # datastore:

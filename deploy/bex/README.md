@@ -1,9 +1,16 @@
 # deploy/bex — beancount.io on bex, without persistent disks
 
 [bex](https://github.com/bex-co/bex) is a Render-compatible PaaS. The Blueprint
-lives at the repo root as [`render.yaml`](../../render.yaml) — that filename is
-canonical per bex ADR049; `bex.yml` is a deprecated alias and there is no
-application-level `bex.yaml`.
+lives at the repo root as [`bex.yaml`](../../bex.yaml).
+
+**That filename is not what bex discovers.** ADR049 makes `render.yaml`
+canonical and `bex.yml` a deprecated `.yml` alias, and says there is no
+application-level `bex.yaml`. This works because the deploy path below posts
+the manifest *inline* — `POST /v1/blueprints/deploy` takes the file's
+contents, not its path — and because an explicitly configured Blueprint path
+always beats discovery. If you ever connect this repo as a Git-backed
+Blueprint on default discovery, it will not find `bex.yaml`: configure the
+path explicitly, or rename the file to `render.yaml`.
 
 ## What runs where
 
@@ -29,12 +36,12 @@ The bex CLI can only *validate* a Blueprint — applying one is a REST/MCP/
 dashboard operation.
 
 ```zsh
-bex blueprints validate ./render.yaml
+bex blueprints validate ./bex.yaml
 
 curl -X POST https://api.bex.co/v1/blueprints/deploy \
   -H "Authorization: Bearer $BEX_ACCESS_TOKEN" \
   -H "Content-Type: application/json" \
-  -d "$(jq -n --arg m "$(cat render.yaml)" \
+  -d "$(jq -n --arg m "$(cat bex.yaml)" \
         '{repo:"https://github.com/bex-co/beancount-io",branch:"main",bexYaml:$m}')"
 ```
 
