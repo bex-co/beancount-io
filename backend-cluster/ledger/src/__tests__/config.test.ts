@@ -4,7 +4,11 @@ describe("loadConfig", () => {
   it("defaults mirror the Python service Settings", () => {
     const cfg = loadConfig({} as NodeJS.ProcessEnv);
     expect(cfg.port).toBe(8000);
-    expect(cfg.gitea).toEqual({ hostName: "beancount-gitea", httpPort: 3000 });
+    expect(cfg.gitea).toEqual({
+      hostName: "beancount-gitea",
+      httpPort: 3000,
+      baseUrl: "http://beancount-gitea:3000",
+    });
     expect(cfg.backendV2).toEqual({
       hostName: "backend-v2",
       httpPort: 4104,
@@ -27,7 +31,11 @@ describe("loadConfig", () => {
     } as NodeJS.ProcessEnv);
     expect(cfg.port).toBe(9000);
     expect(cfg.env).toBe("production");
-    expect(cfg.gitea).toEqual({ hostName: "gitea", httpPort: 3701 });
+    expect(cfg.gitea).toEqual({
+      hostName: "gitea",
+      httpPort: 3701,
+      baseUrl: "http://gitea:3701",
+    });
     expect(cfg.backendV2).toEqual({
       hostName: "bv2",
       httpPort: 4105,

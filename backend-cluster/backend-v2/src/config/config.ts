@@ -44,6 +44,13 @@ export interface GiteaConfig {
   hostname: string;
   internalHostname: string;
   httpPort: number;
+  /**
+   * Fully-qualified base URL for host->Gitea API calls, derived once from
+   * internalHostname/httpPort/GITEA_PROTOCOL. Use this instead of rebuilding
+   * `http://<host>:3000` at each call site: an off-cluster Gitea is reached
+   * over https on 443, which a hardcoded scheme and port cannot express.
+   */
+  internalBaseUrl: string;
   externalHttpPort: number;
   /** Port advertised in clone URLs. */
   sshPort: number;
@@ -189,6 +196,22 @@ function getPlaidEnvironment(env: unknown): PlaidEnvironment {
   }
 }
 
+/**
+ * Derive the internal Gitea base URL. Scheme comes from GITEA_PROTOCOL when
+ * set, otherwise https on 443 and http elsewhere; the port suffix is omitted
+ * for the scheme's default port so the URL stays canonical.
+ */
+function giteaInternalBaseUrl(hostname: string, port: number): string {
+  const protocol =
+    process.env.GITEA_PROTOCOL || (port === 443 ? "https" : "http");
+  const defaultPort = protocol === "https" ? 443 : 80;
+  const portSuffix = port === defaultPort ? "" : `:${port}`;
+  return `${protocol}://${hostname}${portSuffix}`;
+}
+
+const giteaInternalHostname = process.env.GITEA_HOST_NAME || "gitea";
+const giteaHttpPort = parseInt(process.env.GITEA_HTTP_PORT || "3000", 10);
+
 export const config: AppConfig = {
   env: getEnvironment(process.env.NODE_ENV),
   project: "beancount-io",
@@ -206,8 +229,9 @@ export const config: AppConfig = {
   },
   gitea: {
     hostname: process.env.EXTERNAL_GITEA_HOST_NAME || "git.beancount.io",
-    internalHostname: process.env.GITEA_HOST_NAME || "gitea",
-    httpPort: parseInt(process.env.GITEA_HTTP_PORT || "3000", 10),
+    internalHostname: giteaInternalHostname,
+    httpPort: giteaHttpPort,
+    internalBaseUrl: giteaInternalBaseUrl(giteaInternalHostname, giteaHttpPort),
     externalHttpPort: parseInt(
       process.env.EXTERNAL_GITEA_HTTP_PORT || "443",
       10,

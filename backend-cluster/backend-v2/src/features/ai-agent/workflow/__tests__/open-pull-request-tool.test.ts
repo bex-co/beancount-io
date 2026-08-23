@@ -1,13 +1,16 @@
 import { openPullRequest } from "../open-pull-request-tool";
 import type { GiteaConfig } from "@/config/config";
 
+// No `as GiteaConfig` cast: the cast hid a missing field from tsc, so the
+// only signal was a runtime `undefined` in the built URL.
 const gitea: GiteaConfig = {
   hostname: "192.168.4.49",
   internalHostname: "gitea",
   httpPort: 3000,
+  internalBaseUrl: "http://gitea:3000",
   externalHttpPort: 3701,
   sshPort: 2223,
-} as GiteaConfig;
+};
 
 const deps = {
   gitea,

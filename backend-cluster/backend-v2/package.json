@@ -14,7 +14,7 @@
     "test:coverage": "jest --coverage",
     "eval:categorize-transactions": "promptfoo eval -c evals/categorize-transactions/promptfooconfig.yaml",
     "eval:suggest-account-mapping": "promptfoo eval -c evals/suggest-account-mapping/promptfooconfig.yaml",
-    "eval": "for f in evals/*/promptfooconfig.yaml; do echo \"\u2192 $f\"; promptfoo eval -c \"$f\" || exit 1; done",
+    "eval": "for f in evals/*/promptfooconfig.yaml; do echo \"→ $f\"; promptfoo eval -c \"$f\" || exit 1; done",
     "eval:view": "promptfoo view",
     "format": "prettier --write .",
     "lint": "eslint src --fix --ext .ts --quiet",
@@ -26,7 +26,8 @@
     "generate-agent-tool-types": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-agent-tool-types.ts",
     "generate-backend-v2-openapi": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-openapi-spec.ts",
     "generate-fava-client": "npx swagger-typescript-api generate --path ../idl/beancount-ledger.openapi.json -o src/foundation/fava",
-    "generate-gitea-client": "npx swagger-typescript-api generate -p ../idl/gitea.swagger.v1.json -o src/features/gitea/client -n gitea-api.ts"
+    "generate-gitea-client": "npx swagger-typescript-api generate -p ../idl/gitea.swagger.v1.json -o src/features/gitea/client -n gitea-api.ts",
+    "migrate:deploy": "node scripts/migrate-deploy.js"
   },
   "keywords": [
     "beancount",

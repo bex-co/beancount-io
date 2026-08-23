@@ -5,7 +5,7 @@ import {
   InMemoryCache,
   Observable,
 } from "@apollo/client";
-import { config } from "@/config/config";
+import { serverConfig } from "@/config/config.server";
 
 import { getCookie } from "@tanstack/react-start/server";
 
@@ -38,7 +38,7 @@ const loggingLink = new ApolloLink((operation, forward) => {
 export function createApolloSsrClient() {
   const token = getCookie("authSess:beancount.io");
   const httpLink = new HttpLink({
-    uri: config.ssrApiUrl,
+    uri: serverConfig.apiUrl,
     fetch,
     headers: token ? { Authorization: `Bearer ${token}` } : {},
   });

@@ -13,18 +13,26 @@ RUN corepack enable && yarn install --frozen-lockfile
 # Copy source files
 COPY . .
 
-# Build arg for API URL (required at build time)
+# Build args are OPTIONAL overrides. Defaults come from the committed
+# .env.production, which is what a platform that passes no --build-arg gets.
+#
+# These must NOT become ENV directly: with no --build-arg the ARG is empty, so
+# `ENV VITE_API_URL=$VITE_API_URL` sets it to "" -- and Vite prioritises
+# VITE_-prefixed process.env over .env files, so an empty ENV silently blanks
+# the committed value and ships a bundle with no API URL. Write the non-empty
+# ones to .env.production.local instead, which Vite loads at higher precedence
+# than .env.production while an absent file changes nothing.
 ARG VITE_API_URL
-ENV VITE_API_URL=$VITE_API_URL
-
-# Optional: Internal API URL for SSR (defaults to VITE_API_URL if not set)
 ARG VITE_SSR_API_URL
-ENV VITE_SSR_API_URL=$VITE_SSR_API_URL
-
-# Optional: GA4 Measurement ID for this environment's data stream (baked in at
-# build time). Leave unset to ship without analytics.
 ARG VITE_GA_MEASUREMENT_ID
-ENV VITE_GA_MEASUREMENT_ID=$VITE_GA_MEASUREMENT_ID
+RUN set -eu; \
+    : > .env.production.local; \
+    if [ -n "${VITE_API_URL:-}" ]; then \
+      echo "VITE_API_URL=$VITE_API_URL" >> .env.production.local; fi; \
+    if [ -n "${VITE_SSR_API_URL:-}" ]; then \
+      echo "VITE_SSR_API_URL=$VITE_SSR_API_URL" >> .env.production.local; fi; \
+    if [ -n "${VITE_GA_MEASUREMENT_ID:-}" ]; then \
+      echo "VITE_GA_MEASUREMENT_ID=$VITE_GA_MEASUREMENT_ID" >> .env.production.local; fi
 
 # Build the application (produces .output/)
 RUN yarn build

@@ -9,7 +9,7 @@ export const createGiteaClient = (
   password: string,
 ): GiteaApi<unknown> => {
   // Use port 3000 for internal Docker communication (container internal port)
-  const baseUrl = `http://${config.gitea.internalHostname}:3000/api/v1`;
+  const baseUrl = `${config.gitea.internalBaseUrl}/api/v1`;
 
   return new GiteaApi({
     baseUrl,
@@ -27,7 +27,7 @@ export const createGiteaClient = (
  * Note: Activities and some other endpoints require authentication even for public data.
  */
 export const createAnonymousGiteaClient = (): GiteaApi<unknown> => {
-  const baseUrl = `http://${config.gitea.internalHostname}:3000/api/v1`;
+  const baseUrl = `${config.gitea.internalBaseUrl}/api/v1`;
   return new GiteaApi({ baseUrl });
 };
 
@@ -36,7 +36,7 @@ export const createAnonymousGiteaClient = (): GiteaApi<unknown> => {
  */
 export const createGiteaTokenClient = (apiToken: string): GiteaApi<unknown> => {
   // Use port 3000 for internal Docker communication (container internal port)
-  const baseUrl = `http://${config.gitea.internalHostname}:3000/api/v1`;
+  const baseUrl = `${config.gitea.internalBaseUrl}/api/v1`;
 
   return new GiteaApi({
     baseUrl,

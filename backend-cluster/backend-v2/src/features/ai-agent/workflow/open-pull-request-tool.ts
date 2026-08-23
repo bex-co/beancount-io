@@ -48,7 +48,7 @@ const outputSchema = z.object({
 
 // Internal Gitea base for host→Gitea API calls (inside the compose network).
 function internalGiteaBase(gitea: GiteaConfig): string {
-  return `http://${gitea.internalHostname}:${gitea.httpPort}`;
+  return gitea.internalBaseUrl;
 }
 
 // External base for the human-clickable PR URL.

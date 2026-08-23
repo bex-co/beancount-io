@@ -102,7 +102,7 @@ export function setHealthzHandler(
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       }),
       checkService("gitea", async () => {
-        const url = `http://${config.gitea.internalHostname}:${config.gitea.httpPort}/api/healthz`;
+        const url = `${config.gitea.internalBaseUrl}/api/healthz`;
         const res = await fetch(url);
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
       }),

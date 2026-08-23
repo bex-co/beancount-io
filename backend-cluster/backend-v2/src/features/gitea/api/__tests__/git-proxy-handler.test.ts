@@ -86,6 +86,7 @@ describe("setGitProxyHandler", () => {
       gitea: {
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         hostname: "git.example.com",
         externalHttpPort: 443,
         sshPort: 2222,

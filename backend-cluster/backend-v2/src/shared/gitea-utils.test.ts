@@ -9,6 +9,7 @@ describe("generateGiteaUrl", () => {
         hostname: "192.168.4.49",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3701,
         sshPort: 2223,
       };
@@ -23,6 +24,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3000,
         sshPort: 2222,
       };
@@ -39,6 +41,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 443,
         sshPort: 2222,
       };
@@ -53,6 +56,7 @@ describe("generateGiteaUrl", () => {
         hostname: "localhost",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 80,
         sshPort: 2222,
       };
@@ -67,6 +71,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 8443,
         sshPort: 2222,
       };
@@ -83,6 +88,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3000,
         sshPort: 2222,
       };
@@ -99,6 +105,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3000,
         sshPort: 2222,
       };
@@ -117,6 +124,7 @@ describe("generateGiteaUrl", () => {
         hostname: "192.168.4.49",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3701,
         sshPort: 2223,
       };
@@ -131,6 +139,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3000,
         sshPort: 2222,
       };
@@ -147,6 +156,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.example.com",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3000,
         sshPort: 22,
       };
@@ -163,6 +173,7 @@ describe("generateGiteaUrl", () => {
         hostname: "192.168.4.49",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3701,
         sshPort: 2223,
       };
@@ -182,6 +193,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3000,
         sshPort: 2222,
       };
@@ -201,6 +213,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 443,
         sshPort: 2222,
       };
@@ -222,6 +235,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3000,
         sshPort: 2222,
       };
@@ -241,6 +255,7 @@ describe("generateGiteaUrl", () => {
         hostname: "git.beancount.io",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3000,
         sshPort: 2222,
       };
@@ -260,6 +275,7 @@ describe("generateGiteaUrl", () => {
         hostname: "localhost",
         internalHostname: "gitea",
         httpPort: 3000,
+        internalBaseUrl: "http://gitea:3000",
         externalHttpPort: 3000,
         sshPort: 2222,
       };

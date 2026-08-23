@@ -298,7 +298,7 @@ export function setFilesHandler(router: Router): void {
     authMiddleware,
     async (ctx) => {
       const auth = ctx.state.auth as RequestAuth;
-      const url = `http://${config.gitea.hostName}:${config.gitea.httpPort}/api/v1/repos/${encodeURIComponent(ctx.params.owner)}/${encodeURIComponent(ctx.params.repo_name)}/archive/${encodeURIComponent(ctx.params.archive)}`;
+      const url = `${config.gitea.baseUrl}/api/v1/repos/${encodeURIComponent(ctx.params.owner)}/${encodeURIComponent(ctx.params.repo_name)}/archive/${encodeURIComponent(ctx.params.archive)}`;
       const upstream = await fetch(url, {
         headers: { Authorization: auth.header },
       });

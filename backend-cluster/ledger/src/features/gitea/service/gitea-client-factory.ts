@@ -24,7 +24,7 @@ export function clearMemoizedGiteaClients(): void {
 }
 
 function giteaBaseUrl(): string {
-  return `http://${config.gitea.hostName}:${config.gitea.httpPort}/api/v1`;
+  return `${config.gitea.baseUrl}/api/v1`;
 }
 
 function memoizedClient(

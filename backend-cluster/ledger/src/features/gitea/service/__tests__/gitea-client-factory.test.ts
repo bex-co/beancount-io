@@ -9,7 +9,11 @@ jest.mock("@/config", () => ({
   config: {
     env: "test",
     port: 8000,
-    gitea: { hostName: "gitea-test", httpPort: 3123 },
+    gitea: {
+      hostName: "gitea-test",
+      httpPort: 3123,
+      baseUrl: "http://gitea-test:3123",
+    },
     webhookToken: "",
     backendV2: { hostName: "backend-v2", httpPort: 4104, adminToken: "" },
   },
