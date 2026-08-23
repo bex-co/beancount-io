@@ -101,6 +101,14 @@ and need no action. Gitea admin user creation is still a one-time
   reachable. drizzle-orm's migrator is idempotent and `numInstances` is 1, so
   there is no concurrent-migration hazard; a failed migration crashloops the
   container instead of serving against an unmigrated schema.
+- **The namespace quota leaves no room for a rolling update.** With all three
+  services running, a new revision's surge pod cannot be scheduled: the deploy
+  sits in `update_in_progress` until the health gate expires and reports *"the
+  deploy did not become healthy within the health-gate window"*, while the old
+  pod keeps serving. Suspending one service frees the slot and the rollout
+  completes immediately. Raise the plan's `pods`/cpu/memory quota
+  (`quotaForPlan` in `lego/backend/internal/store/namespaces.go`) or expect to
+  suspend something on every deploy.
 - **One-off jobs and `bex ssh` were both unusable here** —
   `POST /v1/services/{id}/jobs` fails within milliseconds whatever `planId` is
   passed, and the SSH gateway closes the connection before offering a key. So
