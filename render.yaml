@@ -62,6 +62,13 @@ services:
     # service already has (Render's create-vs-existing omission semantics), so
     # deleting the line would silently keep a previously-set command.
     preDeployCommand: ""
+    # Migrations run at container start instead, because that is the only
+    # place they can reach the database (see the preDeployCommand note below).
+    # drizzle-orm's migrator is idempotent -- it applies only what the journal
+    # says is pending -- and numInstances is 1, so there is no concurrent-
+    # migration hazard. A failed migration crashloops the container rather
+    # than silently serving against an unmigrated schema.
+    dockerCommand: sh -c "node scripts/migrate-deploy.js && yarn start"
     # Render's canonical use for preDeployCommand is a database
     # migration, but on bex the pre-deploy Job runs in BEX_BUILD_NAMESPACE
     # while the managed Postgres lives in the workspace namespace, and

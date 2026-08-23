@@ -96,6 +96,16 @@ and need no action. Gitea admin user creation is still a one-time
   omitted field preserves the service's existing value. Write
   `preDeployCommand: ""` explicitly.
 
+  What this Blueprint actually does is fold the migration into
+  `dockerCommand`, so it runs at container start where the database *is*
+  reachable. drizzle-orm's migrator is idempotent and `numInstances` is 1, so
+  there is no concurrent-migration hazard; a failed migration crashloops the
+  container instead of serving against an unmigrated schema.
+- **One-off jobs and `bex ssh` were both unusable here** —
+  `POST /v1/services/{id}/jobs` fails within milliseconds whatever `planId` is
+  passed, and the SSH gateway closes the connection before offering a key. So
+  neither is a fallback for "run this once against the database".
+
 ## Not available on bex
 
 Persistent disks, PR preview environments, external log/metric drains, object
