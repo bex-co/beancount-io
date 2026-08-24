@@ -1,0 +1,593 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Claude Code Sandbox - Chat Interface</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Helvetica', 'Arial', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 16px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            height: 85vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 24px;
+            margin-bottom: 5px;
+        }
+
+        .header p {
+            font-size: 14px;
+            opacity: 0.9;
+        }
+
+        .config-panel {
+            background: #f7f9fc;
+            border-bottom: 1px solid #e1e8ed;
+            padding: 15px 20px;
+        }
+
+        .config-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .config-row:last-child {
+            margin-bottom: 0;
+        }
+
+        .config-group {
+            flex: 1;
+        }
+
+        label {
+            display: block;
+            font-size: 12px;
+            font-weight: 600;
+            color: #5a6c7d;
+            margin-bottom: 5px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #e1e8ed;
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 20px;
+            background: #f7f9fc;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            gap: 12px;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-avatar {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: white;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .message.user .message-avatar {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            order: 2;
+        }
+
+        .message.assistant .message-avatar {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+        }
+
+        .message-content {
+            max-width: 70%;
+            padding: 12px 16px;
+            border-radius: 12px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .message.user .message-content {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .message.assistant .message-content {
+            background: white;
+            border: 1px solid #e1e8ed;
+            color: #333;
+        }
+
+        .message.assistant .message-content pre {
+            background: #f7f9fc;
+            padding: 8px;
+            border-radius: 6px;
+            overflow-x: auto;
+            margin: 8px 0;
+        }
+
+        .message.assistant .message-content code {
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 13px;
+        }
+
+        .pr-details {
+            background: #e3f2fd;
+            border-left: 4px solid #2196f3;
+            padding: 10px;
+            margin-top: 10px;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .pr-details strong {
+            color: #1976d2;
+        }
+
+        .pr-details a {
+            color: #2196f3;
+            text-decoration: none;
+        }
+
+        .pr-details a:hover {
+            text-decoration: underline;
+        }
+
+        .input-container {
+            padding: 20px;
+            background: white;
+            border-top: 1px solid #e1e8ed;
+        }
+
+        .input-wrapper {
+            display: flex;
+            gap: 10px;
+            align-items: flex-end;
+        }
+
+        .input-field {
+            flex: 1;
+        }
+
+        .input-field textarea {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e1e8ed;
+            border-radius: 12px;
+            font-size: 14px;
+            font-family: inherit;
+            resize: none;
+            min-height: 50px;
+            max-height: 150px;
+            transition: border-color 0.2s;
+        }
+
+        .input-field textarea:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        button {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+
+        button:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+        }
+
+        button:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 10px;
+            color: #667eea;
+            font-size: 14px;
+        }
+
+        .loading.active {
+            display: block;
+        }
+
+        .error-message {
+            background: #ffebee;
+            border-left: 4px solid #f44336;
+            padding: 12px;
+            margin: 10px 20px;
+            border-radius: 6px;
+            color: #c62828;
+            font-size: 14px;
+        }
+
+        .model-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .model-badge.ask {
+            background: #e3f2fd;
+            color: #1976d2;
+        }
+
+        .model-badge.execute {
+            background: #f3e5f5;
+            color: #7b1fa2;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>Claude Code Sandbox</h1>
+            <p>OpenAI-Compatible Chat Interface</p>
+        </div>
+
+        <div class="config-panel">
+            <div class="config-row">
+                <div class="config-group">
+                    <label for="apiUrl">API URL</label>
+                    <input type="text" id="apiUrl" value="http://localhost:8788/v1/chat/completions" placeholder="http://localhost:8788/v1/chat/completions">
+                </div>
+                <div class="config-group">
+                    <label for="adminToken">Admin Token</label>
+                    <input type="password" id="adminToken" placeholder="your-admin-token">
+                </div>
+            </div>
+
+            <div class="config-row">
+                <div class="config-group">
+                    <label for="model">Model</label>
+                    <select id="model">
+                        <option value="claude-code-ask">claude-code-ask (Questions)</option>
+                        <option value="claude-code-execute">claude-code-execute (Create PR)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-row" id="repoConfig">
+                <div class="config-group">
+                    <label for="repo">Repository (optional for ask mode)</label>
+                    <input type="text" id="repo" placeholder="https://github.com/owner/repo">
+                </div>
+                <div class="config-group">
+                    <label for="githubToken">GitHub Token (optional for ask mode)</label>
+                    <input type="password" id="githubToken" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx">
+                </div>
+            </div>
+        </div>
+
+        <div class="chat-messages" id="chatMessages">
+            <div class="message assistant">
+                <div class="message-avatar">AI</div>
+                <div class="message-content">
+                    <strong>Welcome to Claude Code Sandbox!</strong><br><br>
+                    I can help you in two ways:<br>
+                    <ul style="margin: 10px 0; padding-left: 20px;">
+                        <li><strong>claude-code-ask:</strong> Ask general coding questions or questions about a specific codebase</li>
+                        <li><strong>claude-code-execute:</strong> Create PRs with code changes (requires repo & GitHub token)</li>
+                    </ul>
+                    Try asking me something!
+                </div>
+            </div>
+        </div>
+
+        <div class="loading" id="loading">
+            <span>⏳ Processing your request...</span>
+        </div>
+
+        <div class="input-container">
+            <div class="input-wrapper">
+                <div class="input-field">
+                    <textarea
+                        id="messageInput"
+                        placeholder="Type your message here..."
+                        rows="1"
+                    ></textarea>
+                </div>
+                <button onclick="sendMessage()" id="sendButton">Send</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const loading = document.getElementById('loading');
+        const modelSelect = document.getElementById('model');
+
+        // Configuration fields that should persist
+        const configFields = ['apiUrl', 'adminToken', 'model', 'repo', 'githubToken'];
+
+        // Load saved configuration from localStorage
+        function loadConfig() {
+            configFields.forEach(fieldId => {
+                const savedValue = localStorage.getItem(`claudeCodeSandbox_${fieldId}`);
+                const element = document.getElementById(fieldId);
+                if (savedValue && element) {
+                    element.value = savedValue;
+                }
+            });
+        }
+
+        // Save configuration to localStorage
+        function saveConfig(fieldId, value) {
+            localStorage.setItem(`claudeCodeSandbox_${fieldId}`, value);
+        }
+
+        // Set up event listeners to save on change
+        function setupConfigPersistence() {
+            configFields.forEach(fieldId => {
+                const element = document.getElementById(fieldId);
+                if (element) {
+                    element.addEventListener('change', function() {
+                        saveConfig(fieldId, this.value);
+                    });
+                    // Also save on input for text fields (real-time save)
+                    if (element.type === 'text' || element.type === 'password') {
+                        element.addEventListener('input', function() {
+                            saveConfig(fieldId, this.value);
+                        });
+                    }
+                }
+            });
+        }
+
+        // Initialize on page load
+        document.addEventListener('DOMContentLoaded', function() {
+            loadConfig();
+            setupConfigPersistence();
+        });
+
+        // Auto-resize textarea
+        messageInput.addEventListener('input', function() {
+            this.style.height = 'auto';
+            this.style.height = Math.min(this.scrollHeight, 150) + 'px';
+        });
+
+        // Send on Enter (Shift+Enter for new line)
+        messageInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        // Update UI when model changes
+        modelSelect.addEventListener('change', function() {
+            const isExecuteMode = this.value === 'claude-code-execute';
+            const repoInput = document.getElementById('repo');
+            const tokenInput = document.getElementById('githubToken');
+
+            if (isExecuteMode) {
+                repoInput.required = true;
+                tokenInput.required = true;
+                document.querySelector('label[for="repo"]').textContent = 'Repository (required)';
+                document.querySelector('label[for="githubToken"]').textContent = 'GitHub Token (required)';
+            } else {
+                repoInput.required = false;
+                tokenInput.required = false;
+                document.querySelector('label[for="repo"]').textContent = 'Repository (optional for ask mode)';
+                document.querySelector('label[for="githubToken"]').textContent = 'GitHub Token (optional for ask mode)';
+            }
+        });
+
+        function addMessage(role, content, metadata = {}) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${role}`;
+
+            const avatar = document.createElement('div');
+            avatar.className = 'message-avatar';
+            avatar.textContent = role === 'user' ? 'You' : 'AI';
+
+            const contentDiv = document.createElement('div');
+            contentDiv.className = 'message-content';
+
+            // Add model badge for assistant messages
+            if (role === 'assistant' && metadata.model) {
+                const badge = document.createElement('div');
+                badge.className = `model-badge ${metadata.model === 'claude-code-ask' ? 'ask' : 'execute'}`;
+                badge.textContent = metadata.model;
+                contentDiv.appendChild(badge);
+            }
+
+            // Format content
+            const textDiv = document.createElement('div');
+            textDiv.innerHTML = formatMessage(content);
+            contentDiv.appendChild(textDiv);
+
+            // Add PR details if present
+            if (metadata.pr_url) {
+                const prDiv = document.createElement('div');
+                prDiv.className = 'pr-details';
+                prDiv.innerHTML = `
+                    <strong>✓ PR Created Successfully</strong><br>
+                    <strong>URL:</strong> <a href="${metadata.pr_url}" target="_blank">${metadata.pr_url}</a><br>
+                    <strong>PR #:</strong> ${metadata.pr_number}<br>
+                    <strong>Branch:</strong> ${metadata.branch_name}
+                `;
+                contentDiv.appendChild(prDiv);
+            }
+
+            messageDiv.appendChild(avatar);
+            messageDiv.appendChild(contentDiv);
+            chatMessages.appendChild(messageDiv);
+
+            // Scroll to bottom
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function formatMessage(text) {
+            // Simple markdown-like formatting
+            text = text.replace(/```([\s\S]*?)```/g, '<pre><code>$1</code></pre>');
+            text = text.replace(/`([^`]+)`/g, '<code>$1</code>');
+            text = text.replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>');
+            text = text.replace(/\n/g, '<br>');
+            return text;
+        }
+
+        function showError(message) {
+            const errorDiv = document.createElement('div');
+            errorDiv.className = 'error-message';
+            errorDiv.textContent = `Error: ${message}`;
+            chatMessages.appendChild(errorDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+
+            // Remove after 5 seconds
+            setTimeout(() => errorDiv.remove(), 5000);
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            if (!message) return;
+
+            const apiUrl = document.getElementById('apiUrl').value;
+            const adminToken = document.getElementById('adminToken').value;
+            const model = document.getElementById('model').value;
+            const repo = document.getElementById('repo').value;
+            const githubToken = document.getElementById('githubToken').value;
+
+            if (!adminToken) {
+                showError('Please enter an admin token');
+                return;
+            }
+
+            if (model === 'claude-code-execute' && (!repo || !githubToken)) {
+                showError('Execute mode requires both repository and GitHub token');
+                return;
+            }
+
+            // Add user message
+            addMessage('user', message);
+
+            // Clear input
+            messageInput.value = '';
+            messageInput.style.height = 'auto';
+
+            // Disable input
+            sendButton.disabled = true;
+            messageInput.disabled = true;
+            loading.classList.add('active');
+
+            try {
+                const requestBody = {
+                    model: model,
+                    messages: [
+                        { role: 'user', content: message }
+                    ]
+                };
+
+                // Add optional fields if provided
+                if (repo) requestBody.repo = repo;
+                if (githubToken) requestBody.githubToken = githubToken;
+
+                const response = await fetch(apiUrl, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'x-admin-token': adminToken
+                    },
+                    body: JSON.stringify(requestBody)
+                });
+
+                const data = await response.json();
+
+                if (!response.ok) {
+                    throw new Error(data.error || data.details || 'Request failed');
+                }
+
+                // Extract response based on model
+                const assistantMessage = data.choices[0].message.content;
+
+                const metadata = {
+                    model: data.model,
+                    pr_url: data.pr_url,
+                    pr_number: data.pr_number,
+                    branch_name: data.branch_name
+                };
+
+                addMessage('assistant', assistantMessage, metadata);
+
+            } catch (error) {
+                showError(error.message);
+                console.error('Error:', error);
+            } finally {
+                sendButton.disabled = false;
+                messageInput.disabled = false;
+                loading.classList.remove('active');
+                messageInput.focus();
+            }
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,21 @@
+{
+  "compilerOptions": {
+    "target": "esnext",
+    "lib": ["esnext"],
+    "module": "esnext",
+    "moduleResolution": "bundler",
+    "resolveJsonModule": true,
+    "types": [
+        "./worker-configuration.d.ts",
+        "@types/node",
+        "node",
+        "vitest/globals"
+    ],
+    "esModuleInterop": true,
+    "forceConsistentCasingInFileNames": true,
+    "strict": true,
+    "skipLibCheck": true,
+    "noEmit": true
+  },
+  "include": ["worker-configuration.d.ts", "src/**/*.ts", "scripts/**/*.ts"]
+}

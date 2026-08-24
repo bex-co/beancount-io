@@ -1,0 +1,48 @@
+{
+  "name": "agent-box",
+  "version": "1.0.0",
+  "type": "module",
+  "private": true,
+  "description": "A minimal example of using the Claude Code with Sandbox SDK",
+  "scripts": {
+    "deploy": "wrangler deploy",
+    "dev": "wrangler dev",
+    "start": "wrangler dev",
+    "types": "wrangler types",
+    "typecheck": "tsc --noEmit",
+    "test": "vitest run",
+    "test:watch": "vitest",
+    "test:coverage": "vitest run --coverage",
+    "test:ui": "vitest --ui",
+    "lint": "eslint . --ext .ts --fix",
+    "lint:check": "eslint . --ext .ts",
+    "generate:openapi": "vitest run scripts/generate-openapi.test.ts",
+    "codegen": "yarn generate:openapi"
+  },
+  "devDependencies": {
+    "@cloudflare/sandbox": "*",
+    "@cloudflare/vitest-pool-workers": "^0.7.0",
+    "@eslint/js": "^9.17.0",
+    "@types/accept-language-parser": "^1.5.8",
+    "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.17.0",
+    "@typescript-eslint/parser": "^8.17.0",
+    "@vitest/coverage-v8": "^2.1.0",
+    "eslint": "^9.17.0",
+    "globals": "^15.13.0",
+    "prettier": "^3.4.2",
+    "typescript": "^5.9.3",
+    "vitest": "^2.1.0",
+    "wrangler": "^4.56.0"
+  },
+  "author": "",
+  "license": "MIT",
+  "dependencies": {
+    "accept-language-parser": "^1.5.0",
+    "chanfana": "^3.0.0",
+    "hono": "^4.11.3",
+    "i18next": "^25.8.0",
+    "i18next-fs-backend": "^2.6.1",
+    "zod-openapi": "^5.4.6"
+  }
+}

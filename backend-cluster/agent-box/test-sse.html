@@ -1,0 +1,554 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SSE Test Client - Claude Code Sandbox</title>
+  <style>
+    body {
+      font-family: 'Monaco', 'Menlo', 'Courier New', monospace;
+      padding: 20px;
+      background: #1e1e1e;
+      color: #d4d4d4;
+    }
+    h1 {
+      color: #4ec9b0;
+    }
+    .controls {
+      margin: 20px 0;
+      padding: 15px;
+      background: #2d2d2d;
+      border-radius: 5px;
+    }
+    input, button {
+      font-family: inherit;
+      padding: 8px 12px;
+      margin: 5px;
+      border-radius: 3px;
+      border: 1px solid #555;
+    }
+    input {
+      background: #3c3c3c;
+      color: #d4d4d4;
+      width: 400px;
+    }
+    button {
+      background: #0e639c;
+      color: white;
+      cursor: pointer;
+      font-weight: bold;
+    }
+    button:hover {
+      background: #1177bb;
+    }
+    button:disabled {
+      background: #555;
+      cursor: not-allowed;
+    }
+    .clear-btn {
+      background: #666;
+    }
+    .clear-btn:hover {
+      background: #777;
+    }
+    #log {
+      white-space: pre-wrap;
+      background: #0c0c0c;
+      padding: 15px;
+      border-radius: 5px;
+      max-height: 600px;
+      overflow-y: auto;
+      border: 1px solid #333;
+      font-size: 13px;
+      line-height: 1.6;
+    }
+    .log-line {
+      margin: 3px 0;
+      padding: 2px 0;
+    }
+    .timestamp {
+      color: #858585;
+      margin-right: 10px;
+    }
+    .error {
+      color: #f48771;
+      font-weight: bold;
+    }
+    .success {
+      color: #4ec9b0;
+      font-weight: bold;
+    }
+    .event-type {
+      color: #569cd6;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+    .progress {
+      color: #ce9178;
+    }
+    .pr-link {
+      color: #4ec9b0;
+      text-decoration: underline;
+    }
+    .details {
+      color: #9cdcfe;
+      margin-left: 20px;
+      font-size: 12px;
+    }
+    .progress-bar-container {
+      background: #2d2d2d;
+      height: 30px;
+      border-radius: 5px;
+      margin: 10px 0;
+      overflow: hidden;
+      border: 1px solid #555;
+    }
+    .progress-bar {
+      background: linear-gradient(90deg, #0e639c, #1177bb);
+      height: 100%;
+      transition: width 0.3s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: white;
+      font-weight: bold;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Claude Code Sandbox - SSE Streaming Test Client</h1>
+
+  <div class="controls">
+    <div>
+      <label>Endpoint URL:</label><br>
+      <input type="text" id="endpoint" value="http://localhost:8787" placeholder="http://localhost:8787">
+      <div style="margin-top: 5px;">
+        <button onclick="setEndpoint('http://localhost:8787')" style="background: #666; font-size: 12px; padding: 4px 8px;">Local</button>
+        <button onclick="setEndpoint('https://claude-code-sandbox.puncsky.workers.dev')" style="background: #666; font-size: 12px; padding: 4px 8px;">Production</button>
+      </div>
+    </div>
+    <div>
+      <label>Repository (HTTPS):</label><br>
+      <input type="text" id="repo" placeholder="https://github.com/user/repo.git">
+    </div>
+    <div>
+      <label>Task:</label><br>
+      <input type="text" id="task" placeholder="Add a README file">
+    </div>
+    <div>
+      <label>Branch (base for PR):</label><br>
+      <input type="text" id="branch" placeholder="main" value="main">
+      <small style="color: #858585; display: block; margin-top: 3px;">
+        The branch to use as the base for the pull request (defaults to 'main')
+      </small>
+    </div>
+    <div>
+      <label>GitHub Token:</label><br>
+      <input type="password" id="token" placeholder="ghp_xxxxxxxxxxxx">
+    </div>
+    <div style="margin-top: 15px;">
+      <label style="color: #4ec9b0; font-weight: bold;">📋 JSON (copy/paste friendly):</label><br>
+      <textarea id="jsonView" rows="8" style="width: 100%; font-family: monospace; background: #0c0c0c; color: #d4d4d4; border: 1px solid #555; padding: 10px; border-radius: 3px; resize: vertical;"></textarea>
+      <div style="margin-top: 5px;">
+        <button onclick="copyJSON()" style="background: #0e639c;">📋 Copy JSON</button>
+        <button onclick="applyJSON()" style="background: #0e639c;">📥 Apply JSON to Form</button>
+        <small style="color: #858585; margin-left: 10px;">Paste JSON above and click "Apply JSON to Form"</small>
+      </div>
+    </div>
+    <div style="margin-top: 15px;">
+      <button id="streamBtn" onclick="startStreaming()">Start SSE Streaming Request</button>
+      <button id="blockingBtn" onclick="startBlocking()">Start Blocking Request (JSON)</button>
+      <button class="clear-btn" onclick="clearLog()">Clear Log</button>
+      <button class="clear-btn" onclick="clearSavedData()">Clear Saved Data</button>
+    </div>
+    <div class="progress-bar-container">
+      <div class="progress-bar" id="progressBar" style="width: 0%">0%</div>
+    </div>
+  </div>
+
+  <div id="log"></div>
+
+  <script>
+    const log = document.getElementById('log');
+    const progressBar = document.getElementById('progressBar');
+    const streamBtn = document.getElementById('streamBtn');
+    const blockingBtn = document.getElementById('blockingBtn');
+
+    // LocalStorage keys
+    const STORAGE_KEYS = {
+      endpoint: 'sse-test-endpoint',
+      repo: 'sse-test-repo',
+      task: 'sse-test-task',
+      branch: 'sse-test-branch',
+      token: 'sse-test-token'
+    };
+
+    // Load saved values from localStorage
+    function loadSavedValues() {
+      const endpoint = localStorage.getItem(STORAGE_KEYS.endpoint);
+      const repo = localStorage.getItem(STORAGE_KEYS.repo);
+      const task = localStorage.getItem(STORAGE_KEYS.task);
+      const branch = localStorage.getItem(STORAGE_KEYS.branch);
+      const token = localStorage.getItem(STORAGE_KEYS.token);
+
+      if (endpoint) document.getElementById('endpoint').value = endpoint;
+      if (repo) document.getElementById('repo').value = repo;
+      if (task) document.getElementById('task').value = task;
+      if (branch) document.getElementById('branch').value = branch;
+      if (token) document.getElementById('token').value = token;
+    }
+
+    // Save value to localStorage
+    function saveValue(key, value) {
+      if (value) {
+        localStorage.setItem(STORAGE_KEYS[key], value);
+      } else {
+        localStorage.removeItem(STORAGE_KEYS[key]);
+      }
+    }
+
+    // Update JSON view from form values
+    function updateJSONView() {
+      const data = {
+        endpoint: document.getElementById('endpoint').value,
+        repo: document.getElementById('repo').value,
+        task: document.getElementById('task').value,
+        baseBranch: document.getElementById('branch').value,
+        githubToken: document.getElementById('token').value
+      };
+      document.getElementById('jsonView').value = JSON.stringify(data, null, 2);
+    }
+
+    // Copy JSON to clipboard
+    function copyJSON() {
+      const jsonView = document.getElementById('jsonView');
+      jsonView.select();
+      document.execCommand('copy');
+      addLog('📋 <span class="success">JSON copied to clipboard</span>', 'success');
+    }
+
+    // Apply JSON from textarea to form
+    function applyJSON() {
+      try {
+        const json = document.getElementById('jsonView').value;
+        const data = JSON.parse(json);
+
+        if (data.endpoint !== undefined) document.getElementById('endpoint').value = data.endpoint;
+        if (data.repo !== undefined) document.getElementById('repo').value = data.repo;
+        if (data.task !== undefined) document.getElementById('task').value = data.task;
+        if (data.baseBranch !== undefined) document.getElementById('branch').value = data.baseBranch;
+        if (data.githubToken !== undefined) document.getElementById('token').value = data.githubToken;
+
+        // Save to localStorage
+        saveValue('endpoint', data.endpoint);
+        saveValue('repo', data.repo);
+        saveValue('task', data.task);
+        saveValue('branch', data.baseBranch);
+        saveValue('token', data.githubToken);
+
+        updateJSONView();
+        addLog('📥 <span class="success">JSON applied to form</span>', 'success');
+      } catch (error) {
+        addLog(`<span class="error">Invalid JSON: ${error.message}</span>`, 'error');
+      }
+    }
+
+    // Setup auto-save on input changes
+    function setupAutoSave() {
+      document.getElementById('endpoint').addEventListener('input', (e) => {
+        saveValue('endpoint', e.target.value);
+        updateJSONView();
+      });
+      document.getElementById('repo').addEventListener('input', (e) => {
+        saveValue('repo', e.target.value);
+        updateJSONView();
+      });
+      document.getElementById('task').addEventListener('input', (e) => {
+        saveValue('task', e.target.value);
+        updateJSONView();
+      });
+      document.getElementById('branch').addEventListener('input', (e) => {
+        saveValue('branch', e.target.value);
+        updateJSONView();
+      });
+      document.getElementById('token').addEventListener('input', (e) => {
+        saveValue('token', e.target.value);
+        updateJSONView();
+      });
+    }
+
+    function clearLog() {
+      log.innerHTML = '';
+      setProgress(0);
+    }
+
+    function clearSavedData() {
+      if (confirm('Clear all saved form data? This will remove endpoint, repo, task, branch, and token from localStorage.')) {
+        localStorage.removeItem(STORAGE_KEYS.endpoint);
+        localStorage.removeItem(STORAGE_KEYS.repo);
+        localStorage.removeItem(STORAGE_KEYS.task);
+        localStorage.removeItem(STORAGE_KEYS.branch);
+        localStorage.removeItem(STORAGE_KEYS.token);
+
+        // Reset form to defaults
+        document.getElementById('endpoint').value = 'http://localhost:8787';
+        document.getElementById('repo').value = '';
+        document.getElementById('task').value = '';
+        document.getElementById('branch').value = 'main';
+        document.getElementById('token').value = '';
+
+        updateJSONView();
+        addLog('💾 <span class="success">Saved data cleared</span>', 'success');
+      }
+    }
+
+    function setEndpoint(url) {
+      document.getElementById('endpoint').value = url;
+      saveValue('endpoint', url);
+      updateJSONView();
+      addLog(`🌐 <span class="success">Endpoint set to: ${url}</span>`, 'success');
+    }
+
+    function addLog(message, className = '') {
+      const line = document.createElement('div');
+      line.className = 'log-line' + (className ? ' ' + className : '');
+
+      const timestamp = document.createElement('span');
+      timestamp.className = 'timestamp';
+      timestamp.textContent = new Date().toISOString().substr(11, 12);
+
+      const content = document.createElement('span');
+      content.innerHTML = message;
+
+      line.appendChild(timestamp);
+      line.appendChild(content);
+      log.appendChild(line);
+      log.scrollTop = log.scrollHeight;
+    }
+
+    function setProgress(percent) {
+      progressBar.style.width = percent + '%';
+      progressBar.textContent = percent + '%';
+    }
+
+    function getFormData() {
+      return {
+        endpoint: document.getElementById('endpoint').value,
+        repo: document.getElementById('repo').value,
+        task: document.getElementById('task').value,
+        baseBranch: document.getElementById('branch').value,
+        githubToken: document.getElementById('token').value
+      };
+    }
+
+    async function startStreaming() {
+      const { endpoint, repo, task, baseBranch, githubToken } = getFormData();
+
+      if (!repo || !task || !githubToken) {
+        addLog('<span class="error">ERROR: Please fill in all fields</span>', 'error');
+        return;
+      }
+
+      clearLog();
+      streamBtn.disabled = true;
+      blockingBtn.disabled = true;
+      addLog('<span class="success">Starting SSE streaming request...</span>');
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'text/event-stream',
+            'x-admin-token': 'your-secret-admin-token'
+          },
+          body: JSON.stringify({
+            repo,
+            task,
+            baseBranch,
+            githubToken
+          })
+        });
+
+        if (!response.ok) {
+          throw new Error(`HTTP error! status: ${response.status}`);
+        }
+
+        if (!response.body) {
+          throw new Error('Response body is null');
+        }
+
+        addLog('<span class="success">Connection established, receiving events...</span>');
+
+        const reader = response.body.getReader();
+        const decoder = new TextDecoder();
+        let buffer = '';
+
+        while (true) {
+          const { done, value } = await reader.read();
+          if (done) break;
+
+          buffer += decoder.decode(value, { stream: true });
+          const lines = buffer.split('\n');
+          buffer = lines.pop() || ''; // Keep incomplete line in buffer
+
+          let currentEvent = null;
+          let currentData = null;
+
+          for (const line of lines) {
+            if (line.startsWith('event:')) {
+              currentEvent = line.substring(6).trim();
+            } else if (line.startsWith('data:')) {
+              try {
+                currentData = JSON.parse(line.substring(5).trim());
+
+                if (currentEvent && currentData) {
+                  handleSSEEvent(currentEvent, currentData);
+                  currentEvent = null;
+                  currentData = null;
+                }
+              } catch (e) {
+                addLog(`<span class="error">Failed to parse data: ${e.message}</span>`, 'error');
+              }
+            }
+          }
+        }
+
+        addLog('<span class="success">Stream ended</span>', 'success');
+      } catch (error) {
+        addLog(`<span class="error">ERROR: ${error.message}</span>`, 'error');
+      } finally {
+        streamBtn.disabled = false;
+        blockingBtn.disabled = false;
+      }
+    }
+
+    function handleSSEEvent(eventType, data) {
+      const progress = data.progress || 0;
+      setProgress(progress);
+
+      let message = `<span class="event-type">[${eventType.toUpperCase()}]</span>`;
+      message += data.message;
+
+      if (data.progress !== undefined) {
+        message += ` <span class="progress">(${data.progress}%)</span>`;
+      }
+
+      let className = '';
+      if (eventType === 'error') {
+        className = 'error';
+      } else if (eventType === 'completed') {
+        className = 'success';
+      }
+
+      addLog(message, className);
+
+      // Show additional details
+      if (data.prUrl) {
+        addLog(`<span class="details">→ PR: <a href="${data.prUrl}" target="_blank" class="pr-link">${data.prUrl}</a></span>`);
+      }
+      if (data.prNumber) {
+        addLog(`<span class="details">→ PR Number: #${data.prNumber}</span>`);
+      }
+      if (data.branchName) {
+        addLog(`<span class="details">→ Branch: ${data.branchName}</span>`);
+      }
+      if (data.error) {
+        addLog(`<span class="details error">→ Error: ${data.error}</span>`, 'error');
+      }
+      if (data.details && typeof data.details === 'string') {
+        const preview = data.details.length > 200 ? data.details.substring(0, 200) + '...' : data.details;
+        addLog(`<span class="details">→ ${preview}</span>`);
+      }
+    }
+
+    async function startBlocking() {
+      const { endpoint, repo, task, baseBranch, githubToken } = getFormData();
+
+      if (!repo || !task || !githubToken) {
+        addLog('<span class="error">ERROR: Please fill in all fields</span>', 'error');
+        return;
+      }
+
+      clearLog();
+      streamBtn.disabled = true;
+      blockingBtn.disabled = true;
+      addLog('<span class="success">Starting blocking (JSON) request...</span>');
+      addLog('⏳ Waiting for response (this may take several minutes)...');
+
+      const startTime = Date.now();
+
+      try {
+        const response = await fetch(endpoint, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Accept': 'application/json',
+            'x-admin-token': 'your-secret-admin-token'
+          },
+          body: JSON.stringify({
+            repo,
+            task,
+            baseBranch,
+            githubToken
+          })
+        });
+
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+        addLog(`Response received after ${elapsed}s`);
+
+        const result = await response.json();
+
+        if (response.ok) {
+          setProgress(100);
+          addLog('<span class="success">✓ SUCCESS</span>', 'success');
+          addLog(`<span class="details">Status: ${result.status}</span>`);
+          if (result.prUrl) {
+            addLog(`<span class="details">PR: <a href="${result.prUrl}" target="_blank" class="pr-link">${result.prUrl}</a></span>`);
+          }
+          if (result.prNumber) {
+            addLog(`<span class="details">PR Number: #${result.prNumber}</span>`);
+          }
+          if (result.branchName) {
+            addLog(`<span class="details">Branch: ${result.branchName}</span>`);
+          }
+          if (result.logs) {
+            const preview = result.logs.substring(0, 300);
+            addLog(`<span class="details">Logs preview:\n${preview}...</span>`);
+          }
+        } else {
+          addLog(`<span class="error">✗ ERROR: ${result.error}</span>`, 'error');
+          if (result.details) {
+            addLog(`<span class="details error">${result.details}</span>`, 'error');
+          }
+        }
+      } catch (error) {
+        addLog(`<span class="error">ERROR: ${error.message}</span>`, 'error');
+      } finally {
+        streamBtn.disabled = false;
+        blockingBtn.disabled = false;
+      }
+    }
+
+    // Add keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.key === 'l') {
+        e.preventDefault();
+        clearLog();
+      }
+    });
+
+    // Initialize on page load
+    loadSavedValues();
+    setupAutoSave();
+    updateJSONView();
+
+    addLog('💡 <strong>SSE Test Client Ready</strong>');
+    addLog('🌐 Production URL: https://claude-code-sandbox.puncsky.workers.dev');
+    addLog('🏠 Local URL: http://localhost:8787');
+    addLog('Fill in the form above and click "Start SSE Streaming Request" to test real-time progress updates');
+    addLog('Or click "Start Blocking Request" to test backward compatibility (no streaming)');
+    addLog('💾 Form values are automatically saved and restored across page refreshes');
+    addLog('📋 Use the JSON view to easily copy/paste test configurations');
+  </script>
+</body>
+</html>

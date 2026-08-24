@@ -10,6 +10,7 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 - `backend-cluster/backend-v2/CLAUDE.md` — API gateway and background services
 - `backend-cluster/ledger/CLAUDE.md` — rustledger-WASM ledger service
 - `backend-cluster/idl/CLAUDE.md` — OpenAPI contracts and generated clients
+- `backend-cluster/agent-box/CLAUDE.md` — Cloudflare Worker control plane for the Ask-AI sandbox (Claude Code in Cloudflare Sandbox)
 - `deploy/CLAUDE.md` — local and hosted deployment targets
 - `skills/CLAUDE.md` — agent skills package
 
@@ -28,12 +29,12 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 | `dashboard/`       | active | Web client (React 19, TanStack Start, Apollo, TypeScript)                                                                                               |
 | `mobile/`          | active | React Native iOS/Android app (Expo, Apollo, TypeScript)                                                                                                 |
 | `cli/`             | active | `beancount-cli` — directives, bean-check/format, BQL queries, reports, local-ledger chat (Python, Typer) — includes vendored `fava` reporting library   |
-| `backend-cluster/` | active | Backend services: `backend-v2` (GraphQL/REST API), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients)                 |
+| `backend-cluster/` | active | Backend services: `backend-v2` (GraphQL/REST API), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients), `agent-box` (Cloudflare Worker sandbox control plane) |
 | `skills/`          | active | Agent skills: init, import, importer-author, reconcile, migrate, ask, close, options (see `skills/CLAUDE.md`)                                           |
 | `deploy/`          | active | Deployment targets: `deploy/docker-mac/` (Docker Compose, full stack locally), `deploy/docker/` (single-host production), and `deploy/bex/` (bex PaaS, no persistent disks — Blueprint at root `bex.yaml`) |
 | `docs/`            | active | Documentation content                                                                                                                                   |
 
-There is no root `package.json`. Each package owns its own dependencies and scripts. Dashboard, mobile, ledger, and CLI also own their tracked lockfiles; backend-v2 and the small IDL clients currently do not have one. CI is path-filtered for dashboard, mobile, CLI, and skills (see [Tooling](#tooling)).
+There is no root `package.json`. Each package owns its own dependencies and scripts. Dashboard, mobile, ledger, and CLI also own their tracked lockfiles; backend-v2, agent-box, and the small IDL clients currently do not have one. CI is path-filtered for dashboard, mobile, CLI, and skills (see [Tooling](#tooling)).
 
 When a new package gets real code, add a `<package>/CLAUDE.md` documenting its tech stack and conventions (with the `AGENTS.md` symlink per the compatibility rules above).
 
@@ -77,7 +78,7 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
   - `dashboard/` → Yarn 4.17.0 (Berry); installs with `yarn install --immutable`.
   - `mobile/` → Yarn 1.22.22 (Classic); installs with `yarn install --frozen-lockfile`.
   - `backend-cluster/ledger/` → Yarn 4.17.0 (Berry); installs with `yarn install --immutable`.
-  - `backend-cluster/backend-v2/` and the IDL clients use their package-local setup; neither currently has a tracked lockfile.
+  - `backend-cluster/backend-v2/`, `backend-cluster/agent-box/` (Yarn Classic/npm, `yarn install`; deploys with `wrangler deploy`), and the IDL clients use their package-local setup; none currently has a tracked lockfile.
 - Python package `cli/` uses [uv](https://docs.astral.sh/uv/): `uv sync --all-groups`, then `make check-all`.
 - CI — path-filtered workflows on push/PR to `main`:
   - `.github/workflows/ci.yml` (`CI`) → `mobile/**`: `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`.
