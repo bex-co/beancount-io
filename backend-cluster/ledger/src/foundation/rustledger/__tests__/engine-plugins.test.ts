@@ -21,6 +21,8 @@ let filesSeenByWasm: Record<string, string> = {};
 let rawFilesSeenByWasm: Record<string, string> = {};
 let rawErrors: BeancountError[] = [];
 let transformedErrors: BeancountError[] = [];
+let rawPaddingTransactions: DirectiveJson[] = [];
+let transformedPaddingTransactions: DirectiveJson[] = [];
 let queryCalls = 0;
 
 jest.mock("@/foundation/rustledger/loader", () => ({
@@ -36,6 +38,16 @@ jest.mock("@/foundation/rustledger/loader", () => ({
           Object.values(files).join("\n"),
         )?.[1];
         if (!materialized) rawFilesSeenByWasm = files;
+        const currentDirectives = () =>
+          sourceProbe && probeKey
+            ? parsedDirectives.map((directive, index) => ({
+                ...directive,
+                meta: {
+                  ...(directive.meta ?? {}),
+                  [probeKey]: String(index),
+                },
+              }))
+            : parsedDirectives;
         return {
           isValid: () =>
             !(materialized ? transformedErrors : rawErrors).some(
@@ -44,16 +56,14 @@ jest.mock("@/foundation/rustledger/loader", () => ({
           getErrors: () => (materialized ? transformedErrors : rawErrors),
           getOptions: () =>
             ({ title: null, operating_currencies: [] }) as LedgerOptions,
-          getDirectives: () =>
-            sourceProbe && probeKey
-              ? parsedDirectives.map((directive, index) => ({
-                  ...directive,
-                  meta: {
-                    ...(directive.meta ?? {}),
-                    [probeKey]: String(index),
-                  },
-                }))
-              : parsedDirectives,
+          getDirectives: currentDirectives,
+          expandPads: () => ({
+            directives: currentDirectives(),
+            padding_transactions: materialized
+              ? transformedPaddingTransactions
+              : rawPaddingTransactions,
+            errors: [],
+          }),
           directiveCount: () => parsedDirectives.length,
           query: () => {
             queryCalls += 1;
@@ -121,12 +131,55 @@ const openCash: DirectiveJson = {
   currencies: [],
 } as DirectiveJson;
 
+const openEquity: DirectiveJson = {
+  type: "open",
+  date: "2017-01-01",
+  account: "Equity:Opening",
+  currencies: [],
+} as DirectiveJson;
+
+const padCash: DirectiveJson = {
+  type: "pad",
+  date: "2017-01-02",
+  account: "Assets:Cash",
+  source_account: "Equity:Opening",
+} as DirectiveJson;
+
+const balanceCash: DirectiveJson = {
+  type: "balance",
+  date: "2017-01-03",
+  account: "Assets:Cash",
+  amount: { number: "100", currency: "USD" },
+} as DirectiveJson;
+
+const paddingCash: DirectiveJson = {
+  type: "transaction",
+  date: "2017-01-02",
+  flag: "P",
+  narration:
+    "(Padding inserted for Balance of 100 USD for difference 100 USD)",
+  tags: [],
+  links: [],
+  postings: [
+    {
+      account: "Assets:Cash",
+      units: { number: "100", currency: "USD" },
+    },
+    {
+      account: "Equity:Opening",
+      units: { number: "-100", currency: "USD" },
+    },
+  ],
+} as DirectiveJson;
+
 beforeEach(() => {
   parsedDirectives = [];
   filesSeenByWasm = {};
   rawFilesSeenByWasm = {};
   rawErrors = [];
   transformedErrors = [];
+  rawPaddingTransactions = [];
+  transformedPaddingTransactions = [];
   queryCalls = 0;
   // Tests reuse identical file content with DIFFERENT stubbed parse results —
   // the content-addressed snapshot cache would otherwise serve test A's
@@ -136,6 +189,25 @@ beforeEach(() => {
 });
 
 describe("parseLedgerFiles — plugin orchestration (stubbed WASM)", () => {
+  it("merges generated padding transactions into the parsed stream", async () => {
+    parsedDirectives = [openCash, openEquity, padCash, balanceCash];
+    rawPaddingTransactions = [paddingCash];
+
+    const snapshot = await parseLedgerFiles(
+      { "main.bean": "2017-01-02 pad Assets:Cash Equity:Opening" },
+      "main.bean",
+    );
+
+    expect(snapshot.directives).toEqual([
+      openCash,
+      openEquity,
+      padCash,
+      paddingCash,
+      balanceCash,
+    ]);
+    expect(snapshot.directiveCount).toBe(5);
+  });
+
   it("strips the fava plugin before parse and applies the amortize transform", async () => {
     parsedDirectives = [amortizeTxn];
     const source = [
@@ -311,6 +383,44 @@ describe("parseLedgerFiles — plugin orchestration (stubbed WASM)", () => {
     expect(materializedSource).toContain("Amortize car insurance (1/3)");
     expect(materializedSource).toContain("Amortize car insurance (3/3)");
     expect(materializedSource).not.toContain("fava.plugins.amortize_over");
+  });
+
+  it("materializes transformed padding exactly once for BQL", async () => {
+    parsedDirectives = [
+      openCash,
+      openEquity,
+      forecastTxn,
+      padCash,
+      balanceCash,
+    ];
+    transformedPaddingTransactions = [paddingCash];
+    const files = {
+      "main.bean": [
+        'plugin "fava.plugins.forecast"',
+        '2014-03-08 # "Electricity bill [MONTHLY REPEAT 3 TIMES]"',
+        "2017-01-02 pad Assets:Cash Equity:Opening",
+        "2017-01-03 balance Assets:Cash 100 USD",
+      ].join("\n"),
+    };
+
+    const snapshot = await parseLedgerFiles(files, "main.bean");
+    expect(
+      snapshot.directives.filter(
+        (directive) =>
+          directive.type === "transaction" && directive.flag === "P",
+      ),
+    ).toEqual([paddingCash]);
+
+    const result = await queryLedgerFilesResult(
+      files,
+      "main.bean",
+      "SELECT account",
+    );
+    const materializedSource = String(result.rows[0][0]);
+    expect(materializedSource).toContain("Padding inserted for Balance");
+    expect(materializedSource).not.toContain(
+      "pad Assets:Cash Equity:Opening",
+    );
   });
 
   it("does not execute BQL over a materialized stream with parse errors", async () => {

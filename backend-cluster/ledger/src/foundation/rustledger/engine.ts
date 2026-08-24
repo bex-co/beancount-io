@@ -55,6 +55,11 @@ export interface LedgerSnapshot {
   sourceDetails?: Record<string, EntrySourceDetails>;
 }
 
+/** Raw WASM snapshot plus the built-in pad plugin's synthesized postings. */
+interface ParsedLedgerSnapshot extends LedgerSnapshot {
+  paddingTransactions: DirectiveJson[];
+}
+
 export interface ParseLedgerOptions {
   applyTsPlugins?: boolean;
   today?: string;
@@ -87,14 +92,107 @@ export async function withLedger<T>(
 }
 
 /** Materialize the plain snapshot out of a live WASM ledger. */
-function snapshotOf(ledger: Ledger): LedgerSnapshot {
+function snapshotOf(ledger: Ledger): ParsedLedgerSnapshot {
+  const expandedPads = ledger.expandPads();
   return {
     valid: ledger.isValid(),
     errors: ledger.getErrors(),
     options: ledger.getOptions(),
-    directives: ledger.getDirectives(),
+    directives: expandedPads.directives,
     directiveCount: ledger.directiveCount(),
+    paddingTransactions: expandedPads.padding_transactions,
   };
+}
+
+const DIRECTIVE_SORT_ORDER: Partial<Record<DirectiveJson["type"], number>> = {
+  open: -2,
+  balance: -1,
+  document: 1,
+  close: 2,
+};
+
+function paddingPairKey(
+  date: string,
+  account: string,
+  sourceAccount: string,
+): string {
+  return `${date}\0${account}\0${sourceAccount}`;
+}
+
+function paddingTransactionKey(directive: DirectiveJson): string | undefined {
+  if (
+    directive.type !== "transaction" ||
+    directive.flag !== "P" ||
+    directive.postings.length < 2
+  ) {
+    return undefined;
+  }
+  return paddingPairKey(
+    directive.date,
+    directive.postings[0].account,
+    directive.postings[1].account,
+  );
+}
+
+/**
+ * Insert rustledger's generated padding transactions into the directive stream.
+ * Beancount's built-in pad plugin places each generated `P` transaction directly
+ * after the `Pad` that produced it. Rustledger returns those transactions in a
+ * side array instead, so restore that stream shape before any report walks it.
+ */
+function mergePaddingTransactions(
+  directives: DirectiveJson[],
+  paddingTransactions: DirectiveJson[],
+): DirectiveJson[] {
+  if (paddingTransactions.length === 0) return directives;
+
+  const pending = new Map<string, DirectiveJson[]>();
+  const unkeyed: DirectiveJson[] = [];
+  paddingTransactions.forEach((transaction) => {
+    const key = paddingTransactionKey(transaction);
+    if (key === undefined) {
+      unkeyed.push(transaction);
+      return;
+    }
+    const transactions = pending.get(key);
+    if (transactions) transactions.push(transaction);
+    else pending.set(key, [transaction]);
+  });
+
+  const merged: DirectiveJson[] = [];
+  directives.forEach((directive) => {
+    merged.push(directive);
+    if (directive.type !== "pad") return;
+    const key = paddingPairKey(
+      directive.date,
+      directive.account,
+      directive.source_account,
+    );
+    const transactions = pending.get(key);
+    if (!transactions) return;
+    transactions.forEach((transaction) => {
+      inheritDirectiveSourceId(directive, transaction);
+      merged.push(transaction);
+    });
+    pending.delete(key);
+  });
+
+  const unmatched = [...pending.values()].flat().concat(unkeyed);
+  if (unmatched.length === 0) return merged;
+
+  // Defensive fallback for a future rustledger wire-shape change: retain every
+  // generated posting and restore Beancount's entry_sortkey chronology.
+  return [...merged, ...unmatched]
+    .map((directive, index) => ({ directive, index }))
+    .sort((left, right) => {
+      const dateOrder = left.directive.date.localeCompare(right.directive.date);
+      if (dateOrder !== 0) return dateOrder;
+      const typeOrder =
+        (DIRECTIVE_SORT_ORDER[left.directive.type] ?? 0) -
+        (DIRECTIVE_SORT_ORDER[right.directive.type] ?? 0);
+      return typeOrder !== 0 ? typeOrder : left.index - right.index;
+    })
+    .map(({ directive }) => directive);
 }
 
 const MATERIALIZED_ENTRY_POINT = "__plugin_transformed__.bean";
@@ -107,19 +205,26 @@ interface MaterializedDirectiveStream {
 function materializeDirectiveStreamWithSourceMap(
   directives: DirectiveJson[],
   entryPointSource: string | undefined,
+  materializeOptions: { omitPadDirectives?: boolean } = {},
 ): MaterializedDirectiveStream {
-  const options = (entryPointSource ?? "")
+  const optionLines = (entryPointSource ?? "")
     .split(/\r\n|\r|\n/u)
     .filter((line) => OPTION_LINE_RE.test(line));
   const segments: Array<{
     text: string;
     source?: DirectiveSourceLocation;
   }> = [
-    ...options.map((text) => ({ text })),
-    ...directives.map((directive) => ({
-      text: directiveToText(directive),
-      source: getDirectiveSourceLocation(directive),
-    })),
+    ...optionLines.map((text) => ({ text })),
+    ...directives
+      .filter(
+        (directive) =>
+          materializeOptions.omitPadDirectives !== true ||
+          directive.type !== "pad",
+      )
+      .map((directive) => ({
+        text: directiveToText(directive),
+        source: getDirectiveSourceLocation(directive),
+      })),
   ];
   const sourceByLine = new Map<number, DirectiveSourceLocation>();
   let currentLine = 1;
@@ -173,6 +278,21 @@ export function materializeDirectiveStream(
 ): FileMap {
   return materializeDirectiveStreamWithSourceMap(directives, entryPointSource)
     .files;
+}
+
+/** Re-run the built-in pad plugin after a TS user plugin changed the stream. */
+async function expandTransformedPads(
+  directives: DirectiveJson[],
+  entryPointSource: string | undefined,
+): Promise<DirectiveJson[]> {
+  if (!directives.some((directive) => directive.type === "pad")) return [];
+  const materialized = materializeDirectiveStreamWithSourceMap(
+    directives,
+    entryPointSource,
+  );
+  return withLedger(materialized.files, MATERIALIZED_ENTRY_POINT, (ledger) =>
+    ledger.expandPads().padding_transactions,
+  );
 }
 
 async function transformedValidationErrors(
@@ -385,6 +505,7 @@ async function parseLedgerFilesUncached(
 
   let directives = raw.directives;
   let errors = raw.errors;
+  let paddingTransactions = raw.paddingTransactions;
 
   // rustledger 0.21's Document JSON omits inline tags/links. Recover them from
   // raw source, while also building the file/line sidecar needed by
@@ -447,12 +568,21 @@ async function parseLedgerFilesUncached(
         ...pluginErrors,
       ];
     }
+
+    if (hasHandledPlugin) {
+      paddingTransactions = await expandTransformedPads(
+        directives,
+        files[entryPoint],
+      );
+    }
   }
 
   // The WASM engine has no filesystem, so its `document`/`option "documents"`
   // existence checks always fail. Reconcile them against the real repo file
   // inventory (`repoPaths`), then recompute validity from the resulting errors.
   errors = reconcileDocumentErrors(errors, options.repoPaths);
+
+  directives = mergePaddingTransactions(directives, paddingTransactions);
 
   const capturedSourceIds =
     applyTs || sourceDetails !== undefined
@@ -534,6 +664,7 @@ export async function queryLedgerFilesResultInProcess(
     ? materializeDirectiveStreamWithSourceMap(
         (await parseLedgerFilesInProcess(files, entryPoint)).directives,
         files[entryPoint],
+        { omitPadDirectives: true },
       )
     : undefined;
   const queryFiles = materialized?.files ?? strippedFiles;

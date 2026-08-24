@@ -32,7 +32,11 @@ import {
   queryResultToShellResult,
   queryResultToText,
 } from "@/features/ledger/service/ledger-shell-mappers";
-import { accountHierarchy, buildPriceMap } from "@/foundation/rustledger";
+import {
+  accountBalanceSeries,
+  accountHierarchy,
+  buildPriceMap,
+} from "@/foundation/rustledger";
 
 function assert(condition: boolean, message: string): asserts condition {
   if (!condition) {
@@ -76,6 +80,22 @@ include "accounts.beancount"
 `,
 };
 
+const PAD_FILES = {
+  "main.beancount": `option "operating_currency" "USD"
+
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Equity:Opening USD
+2024-01-02 pad Assets:Cash Equity:Opening
+2024-01-03 balance Assets:Cash 100 USD
+`,
+};
+
+const PAD_PLUGIN_FILES = {
+  "main.beancount": `${PAD_FILES["main.beancount"]}
+plugin "fava.plugins.forecast"
+`,
+};
+
 async function main(): Promise<void> {
   const version = await getRustledgerVersion();
   assert(
@@ -97,6 +117,56 @@ async function main(): Promise<void> {
   assert(
     types.filter((type) => type === "transaction").length === 2,
     "two transactions parsed",
+  );
+
+  const paddedSnapshot = await parseLedgerFiles(
+    PAD_FILES,
+    "main.beancount",
+  );
+  const paddingTransactions = paddedSnapshot.directives.filter(
+    (directive) =>
+      directive.type === "transaction" && directive.flag === "P",
+  );
+  assert(
+    paddingTransactions.length === 1,
+    "pad expansion adds one synthetic transaction to the report stream",
+  );
+  const paddedPrices = buildPriceMap(paddedSnapshot.directives);
+  const assets = accountHierarchy(
+    paddedSnapshot.directives,
+    "Assets",
+    "USD",
+    paddedPrices,
+  );
+  assert(
+    assets.balance_children.USD === "100",
+    "pad-generated postings populate the asset hierarchy",
+  );
+  const netWorth = accountBalanceSeries(
+    paddedSnapshot.directives,
+    "month",
+    ["Assets", "Liabilities"],
+    "USD",
+    paddedPrices,
+  );
+  assert(
+    netWorth.at(-1)?.balance.USD === "100",
+    "pad-generated postings populate the net-worth series",
+  );
+  const paddedPluginQuery = await queryLedgerFilesResult(
+    PAD_PLUGIN_FILES,
+    "main.beancount",
+    "BALANCES",
+  );
+  const paddedCashRow = paddedPluginQuery.rows.find(
+    (row) => row[0] === "Assets:Cash",
+  );
+  const paddedCashBalance = paddedCashRow?.[1] as
+    | { positions?: Array<{ units?: { number?: string } }> }
+    | undefined;
+  assert(
+    paddedCashBalance?.positions?.[0]?.units?.number === "100",
+    "BQL materializes a transformed pad stream exactly once",
   );
 
   // Non-.bean include: beancount permits `include "accounts.txt"`. The loader
