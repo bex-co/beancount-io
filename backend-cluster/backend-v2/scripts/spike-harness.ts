@@ -1,8 +1,9 @@
 import "dotenv/config";
 
 /**
- * m17/t006 live spike — does HarnessAgent + claudeCode + our Cloudflare provider
- * actually run Claude in the container and stream an answer back over the bridge?
+ * m17/t006 live spike — does HarnessAgent + the ACP driver + our Cloudflare
+ * provider actually run the agent in the container and stream an answer back
+ * over the bridge? (ADR 0005 修订 A moved the driver to ACP.)
  *
  * Run on the HOST (not Docker) so `*.localhost` preview URLs resolve to
  * 127.0.0.1 → wrangler dev → proxyToSandbox → container bridge:
@@ -13,7 +14,8 @@ import "dotenv/config";
 
 import { createCloudflareSandbox } from "@/foundation/sandbox-cloudflare";
 import { HarnessAgent } from "@ai-sdk/harness/agent";
-import { createClaudeCode } from "@ai-sdk/harness-claude-code";
+import { createACP } from "@ai-sdk/harness-acp";
+import { ACP_PERMISSION_MODES } from "@/features/ai-agent/workflow/ask-agent-workflow";
 
 const ADMIN_TOKEN = process.env.SANDBOX_ADMIN_TOKEN ?? process.env.ADMIN_TOKEN ?? "";
 // The container reaches the host's llm-cli-proxy via the host LAN IP.
@@ -35,15 +37,23 @@ async function main() {
   });
 
   const agent = new HarnessAgent({
-    harness: createClaudeCode({
-      model: MODEL,
+    harness: createACP({
+      harnessId: "claude-agent-acp",
+      source: {
+        type: "npm-simple",
+        packageName: "@agentclientprotocol/claude-agent-acp",
+      },
+      executable: "claude-agent-acp",
+      modelId: MODEL,
       auth: "direct",
+      permissionModeMapping: ACP_PERMISSION_MODES,
       // The bridge listens on this port in the container; our provider exposes
       // it via getPortEndpoint so the harness host can connect.
       port: 8080,
       env: {
         ANTHROPIC_BASE_URL: PROXY,
         ANTHROPIC_API_KEY: "dummy",
+        IS_SANDBOX: "1",
       },
     }),
     sandbox,

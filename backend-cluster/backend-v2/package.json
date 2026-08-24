@@ -77,7 +77,7 @@
   "dependencies": {
     "@ai-sdk/anthropic": "^4.0.40",
     "@ai-sdk/harness": "1.0.74",
-    "@ai-sdk/harness-claude-code": "1.0.77",
+    "@ai-sdk/harness-acp": "1.0.23",
     "@ai-sdk/openai": "^4.0.44",
     "@apollo/server": "^5.4.0",
     "@as-integrations/koa": "^1.1.1",

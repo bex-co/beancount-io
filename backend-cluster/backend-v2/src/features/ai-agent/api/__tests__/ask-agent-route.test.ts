@@ -8,12 +8,12 @@ import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import type { IAskAgentWorkflow } from "../../workflow/ask-agent-workflow";
 
 // Mock the harness ESM value-imports so importing the workflow (via the route)
-// does not load @ai-sdk/harness-claude-code, whose `import.meta.url` cannot be
+// does not load @ai-sdk/harness-acp, whose `import.meta.url` cannot be
 // evaluated under Jest's CommonJS transform. The route injects a fake workflow,
 // so the real harness is never needed here.
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-claude-code", () => ({
-  createClaudeCode: () => ({}),
+jest.mock("@ai-sdk/harness-acp", () => ({
+  createACP: () => ({}),
 }));
 jest.mock("../../utils/route-guards");
 jest.mock("@/features/ledger/utils/ledger-access-check");
@@ -85,14 +85,12 @@ describe("setAskAgentRoute", () => {
     } as unknown as AppConfig;
 
     workflow = {
-      streamAnswer: jest
-        .fn()
-        .mockResolvedValue(
-          new Response("data: {}\n\n", {
-            status: 200,
-            headers: { "Content-Type": "text/event-stream" },
-          }),
-        ),
+      streamAnswer: jest.fn().mockResolvedValue(
+        new Response("data: {}\n\n", {
+          status: 200,
+          headers: { "Content-Type": "text/event-stream" },
+        }),
+      ),
     };
 
     mockResolveAuthUser.mockResolvedValue({
@@ -109,7 +107,12 @@ describe("setAskAgentRoute", () => {
   afterEach(() => jest.clearAllMocks());
 
   const register = () =>
-    setAskAgentRoute(router, layers, config, () => workflow as IAskAgentWorkflow);
+    setAskAgentRoute(
+      router,
+      layers,
+      config,
+      () => workflow as IAskAgentWorkflow,
+    );
 
   it("registers POST /api-gateway/ask-agent", () => {
     register();

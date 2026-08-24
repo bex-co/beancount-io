@@ -4,8 +4,8 @@ import "reflect-metadata";
 // `import.meta.url` Jest's CommonJS transform cannot evaluate. Nothing here
 // calls them.
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-claude-code", () => ({
-  createClaudeCode: () => ({}),
+jest.mock("@ai-sdk/harness-acp", () => ({
+  createACP: () => ({}),
 }));
 
 import Router, { type RouterContext } from "@koa/router";

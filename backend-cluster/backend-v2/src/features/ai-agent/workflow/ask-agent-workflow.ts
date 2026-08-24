@@ -7,7 +7,7 @@
  */
 
 import { HarnessAgent } from '@ai-sdk/harness/agent';
-import { createClaudeCode } from '@ai-sdk/harness-claude-code';
+import { createACP, type ACPPermissionModeMapping } from '@ai-sdk/harness-acp';
 import type { ToolSet } from 'ai';
 import { generateGiteaUrl } from '@/shared/gitea-utils';
 import type { GiteaConfig } from '@/config/config';
@@ -19,6 +19,27 @@ import {
 import { createOpenPullRequestTool } from './open-pull-request-tool';
 
 const workflowLogger = logger.child({ module: 'ask-agent-workflow' });
+
+/**
+ * Pinned so a new upstream release cannot silently change the in-sandbox agent.
+ * Bump deliberately.
+ */
+const CLAUDE_AGENT_ACP_VERSION = '0.70.0';
+
+/**
+ * harness permission mode → claude-agent-acp session mode id.
+ *
+ * The agent advertises: default | acceptEdits | plan | dontAsk (and `auto` on
+ * models that support it), plus bypassPermissions when ALLOW_BYPASS (see
+ * `env.IS_SANDBOX` below).
+ * This mapping must preserve the ASK/AGENT split verbatim — it is the
+ * product's trust boundary, not an implementation detail.
+ */
+export const ACP_PERMISSION_MODES = {
+  'allow-reads': { type: 'session-mode', modeId: 'default' },
+  'allow-edits': { type: 'session-mode', modeId: 'acceptEdits' },
+  'allow-all': { type: 'session-mode', modeId: 'bypassPermissions' },
+} as const satisfies ACPPermissionModeMapping;
 
 // ASK = read-only Q&A; AGENT = may edit files (writes gated by the PR flow).
 export type AskAgentMode = 'ask' | 'agent';
@@ -44,6 +65,11 @@ export interface AskAgentCommand {
   conversationId: string;
   mode: AskAgentMode;
   abortSignal?: AbortSignal;
+  /**
+   * Debits this turn's tokens against the caller's AI CFO quota. Optional so
+   * spikes/tests can run unmetered; the route always supplies it.
+   */
+  recordTokenUsage?: (totalTokens: number) => Promise<void>;
 }
 
 const ASK_INSTRUCTIONS = `You are the Beancount.io ledger assistant. The user's plain-text accounting repo is cloned at the absolute path /workspace/repo (the main ledger is typically /workspace/repo/main.bean). Always work against /workspace/repo, not your current directory.
@@ -108,9 +134,31 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
         : undefined;
 
     const agent = new HarnessAgent({
-      harness: createClaudeCode({
-        model: this.deps.model,
+      harness: createACP({
+        harnessId: 'claude-agent-acp',
+        // ACP is the driver so the agent is swappable (ADR 0005 修订 A). Pointing
+        // this at codex-acp/gemini is a change to `source` + `executable`, not to
+        // the call stack. The package is installed inside the sandbox, so it is
+        // not a backend-v2 dependency; pin it for reproducible bootstraps.
+        source: {
+          type: 'npm-simple',
+          packageName: '@agentclientprotocol/claude-agent-acp',
+          packageVersion: CLAUDE_AGENT_ACP_VERSION,
+        },
+        executable: 'claude-agent-acp',
+        modelId: this.deps.model,
         auth: 'direct',
+        // Mirrors @ai-sdk/harness-claude-code's own split: secrets go through
+        // credentialEnv, the non-secret gateway root through forwardEnv.
+        credentialEnv: ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'],
+        forwardEnv: ['ANTHROPIC_BASE_URL'],
+        // claude-agent-acp only offers `bypassPermissions` when
+        // `!IS_ROOT || IS_SANDBOX` (acp-agent.js: ALLOW_BYPASS). Our container
+        // runs as root, so without this flag the allow-all mapping above would
+        // name a mode the agent never advertises. We *are* an isolated,
+        // ephemeral sandbox, which is exactly what the flag asserts.
+        env: { IS_SANDBOX: '1' },
+        permissionModeMapping: ACP_PERMISSION_MODES,
         // The bridge listens on this port inside the container; our provider
         // exposes it via getPortEndpoint. Avoid 39001 (the CF sandbox runtime's
         // own internal port) and 3000 (the container's default service).
@@ -174,6 +222,32 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
       prompt: command.prompt,
       session: agentSession,
       abortSignal: command.abortSignal,
+      // The route checks the quota before the turn; this is the matching debit.
+      // Before this, the harness path checked and never debited — ask-agent
+      // burned tokens for free (ADR 0005 修订 A).
+      onFinish: async ({ totalUsage }) => {
+        const totalTokens =
+          (totalUsage?.inputTokens ?? 0) + (totalUsage?.outputTokens ?? 0);
+        if (totalTokens === 0) {
+          // ACP v1 carries no per-step usage, so a turn may report nothing.
+          // Log it rather than debiting a bogus 0.
+          workflowLogger.warn('Turn reported no token usage; nothing debited', {
+            ledgerId: command.ledgerId,
+            conversationId: command.conversationId,
+          });
+          return;
+        }
+        try {
+          await command.recordTokenUsage?.(totalTokens);
+        } catch (err) {
+          // Never fail the user's answer over accounting.
+          workflowLogger.error('Failed to record token usage', {
+            ledgerId: command.ledgerId,
+            totalTokens,
+            error: err instanceof Error ? err.message : String(err),
+          });
+        }
+      },
     });
 
     return result.toUIMessageStreamResponse();

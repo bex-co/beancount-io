@@ -18,7 +18,7 @@ import { assembleApi, type ApiManifest } from "../composition-root";
  * against.
  *
  * Files importing this must first `jest.mock` the two harness ESM packages
- * (`@ai-sdk/harness/agent`, `@ai-sdk/harness-claude-code`); their
+ * (`@ai-sdk/harness/agent`, `@ai-sdk/harness-acp`); their
  * `import.meta.url` cannot be evaluated under Jest's CommonJS transform, and
  * the ai-agent fragment pulls them in transitively.
  */

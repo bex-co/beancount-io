@@ -1,12 +1,15 @@
 // Mock the harness ESM value-imports: the workflow module imports
-// @ai-sdk/harness-claude-code at top level, whose `import.meta.url` breaks Jest's
+// @ai-sdk/harness-acp at top level, whose `import.meta.url` breaks Jest's
 // CommonJS transform. This suite tests only the pure buildAuthenticatedCloneUrl.
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-claude-code", () => ({
-  createClaudeCode: () => ({}),
+jest.mock("@ai-sdk/harness-acp", () => ({
+  createACP: () => ({}),
 }));
 
-import { buildAuthenticatedCloneUrl } from "../ask-agent-workflow";
+import {
+  ACP_PERMISSION_MODES,
+  buildAuthenticatedCloneUrl,
+} from "../ask-agent-workflow";
 import type { GiteaConfig } from "@/config/config";
 
 describe("buildAuthenticatedCloneUrl", () => {
@@ -44,5 +47,29 @@ describe("buildAuthenticatedCloneUrl", () => {
       "secret",
     );
     expect(url.startsWith("https://user:secret@git.beancount.io/")).toBe(true);
+  });
+});
+
+describe("ACP_PERMISSION_MODES", () => {
+  // The ASK/AGENT split is the product's trust boundary (ADR 0005 修订 A), and
+  // the ACP mapping is the only thing carrying it to the agent now that the
+  // driver is protocol-mediated. Pin every mode id: a silent rename upstream
+  // would otherwise downgrade AGENT from human-gated edits to something else.
+  it("maps every harness permission mode to a claude-agent-acp session mode", () => {
+    expect(ACP_PERMISSION_MODES).toEqual({
+      "allow-reads": { type: "session-mode", modeId: "default" },
+      "allow-edits": { type: "session-mode", modeId: "acceptEdits" },
+      "allow-all": { type: "session-mode", modeId: "bypassPermissions" },
+    });
+  });
+
+  it("keeps AGENT on a mode that still gates edits, and ASK unrestricted", () => {
+    // AGENT edits the user's books, so it must NOT land on bypassPermissions.
+    expect(ACP_PERMISSION_MODES["allow-edits"].modeId).not.toBe(
+      "bypassPermissions",
+    );
+    // ASK is read-only in a throwaway clone; approval prompts would just stall
+    // a UI that has nowhere to show them.
+    expect(ACP_PERMISSION_MODES["allow-all"].modeId).toBe("bypassPermissions");
   });
 });
