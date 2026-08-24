@@ -107,7 +107,7 @@ Current variables:
 | `VITE_SSR_API_URL`       | No       | Internal URL for SSR; falls back to `VITE_API_URL`.                                         |
 | `VITE_GA_MEASUREMENT_ID` | No       | Per-environment GA4 stream; unset disables analytics. Non-production builds use debug mode. |
 
-When adding one, update `src/vite-env.d.ts`, the typed config, `.env.example`, `README.md`, and any applicable deployment definitions (`../deploy/mac/` and root `bex.yaml`). Never put a secret in a `VITE_*` variable.
+When adding one, update `src/vite-env.d.ts`, the typed config, `.env.example`, `README.md`, and any applicable deployment definitions (`../deploy/docker-mac/` and root `bex.yaml`). Never put a secret in a `VITE_*` variable.
 
 ## Growth planning and Search Console
 

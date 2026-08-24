@@ -1,0 +1,18 @@
+{
+	email {$ACME_EMAIL}
+}
+
+{$APP_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy dashboard:3000
+}
+
+{$API_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy backend-v2:4104
+}
+
+{$GIT_DOMAIN} {
+	encode zstd gzip
+	reverse_proxy gitea:3000
+}

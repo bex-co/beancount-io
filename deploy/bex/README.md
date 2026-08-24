@@ -14,7 +14,7 @@ path explicitly, or rename the file to `render.yaml`.
 
 ## What runs where
 
-| `deploy/mac` compose | on bex | why |
+| `deploy/docker-mac` compose | on bex | why |
 |---|---|---|
 | `dashboard` | `beancount-dashboard` (web) | |
 | `backend-v2` | `beancount-api` (web) | |

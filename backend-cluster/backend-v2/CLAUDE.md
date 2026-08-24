@@ -179,7 +179,7 @@ When adding one:
 
 1. Add it to `AppConfig` and parse it once in `src/config/config.ts`.
 2. Document it in `.env.tmpl` and `README.md`.
-3. Add a placeholder/pass-through to `../../deploy/mac/.env.example` and `../../deploy/mac/docker-compose.yml` when the local stack needs it.
+3. Add a placeholder/pass-through to `../../deploy/docker-mac/.env.example` and `../../deploy/docker-mac/docker-compose.yml` when the local stack needs it.
 4. Update the root `bex.yaml` when the hosted deployment needs it.
 5. Keep real values only in ignored local files or the deployment platform's secret store.
 

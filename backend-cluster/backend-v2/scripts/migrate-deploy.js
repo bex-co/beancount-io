@@ -1,7 +1,7 @@
 /**
  * Apply pending Drizzle migrations, then exit.
  *
- * This is the deploy-time counterpart of deploy/mac/apply-migrations.sh, meant
+ * This is the deploy-time counterpart of deploy/docker-mac/apply-migrations.sh, meant
  * to run as a platform pre-deploy step so a failed migration fails the deploy
  * and leaves the previous revision serving.
  *

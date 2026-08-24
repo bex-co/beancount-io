@@ -89,9 +89,9 @@ Review your finances, add transactions, scan receipts, and edit ledger files fro
 | [`mobile/`](./mobile) | Active iOS & Android client | Native transaction entry, account views, budgets, receipt capture, ledger editing, light/dark themes, 13 locales, and runtime selection of a compatible self-hosted server. Expo + React Native + Apollo. |
 | [`cli/`](./cli) | `0.1.0` | Read and write directives, check and format files, run BQL and reports, manage remote ledgers, or chat with a local-ledger agent. Python + Typer. Includes vendored `fava` reporting library. |
 | [`skills/`](./skills) | Active skills | The agent-native accounting loop: scaffold a ledger, import bank exports with dedup, author tested beangulp importers, reconcile against statements, migrate from Mint/Monarch/QuickBooks, query your finances in plain language, run a month-end close, and record options trades — all confirm-gated and `bean-check`-verified. |
-| [`backend-cluster/`](./backend-cluster) | Active backend | The services behind the Beancount.io API: `backend-v2` (GraphQL/REST gateway), `ledger` (rustledger-WASM ledger service), and `idl` (OpenAPI specs + generated clients). Runs locally via [`deploy/mac/`](./deploy/mac). |
+| [`backend-cluster/`](./backend-cluster) | Active backend | The services behind the Beancount.io API: `backend-v2` (GraphQL/REST gateway), `ledger` (rustledger-WASM ledger service), and `idl` (OpenAPI specs + generated clients). Run locally via [`deploy/docker-mac/`](./deploy/docker-mac) or self-host on one server via [`deploy/docker/`](./deploy/docker). |
 
-The dashboard and mobile app are clients for the Beancount.io API, served by `backend-cluster/` — hosted, or self-run via `deploy/mac/`. The CLI and ledger skills also support local-first workflows that do not require the hosted service.
+The dashboard and mobile app are clients for the Beancount.io API, served by `backend-cluster/` — hosted, or self-run via `deploy/docker-mac/`. The CLI and ledger skills also support local-first workflows that do not require the hosted service.
 
 ## Choose your entry point
 
@@ -111,7 +111,7 @@ yarn dev
 
 The app runs at `http://localhost:5173`. See the [dashboard setup guide](./dashboard/README.md) for environment variables and architecture.
 
-Prefer everything in containers? [`deploy/mac/`](./deploy/mac) runs the full stack — dashboard, backend API, ledger service, Gitea, PostgreSQL, Redis — with one `docker compose up -d --build` on macOS.
+Prefer everything in containers? [`deploy/docker-mac/`](./deploy/docker-mac) runs the full stack locally on macOS. For a persistent single-server installation with automatic HTTPS and durable Docker volumes, use [`deploy/docker/`](./deploy/docker).
 
 ### Mobile app
 

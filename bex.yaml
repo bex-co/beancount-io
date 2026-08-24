@@ -12,7 +12,7 @@
 # This stack carries NO persistent disks. Every stateful piece is a managed
 # datastore:
 #
-#   deploy/mac compose      ->  here
+#   deploy/docker-mac compose -> here
 #   ------------------------    ---------------------------------------------
 #   dashboard               ->  beancount-dashboard   (web)
 #   backend-v2              ->  beancount-api         (web)

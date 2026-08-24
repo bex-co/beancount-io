@@ -1,0 +1,355 @@
+# Single-host, production-oriented Docker Compose deployment for beancount.io.
+#
+#   cp .env.example .env
+#   # replace every change-me value and point DNS at this host
+#   docker compose config --quiet
+#   docker compose up -d --build
+#
+# Caddy is the only HTTP service published on the host. PostgreSQL, Redis,
+# Gitea, backend-v2, dashboard, and ledger communicate over Compose networks.
+# See README.md for first boot, upgrades, backups, and optional Git-over-SSH.
+
+# Keep this target isolated from deploy/docker-mac when both use the same Docker host.
+name: beancount-io-docker
+
+x-logging: &default-logging
+  driver: json-file
+  options:
+    max-size: "10m"
+    max-file: "5"
+
+x-backend-image: &backend-image
+  build:
+    context: ../../backend-cluster/backend-v2
+    dockerfile: Dockerfile
+  image: beancount-io/backend-v2:${BEANCOUNT_IMAGE_TAG:-selfhosted}
+
+networks:
+  edge:
+    driver: bridge
+  private:
+    driver: bridge
+    internal: true
+
+volumes:
+  caddy_data:
+  caddy_config:
+  gitea_data:
+  postgres_gitea_data:
+  postgres_backend_data:
+  redis_data:
+
+services:
+  caddy:
+    image: ${CADDY_IMAGE:-caddy:2-alpine}
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - edge
+    ports:
+      - "80:80"
+      - "443:443"
+      - "443:443/udp"
+    environment:
+      APP_DOMAIN: ${APP_DOMAIN:?Set APP_DOMAIN in .env}
+      API_DOMAIN: ${API_DOMAIN:?Set API_DOMAIN in .env}
+      GIT_DOMAIN: ${GIT_DOMAIN:?Set GIT_DOMAIN in .env}
+      ACME_EMAIL: ${ACME_EMAIL:?Set ACME_EMAIL in .env}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy_data:/data
+      - caddy_config:/config
+    depends_on:
+      dashboard:
+        condition: service_healthy
+      backend-v2:
+        condition: service_healthy
+      gitea:
+        condition: service_healthy
+
+  dashboard:
+    build:
+      context: ../../dashboard
+      dockerfile: Dockerfile
+      args:
+        # Browser URL is compiled into the client bundle.
+        VITE_API_URL: https://${API_DOMAIN:?Set API_DOMAIN in .env}/api-gateway/
+        # SSR stays on the private Compose network.
+        VITE_SSR_API_URL: http://backend-v2:4104/api-gateway/
+        VITE_GA_MEASUREMENT_ID: ${VITE_GA_MEASUREMENT_ID:-}
+    image: beancount-io/dashboard:${BEANCOUNT_IMAGE_TAG:-selfhosted}
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - edge
+      - private
+    expose:
+      - "3000"
+    depends_on:
+      backend-v2:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  backend-v2:
+    <<: *backend-image
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - edge
+      - private
+    expose:
+      - "4104"
+    depends_on:
+      backend-migrate:
+        condition: service_completed_successfully
+      gitea-init:
+        condition: service_completed_successfully
+      ledger:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      # This is a deep readiness check: it deliberately fails when a required
+      # dependency is unavailable.
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4104/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+    environment:
+      NODE_ENV: production
+      PORT: 4104
+      SERVER_URL: https://${API_DOMAIN:?Set API_DOMAIN in .env}
+      DASHBOARD_URL: https://${APP_DOMAIN:?Set APP_DOMAIN in .env}
+      AUTH_SECRET: ${AUTH_SECRET:?Set AUTH_SECRET in .env}
+      COOKIE_SECRETS: ${COOKIE_SECRETS:?Set COOKIE_SECRETS in .env}
+      ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
+      METRICS_API_TOKEN: ${METRICS_API_TOKEN:?Set METRICS_API_TOKEN in .env}
+      AUTH_JWT_EXP_MINUTES: ${AUTH_JWT_EXP_MINUTES:-525600}
+      POSTGRES_BACKEND_URI: postgresql://${BACKEND_DB_USER:-beancount}:${BACKEND_DB_PASSWORD:?Set BACKEND_DB_PASSWORD in .env}@postgres-backend:5432/${BACKEND_DB_NAME:-beancount}
+      REDIS_URI: redis://redis:6379
+      FAVA_API_URL: http://ledger:8000
+      FAVA_API_ADMIN_USER: ${FAVA_API_ADMIN_USER:?Set FAVA_API_ADMIN_USER in .env}
+      FAVA_API_ADMIN_PASSWORD: ${FAVA_API_ADMIN_PASSWORD:?Set FAVA_API_ADMIN_PASSWORD in .env}
+      GITEA_HOST_NAME: gitea
+      GITEA_HTTP_PORT: 3000
+      EXTERNAL_GITEA_HOST_NAME: ${GIT_DOMAIN:?Set GIT_DOMAIN in .env}
+      EXTERNAL_GITEA_HTTP_PORT: 443
+      GITEA_SSH_PORT: ${SSH_PORT:-2222}
+      SSH_PROXY_ENABLED: ${SSH_PROXY_ENABLED:-false}
+      SSH_PROXY_PORT: ${SSH_PORT:-2222}
+      SSH_PROXY_HOST_KEY: ${SSH_PROXY_HOST_KEY:-}
+      BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-local-dev-placeholder}
+      CLAUDE_CODE_SANDBOX_URL: ${CLAUDE_CODE_SANDBOX_URL:-}
+      CLAUDE_CODE_AGENT_URL: ${CLAUDE_CODE_AGENT_URL:-}
+      ASK_AI_MODE: ${ASK_AI_MODE:-bql}
+      AGENT_MODE: ${AGENT_MODE:-self-hosted}
+      ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
+      # Null is intentional: an empty ANTHROPIC_BASE_URL crashes the process.
+      # To use a custom endpoint, export a non-empty value before Compose runs.
+      ANTHROPIC_BASE_URL:
+      OPENAI_API_KEY: ${OPENAI_API_KEY:-}
+      OPENAI_MODEL: ${OPENAI_MODEL:-gpt-4o}
+      TEMP_ASSETS_AWS_S3_REGION: ${TEMP_ASSETS_AWS_S3_REGION:-us-east-1}
+      TEMP_ASSETS_AWS_S3_BUCKET: ${TEMP_ASSETS_AWS_S3_BUCKET:-}
+      TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID: ${TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID:-}
+      TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY: ${TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY:-}
+      TEMP_ASSETS_AWS_S3_ENDPOINT: ${TEMP_ASSETS_AWS_S3_ENDPOINT:-}
+      PERM_ASSETS_AWS_S3_REGION: ${PERM_ASSETS_AWS_S3_REGION:-us-east-1}
+      PERM_ASSETS_AWS_S3_BUCKET: ${PERM_ASSETS_AWS_S3_BUCKET:-}
+      PERM_ASSETS_AWS_S3_ACCESS_KEY_ID: ${PERM_ASSETS_AWS_S3_ACCESS_KEY_ID:-}
+      PERM_ASSETS_AWS_S3_SECRET_ACCESS_KEY: ${PERM_ASSETS_AWS_S3_SECRET_ACCESS_KEY:-}
+      PERM_ASSETS_AWS_S3_ENDPOINT: ${PERM_ASSETS_AWS_S3_ENDPOINT:-}
+      SEND_GRID_API_KEY: ${SEND_GRID_API_KEY:-}
+      STRIPE_PUBLIC_KEY: ${STRIPE_PUBLIC_KEY:-}
+      STRIPE_PRIVATE_KEY: ${STRIPE_PRIVATE_KEY:-}
+      STRIPE_WEBHOOK_SECRET: ${STRIPE_WEBHOOK_SECRET:-}
+      STRIPE_DEV_PUBLIC_KEY: ${STRIPE_DEV_PUBLIC_KEY:-}
+      STRIPE_DEV_PRIVATE_KEY: ${STRIPE_DEV_PRIVATE_KEY:-}
+      STRIPE_DEV_WEBHOOK_SECRET: ${STRIPE_DEV_WEBHOOK_SECRET:-}
+      PLAID_CLIENT_ID: ${PLAID_CLIENT_ID:-}
+      PLAID_SECRET: ${PLAID_SECRET:-}
+      PLAID_ENVIRONMENT: ${PLAID_ENVIRONMENT:-sandbox}
+      PLAID_WEBHOOK_URL: ${PLAID_WEBHOOK_URL:-}
+      LOKI_HOST: ${LOKI_HOST:-}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+
+  # Runs the idempotent Drizzle migrator before backend-v2 is allowed to start.
+  backend-migrate:
+    <<: *backend-image
+    restart: "no"
+    logging: *default-logging
+    command: ["node", "scripts/migrate-deploy.js"]
+    networks:
+      - private
+    depends_on:
+      postgres-backend:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      POSTGRES_BACKEND_URI: postgresql://${BACKEND_DB_USER:-beancount}:${BACKEND_DB_PASSWORD:?Set BACKEND_DB_PASSWORD in .env}@postgres-backend:5432/${BACKEND_DB_NAME:-beancount}
+
+  ledger:
+    build:
+      context: ../../backend-cluster/ledger
+      dockerfile: Dockerfile
+    image: beancount-io/ledger:${BEANCOUNT_IMAGE_TAG:-selfhosted}
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - private
+    expose:
+      - "8000"
+    depends_on:
+      gitea:
+        condition: service_healthy
+    environment:
+      NODE_ENV: production
+      PORT: 8000
+      GITEA_HOST_NAME: gitea
+      GITEA_HTTP_PORT: 3000
+      BACKEND_V2_HOST_NAME: backend-v2
+      BACKEND_V2_HTTP_PORT: 4104
+      BACKEND_V2_ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
+      LOG_LEVEL: ${LOG_LEVEL:-info}
+    healthcheck:
+      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  gitea:
+    image: ${GITEA_IMAGE:-docker.gitea.com/gitea:1.24}
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - edge
+      - private
+    expose:
+      - "3000"
+      - "22"
+    volumes:
+      - gitea_data:/data
+    depends_on:
+      postgres-gitea:
+        condition: service_healthy
+    environment:
+      USER_UID: ${GITEA_UID:-1000}
+      USER_GID: ${GITEA_GID:-1000}
+      GITEA__database__DB_TYPE: postgres
+      GITEA__database__HOST: postgres-gitea:5432
+      GITEA__database__NAME: ${GITEA_DB_NAME:-gitea}
+      GITEA__database__USER: ${GITEA_DB_USER:-gitea}
+      GITEA__database__PASSWD: ${GITEA_DB_PASSWORD:?Set GITEA_DB_PASSWORD in .env}
+      GITEA__server__DOMAIN: ${GIT_DOMAIN:?Set GIT_DOMAIN in .env}
+      GITEA__server__ROOT_URL: https://${GIT_DOMAIN:?Set GIT_DOMAIN in .env}/
+      GITEA__server__HTTP_PORT: 3000
+      GITEA__server__SSH_DOMAIN: ${GIT_DOMAIN:?Set GIT_DOMAIN in .env}
+      GITEA__server__SSH_PORT: ${SSH_PORT:-2222}
+      GITEA__server__SSH_LISTEN_PORT: 22
+      # Accounts are provisioned through backend-v2; do not expose Gitea's
+      # independent public registration path on a production host.
+      GITEA__service__DISABLE_REGISTRATION: "true"
+      GITEA__security__INSTALL_LOCK: "true"
+      GITEA__security__SECRET_KEY: ${GITEA_SECRET_KEY:?Set GITEA_SECRET_KEY in .env}
+      GITEA__security__INTERNAL_TOKEN: ${GITEA_INTERNAL_TOKEN:?Set GITEA_INTERNAL_TOKEN in .env}
+      GITEA__server__LFS_JWT_SECRET: ${GITEA_LFS_JWT_SECRET:?Set GITEA_LFS_JWT_SECRET in .env}
+      GITEA__oauth2__JWT_SECRET: ${GITEA_OAUTH2_JWT_SECRET:?Set GITEA_OAUTH2_JWT_SECRET in .env}
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:3000/api/healthz"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
+
+  # Creates the backend's Gitea administrator exactly once, after Gitea has
+  # initialized app.ini and its database. A completed container is expected.
+  gitea-init:
+    image: ${GITEA_IMAGE:-docker.gitea.com/gitea:1.24}
+    restart: "no"
+    logging: *default-logging
+    user: "${GITEA_UID:-1000}:${GITEA_GID:-1000}"
+    networks:
+      - private
+    volumes:
+      - gitea_data:/data
+    depends_on:
+      gitea:
+        condition: service_healthy
+    environment:
+      FAVA_API_ADMIN_USER: ${FAVA_API_ADMIN_USER:?Set FAVA_API_ADMIN_USER in .env}
+      FAVA_API_ADMIN_PASSWORD: ${FAVA_API_ADMIN_PASSWORD:?Set FAVA_API_ADMIN_PASSWORD in .env}
+      GITEA_ADMIN_EMAIL: ${GITEA_ADMIN_EMAIL:?Set GITEA_ADMIN_EMAIL in .env}
+    entrypoint: ["/bin/sh", "-ec"]
+    command:
+      - |
+        if gitea --config /data/gitea/conf/app.ini admin user list 2>/dev/null | grep -Fq "$${FAVA_API_ADMIN_USER}"; then
+          echo "Gitea admin '$${FAVA_API_ADMIN_USER}' already exists"
+        else
+          gitea --config /data/gitea/conf/app.ini admin user create \
+            --username "$${FAVA_API_ADMIN_USER}" \
+            --password "$${FAVA_API_ADMIN_PASSWORD}" \
+            --email "$${GITEA_ADMIN_EMAIL}" \
+            --admin \
+            --must-change-password=false
+        fi
+
+  postgres-gitea:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - private
+    volumes:
+      - postgres_gitea_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${GITEA_DB_USER:-gitea}
+      POSTGRES_PASSWORD: ${GITEA_DB_PASSWORD:?Set GITEA_DB_PASSWORD in .env}
+      POSTGRES_DB: ${GITEA_DB_NAME:-gitea}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  postgres-backend:
+    image: ${POSTGRES_IMAGE:-postgres:16-alpine}
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - private
+    volumes:
+      - postgres_backend_data:/var/lib/postgresql/data
+    environment:
+      POSTGRES_USER: ${BACKEND_DB_USER:-beancount}
+      POSTGRES_PASSWORD: ${BACKEND_DB_PASSWORD:?Set BACKEND_DB_PASSWORD in .env}
+      POSTGRES_DB: ${BACKEND_DB_NAME:-beancount}
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 30s
+
+  redis:
+    image: ${REDIS_IMAGE:-redis:7-alpine}
+    restart: unless-stopped
+    logging: *default-logging
+    networks:
+      - private
+    volumes:
+      - redis_data:/data
+    command: ["redis-server", "--appendonly", "yes", "--maxmemory-policy", "noeviction"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+      start_period: 20s

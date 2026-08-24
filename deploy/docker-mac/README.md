@@ -1,4 +1,4 @@
-# deploy/mac — full local stack on macOS
+# deploy/docker-mac — full local stack on macOS
 
 Run the whole beancount.io service — dashboard, backend API, ledger service,
 Gitea, PostgreSQL ×2, Redis — on a Mac with Docker Desktop or
@@ -7,7 +7,7 @@ Gitea, PostgreSQL ×2, Redis — on a Mac with Docker Desktop or
 ## Quick start
 
 ```zsh
-cd deploy/mac
+cd deploy/docker-mac
 cp .env.example .env            # then set the change-me values (see .env.example)
 docker compose up -d --build    # builds dashboard, backend-v2, ledger images
 ./post-docker-compose-up-build.sh
@@ -89,5 +89,5 @@ point), not in Gitea. It is off by default. To enable:
   the placeholder in `.env.example` only lets the server boot. Stripe, Plaid,
   SendGrid, and S3 uploads are likewise disabled until their keys are set.
 - This stack is for local use: default database passwords, `NODE_ENV=development`,
-  no TLS. Production deployment is a different topology (reverse proxy, no
-  published service ports) and does not live in this directory.
+  no TLS. For the production-oriented topology (reverse proxy, named volumes,
+  and no directly published application ports), see [`../docker/`](../docker/).

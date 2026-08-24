@@ -30,7 +30,7 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 | `cli/`             | active | `beancount-cli` — directives, bean-check/format, BQL queries, reports, local-ledger chat (Python, Typer) — includes vendored `fava` reporting library   |
 | `backend-cluster/` | active | Backend services: `backend-v2` (GraphQL/REST API), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients)                 |
 | `skills/`          | active | Agent skills: init, import, importer-author, reconcile, migrate, ask, close, options (see `skills/CLAUDE.md`)                                           |
-| `deploy/`          | active | Deployment targets: `deploy/mac/` (Docker Compose, full stack locally) and `deploy/bex/` (bex PaaS, no persistent disks — Blueprint at root `bex.yaml`) |
+| `deploy/`          | active | Deployment targets: `deploy/docker-mac/` (Docker Compose, full stack locally), `deploy/docker/` (single-host production), and `deploy/bex/` (bex PaaS, no persistent disks — Blueprint at root `bex.yaml`) |
 | `docs/`            | active | Documentation content                                                                                                                                   |
 
 There is no root `package.json`. Each package owns its own dependencies and scripts. Dashboard, mobile, ledger, and CLI also own their tracked lockfiles; backend-v2 and the small IDL clients currently do not have one. CI is path-filtered for dashboard, mobile, CLI, and skills (see [Tooling](#tooling)).
