@@ -14,6 +14,7 @@ describe("createSession", () => {
   it("extracts the user id from the JWT subject", () => {
     const token = createTokenWithPayload({ sub: "user-123" });
     expect(createSession(token, serverUrl)).toEqual({
+      kind: "legacy",
       userId: "user-123",
       authToken: token,
       serverUrl,
@@ -23,6 +24,7 @@ describe("createSession", () => {
   it("works with tokens that include additional claims", () => {
     const token = createTokenWithPayload({ sub: "user-456", role: "admin" });
     expect(createSession(token, serverUrl)).toEqual({
+      kind: "legacy",
       userId: "user-456",
       authToken: token,
       serverUrl,
@@ -58,7 +60,7 @@ describe("createSession", () => {
   it("does not send legacy unscoped sessions to any server", () => {
     expect(
       sessionTokenForServer(
-        { userId: "user-123", authToken: "legacy-token" },
+        { kind: "legacy", userId: "user-123", authToken: "legacy-token" },
         serverUrl,
       ),
     ).toBe(undefined);

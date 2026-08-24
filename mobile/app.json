@@ -2,7 +2,7 @@
   "expo": {
     "version": "1.20260821.44",
     "name": "Beancount",
-    "scheme": "beancount",
+    "scheme": ["beancount", "io.beancount.ios", "io.beancount.android"],
     "slug": "beancount",
     "platforms": ["ios", "android"],
     "orientation": "portrait",

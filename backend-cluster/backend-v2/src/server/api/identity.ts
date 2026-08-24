@@ -2,7 +2,10 @@ import type { RouterContext } from "@koa/router";
 import type { AppConfig } from "@/config/config";
 import type { DatabaseLayer } from "@/foundation/composition";
 import { getTokenFromCtx } from "@/features/auth/utils/auth";
-import { resolveOidcIdentity } from "@/features/oauth/utils/oidc-verify";
+import {
+  type OAuthAudience,
+  resolveOidcIdentity,
+} from "@/features/oauth/utils/oidc-verify";
 import {
   API_KEY_PLAINTEXT_PREFIX,
   apiKeyDigest,
@@ -10,6 +13,7 @@ import {
   isApiKeyLive,
 } from "@/features/apikeys/service/api-key-service";
 import { logger } from "@/shared/logger";
+import { ForbiddenError } from "@/shared/errors";
 
 const identityLogger = logger.child({ module: "identity" });
 
@@ -62,6 +66,14 @@ export const API_SCOPES = [
 ] as const;
 export type ApiScope = (typeof API_SCOPES)[number];
 
+export type OperationClass = "read" | "write" | "admin";
+
+const OPERATION_SCOPE: Record<OperationClass, ApiScope> = {
+  read: "ledger.read",
+  write: "ledger.write",
+  admin: "ledger.admin",
+};
+
 /**
  * The resolved caller — the single shape GraphQL, REST, and MCP all read.
  *
@@ -105,6 +117,21 @@ export interface RequestLike {
   headers: Record<string, string | string[] | undefined>;
 }
 
+export interface ResolveIdentityOptions {
+  oauthAudience?: OAuthAudience;
+}
+
+export function assertIdentityCapability(
+  identity: Identity,
+  operation: OperationClass,
+): void {
+  if (identity.capabilityExempt) return;
+  const required = OPERATION_SCOPE[operation];
+  if (!identity.scopes.has(required)) {
+    throw new ForbiddenError(`Forbidden - ${required} scope required`);
+  }
+}
+
 /**
  * Resolve the caller from a request — the ONE authentication entry point for
  * every API surface (ADR 0006 D2).
@@ -123,6 +150,7 @@ export async function resolveIdentity(
   ctx: RequestLike,
   database: DatabaseLayer,
   config: AppConfig,
+  options: ResolveIdentityOptions = {},
 ): Promise<Identity | undefined> {
   const token = getTokenFromCtx(ctx as RouterContext);
   if (!token) {
@@ -130,7 +158,11 @@ export async function resolveIdentity(
   }
 
   return (
-    (await resolveOAuthIdentity(token, config)) ??
+    (await resolveOAuthIdentity(
+      token,
+      config,
+      options.oauthAudience ?? "api",
+    )) ??
     // Between OAuth and session: keys are bearer-presented like OAuth tokens,
     // but are cheap to reject on their prefix before any verification work.
     (await resolveApiKeyIdentity(token, database)) ??
@@ -238,8 +270,9 @@ async function resolveSessionIdentity(
 async function resolveOAuthIdentity(
   token: string,
   config: AppConfig,
+  audience: OAuthAudience,
 ): Promise<Identity | undefined> {
-  const oidc = await resolveOidcIdentity(token, config);
+  const oidc = await resolveOidcIdentity(token, config, audience);
   if (!oidc) {
     return undefined;
   }

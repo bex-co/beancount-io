@@ -85,7 +85,7 @@ describe("server URL utilities", () => {
     ).toEqual({ ok: false, code: "insecure" });
   });
 
-  it("probes the public health GraphQL contract without authentication", async () => {
+  it("probes health and the complete OAuth discovery contract", async () => {
     const originalFetch = global.fetch;
     const calls: Array<{ url: string; options?: RequestInit }> = [];
     global.fetch = (async (
@@ -93,6 +93,42 @@ describe("server URL utilities", () => {
       options?: RequestInit,
     ) => {
       calls.push({ url: String(url), options });
+      const value = String(url);
+      if (value.includes("oauth-protected-resource")) {
+        return {
+          ok: true,
+          json: async () => ({
+            resource: "https://ledger.example.com/base/v1",
+            authorization_servers: ["https://ledger.example.com/base"],
+            scopes_supported: ["ledger.read", "ledger.write", "ledger.admin"],
+          }),
+        } as Response;
+      }
+      if (value.includes("oauth-authorization-server")) {
+        const issuer = "https://ledger.example.com/base";
+        return {
+          ok: true,
+          json: async () => ({
+            issuer,
+            authorization_endpoint: `${issuer}/api-gateway/oauth/auth`,
+            token_endpoint: `${issuer}/api-gateway/oauth/token`,
+            revocation_endpoint: `${issuer}/api-gateway/oauth/revoke`,
+            userinfo_endpoint: `${issuer}/api-gateway/oauth/me`,
+            response_types_supported: ["code"],
+            grant_types_supported: ["authorization_code", "refresh_token"],
+            scopes_supported: [
+              "openid",
+              "offline_access",
+              "ledger.read",
+              "ledger.write",
+              "ledger.admin",
+            ],
+            token_endpoint_auth_methods_supported: ["none"],
+            code_challenge_methods_supported: ["S256"],
+            authorization_response_iss_parameter_supported: true,
+          }),
+        } as Response;
+      }
       return {
         ok: true,
         json: async () => ({ data: { health: "OK" } }),
@@ -103,16 +139,10 @@ describe("server URL utilities", () => {
       expect(
         await testServerConnection("https://ledger.example.com/base/"),
       ).toEqual({ kind: "connected" });
-      expect(calls).toEqual([
-        {
-          url: "https://ledger.example.com/base/api-gateway/",
-          options: {
-            method: "POST",
-            headers: { "content-type": "application/json" },
-            body: JSON.stringify({ query: "query ServerHealth { health }" }),
-            signal: calls[0]?.options?.signal,
-          },
-        },
+      expect(calls.map((call) => call.url)).toEqual([
+        "https://ledger.example.com/base/api-gateway/",
+        "https://ledger.example.com/.well-known/oauth-protected-resource/base/v1",
+        "https://ledger.example.com/.well-known/oauth-authorization-server/base",
       ]);
     } finally {
       global.fetch = originalFetch;

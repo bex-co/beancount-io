@@ -57,10 +57,14 @@ export function setOpenAIChatCompletionsRoute(
   config: AppConfig,
 ): void {
   router.post("/api-gateway/ai/openai/chat/completions", async (ctx) => {
-    const { user } = await resolveAuthUser(ctx, {
-      models: layers.database.models,
-      db: layers.database.db,
-    });
+    const { user } = await resolveAuthUser(
+      ctx,
+      {
+        models: layers.database.models,
+        db: layers.database.db,
+      },
+      "read",
+    );
     await layers.services.aiCfoUsage.assertQuotaAvailable(user.id);
 
     const parseResult = chatCompletionBodySchema.safeParse(ctx.request.body);

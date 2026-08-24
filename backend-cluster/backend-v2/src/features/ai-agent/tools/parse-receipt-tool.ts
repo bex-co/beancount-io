@@ -4,7 +4,7 @@ import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
-import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
+import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
 
 const toolLogger = logger.child({ module: "tool:parse-receipt" });
 
@@ -54,7 +54,7 @@ export async function executeParseReceipt(
   // builds its Fava client from identity.userId directly — so this is the
   // one place that can check the credential is actually scoped to this
   // ledger before that happens.
-  assertLedgerScope(identity, ledgerId);
+  assertLedgerAuthorization(identity, ledgerId, "read");
   toolLogger.debug("Parsing receipt", { objectKey: input.objectKey });
 
   return runToolSafely({

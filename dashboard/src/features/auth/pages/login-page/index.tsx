@@ -9,6 +9,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useLoginForm } from "@/features/auth/hooks/use-login-form";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
+import { postLegacyMobileAuthToken } from "@/common/providers/react-native-bridge-provider/legacy-auth-bridge";
 
 export default function LoginPage() {
   const navigate = useNavigate();
@@ -18,12 +19,7 @@ export default function LoginPage() {
 
   const { onSubmit, isLoading, serverError } = useLoginForm({
     onSuccess: async (token) => {
-      if (typeof window !== "undefined") {
-        window.postMessage(
-          JSON.stringify({ authToken: token.accessToken }),
-          "*",
-        );
-      }
+      postLegacyMobileAuthToken(token.accessToken, "password");
       const defaultLedger = await getUserDefaultLedger(client);
       if (defaultLedger) {
         const { ledgerOwner, ledgerName } = decodeLedgerId(defaultLedger.id);

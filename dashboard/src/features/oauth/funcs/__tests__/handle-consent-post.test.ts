@@ -1,5 +1,7 @@
 import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
 import { handleConsentPost } from "../handle-consent-post";
+import { handleMobileConsentPost } from "../handle-mobile-consent-post";
+import { backendBaseFromApiUrl } from "@/common/lib/oauth/forward-to-backend";
 
 const CONSENT_URL = "https://beancount.io/oauth/consent?uid=abc";
 
@@ -35,6 +37,37 @@ describe("handleConsentPost", () => {
     expect(init.body).toBe("consent=accept");
     expect(response.status).toBe(303);
     expect(response.headers.get("location")).toBe("https://beancount.io/done");
+  });
+
+  it("preserves a reverse-proxy prefix while removing the API gateway suffix", () => {
+    expect(
+      backendBaseFromApiUrl(
+        "https://books.example.test/beancount/api-gateway/",
+      ),
+    ).toBe("https://books.example.test/beancount");
+  });
+
+  it("forwards a mobile cancellation as the standard interaction decision", async () => {
+    fetchMock.mockResolvedValue(
+      new Response(null, {
+        status: 303,
+        headers: {
+          location: "io.beancount.ios:/oauth/callback?error=access_denied",
+        },
+      }),
+    );
+
+    const response = await handleMobileConsentPost({
+      request: new Request(
+        "https://beancount.io/oauth/mobile-consent?uid=mobile-1",
+        { method: "POST", body: "decision=cancel" },
+      ),
+    });
+
+    const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+    expect(url).toContain("/api-gateway/oauth/interaction/mobile-1/login");
+    expect(init.body).toBe("decision=cancel");
+    expect(response.headers.get("location")).toContain("access_denied");
   });
 
   it("rejects an oversized declared Content-Length before reading the body", async () => {

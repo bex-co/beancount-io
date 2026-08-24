@@ -71,6 +71,22 @@ be prefixed with `VITE_`.
 | `yarn format:check` | Check formatting (Prettier)                    |
 | `yarn codegen`      | Regenerate GraphQL types from the schema       |
 
+## OAuth consent pages
+
+The dashboard serves the human interaction pages for backend-v2's authorization
+server. `/oauth/mobile-consent` reuses the normal login, registration, and OTP
+forms, then shows an account-wide native-app approval; it never posts a bearer
+token to a WebView. The backend issuer redirects here through its configured
+`OAUTH_INTERACTION_URL`, so production should keep the dashboard and issuer
+behind one HTTPS front door (the documented loopback stack is the development
+exception).
+
+The older login/signup `postMessage` bridge remains solely for already-released
+mobile versions. It emits a bounded, token-free
+`legacy_mobile_auth_completed` retirement signal only when the React Native
+WebView object is present. See the mobile README for the minimum-version and
+30-day-zero-use removal gate.
+
 ## Exporting financial statements
 
 Open a ledger's Balance Sheet or Income Statement, apply the time, account,

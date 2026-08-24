@@ -7,7 +7,7 @@
     "dev": "ts-node -r tsconfig-paths/register --transpile-only ./server.ts",
     "start": "ts-node -r tsconfig-paths/register --transpile-only ./server.ts",
     "dist:start": "node dist/server.js",
-    "build": "tsc -b && tsc-alias -p tsconfig.json",
+    "build": "tsc -b tsconfig.typecheck.json && tsc-alias -p tsconfig.json",
     "test": "jest --testPathIgnorePatterns='\\.integration\\.test\\.ts$'",
     "test:integration": "jest --testMatch='**/*.integration.test.ts'",
     "test:watch": "jest --watch",

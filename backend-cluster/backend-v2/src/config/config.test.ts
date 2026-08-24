@@ -1,4 +1,8 @@
-import { config } from "./config";
+import {
+  assertOAuthInteractionHost,
+  config,
+  getOAuthPublicUrl,
+} from "./config";
 
 describe("config", () => {
   const originalEnv = process.env;
@@ -42,6 +46,77 @@ describe("config", () => {
 
   it("should have correct dashboard URL default", () => {
     expect(config.dashboard.url).toBe("https://beancount.io");
+  });
+
+  describe("OAuth public URL validation", () => {
+    it("normalizes a path-prefixed HTTPS issuer", () => {
+      expect(
+        getOAuthPublicUrl(
+          "https://books.example.test/beancount/",
+          "https://beancount.io",
+          "OAUTH_ISSUER",
+          "production",
+        ),
+      ).toBe("https://books.example.test/beancount");
+    });
+
+    it.each([
+      "",
+      "not a url",
+      "https://user@example.test",
+      "https://example.test?a=1",
+    ])("rejects malformed or ambiguous value %p", (value) => {
+      expect(() =>
+        getOAuthPublicUrl(
+          value,
+          "https://beancount.io",
+          "OAUTH_ISSUER",
+          "production",
+        ),
+      ).toThrow(Error);
+    });
+
+    it("permits cleartext only for loopback development", () => {
+      expect(
+        getOAuthPublicUrl(
+          "http://localhost:42601",
+          "https://beancount.io",
+          "OAUTH_ISSUER",
+          "development",
+        ),
+      ).toBe("http://localhost:42601");
+      expect(() =>
+        getOAuthPublicUrl(
+          "http://books.example.test",
+          "https://beancount.io",
+          "OAUTH_ISSUER",
+          "development",
+        ),
+      ).toThrow(Error);
+      expect(() =>
+        getOAuthPublicUrl(
+          "http://localhost:42601",
+          "https://beancount.io",
+          "OAUTH_ISSUER",
+          "production",
+        ),
+      ).toThrow(Error);
+    });
+
+    it("requires interaction pages to share the issuer hostname", () => {
+      expect(() =>
+        assertOAuthInteractionHost(
+          "http://localhost:42601",
+          "http://localhost:42600",
+        ),
+      ).not.toThrow();
+      expect(() =>
+        assertOAuthInteractionHost(
+          "https://auth.example.test",
+          "https://dashboard.example.test",
+        ),
+      ).toThrow(Error);
+    });
   });
 
   describe("gitea configuration structure", () => {

@@ -1,83 +1,27 @@
 import { defaultServerUrl } from "@/config";
 
+export {
+  allowsInsecureLocalhost,
+  endpointFor,
+  validateServerUrl,
+  type ServerUrlErrorCode,
+  type ServerUrlValidation,
+} from "./server-url-validation";
+import {
+  allowsInsecureLocalhost,
+  endpointFor,
+  validateServerUrl,
+  type ServerUrlErrorCode,
+} from "./server-url-validation";
+import { discoverOAuthServer } from "./oauth/discovery";
+
 export const OFFICIAL_SERVER_URL = "https://beancount.io/";
-
-export type ServerUrlErrorCode =
-  "empty" | "invalid" | "credentials" | "query" | "insecure";
-
-export type ServerUrlValidation =
-  { ok: true; url: string } | { ok: false; code: ServerUrlErrorCode };
-
-type ServerUrlOptions = {
-  allowInsecureLocalhost?: boolean;
-};
-
-const localhostNames = new Set(["localhost", "127.0.0.1", "::1"]);
-
-export function allowsInsecureLocalhost(): boolean {
-  return typeof __DEV__ !== "undefined" && __DEV__;
-}
-
-function isLocalhost(hostname: string): boolean {
-  return localhostNames.has(hostname.toLowerCase());
-}
-
-/**
- * Validate a base URL rather than an API endpoint. A pathname is intentional:
- * reverse proxies commonly serve Beancount.io below a path prefix.
- */
-export function validateServerUrl(
-  input: string,
-  options: ServerUrlOptions = {},
-): ServerUrlValidation {
-  const candidate = input.trim();
-  if (!candidate) {
-    return { ok: false, code: "empty" };
-  }
-
-  let parsed: URL;
-  try {
-    parsed = new URL(candidate);
-  } catch {
-    return { ok: false, code: "invalid" };
-  }
-
-  if (
-    !parsed.hostname ||
-    (parsed.protocol !== "https:" && parsed.protocol !== "http:")
-  ) {
-    return { ok: false, code: "invalid" };
-  }
-
-  if (parsed.username || parsed.password) {
-    return { ok: false, code: "credentials" };
-  }
-
-  if (parsed.search || parsed.hash) {
-    return { ok: false, code: "query" };
-  }
-
-  const allowHttp = options.allowInsecureLocalhost ?? allowsInsecureLocalhost();
-  if (
-    parsed.protocol === "http:" &&
-    !(allowHttp && isLocalhost(parsed.hostname))
-  ) {
-    return { ok: false, code: "insecure" };
-  }
-
-  parsed.pathname = `${parsed.pathname.replace(/\/+$/, "")}/`;
-  return { ok: true, url: parsed.toString() };
-}
 
 export function defaultRuntimeServerUrl(): string {
   const configured = validateServerUrl(defaultServerUrl, {
     allowInsecureLocalhost: allowsInsecureLocalhost(),
   });
   return configured.ok ? configured.url : OFFICIAL_SERVER_URL;
-}
-
-export function endpointFor(serverUrl: string, path: string): string {
-  return new URL(path.replace(/^\/+/, ""), serverUrl).toString();
 }
 
 export type ServerConnectionResult =
@@ -107,12 +51,20 @@ export async function testServerConnection(
   const controller = new AbortController();
   const timer = setTimeout(() => controller.abort(), timeoutMs);
   try {
-    const response = await fetch(endpointFor(validation.url, "api-gateway/"), {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ query: HEALTH_QUERY }),
-      signal: controller.signal,
-    });
+    const [healthResult, oauthResult] = await Promise.allSettled([
+      fetch(endpointFor(validation.url, "api-gateway/"), {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ query: HEALTH_QUERY }),
+        signal: controller.signal,
+      }),
+      discoverOAuthServer(validation.url, fetch, controller.signal),
+    ]);
+    if (controller.signal.aborted) return { kind: "timeout" };
+    if (healthResult.status === "rejected") return { kind: "unreachable" };
+    if (oauthResult.status === "rejected") return { kind: "incompatible" };
+
+    const response = healthResult.value;
     if (!response.ok) {
       return { kind: "incompatible" };
     }

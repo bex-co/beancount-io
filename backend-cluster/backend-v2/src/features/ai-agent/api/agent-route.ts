@@ -5,7 +5,6 @@ import { AppConfig } from "@/config/config";
 import { logger } from "@/shared/logger";
 import { BadUserInputError } from "@/shared/errors";
 import { resolveAuthUser } from "../utils/route-guards";
-import { trustedIdentity } from "@/server/api/identity";
 import { generateOAuthToken } from "@/features/oauth/utils/oauth-token-gen";
 import {
   SelfHostedAgentHandler,
@@ -49,17 +48,15 @@ export function setAgentRoute(
       throw new BadUserInputError("ledgerId is required");
     }
 
-    const { user } = await resolveAuthUser(ctx, {
-      models: layers.database.models,
-      db: layers.database.db,
-    });
+    const { user, identity } = await resolveAuthUser(
+      ctx,
+      {
+        models: layers.database.models,
+        db: layers.database.db,
+      },
+      "write",
+    );
     await layers.services.aiCfoUsage.assertQuotaAvailable(user.id);
-
-    // The route's own session check is the trust boundary here; wrapping its
-    // userId is what lets the ledger services' authorizeLedger seam run on
-    // every tool call without re-plumbing this route onto the OAuth/API-key
-    // gate too (ADR 0006 D1 — same verbs the dashboard's resolvers call).
-    const identity = trustedIdentity(user.id);
 
     const mcpToken = await generateOAuthToken(user.id, ledgerId, config);
     const mcpUrl = `${config.server.url}/api-gateway/mcp`;

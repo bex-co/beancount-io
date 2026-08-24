@@ -71,7 +71,9 @@ async function handleMcpRequest(
   // are agents that completed the OAuth ceremony — so a session is refused the
   // same way as no credential at all, discovery hint included, which is what
   // lets a browser-hosted client go get a real token.
-  const identity = await resolveIdentity(ctx, layers.database, config);
+  const identity = await resolveIdentity(ctx, layers.database, config, {
+    oauthAudience: "mcp",
+  });
   if (!identity || identity.method === "session") {
     refuseUnauthenticated(ctx, config);
     return;

@@ -87,6 +87,14 @@ export interface AnalyticsEvents {
    * callback login. Powers DAU/WAU/MAU and retention.
    */
   login: { method: AuthMethod };
+  /**
+   * Coarse retirement signal for the old embedded-mobile token handoff. It is
+   * emitted only when the WebView bridge exists and deliberately carries no
+   * token, user, server, URL, or app-version value.
+   */
+  legacy_mobile_auth_completed: {
+    flow: "password" | "otp" | "one_time_token";
+  };
 
   // --- Activation / engagement ---
   /**

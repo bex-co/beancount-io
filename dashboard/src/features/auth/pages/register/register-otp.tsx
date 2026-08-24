@@ -12,6 +12,7 @@ import { PageSEO } from "@/common/components/seo/page-seo";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
 import { OtpForm } from "@/features/auth/components/otp-form";
+import { postLegacyMobileAuthToken } from "@/common/providers/react-native-bridge-provider/legacy-auth-bridge";
 
 type SignUpOtpPageProps = {
   sessionId: string;
@@ -32,12 +33,7 @@ export default function SignUpOtpPage({
   const { onSubmit, isLoading, serverError } = useOtpForm({
     sessionId,
     onSuccess: async (token) => {
-      if (typeof window !== "undefined") {
-        window.postMessage(
-          JSON.stringify({ authToken: token.accessToken }),
-          "*",
-        );
-      }
+      postLegacyMobileAuthToken(token.accessToken, "otp");
       onSuccess?.();
       void navigate({ to: "/auth/welcome" });
     },

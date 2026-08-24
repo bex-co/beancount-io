@@ -1,12 +1,12 @@
 import { generateOAuthToken } from "../oauth-token-gen";
 import type { AppConfig } from "@/config/config";
-import devJwks from "@/config/jwks/dev.json";
+import { getJwks } from "@/config/jwks";
 
 // Partial config with only the fields used by the functions under test
 const mockConfig = {
   oauth: {
     issuer: "https://beancount.io",
-    jwks: devJwks,
+    jwks: getJwks("test"),
   },
 } as unknown as AppConfig;
 
@@ -27,8 +27,8 @@ describe("generateOAuthToken", () => {
     expect(claims.iss).toBe("https://beancount.io");
     // Unchanged by w1/m18: the provider and this helper mint the same audience,
     // so the resource rename is a single coordinated flip (see legacyMcpResource).
-    // Reaching all three surfaces does not depend on it — the shared identity
-    // gate accepts this token regardless.
+    // This helper is used only for the internal MCP hop during the documented
+    // legacy-resource window; GraphQL and REST reject this audience.
     expect(claims.aud).toBe("https://beancount.io/api-gateway/mcp");
     expect(claims.scope).toBe("ledger.read ledger.write ledger.admin");
     expect(typeof claims.exp).toBe("number");

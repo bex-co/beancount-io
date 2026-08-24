@@ -50,7 +50,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => DeleteLedgerResponse, {
     description: "Delete a specific ledger",
   })

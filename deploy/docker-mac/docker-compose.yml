@@ -37,7 +37,15 @@ services:
         condition: service_healthy
     healthcheck:
       # wget, not curl: node:22-alpine ships busybox wget only.
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:3000/"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:3000/",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -66,7 +74,15 @@ services:
       ledger:
         condition: service_healthy
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:4104/healthz"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:4104/healthz",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -82,6 +98,9 @@ services:
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       METRICS_API_TOKEN: ${METRICS_API_TOKEN:-}
       AUTH_JWT_EXP_MINUTES: ${AUTH_JWT_EXP_MINUTES:-525600}
+      # Production passes this via a secret manager. Development deliberately
+      # omits it so backend-v2 generates an ephemeral signing key.
+      OAUTH_JWKS: ${OAUTH_JWKS:-}
       # Data stores (service-name addressing inside the compose network).
       POSTGRES_BACKEND_URI: ${POSTGRES_BACKEND_URI:-postgresql://postgres:password@postgres-backend:5432/backend}
       REDIS_URI: ${REDIS_URI:-redis://redis:6379}
@@ -170,7 +189,15 @@ services:
       BACKEND_V2_ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       LOG_LEVEL: ${LOG_LEVEL:-debug}
     healthcheck:
-      test: ["CMD", "wget", "--no-verbose", "--tries=1", "--spider", "http://localhost:8000/healthz"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--no-verbose",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8000/healthz",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -226,7 +253,11 @@ services:
     volumes:
       - ./data/postgres:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-gitea}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_USER:-postgres} -d ${POSTGRES_DB:-gitea}",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3
@@ -245,7 +276,11 @@ services:
     volumes:
       - ./data/postgres-backend:/var/lib/postgresql/data
     healthcheck:
-      test: ["CMD-SHELL", "pg_isready -U ${POSTGRES_BACKEND_USER:-postgres} -d ${POSTGRES_BACKEND_DB:-backend}"]
+      test:
+        [
+          "CMD-SHELL",
+          "pg_isready -U ${POSTGRES_BACKEND_USER:-postgres} -d ${POSTGRES_BACKEND_DB:-backend}",
+        ]
       interval: 30s
       timeout: 10s
       retries: 3

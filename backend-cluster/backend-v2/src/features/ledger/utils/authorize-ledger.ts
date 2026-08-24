@@ -1,4 +1,4 @@
-import type { Identity } from "@/server/api/identity";
+import { assertIdentityCapability, type Identity } from "@/server/api/identity";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import { ForbiddenError, UnauthenticatedError } from "@/shared/errors";
 import {
@@ -92,6 +92,15 @@ export function assertLedgerScope(
   }
 }
 
+export function assertLedgerAuthorization(
+  identity: Identity,
+  ledgerId: string,
+  rel: LedgerRel,
+): void {
+  assertIdentityCapability(identity, rel);
+  assertLedgerScope(identity, ledgerId);
+}
+
 /**
  * The single seam every single-ledger service verb starts with: it authorizes
  * the caller against the ledger AND returns the ledger metadata the verb
@@ -112,7 +121,9 @@ export async function authorizeLedger(
   deps: AuthorizeLedgerDeps,
 ): Promise<AuthorizedLedger> {
   try {
-    assertLedgerScope(identity, ledgerId);
+    if (identity) {
+      assertLedgerAuthorization(identity, ledgerId, rel);
+    }
 
     if (!identity) {
       if (rel !== "read") {

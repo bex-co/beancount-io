@@ -1,18 +1,5 @@
-/**
- * w1/m18 replaced MCP's private token parser with the shared identity gate.
- * That is only safe if the gate accepts everything the old parser accepted:
- * every live MCP credential was minted under the old contract, and a narrowing
- * would log those clients out with no way for them to tell why.
- *
- * The old contract, verbatim from `resolveOidcToken` at the previous commit:
- *
- *   jwtVerify(token, jwks, { issuer })            // signature + issuer only
- *   if (!payload.sub || !payload["ledger_id"]) return null;
- *
- * No audience check, no algorithm constraint, no scope requirement. This suite
- * holds the new path to that same acceptance set, so a future tightening has to
- * be a deliberate edit here rather than a side effect somewhere else.
- */
+/** MCP keeps its old resource audience only for the documented refresh-token
+ * compatibility window. It never accepts an absent or arbitrary audience. */
 import { SignJWT, exportJWK, generateKeyPair, type CryptoKey } from "jose";
 import type { AppConfig } from "@/config/config";
 
@@ -52,17 +39,15 @@ function mint(
     .setSubject((claims.sub as string) ?? "user-1")
     .setIssuedAt()
     .setExpirationTime("1h");
-  // The old contract never required an audience, so neither may this suite.
   return opts.audience
     ? jwt.setAudience(opts.audience).sign(privateKey)
     : jwt.sign(privateKey);
 }
 
-describe("MCP auth parity — the gate accepts everything the old parser did", () => {
+describe("MCP audience enforcement", () => {
   it.each([
-    ["the audience the provider mints", `${ISSUER}/api-gateway/mcp`],
-    ["the audience of the eventual rename", `${ISSUER}/v1`],
-    ["an audience nobody anticipated", "https://other.example/x"],
+    ["the transitional legacy audience", `${ISSUER}/api-gateway/mcp`],
+    ["the canonical API audience", `${ISSUER}/v1`],
   ])("accepts a ledger-pinned token with %s", async (_label, audience) => {
     const identity = await resolveOidcIdentity(
       await mint(
@@ -70,6 +55,7 @@ describe("MCP auth parity — the gate accepts everything the old parser did", (
         { audience },
       ),
       config,
+      "mcp",
     );
     expect(identity).toMatchObject({
       userId: "user-1",
@@ -77,18 +63,29 @@ describe("MCP auth parity — the gate accepts everything the old parser did", (
     });
   });
 
-  it("accepts a token carrying no audience claim at all", async () => {
-    const identity = await resolveOidcIdentity(
-      await mint({ sub: "user-1:ada/personal", ledger_id: "ada/personal" }),
-      config,
-    );
-    expect(identity?.userId).toBe("user-1");
-  });
+  it.each([undefined, "https://other.example/x"])(
+    "rejects a token carrying audience %s",
+    async (audience) => {
+      const identity = await resolveOidcIdentity(
+        await mint(
+          { sub: "user-1:ada/personal", ledger_id: "ada/personal" },
+          audience ? { audience } : {},
+        ),
+        config,
+        "mcp",
+      );
+      expect(identity).toBeNull();
+    },
+  );
 
-  it("accepts a token with no scope claim (no live MCP token has one)", async () => {
+  it("accepts an audience-bound token with no scope claim", async () => {
     const identity = await resolveOidcIdentity(
-      await mint({ sub: "user-1:ada/personal", ledger_id: "ada/personal" }),
+      await mint(
+        { sub: "user-1:ada/personal", ledger_id: "ada/personal" },
+        { audience: `${ISSUER}/api-gateway/mcp` },
+      ),
       config,
+      "mcp",
     );
     expect(identity?.scopes).toEqual([]);
   });
@@ -97,9 +94,13 @@ describe("MCP auth parity — the gate accepts everything the old parser did", (
     const identity = await resolveOidcIdentity(
       await mint(
         { sub: "user-1", ledger_id: "ada/personal" },
-        { issuer: "https://evil.example" },
+        {
+          issuer: "https://evil.example",
+          audience: `${ISSUER}/api-gateway/mcp`,
+        },
       ),
       config,
+      "mcp",
     );
     expect(identity).toBeNull();
   });

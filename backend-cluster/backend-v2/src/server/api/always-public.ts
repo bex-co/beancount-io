@@ -65,6 +65,11 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
     reason:
       "RFC 9728 requires anonymous readability: it is what a 401's `WWW-Authenticate` hint points at, so gating it would make the hint useless.",
   },
+  {
+    opId: "REST GET /.well-known/oauth-protected-resource/v1",
+    reason:
+      "RFC 9728 resource-specific discovery metadata; clients need it before they can present a credential to the v1 API.",
+  },
 
   // --- Probes and operator surfaces -------------------------------------
   {

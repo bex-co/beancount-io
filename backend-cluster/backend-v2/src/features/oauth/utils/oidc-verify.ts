@@ -39,7 +39,8 @@ export function apiResource(issuer: string): string {
  * next refresh.
  *
  * Refresh tokens live 30 days (`ttl.RefreshToken` in oidc-route.ts). On or after
- * **2026-09-19** every grant predating this change has expired, and the switch
+ * **2026-09-23** every grant predating the dual-resource deployment has
+ * expired, and the switch
  * is safe: point `defaultResource` and the RFC 9728 document at
  * {@link apiResource}, then drop this constant and the audience entry below.
  * `oidc-route.test.ts` ("does not advertise a resource that pre-existing grants
@@ -72,22 +73,12 @@ function isAsymmetricJwt(token: string): boolean {
   }
 }
 
-/**
- * Record a token whose audience is neither resource we mint against. Shadow
- * telemetry for the enforcement decision deferred to w1/m20 — see the call site.
- */
-function warnOnUnexpectedAudience(
-  aud: string | string[] | undefined,
-  issuer: string,
-): void {
-  if (aud === undefined) return;
-  const expected = [apiResource(issuer), legacyMcpResource(issuer)];
-  const values = Array.isArray(aud) ? aud : [aud];
-  if (values.some((value) => expected.includes(value))) return;
-  oidcVerifyLogger.warn("OAuth token carries an unexpected audience", {
-    aud: values,
-    expected,
-  });
+export type OAuthAudience = "api" | "mcp";
+
+function expectedAudiences(issuer: string, audience: OAuthAudience): string[] {
+  return audience === "mcp"
+    ? [apiResource(issuer), legacyMcpResource(issuer)]
+    : [apiResource(issuer)];
 }
 
 /** A verified OAuth access token, projected onto what the API cares about. */
@@ -104,14 +95,16 @@ export interface OidcIdentity {
 /**
  * Verify an OAuth access token and project it onto an {@link OidcIdentity}.
  *
- * Accepts both the current API resource and the legacy MCP-only one during the
- * compatibility window described on {@link legacyMcpResource}. Returns null for
- * anything that does not verify — bad signature, wrong issuer, wrong audience,
- * expired — without distinguishing which, so the token is never an oracle.
+ * API callers accept only the current resource. MCP additionally accepts its
+ * legacy audience during the compatibility window described on
+ * {@link legacyMcpResource}. Returns null for anything that does not verify —
+ * bad signature, wrong issuer, wrong audience, expired — without distinguishing
+ * which, so the token is never an oracle.
  */
 export async function resolveOidcIdentity(
   token: string,
   config: AppConfig,
+  audience: OAuthAudience = "api",
 ): Promise<OidcIdentity | null> {
   // No issuer configured means there is no authority to verify against, so no
   // token can be an OAuth token. Returning null (rather than throwing) keeps
@@ -138,6 +131,7 @@ export async function resolveOidcIdentity(
   try {
     const { payload } = await jwtVerify(token, getJwks(issuer), {
       issuer,
+      audience: expectedAudiences(issuer, audience),
       // Defense in depth alongside isAsymmetricJwt: never let a symmetric
       // algorithm reach the remote key set. Not a narrowing — a symmetric token
       // could never have verified against a remote JWKS anyway; this only stops
@@ -145,18 +139,6 @@ export async function resolveOidcIdentity(
       algorithms: ASYMMETRIC_ALGS,
     });
     if (!payload.sub) return null;
-
-    // Audience is OBSERVED, not enforced. This verifier's contract before
-    // w1/m18 was signature + issuer, full stop, and unifying the surfaces does
-    // not require narrowing it. Enforcing here would refuse any live token
-    // whose `aud` we failed to anticipate — and `getResourceServerInfo`
-    // accepts any identifier a client asks for, so tokens with an unexpected
-    // audience are reachable in principle. Rejecting them is a real security
-    // decision that belongs with the op-class matrix in w1/m20, which ships
-    // shadow-mode-first precisely so a rule is measured before it denies
-    // anyone. This log is that measurement; promote it to enforcement once it
-    // reads clean in production.
-    warnOnUnexpectedAudience(payload.aud, issuer);
 
     // `sub` is the oidc-provider accountId, which is `userId` for an unpinned
     // grant and `userId:ledgerId` for one pinned to a ledger. The `ledger_id`

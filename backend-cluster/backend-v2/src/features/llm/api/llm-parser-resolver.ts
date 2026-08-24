@@ -1,7 +1,7 @@
 import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
 import { IContext } from "@/server/graphql/context";
 import type { ILLMService } from "../service/llm-service";
-import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
+import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
 import {
   FileParseResult,
   ReceiptParseResult,
@@ -48,7 +48,7 @@ export class LLMParserResolver {
     @Ctx() ctx: IContext,
   ): Promise<ReceiptParseResult> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.llm.parseReceipt(identity.userId, s3ObjectKey, ledgerId);
   }
 }

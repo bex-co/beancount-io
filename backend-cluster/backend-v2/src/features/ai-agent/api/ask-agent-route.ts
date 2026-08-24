@@ -6,7 +6,7 @@ import { logger } from "@/shared/logger";
 import { BadUserInputError } from "@/shared/errors";
 import { parseLedgerId } from "@/shared/str";
 import { resolveAuthUser } from "../utils/route-guards";
-import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
+import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import {
   AskAgentWorkflow,
   type AskAgentMode,
@@ -84,13 +84,18 @@ export function setAskAgentRoute(
 
     const effectiveMode: AskAgentMode = mode === "agent" ? "agent" : "ask";
 
-    const { user } = await resolveAuthUser(ctx, {
-      models: layers.database.models,
-      db: layers.database.db,
-    });
+    const operation = effectiveMode === "agent" ? "write" : "read";
+    const { user, identity } = await resolveAuthUser(
+      ctx,
+      {
+        models: layers.database.models,
+        db: layers.database.db,
+      },
+      operation,
+    );
 
     await layers.services.aiCfoUsage.assertQuotaAvailable(user.id);
-    await assertLedgerAccess(ledgerId, user.id, {
+    await authorizeLedger(identity, ledgerId, operation, {
       models: layers.database.models,
       db: layers.database.db,
       favaClientFactory: layers.clients.favaClientFactory,
@@ -131,9 +136,9 @@ export function setAskAgentRoute(
       ctx.res.setHeader(key, value);
     });
     if (response.body) {
-      Readable.fromWeb(response.body as Parameters<typeof Readable.fromWeb>[0]).pipe(
-        ctx.res,
-      );
+      Readable.fromWeb(
+        response.body as Parameters<typeof Readable.fromWeb>[0],
+      ).pipe(ctx.res);
     } else {
       ctx.res.end();
     }

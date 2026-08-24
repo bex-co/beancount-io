@@ -11,6 +11,7 @@ import { useOnMounted } from "@/common/hooks/use-on-mounted";
 import { Token } from "@/common/types/token";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
+import { postLegacyMobileAuthToken } from "@/common/providers/react-native-bridge-provider/legacy-auth-bridge";
 
 interface AuthWithOneTimeTokenProps {
   oneTimeToken: string;
@@ -44,13 +45,7 @@ const AuthWithOneTimeToken = ({
           expiresAt: response.data.signInWithOneTimeToken.expireAt,
         } as Token;
 
-        // Send token to mobile webview (if present)
-        if (typeof window !== "undefined") {
-          window.postMessage(
-            JSON.stringify({ authToken: token.accessToken }),
-            "*",
-          );
-        }
+        postLegacyMobileAuthToken(token.accessToken, "one_time_token");
       }
 
       if (redirectTo) {

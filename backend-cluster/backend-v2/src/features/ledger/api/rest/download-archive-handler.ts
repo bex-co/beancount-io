@@ -5,6 +5,8 @@ import { type AppLayers } from "@/foundation/composition";
 import { AppConfig } from "@/config/config";
 import { getTokenFromCtx } from "@/features/auth/utils/auth";
 import { resolveLedgerCaller } from "../../utils/ledger-caller-resolver";
+import { resolveIdentity } from "@/server/api/identity";
+import { authorizeLedger } from "../../utils/authorize-ledger";
 import { streamLedgerArchive } from "./archive-proxy";
 import { parseLedgerId } from "@/shared/str";
 
@@ -63,13 +65,26 @@ export function registerDownloadArchiveRoute(
     // assumes it splits.
     parseLedgerId(ledgerId);
 
-    const token =
-      (ctx.query.token as string | undefined) || getTokenFromCtx(ctx);
-    const userId = await resolveLedgerCaller(ledgerId, token, {
-      favaClientFactory: layers.clients.favaClientFactory,
-      models: layers.database.models,
-      db: layers.database.db,
-    });
+    const identity = await resolveIdentity(ctx, layers.database, config);
+    let userId: string | null;
+    if (identity) {
+      await authorizeLedger(identity, ledgerId, "read", {
+        favaClientFactory: layers.clients.favaClientFactory,
+        models: layers.database.models,
+        db: layers.database.db,
+      });
+      userId = identity.userId;
+    } else {
+      userId = await resolveLedgerCaller(
+        ledgerId,
+        (ctx.query.token as string | undefined) || getTokenFromCtx(ctx),
+        {
+          favaClientFactory: layers.clients.favaClientFactory,
+          models: layers.database.models,
+          db: layers.database.db,
+        },
+      );
+    }
 
     await streamLedgerArchive(ctx, layers, config, {
       ledgerId,

@@ -1,15 +1,32 @@
-import { AuthChecker } from "type-graphql";
+import { type AuthChecker } from "type-graphql";
 import { IContext } from "./context";
 import { UnauthenticatedError } from "@/shared/errors";
+import {
+  assertIdentityCapability,
+  type ApiScope,
+  type OperationClass,
+} from "@/server/api/identity";
 
-export const customAuthChecker: AuthChecker<IContext> = ({
-  context,
-}: {
-  context: IContext;
-}) => {
-  const { userId } = context;
-  if (!userId) {
+const SCOPE_OPERATION: Record<ApiScope, OperationClass> = {
+  "ledger.read": "read",
+  "ledger.write": "write",
+  "ledger.admin": "admin",
+};
+
+export const customAuthChecker: AuthChecker<IContext, ApiScope> = (
+  { context, info },
+  roles,
+) => {
+  const { identity } = context;
+  if (!identity) {
     throw new UnauthenticatedError("Access denied! Please login to continue!");
   }
-  return true; // or false if access is denied
+
+  const operation = roles[0]
+    ? SCOPE_OPERATION[roles[0]]
+    : info.operation.operation === "mutation"
+      ? "write"
+      : "read";
+  assertIdentityCapability(identity, operation);
+  return true;
 };

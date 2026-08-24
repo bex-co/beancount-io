@@ -1,4 +1,4 @@
-import { getJwks } from "./jwks";
+import { getOptionalJwks } from "./jwks";
 import type { ScopeEnforcementMode } from "@/server/api/op-class";
 
 // Type definitions for configuration
@@ -125,7 +125,11 @@ interface OAuthDiscourseClientConfig {
 
 interface OAuthConfig {
   issuer: string;
-  jwks: { keys: object[] };
+  /** Public dashboard/front-door origin that serves OAuth interaction pages. */
+  interactionUrl: string;
+  /** Undefined means OAuth is unavailable but legacy login remains available. */
+  jwks?: { keys: object[] };
+  unavailableReason?: string;
   /**
    * Static "discourse" client for third-party identity login (see
    * features/oauth/api/oidc-route.ts). Confidential client with a real
@@ -200,6 +204,44 @@ function getEnvironment(env: unknown): Environment {
   }
 }
 
+export function getOAuthPublicUrl(
+  value: string | undefined,
+  fallback: string,
+  name: string,
+  env: Environment,
+): string {
+  const configured = value === undefined ? fallback : value.trim();
+  if (!configured) throw new Error(`${name} must be a non-empty absolute URL`);
+
+  let url: URL;
+  try {
+    url = new URL(configured);
+  } catch {
+    throw new Error(`${name} must be a non-empty absolute URL`);
+  }
+  if (url.username || url.password || url.search || url.hash) {
+    throw new Error(`${name} must not contain credentials, query, or fragment`);
+  }
+  const isLoopback = ["localhost", "127.0.0.1", "::1"].includes(url.hostname);
+  if (url.protocol !== "https:" && !(env !== "production" && isLoopback)) {
+    throw new Error(
+      `${name} must use HTTPS except on localhost in development`,
+    );
+  }
+  return url.toString().replace(/\/$/, "");
+}
+
+export function assertOAuthInteractionHost(
+  issuer: string,
+  interactionUrl: string,
+): void {
+  if (new URL(issuer).hostname !== new URL(interactionUrl).hostname) {
+    throw new Error(
+      "DASHBOARD_URL must use the issuer hostname so interaction cookies remain available",
+    );
+  }
+}
+
 function getPlaidEnvironment(env: unknown): PlaidEnvironment {
   if (typeof env !== "string") {
     return "sandbox";
@@ -231,12 +273,37 @@ function giteaInternalBaseUrl(hostname: string, port: number): string {
 
 const giteaInternalHostname = process.env.GITEA_HOST_NAME || "gitea";
 const giteaHttpPort = parseInt(process.env.GITEA_HTTP_PORT || "3000", 10);
+const environment = getEnvironment(process.env.NODE_ENV);
+const dashboardUrl = getOAuthPublicUrl(
+  process.env.DASHBOARD_URL,
+  "https://beancount.io",
+  "DASHBOARD_URL",
+  environment,
+);
+const developmentOAuthIssuer = getOAuthPublicUrl(
+  process.env.SERVER_URL,
+  environment === "production"
+    ? "https://beancount.io"
+    : "http://localhost:4104",
+  "SERVER_URL",
+  environment,
+);
+const oauthIssuer =
+  environment === "production" ? dashboardUrl : developmentOAuthIssuer;
+const oauthInteractionUrl = getOAuthPublicUrl(
+  process.env.DASHBOARD_URL,
+  environment === "production" ? dashboardUrl : "http://localhost:5173",
+  "DASHBOARD_URL",
+  environment,
+);
+assertOAuthInteractionHost(oauthIssuer, oauthInteractionUrl);
+const oauthSigningKeys = getOptionalJwks(environment);
 
 export const config: AppConfig = {
   api: {
     scopeEnforcement: "shadow",
   },
-  env: getEnvironment(process.env.NODE_ENV),
+  env: environment,
   project: "beancount-io",
   jwt: {
     secret: process.env.AUTH_SECRET || "",
@@ -248,7 +315,7 @@ export const config: AppConfig = {
     adminPassword: process.env.FAVA_API_ADMIN_PASSWORD || "",
   },
   dashboard: {
-    url: process.env.DASHBOARD_URL || "https://beancount.io",
+    url: dashboardUrl,
   },
   gitea: {
     hostname: process.env.EXTERNAL_GITEA_HOST_NAME || "git.beancount.io",
@@ -339,17 +406,10 @@ export const config: AppConfig = {
   metricsApiToken: process.env.METRICS_API_TOKEN || "",
   adminToken: process.env.ADMIN_TOKEN || "",
   oauth: {
-    // Hardcoded, not env-sourced: this is the one field that previously broke
-    // production. `?? "https://beancount.io"` only falls back on null/undefined,
-    // not on an empty string — passing OAUTH_ISSUER through docker-compose.yml
-    // as `${OAUTH_ISSUER:-}` turned "unset" into "" (defined, empty), which
-    // `new Provider("", ...)` in oidc-route.ts rejects with an uncaught
-    // AssertionError, crashing the whole server on startup. Never make this
-    // env-configurable again without switching the fallback to `||` — see the
-    // "issuer is hardcoded, not env-configurable" test in
-    // features/oauth/api/__tests__/oidc-route.test.ts.
-    issuer: "https://beancount.io",
-    jwks: getJwks(getEnvironment(process.env.NODE_ENV)),
+    issuer: oauthIssuer,
+    interactionUrl: oauthInteractionUrl,
+    jwks: oauthSigningKeys.jwks,
+    unavailableReason: oauthSigningKeys.unavailableReason,
     discourseClient: {
       // Hardcoded — not sensitive, and hardcoding removes a source of
       // config/deploy error. Only clientSecret is env-sourced (see below).

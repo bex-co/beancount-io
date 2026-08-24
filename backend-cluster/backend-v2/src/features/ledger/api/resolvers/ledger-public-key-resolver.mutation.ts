@@ -11,7 +11,7 @@ import {
 export class LedgerPublicKeyMutationResolver {
   constructor(private readonly publicKeyService: ILedgerPublicKeyService) {}
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => PublicKey, {
     description: "Create a new public key for the current user",
   })
@@ -26,7 +26,7 @@ export class LedgerPublicKeyMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => DeletePublicKeyResponse, {
     description: "Delete a specific public key by ID",
   })

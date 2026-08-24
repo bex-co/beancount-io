@@ -9,6 +9,7 @@ export const createSession = (token: string, serverUrl: string) => {
   }
 
   return {
+    kind: "legacy" as const,
     userId: String(decoded.sub),
     authToken: token,
     serverUrl,
@@ -20,5 +21,8 @@ export function sessionTokenForServer(
   session: Session | null,
   serverUrl: string,
 ): string | undefined {
-  return session?.serverUrl === serverUrl ? session.authToken : undefined;
+  if (!session || session.serverUrl !== serverUrl) return undefined;
+  if (session.kind === "legacy") return session.authToken;
+  const resource = new URL("v1", serverUrl).toString().replace(/\/$/, "");
+  return session.resource === resource ? session.accessToken : undefined;
 }

@@ -63,7 +63,7 @@ export class LedgerCollaboratorsMutationResolver {
   ) {}
 
   @Mutation(() => AddCollaboratorResponse)
-  @Authorized()
+  @Authorized("ledger.admin")
   async addOrUpdateLedgerCollaborator(
     @Args() { ledgerId, collaborator, permission }: AddCollaboratorArgs,
     @Ctx() ctx: IContext,
@@ -77,7 +77,7 @@ export class LedgerCollaboratorsMutationResolver {
   }
 
   @Mutation(() => DeleteCollaboratorResponse)
-  @Authorized()
+  @Authorized("ledger.admin")
   async deleteLedgerCollaborator(
     @Args() { ledgerId, collaborator }: DeleteCollaboratorArgs,
     @Ctx() ctx: IContext,

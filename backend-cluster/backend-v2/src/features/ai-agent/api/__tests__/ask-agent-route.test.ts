@@ -16,16 +16,16 @@ jest.mock("@ai-sdk/harness-acp", () => ({
   createACP: () => ({}),
 }));
 jest.mock("../../utils/route-guards");
-jest.mock("@/features/ledger/utils/ledger-access-check");
+jest.mock("@/features/ledger/utils/authorize-ledger");
 
 import { resolveAuthUser } from "../../utils/route-guards";
-import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
+import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 
 const mockResolveAuthUser = resolveAuthUser as jest.MockedFunction<
   typeof resolveAuthUser
 >;
-const mockAssertLedgerAccess = assertLedgerAccess as jest.MockedFunction<
-  typeof assertLedgerAccess
+const mockAuthorizeLedger = authorizeLedger as jest.MockedFunction<
+  typeof authorizeLedger
 >;
 
 describe("setAskAgentRoute", () => {
@@ -100,8 +100,17 @@ describe("setAskAgentRoute", () => {
         ledger_username: "un_a",
         ledger_password: "pw_a",
       },
+      identity: {
+        userId: "usr_1",
+        method: "oauth",
+        scopes: new Set(["ledger.read", "ledger.write"]),
+        capabilityExempt: false,
+      },
     } as never);
-    mockAssertLedgerAccess.mockResolvedValue(undefined as never);
+    mockAuthorizeLedger.mockResolvedValue({
+      ledgerRepoId: 1,
+      ownerUserId: "usr_1",
+    });
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -162,7 +171,12 @@ describe("setAskAgentRoute", () => {
     await invoke(ctx);
 
     expect(assertQuota).toHaveBeenCalledWith("usr_1");
-    expect(mockAssertLedgerAccess).toHaveBeenCalled();
+    expect(mockAuthorizeLedger).toHaveBeenCalledWith(
+      expect.objectContaining({ userId: "usr_1" }),
+      "alice/default",
+      "read",
+      expect.any(Object),
+    );
     expect(workflow.streamAnswer).toHaveBeenCalledWith(
       expect.objectContaining({
         prompt: "what is my balance?", // last message

@@ -85,20 +85,20 @@ async function mintOAuth(
     expiresIn = "1h",
     subject = "user-oauth",
   }: {
-    audience?: string;
+    audience?: string | null;
     issuer?: string;
     expiresIn?: string;
     subject?: string;
   } = {},
 ): Promise<string> {
-  return new SignJWT(claims)
+  const signer = new SignJWT(claims)
     .setProtectedHeader({ alg: "ES256", kid: "test-key" })
     .setIssuer(issuer)
-    .setAudience(audience)
     .setSubject(subject)
     .setIssuedAt()
-    .setExpirationTime(expiresIn)
-    .sign(privateKey);
+    .setExpirationTime(expiresIn);
+  if (audience) signer.setAudience(audience);
+  return signer.sign(privateKey);
 }
 
 describe("resolveIdentity — no credential", () => {
@@ -209,13 +209,43 @@ describe("resolveIdentity — OAuth credential", () => {
     expect(identity?.userId).toBe("user-oauth");
   });
 
-  it("accepts a token whose audience we did not anticipate", async () => {
-    // The verifier's contract before w1/m18 was signature + issuer, with no
-    // audience check at all. Unifying the surfaces must not narrow that: any
-    // token that authenticated an MCP client yesterday still has to work today.
-    // Whether to reject unexpected audiences is a security decision measured in
-    // shadow first and enforced in w1/m20, not smuggled in here.
+  it("rejects a token carrying an unexpected audience", async () => {
     const token = await mintOAuth({}, { audience: "https://other.example/x" });
+    const identity = await resolveIdentity(
+      request({ authorization: `Bearer ${token}` }),
+      databaseAccepting(null),
+      config,
+    );
+    expect(identity).toBeUndefined();
+  });
+
+  it("rejects a token without an audience", async () => {
+    const token = await mintOAuth({}, { audience: null });
+    await expect(
+      resolveIdentity(
+        request({ authorization: `Bearer ${token}` }),
+        databaseAccepting(null),
+        config,
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it("rejects the transitional MCP audience on GraphQL and REST", async () => {
+    const token = await mintOAuth(
+      {},
+      { audience: `${ISSUER}/api-gateway/mcp` },
+    );
+    await expect(
+      resolveIdentity(
+        request({ authorization: `Bearer ${token}` }),
+        databaseAccepting(null),
+        config,
+      ),
+    ).resolves.toBeUndefined();
+  });
+
+  it("accepts only the API resource on the GraphQL and REST gate", async () => {
+    const token = await mintOAuth({}, { audience: `${ISSUER}/v1` });
     const identity = await resolveIdentity(
       request({ authorization: `Bearer ${token}` }),
       databaseAccepting(null),
@@ -224,13 +254,14 @@ describe("resolveIdentity — OAuth credential", () => {
     expect(identity?.method).toBe("oauth");
   });
 
-  it("accepts both resources we mint against", async () => {
+  it("accepts the API and transitional legacy resource on the MCP gate", async () => {
     for (const audience of [`${ISSUER}/api-gateway/mcp`, `${ISSUER}/v1`]) {
       const token = await mintOAuth({ ledger_id: "alice/main" }, { audience });
       const identity = await resolveIdentity(
         request({ authorization: `Bearer ${token}` }),
         databaseAccepting(null),
         config,
+        { oauthAudience: "mcp" },
       );
       expect(identity?.method).toBe("oauth");
     }

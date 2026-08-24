@@ -28,7 +28,7 @@ import { useTheme } from "@/common/theme";
 import { Ionicons } from "@expo/vector-icons";
 
 export const MainContent = () => {
-  const { authToken } = useSession();
+  const session = useSession();
   const toast = useToast();
   const locale = useReactiveVar(localeVar);
   const currentTheme = useReactiveVar(themeVar);
@@ -88,7 +88,7 @@ export const MainContent = () => {
           message: "Account deleted successfully",
           type: "success",
         });
-        await actionLogout(authToken ?? "");
+        await actionLogout(session);
         router.replace("/auth/welcome");
       } else {
         toast.showToast({
@@ -160,7 +160,7 @@ export const MainContent = () => {
             await analytics.track("tap_help_center", { url: helpCenterUrl });
           }}
         />
-        {authToken && (
+        {session && (
           <ListItemHorizontal
             icon={<Ionicons name="trash" size={22} color={theme.black80} />}
             title={t("deleteAccount")}
@@ -196,7 +196,7 @@ export const MainContent = () => {
         />
       </List2>
 
-      {authToken && (
+      {session && (
         <SecondaryButton
           title={t("logout")}
           icon={<Ionicons name="log-out" size={20} color={theme.error} />}
@@ -210,7 +210,7 @@ export const MainContent = () => {
                 {
                   text: t("logoutAlertConfirm"),
                   onPress: async () => {
-                    await actionLogout(authToken ?? "");
+                    await actionLogout(session);
                     router.replace("/auth/welcome");
                   },
                 },

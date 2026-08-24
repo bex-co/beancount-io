@@ -2,6 +2,8 @@ import { apolloClient } from "@/common/apollo/client";
 import { purgeApolloCache } from "@/common/apollo/cache-persist";
 import { teardownSessionCaches } from "@/common/apollo/session-teardown";
 import { defaultRuntimeServerUrl } from "@/common/server-url";
+import { oauthTokenManager } from "@/common/oauth/oauth-token-manager";
+import { clearPendingAuthorization } from "@/common/oauth/pending-authorization-storage";
 import {
   accountUsageVar,
   flushAccountUsage,
@@ -21,7 +23,15 @@ import {
 } from "@/common/vars/server-url";
 
 /** Clear every local value that can be derived from a server-backed ledger. */
-export async function clearServerScopedState(): Promise<void> {
+export async function clearServerScopedState(
+  options: { refreshAlreadyTerminal?: boolean } = {},
+): Promise<void> {
+  if (options.refreshAlreadyTerminal) {
+    oauthTokenManager.invalidatePendingRefreshes();
+  } else {
+    await oauthTokenManager.cancelPendingRefreshes();
+  }
+  await clearPendingAuthorization();
   ledgerVar(null);
   accountUsageVar({});
   merchantRecurringOverridesVar({});

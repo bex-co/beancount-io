@@ -7,6 +7,7 @@ import { fetch as expoFetch } from "expo/fetch";
 import { getEndpoint } from "@/common/request";
 import { sessionVar, ledgerVar, localeVar } from "@/common/vars";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { oauthTokenManager } from "@/common/oauth/oauth-token-manager";
 
 /**
  * The chat client for `POST /api-gateway/agent` — the same route and the same
@@ -47,8 +48,6 @@ export function useAgentChat() {
   // transport mid-stream; `headers` is resolved per request anyway.
   const localeRef = useRef(locale);
   localeRef.current = locale;
-  const tokenRef = useRef(session?.authToken);
-  tokenRef.current = session?.authToken;
 
   const welcome = useMemo<UIMessage>(
     () => ({
@@ -67,12 +66,13 @@ export function useAgentChat() {
       new DefaultChatTransport<UIMessage>({
         api: getEndpoint("api-gateway/agent"),
         credentials: "omit",
-        headers: () => ({
-          ...(tokenRef.current
-            ? { Authorization: `Bearer ${tokenRef.current}` }
-            : {}),
-          "Accept-Language": localeRef.current,
-        }),
+        headers: async () => {
+          const token = await oauthTokenManager.getAccessToken();
+          return {
+            ...(token ? { Authorization: `Bearer ${token}` } : {}),
+            "Accept-Language": localeRef.current,
+          };
+        },
         body: { ledgerId, sessionId },
         fetch: expoFetch as unknown as typeof globalThis.fetch,
       }),
@@ -111,6 +111,6 @@ export function useAgentChat() {
     startNewChat,
     sessionId,
     ledgerId,
-    isSignedIn: Boolean(session?.authToken),
+    isSignedIn: Boolean(session),
   };
 }

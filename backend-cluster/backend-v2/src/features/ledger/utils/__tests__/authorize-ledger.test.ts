@@ -35,7 +35,7 @@ function identity(overrides: Partial<Identity> = {}): Identity {
   return {
     userId: "user-1",
     method: "oauth",
-    scopes: new Set(),
+    scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
     capabilityExempt: false,
     ...overrides,
   };
@@ -46,6 +46,51 @@ describe("authorizeLedger", () => {
     jest.clearAllMocks();
     mockGetLedger.mockResolvedValue({
       data: { success: true, data: { id: 42, private: true } },
+    });
+  });
+
+  describe("OAuth capabilities", () => {
+    it.each([
+      ["read", "ledger.read"],
+      ["write", "ledger.write"],
+      ["admin", "ledger.admin"],
+    ] as const)("requires %s operations to carry %s", async (rel, scope) => {
+      await expect(
+        authorizeLedger(
+          identity({ scopes: new Set() }),
+          "owner/main",
+          rel,
+          deps,
+        ),
+      ).rejects.toThrow(ForbiddenError);
+      expect(mockGetUserByUsername).not.toHaveBeenCalled();
+      expect(mockGetAdminClient).not.toHaveBeenCalled();
+
+      mockGetUserByUsername.mockResolvedValue({ id: "user-1" });
+      await expect(
+        authorizeLedger(
+          identity({ scopes: new Set([scope]) }),
+          "owner/main",
+          rel,
+          deps,
+        ),
+      ).resolves.toEqual({ ledgerRepoId: 42, ownerUserId: "user-1" });
+    });
+
+    it("leaves a full-power legacy session exempt from the scope matrix", async () => {
+      mockGetUserByUsername.mockResolvedValue({ id: "user-1" });
+      await expect(
+        authorizeLedger(
+          identity({
+            method: "session",
+            scopes: new Set(),
+            capabilityExempt: true,
+          }),
+          "owner/main",
+          "admin",
+          deps,
+        ),
+      ).resolves.toEqual({ ledgerRepoId: 42, ownerUserId: "user-1" });
     });
   });
 

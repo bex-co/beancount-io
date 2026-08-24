@@ -108,6 +108,7 @@ class UpdateProfileInput {
 export class AccountResolver {
   constructor(private readonly accountService: IAccountService) {}
 
+  @Authorized("ledger.read")
   @Query(() => UserProfileResponse, {
     description: "get the user",
     nullable: true,
@@ -130,7 +131,7 @@ export class AccountResolver {
     return user;
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => Boolean, {
     description: "delete user account and its associated data",
   })

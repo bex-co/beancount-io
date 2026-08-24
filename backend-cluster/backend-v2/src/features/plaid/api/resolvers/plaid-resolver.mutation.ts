@@ -12,7 +12,7 @@ import {
 import { parseLedgerId } from "@/shared/str";
 import type { IPlaidItemService } from "@/features/plaid/service/plaid-item-service";
 import type { IPlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
-import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
+import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
 
 @Resolver()
 export class PlaidMutationResolver {
@@ -30,7 +30,7 @@ export class PlaidMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidLinkToken> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.createLinkToken(identity.userId, ledgerId);
   }
 
@@ -52,7 +52,7 @@ export class PlaidMutationResolver {
     accountSelection?: boolean,
   ): Promise<PlaidLinkToken> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.createUpdateModeLinkToken(
       identity.userId,
       itemId,
@@ -72,7 +72,7 @@ export class PlaidMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidAccountReconcileResult> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.reconcileItemAccounts(
       identity.userId,
       itemId,
@@ -90,7 +90,7 @@ export class PlaidMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidItemType> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.exchangePublicToken(
       identity.userId,
       ledgerId,
@@ -109,7 +109,7 @@ export class PlaidMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<boolean> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.updateAccountMapping(
       identity.userId,
       accountId,
@@ -129,7 +129,7 @@ export class PlaidMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<boolean> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.updateAccountCurrency(
       identity.userId,
       accountId,
@@ -149,7 +149,7 @@ export class PlaidMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidItemType> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.refreshItemStatus(
       identity.userId,
       itemId,
@@ -168,7 +168,7 @@ export class PlaidMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<boolean> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.unlinkItem(identity.userId, itemId, ledgerId);
   }
 
@@ -182,7 +182,7 @@ export class PlaidMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidSyncResult> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidSyncService.syncItemTransactions(
       identity.userId,
       itemId,
@@ -209,7 +209,7 @@ export class PlaidMutationResolver {
     filename?: string,
   ): Promise<PlaidSubmitResult> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     return this.plaidSyncService.submitTransactionsToLedger(
       identity.userId,
@@ -231,7 +231,7 @@ export class PlaidMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidDeleteResult> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidSyncService.deleteTransactions(
       identity.userId,
       ledgerId,

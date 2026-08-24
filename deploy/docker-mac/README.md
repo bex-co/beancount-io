@@ -91,3 +91,10 @@ point), not in Gitea. It is off by default. To enable:
 - This stack is for local use: default database passwords, `NODE_ENV=development`,
   no TLS. For the production-oriented topology (reverse proxy, named volumes,
   and no directly published application ports), see [`../docker/`](../docker/).
+
+## Production OAuth
+
+Set `DASHBOARD_URL` to the public HTTPS dashboard front door; it is also the
+production OAuth issuer and interaction origin. Keep `OAUTH_JWKS` in the secret
+manager. If no valid signing JWKS is available, backend-v2 continues serving
+legacy login and API traffic while OAuth endpoints return `503`.

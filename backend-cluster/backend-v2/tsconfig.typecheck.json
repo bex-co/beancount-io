@@ -1,5 +1,5 @@
 {
-  "//": "Type-checking only. Adds a paths alias so `@ai-sdk/harness/agent` resolves to its built .d.ts (dist) instead of the package's shipped TS source, which classic `moduleResolution: node` would otherwise pull in and flag its own type errors. This alias must NOT live in tsconfig.json: at runtime, tsconfig-paths would map the import to the .d.ts and ts-node would fail to load it. Runtime resolves the import via Node's exports map (→ dist/agent/index.js) with no alias.",
+  "//": "Type-checking and build config. Adds a paths alias so `@ai-sdk/harness/agent` resolves to its built .d.ts (dist) instead of the package's shipped TS source, which classic `moduleResolution: node` would otherwise pull in and flag its own type errors. This alias must NOT live in tsconfig.json: at runtime, tsconfig-paths would map the import to the .d.ts and ts-node would fail to load it. Emitted imports stay package-relative and Node resolves them through the exports map (→ dist/agent/index.js).",
   "extends": "./tsconfig.json",
   "compilerOptions": {
     "paths": {

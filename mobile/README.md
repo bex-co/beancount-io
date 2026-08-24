@@ -101,6 +101,40 @@ The mobile client defaults to the hosted Beancount.io API. A signed-out user can
 
 `EXPO_PUBLIC_SERVER_URL` remains the build-time default for development and branded builds. It is not a credential; keep actual credentials and private configuration out of committed `.env` files.
 
+### Mobile OAuth contract
+
+New sign-ins open the selected server in the iOS or Android system browser and
+return to the app through `io.beancount.ios:/oauth/callback` or
+`io.beancount.android:/oauth/callback`. The app discovers RFC 9728 protected
+resource metadata and RFC 8414 authorization-server metadata from that selected
+server, then validates the exact resource, issuer, endpoint origin, code-only
+response support, S256 PKCE, and authorization-response issuer. A legacy server
+that only passes the GraphQL health check is reported as incompatible.
+
+The native client is public and has no client secret. Access and rotating
+refresh credentials live only in the OS keychain/keystore. Concurrent requests
+share one refresh; transient offline failures retain the account for retry,
+while `invalid_grant` clears the server-scoped session and Apollo data. Tokens
+are treated as opaque—the user is resolved by an authenticated GraphQL profile
+query after the code exchange, never by decoding token claims in the app.
+
+Logout attempts refresh-token revocation before clearing all local
+server-scoped state. Because API access tokens are self-contained and last at
+most one hour, one already issued token can remain valid until its expiry even
+after refresh revocation; logout prevents the app from refreshing or reusing
+it locally.
+
+Existing installations with a valid legacy session JWT continue to work on
+their issuing server. Once they log out, the app uses OAuth exclusively; there
+is no session-to-refresh-token exchange. The dashboard's old WebView bridge is
+compatibility-only. Remove it after both conditions hold: the stores' minimum
+supported version is at least the first OAuth release, and the bounded
+`legacy_mobile_auth_completed` event is zero for 30 consecutive days. That
+event contains only the flow category—never a token, user, URL, or server. If
+OAuth discovery or callback failures rise during rollout, keep the bridge for
+older builds while rolling the new build back; do not route the new build back
+to embedded authentication.
+
 ## Languages
 
 English, Simplified Chinese, Bulgarian, Catalan, German, Spanish, Persian, French, Dutch, Portuguese, Russian, Slovak, and Ukrainian.

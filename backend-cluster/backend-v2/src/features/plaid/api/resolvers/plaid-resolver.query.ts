@@ -18,7 +18,7 @@ import {
 } from "./plaid-resolver.types";
 import { CategorySuggestion } from "@/features/llm/api/ai-categorization-resolver.types";
 import type { IPlaidItemService } from "@/features/plaid/service/plaid-item-service";
-import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
+import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
 
 @Resolver(() => PlaidItemType)
 export class PlaidQueryResolver {
@@ -33,7 +33,7 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidItemType[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.getItems(identity.userId, ledgerId);
   }
 
@@ -74,12 +74,8 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidAccountType[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
-    return this.plaidItemService.getAccounts(
-      identity.userId,
-      itemId,
-      ledgerId,
-    );
+    assertLedgerAuthorization(identity, ledgerId, "read");
+    return this.plaidItemService.getAccounts(identity.userId, itemId, ledgerId);
   }
 
   @Authorized()
@@ -92,7 +88,7 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidAccountWithInstitutionType[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.getAccountsForLedger(
       identity.userId,
       ledgerId,
@@ -111,7 +107,7 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidTransactionType[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.getUnsyncedTransactions(
       identity.userId,
       accountId,
@@ -131,7 +127,7 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<CategorySuggestion[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.suggestCategories(
       identity.userId,
       ledgerId,
@@ -150,7 +146,7 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidAccountMappingSuggestion[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerScope(identity, ledgerId);
+    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.suggestAccountMapping(
       identity.userId,
       ledgerId,

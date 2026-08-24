@@ -39,10 +39,14 @@ export function setAnthropicMessagesRoute(
   config: AppConfig,
 ): void {
   router.post("/api-gateway/ai/anthropic/v1/messages", async (ctx) => {
-    const { user } = await resolveAuthUser(ctx, {
-      models: layers.database.models,
-      db: layers.database.db,
-    });
+    const { user } = await resolveAuthUser(
+      ctx,
+      {
+        models: layers.database.models,
+        db: layers.database.db,
+      },
+      "read",
+    );
     await layers.services.aiCfoUsage.assertQuotaAvailable(user.id);
 
     const parseResult = anthropicMessageBodySchema.safeParse(ctx.request.body);

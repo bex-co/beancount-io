@@ -4,8 +4,15 @@ import Koa from "koa";
 import Router from "@koa/router";
 import bodyParser from "koa-bodyparser";
 import type { AppConfig } from "@/config/config";
+import { decodeJwt } from "jose";
 import { getJwks } from "@/config/jwks";
-import { setOidcRoutes } from "../oidc-route";
+import { resolveOidcIdentity } from "@/features/oauth/utils/oidc-verify";
+import {
+  MOBILE_CLIENT_ID,
+  MOBILE_REDIRECT_URIS,
+  oauthWellKnownPath,
+  setOidcRoutes,
+} from "../oidc-route";
 
 // Mock logger to avoid winston-loki dependency issues (same pattern as
 // git-proxy-handler.test.ts).
@@ -46,6 +53,23 @@ const TEST_USER = {
   avatarUrl: "https://example.com/avatar.png",
   isBlocked: false,
 };
+
+describe("OAuth well-known URL derivation", () => {
+  it("preserves issuer and resource path prefixes", () => {
+    expect(
+      oauthWellKnownPath(
+        "oauth-authorization-server",
+        "https://books.example.test/beancount",
+      ),
+    ).toBe("/.well-known/oauth-authorization-server/beancount");
+    expect(
+      oauthWellKnownPath(
+        "oauth-protected-resource",
+        "https://books.example.test/beancount/v1",
+      ),
+    ).toBe("/.well-known/oauth-protected-resource/beancount/v1");
+  });
+});
 
 // ── Minimal cookie jar — carries Set-Cookie values across the manual
 // authorize → interaction-login → resume → token redirect chain, since
@@ -103,6 +127,17 @@ describe("oidc-route: unified MCP + identity provider", () => {
         next,
       );
     });
+    app.use(async (ctx, next) => {
+      if (ctx.headers.authorization === `Bearer ${TEST_TOKEN}`) {
+        ctx.state.identity = {
+          userId: TEST_USER.id,
+          method: "session",
+          scopes: new Set(),
+          capabilityExempt: true,
+        };
+      }
+      await next();
+    });
     const router = new Router();
 
     const models = {
@@ -123,6 +158,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
       jwt: { secret: "test-jwt-secret", expMins: 525600 },
       oauth: {
         issuer: ISSUER,
+        interactionUrl: ISSUER,
         jwks: getJwks("test" as AppConfig["env"]),
         discourseClient: {
           clientId: DISCOURSE_CLIENT_ID,
@@ -140,6 +176,21 @@ describe("oidc-route: unified MCP + identity provider", () => {
       },
       config,
     );
+    router.post("/api-gateway/", async (ctx) => {
+      const authorization = ctx.headers.authorization ?? "";
+      const identity = await resolveOidcIdentity(
+        authorization.replace(/^Bearer\s+/i, ""),
+        config,
+      );
+      if (!identity || !identity.scopes.includes("ledger.read")) {
+        ctx.status = 401;
+        ctx.body = { errors: [{ message: "unauthenticated" }] };
+        return;
+      }
+      ctx.body = {
+        data: { userProfile: { id: identity.userId } },
+      };
+    });
     app.use(router.routes());
     app.use(router.allowedMethods());
 
@@ -192,7 +243,10 @@ describe("oidc-route: unified MCP + identity provider", () => {
           cookie: jar.header(),
           "content-type": "application/x-www-form-urlencoded",
         },
-        body: new URLSearchParams(opts.loginBody ?? {}),
+        body: new URLSearchParams({
+          ...(opts.clientId === MOBILE_CLIENT_ID ? { scope: opts.scope } : {}),
+          ...opts.loginBody,
+        }),
         redirect: "manual",
       },
     );
@@ -200,10 +254,13 @@ describe("oidc-route: unified MCP + identity provider", () => {
       const body = (await loginRes.json().catch(() => ({}))) as {
         error?: string;
       };
-      throw Object.assign(new Error("login failed"), {
-        status: loginRes.status,
-        body,
-      });
+      throw Object.assign(
+        new Error(`login failed: ${body.error ?? "unknown"}`),
+        {
+          status: loginRes.status,
+          body,
+        },
+      );
     }
     jar.absorb(loginRes);
     const resumeLocation = loginRes.headers.get("location")!;
@@ -214,12 +271,15 @@ describe("oidc-route: unified MCP + identity provider", () => {
     });
     expect(resumeRes.status).toBe(303);
     const finalLocation = new URL(resumeRes.headers.get("location")!);
-    expect(finalLocation.origin + finalLocation.pathname).toBe(
-      opts.redirectUri,
-    );
+    const callback =
+      finalLocation.origin === "null"
+        ? `${finalLocation.protocol}${finalLocation.pathname}`
+        : finalLocation.origin + finalLocation.pathname;
+    expect(callback).toBe(opts.redirectUri);
     const code = finalLocation.searchParams.get("code");
     expect(code).toBeTruthy();
     expect(finalLocation.searchParams.get("state")).toBe(state);
+    expect(finalLocation.searchParams.get("iss")).toBe(ISSUER);
 
     return { code: code!, verifier: codeVerifier };
   }
@@ -425,6 +485,255 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(location.pathname).toBe("/oauth/identity-consent");
   });
 
+  // ── Native mobile flow (static public client) ─────────────────────────────
+
+  it("mobile flow: completes code+PKCE without a client secret and mints an unpinned API token", async () => {
+    const resource = `${ISSUER}/v1`;
+    const redirectUri = MOBILE_REDIRECT_URIS[0];
+    const { code, verifier } = await driveAuthorizationCode({
+      clientId: MOBILE_CLIENT_ID,
+      clientAuth: "",
+      scope: "openid offline_access ledger.read ledger.write ledger.admin",
+      redirectUri,
+      prompt: "consent",
+      resource,
+    });
+    const tokenBody = await exchangeToken({
+      code,
+      verifier,
+      clientId: MOBILE_CLIENT_ID,
+      redirectUri,
+      resource,
+    });
+
+    expect(tokenBody.access_token).toEqual(expect.any(String));
+    expect(tokenBody.refresh_token).toEqual(expect.any(String));
+    const claims = decodeJwt(tokenBody.access_token as string);
+    expect(claims.aud).toBe(resource);
+    expect(claims.sub).toBe(TEST_USER.id);
+    expect(claims.ledger_id).toBeUndefined();
+
+    const profileResponse = await fetch(`${ISSUER}/api-gateway/`, {
+      method: "POST",
+      headers: {
+        "content-type": "application/json",
+        authorization: `Bearer ${tokenBody.access_token}`,
+      },
+      body: JSON.stringify({
+        query: "query OAuthCurrentUser { userProfile { id } }",
+      }),
+    });
+    expect(await profileResponse.json()).toEqual({
+      data: { userProfile: { id: TEST_USER.id } },
+    });
+  });
+
+  it("mobile flow: routes to account-wide consent and rejects an unregistered callback", async () => {
+    const { codeChallenge } = pkce();
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.searchParams.set("client_id", MOBILE_CLIENT_ID);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", "openid ledger.read");
+    authUrl.searchParams.set("redirect_uri", MOBILE_REDIRECT_URIS[1]);
+    authUrl.searchParams.set("code_challenge", codeChallenge);
+    authUrl.searchParams.set("code_challenge_method", "S256");
+    authUrl.searchParams.set("state", "mobile-state");
+    authUrl.searchParams.set("resource", `${ISSUER}/v1`);
+
+    const consent = await fetch(authUrl, { redirect: "manual" });
+    const consentUrl = new URL(consent.headers.get("location")!);
+    expect(consentUrl.pathname).toBe("/oauth/mobile-consent");
+    expect(consentUrl.searchParams.get("scope")).toBe("openid ledger.read");
+
+    authUrl.searchParams.set(
+      "redirect_uri",
+      "io.beancount.attacker:/oauth/callback",
+    );
+    const rejected = await fetch(authUrl, { redirect: "manual" });
+    expect(rejected.status).toBe(400);
+    expect(await rejected.text()).toContain("redirect_uri");
+  });
+
+  it("mobile flow: rejects the legacy MCP resource and ledger pinning", async () => {
+    const { codeChallenge } = pkce();
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.searchParams.set("client_id", MOBILE_CLIENT_ID);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", "openid ledger.read");
+    authUrl.searchParams.set("redirect_uri", MOBILE_REDIRECT_URIS[0]);
+    authUrl.searchParams.set("code_challenge", codeChallenge);
+    authUrl.searchParams.set("code_challenge_method", "S256");
+    authUrl.searchParams.set("state", "mobile-state");
+    authUrl.searchParams.set("resource", `${ISSUER}/api-gateway/mcp`);
+
+    const wrongResource = await fetch(authUrl, { redirect: "manual" });
+    const resourceError = new URL(wrongResource.headers.get("location")!);
+    expect(resourceError.searchParams.get("error")).toBe("invalid_target");
+
+    await expect(
+      driveAuthorizationCode({
+        clientId: MOBILE_CLIENT_ID,
+        clientAuth: "",
+        scope: "openid ledger.read",
+        redirectUri: MOBILE_REDIRECT_URIS[0],
+        loginBody: { ledgerId: "ada/personal" },
+        resource: `${ISSUER}/v1`,
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it("mobile flow: rejects consent copy that does not match the interaction scopes", async () => {
+    await expect(
+      driveAuthorizationCode({
+        clientId: MOBILE_CLIENT_ID,
+        clientAuth: "",
+        scope: "openid ledger.read ledger.write",
+        redirectUri: MOBILE_REDIRECT_URIS[0],
+        loginBody: { scope: "openid ledger.read" },
+        resource: `${ISSUER}/v1`,
+      }),
+    ).rejects.toMatchObject({ status: 400 });
+  });
+
+  it("mobile flow: cancellation returns the standard access_denied response", async () => {
+    const jar = new CookieJar();
+    const { codeChallenge } = pkce();
+    const redirectUri = MOBILE_REDIRECT_URIS[0];
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.searchParams.set("client_id", MOBILE_CLIENT_ID);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", "openid ledger.read");
+    authUrl.searchParams.set("redirect_uri", redirectUri);
+    authUrl.searchParams.set("code_challenge", codeChallenge);
+    authUrl.searchParams.set("code_challenge_method", "S256");
+    authUrl.searchParams.set("state", "cancel-state");
+    authUrl.searchParams.set("resource", `${ISSUER}/v1`);
+
+    const authRes = await fetch(authUrl, { redirect: "manual" });
+    jar.absorb(authRes);
+    const uid = new URL(authRes.headers.get("location")!).searchParams.get(
+      "uid",
+    )!;
+    const decision = await fetch(
+      `${ISSUER}/api-gateway/oauth/interaction/${uid}/login`,
+      {
+        method: "POST",
+        headers: {
+          cookie: jar.header(),
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ decision: "cancel" }),
+        redirect: "manual",
+      },
+    );
+    jar.absorb(decision);
+    const resumed = await fetch(
+      new URL(decision.headers.get("location")!, ISSUER),
+      { headers: { cookie: jar.header() }, redirect: "manual" },
+    );
+    const callback = new URL(resumed.headers.get("location")!);
+    expect(callback.searchParams.get("error")).toBe("access_denied");
+    expect(callback.searchParams.get("state")).toBe("cancel-state");
+    expect(callback.searchParams.get("iss")).toBe(ISSUER);
+  });
+
+  it("mobile flow: rotates refresh credentials and revocation prevents another refresh", async () => {
+    const resource = `${ISSUER}/v1`;
+    const redirectUri = MOBILE_REDIRECT_URIS[0];
+    const { code, verifier } = await driveAuthorizationCode({
+      clientId: MOBILE_CLIENT_ID,
+      clientAuth: "",
+      scope: "openid offline_access ledger.read",
+      redirectUri,
+      prompt: "consent",
+      resource,
+    });
+    const tokenBody = await exchangeToken({
+      code,
+      verifier,
+      clientId: MOBILE_CLIENT_ID,
+      redirectUri,
+      resource,
+    });
+    const firstRefreshToken = tokenBody.refresh_token as string;
+
+    const refreshRes = await fetch(`${ISSUER}/api-gateway/oauth/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: firstRefreshToken,
+        client_id: MOBILE_CLIENT_ID,
+        resource,
+      }),
+    });
+    expect(refreshRes.status).toBe(200);
+    const refreshed = (await refreshRes.json()) as Record<string, unknown>;
+    expect(refreshed.refresh_token).toEqual(expect.any(String));
+    expect(refreshed.refresh_token).not.toBe(firstRefreshToken);
+
+    const revokeRes = await fetch(`${ISSUER}/api-gateway/oauth/revoke`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        token: refreshed.refresh_token as string,
+        token_type_hint: "refresh_token",
+        client_id: MOBILE_CLIENT_ID,
+      }),
+    });
+    expect(revokeRes.status).toBe(200);
+
+    const afterRevoke = await fetch(`${ISSUER}/api-gateway/oauth/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: refreshed.refresh_token as string,
+        client_id: MOBILE_CLIENT_ID,
+        resource,
+      }),
+    });
+    expect(afterRevoke.status).toBe(400);
+    expect((await afterRevoke.json()) as object).toMatchObject({
+      error: "invalid_grant",
+    });
+  });
+
+  it("resource indicators: rejects an arbitrary resource with invalid_target", async () => {
+    const { codeChallenge } = pkce();
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.searchParams.set("client_id", MOBILE_CLIENT_ID);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", "openid ledger.read");
+    authUrl.searchParams.set("redirect_uri", MOBILE_REDIRECT_URIS[0]);
+    authUrl.searchParams.set("code_challenge", codeChallenge);
+    authUrl.searchParams.set("code_challenge_method", "S256");
+    authUrl.searchParams.set("state", "mobile-state");
+    authUrl.searchParams.set("resource", "https://attacker.example.test/api");
+
+    const res = await fetch(authUrl, { redirect: "manual" });
+    expect(res.status).toBe(303);
+    const location = new URL(res.headers.get("location")!);
+    expect(location.searchParams.get("error")).toBe("invalid_target");
+  });
+
+  it("resource indicators: identity clients cannot request an API token", async () => {
+    const { codeChallenge } = pkce();
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.searchParams.set("client_id", DISCOURSE_CLIENT_ID);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set("scope", "openid ledger.read");
+    authUrl.searchParams.set("redirect_uri", DISCOURSE_REDIRECT_URI);
+    authUrl.searchParams.set("code_challenge", codeChallenge);
+    authUrl.searchParams.set("code_challenge_method", "S256");
+    authUrl.searchParams.set("state", "identity-state");
+    authUrl.searchParams.set("resource", `${ISSUER}/v1`);
+
+    const res = await fetch(authUrl, { redirect: "manual" });
+    const location = new URL(res.headers.get("location")!);
+    expect(location.searchParams.get("error")).toBe("invalid_target");
+  });
+
   // ── MCP flow (dynamically-registered client, unchanged behavior) ──────────
 
   async function registerMcpClient(): Promise<{
@@ -457,7 +766,10 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
     authUrl.searchParams.set("client_id", clientId);
     authUrl.searchParams.set("response_type", "code");
-    authUrl.searchParams.set("scope", "openid offline_access");
+    authUrl.searchParams.set(
+      "scope",
+      "openid offline_access ledger.read ledger.write ledger.admin",
+    );
     authUrl.searchParams.set("redirect_uri", redirectUri);
     authUrl.searchParams.set("code_challenge", codeChallenge);
     authUrl.searchParams.set("code_challenge_method", "S256");
@@ -473,7 +785,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const { code, verifier } = await driveAuthorizationCode({
       clientId,
       clientAuth: "",
-      scope: "openid offline_access",
+      scope: "openid offline_access ledger.read ledger.write ledger.admin",
       redirectUri,
       loginBody: { ledgerId: "ada/personal" },
       prompt: "consent",
@@ -511,7 +823,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const { code, verifier } = await driveAuthorizationCode({
       clientId,
       clientAuth: "",
-      scope: "openid offline_access",
+      scope: "openid offline_access ledger.read ledger.write ledger.admin",
       redirectUri,
       prompt: "consent",
     });
@@ -543,9 +855,10 @@ describe("oidc-route: unified MCP + identity provider", () => {
   // grants issued against the old one are still alive kills every one of those
   // sessions on its next refresh — verified: it returns exactly that error.
   //
-  // Hence discovery keeps naming the legacy resource until the 30-day refresh
-  // TTL has retired every such grant. This test fails if that is flipped early.
-  it("does not advertise a resource that pre-existing grants cannot refresh against", async () => {
+  // New grants carry both resources so they are ready for the eventual flip,
+  // while discovery keeps naming the legacy resource until the last old-only
+  // grant reaches its 30-day TTL. This test fails if either half is removed.
+  it("bridges new MCP grants while discovery protects pre-existing grants", async () => {
     const { clientId, redirectUri } = await registerMcpClient();
     const legacyResource = `${ISSUER}/api-gateway/mcp`;
     const newResource = `${ISSUER}/v1`;
@@ -553,7 +866,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const { code, verifier } = await driveAuthorizationCode({
       clientId,
       clientAuth: "",
-      scope: "openid offline_access",
+      scope: "openid offline_access ledger.read ledger.write ledger.admin",
       redirectUri,
       loginBody: { ledgerId: "ada/personal" },
       prompt: "consent",
@@ -585,15 +898,13 @@ describe("oidc-route: unified MCP + identity provider", () => {
       };
     };
 
-    // Refreshing against the resource the grant was issued for works.
-    const sameResource = await refreshWith(legacyResource);
-    expect(sameResource.status).toBe(200);
-
-    // Naming a different one does not — this is the failure mode being guarded,
-    // pinned so nobody has to rediscover why discovery lags behind.
+    // New grants also carry the canonical resource, so they survive the future
+    // discovery flip without a custom token-exchange grant.
     const switched = await refreshWith(newResource);
-    expect(switched.status).toBe(400);
-    expect(switched.body.error).toBe("invalid_grant");
+    expect(switched.status).toBe(200);
+    expect(decodeJwt(switched.body.access_token as string).aud).toBe(
+      newResource,
+    );
 
     // Therefore discovery must keep naming the resource existing grants hold.
     const metadata = (await (
@@ -614,6 +925,9 @@ describe("oidc-route: unified MCP + identity provider", () => {
       scopes_supported?: string[];
       code_challenge_methods_supported?: string[];
       token_endpoint_auth_methods_supported?: string[];
+      response_types_supported?: string[];
+      grant_types_supported?: string[];
+      authorization_response_iss_parameter_supported?: boolean;
     };
     expect(body.issuer).toBe(ISSUER);
     expect(body.authorization_endpoint).toBe(
@@ -628,19 +942,46 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(body.token_endpoint_auth_methods_supported).toContain(
       "client_secret_basic",
     );
+    expect(body.response_types_supported).toEqual(["code"]);
+    expect(body.authorization_response_iss_parameter_supported).toBe(true);
+    expect(body.grant_types_supported).toEqual(
+      expect.arrayContaining(["authorization_code", "refresh_token"]),
+    );
+  });
+
+  it("public JWKS exposes only the active public signing key", async () => {
+    const res = await fetch(`${ISSUER}/api-gateway/oauth/jwks`);
+    const body = (await res.json()) as {
+      keys?: Array<Record<string, unknown>>;
+    };
+    expect(res.status).toBe(200);
+    expect(body.keys).toHaveLength(1);
+    expect(body.keys?.[0]).toMatchObject({
+      kid: "development-ephemeral",
+      kty: "EC",
+      crv: "P-256",
+      alg: "ES256",
+    });
+    expect(body.keys?.[0].d).toBeUndefined();
+  });
+
+  it("canonical protected-resource metadata exactly names the API resource", async () => {
+    const res = await fetch(
+      `${ISSUER}/.well-known/oauth-protected-resource/v1`,
+    );
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({
+      resource: `${ISSUER}/v1`,
+      authorization_servers: [ISSUER],
+      scopes_supported: ["ledger.read", "ledger.write", "ledger.admin"],
+      bearer_methods_supported: ["header"],
+    });
   });
 });
 
-// Regression test for a real incident: passing OAUTH_ISSUER through
-// docker-compose.yml as `${OAUTH_ISSUER:-}` turned "env var unset" into "env
-// var set to an empty string". config.ts used `??`, which only falls back on
-// null/undefined, so the empty string reached `new Provider("", ...)`
-// directly — oidc-provider asserts the issuer is a non-empty URL and throws,
-// which was an unhandled rejection that crashed the entire server on boot
-// (not just the OAuth feature). issuer is now hardcoded (see config.ts), so
-// this exact scenario can no longer happen — but the discourseClient fields
-// are still partially env-sourced (clientSecret), so this locks in that an
-// empty/missing config there degrades gracefully instead of crashing.
+// The config layer now rejects an empty issuer before provider construction.
+// The optional Discourse secret remains allowed to be empty; in that case only
+// the always-present public mobile client is registered.
 describe("oidc-route: missing discourseClient config must not crash the server", () => {
   const PORT = 47593;
   const ISSUER = `http://127.0.0.1:${PORT}`;
@@ -660,7 +1001,8 @@ describe("oidc-route: missing discourseClient config must not crash the server",
       env: "test",
       jwt: { secret: "test-jwt-secret", expMins: 525600 },
       oauth: {
-        issuer: "https://beancount.io", // hardcoded, per config.ts — never empty
+        issuer: "https://beancount.io",
+        interactionUrl: "https://beancount.io",
         jwks: getJwks("test" as AppConfig["env"]),
         discourseClient: {
           clientId: "discourse-forum",
@@ -686,6 +1028,52 @@ describe("oidc-route: missing discourseClient config must not crash the server",
     server = http.createServer(app.callback());
   });
 
+  it("keeps the server available and returns 503 when OAuth signing keys are absent", async () => {
+    const app = new Koa();
+    const router = new Router();
+    const disabledIssuer = "http://127.0.0.1:47594";
+    const config = {
+      env: "production",
+      oauth: {
+        issuer: disabledIssuer,
+        interactionUrl: disabledIssuer,
+        jwks: undefined,
+        unavailableReason: "OAUTH_JWKS is required in production",
+        discourseClient: {
+          clientId: "discourse-forum",
+          clientSecret: "",
+          redirectUri: "https://beancount.io/forum/auth/oidc/callback",
+        },
+      },
+    } as unknown as AppConfig;
+
+    setOidcRoutes(
+      router,
+      {
+        database: { db: {} as never, models: {} as never },
+        clients: {} as never,
+      },
+      config,
+    );
+    router.get("/healthz", (ctx) => {
+      ctx.body = { ok: true };
+    });
+    app.use(router.routes());
+    app.use(router.allowedMethods());
+    server = http.createServer(app.callback());
+    await new Promise<void>((resolve) => server.listen(47594, resolve));
+
+    const health = await fetch(`${disabledIssuer}/healthz`);
+    expect(health.status).toBe(200);
+    const oauth = await fetch(`${disabledIssuer}/api-gateway/oauth/token`, {
+      method: "POST",
+    });
+    expect(oauth.status).toBe(503);
+    expect(await oauth.json()).toMatchObject({
+      error: "oauth_not_configured",
+    });
+  });
+
   it("the discourse client is simply absent — no crash, no client registered", async () => {
     const app = new Koa();
     const router = new Router();
@@ -695,6 +1083,7 @@ describe("oidc-route: missing discourseClient config must not crash the server",
       jwt: { secret: "test-jwt-secret", expMins: 525600 },
       oauth: {
         issuer: ISSUER,
+        interactionUrl: ISSUER,
         jwks: getJwks("test" as AppConfig["env"]),
         discourseClient: {
           clientId: "discourse-forum",
@@ -726,5 +1115,181 @@ describe("oidc-route: missing discourseClient config must not crash the server",
     // 400 invalid_client, not a connection failure or 500 — the route works,
     // it just correctly has no client registered for this id.
     expect(res.status).toBe(400);
+  });
+});
+
+describe("oidc-route: path-prefixed public issuer", () => {
+  const PORT = 47594;
+  const ORIGIN = `http://127.0.0.1:${PORT}`;
+  const ISSUER = `${ORIGIN}/books`;
+  let server: http.Server;
+
+  beforeAll(async () => {
+    const app = new Koa();
+    const router = new Router();
+    app.use(async (ctx, next) => {
+      if (ctx.path.startsWith("/books/api-gateway/oauth/")) {
+        ctx.req.url = ctx.req.url?.slice("/books".length) ?? ctx.req.url;
+      }
+      await next();
+    });
+    const koaBodyParser = bodyParser();
+    app.use(async (ctx, next) => {
+      const isOidcCore =
+        ctx.path.startsWith("/api-gateway/oauth/") &&
+        !ctx.path.startsWith("/api-gateway/oauth/interaction/");
+      if (isOidcCore) return next();
+      return koaBodyParser(
+        ctx as unknown as Parameters<typeof koaBodyParser>[0],
+        next,
+      );
+    });
+    app.use(async (ctx, next) => {
+      if (ctx.headers.authorization === `Bearer ${TEST_TOKEN}`) {
+        ctx.state.identity = {
+          userId: TEST_USER.id,
+          method: "session",
+          scopes: new Set(),
+          capabilityExempt: true,
+        };
+      }
+      await next();
+    });
+    const config = {
+      env: "test",
+      jwt: { secret: "test-jwt-secret", expMins: 525600 },
+      oauth: {
+        issuer: ISSUER,
+        interactionUrl: ORIGIN,
+        jwks: getJwks("test" as AppConfig["env"]),
+        discourseClient: {
+          clientId: "discourse-forum",
+          clientSecret: "",
+          redirectUri: `${ORIGIN}/forum/callback`,
+        },
+      },
+    } as unknown as AppConfig;
+
+    setOidcRoutes(
+      router,
+      {
+        database: {
+          db: {} as never,
+          models: {
+            user: {
+              getById: jest.fn(async (_db: unknown, id: string) =>
+                id === TEST_USER.id ? TEST_USER : null,
+              ),
+            },
+          } as never,
+        },
+        clients: {} as never,
+      },
+      config,
+    );
+    app.use(router.routes());
+    app.use(router.allowedMethods());
+    server = http.createServer(app.callback());
+    await new Promise<void>((resolve) => server.listen(PORT, resolve));
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((resolve) => server.close(() => resolve()));
+  });
+
+  it("serves an exact path-aware metadata chain", async () => {
+    const resourceResponse = await fetch(
+      `${ORIGIN}/.well-known/oauth-protected-resource/books/v1`,
+    );
+    expect(resourceResponse.status).toBe(200);
+    expect(await resourceResponse.json()).toMatchObject({
+      resource: `${ISSUER}/v1`,
+      authorization_servers: [ISSUER],
+    });
+
+    const issuerResponse = await fetch(
+      `${ORIGIN}/.well-known/oauth-authorization-server/books`,
+    );
+    expect(issuerResponse.status).toBe(200);
+    expect(await issuerResponse.json()).toMatchObject({
+      issuer: ISSUER,
+      authorization_endpoint: `${ISSUER}/api-gateway/oauth/auth`,
+      token_endpoint: `${ISSUER}/api-gateway/oauth/token`,
+    });
+  });
+
+  it("preserves the issuer prefix through authorization, consent, and token exchange", async () => {
+    const jar = new CookieJar();
+    const { codeVerifier, codeChallenge } = pkce();
+    const scope = "openid offline_access ledger.read";
+    const resource = `${ISSUER}/v1`;
+    const redirectUri = MOBILE_REDIRECT_URIS[0];
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.search = new URLSearchParams({
+      client_id: MOBILE_CLIENT_ID,
+      response_type: "code",
+      scope,
+      redirect_uri: redirectUri,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
+      state: "path-prefix-state",
+      prompt: "consent",
+      resource,
+    }).toString();
+
+    const authorization = await fetch(authUrl, { redirect: "manual" });
+    expect(authorization.status).toBe(303);
+    jar.absorb(authorization);
+    const consentUrl = new URL(authorization.headers.get("location")!);
+    expect(consentUrl.origin).toBe(ORIGIN);
+    expect(consentUrl.pathname).toBe("/oauth/mobile-consent");
+    const uid = consentUrl.searchParams.get("uid")!;
+
+    const consent = await fetch(
+      `${ISSUER}/api-gateway/oauth/interaction/${uid}/login`,
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${TEST_TOKEN}`,
+          cookie: jar.header(),
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({ scope }),
+        redirect: "manual",
+      },
+    );
+    expect(consent.status).toBe(303);
+    jar.absorb(consent);
+    const resumeUrl = new URL(consent.headers.get("location")!, ISSUER);
+    expect(resumeUrl.pathname.startsWith("/books/")).toBe(true);
+
+    const resume = await fetch(resumeUrl, {
+      headers: { cookie: jar.header() },
+      redirect: "manual",
+    });
+    expect(resume.status).toBe(303);
+    const callback = new URL(resume.headers.get("location")!);
+    expect(`${callback.protocol}${callback.pathname}`).toBe(redirectUri);
+    expect(callback.searchParams.get("iss")).toBe(ISSUER);
+
+    const token = await fetch(`${ISSUER}/api-gateway/oauth/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "authorization_code",
+        client_id: MOBILE_CLIENT_ID,
+        code: callback.searchParams.get("code")!,
+        code_verifier: codeVerifier,
+        redirect_uri: redirectUri,
+        resource,
+      }),
+    });
+    expect(token.status).toBe(200);
+    const tokenBody = (await token.json()) as { access_token: string };
+    expect(decodeJwt(tokenBody.access_token)).toMatchObject({
+      iss: ISSUER,
+      aud: resource,
+      sub: TEST_USER.id,
+    });
   });
 });

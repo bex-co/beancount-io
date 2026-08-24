@@ -63,9 +63,74 @@ FAVA_API_URL=http://localhost:8000
 FAVA_API_ADMIN_USER=admin
 FAVA_API_ADMIN_PASSWORD=your_password
 AUTH_SECRET=your_jwt_secret
+SERVER_URL=http://localhost:4104
+DASHBOARD_URL=http://localhost:5173
 # Optional: login/register JWT lifetime in minutes (default 525600 = 365 days)
 # AUTH_JWT_EXP_MINUTES=5
 ```
+
+Production OAuth requires `OAUTH_JWKS`, a complete private P-256/ES256 signing
+JWKS provided by the deployment secret manager. It must never be committed or
+copied into `.env.example`. When it is absent or malformed, OAuth endpoints
+return `503 oauth_not_configured`; the existing API and legacy JWT login remain
+available. Development and tests generate an ephemeral process-local key.
+
+Rotate an OAuth signing key by installing the replacement secret, deploying it,
+and removing the replaced public key from the served JWKS. Deleting a historical
+private key from Git without replacing the accepted live key does not invalidate
+tokens signed with it.
+
+### OAuth deployment contract
+
+`DASHBOARD_URL` is the public authorization-server and consent front door in
+production. `SERVER_URL` is the direct backend URL used by the local development
+stack. They are normal public deployment configuration, not OAuth secrets. Both
+default to the official service in production; development defaults to the
+local backend and dashboard. HTTPS is mandatory except for `localhost`,
+`127.0.0.1`, or `::1` outside production. If a production reverse proxy
+publishes Beancount under a path prefix, include that prefix in `DASHBOARD_URL`
+without a trailing slash.
+
+The localhost stack uses different ports but the same hostname. Production
+deployments should normally expose both through one HTTPS front door.
+
+Discovery starts at the RFC 9728 URL derived from the API resource. For an
+issuer `https://books.example.test/beancount`, the API resource and discovery
+chain are:
+
+```text
+resource: https://books.example.test/beancount/v1
+protected resource metadata:
+  https://books.example.test/.well-known/oauth-protected-resource/beancount/v1
+authorization server metadata:
+  https://books.example.test/.well-known/oauth-authorization-server/beancount
+```
+
+The proxy must route those well-known paths, the issuer-prefixed
+`/api-gateway/oauth/*` endpoints, and the interaction pages to this backend and
+dashboard respectively. The static `beancount-mobile` client is public (no
+secret), accepts only authorization code plus refresh grants, requires S256
+PKCE, and registers only `io.beancount.ios:/oauth/callback` and
+`io.beancount.android:/oauth/callback`.
+
+OAuth capabilities use one closed operation matrix on GraphQL, REST, and MCP:
+reads require `ledger.read`, ordinary mutations require
+`ledger.write`, and destructive account/ledger operations plus collaborator or
+public-key management require `ledger.admin`. These scopes are independent; an
+admin credential does not implicitly gain read or write access. Legacy browser
+and installed-mobile session JWTs remain capability-exempt only for the stated
+migration window.
+
+Signing-key rotation is a two-step deployment: replace the secret-backed JWKS,
+deploy, then verify `/api-gateway/oauth/jwks` exposes the new public `kid` only.
+Tokens signed by a removed key stop authenticating immediately. Never place the
+private JWK or a token in logs, commands captured by CI, or committed files.
+
+Refresh-token revocation prevents another refresh but does not maintain a
+per-request denylist for already-issued self-contained access tokens. Their
+maximum lifetime is one hour (`ttl.AccessToken`); clients must clear their local
+copy immediately on logout and operators should use signing-key rotation only
+for incident response where immediate global invalidation is required.
 
 #### Git over SSH proxy (optional, ADR 0004)
 
@@ -86,7 +151,7 @@ SSH_PROXY_HOST_KEY=
 
 The proxy also enforces the free-tier directive cap, replacing the last Gitea
 pre-receive hook. It asks ledger-v2 what the ledger currently counts and refuses
-a push whose ledger is already over — the question it *cannot* answer is whether
+a push whose ledger is already over — the question it _cannot_ answer is whether
 a push would take it over, because a thin pack carries no object store.
 
 There is no switch. It fails **open** on any error instead: once the hook is

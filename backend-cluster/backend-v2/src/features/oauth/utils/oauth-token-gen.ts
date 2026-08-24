@@ -11,18 +11,20 @@ const TTL_SECONDS = 3600;
  *
  * The audience stays the MCP resource, matching what the OIDC provider mints,
  * so there is ONE resource rename on one date rather than a split fleet — see
- * `legacyMcpResource`. Reaching GraphQL and REST with this token does not
- * depend on the rename: the shared identity gate accepts it either way, which
- * is what ADR 0006 D5 actually needed. `ledgerId` pins the token to a single
- * ledger; omit it for an unpinned one, which MCP refuses but the other surfaces
- * accept.
+ * `legacyMcpResource`. GraphQL and REST deliberately reject this transitional
+ * audience; the generated credential is handed only to MCP. `ledgerId` pins
+ * the token to a single ledger; omit it for an unpinned one, which MCP refuses.
  */
 export async function generateOAuthToken(
   userId: string,
   ledgerId: string | undefined,
   config: AppConfig,
 ): Promise<string> {
-  const jwk = config.oauth.jwks.keys[0] as JsonWebKey & { kid?: string };
+  const jwks = config.oauth.jwks;
+  if (!jwks) {
+    throw new Error("OAuth is not configured on this server");
+  }
+  const jwk = jwks.keys[0] as JsonWebKey & { kid?: string };
   const privateKey = await importJWK(jwk, "ES256");
 
   return new SignJWT({

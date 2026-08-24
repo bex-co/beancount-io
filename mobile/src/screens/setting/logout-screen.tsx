@@ -62,7 +62,7 @@ export const LogoutScreen = () => {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
-  const { authToken } = useSession();
+  const session = useSession();
 
   // The bar reaching the end *is* the signal to sign out — one animation, not
   // an animation racing a timer. Under reduce-motion the fill lands instantly
@@ -70,10 +70,8 @@ export const LogoutScreen = () => {
   // moment legible, and a user who has asked for less motion is not watching
   // it.
   const onProgressComplete = useCallback(async () => {
-    if (authToken) {
-      await actionLogout(authToken);
-    }
-  }, [authToken]);
+    await actionLogout(session);
+  }, [session]);
 
   return (
     <View style={styles.container}>

@@ -1,7 +1,20 @@
+import { config } from "@/config/config";
+
+export function backendBaseFromApiUrl(apiUrl: string): string {
+  const url = new URL(apiUrl);
+  const marker = "/api-gateway";
+  const markerIndex = url.pathname.lastIndexOf(marker);
+  if (markerIndex === -1) {
+    throw new Error("OAuth backend URL must contain /api-gateway");
+  }
+  const publicPrefix = url.pathname.slice(0, markerIndex).replace(/\/$/, "");
+  return `${url.origin}${publicPrefix}`;
+}
+
 export function getBackendBase(): string {
-  const sseApiUrl =
-    import.meta.env.VITE_API_URL ?? "http://localhost:4104/api-gateway/";
-  return new URL(sseApiUrl).origin;
+  return backendBaseFromApiUrl(
+    config.ssrApiUrl ?? "http://localhost:4104/api-gateway/",
+  );
 }
 
 export async function forwardToBackend(

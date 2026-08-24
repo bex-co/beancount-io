@@ -109,6 +109,7 @@ describe("utility modules", () => {
       const serverUrl = "https://ledger.example.com/";
       const session = createSession(token, serverUrl);
       expect(session).toEqual({
+        kind: "legacy",
         userId: `${token}-subject`,
         authToken: token,
         serverUrl,

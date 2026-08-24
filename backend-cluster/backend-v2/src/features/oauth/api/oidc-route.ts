@@ -1,6 +1,6 @@
 import type { IncomingMessage } from "node:http";
 import Router from "@koa/router";
-import { Provider } from "oidc-provider";
+import { errors, Provider } from "oidc-provider";
 import {
   type DatabaseLayer,
   type ClientFactoryLayer,
@@ -12,9 +12,16 @@ import { resolveAuthUser } from "@/features/ai-agent/utils/route-guards";
 import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
 import { API_SCOPES } from "@/server/api/identity";
 import { legacyMcpResource } from "@/features/oauth/utils/oidc-verify";
+import { apiResource } from "@/features/oauth/utils/oidc-verify";
 import { logger } from "@/shared/logger";
 
 const oidcLogger = logger.child({ module: "oidc-provider" });
+
+export const MOBILE_CLIENT_ID = "beancount-mobile";
+export const MOBILE_REDIRECT_URIS = [
+  "io.beancount.ios:/oauth/callback",
+  "io.beancount.android:/oauth/callback",
+] as const;
 
 interface IdentityClaims {
   sub: string;
@@ -46,17 +53,36 @@ function buildStaticClients(
   config: AppConfig,
 ): NonNullable<ConstructorParameters<typeof Provider>[1]>["clients"] {
   const { clientId, clientSecret, redirectUri } = config.oauth.discourseClient;
-  if (!clientId || !clientSecret) return [];
-  return [
+  type StaticClient = NonNullable<
+    NonNullable<ConstructorParameters<typeof Provider>[1]>["clients"]
+  >[number];
+  const clients: StaticClient[] = [
     {
-      client_id: clientId,
-      client_secret: clientSecret,
-      redirect_uris: [redirectUri],
-      grant_types: ["authorization_code"],
+      client_id: MOBILE_CLIENT_ID,
+      client_name: "Beancount Mobile",
+      application_type: "native",
+      redirect_uris: [...MOBILE_REDIRECT_URIS],
+      grant_types: ["authorization_code", "refresh_token"],
       response_types: ["code"],
-      token_endpoint_auth_method: "client_secret_basic",
+      token_endpoint_auth_method: "none",
+      scope: `openid offline_access ${API_SCOPES.join(" ")}`,
     },
   ];
+  if (!clientId || !clientSecret) return clients;
+  clients.push({
+    client_id: clientId,
+    client_secret: clientSecret,
+    redirect_uris: [redirectUri],
+    grant_types: ["authorization_code"],
+    response_types: ["code"],
+    token_endpoint_auth_method: "client_secret_basic",
+  });
+  return clients;
+}
+
+export function oauthWellKnownPath(kind: string, absoluteUrl: string): string {
+  const path = new URL(absoluteUrl).pathname.replace(/^\/|\/$/g, "");
+  return `/.well-known/${kind}${path ? `/${path}` : ""}`;
 }
 
 export function setOidcRoutes(
@@ -64,11 +90,42 @@ export function setOidcRoutes(
   layers: { database: DatabaseLayer; clients: ClientFactoryLayer },
   config: AppConfig,
 ): void {
+  const jwks = config.oauth.jwks;
+  if (!jwks) {
+    const unavailable: Router.Middleware = (ctx) => {
+      ctx.status = 503;
+      ctx.body = {
+        error: "oauth_not_configured",
+        error_description:
+          "OAuth is unavailable because this server has no valid signing-key configuration.",
+      };
+    };
+    oidcLogger.warn("OAuth routes are disabled", {
+      reason: config.oauth.unavailableReason ?? "signing keys unavailable",
+    });
+    router.all("/api-gateway/oauth/{*path}", unavailable);
+    router.all(
+      oauthWellKnownPath("oauth-authorization-server", config.oauth.issuer),
+      unavailable,
+    );
+    router.all("/.well-known/oauth-protected-resource", unavailable);
+    router.all(
+      oauthWellKnownPath(
+        "oauth-protected-resource",
+        apiResource(config.oauth.issuer),
+      ),
+      unavailable,
+    );
+    return;
+  }
+
   const isIdentityClient = (clientId: unknown): boolean =>
     clientId === config.oauth.discourseClient.clientId;
+  const isMobileClient = (clientId: unknown): boolean =>
+    clientId === MOBILE_CLIENT_ID;
 
   const provider = new Provider(config.oauth.issuer, {
-    jwks: config.oauth.jwks,
+    jwks,
     // Postgres in every environment except automated tests — dev/staging both have
     // a real Postgres available (docker-compose), and this app's Environment type
     // has no "staging" value, so a production-only gate would silently leave a
@@ -79,6 +136,7 @@ export function setOidcRoutes(
         : createPostgresAdapterFactory(layers.database.db),
 
     clients: buildStaticClients(config),
+    responseTypes: ["code"],
 
     features: {
       devInteractions: { enabled: false },
@@ -90,11 +148,14 @@ export function setOidcRoutes(
         // token instead of one bound to the MCP resource (see oidc-provider's own
         // resourceIndicators docs: "if ... no resource parameter is present — an
         // Access Token for the UserInfo Endpoint is returned").
-        defaultResource: (_ctx, client, oneOf) => {
+        defaultResource: (ctx, client, oneOf) => {
           // Falsy (not just literally undefined) reads as "no resource" —
           // see oidc-provider's checkResource/emptyResource.
           if (isIdentityClient(client.clientId)) return "";
           if (oneOf) return oneOf;
+          if (isMobileClient(client.clientId)) {
+            return apiResource(config.oauth.issuer);
+          }
           // Still the legacy MCP indicator during the compatibility window, on
           // purpose. A grant stored before this change carries only that
           // indicator, and oidc-provider rejects a token request naming a
@@ -104,12 +165,40 @@ export function setOidcRoutes(
           // carry the API indicator (see the consent handler below), so the
           // default can be flipped to `apiResource` once the window closes —
           // see legacyMcpResource for the date.
-          return legacyMcpResource(config.oauth.issuer);
+          return ctx.oidc.route === "authorization"
+            ? [
+                legacyMcpResource(config.oauth.issuer),
+                apiResource(config.oauth.issuer),
+              ]
+            : legacyMcpResource(config.oauth.issuer);
         },
-        getResourceServerInfo: () => ({
-          scope: `openid offline_access ${API_SCOPES.join(" ")}`,
-          accessTokenFormat: "jwt",
-        }),
+        getResourceServerInfo: (_ctx, resourceIndicator, client) => {
+          const canonicalApiResource = apiResource(config.oauth.issuer);
+          if (isIdentityClient(client.clientId)) {
+            throw new errors.InvalidTarget(
+              "identity clients cannot request an API resource",
+            );
+          }
+          if (
+            isMobileClient(client.clientId) &&
+            resourceIndicator !== canonicalApiResource
+          ) {
+            throw new errors.InvalidTarget(
+              "the native client must use the API resource",
+            );
+          }
+          const allowed = new Set([
+            canonicalApiResource,
+            legacyMcpResource(config.oauth.issuer),
+          ]);
+          if (!allowed.has(resourceIndicator)) {
+            throw new errors.InvalidTarget("unknown resource indicator");
+          }
+          return {
+            scope: `openid offline_access ${API_SCOPES.join(" ")}`,
+            accessTokenFormat: "jwt",
+          };
+        },
       },
       revocation: { enabled: true },
     },
@@ -136,8 +225,21 @@ export function setOidcRoutes(
       url: (_ctx, interaction) => {
         const path = isIdentityClient(interaction.params.client_id)
           ? "/oauth/identity-consent"
-          : "/oauth/consent";
-        return `${config.oauth.issuer}${path}?uid=${interaction.uid}`;
+          : isMobileClient(interaction.params.client_id)
+            ? "/oauth/mobile-consent"
+            : "/oauth/consent";
+        const consentUrl = new URL(
+          path.replace(/^\//, ""),
+          `${config.oauth.interactionUrl}/`,
+        );
+        consentUrl.searchParams.set("uid", interaction.uid);
+        if (isMobileClient(interaction.params.client_id)) {
+          consentUrl.searchParams.set(
+            "scope",
+            (interaction.params.scope as string | undefined) ?? "openid",
+          );
+        }
+        return consentUrl.toString();
       },
     },
 
@@ -227,21 +329,47 @@ export function setOidcRoutes(
   // breaks OIDC/MCP clients that enforce same-origin metadata. Pin the forwarded
   // headers to the issuer so OIDC responses stay deterministic across topologies.
   const issuerUrl = new URL(config.oauth.issuer);
-  function pinHostToIssuer(req: IncomingMessage): void {
+  function pinRequestToIssuer(req: IncomingMessage): void {
     req.headers.host = issuerUrl.host;
     req.headers["x-forwarded-host"] = issuerUrl.host;
     req.headers["x-forwarded-proto"] = issuerUrl.protocol.slice(0, -1); // "https"
+    // The public reverse proxy strips an issuer path prefix before Koa routing.
+    // oidc-provider normally learns that mount path from `originalUrl`; restore
+    // it here so discovery and resume URLs retain the configured public prefix.
+    const issuerPath = issuerUrl.pathname.replace(/\/$/, "");
+    if (issuerPath) {
+      (req as IncomingMessage & { originalUrl?: string }).originalUrl =
+        `${issuerPath}${req.url ?? ""}`;
+    }
+  }
+
+  function bridgeMcpAuthorizationResources(req: IncomingMessage): void {
+    if (!req.url) return;
+    const url = new URL(req.url, config.oauth.issuer);
+    if (url.pathname !== "/api-gateway/oauth/auth") return;
+    const clientId = url.searchParams.get("client_id");
+    if (isIdentityClient(clientId) || isMobileClient(clientId)) return;
+
+    const legacy = legacyMcpResource(config.oauth.issuer);
+    const canonical = apiResource(config.oauth.issuer);
+    const resources = url.searchParams.getAll("resource");
+    if (resources.includes(legacy) && !resources.includes(canonical)) {
+      url.searchParams.append("resource", canonical);
+      req.url = `${url.pathname}${url.search}`;
+    }
   }
 
   // --- Interaction endpoints (registered BEFORE catch-all) ---
 
   router.get("/api-gateway/oauth/interaction/:uid", async (ctx) => {
     try {
+      pinRequestToIssuer(ctx.req);
       const interaction = await provider.interactionDetails(ctx.req, ctx.res);
       ctx.body = {
         uid: interaction.uid,
         client: interaction.params.client_id,
         scope: interaction.params.scope,
+        resource: interaction.params.resource,
       };
     } catch (err) {
       oidcLogger.warn("Failed to get interaction details", {
@@ -255,8 +383,25 @@ export function setOidcRoutes(
 
   router.post("/api-gateway/oauth/interaction/:uid/login", async (ctx) => {
     try {
+      pinRequestToIssuer(ctx.req);
       const interaction = await provider.interactionDetails(ctx.req, ctx.res);
       const { params, prompt } = interaction;
+
+      const interactionBody = ctx.request.body as {
+        decision?: string;
+        ledgerId?: string;
+        scope?: string;
+      };
+      if (interactionBody.decision === "cancel") {
+        await provider.interactionFinished(
+          ctx.req,
+          ctx.res,
+          { error: "access_denied", error_description: "User cancelled" },
+          { mergeWithLastSubmission: false },
+        );
+        ctx.respond = false;
+        return;
+      }
 
       const { user } = await resolveAuthUser(ctx, {
         models: layers.database.models,
@@ -285,7 +430,21 @@ export function setOidcRoutes(
         grant.addOIDCScope(requestedScope);
         grantId = await grant.save();
       } else {
-        const { ledgerId } = ctx.request.body as { ledgerId?: string };
+        const { ledgerId } = interactionBody;
+
+        if (isMobileClient(params.client_id) && ledgerId) {
+          throw new errors.InvalidRequest(
+            "the native client grant must be account-wide",
+          );
+        }
+        if (
+          isMobileClient(params.client_id) &&
+          interactionBody.scope !== params.scope
+        ) {
+          throw new errors.InvalidRequest(
+            "the displayed native-client scopes do not match the interaction",
+          );
+        }
 
         // A ledger is optional now. Pinning the grant to one ledger is the
         // least-privilege shape (an agent that should only see one book), but
@@ -321,13 +480,39 @@ export function setOidcRoutes(
           for (const [indicator, scopes] of Object.entries(
             details.missingResourceScopes,
           )) {
-            grant.addResourceScope(indicator, scopes.join(" "));
+            const scope = scopes.join(" ");
+            grant.addResourceScope(indicator, scope);
+            if (
+              !isMobileClient(params.client_id) &&
+              indicator === legacyMcpResource(config.oauth.issuer)
+            ) {
+              grant.addResourceScope(apiResource(config.oauth.issuer), scope);
+            }
           }
         } else {
-          const resource =
-            (params.resource as string | undefined) ??
-            legacyMcpResource(config.oauth.issuer);
-          grant.addResourceScope(resource, requestedScope);
+          const paramResources = Array.isArray(params.resource)
+            ? params.resource.filter(
+                (resource): resource is string => typeof resource === "string",
+              )
+            : typeof params.resource === "string"
+              ? [params.resource]
+              : [];
+          const resources =
+            paramResources.length > 0
+              ? paramResources
+              : isMobileClient(params.client_id)
+                ? [apiResource(config.oauth.issuer)]
+                : [
+                    legacyMcpResource(config.oauth.issuer),
+                    apiResource(config.oauth.issuer),
+                  ];
+          // oidc-provider separates the OIDC and resource portions when the
+          // grant is evaluated. Passing the original request here is required
+          // for it to retain `offline_access` and avoid a second consent loop;
+          // unsupported values were already rejected against `scopes` above.
+          for (const resource of resources) {
+            grant.addResourceScope(resource, requestedScope);
+          }
         }
 
         grantId = await grant.save();
@@ -359,7 +544,8 @@ export function setOidcRoutes(
   // Delegate /api-gateway/oauth/* to oidc-provider (no koa-mount, path preserved)
   router.all("/api-gateway/oauth/{*path}", async (ctx) => {
     try {
-      pinHostToIssuer(ctx.req);
+      bridgeMcpAuthorizationResources(ctx.req);
+      pinRequestToIssuer(ctx.req);
       ctx.respond = false;
       await cb(ctx.req, ctx.res);
     } catch (err) {
@@ -374,9 +560,17 @@ export function setOidcRoutes(
   });
 
   // oidc-provider serves its discovery document at this path (proxied by dashboard)
-  router.get("/.well-known/oauth-authorization-server", async (ctx) => {
+  const authorizationServerMetadataPath = oauthWellKnownPath(
+    "oauth-authorization-server",
+    config.oauth.issuer,
+  );
+  const serveAuthorizationServerMetadata: Router.Middleware = async (ctx) => {
     try {
-      pinHostToIssuer(ctx.req);
+      // oidc-provider is mounted at the backend root. A public path prefix is
+      // represented in the configured issuer and reverse proxy, not in its
+      // internal router, so normalize the RFC 8414 derived URL before delegating.
+      ctx.req.url = "/.well-known/oauth-authorization-server";
+      pinRequestToIssuer(ctx.req);
       ctx.respond = false;
       await cb(ctx.req, ctx.res);
     } catch (err) {
@@ -388,7 +582,8 @@ export function setOidcRoutes(
         ctx.res.end(JSON.stringify({ error: "Internal server error" }));
       }
     }
-  });
+  };
+  router.get(authorizationServerMetadataPath, serveAuthorizationServerMetadata);
 
   // RFC 9728: Protected Resource Metadata. Advertises the closed API scope
   // vocabulary so a discovery-driven client requests exactly those
@@ -408,4 +603,17 @@ export function setOidcRoutes(
       bearer_methods_supported: ["header"],
     };
   });
+
+  const canonicalResource = apiResource(config.oauth.issuer);
+  router.get(
+    oauthWellKnownPath("oauth-protected-resource", canonicalResource),
+    async (ctx) => {
+      ctx.body = {
+        resource: canonicalResource,
+        authorization_servers: [config.oauth.issuer],
+        scopes_supported: [...API_SCOPES],
+        bearer_methods_supported: ["header"],
+      };
+    },
+  );
 }

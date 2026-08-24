@@ -1,26 +1,17 @@
 import { ApolloClient, ApolloLink, HttpLink } from "@apollo/client";
+import { setContext } from "@apollo/client/link/context";
 
 import { getEndpoint } from "@/common/request";
-import { sessionVar } from "@/common/vars";
-import { getServerUrl } from "@/common/vars/server-url";
-import { sessionTokenForServer } from "@/common/session-utils";
 import { onErrorLink } from "@/common/apollo/error-handling";
 import { cache } from "@/common/apollo/cache";
+import { oauthTokenManager } from "@/common/oauth/oauth-token-manager";
+import { buildAuthHeaders } from "@/common/apollo/auth-headers";
 
-const middlewareLink = new ApolloLink((operation, forward) => {
-  // The equality guard is defense in depth for startup and server-change
-  // transitions: a bearer token is valid only for its issuing server.
-  const token = sessionTokenForServer(sessionVar(), getServerUrl());
-  operation.setContext(
-    ({ headers = {} }: { headers?: Record<string, string> }) => ({
-      headers: {
-        ...headers,
-        "x-app-id": "beancount-mobile",
-        ...(token ? { authorization: `Bearer ${token}` } : {}),
-      },
-    }),
-  );
-  return forward(operation);
+const middlewareLink = setContext(async (_operation, { headers = {} }) => {
+  const token = await oauthTokenManager.getAccessToken();
+  return {
+    headers: buildAuthHeaders(headers, token),
+  };
 });
 
 // use with apollo-client

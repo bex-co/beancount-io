@@ -1,4 +1,4 @@
-import { Resolver, Query, Arg, Ctx, Int } from "type-graphql";
+import { Resolver, Query, Arg, Authorized, Ctx, Int } from "type-graphql";
 import { IContext } from "@/server/graphql/context";
 import type { ICommitsService } from "../service/commits-service";
 import { CommitListItem, CommitDetails } from "./commits-resolver.types";
@@ -7,6 +7,7 @@ import { CommitListItem, CommitDetails } from "./commits-resolver.types";
 export class CommitsResolver {
   constructor(private readonly commitsService: ICommitsService) {}
 
+  @Authorized("ledger.read")
   @Query(() => [CommitListItem])
   async listCommits(
     @Arg("ledgerId") ledgerId: string,
@@ -24,6 +25,7 @@ export class CommitsResolver {
     });
   }
 
+  @Authorized("ledger.read")
   @Query(() => CommitDetails)
   async getCommitDetails(
     @Arg("ledgerId") ledgerId: string,
