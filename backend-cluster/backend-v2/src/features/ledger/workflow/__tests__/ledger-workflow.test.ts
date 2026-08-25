@@ -746,7 +746,7 @@ describe("LedgerWorkflow", () => {
       ).rejects.toThrow(InternalServerError);
     });
 
-    it("should strip permissions when no userId provided (public client uses owner token)", async () => {
+    it("should strip permissions when no userId provided", async () => {
       mockFavaApiClient.ledgers.getLedger.mockResolvedValue({
         data: {
           success: true,
@@ -827,7 +827,6 @@ describe("LedgerWorkflow", () => {
         }),
       ).rejects.toThrow(OperationNotAllowedError);
     });
-
   });
 
   describe("updateLedgerFile", () => {
@@ -887,7 +886,6 @@ describe("LedgerWorkflow", () => {
         }),
       ).rejects.toThrow(OperationNotAllowedError);
     });
-
   });
 
   describe("deleteLedgerFile", () => {
@@ -995,6 +993,17 @@ describe("LedgerWorkflow", () => {
         }),
       ).rejects.toThrow(InternalServerError);
     });
+
+    it("rejects traversal before provisioning a ledger client", async () => {
+      await expect(
+        workflow.getLedgerFile({
+          ledgerId,
+          userId: USER_ID,
+          args: { path: "../../private/main.bean" },
+        }),
+      ).rejects.toThrow(BadUserInputError);
+      expect(favaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+    });
   });
 
   describe("getLedgerDirContent", () => {
@@ -1019,12 +1028,14 @@ describe("LedgerWorkflow", () => {
       const result = await workflow.getLedgerDirContent({
         ledgerId,
         userId: USER_ID,
-        args: { dirPath: "/" },
+        args: { dirPath: "reports" },
       });
 
       expect(
         mockFavaApiClient.ledgers.getLedgerDirContent,
-      ).toHaveBeenCalledWith("testuser", "test-ledger", { dir_path: "/" });
+      ).toHaveBeenCalledWith("testuser", "test-ledger", {
+        dir_path: "reports",
+      });
       expect(result).toHaveLength(2);
       expect(result[0].path).toBe("main.bean");
       expect(result[1].path).toBe("accounts.bean");
@@ -1038,6 +1049,17 @@ describe("LedgerWorkflow", () => {
       await expect(
         workflow.getLedgerDirContent({ ledgerId, userId: USER_ID, args: {} }),
       ).rejects.toThrow(InternalServerError);
+    });
+
+    it("rejects a traversal directory before provisioning a ledger client", async () => {
+      await expect(
+        workflow.getLedgerDirContent({
+          ledgerId,
+          userId: USER_ID,
+          args: { dirPath: "../private" },
+        }),
+      ).rejects.toThrow(BadUserInputError);
+      expect(favaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
     });
   });
 

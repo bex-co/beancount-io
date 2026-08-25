@@ -11,6 +11,7 @@ import type { LedgerEntryInput } from "@/foundation/ledger-api-types/ledger-entr
 import { BadUserInputError } from "@/shared/errors";
 import { NotFoundDetailError } from "@/server/py-errors";
 import type { ContentsResponse } from "@/features/gitea/client/gitea-api";
+import { assertSafeRepoPath, toSafeRepoUrlPath } from "@/shared/safe-repo-path";
 
 /**
  * Wire shape (Python `EntryAddBulkEntriesRequest`): a discriminated union of
@@ -66,6 +67,7 @@ export function setEntriesHandler(router: Router): void {
           );
         }
         const target = row.filename || defaultFilename;
+        assertSafeRepoPath(target, `entries[${idx}].filename`);
         const list = byFile.get(target) ?? [];
         list.push(text);
         byFile.set(target, list);
@@ -74,9 +76,14 @@ export function setEntriesHandler(router: Router): void {
       const client = giteaClientForRequest(ctx);
       const updates: Array<{ path: string; content: string; sha: string }> = [];
       for (const [path, texts] of byFile) {
+        const safeUrlPath = toSafeRepoUrlPath(path, "filename");
         let file: ContentsResponse | null = null;
         try {
-          const res = await client.repos.repoGetContents(owner, repoName, path);
+          const res = await client.repos.repoGetContents(
+            owner,
+            repoName,
+            safeUrlPath,
+          );
           const data = res.data as ContentsResponse | ContentsResponse[] | null;
           file = data === null || Array.isArray(data) ? null : data;
         } catch (err) {

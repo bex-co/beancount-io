@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { createFavaApi } from "../create-client";
+import { createAnonymousFavaApi, createFavaApi } from "../create-client";
 import { ApiClient } from "../api-client";
 
 // Mock ApiClient
@@ -111,6 +111,15 @@ describe("createFavaApi", () => {
           baseUrl,
         }),
       );
+    });
+  });
+
+  it("uses the private anonymous-read protocol without a user credential", () => {
+    createAnonymousFavaApi("http://ledger.internal");
+
+    expect(ApiClient).toHaveBeenCalledWith({
+      baseUrl: "http://ledger.internal",
+      baseApiParams: { headers: { Authorization: "Anonymous" } },
     });
   });
 });

@@ -1,8 +1,5 @@
 import type { Context } from "koa";
-import {
-  authMiddleware,
-  parseAuthorizationHeader,
-} from "@/server/auth";
+import { authMiddleware, parseAuthorizationHeader } from "@/server/auth";
 
 jest.mock("@/config", () => ({
   config: {
@@ -42,6 +39,13 @@ describe("parseAuthorizationHeader", () => {
     expect(auth).toEqual({ authType: "api_key", header: "token abc123" });
   });
 
+  it("classifies the private anonymous-read protocol", () => {
+    expect(parseAuthorizationHeader("Anonymous")).toEqual({
+      authType: "anonymous",
+      header: "Anonymous",
+    });
+  });
+
   it("rejects missing, empty, and unknown schemes", () => {
     expect(parseAuthorizationHeader(undefined)).toBeNull();
     expect(parseAuthorizationHeader("")).toBeNull();
@@ -77,4 +81,3 @@ describe("authMiddleware", () => {
     expect((ctx.state.auth as { username: string }).username).toBe("bob");
   });
 });
-

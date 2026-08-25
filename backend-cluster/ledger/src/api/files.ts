@@ -11,6 +11,8 @@ import { checkDirectiveLimitForFileChanges } from "@/core/directive-limit";
 import { config } from "@/config";
 import { DomainError, ErrorCategory, NotFoundError } from "@/shared/errors";
 import { NotFoundDetailError } from "@/server/py-errors";
+import { assertSafeRepoPath, toSafeRepoUrlPath } from "@/shared/safe-repo-path";
+import { assertSafeArchiveName } from "@/shared/safe-archive-name";
 
 /** Gitea archive failure forwarded with its upstream status (Python parity). */
 class ArchiveDownloadError extends DomainError {
@@ -90,11 +92,12 @@ export function setFilesHandler(router: Router): void {
     async (ctx) => {
       const client = giteaClientForRequest(ctx);
       const path = String(ctx.query.path ?? "");
+      const safeUrlPath = toSafeRepoUrlPath(path);
       try {
         const res = await client.repos.repoGetContents(
           ctx.params.owner,
           ctx.params.repo_name,
-          path,
+          safeUrlPath,
         );
         const data = res.data as ContentsResponse | ContentsResponse[] | null;
         if (data === null || Array.isArray(data)) {
@@ -119,10 +122,14 @@ export function setFilesHandler(router: Router): void {
     async (ctx) => {
       const client = giteaClientForRequest(ctx);
       const body = (ctx.request.body ?? {}) as { files?: string[] };
+      const files = body.files ?? [];
+      files.forEach((path, index) =>
+        assertSafeRepoPath(path, `files[${index}]`),
+      );
       const res = await client.repos.repoGetFileContentsPost(
         ctx.params.owner,
         ctx.params.repo_name,
-        { files: body.files ?? [] },
+        { files },
       );
       const items = (res.data ?? []) as Array<ContentsResponse | null>;
       ctx.body = successResponse(
@@ -140,6 +147,7 @@ export function setFilesHandler(router: Router): void {
     async (ctx) => {
       const { owner, repo_name: repoName } = ctx.params;
       const body = (ctx.request.body ?? {}) as CreateFileBody;
+      const safeUrlPath = toSafeRepoUrlPath(body.path);
       const client = giteaClientForRequest(ctx);
       await checkDirectiveLimitForFileChanges(
         client,
@@ -151,7 +159,7 @@ export function setFilesHandler(router: Router): void {
       const res = await client.repos.repoCreateFile(
         owner,
         repoName,
-        body.path,
+        safeUrlPath,
         {
           content: body.content,
           message: body.message || `Create ${body.path}`,
@@ -172,6 +180,7 @@ export function setFilesHandler(router: Router): void {
     async (ctx) => {
       const { owner, repo_name: repoName } = ctx.params;
       const body = (ctx.request.body ?? {}) as UpdateFileBody;
+      const safeUrlPath = toSafeRepoUrlPath(body.path);
       const client = giteaClientForRequest(ctx);
       await checkDirectiveLimitForFileChanges(
         client,
@@ -183,7 +192,7 @@ export function setFilesHandler(router: Router): void {
       const res = await client.repos.repoUpdateFile(
         owner,
         repoName,
-        body.path,
+        safeUrlPath,
         {
           content: body.content,
           sha: body.sha,
@@ -204,8 +213,9 @@ export function setFilesHandler(router: Router): void {
     async (ctx) => {
       const { owner, repo_name: repoName } = ctx.params;
       const body = (ctx.request.body ?? {}) as DeleteFileBody;
+      const safeUrlPath = toSafeRepoUrlPath(body.path);
       const client = giteaClientForRequest(ctx);
-      await client.repos.repoDeleteFile(owner, repoName, body.path, {
+      await client.repos.repoDeleteFile(owner, repoName, safeUrlPath, {
         sha: body.sha,
         message: body.message || `Delete ${body.path}`,
       });
@@ -220,8 +230,15 @@ export function setFilesHandler(router: Router): void {
     async (ctx) => {
       const { owner, repo_name: repoName } = ctx.params;
       const body = (ctx.request.body ?? {}) as ChangeFilesBody;
+      const operations = body.files ?? [];
       const fileChanges: Record<string, string | null> = {};
-      for (const op of body.files ?? []) {
+      operations.forEach((op, index) => {
+        assertSafeRepoPath(op.path, `files[${index}].path`);
+        if (op.from_path !== null && op.from_path !== undefined) {
+          assertSafeRepoPath(op.from_path, `files[${index}].from_path`);
+        }
+      });
+      for (const op of operations) {
         if (op.operation === "delete") {
           fileChanges[op.path] = null;
         } else if (op.content !== null && op.content !== undefined) {
@@ -237,7 +254,7 @@ export function setFilesHandler(router: Router): void {
         { exempt: directiveLimitExempt(ctx) },
       );
       await client.repos.repoChangeFiles(owner, repoName, {
-        files: (body.files ?? []).map((op) => ({
+        files: operations.map((op) => ({
           operation: op.operation,
           path: op.path,
           content: op.content ?? undefined,
@@ -262,12 +279,13 @@ export function setFilesHandler(router: Router): void {
       const res = await client.repos.repoGetContentsList(owner, repoName);
       content = (res.data ?? []) as ContentsResponse[];
     } else {
+      const safeUrlPath = toSafeRepoUrlPath(dirPath, "dir_path");
       let data: ContentsResponse | ContentsResponse[] | null;
       try {
         const res = await client.repos.repoGetContents(
           owner,
           repoName,
-          dirPath,
+          safeUrlPath,
         );
         data = res.data as ContentsResponse | ContentsResponse[] | null;
       } catch (err) {
@@ -292,15 +310,19 @@ export function setFilesHandler(router: Router): void {
   });
 
   // operationId: getLedgerArchive — GET /ledgers/{o}/{r}/archive/{archive}
-  // Streams raw bytes from Gitea with the caller's forwarded credentials.
+  // Streams raw bytes with the caller's credentials, or no credential for a
+  // public-ledger request carrying backend-v2's private Anonymous marker.
   router.get(
     "/ledgers/:owner/:repo_name/archive/:archive",
     authMiddleware,
     async (ctx) => {
       const auth = ctx.state.auth as RequestAuth;
+      assertSafeArchiveName(ctx.params.archive);
       const url = `${config.gitea.baseUrl}/api/v1/repos/${encodeURIComponent(ctx.params.owner)}/${encodeURIComponent(ctx.params.repo_name)}/archive/${encodeURIComponent(ctx.params.archive)}`;
       const upstream = await fetch(url, {
-        headers: { Authorization: auth.header },
+        ...(auth.authType === "anonymous"
+          ? {}
+          : { headers: { Authorization: auth.header } }),
       });
       if (upstream.status !== 200) {
         if (upstream.status === 404) {

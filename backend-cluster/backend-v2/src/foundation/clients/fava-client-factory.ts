@@ -2,17 +2,15 @@ import { NodePgDatabase } from "drizzle-orm/node-postgres";
 import { type AppConfig } from "@/config/config";
 import { IModels } from "@/foundation/models";
 import {
+  createAnonymousFavaApi,
   createFavaApi,
-  createAPIKeyFavaApi,
   FavaApiClient,
 } from "@/foundation/fava";
 import { FavaApiContext } from "@/foundation/types";
 import { parseLedgerId } from "@/shared/str";
-import { lock, LOCK_KEYS } from "@/shared/lock";
 import {
   UnauthenticatedError,
   NotFoundError,
-  InternalServerError,
   ForbiddenError,
 } from "@/shared/errors";
 
@@ -95,56 +93,7 @@ export class FavaClientFactory implements IFavaClientFactory {
     if (response.data.data.private) {
       throw new ForbiddenError("Ledger is private");
     }
-    const user = await this.models.user.getUserByUsername(this.db, ledgerOwner);
-    if (!user) {
-      throw new NotFoundError("Invalid ledger ID");
-    }
-    if (user.ledger_api_token) {
-      return createAPIKeyFavaApi(
-        this.config.favaApi.baseUrl,
-        user.ledger_api_token,
-      );
-    }
-    const lockKey = LOCK_KEYS.API_KEY.create(user.id);
-    return lock.acquire(lockKey, async () => {
-      const ledgerUser = await this.models.user.getUserByUsername(
-        this.db,
-        ledgerOwner,
-      );
-      if (!ledgerUser) {
-        throw new NotFoundError("Invalid ledger ID");
-      }
-      if (ledgerUser.ledger_api_token) {
-        return createAPIKeyFavaApi(
-          this.config.favaApi.baseUrl,
-          ledgerUser.ledger_api_token,
-        );
-      }
-
-      const favaApiClient = createFavaApi(
-        this.config.favaApi.baseUrl,
-        ledgerUser.ledger_username,
-        ledgerUser.ledger_password,
-      );
-
-      const response = await favaApiClient.tokens.createUserToken(
-        ledgerUser.ledger_username,
-        {
-          name: "read:repository",
-          scopes: ["read:repository"],
-        },
-      );
-      if (!response.data?.success || !response.data.data.sha1) {
-        throw new InternalServerError("Failed to create API key");
-      }
-      await this.models.user.updateUser(this.db, ledgerUser.id, {
-        ledger_api_token: response.data.data.sha1,
-      });
-      return createAPIKeyFavaApi(
-        this.config.favaApi.baseUrl,
-        response.data.data.sha1,
-      );
-    });
+    return createAnonymousFavaApi(this.config.favaApi.baseUrl);
   }
 
   public getAdminClient(): FavaApiClient {

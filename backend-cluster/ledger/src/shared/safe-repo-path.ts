@@ -22,8 +22,11 @@ import { BadUserInputError } from "@/shared/errors";
  * Reject a repo-relative path containing traversal / absolute / empty
  * segments, NULs, or backslashes. Throws {@link BadUserInputError}.
  */
-export function assertSafeRepoPath(path: string, field = "path"): void {
-  if (path.length === 0) {
+export function assertSafeRepoPath(
+  path: unknown,
+  field = "path",
+): asserts path is string {
+  if (typeof path !== "string" || path.length === 0) {
     throw new BadUserInputError("File path must not be empty", field);
   }
   if (path.includes("\0") || path.includes("\\")) {

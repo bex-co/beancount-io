@@ -31,6 +31,17 @@ export const createAPIKeyFavaApi = (
 };
 
 /**
+ * Ask ledger-v2 to use Gitea's unauthenticated client. This private protocol
+ * can read public repositories only and carries no reusable user credential.
+ */
+export const createAnonymousFavaApi = (baseUrl: string): FavaApiClient => {
+  return new ApiClient({
+    baseUrl,
+    baseApiParams: { headers: { Authorization: "Anonymous" } },
+  });
+};
+
+/**
  * Reuse an `Authorization` header the caller already holds.
  *
  * The git proxies translate a user's app credentials into their Gitea

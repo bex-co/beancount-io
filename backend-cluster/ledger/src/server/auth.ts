@@ -1,17 +1,20 @@
 import type { Context, Next } from "koa";
 import type { Api as GiteaApi } from "@/features/gitea/client/gitea-api";
-import { createGiteaClientFromAuthHeader } from "@/features/gitea/service/gitea-client-factory";
+import {
+  createAnonymousGiteaClient,
+  createGiteaClientFromAuthHeader,
+} from "@/features/gitea/service/gitea-client-factory";
 import { errorResponse } from "./envelope";
 
 /**
  * Request auth state, mirroring the Python `get_auth_credentials` +
- * `Context.user` (`app/deps/{security,context}.py`): the Authorization header
- * is parsed only to classify it and (for Basic) recover username/password; the
- * header itself is forwarded verbatim to Gitea, which is the sole authority.
+ * `Context.user` (`app/deps/{security,context}.py`): Basic/token headers are
+ * forwarded verbatim to Gitea, which is the sole authority. The private
+ * `Anonymous` marker instead selects a Gitea client with no credentials.
  */
 export interface RequestAuth {
-  authType: "basic" | "api_key";
-  /** The exact Authorization header value to forward to Gitea. */
+  authType: "basic" | "api_key" | "anonymous";
+  /** Original header; forwarded only for Basic/token requests. */
   header: string;
   /** Set only for Basic auth (token-auth requests have no local identity). */
   username?: string;
@@ -30,6 +33,12 @@ export function parseAuthorizationHeader(
       return { authType: "api_key", header: `token ${token}` };
     }
     return null;
+  }
+  // Private backend-v2 -> ledger-v2 protocol for reads that have already been
+  // authorized as public. The resulting Gitea client carries no credential,
+  // so it cannot read a private repository or perform a write.
+  if (header === "Anonymous") {
+    return { authType: "anonymous", header };
   }
   if (header.startsWith("Basic ")) {
     const encoded = header.slice(6).trim();
@@ -79,9 +88,10 @@ export function giteaClientForRequest(ctx: Context): GiteaApi<unknown> {
       "giteaClientForRequest called on a route without authMiddleware",
     );
   }
-  return createGiteaClientFromAuthHeader(auth.header);
+  return auth.authType === "anonymous"
+    ? createAnonymousGiteaClient()
+    : createGiteaClientFromAuthHeader(auth.header);
 }
-
 
 /**
  * Whether the caller declared this write exempt from the directive limit.

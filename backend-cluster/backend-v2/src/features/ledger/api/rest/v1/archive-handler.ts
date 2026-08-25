@@ -4,6 +4,7 @@ import { streamLedgerArchive } from "../archive-proxy";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
+import { SAFE_ARCHIVE_NAME_PATTERN } from "../safe-archive-name";
 import {
   mintArchiveTicket,
   redeemArchiveTicket,
@@ -11,7 +12,7 @@ import {
 } from "./archive-ticket";
 
 const archiveParamsSchema = ledgerPathSchema.extend({
-  archive: z.string().min(1).openapi({
+  archive: z.string().regex(SAFE_ARCHIVE_NAME_PATTERN).openapi({
     description:
       "Archive to download. Git archives are `gitea-<branch>.zip`; `tar.gz` and `zip` are also accepted.",
     example: "gitea-main.zip",

@@ -24,9 +24,7 @@ import {
 } from "@/features/ledger/utils/ledger-template";
 import { parseLedgerId } from "@/shared/str";
 import { lock, LOCK_KEYS } from "@/shared/lock";
-import {
-  directiveLimitExemptParams,
-} from "@/features/ledger/operations/directive-limit-bypass";
+import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import { FavaLedgerPublic } from "@/features/ledger/types/fava-api.types";
 import {
   mapToLedger,
@@ -63,6 +61,7 @@ import { filterNullish } from "@/shared/tools";
 import { processBatch } from "@/shared/batch-processor";
 import { logger } from "@/shared/logger";
 import { trustedIdentity } from "@/server/api/identity";
+import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
 
@@ -354,6 +353,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     input: CreateLedgerFileCommand;
     platform: "web" | "mobile";
   }): Promise<LedgerFileData> {
+    assertSafeRepoPath(input.path);
     const fileOptions: LedgerCreateFileOptions = {
       path: input.path,
       content: input.content,
@@ -389,6 +389,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     input: UpdateLedgerFileCommand;
     platform: "web" | "mobile";
   }): Promise<LedgerFileData> {
+    assertSafeRepoPath(input.path);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const fileOptions: LedgerUpdateFileOptions = {
       path: input.path,
@@ -424,9 +425,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     input: DeleteLedgerFileCommand;
   }): Promise<DeleteLedgerFileResult> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
-    if (input.path === "") {
-      throw new BadUserInputError("Path is required");
-    }
+    assertSafeRepoPath(input.path);
     if (input.path === "main.bean") {
       throw new BadUserInputError("main.bean file cannot be deleted");
     }
@@ -462,6 +461,8 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     ledgerId: string;
     input: RenameLedgerFileCommand;
   }): Promise<RenameLedgerFileResult> {
+    assertSafeRepoPath(input.oldPath, "oldPath");
+    assertSafeRepoPath(input.newPath, "newPath");
     const changeOptions: LedgerChangeFilesOptions = {
       files: [
         {
@@ -710,8 +711,8 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     );
 
     const ledger = mapToLedger(data as FavaLedgerPublic, this.config.gitea);
-    // The public client authenticates as the ledger owner, so Gitea returns the
-    // owner's permissions. Strip them so the viewer doesn't see owner-level access.
+    // Public reads use an anonymous Gitea client. Strip permissions defensively
+    // so a future upstream behavior change cannot expose an elevated view.
     if (!userId) {
       return { ...ledger, permissions: undefined };
     }
@@ -727,6 +728,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     userId?: string;
     args: GetLedgerFileParams;
   }): Promise<LedgerFileData | null> {
+    assertSafeRepoPath(args.path);
     try {
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
       const favaApiClient = await this.favaClientFactory.getPublicApiClient(
@@ -763,6 +765,9 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     userId?: string;
     args: GetLedgerDirContentParams;
   }): Promise<LedgerFileData[]> {
+    if (args.dirPath !== null && args.dirPath !== undefined) {
+      assertSafeRepoPath(args.dirPath, "dirPath");
+    }
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,

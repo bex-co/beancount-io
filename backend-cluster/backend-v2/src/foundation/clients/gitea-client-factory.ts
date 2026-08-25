@@ -4,16 +4,13 @@ import { IModels } from "@/foundation/models";
 import { Api as GiteaApi } from "@/features/gitea/client/gitea-api";
 import {
   createGiteaClient,
-  createGiteaTokenClient,
   createAnonymousGiteaClient,
 } from "@/features/gitea/service/gitea-client-factory";
 import { parseLedgerId } from "@/shared/str";
-import { lock, LOCK_KEYS } from "@/shared/lock";
 import {
   UnauthenticatedError,
   NotFoundError,
   ForbiddenError,
-  InternalServerError,
 } from "@/shared/errors";
 
 /**
@@ -65,39 +62,7 @@ export class GiteaClientFactory implements IGiteaClientFactory {
       throw new ForbiddenError("Ledger is private");
     }
 
-    const user = await this.models.user.getUserByUsername(this.db, ledgerOwner);
-
-    if (!user) {
-      throw new NotFoundError("Invalid ledger ID");
-    }
-    if (user.ledger_api_token) {
-      return createGiteaTokenClient(user.ledger_api_token);
-    }
-    const lockKey = LOCK_KEYS.API_KEY.create(user.id);
-    return lock.acquire(lockKey, async () => {
-      const ledgerUser = await this.models.user.getUserByUsername(
-        this.db,
-        ledgerOwner,
-      );
-      if (!ledgerUser) {
-        throw new NotFoundError("Invalid ledger ID");
-      }
-      if (ledgerUser.ledger_api_token) {
-        return createGiteaTokenClient(ledgerUser.ledger_api_token);
-      }
-      const tokenResponse = await adminClient.users.userCreateToken(
-        ledgerOwner,
-        { name: "read:repository", scopes: ["read:repository"] },
-        { format: "json" },
-      );
-      if (!tokenResponse.data?.sha1) {
-        throw new InternalServerError("Failed to create API key");
-      }
-      await this.models.user.updateUser(this.db, ledgerUser.id, {
-        ledger_api_token: tokenResponse.data.sha1,
-      });
-      return createGiteaTokenClient(tokenResponse.data.sha1);
-    });
+    return createAnonymousGiteaClient();
   }
 
   public async getUserApiClient(userId: string): Promise<GiteaApi<unknown>> {

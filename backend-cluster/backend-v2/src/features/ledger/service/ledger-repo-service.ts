@@ -7,6 +7,7 @@ import {
   authorizeLedger,
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
+import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 
 type CommitUser = {
   login: string | null;
@@ -64,7 +65,10 @@ export interface ILedgerRepoService {
   }): Promise<void>;
 }
 
-export class LedgerRepoService extends AuthorizedLedgerService implements ILedgerRepoService {
+export class LedgerRepoService
+  extends AuthorizedLedgerService
+  implements ILedgerRepoService
+{
   async getLatestCommit(params: {
     ledgerId: string;
     identity: Identity;
@@ -120,6 +124,9 @@ export class LedgerRepoService extends AuthorizedLedgerService implements ILedge
   }): Promise<LedgerFileEntry[]> {
     const { ledgerId, identity, dirPath } = params;
     await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    if (dirPath !== undefined) {
+      assertSafeRepoPath(dirPath, "dirPath");
+    }
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -148,6 +155,7 @@ export class LedgerRepoService extends AuthorizedLedgerService implements ILedge
   }): Promise<LedgerFileWithContent[]> {
     const { ledgerId, identity, paths } = params;
     await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    paths.forEach((path, index) => assertSafeRepoPath(path, `paths[${index}]`));
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -176,6 +184,15 @@ export class LedgerRepoService extends AuthorizedLedgerService implements ILedge
   }): Promise<void> {
     const { ledgerId, identity, operations, message } = params;
     await authorizeLedger(identity, ledgerId, "write", this.authDeps);
+    operations.forEach((operation, index) => {
+      assertSafeRepoPath(operation.path, `operations[${index}].path`);
+      if (operation.from_path !== null && operation.from_path !== undefined) {
+        assertSafeRepoPath(
+          operation.from_path,
+          `operations[${index}].from_path`,
+        );
+      }
+    });
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,

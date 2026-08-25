@@ -711,7 +711,7 @@
         "properties": {
           "archive": {
             "type": "string",
-            "minLength": 1,
+            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$",
             "description": "Archive to download. Git archives are `gitea-<branch>.zip`; `tar.gz` and `zip` are also accepted.",
             "example": "gitea-main.zip"
           }
@@ -6832,7 +6832,7 @@
           {
             "schema": {
               "type": "string",
-              "minLength": 1,
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$",
               "description": "Archive to download. Git archives are `gitea-<branch>.zip`; `tar.gz` and `zip` are also accepted.",
               "example": "gitea-main.zip"
             },

@@ -1,5 +1,6 @@
 import {
   clearMemoizedGiteaClients,
+  createAnonymousGiteaClient,
   createGiteaClient,
   createGiteaClientFromAuthHeader,
   createGiteaTokenClient,
@@ -61,5 +62,22 @@ describe("gitea-client-factory", () => {
     expect(createGiteaClientFromAuthHeader(header)).toBe(viaHelper);
     const tokenClient = createGiteaTokenClient("t1");
     expect(createGiteaClientFromAuthHeader("token t1")).toBe(tokenClient);
+  });
+
+  it("sends no Authorization header for anonymous public reads", async () => {
+    const fetchSpy = jest.spyOn(global, "fetch").mockResolvedValue(
+      new Response(JSON.stringify({ id: 1, private: false }), {
+        status: 200,
+        headers: { "content-type": "application/json" },
+      }),
+    );
+
+    const client = createAnonymousGiteaClient();
+    await client.repos.repoGet("alice", "public-ledger", { format: "json" });
+
+    const [, init] = fetchSpy.mock.calls[0] as [string, RequestInit];
+    expect(
+      (init.headers as Record<string, string>).Authorization,
+    ).toBeUndefined();
   });
 });

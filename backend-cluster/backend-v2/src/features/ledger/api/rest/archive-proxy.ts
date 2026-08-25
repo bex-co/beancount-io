@@ -4,6 +4,7 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { NotFoundError, UnauthenticatedError } from "@/shared/errors";
 import { parseLedgerId } from "@/shared/str";
+import { assertSafeArchiveName } from "./safe-archive-name";
 
 /**
  * Streaming a ledger archive from the ledger service.
@@ -21,31 +22,32 @@ export async function streamLedgerArchive(
     archive: string;
     /**
      * Whose ledger credentials to use. `null`/`undefined` means an anonymous
-     * read of a public ledger, which falls back to the owner's credentials.
+     * read that ledger-v2 forwards to Gitea without a credential.
      */
     userId?: string | null;
   },
 ): Promise<void> {
+  assertSafeArchiveName(args.archive);
   const { ledgerOwner, ledgerName } = parseLedgerId(args.ledgerId);
 
-  const user = args.userId
-    ? await layers.database.models.user.getById(layers.database.db, args.userId)
-    : await layers.database.models.user.getUserByUsername(
-        layers.database.db,
-        ledgerOwner,
-      );
-  if (!user) {
-    throw new UnauthenticatedError("User not found");
+  let authorization = "Anonymous";
+  if (args.userId) {
+    const user = await layers.database.models.user.getById(
+      layers.database.db,
+      args.userId,
+    );
+    if (!user) {
+      throw new UnauthenticatedError("User not found");
+    }
+    authorization = `Basic ${Buffer.from(
+      `${user.ledger_username}:${user.ledger_password}`,
+    ).toString("base64")}`;
   }
 
   const baseUrl = config.favaApi.baseUrl.replace(/\/$/, "");
-  const basicAuth = Buffer.from(
-    `${user.ledger_username}:${user.ledger_password}`,
-  ).toString("base64");
-
   const response = await fetch(
-    `${baseUrl}/ledgers/${ledgerOwner}/${ledgerName}/archive/${args.archive}`,
-    { method: "GET", headers: { Authorization: `Basic ${basicAuth}` } },
+    `${baseUrl}/ledgers/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/archive/${encodeURIComponent(args.archive)}`,
+    { method: "GET", headers: { Authorization: authorization } },
   );
 
   if (!response.ok) {

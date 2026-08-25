@@ -9,6 +9,10 @@ import { resolveIdentity } from "@/server/api/identity";
 import { authorizeLedger } from "../../utils/authorize-ledger";
 import { streamLedgerArchive } from "./archive-proxy";
 import { parseLedgerId } from "@/shared/str";
+import {
+  assertSafeArchiveName,
+  SAFE_ARCHIVE_NAME_PATTERN,
+} from "./safe-archive-name";
 
 /**
  * The pre-v1 archive download. Superseded, kept for existing clients.
@@ -33,7 +37,7 @@ export const downloadArchiveParamsSchema = z
         "Ledger identifier in format 'owner/repo' (e.g., 'user123/main-ledger')",
       example: "user123/main-ledger",
     }),
-    archive: z.string().openapi({
+    archive: z.string().regex(SAFE_ARCHIVE_NAME_PATTERN).openapi({
       description:
         "Archive format to download. Common formats: 'tar.gz', 'zip'. For Git archives, use 'gitea-<branch>.zip'",
       example: "gitea-main.zip",
@@ -64,6 +68,7 @@ export function registerDownloadArchiveRoute(
     // Parsed here purely to reject a malformed id before anything downstream
     // assumes it splits.
     parseLedgerId(ledgerId);
+    assertSafeArchiveName(archive);
 
     const identity = await resolveIdentity(ctx, layers.database, config);
     let userId: string | null;

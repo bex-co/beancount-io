@@ -103,6 +103,17 @@ describe("v1 archive tickets", () => {
     expect(status).toBe(403);
   });
 
+  it("rejects a traversal archive name before minting a ticket", async () => {
+    const response = await fetch(`${server.url}${LEDGER}/archive-tickets`, {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ archive: "../../private-ledger" }),
+    });
+
+    expect(response.status).toBe(400);
+    expect(fetchMock).not.toHaveBeenCalled();
+  });
+
   it("downloads with the ticket and no credential of any kind", async () => {
     const { body } = await mintTicket();
     // No identity at all — the point of the ticket.
