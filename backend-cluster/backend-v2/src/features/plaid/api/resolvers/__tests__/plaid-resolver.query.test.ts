@@ -87,7 +87,7 @@ describe("PlaidQueryResolver", () => {
       const result = await resolver.getPlaidItems("owner/ledger", ctx);
 
       expect(mockPlaidItemService.getItems).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "owner/ledger",
       );
       expect(result).toBe(expected);
@@ -112,7 +112,7 @@ describe("PlaidQueryResolver", () => {
       const result = await resolver.getPlaidItem("pitm_1", ctx);
 
       expect(mockPlaidItemService.getItem).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pitm_1",
       );
       expect(result).toBe(mockItem);
@@ -154,7 +154,7 @@ describe("PlaidQueryResolver", () => {
       );
 
       expect(mockPlaidItemService.getAccounts).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pitm_1",
         "owner/ledger",
       );
@@ -187,7 +187,7 @@ describe("PlaidQueryResolver", () => {
       );
 
       expect(mockPlaidItemService.getAccountsForLedger).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "owner/ledger",
       );
       expect(result).toBe(expected);
@@ -221,7 +221,7 @@ describe("PlaidQueryResolver", () => {
       );
 
       expect(mockPlaidItemService.getUnsyncedTransactions).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pacc_1",
         "owner/ledger",
       );
@@ -238,7 +238,7 @@ describe("PlaidQueryResolver", () => {
       );
 
       expect(mockPlaidItemService.getUnsyncedTransactions).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         undefined,
         "owner/ledger",
       );
@@ -263,7 +263,7 @@ describe("PlaidQueryResolver", () => {
       );
 
       expect(mockPlaidItemService.suggestCategories).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "testuser/personal",
         "pacc_1",
       );
@@ -290,7 +290,7 @@ describe("PlaidQueryResolver", () => {
       );
 
       expect(mockPlaidItemService.suggestAccountMapping).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "testuser/personal",
         "pitm_1",
       );

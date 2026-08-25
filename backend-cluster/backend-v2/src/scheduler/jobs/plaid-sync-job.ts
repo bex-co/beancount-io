@@ -1,4 +1,5 @@
 import { logger } from "@/shared/logger";
+import { systemIdentity } from "@/server/api/identity";
 import type { JobFactory } from "../types";
 import { PlaidItemPostgresModel } from "@/features/plaid/data/plaid-item-model";
 import { PlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
@@ -57,7 +58,9 @@ export const createPlaidSyncJob: JobFactory = (layers) => {
         for (const item of activeItems) {
           try {
             await plaidSyncService.syncItemTransactions(
-              item.userId,
+              // No caller: a scheduled run acts on the user's behalf with no
+              // request behind it. Named rather than defaulted (w3/m9).
+              systemIdentity(item.userId),
               item.id,
               "scheduled",
             );

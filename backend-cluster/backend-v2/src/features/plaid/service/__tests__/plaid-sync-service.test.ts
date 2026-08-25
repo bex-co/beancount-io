@@ -1,4 +1,5 @@
 import { PlaidSyncService } from "../plaid-sync-service";
+import { trustedIdentity } from "@/server/api/identity";
 import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
 import { buildBeancountTransaction } from "../../utils/plaid-mapper";
 import { BadUserInputError, ForbiddenError } from "@/shared/errors";
@@ -194,7 +195,11 @@ describe("PlaidSyncService", () => {
         hasMore: false,
       });
 
-      await service.syncItemTransactions(userId, itemId, "manual");
+      await service.syncItemTransactions(
+        trustedIdentity(userId),
+        itemId,
+        "manual",
+      );
 
       expect(mockPlaidAccountModel.create).toHaveBeenCalledWith(
         mockDb,
@@ -219,7 +224,7 @@ describe("PlaidSyncService", () => {
       });
 
       const result = await service.syncItemTransactions(
-        userId,
+        trustedIdentity(userId),
         itemId,
         "manual",
       );
@@ -277,7 +282,7 @@ describe("PlaidSyncService", () => {
       mockPlaidSyncLogModel.create.mockResolvedValue({ id: "log_1" });
 
       const result = await service.syncItemTransactions(
-        userId,
+        trustedIdentity(userId),
         itemId,
         "manual",
       );
@@ -302,7 +307,7 @@ describe("PlaidSyncService", () => {
       mockPlaidSyncLogModel.create.mockResolvedValue({ id: "log_1" });
 
       await expect(
-        service.syncItemTransactions(userId, itemId, "manual"),
+        service.syncItemTransactions(trustedIdentity(userId), itemId, "manual"),
       ).rejects.toThrow("Plaid Item not found");
     });
 
@@ -314,7 +319,7 @@ describe("PlaidSyncService", () => {
       mockPlaidSyncLogModel.create.mockResolvedValue({ id: "log_1" });
 
       await expect(
-        service.syncItemTransactions(userId, itemId, "manual"),
+        service.syncItemTransactions(trustedIdentity(userId), itemId, "manual"),
       ).rejects.toThrow("Unauthorized access to Plaid Item");
     });
 
@@ -326,7 +331,7 @@ describe("PlaidSyncService", () => {
       mockPlaidSyncLogModel.create.mockResolvedValue({ id: "log_1" });
 
       await expect(
-        service.syncItemTransactions(userId, itemId, "manual"),
+        service.syncItemTransactions(trustedIdentity(userId), itemId, "manual"),
       ).rejects.toThrow(
         'Cannot sync transactions for Plaid Item with status "requires_reauth"',
       );
@@ -349,7 +354,7 @@ describe("PlaidSyncService", () => {
       mockPlaidItemModel.update.mockResolvedValue(undefined);
 
       const result = await service.syncItemTransactions(
-        userId,
+        trustedIdentity(userId),
         itemId,
         "manual",
         "owner/ledger",
@@ -371,7 +376,12 @@ describe("PlaidSyncService", () => {
       });
 
       await expect(
-        service.syncItemTransactions(userId, itemId, "manual", "owner/ledger"),
+        service.syncItemTransactions(
+          trustedIdentity(userId),
+          itemId,
+          "manual",
+          "owner/ledger",
+        ),
       ).rejects.toThrow("Unauthorized access to Plaid Item");
     });
 
@@ -387,7 +397,12 @@ describe("PlaidSyncService", () => {
       });
 
       await expect(
-        service.syncItemTransactions(userId, itemId, "manual", "owner/ledger"),
+        service.syncItemTransactions(
+          trustedIdentity(userId),
+          itemId,
+          "manual",
+          "owner/ledger",
+        ),
       ).rejects.toThrow(ForbiddenError);
     });
   });
@@ -421,7 +436,7 @@ describe("PlaidSyncService", () => {
       );
 
       const result = await service.getUnsyncedTransactionsForCategorization(
-        userId,
+        trustedIdentity(userId),
         accountId,
       );
 
@@ -438,7 +453,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.getUnsyncedByAccountId.mockResolvedValue([]);
 
       const result = await service.getUnsyncedTransactionsForCategorization(
-        userId,
+        trustedIdentity(userId),
         accountId,
       );
 
@@ -449,7 +464,10 @@ describe("PlaidSyncService", () => {
       mockPlaidAccountModel.getById.mockResolvedValue(null);
 
       await expect(
-        service.getUnsyncedTransactionsForCategorization(userId, accountId),
+        service.getUnsyncedTransactionsForCategorization(
+          trustedIdentity(userId),
+          accountId,
+        ),
       ).rejects.toThrow("PlaidAccount not found");
     });
 
@@ -461,7 +479,10 @@ describe("PlaidSyncService", () => {
       });
 
       await expect(
-        service.getUnsyncedTransactionsForCategorization(userId, accountId),
+        service.getUnsyncedTransactionsForCategorization(
+          trustedIdentity(userId),
+          accountId,
+        ),
       ).rejects.toThrow("Unauthorized access to PlaidAccount");
     });
   });
@@ -507,7 +528,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
 
       const result = await service.submitTransactionsToLedger(
-        userId,
+        trustedIdentity(userId),
         ledgerOwner,
         ledgerName,
         txInputs,
@@ -524,7 +545,12 @@ describe("PlaidSyncService", () => {
 
     it("should throw when no transactions provided", async () => {
       await expect(
-        service.submitTransactionsToLedger(userId, ledgerOwner, ledgerName, []),
+        service.submitTransactionsToLedger(
+          trustedIdentity(userId),
+          ledgerOwner,
+          ledgerName,
+          [],
+        ),
       ).rejects.toThrow("No transactions provided");
     });
 
@@ -533,7 +559,7 @@ describe("PlaidSyncService", () => {
 
       await expect(
         service.submitTransactionsToLedger(
-          userId,
+          trustedIdentity(userId),
           ledgerOwner,
           ledgerName,
           txInputs,
@@ -550,7 +576,7 @@ describe("PlaidSyncService", () => {
 
       await expect(
         service.submitTransactionsToLedger(
-          userId,
+          trustedIdentity(userId),
           ledgerOwner,
           ledgerName,
           txInputs,
@@ -569,7 +595,7 @@ describe("PlaidSyncService", () => {
 
       await expect(
         service.submitTransactionsToLedger(
-          userId,
+          trustedIdentity(userId),
           ledgerOwner,
           ledgerName,
           txInputs,
@@ -589,7 +615,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
 
       await service.submitTransactionsToLedger(
-        userId,
+        trustedIdentity(userId),
         ledgerOwner,
         ledgerName,
         [
@@ -624,7 +650,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
 
       await service.submitTransactionsToLedger(
-        userId,
+        trustedIdentity(userId),
         ledgerOwner,
         ledgerName,
         txInputs,
@@ -650,7 +676,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
 
       await service.submitTransactionsToLedger(
-        userId,
+        trustedIdentity(userId),
         ledgerOwner,
         ledgerName,
         txInputs,
@@ -679,7 +705,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
 
       await service.submitTransactionsToLedger(
-        userId,
+        trustedIdentity(userId),
         ledgerOwner,
         ledgerName,
         txInputs,
@@ -710,7 +736,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
 
       await service.submitTransactionsToLedger(
-        userId,
+        trustedIdentity(userId),
         ledgerOwner,
         ledgerName,
         txInputs,
@@ -736,7 +762,7 @@ describe("PlaidSyncService", () => {
 
       await expect(
         service.submitTransactionsToLedger(
-          userId,
+          trustedIdentity(userId),
           ledgerOwner,
           ledgerName,
           txInputs,
@@ -763,7 +789,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
 
       const result = await service.submitTransactionsToLedger(
-        userId,
+        trustedIdentity(userId),
         ledgerOwner,
         ledgerName,
         [
@@ -790,7 +816,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
 
       await service.submitTransactionsToLedger(
-        userId,
+        trustedIdentity(userId),
         ledgerOwner,
         ledgerName,
         txInputs,
@@ -815,7 +841,7 @@ describe("PlaidSyncService", () => {
 
       await expect(
         service.submitTransactionsToLedger(
-          userId,
+          trustedIdentity(userId),
           ledgerOwner,
           ledgerName,
           txInputs,
@@ -841,7 +867,7 @@ describe("PlaidSyncService", () => {
 
       await expect(
         service.submitTransactionsToLedger(
-          userId,
+          trustedIdentity(userId),
           ledgerOwner,
           ledgerName,
           txInputs,
@@ -870,7 +896,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.markAsSynced.mockResolvedValue(undefined);
 
       const result = await service.submitTransactionsToLedger(
-        userId,
+        trustedIdentity(userId),
         ledgerOwner,
         ledgerName,
         txInputs,
@@ -915,7 +941,7 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.deleteMany.mockResolvedValue(undefined);
 
       const result = await service.deleteTransactions(
-        userId,
+        trustedIdentity(userId),
         ledgerId,
         transactionIds,
       );
@@ -933,7 +959,7 @@ describe("PlaidSyncService", () => {
 
     it("should throw when no transaction ids provided", async () => {
       await expect(
-        service.deleteTransactions(userId, ledgerId, []),
+        service.deleteTransactions(trustedIdentity(userId), ledgerId, []),
       ).rejects.toThrow("No transactions provided");
     });
 
@@ -941,7 +967,11 @@ describe("PlaidSyncService", () => {
       mockPlaidTransactionModel.getByTransactionIds.mockResolvedValue([]);
 
       await expect(
-        service.deleteTransactions(userId, ledgerId, transactionIds),
+        service.deleteTransactions(
+          trustedIdentity(userId),
+          ledgerId,
+          transactionIds,
+        ),
       ).rejects.toThrow("Some transactions not found in database");
     });
 
@@ -953,7 +983,11 @@ describe("PlaidSyncService", () => {
       mockPlaidItemModel.getById.mockResolvedValue(mockItem);
 
       await expect(
-        service.deleteTransactions(userId, ledgerId, transactionIds),
+        service.deleteTransactions(
+          trustedIdentity(userId),
+          ledgerId,
+          transactionIds,
+        ),
       ).rejects.toThrow("already synced to ledger and cannot be deleted");
     });
 
@@ -968,7 +1002,11 @@ describe("PlaidSyncService", () => {
       });
 
       await expect(
-        service.deleteTransactions(userId, ledgerId, transactionIds),
+        service.deleteTransactions(
+          trustedIdentity(userId),
+          ledgerId,
+          transactionIds,
+        ),
       ).rejects.toThrow("Unauthorized access to transaction");
     });
 
@@ -983,7 +1021,11 @@ describe("PlaidSyncService", () => {
       });
 
       await expect(
-        service.deleteTransactions(userId, ledgerId, transactionIds),
+        service.deleteTransactions(
+          trustedIdentity(userId),
+          ledgerId,
+          transactionIds,
+        ),
       ).rejects.toThrow(ForbiddenError);
     });
   });

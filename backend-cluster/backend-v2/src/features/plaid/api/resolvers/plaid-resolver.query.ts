@@ -34,7 +34,7 @@ export class PlaidQueryResolver {
   ): Promise<PlaidItemType[]> {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "read");
-    return this.plaidItemService.getItems(identity.userId, ledgerId);
+    return this.plaidItemService.getItems(identity, ledgerId);
   }
 
   @Authorized()
@@ -45,7 +45,7 @@ export class PlaidQueryResolver {
     @Arg("id", () => String) id: string,
     @Ctx() ctx: IContext,
   ): Promise<PlaidItemType> {
-    return this.plaidItemService.getItem(ctx.getCurrentUserId(), id);
+    return this.plaidItemService.getItem(ctx.getCurrentIdentity(), id);
   }
 
   @FieldResolver(() => PlaidLastSync, { nullable: true })
@@ -75,7 +75,7 @@ export class PlaidQueryResolver {
   ): Promise<PlaidAccountType[]> {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "read");
-    return this.plaidItemService.getAccounts(identity.userId, itemId, ledgerId);
+    return this.plaidItemService.getAccounts(identity, itemId, ledgerId);
   }
 
   @Authorized()
@@ -90,7 +90,7 @@ export class PlaidQueryResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.getAccountsForLedger(
-      identity.userId,
+      identity,
       ledgerId,
     );
   }
@@ -109,7 +109,7 @@ export class PlaidQueryResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.getUnsyncedTransactions(
-      identity.userId,
+      identity,
       accountId,
       ledgerId,
     );
@@ -129,7 +129,7 @@ export class PlaidQueryResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.suggestCategories(
-      identity.userId,
+      identity,
       ledgerId,
       accountId,
     );
@@ -148,7 +148,7 @@ export class PlaidQueryResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.suggestAccountMapping(
-      identity.userId,
+      identity,
       ledgerId,
       itemId,
     );

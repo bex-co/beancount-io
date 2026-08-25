@@ -6,7 +6,7 @@ import { BadUserInputError, ConflictError } from "@/shared/errors";
 import { unwrapFavaResponse } from "@/foundation/fava";
 import { parseLedgerId } from "@/shared/str";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
-import { trustedIdentity } from "@/server/api/identity";
+import type { Identity } from "@/server/api/identity";
 import { logger } from "@/shared/logger";
 import { type IPlaidClient } from "./plaid-client";
 import { encryptToken, decryptToken } from "../utils/encryption";
@@ -81,71 +81,71 @@ export interface PlaidAccountReconcileResult {
 }
 
 export interface IPlaidItemService {
-  getItems(userId: string, ledgerId: string): Promise<PlaidItemResult[]>;
-  getItem(userId: string, id: string): Promise<PlaidItemResult>;
+  getItems(identity: Identity, ledgerId: string): Promise<PlaidItemResult[]>;
+  getItem(identity: Identity, id: string): Promise<PlaidItemResult>;
   getAccounts(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
   ): Promise<PlaidAccountResult[]>;
   getAccountsForLedger(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
   ): Promise<PlaidAccountWithInstitutionResult[]>;
   getUnsyncedTransactions(
-    userId: string,
+    identity: Identity,
     accountId: string | undefined,
     ledgerId: string,
   ): Promise<PlaidTransactionResult[]>;
   suggestCategories(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     accountId?: string,
   ): Promise<CategorySuggestion[]>;
   suggestAccountMapping(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     itemId: string,
   ): Promise<PlaidAccountMappingSuggestion[]>;
   createLinkToken(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
   ): Promise<{ linkToken: string }>;
   createUpdateModeLinkToken(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
     accountSelection?: boolean,
   ): Promise<{ linkToken: string }>;
   reconcileItemAccounts(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
   ): Promise<PlaidAccountReconcileResult>;
   exchangePublicToken(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     publicToken: string,
   ): Promise<PlaidItemResult>;
   updateAccountMapping(
-    userId: string,
+    identity: Identity,
     accountId: string,
     ledgerAccount: string,
     ledgerId: string,
   ): Promise<boolean>;
   updateAccountCurrency(
-    userId: string,
+    identity: Identity,
     accountId: string,
     currency: string,
     ledgerId: string,
   ): Promise<boolean>;
   refreshItemStatus(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
   ): Promise<PlaidItemResult>;
   unlinkItem(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
   ): Promise<boolean>;
@@ -163,8 +163,16 @@ export class PlaidItemService implements IPlaidItemService {
     private readonly config: Pick<AppConfig, "blockeden">,
   ) {}
 
-  private assertLedgerAccess(ledgerId: string, userId: string) {
-    return authorizeLedger(trustedIdentity(userId), ledgerId, "read", {
+  /**
+   * Authorize as the caller, not as a full-power session.
+   *
+   * Built `trustedIdentity(userId)` until w3/m9 — `capabilityExempt`, so the
+   * scope check short-circuited and the transport gate was the only thing
+   * between a narrow token and a bank connection. Unattended callers name
+   * their exemption at the call site (`systemIdentity`) instead.
+   */
+  private assertLedgerAccess(ledgerId: string, identity: Identity) {
+    return authorizeLedger(identity, ledgerId, "read", {
       models: this.models,
       db: this.db,
       favaClientFactory: this.favaClientFactory,
@@ -172,16 +180,19 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   /** Item-management mutations require at least write tier — a read-only collaborator may not. */
-  private assertLedgerWriteAccess(ledgerId: string, userId: string) {
-    return authorizeLedger(trustedIdentity(userId), ledgerId, "write", {
+  private assertLedgerWriteAccess(ledgerId: string, identity: Identity) {
+    return authorizeLedger(identity, ledgerId, "write", {
       models: this.models,
       db: this.db,
       favaClientFactory: this.favaClientFactory,
     });
   }
 
-  async getItems(userId: string, ledgerId: string): Promise<PlaidItemResult[]> {
-    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, userId);
+  async getItems(
+    identity: Identity,
+    ledgerId: string,
+  ): Promise<PlaidItemResult[]> {
+    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, identity);
     const items = await this.models.plaidItem.getByLedgerRepoId(
       this.db,
       ledgerRepoId,
@@ -189,7 +200,8 @@ export class PlaidItemService implements IPlaidItemService {
     return items.map(toItemResult);
   }
 
-  async getItem(userId: string, id: string): Promise<PlaidItemResult> {
+  async getItem(identity: Identity, id: string): Promise<PlaidItemResult> {
+    const { userId } = identity;
     const item = await this.models.plaidItem.getById(this.db, id);
     if (!item) {
       throw new BadUserInputError("Plaid Item not found");
@@ -201,7 +213,7 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async getAccounts(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
   ): Promise<PlaidAccountResult[]> {
@@ -209,7 +221,7 @@ export class PlaidItemService implements IPlaidItemService {
     if (!item) {
       throw new BadUserInputError("Item not found");
     }
-    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, userId);
+    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, identity);
     if (item.ledgerRepoId !== ledgerRepoId) {
       throw new BadUserInputError("Unauthorized access to Item");
     }
@@ -229,10 +241,10 @@ export class PlaidItemService implements IPlaidItemService {
    * picker built off this query.
    */
   async getAccountsForLedger(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
   ): Promise<PlaidAccountWithInstitutionResult[]> {
-    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, userId);
+    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, identity);
     const accounts = await this.models.plaidAccount.getEnabledByLedgerRepoId(
       this.db,
       ledgerRepoId,
@@ -247,7 +259,7 @@ export class PlaidItemService implements IPlaidItemService {
    * transaction order for a given scope — the frontend maps AI suggestions
    * back onto rows purely by array index. */
   private async getUnsyncedTransactionsForScope(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     accountId?: string,
   ): Promise<{
@@ -257,7 +269,7 @@ export class PlaidItemService implements IPlaidItemService {
       { accountName: string; institutionName: string; ledgerAccount?: string }
     >;
   }> {
-    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, userId);
+    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, identity);
 
     if (accountId) {
       const account = await this.models.plaidAccount.getById(
@@ -318,10 +330,11 @@ export class PlaidItemService implements IPlaidItemService {
 
   private async getOpenLedgerAccounts(
     ledgerId: string,
-    userId: string,
+    identity: Identity,
     ledgerOwner: string,
     ledgerName: string,
   ): Promise<string[]> {
+    const { userId } = identity;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -341,10 +354,11 @@ export class PlaidItemService implements IPlaidItemService {
    * `LLMService` (`categorizeTransactions`'s `autoAccounts` flag). */
   private async getAutoAccountsEnabled(
     ledgerId: string,
-    userId: string,
+    identity: Identity,
     ledgerOwner: string,
     ledgerName: string,
   ): Promise<boolean> {
+    const { userId } = identity;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -361,12 +375,12 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async getUnsyncedTransactions(
-    userId: string,
+    identity: Identity,
     accountId: string | undefined,
     ledgerId: string,
   ): Promise<PlaidTransactionResult[]> {
     const { transactions, accountsById } =
-      await this.getUnsyncedTransactionsForScope(userId, ledgerId, accountId);
+      await this.getUnsyncedTransactionsForScope(identity, ledgerId, accountId);
 
     return transactions.map((tx) => {
       const account = accountsById.get(tx.plaidAccountId);
@@ -390,14 +404,15 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async suggestCategories(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     accountId?: string,
   ): Promise<CategorySuggestion[]> {
+    const { userId } = identity;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
     const { transactions } = await this.getUnsyncedTransactionsForScope(
-      userId,
+      identity,
       ledgerId,
       accountId,
     );
@@ -409,7 +424,7 @@ export class PlaidItemService implements IPlaidItemService {
     const txsForCategorization = mapToCategorizationFormat(transactions);
     const existingAccounts = await this.getOpenLedgerAccounts(
       ledgerId,
-      userId,
+      identity,
       ledgerOwner,
       ledgerName,
     );
@@ -442,17 +457,18 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async suggestAccountMapping(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     itemId: string,
   ): Promise<PlaidAccountMappingSuggestion[]> {
+    const { userId } = identity;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
     const item = await this.models.plaidItem.getById(this.db, itemId);
     if (!item) {
       throw new BadUserInputError("Item not found");
     }
-    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, userId);
+    const { ledgerRepoId } = await this.assertLedgerAccess(ledgerId, identity);
     if (item.ledgerRepoId !== ledgerRepoId) {
       throw new BadUserInputError("Unauthorized access to Item");
     }
@@ -468,13 +484,13 @@ export class PlaidItemService implements IPlaidItemService {
 
     const existingAccounts = await this.getOpenLedgerAccounts(
       ledgerId,
-      userId,
+      identity,
       ledgerOwner,
       ledgerName,
     );
     const autoAccounts = await this.getAutoAccountsEnabled(
       ledgerId,
-      userId,
+      identity,
       ledgerOwner,
       ledgerName,
     );
@@ -511,28 +527,30 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async createLinkToken(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
   ): Promise<{ linkToken: string }> {
-    await this.assertLedgerWriteAccess(ledgerId, userId);
+    const { userId } = identity;
+    await this.assertLedgerWriteAccess(ledgerId, identity);
     const linkToken = await this.plaidClient.createLinkToken(userId);
     itemServiceLogger.info("Link token created", { userId });
     return { linkToken };
   }
 
   async createUpdateModeLinkToken(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
     accountSelection?: boolean,
   ): Promise<{ linkToken: string }> {
+    const { userId } = identity;
     const item = await this.models.plaidItem.getById(this.db, itemId);
     if (!item) {
       throw new BadUserInputError("Item not found");
     }
     const { ledgerRepoId } = await this.assertLedgerWriteAccess(
       ledgerId,
-      userId,
+      identity,
     );
     if (item.ledgerRepoId !== ledgerRepoId) {
       throw new BadUserInputError("Unauthorized access to Item");
@@ -564,17 +582,18 @@ export class PlaidItemService implements IPlaidItemService {
    * from a webhook, a cron job, or any other unattended path.
    */
   async reconcileItemAccounts(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
   ): Promise<PlaidAccountReconcileResult> {
+    const { userId } = identity;
     const item = await this.models.plaidItem.getById(this.db, itemId);
     if (!item) {
       throw new BadUserInputError("Item not found");
     }
     const { ledgerRepoId } = await this.assertLedgerWriteAccess(
       ledgerId,
-      userId,
+      identity,
     );
     if (item.ledgerRepoId !== ledgerRepoId) {
       throw new BadUserInputError("Unauthorized access to Item");
@@ -619,7 +638,7 @@ export class PlaidItemService implements IPlaidItemService {
     // failing LLM call must not hold a lock or fail the reconcile.
     if (result.addedAccounts.length > 0) {
       await this.autoMapAccounts(
-        userId,
+        identity,
         ledgerId,
         itemId,
         item.institutionName,
@@ -640,23 +659,24 @@ export class PlaidItemService implements IPlaidItemService {
    * and the user maps them by hand.
    */
   private async autoMapAccounts(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     itemId: string,
     institutionName: string,
     accounts: PlaidAccount[],
   ): Promise<void> {
+    const { userId } = identity;
     try {
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
       const existingAccounts = await this.getOpenLedgerAccounts(
         ledgerId,
-        userId,
+        identity,
         ledgerOwner,
         ledgerName,
       );
       const autoAccounts = await this.getAutoAccountsEnabled(
         ledgerId,
-        userId,
+        identity,
         ledgerOwner,
         ledgerName,
       );
@@ -702,15 +722,16 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async exchangePublicToken(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     publicToken: string,
   ): Promise<PlaidItemResult> {
+    const { userId } = identity;
     // Checked before burning the (one-time-use) publicToken with Plaid, so a
     // rejected request doesn't waste it.
     const { ledgerRepoId } = await this.assertLedgerWriteAccess(
       ledgerId,
-      userId,
+      identity,
     );
 
     const { accessToken, itemId } =
@@ -793,7 +814,7 @@ export class PlaidItemService implements IPlaidItemService {
 
     if (createdAccounts.length > 0) {
       await this.autoMapAccounts(
-        userId,
+        identity,
         ledgerId,
         item.id,
         institutionName,
@@ -805,7 +826,7 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async updateAccountMapping(
-    userId: string,
+    identity: Identity,
     accountId: string,
     ledgerAccount: string,
     ledgerId: string,
@@ -823,7 +844,7 @@ export class PlaidItemService implements IPlaidItemService {
     }
     const { ledgerRepoId } = await this.assertLedgerWriteAccess(
       ledgerId,
-      userId,
+      identity,
     );
     if (item.ledgerRepoId !== ledgerRepoId) {
       throw new BadUserInputError("Unauthorized access to account");
@@ -832,7 +853,7 @@ export class PlaidItemService implements IPlaidItemService {
       ledgerAccount,
     });
     itemServiceLogger.info("Account mapping updated", {
-      userId,
+      identity,
       accountId,
       ledgerAccount,
     });
@@ -840,7 +861,7 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async updateAccountCurrency(
-    userId: string,
+    identity: Identity,
     accountId: string,
     currency: string,
     ledgerId: string,
@@ -858,7 +879,7 @@ export class PlaidItemService implements IPlaidItemService {
     }
     const { ledgerRepoId } = await this.assertLedgerWriteAccess(
       ledgerId,
-      userId,
+      identity,
     );
     if (item.ledgerRepoId !== ledgerRepoId) {
       throw new BadUserInputError("Unauthorized access to account");
@@ -867,7 +888,7 @@ export class PlaidItemService implements IPlaidItemService {
       currency,
     });
     itemServiceLogger.info("Account currency updated", {
-      userId,
+      identity,
       accountId,
       currency,
     });
@@ -875,7 +896,7 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async refreshItemStatus(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
   ): Promise<PlaidItemResult> {
@@ -885,7 +906,7 @@ export class PlaidItemService implements IPlaidItemService {
     }
     const { ledgerRepoId } = await this.assertLedgerWriteAccess(
       ledgerId,
-      userId,
+      identity,
     );
     if (item.ledgerRepoId !== ledgerRepoId) {
       throw new BadUserInputError("Unauthorized access to Item");
@@ -905,7 +926,7 @@ export class PlaidItemService implements IPlaidItemService {
     await this.models.plaidItem.update(this.db, itemId, updateData);
 
     itemServiceLogger.info("Item status refreshed from Plaid", {
-      userId,
+      identity,
       itemId,
       oldStatus: item.status,
       newStatus: updateData.status,
@@ -919,17 +940,18 @@ export class PlaidItemService implements IPlaidItemService {
   }
 
   async unlinkItem(
-    userId: string,
+    identity: Identity,
     itemId: string,
     ledgerId: string,
   ): Promise<boolean> {
+    const { userId } = identity;
     const item = await this.models.plaidItem.getById(this.db, itemId);
     if (!item) {
       throw new BadUserInputError("Item not found");
     }
     const { ledgerRepoId } = await this.assertLedgerWriteAccess(
       ledgerId,
-      userId,
+      identity,
     );
     if (item.ledgerRepoId !== ledgerRepoId) {
       throw new BadUserInputError("Unauthorized access to Item");

@@ -31,7 +31,7 @@ export class PlaidMutationResolver {
   ): Promise<PlaidLinkToken> {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
-    return this.plaidItemService.createLinkToken(identity.userId, ledgerId);
+    return this.plaidItemService.createLinkToken(identity, ledgerId);
   }
 
   @Authorized()
@@ -54,7 +54,7 @@ export class PlaidMutationResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.createUpdateModeLinkToken(
-      identity.userId,
+      identity,
       itemId,
       ledgerId,
       accountSelection,
@@ -74,7 +74,7 @@ export class PlaidMutationResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.reconcileItemAccounts(
-      identity.userId,
+      identity,
       itemId,
       ledgerId,
     );
@@ -92,7 +92,7 @@ export class PlaidMutationResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.exchangePublicToken(
-      identity.userId,
+      identity,
       ledgerId,
       publicToken,
     );
@@ -111,7 +111,7 @@ export class PlaidMutationResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.updateAccountMapping(
-      identity.userId,
+      identity,
       accountId,
       ledgerAccount,
       ledgerId,
@@ -131,7 +131,7 @@ export class PlaidMutationResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.updateAccountCurrency(
-      identity.userId,
+      identity,
       accountId,
       currency,
       ledgerId,
@@ -151,7 +151,7 @@ export class PlaidMutationResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidItemService.refreshItemStatus(
-      identity.userId,
+      identity,
       itemId,
       ledgerId,
     );
@@ -169,7 +169,7 @@ export class PlaidMutationResolver {
   ): Promise<boolean> {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
-    return this.plaidItemService.unlinkItem(identity.userId, itemId, ledgerId);
+    return this.plaidItemService.unlinkItem(identity, itemId, ledgerId);
   }
 
   @Authorized()
@@ -184,7 +184,7 @@ export class PlaidMutationResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidSyncService.syncItemTransactions(
-      identity.userId,
+      identity,
       itemId,
       "manual",
       ledgerId,
@@ -212,7 +212,7 @@ export class PlaidMutationResolver {
     assertLedgerAuthorization(identity, ledgerId, "write");
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     return this.plaidSyncService.submitTransactionsToLedger(
-      identity.userId,
+      identity,
       ledgerOwner,
       ledgerName,
       transactions,
@@ -233,7 +233,7 @@ export class PlaidMutationResolver {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
     return this.plaidSyncService.deleteTransactions(
-      identity.userId,
+      identity,
       ledgerId,
       transactionIds,
     );

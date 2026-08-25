@@ -1,4 +1,5 @@
 import "reflect-metadata";
+import { trustedIdentity } from "@/server/api/identity";
 
 jest.mock("@/shared/logger", () => ({
   logger: {
@@ -120,7 +121,10 @@ describe("PlaidItemService", () => {
     it("scopes to the ledger via assertLedgerAccess", async () => {
       mockPlaidItemModel.getByLedgerRepoId.mockResolvedValue([makeItem()]);
 
-      const result = await service.getItems("user_owner", "owner/ledger");
+      const result = await service.getItems(
+        trustedIdentity("user_owner"),
+        "owner/ledger",
+      );
 
       expect(mockAssertLedgerAccess).toHaveBeenCalledWith(
         "owner/ledger",
@@ -138,7 +142,7 @@ describe("PlaidItemService", () => {
       mockAssertLedgerAccess.mockRejectedValue(new Error("Forbidden"));
 
       await expect(
-        service.getItems("user_other", "owner/ledger"),
+        service.getItems(trustedIdentity("user_other"), "owner/ledger"),
       ).rejects.toThrow("Forbidden");
     });
   });
@@ -150,7 +154,11 @@ describe("PlaidItemService", () => {
       );
       mockPlaidAccountModel.getByItemId.mockResolvedValue([]);
 
-      await service.getAccounts("user_other", "pitm_1", "owner/ledger");
+      await service.getAccounts(
+        trustedIdentity("user_other"),
+        "pitm_1",
+        "owner/ledger",
+      );
 
       expect(mockAssertLedgerAccess).toHaveBeenCalledWith(
         "owner/ledger",
@@ -174,7 +182,11 @@ describe("PlaidItemService", () => {
       });
 
       await expect(
-        service.getAccounts("user_other", "pitm_1", "other/ledger"),
+        service.getAccounts(
+          trustedIdentity("user_other"),
+          "pitm_1",
+          "other/ledger",
+        ),
       ).rejects.toThrow(BadUserInputError);
       expect(mockPlaidAccountModel.getByItemId).not.toHaveBeenCalled();
     });
@@ -202,7 +214,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.getAccountsForLedger(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
       );
 
@@ -229,7 +241,10 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.getEnabledByLedgerRepoId.mockResolvedValue([]);
 
       await expect(
-        service.getAccountsForLedger("user_reader", "owner/ledger"),
+        service.getAccountsForLedger(
+          trustedIdentity("user_reader"),
+          "owner/ledger",
+        ),
       ).resolves.toEqual([]);
     });
 
@@ -237,7 +252,10 @@ describe("PlaidItemService", () => {
       mockAssertLedgerAccess.mockRejectedValue(new Error("Forbidden"));
 
       await expect(
-        service.getAccountsForLedger("user_other", "owner/ledger"),
+        service.getAccountsForLedger(
+          trustedIdentity("user_other"),
+          "owner/ledger",
+        ),
       ).rejects.toThrow("Forbidden");
       expect(
         mockPlaidAccountModel.getEnabledByLedgerRepoId,
@@ -259,7 +277,7 @@ describe("PlaidItemService", () => {
       mockPlaidTransactionModel.getUnsyncedByAccountId.mockResolvedValue([]);
 
       await service.getUnsyncedTransactions(
-        "user_other",
+        trustedIdentity("user_other"),
         "pacc_1",
         "owner/ledger",
       );
@@ -278,7 +296,11 @@ describe("PlaidItemService", () => {
       });
 
       await expect(
-        service.getUnsyncedTransactions("user_other", "pacc_1", "other/ledger"),
+        service.getUnsyncedTransactions(
+          trustedIdentity("user_other"),
+          "pacc_1",
+          "other/ledger",
+        ),
       ).rejects.toThrow(BadUserInputError);
       expect(
         mockPlaidTransactionModel.getUnsyncedByAccountId,
@@ -315,7 +337,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.getUnsyncedTransactions(
-        "user_owner",
+        trustedIdentity("user_owner"),
         undefined,
         "owner/ledger",
       );
@@ -360,7 +382,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.getUnsyncedTransactions(
-        "user_owner",
+        trustedIdentity("user_owner"),
         undefined,
         "owner/ledger",
       );
@@ -385,7 +407,7 @@ describe("PlaidItemService", () => {
       });
 
       await expect(
-        service.createLinkToken("user_other", "owner/ledger"),
+        service.createLinkToken(trustedIdentity("user_other"), "owner/ledger"),
       ).rejects.toThrow(ForbiddenError);
       expect(mockPlaidClient.createLinkToken).not.toHaveBeenCalled();
     });
@@ -394,7 +416,7 @@ describe("PlaidItemService", () => {
       mockPlaidClient.createLinkToken.mockResolvedValue("link-token-abc");
 
       const result = await service.createLinkToken(
-        "user_other",
+        trustedIdentity("user_other"),
         "owner/ledger",
       );
 
@@ -422,7 +444,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.exchangePublicToken(
-          "user_other",
+          trustedIdentity("user_other"),
           "owner/ledger",
           "public-token",
         ),
@@ -439,7 +461,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.exchangePublicToken(
-          "user_other",
+          trustedIdentity("user_other"),
           "owner/ledger",
           "public-token",
         ),
@@ -449,7 +471,7 @@ describe("PlaidItemService", () => {
 
     it("persists the resolved ledgerRepoId on the created item", async () => {
       await service.exchangePublicToken(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -466,7 +488,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.exchangePublicToken(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -482,7 +504,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.exchangePublicToken(
-          "user_owner",
+          trustedIdentity("user_owner"),
           "owner/ledger",
           "public-token",
         ),
@@ -553,7 +575,7 @@ describe("PlaidItemService", () => {
       });
 
       await service.exchangePublicToken(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -606,7 +628,7 @@ describe("PlaidItemService", () => {
       });
 
       await service.exchangePublicToken(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -631,7 +653,7 @@ describe("PlaidItemService", () => {
         .mockRejectedValue(new Error("fava down"));
 
       const result = await service.exchangePublicToken(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -645,7 +667,7 @@ describe("PlaidItemService", () => {
       mockFavaClientFactory.getPublicApiClient = jest.fn();
 
       await service.exchangePublicToken(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -669,7 +691,7 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.update.mockResolvedValue(undefined);
 
       const result = await service.updateAccountMapping(
-        "user_other",
+        trustedIdentity("user_other"),
         "pacc_1",
         "Assets:Checking",
         "owner/ledger",
@@ -688,7 +710,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.updateAccountMapping(
-          "user_other",
+          trustedIdentity("user_other"),
           "pacc_1",
           "Assets:Checking",
           "owner/ledger",
@@ -707,7 +729,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.updateAccountMapping(
-          "user_other",
+          trustedIdentity("user_other"),
           "pacc_1",
           "Assets:Checking",
           "owner/ledger",
@@ -731,7 +753,7 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.update.mockResolvedValue(undefined);
 
       const result = await service.updateAccountCurrency(
-        "user_other",
+        trustedIdentity("user_other"),
         "pacc_1",
         "EUR",
         "owner/ledger",
@@ -755,7 +777,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.updateAccountCurrency(
-          "user_other",
+          trustedIdentity("user_other"),
           "pacc_1",
           "EUR",
           "owner/ledger",
@@ -774,7 +796,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.updateAccountCurrency(
-          "user_other",
+          trustedIdentity("user_other"),
           "pacc_1",
           "EUR",
           "owner/ledger",
@@ -798,7 +820,7 @@ describe("PlaidItemService", () => {
       mockAccountAndItem({ userId: "user_owner", ledgerRepoId: 42 });
 
       const result = await service.suggestCategories(
-        "user_other",
+        trustedIdentity("user_other"),
         "owner/ledger",
         "pacc_1",
       );
@@ -815,7 +837,11 @@ describe("PlaidItemService", () => {
       });
 
       await expect(
-        service.suggestCategories("user_other", "other/ledger", "pacc_1"),
+        service.suggestCategories(
+          trustedIdentity("user_other"),
+          "other/ledger",
+          "pacc_1",
+        ),
       ).rejects.toThrow(BadUserInputError);
     });
   });
@@ -841,7 +867,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.suggestAccountMapping(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
         "pitm_1",
       );
@@ -891,7 +917,7 @@ describe("PlaidItemService", () => {
       });
 
       const result = await service.suggestAccountMapping(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
         "pitm_1",
       );
@@ -931,7 +957,7 @@ describe("PlaidItemService", () => {
       });
 
       await service.suggestAccountMapping(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "owner/ledger",
         "pitm_1",
       );
@@ -946,7 +972,11 @@ describe("PlaidItemService", () => {
       mockItemAndAccounts([], { ledgerRepoId: 99 });
 
       await expect(
-        service.suggestAccountMapping("user_other", "other/ledger", "pitm_1"),
+        service.suggestAccountMapping(
+          trustedIdentity("user_other"),
+          "other/ledger",
+          "pitm_1",
+        ),
       ).rejects.toThrow(BadUserInputError);
       expect(mockSuggestAccountMappingLLM).not.toHaveBeenCalled();
     });
@@ -960,7 +990,7 @@ describe("PlaidItemService", () => {
 
     it("does not request account selection by default", async () => {
       await service.createUpdateModeLinkToken(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -974,7 +1004,7 @@ describe("PlaidItemService", () => {
 
     it("requests account selection when asked", async () => {
       await service.createUpdateModeLinkToken(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
         true,
@@ -1023,7 +1053,9 @@ describe("PlaidItemService", () => {
         async (_db: unknown, input: { accountId: string }) =>
           localAccount(input.accountId),
       );
-      (mockSuggestAccountMappingLLM as jest.Mock).mockResolvedValue({ suggestions: [] });
+      (mockSuggestAccountMappingLLM as jest.Mock).mockResolvedValue({
+        suggestions: [],
+      });
     });
 
     it("creates rows for accounts Plaid newly shares", async () => {
@@ -1036,7 +1068,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.reconcileItemAccounts(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1062,7 +1094,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.reconcileItemAccounts(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1091,7 +1123,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.reconcileItemAccounts(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1114,7 +1146,11 @@ describe("PlaidItemService", () => {
       ]);
 
       await expect(
-        service.reconcileItemAccounts("user_owner", "pitm_1", "owner/ledger"),
+        service.reconcileItemAccounts(
+          trustedIdentity("user_owner"),
+          "pitm_1",
+          "owner/ledger",
+        ),
       ).rejects.toThrow(BadUserInputError);
 
       expect(mockPlaidAccountModel.delete).not.toHaveBeenCalled();
@@ -1126,7 +1162,7 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.getByItemId.mockResolvedValue([]);
 
       const result = await service.reconcileItemAccounts(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1145,7 +1181,11 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.getByItemId.mockResolvedValue([]);
 
       await expect(
-        service.reconcileItemAccounts("user_owner", "pitm_1", "owner/ledger"),
+        service.reconcileItemAccounts(
+          trustedIdentity("user_owner"),
+          "pitm_1",
+          "owner/ledger",
+        ),
       ).rejects.toThrow(BadUserInputError);
 
       expect(mockPlaidAccountModel.delete).not.toHaveBeenCalled();
@@ -1160,7 +1200,11 @@ describe("PlaidItemService", () => {
       });
 
       await expect(
-        service.reconcileItemAccounts("user_reader", "pitm_1", "owner/ledger"),
+        service.reconcileItemAccounts(
+          trustedIdentity("user_reader"),
+          "pitm_1",
+          "owner/ledger",
+        ),
       ).rejects.toThrow(ForbiddenError);
 
       expect(mockPlaidClient.getAccounts).not.toHaveBeenCalled();
@@ -1172,7 +1216,11 @@ describe("PlaidItemService", () => {
       );
 
       await expect(
-        service.reconcileItemAccounts("user_owner", "pitm_1", "owner/ledger"),
+        service.reconcileItemAccounts(
+          trustedIdentity("user_owner"),
+          "pitm_1",
+          "owner/ledger",
+        ),
       ).rejects.toThrow(BadUserInputError);
 
       expect(mockPlaidClient.getAccounts).not.toHaveBeenCalled();
@@ -1193,7 +1241,7 @@ describe("PlaidItemService", () => {
       });
 
       await service.reconcileItemAccounts(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1220,7 +1268,7 @@ describe("PlaidItemService", () => {
       ]);
 
       await service.reconcileItemAccounts(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1231,10 +1279,12 @@ describe("PlaidItemService", () => {
     it("still succeeds when AI mapping fails", async () => {
       mockPlaidClient.getAccounts.mockResolvedValue([remoteAccount("acc_1")]);
       mockPlaidAccountModel.getByItemId.mockResolvedValue([]);
-      (mockSuggestAccountMappingLLM as jest.Mock).mockRejectedValue(new Error("llm down"));
+      (mockSuggestAccountMappingLLM as jest.Mock).mockRejectedValue(
+        new Error("llm down"),
+      );
 
       const result = await service.reconcileItemAccounts(
-        "user_owner",
+        trustedIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );

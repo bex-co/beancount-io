@@ -80,7 +80,7 @@ describe("PlaidWebhookService", () => {
       // syncItemTransactions is fire-and-forget; flush all pending microtasks
       await new Promise((resolve) => setImmediate(resolve));
       expect(mockSyncService.syncItemTransactions).toHaveBeenCalledWith(
-        "user_1",
+        expect.objectContaining({ userId: "user_1" }),
         "pitm_1",
         "webhook",
       );

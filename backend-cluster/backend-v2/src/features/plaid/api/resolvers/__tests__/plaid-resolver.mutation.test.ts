@@ -99,7 +99,7 @@ describe("PlaidMutationResolver", () => {
       const result = await resolver.createPlaidLinkToken("owner/ledger", ctx);
 
       expect(mockPlaidItemService.createLinkToken).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "owner/ledger",
       );
       expect(result.linkToken).toBe("link-token-abc");
@@ -121,7 +121,7 @@ describe("PlaidMutationResolver", () => {
       expect(
         mockPlaidItemService.createUpdateModeLinkToken,
       ).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pitm_1",
         "owner/ledger",
         undefined,
@@ -143,7 +143,12 @@ describe("PlaidMutationResolver", () => {
 
       expect(
         mockPlaidItemService.createUpdateModeLinkToken,
-      ).toHaveBeenCalledWith("user_test", "pitm_1", "owner/ledger", true);
+      ).toHaveBeenCalledWith(
+        expect.objectContaining({ userId: "user_test" }),
+        "pitm_1",
+        "owner/ledger",
+        true,
+      );
     });
   });
 
@@ -162,7 +167,7 @@ describe("PlaidMutationResolver", () => {
       );
 
       expect(mockPlaidItemService.reconcileItemAccounts).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pitm_1",
         "owner/ledger",
       );
@@ -187,7 +192,7 @@ describe("PlaidMutationResolver", () => {
       );
 
       expect(mockPlaidItemService.exchangePublicToken).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "owner/ledger",
         "public-token",
       );
@@ -217,7 +222,7 @@ describe("PlaidMutationResolver", () => {
       );
 
       expect(mockPlaidItemService.updateAccountMapping).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pacc_1",
         "Assets:Checking",
         "owner/ledger",
@@ -238,7 +243,7 @@ describe("PlaidMutationResolver", () => {
       );
 
       expect(mockPlaidItemService.updateAccountCurrency).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pacc_1",
         "EUR",
         "owner/ledger",
@@ -258,7 +263,7 @@ describe("PlaidMutationResolver", () => {
       );
 
       expect(mockPlaidItemService.refreshItemStatus).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pitm_1",
         "owner/ledger",
       );
@@ -277,7 +282,7 @@ describe("PlaidMutationResolver", () => {
       );
 
       expect(mockPlaidItemService.unlinkItem).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pitm_1",
         "owner/ledger",
       );
@@ -304,7 +309,7 @@ describe("PlaidMutationResolver", () => {
       );
 
       expect(mockPlaidSyncService.syncItemTransactions).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "pitm_1",
         "manual",
         "owner/ledger",
@@ -336,7 +341,7 @@ describe("PlaidMutationResolver", () => {
       expect(
         mockPlaidSyncService.submitTransactionsToLedger,
       ).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "testuser",
         "personal",
         transactions,
@@ -364,7 +369,7 @@ describe("PlaidMutationResolver", () => {
       expect(
         mockPlaidSyncService.submitTransactionsToLedger,
       ).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "testuser",
         "personal",
         transactions,
@@ -390,7 +395,7 @@ describe("PlaidMutationResolver", () => {
       );
 
       expect(mockPlaidSyncService.deleteTransactions).toHaveBeenCalledWith(
-        "user_test",
+        expect.objectContaining({ userId: "user_test" }),
         "testuser/personal",
         transactionIds,
       );
@@ -421,7 +426,10 @@ describe("PlaidMutationResolver", () => {
     const OTHER = "alice/ledgerB";
 
     it.each([
-      ["createPlaidLinkToken", () => resolver.createPlaidLinkToken(OTHER, scopedCtx(PINNED))],
+      [
+        "createPlaidLinkToken",
+        () => resolver.createPlaidLinkToken(OTHER, scopedCtx(PINNED)),
+      ],
       [
         "createPlaidUpdateModeLinkToken",
         () =>
@@ -434,11 +442,17 @@ describe("PlaidMutationResolver", () => {
       ],
       [
         "reconcilePlaidAccounts",
-        () => resolver.reconcilePlaidAccounts("item_1", OTHER, scopedCtx(PINNED)),
+        () =>
+          resolver.reconcilePlaidAccounts("item_1", OTHER, scopedCtx(PINNED)),
       ],
       [
         "exchangePlaidPublicToken",
-        () => resolver.exchangePlaidPublicToken(OTHER, "public-token", scopedCtx(PINNED)),
+        () =>
+          resolver.exchangePlaidPublicToken(
+            OTHER,
+            "public-token",
+            scopedCtx(PINNED),
+          ),
       ],
       [
         "updatePlaidAccountMapping",
@@ -453,40 +467,71 @@ describe("PlaidMutationResolver", () => {
       [
         "updatePlaidAccountCurrency",
         () =>
-          resolver.updatePlaidAccountCurrency("account_1", "USD", OTHER, scopedCtx(PINNED)),
+          resolver.updatePlaidAccountCurrency(
+            "account_1",
+            "USD",
+            OTHER,
+            scopedCtx(PINNED),
+          ),
       ],
       [
         "refreshPlaidItemStatus",
-        () => resolver.refreshPlaidItemStatus("item_1", OTHER, scopedCtx(PINNED)),
+        () =>
+          resolver.refreshPlaidItemStatus("item_1", OTHER, scopedCtx(PINNED)),
       ],
-      ["unlinkPlaidItem", () => resolver.unlinkPlaidItem("item_1", OTHER, scopedCtx(PINNED))],
+      [
+        "unlinkPlaidItem",
+        () => resolver.unlinkPlaidItem("item_1", OTHER, scopedCtx(PINNED)),
+      ],
       [
         "syncPlaidTransactions",
-        () => resolver.syncPlaidTransactions("item_1", OTHER, scopedCtx(PINNED)),
+        () =>
+          resolver.syncPlaidTransactions("item_1", OTHER, scopedCtx(PINNED)),
       ],
       [
         "submitPlaidTransactionsToLedger",
         () =>
-          resolver.submitPlaidTransactionsToLedger(OTHER, [], scopedCtx(PINNED), undefined),
+          resolver.submitPlaidTransactionsToLedger(
+            OTHER,
+            [],
+            scopedCtx(PINNED),
+            undefined,
+          ),
       ],
       [
         "deletePlaidTransactions",
-        () => resolver.deletePlaidTransactions(OTHER, ["tx_1"], scopedCtx(PINNED)),
+        () =>
+          resolver.deletePlaidTransactions(OTHER, ["tx_1"], scopedCtx(PINNED)),
       ],
-    ])("%s rejects a ledgerId outside the grant's pinned ledger", async (_name, call) => {
-      await expect(call()).rejects.toThrow(ForbiddenError);
-      expect(mockPlaidItemService.createLinkToken).not.toHaveBeenCalled();
-      expect(mockPlaidItemService.createUpdateModeLinkToken).not.toHaveBeenCalled();
-      expect(mockPlaidItemService.reconcileItemAccounts).not.toHaveBeenCalled();
-      expect(mockPlaidItemService.exchangePublicToken).not.toHaveBeenCalled();
-      expect(mockPlaidItemService.updateAccountMapping).not.toHaveBeenCalled();
-      expect(mockPlaidItemService.updateAccountCurrency).not.toHaveBeenCalled();
-      expect(mockPlaidItemService.refreshItemStatus).not.toHaveBeenCalled();
-      expect(mockPlaidItemService.unlinkItem).not.toHaveBeenCalled();
-      expect(mockPlaidSyncService.syncItemTransactions).not.toHaveBeenCalled();
-      expect(mockPlaidSyncService.submitTransactionsToLedger).not.toHaveBeenCalled();
-      expect(mockPlaidSyncService.deleteTransactions).not.toHaveBeenCalled();
-    });
+    ])(
+      "%s rejects a ledgerId outside the grant's pinned ledger",
+      async (_name, call) => {
+        await expect(call()).rejects.toThrow(ForbiddenError);
+        expect(mockPlaidItemService.createLinkToken).not.toHaveBeenCalled();
+        expect(
+          mockPlaidItemService.createUpdateModeLinkToken,
+        ).not.toHaveBeenCalled();
+        expect(
+          mockPlaidItemService.reconcileItemAccounts,
+        ).not.toHaveBeenCalled();
+        expect(mockPlaidItemService.exchangePublicToken).not.toHaveBeenCalled();
+        expect(
+          mockPlaidItemService.updateAccountMapping,
+        ).not.toHaveBeenCalled();
+        expect(
+          mockPlaidItemService.updateAccountCurrency,
+        ).not.toHaveBeenCalled();
+        expect(mockPlaidItemService.refreshItemStatus).not.toHaveBeenCalled();
+        expect(mockPlaidItemService.unlinkItem).not.toHaveBeenCalled();
+        expect(
+          mockPlaidSyncService.syncItemTransactions,
+        ).not.toHaveBeenCalled();
+        expect(
+          mockPlaidSyncService.submitTransactionsToLedger,
+        ).not.toHaveBeenCalled();
+        expect(mockPlaidSyncService.deleteTransactions).not.toHaveBeenCalled();
+      },
+    );
 
     it("still allows the mutation when ledgerId matches the grant's pinned ledger", async () => {
       mockPlaidItemService.createLinkToken.mockResolvedValue({

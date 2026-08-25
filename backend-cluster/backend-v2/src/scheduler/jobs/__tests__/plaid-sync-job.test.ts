@@ -101,7 +101,13 @@ describe("createPlaidSyncJob", () => {
     await job.task();
 
     expect(mockSyncItemTransactions).toHaveBeenCalledWith(
-      item.userId,
+      // A scheduled run has no caller, so it claims a system identity on the
+      // user's behalf — named at the call site rather than defaulted inside
+      // the service (w3/m9).
+      expect.objectContaining({
+        userId: item.userId,
+        capabilityExempt: true,
+      }),
       item.id,
       "scheduled",
     );

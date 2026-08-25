@@ -1,4 +1,5 @@
 import { logger } from "@/shared/logger";
+import { systemIdentity } from "@/server/api/identity";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
 import type { PlaidWebhookRequest } from "../api/rest/plaid-webhook-schemas";
@@ -92,7 +93,7 @@ export class PlaidWebhookService implements IPlaidWebhookService {
         });
 
         this.plaidSyncService
-          .syncItemTransactions(userId, itemDbId, "webhook")
+          .syncItemTransactions(systemIdentity(userId), itemDbId, "webhook")
           .then(() => {
             webhookLogger.info("Webhook-triggered sync completed", { item_id });
           })
@@ -110,7 +111,7 @@ export class PlaidWebhookService implements IPlaidWebhookService {
           item_id,
         });
         this.plaidSyncService
-          .syncItemTransactions(userId, itemDbId, "webhook")
+          .syncItemTransactions(systemIdentity(userId), itemDbId, "webhook")
           .catch((err) => {
             webhookLogger.error("Sync failed after transactions removed", {
               item_id,

@@ -200,11 +200,14 @@ describe("reconcileAccounts", () => {
     ]);
     mockPlaidAccountModel.getByItemId.mockResolvedValue([]);
     mockPlaidAccountModel.create
-      .mockRejectedValueOnce(Object.assign(new Error("duplicate"), {
-        code: "23505",
-      }))
-      .mockImplementationOnce(async (_db: unknown, input: { accountId: string }) =>
-        local(input.accountId),
+      .mockRejectedValueOnce(
+        Object.assign(new Error("duplicate"), {
+          code: "23505",
+        }),
+      )
+      .mockImplementationOnce(
+        async (_db: unknown, input: { accountId: string }) =>
+          local(input.accountId),
       );
 
     const result = await reconcileAccounts(deps(), {
@@ -219,7 +222,9 @@ describe("reconcileAccounts", () => {
   it("propagates a non-unique-violation write failure", async () => {
     mockPlaidClient.getAccounts.mockResolvedValue([remote("acc_1")]);
     mockPlaidAccountModel.getByItemId.mockResolvedValue([]);
-    mockPlaidAccountModel.create.mockRejectedValue(new Error("connection lost"));
+    mockPlaidAccountModel.create.mockRejectedValue(
+      new Error("connection lost"),
+    );
 
     await expect(
       reconcileAccounts(deps(), { ...params, allowDeletes: true }),

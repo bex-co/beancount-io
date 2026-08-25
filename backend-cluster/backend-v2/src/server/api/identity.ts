@@ -33,6 +33,23 @@ const EMPTY_SCOPES: ReadonlySet<string> = new Set<string>();
  * throws away `ledgerScope`, so only use it where the caller's own request
  * already resolved which ledger it means, same as before `Identity` existed.
  */
+/**
+ * A full-capability identity for a caller that has none: a cron run, a webhook.
+ *
+ * Same value as {@link trustedIdentity}, deliberately under a second name.
+ * `trustedIdentity` used to be built *inside* service methods, where claiming
+ * full capability was invisible — a scoped token reached the service and the
+ * service promptly forgot it was scoped, leaving the transport gate as the only
+ * enforcement (w3/m9). Every remaining claim now happens at a call site under
+ * this name, so `grep systemIdentity` enumerates them.
+ *
+ * Use it only where there genuinely is no caller. If a request reached you, its
+ * identity is what should authorize.
+ */
+export function systemIdentity(userId: string): Identity {
+  return trustedIdentity(userId);
+}
+
 export function trustedIdentity(userId: string): Identity {
   return {
     userId,

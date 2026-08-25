@@ -11,7 +11,7 @@ import {
 import { lock, LOCK_KEYS } from "@/shared/lock";
 import { unwrapFavaResponse } from "@/foundation/fava";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
-import { trustedIdentity } from "@/server/api/identity";
+import type { Identity } from "@/server/api/identity";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
 import { createLedgerId } from "@/shared/str";
 import type { IPlaidClient } from "./plaid-client";
@@ -36,17 +36,17 @@ export interface PlaidSyncResult {
 
 export interface IPlaidSyncService {
   syncItemTransactions(
-    userId: string,
+    identity: Identity,
     itemId: string,
     syncType: "manual" | "webhook" | "scheduled",
     ledgerId?: string,
   ): Promise<PlaidSyncResult>;
   getUnsyncedTransactionsForCategorization(
-    userId: string,
+    identity: Identity,
     accountId: string,
   ): Promise<TransactionToCategorize[]>;
   submitTransactionsToLedger(
-    userId: string,
+    identity: Identity,
     ledgerOwner: string,
     ledgerName: string,
     transactionInputs: Array<{
@@ -57,7 +57,7 @@ export interface IPlaidSyncService {
     filename?: string,
   ): Promise<{ success: boolean; addedCount: number; message?: string }>;
   deleteTransactions(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     transactionIds: string[],
   ): Promise<{ success: boolean; deletedCount: number; message?: string }>;
@@ -79,8 +79,12 @@ export class PlaidSyncService implements IPlaidSyncService {
   ) {}
 
   /** Item-management mutations require at least write tier — a read-only collaborator may not. */
-  private assertLedgerWriteAccess(ledgerId: string, userId: string) {
-    return authorizeLedger(trustedIdentity(userId), ledgerId, "write", {
+  /**
+   * Authorize as the caller. Previously `trustedIdentity(userId)`, which is
+   * `capabilityExempt` and so skipped the scope check entirely — see m9.
+   */
+  private assertLedgerWriteAccess(ledgerId: string, identity: Identity) {
+    return authorizeLedger(identity, ledgerId, "write", {
       models: this.models,
       db: this.db,
       favaClientFactory: this.favaClientFactory,
@@ -88,7 +92,7 @@ export class PlaidSyncService implements IPlaidSyncService {
   }
 
   async syncItemTransactions(
-    userId: string,
+    identity: Identity,
     itemId: string,
     syncType: "manual" | "webhook" | "scheduled",
     ledgerId?: string,
@@ -96,16 +100,24 @@ export class PlaidSyncService implements IPlaidSyncService {
     const lockKey = LOCK_KEYS.PLAID.syncTransactions(itemId);
 
     return lock.acquire(lockKey, async () => {
-      return this.syncItemTransactionsImpl(itemId, userId, syncType, ledgerId);
+      return this.syncItemTransactionsImpl(
+        itemId,
+        identity,
+        syncType,
+        ledgerId,
+      );
     });
   }
 
   private async syncItemTransactionsImpl(
     itemId: string,
-    userId: string,
+    identity: Identity,
     syncType: "manual" | "webhook" | "scheduled",
     ledgerId?: string,
   ): Promise<PlaidSyncResult> {
+    // The identity is what authorizes; `userId` is the id the models key on.
+    // Derived rather than passed separately so the two can never disagree.
+    const { userId } = identity;
     const startedAt = new Date();
 
     try {
@@ -116,7 +128,7 @@ export class PlaidSyncService implements IPlaidSyncService {
       if (ledgerId) {
         const { ledgerRepoId } = await this.assertLedgerWriteAccess(
           ledgerId,
-          userId,
+          identity,
         );
         if (item.ledgerRepoId !== ledgerRepoId) {
           throw new BadUserInputError("Unauthorized access to Plaid Item");
@@ -354,9 +366,10 @@ export class PlaidSyncService implements IPlaidSyncService {
   }
 
   async getUnsyncedTransactionsForCategorization(
-    userId: string,
+    identity: Identity,
     accountId: string,
   ): Promise<TransactionToCategorize[]> {
+    const { userId } = identity;
     const account = await this.models.plaidAccount.getById(this.db, accountId);
     if (!account) {
       throw new BadUserInputError("PlaidAccount not found");
@@ -385,7 +398,7 @@ export class PlaidSyncService implements IPlaidSyncService {
   }
 
   async submitTransactionsToLedger(
-    userId: string,
+    identity: Identity,
     ledgerOwner: string,
     ledgerName: string,
     transactionInputs: Array<{
@@ -395,6 +408,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     }>,
     filename?: string,
   ): Promise<{ success: boolean; addedCount: number; message?: string }> {
+    const { userId } = identity;
     if (transactionInputs.length === 0) {
       throw new BadUserInputError("No transactions provided");
     }
@@ -414,7 +428,7 @@ export class PlaidSyncService implements IPlaidSyncService {
 
     const { ledgerRepoId } = await this.assertLedgerWriteAccess(
       createLedgerId(ledgerOwner, ledgerName),
-      userId,
+      identity,
     );
 
     for (const tx of transactions) {
@@ -537,7 +551,7 @@ export class PlaidSyncService implements IPlaidSyncService {
   }
 
   async deleteTransactions(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     transactionIds: string[],
   ): Promise<{ success: boolean; deletedCount: number; message?: string }> {
@@ -556,7 +570,7 @@ export class PlaidSyncService implements IPlaidSyncService {
 
     const { ledgerRepoId } = await this.assertLedgerWriteAccess(
       ledgerId,
-      userId,
+      identity,
     );
 
     for (const tx of transactions) {
