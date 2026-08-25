@@ -307,7 +307,8 @@ and this server in the path, so a client must not try to fetch it from the web
 itself. Resources authorize per read, exactly like tools: access revoked between
 two fetches is refused on the second.
 
-Eleven templates today — the ledger's own vocabulary, plus file contents:
+Twenty-one templates today — the ledger's vocabulary, its analysis reads, and
+file contents:
 
 ```
 beancount://{owner}/{name}/payees        …/narrations   …/currencies
@@ -315,7 +316,22 @@ beancount://{owner}/{name}/tags          …/links        …/years
 beancount://{owner}/{name}/commodities   …/events       …/errors
 beancount://{owner}/{name}/attributes
 beancount://{owner}/{name}/files/{path}
+
+beancount://{owner}/{name}/trial-balance        …/interval-totals
+beancount://{owner}/{name}/account-last-entries …/entries-count
+beancount://{owner}/{name}/account-directives
+beancount://{owner}/{name}/account-report/{accountName}
+beancount://{owner}/{name}/payee-transactions/{payee}
+beancount://{owner}/{name}/narration-transactions/{narration}
+beancount://{owner}/{name}/payee-accounts/{payee}
+beancount://{owner}/{name}/entry-context/{entryHash}
 ```
+
+**One asymmetry to know about.** The REST twins take optional narrowing —
+`?account=…&filter=…&time=…&interval=…` — and the MCP resources do not. The MCP
+SDK's URI-template matcher has no form-style query expansion, so an optional
+parameter cannot be expressed in a template it will match. Required parameters
+ride the path, as above; for a filtered read, use the REST route.
 
 The vocabulary reads are what a client needs _before_ writing a correct entry:
 which payees already exist, which currencies the book uses, which tags are in

@@ -1,6 +1,7 @@
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolContext } from "../tools/types";
 import { VOCABULARY_READS } from "@/features/ledger/api/rest/v1/vocabulary-handler";
+import { ANALYSIS_READS } from "@/features/ledger/api/rest/v1/analysis-handler";
 
 /**
  * The MCP surface's resource fragment (ADR 0008 D2).
@@ -13,9 +14,9 @@ import { VOCABULARY_READS } from "@/features/ledger/api/rest/v1/vocabulary-handl
  * primitives, and it is the line this fragment follows: reads here, actions in
  * `mcp-tools.ts`.
  *
- * Eleven templates: the ledger's own vocabulary (w3/m6) plus file contents, the
- * one w3/m5 proved the shape with. The remaining read families follow in
- * w3/m7–m8.
+ * Twenty-one templates: the ledger's vocabulary (w3/m6), its analysis reads
+ * (w3/m7), and file contents — the one w3/m5 proved the shape with. The
+ * bank-import family follows in w3/m8.
  */
 
 /**
@@ -100,9 +101,66 @@ const vocabularyResources: readonly McpResourceDescriptor[] =
     },
   }));
 
+/**
+ * The analysis reads, as templates (w3/m7).
+ *
+ * Same construction as the vocabulary ones and the same reason: one
+ * `ANALYSIS_READS` list, two adapters.
+ *
+ * Required parameters ride the **path** (`…/payee-transactions/{payee}`) rather
+ * than a query string, which is not the spelling ADR 0008 D5a first chose. The
+ * SDK's `UriTemplate.match` does not implement RFC 6570 form-style expansion,
+ * so a `{?account,filter}` template matches no URI at all, and a bare template
+ * stops matching the moment a caller appends `?`. Path parameters match — colons
+ * in account names included.
+ *
+ * The cost is real and worth naming: **optional filters are REST-only.** A
+ * caller wanting a trial balance narrowed by time uses the REST route; the MCP
+ * resource returns the unfiltered read. That is a tooling limit, not a decision,
+ * and it is recorded on the affected rows rather than left for someone to
+ * rediscover.
+ */
+const analysisResources: readonly McpResourceDescriptor[] = ANALYSIS_READS.map(
+  (read) => ({
+    name: `ledger${read.segment
+      .split("-")
+      .map((part) => part[0].toUpperCase() + part.slice(1))
+      .join("")}`,
+    title: read.summary,
+    description: read.description,
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}${read.uriPath}`,
+    read: async (toolCtx, variables) => {
+      const ledgerId = resolveLedgerId(toolCtx, variables);
+      // The path variable arrives here alongside `owner`/`name`, and the
+      // services read it from `query` — so a path parameter and its REST
+      // query-string twin land in the same place. RFC 6570 hands a variable
+      // back as a string or a list; a repeated one collapses to its first
+      // value rather than reaching the service as an array it would mishandle.
+      const query = Object.fromEntries(
+        Object.entries(variables)
+          .filter(([key]) => key !== "owner" && key !== "name")
+          .map(([key, value]) => [
+            key,
+            Array.isArray(value) ? value[0] : value,
+          ]),
+      ) as Record<string, string | undefined>;
+      // The same service objects the REST route passes: `fetch` takes the
+      // services it uses, not a surface's wrapper around them.
+      const result = await read.fetch(toolCtx.services, {
+        ledgerId,
+        identity: toolCtx.identity,
+        query,
+      });
+      return JSON.stringify(result, null, 2);
+    },
+  }),
+);
+
 /** The resource fragment: every template this feature contributes to the registry. */
 export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
   ...vocabularyResources,
+  ...analysisResources,
   {
     name: "ledgerFile",
     title: "Ledger File Contents",

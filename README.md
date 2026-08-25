@@ -154,8 +154,9 @@ Point an MCP client at a deployment to query and edit a ledger from an agent:
 ```
 
 Seven tools — BQL queries, file listing, reads, edits, and API-key management —
-plus eleven URI-addressed **resources** an agent fetches without spending a tool
-call, covering the ledger's vocabulary (payees, currencies, tags, …) and file
+plus twenty-one URI-addressed **resources** an agent fetches without spending a
+tool call, covering the ledger's vocabulary (payees, currencies, tags, …), its
+analysis reads (trial balance, account reports, interval totals, …), and file
 contents. Each resource has a REST twin over the same service call.
 Every call re-authorizes, so access revoked mid-session is refused on the next
 one. The credential must be scoped to a single ledger. `yarn mcp:conformance <base-url>`

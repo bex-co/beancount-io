@@ -8,6 +8,7 @@ import { REPORT_ROUTES } from "./reports-handler";
 import { FILE_ROUTES } from "./files-handler";
 import { ENTRY_ROUTES } from "./entries-handler";
 import { VOCABULARY_ROUTES } from "./vocabulary-handler";
+import { ANALYSIS_ROUTES } from "./analysis-handler";
 import {
   ARCHIVE_DOWNLOAD_ROUTES,
   ARCHIVE_TICKET_ROUTES,
@@ -33,6 +34,7 @@ export const V1_SCOPED_ROUTES: readonly V1Route<never, never, never>[] = [
   ...FILE_ROUTES,
   ...ENTRY_ROUTES,
   ...VOCABULARY_ROUTES,
+  ...ANALYSIS_ROUTES,
   ...ARCHIVE_TICKET_ROUTES,
 ];
 

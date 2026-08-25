@@ -607,12 +607,15 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
     M.coveredByBql,
   ),
-  gqlOnly(
-    "Query.getLedgerTrialBalance",
-    "read",
-    R.notInV1Table,
-    M.coveredByBql,
-  ),
+  {
+    verb: "Query.getLedgerTrialBalance",
+    class: "read",
+    gql: "Query.getLedgerTrialBalance",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/trial-balance",
+    mcpResource: "ledgerTrialBalance",
+    mcpExempt:
+      "Reachable as the `ledgerTrialBalance` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
   {
     verb: "Query.getLedgerAttributes",
     class: "read",
@@ -646,24 +649,33 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     R.dashboardShaped,
     M.coveredByBql,
   ),
-  gqlOnly(
-    "Query.getLedgerPayeeTransactions",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
-  gqlOnly(
-    "Query.getLedgerNarrationTransactions",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
-  gqlOnly(
-    "Query.getLedgerPayeeAccounts",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
+  {
+    verb: "Query.getLedgerPayeeTransactions",
+    class: "read",
+    gql: "Query.getLedgerPayeeTransactions",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payee-transactions",
+    mcpResource: "ledgerPayeeTransactions",
+    mcpExempt:
+      "Reachable as the `ledgerPayeeTransactions` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerNarrationTransactions",
+    class: "read",
+    gql: "Query.getLedgerNarrationTransactions",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/narration-transactions",
+    mcpResource: "ledgerNarrationTransactions",
+    mcpExempt:
+      "Reachable as the `ledgerNarrationTransactions` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerPayeeAccounts",
+    class: "read",
+    gql: "Query.getLedgerPayeeAccounts",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payee-accounts",
+    mcpResource: "ledgerPayeeAccounts",
+    mcpExempt:
+      "Reachable as the `ledgerPayeeAccounts` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
   {
     verb: "Query.getLedgerErrors",
     class: "read",
@@ -733,42 +745,57 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     mcpExempt:
       "Reachable as the `ledgerPayees` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
   },
-  gqlOnly(
-    "Query.getLedgerAccountLastEntries",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
-  gqlOnly(
-    "Query.getLedgerEntriesCountPerType",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
-  gqlOnly(
-    "Query.getLedgerAccountReport",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
-  gqlOnly(
-    "Query.getLedgerIntervalTotals",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
+  {
+    verb: "Query.getLedgerAccountLastEntries",
+    class: "read",
+    gql: "Query.getLedgerAccountLastEntries",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-last-entries",
+    mcpResource: "ledgerAccountLastEntries",
+    mcpExempt:
+      "Reachable as the `ledgerAccountLastEntries` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerEntriesCountPerType",
+    class: "read",
+    gql: "Query.getLedgerEntriesCountPerType",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/entries-count",
+    mcpResource: "ledgerEntriesCount",
+    mcpExempt:
+      "Reachable as the `ledgerEntriesCount` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerAccountReport",
+    class: "read",
+    gql: "Query.getLedgerAccountReport",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-report",
+    mcpResource: "ledgerAccountReport",
+    mcpExempt:
+      "Reachable as the `ledgerAccountReport` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerIntervalTotals",
+    class: "read",
+    gql: "Query.getLedgerIntervalTotals",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/interval-totals",
+    mcpResource: "ledgerIntervalTotals",
+    mcpExempt:
+      "Reachable as the `ledgerIntervalTotals` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
   gqlAndRest(
     "Query.getLedgerJournal",
     "read",
     "GET /api-gateway/v1/ledgers/{owner}/{name}/journal",
     M.coveredByBql,
   ),
-  gqlOnly(
-    "Query.getLedgerEntryContext",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
+  {
+    verb: "Query.getLedgerEntryContext",
+    class: "read",
+    gql: "Query.getLedgerEntryContext",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/entry-context",
+    mcpResource: "ledgerEntryContext",
+    mcpExempt:
+      "Reachable as the `ledgerEntryContext` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
   gqlOnly(
     "Query.getLedgerPlaintextJournal",
     "read",
@@ -787,12 +814,15 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     "GET /api-gateway/v1/ledgers/{owner}/{name}/accounts",
     M.coveredByBql,
   ),
-  gqlOnly(
-    "Query.getLedgerAccountDirectives",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
+  {
+    verb: "Query.getLedgerAccountDirectives",
+    class: "read",
+    gql: "Query.getLedgerAccountDirectives",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-directives",
+    mcpResource: "ledgerAccountDirectives",
+    mcpExempt:
+      "Reachable as the `ledgerAccountDirectives` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
   gqlOnly(
     "Query.getLedgerAssetDownloadUrl",
     "read",

@@ -11,7 +11,13 @@ import type { Identity } from "@/server/api/identity";
  */
 export type ToolServices = Pick<
   ServiceLayer,
-  "ledgerShell" | "ledgerRepo" | "apiKey" | "ledgerData"
+  | "ledgerShell"
+  | "ledgerRepo"
+  | "apiKey"
+  | "ledgerData"
+  | "ledgerFinance"
+  | "ledgerJournal"
+  | "ledgerAccount"
 >;
 
 export interface ToolContext {

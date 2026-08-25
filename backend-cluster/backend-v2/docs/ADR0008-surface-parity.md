@@ -140,6 +140,26 @@ Both catch defects found in the table today, and both are conditions on the row 
 1. **An escape hatch must be able to do the job.** An exemption citing a read-only alternative must not sit on a `write` or `admin` verb.
 2. **An exemption that depends on another decision must cite it by id**, so changing that decision can enumerate what it re-opens.
 
+### D5a — The family parameter shape, settled once (w3/m7/t001)
+
+The read families take date ranges, accounts, intervals and filters, and answering that per verb would produce sixteen APIs wearing one prefix. It is settled by **reusing what `/journal` already publishes** rather than by inventing:
+
+| Parameter                 | Meaning                                  | Source                  |
+| ------------------------- | ---------------------------------------- | ----------------------- |
+| `account`                 | restrict to one account and its children | `journalQuerySchema`    |
+| `filter`                  | Fava filter expression                   | `journalQuerySchema`    |
+| `time`                    | Fava time expression                     | `journalQuerySchema`    |
+| `interval` / `conversion` | period grouping and currency conversion  | the services' own names |
+| `limit` / `offset`        | paging, `limit` capped at 1000           | `journalQuerySchema`    |
+
+Reuse over invention is ADR 0006 D1 applied to parameters: a verb should behave the same everywhere, and that includes what you call its arguments. The MCP resource templates carry the identical names through RFC 6570 query expansion, so a caller moving between surfaces re-reads nothing.
+
+**Amended by implementation: MCP takes required parameters on the path, and cannot take the optional ones at all.** The query-string spelling above is what REST publishes and what this record first specified for both. The MCP SDK's `UriTemplate.match` does not implement RFC 6570 form-style expansion — a `{?account,filter,time}` template matches no URI whatsoever, and a bare template stops matching the moment a caller appends `?` (verified against `@modelcontextprotocol/sdk` 1.30.0). Path parameters match, colons in account names included.
+
+So a required parameter rides the path (`…/payee-transactions/{payee}`) and **optional filters are a REST-only capability**. A caller wanting a time-narrowed trial balance uses the REST route; the MCP resource answers unfiltered. This is a tooling limit rather than a decision, and it is the first case where the two surfaces differ in what a verb can be _asked_, not in whether it exists. Worth revisiting when the SDK's matcher grows form-style expansion, or by moving filters onto the path as an opaque segment if agents turn out to need them.
+
+**The unbounded-response worry turned out to be already solved.** The three reads that can return a whole ledger's history — `journalEntries`, `getLedgerPlaintextJournal`, `getLedgerAccountJournal` — are exactly the three already covered by `GET /api-gateway/v1/ledgers/{owner}/{name}/journal`, which takes the same narrowing _and_ pages with `limit`/`offset`. They stay deferred against that endpoint rather than being ported and then bounded a second way. Nothing else in the family is unbounded.
+
 ## Defects found (2026-08-25)
 
 The first three are one-line fixes; the fourth re-opens fifteen verbs. They matter because each was true when written and stopped being true with nothing to notice — the failure mode D1 and D7 exist to catch.

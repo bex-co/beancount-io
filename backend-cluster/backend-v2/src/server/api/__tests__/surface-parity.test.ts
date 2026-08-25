@@ -173,8 +173,8 @@ describe("surface parity", () => {
    */
   const DEFERRED: Record<"gql" | "rest" | "mcp", number> = {
     gql: 0,
-    rest: 70,
-    mcp: 81,
+    rest: 60,
+    mcp: 71,
   };
 
   it("tracks the in-scope gap exactly, so it cannot drift either way", () => {
