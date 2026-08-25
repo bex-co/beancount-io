@@ -1,0 +1,9 @@
+# Service data (postgres, gitea, redis) lives here — never commit it.
+data/
+
+# Local overrides and secrets.
+.env
+docker-compose.override.yml
+
+# Runtime logs / pid files from up.sh (wrangler dev, ollama).
+tmp/

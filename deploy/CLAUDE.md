@@ -5,12 +5,13 @@ Deployment configuration for the Beancount.io stack. Read the target's README be
 ## Targets
 
 - `docker-mac/` — full local stack through Docker Compose: dashboard, backend-v2, ledger, Gitea, two PostgreSQL instances, and Redis. Run Compose commands from `deploy/docker-mac/`.
+- `dev-sandbox/` — the docker-mac stack (on ports 42610-42612 plus a `devdns` dnsmasq sidecar) **plus the Ask-AI sandbox path**: the agent-box worker under host-side `wrangler dev` and optional local-model (Ollama) credentials. Use `./up.sh` / `./down.sh` from `deploy/dev-sandbox/`; the scripts also write `backend-cluster/agent-box/.dev.vars` (shared `ADMIN_TOKEN`).
 - `docker/` — production-oriented, single-host Docker Compose deployment with Caddy-managed TLS, named volumes, health-gated initialization, and no directly published application or datastore ports. Run Compose commands from `deploy/docker/`.
 - `bex/` — operational notes for the bex PaaS deployment. The actual Blueprint is the repository-root `../bex.yaml`; bex has no persistent disks, so stateful services remain external.
 
 ## Safety and configuration
 
-- `docker-mac/.env` is local and gitignored. Commit placeholders only in `docker-mac/.env.example`.
+- `docker-mac/.env` and `dev-sandbox/.env` are local and gitignored. Commit placeholders only in the matching `.env.example`. `dev-sandbox/up.sh` generates secrets into `.env` and mirrors `ADMIN_TOKEN` into `backend-cluster/agent-box/.dev.vars` (also gitignored) — keep those two in sync when editing either by hand.
 - `docker/.env` is secret, host-specific, and gitignored. Commit placeholders only in `docker/.env.example`; keep production values out of Compose overrides and documentation.
 - Root `../bex.yaml` contains deployment structure, never credentials. Configure secrets in the deployment platform.
 - Keep ledger/PostgreSQL/Redis internal unless a documented operational requirement says otherwise. `docker-mac/docker-compose.yml` intentionally publishes only the user-facing development ports; `docker/docker-compose.yml` publishes only Caddy's HTTP(S) edge by default.
@@ -20,7 +21,7 @@ Deployment configuration for the Beancount.io stack. Read the target's README be
 
 ## Validation
 
-For Compose-target changes, from the changed directory (`deploy/docker-mac/` or `deploy/docker/`):
+For Compose-target changes, from the changed directory (`deploy/docker-mac/`, `deploy/dev-sandbox/`, or `deploy/docker/`):
 
 ```zsh
 docker compose config --quiet
