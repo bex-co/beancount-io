@@ -18,7 +18,8 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 
 - `CLAUDE.md` is the canonical instruction file at every scope. The adjacent `AGENTS.md` must be a relative symlink to it so Claude Code and Codex always read the same instructions; never maintain duplicate copies.
 - When adding, moving, or removing a scoped `CLAUDE.md`, make the same structural change to its `AGENTS.md` symlink. When editing either name, update the canonical `CLAUDE.md` through the symlink rather than replacing the symlink with a regular file.
-- Shared skills live in `skills/.claude/skills/`. The root `.agents/skills` symlink must continue to point there so both agents use the same skill implementation. Edit the canonical skill tree only; do not create divergent Claude-only and Codex-only copies.
+- Shared skills live in `skills/.claude/skills/`. The root `.claude/skills` (Claude Code) and `.agents/skills` (Codex) symlinks must both continue to point there — as the relative link `../skills/.claude/skills` — so both agents use the same skill implementation. Never create a real directory at either path. Edit the canonical skill tree only; do not create divergent Claude-only and Codex-only copies.
+- Slash commands are skills. Every `/name` workflow lives at `skills/.claude/skills/<name>/SKILL.md` (with `allowed-tools` in its frontmatter when it needs pre-approved tools); there is no `.claude/commands/` at the root. A command there would be invisible to Codex, and Claude Code lets a same-named skill shadow it anyway.
 - Write instructions and skills using behavior supported by both Claude Code and Codex. If platform-specific configuration or tooling is unavoidable, label it clearly and provide equivalent behavior for the other agent.
 - After changing instruction files, skills, or their symlinks, run `python3 scripts/check-agent-guidance.py`. It verifies every tracked scope, including nested feature guides, plus the shared-skills link.
 
@@ -40,7 +41,7 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 
 ## Roadmap board (`.pm/`)
 
-`.pm/` is the public TPM board for growing adoption in the open-source and agentic-coding community (workstreams → milestones → tasks). Conventions live canonically in `.claude/commands/pm.md`; `/pm` is the **only** command that writes to `.pm/`, and `/pm-brainstorm` proposes work as text. Read `.pm/DO_NOT_DO.md` before proposing roadmap work. The board is public — no secrets, no private-repo references.
+`.pm/` is the public TPM board for growing adoption in the open-source and agentic-coding community (workstreams → milestones → tasks). Conventions live canonically in `skills/.claude/skills/pm/SKILL.md`; `/pm` is the **only** skill that writes to `.pm/`, `/pm-brainstorm` proposes work as text, and `/loop-worker <wN>` drains a workstream milestone by milestone (implement → `/pm done` → `/ship`). Read `.pm/DO_NOT_DO.md` before proposing roadmap work. The board is public — no secrets, no private-repo references.
 
 ## Repo-wide rules
 

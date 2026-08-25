@@ -2,7 +2,7 @@
 
 Cross-compatible Claude Code and Codex skills that automate Beancount workflows for [Beancount.io](https://beancount.io/) users (see root `CLAUDE.md` for repo-wide rules).
 
-A skill is a `SKILL.md` instruction package with optional references, evals, scripts, and agent metadata. The canonical implementations live here under `.claude/skills/`; the repository-root `.agents/skills` symlink exposes the same tree to Codex. Do not create platform-specific copies.
+A skill is a `SKILL.md` instruction package with optional references, evals, scripts, and agent metadata. The canonical implementations live here under `.claude/skills/`; the repository-root `.claude/skills` and `.agents/skills` symlinks expose the same tree to Claude Code and Codex respectively. Do not create platform-specific copies.
 
 ## Layout
 
@@ -27,9 +27,11 @@ skills/
         evals/                Statement+ledger fixtures per mismatch class
       mermaid/                Draw syntax-verified Mermaid architecture diagrams
         SKILL.md
-      pm/                     Codex entry point for the root /pm command
-      pm-brainstorm/          Codex entry point for /pm-brainstorm
-      ship/                   Codex entry point for the root /ship command
+      pm/                     /pm — arrange the public .pm adoption board (the only writer to .pm/)
+      pm-brainstorm/          /pm-brainstorm — propose .pm milestones and tasks as text
+      loop-worker/            /loop-worker — drain a .pm workstream milestone by milestone
+      ship/                   /ship — pull --rebase, commit, push main
+        agents/               Codex interface metadata (openai.yaml)
   tmp/                        Scratch space — gitignored, safe for experiments
 ```
 
@@ -48,9 +50,10 @@ Most stateful `beancount-*` skills have `references/` and `evals/`; small skills
 | `beancount-options`         | Turn human-language descriptions of options trades (CSP, covered call, vertical, condor, roll, assignment, exercise, expiration, …) into balanced beancount transactions. Uses per-contract cost basis, IRS-aligned assignment treatment, and runs `bean-check` to verify before reporting success.                                                                                                                                                                                                                                   |
 | `beancount-reconcile`       | Reconcile one account against a bank/broker statement (CSV or pasted PDF text). Diffs statement vs ledger into mismatch classes (missing, duplicate, amount-mismatch, date-drift), and — only after confirmation — appends the missing transactions plus a period-end `balance` assertion that ties the account out. Append-only (reports suspects/duplicates/mismatches for manual fixing); never writes a failing assertion; `bean-check`-gated. Triggers on "reconcile my checking account" / "does my ledger match my statement". |
 | `mermaid`                   | Draw concise, syntax-verified Mermaid architecture diagrams for a repo component, document, system, or dependency flow. Verifies the diagram renders via `mermaid-cli` before answering.                                                                                                                                                                                                                                                                                                                                              |
-| `ship`                      | Codex entry point for the repository's canonical [`/ship` workflow](../.claude/commands/ship.md).                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| `pm`                        | Codex entry point for the canonical [`/pm` workflow](../.claude/commands/pm.md) — arrange the public `.pm` adoption board (the only writer to `.pm/`).                                                                                                                                                                                                                                                                                                                                                                                |
-| `pm-brainstorm`             | Codex entry point for the canonical [`/pm-brainstorm` workflow](../.claude/commands/pm-brainstorm.md) — propose adoption milestones as text; `/pm` materializes them.                                                                                                                                                                                                                                                                                                                                                                 |
+| `ship`                      | `/ship` — bring local `main` up to date with `git pull --rebase`, commit pending work with a Conventional Commits message (session-aware when the agent made the changes), and push to `origin/main`. Resolves rebase conflicts itself; ends at the shipped HEAD.                                                                                                                                                                                                                                                                     |
+| `pm`                        | `/pm` — arrange the public `.pm` adoption board: status, new workstream, inbox notes, promote, new milestone, add-task, done. The **only** writer to `.pm/` and the canonical home of the board conventions (mission pillars, hierarchy, sizing rule, standing closing tasks, templates).                                                                                                                                                                                                                                             |
+| `pm-brainstorm`             | `/pm-brainstorm <topic>` — think a topic through with the TPM adoption lens and propose milestones / inbox notes as text only; ends with the exact `/pm` invocations to materialize them. Writes nothing.                                                                                                                                                                                                                                                                                                                             |
+| `loop-worker`               | `/loop-worker <wN>` — autonomously drain one `.pm` workstream: pick the lowest pending milestone, implement every task end to end with the package checks green, `/pm done` each task, `/ship` the milestone, repeat until none remain or a milestone blocks.                                                                                                                                                                                                                                                                         |
 
 ## Conventions
 

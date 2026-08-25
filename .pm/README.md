@@ -2,7 +2,7 @@
 
 Public TPM board for growing Beancount.io adoption in the open-source and agentic-coding community.
 
-- Conventions — mission pillars, hierarchy, sizing rule, quality gate, templates — live canonically in [`.claude/commands/pm.md`](../.claude/commands/pm.md).
+- Conventions — mission pillars, hierarchy, sizing rule, quality gate, templates — live canonically in [`skills/.claude/skills/pm/SKILL.md`](../skills/.claude/skills/pm/SKILL.md).
 - `/pm-brainstorm <topic>` proposes work (text only); `/pm` is the **only** command that writes here.
 - Hard constraints: [`DO_NOT_DO.md`](./DO_NOT_DO.md).
 - Layout: `wN/` general-purpose worker queues → `wN/NNN.md` inbox notes (≤ ~1h) and `wN/mN/` milestones (> ~1h) → `wN/mN/tNNN.md` tasks. Topic focus belongs to milestones and tasks; workers can take work across packages and adoption pillars. Completed work moves under `done/`.

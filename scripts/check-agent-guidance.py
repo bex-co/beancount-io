@@ -64,16 +64,20 @@ def main() -> int:
                 f"{relative(agents)} has no tracked/visible sibling CLAUDE.md"
             )
 
-    shared_skills = REPO_ROOT / ".agents" / "skills"
+    # Both agents must read the same skill tree: Claude Code via .claude/skills,
+    # Codex via .agents/skills. Each is a relative symlink to the canonical tree.
     expected_target = "../skills/.claude/skills"
-    if not shared_skills.is_symlink():
-        errors.append(".agents/skills must be a relative symlink")
-    elif os.readlink(shared_skills) != expected_target:
-        errors.append(
-            f".agents/skills points to {os.readlink(shared_skills)!r}, expected {expected_target!r}"
-        )
-    elif shared_skills.resolve() != (REPO_ROOT / "skills/.claude/skills").resolve():
-        errors.append(".agents/skills does not resolve to skills/.claude/skills")
+    canonical_skills = (REPO_ROOT / "skills/.claude/skills").resolve()
+    for link in (".claude/skills", ".agents/skills"):
+        shared_skills = REPO_ROOT / link
+        if not shared_skills.is_symlink():
+            errors.append(f"{link} must be a relative symlink")
+        elif os.readlink(shared_skills) != expected_target:
+            errors.append(
+                f"{link} points to {os.readlink(shared_skills)!r}, expected {expected_target!r}"
+            )
+        elif shared_skills.resolve() != canonical_skills:
+            errors.append(f"{link} does not resolve to skills/.claude/skills")
 
     if errors:
         for error in errors:
@@ -82,7 +86,7 @@ def main() -> int:
 
     print(
         f"OK: {len(claude_files)} CLAUDE.md scopes have matching AGENTS.md links; "
-        ".agents/skills resolves to the canonical skill tree."
+        ".claude/skills and .agents/skills resolve to the canonical skill tree."
     )
     return 0
 
