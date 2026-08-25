@@ -1,12 +1,12 @@
 # w3 · m8 — Port the bank-import family to REST and MCP
 
-**Worker:** worker3 **Goal:** Everything a customer does with an already-linked bank — list it, inspect it, map its accounts, sync transactions, submit them to the ledger, unlink it — is reachable from REST and MCP. The browser ceremony stays a browser ceremony; nothing after it does. **Status:** todo
+**Worker:** worker3 **Goal:** Everything a customer does with an already-linked bank — list it, inspect it, map its accounts, sync transactions, submit them to the ledger, unlink it — is reachable from REST and MCP. The browser ceremony stays a browser ceremony; nothing after it does. **Status:** in progress (t001 decided; m9 prerequisite shipped)
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Decide what an agent may do to a bank link, and under which scope | 45m | — |
+| t001 | Decide what an agent may do to a bank link, and under which scope | 45m | — | — **DONE**
 | t002 | `v1Route` declarations for the in-scope bank verbs | 60m | t001 |
 | t003 | The same set on MCP — reads as resources, writes as a grouped tool | 60m | t001 |
 | t004 | Lower both ratchet ceilings, and prove they hold | 20m | t002, t003 |
@@ -29,6 +29,25 @@ submitPlaidTransactionsToLedger · deletePlaidTransactions
 ```
 
 **Out of scope, permanently** — the operation *is* the hosted widget (ADR 0008 D4): `createPlaidLinkToken`, `createPlaidUpdateModeLinkToken`, `exchangePlaidPublicToken`. A customer links a bank in a browser once; there is no API to expose for that, and this milestone does not pretend otherwise.
+
+## t001 decided (2026-08-25)
+
+The decision task is answered; what remains is the port.
+
+**All fifteen go on both surfaces.** Customer-facing means customer-facing — an agent that can read and edit a ledger but cannot pull the transactions into it is doing the tedious half.
+
+**`dry_run` on the two verbs that can actually preview something:**
+
+| Verb | `dry_run` | Why |
+| --- | --- | --- |
+| `syncPlaidTransactions`, `submitTransactionsToLedger`, `deletePlaidTransactions` | **yes** | the import workflow writes real transactions; a preview is what makes it reviewable |
+| `unlinkPlaidItem` | **yes** | can report what would be severed — accounts, synced transactions |
+| `reconcilePlaidAccounts` | **yes** | already computes a diff; previewing it is free |
+| `updatePlaidAccountMapping`, `updatePlaidAccountCurrency`, `refreshPlaidItemStatus`, and the reads | **no** | there is nothing to check. A `dry_run` that only echoes the input back teaches an agent to trust a preview that never had a chance to catch the mistake — worse than not offering one |
+
+**Prerequisite met.** w3/m9 shipped: the Plaid services now authorize as their caller rather than rebuilding a capability-exempt session, so a narrowed agent credential stays narrowed inside the service and not only at the gate. That was the condition this milestone's port should not have happened without.
+
+**Still open for the implementer:** the three Link-ceremony verbs stay out (ADR 0008 D4), and `plaidBinding` narrows to exactly those three.
 
 ## Definition of done
 
