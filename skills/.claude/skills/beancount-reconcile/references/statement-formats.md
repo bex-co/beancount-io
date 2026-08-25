@@ -20,6 +20,8 @@ The common shape is one row per transaction with a date, a description/payee, an
 2. **Separate Debit / Credit columns** — two columns; each row fills one. You must combine them into a single signed amount (see sign rules below).
 3. **Amount + running balance** — an `Amount` and a `Balance` column. The `Balance` column is a gift: the last row's balance is the ending balance, and you can cross-check each line by walking the running balance.
 
+A transaction-row CSV carries no period bounds. Infer the period as the **calendar month of the row dates** (state the inference in the proposal; the last row's date is *not* the period end), or ask when the rows span a month boundary and the user's words don't pin the month.
+
 Detect the columns from the header row. If there is no header, infer from the data (a column that is always a parseable date; a column that is always numeric) and **state your inference to the user before relying on it**.
 
 ### Pasted PDF text
@@ -62,7 +64,7 @@ Credit-card CSVs frequently list **purchases as positive numbers** ("Amount = 54
 
 ## Date normalization
 
-- **MDY vs DMY** is genuinely ambiguous for day ≤ 12 (`03/04/2026`). Resolve it from the statement's locale/issuer if known, from any unambiguous date on the same statement (a day > 12 fixes the order), or by asking. Persist the resolved `date_format` in the config block.
+- **MDY vs DMY** is genuinely ambiguous for day ≤ 12 (`03/04/2026`). Resolve it from the statement's locale/issuer if known, from any unambiguous date on the same statement (a day > 12 fixes the order), from the ledger's own posting dates when they corroborate exactly one reading (say which source decided it), or by asking. Persist the resolved `date_format` in the config block.
 - Use the **posting/transaction date**, not any "posted vs. effective" second date, and be consistent with whichever the ledger already uses. Pending-vs-settled date differences are expected and handled by the Match phase's date window — don't try to correct them here.
 - Emit ISO `YYYY-MM-DD`.
 

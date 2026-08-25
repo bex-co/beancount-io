@@ -11,7 +11,7 @@ Diff the normalized statement lines (from `statement-formats.md`) against the le
   ```
 - **Anchor**: the prior `balance` assertion for the account (from Discover). Reconcile forward from it; you do not need to re-match anything before it.
 
-## Matching algorithm — two passes, then classify
+## Matching algorithm — three passes, then classify
 
 Match on **amount first** (the number rarely lies; dates and descriptions drift).
 
@@ -21,7 +21,9 @@ Match on **amount first** (the number rarely lies; dates and descriptions drift)
 
 When two candidates tie (same amount, same gap), or an amount appears an unequal number of times on each side, **do not force a pairing** — surface it and ask. A wrong pairing hides a real discrepancy.
 
-Everything still unpaired after Pass 2 is a discrepancy. Classify it.
+**Pass 3 — near-miss (amounts differ).** For what remains, pair a statement line with a ledger posting when the **descriptions are similar** (same merchant tokens) and the dates are within WINDOW, **but the amounts differ**. Each such pair is an **amount-mismatch** — report it, never auto-edit. Also check multiplicity here: one statement line whose amount matches **two or more** ledger postings within the window (and amounts are equal) is a **duplicate** in the ledger — report both postings with their file positions. Pass 3 exists because Passes 1–2 require amount equality, so mismatches and duplicates can never surface without it.
+
+Everything still unpaired after Pass 3 is a discrepancy. Classify it.
 
 ## The discrepancy classes
 

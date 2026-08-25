@@ -1,12 +1,12 @@
 {
   "skill_name": "beancount-import",
-  "notes": "Each eval maps the fixture ledger to ./ledger.beancount and the fixture export to ./export.csv (or .ofx) in a scratch dir. bean-check is /tmp/beancount_venv/bin/bean-check (or `pip install beancount`). eval1-5 cover the happy paths (signed CSV, debit/credit split, OFX FITID, overlap dedup, pending rows); eval6-9 are failure-mode/guarantee checks (ambiguity must ask, no write without confirm, missing target file, idempotent re-import).",
+  "notes": "Each eval maps the fixture ledger to ./ledger.beancount and the fixture export to ./export.csv (or .ofx) in a scratch dir. bean-check via `uv run --project cli bean-check` in this repo (`pip install beancount` elsewhere). eval1-5 cover the happy paths (signed CSV, debit/credit split, OFX FITID, overlap dedup, pending rows); eval6-9 are failure-mode/guarantee checks (ambiguity must ask, no write without confirm, missing target file, idempotent re-import).",
   "evals": [
     {
       "id": 1,
       "name": "signed-csv-basic",
       "prompt": "Import ./export.csv into my ledger at ./ledger.beancount. It's my Chase checking account (Assets:Bank:Checking).",
-      "expected_output": "Four rows staged, categorized from ledger history: TRADER JOES -> Expenses:Food:Groceries (high, prior entries), SHELL OIL -> Expenses:Transport (high), PAYROLL ACME -> Income:Salary (high), CITY PARKING -> Expenses:Uncategorized (low, no prior). A review table with per-row confidence and reason is shown; after explicit yes, entries are appended date-sorted with import-id metadata, Expenses:Uncategorized is opened, and bean-check passes.",
+      "expected_output": "Four rows staged, categorized from ledger history: TRADER JOES -> Expenses:Food:Groceries (high, prior entries), SHELL OIL -> Expenses:Transport (medium, 1 prior), PAYROLL ACME -> Income:Salary (medium, 1 prior), CITY PARKING -> Expenses:Uncategorized (low, no prior). A review table with per-row confidence and reason is shown; after explicit yes, entries are appended date-sorted with import-id metadata, Expenses:Uncategorized is opened, and bean-check passes.",
       "files": ["evals/files/eval1_ledger.beancount", "evals/files/eval1_export.csv"],
       "expectations": [
         "The MDY date format is proven from the data (rows with day > 12) rather than asked or guessed",
@@ -80,11 +80,11 @@
       "id": 6,
       "name": "ambiguous-format-must-ask",
       "prompt": "Import ./export.csv into ./ledger.beancount (Assets:Bank:Checking).",
-      "expected_output": "The export has all-positive amounts with cryptic type codes (D/W) and every date's day and month are both <= 12, so neither the sign convention nor the date format is provable from the data. The skill asks about both before staging anything, and writes nothing.",
+      "expected_output": "The export has all-positive amounts with cryptic type codes (D/W/C) and every date's day and month are both <= 12, so neither the sign convention nor the date format is provable from the data. The skill asks about both before staging anything, and writes nothing.",
       "files": ["evals/files/eval6_ledger.beancount", "evals/files/eval6_export.csv"],
       "expectations": [
         "The skill asks the user to clarify the date format (MDY vs DMY cannot be proven — all days <= 12)",
-        "The skill asks what the D/W type codes mean rather than guessing the sign of any amount",
+        "The skill asks what the D/W/C type codes mean rather than guessing the sign of any amount",
         "No transaction is staged as final and nothing is written to the ledger before both answers arrive",
         "The ledger file is unchanged (byte-identical) at the point the questions are asked"
       ]

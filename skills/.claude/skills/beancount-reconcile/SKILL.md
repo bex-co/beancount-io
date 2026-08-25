@@ -44,7 +44,7 @@ Then establish, in order:
 
 Report the target account, its type, and the prior balance assertion (if any) to the user before continuing, so a misdetection is caught early.
 
-Persist the contract as a config block on the main file the first time:
+Persist the contract as a config block on the main file — but only as part of the confirmed append (show it in the Propose phase; never write it before the explicit yes):
 
 ```
 ;; beancount-reconcile config
@@ -79,7 +79,7 @@ Diff the normalized statement lines against the ledger's postings to the target 
 | **amount-mismatch** | matched payee/date but amounts differ | report for manual review |
 | **date-drift** | same transaction, dates differ (pending vs settled) | treat as matched; note the drift |
 
-Matching order: exact (date + amount) first, then a windowed pass (amount equal within ±N days, description similar). Anything unmatched on either side falls into one of the classes above. When a match is ambiguous, ask rather than force it.
+Matching order: exact (date + amount) first, then a windowed pass (amount equal within ±N days, description similar), then a near-miss pass over the leftovers (similar description + date window with *different* amounts → amount-mismatch; one line matching two+ postings → duplicate). Anything unmatched on either side falls into one of the classes above. When a match is ambiguous, ask rather than force it.
 
 ### 4. Propose
 
@@ -148,7 +148,7 @@ Do not append the suspect / duplicate / amount-mismatch items — those are repo
 After appending, run `bean-check` on the modified file:
 
 ```bash
-bean-check ./ledger.beancount
+bean-check ./ledger.beancount   # this repo: uv run --project cli bean-check
 ```
 
 In the clean case, you appended the missing entries plus a passing `balance` assertion — that assertion is the reconciliation's proof, and `bean-check` verifies it:

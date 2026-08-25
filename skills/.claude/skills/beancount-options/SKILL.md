@@ -58,7 +58,7 @@ Persist the choice as a config comment block at the top of the main file:
 ;; broker_default: Robinhood
 ```
 
-This is the contract going forward — re-read it on every invocation rather than re-detecting from scratch.
+This is the contract going forward — re-read it on every invocation rather than re-detecting from scratch. Write the block as part of the first confirmed append (never before it); when prior options entries exist without one, propose adding it in that run's confirmation.
 
 ### 2. Parse
 
@@ -97,6 +97,7 @@ Universal generation rules — apply unless a reference file overrides:
 - **Assignment**: option closes at $0; resulting stock opens with cost basis adjusted for the original premium. No income line for the option itself. See `references/assignment.md`.
 - **Exercise** (long option you exercised): mirror of assignment — premium adjusts stock basis, no separate option income. See `references/exercise.md`.
 - **Expiration**: identical to a close at $0 premium.
+- **`{}` disposal requires the held lot**: a `-100 AAPL {}` posting matches an existing stock lot in that account. If the shares aren't booked in the ledger yet, book (or ask about) the purchase first — otherwise `bean-check` fails with the unintuitive `Too many missing numbers for currency group 'USD'`.
 
 ### 4. Append
 
@@ -131,7 +132,7 @@ When appending:
 After appending, run `bean-check` on the modified file:
 
 ```bash
-bean-check ./ledger.beancount
+bean-check ./ledger.beancount   # this repo: uv run --project cli bean-check
 ```
 
 If `bean-check` reports **any** errors (transaction does not balance, lot booking failure, undeclared account, etc.), do NOT report success. Instead:
@@ -177,7 +178,6 @@ Assets:Brokerage:<BrokerName>:Options
 Assets:Brokerage:<BrokerName>:Stock
 Income:Trading:OptionPremium
 Income:Trading:CapitalGains
-Income:Trading:WashSaleDisallowed
 Expenses:Trading:Fees
 ```
 

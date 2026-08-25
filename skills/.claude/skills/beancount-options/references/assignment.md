@@ -17,7 +17,7 @@ Example: sold SPY 480P for $2.10 ($210 basis), assigned. Must buy 100 shares at 
 - Stock total cost = 100 × 477.90 = $47,790
 
 ```
-2026-06-20 * "ASSN SPY 480P 5/1 → bought 100 SPY @ 480" ^spy-480p-20260501
+2026-05-01 * "ASSN SPY 480P 5/1 → bought 100 SPY @ 480" ^spy-480p-20260501
   Assets:Brokerage:Robinhood:Cash                                  -48000.00 USD
   Assets:Brokerage:Robinhood:Options    1 SPY_PUT_20260501_00480000 {210.00 USD} @ 0.00 USD
   Assets:Brokerage:Robinhood:Stock      100 SPY {477.90 USD}

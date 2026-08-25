@@ -59,7 +59,7 @@ Effective stock basis: $148.50 (strike $150 − put premium $1.50/share).
 
 Realize +$200 income (full premium kept). Stock still held.
 
-### Step 5: Sell another CC; this time assigned
+### Step 5: Sell another CC — and this time it gets assigned (two events, two transactions)
 
 ```
 2026-07-25 * "STO AAPL 165C 8/15 (wheel cc)" ^aapl-165c-20260815 #wheel

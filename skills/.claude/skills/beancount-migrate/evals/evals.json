@@ -1,12 +1,12 @@
 {
   "skill_name": "beancount-migrate",
-  "notes": "Each eval runs in an empty scratch dir with the fixture export copied in as ./export.csv. bean-check is /tmp/beancount_venv/bin/bean-check. eval1-3 are per-source happy paths (Mint, Monarch, QBO); eval4-6 are failure-mode checks (balance delta surfaced, unmapped category never guessed, no conversion before mapping confirm). Fixture arithmetic: eval1 Chase flows sum +1935.81 (opening 1000.00 -> stated 2935.81), Amex flows +370.76 in ledger sign (opening -500.00 -> stated -129.24); eval2 Checking +1945.80 (opening 500.00 -> 2445.80), Savings +501.25 (opening 1000.00 -> 1501.25).",
+  "notes": "Each eval runs in an empty scratch dir with the fixture export copied in as ./export.csv. bean-check via `uv run --project cli bean-check` in this repo (`pip install beancount` elsewhere). eval1-3 are per-source happy paths (Mint, Monarch, QBO); eval4-6 are failure-mode checks (balance delta surfaced, unmapped category never guessed, no conversion before mapping confirm). Fixture arithmetic: eval1 Chase flows sum +1935.81 (opening 1000.00 -> stated 2935.81), Amex flows +370.76 in ledger sign (opening -500.00 -> stated -129.24); eval2 Checking +1945.80 (opening 500.00 -> 2445.80), Savings +501.25 (opening 1000.00 -> 1501.25).",
   "evals": [
     {
       "id": 1,
       "name": "mint-full-migration",
       "prompt": "I finally got my Mint export before it died — it's ./export.csv. Migrate me to beancount. Current balances: Chase Checking is 2935.81, my Amex card owes 129.24.",
-      "expected_output": "Fresh ledger scaffolded (beancount-init flow). Mapping tables proposed and confirmed: Chase Checking -> Assets:Bank:ChaseChecking, Amex Card -> Liabilities:CreditCard:Amex; categories mapped, 'Stuff' -> Expenses:Uncategorized (listed, not guessed). The two Credit Card Payment rows merge into ONE transfer transaction. Opening balances computed (Chase 1000.00 on the day before the earliest row; Amex -500.00), endpoint balance assertions appended (2935.81 and -129.24, day-after-last-row dates). 7 transactions from 8 rows (one pair merged). Migration report shows counts, the unmapped category, and balances tying out. bean-check passes.",
+      "expected_output": "Fresh ledger scaffolded (beancount-init flow). Mapping tables proposed and confirmed: Chase Checking -> Assets:Bank:ChaseChecking, Amex Card -> Liabilities:CreditCard:Amex; categories mapped, 'Stuff' -> Expenses:Uncategorized (listed, not guessed). The two Credit Card Payment rows merge into ONE transfer transaction. Opening balances computed (Chase 1000.00 on the day before the earliest row; Amex -500.00), endpoint balance assertions appended (2935.81 and -129.24, day-after-last-row dates). 6 non-transfer transactions + 1 merged transfer pair (2 rows) from 8 source rows. Migration report shows counts, the unmapped category, and balances tying out. bean-check passes.",
       "files": ["evals/files/eval1_mint.csv"],
       "expectations": [
         "Account and category mapping tables are presented and confirmed BEFORE any conversion",
@@ -14,8 +14,8 @@
         "Category 'Stuff' maps to Expenses:Uncategorized and is listed in the mapping table and final report with its row count — no invented account",
         "Opening balance entries: Assets:Bank:ChaseChecking 1000.00 USD and Liabilities:CreditCard:Amex -500.00 USD against Equity:Opening-Balances, dated before the earliest row",
         "Endpoint balance assertions dated the day AFTER each account's last row: Chase 2935.81 USD, Amex -129.24 USD",
-        "Row-count math is reported: 8 source rows = 7 transactions with 1 transfer pair merged (2 rows), 0 skipped",
-        "Every converted entry carries import-id metadata with a mint: prefix",
+        "Row-count math is reported: 8 source rows = 6 non-transfer transactions + 1 merged transfer pair (2 rows), 0 skipped",
+        "Every converted entry carries import-id metadata with a mint: prefix; the merged transfer pair also carries import-id-2 for the second row",
         "Mint's all-positive amounts are signed via the Transaction Type column (debit=out, credit=in) mapped to each account's ledger sign",
         "bean-check passes on the final ledger"
       ]

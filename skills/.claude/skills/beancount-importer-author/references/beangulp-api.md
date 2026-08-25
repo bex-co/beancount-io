@@ -27,7 +27,6 @@ class Importer(csvbase.Importer):
     date = csvbase.Date("Date", "%m/%d/%Y")
     narration = csvbase.Column("Description")
     amount = csvbase.Amount("Amount")
-    # split debit/credit columns:  amount = csvbase.CreditOrDebit("Credit", "Debit")
 
     def __init__(self, account, currency="USD"):
         super().__init__(account, currency)
@@ -39,6 +38,49 @@ class Importer(csvbase.Importer):
 ```
 
 Column descriptors handle parsing/order; `csvbase.Importer` provides `extract` (and emits a `balance` directive when the file has a balance column — `balance = csvbase.Amount("Balance")`). Subclass hooks: `metadata()`, `finalize()` for per-row tweaks (e.g. attach `import-id` metadata from a row's native ID — follow the grammar in beancount-import's `references/dedup.md` so importer output dedups against skill-imported history).
+
+**`metadata()` must extend, not replace, the default** — return `data.new_metadata(filepath, lineno)` updated with your keys. A dict holding only `import-id` drops the `filename`/`lineno` keys beangulp's sorting needs, and every `generate`/`test` run dies with `KeyError: 'lineno'`:
+
+```python
+from beancount.core import data
+
+def metadata(self, filepath, lineno, row):
+    meta = data.new_metadata(filepath, lineno)   # keep filename/lineno
+    meta["import-id"] = "csv:sha256:…"           # then add yours
+    return meta
+```
+
+**Split debit/credit columns**: there is no built-in that merges two columns (beangulp 0.2 has no `CreditOrDebit`), and `csvbase.Importer.extract` reads a single `amount` field. Declare both columns with `subs={r"^$": "0"}` (an empty cell crashes `decimal.Decimal`) and override `extract` to post the signed difference yourself:
+
+```python
+from beancount.core import amount as amount_mod
+from beancount.core import data
+
+class Importer(csvbase.Importer):
+    date = csvbase.Date("Date", "%m/%d/%Y")
+    narration = csvbase.Column("Description")
+    debit = csvbase.Amount("Debit", subs={r"^$": "0"})
+    credit = csvbase.Amount("Credit", subs={r"^$": "0"})
+
+    def extract(self, filepath, existing):
+        entries = []
+        offset = int(self.skiplines) + bool(self.names) + 1
+        for lineno, row in enumerate(self.read(filepath), offset):
+            if not row:
+                continue
+            signed = row.credit - row.debit   # merge to one signed amount
+            meta = data.new_metadata(filepath, lineno)
+            meta["import-id"] = "csv:sha256:…"
+            entries.append(
+                data.Transaction(meta, row.date, self.flag, None, row.narration,
+                                 set(), set(), [
+                    data.Posting(self.importer_account,
+                                 amount_mod.Amount(signed, self.currency), None, None, None, None),
+                ]))
+        return entries
+```
+
+`Column("A", "B")` (multiple names) means "column named A, or B if the bank renamed it" — alternate names for one logical column, not a merge.
 
 ## Self-test CLI — make every importer its own harness
 

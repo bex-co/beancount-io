@@ -46,9 +46,19 @@ Config block format — one `source` stanza per export source:
 ;;   format: csv  columns: date=1,desc=2,amount=3  date_format: MDY  sign: negative=outflow
 ;;   append_target: ./transactions/2026.beancount
 ;;   imports: 3
+;; source: amex-card
+;;   account: Liabilities:CreditCard:Amex
+;;   format: csv  columns: date=1,desc=2,debit=3,credit=4  date_format: MDY  sign: debit=outflow
+;;   append_target: ./transactions/2026.beancount
+;;   imports: 1
+;; source: other-bank
+;;   account: Assets:Bank:Savings
+;;   format: csv  columns: date=1,desc=2,amount=3,type=4  date_format: MDY  sign: type=D|W=outflow,C=inflow
+;;   append_target: ./transactions/2026.beancount
+;;   imports: 1
 ```
 
-Bump `imports:` on every completed run. **When it reaches 3+, suggest once**: "you've imported this source N times — want me to codify it as a tested beangulp importer via `beancount-importer-author`?"
+Bump `imports:` on every run that writes entries (a fully-deduped no-op re-import doesn't touch the file at all). **When it reaches 3+, suggest once**: "you've imported this source N times — want me to codify it as a tested beangulp importer via `beancount-importer-author`?"
 
 ### 2. Normalize
 
@@ -81,7 +91,9 @@ Categorize each candidate's counter-account from the ledger's own history. **Rea
 
 ### 6. Confirm
 
-Show the user everything, then ask. **Never write before an explicit yes.** Present, in this order:
+Show the user everything, then ask. **Never write before an explicit yes.**
+
+**Nothing to import** (every row already imported, no suspected-duplicate decisions open): skip the review table and the yes/no prompt entirely — report the no-op ("4 already imported, 0 new — nothing to do") and write nothing, not even the config block.
 
 1. **Target file** — one explicit path.
 2. **Summary counts** — rows in file / already imported (skipped) / suspected duplicates (awaiting decision) / to import.
@@ -121,8 +133,8 @@ On **yes**:
 - Every written entry carries its `import-id` as transaction metadata:
 
 ```
-2026-05-07 * "TRADER JOES #123"
-  import-id: "csv:sha256:a3f19c02d4e8b711"
+2026-05-07 * "TRADER JOES" "TRADER JOES #123 SEATTLE WA"
+  import-id: "csv:sha256:12802942bbda86f9"
   Assets:Bank:Checking      -54.20 USD
   Expenses:Food:Groceries    54.20 USD
 ```
@@ -132,7 +144,7 @@ On **yes**:
 Then run `bean-check` on the main file:
 
 ```bash
-bean-check ./main.beancount   # /tmp/beancount_venv/bin/bean-check if not on PATH
+bean-check ./main.beancount   # if not on PATH: pip install beancount (this repo: uv run --project cli bean-check)
 ```
 
 - **Passes** → report: N imported, M skipped as already-imported, suspected-duplicate decisions, and any `Expenses:Uncategorized` rows to refine. Suggest `beancount-reconcile` for the period if the import was large.

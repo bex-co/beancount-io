@@ -40,7 +40,7 @@ Compute it honestly (e.g. `printf '%s' '<input>' | shasum -a 256 | cut -c1-16`) 
 
 ## The two dedup layers
 
-**Layer 1 — exact (import-id match).** Collect every `import-id` value already in the ledger (scan entry metadata). A candidate whose ID is present is *already imported*: drop it, count it in the review summary. This layer is mechanical — no user decision needed.
+**Layer 1 — exact (import-id match).** Collect every `import-id` value already in the ledger (scan entry metadata; also collect `import-id-2` — beancount-migrate's merged transfer pairs record the counterparty row's id there). A candidate whose ID is present under either key is *already imported*: drop it, count it in the review summary. This layer is mechanical — no user decision needed.
 
 **Layer 2 — fuzzy (legacy entries without metadata).** Manual entries predate the convention. For each surviving candidate, look for existing entries **lacking** import-id metadata that post the **same amount** to the **source account** within **±3 days**, with similar descriptions (case-insensitive token overlap; a matching leading word like a shared merchant name counts). Each hit is a **suspected duplicate**: present the candidate and the existing entry side by side and ask *skip* (already recorded manually) or *import* (genuinely distinct). Never decide silently in either direction — a wrong skip loses a real transaction, a wrong import double-books one.
 

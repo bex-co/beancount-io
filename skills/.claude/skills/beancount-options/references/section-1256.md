@@ -26,8 +26,9 @@ Tag index option transactions with `#section-1256` to make them filterable for y
 
 ```
 2026-05-01 * "STO SPX 4500P 6/20" ^spx-4500p-20260620 #section-1256
-  Assets:Brokerage:IBKR:Cash                              ... USD
-  Assets:Brokerage:IBKR:Options    -1 SPX_PUT_20260620_04500000 {... USD}
+  Assets:Brokerage:IBKR:Cash                              4499.35 USD
+  Assets:Brokerage:IBKR:Options    -1 SPX_PUT_20260620_04500000 {4500.00 USD}
+  Expenses:Trading:Fees                                          0.65 USD
 ```
 
 ## Year-end mark-to-market (deferred to phase 2)

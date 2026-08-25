@@ -1,6 +1,6 @@
 {
   "skill_name": "beancount-ask",
-  "notes": "Each eval maps evals/files/eval1_ledger.beancount to ./ledger.beancount in a scratch dir. bean-query is /tmp/beancount_venv/bin/bean-query (pip install beanquery). Ground truth (verified by running the recipes against the fixture): June expenses Groceries 141.60 / Gas 50.00 / Streaming 17.99; groceries trend Apr 145.50, May 147.40, Jun 141.60; net worth 14581.53; monthly burn Apr 200.99, May 707.89, Jun 209.59; NETFLIX 15.49 -> 17.99 in June; anomaly BEST BUY 500.00 on 2026-05-28. eval1-6 are the recipe families; eval7-9 are failure modes (clarify-don't-assume, no figure without query, read-only).",
+  "notes": "Each eval maps evals/files/eval1_ledger.beancount to ./ledger.beancount in a scratch dir. bean-query via `uv run --project cli bean-query` in this repo (`pip install beanquery` elsewhere). Ground truth (verified by running the recipes against the fixture): June expenses Groceries 141.60 / Gas 50.00 / Streaming 17.99; groceries trend Apr 145.50, May 147.40, Jun 141.60; net worth 14581.53; monthly burn Apr 200.99, May 707.89, Jun 209.59; NETFLIX 15.49 -> 17.99 in June; anomaly BEST BUY 500.00 on 2026-05-28. eval1-6 are the recipe families; eval7-9 are failure modes (clarify-don't-assume, no figure without query, read-only).",
   "evals": [
     {
       "id": 1,

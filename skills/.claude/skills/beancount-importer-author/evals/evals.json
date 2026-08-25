@@ -1,6 +1,6 @@
 {
   "skill_name": "beancount-importer-author",
-  "notes": "Each eval runs in a scratch dir with fixtures copied in. Python + beangulp: /tmp/beancount_venv/bin/python (pip install beangulp beancount if missing). eval1-3 are happy paths (author from sample, graduate from beancount-import config, drift repair); eval4-6 are failure modes (ambiguity asks, red harness never handed over, wiring confirm-gated).",
+  "notes": "Each eval runs in a scratch dir with fixtures copied in. Python + beangulp: any venv with beangulp installed (`pip install beangulp beancount`). eval1-3 are happy paths (author from sample, graduate from beancount-import config, drift repair); eval4-6 are failure modes (ambiguity asks, red harness never handed over, wiring confirm-gated).",
   "evals": [
     {
       "id": 1,

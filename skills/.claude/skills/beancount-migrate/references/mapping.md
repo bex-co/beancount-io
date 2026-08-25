@@ -28,12 +28,14 @@ Pair rows where: both mapped as transfers, **same absolute amount**, **opposite 
 
 Greedy match closest-date-first; a transfer row with no partner (the counterparty account wasn't exported, or timing crossed the export boundary) is **unpaired**: convert it against `Equity:Transfers-Review` and list it in the report — totals still tie, the user resolves it later. Never drop it, never pair it with a non-transfer row.
 
+Merged-pair transaction text: payee = the **outflow side's** description; keep the counterparty's raw description as narration when it differs meaningfully. Record one row's hash as `import-id` and the other's as `import-id-2` (see dedup.md) so either account's later import exact-matches its side.
+
 ## Opening balances and the endpoint assertion
 
 Exports carry flows, not balances, so anchor both ends per account:
 
-1. Ask the user for the **current balance** (from the old app's account screen or the real bank).
-2. `opening = current − Σ(converted rows for that account)`.
+1. Ask the user for the **current balance** (from the old app's account screen or the real bank). Also ask for the **balance at the start of the export period** if they know it (or read it from the export when it states one).
+2. `opening = current − Σ(converted rows for that account)`. **But when a stated opening exists, use it as-is instead** — then the endpoint assertion is a genuine check of the conversion (rows missing from the export, pending transactions, wrong stated balance make it fail by exactly the delta), not a tautology. Never nudge either number to force a pass; a real delta is a report finding.
 3. Emit the opening entry dated the **day before the earliest row**:
 
 ```
@@ -52,7 +54,7 @@ A failing endpoint assertion is the migration's smoke detector — it means rows
 
 ## import-id on migrated entries
 
-Every converted entry carries `import-id` metadata using the `beancount-import` skill's convention (see that skill's `references/dedup.md`): native row ID if the export has one, else `<source>:sha256:<16-hex>` over the same normalized `date|amount|description|source-account` input (e.g. `mint:sha256:…`). This makes migration and ongoing imports one continuous, deduplicated history: the user's first `beancount-import` run after migrating won't double-book overlap rows.
+Every converted entry carries `import-id` metadata using the `beancount-import` skill's convention (see that skill's `references/dedup.md`): native row ID if the export has one, else `<source>:sha256:<16-hex>` over the same normalized `date|amount|description|source-account` input (e.g. `mint:sha256:…`). A merged transfer pair records the second row's id as `import-id-2`. This makes migration and ongoing imports one continuous, deduplicated history: the user's first `beancount-import` run after migrating won't double-book overlap rows.
 
 ## Generic CSV path (unknown source)
 

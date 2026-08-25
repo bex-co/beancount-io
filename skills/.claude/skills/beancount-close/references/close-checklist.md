@@ -39,8 +39,10 @@ Read the month-grid per payee: present in all prior months of the window, absent
 ## Flag sweep
 
 ```sql
-SELECT date, flag, payee, narration WHERE flag = '!' AND date < <period-end+1> ORDER BY date
+SELECT date, flag, payee, narration WHERE flag = '!' AND date < <period-end+1> GROUP BY date, flag, payee, narration ORDER BY date
 ```
+
+(The `GROUP BY` collapses the one-row-per-posting duplicates — without it a two-posting transaction counts twice in the report.)
 
 Each `!` is either resolved by the user during the close (their edit, not this skill's) or **carried** — counted in the report. A close can complete with carried flags; it cannot complete with uncounted ones.
 
