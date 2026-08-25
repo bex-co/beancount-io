@@ -5,6 +5,7 @@ import {
   ErrorCategory,
 } from "@/shared/errors";
 import { logger } from "@/shared/logger";
+import { config } from "@/config/config";
 
 const errorLogger = logger.child({ module: "rest-errors" });
 
@@ -96,7 +97,15 @@ export function restErrorMiddleware(): Router.Middleware {
         ok: false,
         error: {
           code: ErrorCategory.INTERNAL_SERVER_ERROR,
-          message,
+          // Masked in production, exactly as `graphql/format-error.ts` masks an
+          // INTERNAL_SERVER_ERROR there. An unexpected error is by definition one
+          // nobody shaped for a client to read: a Drizzle failure arrives as the
+          // full SQL text plus its bound parameters, and this middleware sits in
+          // front of `resolveIdentity`, so an UNAUTHENTICATED caller was getting
+          // the api_keys statement and the digest it had just probed with. The
+          // message is still logged above with its stack.
+          message:
+            config.env === "production" ? "Internal server error" : message,
         },
       };
     }

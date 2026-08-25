@@ -82,6 +82,38 @@ async function handleMcpRequest(
   // Throws ForbiddenError for an unpinned credential — handled by restErrorMiddleware
   const ledgerId = resolveMcpLedgerId(identity);
 
+  // GET and DELETE are refused here, before any transport exists.
+  //
+  // This endpoint is stateless (`sessionIdGenerator: undefined`, below): the
+  // server and transport are built per request and thrown away, so there is no
+  // session for a standalone SSE stream to belong to and no server-initiated
+  // message that could ever reach one. The transport does not know that, and
+  // answers GET by opening a stream it holds open forever — and because
+  // `handleRequest` only resolves once that stream ends, the `finally` that
+  // closes the server never runs. The observed result was a 200
+  // `text/event-stream` that sent nothing and never closed, one leaked
+  // McpServer per connection.
+  //
+  // 405 is what the Streamable HTTP spec prescribes for both: for GET when the
+  // server offers no stream at this endpoint, and for DELETE when it does not
+  // let clients terminate sessions. The routes stay registered so the answer
+  // comes from here rather than from `allowedMethods()`, which would skip
+  // authentication and hand an unauthenticated caller the same 405.
+  if (ctx.method !== "POST") {
+    ctx.set("Allow", "POST");
+    ctx.status = 405;
+    ctx.body = {
+      jsonrpc: "2.0",
+      error: {
+        code: -32000,
+        message:
+          "Method Not Allowed: this MCP endpoint is stateless and serves POST only",
+      },
+      id: null,
+    };
+    return;
+  }
+
   const toolCtx: ToolContext = {
     services: {
       ledgerShell: layers.services.ledgerShell,

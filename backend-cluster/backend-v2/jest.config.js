@@ -3,7 +3,11 @@ module.exports = {
   testEnvironment: "node",
   testTimeout: 10000,
   forceExit: true,
-  roots: ["<rootDir>/src"],
+  // `scripts/` too, not only `src/`: the MCP conformance checker is
+  // production-facing tooling an operator runs against a live deployment, so
+  // it is tested like the rest of the code rather than trusted because it is
+  // short.
+  roots: ["<rootDir>/src", "<rootDir>/scripts"],
   testMatch: [
     "**/__tests__/**/*.test.ts",
     "**/__test__/**/*.test.ts",
@@ -25,16 +29,17 @@ module.exports = {
     // Transform jose and oidc-provider (+ its ESM-only deps) since they use ESM syntax.
     // ai@7 and the whole @ai-sdk scope are pure ESM (type: module), so Jest must
     // transform them too (m17/t004).
-    "node_modules/(jose|oidc-provider|nanoid|quick-lru|eta|ai|@ai-sdk/.+|@workflow/.+|@vercel/.+|eventsource-parser)/.+\\.js$": [
-      "ts-jest",
-      {
-        tsconfig: {
-          allowJs: true,
-          esModuleInterop: true,
-          allowSyntheticDefaultImports: true,
+    "node_modules/(jose|oidc-provider|nanoid|quick-lru|eta|ai|@ai-sdk/.+|@workflow/.+|@vercel/.+|eventsource-parser)/.+\\.js$":
+      [
+        "ts-jest",
+        {
+          tsconfig: {
+            allowJs: true,
+            esModuleInterop: true,
+            allowSyntheticDefaultImports: true,
+          },
         },
-      },
-    ],
+      ],
   },
   collectCoverageFrom: [
     "src/**/*.ts",

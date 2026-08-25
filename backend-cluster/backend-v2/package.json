@@ -23,6 +23,7 @@
     "migrate": "drizzle-kit migrate",
     "kill": "lsof -n -i4TCP:4104 | grep LISTEN | awk '{ print $2 }' | xargs kill",
     "codegen": "yarn generate-backend-v2-openapi && yarn generate-fava-client && yarn generate-gitea-client && yarn generate-agent-tool-types",
+    "mcp:conformance": "ts-node -r tsconfig-paths/register --transpile-only scripts/mcp-conformance.ts",
     "generate-agent-tool-types": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-agent-tool-types.ts",
     "generate-backend-v2-openapi": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-openapi-spec.ts",
     "generate-v1-openapi": "ts-node -r tsconfig-paths/register --transpile-only scripts/generate-v1-openapi.ts",

@@ -190,6 +190,7 @@ The server will be available at the port specified in your configuration (defaul
 - `yarn server`: Start the server using Node.js (requires build first)
 - `yarn lint`: Run ESLint to check and fix code style issues
 - `yarn kill`: Kill the node server occupying port 4104
+- `yarn mcp:conformance <base-url>`: Check whether a deployment's MCP endpoint is connectable (see [Connecting an MCP client](#connecting-an-mcp-client))
 - `yarn backfill-empty-locale`: Run script to backfill empty locale data
 - `yarn backfill-user-activated`: Run script to backfill user activation status
 
@@ -205,3 +206,99 @@ See `src/scheduler/` for implementation details and `src/scheduler/README.md` fo
 ## API Documentation
 
 The backend exposes GraphQL APIs through Apollo Server. You can explore the API schema by running the server and visiting the GraphQL playground.
+
+## Connecting an MCP client
+
+The backend serves a Model Context Protocol endpoint, so a coding agent can
+query and edit a ledger directly. Its contract — address, method set, refusal
+dialect, deployment preconditions — is
+[ADR 0007](./docs/ADR0007-mcp-surface.md).
+
+### The endpoint
+
+```
+POST {your-deployment}/api-gateway/mcp
+```
+
+Two things about the address are worth stating plainly, because getting either
+wrong produces an unhelpful error:
+
+- **The full path is `/api-gateway/mcp`.** A shorter `/mcp` is not an alias
+  unless your edge routes it; without that it reaches whatever serves your web
+  front end, which typically answers a JSON-RPC POST with an HTML-shaped error
+  that mentions nothing about MCP.
+- **`POST` only.** `GET` and `DELETE` return `405` with `Allow: POST`. The
+  transport is stateless — one server per request — so there is no session for a
+  server-initiated stream to belong to.
+
+### The credential must be pinned to one ledger
+
+This is the requirement most first-time integrations miss. Both an OAuth grant
+and a durable `bcio_` API key reach the endpoint, but **either must be scoped to
+a single ledger**. MCP has no per-call ledger argument, so an unpinned
+credential — perfectly usable on GraphQL and `/v1` — is refused here rather than
+guessed at:
+
+```
+403 {"ok":false,"error":{"code":"FORBIDDEN","message":
+  "This credential is not bound to a ledger; MCP requires a ledger-scoped grant"}}
+```
+
+Mint an API key with `ledgerScope: "owner/name"` for an agent client.
+
+An anonymous request gets a `401` carrying an RFC 9728 pointer:
+
+```
+WWW-Authenticate: Bearer resource_metadata="{issuer}/.well-known/oauth-protected-resource"
+```
+
+That URL is how a client discovers the authorization server, so a deployment
+whose OAuth signing key is unconfigured cannot be connected to at all — the
+`401` is correct but points at a `503`. See the OAuth deployment contract above
+for `OAUTH_JWKS`.
+
+### Client configuration
+
+```json
+{
+  "mcpServers": {
+    "beancount": {
+      "type": "http",
+      "url": "https://your-deployment/api-gateway/mcp",
+      "headers": { "Authorization": "Bearer bcio_your_ledger_scoped_key" }
+    }
+  }
+}
+```
+
+### The tools
+
+Seven, all scoped to the credential's ledger and re-authorized on every call, so
+revoking access takes effect on the next tool call rather than the next session:
+
+| Tool              | What it does                                              |
+| ----------------- | --------------------------------------------------------- |
+| `runBqlQuery`     | Run a BQL query against the ledger                        |
+| `listLedgerFiles` | List files and directories                                |
+| `readLedgerFiles` | Read file contents, optionally by line range              |
+| `editLedgerFiles` | Create / update / replace / delete, with a `dry_run` mode |
+| `listApiKeys`     | List the caller's API keys                                |
+| `createApiKey`    | Mint a key (an API key may not mint another)              |
+| `revokeApiKey`    | Revoke a key                                              |
+
+Each returns `{ ok: true, result }` or `{ ok: false, error }` and publishes that
+shape as its `outputSchema`, so a client can validate what it receives. A
+failure — invalid query, missing file, revoked access, insufficient scope — also
+carries `isError: true`, which is the flag an agent should branch on.
+
+### Diagnosing a deployment that will not connect
+
+```zsh
+yarn mcp:conformance https://your-deployment
+yarn mcp:conformance https://your-deployment --token bcio_… --read-only-token bcio_…
+```
+
+This runs ADR 0007's seven-point checklist and names the check that failed
+rather than leaving you to infer it from a curl transcript. Checks needing a
+credential are skipped, not failed, when none is supplied. It exits non-zero if
+any check fails, and only observes — it changes nothing.

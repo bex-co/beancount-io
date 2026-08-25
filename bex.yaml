@@ -119,6 +119,17 @@ services:
         sync: false
       - key: METRICS_API_TOKEN
         generateValue: true
+      # The OAuth authorization server's private signing JWKS. sync:false, not
+      # generateValue: it is a complete P-256/ES256 private JWKS document, not a
+      # random string, and rotating it invalidates every live access token.
+      #
+      # Not optional in practice. Without it `src/features/oauth/api/oidc-route.ts`
+      # replaces every OAuth route with a 503 `oauth_not_configured`, including
+      # `/.well-known/oauth-protected-resource` — the URL the MCP endpoint's 401
+      # names in WWW-Authenticate. An MCP client then discovers nothing and
+      # cannot authenticate at all. Generate per backend-v2's README.
+      - key: OAUTH_JWKS
+        sync: false
 
       # --- Gitea ------------------------------------------------------------
       # Host is configured; credentials are not. Port 443 selects https via the

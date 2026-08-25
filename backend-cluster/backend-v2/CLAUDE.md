@@ -117,9 +117,12 @@ yarn lint
 yarn typecheck
 yarn build
 yarn codegen
+yarn mcp:conformance <base-url>
 ```
 
-`yarn lint` fixes eligible ESLint findings. Review its diff. Unit tests live beside features in `__tests__/`; integration tests use `*.integration.test.ts`.
+`yarn lint` fixes eligible ESLint findings. Review its diff. Unit tests live beside features in `__tests__/` — and beside the scripts in `scripts/__tests__/`, which is why Jest's `roots` covers both; integration tests use `*.integration.test.ts`.
+
+`yarn mcp:conformance <base-url> [--token …] [--read-only-token …]` runs ADR 0007's checklist against a deployment and names the check that failed. It only observes, so it is safe to point at production; checks needing a credential skip rather than fail without one.
 
 Code generation:
 
@@ -134,7 +137,7 @@ Prompt and agent-routing evals live entirely under `evals/`. Use the focused `ya
 
 - GraphQL: `src/server/graphql/`; resolver list and DI are in `resolver-registry.ts`.
 - REST: feature handlers register fragments consumed by `src/server/api/composition-root.ts`.
-- MCP: `src/features/ai-agent/api/mcp-tools.ts`, registered through the same composition root.
+- MCP: `src/features/ai-agent/api/mcp-tools.ts`, registered through the same composition root. The endpoint's own contract — its address, why it serves `POST` only, why a `401` is worthless unless the discovery document it names resolves, and why a tool result reading `ok: false` must carry `isError` — is **ADR 0007** (`docs/ADR0007-mcp-surface.md`). Read it before changing `mcp-route.ts`; every rule in it exists because production broke without it.
 - OpenAPI: `GET /api-gateway/v1/openapi.json` is the published v1 contract and is served in every environment. The internal `/api-docs` and `/api-admin-docs` Swagger UI pages stay development-only.
 - New documented REST endpoints use Zod schemas, `zodValidator()`, and central route registration. Import the shared `@/shared/zod-openapi-setup`; never call `extendZodWithOpenApi()` in individual schema files.
 

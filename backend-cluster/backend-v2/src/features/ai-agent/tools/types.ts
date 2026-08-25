@@ -46,3 +46,64 @@ export const toolOutputSchema = <S extends z.ZodTypeAny>(result: S) =>
     z.object({ ok: z.literal(true), result }),
     toolErrorSchema,
   ]);
+
+/**
+ * The same contract as {@link toolOutputSchema}, in the one shape MCP is able
+ * to publish.
+ *
+ * MCP's SDK runs a tool's `outputSchema` through `normalizeObjectSchema`, which
+ * yields an object schema or nothing at all — a discriminated union normalizes
+ * to `undefined`. Registering the union directly is therefore strictly worse
+ * than registering nothing: `tools/list` advertises no schema *and* every call
+ * fails with `Cannot read properties of undefined (reading '_zod')`, because
+ * the output validator dereferences what the normalizer declined to produce.
+ * Verified against `@modelcontextprotocol/sdk` 1.30.0 (ADR 0007 D8).
+ *
+ * So the discriminant is widened to a plain `ok: boolean` and both payload
+ * members become optional. Note what does and does not change: the **payload**
+ * is untouched — a result still arrives as `{ ok: true, result }` or
+ * `{ ok: false, error }`, and `runToolSafely` still produces exactly those.
+ * Only the published *description* loosens, trading the union's "ok: true
+ * implies result" for a schema that exists at all. The descriptions below carry
+ * the implication the type system can no longer state.
+ */
+export function mcpOutputSchema(
+  union: ReturnType<typeof toolOutputSchema>,
+): z.ZodObject<{
+  ok: z.ZodBoolean;
+  result: z.ZodOptional<z.ZodTypeAny>;
+  error: z.ZodOptional<z.ZodString>;
+}> {
+  type SuccessBranch = Extract<
+    (typeof union.options)[number],
+    { shape: { result: unknown } }
+  >;
+  const success = union.options.find(
+    (option): option is SuccessBranch => "result" in option.shape,
+  );
+  // Loud rather than silent: publishing no schema is the failure this helper
+  // exists to prevent, so a `toolOutputSchema` that stopped having an `ok: true`
+  // branch must break the server's construction, not its tool calls.
+  if (!success) {
+    throw new Error(
+      "mcpOutputSchema: no `{ ok: true, result }` branch in the union — " +
+        "toolOutputSchema's shape changed and the MCP output contract cannot be derived",
+    );
+  }
+  return z.object({
+    ok: z
+      .boolean()
+      .describe(
+        "True when the tool succeeded; false when it refused or failed.",
+      ),
+    result: success.shape.result
+      .optional()
+      .describe("The tool's payload. Present when `ok` is true."),
+    error: z
+      .string()
+      .optional()
+      .describe(
+        "Why the tool refused or failed. Present when `ok` is false, alongside `isError` on the result.",
+      ),
+  });
+}

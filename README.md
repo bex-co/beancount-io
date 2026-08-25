@@ -83,13 +83,13 @@ Review your finances, add transactions, scan receipts, and edit ledger files fro
 
 ## What is here today
 
-| Package | Status | What you can build with it |
-| --- | --- | --- |
-| [`dashboard/`](./dashboard) | Active web client | Ledgers, journal, reports, Monaco editor, imports, collaboration, and an AI assistant. React 19 + TanStack Start + Apollo. |
-| [`mobile/`](./mobile) | Active iOS & Android client | Native transaction entry, account views, budgets, receipt capture, ledger editing, light/dark themes, 13 locales, and runtime selection of a compatible self-hosted server. Expo + React Native + Apollo. |
-| [`cli/`](./cli) | `0.1.0` | Read and write directives, check and format files, run BQL and reports, manage remote ledgers, or chat with a local-ledger agent. Python + Typer. Includes vendored `fava` reporting library. |
-| [`skills/`](./skills) | Active skills | The agent-native accounting loop: scaffold a ledger, import bank exports with dedup, author tested beangulp importers, reconcile against statements, migrate from Mint/Monarch/QuickBooks, query your finances in plain language, run a month-end close, and record options trades — all confirm-gated and `bean-check`-verified. |
-| [`backend-cluster/`](./backend-cluster) | Active backend | The services behind the Beancount.io API: `backend-v2` (GraphQL/REST gateway), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients), and `agent-box` (Cloudflare Worker control plane for the Ask-AI sandbox). Run locally via [`deploy/docker-mac/`](./deploy/docker-mac) or self-host on one server via [`deploy/docker/`](./deploy/docker). |
+| Package                                 | Status                      | What you can build with it                                                                                                                                                                                                                                                                                                                                                     |
+| --------------------------------------- | --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| [`dashboard/`](./dashboard)             | Active web client           | Ledgers, journal, reports, Monaco editor, imports, collaboration, and an AI assistant. React 19 + TanStack Start + Apollo.                                                                                                                                                                                                                                                     |
+| [`mobile/`](./mobile)                   | Active iOS & Android client | Native transaction entry, account views, budgets, receipt capture, ledger editing, light/dark themes, 13 locales, and runtime selection of a compatible self-hosted server. Expo + React Native + Apollo.                                                                                                                                                                      |
+| [`cli/`](./cli)                         | `0.1.0`                     | Read and write directives, check and format files, run BQL and reports, manage remote ledgers, or chat with a local-ledger agent. Python + Typer. Includes vendored `fava` reporting library.                                                                                                                                                                                  |
+| [`skills/`](./skills)                   | Active skills               | The agent-native accounting loop: scaffold a ledger, import bank exports with dedup, author tested beangulp importers, reconcile against statements, migrate from Mint/Monarch/QuickBooks, query your finances in plain language, run a month-end close, and record options trades — all confirm-gated and `bean-check`-verified.                                              |
+| [`backend-cluster/`](./backend-cluster) | Active backend              | The services behind the Beancount.io API: `backend-v2` (GraphQL/REST gateway), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients), and `agent-box` (Cloudflare Worker control plane for the Ask-AI sandbox). Run locally via [`deploy/docker-mac/`](./deploy/docker-mac) or self-host on one server via [`deploy/docker/`](./deploy/docker). |
 
 The dashboard and mobile app are clients for the Beancount.io API, served by `backend-cluster/` — hosted, or self-run via `deploy/docker-mac/`. The CLI and ledger skills also support local-first workflows that do not require the hosted service.
 
@@ -137,16 +137,41 @@ uv run beancount-cli --help
 
 The [CLI reference](./cli/docs/USAGE.md) covers local reads and writes, validation, formatting, queries, reports, authentication, and ledger management.
 
+### Coding agent (MCP)
+
+Point an MCP client at a deployment to query and edit a ledger from an agent:
+
+```json
+{
+  "mcpServers": {
+    "beancount": {
+      "type": "http",
+      "url": "https://your-deployment/api-gateway/mcp",
+      "headers": { "Authorization": "Bearer bcio_your_ledger_scoped_key" }
+    }
+  }
+}
+```
+
+Seven tools — BQL queries, file listing, reads, edits, and API-key management —
+each re-authorized on every call. The credential must be scoped to a single
+ledger; MCP has no per-call ledger argument. `yarn mcp:conformance <base-url>`
+tells you whether a deployment is connectable. See
+[connecting an MCP client](./backend-cluster/backend-v2/README.md#connecting-an-mcp-client)
+for the walkthrough and
+[ADR 0007](./backend-cluster/backend-v2/docs/ADR0007-mcp-surface.md) for the
+endpoint's contract.
+
 ## Quality bar
 
 Every active package has path-filtered CI so unrelated changes stay fast:
 
-| Package | Run before opening a PR |
-| --- | --- |
-| Dashboard | `cd dashboard && yarn format:check && yarn lint && yarn test && yarn build` |
-| Mobile | `cd mobile && yarn format:check && yarn lint && yarn typecheck && yarn test:unit` |
-| CLI | `cd cli && make check-all` |
-| Skills | `python3 skills/scripts/ci-check.py` |
+| Package   | Run before opening a PR                                                           |
+| --------- | --------------------------------------------------------------------------------- |
+| Dashboard | `cd dashboard && yarn format:check && yarn lint && yarn test && yarn build`       |
+| Mobile    | `cd mobile && yarn format:check && yarn lint && yarn typecheck && yarn test:unit` |
+| CLI       | `cd cli && make check-all`                                                        |
+| Skills    | `python3 skills/scripts/ci-check.py`                                              |
 
 A repository-wide secret scan also gates every push and pull request.
 

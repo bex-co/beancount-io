@@ -1,6 +1,6 @@
 # w3 · m3 — Budget localization & analytics-driven iteration
 
-**Worker:** worker3 **Goal:** Budget speaks all 13 app locales, and the first round of analytics-informed refinements ships (or is explicitly declined with data). **Status:** in progress (t001 locales + t006 parity test done; t002/t003 blocked by design — the analytics review needs m1/m2 shipped and collecting for a real window, so t004/t005/t007 wait on them)
+**Worker:** worker3 **Goal:** Budget speaks all 13 app locales, and the first round of analytics-informed refinements ships (or is explicitly declined with data). **Status:** in progress (t001 locales + t006 parity test done; t002 unblocked 2026-08-24 — budget shipped in `mobile-v1.20260814.42`, so the funnel has collected for a real window and the analytics review is now the next actionable task)
 
 ## Tasks (in order)
 

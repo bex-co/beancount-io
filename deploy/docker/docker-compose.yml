@@ -130,6 +130,13 @@ services:
       COOKIE_SECRETS: ${COOKIE_SECRETS:?Set COOKIE_SECRETS in .env}
       ADMIN_TOKEN: ${ADMIN_TOKEN:?Set ADMIN_TOKEN in .env}
       METRICS_API_TOKEN: ${METRICS_API_TOKEN:?Set METRICS_API_TOKEN in .env}
+      # The OAuth authorization server's private signing JWKS. Optional to
+      # boot, but every OAuth route answers 503 `oauth_not_configured`
+      # without it — including `/.well-known/oauth-protected-resource`,
+      # which is where the MCP endpoint's 401 sends clients to discover
+      # how to authenticate. Leaving it unset makes MCP unreachable.
+      # Generate per `backend-cluster/backend-v2/README.md`.
+      OAUTH_JWKS: ${OAUTH_JWKS:-}
       AUTH_JWT_EXP_MINUTES: ${AUTH_JWT_EXP_MINUTES:-525600}
       POSTGRES_BACKEND_URI: postgresql://${BACKEND_DB_USER:-beancount}:${BACKEND_DB_PASSWORD:?Set BACKEND_DB_PASSWORD in .env}@postgres-backend:5432/${BACKEND_DB_NAME:-beancount}
       REDIS_URI: redis://redis:6379

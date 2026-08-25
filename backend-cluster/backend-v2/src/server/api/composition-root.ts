@@ -363,6 +363,7 @@ export function assembleMcpRegistry(
         title: descriptor.title,
         description: descriptor.description,
         inputSchema: descriptor.inputSchema,
+        outputSchema: descriptor.outputSchema,
       },
       makeMcpToolHandler(
         toolCtx,
@@ -405,7 +406,19 @@ function makeMcpToolHandler(
         config.api.scopeEnforcement,
       );
       const result = await descriptor.execute(toolCtx, input);
+      // `runToolSafely` is the tools' error boundary: it turns a throw into the
+      // ordinary-looking value `{ ok: false, error }` and returns it. Without
+      // the flag below, that reaches the client as a *successful* tool result —
+      // so a revoked ledger grant, which every tool re-checks per call through
+      // `authorizeLedger` precisely so revocation bites on the next call, was
+      // announced to the agent as success. `isError` is MCP's dialect for a
+      // failure inside a tool, and it is the one an agent branches on.
+      const failed =
+        typeof result === "object" &&
+        result !== null &&
+        (result as { ok?: unknown }).ok === false;
       return {
+        ...(failed && { isError: true }),
         content: [{ type: "text", text: JSON.stringify(result) }],
         structuredContent: result as Record<string, unknown>,
       };

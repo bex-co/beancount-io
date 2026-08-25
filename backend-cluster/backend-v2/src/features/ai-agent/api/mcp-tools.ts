@@ -1,36 +1,44 @@
 import type { ZodTypeAny } from "zod";
 import {
   bqlQueryInputSchema,
+  bqlQueryOutputSchema,
   executeBqlQuery,
   description as bqlDescription,
 } from "../tools/bql-query-tool";
 import {
   listLedgerFilesInputSchema,
+  listLedgerFilesOutputSchema,
   executeListLedgerFiles,
   description as listDescription,
 } from "../tools/list-ledger-files-tool";
 import {
   readLedgerFilesInputSchema,
+  readLedgerFilesOutputSchema,
   executeReadLedgerFiles,
   description as readDescription,
 } from "../tools/read-ledger-files-tool";
 import {
   editLedgerFilesInputSchema,
+  editLedgerFilesOutputSchema,
   executeEditLedgerFiles,
   description as editDescription,
 } from "../tools/edit-ledger-files-tool";
 import {
   createApiKeyDescription,
   createApiKeyInputSchema,
+  createApiKeyOutputSchema,
   executeCreateApiKey,
   executeListApiKeys,
   executeRevokeApiKey,
   listApiKeysDescription,
   listApiKeysInputSchema,
+  listApiKeysOutputSchema,
   revokeApiKeyDescription,
   revokeApiKeyInputSchema,
+  revokeApiKeyOutputSchema,
 } from "../tools/api-key-tools";
 import type { ToolContext } from "../tools/types";
+import { mcpOutputSchema } from "../tools/types";
 
 /**
  * One MCP tool, described rather than registered.
@@ -47,6 +55,14 @@ export interface McpToolDescriptor {
   readonly title: string;
   readonly description: string;
   readonly inputSchema: ZodTypeAny;
+  /**
+   * What the tool's `structuredContent` looks like, published in `tools/list`
+   * so a client can validate what it receives instead of trusting it (ADR 0007
+   * D8). Derived from the tool's own `toolOutputSchema` union by
+   * `mcpOutputSchema`, which is the only shape MCP can actually publish — see
+   * its comment for why the union itself cannot be registered.
+   */
+  readonly outputSchema: ZodTypeAny;
   readonly execute: (toolCtx: ToolContext, input: never) => Promise<unknown>;
 }
 
@@ -57,6 +73,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Run Beancount Query (BQL)",
     description: bqlDescription,
     inputSchema: bqlQueryInputSchema,
+    outputSchema: mcpOutputSchema(bqlQueryOutputSchema),
     execute: executeBqlQuery,
   },
   {
@@ -64,6 +81,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "List Ledger Files & Directories",
     description: listDescription,
     inputSchema: listLedgerFilesInputSchema,
+    outputSchema: mcpOutputSchema(listLedgerFilesOutputSchema),
     execute: executeListLedgerFiles,
   },
   {
@@ -71,6 +89,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Read Ledger File Contents",
     description: readDescription,
     inputSchema: readLedgerFilesInputSchema,
+    outputSchema: mcpOutputSchema(readLedgerFilesOutputSchema),
     execute: executeReadLedgerFiles,
   },
   {
@@ -78,6 +97,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Edit Ledger Files (Create / Update / Delete)",
     description: editDescription,
     inputSchema: editLedgerFilesInputSchema,
+    outputSchema: mcpOutputSchema(editLedgerFilesOutputSchema),
     execute: executeEditLedgerFiles,
   },
   // Key management (ADR 0006 D6). Not ledger verbs, but the same credential
@@ -88,6 +108,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "List API Keys",
     description: listApiKeysDescription,
     inputSchema: listApiKeysInputSchema,
+    outputSchema: mcpOutputSchema(listApiKeysOutputSchema),
     execute: executeListApiKeys,
   },
   {
@@ -95,6 +116,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Mint an API Key",
     description: createApiKeyDescription,
     inputSchema: createApiKeyInputSchema,
+    outputSchema: mcpOutputSchema(createApiKeyOutputSchema),
     execute: executeCreateApiKey,
   },
   {
@@ -102,6 +124,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     title: "Revoke an API Key",
     description: revokeApiKeyDescription,
     inputSchema: revokeApiKeyInputSchema,
+    outputSchema: mcpOutputSchema(revokeApiKeyOutputSchema),
     execute: executeRevokeApiKey,
   },
 ];

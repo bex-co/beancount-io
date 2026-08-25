@@ -153,6 +153,7 @@ type McpHandler = (input: unknown) => Promise<CallToolResult>;
 function captureMcpHandlers(
   identity: Identity,
   config: AppConfig,
+  services?: Record<string, unknown>,
 ): Map<string, McpHandler> {
   const handlers = new Map<string, McpHandler>();
   const spy = jest
@@ -164,7 +165,7 @@ function captureMcpHandlers(
   try {
     assembleMcpRegistry(
       {
-        services: {
+        services: services ?? {
           // Reached only if the gate lets the call through, which is exactly
           // what the denial assertions below are checking does not happen.
           ledgerShell: { queryShellText: jest.fn() },
@@ -227,6 +228,43 @@ describe("scope enforcement across surfaces", () => {
       const result = await handlers.get("editLedgerFiles")!({});
       expect(result.isError).toBe(true);
       expect(JSON.stringify(result.content)).toContain("ledger.write");
+    });
+
+    /**
+     * The gate above is not the only place a call is refused. A grant the
+     * caller still holds the scope for can be revoked on the ledger itself, and
+     * every tool re-checks that per call through `authorizeLedger` — inside
+     * `runToolSafely`, which is an error boundary: it catches the ForbiddenError
+     * and *returns* `{ ok: false, error }`. That value used to be wrapped as an
+     * ordinary successful result, so the second dialect of "no" reached the
+     * agent as a yes, and only the first one it branches on said otherwise.
+     */
+    it("MCP: a refusal raised inside the tool is an isError result too", async () => {
+      const handlers = captureMcpHandlers(
+        {
+          userId: "usr_1",
+          method: "oauth",
+          // Holds the scope — this denial comes from the ledger, not the gate.
+          scopes: new Set(["ledger.read"]),
+          tokenId: "tok_1",
+          capabilityExempt: false,
+        },
+        enforcing,
+        {
+          ledgerShell: {
+            queryShellText: jest
+              .fn()
+              .mockRejectedValue(
+                new ForbiddenError("You no longer have access to this ledger"),
+              ),
+          },
+          ledgerRepo: {},
+        },
+      );
+
+      const result = await handlers.get("runBqlQuery")!({ query: "BALANCES" });
+      expect(result.isError).toBe(true);
+      expect(JSON.stringify(result.content)).toContain("no longer have access");
     });
   });
 
