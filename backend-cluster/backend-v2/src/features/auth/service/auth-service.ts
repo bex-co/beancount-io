@@ -10,6 +10,8 @@ import {
   ForbiddenError,
   ConflictError,
   BadUserInputError,
+  RateLimitedError,
+  ServiceUnavailableError,
 } from "@/shared/errors";
 import { getBasicAuthHeader } from "@/features/auth/utils/auth";
 import { delayRun } from "@/shared/execute";
@@ -19,6 +21,9 @@ import { defaultLedgerTemplate } from "@/features/ledger/utils/ledger-template";
 import { logger } from "@/shared/logger";
 import { lock, LOCK_KEYS } from "@/shared/lock";
 import { checkRateLimit } from "@/shared/rate-limiter";
+import { incrementInWindow } from "@/foundation/redis/redis-counter";
+import { CACHE_KEYS } from "@/shared/cache";
+import { secureStringEqual } from "@/features/auth/utils/secure-string-equal";
 import bcrypt from "bcryptjs";
 import {
   renderWelcomeHtml,
@@ -70,6 +75,8 @@ type AuthResponse = {
 };
 
 const MAX_PASSWORD_LENGTH = 128;
+const SIGNUP_OTP_ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
+const SIGNUP_OTP_MAX_ATTEMPTS = 5;
 
 const DISPOSABLE_EMAIL_DOMAINS = new Set([
   "mailinator.com",
@@ -535,7 +542,9 @@ export class AuthService implements IAuthService {
       throw new BadUserInputError("Invalid or expired session");
     }
 
-    if (session.otp !== otp) {
+    await this.consumeSignupOtpAttempt(session.email);
+
+    if (!secureStringEqual(session.otp, otp)) {
       throw new BadUserInputError("Invalid OTP code");
     }
 
@@ -581,15 +590,11 @@ export class AuthService implements IAuthService {
       throw new BadUserInputError("Invalid or expired session");
     }
 
-    // Rate limit OTP attempts: 5 tries per session (session lifetime is 10 minutes)
-    // Prevents brute-forcing the 4-digit code (9000 possibilities)
-    checkRateLimit(`otp-verify:${sessionId}`, {
-      windowMs: 10 * 60 * 1000,
-      max: 5,
-      message: "Too many OTP attempts. Please request a new verification code.",
-    });
+    // Charge attempts to the normalized email, not the replaceable session id,
+    // so requesting a fresh code cannot reset the brute-force budget.
+    await this.consumeSignupOtpAttempt(session.email);
 
-    if (session.otp !== otp) {
+    if (!secureStringEqual(session.otp, otp)) {
       throw new BadUserInputError("Invalid OTP code");
     }
 
@@ -611,6 +616,27 @@ export class AuthService implements IAuthService {
     await this.deleteSignupOtpSession(sessionId);
 
     return result;
+  };
+
+  private consumeSignupOtpAttempt = async (email: string): Promise<void> => {
+    const attempt = await incrementInWindow(
+      CACHE_KEYS.auth.signupOtpAttemptsByEmail(email),
+      SIGNUP_OTP_ATTEMPT_WINDOW_MS,
+    );
+
+    // OTP verification is an authentication boundary. If the shared atomic
+    // budget cannot be enforced, fail closed instead of allowing unmetered
+    // guesses on every backend instance.
+    if (!attempt) {
+      throw new ServiceUnavailableError("OTP verification");
+    }
+
+    if (attempt.count > SIGNUP_OTP_MAX_ATTEMPTS) {
+      throw new RateLimitedError(
+        Math.max(1, Math.ceil(attempt.resetInMs / 1000)),
+        "Too many OTP attempts. Please request a new verification code.",
+      );
+    }
   };
 
   /**

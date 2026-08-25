@@ -42,6 +42,25 @@ describe("str utilities", () => {
 
       expect(result).toBe("");
     });
+
+    it("does not depend on Math.random", () => {
+      const mathRandom = jest
+        .spyOn(Math, "random")
+        .mockImplementation(() => {
+          throw new Error("insecure PRNG called");
+        });
+
+      expect(getRandomString(16)).toMatch(/^[a-zA-Z0-9]{16}$/);
+      expect(mathRandom).not.toHaveBeenCalled();
+      mathRandom.mockRestore();
+    });
+
+    it.each([-1, 1.5, Number.NaN, Number.POSITIVE_INFINITY])(
+      "rejects invalid length %s",
+      (length) => {
+        expect(() => getRandomString(length)).toThrow(RangeError);
+      },
+    );
   });
 
   describe("getLedgerUsername", () => {

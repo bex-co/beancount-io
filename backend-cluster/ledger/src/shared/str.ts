@@ -1,9 +1,18 @@
+import { randomInt } from "node:crypto";
+
+const RANDOM_STRING_ALPHABET =
+  "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+
 export function getRandomString(length: number): string {
-  const chars =
-    "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789";
+  if (!Number.isSafeInteger(length) || length < 0) {
+    throw new RangeError("Random string length must be a non-negative integer");
+  }
+
   let result = "";
   for (let i = 0; i < length; i++) {
-    result += chars.charAt(Math.floor(Math.random() * chars.length));
+    // randomInt uses rejection sampling internally, avoiding both predictable
+    // Math.random() output and modulo bias.
+    result += RANDOM_STRING_ALPHABET[randomInt(RANDOM_STRING_ALPHABET.length)];
   }
   return result;
 }
