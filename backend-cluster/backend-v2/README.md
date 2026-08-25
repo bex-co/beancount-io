@@ -307,7 +307,7 @@ and this server in the path, so a client must not try to fetch it from the web
 itself. Resources authorize per read, exactly like tools: access revoked between
 two fetches is refused on the second.
 
-Twenty-one templates today — the ledger's vocabulary, its analysis reads, and
+Twenty-eight templates today — the ledger's vocabulary, its analysis reads, and
 file contents:
 
 ```
@@ -326,6 +326,32 @@ beancount://{owner}/{name}/narration-transactions/{narration}
 beancount://{owner}/{name}/payee-accounts/{payee}
 beancount://{owner}/{name}/entry-context/{entryHash}
 ```
+
+### Bank import
+
+Everything a customer does with a bank that is **already linked** is on both
+surfaces — list connections and accounts, pull transactions, write them into the
+ledger, discard them, reconcile, map an account, unlink:
+
+```
+beancount://{owner}/{name}/banks                    …/banks/{itemId}
+beancount://{owner}/{name}/banks/{itemId}/accounts  …/bank-accounts
+beancount://{owner}/{name}/bank-transactions/unsynced
+```
+
+with `manageBankImport` (sync / submit / discard) and `manageBankConnection`
+(reconcile / map / currency / refresh / unlink) as the two write tools. They are
+two rather than one deliberately: a credential that may import transactions must
+not thereby be able to sever the bank connection.
+
+**Linking a new bank is not here.** That happens in a browser through the bank's
+own widget — there is no API to expose for it. Link once, then everything after
+is scriptable.
+
+**`dry_run=true`** on sync, submit, discard, reconcile and unlink runs every
+check and reports exactly what would change, writing nothing. It is deliberately
+absent from the account-config updates and the status refresh: a preview that
+only echoed your input back would teach you to trust a check that never ran.
 
 **One asymmetry to know about.** The REST twins take optional narrowing —
 `?account=…&filter=…&time=…&interval=…` — and the MCP resources do not. The MCP

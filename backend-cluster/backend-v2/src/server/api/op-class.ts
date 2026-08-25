@@ -1124,20 +1124,42 @@ const ASSET_VERBS: readonly VerbEntry[] = [
  * read/write ledger data.
  */
 const PLAID_VERBS: readonly VerbEntry[] = [
-  gqlOnly("Query.getPlaidItems", "admin", R.plaidOperation, M.plaidOperation),
-  gqlOnly("Query.getPlaidItem", "admin", R.plaidOperation, M.plaidOperation),
-  gqlOnly(
-    "Query.getPlaidAccounts",
-    "admin",
-    R.plaidOperation,
-    M.plaidOperation,
-  ),
-  gqlOnly(
-    "Query.getPlaidAccountsForLedger",
-    "admin",
-    R.plaidOperation,
-    M.plaidOperation,
-  ),
+  {
+    verb: "Query.getPlaidItems",
+    class: "admin",
+    gql: "Query.getPlaidItems",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/banks",
+    mcpResource: "bankList",
+    mcpExempt:
+      "Reachable as the `bankList` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getPlaidItem",
+    class: "admin",
+    gql: "Query.getPlaidItem",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}",
+    mcpResource: "bank",
+    mcpExempt:
+      "Reachable as the `bank` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getPlaidAccounts",
+    class: "admin",
+    gql: "Query.getPlaidAccounts",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/accounts",
+    mcpResource: "bankAccountsForItem",
+    mcpExempt:
+      "Reachable as the `bankAccountsForItem` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getPlaidAccountsForLedger",
+    class: "admin",
+    gql: "Query.getPlaidAccountsForLedger",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-accounts",
+    mcpResource: "bankAccounts",
+    mcpExempt:
+      "Reachable as the `bankAccounts` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
   gqlOnly(
     "Mutation.createPlaidLinkToken",
     "admin",
@@ -1156,67 +1178,89 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     R.plaidBinding,
     M.plaidBinding,
   ),
-  gqlOnly(
-    "Mutation.unlinkPlaidItem",
-    "admin",
-    R.plaidOperation,
-    M.plaidOperation,
-  ),
-  gqlOnly(
-    "Mutation.reconcilePlaidAccounts",
-    "admin",
-    R.plaidOperation,
-    M.plaidOperation,
-  ),
-  gqlOnly(
-    "Mutation.updatePlaidAccountMapping",
-    "admin",
-    R.plaidOperation,
-    M.plaidOperation,
-  ),
-  gqlOnly(
-    "Mutation.updatePlaidAccountCurrency",
-    "admin",
-    R.plaidOperation,
-    M.plaidOperation,
-  ),
-  gqlOnly(
-    "Mutation.refreshPlaidItemStatus",
-    "admin",
-    R.plaidOperation,
-    M.plaidOperation,
-  ),
-  gqlOnly(
-    "Query.getUnsyncedPlaidTransactions",
-    "read",
-    R.dashboardShaped,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Query.suggestPlaidTransactionCategories",
-    "read",
-    R.llm,
-    M.notAgentShaped,
-  ),
-  gqlOnly("Query.suggestPlaidAccountMapping", "read", R.llm, M.notAgentShaped),
-  gqlOnly(
-    "Mutation.syncPlaidTransactions",
-    "write",
-    R.dashboardShaped,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.submitPlaidTransactionsToLedger",
-    "write",
-    R.dashboardShaped,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.deletePlaidTransactions",
-    "write",
-    R.dashboardShaped,
-    M.notAgentShaped,
-  ),
+  {
+    verb: "Mutation.unlinkPlaidItem",
+    class: "admin",
+    gql: "Mutation.unlinkPlaidItem",
+    rest: "DELETE /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}",
+    mcp: "manageBankConnection",
+  },
+  {
+    verb: "Mutation.reconcilePlaidAccounts",
+    class: "admin",
+    gql: "Mutation.reconcilePlaidAccounts",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/reconcile",
+    mcp: "manageBankConnection",
+  },
+  {
+    verb: "Mutation.updatePlaidAccountMapping",
+    class: "admin",
+    gql: "Mutation.updatePlaidAccountMapping",
+    rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/bank-accounts/{accountId}/mapping",
+    mcp: "manageBankConnection",
+  },
+  {
+    verb: "Mutation.updatePlaidAccountCurrency",
+    class: "admin",
+    gql: "Mutation.updatePlaidAccountCurrency",
+    rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/bank-accounts/{accountId}/currency",
+    mcp: "manageBankConnection",
+  },
+  {
+    verb: "Mutation.refreshPlaidItemStatus",
+    class: "admin",
+    gql: "Mutation.refreshPlaidItemStatus",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/refresh",
+    mcp: "manageBankConnection",
+  },
+  {
+    verb: "Query.getUnsyncedPlaidTransactions",
+    class: "read",
+    gql: "Query.getUnsyncedPlaidTransactions",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/unsynced",
+    mcpResource: "bankUnsyncedTransactions",
+    mcpExempt:
+      "Reachable as the `bankUnsyncedTransactions` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.suggestPlaidTransactionCategories",
+    class: "read",
+    gql: "Query.suggestPlaidTransactionCategories",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/suggested-categories",
+    mcpResource: "bankSuggestedCategories",
+    mcpExempt:
+      "Reachable as the `bankSuggestedCategories` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.suggestPlaidAccountMapping",
+    class: "read",
+    gql: "Query.suggestPlaidAccountMapping",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/suggested-mapping",
+    mcpResource: "bankSuggestedMapping",
+    mcpExempt:
+      "Reachable as the `bankSuggestedMapping` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Mutation.syncPlaidTransactions",
+    class: "write",
+    gql: "Mutation.syncPlaidTransactions",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/sync",
+    mcp: "manageBankImport",
+  },
+  {
+    verb: "Mutation.submitPlaidTransactionsToLedger",
+    class: "write",
+    gql: "Mutation.submitPlaidTransactionsToLedger",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/submit",
+    mcp: "manageBankImport",
+  },
+  {
+    verb: "Mutation.deletePlaidTransactions",
+    class: "write",
+    gql: "Mutation.deletePlaidTransactions",
+    rest: "DELETE /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions",
+    mcp: "manageBankImport",
+  },
 ];
 
 /**

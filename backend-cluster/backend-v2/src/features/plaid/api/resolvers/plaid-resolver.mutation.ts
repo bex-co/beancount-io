@@ -150,11 +150,7 @@ export class PlaidMutationResolver {
   ): Promise<PlaidItemType> {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
-    return this.plaidItemService.refreshItemStatus(
-      identity,
-      itemId,
-      ledgerId,
-    );
+    return this.plaidItemService.refreshItemStatus(identity, itemId, ledgerId);
   }
 
   @Authorized()
@@ -169,7 +165,10 @@ export class PlaidMutationResolver {
   ): Promise<boolean> {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "write");
-    return this.plaidItemService.unlinkItem(identity, itemId, ledgerId);
+    // GraphQL's contract stays boolean: the dashboard never dry-runs, and the
+    // service throws rather than returning false on failure.
+    await this.plaidItemService.unlinkItem(identity, itemId, ledgerId);
+    return true;
   }
 
   @Authorized()

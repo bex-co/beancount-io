@@ -1,19 +1,19 @@
 # w3 · m8 — Port the bank-import family to REST and MCP
 
-**Worker:** worker3 **Goal:** Everything a customer does with an already-linked bank — list it, inspect it, map its accounts, sync transactions, submit them to the ledger, unlink it — is reachable from REST and MCP. The browser ceremony stays a browser ceremony; nothing after it does. **Status:** in progress (t001 decided; m9 prerequisite shipped)
+**Worker:** worker3 **Goal:** Everything a customer does with an already-linked bank — list it, inspect it, map its accounts, sync transactions, submit them to the ledger, unlink it — is reachable from REST and MCP. The browser ceremony stays a browser ceremony; nothing after it does. **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Decide what an agent may do to a bank link, and under which scope | 45m | — | — **DONE**
-| t002 | `v1Route` declarations for the in-scope bank verbs | 60m | t001 |
-| t003 | The same set on MCP — reads as resources, writes as a grouped tool | 60m | t001 |
-| t004 | Lower both ratchet ceilings, and prove they hold | 20m | t002, t003 |
-| t005 | Adoption surface | 20m | t004 |
-| t006 | Simplify | 20m | t005 |
-| t007 | Test coverage | 30m | t005 |
-| t008 | Closeout | 20m | t007 |
+| t002 | `v1Route` declarations for the in-scope bank verbs | 60m | t001 | — **DONE**
+| t003 | The same set on MCP — reads as resources, writes as a grouped tool | 60m | t001 | — **DONE**
+| t004 | Lower both ratchet ceilings, and prove they hold | 20m | t002, t003 | — **DONE**
+| t005 | Adoption surface | 20m | t004 | — **DONE**
+| t006 | Simplify | 20m | t005 | — **DONE**
+| t007 | Test coverage | 30m | t005 | — **DONE**
+| t008 | Closeout | 20m | t007 | — **DONE**
 
 ## The fifteen, and the three that stay out
 
@@ -58,6 +58,18 @@ The fifteen answer under `/api-gateway/v1/…` and are reachable on MCP in the f
 *Import my bank transactions into my ledger* is close to the whole job of bookkeeping, and it is the half an agent currently cannot do. It can read a ledger and edit it, but the transactions have to arrive by hand — so the agent does the tedious part and the human does the tedious part too.
 
 That is also why t001 comes first rather than jumping to routes. Nine of the fifteen are `admin`-class, and `unlinkPlaidItem` severs a bank connection while `syncPlaidTransactions` reaches a third party holding the customer's financial data. **Handing an agent the same reach a dashboard has is a decision, not a port**, and it should be made deliberately — including the option of leaving some of the fifteen REST-only.
+
+## Closeout notes (2026-08-25)
+
+**Ported: 15.** REST 44 → 59 (gap 60 → 45); MCP 29 → 44 (gap 71 → 56). Seven reads as resources, eight writes as tools.
+
+**The grouping in t003 was wrong and the codebase caught it.** One `manageBankImport` tool covering all eight writes failed at startup: the op-class registry refuses a tool id classified both `write` (`syncPlaidTransactions`) and `admin` (`refreshPlaidItemStatus`). That is ADR 0008 D3 enforcing its own rule — a group needs a shared shape *and* a shared authorization class, and this had only the first. Split into `manageBankImport` (write: sync / submit / discard) and `manageBankConnection` (admin: reconcile / map / currency / refresh / unlink). Better than the original: **a credential that may import transactions cannot thereby sever the bank connection.** Tools 7 → 9.
+
+**`dry_run` is real, not a shape.** All five previews return *after* every validation the write performs, so what they report is the decision the write would have acted on. Sync gets a separate read-only path rather than guards inside the write loop — that loop mutates in four places and persists a cursor at the end, and a missed guard would mean a "preview" that wrote. Separate code cannot miss a guard it does not have. Tests assert on the mutating collaborators (`delete`, `removeItem`) never being called, because a write followed by a preview-shaped response is indistinguishable from outside.
+
+**Fixed while here:** the `.well-known/mcp.json` manifest declared `capabilities: { tools }` only. It has served resources since m5 — a client reading it would conclude the read surface, which is most of the server, does not exist.
+
+**Not ported, and permanently:** the three Plaid Link ceremony verbs. `plaidBinding` now covers exactly those three.
 
 ## Source + Goal linkage
 

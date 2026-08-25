@@ -26,6 +26,15 @@ export interface ReconcileAccountsParams {
    * adding is always safe to retry, removing is not.
    */
   allowDeletes: boolean;
+  /**
+   * Compute the diff and return it without writing anything.
+   *
+   * A separate flag rather than a caller-side "read then decide": the diff is
+   * derived from a live Plaid response and our stored rows, so anything
+   * recomputed outside this function could disagree with what the write would
+   * actually do.
+   */
+  dryRun?: boolean;
 }
 
 export interface ReconcileAccountsResult {
@@ -33,6 +42,14 @@ export interface ReconcileAccountsResult {
   removedCount: number;
   /** Accounts Plaid no longer shares that were left in place because `allowDeletes` was false. */
   staleCount: number;
+  /** Set only by a preview: the diff that a real reconcile would act on. */
+  dryRun?: true;
+  wouldAdd?: Array<{ accountId: string; accountName: string; mask?: string }>;
+  wouldDelete?: Array<{
+    accountId: string;
+    accountName: string;
+    ledgerAccount?: string;
+  }>;
 }
 
 /**
@@ -48,7 +65,7 @@ export async function reconcileAccounts(
   params: ReconcileAccountsParams,
 ): Promise<ReconcileAccountsResult> {
   const { plaidClient, models, db } = deps;
-  const { itemId, accessToken, allowDeletes } = params;
+  const { itemId, accessToken, allowDeletes, dryRun = false } = params;
 
   const remoteAccounts = await plaidClient.getAccounts(accessToken);
   const localAccounts = await models.plaidAccount.getByItemId(db, itemId);
@@ -94,6 +111,29 @@ export async function reconcileAccounts(
 
   if (toCreate.length === 0 && toDelete.length === 0) {
     return { addedAccounts: [], removedCount: 0, staleCount: stale.length };
+  }
+
+  // The diff above is the whole decision — what Plaid shares, what we store,
+  // and which of the difference `allowDeletes` permits acting on. Returning it
+  // here is an exact preview, not an estimate, because the write below acts on
+  // these very lists (w3/m8).
+  if (dryRun) {
+    return {
+      addedAccounts: [],
+      removedCount: 0,
+      staleCount: stale.length,
+      dryRun: true,
+      wouldAdd: toCreate.map((a) => ({
+        accountId: a.accountId,
+        accountName: a.name,
+        mask: a.mask ?? undefined,
+      })),
+      wouldDelete: toDelete.map((a) => ({
+        accountId: a.accountId,
+        accountName: a.accountName,
+        ledgerAccount: a.ledgerAccount ?? undefined,
+      })),
+    };
   }
 
   const addedAccounts: PlaidAccount[] = [];

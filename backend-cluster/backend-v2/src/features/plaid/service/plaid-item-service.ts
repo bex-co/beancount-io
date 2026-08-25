@@ -78,7 +78,36 @@ export interface PlaidAccountReconcileResult {
   success: boolean;
   addedCount: number;
   removedCount: number;
+  /** Set only by a preview (w3/m8): the diff a real reconcile would act on. */
+  dryRun?: true;
+  wouldAdd?: Array<{ accountId: string; accountName: string; mask?: string }>;
+  wouldDelete?: Array<{
+    accountId: string;
+    accountName: string;
+    ledgerAccount?: string;
+  }>;
 }
+
+/**
+ * What unlinking did, or would do.
+ *
+ * A `dryRun` answer is not a guess: every check the real path makes has already
+ * run by the time it is produced, so what it reports is the decision the write
+ * would have acted on (w3/m8).
+ */
+export type PlaidUnlinkResult =
+  | { dryRun: false; unlinked: true }
+  | {
+      dryRun: true;
+      wouldUnlink: true;
+      institutionName: string;
+      accountsSevered: number;
+      accounts: Array<{
+        id: string;
+        accountName: string;
+        ledgerAccount?: string;
+      }>;
+    };
 
 export interface IPlaidItemService {
   getItems(identity: Identity, ledgerId: string): Promise<PlaidItemResult[]>;
@@ -121,6 +150,7 @@ export interface IPlaidItemService {
     identity: Identity,
     itemId: string,
     ledgerId: string,
+    dryRun?: boolean,
   ): Promise<PlaidAccountReconcileResult>;
   exchangePublicToken(
     identity: Identity,
@@ -148,7 +178,8 @@ export interface IPlaidItemService {
     identity: Identity,
     itemId: string,
     ledgerId: string,
-  ): Promise<boolean>;
+    dryRun?: boolean,
+  ): Promise<PlaidUnlinkResult>;
 }
 
 export class PlaidItemService implements IPlaidItemService {
@@ -585,6 +616,7 @@ export class PlaidItemService implements IPlaidItemService {
     identity: Identity,
     itemId: string,
     ledgerId: string,
+    dryRun = false,
   ): Promise<PlaidAccountReconcileResult> {
     const { userId } = identity;
     const item = await this.models.plaidItem.getById(this.db, itemId);
@@ -609,7 +641,7 @@ export class PlaidItemService implements IPlaidItemService {
           models: this.models,
           db: this.db,
         },
-        { itemId, accessToken, allowDeletes: true },
+        { itemId, accessToken, allowDeletes: true, dryRun },
       );
     } catch (err) {
       if (err instanceof BadUserInputError) {
@@ -650,6 +682,15 @@ export class PlaidItemService implements IPlaidItemService {
       success: true,
       addedCount: result.addedAccounts.length,
       removedCount: result.removedCount,
+      // Present only on a preview. `addedAccounts` is empty then, which is also
+      // why the LLM auto-mapping above cannot fire on a dry run.
+      ...(result.dryRun
+        ? {
+            dryRun: true as const,
+            wouldAdd: result.wouldAdd,
+            wouldDelete: result.wouldDelete,
+          }
+        : {}),
     };
   }
 
@@ -943,7 +984,8 @@ export class PlaidItemService implements IPlaidItemService {
     identity: Identity,
     itemId: string,
     ledgerId: string,
-  ): Promise<boolean> {
+    dryRun = false,
+  ): Promise<PlaidUnlinkResult> {
     const { userId } = identity;
     const item = await this.models.plaidItem.getById(this.db, itemId);
     if (!item) {
@@ -956,6 +998,28 @@ export class PlaidItemService implements IPlaidItemService {
     if (item.ledgerRepoId !== ledgerRepoId) {
       throw new BadUserInputError("Unauthorized access to Item");
     }
+    // Every check above has run, so a preview here reflects the real decision
+    // rather than a guess: the item exists, the caller may write to the ledger,
+    // and the item belongs to it. What is left to report is the blast radius.
+    if (dryRun) {
+      const accounts = await this.models.plaidAccount.getByItemId(
+        this.db,
+        itemId,
+      );
+      itemServiceLogger.info("Plaid Item unlink previewed", { userId, itemId });
+      return {
+        dryRun: true,
+        wouldUnlink: true,
+        institutionName: item.institutionName,
+        accountsSevered: accounts.length,
+        accounts: accounts.map((account) => ({
+          id: account.id,
+          accountName: account.accountName,
+          ledgerAccount: account.ledgerAccount ?? undefined,
+        })),
+      };
+    }
+
     const accessToken = decryptToken(item.accessToken);
     try {
       await this.plaidClient.removeItem(accessToken);
@@ -967,7 +1031,7 @@ export class PlaidItemService implements IPlaidItemService {
     }
     await this.models.plaidItem.delete(this.db, itemId);
     itemServiceLogger.info("Plaid Item unlinked", { userId, itemId });
-    return true;
+    return { dryRun: false, unlinked: true };
   }
 }
 

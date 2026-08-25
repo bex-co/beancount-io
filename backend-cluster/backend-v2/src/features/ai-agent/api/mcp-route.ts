@@ -123,6 +123,8 @@ async function handleMcpRequest(
       ledgerFinance: layers.services.ledgerFinance,
       ledgerJournal: layers.services.ledgerJournal,
       ledgerAccount: layers.services.ledgerAccount,
+      plaidItem: layers.services.plaidItem,
+      plaidSync: layers.services.plaidSync,
     },
     identity,
     ledgerId,

@@ -39,6 +39,16 @@ import {
 } from "../tools/api-key-tools";
 import type { ToolContext } from "../tools/types";
 import { mcpOutputSchema } from "../tools/types";
+import {
+  bankConnectionInputSchema,
+  bankConnectionOutputSchema,
+  bankImportInputSchema,
+  bankImportOutputSchema,
+  connectionDescription,
+  executeBankConnection,
+  executeBankImport,
+  importDescription,
+} from "../tools/bank-import-tool";
 
 /**
  * One MCP tool, described rather than registered.
@@ -118,6 +128,26 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     inputSchema: createApiKeyInputSchema,
     outputSchema: mcpOutputSchema(createApiKeyOutputSchema),
     execute: executeCreateApiKey,
+  },
+  // Eight bank-import verbs behind one `operation` discriminator (ADR 0008 D3).
+  // A family, not a bag: same subject, same authorization class, and an agent
+  // picking one is choosing among them rather than between them and something
+  // unrelated.
+  {
+    name: "manageBankImport",
+    title: "Move Bank Transactions Into The Ledger",
+    description: importDescription,
+    inputSchema: bankImportInputSchema,
+    outputSchema: mcpOutputSchema(bankImportOutputSchema),
+    execute: executeBankImport,
+  },
+  {
+    name: "manageBankConnection",
+    title: "Manage A Linked Bank Connection",
+    description: connectionDescription,
+    inputSchema: bankConnectionInputSchema,
+    outputSchema: mcpOutputSchema(bankConnectionOutputSchema),
+    execute: executeBankConnection,
   },
   {
     name: "revokeApiKey",

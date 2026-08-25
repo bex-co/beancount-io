@@ -87,21 +87,25 @@ describe("op-class coverage", () => {
   });
 
   it("covers every MCP tool, and budgets tools separately from resources", () => {
-    // Four ledger tools plus the three key-management tools w1/m22 added. The
-    // count is asserted because tool count is the dominant cost in an agent's
-    // tool selection — growing it should be a decision, not a drift.
+    // Four ledger tools, three key-management tools (w1/m22), and the two bank
+    // tools w3/m8 added. Two rather than one because the op-class registry
+    // refuses a tool spanning `write` and `admin` — a credential that may
+    // import transactions must not thereby be able to sever the connection.
+    //
+    // The count is asserted because tool count is the dominant cost in an
+    // agent's tool selection: growing it should be a decision, not a drift.
     const tools = mcpOps.filter((op) => !op.startsWith("MCP resource:"));
-    expect(tools).toHaveLength(7);
+    expect(tools).toHaveLength(9);
 
     // Resources are counted apart on purpose. They do not compete for tool
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can
     // reach MCP at all — so they must not be held to the tool budget, and a
     // single number covering both would quietly do exactly that.
-    // Ten vocabulary reads (w3/m6), ten analysis reads (w3/m7), and the file
-    // template m5 proved the shape with. This number is expected to climb as
+    // Ten vocabulary reads (w3/m6), ten analysis reads (w3/m7), seven bank
+    // reads (w3/m8), and the file template m5 proved the shape with. This number is expected to climb as
     // the read surface ports; the tool count above is not.
     const resources = mcpOps.filter((op) => op.startsWith("MCP resource:"));
-    expect(resources).toHaveLength(21);
+    expect(resources).toHaveLength(28);
   });
 });
 

@@ -18,6 +18,8 @@ export type ToolServices = Pick<
   | "ledgerFinance"
   | "ledgerJournal"
   | "ledgerAccount"
+  | "plaidItem"
+  | "plaidSync"
 >;
 
 export interface ToolContext {

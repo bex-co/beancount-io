@@ -2,6 +2,7 @@ import Router from "@koa/router";
 import { toJSONSchema } from "zod";
 import type { AppConfig } from "@/config/config";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
+import { MCP_RESOURCES } from "@/features/ai-agent/api/mcp-resources";
 
 const SECURITY_TXT = `Contact: mailto:hello@beancount.io
 Contact: https://beancount.io/security#report-a-vulnerability
@@ -23,11 +24,20 @@ function mcpManifest(config: AppConfig) {
     endpoint: `${publicOrigin}/api-gateway/mcp`,
     transport: "streamable-http",
     transports: ["streamable-http"],
-    capabilities: { tools: {}, streaming: true },
+    // Resources are declared alongside tools because the server serves both.
+    // A manifest listing only tools would tell a client the read surface does
+    // not exist — and the read surface is most of it (ADR 0008 D2).
+    capabilities: { tools: {}, resources: {}, streaming: true },
     tools: MCP_TOOLS.map((tool) => ({
       name: tool.name,
       description: tool.description,
       inputSchema: toJSONSchema(tool.inputSchema),
+    })),
+    resources: MCP_RESOURCES.map((resource) => ({
+      name: resource.name,
+      description: resource.description,
+      uriTemplate: resource.uriTemplate,
+      mimeType: resource.mimeType,
     })),
     auth: {
       type: "oauth2",

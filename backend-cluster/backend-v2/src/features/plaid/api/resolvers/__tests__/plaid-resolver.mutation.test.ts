@@ -273,7 +273,10 @@ describe("PlaidMutationResolver", () => {
 
   describe("unlinkPlaidItem", () => {
     it("should delegate to plaidItemService.unlinkItem", async () => {
-      mockPlaidItemService.unlinkItem.mockResolvedValue(true);
+      mockPlaidItemService.unlinkItem.mockResolvedValue({
+        dryRun: false,
+        unlinked: true,
+      });
 
       const result = await resolver.unlinkPlaidItem(
         "pitm_1",

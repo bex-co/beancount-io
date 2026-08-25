@@ -153,11 +153,12 @@ Point an MCP client at a deployment to query and edit a ledger from an agent:
 }
 ```
 
-Seven tools — BQL queries, file listing, reads, edits, and API-key management —
-plus twenty-one URI-addressed **resources** an agent fetches without spending a
-tool call, covering the ledger's vocabulary (payees, currencies, tags, …), its
-analysis reads (trial balance, account reports, interval totals, …), and file
-contents. Each resource has a REST twin over the same service call.
+Nine tools — BQL queries, file listing, reads, edits, API-key management, and bank import —
+plus twenty-eight URI-addressed **resources** an agent fetches without spending
+a tool call — the ledger's vocabulary (payees, currencies, tags, …), its analysis
+reads (trial balance, account reports, …), its linked banks, and file contents.
+Bank imports are drivable end to end after a one-time browser link, with
+`dry_run` on everything that writes. Each resource has a REST twin over the same service call.
 Every call re-authorizes, so access revoked mid-session is refused on the next
 one. The credential must be scoped to a single ledger. `yarn mcp:conformance <base-url>`
 tells you whether a deployment is connectable. See

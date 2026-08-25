@@ -32,7 +32,33 @@ export interface PlaidSyncResult {
   transactionsModified: number;
   transactionsRemoved: number;
   message?: string;
+  /** Set only by a preview (w3/m8): what a real sync would do, having written nothing. */
+  dryRun?: true;
+  wouldAdd?: number;
+  wouldModify?: number;
+  wouldRemove?: number;
+  morePagesAvailable?: boolean;
 }
+
+/** What a submit did, or would do. A preview runs every check the write does. */
+export type PlaidSubmitResult = {
+  success: boolean;
+  addedCount: number;
+  message?: string;
+  dryRun?: true;
+  wouldAddCount?: number;
+  preview?: unknown[];
+};
+
+/** What a delete did, or would do. */
+export type PlaidDeleteResult = {
+  success: boolean;
+  deletedCount: number;
+  message?: string;
+  dryRun?: true;
+  wouldDeleteCount?: number;
+  preview?: Array<{ transactionId: string; name: string; amount: string }>;
+};
 
 export interface IPlaidSyncService {
   syncItemTransactions(
@@ -40,6 +66,7 @@ export interface IPlaidSyncService {
     itemId: string,
     syncType: "manual" | "webhook" | "scheduled",
     ledgerId?: string,
+    dryRun?: boolean,
   ): Promise<PlaidSyncResult>;
   getUnsyncedTransactionsForCategorization(
     identity: Identity,
@@ -55,12 +82,14 @@ export interface IPlaidSyncService {
       sourceAccount?: string;
     }>,
     filename?: string,
-  ): Promise<{ success: boolean; addedCount: number; message?: string }>;
+    dryRun?: boolean,
+  ): Promise<PlaidSubmitResult>;
   deleteTransactions(
     identity: Identity,
     ledgerId: string,
     transactionIds: string[],
-  ): Promise<{ success: boolean; deletedCount: number; message?: string }>;
+    dryRun?: boolean,
+  ): Promise<PlaidDeleteResult>;
 }
 
 export class PlaidSyncService implements IPlaidSyncService {
@@ -96,6 +125,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     itemId: string,
     syncType: "manual" | "webhook" | "scheduled",
     ledgerId?: string,
+    dryRun = false,
   ): Promise<PlaidSyncResult> {
     const lockKey = LOCK_KEYS.PLAID.syncTransactions(itemId);
 
@@ -105,6 +135,7 @@ export class PlaidSyncService implements IPlaidSyncService {
         identity,
         syncType,
         ledgerId,
+        dryRun,
       );
     });
   }
@@ -114,6 +145,7 @@ export class PlaidSyncService implements IPlaidSyncService {
     identity: Identity,
     syncType: "manual" | "webhook" | "scheduled",
     ledgerId?: string,
+    dryRun = false,
   ): Promise<PlaidSyncResult> {
     // The identity is what authorizes; `userId` is the id the models key on.
     // Derived rather than passed separately so the two can never disagree.
@@ -185,6 +217,39 @@ export class PlaidSyncService implements IPlaidSyncService {
       let totalRemoved = 0;
       let cursor = item.transactionsCursor;
       let hasMore = true;
+
+      // A preview runs on its own path rather than guarding the writes below.
+      // The write loop mutates in four places and persists the cursor at the
+      // end; a missed guard there would mean a "preview" that actually wrote,
+      // which is the one failure a dry run must never have. Separate code
+      // cannot miss a guard it does not have.
+      //
+      // Plaid is still called — a preview of remote data has to ask for it —
+      // but nothing here is persisted and the cursor is not advanced, so the
+      // real sync that follows returns exactly this.
+      if (dryRun) {
+        const preview = await this.plaidClient.transactionsSync(
+          accessToken,
+          cursor,
+        );
+        const forEnabled = (txs: Array<{ accountId: string }>) =>
+          txs.filter((tx) => enabledAccountIds.has(tx.accountId)).length;
+        return {
+          success: true,
+          transactionsFetched:
+            preview.added.length +
+            preview.modified.length +
+            preview.removed.length,
+          transactionsAdded: 0,
+          transactionsModified: 0,
+          transactionsRemoved: 0,
+          dryRun: true,
+          wouldAdd: forEnabled(preview.added),
+          wouldModify: forEnabled(preview.modified),
+          wouldRemove: preview.removed.length,
+          morePagesAvailable: preview.hasMore,
+        };
+      }
 
       while (hasMore) {
         const syncResult = await this.plaidClient.transactionsSync(
@@ -407,7 +472,8 @@ export class PlaidSyncService implements IPlaidSyncService {
       sourceAccount?: string;
     }>,
     filename?: string,
-  ): Promise<{ success: boolean; addedCount: number; message?: string }> {
+    dryRun = false,
+  ): Promise<PlaidSubmitResult> {
     const { userId } = identity;
     if (transactionInputs.length === 0) {
       throw new BadUserInputError("No transactions provided");
@@ -490,6 +556,19 @@ export class PlaidSyncService implements IPlaidSyncService {
       );
     }
 
+    // Everything above is validation and construction — ownership, ledger
+    // access, already-synced checks, account mapping — so a preview here is the
+    // exact set the write would append, not an estimate of it.
+    if (dryRun) {
+      return {
+        success: true,
+        addedCount: 0,
+        dryRun: true,
+        wouldAddCount: beancountTransactions.length,
+        preview: beancountTransactions,
+      };
+    }
+
     const ledgerId = `${ledgerOwner}/${ledgerName}`;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -554,7 +633,8 @@ export class PlaidSyncService implements IPlaidSyncService {
     identity: Identity,
     ledgerId: string,
     transactionIds: string[],
-  ): Promise<{ success: boolean; deletedCount: number; message?: string }> {
+    dryRun = false,
+  ): Promise<PlaidDeleteResult> {
     if (transactionIds.length === 0) {
       throw new BadUserInputError("No transactions provided");
     }
@@ -595,6 +675,22 @@ export class PlaidSyncService implements IPlaidSyncService {
           `Transaction ${tx.transactionId} already synced to ledger and cannot be deleted`,
         );
       }
+    }
+
+    // Ownership, ledger access and the already-synced refusal have all run, so
+    // this lists exactly what the delete would remove.
+    if (dryRun) {
+      return {
+        success: true,
+        deletedCount: 0,
+        dryRun: true,
+        wouldDeleteCount: transactions.length,
+        preview: transactions.map((tx) => ({
+          transactionId: tx.transactionId,
+          name: tx.name,
+          amount: String(tx.amount),
+        })),
+      };
     }
 
     const internalIds = transactions.map((tx) => tx.id);

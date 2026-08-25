@@ -68,7 +68,26 @@ describe("well-known routes", () => {
       "editLedgerFiles",
       "listApiKeys",
       "createApiKey",
+      "manageBankImport",
+      "manageBankConnection",
       "revokeApiKey",
     ]);
+  });
+
+  it("declares the resource surface too, not only tools", async () => {
+    const response = await fetch(`${origin}/.well-known/mcp.json`);
+    const body = (await response.json()) as {
+      capabilities: { resources?: unknown };
+      resources: Array<{ name: string; uriTemplate: string }>;
+    };
+
+    // A client reading a tools-only manifest would conclude the read surface
+    // does not exist — and it is most of the server (ADR 0008 D2).
+    expect(body.capabilities.resources).toBeDefined();
+    expect(body.resources.length).toBeGreaterThan(0);
+    expect(body.resources[0]).toMatchObject({
+      name: expect.any(String),
+      uriTemplate: expect.stringContaining("beancount://"),
+    });
   });
 });

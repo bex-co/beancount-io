@@ -157,10 +157,143 @@ const analysisResources: readonly McpResourceDescriptor[] = ANALYSIS_READS.map(
   }),
 );
 
+/**
+ * The bank reads, as templates (w3/m8).
+ *
+ * Hand-written rather than derived from a shared list, because unlike the
+ * ledger families these do not share one service signature — some take an item
+ * id, some an account filter, and two reach a different service. A list built
+ * to paper over that would hide the difference rather than remove it.
+ */
+const bankResources: readonly McpResourceDescriptor[] = [
+  {
+    name: "bankList",
+    title: "Linked Banks",
+    description: "Every bank connection linked to this ledger.",
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/banks`,
+    read: async (ctx, vars) =>
+      JSON.stringify(
+        await ctx.services.plaidItem.getItems(
+          ctx.identity,
+          resolveLedgerId(ctx, vars),
+        ),
+        null,
+        2,
+      ),
+  },
+  {
+    name: "bank",
+    title: "One Linked Bank",
+    description: "Status and institution details for a single bank connection.",
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/banks/{itemId}`,
+    read: async (ctx, vars) => {
+      resolveLedgerId(ctx, vars);
+      return JSON.stringify(
+        await ctx.services.plaidItem.getItem(
+          ctx.identity,
+          String(vars.itemId ?? ""),
+        ),
+        null,
+        2,
+      );
+    },
+  },
+  {
+    name: "bankAccountsForItem",
+    title: "A Bank's Accounts",
+    description: "The accounts one bank connection shares.",
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/banks/{itemId}/accounts`,
+    read: async (ctx, vars) =>
+      JSON.stringify(
+        await ctx.services.plaidItem.getAccounts(
+          ctx.identity,
+          String(vars.itemId ?? ""),
+          resolveLedgerId(ctx, vars),
+        ),
+        null,
+        2,
+      ),
+  },
+  {
+    name: "bankAccounts",
+    title: "All Bank Accounts",
+    description:
+      "Accounts across every linked bank, with their institution and ledger-account mapping.",
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/bank-accounts`,
+    read: async (ctx, vars) =>
+      JSON.stringify(
+        await ctx.services.plaidItem.getAccountsForLedger(
+          ctx.identity,
+          resolveLedgerId(ctx, vars),
+        ),
+        null,
+        2,
+      ),
+  },
+  {
+    name: "bankUnsyncedTransactions",
+    title: "Transactions Not Yet In The Ledger",
+    description:
+      "Transactions pulled from a bank that have not been written into the ledger — what `manageBankImport` submits.",
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/bank-transactions/unsynced`,
+    read: async (ctx, vars) =>
+      JSON.stringify(
+        await ctx.services.plaidItem.getUnsyncedTransactions(
+          ctx.identity,
+          undefined,
+          resolveLedgerId(ctx, vars),
+        ),
+        null,
+        2,
+      ),
+  },
+  {
+    name: "bankSuggestedCategories",
+    title: "Suggested Categories For Unsynced Transactions",
+    description:
+      "A ledger account suggested for each staged transaction, drawn from the ledger's own history.",
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/bank-transactions/suggested-categories`,
+    read: async (ctx, vars) =>
+      JSON.stringify(
+        await ctx.services.plaidItem.suggestCategories(
+          ctx.identity,
+          resolveLedgerId(ctx, vars),
+        ),
+        null,
+        2,
+      ),
+  },
+  {
+    name: "bankSuggestedMapping",
+    title: "Suggested Ledger Account Per Bank Account",
+    description:
+      "Which ledger account each of a bank's accounts most likely corresponds to.",
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/banks/{itemId}/suggested-mapping`,
+    read: async (ctx, vars) =>
+      JSON.stringify(
+        await ctx.services.plaidItem.suggestAccountMapping(
+          ctx.identity,
+          resolveLedgerId(ctx, vars),
+          String(vars.itemId ?? ""),
+        ),
+        null,
+        2,
+      ),
+  },
+];
+
 /** The resource fragment: every template this feature contributes to the registry. */
 export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
   ...vocabularyResources,
   ...analysisResources,
+  ...bankResources,
   {
     name: "ledgerFile",
     title: "Ledger File Contents",
