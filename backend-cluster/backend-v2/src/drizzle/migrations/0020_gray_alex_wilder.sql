@@ -1,2 +1,0 @@
-ALTER TABLE "users" ADD COLUMN "ledger_password_version" integer DEFAULT 1 NOT NULL;--> statement-breakpoint
-ALTER TABLE "users" ADD COLUMN "ledger_password_rotation_pending" boolean DEFAULT true NOT NULL;

@@ -2,7 +2,6 @@ import {
   pgTable,
   text,
   boolean,
-  integer,
   timestamp,
   uniqueIndex,
   index,
@@ -34,17 +33,6 @@ export const users = pgTable(
     // Ledger credentials
     ledger_username: text("ledger_username").notNull(),
     ledger_password: text("ledger_password").notNull(),
-    // Version 1 credentials predate the CSPRNG migration. Existing rows receive
-    // the defaults below; model-created users explicitly start at version 2
-    // with no rotation pending.
-    ledgerPasswordVersion: integer("ledger_password_version")
-      .notNull()
-      .default(1),
-    ledgerPasswordRotationPending: boolean(
-      "ledger_password_rotation_pending",
-    )
-      .notNull()
-      .default(true),
     ledger_api_token: text("ledger_api_token"),
 
     // Timestamps

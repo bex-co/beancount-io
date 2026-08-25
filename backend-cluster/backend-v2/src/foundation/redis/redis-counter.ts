@@ -27,9 +27,10 @@ export interface CounterResult {
  * steady stream of requests cannot keep pushing the window out and turn a
  * per-minute budget into a permanent one.
  *
- * Returns `undefined` when Redis is unreachable. Ordinary request throttles
- * may fail open on that; security-sensitive callers such as OTP verification
- * can explicitly fail closed instead.
+ * Returns `undefined` when Redis is unreachable. Callers **fail open** on that:
+ * a limiter that refuses everything when its store is down converts a
+ * dependency blip into a full outage, which is a worse failure than briefly
+ * unmetered traffic.
  */
 export async function incrementInWindow(
   key: string,
@@ -47,7 +48,7 @@ export async function incrementInWindow(
     const ttl = await client.pTTL(key);
     return { count, resetInMs: ttl > 0 ? ttl : windowMs };
   } catch (err) {
-    counterLogger.error("Redis counter unavailable", {
+    counterLogger.error("Redis counter failed; failing open", {
       error: err instanceof Error ? err.message : String(err),
     });
     return undefined;

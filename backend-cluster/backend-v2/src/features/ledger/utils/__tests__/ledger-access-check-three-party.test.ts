@@ -57,9 +57,6 @@ describe("assertLedgerAccess - Three-Party Authorization", () => {
       updateLastSeenAt: jest.fn(),
       getRecentlySeenUsers: jest.fn(),
       countUsers: jest.fn(),
-      getLedgerPasswordRotationCandidates: jest.fn(),
-      stageLedgerPasswordRotation: jest.fn(),
-      completeLedgerPasswordRotation: jest.fn(),
     };
 
     mockGetLedgerCollaboratorPermission = jest.fn();

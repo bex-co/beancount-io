@@ -1,16 +1,8 @@
-import { eq, or, and, ne, sql, gte, desc, lt } from "drizzle-orm";
+import { eq, or, and, ne, sql, gte, desc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 import { makeGravatar } from "@/shared/tools";
-import {
-  User,
-  CreateUserInput,
-  UpdateUserInput,
-  IUserModel,
-  CURRENT_LEDGER_PASSWORD_VERSION,
-  type LedgerPasswordRotationCandidate,
-  type StagedLedgerPasswordRotation,
-} from "./types";
+import { User, CreateUserInput, UpdateUserInput, IUserModel } from "./types";
 import { users } from "./schema";
 import { type DbExecutor } from "@/drizzle/drizzle";
 
@@ -109,8 +101,6 @@ export class UserPostgresModel implements IUserModel {
         lastName: input.lastName ?? null,
         ledger_username: input.ledger_username,
         ledger_password: input.ledger_password,
-        ledgerPasswordVersion: CURRENT_LEDGER_PASSWORD_VERSION,
-        ledgerPasswordRotationPending: false,
         isBlocked: false,
         createAt: now,
         updateAt: now,
@@ -317,95 +307,5 @@ export class UserPostgresModel implements IUserModel {
       users: rows.map((row) => this.toPlainObject(row)),
       total: countResult[0]?.total ?? 0,
     };
-  }
-
-  public async getLedgerPasswordRotationCandidates(
-    db: DbExecutor,
-    limit: number,
-  ): Promise<LedgerPasswordRotationCandidate[]> {
-    const result = await db
-      .select({
-        id: users.id,
-        ledgerUsername: users.ledger_username,
-      })
-      .from(users)
-      .where(eq(users.ledgerPasswordRotationPending, true))
-      .limit(limit);
-
-    return result;
-  }
-
-  public async stageLedgerPasswordRotation(
-    db: DbExecutor,
-    userId: string,
-    password: string,
-  ): Promise<StagedLedgerPasswordRotation | null> {
-    // Only the first worker replaces a legacy password. Other workers read the
-    // already-staged value and send that same value to Gitea, making retries
-    // and concurrent scheduler instances safe.
-    const staged = await db
-      .update(users)
-      .set({
-        ledger_password: password,
-        ledgerPasswordVersion: CURRENT_LEDGER_PASSWORD_VERSION,
-        updateAt: new Date(),
-      })
-      .where(
-        and(
-          eq(users.id, userId),
-          eq(users.ledgerPasswordRotationPending, true),
-          lt(users.ledgerPasswordVersion, CURRENT_LEDGER_PASSWORD_VERSION),
-        ),
-      )
-      .returning({
-        ledgerUsername: users.ledger_username,
-        ledgerPassword: users.ledger_password,
-      });
-
-    if (staged[0]) return staged[0];
-
-    const existingStage = await db
-      .select({
-        ledgerUsername: users.ledger_username,
-        ledgerPassword: users.ledger_password,
-      })
-      .from(users)
-      .where(
-        and(
-          eq(users.id, userId),
-          eq(users.ledgerPasswordRotationPending, true),
-          eq(
-            users.ledgerPasswordVersion,
-            CURRENT_LEDGER_PASSWORD_VERSION,
-          ),
-        ),
-      )
-      .limit(1);
-
-    return existingStage[0] ?? null;
-  }
-
-  public async completeLedgerPasswordRotation(
-    db: DbExecutor,
-    userId: string,
-    password: string,
-  ): Promise<boolean> {
-    const completed = await db
-      .update(users)
-      .set({
-        ledgerPasswordRotationPending: false,
-        updateAt: new Date(),
-      })
-      .where(
-        and(
-          eq(users.id, userId),
-          eq(users.ledgerPasswordRotationPending, true),
-          eq(users.ledgerPasswordVersion, CURRENT_LEDGER_PASSWORD_VERSION),
-          eq(users.ledger_password, password),
-        ),
-      )
-      .returning({ id: users.id });
-
-    return completed.length === 1;
   }
 }

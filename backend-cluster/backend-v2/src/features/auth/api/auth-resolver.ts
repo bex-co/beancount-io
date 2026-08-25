@@ -8,7 +8,7 @@ import {
   ObjectType,
   Query,
 } from "type-graphql";
-import { Matches, MaxLength } from "class-validator";
+import { MaxLength } from "class-validator";
 import { IContext } from "@/server/graphql/context";
 import type { IAuthService } from "@/features/auth/service/auth-service";
 import { UnauthenticatedError } from "@/shared/errors";
@@ -144,7 +144,6 @@ class VerifySignUpOtpInput {
   public sessionId: string;
 
   @Field(() => String)
-  @Matches(/^\d{6}$/, { message: "OTP must be a 6-digit code" })
   public otp: string;
 }
 

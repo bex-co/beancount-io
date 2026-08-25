@@ -43,18 +43,6 @@ export interface UpdateUserInput {
   ledger_api_token?: string;
 }
 
-export const CURRENT_LEDGER_PASSWORD_VERSION = 2;
-
-export interface LedgerPasswordRotationCandidate {
-  id: string;
-  ledgerUsername: string;
-}
-
-export interface StagedLedgerPasswordRotation {
-  ledgerUsername: string;
-  ledgerPassword: string;
-}
-
 /**
  * Database executor type - represents any database connection/transaction.
  * This allows the interface to remain database-agnostic while supporting transactions.
@@ -134,19 +122,4 @@ export interface IUserModel {
     },
   ): Promise<{ users: User[]; total: number }>;
   countUsers(db: DbExecutor): Promise<number>;
-
-  getLedgerPasswordRotationCandidates(
-    db: DbExecutor,
-    limit: number,
-  ): Promise<LedgerPasswordRotationCandidate[]>;
-  stageLedgerPasswordRotation(
-    db: DbExecutor,
-    userId: string,
-    password: string,
-  ): Promise<StagedLedgerPasswordRotation | null>;
-  completeLedgerPasswordRotation(
-    db: DbExecutor,
-    userId: string,
-    password: string,
-  ): Promise<boolean>;
 }

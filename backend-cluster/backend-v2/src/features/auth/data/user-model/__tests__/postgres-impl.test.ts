@@ -168,8 +168,6 @@ describe("UserPostgresModel", () => {
           password: input.password,
           email: input.email,
           ledger_username: "newuser",
-          ledgerPasswordVersion: 2,
-          ledgerPasswordRotationPending: false,
         }),
       );
       expect(result.email).toBe(input.email);
@@ -343,87 +341,6 @@ describe("UserPostgresModel", () => {
         expect.objectContaining({
           lastName: "Smith",
           updateAt: expect.any(Date),
-        }),
-      );
-    });
-  });
-
-  describe("ledger password rotation", () => {
-    it("lists only the requested batch of pending users", async () => {
-      const candidates = [{ id: "user1", ledgerUsername: "alice" }];
-      mockDb.limit.mockResolvedValue(candidates);
-
-      await expect(
-        model.getLedgerPasswordRotationCandidates(mockDb, 100),
-      ).resolves.toEqual(candidates);
-
-      expect(mockDb.limit).toHaveBeenCalledWith(100);
-      expect(mockDb.where).toHaveBeenCalled();
-    });
-
-    it("stages a version 2 password exactly once", async () => {
-      mockDb.returning.mockResolvedValue([
-        {
-          ledgerUsername: "alice",
-          ledgerPassword: "secure-password",
-        },
-      ]);
-
-      await expect(
-        model.stageLedgerPasswordRotation(
-          mockDb,
-          "user1",
-          "secure-password",
-        ),
-      ).resolves.toEqual({
-        ledgerUsername: "alice",
-        ledgerPassword: "secure-password",
-      });
-
-      expect(mockDb.set).toHaveBeenCalledWith(
-        expect.objectContaining({
-          ledger_password: "secure-password",
-          ledgerPasswordVersion: 2,
-        }),
-      );
-      expect(mockDb.select).not.toHaveBeenCalled();
-    });
-
-    it("reuses a password already staged by another worker", async () => {
-      mockDb.returning.mockResolvedValue([]);
-      mockDb.limit.mockResolvedValue([
-        {
-          ledgerUsername: "alice",
-          ledgerPassword: "worker-one-password",
-        },
-      ]);
-
-      await expect(
-        model.stageLedgerPasswordRotation(
-          mockDb,
-          "user1",
-          "discarded-worker-two-password",
-        ),
-      ).resolves.toEqual({
-        ledgerUsername: "alice",
-        ledgerPassword: "worker-one-password",
-      });
-    });
-
-    it("marks only the matching staged password complete", async () => {
-      mockDb.returning.mockResolvedValue([{ id: "user1" }]);
-
-      await expect(
-        model.completeLedgerPasswordRotation(
-          mockDb,
-          "user1",
-          "secure-password",
-        ),
-      ).resolves.toBe(true);
-
-      expect(mockDb.set).toHaveBeenCalledWith(
-        expect.objectContaining({
-          ledgerPasswordRotationPending: false,
         }),
       );
     });

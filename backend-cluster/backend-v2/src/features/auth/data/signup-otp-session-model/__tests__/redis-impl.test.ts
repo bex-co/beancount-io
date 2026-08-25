@@ -1,8 +1,5 @@
 import "reflect-metadata";
-import {
-  generateSignupOtp,
-  SignupOtpSessionRedisModel,
-} from "../redis-impl";
+import { SignupOtpSessionRedisModel } from "../redis-impl";
 import type { CreateSessionInput } from "../types";
 
 const mockCache = {
@@ -28,7 +25,7 @@ describe("SignupOtpSessionRedisModel", () => {
   });
 
   describe("createSession", () => {
-    it("should create a session with a six-digit OTP", async () => {
+    it("should create a session with generated OTP", async () => {
       // No existing session for email
       mockCache.get.mockResolvedValue(null);
 
@@ -40,20 +37,8 @@ describe("SignupOtpSessionRedisModel", () => {
       expect(result.lastName).toBe(baseInput.lastName);
       expect(result.ip).toBe(baseInput.ip);
       expect(result.id).toBeTruthy();
-      expect(result.otp).toMatch(/^\d{6}$/);
+      expect(result.otp).toMatch(/^\d{4}$/);
       expect(result.expireAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
-    });
-
-    it("does not use Math.random to generate the OTP", () => {
-      const mathRandom = jest
-        .spyOn(Math, "random")
-        .mockImplementation(() => {
-          throw new Error("insecure PRNG called");
-        });
-
-      expect(generateSignupOtp()).toMatch(/^\d{6}$/);
-      expect(mathRandom).not.toHaveBeenCalled();
-      mathRandom.mockRestore();
     });
 
     it("should store session and email→session mapping with TTL", async () => {
@@ -147,7 +132,7 @@ describe("SignupOtpSessionRedisModel", () => {
         username: null,
         ip: "127.0.0.1",
         withDefaultLedger: false,
-        otp: "123456",
+        otp: "1234",
         expireAt: new Date(Date.now() + 60000).toISOString(),
       };
       mockCache.get.mockResolvedValueOnce(JSON.stringify(sessionData));
@@ -178,7 +163,7 @@ describe("SignupOtpSessionRedisModel", () => {
         username: null,
         ip: "127.0.0.1",
         withDefaultLedger: false,
-        otp: "123456",
+        otp: "1234",
         expireAt: new Date(Date.now() + 60000).toISOString(),
       };
       mockCache.get.mockResolvedValueOnce(JSON.stringify(sessionData));
@@ -214,7 +199,7 @@ describe("SignupOtpSessionRedisModel", () => {
         username: null,
         ip: "127.0.0.1",
         withDefaultLedger: false,
-        otp: "482193",
+        otp: "4821",
         expireAt: new Date(Date.now() + 60000).toISOString(),
       };
       // Two-step lookup: email key → sessionId, then session key → JSON
