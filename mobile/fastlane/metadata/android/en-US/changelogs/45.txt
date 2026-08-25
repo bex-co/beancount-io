@@ -1,0 +1,1 @@
+• Localized store descriptions and screenshots now explain Beancount in more languages.

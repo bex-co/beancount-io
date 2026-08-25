@@ -41,6 +41,7 @@
 - [x] **m35** — Merchants directory in the drawer (9 tasks) ← from `/pm` hand-off 2026-08-19 (Monarch Merchants parity research: Mobbin iOS captures + help.monarch.com + monarchmoney GraphQL clients)
 - [x] **m36** — Merchant view: stats and transaction history (8 tasks) ← same hand-off; sequenced after m35 — navigates from its list, reuses its `queryShell` plumbing
 - [x] **m37** — Recurring merchants: detection and grouping (9 tasks) ← same hand-off; sequenced after m35 + m36 — the directory is its surface, the merchant view hosts its toggle
+- [ ] **m38** — Localize and optimize the App Store product page (15 tasks) ← from `/pm-brainstorm` 2026-08-24; moved from the monorepo root board
 
 ## Merchants hand-off — 2026-08-19
 

@@ -87,15 +87,17 @@ yarn start
 
 Expo will guide you to an iOS simulator, Android emulator, or connected device.
 
-| Command          | Purpose                             |
-| ---------------- | ----------------------------------- |
-| `yarn ios`       | Build and launch the iOS app        |
-| `yarn android`   | Build and launch the Android app    |
-| `yarn lint`      | Run TypeScript and ESLint checks    |
-| `yarn typecheck` | Run strict TypeScript checking      |
-| `yarn test:unit` | Run the unit test suite             |
-| `yarn test`      | Run lint, typecheck, and unit tests |
-| `yarn codegen`   | Regenerate GraphQL types and hooks  |
+| Command                  | Purpose                                   |
+| ------------------------ | ----------------------------------------- |
+| `yarn ios`               | Build and launch the iOS app              |
+| `yarn android`           | Build and launch the Android app          |
+| `yarn lint`              | Run TypeScript and ESLint checks          |
+| `yarn typecheck`         | Run strict TypeScript checking            |
+| `yarn test:unit`         | Run the unit test suite                   |
+| `yarn test`              | Run lint, typecheck, and unit tests       |
+| `yarn codegen`           | Regenerate GraphQL types and hooks        |
+| `yarn metadata:validate` | Validate localized App Store metadata     |
+| `yarn screenshots:build` | Build all localized App Store screenshots |
 
 The mobile client defaults to the hosted Beancount.io API. A signed-out user can tap the server icon on the welcome screen to connect the standard app to a compatible self-hosted Beancount.io deployment; enter its base URL (for example `https://ledger.example.com/`) and use **Test connection** for an advisory compatibility check. HTTPS is required in release builds. Development builds may use `http://localhost` for a local stack.
 
@@ -138,6 +140,11 @@ to embedded authentication.
 ## Languages
 
 English, Simplified Chinese, Bulgarian, Catalan, German, Spanish, Persian, French, Dutch, Portuguese, Russian, Slovak, and Ukrainian.
+
+The app UI supports all 13. Canonical App Store metadata covers the 11 languages
+Apple accepts through 14 regional localizations; Bulgarian and Persian inherit
+the primary English store listing because App Store Connect offers neither
+metadata locale. See the [localized App Store release workflow](./docs/app-store-localization.md).
 
 ## Contributing and support
 

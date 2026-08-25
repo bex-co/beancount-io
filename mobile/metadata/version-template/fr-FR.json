@@ -1,0 +1,8 @@
+{
+  "description": "Votre livre comptable est un fichier texte brut qui vous appartient durablement.\n\nBeancount met une comptabilité rigoureuse en partie double sur votre téléphone sans enfermer votre historique financier dans une base de données propriétaire. Enregistrez un achat en quelques secondes, consultez le fichier Beancount source et conservez chaque modification dans l’historique Git.\n\nUNE VISION CLAIRE\n• Suivez patrimoine net, actifs, passifs, revenus et dépenses\n• Comparez les dépenses par mois, trimestre ou année\n• Analysez trésorerie, bénéfices, budgets, marchands et comptes\n\nVOS COMPTES, VOTRE FORMAT\n• Gardez de vrais fichiers texte en syntaxe Beancount\n• Consultez commits, auteurs et différences ligne par ligne\n• Modifiez directement le livre et emportez vos fichiers à tout moment\n\nPOUR UNE COMPTABILITÉ COMPLÈTE\n• Écritures, ventilations, virements et remboursements\n• Plusieurs livres, devises, placements, crypto et immobilier\n• Capture de reçus, suggestions, recherche et filtres\n\nBeancount est gratuit, sans publicité ni achat intégré.",
+  "keywords": "finances,dépenses,budget,patrimoine,reçus,investissements,actions,crypto,trésorerie,épargne",
+  "promotionalText": "Comprenez toutes vos finances, gardez votre livre en texte brut et suivez chaque changement avec l’historique Git et des rapports complets.",
+  "marketingUrl": "https://beancount.io",
+  "supportUrl": "https://beancount.io",
+  "whatsNew": ""
+}

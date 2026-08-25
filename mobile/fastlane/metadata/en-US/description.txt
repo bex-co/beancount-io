@@ -1,1 +1,0 @@
-Beancount.io records your financial transactions in text files, visualize them into financial statements (income statement, balance sheet, trial balance, etc.), and helps you live a better financial life.

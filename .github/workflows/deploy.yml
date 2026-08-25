@@ -71,6 +71,12 @@ jobs:
       - name: Verify (lint, typecheck, unit)
         run: yarn test
 
+      # The version bump cannot reach EAS auto-submit until a reviewed ASC apply
+      # was pulled back and matched against the exact canonical inputs in Git.
+      - name: Verify App Store listing was staged first
+        if: steps.state.outputs.needs_release == 'true'
+        run: yarn store:staging-check
+
       - name: OTA update
         if: steps.state.outputs.needs_release == 'true'
         env:

@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "primaryStoreLocale": "en-US",
+  "runtimeLocales": [
+    "en",
+    "zh",
+    "bg",
+    "ca",
+    "de",
+    "es",
+    "fa",
+    "fr",
+    "nl",
+    "pt",
+    "ru",
+    "sk",
+    "uk"
+  ],
+  "storeLocales": [
+    "en-US",
+    "zh-Hans",
+    "ca",
+    "de-DE",
+    "es-ES",
+    "es-MX",
+    "fr-FR",
+    "fr-CA",
+    "nl-NL",
+    "pt-BR",
+    "pt-PT",
+    "ru",
+    "sk",
+    "uk"
+  ],
+  "runtimeToStore": {
+    "en": ["en-US"],
+    "zh": ["zh-Hans"],
+    "bg": [],
+    "ca": ["ca"],
+    "de": ["de-DE"],
+    "es": ["es-ES", "es-MX"],
+    "fa": [],
+    "fr": ["fr-FR", "fr-CA"],
+    "nl": ["nl-NL"],
+    "pt": ["pt-BR", "pt-PT"],
+    "ru": ["ru"],
+    "sk": ["sk"],
+    "uk": ["uk"]
+  },
+  "fallbacks": {
+    "bg": {
+      "storeLocale": "en-US",
+      "reason": "App Store Connect does not offer Bulgarian metadata localization."
+    },
+    "fa": {
+      "storeLocale": "en-US",
+      "reason": "App Store Connect does not offer Persian metadata localization."
+    }
+  }
+}

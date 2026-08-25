@@ -1,0 +1,107 @@
+{
+  "schemaVersion": 1,
+  "sourcePolicy": "Tracked captures contain only the deterministic public demo ledger; the renderer overlays shipped UI translations and locale-native captions for every storefront.",
+  "displayTypes": [
+    {
+      "name": "APP_IPHONE_65",
+      "width": 1284,
+      "height": 2778,
+      "layout": "phone"
+    },
+    {
+      "name": "APP_IPAD_PRO_3GEN_129",
+      "width": 2064,
+      "height": 2752,
+      "layout": "tablet"
+    }
+  ],
+  "stories": [
+    {
+      "order": 1,
+      "id": "overview",
+      "source": "docs/marketing-showcase/webp/01-home.webp"
+    },
+    {
+      "order": 2,
+      "id": "ownership",
+      "source": "docs/marketing-showcase/webp/21-file-editor.webp"
+    },
+    {
+      "order": 3,
+      "id": "reports",
+      "source": "docs/marketing-showcase/webp/04-reports.webp"
+    }
+  ],
+  "captions": {
+    "en-US": [
+      "Your whole financial life, clear",
+      "Your ledger. Plain text. Git history.",
+      "Reports that explain where money moves"
+    ],
+    "zh-Hans": [
+      "看清你的全部财务",
+      "纯文本账本、Git 历史，真正属于你",
+      "用报表看懂资金流向"
+    ],
+    "ca": [
+      "Tota la teva vida financera, clara",
+      "El teu llibre. Text pla. Historial Git.",
+      "Informes que expliquen on van els diners"
+    ],
+    "de-DE": [
+      "Deine Finanzen auf einen Blick",
+      "Dein Hauptbuch. Klartext. Git-Verlauf.",
+      "Berichte zeigen, wohin dein Geld fließt"
+    ],
+    "es-ES": [
+      "Toda tu vida financiera, clara",
+      "Tu libro. Texto plano. Historial Git.",
+      "Informes que explican adónde va tu dinero"
+    ],
+    "es-MX": [
+      "Tus finanzas completas, claras",
+      "Tu libro. Texto plano. Historial Git.",
+      "Reportes que muestran a dónde va tu dinero"
+    ],
+    "fr-FR": [
+      "Toute votre vie financière, en clair",
+      "Votre livre. Texte brut. Historique Git.",
+      "Des rapports qui expliquent vos flux d’argent"
+    ],
+    "fr-CA": [
+      "Vos finances en un coup d’œil",
+      "Votre livre. Texte brut. Historique Git.",
+      "Des rapports pour suivre où va votre argent"
+    ],
+    "nl-NL": [
+      "Al je financiën helder in beeld",
+      "Jouw grootboek. Platte tekst. Git-historie.",
+      "Rapporten die je geldstromen verklaren"
+    ],
+    "pt-BR": [
+      "Toda a sua vida financeira, clara",
+      "Seu livro-razão. Texto puro. Histórico Git.",
+      "Relatórios que mostram para onde o dinheiro vai"
+    ],
+    "pt-PT": [
+      "Toda a sua vida financeira, clara",
+      "O seu livro-razão. Texto simples. Histórico Git.",
+      "Relatórios que mostram para onde vai o dinheiro"
+    ],
+    "ru": [
+      "Все ваши финансы перед глазами",
+      "Ваша книга. Обычный текст. История Git.",
+      "Отчёты показывают движение денег"
+    ],
+    "sk": [
+      "Všetky vaše financie prehľadne",
+      "Vaša kniha. Čistý text. História Git.",
+      "Prehľady ukážu, kam smerujú peniaze"
+    ],
+    "uk": [
+      "Усі ваші фінанси як на долоні",
+      "Ваша книга. Простий текст. Історія Git.",
+      "Звіти показують рух ваших грошей"
+    ]
+  }
+}

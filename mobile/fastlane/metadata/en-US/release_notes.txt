@@ -1,3 +1,0 @@
-• Transaction details redesigned for clearer postings and merchant context
-• Home account charts: See all sits on the tab row beside the labels
-• Pull-to-refresh uses neutral chrome that fits light and dark themes

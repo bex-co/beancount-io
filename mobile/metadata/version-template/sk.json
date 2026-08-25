@@ -1,0 +1,8 @@
+{
+  "description": "Vaša účtovná kniha je obyčajný textový súbor, ktorý zostane navždy váš.\n\nBeancount prináša spoľahlivé podvojné účtovníctvo do telefónu bez uzamknutia finančnej histórie v uzavretej databáze. Nákup zaznamenáte za pár sekúnd, otvoríte pôvodný súbor Beancount a každú zmenu uchováte v histórii Git.\n\nJASNÝ PREHĽAD O FINANCIÁCH\n• Sledujte čisté imanie, aktíva, záväzky, príjmy a výdavky\n• Porovnávajte výdavky podľa mesiacov, štvrťrokov alebo rokov\n• Analyzujte peňažný tok, zisk, rozpočty, obchodníkov a účty\n\nVAŠE KNIHY, VÁŠ FORMÁT\n• Uchovajte si skutočné textové súbory v syntaxi Beancount\n• Prezerajte commity, autorov a zmeny riadok po riadku\n• Upravujte zdrojový súbor a vezmite si údaje kedykoľvek so sebou\n\nPRE SKUTOČNÉ ÚČTOVNÍCTVO\n• Úplné zápisy, rozdelenia, prevody a náhrady\n• Viac kníh, meny, investície, krypto a nehnuteľnosti\n• Snímanie účteniek, návrhy, vyhľadávanie a filtre\n\nBeancount je bezplatný, bez reklám a nákupov v aplikácii.",
+  "keywords": "financie,výdavky,rozpočet,majetok,účtenky,investície,akcie,krypto,peňažný tok",
+  "promotionalText": "Získajte prehľad o financiách, zachovajte knihu v čistom texte a pochopte každú zmenu vďaka histórii Git a podrobným prehľadom.",
+  "marketingUrl": "https://beancount.io",
+  "supportUrl": "https://beancount.io",
+  "whatsNew": ""
+}

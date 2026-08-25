@@ -19,6 +19,10 @@
     "codegen": "graphql-codegen",
     "bump": "npx tsx ./src/scripts/bump-version.ts",
     "bump-dummy": "npx tsx ./src/scripts/bump-version-dummy.ts",
+    "metadata:validate": "npx tsx ./src/scripts/validate-store-metadata.ts && asc metadata validate --dir ./metadata --output table",
+    "store:staging-check": "npx tsx ./src/scripts/check-store-staging.ts",
+    "screenshots:build": "./scripts/build-screenshots.sh",
+    "screenshots:validate": "npx tsx ./src/scripts/validate-screenshots.ts",
     "deploy": "bash ./deploy.sh"
   },
   "dependencies": {
@@ -119,5 +123,5 @@
     "typescript": "~6.0.3"
   },
   "packageManager": "yarn@1.22.22",
-  "version": "1.20260821.44"
+  "version": "1.20260824.45"
 }

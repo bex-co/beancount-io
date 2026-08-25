@@ -187,7 +187,10 @@ only uploads the binary via `ascAppId`. Treat `metadata/` as the single source o
 
 ```
 metadata/
+  store-locales.json               runtime/store mapping and bg/fa fallback
+  screenshots.json                 locale/device/story/caption manifest
   app-info/<locale>.json          name, subtitle, privacyPolicyUrl
+  version-template/<locale>.json  stable copy; whatsNew is always blanked
   version/<version>/<locale>.json description, keywords, promotionalText,
                                   supportUrl, marketingUrl, whatsNew
   screenshots/<locale>/<displayType>/NN-name.png
@@ -196,22 +199,30 @@ metadata/
 Screenshots are **not** handled by `asc metadata`; they upload separately (see below).
 Filename order is display order, and Apple surfaces the first three in search results.
 
-Locales: `en-US`, `zh-Hans`. Apple's limits — name 30, subtitle 30, keywords 100,
-promotional text 170, description 4000 — are counted in **code points**, so CJK
-characters cost 1 each.
+Store localizations: `en-US`, `zh-Hans`, `ca`, `de-DE`, `es-ES`, `es-MX`,
+`fr-FR`, `fr-CA`, `nl-NL`, `pt-BR`, `pt-PT`, `ru`, `sk`, and `uk`. The app also
+ships Bulgarian and Persian, but Apple offers no matching metadata locales; both
+explicitly inherit primary `en-US` rather than being falsely mapped. Apple's
+limits — name 30, subtitle 30, keywords 100, promotional text 170, description
+4000 — are counted in **code points**, so CJK characters cost 1 each.
 
-| Command                                                                            | What it does                        |
-| ---------------------------------------------------------------------------------- | ----------------------------------- |
-| `asc metadata validate --dir ./metadata`                                           | Offline lint; run before every push |
-| `asc metadata pull --app 1527950512 --version <v> --dir ./metadata`                | Overwrite local files from live ASC |
-| `asc metadata plan --app 1527950512 --version <v> --dir ./metadata --output table` | Dry-run diff vs. live               |
-| `asc metadata approve` → `asc metadata push`                                       | Apply the approved plan             |
+| Command                                                                             | What it does                                              |
+| ----------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `yarn metadata:validate`                                                            | Project checks plus upstream ASC lint                     |
+| `asc metadata pull --app 1527950512 --version <v> --dir ./tmp/asc-baseline --force` | Read-only baseline into ignored state                     |
+| `./scripts/app-store-release.sh plan <v>`                                           | Metadata plans plus visual screenshot review              |
+| `./scripts/app-store-release.sh approve <v> <v>`                                    | Record reviewed local approvals                           |
+| `./scripts/app-store-release.sh apply-metadata <v> <v>`                             | Confirmed metadata apply; creates remote locale resources |
+| `./scripts/app-store-release.sh plan-screenshots <v>`                               | Read-only replacement/order plan for every screenshot set |
+| `./scripts/app-store-release.sh apply-screenshots <v> <v>`                          | Confirmed screenshot apply after final plan review        |
 
 Only **promotional text** is editable while a version is live. `name`, `subtitle`,
 `keywords`, `description`, `marketingUrl`, `supportUrl`, and the age-rating
 declaration all require a version in `PREPARE_FOR_SUBMISSION`, so they ship with a
-release. Cut the release first (`yarn bump`), then copy
-`metadata/version/<old>/` to the new version directory and push.
+release. Run `yarn bump` locally first; it scaffolds every canonical locale from
+`metadata/version-template/` with blank `whatsNew` fields. Fill every localized
+release note and stage the listing before the bump reaches `main` and triggers
+EAS auto-submit.
 
 Keywords must not repeat words already in the app name or subtitle — Apple indexes
 those separately — and drop the spaces after commas; they count against the 100.
@@ -223,29 +234,25 @@ is gitignored at the repo root. Keep it that way; this repo is public.
 
 Apple currently accepts only two display types — everything else is derived from them:
 
-| Display type            | Dimensions             | Source                                      |
-| ----------------------- | ---------------------- | ------------------------------------------- |
-| `APP_IPHONE_65`         | 1284×2778 or 1242×2688 | `docs/marketing-showcase/webp/` (1206×2622) |
-| `APP_IPAD_PRO_3GEN_129` | 2048×2732 or 2064×2752 | needs an iPad capture run                   |
+| Display type            | Generated size | Source                                                |
+| ----------------------- | -------------- | ----------------------------------------------------- |
+| `APP_IPHONE_65`         | 1284×2778      | deterministic public demo captures                    |
+| `APP_IPAD_PRO_3GEN_129` | 2064×2752      | deterministic public demo captures on a tablet canvas |
 
-No current simulator renders 1284×2778 natively, so resizing is unavoidable regardless of
-capture device. Two scripts own this; the generated PNGs are gitignored, so rebuild rather
-than expecting them in a fresh clone:
+The generated PNGs are gitignored, so rebuild rather than expecting them in a
+fresh clone:
 
 ```zsh
-./scripts/build-screenshots.sh        # webp -> 1284x2778 PNG, alpha stripped, ordered
-SET_ID=<set> DIR=metadata/screenshots/en-US/APP_IPHONE_65 \
-  node scripts/upload-screenshots.js  # reserve -> PUT -> commit -> pin order
+yarn screenshots:build
+yarn screenshots:validate
+./scripts/app-store-release.sh plan <version>
 ```
 
-Strip alpha — Apple rejects screenshots with a transparency channel. Uploads only work
-against a version in `PREPARE_FOR_SUBMISSION`; a live version returns _"An attribute value
-is not acceptable for the current resource state"_. Locales with no screenshot set inherit
-the primary locale's, so zh-Hans needs none.
-
-iPad (`APP_IPAD_PRO_3GEN_129`) still carries 2020 captures. `app.json` sets
-`supportsTablet: true`, so iPad visitors see them. Refreshing needs an iPad simulator run
-with a signed-in account.
+The build produces 84 opaque assets: 14 locales × two device types × the three
+ordered stories in `metadata/screenshots.json`. Uploads only work against
+`PREPARE_FOR_SUBMISSION`; all planning, review, replacement, and ordering use
+upstream `asc screenshots` commands. See `docs/app-store-localization.md` for the
+complete pre-auto-submit choreography.
 
 ## Roadmap board (`.pm/`)
 
@@ -259,7 +266,7 @@ Conventions live canonically in `.claude/commands/pm.md`. Product pillars are in
 ## CI / Deploy
 
 - CI (`../.github/workflows/ci.yml`) runs `yarn format:check`, `yarn lint`, `yarn typecheck`, and `yarn test:unit` on push/PR to `main`.
-- Release (`../.github/workflows/deploy.yml`, workflow name `Release (mobile)`) runs on every `mobile/**` push to `main` and verifies checks, but deploys only if `package.json`'s version has no `mobile-v<version>` git tag yet: it sends the OTA update and runs the EAS build/submit, then pushes the tag and a GitHub Release. A push without a version bump deploys nothing — use `yarn bump` to cut a release; a failed release retries automatically on the next push because the tag is only created after success.
+- Release (`../.github/workflows/deploy.yml`, workflow name `Release (mobile)`) runs on every `mobile/**` push to `main` and verifies checks, but deploys only if `package.json`'s version has no `mobile-v<version>` git tag yet. A new version must also carry `metadata/releases/<version>.json`, written by the ASC parity check and bound to the exact listing inputs; a missing or stale receipt blocks EAS before auto-submit. On success it sends the OTA update and runs the EAS build/submit, then pushes the tag and a GitHub Release. A push without a version bump deploys nothing — use `yarn bump` to cut a release; a failed release retries automatically on the next push because the tag is only created after success.
 
 ## Repo
 
