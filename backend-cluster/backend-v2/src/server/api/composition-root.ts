@@ -43,6 +43,7 @@ import {
   API_KEY_V1_ROUTES,
 } from "@/features/apikeys/api/api-key-rest";
 import { setSitemapHandler } from "@/features/sitemap/api/sitemap-handler";
+import { setWellKnownRoutes } from "@/features/well-known/api/well-known-route";
 import { setMcpRoute, setupAiAgentRoutes } from "@/features/ai-agent/api";
 import { setGitProxyHandler } from "@/features/gitea/api/git-proxy-handler";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
@@ -137,6 +138,11 @@ export const REST_FRAGMENTS: readonly RestFragment[] = [
     gate: "outside",
     register: (router, { layers, config }) =>
       setOidcRoutes(router, layers, config),
+  },
+  {
+    feature: "well-known",
+    gate: "outside",
+    register: (router, { config }) => setWellKnownRoutes(router, config),
   },
   {
     feature: "healthz",

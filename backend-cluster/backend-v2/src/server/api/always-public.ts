@@ -70,6 +70,16 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
     reason:
       "RFC 9728 resource-specific discovery metadata; clients need it before they can present a credential to the v1 API.",
   },
+  {
+    opId: "REST GET /.well-known/security.txt",
+    reason:
+      "RFC 9116 security contact metadata; vulnerability reporters and automated security tooling must be able to read it without an application credential.",
+  },
+  {
+    opId: "REST GET /.well-known/mcp.json",
+    reason:
+      "Public MCP discovery metadata; a client must be able to learn the transport, endpoint, tools, and OAuth URLs before it has a credential.",
+  },
 
   // --- Probes and operator surfaces -------------------------------------
   {
