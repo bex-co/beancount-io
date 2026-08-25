@@ -1,6 +1,6 @@
-# w3 — Mobile budget parity & the agent-facing MCP endpoint (worker3)
+# w3 — General adoption worker queue (worker3)
 
-**Worker:** worker3 — third workstream. It opened on budget tracking, bringing dashboard features to the mobile glance surface (m1–m3, from the 2026-08-09 budget-on-mobile PM spec; dashboard reference: `dashboard/src/features/ledger-data/budget/` — those three need zero backend changes, because every GraphQL operation they use already exists in the mobile schema). Widened at m4 to the backend's MCP endpoint: the surface a coding agent connects to, and the most direct expression of the A1 pillar this board exists to serve.
+**Worker:** worker3 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty. Existing milestones retain their historical order and source.
 
 ## Milestones
 

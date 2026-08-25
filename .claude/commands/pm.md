@@ -22,7 +22,7 @@ This board exists to grow **adoption of Beancount.io in the open-source and agen
 
 | Level | Path | Meaning | Effort |
 | --- | --- | --- | --- |
-| Workstream | `wN/` (`w1`, `w2`, `w3`, …) | a themed track / "worker" roadmap; `README.md` + inbox notes | — |
+| Workstream | `wN/` (`w1`, `w2`, `w3`, …) | a general-purpose worker queue; `README.md` + inbox notes | — |
 | Inbox note | `wN/NNN.md` (`w1/005.md`) | one idea or a **sub-hour** unit of work, plain markdown | ≤ ~1h |
 | Milestone | `wN/mN/` (`m1`, `m2`, …) | a shippable chunk: `README.md` + task files | **> ~1h**, multiple tasks |
 | Task | `wN/mN/tNNN.md` | a single unit | tens of minutes |
@@ -31,6 +31,7 @@ This board exists to grow **adoption of Beancount.io in the open-source and agen
 
 - **The board is public.** `.pm/` is committed to a public repo. Write every board file for public consumption: no secrets or credentials, no user data, and no references to private repositories or their contents. Assume the community reads the board — it is itself an adoption surface.
 - **Respect the anti-goals.** Read `.pm/DO_NOT_DO.md` before proposing or materializing work. Do not create milestones/tasks that conflict with it.
+- **Workers are generalists.** A workstream is a worker queue, not a permanent topic, package, feature, or pillar lane. Keep workstream titles and provenance generic; put topic-specific scope in milestones, tasks, and inbox notes. Route new work by priority, dependencies, and available capacity, and allow one workstream to contain unrelated topics across A1/A2/A3.
 - **Sizing rule.** A milestone must be **> ~1 hour of work across more than one task**. If a chunk is ≤ ~1h (tens of minutes, a task or two), do **NOT** create an `mN/` directory — record it as a loose inbox note `wN/NNN.md`. Tasks take tens of minutes; milestones take hours.
 - **IDs must match the path.** A task's `id: wN/mN/tNNN` frontmatter must equal the directory it lives in. Never create a milestone dir whose path disagrees with the IDs inside it; if you find drift, flag and repair it, don't copy it.
 - **Keep status in sync** across all three places it lives: the workstream `README.md` milestone checkbox, the milestone `README.md` `**Status:**` line + the `— DONE` marker in the task table, and each task's `status:` frontmatter.
@@ -62,7 +63,7 @@ Touch no files.
 
 ### `new workstream <title>`
 
-Create the next free `wN/` with `README.md` from the workstream template below.
+Create the next free `wN/` with `README.md` from the workstream template below. The title must describe a generic worker queue, not a topic specialty.
 
 ### `add <wN> <idea…>`
 
@@ -94,9 +95,9 @@ Show the intended moves before mutating if the user passed `DRY_RUN=1`.
 ### Workstream `README.md`
 
 ```markdown
-# wN — <roadmap title> (<worker>)
+# wN — <generic worker-queue title> (<worker>)
 
-**Worker:** <worker> <one-line provenance / ordering rationale>
+**Worker:** <worker> — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty.
 
 ## Milestones
 

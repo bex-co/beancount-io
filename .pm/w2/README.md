@@ -1,6 +1,6 @@
-# w2 — Canonical beancount agent-skill suite (worker2)
+# w2 — General adoption worker queue (worker2)
 
-**Worker:** worker2 — second workstream; builds `skills/` into the canonical beancount skill suite per the July 2026 skills-market research (accounting-skills lane is open, verification rails are the moat, job-first naming drives distribution).
+**Worker:** worker2 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty. Existing milestones retain their historical order and source.
 
 ## Milestones
 

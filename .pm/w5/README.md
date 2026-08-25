@@ -1,6 +1,6 @@
-# w5 — Ledger dashboard polish & first-run experience (worker1)
+# w5 — General adoption worker queue (worker1)
 
-**Worker:** worker1 — fifth workstream; from the 2026-08-17 `/pm-brainstorm` designer+TPM polish review of https://beancount.io/ledger, the login-gated dashboard home whose ledger list lives entirely in the left sidebar (`dashboard/src/features/ledger-list/`).
+**Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty. Existing milestones retain their historical order and source.
 
 ## Milestones
 

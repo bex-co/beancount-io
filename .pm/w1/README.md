@@ -1,6 +1,6 @@
-# w1 — Ask Beancount.io chat experience (worker1)
+# w1 — General adoption worker queue (worker1)
 
-**Worker:** worker1 — first workstream; the Ask AI chat is the most visible agent surface in the dashboard, so it leads the board.
+**Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty. Existing milestones retain their historical order and source.
 
 ## Milestones
 
