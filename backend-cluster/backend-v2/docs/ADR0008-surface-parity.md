@@ -24,18 +24,18 @@ The reasons have been doing a second job they were not meant for: standing in fo
 | `public`       | 2       | 0      | 0       |
 | **Total**      | **143** | **9**  | **24**  |
 
-The gap is 134 verbs on MCP and 119 on REST. Those numbers look forbidding, and one class inside them is doing most of the intimidating.
+The gap is 134 verbs on MCP and 119 on REST — 95 and 80 once D4 takes the out-of-scope verbs off both. Those numbers look forbidding, and one class inside them is doing most of the intimidating.
 
 ### The `session-only` wall
 
 34 of the 143 — a quarter of the table — are `session-only`. That class is not "nobody got to it yet." It is ADR 0006 D3's deliberate statement that **no scope in the vocabulary can unlock these**: account lifecycle, billing, credential minting. The vocabulary is three ledger scopes wide precisely so that a token granted "manage my ledger" cannot also delete the account.
 
-So these 34 are not a parity backlog. Reaching them from MCP or REST would mean widening the scope vocabulary, which is ADR 0006 D3's decision to re-open, not this one's. **Parity's denominator is 109, not 143**, and the remaining 34 are a separate question that should be asked on its own terms rather than smuggled in as a parity chore.
+So these 34 are not a parity backlog. Reaching them from MCP or REST would mean widening the scope vocabulary, which is ADR 0006 D3's decision to re-open, not this one's. They are the largest of three exclusions that D4 names; **parity's denominator is 104, not 143**.
 
 ## Decision Drivers
 
-- **The goal is a verb reachable from any of the three clients**, not three hand-maintained implementations. Whatever gets 109 verbs onto MCP has to be mostly mechanical or it will not happen.
-- **Tool count is a real constraint, and it is a constraint on _tools_.** Agent selection accuracy degrades as a flat tool list grows. That is why the previous framing treated 52 read verbs as unreachable — and it is why the answer is to stop putting reads in the tool list at all.
+- **The goal is a verb reachable from any of the three clients**, not three hand-maintained implementations. Whatever gets 95 verbs onto MCP has to be mostly mechanical or it will not happen.
+- **Tool count is a real constraint, and it is a constraint on _tools_.** Agent selection accuracy degrades as a flat tool list grows. That is why the previous framing treated 50 read verbs as unreachable — and it is why the answer is to stop putting reads in the tool list at all.
 - **An exemption should expire.** A reason that is true today and unexamined for a year is how the current table accumulated three false statements (below).
 - **Structural limits are worth naming precisely**, so that everything else is understood to be work rather than principle.
 
@@ -52,11 +52,11 @@ Anything that is neither is a decision waiting to be made, not an exemption. The
 
 ### D2 — MCP reads become Resources, not Tools
 
-This is the unlock, and it is why the 52-read gap was never really about effort.
+This is the unlock, and it is why the 50-read gap was never really about effort.
 
-MCP has three server primitives, and the previous framing used one. [Resources](https://modelcontextprotocol.io/specification/2025-06-18/server/resources) are application-driven data addressed by URI: `resources/list` and `resources/templates/list` both **paginate**, templates take RFC 6570 parameters, and — decisively — **a resource does not compete with tools for the model's selection attention.** The 52-read tool-count objection simply does not apply to them.
+MCP has three server primitives, and the previous framing used one. [Resources](https://modelcontextprotocol.io/specification/2025-06-18/server/resources) are application-driven data addressed by URI: `resources/list` and `resources/templates/list` both **paginate**, templates take RFC 6570 parameters, and — decisively — **a resource does not compete with tools for the model's selection attention.** The 50-read tool-count objection simply does not apply to them.
 
-So the 52 `read` verbs become resource templates:
+So the 50 in-scope `read` verbs still missing from MCP become resource templates:
 
 ```
 beancount://{owner}/{name}/income-statement{?from,to,interval}
@@ -71,19 +71,46 @@ This also retires the largest exemption category in the table. "Already reachabl
 
 ### D3 — MCP writes and admin stay tools, grouped by shape
 
-46 verbs (`write` 22 + `admin` 24) belong in the tool list, and 46 tools would be exactly the problem D2 avoids. They group, and the table already shows the pattern: `editLedgerFiles` is one tool covering three verbs (`create` / `update` / `delete`) through an `operation` discriminator.
+43 in-scope verbs (`write` and `admin`) belong in the tool list, and 43 tools would be exactly the problem D2 avoids. They group, and the table already shows the pattern: `editLedgerFiles` is one tool covering three verbs (`create` / `update` / `delete`) through an `operation` discriminator.
 
 Grouping is legitimate when the members share a shape and an authorization class, and illegitimate when it exists only to flatter the tool count — a tool whose `operation` enum spans unrelated domains is one tool in the listing and several in the model's head. Each group needs its family named in the table so the grouping is reviewable.
 
-### D4 — `session-only` is the boundary, and it is 34 verbs
+### D4 — Parity's scope is the customer-facing surface, and it is 104 verbs
 
-Named here so that no future reader mistakes it for undone work. These reach neither MCP nor REST because ADR 0006 D3 gave them no scope, deliberately. They carry `structural:` under D1.
+"Every verb on every surface" is the wrong target because not every verb is a thing a customer does. The scope is **an operation a ledger owner — or an agent acting for them — performs on their own accounting data.** Everything else is excluded by name, so that the remainder is understood to be work.
 
-Changing that is a scope-vocabulary decision — a fourth scope, or a class of ops requiring step-up authentication — and it belongs in its own ADR against ADR 0006 D3. Nothing in this record should be read as proposing it.
+| Excluded                  | Count | Why                                                                                                                                                                                                                            |
+| ------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `session-only`            | 34    | Account lifecycle, billing, credential minting. ADR 0006 D3 deliberately gave these no scope, so that a token granted "manage my ledger" cannot also delete the account. Not accounting work, and no credential can reach them |
+| Browser-ceremony verbs    | 3     | The operation **is** a hosted widget: `createPlaidLinkToken`, `createPlaidUpdateModeLinkToken`, `exchangePlaidPublicToken`. There is no API to expose — the customer's action happens inside Plaid Link                        |
+| Screen-shaped projections | 2     | `Query.accountHierarchy`, `Query.homeCharts` — a specific dashboard's layout. The customer-facing thing is the underlying data, which is in scope on its own                                                                   |
 
-### D5 — REST parity is mechanical, and its bar is different
+**143 − 34 − 3 − 2 = 104.** Of those, 9 are on MCP and 24 on REST. None of the 5 newly-excluded verbs is on either surface today, so this scoping does not retire any existing work.
 
-85 achievable verbs are missing from REST (119 minus the 34 structural). REST needs no new primitive: `v1Route({...})` plus a line in `v1/index.ts` mounts, validates, and documents an endpoint from one declaration, and the OpenAPI snapshot makes each addition a reviewable diff.
+Two things this rules out. It is not a size argument — 104 is most of the table, and the exclusions are five verbs plus a class that was already structural. And it is not a permanent judgement about Plaid or dashboards: it names _ceremonies_ and _projections_, so a Plaid operation that is neither is in scope, which is exactly what D4a is about.
+
+#### D4a — "browser ceremony" means the ceremony, not the domain
+
+`plaidBinding` reads _"Bank binding runs through the Plaid Link browser widget, which an agent cannot drive."_ True — of three verbs. It is applied to **twelve**, and the other Plaid verbs are ordinary operations on a bank that is already linked:
+
+```
+getPlaidItems · getPlaidItem · getPlaidAccounts · getPlaidAccountsForLedger
+unlinkPlaidItem · reconcilePlaidAccounts · updatePlaidAccountMapping
+updatePlaidAccountCurrency · refreshPlaidItemStatus
+getUnsyncedPlaidTransactions · suggestPlaidTransactionCategories
+suggestPlaidAccountMapping · syncPlaidTransactions
+submitPlaidTransactionsToLedger · deletePlaidTransactions
+```
+
+Nothing about those needs a browser. And the last three are among the most customer-facing operations in the product: _import my bank transactions into my ledger_ is close to the whole job. An agent that can read and edit a ledger but cannot pull the transactions into it is doing the tedious half.
+
+This is the same failure as the three defects in the table, one level up again: **a reason that is true for part of a family, applied to the family.** The rule that follows — an exemption may only cover the rows its argument actually reaches — is what D7's checks are the mechanical half of.
+
+### D5 — REST parity is mechanical, needs no new primitive, and ports alongside MCP
+
+80 in-scope verbs are missing from REST (104 minus the 24 already there). REST needs no new primitive: `v1Route({...})` plus a line in `v1/index.ts` mounts, validates, and documents an endpoint from one declaration, and the OpenAPI snapshot makes each addition a reviewable diff. That asymmetry is worth stating — **MCP needs a primitive proven before it can port; REST does not** — because it is the only reason the two are not symmetric, and it does not imply REST comes second.
+
+The two surfaces are missing largely the _same verbs_: 30 of REST's 80 are ledger reads, and those are precisely the reads MCP wants as resource templates. So they port together, per family, over one service call. Porting them separately would mean two passes over each family and two adapters free to drift, which is exactly what ADR 0006 D1's one-verb-one-behaviour rule exists to prevent.
 
 ADR 0006 D7's "small on purpose" stays true as a _sequencing_ rule, not a cap: the bar is that a caller who has never read the schema can do the thing with curl in ten minutes, which orders the work — the verbs a curl user reaches for first go first — without excusing the tail.
 
@@ -92,7 +119,7 @@ ADR 0006 D7's "small on purpose" stays true as a _sequencing_ rule, not a cap: t
 `surface-parity.test.ts` keeps its current checks and gains one. A checked-in count per surface, asserted as a ceiling:
 
 ```ts
-const MAX_DEFERRED = { gql: 0, rest: 85, mcp: 100 };
+const MAX_DEFERRED = { gql: 0, rest: 80, mcp: 95 };
 ```
 
 Adding a verb without its REST and MCP twins fails CI until the number is _raised in the same diff_ — which is the point: raising it is a visible, arguable act, and lowering it is the work. `structural:` entries are counted separately and are not expected to move.
@@ -106,24 +133,44 @@ Both catch defects found in the table today, and both are conditions on the row 
 
 ## Defects found (2026-08-25)
 
-All three are one-line fixes. They matter because each was true when written and stopped being true with nothing to notice — the failure mode D1 and D7 exist to catch.
+The first three are one-line fixes; the fourth re-opens fifteen verbs. They matter because each was true when written and stopped being true with nothing to notice — the failure mode D1 and D7 exist to catch.
 
-| Where                                      | Problem                                                                                                                                                                                                         | Fix                                             |
-| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
-| `Mutation.bulkEntries` (`write`)           | Excused as "already reachable through `runBqlQuery`", which is read-only and cannot append a directive. The category was written for reads — 29 of the 30 rows carrying it are reads — and applied to one write | Point at `editLedgerFiles`, which does reach it |
-| `Query.listLedgers` (`read`)               | "Not agent-shaped" was true only because ADR 0007 D3 pinned each credential to one ledger. Under ADR 0007 D11 it inverts into the first call an unpinned agent must make                                        | Cite the dependency; reverse when D11 lands     |
-| `M.notAgentShaped` (the category, 59 rows) | Argues against degrading "selection accuracy for **the four** that matter". There are seven tools — ADR 0006 D6 added the API-key ones later                                                                    | Say seven, or stop counting in prose            |
+| Where                                      | Problem                                                                                                                                                                                                         | Fix                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------- |
+| `Mutation.bulkEntries` (`write`)           | Excused as "already reachable through `runBqlQuery`", which is read-only and cannot append a directive. The category was written for reads — 29 of the 30 rows carrying it are reads — and applied to one write | Point at `editLedgerFiles`, which does reach it                                                                                                                                                                                                                                                                                                                          |
+| `Query.listLedgers` (`read`)               | "Not agent-shaped" was true only because ADR 0007 D3 pinned each credential to one ledger. Under ADR 0007 D11 it inverts into the first call an unpinned agent must make                                        | Cite the dependency; reverse when D11 lands                                                                                                                                                                                                                                                                                                                              |
+| `M.plaidBinding` (the category, 12 rows)   | mixed                                                                                                                                                                                                           | Argues that bank binding runs through a browser widget an agent cannot drive — true of exactly 3 verbs. The other 9 it covers, plus 6 more Plaid verbs, are ordinary operations on an already-linked bank, including `syncPlaidTransactions` and `submitPlaidTransactionsToLedger` — importing bank transactions into a ledger, which is close to the whole customer job | Narrow the category to the three Link-ceremony verbs; the rest are in scope per D4a |
+| `M.notAgentShaped` (the category, 59 rows) | Argues against degrading "selection accuracy for **the four** that matter". There are seven tools — ADR 0006 D6 added the API-key ones later                                                                    | Say seven, or stop counting in prose                                                                                                                                                                                                                                                                                                                                     |
 
-The third is the same failure one level up: a category written once and reused 59 times is what makes the closed set valuable, and also what lets a number in its prose go stale in 59 places at once.
+The last two are the same failure one level up: a category written once and reused 59 times is what makes the closed set valuable, and also what lets a number in its prose go stale in 59 places at once.
 
 ## Sequencing
 
 1. **Fix the three defects** and split every exemption into `structural:` / `deferred:` (D1). Until that split exists, no count means anything.
-2. **Land the MCP resource layer** (D2) — capability declaration, `resources/templates/list`, one template to prove the shape end to end. This is the highest-leverage step: it converts 52 verbs from "argued impossible" to "mechanical".
-3. **Port the reads** onto templates, in the order a real agent session needs them.
-4. **Group the writes** (D3), naming each family in the table.
-5. **REST tail** (D5), ordered by the ten-minute-curl bar.
-6. **Turn on the ratchet** (D6) once the counts are honest, so step 3–5 can only move it down.
+2. **Land the MCP resource layer** (D2) — capability declaration, `resources/templates/list`, one template to prove the shape end to end. This is the highest-leverage step: it converts 50 verbs from "argued impossible" to "mechanical".
+3. **Turn on the ratchet** (D6) as soon as the counts are honest — before the porting, not after it, since its whole purpose is to keep the steps below from adding new gaps while closing old ones.
+4. **Port by verb family, both surfaces in the same pass** — REST route and resource template over one service call. Not REST-then-MCP: the two need the same service, the same authorization test, and the same equivalence test, so serializing them means opening every family twice and inviting the two adapters to drift.
+5. **Group the writes** (D3), naming each family in the table.
+6. **The families where the surface question is real** — Plaid's eleven `admin` verbs are the clear case: `plaidBinding` excuses them from MCP because an agent cannot drive a browser widget, which says nothing about whether a REST caller can. Each such family needs its own answer, not the MCP one reused.
+
+Order the families in step 4 by the ten-minute-curl bar and by what an agent needs before it can write a correct transaction — those turn out to be the same list.
+
+### The families, and where each stands
+
+Every one of the 80 in-scope verbs missing from REST is **also** missing from MCP, which is the evidence behind step 4 rather than an argument for it — porting them separately would mean opening each family twice.
+
+| Family                     | Verbs | Milestone | Note                                                                                                                                              |
+| -------------------------- | ----- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Ledger vocabulary reads    | 11    | `w3/m6`   | Uniform, no arguments — where the porting pattern gets proven cheaply                                                                             |
+| Report and journal reads   | 16    | `w3/m7`   | One design question: parameter and bounding shape for the family                                                                                  |
+| Bank import (Plaid)        | 15    | `w3/m8`   | The D4a family. Needs an authorization decision before a port                                                                                     |
+| Files and documents        | 10    | —         | Asset upload/download URLs raise a ticket-vs-header question like the archive route's                                                             |
+| Ledger lifecycle and misc  | 10    | —         | `createLedger` / `deleteLedger` / star, plus `health` and `featureFlags` (`public`)                                                               |
+| Collaboration and keys     | 8     | —         | All `admin`. Whether an agent should add collaborators is the same shape of question as m8/t001                                                   |
+| Git and version history    | 7     | —         | Commits, pull requests. Reads are easy; the PR verbs need a decision                                                                              |
+| Entry writing and receipts | 3     | —         | `addEntries`, `insertReceiptTransaction`, `suggestTransactionCategories` — overlap `editLedgerFiles`; decide whether they are twins or duplicates |
+
+The four unplanned families are deliberately not milestones yet. Each carries a decision that m6–m8 will inform — what a family port actually costs, and how the two surfaces should diverge when they must — and materializing 32 speculative task files now would be recording guesses as plans.
 
 ## Alternatives Considered
 
@@ -147,7 +194,7 @@ The honest long answer: if every verb declared its shape once, parity would be s
 
 ### Positive
 
-- The 52-read gap stops being a debate and becomes a port, because Resources are the primitive it always needed.
+- The 50-read gap stops being a debate and becomes a port, because Resources are the primitive it always needed.
 - `structural:` vs `deferred:` makes the real boundary — 34 `session-only` verbs — legible, and everything else visibly work.
 - The ratchet makes adding an unpaired verb a decision someone has to defend in the diff.
 
@@ -162,7 +209,7 @@ The honest long answer: if every verb declared its shape once, parity would be s
 - Does the URI scheme belong on `beancount://` or on `https://beancount.io/...`? The spec reserves `https://` for resources the client can fetch itself, which these are not — but a custom scheme is one more thing to document.
 - Should reads be reachable **both** ways during the transition, or does a resource replace `runBqlQuery` for the reports it covers? Both is friendlier and doubles the surface.
 - Does D6's ceiling belong per surface, or per surface × class? A ceiling that lets 20 reads land while an admin verb slips through is not measuring the risky thing.
-- Do the 34 `session-only` verbs deserve their own ADR now, or after the 109 are done?
+- Do the 34 `session-only` verbs deserve their own ADR now, or after the 104 are done?
 
 ## References
 
