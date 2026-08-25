@@ -1,6 +1,6 @@
 # ADR 0007: The MCP surface — one stateless endpoint, and the rules that keep it honest
 
-- Status: Accepted. D3 and D5 were already in force; D2, D6, D7, D8 and D9 have landed and D10 is partly completed; D1, D4 and the remainder of D10 are outstanding and need access to a deployment rather than a change to this repo (see [Implementation status](#implementation-status-2026-08-24)).
+- Status: Accepted. D3 and D5 were already in force; D2, D6, D7, D8 and D9 have landed and D10 is partly completed; D1 and the remainder of D10 need access to a deployment rather than a change to this repo; **D11 (multi-ledger) is accepted and unimplemented** (see [Implementation status](#implementation-status-2026-08-24)). Cross-surface parity moved to its own record, [ADR 0008](./ADR0008-surface-parity.md).
 - Date: 2026-08-24
 - Decision owners: Backend (route, registry, transport, error translation), Deploy (routing, secrets, migrations)
 - Scope: `POST /api-gateway/mcp` — the Model Context Protocol endpoint an external agent connects to. What its address is, which HTTP methods it answers, which credentials reach it, how a refusal is phrased, and which deployment facts are part of its contract rather than tribal knowledge. Extends ADR 0006, which established the three-surface model; this ADR is about the third surface specifically.
@@ -65,6 +65,8 @@ This is what the Streamable HTTP spec prescribes for both — `405` for `GET` wh
 - **The credential must be pinned to one ledger.** MCP has no per-call ledger argument to fall back on, so an unpinned token — legitimate on GraphQL and REST — is refused here with a `ForbiddenError` rather than guessed at. API keys are minted with `ledgerScope: "owner/name"` for this reason.
 
 Both refusals are decided _before_ the tool context is built, so an unusable credential never reaches a registry.
+
+> **Superseded in part by [D11](#d11--a-credential-may-reach-more-than-one-ledger-and-the-call-says-which).** The second bullet stays true for a pinned credential and stops being the only mode: D11 gives the ledger tools an optional `ledger` argument, so an unpinned credential is refused only when it names no ledger. The session-is-not-a-credential rule is untouched.
 
 ### D4 — A `401` must hand back a pointer that resolves
 
@@ -136,6 +138,40 @@ The endpoint depends on two deployment facts that no code path can supply:
 - **The `api_keys` and `audit_events` tables** (migrations `0018`, `0019`) — the second credential kind and the audit hook. On the hosted target migrations run from inside a running instance (`bex ssh` → `yarn migrate:deploy`), because the pre-deploy job cannot reach the datastore across namespaces; that is a documented constraint, which makes "did they run?" a **release checklist item**, not an assumption.
 
 Both fell through the same crack: `backend-v2/CLAUDE.md` already requires a new environment variable to be added to `.env.tmpl`, the README, the local compose file, _and_ `bex.yaml`. `OAUTH_JWKS` reached the README and `deploy/docker-mac` — and stopped there. It was in neither `.env.tmpl` nor either production manifest, so the one deployment that actually needed it was the one place it was never written down. The checklist was right; nothing enforced it.
+
+### D11 — A credential may reach more than one ledger, and the call says which
+
+D3's pin is kept as the default and stops being the only mode. The four ledger tools take an optional `ledger` argument (`owner/name`), resolved in this order:
+
+| Credential | `ledger` argument | Result                                       |
+| ---------- | ----------------- | -------------------------------------------- |
+| pinned     | absent            | the pin — **today's behaviour, bit for bit** |
+| pinned     | equals the pin    | allowed                                      |
+| pinned     | any other ledger  | **refused.** A pin never widens              |
+| unpinned   | present           | that ledger, authorized on this call         |
+| unpinned   | absent            | refused, with a message naming `listLedgers` |
+
+Three things make this smaller than it looks:
+
+- **`authorizeLedger` needs no change.** It already takes the ledger id as a per-call argument (D5) — the seam that makes mid-session revocation bite is the same seam that makes a per-call ledger safe. Nothing about authorization moves.
+- **`resolveMcpLedgerId` stops being a gate and becomes a default.** It is the only place in the route that has to change.
+- **Nothing existing breaks.** A pinned credential that never sends the argument behaves exactly as it does today, so every live client keeps working and the change is purely additive.
+
+**`listLedgers` becomes a tool**, reversing its `mcpExempt` — which read _"Not agent-shaped: no agent workflow reaches for it."_ That was true, and it was true **only because of D3's pin**: with exactly one reachable ledger, listing them is a tool that can only ever return the answer the agent already had. The moment a credential can reach several, it is the first call an agent has to make. See ADR 0008 D3 — an exemption inherited from a constraint has to be re-derived when that constraint moves, and this is the worked example.
+
+#### What this gives up, stated plainly
+
+For a **pinned** credential nothing changes: the agent still cannot write to the wrong book, and that is still enforced by the token rather than by the model choosing correctly.
+
+For an **unpinned** one, that guarantee is genuinely weaker. "Do not write to the wrong ledger" moves from the credential to the model's choice of argument, and `editLedgerFiles` commits. That is a real reduction in safety, not a neutral generalization, and it is why unpinned is opt-in rather than the default: a client that wants the strong property keeps it by minting a pinned key, which stays the documented recommendation for anything unattended.
+
+Three things blunt the remaining edge, none of which removes it: `editLedgerFiles` already has `dry_run`; every tool result should echo the ledger it acted on, so a wrong choice is visible in the transcript rather than silent; and the audit trail already records the ledger per call.
+
+#### Why not the alternatives
+
+- **A ledger-selection tool that sets session state** — impossible as specified: the transport is stateless by D2, one server per request. There is no session to hold the selection.
+- **One endpoint per ledger** (`/api-gateway/mcp/{owner}/{name}`) — would keep the token-enforced property for every mode, since each path is its own RFC 8707 resource. Rejected for now because it multiplies endpoints, discovery documents, and audiences by the number of ledgers a user owns, and because a client would have to be reconfigured whenever a ledger is added. Worth revisiting if the unpinned mode proves too loose in practice.
+- **Making every tool take a required `ledger`** — would break every pinned credential in use and move the safety property from "cannot" to "should not" for all clients, not just the ones that opted in.
 
 ## Architecture
 
@@ -256,13 +292,17 @@ A deploy is not "MCP-ready" until all seven hold. `yarn mcp:conformance <base-ur
 - The conformance checklist below is now executable: `yarn mcp:conformance <base-url> [--token …] [--read-only-token …]` runs all seven checks against any deployment, names the check that failed, skips (rather than fails) what it has no credential for, and only observes. Credential-gated checks that an operator often cannot exercise by hand are covered by tests against a real socket.
 - `backend-cluster/backend-v2/README.md` documents connecting a client; the root `README.md` surfaces it.
 
+**Landed on the deployment side (verified 2026-08-25):**
+
+- D4 — `OAUTH_JWKS` is seeded. `/.well-known/oauth-protected-resource` and `/.well-known/oauth-authorization-server` both return `200`, `/api-gateway/oauth/jwks` serves an ES256 key, and dynamic client registration works. An MCP client can now complete the OAuth ceremony end to end; a browser consent step is the only part a script cannot drive.
+
 **Outstanding — requires production access or a follow-up change:**
 
-- D1 — a working public path for `/mcp`, either as an edge alias or by leaving `/api-gateway/mcp` as the documented address. The sibling case has since been settled the other way: `/v1/*` was unreachable for the same reason (the edge routes only `/api-gateway/*`, so `/v1/openapi.json` 404'd from the dashboard despite ADR 0006 D8 declaring it served everywhere), and `fix(backend-v2): move REST v1 under API gateway` fixed it by moving the mount rather than changing the edge. Moving MCP is not available — it is already there — so this one is genuinely an edge decision.
-- D4 — seed the `OAUTH_JWKS` value; verify discovery returns `200`.
+- D1 — a working public path for `/mcp`, either as an edge alias or by leaving `/api-gateway/mcp` as the documented address. The REST surface hit the same problem — the edge routes only `/api-gateway/*` — and `fix(backend-v2): move REST v1 under API gateway` settled it by moving the mount under the gateway rather than widening the edge, making `/api-gateway/v1/…` the one correct address. That move is not available to MCP, which already sits there, so this one is genuinely an edge decision.
 - D10 — apply migrations `0018`/`0019` to the production database, and run `yarn mcp:conformance` as a post-deploy step.
+- D11 — the optional `ledger` argument on the four ledger tools, the `listLedgers` tool, and turning `resolveMcpLedgerId` from a gate into a default. Additive: no live client changes behaviour. Reversing `Query.listLedgers`'s `mcpExempt` is part of this, not a separate cleanup.
 
-Until D4 and D10 are done there is **no working credential path to production MCP at all**: OAuth discovery 503s and API keys 500.
+The remaining production gap is D10 alone, and it is narrower than it was: **OAuth works, API keys do not.** `resolveApiKeyIdentity` queries `api_keys` only for `bcio_`-prefixed tokens, so a `bcio_` credential still returns `500` on the missing table while an OAuth token never touches that path. A human at a browser can connect today; CI, cron, and unattended clients cannot until the migration runs.
 
 ## Open Questions
 

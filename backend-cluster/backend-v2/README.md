@@ -236,8 +236,8 @@ wrong produces an unhelpful error:
 This is the requirement most first-time integrations miss. Both an OAuth grant
 and a durable `bcio_` API key reach the endpoint, but **either must be scoped to
 a single ledger**. MCP has no per-call ledger argument, so an unpinned
-credential — perfectly usable on GraphQL and `/v1` — is refused here rather than
-guessed at:
+credential — perfectly usable on GraphQL and `/api-gateway/v1` — is refused here
+rather than guessed at:
 
 ```
 403 {"ok":false,"error":{"code":"FORBIDDEN","message":
