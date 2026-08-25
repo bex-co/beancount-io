@@ -307,6 +307,22 @@ and this server in the path, so a client must not try to fetch it from the web
 itself. Resources authorize per read, exactly like tools: access revoked between
 two fetches is refused on the second.
 
+Eleven templates today — the ledger's own vocabulary, plus file contents:
+
+```
+beancount://{owner}/{name}/payees        …/narrations   …/currencies
+beancount://{owner}/{name}/tags          …/links        …/years
+beancount://{owner}/{name}/commodities   …/events       …/errors
+beancount://{owner}/{name}/attributes
+beancount://{owner}/{name}/files/{path}
+```
+
+The vocabulary reads are what a client needs _before_ writing a correct entry:
+which payees already exist, which currencies the book uses, which tags are in
+play. Each has a REST twin under the same name — `GET
+/api-gateway/v1/ledgers/{owner}/{name}/payees` — resolving through the same
+service call, so the two surfaces cannot disagree.
+
 Discover them with `resources/templates/list`; read one with `resources/read`.
 Hosts differ in whether they surface resources to the model automatically, so a
 client that shows you none is a host limitation rather than a server one.

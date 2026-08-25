@@ -613,19 +613,33 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     R.notInV1Table,
     M.coveredByBql,
   ),
-  gqlOnly(
-    "Query.getLedgerAttributes",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
-  gqlOnly(
-    "Query.getLedgerCommodities",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
-  gqlOnly("Query.getLedgerEvents", "read", R.dashboardShaped, M.coveredByBql),
+  {
+    verb: "Query.getLedgerAttributes",
+    class: "read",
+    gql: "Query.getLedgerAttributes",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/attributes",
+    mcpResource: "ledgerAttributes",
+    mcpExempt:
+      "Reachable as the `ledgerAttributes` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerCommodities",
+    class: "read",
+    gql: "Query.getLedgerCommodities",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/commodities",
+    mcpResource: "ledgerCommodities",
+    mcpExempt:
+      "Reachable as the `ledgerCommodities` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerEvents",
+    class: "read",
+    gql: "Query.getLedgerEvents",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/events",
+    mcpResource: "ledgerEvents",
+    mcpExempt:
+      "Reachable as the `ledgerEvents` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
   gqlOnly(
     "Query.getLedgerDocuments",
     "read",
@@ -650,29 +664,75 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     R.dashboardShaped,
     M.coveredByBql,
   ),
-  gqlOnly("Query.getLedgerErrors", "read", R.dashboardShaped, M.notAgentShaped),
-  gqlOnly(
-    "Query.getLedgerCurrencies",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
+  {
+    verb: "Query.getLedgerErrors",
+    class: "read",
+    gql: "Query.getLedgerErrors",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/errors",
+    mcpResource: "ledgerErrors",
+    mcpExempt:
+      "Reachable as the `ledgerErrors` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerCurrencies",
+    class: "read",
+    gql: "Query.getLedgerCurrencies",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/currencies",
+    mcpResource: "ledgerCurrencies",
+    mcpExempt:
+      "Reachable as the `ledgerCurrencies` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
   gqlOnly(
     "Query.getLedgerSourceFiles",
     "read",
     R.coveredByV1Files,
     M.notAgentShaped,
   ),
-  gqlOnly("Query.getLedgerTags", "read", R.dashboardShaped, M.coveredByBql),
-  gqlOnly("Query.getLedgerYears", "read", R.dashboardShaped, M.coveredByBql),
-  gqlOnly("Query.getLedgerLinks", "read", R.dashboardShaped, M.coveredByBql),
-  gqlOnly(
-    "Query.getLedgerNarrations",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
-  gqlOnly("Query.getLedgerPayees", "read", R.dashboardShaped, M.coveredByBql),
+  {
+    verb: "Query.getLedgerTags",
+    class: "read",
+    gql: "Query.getLedgerTags",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/tags",
+    mcpResource: "ledgerTags",
+    mcpExempt:
+      "Reachable as the `ledgerTags` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerYears",
+    class: "read",
+    gql: "Query.getLedgerYears",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/years",
+    mcpResource: "ledgerYears",
+    mcpExempt:
+      "Reachable as the `ledgerYears` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerLinks",
+    class: "read",
+    gql: "Query.getLedgerLinks",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/links",
+    mcpResource: "ledgerLinks",
+    mcpExempt:
+      "Reachable as the `ledgerLinks` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerNarrations",
+    class: "read",
+    gql: "Query.getLedgerNarrations",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/narrations",
+    mcpResource: "ledgerNarrations",
+    mcpExempt:
+      "Reachable as the `ledgerNarrations` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
+  {
+    verb: "Query.getLedgerPayees",
+    class: "read",
+    gql: "Query.getLedgerPayees",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payees",
+    mcpResource: "ledgerPayees",
+    mcpExempt:
+      "Reachable as the `ledgerPayees` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+  },
   gqlOnly(
     "Query.getLedgerAccountLastEntries",
     "read",

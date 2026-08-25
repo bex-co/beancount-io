@@ -1,5 +1,6 @@
 import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolContext } from "../tools/types";
+import { VOCABULARY_READS } from "@/features/ledger/api/rest/v1/vocabulary-handler";
 
 /**
  * The MCP surface's resource fragment (ADR 0008 D2).
@@ -12,8 +13,9 @@ import type { ToolContext } from "../tools/types";
  * primitives, and it is the line this fragment follows: reads here, actions in
  * `mcp-tools.ts`.
  *
- * This file holds one template. It is the proof of shape for the port that
- * follows (w3/m6–m8), not the port.
+ * Eleven templates: the ledger's own vocabulary (w3/m6) plus file contents, the
+ * one w3/m5 proved the shape with. The remaining read families follow in
+ * w3/m7–m8.
  */
 
 /**
@@ -69,8 +71,38 @@ function resolveLedgerId(
   return requested;
 }
 
+/**
+ * The ledger-vocabulary reads, as templates.
+ *
+ * Built from the *same* `VOCABULARY_READS` list the v1 REST routes are built
+ * from, so the two surfaces cannot answer differently: there is one list, one
+ * service call per entry, and two adapters. Writing the ten out again here
+ * would be ten chances for the surfaces to drift, and the drift would be
+ * invisible because each side has its own tests (ADR 0008 D5).
+ */
+const vocabularyResources: readonly McpResourceDescriptor[] =
+  VOCABULARY_READS.map((read) => ({
+    name: `ledger${read.segment[0].toUpperCase()}${read.segment.slice(1)}`,
+    title: read.summary,
+    description: read.description,
+    mimeType: "application/json",
+    uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,
+    read: async (toolCtx, variables) => {
+      const ledgerId = resolveLedgerId(toolCtx, variables);
+      // The same service instance the REST route calls — `read.fetch` takes the
+      // service rather than a surface's wrapper around it, so neither side has
+      // to fake the other's shape.
+      const result = await read.fetch(toolCtx.services.ledgerData, {
+        ledgerId,
+        identity: toolCtx.identity,
+      });
+      return JSON.stringify(result, null, 2);
+    },
+  }));
+
 /** The resource fragment: every template this feature contributes to the registry. */
 export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
+  ...vocabularyResources,
   {
     name: "ledgerFile",
     title: "Ledger File Contents",

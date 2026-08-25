@@ -1,18 +1,24 @@
 # w3 · m6 — Port the ledger vocabulary reads to REST and MCP together
 
-**Worker:** worker3 **Goal:** The eleven reads that tell a caller what a ledger *contains* — its payees, accounts, currencies, tags, links, narrations, years, commodities, events, errors, and metadata — are reachable from REST and from MCP, ported as one family rather than twice. **Status:** todo
+**Worker:** worker3 **Goal:** The eleven reads that tell a caller what a ledger *contains* — its payees, accounts, currencies, tags, links, narrations, years, commodities, events, errors, and metadata — are reachable from REST and from MCP, ported as one family rather than twice. **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | `v1Route` declarations for the eleven vocabulary reads | 45m | — |
-| t002 | The same eleven as MCP resource templates | 45m | — |
-| t003 | Lower both ratchet ceilings, and prove they hold | 20m | t001, t002 |
-| t004 | Adoption surface | 20m | t003 |
-| t005 | Simplify | 20m | t004 |
-| t006 | Test coverage | 30m | t004 |
-| t007 | Closeout | 20m | t006 |
+| t001 | `v1Route` declarations for the eleven vocabulary reads | 45m | — | — **DONE**
+| t002 | The same eleven as MCP resource templates | 45m | — | — **DONE**
+| t003 | Lower both ratchet ceilings, and prove they hold | 20m | t001, t002 | — **DONE**
+| t004 | Adoption surface | 20m | t003 | — **DONE**
+| t005 | Simplify | 20m | t004 | — **DONE**
+| t006 | Test coverage | 30m | t004 | — **DONE**
+| t007 | Closeout | 20m | t006 | — **DONE**
+
+## Amended during t001 — ten, not eleven
+
+`Query.ledgerMeta` was in the family by name and does not belong in it by argument. It is a **legacy resolver**, kept for older mobile builds and on the removal path, and its `restExempt` says so: *"a public REST twin would extend its life rather than end it."* That reason is still true, and porting it would work directly against the removal. It stays deferred, with its existing reason intact.
+
+The other ten are ported. Their old `restExempt` was `dashboardShaped` — *"the response is assembled for one screen"* — which is true of `accountHierarchy` and `homeCharts`, the verbs that category was written for, and false of a `string[]` of payees. **That is a fifth instance of ADR 0008's failure mode**: a category outrunning its argument, and it is why this family looked settled.
 
 ## Definition of done
 
@@ -23,6 +29,16 @@ Each of the eleven verbs answers on `GET /api-gateway/v1/{owner}/{name}/…` and
 They are what an agent needs before it can write a correct transaction: which payees already exist, which accounts are open, which currencies the book uses, which tags are in play. Today an agent has to reconstruct all of it through `runBqlQuery` — which works and is exactly the "already reachable" argument the table used to defer them — but it means every session re-derives the ledger's vocabulary instead of reading it.
 
 They are also the most uniform family in the table: eleven list-shaped reads over one ledger, no pagination questions, no new services. If porting-by-family is going to work as a pattern, this is where the pattern gets proven cheaply.
+
+## Closeout notes (2026-08-25)
+
+**Ported: 10.** REST 24 → 34 (gap 80 → 70); MCP 9 → 19 (gap 91 → 81).
+
+**Cost per verb: low, and the reason generalizes.** The ten differ only in a path segment and which `ILedgerDataService` method they call, so they are one `VOCABULARY_READS` list that both surfaces build from — ten routes and ten templates from one array. That is what made the family cheap, and it is the property to look for when picking the next one, not "how many verbs".
+
+**One bug this found in m5's own work.** `countDeferred` counted a verb as present on MCP only if it had a *tool*, ignoring `mcpResource`. Porting ten reads as resources left the MCP number stubbornly at 91 until that was fixed. A resource is presence on the surface; the ratchet now says so.
+
+**Also corrected here:** `ledgerMeta` excluded as legacy (above), and `R.dashboardShaped` was retired from all ten — a fifth instance of a category outrunning its argument.
 
 ## Source + Goal linkage
 

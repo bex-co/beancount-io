@@ -64,10 +64,13 @@ describe("classifyOp", () => {
         total +
         (entry.gql ? 1 : 0) +
         (entry.rest ? 1 : 0) +
-        (entry.mcp ? 1 : 0),
+        (entry.mcp ? 1 : 0) +
+        (entry.mcpResource ? 1 : 0),
       0,
     );
-    // `editLedgerFiles` is named by three rows, so ids are fewer than entries.
+    // Fewer ids than entries for two reasons: `editLedgerFiles` is named by
+    // three rows, and `ledger.readFiles` carries both a tool and a resource —
+    // one verb, two primitives, two ids.
     expect(classifiedOpIds().length).toBeLessThanOrEqual(expected);
     expect(new Set(classifiedOpIds()).size).toBe(classifiedOpIds().length);
   });

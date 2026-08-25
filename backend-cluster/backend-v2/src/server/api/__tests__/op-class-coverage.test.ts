@@ -97,8 +97,11 @@ describe("op-class coverage", () => {
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can
     // reach MCP at all — so they must not be held to the tool budget, and a
     // single number covering both would quietly do exactly that.
+    // Ten ledger-vocabulary reads (w3/m6) plus the file template m5 proved the
+    // shape with. This number is expected to climb as the read surface ports;
+    // the tool count above is not.
     const resources = mcpOps.filter((op) => op.startsWith("MCP resource:"));
-    expect(resources).toHaveLength(1);
+    expect(resources).toHaveLength(11);
   });
 });
 

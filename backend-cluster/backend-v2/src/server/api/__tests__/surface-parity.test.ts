@@ -123,9 +123,18 @@ export function findMalformedDependencies(
 export function countDeferred(
   table: readonly VerbEntry[],
 ): Record<"gql" | "rest" | "mcp", number> {
+  // A verb is present on MCP if *either* primitive carries it. Counting only
+  // `mcp` would have left the vocabulary reads in the debt after w3/m6 ported
+  // them as resources — the surface reaches them, which is the only question
+  // parity asks.
+  const present = (entry: VerbEntry, surface: "gql" | "rest" | "mcp") =>
+    surface === "mcp"
+      ? Boolean(entry.mcp ?? entry.mcpResource)
+      : Boolean(entry[surface]);
   const missing = (surface: "gql" | "rest" | "mcp") =>
-    table.filter((entry) => !entry[surface] && isReachableOn(entry, surface))
-      .length;
+    table.filter(
+      (entry) => !present(entry, surface) && isReachableOn(entry, surface),
+    ).length;
   return { gql: missing("gql"), rest: missing("rest"), mcp: missing("mcp") };
 }
 
@@ -164,8 +173,8 @@ describe("surface parity", () => {
    */
   const DEFERRED: Record<"gql" | "rest" | "mcp", number> = {
     gql: 0,
-    rest: 80,
-    mcp: 91,
+    rest: 70,
+    mcp: 81,
   };
 
   it("tracks the in-scope gap exactly, so it cannot drift either way", () => {

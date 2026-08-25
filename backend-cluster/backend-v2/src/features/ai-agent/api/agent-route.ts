@@ -71,6 +71,7 @@ export function setAgentRoute(
           ledgerShell: layers.services.ledgerShell,
           ledgerRepo: layers.services.ledgerRepo,
           apiKey: layers.services.apiKey,
+          ledgerData: layers.services.ledgerData,
         },
         identity,
         mcpToken,
