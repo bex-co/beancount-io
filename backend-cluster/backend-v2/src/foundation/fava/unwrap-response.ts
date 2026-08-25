@@ -1,5 +1,7 @@
 import { DomainError, InternalServerError } from "@/shared/errors";
 import type { ErrorResponse, HttpResponse } from "./Api";
+import { FavaApiError } from "./api-client";
+import { favaApiErrorToDomainError } from "./error-to-domain";
 
 /** Minimal shape shared by every generated `SuccessResponse*` interface. */
 type FavaSuccessEnvelope<T> = { success?: boolean; data: T };
@@ -37,6 +39,9 @@ export async function unwrapFavaResponse<T>(
     resolved = await response;
   } catch (error) {
     if (error instanceof DomainError) throw error;
+    if (!makeError && error instanceof FavaApiError) {
+      throw favaApiErrorToDomainError(error, operation);
+    }
     throw makeError
       ? makeError(error)
       : new InternalServerError(`Failed to ${operation}`);

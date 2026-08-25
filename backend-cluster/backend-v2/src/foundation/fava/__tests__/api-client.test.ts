@@ -115,7 +115,10 @@ describe("ApiClient", () => {
 
       await expect(
         apiClient.request({ path: "/slow", method: "GET" }),
-      ).rejects.toThrow("Fava API request timed out");
+      ).rejects.toMatchObject({
+        message: "Fava API request timed out",
+        status: 504,
+      });
 
       expect(mockFavaLogger.warn).toHaveBeenCalledWith("Request timed out", {
         method: "GET",

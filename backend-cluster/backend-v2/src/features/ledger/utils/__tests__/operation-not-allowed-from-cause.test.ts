@@ -1,8 +1,10 @@
 import "reflect-metadata";
 import { FavaApiError } from "@/foundation/fava";
 import {
+  ForbiddenError,
   OperationNotAllowedError,
   ResourceLimitReachedError,
+  UnauthenticatedError,
 } from "@/shared/errors";
 import { operationNotAllowedFromCause } from "../operation-not-allowed-from-cause";
 
@@ -79,7 +81,7 @@ describe("operationNotAllowedFromCause", () => {
     );
   });
 
-  it("falls back to OperationNotAllowedError for a FavaApiError with an unrelated code", () => {
+  it("preserves an upstream authentication failure", () => {
     const cause = new FavaApiError("Missing authorization header", 401, {
       success: false,
       error: "Missing authorization header",
@@ -87,10 +89,7 @@ describe("operationNotAllowedFromCause", () => {
 
     const error = operationNotAllowedFromCause("update ledger file", cause);
 
-    expect(error).toBeInstanceOf(OperationNotAllowedError);
-    expect(error.message).toBe(
-      "Operation 'update ledger file' not allowed: Missing authorization header",
-    );
+    expect(error).toBeInstanceOf(UnauthenticatedError);
   });
 
   it("falls back to OperationNotAllowedError when details are malformed", () => {
@@ -106,6 +105,6 @@ describe("operationNotAllowedFromCause", () => {
 
     const error = operationNotAllowedFromCause("update ledger file", cause);
 
-    expect(error).toBeInstanceOf(OperationNotAllowedError);
+    expect(error).toBeInstanceOf(ForbiddenError);
   });
 });

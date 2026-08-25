@@ -135,8 +135,13 @@ export class ValidationError extends DomainError {
  * throw new ConflictError("User", "Email already exists");
  */
 export class ConflictError extends DomainError {
-  constructor(resource: string, reason: string) {
+  constructor(
+    resource: string,
+    reason: string,
+    metadata?: Record<string, unknown>,
+  ) {
     super(ErrorCategory.CONFLICT, `${resource} conflict: ${reason}`, {
+      ...metadata,
       resource,
       reason,
     });

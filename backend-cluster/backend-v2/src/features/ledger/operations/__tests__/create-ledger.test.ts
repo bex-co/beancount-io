@@ -1,13 +1,15 @@
 import "reflect-metadata";
 import { createLedger, CreateLedgerParams } from "../create-ledger";
 import { AppConfig } from "@/config/config";
-import { LedgerCreate } from "@/foundation/fava";
+import { FavaApiError, LedgerCreate } from "@/foundation/fava";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
 import {
+  ConflictError,
   NotFoundError,
   ResourceLimitReachedError,
   ServiceUnavailableError,
+  UnauthenticatedError,
 } from "@/shared/errors";
 
 // Mock the cross-service tier operation; the pure getTierLimits runs for real.
@@ -129,6 +131,23 @@ describe("createLedger operation", () => {
       ).rejects.toThrow(ServiceUnavailableError);
     });
 
+    it("should preserve an authentication failure while listing ledgers", async () => {
+      mockFavaApiClient.ledgers.listLedgers.mockRejectedValue(
+        new FavaApiError("Missing authorization header", 401, {
+          success: false,
+          error: "Missing authorization header",
+        }),
+      );
+
+      await expect(
+        createLedger({
+          ...deps,
+          ledgerCreate: createValidLedgerInput(),
+          userId,
+        }),
+      ).rejects.toThrow(UnauthenticatedError);
+    });
+
     it("should throw error when user not found", async () => {
       mockFavaApiClient.ledgers.listLedgers.mockResolvedValue({
         data: { success: true, data: [] },
@@ -184,6 +203,69 @@ describe("createLedger operation", () => {
           userId,
         }),
       ).rejects.toThrow(ServiceUnavailableError);
+    });
+
+    it("should translate a duplicate ledger name into a structured conflict", async () => {
+      mockFavaApiClient.ledgers.listLedgers.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      mockFavaApiClient.ledgers.createLedger.mockRejectedValue(
+        new FavaApiError(
+          "A ledger with the name 'existing-ledger' already exists.",
+          400,
+          {
+            success: false,
+            error:
+              "A ledger with the name 'existing-ledger' already exists. Please choose a different name.",
+          },
+        ),
+      );
+
+      try {
+        await createLedger({
+          ...deps,
+          ledgerCreate: createValidLedgerInput(),
+          userId,
+        });
+        fail("Expected error to be thrown");
+      } catch (error) {
+        expect(error).toBeInstanceOf(ConflictError);
+        const conflict = error as ConflictError;
+        expect(conflict.category).toBe("CONFLICT");
+        expect(conflict.metadata).toEqual({
+          resource: "Ledger",
+          reason: "Name already exists",
+          reasonCode: "LEDGER_NAME_ALREADY_EXISTS",
+          field: "name",
+        });
+      }
+    });
+
+    it("should recognize the ledger service's machine-readable duplicate code", async () => {
+      mockFavaApiClient.ledgers.listLedgers.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+      mockFavaApiClient.ledgers.createLedger.mockRejectedValue(
+        new FavaApiError("Ledger name conflict", 400, {
+          success: false,
+          error: "Ledger name conflict",
+          code: "ledger_name_already_exists",
+        }),
+      );
+
+      await expect(
+        createLedger({
+          ...deps,
+          ledgerCreate: createValidLedgerInput(),
+          userId,
+        }),
+      ).rejects.toMatchObject({
+        category: "CONFLICT",
+        metadata: {
+          reasonCode: "LEDGER_NAME_ALREADY_EXISTS",
+          field: "name",
+        },
+      });
     });
 
     it("should correctly filter user's own ledgers from all ledgers", async () => {

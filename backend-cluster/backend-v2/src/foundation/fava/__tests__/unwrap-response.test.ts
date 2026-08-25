@@ -1,9 +1,15 @@
 import "reflect-metadata";
 import {
   BadUserInputError,
+  ConflictError,
+  ForbiddenError,
   InternalServerError,
+  NotFoundError,
+  RateLimitedError,
   ServiceUnavailableError,
+  UnauthenticatedError,
 } from "@/shared/errors";
+import { FavaApiError } from "../api-client";
 import { unwrapFavaResponse } from "../unwrap-response";
 import type { ErrorResponse, HttpResponse } from "../Api";
 
@@ -62,6 +68,84 @@ describe("unwrapFavaResponse", () => {
     await expect(
       unwrapFavaResponse(response, "update ledger file"),
     ).rejects.toThrow(InternalServerError);
+  });
+
+  it.each([
+    [400, BadUserInputError, "BAD_USER_INPUT"],
+    [401, UnauthenticatedError, "UNAUTHENTICATED"],
+    [403, ForbiddenError, "FORBIDDEN"],
+    [404, NotFoundError, "NOT_FOUND"],
+    [409, ConflictError, "CONFLICT"],
+    [422, BadUserInputError, "BAD_USER_INPUT"],
+    [429, RateLimitedError, "RATE_LIMITED"],
+    [500, ServiceUnavailableError, "SERVICE_UNAVAILABLE"],
+    [503, ServiceUnavailableError, "SERVICE_UNAVAILABLE"],
+    [undefined, ServiceUnavailableError, "SERVICE_UNAVAILABLE"],
+  ])(
+    "maps a Ledger API %s response to %s",
+    async (status, ErrorClass, category) => {
+      const response = Promise.reject(
+        new FavaApiError("upstream failure", status, {
+          success: false,
+          error: "upstream failure",
+        }),
+      );
+
+      let caught: unknown;
+      try {
+        await unwrapFavaResponse(response, "read ledger");
+      } catch (error) {
+        caught = error;
+      }
+
+      expect(caught).toBeInstanceOf(ErrorClass);
+      expect(caught).toMatchObject({ category });
+    },
+  );
+
+  it("maps the legacy resource-limit message to ResourceLimitReachedError", async () => {
+    const response = Promise.reject(
+      new FavaApiError(
+        "Ledger source file count limit reached. Maximum: 100, Current: 101.",
+        403,
+        {
+          success: false,
+          error:
+            "Ledger source file count limit reached. Maximum: 100, Current: 101.",
+        },
+      ),
+    );
+
+    await expect(
+      unwrapFavaResponse(response, "read ledger"),
+    ).rejects.toMatchObject({
+      category: "RESOURCE_LIMIT_REACHED",
+      metadata: {
+        resource: "Ledger source file count",
+        limit: 100,
+        current: 101,
+      },
+    });
+  });
+
+  it("maps duplicate names to a structured conflict", async () => {
+    const response = Promise.reject(
+      new FavaApiError("duplicate", 400, {
+        success: false,
+        error:
+          "A ledger with the name 'existing' already exists. Please choose a different name.",
+      }),
+    );
+
+    await expect(
+      unwrapFavaResponse(response, "update ledger"),
+    ).rejects.toMatchObject({
+      category: "CONFLICT",
+      metadata: {
+        reasonCode: "LEDGER_NAME_ALREADY_EXISTS",
+        field: "name",
+      },
+    });
   });
 
   it("calls makeError with the underlying cause when the request itself rejects", async () => {

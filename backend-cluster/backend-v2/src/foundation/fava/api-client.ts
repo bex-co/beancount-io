@@ -56,7 +56,7 @@ export class ApiClient extends Api<unknown> {
             path,
             timeoutMs: this.timeoutMs,
           });
-          throw new Error("Fava API request timed out");
+          throw new FavaApiError("Fava API request timed out", 504);
         }
 
         const response = e as HttpResponse<unknown, ErrorResponse>;

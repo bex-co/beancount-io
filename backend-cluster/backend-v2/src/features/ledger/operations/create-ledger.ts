@@ -1,6 +1,8 @@
 import {
+  FavaApiError,
   LedgerCreate,
   FavaApiClient,
+  favaApiErrorToDomainError,
   unwrapFavaResponse,
 } from "@/foundation/fava";
 import { generateGiteaUrl } from "@/shared/gitea-utils";
@@ -20,6 +22,13 @@ import {
   ResourceLimitReachedError,
   ServiceUnavailableError,
 } from "@/shared/errors";
+
+function ledgerApiError(operation: string, cause?: unknown): Error {
+  if (cause instanceof FavaApiError) {
+    return favaApiErrorToDomainError(cause, operation);
+  }
+  return new ServiceUnavailableError("Ledger API");
+}
 
 /**
  * Params for {@link createLedger}. Deps are injected explicitly (not via
@@ -58,7 +67,7 @@ export async function createLedger({
       limit: 10,
     }),
     "list ledgers",
-    () => new ServiceUnavailableError("Ledger API"),
+    (cause) => ledgerApiError("list ledgers", cause),
   );
 
   const user = await models.user.getById(postgresDb, userId);
@@ -85,7 +94,7 @@ export async function createLedger({
   const data = (await unwrapFavaResponse(
     favaApiClient.ledgers.createLedger(ledgerCreate),
     "create ledger",
-    () => new ServiceUnavailableError("Ledger API"),
+    (cause) => ledgerApiError("create ledger", cause),
   )) as FavaLedgerPublic;
 
   const giteaUrl = generateGiteaUrl(config.gitea, data.full_name);
