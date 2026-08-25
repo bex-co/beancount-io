@@ -151,7 +151,25 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
         // Mirrors @ai-sdk/harness-claude-code's own split: secrets go through
         // credentialEnv, the non-secret gateway root through forwardEnv.
         credentialEnv: ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'],
-        forwardEnv: ['ANTHROPIC_BASE_URL'],
+        // harness-acp@1.0.23 refuses credentialEnv without credentialBrokering.
+        // Brokering only applies when the sandbox session exposes
+        // addRequestTransformations; the Cloudflare provider has no primitive
+        // for that (ADR 0005), so the harness warns and falls back to direct
+        // credential forwarding — this function is never invoked today.
+        credentialBrokering: () => [],
+        // ANTHROPIC_MODEL / ANTHROPIC_SMALL_FAST_MODEL are non-secret model
+        // overrides honored by the Claude Code binary itself. Unset in
+        // production (no-op); local stacks (deploy/dev-sandbox) set them to
+        // route the in-sandbox agent at an Anthropic-compatible local model
+        // server, which ignores the ACP-level modelId.
+        // API_TIMEOUT_MS raises the Claude Code binary's per-request timeout;
+        // local model servers can take minutes to prefill the system prompt.
+        forwardEnv: [
+          'ANTHROPIC_BASE_URL',
+          'ANTHROPIC_MODEL',
+          'ANTHROPIC_SMALL_FAST_MODEL',
+          'API_TIMEOUT_MS',
+        ],
         // claude-agent-acp only offers `bypassPermissions` when
         // `!IS_ROOT || IS_SANDBOX` (acp-agent.js: ALLOW_BYPASS). Our container
         // runs as root, so without this flag the allow-all mapping above would

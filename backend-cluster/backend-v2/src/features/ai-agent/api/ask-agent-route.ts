@@ -15,8 +15,13 @@ import {
 
 const askAgentLogger = logger.child({ module: "ask-agent-route" });
 
-// Model for the Claude Code harness (matches the worker's DEFAULT_ANSWER_MODEL).
-const ASK_AGENT_MODEL = "claude-sonnet-4-5-20250929";
+// Model for the Claude Code harness. Must be an id the pinned
+// claude-agent-acp version (CLAUDE_AGENT_ACP_VERSION) actually advertises —
+// an unknown id is silently DROPPED and the agent falls back to the Claude
+// Code CLI default model, which defeats the pin. claude-agent-acp@0.70.0
+// advertises non-dated ids like "claude-sonnet-5"; the previously pinned
+// dated "claude-sonnet-4-5-20250929" is not in its catalog.
+const ASK_AGENT_MODEL = "claude-sonnet-5";
 
 interface AskAgentRequest {
   // Accept both shapes: a plain { role, content } message (e.g. API clients) and
