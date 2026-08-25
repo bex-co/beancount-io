@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { UserPostgresModel } from "../postgres-impl";
 import type { CreateUserInput } from "../types";
+import { PgDialect } from "drizzle-orm/pg-core";
 
 jest.mock("bcryptjs", () => ({
   hash: jest.fn().mockResolvedValue("hashed-password"),
@@ -120,6 +121,22 @@ describe("UserPostgresModel", () => {
       expect(result).not.toBeNull();
       expect(result!.ledger_username).toBe("johndoe");
     });
+
+    it.each(["%", "_", "\\%_admin"])(
+      "treats LIKE metacharacters in %p as literal equality input",
+      async (username) => {
+        mockDb.limit.mockResolvedValue([]);
+
+        await model.getUserByUsername(mockDb, username);
+
+        const predicate = mockDb.where.mock.calls[0][0];
+        const query = new PgDialect().sqlToQuery(predicate);
+        expect(query.sql.toLowerCase()).not.toContain("like");
+        expect(query.sql.toLowerCase()).toContain("lower");
+        expect(query.params).toEqual([username]);
+        expect(mockDb.limit).toHaveBeenCalledWith(1);
+      },
+    );
   });
 
   describe("create", () => {
@@ -160,7 +177,7 @@ describe("UserPostgresModel", () => {
 
   describe("findUserByEmailOrUsername", () => {
     it("should return empty array when no users found", async () => {
-      mockDb.where.mockResolvedValue([]);
+      mockDb.limit.mockResolvedValue([]);
 
       const result = await model.findUserByEmailOrUsername(
         mockDb,
@@ -171,7 +188,7 @@ describe("UserPostgresModel", () => {
     });
 
     it("should find users by email or username", async () => {
-      mockDb.where.mockResolvedValue([mockUserRow]);
+      mockDb.limit.mockResolvedValue([mockUserRow]);
 
       const result = await model.findUserByEmailOrUsername(
         mockDb,
@@ -182,14 +199,29 @@ describe("UserPostgresModel", () => {
       expect(result[0].email).toBe("user@example.com");
     });
 
-    it("should deduplicate users when both email and username match", async () => {
-      // Return the same user twice (simulating two matches)
-      mockDb.where.mockResolvedValue([mockUserRow, mockUserRow]);
+    it("hard-limits an exact lookup to one user", async () => {
+      mockDb.limit.mockResolvedValue([mockUserRow]);
 
-      const result = await model.findUserByEmailOrUsername(mockDb, "johndoe");
+      await model.findUserByEmailOrUsername(mockDb, "johndoe");
 
-      expect(result).toHaveLength(1);
+      expect(mockDb.limit).toHaveBeenCalledWith(1);
     });
+
+    it.each(["%", "_", "\\%_@example.com"])(
+      "treats LIKE metacharacters in %p as literal equality input",
+      async (keyword) => {
+        mockDb.limit.mockResolvedValue([]);
+
+        await model.findUserByEmailOrUsername(mockDb, keyword);
+
+        const predicate = mockDb.where.mock.calls[0][0];
+        const query = new PgDialect().sqlToQuery(predicate);
+        expect(query.sql.toLowerCase()).not.toContain("like");
+        expect(query.sql.toLowerCase()).toContain("lower");
+        expect(query.params).toEqual([keyword, keyword]);
+        expect(mockDb.limit).toHaveBeenCalledWith(1);
+      },
+    );
   });
 
   describe("verifyPassword", () => {

@@ -1,5 +1,6 @@
 import "reflect-metadata";
-import { AccountResolver } from "../account-resolver";
+import { validate } from "class-validator";
+import { AccountResolver, SearchUserInput } from "../account-resolver";
 import { IContext } from "@/server/graphql/context";
 import type { IAccountService } from "@/features/auth/service/account-service";
 import { UnauthenticatedError } from "@/shared/errors";
@@ -144,6 +145,24 @@ describe("AccountResolver", () => {
   });
 
   describe("getUserByExactMatch", () => {
+    it.each(["", "a", "ab"])("rejects short keyword %p", async (keyword) => {
+      const input = Object.assign(new SearchUserInput(), { keyword });
+
+      const errors = await validate(input);
+
+      expect(errors[0]?.constraints).toHaveProperty("minLength");
+    });
+
+    it("rejects a keyword longer than an email can be", async () => {
+      const input = Object.assign(new SearchUserInput(), {
+        keyword: "a".repeat(321),
+      });
+
+      const errors = await validate(input);
+
+      expect(errors[0]?.constraints).toHaveProperty("maxLength");
+    });
+
     it("should get users by exact keyword match", async () => {
       const args = { keyword: "john@example.com" };
       const mockUsers = [

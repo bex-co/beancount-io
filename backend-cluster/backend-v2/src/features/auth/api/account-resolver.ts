@@ -8,6 +8,7 @@ import {
   ObjectType,
   Query,
 } from "type-graphql";
+import { MaxLength, MinLength } from "class-validator";
 import { ReportStatus } from "@/features/auth/utils/report-status";
 import { IContext } from "@/server/graphql/context";
 import type { IAccountService } from "@/features/auth/service/account-service";
@@ -82,8 +83,12 @@ class SearchUser {
 }
 
 @ArgsType()
-class SearchUserInput {
+export class SearchUserInput {
   @Field(() => String)
+  @MinLength(3, { message: "Search keyword must be at least 3 characters" })
+  @MaxLength(320, {
+    message: "Search keyword must be at most 320 characters",
+  })
   public keyword: string;
 
   @Field(() => String, { nullable: true })
@@ -145,7 +150,6 @@ export class AccountResolver {
     @Ctx() ctx: IContext,
     @Args() args: SearchUserInput,
   ): Promise<SearchUser[]> {
-
     const users = await this.accountService.findUsersByEmailOrUsername(
       args.keyword,
       args.includeCurrentUser ? undefined : ctx.getCurrentUserId(),

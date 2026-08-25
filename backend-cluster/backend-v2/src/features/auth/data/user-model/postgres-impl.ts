@@ -1,4 +1,4 @@
-import { eq, or, ilike, and, ne, sql, gte, desc } from "drizzle-orm";
+import { eq, or, and, ne, sql, gte, desc } from "drizzle-orm";
 import bcrypt from "bcryptjs";
 import { nanoid } from "nanoid";
 import { makeGravatar } from "@/shared/tools";
@@ -71,11 +71,12 @@ export class UserPostgresModel implements IUserModel {
     db: DbExecutor,
     username: string,
   ): Promise<User | null> {
-    // Case-insensitive exact match using ILIKE
+    // Use equality over normalized values. ILIKE would treat caller-supplied
+    // `%` and `_` as wildcards even though Drizzle parameterizes the value.
     const result = await db
       .select()
       .from(users)
-      .where(ilike(users.ledger_username, username))
+      .where(sql<boolean>`lower(${users.ledger_username}) = lower(${username})`)
       .limit(1);
 
     return result[0] ? this.toPlainObject(result[0]) : null;
@@ -113,21 +114,20 @@ export class UserPostgresModel implements IUserModel {
     db: DbExecutor,
     keyword: string,
   ): Promise<User[]> {
-    // Security: Use exact match only to prevent email enumeration attacks
-    // Case-insensitive exact match using ILIKE
+    // Security: exact equality prevents LIKE metacharacters from turning one
+    // lookup into bulk email enumeration. The endpoint is intentionally 0/1.
     const result = await db
       .select()
       .from(users)
       .where(
-        or(ilike(users.email, keyword), ilike(users.ledger_username, keyword)),
-      );
+        or(
+          sql<boolean>`lower(${users.email}) = lower(${keyword})`,
+          sql<boolean>`lower(${users.ledger_username}) = lower(${keyword})`,
+        ),
+      )
+      .limit(1);
 
-    // Deduplicate users by id (in case both email and username match)
-    const uniqueUsers = Array.from(
-      new Map(result.map((user) => [user.id, user])).values(),
-    );
-
-    return uniqueUsers.map((row) => this.toPlainObject(row));
+    return result.map((row) => this.toPlainObject(row));
   }
 
   public async getActiveUsersWithUsername(

@@ -43,7 +43,7 @@ export const users = pgTable(
   (table) => [
     // Unique constraint on email
     uniqueIndex("users_email_idx").on(table.email),
-    // Index on ledger_username for username lookups (case-insensitive ILIKE queries)
+    // Index on ledger_username for username lookups
     index("users_ledger_username_idx").on(table.ledger_username),
     // Composite index for getActiveUsersWithUsername() query
     // Filters: isBlocked != true AND ledger_username IS NOT NULL
