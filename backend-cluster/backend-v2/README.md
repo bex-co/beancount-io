@@ -291,6 +291,26 @@ shape as its `outputSchema`, so a client can validate what it receives. A
 failure — invalid query, missing file, revoked access, insufficient scope — also
 carries `isError: true`, which is the flag an agent should branch on.
 
+### Resources
+
+Beyond tools, the server publishes **resources**: ledger data addressed by URI
+that a client fetches directly, without spending a tool call. Today that is one
+template, with the read surface porting onto it
+([ADR 0008](./docs/ADR0008-surface-parity.md)):
+
+```
+beancount://{owner}/{name}/files/{path}
+```
+
+The scheme is deliberately not `https://` — reaching one needs your credential
+and this server in the path, so a client must not try to fetch it from the web
+itself. Resources authorize per read, exactly like tools: access revoked between
+two fetches is refused on the second.
+
+Discover them with `resources/templates/list`; read one with `resources/read`.
+Hosts differ in whether they surface resources to the model automatically, so a
+client that shows you none is a host limitation rather than a server one.
+
 ### Diagnosing a deployment that will not connect
 
 ```zsh

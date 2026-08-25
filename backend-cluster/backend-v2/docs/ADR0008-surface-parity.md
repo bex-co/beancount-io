@@ -114,15 +114,24 @@ The two surfaces are missing largely the _same verbs_: 30 of REST's 80 are ledge
 
 ADR 0006 D7's "small on purpose" stays true as a _sequencing_ rule, not a cap: the bar is that a caller who has never read the schema can do the thing with curl in ten minutes, which orders the work — the verbs a curl user reaches for first go first — without excusing the tail.
 
-### D6 — The guard ratchets: absences may fall, never rise
+### D6 — The gap is tracked exactly, and can only move by an edit
 
-`surface-parity.test.ts` keeps its current checks and gains one. A checked-in count per surface, asserted as a ceiling:
+`surface-parity.test.ts` keeps its current checks and gains one: a checked-in count per surface, asserted with `toEqual` rather than as a ceiling.
 
 ```ts
-const MAX_DEFERRED = { gql: 0, rest: 80, mcp: 95 };
+const DEFERRED = { gql: 0, rest: 80, mcp: 91 };
 ```
 
-Adding a verb without its REST and MCP twins fails CI until the number is _raised in the same diff_ — which is the point: raising it is a visible, arguable act, and lowering it is the work. `structural:` entries are counted separately and are not expected to move.
+The number then moves in _either_ direction only by someone editing that line — adding a verb without its twins fails until the count is raised, porting one fails until it is lowered. Raising it is a visible, arguable act; and asserting exactly keeps the number tight, where a ceiling with slack under it is how the next unpaired verb arrives unnoticed.
+
+Two things are excluded before counting, and the difference between them matters:
+
+- **Out of parity scope** (D4) — the 34 `session-only`, 3 Link-ceremony, and 2 screen-projection verbs. Not targets.
+- **In scope, but the surface cannot carry it** — 6 on GraphQL (an archive's bytes, two event streams, two foreign wire formats) and 4 on MCP (the agent transports themselves; a tool for reaching one from inside a tool call would be circular). Targets, physically unreachable there.
+
+Both come from named lists in `op-class.ts`, not from a marker pasted into each exemption string. **An exemption is an argument, and the same argument lands on in-scope and out-of-scope verbs alike** — "credential minting is unreachable by a token" excuses six `session-only` verbs and four in-scope ones, so a prose marker would have to be right in every row it was copied into. That is the failure this record exists to stop. Derive what can be derived.
+
+This is also why MCP's number is 91 and not the 104 − 9 = 95 first stated here: four in-scope verbs are unreachable on MCP by construction.
 
 ### D7 — The two mechanical checks the current guard cannot make
 
@@ -206,8 +215,9 @@ The honest long answer: if every verb declared its shape once, parity would be s
 
 ## Open Questions
 
-- Does the URI scheme belong on `beancount://` or on `https://beancount.io/...`? The spec reserves `https://` for resources the client can fetch itself, which these are not — but a custom scheme is one more thing to document.
-- Should reads be reachable **both** ways during the transition, or does a resource replace `runBqlQuery` for the reports it covers? Both is friendlier and doubles the surface.
+- ~~Does the URI scheme belong on `beancount://` or `https://`?~~ **Settled in w3/m5/t004: `beancount://{owner}/{name}/…`.** The spec reserves `https://` for resources a client can fetch directly from the web, and these cannot be — reaching one needs the caller's credential, a per-call ledger authorization, and this server in the path. Advertising them as `https://` would invite a client to fetch them itself and collect a 401 from somewhere it did not expect.
+- Should reads be reachable **both** ways during the transition, or does a resource replace `runBqlQuery` for the reports it covers? Both is friendlier and doubles the surface. m5 shipped `ledgerFile` alongside the `readLedgerFiles` tool, so the first instance is "both" — one `VERB_TABLE` row now carries `mcp` and `mcpResource` together, which is at least cheap to reverse.
+- Should a resource read be rate-limited on the same budget as a tool call? It is today. But an agent pulling six files into context is one logical act, and charging it six writes' worth of budget may be the wrong shape once the port grows.
 - Does D6's ceiling belong per surface, or per surface × class? A ceiling that lets 20 reads land while an admin verb slips through is not measuring the risky thing.
 - Do the 34 `session-only` verbs deserve their own ADR now, or after the 104 are done?
 

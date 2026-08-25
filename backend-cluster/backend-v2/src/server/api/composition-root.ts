@@ -3,7 +3,10 @@ import type http from "http";
 import type { GraphQLSchema } from "graphql";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { ToolCallback } from "@modelcontextprotocol/sdk/server/mcp.js";
-import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
+import type {
+  CallToolResult,
+  ReadResourceResult,
+} from "@modelcontextprotocol/sdk/types.js";
 import type { ZodTypeAny } from "zod";
 
 import type { AppConfig } from "@/config/config";
@@ -43,9 +46,19 @@ import { setSitemapHandler } from "@/features/sitemap/api/sitemap-handler";
 import { setMcpRoute, setupAiAgentRoutes } from "@/features/ai-agent/api";
 import { setGitProxyHandler } from "@/features/gitea/api/git-proxy-handler";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
+import {
+  MCP_RESOURCES,
+  resourceTemplateFor,
+} from "@/features/ai-agent/api/mcp-resources";
 import type { ToolContext } from "@/features/ai-agent/tools/types";
 
-import { gqlOpId, mcpOpId, requireScopeClass, restOpId } from "./op-class";
+import {
+  gqlOpId,
+  mcpOpId,
+  mcpResourceOpId,
+  requireScopeClass,
+  restOpId,
+} from "./op-class";
 import { enforceRateLimit } from "./rate-limit";
 import { normalizeRestPath, opMethodsForLayer } from "./rest-op-id";
 
@@ -338,9 +351,12 @@ export function listGraphqlOps(schema: GraphQLSchema): string[] {
 // MCP assembly + enumeration
 // ---------------------------------------------------------------------------
 
-/** Every tool in the MCP fragment, as op ids (`MCP <tool>`). */
+/** Every tool and resource in the MCP fragment, as op ids. */
 export function listMcpOps(): string[] {
-  return MCP_TOOLS.map((tool) => mcpOpId(tool.name));
+  return [
+    ...MCP_TOOLS.map((tool) => mcpOpId(tool.name)),
+    ...MCP_RESOURCES.map((resource) => mcpResourceOpId(resource.name)),
+  ];
 }
 
 /**
@@ -373,7 +389,72 @@ export function assembleMcpRegistry(
     );
   }
 
+  for (const descriptor of MCP_RESOURCES) {
+    server.registerResource(
+      descriptor.name,
+      resourceTemplateFor(descriptor),
+      {
+        title: descriptor.title,
+        description: descriptor.description,
+        mimeType: descriptor.mimeType,
+      },
+      makeMcpResourceHandler(toolCtx, descriptor, config),
+    );
+  }
+
   return server;
+}
+
+/**
+ * The per-call gate both MCP primitives run.
+ *
+ * Extracted so "a resource read is gated exactly like a tool call" is a fact
+ * about the code rather than a claim in a comment — two copies would be free to
+ * drift, and the copy that drifts is the one nobody is reading.
+ *
+ * MCP conversations arrive over one long-lived HTTP request, so there is no
+ * per-call socket to key the limiter on; the credential is the budget, and MCP
+ * always has one.
+ */
+async function gateMcpCall(
+  opId: string,
+  toolCtx: ToolContext,
+  config: AppConfig,
+): Promise<void> {
+  await enforceRateLimit({ opId, identity: toolCtx.identity, ip: "mcp" });
+  requireScopeClass(toolCtx.identity, opId, config.api.scopeEnforcement);
+}
+
+/**
+ * A resource read runs the same gate a tool call does.
+ *
+ * Resources are the surface where the shortcut is tempting — authorize once
+ * when the template list is built, then serve reads cheaply — and that is
+ * exactly what ADR 0006 D4/D9 removed from MCP in the first place. Per read,
+ * every read: the rate limiter, the scope gate, and the service's own
+ * `authorizeLedger`. A grant revoked between two fetches bites on the second.
+ */
+function makeMcpResourceHandler(
+  toolCtx: ToolContext,
+  descriptor: (typeof MCP_RESOURCES)[number],
+  config: AppConfig,
+) {
+  return async (
+    uri: URL,
+    variables: Record<string, string | string[]>,
+  ): Promise<ReadResourceResult> => {
+    const opId = mcpResourceOpId(descriptor.name);
+    mcpLogger.info("MCP resource read", {
+      resource: descriptor.name,
+      ledgerId: toolCtx.ledgerId,
+      userId: toolCtx.identity.userId,
+    });
+    await gateMcpCall(opId, toolCtx, config);
+    const text = await descriptor.read(toolCtx, variables);
+    return {
+      contents: [{ uri: uri.href, mimeType: descriptor.mimeType, text }],
+    };
+  };
 }
 
 function makeMcpToolHandler(
@@ -392,19 +473,7 @@ function makeMcpToolHandler(
       // status: the client is an agent mid-conversation, and a thrown HTTP
       // error would end the session instead of telling it what it lacks. The
       // catch below turns the ForbiddenError into exactly that.
-      await enforceRateLimit({
-        opId: mcpOpId(descriptor.name),
-        identity: toolCtx.identity,
-        // MCP conversations arrive over one long-lived HTTP request, so there
-        // is no per-call socket to read; the credential is the budget key here,
-        // and MCP always has one.
-        ip: "mcp",
-      });
-      requireScopeClass(
-        toolCtx.identity,
-        mcpOpId(descriptor.name),
-        config.api.scopeEnforcement,
-      );
+      await gateMcpCall(mcpOpId(descriptor.name), toolCtx, config);
       const result = await descriptor.execute(toolCtx, input);
       // `runToolSafely` is the tools' error boundary: it turns a throw into the
       // ordinary-looking value `{ ok: false, error }` and returns it. Without

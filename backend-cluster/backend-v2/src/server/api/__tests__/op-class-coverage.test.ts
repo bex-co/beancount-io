@@ -86,11 +86,19 @@ describe("op-class coverage", () => {
     ).toBe(62);
   });
 
-  it("covers every MCP tool", () => {
+  it("covers every MCP tool, and budgets tools separately from resources", () => {
     // Four ledger tools plus the three key-management tools w1/m22 added. The
     // count is asserted because tool count is the dominant cost in an agent's
     // tool selection — growing it should be a decision, not a drift.
-    expect(mcpOps).toHaveLength(7);
+    const tools = mcpOps.filter((op) => !op.startsWith("MCP resource:"));
+    expect(tools).toHaveLength(7);
+
+    // Resources are counted apart on purpose. They do not compete for tool
+    // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can
+    // reach MCP at all — so they must not be held to the tool budget, and a
+    // single number covering both would quietly do exactly that.
+    const resources = mcpOps.filter((op) => op.startsWith("MCP resource:"));
+    expect(resources).toHaveLength(1);
   });
 });
 

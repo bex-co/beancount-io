@@ -1,4 +1,4 @@
-import { VERB_TABLE, type VerbEntry } from "../op-class";
+import { VERB_TABLE, isReachableOn, type VerbEntry } from "../op-class";
 
 /**
  * ADR 0006 D9, test 1 — three-surface parity is a test, not a discipline.
@@ -58,6 +58,77 @@ export function findParityGaps(table: readonly VerbEntry[]): ParityGap[] {
   return gaps;
 }
 
+/**
+ * An exemption that excuses a verb by naming another route has made a factual
+ * claim, and `runBqlQuery` is the one route whose limits are absolute: BQL is a
+ * query language and cannot write a directive. So it can excuse a `read` and
+ * never a `write` or an `admin`.
+ *
+ * `Mutation.bulkEntries` carried exactly this — the category was written for
+ * reads, 29 of its 30 rows are reads, and it was pasted onto one write. The
+ * conclusion happened to survive (`editLedgerFiles` does reach it) while the
+ * argument did not, which is the shape that never surfaces on its own.
+ */
+export function findUnreachableEscapeHatches(
+  table: readonly VerbEntry[],
+): string[] {
+  return table
+    .filter(
+      (entry) =>
+        (entry.class === "write" || entry.class === "admin") &&
+        !entry.mcp &&
+        entry.mcpExempt?.includes("runBqlQuery"),
+    )
+    .map(
+      (entry) =>
+        `${entry.verb} is ${entry.class}-class but excused by a read-only escape hatch`,
+    );
+}
+
+/**
+ * An exemption whose truth rests on a decision made elsewhere has to say so in
+ * a form that can be found by searching, so that changing that decision can
+ * enumerate what it re-opens.
+ *
+ * Only the *format* is checkable — whether a reason genuinely depends on a
+ * decision is a judgement. This enforces that anyone who writes `depends-on`
+ * writes an id after it, which is what makes the grep work.
+ */
+const DEPENDENCY_CITATION = /depends-on ADR-\d{4}-D\d+/;
+
+export function findMalformedDependencies(
+  table: readonly VerbEntry[],
+): string[] {
+  const problems: string[] = [];
+  for (const entry of table) {
+    for (const field of ["gqlExempt", "restExempt", "mcpExempt"] as const) {
+      const reason = entry[field];
+      if (!reason?.includes("depends-on")) continue;
+      if (!DEPENDENCY_CITATION.test(reason)) {
+        problems.push(
+          `${entry.verb}'s ${field} says "depends-on" without an ADR-NNNN-DN id to grep for`,
+        );
+      }
+    }
+  }
+  return problems;
+}
+
+/**
+ * How many in-scope verbs each surface is still missing.
+ *
+ * Out-of-scope absences are excluded rather than counted and forgiven, so the
+ * number is the work remaining and nothing else (ADR 0008 D4/D6).
+ */
+export function countDeferred(
+  table: readonly VerbEntry[],
+): Record<"gql" | "rest" | "mcp", number> {
+  const missing = (surface: "gql" | "rest" | "mcp") =>
+    table.filter((entry) => !entry[surface] && isReachableOn(entry, surface))
+      .length;
+  return { gql: missing("gql"), rest: missing("rest"), mcp: missing("mcp") };
+}
+
 const describeGap = (gap: ParityGap) =>
   gap.problem === "missing"
     ? `${gap.verb} is absent from ${gap.surface} with no ${EXEMPT_FIELD[gap.surface]} reason`
@@ -76,6 +147,37 @@ describe("surface parity", () => {
       return false;
     }).map((entry) => entry.verb);
     expect(duplicates).toEqual([]);
+  });
+
+  /**
+   * ADR 0008 D6 — the parity gap, tracked exactly.
+   *
+   * Asserted with `toEqual`, not as a ceiling, so the number moves in *either*
+   * direction only by someone editing this line. Adding a verb without its
+   * twins fails until the count is raised; porting one fails until it is
+   * lowered. Both are the point: the first makes growing the gap a visible,
+   * arguable act, and the second keeps the number tight — a ceiling with slack
+   * under it is how the next unpaired verb arrives unnoticed.
+   *
+   * Out-of-scope verbs (ADR 0008 D4) and ones a surface physically cannot carry
+   * are excluded upstream, so this is work remaining and nothing else.
+   */
+  const DEFERRED: Record<"gql" | "rest" | "mcp", number> = {
+    gql: 0,
+    rest: 80,
+    mcp: 91,
+  };
+
+  it("tracks the in-scope gap exactly, so it cannot drift either way", () => {
+    expect(countDeferred(VERB_TABLE)).toEqual(DEFERRED);
+  });
+
+  it("excuses a write verb only by a route that can write", () => {
+    expect(findUnreachableEscapeHatches(VERB_TABLE)).toEqual([]);
+  });
+
+  it("keeps every dependency citation greppable", () => {
+    expect(findMalformedDependencies(VERB_TABLE)).toEqual([]);
   });
 
   it("reaches all three surfaces for at least the ADR 0006 D1 verbs", () => {
@@ -123,5 +225,90 @@ describe("findParityGaps", () => {
     expect(gaps).toEqual([
       { verb: "test.verb", surface: "mcp", problem: "vague-reason" },
     ]);
+  });
+});
+
+describe("the checks ADR 0008 D7 added", () => {
+  const row = (over: Partial<VerbEntry>): VerbEntry => ({
+    verb: "test.verb",
+    class: "read",
+    gql: "Query.testVerb",
+    restExempt: "A".repeat(MIN_REASON_LENGTH),
+    mcpExempt: "B".repeat(MIN_REASON_LENGTH),
+    ...over,
+  });
+
+  describe("escape-hatch reachability", () => {
+    it("accepts a read excused by runBqlQuery", () => {
+      const entry = row({
+        mcpExempt: "Already reachable through `runBqlQuery`.",
+      });
+      expect(findUnreachableEscapeHatches([entry])).toEqual([]);
+    });
+
+    it("rejects a write excused by runBqlQuery — the bulkEntries defect", () => {
+      const entry = row({
+        verb: "Mutation.bulkEntries",
+        class: "write",
+        mcpExempt: "Already reachable through `runBqlQuery`.",
+      });
+      expect(findUnreachableEscapeHatches([entry])).toEqual([
+        "Mutation.bulkEntries is write-class but excused by a read-only escape hatch",
+      ]);
+    });
+
+    it("rejects an admin verb the same way", () => {
+      const entry = row({
+        class: "admin",
+        mcpExempt: "Already reachable through `runBqlQuery`.",
+      });
+      expect(findUnreachableEscapeHatches([entry])).toHaveLength(1);
+    });
+  });
+
+  describe("dependency citations", () => {
+    it("ignores a reason that claims no dependency", () => {
+      expect(findMalformedDependencies([row({})])).toEqual([]);
+    });
+
+    it("accepts a greppable citation", () => {
+      const entry = row({
+        mcpExempt: "depends-on ADR-0007-D3 — the ledger pin.",
+      });
+      expect(findMalformedDependencies([entry])).toEqual([]);
+    });
+
+    it("rejects a dependency with no id to grep for", () => {
+      const entry = row({
+        mcpExempt: "depends-on the ledger pinning decision.",
+      });
+      expect(findMalformedDependencies([entry])).toHaveLength(1);
+    });
+  });
+
+  describe("deferred counting", () => {
+    it("counts an in-scope absence", () => {
+      expect(countDeferred([row({ rest: undefined })]).rest).toBe(1);
+    });
+
+    it("does not count a session-only absence — it is out of scope, not debt", () => {
+      const entry = row({ class: "session-only", rest: undefined });
+      expect(countDeferred([entry]).rest).toBe(0);
+    });
+
+    it("does not count a verb the surface physically cannot carry", () => {
+      // `ai.agent` IS the agent transport; a tool for reaching it is circular.
+      const entry = row({ verb: "ai.agent", class: "write", mcp: undefined });
+      expect(countDeferred([entry]).mcp).toBe(0);
+    });
+
+    it("does not count the Plaid Link ceremony", () => {
+      const entry = row({
+        verb: "Mutation.exchangePlaidPublicToken",
+        class: "admin",
+        rest: undefined,
+      });
+      expect(countDeferred([entry]).rest).toBe(0);
+    });
   });
 });

@@ -90,6 +90,16 @@ export const restOpId = (method: string, path: string): string =>
   `REST ${method} ${path}`;
 export const gqlOpId = (field: string): string => `GQL ${field}`;
 export const mcpOpId = (tool: string): string => `MCP ${tool}`;
+/**
+ * A resource read is its own op, classified like any other.
+ *
+ * Distinct from `mcpOpId` because a resource and a tool are separate primitives
+ * with separate handlers, and the rate limiter and audit trail should be able
+ * to tell "read the file" from "call the tool that reads the file". The *verb*
+ * is the same, so both ids hang off one `VERB_TABLE` row.
+ */
+export const mcpResourceOpId = (resource: string): string =>
+  `MCP resource:${resource}`;
 
 // ---------------------------------------------------------------------------
 // The verb table
@@ -114,6 +124,12 @@ export interface VerbEntry {
   readonly rest?: string;
   /** MCP tool name. */
   readonly mcp?: string;
+  /**
+   * MCP resource name, when the same verb is also fetchable as a resource
+   * (ADR 0008 D2). Reads that an agent pulls into context rather than acts
+   * through; the verb and its class are shared with the tool above.
+   */
+  readonly mcpResource?: string;
   readonly gqlExempt?: string;
   readonly restExempt?: string;
   readonly mcpExempt?: string;
@@ -152,7 +168,9 @@ const R = {
   pullRequest:
     "Ledger pull-request review is a dashboard workflow layered on Gitea's own API; publishing it as REST would commit us to Gitea's review model as public contract.",
   plaidBinding:
-    "Plaid binding runs through Link, a browser widget: the link token and its public-token exchange are only meaningful as callbacks from that widget.",
+    "Plaid binding runs through Link, a browser widget — the link token and its public-token exchange are only meaningful as callbacks from that widget. Covers the Link ceremony only; operating an already-linked bank is `plaidOperation` (ADR 0008 D4a).",
+  plaidOperation:
+    "Operating an already-linked bank — listing items, mapping accounts, syncing and submitting transactions — needs no browser and is squarely customer-facing. Deferred pending the authorization decision in w3/m8/t001, not excused (ADR 0008 D4a).",
   llm: "LLM-assisted helper whose contract is a prompt and its response shape, both still moving. Publishing it as REST would freeze what we are still iterating on.",
   assetStorage:
     "Pre-signed S3 URL minting is an implementation detail of the dashboard's upload widget, not a ledger resource.",
@@ -171,7 +189,7 @@ const R = {
  */
 const M = {
   notAgentShaped:
-    "Not agent-shaped: no agent workflow reaches for it, and every additional tool measurably degrades selection accuracy for the four that matter (ADR 0006 Alternatives: agents are highly sensitive to tool naming and count).",
+    "Not agent-shaped — no agent workflow reaches for it, and every additional tool measurably degrades selection accuracy for the ones that do (ADR 0006 Alternatives: agents are highly sensitive to tool naming and count). Deferred rather than structural: ADR 0008 D5 makes the tool list a budget, so this is an argument about today's budget, not a permanent limit.",
   sessionCeremony:
     "Authentication ceremony: an MCP client arrives already holding a token, so it can neither need nor complete these.",
   credentialMinting:
@@ -179,13 +197,19 @@ const M = {
   billing:
     "Billing is a human decision with a hosted checkout page; an agent has nothing to do with the URL it would receive.",
   plaidBinding:
-    "Bank binding runs through the Plaid Link browser widget, which an agent cannot drive.",
+    "Bank binding runs through the Plaid Link browser widget, which an agent cannot drive. Covers the Link ceremony only — three verbs. Operating an already-linked bank is `plaidOperation` (ADR 0008 D4a).",
+  plaidOperation:
+    "Operating an already-linked bank needs no browser, and importing transactions into a ledger is close to the whole customer job. Deferred pending w3/m8/t001's decision on what an agent may do to a bank link, not excused (ADR 0008 D4a).",
   dashboardShaped:
     "Screen-shaped payload: an agent wants the underlying ledger data, which `runBqlQuery` already gives it in a form it can reason about.",
   coveredByBql:
-    "Already reachable through `runBqlQuery`: BQL expresses this query directly, so a dedicated tool would be a second, narrower way to ask the same question.",
+    "Already reachable through `runBqlQuery` — BQL expresses this query directly, so a dedicated tool would be a second, narrower way to ask the same question. Read-only by construction: BQL cannot write, so this may never excuse a `write` or `admin` verb (ADR 0008 D7.1).",
+  coveredByEditFiles:
+    "Already reachable through `editLedgerFiles` — the directive is written into the ledger file and committed by the same tool, so a dedicated tool would be a second way to spell one commit.",
   transportOnly:
     "This *is* the MCP surface's own transport or one of its siblings — a tool for reaching it would be circular.",
+  singleLedgerPin:
+    "Depends-on ADR-0007-D3 — MCP pins every credential to one ledger, so a tool that enumerates ledgers can only return the one the agent already has. ADR 0007 D11 relaxes the pin and inverts this: an unpinned credential must call it first. Reverse when D11 lands.",
 } as const;
 
 /** Why a verb has no GraphQL field. */
@@ -197,6 +221,95 @@ const G = {
   wireCompat:
     "Exists to speak a foreign wire format (OpenAI / Anthropic / MCP) so third-party clients work unchanged; a GraphQL twin would have no client.",
 } as const;
+
+/**
+ * Verbs outside the parity target, by name.
+ *
+ * ADR 0008 D4 scopes parity to the customer-facing surface: an operation a
+ * ledger owner, or an agent acting for them, performs on their own accounting
+ * data. Three things fall outside it. Two are small enough to list here; the
+ * third — the `session-only` class — is derived, because ADR 0006 D3 already
+ * decided it and a second list would be free to disagree.
+ *
+ * These are lists rather than a marker on each exemption string on purpose.
+ * An exemption is an *argument*, and the same argument lands on both in-scope
+ * and out-of-scope verbs — "credential minting is unreachable by a token"
+ * excuses six `session-only` verbs and four in-scope ones. A prose marker would
+ * have to be right in every row it was pasted into, which is the failure mode
+ * ADR 0008 exists to stop. Derive what can be derived.
+ */
+
+/** The Plaid Link ceremony: the operation *is* the hosted browser widget. */
+const LINK_CEREMONY_VERBS: ReadonlySet<string> = new Set([
+  "Mutation.createPlaidLinkToken",
+  "Mutation.createPlaidUpdateModeLinkToken",
+  "Mutation.exchangePlaidPublicToken",
+]);
+
+/** Projections assembled for one dashboard screen, not ledger resources. */
+const SCREEN_PROJECTION_VERBS: ReadonlySet<string> = new Set([
+  "Query.accountHierarchy",
+  "Query.homeCharts",
+]);
+
+/**
+ * In-scope verbs a given surface cannot carry, whatever the effort.
+ *
+ * Distinct from the scope lists above, and the distinction matters: those say
+ * "not a parity target"; this says "a target, and this surface physically
+ * cannot". Ten verbs, all of them a transport limit rather than a judgement —
+ * which is why they are listed rather than argued for per row.
+ */
+const SURFACE_IMPOSSIBLE: Record<
+  "gql" | "rest" | "mcp",
+  ReadonlySet<string>
+> = {
+  // A GraphQL response cannot stream an archive or an event stream, and cannot
+  // speak someone else's wire format.
+  gql: new Set([
+    "ledger.downloadArchive",
+    "ledger.downloadArchive.legacy",
+    "ai.agent",
+    "ai.askAgent",
+    "ai.openaiChatCompletions",
+    "ai.anthropicMessages",
+  ]),
+  // REST can carry anything in scope; the set is empty rather than absent so
+  // that adding to it is a deliberate edit here.
+  rest: new Set<string>(),
+  // These *are* the agent transports. A tool for reaching one from inside a
+  // tool call is circular.
+  mcp: new Set([
+    "ai.agent",
+    "ai.askAgent",
+    "ai.openaiChatCompletions",
+    "ai.anthropicMessages",
+  ]),
+};
+
+/** Whether `surface` could carry this verb if someone did the work. */
+export function isReachableOn(
+  entry: VerbEntry,
+  surface: "gql" | "rest" | "mcp",
+): boolean {
+  return isInParityScope(entry) && !SURFACE_IMPOSSIBLE[surface].has(entry.verb);
+}
+
+/**
+ * Whether a verb is something parity is trying to reach at all.
+ *
+ * False means "cannot, and that is settled" — not "nobody got to it". The
+ * ratchet in `surface-parity.test.ts` counts only what this returns true for,
+ * so an absence that is genuinely out of reach never inflates the debt and an
+ * absence that is merely unbuilt can never hide inside it.
+ */
+export function isInParityScope(entry: VerbEntry): boolean {
+  return (
+    entry.class !== "session-only" &&
+    !LINK_CEREMONY_VERBS.has(entry.verb) &&
+    !SCREEN_PROJECTION_VERBS.has(entry.verb)
+  );
+}
 
 /** A verb on GraphQL and REST, but not MCP. */
 const gqlAndRest = (
@@ -466,7 +579,7 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     "Query.listLedgers",
     "read",
     "GET /api-gateway/v1/ledgers",
-    M.notAgentShaped,
+    M.singleLedgerPin,
   ),
   gqlOnly(
     "Query.listUserOwnedLedgers",
@@ -654,7 +767,7 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     "Mutation.bulkEntries",
     "write",
     "POST /api-gateway/v1/ledgers/{owner}/{name}/entries",
-    M.coveredByBql,
+    M.coveredByEditFiles,
   ),
   gqlOnly(
     "Mutation.insertReceiptTransaction",
@@ -773,6 +886,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     class: "read",
     gql: "Query.getLedgerFile",
     mcp: "readLedgerFiles",
+    mcpResource: "ledgerFile",
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
   },
   // One MCP tool, three GraphQL mutations: `editLedgerFiles` takes create /
@@ -920,14 +1034,19 @@ const ASSET_VERBS: readonly VerbEntry[] = [
  * read/write ledger data.
  */
 const PLAID_VERBS: readonly VerbEntry[] = [
-  gqlOnly("Query.getPlaidItems", "admin", R.plaidBinding, M.plaidBinding),
-  gqlOnly("Query.getPlaidItem", "admin", R.plaidBinding, M.plaidBinding),
-  gqlOnly("Query.getPlaidAccounts", "admin", R.plaidBinding, M.plaidBinding),
+  gqlOnly("Query.getPlaidItems", "admin", R.plaidOperation, M.plaidOperation),
+  gqlOnly("Query.getPlaidItem", "admin", R.plaidOperation, M.plaidOperation),
+  gqlOnly(
+    "Query.getPlaidAccounts",
+    "admin",
+    R.plaidOperation,
+    M.plaidOperation,
+  ),
   gqlOnly(
     "Query.getPlaidAccountsForLedger",
     "admin",
-    R.plaidBinding,
-    M.plaidBinding,
+    R.plaidOperation,
+    M.plaidOperation,
   ),
   gqlOnly(
     "Mutation.createPlaidLinkToken",
@@ -947,30 +1066,35 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     R.plaidBinding,
     M.plaidBinding,
   ),
-  gqlOnly("Mutation.unlinkPlaidItem", "admin", R.plaidBinding, M.plaidBinding),
+  gqlOnly(
+    "Mutation.unlinkPlaidItem",
+    "admin",
+    R.plaidOperation,
+    M.plaidOperation,
+  ),
   gqlOnly(
     "Mutation.reconcilePlaidAccounts",
     "admin",
-    R.plaidBinding,
-    M.plaidBinding,
+    R.plaidOperation,
+    M.plaidOperation,
   ),
   gqlOnly(
     "Mutation.updatePlaidAccountMapping",
     "admin",
-    R.plaidBinding,
-    M.plaidBinding,
+    R.plaidOperation,
+    M.plaidOperation,
   ),
   gqlOnly(
     "Mutation.updatePlaidAccountCurrency",
     "admin",
-    R.plaidBinding,
-    M.plaidBinding,
+    R.plaidOperation,
+    M.plaidOperation,
   ),
   gqlOnly(
     "Mutation.refreshPlaidItemStatus",
     "admin",
-    R.plaidBinding,
-    M.plaidBinding,
+    R.plaidOperation,
+    M.plaidOperation,
   ),
   gqlOnly(
     "Query.getUnsyncedPlaidTransactions",
@@ -1081,6 +1205,7 @@ function buildOpIndex(): ReadonlyMap<string, VerbEntry> {
     if (entry.gql) claim(gqlOpId(entry.gql), entry);
     if (entry.rest) claim(restOpId(...splitRest(entry.rest)), entry);
     if (entry.mcp) claim(mcpOpId(entry.mcp), entry);
+    if (entry.mcpResource) claim(mcpResourceOpId(entry.mcpResource), entry);
   }
   return index;
 }

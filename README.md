@@ -154,8 +154,9 @@ Point an MCP client at a deployment to query and edit a ledger from an agent:
 ```
 
 Seven tools — BQL queries, file listing, reads, edits, and API-key management —
-each re-authorized on every call. The credential must be scoped to a single
-ledger; MCP has no per-call ledger argument. `yarn mcp:conformance <base-url>`
+plus URI-addressed **resources** an agent fetches without spending a tool call.
+Every call re-authorizes, so access revoked mid-session is refused on the next
+one. The credential must be scoped to a single ledger. `yarn mcp:conformance <base-url>`
 tells you whether a deployment is connectable. See
 [connecting an MCP client](./backend-cluster/backend-v2/README.md#connecting-an-mcp-client)
 for the walkthrough and

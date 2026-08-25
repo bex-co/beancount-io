@@ -1,19 +1,27 @@
 # w3 · m5 — Surface parity groundwork: honest counts and the MCP resource layer
 
-**Worker:** worker3 **Goal:** The parity numbers mean something, they can only go down, and the primitive that makes 52 read verbs reachable from MCP exists and is proven end to end. **Status:** todo
+**Worker:** worker3 **Goal:** The parity numbers mean something, they can only go down, and the primitive that makes 52 read verbs reachable from MCP exists and is proven end to end. **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
-| t001 | Fix the three stale exemptions in `VERB_TABLE` | 30m | — |
-| t002 | Split every exemption into `structural:` or `deferred:` | 45m | t001 |
-| t003 | Guards: the parity ratchet, plus D7's two mechanical checks | 45m | t002 |
-| t004 | MCP `resources` capability + one resource template, end to end | 45m | — |
-| t005 | Adoption surface | 20m | t003, t004 |
-| t006 | Simplify | 20m | t005 |
-| t007 | Test coverage | 30m | t005 |
-| t008 | Closeout | 20m | t007 |
+| t001 | Fix the three stale exemptions in `VERB_TABLE` | 30m | — | — **DONE**
+| t002 | Split every exemption into `structural:` or `deferred:` | 45m | t001 | — **DONE**
+| t003 | Guards: the parity ratchet, plus D7's two mechanical checks | 45m | t002 | — **DONE**
+| t004 | MCP `resources` capability + one resource template, end to end | 45m | — | — **DONE**
+| t005 | Adoption surface | 20m | t003, t004 | — **DONE**
+| t006 | Simplify | 20m | t005 | — **DONE**
+| t007 | Test coverage | 30m | t005 | — **DONE**
+| t008 | Closeout | 20m | t007 | — **DONE**
+
+## Definition of done — amended during t002
+
+**The first clause below was not met as written, on purpose.** It called for every exemption string to begin `structural:` or `deferred:`. Prefixing them revealed why that cannot work: five categories genuinely span both — `credentialMinting` excuses six `session-only` verbs and four in-scope ones — because **an exemption is an argument, and the same argument lands on rows of both kinds**. A prose marker would have to be correct in every row it was pasted into, which is the exact failure ADR 0008 exists to stop.
+
+So scope is derived instead, from two short named lists in `op-class.ts` (`isInParityScope`, `isReachableOn`) that cannot go stale. ADR 0008 D6 was rewritten to match, and the reasoning is recorded there rather than only here. Everything else in the clause below held.
+
+A second correction fell out of it: the MCP count is **91, not 95**. Four in-scope verbs — the agent transports themselves — are unreachable on MCP by construction, which the original arithmetic missed.
 
 ## Definition of done
 
