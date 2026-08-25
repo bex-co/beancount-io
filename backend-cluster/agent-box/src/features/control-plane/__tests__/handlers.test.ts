@@ -151,6 +151,23 @@ describe('control-plane handlers', () => {
     expect(result).toEqual({ ok: true });
   });
 
+  it('writeFile creates the parent directory first (harness contract)', async () => {
+    const sandbox = makeSandbox();
+    await writeFile(sandbox, {
+      path: "/workspace/.harness-bootstrap/impl/it's.json",
+      content: '{}',
+      encoding: 'utf-8',
+    });
+    expect(sandbox.exec).toHaveBeenCalledWith(
+      `mkdir -p '/workspace/.harness-bootstrap/impl'`,
+    );
+    const execOrder = (sandbox.exec as ReturnType<typeof vi.fn>).mock
+      .invocationCallOrder[0];
+    const writeOrder = (sandbox.writeFile as ReturnType<typeof vi.fn>).mock
+      .invocationCallOrder[0];
+    expect(execOrder).toBeLessThan(writeOrder);
+  });
+
   it('readFile returns { exists: true, content } on success', async () => {
     const sandbox = makeSandbox();
     const result = await readFile(sandbox, { path: '/workspace/a.txt' });

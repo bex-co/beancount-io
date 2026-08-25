@@ -199,12 +199,30 @@ export interface WriteFileRequest {
   encoding?: string;
 }
 
+// Harness contract: file writes "create parent directories recursively and
+// overwrite any existing file". The SDK's writeFile is a plain shell redirect
+// and fails with ENOENT on a missing parent, so ensure the directory first.
 export async function writeFile(
   sandbox: SandboxLike,
   req: WriteFileRequest,
 ): Promise<{ ok: true }> {
+  const dir = posixDirname(req.path);
+  if (dir !== '' && dir !== '/' && dir !== '.') {
+    await sandbox.exec(`mkdir -p ${singleQuote(dir)}`);
+  }
   await sandbox.writeFile(req.path, req.content, { encoding: req.encoding });
   return { ok: true };
+}
+
+function posixDirname(path: string): string {
+  const idx = path.lastIndexOf('/');
+  if (idx < 0) return '';
+  if (idx === 0) return '/';
+  return path.slice(0, idx);
+}
+
+function singleQuote(value: string): string {
+  return `'${value.replaceAll("'", `'\\''`)}'`;
 }
 
 export interface ReadFileRequest {
