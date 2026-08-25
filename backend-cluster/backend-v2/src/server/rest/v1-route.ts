@@ -28,13 +28,13 @@ import { errorSchema, json } from "./v1-schemas";
  */
 
 /** The prefix every v1 path carries. */
-export const V1_PREFIX = "/v1";
+export const V1_PREFIX = "/api-gateway/v1";
 
 /**
  * Path syntax for a route declaration: OpenAPI-style `{param}`, plus `{*param}`
  * for a trailing wildcard that swallows slashes (file paths).
  */
-export type V1Path = `/${string}`;
+export type V1Path = `${typeof V1_PREFIX}/${string}`;
 
 export type V1Method = "get" | "post" | "put" | "delete";
 
@@ -65,7 +65,7 @@ export interface V1Input<P, Q, B> {
 
 export interface V1Route<P = unknown, Q = unknown, B = unknown> {
   readonly method: V1Method;
-  /** Declared path including the `/v1` prefix, in `{param}` form. */
+  /** Declared path including the `/api-gateway/v1` prefix, in `{param}` form. */
   readonly path: V1Path;
   readonly summary: string;
   readonly description: string;

@@ -86,7 +86,7 @@ const fileSchema = z
 export const FILE_ROUTES = [
   v1Route({
     method: "get",
-    path: "/v1/ledgers/{owner}/{name}/files",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/files",
     summary: "List files and directories",
     description:
       "One directory level, directories first then files by name. Pass `dir` to descend; omit it for the repository root.",
@@ -105,7 +105,7 @@ export const FILE_ROUTES = [
 
   v1Route({
     method: "get",
-    path: "/v1/ledgers/{owner}/{name}/files/{*path}",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
     summary: "Read a file",
     description:
       "The file's content as UTF-8 text, with the blob SHA to pass back when updating it.",
@@ -127,7 +127,7 @@ export const FILE_ROUTES = [
 
   v1Route({
     method: "put",
-    path: "/v1/ledgers/{owner}/{name}/files/{*path}",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
     summary: "Create or replace a file",
     description:
       "Writes the file and commits it. Include the `sha` from a prior GET to replace an existing file; omit it to create a new one.",
@@ -156,7 +156,7 @@ export const FILE_ROUTES = [
 
   v1Route({
     method: "delete",
-    path: "/v1/ledgers/{owner}/{name}/files/{*path}",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
     summary: "Delete a file",
     description: "Removes the file and commits the deletion.",
     params: filePathSchema,

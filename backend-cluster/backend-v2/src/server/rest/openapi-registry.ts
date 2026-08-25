@@ -259,7 +259,7 @@ export function generateV1OpenAPIDocument() {
       description: `
 The public REST API for Beancount.io ledgers.
 
-Every endpoint addresses a ledger as two path segments — \`/v1/ledgers/{owner}/{name}\` —
+Every endpoint addresses a ledger as two path segments — \`/api-gateway/v1/ledgers/{owner}/{name}\` —
 and returns JSON. Errors share one shape: \`{ "ok": false, "error": { "code", "message" } }\`.
 
 ## Authentication

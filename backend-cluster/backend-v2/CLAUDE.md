@@ -135,7 +135,7 @@ Prompt and agent-routing evals live entirely under `evals/`. Use the focused `ya
 - GraphQL: `src/server/graphql/`; resolver list and DI are in `resolver-registry.ts`.
 - REST: feature handlers register fragments consumed by `src/server/api/composition-root.ts`.
 - MCP: `src/features/ai-agent/api/mcp-tools.ts`, registered through the same composition root.
-- OpenAPI: `GET /v1/openapi.json` is the published v1 contract and is served in every environment. The internal `/api-docs` and `/api-admin-docs` Swagger UI pages stay development-only.
+- OpenAPI: `GET /api-gateway/v1/openapi.json` is the published v1 contract and is served in every environment. The internal `/api-docs` and `/api-admin-docs` Swagger UI pages stay development-only.
 - New documented REST endpoints use Zod schemas, `zodValidator()`, and central route registration. Import the shared `@/shared/zod-openapi-setup`; never call `extendZodWithOpenApi()` in individual schema files.
 
 ### The v1 REST surface
@@ -169,7 +169,7 @@ Every surface authenticates through one gate and classifies every operation:
 
 Only a sha256 digest is stored, plus a display prefix. The plaintext is returned by the mint response and is unrecoverable afterwards.
 
-A key reaches GraphQL and `/v1` unconditionally. **MCP additionally requires the key to be ledger-scoped**, because `mcp-route.ts` refuses any credential not bound to one ledger — mint with `ledgerScope: "owner/name"` for an agent client.
+A key reaches GraphQL and `/api-gateway/v1` unconditionally. **MCP additionally requires the key to be ledger-scoped**, because `mcp-route.ts` refuses any credential not bound to one ledger — mint with `ledgerScope: "owner/name"` for an agent client.
 
 ## Environment and deployment
 

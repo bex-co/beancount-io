@@ -106,7 +106,7 @@ const entriesBodySchema = z
   });
 
 /**
- * `POST /v1/ledgers/{owner}/{name}/entries` — append directives without
+ * `POST /api-gateway/v1/ledgers/{owner}/{name}/entries` — append directives without
  * knowing which file they belong in.
  *
  * The service routes each directive to its file from the ledger's own
@@ -118,7 +118,7 @@ const entriesBodySchema = z
 export const ENTRY_ROUTES = [
   v1Route({
     method: "post",
-    path: "/v1/ledgers/{owner}/{name}/entries",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/entries",
     summary: "Add directives to the ledger",
     description:
       "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written.",

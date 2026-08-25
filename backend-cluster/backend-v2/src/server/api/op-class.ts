@@ -134,13 +134,13 @@ const R = {
   billing:
     "Billing verbs return Stripe-hosted URLs a human must visit in a browser; a curl client cannot complete checkout or the customer portal, so the endpoint would hand back a link to nowhere.",
   coveredByV1List:
-    "Covered by `GET /v1/ledgers`, which already returns every ledger the caller can reach. Owner-filtering and search are paging concerns of one screen; a client holding the list can do both itself.",
+    "Covered by `GET /api-gateway/v1/ledgers`, which already returns every ledger the caller can reach. Owner-filtering and search are paging concerns of one screen; a client holding the list can do both itself.",
   coveredByV1Journal:
-    "Covered by `GET /v1/ledgers/{owner}/{name}/journal`, which takes the same account/filter/time narrowing and answers with structured entries rather than a screen-tuned or plaintext rendering.",
+    "Covered by `GET /api-gateway/v1/ledgers/{owner}/{name}/journal`, which takes the same account/filter/time narrowing and answers with structured entries rather than a screen-tuned or plaintext rendering.",
   coveredByV1Entries:
-    "Covered by `POST /v1/ledgers/{owner}/{name}/entries`, which calls the same `addBulkEntries` service and routes each directive to its file the same way.",
+    "Covered by `POST /api-gateway/v1/ledgers/{owner}/{name}/entries`, which calls the same `addBulkEntries` service and routes each directive to its file the same way.",
   coveredByV1Files:
-    "Expressible over the v1 file endpoints: `GET`, `PUT`, and `DELETE` on `/v1/ledgers/{owner}/{name}/files/{path}` cover reading, writing, and moving content. A dedicated verb would be a second way to spell the same commit.",
+    "Expressible over the v1 file endpoints: `GET`, `PUT`, and `DELETE` on `/api-gateway/v1/ledgers/{owner}/{name}/files/{path}` cover reading, writing, and moving content. A dedicated verb would be a second way to spell the same commit.",
   ledgerControlPlane:
     "The ledger control plane — creating, renaming, deleting a ledger, and who may reach it — is `admin` class and deliberately outside D7's v1 table. v1 publishes ledger *content*; granting a token the power to delete a ledger is a decision to take deliberately alongside API keys (w1/m22), not to inherit from publishing reads.",
   notInV1Table:
@@ -462,7 +462,12 @@ const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
 ];
 
 const LEDGER_READ_VERBS: readonly VerbEntry[] = [
-  gqlAndRest("Query.listLedgers", "read", "GET /v1/ledgers", M.notAgentShaped),
+  gqlAndRest(
+    "Query.listLedgers",
+    "read",
+    "GET /api-gateway/v1/ledgers",
+    M.notAgentShaped,
+  ),
   gqlOnly(
     "Query.listUserOwnedLedgers",
     "read",
@@ -473,20 +478,20 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
   gqlAndRest(
     "Query.getLedger",
     "read",
-    "GET /v1/ledgers/{owner}/{name}",
+    "GET /api-gateway/v1/ledgers/{owner}/{name}",
     M.notAgentShaped,
   ),
   gqlOnly("Query.getLedgerOverview", "read", R.dashboardShaped, M.coveredByBql),
   gqlAndRest(
     "Query.getLedgerIncomeStatement",
     "read",
-    "GET /v1/ledgers/{owner}/{name}/statements/{statement}",
+    "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
     M.coveredByBql,
   ),
   gqlAndRest(
     "Query.getLedgerBalanceSheet",
     "read",
-    "GET /v1/ledgers/{owner}/{name}/statements/{statement}",
+    "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
     M.coveredByBql,
   ),
   gqlOnly(
@@ -582,7 +587,7 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
   gqlAndRest(
     "Query.getLedgerJournal",
     "read",
-    "GET /v1/ledgers/{owner}/{name}/journal",
+    "GET /api-gateway/v1/ledgers/{owner}/{name}/journal",
     M.coveredByBql,
   ),
   gqlOnly(
@@ -606,7 +611,7 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
   gqlAndRest(
     "Query.getLedgerAccounts",
     "read",
-    "GET /v1/ledgers/{owner}/{name}/accounts",
+    "GET /api-gateway/v1/ledgers/{owner}/{name}/accounts",
     M.coveredByBql,
   ),
   gqlOnly(
@@ -624,7 +629,7 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
   gqlAndRest(
     "Query.getLedgerArchiveDownloadUrl",
     "read",
-    "POST /v1/ledgers/{owner}/{name}/archive-tickets",
+    "POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets",
     M.notAgentShaped,
   ),
   gqlOnly(
@@ -648,7 +653,7 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
   gqlAndRest(
     "Mutation.bulkEntries",
     "write",
-    "POST /v1/ledgers/{owner}/{name}/entries",
+    "POST /api-gateway/v1/ledgers/{owner}/{name}/entries",
     M.coveredByBql,
   ),
   gqlOnly(
@@ -714,21 +719,21 @@ const API_KEY_VERBS: readonly VerbEntry[] = [
     verb: "apikeys.list",
     class: "admin",
     gql: "Query.apiKeys",
-    rest: "GET /v1/api-keys",
+    rest: "GET /api-gateway/v1/api-keys",
     mcp: "listApiKeys",
   },
   {
     verb: "apikeys.create",
     class: "admin",
     gql: "Mutation.createApiKey",
-    rest: "POST /v1/api-keys",
+    rest: "POST /api-gateway/v1/api-keys",
     mcp: "createApiKey",
   },
   {
     verb: "apikeys.revoke",
     class: "admin",
     gql: "Mutation.revokeApiKey",
-    rest: "DELETE /v1/api-keys/{id}",
+    rest: "DELETE /api-gateway/v1/api-keys/{id}",
     mcp: "revokeApiKey",
   },
 ];
@@ -744,7 +749,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     // `write`, so a BQL query — which changes nothing — would demand
     // `ledger.write` on the strength of its verb alone. The body is a POST
     // because a BQL statement does not belong in a URL, not because it writes.
-    rest: "POST /v1/ledgers/{owner}/{name}/query",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/query",
   },
   {
     verb: "ledger.queryShell",
@@ -753,7 +758,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     // Same endpoint as `queryShellText`, chosen by `Accept`: JSON returns the
     // typed table, `text/plain` the shell's own rendering. One route, one
     // service call, two representations — so both verbs point at it.
-    rest: "POST /v1/ledgers/{owner}/{name}/query",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/query",
     mcpExempt: M.coveredByBql,
   },
   {
@@ -761,14 +766,14 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     class: "read",
     gql: "Query.getLedgerDirContent",
     mcp: "listLedgerFiles",
-    rest: "GET /v1/ledgers/{owner}/{name}/files",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/files",
   },
   {
     verb: "ledger.readFiles",
     class: "read",
     gql: "Query.getLedgerFile",
     mcp: "readLedgerFiles",
-    rest: "GET /v1/ledgers/{owner}/{name}/files/{*path}",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
   },
   // One MCP tool, three GraphQL mutations: `editLedgerFiles` takes create /
   // update / delete as an operation argument, while GraphQL spells each out as
@@ -779,26 +784,26 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     class: "write",
     gql: "Mutation.createLedgerFile",
     mcp: "editLedgerFiles",
-    rest: "PUT /v1/ledgers/{owner}/{name}/files/{*path}",
+    rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
   },
   {
     verb: "ledger.editFiles.update",
     class: "write",
     gql: "Mutation.updateLedgerFile",
     mcp: "editLedgerFiles",
-    rest: "PUT /v1/ledgers/{owner}/{name}/files/{*path}",
+    rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
   },
   {
     verb: "ledger.editFiles.delete",
     class: "write",
     gql: "Mutation.deleteLedgerFile",
     mcp: "editLedgerFiles",
-    rest: "DELETE /v1/ledgers/{owner}/{name}/files/{*path}",
+    rest: "DELETE /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
   },
   {
     verb: "ledger.downloadArchive",
     class: "read",
-    rest: "GET /v1/ledgers/{owner}/{name}/archive/{archive}",
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
     gqlExempt: G.bytesNotFields,
     mcpExempt: M.notAgentShaped,
   },

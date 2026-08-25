@@ -21,7 +21,7 @@ const archiveParamsSchema = ledgerPathSchema.extend({
 const downloadQuerySchema = z.object({
   ticket: z.string().min(1).openapi({
     description:
-      "Single-use ticket from POST /v1/ledgers/{owner}/{name}/archive-tickets",
+      "Single-use ticket from POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets",
   }),
 });
 
@@ -31,7 +31,7 @@ const ticketSchema = z
       description:
         "The download URL, ticket included. Valid once, for 60 seconds.",
       example:
-        "/v1/ledgers/alice/main-ledger/archive/gitea-main.zip?ticket=v1.eyJ1c2VySWQi...",
+        "/api-gateway/v1/ledgers/alice/main-ledger/archive/gitea-main.zip?ticket=v1.eyJ1c2VySWQi...",
     }),
     expiresAt: z.string().openapi({
       description: "When the ticket stops being redeemable (ISO 8601)",
@@ -56,7 +56,7 @@ const ticketSchema = z
 export const ARCHIVE_TICKET_ROUTES = [
   v1Route({
     method: "post",
-    path: "/v1/ledgers/{owner}/{name}/archive-tickets",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/archive-tickets",
     summary: "Mint an archive download ticket",
     description: `Returns a URL that downloads the archive once, within ${TICKET_LIFETIME_MS / 1000} seconds. The ticket is bound to the caller, the ledger, and the archive name, and is refused on a second use.`,
     // The archive is named in the body, not the path: minting is an operation
@@ -84,7 +84,7 @@ export const ARCHIVE_TICKET_ROUTES = [
         layers.clients.cacheHelper,
       );
       return {
-        url: `/v1/ledgers/${params.owner}/${params.name}/archive/${encodeURIComponent(body.archive)}?ticket=${encodeURIComponent(ticket)}`,
+        url: `/api-gateway/v1/ledgers/${params.owner}/${params.name}/archive/${encodeURIComponent(body.archive)}?ticket=${encodeURIComponent(ticket)}`,
         expiresAt,
       };
     },
@@ -103,7 +103,7 @@ export const ARCHIVE_TICKET_ROUTES = [
 export const ARCHIVE_DOWNLOAD_ROUTES = [
   v1Route({
     method: "get",
-    path: "/v1/ledgers/{owner}/{name}/archive/{archive}",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
     summary: "Download a ledger archive",
     description:
       "Streams the archive. Requires a ticket from the archive-tickets endpoint; no bearer token is read here, and a ticket works exactly once.",

@@ -21,7 +21,7 @@ const auditLogger = logger.child({ module: "audit" });
 export type AuditOutcome = "allowed" | "denied" | "shadow-denied";
 
 export interface AuditEvent {
-  /** Stable op id (`REST POST /v1/...`, `GQL Mutation.x`, `MCP y`). */
+  /** Stable op id (`REST POST /api-gateway/v1/...`, `GQL Mutation.x`, `MCP y`). */
   readonly op: string;
   readonly userId?: string;
   readonly method?: AuthMethod;

@@ -12,7 +12,7 @@ import {
   type RestMount,
 } from "@/server/api/composition-root";
 import { registry, generateV1OpenAPIDocument } from "../openapi-registry";
-import { toKoaPath, toOpenApiPath } from "../v1-route";
+import { V1_PREFIX, toKoaPath, toOpenApiPath } from "../v1-route";
 import { normalizeRestPath } from "@/server/api/rest-op-id";
 
 /**
@@ -24,9 +24,9 @@ import { normalizeRestPath } from "@/server/api/rest-op-id";
  * named a URL that 404s and nothing noticed. Three checks, one per direction
  * something can go missing:
  *
- * 1. A mounted `/v1` route with no `registerRoute` — live surface nobody
+ * 1. A mounted `/api-gateway/v1` route with no `registerRoute` — live surface nobody
  *    documented.
- * 2. A registered `/v1` route with no mount — documentation for something that
+ * 2. A registered `/api-gateway/v1` route with no mount — documentation for something that
  *    is not there, which is worse than silence because a client will try it.
  * 3. A declared path that is not a mounted path — the archive bug's shape,
  *    checked across every registered route, not just v1's.
@@ -37,14 +37,14 @@ import { normalizeRestPath } from "@/server/api/rest-op-id";
  */
 
 /**
- * Routes under `/v1` that are documentation infrastructure rather than part of
+ * Routes under `/api-gateway/v1` that are documentation infrastructure rather than part of
  * the resource contract. Each needs a reason, on the same principle as the
  * always-public census: an exception nobody wrote down is an exception nobody
  * can re-examine.
  */
 const V1_INFRASTRUCTURE: ReadonlyMap<string, string> = new Map([
   [
-    "GET /v1/openapi.json",
+    "GET /api-gateway/v1/openapi.json",
     "The spec document itself. Documenting it inside itself would be circular, and it is not a ledger resource.",
   ],
 ]);
@@ -93,12 +93,12 @@ describe("openapi completeness", () => {
     mounted = mountedPaths(mounts);
   });
 
-  it("documents every mounted /v1 route", () => {
+  it("documents every mounted /api-gateway/v1 route", () => {
     const registered = new Set(
       registeredRoutes().map((route) => `${route.method} ${route.path}`),
     );
     const undocumented = mounts
-      .filter((mount) => mount.path.startsWith("/v1"))
+      .filter((mount) => mount.path.startsWith(V1_PREFIX))
       .map(mountKey)
       .filter((key) => {
         if (V1_INFRASTRUCTURE.has(key)) return false;
@@ -108,7 +108,7 @@ describe("openapi completeness", () => {
     expect(undocumented).toEqual([]);
   });
 
-  it("mounts every /v1 route it documents", () => {
+  it("mounts every /api-gateway/v1 route it documents", () => {
     const unmounted = V1_DECLARED_ROUTES.map(
       (route) =>
         `${route.method.toUpperCase()} ${normalizeRestPath(toKoaPath(route.path))}`,
@@ -140,10 +140,10 @@ describe("openapi completeness", () => {
   it("keeps the admin surface out of the public v1 document", () => {
     const doc = generateV1OpenAPIDocument();
     const paths = Object.keys(doc.paths ?? {});
-    expect(paths.filter((p) => !p.startsWith("/v1"))).toEqual([]);
+    expect(paths.filter((p) => !p.startsWith(V1_PREFIX))).toEqual([]);
   });
 
-  it("gives every /v1 infrastructure exception a reason", () => {
+  it("gives every /api-gateway/v1 infrastructure exception a reason", () => {
     for (const reason of V1_INFRASTRUCTURE.values()) {
       expect(reason.trim().length).toBeGreaterThan(40);
     }

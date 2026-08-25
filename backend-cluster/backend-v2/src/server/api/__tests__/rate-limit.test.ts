@@ -69,7 +69,7 @@ describe("budgets", () => {
       "oauth",
     );
     expect(anonymousFamily("/api-gateway/stripe/webhook")).toBe("webhook");
-    expect(anonymousFamily("/v1/ledgers")).toBe("default");
+    expect(anonymousFamily("/api-gateway/v1/ledgers")).toBe("default");
     // A flood against one must not be able to exhaust another.
     expect(new Set(Object.keys(ANONYMOUS_BUDGETS)).size).toBe(3);
   });
@@ -175,7 +175,7 @@ describe("store outage", () => {
       enforceRateLimit({ opId: "GQL Query.x", identity: token, ip: "ip" }),
     ).resolves.toBeUndefined();
     await expect(
-      consumeAnonymous({ path: "/v1/ledgers", ip: "ip" }),
+      consumeAnonymous({ path: "/api-gateway/v1/ledgers", ip: "ip" }),
     ).resolves.toMatchObject({ allowed: true });
   });
 });

@@ -87,9 +87,12 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
     reason:
       "Prometheus scrape behind its own `x-api-key` (`metricsAuthRequired`), proxied from ledger-v2; same reasoning as `/metrics/backend`.",
   },
-  { opId: "REST GET /v1/openapi.json", reason: PUBLIC_CONTRACT },
   {
-    opId: "REST GET /v1/ledgers/{owner}/{name}/archive/{archive}",
+    opId: "REST GET /api-gateway/v1/openapi.json",
+    reason: PUBLIC_CONTRACT,
+  },
+  {
+    opId: "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
     reason: TICKET_IS_THE_CREDENTIAL,
   },
   { opId: "REST GET /api-docs", reason: DEV_ONLY_DOCS },

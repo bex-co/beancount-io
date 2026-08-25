@@ -65,7 +65,7 @@ const statementQuerySchema = z.object({
 export const REPORT_ROUTES = [
   v1Route({
     method: "get",
-    path: "/v1/ledgers/{owner}/{name}/journal",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/journal",
     summary: "List journal entries",
     description:
       "The ledger's journal, optionally narrowed by account, Fava filter, or time expression, and paged with `limit`/`offset`.",
@@ -84,7 +84,7 @@ export const REPORT_ROUTES = [
 
   v1Route({
     method: "get",
-    path: "/v1/ledgers/{owner}/{name}/accounts",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/accounts",
     summary: "List accounts",
     description:
       "Every account name in the ledger. `status=open` or `status=closed` narrows it to accounts with or without a close directive.",
@@ -104,7 +104,7 @@ export const REPORT_ROUTES = [
 
   v1Route({
     method: "get",
-    path: "/v1/ledgers/{owner}/{name}/statements/{statement}",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
     summary: "Get a financial statement",
     description:
       "Renders the balance sheet or the income statement for the period, with optional currency conversion and interval bucketing.",

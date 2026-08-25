@@ -76,7 +76,7 @@ const config = {
 
 let server: V1TestServer;
 
-const LEDGER = "/v1/ledgers/alice/main";
+const LEDGER = "/api-gateway/v1/ledgers/alice/main";
 
 async function call(
   method: string,
@@ -118,7 +118,7 @@ beforeEach(() => {
 describe("v1 authentication and scope", () => {
   it("refuses an anonymous caller with 401", async () => {
     server.setIdentity(undefined);
-    const { status, body } = await call("GET", "/v1/ledgers");
+    const { status, body } = await call("GET", "/api-gateway/v1/ledgers");
     expect(status).toBe(401);
     expect(body).toMatchObject({
       ok: false,
@@ -128,7 +128,7 @@ describe("v1 authentication and scope", () => {
 
   it("refuses a token with no scopes with 403, before the handler runs", async () => {
     server.setIdentity(scopelessToken);
-    const { status, body } = await call("GET", "/v1/ledgers");
+    const { status, body } = await call("GET", "/api-gateway/v1/ledgers");
     expect(status).toBe(403);
     expect(body).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
     expect(workflows.ledger.listLedgers).not.toHaveBeenCalled();
@@ -191,7 +191,10 @@ describe("v1 request validation", () => {
   });
 
   it("rejects an out-of-range query parameter", async () => {
-    const { status, body } = await call("GET", "/v1/ledgers?limit=0");
+    const { status, body } = await call(
+      "GET",
+      "/api-gateway/v1/ledgers?limit=0",
+    );
     expect(status).toBe(400);
     expect(body).toMatchObject({ error: { code: "VALIDATION_FAILED" } });
   });
@@ -210,7 +213,10 @@ describe("v1 request validation", () => {
 
 describe("v1 reads", () => {
   it("lists ledgers", async () => {
-    const { status, body } = await call("GET", "/v1/ledgers?page=1&limit=20");
+    const { status, body } = await call(
+      "GET",
+      "/api-gateway/v1/ledgers?page=1&limit=20",
+    );
     expect(status).toBe(200);
     expect(body).toEqual([{ id: "alice/main" }]);
     expect(workflows.ledger.listLedgers).toHaveBeenCalledWith({

@@ -83,9 +83,9 @@ const call = async (method: string, path: string, body?: unknown) => {
   return { status: response.status, body: await response.json() };
 };
 
-describe("GET /v1/api-keys", () => {
+describe("GET /api-gateway/v1/api-keys", () => {
   it("lists keys by prefix and never by digest", async () => {
-    const { status, body } = await call("GET", "/v1/api-keys");
+    const { status, body } = await call("GET", "/api-gateway/v1/api-keys");
     expect(status).toBe(200);
     expect(JSON.stringify(body)).not.toContain(storedKey.keyDigest);
     expect(body).toEqual([
@@ -95,14 +95,14 @@ describe("GET /v1/api-keys", () => {
 
   it("refuses an anonymous caller", async () => {
     server.setIdentity(undefined);
-    const { status } = await call("GET", "/v1/api-keys");
+    const { status } = await call("GET", "/api-gateway/v1/api-keys");
     expect(status).toBe(401);
   });
 });
 
-describe("POST /v1/api-keys", () => {
+describe("POST /api-gateway/v1/api-keys", () => {
   it("returns the plaintext exactly once, alongside the key", async () => {
-    const { status, body } = await call("POST", "/v1/api-keys", {
+    const { status, body } = await call("POST", "/api-gateway/v1/api-keys", {
       name: "CI",
       scopes: ["ledger.read"],
     });
@@ -112,7 +112,7 @@ describe("POST /v1/api-keys", () => {
   });
 
   it("rejects a scope outside the vocabulary before reaching the service", async () => {
-    const { status, body } = await call("POST", "/v1/api-keys", {
+    const { status, body } = await call("POST", "/api-gateway/v1/api-keys", {
       name: "CI",
       scopes: ["ledger.superuser"],
     });
@@ -122,7 +122,7 @@ describe("POST /v1/api-keys", () => {
   });
 
   it("rejects an empty scope list", async () => {
-    const { status } = await call("POST", "/v1/api-keys", {
+    const { status } = await call("POST", "/api-gateway/v1/api-keys", {
       name: "CI",
       scopes: [],
     });
@@ -133,7 +133,7 @@ describe("POST /v1/api-keys", () => {
     apiKeyService.mint.mockRejectedValueOnce(
       new PremiumRequiredError("API keys"),
     );
-    const { status, body } = await call("POST", "/v1/api-keys", {
+    const { status, body } = await call("POST", "/api-gateway/v1/api-keys", {
       name: "CI",
       scopes: ["ledger.read"],
     });
@@ -145,7 +145,10 @@ describe("POST /v1/api-keys", () => {
     // The no-self-perpetuation rule lives in the service so it holds on all
     // three surfaces; the adapter's job is only not to bypass it.
     server.setIdentity(fromKey);
-    await call("POST", "/v1/api-keys", { name: "CI", scopes: ["ledger.read"] });
+    await call("POST", "/api-gateway/v1/api-keys", {
+      name: "CI",
+      scopes: ["ledger.read"],
+    });
     expect(apiKeyService.mint).toHaveBeenCalledWith(
       expect.objectContaining({ method: "apikey" }),
       expect.anything(),
@@ -153,9 +156,12 @@ describe("POST /v1/api-keys", () => {
   });
 });
 
-describe("DELETE /v1/api-keys/{id}", () => {
+describe("DELETE /api-gateway/v1/api-keys/{id}", () => {
   it("revokes by id", async () => {
-    const { status, body } = await call("DELETE", "/v1/api-keys/akey_1");
+    const { status, body } = await call(
+      "DELETE",
+      "/api-gateway/v1/api-keys/akey_1",
+    );
     expect(status).toBe(200);
     expect(body).toMatchObject({ id: "akey_1" });
     expect(apiKeyService.revoke).toHaveBeenCalledWith(

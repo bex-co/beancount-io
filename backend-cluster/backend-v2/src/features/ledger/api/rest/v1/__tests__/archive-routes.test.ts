@@ -53,7 +53,7 @@ const config = {
 } as unknown as AppConfig;
 
 let server: V1TestServer;
-const LEDGER = "/v1/ledgers/alice/main";
+const LEDGER = "/api-gateway/v1/ledgers/alice/main";
 
 beforeAll(async () => {
   server = await startV1TestServer(layers, config);
@@ -134,7 +134,7 @@ describe("v1 archive tickets", () => {
     const query = body.url.slice(body.url.indexOf("?"));
 
     const response = await fetch(
-      `${server.url}/v1/ledgers/bob/main/archive/gitea-main.zip${query}`,
+      `${server.url}/api-gateway/v1/ledgers/bob/main/archive/gitea-main.zip${query}`,
     );
     expect(response.status).toBe(403);
     expect(fetchMock).not.toHaveBeenCalled();

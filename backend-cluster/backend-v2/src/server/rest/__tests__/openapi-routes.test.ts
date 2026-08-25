@@ -19,7 +19,7 @@ describe("setOpenApiRoutes", () => {
     // stays out: it describes surface we have promised nobody, and it renders
     // its UI from a CDN.
     expect(router.get).toHaveBeenCalledWith(
-      "/v1/openapi.json",
+      "/api-gateway/v1/openapi.json",
       expect.any(Function),
     );
     expect(router.get).toHaveBeenCalledTimes(1);

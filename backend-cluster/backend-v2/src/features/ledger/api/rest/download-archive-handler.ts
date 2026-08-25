@@ -14,7 +14,7 @@ import { parseLedgerId } from "@/shared/str";
  * The pre-v1 archive download. Superseded, kept for existing clients.
  *
  * Two things are wrong with it, both fixed by
- * `GET /v1/ledgers/{owner}/{name}/archive/{archive}`:
+ * `GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}`:
  *
  * 1. It accepts `?token=<JWT>` — the caller's long-lived session credential in
  *    a URL, and therefore in access logs, Referer headers, browser history, and
@@ -104,8 +104,8 @@ export function registerDownloadArchiveRoute(
     summary: "Download ledger archive file (deprecated)",
     description: `Downloads a ledger archive in the specified format (e.g., tar.gz, zip).
 
-**Deprecated.** Use \`POST /v1/ledgers/{owner}/{name}/archive-tickets\` followed by
-\`GET /v1/ledgers/{owner}/{name}/archive/{archive}?ticket=...\` instead. This route
+**Deprecated.** Use \`POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets\` followed by
+\`GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}?ticket=...\` instead. This route
 accepts a JWT in the query string, which puts a long-lived credential into logs and
 browser history, and addresses the ledger as a single \`owner%2Fname\` path segment.
 

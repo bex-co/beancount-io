@@ -14,7 +14,7 @@ const queryBodySchema = z
   });
 
 /**
- * `POST /v1/ledgers/{owner}/{name}/query` — BQL, the one endpoint that answers
+ * `POST /api-gateway/v1/ledgers/{owner}/{name}/query` — BQL, the one endpoint that answers
  * questions we did not anticipate.
  *
  * POST rather than GET because a BQL statement is a program, and programs do
@@ -32,7 +32,7 @@ const queryBodySchema = z
 export const QUERY_ROUTES = [
   v1Route({
     method: "post",
-    path: "/v1/ledgers/{owner}/{name}/query",
+    path: "/api-gateway/v1/ledgers/{owner}/{name}/query",
     summary: "Run a BQL query",
     description:
       "Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a typed table; `Accept: text/plain` returns the shell's own text rendering.",

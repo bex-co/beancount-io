@@ -38,7 +38,7 @@ function renderSwaggerUiHtml(title: string, specUrl: string): string {
  *
  * Two audiences, two lifetimes:
  *
- * - `/v1/openapi.json` is the **public contract** (ADR 0006 D8) and is served
+ * - `/api-gateway/v1/openapi.json` is the **public contract** (ADR 0006 D8) and is served
  *   everywhere, production included. A published API whose spec 404s in
  *   production is an API nobody outside can use without reading our source.
  * - `/api-docs` and `/api-admin-docs` describe internal surface and stay
@@ -54,7 +54,7 @@ export function setOpenApiRoutes(
   router: Router,
   config: Pick<AppConfig, "env">,
 ): void {
-  router.get("/v1/openapi.json", (ctx) => {
+  router.get("/api-gateway/v1/openapi.json", (ctx) => {
     ctx.body = generateV1OpenAPIDocument();
   });
 

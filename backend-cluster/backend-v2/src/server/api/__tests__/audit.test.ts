@@ -29,7 +29,7 @@ afterEach(() => setAuditSink(undefined));
 describe("the event shape", () => {
   it("has no field capable of carrying an argument value", () => {
     const event: AuditEvent = {
-      op: "REST PUT /v1/ledgers/{owner}/{name}/files/{*path}",
+      op: "REST PUT /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
       userId: "usr_1",
       method: "apikey",
       tokenId: "akey_1",
@@ -153,7 +153,7 @@ describe("coverage through the enforcement seam", () => {
     const events = await collect(() =>
       requireScopeClass(
         readOnly,
-        "REST PUT /v1/ledgers/{owner}/{name}/files/{*path}",
+        "REST PUT /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
         "enforce",
       ),
     );

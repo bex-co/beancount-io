@@ -26,7 +26,7 @@ import {
 export const API_KEY_V1_ROUTES: readonly V1Route<never, never, never>[] = [
   v1Route({
     method: "get",
-    path: "/v1/api-keys",
+    path: "/api-gateway/v1/api-keys",
     summary: "List your API keys",
     description:
       "Every key you have minted, newest first, including revoked and expired ones. Keys are shown by prefix — the key itself was returned once, when it was created.",
@@ -39,7 +39,7 @@ export const API_KEY_V1_ROUTES: readonly V1Route<never, never, never>[] = [
 
   v1Route({
     method: "post",
-    path: "/v1/api-keys",
+    path: "/api-gateway/v1/api-keys",
     summary: "Mint an API key",
     description:
       "Creates a key and returns its plaintext, which is shown here and never again. Requires a paid plan, and cannot be called with an API key — sign in, or use an OAuth grant.",
@@ -56,7 +56,7 @@ export const API_KEY_V1_ROUTES: readonly V1Route<never, never, never>[] = [
 
   v1Route({
     method: "delete",
-    path: "/v1/api-keys/{id}",
+    path: "/api-gateway/v1/api-keys/{id}",
     summary: "Revoke an API key",
     description:
       "Stops the key working from the next request onward. Revoking twice is not an error, and a key id you do not own reads as not found.",

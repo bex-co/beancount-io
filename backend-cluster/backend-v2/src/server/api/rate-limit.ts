@@ -62,7 +62,7 @@ export const OP_BUDGETS: Record<string, Budget> = {
   // Minting a durable credential is rare by nature, and a flood of attempts is
   // more likely to be a loop than a user.
   "GQL Mutation.createApiKey": { windowMs: MINUTE, max: 5 },
-  "REST POST /v1/api-keys": { windowMs: MINUTE, max: 5 },
+  "REST POST /api-gateway/v1/api-keys": { windowMs: MINUTE, max: 5 },
   "MCP createApiKey": { windowMs: MINUTE, max: 5 },
 };
 

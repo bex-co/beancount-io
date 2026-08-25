@@ -13,7 +13,7 @@ export const auditEvents = pgTable(
   "audit_events",
   {
     id: text("id").primaryKey(),
-    /** Stable op id: `REST POST /v1/...`, `GQL Mutation.x`, `MCP y`. */
+    /** Stable op id: `REST POST /api-gateway/v1/...`, `GQL Mutation.x`, `MCP y`. */
     op: text("op").notNull(),
     /** The user, when the request had one. */
     userId: text("user_id"),

@@ -3,7 +3,7 @@
   "info": {
     "title": "Beancount.io v1 API",
     "version": "1.0.0",
-    "description": "The public REST API for Beancount.io ledgers.\n\nEvery endpoint addresses a ledger as two path segments — `/v1/ledgers/{owner}/{name}` —\nand returns JSON. Errors share one shape: `{ \"ok\": false, \"error\": { \"code\", \"message\" } }`.\n\n## Authentication\n\nSend a bearer token: an OAuth 2.1 access token from this server's OIDC provider,\nor a session token. Each operation is classified `read`, `write`, or `admin`, and a\ntoken is refused when its scopes (`ledger.read`, `ledger.write`, `ledger.admin`)\ndo not cover the operation's class.\n\nThe one exception is the archive download, which takes a single-use ticket in the\nquery string instead — a browser following a download link cannot send a header.",
+    "description": "The public REST API for Beancount.io ledgers.\n\nEvery endpoint addresses a ledger as two path segments — `/api-gateway/v1/ledgers/{owner}/{name}` —\nand returns JSON. Errors share one shape: `{ \"ok\": false, \"error\": { \"code\", \"message\" } }`.\n\n## Authentication\n\nSend a bearer token: an OAuth 2.1 access token from this server's OIDC provider,\nor a session token. Each operation is classified `read`, `write`, or `admin`, and a\ntoken is refused when its scopes (`ledger.read`, `ledger.write`, `ledger.admin`)\ndo not cover the operation's class.\n\nThe one exception is the archive download, which takes a single-use ticket in the\nquery string instead — a browser following a download link cannot send a header.",
     "contact": {
       "name": "Beancount.io",
       "url": "https://github.com/bex-co/beancount-io"
@@ -619,7 +619,7 @@
           "url": {
             "type": "string",
             "description": "The download URL, ticket included. Valid once, for 60 seconds.",
-            "example": "/v1/ledgers/alice/main-ledger/archive/gitea-main.zip?ticket=v1.eyJ1c2VySWQi..."
+            "example": "/api-gateway/v1/ledgers/alice/main-ledger/archive/gitea-main.zip?ticket=v1.eyJ1c2VySWQi..."
           },
           "expiresAt": {
             "type": "string",
@@ -765,7 +765,7 @@
     "parameters": {}
   },
   "paths": {
-    "/v1/ledgers": {
+    "/api-gateway/v1/ledgers": {
       "get": {
         "summary": "List the caller's ledgers",
         "description": "Every ledger the caller can reach — owned, shared, and starred — newest first. Backed by the same source as the GraphQL `listLedgers` query.",
@@ -874,7 +874,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}": {
+    "/api-gateway/v1/ledgers/{owner}/{name}": {
       "get": {
         "summary": "Get one ledger",
         "description": "Metadata for a single ledger: description, visibility, default branch, and the caller's permissions on it.",
@@ -979,7 +979,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}/query": {
+    "/api-gateway/v1/ledgers/{owner}/{name}/query": {
       "post": {
         "summary": "Run a BQL query",
         "description": "Runs a Beancount Query Language statement against the ledger. `Accept: application/json` returns a typed table; `Accept: text/plain` returns the shell's own text rendering.",
@@ -1098,7 +1098,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}/journal": {
+    "/api-gateway/v1/ledgers/{owner}/{name}/journal": {
       "get": {
         "summary": "List journal entries",
         "description": "The ledger's journal, optionally narrowed by account, Fava filter, or time expression, and paged with `limit`/`offset`.",
@@ -1256,7 +1256,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}/accounts": {
+    "/api-gateway/v1/ledgers/{owner}/{name}/accounts": {
       "get": {
         "summary": "List accounts",
         "description": "Every account name in the ledger. `status=open` or `status=closed` narrows it to accounts with or without a close directive.",
@@ -1378,7 +1378,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}/statements/{statement}": {
+    "/api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}": {
       "get": {
         "summary": "Get a financial statement",
         "description": "Renders the balance sheet or the income statement for the period, with optional currency conversion and interval bucketing.",
@@ -1539,7 +1539,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}/files": {
+    "/api-gateway/v1/ledgers/{owner}/{name}/files": {
       "get": {
         "summary": "List files and directories",
         "description": "One directory level, directories first then files by name. Pass `dir` to descend; omit it for the repository root.",
@@ -1658,7 +1658,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}/files/{path}": {
+    "/api-gateway/v1/ledgers/{owner}/{name}/files/{path}": {
       "get": {
         "summary": "Read a file",
         "description": "The file's content as UTF-8 text, with the blob SHA to pass back when updating it.",
@@ -2023,7 +2023,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}/entries": {
+    "/api-gateway/v1/ledgers/{owner}/{name}/entries": {
       "post": {
         "summary": "Add directives to the ledger",
         "description": "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written.",
@@ -2148,7 +2148,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}/archive-tickets": {
+    "/api-gateway/v1/ledgers/{owner}/{name}/archive-tickets": {
       "post": {
         "summary": "Mint an archive download ticket",
         "description": "Returns a URL that downloads the archive once, within 60 seconds. The ticket is bound to the caller, the ledger, and the archive name, and is refused on a second use.",
@@ -2262,7 +2262,7 @@
         }
       }
     },
-    "/v1/api-keys": {
+    "/api-gateway/v1/api-keys": {
       "get": {
         "summary": "List your API keys",
         "description": "Every key you have minted, newest first, including revoked and expired ones. Keys are shown by prefix — the key itself was returned once, when it was created.",
@@ -2440,7 +2440,7 @@
         }
       }
     },
-    "/v1/api-keys/{id}": {
+    "/api-gateway/v1/api-keys/{id}": {
       "delete": {
         "summary": "Revoke an API key",
         "description": "Stops the key working from the next request onward. Revoking twice is not an error, and a key id you do not own reads as not found.",
@@ -2533,7 +2533,7 @@
         }
       }
     },
-    "/v1/ledgers/{owner}/{name}/archive/{archive}": {
+    "/api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}": {
       "get": {
         "summary": "Download a ledger archive",
         "description": "Streams the archive. Requires a ticket from the archive-tickets endpoint; no bearer token is read here, and a ticket works exactly once.",
@@ -2581,10 +2581,10 @@
             "schema": {
               "type": "string",
               "minLength": 1,
-              "description": "Single-use ticket from POST /v1/ledgers/{owner}/{name}/archive-tickets"
+              "description": "Single-use ticket from POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets"
             },
             "required": true,
-            "description": "Single-use ticket from POST /v1/ledgers/{owner}/{name}/archive-tickets",
+            "description": "Single-use ticket from POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets",
             "name": "ticket",
             "in": "query"
           }

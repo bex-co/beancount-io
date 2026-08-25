@@ -99,11 +99,11 @@ describe("findCoverageDrift", () => {
   // looks exactly like a codebase with no drift.
   it("reports a live op nobody classified", () => {
     const drift = findCoverageDrift(
-      ["REST GET /v1/new-thing", "GQL Query.known"],
+      ["REST GET /api-gateway/v1/new-thing", "GQL Query.known"],
       ["GQL Query.known"],
       new Set(),
     );
-    expect(drift.unclassified).toEqual(["REST GET /v1/new-thing"]);
+    expect(drift.unclassified).toEqual(["REST GET /api-gateway/v1/new-thing"]);
     expect(drift.stale).toEqual([]);
   });
 
