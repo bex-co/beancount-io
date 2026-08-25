@@ -240,7 +240,8 @@ const jaSeo: Record<string, TranslationEntry> = {
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Beancountにサインイン — 無料のオープンソース・プレーンテキスト会計",
+    message:
+      "Beancountにサインイン — 無料のオープンソース・プレーンテキスト会計",
     description: "Login page title",
   },
   "seo.logout.description": {

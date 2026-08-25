@@ -358,7 +358,8 @@ const deSeo: Record<string, TranslationEntry> = {
     description: "Sign up page meta description",
   },
   "seo.signUp.title": {
-    message: "Kostenloses Beancount-Konto erstellen — Git-gestützte Buchhaltung",
+    message:
+      "Kostenloses Beancount-Konto erstellen — Git-gestützte Buchhaltung",
     description: "Sign up page title",
   },
   "seo.signUpOtp.description": {

@@ -296,7 +296,8 @@ const nlSeo: Record<string, TranslationEntry> = {
     description: "Login page meta description",
   },
   "seo.login.title": {
-    message: "Inloggen bij Beancount — Gratis open-source plain-tekst boekhouding",
+    message:
+      "Inloggen bij Beancount — Gratis open-source plain-tekst boekhouding",
     description: "Login page title",
   },
   "seo.logout.description": {

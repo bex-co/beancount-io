@@ -29,7 +29,8 @@ const koSeo: Record<string, TranslationEntry> = {
     description: "Dashboard page title",
   },
   "seo.forgotPassword.description": {
-    message: "Beancount.io 비밀번호를 안전하게 재설정하세요. 일회성 보안 링크를 이메일로 보내드립니다 — 그런 다음 즉시 장부로 돌아가 작업을 계속하세요.",
+    message:
+      "Beancount.io 비밀번호를 안전하게 재설정하세요. 일회성 보안 링크를 이메일로 보내드립니다 — 그런 다음 즉시 장부로 돌아가 작업을 계속하세요.",
     description: "Forgot password page meta description",
   },
   "seo.forgotPassword.title": {
@@ -233,7 +234,8 @@ const koSeo: Record<string, TranslationEntry> = {
     description: "Trial balance page title with ledger name",
   },
   "seo.login.description": {
-    message: "Beancount.io에 로그인 — 오픈 소스, Git 기반 일반 텍스트 회계. 장부를 관리하고 은행을 가져오며 장부를 감사 가능하게 유지하세요.",
+    message:
+      "Beancount.io에 로그인 — 오픈 소스, Git 기반 일반 텍스트 회계. 장부를 관리하고 은행을 가져오며 장부를 감사 가능하게 유지하세요.",
     description: "Login page meta description",
   },
   "seo.login.title": {
