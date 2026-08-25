@@ -1,18 +1,18 @@
 # w3 · m3 — Budget localization & analytics-driven iteration
 
-**Worker:** worker3 **Goal:** Budget speaks all 13 app locales, and the first round of analytics-informed refinements ships (or is explicitly declined with data). **Status:** in progress (t001 locales + t006 parity test done; t002 unblocked 2026-08-24 — budget shipped in `mobile-v1.20260814.42`, so the funnel has collected for a real window and the analytics review is now the next actionable task)
+**Worker:** worker3 **Goal:** Budget speaks all 13 app locales, and the first round of analytics-informed refinements ships (or is explicitly declined with data). **Status:** done
 
 ## Tasks (in order)
 
 | id   | title | est | depends_on |
 | ---- | ----- | --- | ---------- |
 | t001 | Translate budget strings into the 13 non-English locales | 45m | — | — **DONE**
-| t002 | Analytics review: budget funnel + iteration decisions | 30m | — |
-| t003 | Implement decided iterations (interval filter / panel tuning) | 45m | t002 |
-| t004 | Adoption surface | 20m | t001, t003 |
-| t005 | Simplify | 20m | t004 |
+| t002 | Analytics review: budget funnel + iteration decisions | 30m | — | — **DONE**
+| t003 | Implement decided iterations (interval filter / panel tuning) | 45m | t002 | — **DONE**
+| t004 | Adoption surface | 20m | t001, t003 | — **DONE**
+| t005 | Simplify | 20m | t004 | — **DONE**
 | t006 | Test coverage | 30m | t004 | — **DONE**
-| t007 | Closeout | 20m | t006 |
+| t007 | Closeout | 20m | t006 | — **DONE**
 
 ## Definition of done
 
