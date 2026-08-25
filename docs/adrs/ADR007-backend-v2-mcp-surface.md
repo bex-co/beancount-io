@@ -1,6 +1,6 @@
 # ADR 0007: The MCP surface — one stateless endpoint, and the rules that keep it honest
 
-- Status: Accepted. D3 and D5 were already in force; D2, D6, D7, D8 and D9 have landed and D10 is partly completed; D1 and the remainder of D10 need access to a deployment rather than a change to this repo; **D11 (multi-ledger) is accepted and unimplemented** (see [Implementation status](#implementation-status-2026-08-24)). Cross-surface parity moved to its own record, [ADR 0008](./ADR0008-surface-parity.md).
+- Status: Accepted. D3 and D5 were already in force; D2, D6, D7, D8 and D9 have landed and D10 is partly completed; D1 and the remainder of D10 need access to a deployment rather than a change to this repo; **D11 (multi-ledger) is accepted and unimplemented** (see [Implementation status](#implementation-status-2026-08-24)). Cross-surface parity moved to its own record, [ADR 0008](./ADR008-backend-v2-surface-parity.md).
 - Date: 2026-08-24
 - Decision owners: Backend (route, registry, transport, error translation), Deploy (routing, secrets, migrations)
 - Scope: `POST /api-gateway/mcp` — the Model Context Protocol endpoint an external agent connects to. What its address is, which HTTP methods it answers, which credentials reach it, how a refusal is phrased, and which deployment facts are part of its contract rather than tribal knowledge. Extends ADR 0006, which established the three-surface model; this ADR is about the third surface specifically.

@@ -38,8 +38,8 @@ Build the assistant as a **native screen that is a protocol-faithful sibling of 
 - **New screen + route**: `src/screens/agent-screen/` mounted from `app/(app)/agent.tsx`. Message list rendering agent answers as markdown (via `react-native-marked` — see [Rendering markdown](#rendering-markdown-react-native-marked)), input bar, streaming indicator, stop, inline error + retry. Entry points: a Home-screen "Ask" affordance and the deep link `beancount:///(app)/agent?q=…`, which **prefills the input and never submits** — deliberately unlike the dashboard's `?q=`, because any app can open a URL scheme with text it chose (see [Implementation notes](#implementation-notes-2026-08-19)).
 - **Tool approvals**: port the dashboard's approval-card pattern to React Native — a file-edit card showing the change description and diff, and a receipt-insert card showing the proposed transaction — wired to `addToolApprovalResponse` with `sendAutomaticallyWhen` completing the round-trip.
 - **Attachments**: reuse the receipt-capture upload leg (`generateTempAssetUploadUrl` → presigned PUT), then send `file` parts plus `data-file-upload` parts `{ objectKey, filename }`, exactly as the dashboard does. Camera capture can feed the same staging path later.
-- **Conversation state is client-held** (the server is stateless per request): keep the `UIMessage[]` in memory for the app session with a New-chat reset. **Durable, cross-device history is explicitly deferred** to the backend-owned persistence design (see `dashboard/docs/ADR001-chat-history-persistence.md`); when its history endpoints exist, this screen hydrates from them without a transport change.
-- **Quota exhaustion** renders an upgrade prompt that links to the mobile subscription surface (see `mobile/docs/ADR001-mobile-billing.md`), mirroring the dashboard's upgrade panel.
+- **Conversation state is client-held** (the server is stateless per request): keep the `UIMessage[]` in memory for the app session with a New-chat reset. **Durable, cross-device history is explicitly deferred** to the backend-owned persistence design (see `docs/adrs/ADR001-dashboard-chat-history-persistence.md`); when its history endpoints exist, this screen hydrates from them without a transport change.
+- **Quota exhaustion** renders an upgrade prompt that links to the mobile subscription surface (see `docs/adrs/ADR001-mobile-billing.md`), mirroring the dashboard's upgrade panel.
 
 ## Architecture
 
@@ -219,8 +219,8 @@ Internal (public repo):
 - `dashboard/src/features/ai-agent/pages/agent/file-edit-approval.tsx`, `receipt-insert-approval.tsx` — approval-card UX to port
 - `mobile/src/screens/receipt-capture-screen/use-receipt-workflow.ts` — existing presign → PUT → `objectKey` pipeline
 - `mobile/src/common/apollo/secure-session-storage.ts`, `mobile/src/common/request.ts` — Bearer token custody and endpoint base
-- `dashboard/docs/ADR001-chat-history-persistence.md` — backend-owned durable history (deferred dependency)
-- `mobile/docs/ADR001-mobile-billing.md` — subscription surface the quota upsell links to
+- `docs/adrs/ADR001-dashboard-chat-history-persistence.md` — backend-owned durable history (deferred dependency)
+- `docs/adrs/ADR001-mobile-billing.md` — subscription surface the quota upsell links to
 
 Internal (private `backend-v2`, path + operation only):
 

@@ -9,7 +9,7 @@
 
 Beancount.io's `.well-known` traffic includes OAuth/OIDC discovery (RFC 8414 + RFC 9728), RFC 9116 security contact metadata, and MCP client discovery. The implementation is correctly centralized in the backend's well-known route files, but the _knowledge_ of these paths is not: the OAuth routes live in `oidc-route.ts`, the migrated security and MCP routes live in `well-known-route.ts`, their public-access justification lives in `always-public.ts`, their rate-limit bucket lives in `rate-limit.ts`, the dev proxy that forwards them lives in `dashboard/vite.config.ts`, a client-side mirror of the OAuth URL-building logic lives in `mobile/src/common/oauth/discovery.ts`, and deployment warnings about what breaks when OAuth discovery 503s are duplicated across `bex.yaml`, `deploy/docker/docker-compose.yml`, and `.env.tmpl`. Nothing tied these together, so a new well-known path could be added to a route file without anyone updating the proxy, the gate census, or the deployment docs.
 
-This ADR is that index. It does not re-implement or re-decide anything — `oidc-route.ts` is still the source of truth for behavior, and [ADR0007 D4](./backend-v2-ADR0007-mcp-surface.md) is still the source of truth for _why_ the MCP endpoint depends on this discovery chain. This document exists so the full set of paths, and the full set of places a change to them touches, is readable in one place.
+This ADR is that index. It does not re-implement or re-decide anything — `oidc-route.ts` is still the source of truth for behavior, and [ADR0007 D4](./ADR007-backend-v2-mcp-surface.md) is still the source of truth for _why_ the MCP endpoint depends on this discovery chain. This document exists so the full set of paths, and the full set of places a change to them touches, is readable in one place.
 
 ## The paths
 
@@ -48,7 +48,7 @@ In production, where the issuer has no extra path segment, the three paths colla
 7. **Deployment secret docs** — `bex.yaml`, `deploy/docker/docker-compose.yml`, and `backend-cluster/backend-v2/.env.tmpl` each carry a comment warning that missing `OAUTH_JWKS` makes `/.well-known/oauth-protected-resource` answer `503`, which breaks MCP authentication. Update all three if the warning's target path changes.
 8. **SEO / analytics exclusion** — `dashboard/scripts/search-console-report-core.ts` classifies `/.well-known` under `apiPrefixes` so Search Console reporting doesn't misattribute discovery-document traffic to dashboard-owned pages (see `dashboard/CLAUDE.md`).
 9. **Backend README** — `backend-cluster/backend-v2/README.md`'s "OAuth deployment contract" section is the canonical worked example of the issuer → resource → well-known path chain; update it if the derivation logic changes.
-10. **ADR0007** — `docs/adrs/backend-v2-ADR0007-mcp-surface.md` D4 documents _why_ the protected-resource document is part of MCP's contract rather than a neighbouring OAuth feature. This ADR indexes the paths; ADR0007 explains that one consequence in depth. Don't duplicate its prose here.
+10. **ADR0007** — `docs/adrs/ADR007-backend-v2-mcp-surface.md` D4 documents _why_ the protected-resource document is part of MCP's contract rather than a neighbouring OAuth feature. This ADR indexes the paths; ADR0007 explains that one consequence in depth. Don't duplicate its prose here.
 
 ## Decision
 

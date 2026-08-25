@@ -7,7 +7,7 @@
  * connectable?" — and, when it is not, names which of the seven checks failed
  * rather than leaving an operator to infer it from a curl transcript. The
  * checks exist because each has been observed failing in a real deployment
- * while every unit test passed; see `docs/ADR0007-mcp-surface.md`.
+ * while every unit test passed; see `docs/adrs/ADR007-backend-v2-mcp-surface.md`.
  *
  * Audience is any operator, not only beancount.io: a `deploy/docker/`
  * self-hoster runs the same command against their own base URL.

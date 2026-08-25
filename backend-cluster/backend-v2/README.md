@@ -212,7 +212,7 @@ The backend exposes GraphQL APIs through Apollo Server. You can explore the API 
 The backend serves a Model Context Protocol endpoint, so a coding agent can
 query and edit a ledger directly. Its contract — address, method set, refusal
 dialect, deployment preconditions — is
-[ADR 0007](./docs/ADR0007-mcp-surface.md).
+[ADR 0007](../../docs/adrs/ADR007-backend-v2-mcp-surface.md).
 
 ### The endpoint
 
@@ -296,7 +296,7 @@ carries `isError: true`, which is the flag an agent should branch on.
 Beyond tools, the server publishes **resources**: ledger data addressed by URI
 that a client fetches directly, without spending a tool call. Today that is one
 template, with the read surface porting onto it
-([ADR 0008](./docs/ADR0008-surface-parity.md)):
+([ADR 0008](../../docs/adrs/ADR008-backend-v2-surface-parity.md)):
 
 ```
 beancount://{owner}/{name}/files/{path}

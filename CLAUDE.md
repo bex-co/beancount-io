@@ -33,7 +33,7 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 | `backend-cluster/` | active | Backend services: `backend-v2` (GraphQL/REST/MCP API), `ledger` (rustledger-WASM ledger service), `idl` (OpenAPI specs + generated clients), `agent-box` (Cloudflare Worker sandbox control plane)         |
 | `skills/`          | active | Agent skills: init, import, importer-author, reconcile, migrate, ask, close, options (see `skills/CLAUDE.md`)                                                                                              |
 | `deploy/`          | active | Deployment targets: `deploy/docker-mac/` (Docker Compose, full stack locally), `deploy/docker/` (single-host production), and `deploy/bex/` (bex PaaS, no persistent disks — Blueprint at root `bex.yaml`) |
-| `docs/`            | active | Documentation content                                                                                                                                                                                      |
+| `docs/`            | active | Documentation content; `docs/adrs/` centralizes every package's Architecture Decision Records (`ADR<NNN>-<package>-<slug>.md`)                                                                             |
 
 There is no root `package.json`. Each package owns its own dependencies and scripts. Dashboard, mobile, ledger, and CLI also own their tracked lockfiles; backend-v2, agent-box, and the small IDL clients currently do not have one. CI is path-filtered for dashboard, mobile, CLI, and skills (see [Tooling](#tooling)).
 

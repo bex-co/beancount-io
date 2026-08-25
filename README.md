@@ -164,7 +164,7 @@ one. The credential must be scoped to a single ledger. `yarn mcp:conformance <ba
 tells you whether a deployment is connectable. See
 [connecting an MCP client](./backend-cluster/backend-v2/README.md#connecting-an-mcp-client)
 for the walkthrough and
-[ADR 0007](./backend-cluster/backend-v2/docs/ADR0007-mcp-surface.md) for the
+[ADR 0007](./docs/adrs/ADR007-backend-v2-mcp-surface.md) for the
 endpoint's contract.
 
 ## Quality bar

@@ -12,7 +12,7 @@ import { oauthTokenManager } from "@/common/oauth/oauth-token-manager";
 /**
  * The chat client for `POST /api-gateway/agent` — the same route and the same
  * UIMessage stream the web dashboard consumes, so both clients stay one
- * protocol. See `docs/ADR002-mobile-ai-assistant.md`.
+ * protocol. See `docs/adrs/ADR002-mobile-ai-assistant.md`.
  *
  * Two things here are deliberate and were measured on device (w1/m32/t001):
  *

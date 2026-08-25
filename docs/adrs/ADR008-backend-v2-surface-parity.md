@@ -3,7 +3,7 @@
 - Status: Accepted, unimplemented. The target is every verb on all three surfaces; this record says how to get there, what the one structural boundary is, and how the guard changes from excusing gaps to closing them.
 - Date: 2026-08-25
 - Decision owners: Backend (the verb table, the three surfaces, the drift guards)
-- Scope: how the 143 verbs in `src/server/api/op-class.ts`'s `VERB_TABLE` reach all three surfaces. Extends ADR 0006 D3 (one decision, three dialects) and D9 test 1 (parity is a test). MCP's transport contract stays in [ADR 0007](./ADR0007-mcp-surface.md).
+- Scope: how the 143 verbs in `src/server/api/op-class.ts`'s `VERB_TABLE` reach all three surfaces. Extends ADR 0006 D3 (one decision, three dialects) and D9 test 1 (parity is a test). MCP's transport contract stays in [ADR 0007](./ADR007-backend-v2-mcp-surface.md).
 
 ## Context
 
@@ -249,7 +249,7 @@ Internal:
 - `src/server/api/__tests__/surface-parity.test.ts` — the guard D6 and D7 extend
 - `src/features/ledger/api/rest/v1/` — `v1Route` and the one-declaration pattern D5 relies on
 - `src/features/ai-agent/api/mcp-tools.ts` — the seven tools behind the nine MCP verbs
-- `docs/ADR0007-mcp-surface.md` — MCP's transport contract; D3 and D11 are the dependency this record's D7 is about
+- `docs/adrs/ADR007-backend-v2-mcp-surface.md` — MCP's transport contract; D3 and D11 are the dependency this record's D7 is about
 
 External:
 
