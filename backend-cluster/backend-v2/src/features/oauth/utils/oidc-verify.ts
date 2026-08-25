@@ -1,19 +1,57 @@
-import { createRemoteJWKSet, decodeProtectedHeader, jwtVerify } from "jose";
+import { createLocalJWKSet, decodeProtectedHeader, jwtVerify } from "jose";
 import { logger } from "@/shared/logger";
 import type { AppConfig } from "@/config/config";
 
 const oidcVerifyLogger = logger.child({ module: "oidc-verify" });
 
-const jwksSets = new Map<string, ReturnType<typeof createRemoteJWKSet>>();
+/** JWK members that are secret. Everything else is safe to verify against. */
+const PRIVATE_JWK_PARAMETERS = ["d", "p", "q", "dp", "dq", "qi", "k"] as const;
 
-function getJwks(issuer: string) {
-  if (!jwksSets.has(issuer)) {
-    jwksSets.set(
-      issuer,
-      createRemoteJWKSet(new URL(`${issuer}/api-gateway/oauth/jwks`)),
-    );
+function publicJwk(key: object): Record<string, unknown> {
+  const entries = Object.entries(key).filter(
+    ([name]) => !(PRIVATE_JWK_PARAMETERS as readonly string[]).includes(name),
+  );
+  return Object.fromEntries(entries);
+}
+
+const keySets = new WeakMap<
+  object,
+  ReturnType<typeof createLocalJWKSet> | null
+>();
+
+/**
+ * Verify against the signing keys this process already holds, not over HTTP.
+ *
+ * This resource server and that authorization server are the same process:
+ * `resolveOidcIdentity` only ever verifies tokens whose issuer is
+ * `config.oauth.issuer`, and `config.oauth.jwks` is that issuer's key material.
+ * Fetching it back over the public issuer URL made every OAuth-authenticated
+ * request depend on the deployment being able to reach its own front door from
+ * the inside — which a container cannot do when the public URL names a host
+ * port (`http://localhost:42601` resolves to the container itself, where
+ * nothing listens on that port), and which Kubernetes platforms that deny
+ * pod->node egress block outright. Self-hosted sign-in failed on exactly that.
+ *
+ * Returns null when no keys are configured: OAuth is disabled there, so no
+ * access token can be valid, and there is nothing to fetch that would change
+ * that answer.
+ */
+function getKeySet(config: AppConfig) {
+  const jwks = config.oauth?.jwks;
+  if (!jwks) return null;
+  const cached = keySets.get(jwks);
+  if (cached !== undefined) return cached;
+
+  let keySet: ReturnType<typeof createLocalJWKSet> | null = null;
+  try {
+    keySet = createLocalJWKSet({ keys: jwks.keys.map(publicJwk) });
+  } catch (err) {
+    oidcVerifyLogger.error("OAuth signing keys cannot verify tokens", {
+      error: err instanceof Error ? err.message : String(err),
+    });
   }
-  return jwksSets.get(issuer)!;
+  keySets.set(jwks, keySet);
+  return keySet;
 }
 
 /**
@@ -113,29 +151,24 @@ export async function resolveOidcIdentity(
   const issuer = config.oauth?.issuer;
   if (!issuer) return null;
 
+  const keySet = getKeySet(config);
+  if (!keySet) return null;
+
   // Reject a token that cannot possibly be one of ours BEFORE calling jwtVerify.
   //
-  // This is not an optimization, it is a correctness fix. Our session JWTs are
-  // symmetric (HS256) and structurally valid, so jwtVerify would happily parse
-  // one, consult the remote JWKS — an actual HTTP request from this process to
-  // our own public /jwks endpoint, out through the edge and back — and only
-  // then fail with ERR_JOSE_NOT_SUPPORTED. That put a network round trip on the
-  // authentication path of every signed-in dashboard and mobile request, and
-  // made all of them hostage to the JWKS endpoint's availability.
-  //
+  // Our session JWTs are symmetric (HS256) and structurally valid, so jwtVerify
+  // would happily parse one and only then fail with ERR_JOSE_NOT_SUPPORTED.
   // OAuth access tokens are asymmetric (ES256, from config.oauth.jwks); session
   // tokens are HS*. The algorithm is the honest discriminator, and reading it
   // costs one base64 decode with no verification and no I/O.
   if (!isAsymmetricJwt(token)) return null;
 
   try {
-    const { payload } = await jwtVerify(token, getJwks(issuer), {
+    const { payload } = await jwtVerify(token, keySet, {
       issuer,
       audience: expectedAudiences(issuer, audience),
       // Defense in depth alongside isAsymmetricJwt: never let a symmetric
-      // algorithm reach the remote key set. Not a narrowing — a symmetric token
-      // could never have verified against a remote JWKS anyway; this only stops
-      // it from taking a network round trip to find that out.
+      // algorithm reach the key set, whatever a header claims.
       algorithms: ASYMMETRIC_ALGS,
     });
     if (!payload.sub) return null;

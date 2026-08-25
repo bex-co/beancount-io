@@ -1,21 +1,21 @@
 # w1 · m5 — OAuth 2.1-aligned native mobile authentication
 
-**Worker:** worker1 **Goal:** hosted and self-hosted mobile users authenticate through an external-browser authorization-code flow with PKCE, scoped API access, and safely rotated refresh credentials **Status:** todo
+**Worker:** worker1 **Goal:** hosted and self-hosted mobile users authenticate through an external-browser authorization-code flow with PKCE, scoped API access, and safely rotated refresh credentials **Status:** todo (t001, t002, t004–t010 done)
 
 ## Tasks (in order)
 
 | id   | title                                                   | est | depends_on                  |
 | ---- | ------------------------------------------------------- | --- | --------------------------- |
-| t001 | Externalize and rotate OAuth signing keys               | 1h  | —                           |
-| t002 | Enforce OAuth resources and access-token audiences      | 1h  | t001                        |
+| t001 | Externalize and rotate OAuth signing keys               | 1h  | —                           | — **DONE**
+| t002 | Enforce OAuth resources and access-token audiences      | 1h  | t001                        | — **DONE**
 | t003 | Enforce the OAuth operation-scope matrix                | 1h  | t002                        |
-| t004 | Make issuer configuration and discovery self-host safe  | 1h  | t002                        |
-| t005 | Register a code-only public native mobile client        | 45m | t003, t004                  |
-| t006 | Add account-wide mobile OAuth consent                   | 1h  | t005                        |
-| t007 | Launch native authorization code plus PKCE              | 1h  | t005, t006                  |
-| t008 | Add secure OAuth session and refresh management         | 1h  | t007                        |
-| t009 | Integrate OAuth refresh and logout with Apollo          | 1h  | t008                        |
-| t010 | Stage legacy-session compatibility and bridge retirement | 45m | t009                      |
+| t004 | Make issuer configuration and discovery self-host safe  | 1h  | t002                        | — **DONE**
+| t005 | Register a code-only public native mobile client        | 45m | t003, t004                  | — **DONE**
+| t006 | Add account-wide mobile OAuth consent                   | 1h  | t005                        | — **DONE**
+| t007 | Launch native authorization code plus PKCE              | 1h  | t005, t006                  | — **DONE**
+| t008 | Add secure OAuth session and refresh management         | 1h  | t007                        | — **DONE**
+| t009 | Integrate OAuth refresh and logout with Apollo          | 1h  | t008                        | — **DONE**
+| t010 | Stage legacy-session compatibility and bridge retirement | 45m | t009                      | — **DONE**
 | t011 | Verify the hosted and self-hosted deployment contract   | 1h  | t004, t005, t006, t009, t010 |
 | t012 | Adoption surface                                        | 30m | t011                        |
 | t013 | Simplify                                                | 30m | t012                        |

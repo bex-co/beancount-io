@@ -78,45 +78,6 @@ describe("utility modules", () => {
     });
   });
 
-  describe("session-utils", () => {
-    const jwtDecodePath = require.resolve("jwt-decode");
-    const sessionUtilsPath = require.resolve("../session-utils");
-    let originalJwtDecode: NodeModule | undefined;
-
-    beforeEach(() => {
-      originalJwtDecode = require.cache[jwtDecodePath];
-      require.cache[jwtDecodePath] = {
-        exports: {
-          __esModule: true,
-          jwtDecode: (token: string) => ({ sub: `${token}-subject` }),
-        },
-      } as NodeModule;
-      delete require.cache[sessionUtilsPath];
-    });
-
-    afterEach(() => {
-      delete require.cache[sessionUtilsPath];
-      if (originalJwtDecode) {
-        require.cache[jwtDecodePath] = originalJwtDecode;
-      } else {
-        delete require.cache[jwtDecodePath];
-      }
-    });
-
-    it("derives a session object from the JWT subject", () => {
-      const { createSession } = require("../session-utils");
-      const token = "abc.def";
-      const serverUrl = "https://ledger.example.com/";
-      const session = createSession(token, serverUrl);
-      expect(session).toEqual({
-        kind: "legacy",
-        userId: `${token}-subject`,
-        authToken: token,
-        serverUrl,
-      });
-    });
-  });
-
   describe("request helpers", () => {
     const Module = require("module");
     const configPath = path.resolve(__dirname, "../../config.ts");

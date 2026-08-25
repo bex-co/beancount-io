@@ -528,6 +528,39 @@ describe("oidc-route: unified MCP + identity provider", () => {
     });
   });
 
+  it("mobile flow: without prompt=consent there is no refresh token to renew from", async () => {
+    // Why the native client always sends prompt=consent. OIDC Core §11 makes
+    // offline_access conditional on an explicit consent prompt, and
+    // oidc-provider enforces that by dropping the scope rather than failing —
+    // so the omission is invisible until the access token expires an hour
+    // later and the app has nothing to refresh with. Pinned here because the
+    // parameter looks redundant from the mobile side and reads like something
+    // safe to remove.
+    const resource = `${ISSUER}/v1`;
+    const redirectUri = MOBILE_REDIRECT_URIS[0];
+    // The provider strips offline_access from the interaction before the
+    // consent page ever sees it, so the page posts back the narrowed set —
+    // which is why this failure is silent rather than an error.
+    const { code, verifier } = await driveAuthorizationCode({
+      clientId: MOBILE_CLIENT_ID,
+      clientAuth: "",
+      scope: "openid offline_access ledger.read ledger.write ledger.admin",
+      loginBody: { scope: "openid ledger.read ledger.write ledger.admin" },
+      redirectUri,
+      resource,
+    });
+    const tokenBody = await exchangeToken({
+      code,
+      verifier,
+      clientId: MOBILE_CLIENT_ID,
+      redirectUri,
+      resource,
+    });
+
+    expect(tokenBody.access_token).toEqual(expect.any(String));
+    expect(tokenBody.refresh_token).toBeUndefined();
+  });
+
   it("mobile flow: routes to account-wide consent and rejects an unregistered callback", async () => {
     const { codeChallenge } = pkce();
     const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);

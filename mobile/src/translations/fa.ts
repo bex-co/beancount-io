@@ -120,6 +120,9 @@ export const fa: typeof en = {
   confirmPassword: "تأیید گذرواژه",
   alreadyHaveAccount: "حساب دارید؟ وارد شوید",
   backToSignIn: "بازگشت به ورود",
+  signInOpensBrowser:
+    "ورود مرورگر شما را باز می‌کند و سپس به Beancount بازمی‌گردد.",
+  signInFailed: "ورود کامل نشد. لطفاً دوباره تلاش کنید.",
   resetPassword: "بازنشانی رمز عبور",
   resetPasswordDescription:
     "آدرس ایمیل خود را وارد کنید تا پیوندی برای بازنشانی رمز عبور دریافت کنید.",

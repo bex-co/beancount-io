@@ -114,6 +114,8 @@ export const zh: typeof en = {
   confirmPassword: "确认密码",
   alreadyHaveAccount: "已有账号？登录",
   backToSignIn: "返回登录",
+  signInOpensBrowser: "登录会打开浏览器，完成后自动返回 Beancount。",
+  signInFailed: "登录未能完成，请重试。",
   resetPassword: "重置密码",
   resetPasswordDescription:
     "输入你的邮箱地址，我们会发送一个重置密码的链接给你。",

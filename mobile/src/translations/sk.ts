@@ -122,6 +122,9 @@ export const sk: typeof en = {
   confirmPassword: "Potvrdiť heslo",
   alreadyHaveAccount: "Už máte účet? Prihláste sa",
   backToSignIn: "Späť na prihlásenie",
+  signInOpensBrowser:
+    "Prihlásenie otvorí váš prehliadač a potom sa vráti do Beancountu.",
+  signInFailed: "Prihlásenie sa nepodarilo dokončiť. Skúste to znova.",
   resetPassword: "Resetovať heslo",
   resetPasswordDescription:
     "Zadajte svoju e-mailovú adresu pre získanie odkazu na resetovanie hesla.",

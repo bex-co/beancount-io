@@ -122,6 +122,9 @@ export const uk: typeof en = {
   confirmPassword: "Підтвердьте пароль",
   alreadyHaveAccount: "Вже маєте обліковий запис? Увійдіть",
   backToSignIn: "Назад до входу",
+  signInOpensBrowser:
+    "Вхід відкриє ваш браузер, а потім поверне вас до Beancount.",
+  signInFailed: "Не вдалося завершити вхід. Спробуйте ще раз.",
   resetPassword: "Скинути пароль",
   resetPasswordDescription:
     "Введіть свою електронну адресу, щоб отримати посилання для скидання пароля.",

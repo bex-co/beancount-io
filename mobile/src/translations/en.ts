@@ -117,6 +117,9 @@ export const en = {
   confirmPassword: "Confirm Password",
   alreadyHaveAccount: "Already have an account? Sign in",
   backToSignIn: "Back to Sign in",
+  signInOpensBrowser:
+    "Signing in opens your browser, then returns to Beancount.",
+  signInFailed: "Could not complete sign-in. Please try again.",
   resetPassword: "Reset Password",
   resetPasswordDescription:
     "Enter your email address to receive a link to reset your password.",

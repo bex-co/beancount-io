@@ -124,6 +124,9 @@ export const pt: typeof en = {
   confirmPassword: "Confirmar senha",
   alreadyHaveAccount: "Já tem conta? Entrar",
   backToSignIn: "Voltar para entrar",
+  signInOpensBrowser:
+    "Entrar abre o seu navegador e depois volta para o Beancount.",
+  signInFailed: "Não foi possível concluir a entrada. Tente novamente.",
   resetPassword: "Redefinir senha",
   resetPasswordDescription:
     "Digite seu endereço de e-mail para receber um link para redefinir sua senha.",

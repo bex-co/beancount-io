@@ -76,10 +76,13 @@ be prefixed with `VITE_`.
 The dashboard serves the human interaction pages for backend-v2's authorization
 server. `/oauth/mobile-consent` reuses the normal login, registration, and OTP
 forms, then shows an account-wide native-app approval; it never posts a bearer
-token to a WebView. The backend issuer redirects here through its configured
-`OAUTH_INTERACTION_URL`, so production should keep the dashboard and issuer
-behind one HTTPS front door (the documented loopback stack is the development
-exception).
+token to a WebView. The backend issuer redirects here through backend-v2's
+`DASHBOARD_URL`, which must resolve to the same hostname as the issuer —
+backend-v2 refuses to start otherwise, because the interaction cookie the
+authorization server sets would not be readable from a different host. Keep the
+dashboard and issuer behind one HTTPS front door in production; the documented
+loopback stack is the development exception, where both sides are `localhost`
+on different ports and cookies are shared regardless of port.
 
 The older login/signup `postMessage` bridge remains solely for already-released
 mobile versions. It emits a bounded, token-free

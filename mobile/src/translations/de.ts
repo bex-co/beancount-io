@@ -123,6 +123,10 @@ export const de: typeof en = {
   confirmPassword: "Passwort bestätigen",
   alreadyHaveAccount: "Bereits ein Konto? Anmelden",
   backToSignIn: "Zurück zur Anmeldung",
+  signInOpensBrowser:
+    "Die Anmeldung öffnet deinen Browser und kehrt danach zu Beancount zurück.",
+  signInFailed:
+    "Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
   resetPassword: "Passwort zurücksetzen",
   resetPasswordDescription:
     "Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen Ihres Passworts zu erhalten.",

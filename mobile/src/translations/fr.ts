@@ -123,6 +123,9 @@ export const fr: typeof en = {
   confirmPassword: "Confirmer le mot de passe",
   alreadyHaveAccount: "Vous avez déjà un compte ? Connectez-vous",
   backToSignIn: "Retour à la connexion",
+  signInOpensBrowser:
+    "La connexion ouvre votre navigateur, puis revient à Beancount.",
+  signInFailed: "Impossible de terminer la connexion. Veuillez réessayer.",
   resetPassword: "Réinitialiser le mot de passe",
   resetPasswordDescription:
     "Entrez votre e-mail pour recevoir un lien de réinitialisation de mot de passe.",

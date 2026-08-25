@@ -1,4 +1,4 @@
-import { Dimensions, View, StyleSheet, Image } from "react-native";
+import { Dimensions, View, StyleSheet, Image, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -8,7 +8,7 @@ import { useThemeStyle, usePageView } from "@/common/hooks";
 import { useTheme } from "@/common/theme";
 import { Button } from "@/components";
 import { PressableScale } from "@/components/pressable-scale";
-import { LoginOrSignUp } from "@/screens/welcome/auth-modal";
+import { useNativeSignIn } from "@/screens/welcome/use-native-sign-in";
 
 const { height } = Dimensions.get("window");
 
@@ -39,19 +39,34 @@ const getStyles = (theme: ColorTheme) =>
       alignItems: "center",
       justifyContent: "center",
     },
-    buttonContainer: {
+    footer: {
       position: "absolute",
       left: 0,
       right: 0,
-      bottom: 80,
+      bottom: 60,
+      paddingHorizontal: 20,
+      gap: 12,
+    },
+    buttonContainer: {
       height: 44,
       flexDirection: "row",
       justifyContent: "space-around",
-      paddingHorizontal: 20,
       gap: 10,
     },
     flex: {
       flex: 1,
+    },
+    hint: {
+      color: theme.black60,
+      fontSize: 13,
+      lineHeight: 18,
+      textAlign: "center",
+    },
+    error: {
+      color: theme.error,
+      fontSize: 13,
+      lineHeight: 18,
+      textAlign: "center",
     },
   });
 
@@ -60,6 +75,9 @@ export function WelcomeScreen(): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
+  const { pendingFlow, failed, start } = useNativeSignIn();
+  const busy = pendingFlow !== null;
+
   return (
     <View style={styles.container}>
       <SafeAreaView edges={["top"]} style={styles.serverButtonArea}>
@@ -75,13 +93,32 @@ export function WelcomeScreen(): JSX.Element {
         </PressableScale>
       </SafeAreaView>
       <Image source={require("@/assets/images/icon.png")} style={styles.icon} />
-      <View style={styles.buttonContainer}>
-        <LoginOrSignUp isSignUp={false} style={styles.flex}>
-          <Button type="outline">{t("signIn")}</Button>
-        </LoginOrSignUp>
-        <LoginOrSignUp isSignUp={true} style={styles.flex}>
-          <Button type="primary">{t("signUp")}</Button>
-        </LoginOrSignUp>
+      <View style={styles.footer}>
+        <View style={styles.buttonContainer}>
+          <Button
+            type="outline"
+            style={styles.flex}
+            testID="welcome-sign-in"
+            loading={pendingFlow === "sign_in"}
+            disabled={busy}
+            onPress={() => start("sign_in")}
+          >
+            {t("signIn")}
+          </Button>
+          <Button
+            type="primary"
+            style={styles.flex}
+            testID="welcome-sign-up"
+            loading={pendingFlow === "sign_up"}
+            disabled={busy}
+            onPress={() => start("sign_up")}
+          >
+            {t("signUp")}
+          </Button>
+        </View>
+        <Text style={failed ? styles.error : styles.hint}>
+          {failed ? t("signInFailed") : t("signInOpensBrowser")}
+        </Text>
       </View>
     </View>
   );

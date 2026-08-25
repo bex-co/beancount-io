@@ -9,8 +9,9 @@ import { API_SCOPES, resolveIdentity } from "../identity";
  * all three surfaces are wrong together. These tests walk the credential ×
  * outcome matrix the ADR names as the P0 risk control.
  *
- * JWKS is fetched remotely in production; here the module is mocked to resolve
- * against a locally generated key pair.
+ * The resource server verifies against the signing keys it already holds
+ * (`config.oauth.jwks`); here those are a locally generated key pair, and jose's
+ * key-set factory is wrapped only to count how often a token reaches it.
  */
 
 const ISSUER = "https://beancount.io";
@@ -21,11 +22,10 @@ let mockLocalJwks: { keys: object[] };
 let privateKey: CryptoKey;
 
 /**
- * Counts how many times jose asks the key set to resolve a key. In production
- * `createRemoteJWKSet`'s resolver performs an HTTP request to our public /jwks
- * endpoint, so "was the resolver called?" is exactly "did this credential cost
- * a network round trip?". Asserting on `global.fetch` cannot see it here — the
- * key set is local in tests — which is why the counter lives inside the mock.
+ * Counts how many times jose asks the key set to resolve a key — i.e. how often
+ * a credential got past the cheap pre-checks and reached real signature
+ * verification. A session JWT that reached it would mean every signed-in
+ * request pays for an EC verification that can only ever fail.
  */
 let mockJwksLookups = 0;
 
@@ -33,8 +33,8 @@ jest.mock("jose", () => {
   const actual = jest.requireActual("jose");
   return {
     ...actual,
-    createRemoteJWKSet: () => {
-      const local = actual.createLocalJWKSet(mockLocalJwks);
+    createLocalJWKSet: (jwks: { keys: object[] }) => {
+      const local = actual.createLocalJWKSet(jwks);
       return (...args: unknown[]) => {
         mockJwksLookups += 1;
         return local(...args);
@@ -50,11 +50,12 @@ beforeAll(async () => {
   pub.kid = "test-key";
   pub.alg = "ES256";
   mockLocalJwks = { keys: [pub] };
+  config = {
+    oauth: { issuer: ISSUER, jwks: mockLocalJwks },
+  } as unknown as AppConfig;
 });
 
-const config = {
-  oauth: { issuer: ISSUER },
-} as unknown as AppConfig;
+let config: AppConfig;
 
 /** A database layer whose JWT model accepts exactly one session token. */
 function databaseAccepting(

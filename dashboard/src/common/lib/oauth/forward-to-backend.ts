@@ -1,4 +1,4 @@
-import { config } from "@/config/config";
+import { serverConfig } from "@/config/config.server";
 
 export function backendBaseFromApiUrl(apiUrl: string): string {
   const url = new URL(apiUrl);
@@ -11,10 +11,17 @@ export function backendBaseFromApiUrl(apiUrl: string): string {
   return `${url.origin}${publicPrefix}`;
 }
 
+/**
+ * The in-cluster backend address, never the public one.
+ *
+ * This must come from `config.server.ts` rather than the isomorphic `config`:
+ * that module's values are baked in from `import.meta.env` for the browser, and
+ * the SSR server dialling the backend over its own public URL hairpins through
+ * the ingress it was served from — blocked outright on platforms that deny
+ * pod->node egress, and simply the wrong container in a compose network.
+ */
 export function getBackendBase(): string {
-  return backendBaseFromApiUrl(
-    config.ssrApiUrl ?? "http://localhost:4104/api-gateway/",
-  );
+  return backendBaseFromApiUrl(serverConfig.apiUrl);
 }
 
 export async function forwardToBackend(

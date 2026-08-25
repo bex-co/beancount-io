@@ -124,6 +124,9 @@ export const es: typeof en = {
   confirmPassword: "Confirmar contraseña",
   alreadyHaveAccount: "¿Ya tienes una cuenta? Inicia sesión",
   backToSignIn: "Volver a iniciar sesión",
+  signInOpensBrowser:
+    "Al iniciar sesión se abre tu navegador y luego vuelve a Beancount.",
+  signInFailed: "No se pudo completar el inicio de sesión. Inténtalo de nuevo.",
   resetPassword: "Restablecer contraseña",
   resetPasswordDescription:
     "Introduce tu correo electrónico para recibir un enlace y restablecer la contraseña.",

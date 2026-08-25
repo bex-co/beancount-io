@@ -124,6 +124,9 @@ export const ca: typeof en = {
   confirmPassword: "Confirma la contrasenya",
   alreadyHaveAccount: "Ja tens compte? Inicia la sessió",
   backToSignIn: "Torna a l'inici de sessió",
+  signInOpensBrowser:
+    "En iniciar la sessió s'obre el navegador i després torna a Beancount.",
+  signInFailed: "No s'ha pogut completar l'inici de sessió. Torna-ho a provar.",
   resetPassword: "Restablir contrasenya",
   resetPasswordDescription:
     "Introdueix la teva adreça de correu electrònic per rebre un enllaç per restablir la contrasenya.",

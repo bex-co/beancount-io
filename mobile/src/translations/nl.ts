@@ -121,6 +121,9 @@ export const nl: typeof en = {
   confirmPassword: "Wachtwoord bevestigen",
   alreadyHaveAccount: "Al een account? Inloggen",
   backToSignIn: "Terug naar inloggen",
+  signInOpensBrowser:
+    "Inloggen opent je browser en keert daarna terug naar Beancount.",
+  signInFailed: "Inloggen kon niet worden voltooid. Probeer het opnieuw.",
   resetPassword: "Wachtwoord resetten",
   resetPasswordDescription:
     "Voer je e-mailadres in om een link te ontvangen om je wachtwoord te resetten.",

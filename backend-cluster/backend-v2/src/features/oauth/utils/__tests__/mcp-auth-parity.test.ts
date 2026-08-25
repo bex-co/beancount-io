@@ -5,29 +5,24 @@ import type { AppConfig } from "@/config/config";
 
 const ISSUER = "https://beancount.io";
 
-let mockLocalJwks: { keys: object[] };
 let privateKey: CryptoKey;
-
-jest.mock("jose", () => {
-  const actual = jest.requireActual("jose");
-  return {
-    ...actual,
-    createRemoteJWKSet: () => actual.createLocalJWKSet(mockLocalJwks),
-  };
-});
+let config: AppConfig;
 
 import { resolveOidcIdentity } from "../oidc-verify";
 
 beforeAll(async () => {
   const pair = await generateKeyPair("ES256", { extractable: true });
   privateKey = pair.privateKey;
+  // The private half stays here, in the signer. The resource server verifies
+  // against the configured key set directly — no jose mock, because there is
+  // no network fetch left to stand in for.
   const pub = await exportJWK(pair.publicKey);
   pub.kid = "test-key";
   pub.alg = "ES256";
-  mockLocalJwks = { keys: [pub] };
+  config = {
+    oauth: { issuer: ISSUER, jwks: { keys: [pub] } },
+  } as unknown as AppConfig;
 });
-
-const config = { oauth: { issuer: ISSUER } } as unknown as AppConfig;
 
 function mint(
   claims: Record<string, unknown>,

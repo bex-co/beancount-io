@@ -122,6 +122,9 @@ export const bg: typeof en = {
   confirmPassword: "Потвърдете паролата",
   alreadyHaveAccount: "Вече имате акаунт? Влезте",
   backToSignIn: "Назад към входа",
+  signInOpensBrowser:
+    "Влизането отваря браузъра ви и след това се връща в Beancount.",
+  signInFailed: "Влизането не можа да бъде завършено. Опитайте отново.",
   resetPassword: "Нулиране на парола",
   resetPasswordDescription:
     "Въведете вашия имейл адрес, за да получите връзка за нулиране на паролата.",

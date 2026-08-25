@@ -122,6 +122,9 @@ export const ru: typeof en = {
   confirmPassword: "Подтвердить пароль",
   alreadyHaveAccount: "Уже есть аккаунт? Войти",
   backToSignIn: "Назад к входу",
+  signInOpensBrowser:
+    "Вход откроет ваш браузер, а затем вернёт вас в Beancount.",
+  signInFailed: "Не удалось завершить вход. Попробуйте ещё раз.",
   resetPassword: "Сброс пароля",
   resetPasswordDescription:
     "Введите ваш адрес электронной почты, чтобы получить ссылку для сброса пароля.",
