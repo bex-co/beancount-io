@@ -5,6 +5,7 @@ import type { LedgerChangeFileOperation } from "@/foundation/fava/Api";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import { normalizeAgentRepoPath } from "./agent-repo-path";
 
 const toolLogger = logger.child({ module: "tool:edit-ledger-files" });
 
@@ -97,9 +98,13 @@ export async function executeEditLedgerFiles(
     level: "error",
     formatError: (msg) => `commit failed: ${msg}`,
     execute: async (): Promise<EditLedgerFilesResult> => {
+      const normalizedFiles = files.map((file) => ({
+        ...file,
+        path: normalizeAgentRepoPath(file.path),
+      }));
       const pathsToFetch = [
         ...new Set(
-          files
+          normalizedFiles
             .filter(
               (f) =>
                 f.operation === "update" ||
@@ -122,7 +127,7 @@ export async function executeEditLedgerFiles(
       }
 
       const operations: LedgerChangeFileOperation[] = [];
-      for (const f of files) {
+      for (const f of normalizedFiles) {
         if (f.operation === "create") {
           operations.push({
             operation: "create",

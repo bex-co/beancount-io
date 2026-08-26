@@ -4,6 +4,7 @@ import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import { normalizeAgentRepoPath } from "./agent-repo-path";
 
 const toolLogger = logger.child({ module: "tool:read-ledger-file" });
 
@@ -62,16 +63,20 @@ export async function executeReadLedgerFiles(
     logger: toolLogger,
     message: "Failed to read files",
     execute: async (): Promise<ReadLedgerFileSection[]> => {
+      const requestedFiles = input.files.map((file) => ({
+        ...file,
+        path: normalizeAgentRepoPath(file.path),
+      }));
       const files = await services.ledgerRepo.getFilesContent({
         ledgerId,
         identity,
-        paths: input.files.map((f) => f.path),
+        paths: requestedFiles.map((file) => file.path),
       });
       const contentMap = new Map(files.map((f) => [f.path, f.content]));
 
       const sections: ReadLedgerFileSection[] = [];
 
-      for (const { path, start_line, end_line } of input.files) {
+      for (const { path, start_line, end_line } of requestedFiles) {
         const raw = contentMap.get(path);
         if (raw === undefined) {
           throw new Error(`file not found: ${path}`);

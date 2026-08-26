@@ -81,6 +81,19 @@ describe("executeListLedgerFiles", () => {
       dirPath: "subdir",
     });
   });
+
+  it("treats a shell-style dot as the repository root", async () => {
+    const ledgerRepo = { listDirContent: jest.fn().mockResolvedValue([]) };
+    await executeListLedgerFiles(
+      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      { dir_path: "." },
+    );
+    expect(ledgerRepo.listDirContent).toHaveBeenCalledWith({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      dirPath: undefined,
+    });
+  });
 });
 
 describe("executeReadLedgerFiles", () => {
@@ -152,6 +165,31 @@ describe("executeReadLedgerFiles", () => {
       ledgerId: LEDGER_ID,
       identity: IDENTITY,
       paths: ["main.bean", "main.bean"],
+    });
+  });
+
+  it("canonicalizes a shell-style relative path before reading", async () => {
+    const ledgerRepo = serviceReturning("content");
+    const result = await executeReadLedgerFiles(
+      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      { files: [{ path: "./main.bean" }] },
+    );
+    expect(ledgerRepo.getFilesContent).toHaveBeenCalledWith({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      paths: ["main.bean"],
+    });
+    expect(result).toEqual({
+      ok: true,
+      result: [
+        {
+          path: "main.bean",
+          startLine: 1,
+          endLine: 1,
+          totalLines: 1,
+          content: "content",
+        },
+      ],
     });
   });
 });
@@ -281,6 +319,40 @@ describe("executeEditLedgerFiles", () => {
     expect(ledgerRepo.changeFiles).toHaveBeenCalledWith(
       expect.objectContaining({
         operations: [{ operation: "delete", path: "old.bean", sha: "sha-to-delete" }],
+      }),
+    );
+  });
+
+  it("canonicalizes a shell-style relative path before editing", async () => {
+    const ledgerRepo = {
+      getFilesContent: jest
+        .fn()
+        .mockResolvedValue([{ path: "main.bean", content: "abc", sha: "sha1" }]),
+      changeFiles: jest.fn().mockResolvedValue(undefined),
+    };
+    await executeEditLedgerFiles(
+      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        description: "edit",
+        files: [
+          {
+            operation: "update",
+            path: "./main.bean",
+            old_string: "b",
+            new_string: "B",
+          },
+        ],
+        dry_run: false,
+      },
+    );
+    expect(ledgerRepo.getFilesContent).toHaveBeenCalledWith({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      paths: ["main.bean"],
+    });
+    expect(ledgerRepo.changeFiles).toHaveBeenCalledWith(
+      expect.objectContaining({
+        operations: [expect.objectContaining({ path: "main.bean" })],
       }),
     );
   });

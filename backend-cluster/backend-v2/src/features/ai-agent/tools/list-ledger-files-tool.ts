@@ -4,6 +4,7 @@ import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import { normalizeAgentDirPath } from "./agent-repo-path";
 
 const toolLogger = logger.child({ module: "tool:list-ledger-files" });
 
@@ -14,7 +15,7 @@ export const listLedgerFilesInputSchema = z.object({
   dir_path: z
     .string()
     .optional()
-    .describe("Directory path to list. Omit for root."),
+    .describe("Directory path to list. Omit for root; '.' is also accepted."),
 });
 
 export const listLedgerFilesOutputSchema = toolOutputSchema(
@@ -36,7 +37,7 @@ export async function executeListLedgerFiles(
       const entries = await services.ledgerRepo.listDirContent({
         ledgerId,
         identity,
-        dirPath: input.dir_path,
+        dirPath: normalizeAgentDirPath(input.dir_path),
       });
       return entries.map((e) => ({ path: e.path, type: e.type }));
     },
