@@ -177,6 +177,11 @@ describe("setAskAgentRoute", () => {
     });
     await invoke(ctx);
 
+    expect(mockResolveAuthUser).toHaveBeenCalledWith(
+      expect.any(Object),
+      expect.any(Object),
+      "read",
+    );
     expect(assertQuota).toHaveBeenCalledWith("usr_1");
     expect(mockAuthorizeLedger).toHaveBeenCalledWith(
       expect.objectContaining({ userId: "usr_1" }),
@@ -247,6 +252,11 @@ describe("setAskAgentRoute", () => {
       mode: "agent",
     });
     await invoke(agentCtx);
+    expect(mockResolveAuthUser).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      expect.any(Object),
+      "write",
+    );
     expect(workflow.streamAnswer).toHaveBeenCalledWith(
       expect.objectContaining({ mode: "agent" }),
     );
@@ -259,6 +269,11 @@ describe("setAskAgentRoute", () => {
       mode: "nonsense",
     });
     await invoke(weirdCtx);
+    expect(mockResolveAuthUser).toHaveBeenLastCalledWith(
+      expect.any(Object),
+      expect.any(Object),
+      "read",
+    );
     expect(workflow.streamAnswer).toHaveBeenCalledWith(
       expect.objectContaining({ mode: "ask" }),
     );
