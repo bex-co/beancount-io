@@ -10,13 +10,14 @@ import {
 import {
   assertLedgerAccess,
   type AssertLedgerAccessDeps,
+  type LedgerPermission,
 } from "./ledger-access-check";
 
 /** The access level a single-ledger verb requires. */
 export type LedgerRel = "read" | "write" | "admin";
 
 const REL_RANK: Record<LedgerRel, number> = { read: 0, write: 1, admin: 2 };
-const PERMISSION_RANK: Record<"read" | "write" | "admin", number> = {
+const PERMISSION_RANK: Record<LedgerPermission, number> = {
   read: 0,
   write: 1,
   admin: 2,
@@ -186,11 +187,18 @@ function auditLedgerAccess(
 
 function authorizeRank(
   rel: LedgerRel,
-  permission: "read" | "write" | "admin",
+  permission: LedgerPermission,
   ledgerOwnerId: string,
   ledgerRepoId: number,
 ): AuthorizedLedger {
-  if (PERMISSION_RANK[permission] < REL_RANK[rel]) {
+  // Read the rank as possibly-missing even though the parameter's type says it
+  // cannot be: the value originates upstream of this process, and a bare
+  // `PERMISSION_RANK[permission] < REL_RANK[rel]` fails OPEN on anything the
+  // record does not know — `undefined < 0` is `false`, which would authorize
+  // every rel including admin. `asLedgerPermission` is the gate; this is the
+  // second lock on the same door.
+  const rank: number | undefined = PERMISSION_RANK[permission];
+  if (rank === undefined || rank < REL_RANK[rel]) {
     throw new ForbiddenError(`Forbidden - ${rel} access required`);
   }
   return { ledgerRepoId, ownerUserId: ledgerOwnerId };

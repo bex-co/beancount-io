@@ -224,4 +224,49 @@ describe("assertLedgerAccess", () => {
       assertLedgerAccess("owner/ledger", "user2", deps),
     ).rejects.toThrow(ForbiddenError);
   });
+
+  // The ledger service relays Gitea's permission verbatim, and Gitea answers a
+  // repo the caller has no access to with a 200 carrying "none" — not an error.
+  // Trusting that string outranked every rel, so a non-collaborator got admin
+  // on a private ledger.
+  describe("out-of-vocabulary collaborator permissions", () => {
+    beforeEach(() => {
+      mockGetUserByUsername.mockResolvedValue({
+        id: "ownerUser",
+        ledger_username: "owner",
+      });
+      mockGetById.mockResolvedValue({ id: "user2", ledger_username: "user2" });
+    });
+
+    it.each(["none", "owner", "ADMIN", "", "banana"])(
+      "should throw ForbiddenError on a private ledger for permission %p",
+      async (permission) => {
+        mockGetLedgerCollaboratorPermission.mockResolvedValue({
+          data: { success: true, data: { permission } },
+        });
+        // mockGetLedger already returns private: true from beforeEach
+
+        await expect(
+          assertLedgerAccess("owner/ledger", "user2", deps),
+        ).rejects.toThrow(ForbiddenError);
+      },
+    );
+
+    it("should fall through to plain read on a public ledger, not the raw value", async () => {
+      mockGetLedgerCollaboratorPermission.mockResolvedValue({
+        data: { success: true, data: { permission: "none" } },
+      });
+      mockGetLedger.mockResolvedValue({
+        data: { success: true, data: { private: false, id: 999 } },
+      });
+
+      const result = await assertLedgerAccess("owner/ledger", "user2", deps);
+
+      expect(result).toEqual({
+        permission: "read",
+        ledgerOwnerId: "ownerUser",
+        ledgerRepoId: 999,
+      });
+    });
+  });
 });

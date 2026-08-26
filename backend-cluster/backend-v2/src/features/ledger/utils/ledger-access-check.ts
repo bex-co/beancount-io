@@ -14,6 +14,27 @@ export interface AssertLedgerAccessDeps {
   favaClientFactory: IFavaClientFactory;
 }
 
+/** The closed vocabulary of ledger permissions this service understands. */
+export type LedgerPermission = "read" | "write" | "admin";
+
+const LEDGER_PERMISSIONS: readonly string[] = ["read", "write", "admin"];
+
+/**
+ * The ledger service hands Gitea's permission string back verbatim (typed
+ * `string | null`), and Gitea's vocabulary is wider than ours: a caller with no
+ * access to the repo gets a 200 carrying `"none"`, not an error. Casting that
+ * straight to `LedgerPermission` would make it outrank every rel, so anything
+ * outside the three levels we understand is treated as no collaborator grant
+ * at all and falls through to the public-visibility check.
+ */
+export function asLedgerPermission(
+  value: string | null | undefined,
+): LedgerPermission | null {
+  return typeof value === "string" && LEDGER_PERMISSIONS.includes(value)
+    ? (value as LedgerPermission)
+    : null;
+}
+
 /**
  * `userId` is optional so this one function also serves anonymous callers —
  * the read-only, non-private-ledger access that `FavaClientFactory
@@ -28,7 +49,7 @@ export async function assertLedgerAccess(
   userId: string | undefined,
   deps: AssertLedgerAccessDeps,
 ): Promise<{
-  permission: "read" | "write" | "admin";
+  permission: LedgerPermission;
   ledgerOwnerId: string;
   ledgerRepoId: number;
 }> {
@@ -91,7 +112,7 @@ export async function assertLedgerAccess(
 
     const { favaApiClient } =
       await deps.favaClientFactory.getApiContext(userId);
-    let collaboratorPermission: string | null = null;
+    let collaboratorPermission: LedgerPermission | null = null;
 
     try {
       const data = await unwrapFavaResponse(
@@ -106,9 +127,7 @@ export async function assertLedgerAccess(
             "Forbidden - you do not have access to this ledger",
           ),
       );
-      if (data?.permission) {
-        collaboratorPermission = data.permission;
-      }
+      collaboratorPermission = asLedgerPermission(data?.permission);
     } catch (error) {
       accessLogger.warn(
         "Failed to fetch collaborator permission, falling back to visibility check",
@@ -121,7 +140,7 @@ export async function assertLedgerAccess(
 
     if (collaboratorPermission) {
       return {
-        permission: collaboratorPermission as "read" | "write" | "admin",
+        permission: collaboratorPermission,
         ledgerOwnerId,
         ledgerRepoId,
       };
