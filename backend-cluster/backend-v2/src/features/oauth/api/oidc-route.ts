@@ -10,9 +10,10 @@ import { MemoryAdapter } from "../data/memory-adapter";
 import { createPostgresAdapterFactory } from "../data/oauth-adapter-model";
 import { resolveAuthUser } from "@/features/ai-agent/utils/route-guards";
 import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
-import { API_SCOPES } from "@/server/api/identity";
+import { API_SCOPES, assertSessionIdentity } from "@/server/api/identity";
 import { legacyMcpResource } from "@/features/oauth/utils/oidc-verify";
 import { apiResource } from "@/features/oauth/utils/oidc-verify";
+import { CATEGORY_HTTP_STATUS, DomainError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 
 const oidcLogger = logger.child({ module: "oidc-provider" });
@@ -403,10 +404,27 @@ export function setOidcRoutes(
         return;
       }
 
-      const { user } = await resolveAuthUser(ctx, {
+      const { user, identity } = await resolveAuthUser(ctx, {
         models: layers.database.models,
         db: layers.database.db,
       });
+
+      // Consent is an authorization decision, not merely an authenticated one.
+      // Everything below derives the new grant's authority from the REQUEST —
+      // `params.scope` for the scopes, `interactionBody.ledgerId` for the pin —
+      // so whoever approves here hands out power they were never asked to hold.
+      // Without this, a `ledger.read` API key pinned to one ledger could approve
+      // an account-wide `ledger.admin` grant for a client it registered itself
+      // via open DCR, and walk away with a 30-day refresh token: escalation in
+      // two hops, no browser, no user interaction.
+      //
+      // A delegated scope cannot express "this person agreed", so the credential
+      // must be the product's own session — the same rule CLI device approval
+      // applies (`cli-auth-service.authorizeSession`). This route sits outside
+      // the op-class gate by necessity (always-public.ts: requiring a token to
+      // obtain a token closes the only door in), which is exactly why the check
+      // has to live here.
+      assertSessionIdentity(identity, "Approving an OAuth authorization");
 
       // oidc-provider v9 requires an explicit Grant document to issue an auth code.
       // Without grantId in the consent result, the resumed auth endpoint finds no grant
@@ -534,7 +552,15 @@ export function setOidcRoutes(
         uid: ctx.params.uid,
         error: err instanceof Error ? err.message : String(err),
       });
-      ctx.status = 400;
+      // A refused credential is not a malformed request: this handler runs
+      // outside the REST error middleware (it owns `ctx.respond` for the
+      // provider's redirects), so map the category here rather than reporting
+      // every failure as 400 and leaving a caller unable to tell "your consent
+      // was rejected" from "your form was wrong".
+      ctx.status =
+        err instanceof DomainError
+          ? (err.httpStatusHint ?? CATEGORY_HTTP_STATUS[err.category])
+          : 400;
       ctx.body = {
         error: err instanceof Error ? err.message : "Login failed",
       };

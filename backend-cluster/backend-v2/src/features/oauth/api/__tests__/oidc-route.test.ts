@@ -44,6 +44,11 @@ const DISCOURSE_CLIENT_ID = "discourse-test";
 const DISCOURSE_CLIENT_SECRET = "test-client-secret-value";
 const DISCOURSE_REDIRECT_URI = "https://forum.example.test/auth/callback";
 const TEST_TOKEN = "test-bearer-token";
+// A token-shaped credential: scoped, ledger-pinned, and NOT capability-exempt —
+// the shape an API key or a third-party OAuth grant resolves to. It authenticates
+// as the same user as TEST_TOKEN, which is the whole point: consent has to turn
+// on *how* the caller proved themselves, not on who they are.
+const TEST_SCOPED_TOKEN = "test-scoped-api-key";
 const TEST_USER = {
   id: "user_test123",
   email: "ada@example.com",
@@ -134,6 +139,15 @@ describe("oidc-route: unified MCP + identity provider", () => {
           method: "session",
           scopes: new Set(),
           capabilityExempt: true,
+        };
+      } else if (ctx.headers.authorization === `Bearer ${TEST_SCOPED_TOKEN}`) {
+        ctx.state.identity = {
+          userId: TEST_USER.id,
+          method: "apikey",
+          scopes: new Set(["ledger.read"]),
+          ledgerScope: "ada/personal",
+          tokenId: "akey_test",
+          capabilityExempt: false,
         };
       }
       await next();
@@ -790,6 +804,112 @@ describe("oidc-route: unified MCP + identity provider", () => {
     return { clientId: body.client_id, redirectUri };
   }
 
+  // Consent is an authorization decision. The grant's authority comes entirely
+  // from the request — `params.scope` for the scopes, the body's `ledgerId` for
+  // the pin — so an approver who holds less than what it hands out is a two-hop
+  // privilege escalation: register a client via open DCR, approve it with a
+  // read-only ledger-pinned key, redeem the code, walk away with an unpinned
+  // `ledger.admin` token and a refresh token.
+  async function startAuthorization(): Promise<{
+    jar: CookieJar;
+    uid: string;
+    clientId: string;
+    redirectUri: string;
+  }> {
+    const { clientId, redirectUri } = await registerMcpClient();
+    const jar = new CookieJar();
+    const { codeChallenge } = pkce();
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.searchParams.set("client_id", clientId);
+    authUrl.searchParams.set("response_type", "code");
+    authUrl.searchParams.set(
+      "scope",
+      "openid offline_access ledger.read ledger.write ledger.admin",
+    );
+    authUrl.searchParams.set("redirect_uri", redirectUri);
+    authUrl.searchParams.set("code_challenge", codeChallenge);
+    authUrl.searchParams.set("code_challenge_method", "S256");
+    authUrl.searchParams.set("state", crypto.randomBytes(8).toString("hex"));
+    authUrl.searchParams.set("prompt", "consent");
+    const authRes = await fetch(authUrl, { redirect: "manual" });
+    jar.absorb(authRes);
+    const uid = new URL(authRes.headers.get("location")!).searchParams.get(
+      "uid",
+    )!;
+    expect(uid).toBeTruthy();
+    return { jar, uid, clientId, redirectUri };
+  }
+
+  async function postInteractionLogin(opts: {
+    uid: string;
+    jar: CookieJar;
+    bearer: string;
+    body?: Record<string, string>;
+  }): Promise<Response> {
+    return fetch(`${ISSUER}/api-gateway/oauth/interaction/${opts.uid}/login`, {
+      method: "POST",
+      headers: {
+        authorization: `Bearer ${opts.bearer}`,
+        cookie: opts.jar.header(),
+        "content-type": "application/x-www-form-urlencoded",
+      },
+      body: new URLSearchParams(opts.body ?? {}),
+      redirect: "manual",
+    });
+  }
+
+  it("consent: a scoped, ledger-pinned credential cannot approve a grant", async () => {
+    const { jar, uid } = await startAuthorization();
+
+    const res = await postInteractionLogin({
+      uid,
+      jar,
+      bearer: TEST_SCOPED_TOKEN,
+    });
+
+    expect(res.status).toBe(403);
+    const body = (await res.json()) as { error?: string };
+    expect(body.error).toContain("full signed-in session");
+    // And the interaction is not finished: no redirect back to the client, so
+    // there is no authorization code to redeem.
+    expect(res.headers.get("location")).toBeNull();
+  });
+
+  it("consent: a scoped credential cannot approve even for its own pinned ledger", async () => {
+    const { jar, uid } = await startAuthorization();
+
+    // Naming the ledger the key is already confined to does not make the key a
+    // valid approver — the escalation is over the *scopes*, which this handler
+    // reads from the request either way.
+    const res = await postInteractionLogin({
+      uid,
+      jar,
+      bearer: TEST_SCOPED_TOKEN,
+      body: { ledgerId: "ada/personal" },
+    });
+
+    expect(res.status).toBe(403);
+  });
+
+  it("consent: an unauthenticated approval is refused, not treated as a bad form", async () => {
+    const { jar, uid } = await startAuthorization();
+
+    const res = await fetch(
+      `${ISSUER}/api-gateway/oauth/interaction/${uid}/login`,
+      {
+        method: "POST",
+        headers: {
+          cookie: jar.header(),
+          "content-type": "application/x-www-form-urlencoded",
+        },
+        body: new URLSearchParams({}),
+        redirect: "manual",
+      },
+    );
+
+    expect(res.status).toBe(401);
+  });
+
   it("MCP flow: dynamic client registration still works, and a ledger-pinned grant gets ledger-scoped claims", async () => {
     const { clientId, redirectUri } = await registerMcpClient();
 
@@ -1184,6 +1304,15 @@ describe("oidc-route: path-prefixed public issuer", () => {
           method: "session",
           scopes: new Set(),
           capabilityExempt: true,
+        };
+      } else if (ctx.headers.authorization === `Bearer ${TEST_SCOPED_TOKEN}`) {
+        ctx.state.identity = {
+          userId: TEST_USER.id,
+          method: "apikey",
+          scopes: new Set(["ledger.read"]),
+          ledgerScope: "ada/personal",
+          tokenId: "akey_test",
+          capabilityExempt: false,
         };
       }
       await next();

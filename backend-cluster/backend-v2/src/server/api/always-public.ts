@@ -49,7 +49,7 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
   },
   {
     opId: "REST POST /api-gateway/oauth/interaction/{uid}/login",
-    reason: OIDC_CEREMONY,
+    reason: `${OIDC_CEREMONY} The scope vocabulary cannot express consent anyway — a delegated scope says what a credential may do, not that a person agreed — so the handler requires a full signed-in session (\`assertSessionIdentity\`) before it will build a Grant.`,
   },
   {
     opId: "REST ALL /api-gateway/oauth/{*path}",
