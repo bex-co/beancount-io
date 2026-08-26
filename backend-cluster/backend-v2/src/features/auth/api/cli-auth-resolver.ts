@@ -98,7 +98,7 @@ export class CliAuthResolver {
   ): Promise<ConfirmCliAuthSessionResponse> {
     await this.cliAuthService.authorizeSession(
       args.sessionId,
-      ctx.getCurrentUserId(),
+      ctx.getCurrentIdentity(),
     );
     return { success: true };
   }
@@ -108,9 +108,13 @@ export class CliAuthResolver {
     description: "Deny a pending CLI authentication session.",
   })
   public async denyCliAuthSession(
+    @Ctx() ctx: IContext,
     @Args() args: CliAuthSessionInput,
   ): Promise<DenyCliAuthSessionResponse> {
-    await this.cliAuthService.denySession(args.sessionId);
+    await this.cliAuthService.denySession(
+      args.sessionId,
+      ctx.getCurrentIdentity(),
+    );
     return { success: true };
   }
 

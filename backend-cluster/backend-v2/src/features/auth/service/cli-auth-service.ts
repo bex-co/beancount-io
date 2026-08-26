@@ -1,15 +1,16 @@
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { IModels } from "@/foundation/models";
 import type { CliAuthSessionStatus } from "@/features/auth/data/cli-auth-session-model/types";
-import { BadUserInputError } from "@/shared/errors";
+import type { Identity } from "@/server/api/identity";
+import { BadUserInputError, ForbiddenError } from "@/shared/errors";
 
 /** CLI auth sessions expire 10 minutes after creation. */
 const SESSION_TTL_MINS = 10;
 
 export interface ICliAuthService {
   createSession(): Promise<{ sessionId: string; expiresAt: string }>;
-  authorizeSession(sessionId: string, userId: string): Promise<void>;
-  denySession(sessionId: string): Promise<void>;
+  authorizeSession(sessionId: string, identity: Identity): Promise<void>;
+  denySession(sessionId: string, identity: Identity): Promise<void>;
   getSessionStatus(sessionId: string): Promise<CliAuthSessionStatus | null>;
   consumeSession(
     sessionId: string,
@@ -41,15 +42,19 @@ export class CliAuthService implements ICliAuthService {
   }
 
   /**
-   * Authorize a pending session for `userId`: issues a JWT and stores it in the
-   * session for the CLI to consume.
+   * Authorize a pending session from a full session identity: issues a JWT and
+   * stores it in the session for the CLI to consume.
    */
-  async authorizeSession(sessionId: string, userId: string): Promise<void> {
+  async authorizeSession(
+    sessionId: string,
+    identity: Identity,
+  ): Promise<void> {
+    this.assertFullSessionIdentity(identity);
     await this.assertPendingSession(sessionId);
 
     const { token, expireAt } = await this.models.jwt.create(
       this.postgresDb,
-      userId,
+      identity.userId,
     );
 
     await this.models.cliAuthSession.authorize(
@@ -60,7 +65,8 @@ export class CliAuthService implements ICliAuthService {
   }
 
   /** Deny a pending session. */
-  async denySession(sessionId: string): Promise<void> {
+  async denySession(sessionId: string, identity: Identity): Promise<void> {
+    this.assertFullSessionIdentity(identity);
     await this.assertPendingSession(sessionId);
     await this.models.cliAuthSession.deny(sessionId);
   }
@@ -112,6 +118,19 @@ export class CliAuthService implements ICliAuthService {
 
     if (session.status !== "pending") {
       throw new BadUserInputError("CLI auth session has already been used");
+    }
+  }
+
+  /**
+   * The CLI ceremony mints a full session credential, so only an existing full
+   * session may approve or deny it. Scoped OAuth tokens and API keys must never
+   * be able to turn themselves into an unscoped session JWT.
+   */
+  private assertFullSessionIdentity(identity: Identity): void {
+    if (identity.method !== "session" || !identity.capabilityExempt) {
+      throw new ForbiddenError(
+        "A full signed-in session is required to approve CLI authentication",
+      );
     }
   }
 }
