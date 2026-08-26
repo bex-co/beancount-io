@@ -16,7 +16,7 @@ import { unwrapFavaResponse } from "@/foundation/fava";
 import type { LedgerPublic } from "@/foundation/fava/Api";
 import { config } from "@/config/config";
 import { logger } from "@/shared/logger";
-import { trustedIdentity } from "@/server/api/identity";
+import { systemIdentity } from "@/server/api/identity";
 
 /**
  * ONE-TIME offline script (h2-plan.md item 3 — free-tier transaction limit).
@@ -267,9 +267,11 @@ async function processUser(
       continue;
     }
     try {
+      // An offline sweep has no caller; the subject is whichever user this
+      // row is about.
       const counts = await ctx.ledgerDataService.getEntriesCountPerType({
         ledgerId: ledger.full_name,
-        identity: trustedIdentity(user.id),
+        identity: systemIdentity(user.id),
       });
       const sum = counts.reduce((acc, c) => acc + c.number, 0);
       total += sum;

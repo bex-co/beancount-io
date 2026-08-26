@@ -8,7 +8,8 @@ import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factor
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
 import type { ILedgerEntryService } from "@/features/ledger/service/ledger-entry-service";
 import type { AppConfig } from "@/config/config";
-import { trustedIdentity } from "@/server/api/identity";
+import type { Identity } from "@/server/api/identity";
+import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
 
 const moduleLogger = logger.child({ module: "ledger-receipt-workflow" });
 
@@ -27,11 +28,17 @@ export type InsertReceiptInput = {
 };
 
 export interface ILedgerReceiptWorkflow {
+  /**
+   * Takes the caller's real `Identity`, not a bare userId: the git strategy
+   * commits the receipt file into the repository *before* `addBulkEntries`
+   * reaches the `authorizeLedger` seam, so a rebuilt identity here would let a
+   * ledger-pinned credential drop a file into a ledger it was never granted.
+   */
   insertReceiptTransaction(params: {
     ledgerId: string;
     receiptObjectKey: string;
     input: InsertReceiptInput;
-    userId: string;
+    identity: Identity;
   }): Promise<{ success: boolean }>;
 }
 
@@ -74,9 +81,14 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     ledgerId: string;
     receiptObjectKey: string;
     input: InsertReceiptInput;
-    userId: string;
+    identity: Identity;
   }): Promise<{ success: boolean }> {
-    const { ledgerId, receiptObjectKey, input, userId } = params;
+    const { ledgerId, receiptObjectKey, input, identity } = params;
+    // Before any Fava call: the options read, the repository file commit, and
+    // the S3 promotion all run ahead of `addBulkEntries`, which is where the
+    // full seam lives.
+    assertLedgerAuthorization(identity, ledgerId, "write");
+    const { userId } = identity;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -96,25 +108,25 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
         ledgerId,
         receiptObjectKey,
         input,
-        userId,
+        identity,
         bcioData,
       });
     }
-    return this.s3Strategy({ ledgerId, receiptObjectKey, input, userId });
+    return this.s3Strategy({ ledgerId, receiptObjectKey, input, identity });
   }
 
   private async gitStrategy(params: {
     ledgerId: string;
     receiptObjectKey: string;
     input: InsertReceiptInput;
-    userId: string;
+    identity: Identity;
     bcioData: BcioOptionsPublic | undefined;
   }): Promise<{ success: boolean }> {
-    const { ledgerId, receiptObjectKey, input, userId, bcioData } = params;
+    const { ledgerId, receiptObjectKey, input, identity, bcioData } = params;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
-      userId,
+      identity.userId,
     );
 
     const linkId = nanoidBase58(8);
@@ -156,7 +168,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     // Receipts don't get mobile directive-limit bypass treatment yet — no
     // caller of this workflow threads a platform through today.
     await this.ledgerEntry.addBulkEntries(
-      trustedIdentity(userId),
+      identity,
       ledgerOwner,
       ledgerName,
       [
@@ -194,9 +206,9 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     ledgerId: string;
     receiptObjectKey: string;
     input: InsertReceiptInput;
-    userId: string;
+    identity: Identity;
   }): Promise<{ success: boolean }> {
-    const { ledgerId, receiptObjectKey, input, userId } = params;
+    const { ledgerId, receiptObjectKey, input, identity } = params;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
     const adminClient = this.favaClientFactory.getAdminClient();
@@ -216,7 +228,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     // Receipts don't get mobile directive-limit bypass treatment yet — no
     // caller of this workflow threads a platform through today.
     await this.ledgerEntry.addBulkEntries(
-      trustedIdentity(userId),
+      identity,
       ledgerOwner,
       ledgerName,
       [

@@ -4,7 +4,6 @@ import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
-import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
 
 const toolLogger = logger.child({ module: "tool:parse-receipt" });
 
@@ -50,11 +49,9 @@ export async function executeParseReceipt(
   input: z.infer<typeof parseReceiptInputSchema>,
 ): Promise<ParseReceiptOutput> {
   const { llmService, identity, ledgerId } = ctx;
-  // llmService.parseReceipt has no authorizeLedger seam of its own — it
-  // builds its Fava client from identity.userId directly — so this is the
-  // one place that can check the credential is actually scoped to this
-  // ledger before that happens.
-  assertLedgerAuthorization(identity, ledgerId, "read");
+  // The caller's real identity goes in whole: `llmService.parseReceipt`
+  // asserts the ledger scope itself, so this tool cannot be the surface that
+  // forgets to.
   toolLogger.debug("Parsing receipt", { objectKey: input.objectKey });
 
   return runToolSafely({
@@ -63,7 +60,7 @@ export async function executeParseReceipt(
     context: { objectKey: input.objectKey },
     execute: async () => {
       const result = await llmService.parseReceipt(
-        identity.userId,
+        identity,
         input.objectKey,
         ledgerId,
       );

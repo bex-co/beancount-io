@@ -1,6 +1,7 @@
 import "reflect-metadata";
 import { LedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
 import type { BcioOptionsPublic } from "@/foundation/fava";
+import type { Identity } from "@/server/api/identity";
 
 jest.mock("@/foundation/fava", () => ({
   unwrapFavaResponse: jest.fn(async (promise: Promise<unknown>) => promise),
@@ -13,6 +14,14 @@ jest.mock("@/shared/fetch-asset-base64", () => ({
 /** Minimal bcio options stub with only the receipt routing field set. */
 const bcio = (receipt_storage: string | null): BcioOptionsPublic =>
   ({ receipt_storage }) as unknown as BcioOptionsPublic;
+
+/** A browser session: full trust, pinned to nothing. */
+const sessionIdentity: Identity = {
+  userId: "user_1",
+  method: "session",
+  scopes: new Set(),
+  capabilityExempt: true,
+};
 
 const baseInput = {
   date: "2026-06-18",
@@ -83,7 +92,7 @@ describe("strategy routing", () => {
       ledgerId: "owner/ledger",
       receiptObjectKey: "tmp/r.pdf",
       input: baseInput,
-      userId: "user_1",
+      identity: sessionIdentity,
     });
 
     expect(copyTempToPermanent).not.toHaveBeenCalled();
@@ -104,7 +113,7 @@ describe("strategy routing", () => {
       ledgerId: "owner/ledger",
       receiptObjectKey: "tmp/r.pdf",
       input: baseInput,
-      userId: "user_1",
+      identity: sessionIdentity,
     });
 
     expect(copyTempToPermanent).toHaveBeenCalledTimes(1);
@@ -124,7 +133,7 @@ describe("strategy routing", () => {
       ledgerId: "owner/ledger",
       receiptObjectKey: "tmp/r.pdf",
       input: baseInput,
-      userId: "user_1",
+      identity: sessionIdentity,
     });
 
     expect(copyTempToPermanent).toHaveBeenCalledTimes(1);
@@ -140,7 +149,7 @@ describe("strategy routing", () => {
       ledgerId: "owner/ledger",
       receiptObjectKey: "tmp/r.pdf",
       input: baseInput,
-      userId: "user_1",
+      identity: sessionIdentity,
     });
 
     expect(copyTempToPermanent).toHaveBeenCalledTimes(1);
@@ -184,7 +193,7 @@ describe("s3 receipt storage strategy — temp cleanup ordering", () => {
       ledgerId: "owner/ledger",
       receiptObjectKey: "tmp/2026-06-18-r.pdf",
       input: baseInput,
-      userId: "user_1",
+      identity: sessionIdentity,
     });
 
     expect(order).toEqual(["copy", "write", "delete"]);
@@ -204,7 +213,7 @@ describe("s3 receipt storage strategy — temp cleanup ordering", () => {
         ledgerId: "owner/ledger",
         receiptObjectKey: "tmp/2026-06-18-r.pdf",
         input: baseInput,
-        userId: "user_1",
+        identity: sessionIdentity,
       }),
     ).rejects.toThrow("ledger write failed");
 

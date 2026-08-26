@@ -3,8 +3,11 @@ import type { IAssetStorageService } from "@/features/s3/service/asset-storage-s
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import type { AppConfig } from "@/config/config";
 import { LedgerAccountService } from "@/features/ledger/service/ledger-account-service";
-import type { AuthorizeLedgerDeps } from "@/features/ledger/utils/authorize-ledger";
-import { trustedIdentity } from "@/server/api/identity";
+import {
+  assertLedgerAuthorization,
+  type AuthorizeLedgerDeps,
+} from "@/features/ledger/utils/authorize-ledger";
+import type { Identity } from "@/server/api/identity";
 import { LLMClient } from "../utils/llm-client";
 import { extractTransactionsFromFile } from "../utils/extract-transactions-from-file";
 import { extractReceiptFromFile } from "../utils/extract-receipt-from-file";
@@ -52,19 +55,27 @@ export type CategorySuggestionResult = {
   reasoning?: string;
 };
 
+/**
+ * Every verb takes the caller's real `Identity`, never a rebuilt one: the two
+ * ledger-reading verbs feed it straight to the authorization seam, so a
+ * ledger-pinned or scope-narrowed credential stays narrow all the way down
+ * (w3/m9). `parseFile` names no ledger, so it has nothing to authorize against
+ * beyond the transport gate's op class — it takes an `Identity` anyway so that
+ * no signature here invites a caller to hand over a bare userId out of habit.
+ */
 export interface ILLMService {
   parseFile(
-    userId: string,
+    identity: Identity,
     s3ObjectKey: string,
     fileFormat: string,
   ): Promise<ParseFileResult>;
   parseReceipt(
-    userId: string,
+    identity: Identity,
     s3ObjectKey: string,
     ledgerId: string,
   ): Promise<ParseReceiptResult>;
   suggestCategories(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     transactions: TransactionToCategorizeDomain[],
   ): Promise<CategorySuggestionResult[]>;
@@ -100,10 +111,11 @@ export class LLMService implements ILLMService {
   }
 
   async parseFile(
-    userId: string,
+    identity: Identity,
     s3ObjectKey: string,
     fileFormat: string,
   ): Promise<ParseFileResult> {
+    const { userId } = identity;
     const usageCheck = await this.aiCfoUsageService.check(userId);
     if (!usageCheck.allowed) {
       throw new ResourceLimitReachedError(
@@ -141,10 +153,14 @@ export class LLMService implements ILLMService {
   }
 
   async parseReceipt(
-    userId: string,
+    identity: Identity,
     s3ObjectKey: string,
     ledgerId: string,
   ): Promise<ParseReceiptResult> {
+    // Fail before any LLM spend or S3 work when the credential is pinned to a
+    // different ledger than the one named.
+    assertLedgerAuthorization(identity, ledgerId, "read");
+    const { userId } = identity;
     const usageCheck = await this.aiCfoUsageService.check(userId);
     if (!usageCheck.allowed) {
       throw new ResourceLimitReachedError(
@@ -182,7 +198,7 @@ export class LLMService implements ILLMService {
         this.ledgerAccountService.getAccountDirectives(
           ledgerOwner,
           ledgerName,
-          trustedIdentity(userId),
+          identity,
         ),
       ]);
 
@@ -211,10 +227,14 @@ export class LLMService implements ILLMService {
   }
 
   async suggestCategories(
-    userId: string,
+    identity: Identity,
     ledgerId: string,
     transactions: TransactionToCategorizeDomain[],
   ): Promise<CategorySuggestionResult[]> {
+    // The journal and plugin reads below go straight to Fava with no seam of
+    // their own; assert here so a mismatched ledger never reaches them.
+    assertLedgerAuthorization(identity, ledgerId, "read");
+    const { userId } = identity;
     const usageCheck = await this.aiCfoUsageService.check(userId);
     if (!usageCheck.allowed) {
       throw new ResourceLimitReachedError(
@@ -238,7 +258,7 @@ export class LLMService implements ILLMService {
       ledgerOwner,
       ledgerName,
       "open",
-      trustedIdentity(userId),
+      identity,
     );
 
     const journalResponse = await favaApiClient.journal.getJournal(

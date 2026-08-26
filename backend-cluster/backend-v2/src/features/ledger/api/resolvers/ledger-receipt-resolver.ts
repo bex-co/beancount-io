@@ -70,7 +70,7 @@ export class LedgerReceiptMutationResolver {
       ledgerId,
       receiptObjectKey,
       input,
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
     });
   }
 }

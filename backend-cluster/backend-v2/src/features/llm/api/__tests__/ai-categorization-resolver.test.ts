@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { LLMCategorizationQueryResolver } from "../ai-categorization-resolver";
 import type { ILLMService } from "../../service/llm-service";
 import type { IContext } from "@/server/graphql/context";
+import type { Identity } from "@/server/api/identity";
 
 describe("LLMCategorizationQueryResolver", () => {
   let resolver: LLMCategorizationQueryResolver;
@@ -9,6 +10,15 @@ describe("LLMCategorizationQueryResolver", () => {
   let mockContext: IContext;
 
   const testLedgerId = "dGVzdG93bmVyL215LWJvb2s";
+
+  /** An OAuth grant pinned to one ledger — the narrowing that must survive. */
+  const pinnedIdentity: Identity = {
+    userId: "user123",
+    method: "oauth",
+    scopes: new Set(["ledger.read"]),
+    ledgerScope: testLedgerId,
+    capabilityExempt: false,
+  };
 
   beforeEach(() => {
     mockLLMService = {
@@ -27,6 +37,7 @@ describe("LLMCategorizationQueryResolver", () => {
 
     mockContext = {
       getCurrentUserId: jest.fn().mockReturnValue("user123"),
+      getCurrentIdentity: jest.fn().mockReturnValue(pinnedIdentity),
     } as unknown as IContext;
 
     resolver = new LLMCategorizationQueryResolver(mockLLMService);
@@ -47,15 +58,18 @@ describe("LLMCategorizationQueryResolver", () => {
       },
     ];
 
-    it("should delegate to llm.suggestCategories with userId from context", async () => {
+    it("hands the service the caller's real identity, still narrowed", async () => {
       const result = await resolver.suggestTransactionCategories(
         testLedgerId,
         mockTransactions,
         mockContext,
       );
 
+      // Not `ctx.getCurrentUserId()`: a bare userId would arrive at the
+      // service as a capability-exempt, unpinned identity and defeat both
+      // checks the service runs.
       expect(mockLLMService.suggestCategories).toHaveBeenCalledWith(
-        "user123",
+        pinnedIdentity,
         testLedgerId,
         mockTransactions,
       );

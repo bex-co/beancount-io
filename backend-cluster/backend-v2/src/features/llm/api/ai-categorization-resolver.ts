@@ -22,7 +22,7 @@ export class LLMCategorizationQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<CategorySuggestion[]> {
     return this.llm.suggestCategories(
-      ctx.getCurrentUserId(),
+      ctx.getCurrentIdentity(),
       ledgerId,
       transactions,
     );

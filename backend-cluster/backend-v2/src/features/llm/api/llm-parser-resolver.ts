@@ -1,7 +1,6 @@
 import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
 import { IContext } from "@/server/graphql/context";
 import type { ILLMService } from "../service/llm-service";
-import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
 import {
   FileParseResult,
   ReceiptParseResult,
@@ -27,7 +26,11 @@ export class LLMParserResolver {
     fileFormat: string,
     @Ctx() ctx: IContext,
   ): Promise<FileParseResult> {
-    return this.llm.parseFile(ctx.getCurrentUserId(), s3ObjectKey, fileFormat);
+    return this.llm.parseFile(
+      ctx.getCurrentIdentity(),
+      s3ObjectKey,
+      fileFormat,
+    );
   }
 
   @Authorized()
@@ -47,8 +50,12 @@ export class LLMParserResolver {
     ledgerId: string,
     @Ctx() ctx: IContext,
   ): Promise<ReceiptParseResult> {
-    const identity = ctx.getCurrentIdentity();
-    assertLedgerAuthorization(identity, ledgerId, "read");
-    return this.llm.parseReceipt(identity.userId, s3ObjectKey, ledgerId);
+    // The ledger-scope check lives in the service now, so every surface that
+    // reaches `parseReceipt` gets it — not just this resolver.
+    return this.llm.parseReceipt(
+      ctx.getCurrentIdentity(),
+      s3ObjectKey,
+      ledgerId,
+    );
   }
 }

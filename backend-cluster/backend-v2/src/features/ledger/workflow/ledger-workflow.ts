@@ -60,7 +60,7 @@ import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-
 import { filterNullish } from "@/shared/tools";
 import { processBatch } from "@/shared/batch-processor";
 import { logger } from "@/shared/logger";
-import { trustedIdentity } from "@/server/api/identity";
+import { systemIdentity } from "@/server/api/identity";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
@@ -131,6 +131,13 @@ export interface ILedgerWorkflow {
     userId: string;
     args: ListLedgersParams;
   }): Promise<LedgerData[]>;
+  /**
+   * Support-only: the admin REST surface asks this about an arbitrary user by
+   * email, so `userId` is the *subject*, not the caller — there is no caller
+   * identity to thread and the per-ledger counts authorize as `systemIdentity`
+   * for that subject. Do not reach for this from a request-backed path; those
+   * have a real `Identity` and should carry it.
+   */
   listUserOwnedLedgersWithDirectiveCounts(params: {
     userId: string;
   }): Promise<LedgerWithDirectiveCountData[]>;
@@ -618,9 +625,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const { results, errors } = await processBatch(
       nonEmptyLedgers,
       async (ledger) => {
+        // No caller to authorize as: the admin endpoint above names the
+        // subject by email. Exempt under a name that greps (w3/m9).
         const counts = await this.ledgerDataService.getEntriesCountPerType({
           ledgerId: ledger.id,
-          identity: trustedIdentity(userId),
+          identity: systemIdentity(userId),
         });
         return {
           ledgerId: ledger.id,

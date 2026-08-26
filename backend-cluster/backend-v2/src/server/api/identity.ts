@@ -21,36 +21,26 @@ const identityLogger = logger.child({ module: "identity" });
 const EMPTY_SCOPES: ReadonlySet<string> = new Set<string>();
 
 /**
- * Wrap an already-vetted userId in a capability-exempt `Identity` for callers
- * that authenticate a request themselves (e.g. via `ctx.getCurrentUserId()`)
- * before reaching an internal workflow or service — code written before
- * `Identity` existed, whose own trust boundary is elsewhere and is unchanged
- * by this wrapping. `capabilityExempt: true` matches a session's semantics:
- * full trust, no scope narrowing.
+ * A full-capability identity for a caller that has none: a cron run, a webhook,
+ * an admin endpoint naming its subject by email.
  *
- * Deliberately NOT for anything that terminates in `authorizeLedger` on a
- * DIFFERENT ledger than the one the original caller was scoped to — this
- * throws away `ledgerScope`, so only use it where the caller's own request
- * already resolved which ledger it means, same as before `Identity` existed.
- */
-/**
- * A full-capability identity for a caller that has none: a cron run, a webhook.
+ * `capabilityExempt: true` matches a session's semantics — full trust, no scope
+ * narrowing — which is exactly why this must never stand in for a caller who
+ * *does* have an identity. A predecessor named `trustedIdentity` was built
+ * *inside* service methods, where claiming full capability was invisible: a
+ * scoped token reached the service, the service promptly forgot it was scoped,
+ * and the transport gate became the only enforcement (w3/m9). Worse, the
+ * rebuilt value carries no `ledgerScope`, so `assertLedgerScope` downstream has
+ * nothing left to check and silently passes.
  *
- * Same value as {@link trustedIdentity}, deliberately under a second name.
- * `trustedIdentity` used to be built *inside* service methods, where claiming
- * full capability was invisible — a scoped token reached the service and the
- * service promptly forgot it was scoped, leaving the transport gate as the only
- * enforcement (w3/m9). Every remaining claim now happens at a call site under
- * this name, so `grep systemIdentity` enumerates them.
+ * Every remaining claim of exemption now happens at a call site under this one
+ * name, so `grep systemIdentity` enumerates them. There is deliberately no
+ * second, blander name for the same value.
  *
  * Use it only where there genuinely is no caller. If a request reached you, its
- * identity is what should authorize.
+ * identity is what should authorize — thread it through instead.
  */
 export function systemIdentity(userId: string): Identity {
-  return trustedIdentity(userId);
-}
-
-export function trustedIdentity(userId: string): Identity {
   return {
     userId,
     method: "session",

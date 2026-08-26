@@ -4,7 +4,6 @@ import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
-import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
 
 const toolLogger = logger.child({ module: "tool:insert-receipt-transaction" });
 
@@ -57,9 +56,9 @@ export async function executeInsertReceiptTransaction(
   input: z.infer<typeof insertReceiptTransactionInputSchema>,
 ): Promise<InsertReceiptTransactionOutput> {
   const { ledgerReceiptWorkflow, identity, ledgerId } = ctx;
-  // ledgerReceiptWorkflow.insertReceiptTransaction has no authorizeLedger seam
-  // of its own — same reasoning as parse-receipt-tool.ts.
-  assertLedgerAuthorization(identity, ledgerId, "write");
+  // The caller's real identity goes in whole; the workflow asserts the ledger
+  // scope from it — same reasoning as parse-receipt-tool.ts.
+  //
   // Default to today when the receipt had no visible date, so we never write a
   // blank/invalid Beancount entry.
   const date = input.date || new Date().toISOString().slice(0, 10);
@@ -94,7 +93,7 @@ export async function executeInsertReceiptTransaction(
           ],
           documentAccount: input.documentAccount,
         },
-        userId: identity.userId,
+        identity,
       });
       return result;
     },

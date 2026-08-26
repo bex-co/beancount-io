@@ -1,5 +1,5 @@
 import "reflect-metadata";
-import { trustedIdentity } from "@/server/api/identity";
+import { systemIdentity } from "@/server/api/identity";
 
 jest.mock("@/shared/logger", () => ({
   logger: {
@@ -122,7 +122,7 @@ describe("PlaidItemService", () => {
       mockPlaidItemModel.getByLedgerRepoId.mockResolvedValue([makeItem()]);
 
       const result = await service.getItems(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
       );
 
@@ -142,7 +142,7 @@ describe("PlaidItemService", () => {
       mockAssertLedgerAccess.mockRejectedValue(new Error("Forbidden"));
 
       await expect(
-        service.getItems(trustedIdentity("user_other"), "owner/ledger"),
+        service.getItems(systemIdentity("user_other"), "owner/ledger"),
       ).rejects.toThrow("Forbidden");
     });
   });
@@ -155,7 +155,7 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.getByItemId.mockResolvedValue([]);
 
       await service.getAccounts(
-        trustedIdentity("user_other"),
+        systemIdentity("user_other"),
         "pitm_1",
         "owner/ledger",
       );
@@ -183,7 +183,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.getAccounts(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "pitm_1",
           "other/ledger",
         ),
@@ -214,7 +214,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.getAccountsForLedger(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
       );
 
@@ -242,7 +242,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.getAccountsForLedger(
-          trustedIdentity("user_reader"),
+          systemIdentity("user_reader"),
           "owner/ledger",
         ),
       ).resolves.toEqual([]);
@@ -253,7 +253,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.getAccountsForLedger(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "owner/ledger",
         ),
       ).rejects.toThrow("Forbidden");
@@ -277,7 +277,7 @@ describe("PlaidItemService", () => {
       mockPlaidTransactionModel.getUnsyncedByAccountId.mockResolvedValue([]);
 
       await service.getUnsyncedTransactions(
-        trustedIdentity("user_other"),
+        systemIdentity("user_other"),
         "pacc_1",
         "owner/ledger",
       );
@@ -297,7 +297,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.getUnsyncedTransactions(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "pacc_1",
           "other/ledger",
         ),
@@ -337,7 +337,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.getUnsyncedTransactions(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         undefined,
         "owner/ledger",
       );
@@ -382,7 +382,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.getUnsyncedTransactions(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         undefined,
         "owner/ledger",
       );
@@ -407,7 +407,7 @@ describe("PlaidItemService", () => {
       });
 
       await expect(
-        service.createLinkToken(trustedIdentity("user_other"), "owner/ledger"),
+        service.createLinkToken(systemIdentity("user_other"), "owner/ledger"),
       ).rejects.toThrow(ForbiddenError);
       expect(mockPlaidClient.createLinkToken).not.toHaveBeenCalled();
     });
@@ -416,7 +416,7 @@ describe("PlaidItemService", () => {
       mockPlaidClient.createLinkToken.mockResolvedValue("link-token-abc");
 
       const result = await service.createLinkToken(
-        trustedIdentity("user_other"),
+        systemIdentity("user_other"),
         "owner/ledger",
       );
 
@@ -444,7 +444,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.exchangePublicToken(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "owner/ledger",
           "public-token",
         ),
@@ -461,7 +461,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.exchangePublicToken(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "owner/ledger",
           "public-token",
         ),
@@ -471,7 +471,7 @@ describe("PlaidItemService", () => {
 
     it("persists the resolved ledgerRepoId on the created item", async () => {
       await service.exchangePublicToken(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -488,7 +488,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.exchangePublicToken(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -504,7 +504,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.exchangePublicToken(
-          trustedIdentity("user_owner"),
+          systemIdentity("user_owner"),
           "owner/ledger",
           "public-token",
         ),
@@ -575,7 +575,7 @@ describe("PlaidItemService", () => {
       });
 
       await service.exchangePublicToken(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -628,7 +628,7 @@ describe("PlaidItemService", () => {
       });
 
       await service.exchangePublicToken(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -653,7 +653,7 @@ describe("PlaidItemService", () => {
         .mockRejectedValue(new Error("fava down"));
 
       const result = await service.exchangePublicToken(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -667,7 +667,7 @@ describe("PlaidItemService", () => {
       mockFavaClientFactory.getPublicApiClient = jest.fn();
 
       await service.exchangePublicToken(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "public-token",
       );
@@ -691,7 +691,7 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.update.mockResolvedValue(undefined);
 
       const result = await service.updateAccountMapping(
-        trustedIdentity("user_other"),
+        systemIdentity("user_other"),
         "pacc_1",
         "Assets:Checking",
         "owner/ledger",
@@ -710,7 +710,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.updateAccountMapping(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "pacc_1",
           "Assets:Checking",
           "owner/ledger",
@@ -729,7 +729,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.updateAccountMapping(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "pacc_1",
           "Assets:Checking",
           "owner/ledger",
@@ -753,7 +753,7 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.update.mockResolvedValue(undefined);
 
       const result = await service.updateAccountCurrency(
-        trustedIdentity("user_other"),
+        systemIdentity("user_other"),
         "pacc_1",
         "EUR",
         "owner/ledger",
@@ -777,7 +777,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.updateAccountCurrency(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "pacc_1",
           "EUR",
           "owner/ledger",
@@ -796,7 +796,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.updateAccountCurrency(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "pacc_1",
           "EUR",
           "owner/ledger",
@@ -820,7 +820,7 @@ describe("PlaidItemService", () => {
       mockAccountAndItem({ userId: "user_owner", ledgerRepoId: 42 });
 
       const result = await service.suggestCategories(
-        trustedIdentity("user_other"),
+        systemIdentity("user_other"),
         "owner/ledger",
         "pacc_1",
       );
@@ -838,7 +838,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.suggestCategories(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "other/ledger",
           "pacc_1",
         ),
@@ -867,7 +867,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.suggestAccountMapping(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "pitm_1",
       );
@@ -917,7 +917,7 @@ describe("PlaidItemService", () => {
       });
 
       const result = await service.suggestAccountMapping(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "pitm_1",
       );
@@ -957,7 +957,7 @@ describe("PlaidItemService", () => {
       });
 
       await service.suggestAccountMapping(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "pitm_1",
       );
@@ -973,7 +973,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.suggestAccountMapping(
-          trustedIdentity("user_other"),
+          systemIdentity("user_other"),
           "other/ledger",
           "pitm_1",
         ),
@@ -990,7 +990,7 @@ describe("PlaidItemService", () => {
 
     it("does not request account selection by default", async () => {
       await service.createUpdateModeLinkToken(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1004,7 +1004,7 @@ describe("PlaidItemService", () => {
 
     it("requests account selection when asked", async () => {
       await service.createUpdateModeLinkToken(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
         true,
@@ -1068,7 +1068,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.reconcileItemAccounts(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1094,7 +1094,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.reconcileItemAccounts(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1123,7 +1123,7 @@ describe("PlaidItemService", () => {
       ]);
 
       const result = await service.reconcileItemAccounts(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1147,7 +1147,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.reconcileItemAccounts(
-          trustedIdentity("user_owner"),
+          systemIdentity("user_owner"),
           "pitm_1",
           "owner/ledger",
         ),
@@ -1162,7 +1162,7 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.getByItemId.mockResolvedValue([]);
 
       const result = await service.reconcileItemAccounts(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1182,7 +1182,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.reconcileItemAccounts(
-          trustedIdentity("user_owner"),
+          systemIdentity("user_owner"),
           "pitm_1",
           "owner/ledger",
         ),
@@ -1201,7 +1201,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.reconcileItemAccounts(
-          trustedIdentity("user_reader"),
+          systemIdentity("user_reader"),
           "pitm_1",
           "owner/ledger",
         ),
@@ -1217,7 +1217,7 @@ describe("PlaidItemService", () => {
 
       await expect(
         service.reconcileItemAccounts(
-          trustedIdentity("user_owner"),
+          systemIdentity("user_owner"),
           "pitm_1",
           "owner/ledger",
         ),
@@ -1241,7 +1241,7 @@ describe("PlaidItemService", () => {
       });
 
       await service.reconcileItemAccounts(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1268,7 +1268,7 @@ describe("PlaidItemService", () => {
       ]);
 
       await service.reconcileItemAccounts(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
@@ -1284,7 +1284,7 @@ describe("PlaidItemService", () => {
       );
 
       const result = await service.reconcileItemAccounts(
-        trustedIdentity("user_owner"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );

@@ -74,13 +74,16 @@ function memoizedAssertLedgerAccess(
  * This is `authorizeLedger`'s first check, factored out so callers that never
  * reach `authorizeLedger` at all can still enforce it. That gap is real: a
  * verb whose only "authorization" is building a Fava client from the caller's
- * own credentials (Plaid's item/account verbs, receipt parsing/insertion, the
- * LLM file-parse mutations) has no seam to call `authorizeLedger` from, but
- * every one of them takes a caller-supplied `ledgerId` wired to a GraphQL
- * argument the OAuth token's own scope has nothing to do with. Call this at
- * the boundary where that argument is read — the resolver, or the tool
- * executor — using the REAL `Identity`, never a `trustedIdentity()`
- * reconstruction (which has no `ledgerScope` to check by construction).
+ * own credentials (receipt parsing/insertion, the LLM categorization and
+ * file-parse verbs) has no seam to call `authorizeLedger` from, but every one
+ * of them takes a caller-supplied `ledgerId` wired to a GraphQL argument the
+ * OAuth token's own scope has nothing to do with.
+ *
+ * Enforce it in the *service or workflow* that reads that `ledgerId`, not in
+ * each resolver and tool executor: a check placed per-surface is a check the
+ * next surface forgets. And enforce it with the caller's REAL `Identity` — a
+ * `systemIdentity()` stand-in has no `ledgerScope` to check by construction,
+ * so passing one turns this into a no-op.
  */
 export function assertLedgerScope(
   identity: Identity | undefined,

@@ -2,11 +2,21 @@ import "reflect-metadata";
 import { LLMParserResolver } from "../llm-parser-resolver";
 import type { ILLMService } from "../../service/llm-service";
 import type { IContext } from "@/server/graphql/context";
+import type { Identity } from "@/server/api/identity";
 
 describe("LLMParserResolver", () => {
   let resolver: LLMParserResolver;
   let mockLLMService: jest.Mocked<ILLMService>;
   let mockContext: IContext;
+
+  /** An OAuth grant pinned to one ledger — the narrowing that must survive. */
+  const pinnedIdentity: Identity = {
+    userId: "user123",
+    method: "oauth",
+    scopes: new Set(["ledger.read", "ledger.write"]),
+    ledgerScope: "ledger123",
+    capabilityExempt: false,
+  };
 
   beforeEach(() => {
     mockLLMService = {
@@ -33,12 +43,7 @@ describe("LLMParserResolver", () => {
 
     mockContext = {
       getCurrentUserId: jest.fn().mockReturnValue("user123"),
-      getCurrentIdentity: jest.fn().mockReturnValue({
-        userId: "user123",
-        method: "session",
-        scopes: new Set(),
-        capabilityExempt: true,
-      }),
+      getCurrentIdentity: jest.fn().mockReturnValue(pinnedIdentity),
     } as unknown as IContext;
 
     resolver = new LLMParserResolver(mockLLMService);
@@ -49,7 +54,7 @@ describe("LLMParserResolver", () => {
   });
 
   describe("parseFile", () => {
-    it("should delegate to llm.parseFile with userId from context", async () => {
+    it("hands the service the caller's real identity", async () => {
       const result = await resolver.parseFile(
         "tmp/file.csv",
         "csv",
@@ -57,7 +62,7 @@ describe("LLMParserResolver", () => {
       );
 
       expect(mockLLMService.parseFile).toHaveBeenCalledWith(
-        "user123",
+        pinnedIdentity,
         "tmp/file.csv",
         "csv",
       );
@@ -67,15 +72,17 @@ describe("LLMParserResolver", () => {
   });
 
   describe("parseReceipt", () => {
-    it("should delegate to llm.parseReceipt with userId from context", async () => {
+    it("hands the service the caller's real identity, still pinned", async () => {
       const result = await resolver.parseReceipt(
         "tmp/receipt.jpg",
         "ledger123",
         mockContext,
       );
 
+      // A bare userId here would strip `ledgerScope` and leave the service's
+      // own scope assertion with nothing to compare.
       expect(mockLLMService.parseReceipt).toHaveBeenCalledWith(
-        "user123",
+        pinnedIdentity,
         "tmp/receipt.jpg",
         "ledger123",
       );
