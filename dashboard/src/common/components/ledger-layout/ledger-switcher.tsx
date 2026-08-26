@@ -228,69 +228,76 @@ function LedgerAuthenticatedSwitcher({
             <PopoverContent className="w-[300px] p-0" align="start">
               <Command>
                 <CommandInput placeholder={t("page.dashboard.searchLedgers")} />
-                <CommandList>
-                  <CommandEmpty>
-                    {loading
-                      ? t("page.dashboard.loadingLedgers")
-                      : t("page.dashboard.noLedgersFound")}
-                  </CommandEmpty>
+                <CommandList className="flex min-h-0 flex-col overflow-hidden">
+                  <div className="min-h-0 flex-1 overflow-x-hidden overflow-y-auto">
+                    <CommandEmpty>
+                      {loading
+                        ? t("page.dashboard.loadingLedgers")
+                        : t("page.dashboard.noLedgersFound")}
+                    </CommandEmpty>
 
-                  {sortedGroups.map(([owner, ownedLedgers], groupIndex) => (
-                    <React.Fragment key={owner}>
-                      <CommandGroup>
-                        {/* Owner-level item - clickable, navigates to account page */}
-                        <CommandItem
-                          value={owner}
-                          onSelect={() => handleSelectOwner(owner)}
-                          className="font-semibold"
-                          aria-label={t("page.dashboard.goToAccount", {
-                            owner,
+                    {sortedGroups.map(([owner, ownedLedgers], groupIndex) => (
+                      <React.Fragment key={owner}>
+                        <CommandGroup>
+                          {/* Owner-level item - clickable, navigates to account page */}
+                          <CommandItem
+                            value={owner}
+                            onSelect={() => handleSelectOwner(owner)}
+                            className="font-semibold"
+                            aria-label={t("page.dashboard.goToAccount", {
+                              owner,
+                            })}
+                          >
+                            <User className="mr-2 h-4 w-4" />
+                            <span>{owner}</span>
+                          </CommandItem>
+
+                          {/* Repository items under this owner - indented */}
+                          {ownedLedgers.map((ledger) => {
+                            const { repo } = parseLedgerFullName(
+                              ledger.fullName,
+                            );
+                            return (
+                              <CommandItem
+                                key={ledger.id}
+                                value={`${ledger.fullName} ${ledger.name}`}
+                                onSelect={() => handleSelectLedger(ledger.id)}
+                                className="pl-6"
+                              >
+                                <Check
+                                  className={cn(
+                                    "mr-2 h-4 w-4",
+                                    currentLedgerId === ledger.id
+                                      ? "opacity-100"
+                                      : "opacity-0",
+                                  )}
+                                />
+                                <span className="text-sm truncate">
+                                  {repo || ledger.name}
+                                </span>
+                                <LedgerVisibilityIcon
+                                  isPrivate={ledger.private}
+                                  className="ml-auto"
+                                />
+                              </CommandItem>
+                            );
                           })}
-                        >
-                          <User className="mr-2 h-4 w-4" />
-                          <span>{owner}</span>
-                        </CommandItem>
+                        </CommandGroup>
 
-                        {/* Repository items under this owner - indented */}
-                        {ownedLedgers.map((ledger) => {
-                          const { repo } = parseLedgerFullName(ledger.fullName);
-                          return (
-                            <CommandItem
-                              key={ledger.id}
-                              value={`${ledger.fullName} ${ledger.name}`}
-                              onSelect={() => handleSelectLedger(ledger.id)}
-                              className="pl-6"
-                            >
-                              <Check
-                                className={cn(
-                                  "mr-2 h-4 w-4",
-                                  currentLedgerId === ledger.id
-                                    ? "opacity-100"
-                                    : "opacity-0",
-                                )}
-                              />
-                              <span className="text-sm truncate">
-                                {repo || ledger.name}
-                              </span>
-                              <LedgerVisibilityIcon
-                                isPrivate={ledger.private}
-                                className="ml-auto"
-                              />
-                            </CommandItem>
-                          );
-                        })}
-                      </CommandGroup>
+                        {/* Separator between owner groups (not after last) */}
+                        {groupIndex < sortedGroups.length - 1 && (
+                          <CommandSeparator />
+                        )}
+                      </React.Fragment>
+                    ))}
+                  </div>
 
-                      {/* Separator between owner groups (not after last) */}
-                      {groupIndex < sortedGroups.length - 1 && (
-                        <CommandSeparator />
-                      )}
-                    </React.Fragment>
-                  ))}
-
-                  <CommandSeparator />
-                  <CommandGroup>
+                  <CommandGroup
+                    forceMount
+                    className="shrink-0 border-t bg-popover"
+                  >
                     <CommandItem
+                      forceMount
                       onSelect={() => {
                         setOpen(false);
                         setIsCreateDialogOpen(true);
@@ -299,7 +306,7 @@ function LedgerAuthenticatedSwitcher({
                       <Plus className="mr-2 h-4 w-4" />
                       {t("page.dashboard.createLedger")}
                     </CommandItem>
-                    <CommandItem onSelect={handleManageLedgers}>
+                    <CommandItem forceMount onSelect={handleManageLedgers}>
                       <LayoutGrid className="mr-2 h-4 w-4" />
                       {t("page.dashboard.manageLedgers")}
                     </CommandItem>
