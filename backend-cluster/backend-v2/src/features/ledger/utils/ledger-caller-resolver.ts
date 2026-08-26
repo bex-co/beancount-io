@@ -1,32 +1,26 @@
 import { parseLedgerId } from "@/shared/str";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
-import type { IModels } from "@/foundation/models/types";
-import type { DbExecutor } from "@/drizzle/drizzle";
-import {
-  NotFoundError,
-  UnauthenticatedError,
-  ForbiddenError,
-} from "@/shared/errors";
+import { NotFoundError, UnauthenticatedError } from "@/shared/errors";
 
 export interface ResolveLedgerCallerDeps {
   favaClientFactory: IFavaClientFactory;
-  models: Pick<IModels, "jwt">;
-  db: DbExecutor;
 }
 
 /**
- * Resolves who is making a REST request to a ledger endpoint.
+ * Resolves an *anonymous* REST request against a ledger endpoint.
  *
- * - Public ledger: no token required, returns null (anonymous access allowed).
- * - Private ledger: requires a valid JWT and confirms the user can read the
- *   ledger via the Fava API. Returns the verified userId.
+ * - Public ledger: returns null — anonymous access is allowed, and downstream
+ *   runs with no credential at all.
+ * - Private ledger: throws `UnauthenticatedError`.
  *
- * The token must be extracted and provided by the caller (e.g. from
- * ctx.query.token or the Authorization header).
+ * Authenticated callers never reach this helper: they resolve through
+ * `resolveIdentity` + `authorizeLedger` upstream. There is deliberately no
+ * token parameter — this route family once accepted `?token=<JWT>`, which put
+ * a long-lived credential into every URL it touched; the single-use ticket
+ * flow (`v1/archive-handler.ts`) is the replacement for link-shaped downloads.
  */
 export async function resolveLedgerCaller(
   ledgerId: string,
-  token: string | undefined,
   deps: ResolveLedgerCallerDeps,
 ): Promise<string | null> {
   const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
@@ -45,23 +39,7 @@ export async function resolveLedgerCaller(
     return null; // public ledger — no auth required
   }
 
-  if (!token) {
-    throw new UnauthenticatedError("Unauthorized - no token provided");
-  }
-
-  const userId = await deps.models.jwt.verify(deps.db, token);
-  if (!userId) {
-    throw new UnauthenticatedError("Invalid or expired token");
-  }
-
-  const { favaApiClient } = await deps.favaClientFactory.getApiContext(userId);
-  const accessResponse = await favaApiClient.ledgers.getLedger(
-    ledgerOwner,
-    ledgerName,
+  throw new UnauthenticatedError(
+    "Unauthorized - credentials required for a private ledger",
   );
-  if (!accessResponse.data?.success) {
-    throw new ForbiddenError("Access denied");
-  }
-
-  return userId;
 }

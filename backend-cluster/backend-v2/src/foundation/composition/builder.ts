@@ -128,6 +128,7 @@ export function buildServiceLayer(input: {
       input.database.models,
       input.database.db,
       assetStorage,
+      input.clients.cacheHelper,
       input.config,
     ),
     ledgerEntry: new LedgerEntryService(

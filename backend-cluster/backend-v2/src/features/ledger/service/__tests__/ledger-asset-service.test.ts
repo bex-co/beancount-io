@@ -2,6 +2,7 @@ import { LedgerAssetService } from "../ledger-asset-service";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
 import { NotFoundError, ForbiddenError } from "@/shared/errors";
+import { makeFakeCache } from "@/server/rest/__tests__/v1-test-server";
 
 // Exercises this service's own behavior; authorizeLedger has its own suite.
 jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
@@ -23,7 +24,10 @@ const mockAssetStorage = {
   generateDownloadUrl: jest.fn().mockResolvedValue({ downloadUrl: "https://s3.example/signed" }),
 };
 
-const mockConfig = { server: { url: "https://beancount.io/" } };
+const mockConfig = {
+  server: { url: "https://beancount.io/" },
+  jwt: { secret: "test-secret" },
+};
 
 const IDENTITY: Identity = {
   userId: "alice",
@@ -33,6 +37,7 @@ const IDENTITY: Identity = {
 };
 
 describe("LedgerAssetService", () => {
+  const cache = makeFakeCache();
   let service: LedgerAssetService;
 
   beforeEach(() => {
@@ -46,6 +51,7 @@ describe("LedgerAssetService", () => {
       {} as any,
       {} as any,
       mockAssetStorage as any,
+      cache.helper as any,
       mockConfig as any,
     );
   });
@@ -89,7 +95,7 @@ describe("LedgerAssetService", () => {
   });
 
   describe("getLedgerArchiveDownloadUrl", () => {
-    it("appends the token only for a private ledger", async () => {
+    it("mints a single-use ticket URL for an authenticated caller — no session JWT in the URL", async () => {
       mockGetLedger.mockResolvedValue({
         data: { success: true, data: { private: true } },
       });
@@ -97,7 +103,6 @@ describe("LedgerAssetService", () => {
       const url = await service.getLedgerArchiveDownloadUrl(
         "alice/personal",
         IDENTITY,
-        "dl-token",
       );
 
       expect(authorizeLedger).toHaveBeenCalledWith(
@@ -106,12 +111,14 @@ describe("LedgerAssetService", () => {
         "read",
         expect.anything(),
       );
-      expect(url).toBe(
-        "https://beancount.io/api-gateway/ledgers/alice/personal/archive/main.zip?token=dl-token",
+      expect(url).toMatch(
+        /^https:\/\/beancount\.io\/api-gateway\/v1\/ledgers\/alice\/personal\/archive\/main\.zip\?ticket=v1\./,
       );
+      // The property the fix exists for: no long-lived credential in the URL.
+      expect(url).not.toContain("token=");
     });
 
-    it("omits the token for a public ledger even when one is supplied", async () => {
+    it("returns a credential-free legacy URL, ledgerId encoded, for an anonymous public read", async () => {
       mockGetLedger.mockResolvedValue({
         data: { success: true, data: { private: false } },
       });
@@ -119,23 +126,44 @@ describe("LedgerAssetService", () => {
       const url = await service.getLedgerArchiveDownloadUrl(
         "alice/personal",
         undefined,
-        "dl-token",
       );
 
       expect(url).toBe(
-        "https://beancount.io/api-gateway/ledgers/alice/personal/archive/main.zip",
+        "https://beancount.io/api-gateway/ledgers/alice%2Fpersonal/archive/main.zip",
       );
     });
 
-    it("denies before returning a URL when authorizeLedger rejects", async () => {
+    it("refuses to mint when no signing secret is configured", async () => {
+      mockGetLedger.mockResolvedValue({
+        data: { success: true, data: { private: true } },
+      });
+      const unconfigured = new LedgerAssetService(
+        mockFavaClientFactory as any,
+        {} as any,
+        {} as any,
+        mockAssetStorage as any,
+        cache.helper as any,
+        { ...mockConfig, jwt: { secret: "" } } as any,
+      );
+
+      const noncesBefore = cache.size();
+      await expect(
+        unconfigured.getLedgerArchiveDownloadUrl("alice/personal", IDENTITY),
+      ).rejects.toThrow(ForbiddenError);
+      expect(cache.size()).toBe(noncesBefore);
+    });
+
+    it("denies before minting anything when authorizeLedger rejects", async () => {
       mockGetLedger.mockResolvedValue({
         data: { success: true, data: { private: true } },
       });
       (authorizeLedger as jest.Mock).mockRejectedValue(new ForbiddenError("no"));
 
+      const noncesBefore = cache.size();
       await expect(
-        service.getLedgerArchiveDownloadUrl("alice/personal", undefined),
+        service.getLedgerArchiveDownloadUrl("alice/personal", IDENTITY),
       ).rejects.toThrow(ForbiddenError);
+      expect(cache.size()).toBe(noncesBefore);
     });
   });
 });

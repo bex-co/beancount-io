@@ -412,7 +412,7 @@
               },
               "count": {
                 "type": "integer",
-                "description": "Number of users returned in this response"
+                "description": "Total number of users matching the filter, regardless of pagination"
               }
             },
             "required": [
@@ -878,6 +878,119 @@
           "email"
         ],
         "description": "Request body for fetching a user's full detail by email"
+      },
+      "AdminLedgerLimitsResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "maxDirectives": {
+            "type": "integer",
+            "description": "Maximum beancount directives allowed for this user's subscription tier, or -1 if unlimited",
+            "example": 1000
+          }
+        },
+        "required": [
+          "ok",
+          "maxDirectives"
+        ]
+      },
+      "UserLedgersResponse": {
+        "type": "object",
+        "properties": {
+          "ok": {
+            "type": "boolean",
+            "enum": [
+              true
+            ],
+            "description": "Indicates request succeeded"
+          },
+          "ledgers": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminUserLedger"
+            }
+          }
+        },
+        "required": [
+          "ok",
+          "ledgers"
+        ]
+      },
+      "AdminUserLedger": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "example": "jdoe/personal-finances"
+          },
+          "name": {
+            "type": "string",
+            "example": "personal-finances"
+          },
+          "fullName": {
+            "type": "string",
+            "example": "jdoe/personal-finances"
+          },
+          "private": {
+            "type": "boolean",
+            "example": true
+          },
+          "empty": {
+            "type": "boolean",
+            "example": false
+          },
+          "size": {
+            "type": "integer",
+            "example": 2048
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2025-01-01T00:00:00.000Z"
+          },
+          "updatedAt": {
+            "type": "string",
+            "format": "date-time",
+            "example": "2026-05-15T10:00:00.000Z"
+          },
+          "directiveCount": {
+            "type": "integer",
+            "nullable": true,
+            "description": "Total beancount directive count for this ledger, or null if it could not be computed",
+            "example": 842
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "fullName",
+          "private",
+          "empty",
+          "size",
+          "createdAt",
+          "updatedAt",
+          "directiveCount"
+        ]
+      },
+      "UserLedgersRequest": {
+        "type": "object",
+        "properties": {
+          "email": {
+            "type": "string",
+            "format": "email",
+            "description": "Email address of the user whose ledgers to list",
+            "example": "user@example.com"
+          }
+        },
+        "required": [
+          "email"
+        ]
       },
       "StripeWebhookSuccessResponse": {
         "type": "object",
@@ -1659,6 +1772,130 @@
         }
       }
     },
+    "/api/admin/ledger-limits/{ledgerUsername}": {
+      "get": {
+        "summary": "Get a user's directive limit by ledger username",
+        "description": "Called by beancount-ledger's pre-receive hook check to enforce the free-tier directive cap.\n\nLooks up the user by their Gitea/ledger username and returns their subscription tier's maxDirectives limit (-1 = unlimited).",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "description": "The user's ledger (Gitea) username",
+              "example": "jdoe"
+            },
+            "required": true,
+            "description": "The user's ledger (Gitea) username",
+            "name": "ledgerUsername",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Directive limit for the user's current tier",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminLedgerLimitsResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized — invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/admin/user-ledgers": {
+      "post": {
+        "summary": "Get a user's ledger list with per-ledger directive counts",
+        "description": "Returns every ledger a user owns, each with its total beancount\ndirective count (summed across all directive types) — the same figure the\ndashboard's directive-usage indicator shows and that the free-tier directive\ncap is measured against. Intended for support/debugging.\n\nThe endpoint will return an error if:\n- The user with the provided email does not exist (404)\n\nA ledger's `directiveCount` is `null` if it could not be computed (e.g. a\ntransient ledger-service error) rather than failing the whole request.",
+        "tags": [
+          "Admin API"
+        ],
+        "security": [
+          {
+            "adminToken": []
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserLedgersRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "User's ledgers retrieved successfully",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserLedgersResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request - invalid input",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "Unauthorized - invalid or missing admin token",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "User not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api-gateway/stripe/webhook": {
       "post": {
         "summary": "Handle Stripe webhook events",
@@ -1788,10 +2025,11 @@
         }
       }
     },
-    "/ledgers/{ledgerId}/archive/{archive}": {
+    "/api-gateway/ledgers/{ledgerId}/archive/{archive}": {
       "get": {
-        "summary": "Download ledger archive file",
-        "description": "Downloads a ledger archive in the specified format (e.g., tar.gz, zip).\n\nThis endpoint acts as a proxy to the Python ledger service, forwarding the request with the user's credentials.\n\nThe user must be authenticated and have access to the specified ledger.\n\nCommon archive formats:\n- 'gitea-main.zip' - Git archive from Gitea repository (main branch)\n- 'tar.gz' - Tarball archive\n- 'zip' - ZIP archive",
+        "deprecated": true,
+        "summary": "Download ledger archive file (deprecated)",
+        "description": "Downloads a ledger archive in the specified format (e.g., tar.gz, zip).\n\n**Deprecated.** Use `POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets` followed by\n`GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}?ticket=...` instead. This route\naddresses the ledger as a single `owner%2Fname` path segment, and a private ledger needs an\n`Authorization` header — a credential in the query string is not read by this route.\n\nCommon archive formats:\n- 'gitea-main.zip' - Git archive from Gitea repository (main branch)\n- 'tar.gz' - Tarball archive\n- 'zip' - ZIP archive",
         "tags": [
           "Ledger"
         ],
@@ -1810,6 +2048,7 @@
           {
             "schema": {
               "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$",
               "description": "Archive format to download. Common formats: 'tar.gz', 'zip'. For Git archives, use 'gitea-<branch>.zip'",
               "example": "gitea-main.zip"
             },
@@ -1817,17 +2056,6 @@
             "description": "Archive format to download. Common formats: 'tar.gz', 'zip'. For Git archives, use 'gitea-<branch>.zip'",
             "name": "archive",
             "in": "path"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "description": "JWT authentication token for verifying user access",
-              "example": "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI1MDdmMWY3N2JjZjg2Y2Q3OTk0MzkwMTEifQ.abc123"
-            },
-            "required": true,
-            "description": "JWT authentication token for verifying user access",
-            "name": "token",
-            "in": "query"
           }
         ],
         "responses": {
@@ -1855,7 +2083,7 @@
             }
           },
           "401": {
-            "description": "Unauthorized - invalid or missing token"
+            "description": "Unauthorized - private ledger without credentials"
           },
           "404": {
             "description": "Archive or ledger not found"

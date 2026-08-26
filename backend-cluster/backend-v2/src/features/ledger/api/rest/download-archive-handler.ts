@@ -3,7 +3,6 @@ import { z } from "@/shared/zod-openapi-setup";
 import { registerRoute } from "@/server/rest/openapi-registry";
 import { type AppLayers } from "@/foundation/composition";
 import { AppConfig } from "@/config/config";
-import { getTokenFromCtx } from "@/features/auth/utils/auth";
 import { resolveLedgerCaller } from "../../utils/ledger-caller-resolver";
 import { resolveIdentity } from "@/server/api/identity";
 import { authorizeLedger } from "../../utils/authorize-ledger";
@@ -17,18 +16,24 @@ import {
 /**
  * The pre-v1 archive download. Superseded, kept for existing clients.
  *
- * Two things are wrong with it, both fixed by
+ * What is still wrong with it, fixed by
  * `GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}`:
+ * `:ledgerId` is one path segment holding `owner/name`, which only works while
+ * an encoded `%2F` survives Cloudflare and Caddy unchanged. v1 splits it into
+ * two segments.
  *
- * 1. It accepts `?token=<JWT>` — the caller's long-lived session credential in
- *    a URL, and therefore in access logs, Referer headers, browser history, and
- *    CDN logs. v1 takes a single-use 60-second ticket instead.
- * 2. `:ledgerId` is one path segment holding `owner/name`, which only works
- *    while an encoded `%2F` survives Cloudflare and Caddy unchanged. v1 splits
- *    it into two segments.
+ * The other reason for v1 — this route's acceptance of `?token=<JWT>`, the
+ * caller's long-lived session credential in a URL — is no longer a property of
+ * the route: the query parameter is not read, so a credential in the query
+ * string buys nothing here. `Authorization: Bearer` still works, and anonymous
+ * reads of public ledgers still work; everything else should mint a ticket via
+ * `POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets` or
+ * `Query.getLedgerArchiveDownloadUrl`, both of which return the single-use
+ * 60-second ticket URL.
  *
- * Removal is a separate, dated decision once clients have moved; until then it
- * is marked `deprecated` in the spec so nobody adopts it by accident.
+ * Removal of the route itself is a separate, dated decision once clients have
+ * moved; until then it is marked `deprecated` in the spec so nobody adopts it
+ * by accident.
  */
 export const downloadArchiveParamsSchema = z
   .object({
@@ -45,17 +50,6 @@ export const downloadArchiveParamsSchema = z
   })
   .openapi("DownloadArchiveParams", {
     description: "Path parameters for downloading ledger archive",
-  });
-
-export const downloadArchiveQuerySchema = z
-  .object({
-    token: z.string().optional().openapi({
-      description:
-        "DEPRECATED. JWT in the query string; prefer `Authorization: Bearer`, or move to the v1 archive endpoint's single-use ticket.",
-    }),
-  })
-  .openapi("DownloadArchiveQuery", {
-    description: "Query parameters for archive download authentication",
   });
 
 export function registerDownloadArchiveRoute(
@@ -80,15 +74,9 @@ export function registerDownloadArchiveRoute(
       });
       userId = identity.userId;
     } else {
-      userId = await resolveLedgerCaller(
-        ledgerId,
-        (ctx.query.token as string | undefined) || getTokenFromCtx(ctx),
-        {
-          favaClientFactory: layers.clients.favaClientFactory,
-          models: layers.database.models,
-          db: layers.database.db,
-        },
-      );
+      userId = await resolveLedgerCaller(ledgerId, {
+        favaClientFactory: layers.clients.favaClientFactory,
+      });
     }
 
     await streamLedgerArchive(ctx, layers, config, {
@@ -111,8 +99,8 @@ export function registerDownloadArchiveRoute(
 
 **Deprecated.** Use \`POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets\` followed by
 \`GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}?ticket=...\` instead. This route
-accepts a JWT in the query string, which puts a long-lived credential into logs and
-browser history, and addresses the ledger as a single \`owner%2Fname\` path segment.
+addresses the ledger as a single \`owner%2Fname\` path segment, and a private ledger needs an
+\`Authorization\` header — a credential in the query string is not read by this route.
 
 Common archive formats:
 - 'gitea-main.zip' - Git archive from Gitea repository (main branch)
@@ -121,7 +109,6 @@ Common archive formats:
     tags: ["Ledger"],
     request: {
       params: downloadArchiveParamsSchema,
-      query: downloadArchiveQuerySchema,
     },
     responses: {
       200: {
@@ -138,7 +125,7 @@ Common archive formats:
           },
         },
       },
-      401: { description: "Unauthorized - invalid or missing token" },
+      401: { description: "Unauthorized - private ledger without credentials" },
       404: { description: "Archive or ledger not found" },
       500: { description: "Failed to download archive from upstream service" },
     },

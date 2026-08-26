@@ -49,8 +49,9 @@ export class LedgerAssetQueryResolver {
 
   @Query(() => LedgerAssetDownloadUrlResult, {
     description:
-      "Get a downloadable URL for a ledger Git archive (gitea-main.zip). " +
-      "Public ledgers require no auth; private ledgers require a valid session.",
+      "Get a downloadable URL for a ledger Git archive (main.zip). " +
+      "Authenticated callers receive a single-use, 60-second ticket URL; " +
+      "public ledgers are readable without auth.",
   })
   async getLedgerArchiveDownloadUrl(
     @Arg("ledgerId", () => String) ledgerId: string,
@@ -59,7 +60,6 @@ export class LedgerAssetQueryResolver {
     const downloadUrl = await this.assetService.getLedgerArchiveDownloadUrl(
       ledgerId,
       ctx.identity,
-      ctx.token,
     );
     return { downloadUrl };
   }
