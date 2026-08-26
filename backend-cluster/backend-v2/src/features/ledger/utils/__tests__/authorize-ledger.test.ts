@@ -77,6 +77,22 @@ describe("authorizeLedger", () => {
       ).resolves.toEqual({ ledgerRepoId: 42, ownerUserId: "user-1" });
     });
 
+    it.each([
+      ["ledger.write", "read"],
+      ["ledger.admin", "read"],
+      ["ledger.admin", "write"],
+    ] as const)("lets %s satisfy a weaker %s operation", async (scope, rel) => {
+      mockGetUserByUsername.mockResolvedValue({ id: "user-1" });
+      await expect(
+        authorizeLedger(
+          identity({ scopes: new Set([scope]) }),
+          "owner/main",
+          rel,
+          deps,
+        ),
+      ).resolves.toEqual({ ledgerRepoId: 42, ownerUserId: "user-1" });
+    });
+
     it("leaves a full-power legacy session exempt from the scope matrix", async () => {
       mockGetUserByUsername.mockResolvedValue({ id: "user-1" });
       await expect(

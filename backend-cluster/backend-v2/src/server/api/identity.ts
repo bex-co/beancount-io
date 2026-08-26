@@ -91,11 +91,28 @@ const OPERATION_SCOPE: Record<OperationClass, ApiScope> = {
   admin: "ledger.admin",
 };
 
-const SATISFYING_SCOPES: Record<OperationClass, readonly ApiScope[]> = {
-  read: ["ledger.read", "ledger.write", "ledger.admin"],
-  write: ["ledger.write", "ledger.admin"],
-  admin: ["ledger.admin"],
+/**
+ * A stronger grant satisfies every weaker operation. Keep this shared with
+ * the per-ledger authorization seam so the transport gate and service checks
+ * cannot disagree about scope implication.
+ *
+ * Exact matching creates credentials that may rewrite a ledger but cannot
+ * inspect it first. Real write flows read before editing, so that model would
+ * only teach clients to request every scope instead of choosing the least
+ * authority their workflow needs.
+ */
+const SATISFYING_SCOPES: Record<ApiScope, readonly ApiScope[]> = {
+  "ledger.read": ["ledger.read", "ledger.write", "ledger.admin"],
+  "ledger.write": ["ledger.write", "ledger.admin"],
+  "ledger.admin": ["ledger.admin"],
 };
+
+export function hasRequiredScope(
+  scopes: ReadonlySet<string>,
+  required: ApiScope,
+): boolean {
+  return SATISFYING_SCOPES[required].some((scope) => scopes.has(scope));
+}
 
 /**
  * The resolved caller — the single shape GraphQL, REST, and MCP all read.
@@ -159,7 +176,7 @@ export function identityHasCapability(
 ): boolean {
   return (
     identity.capabilityExempt ||
-    SATISFYING_SCOPES[operation].some((scope) => identity.scopes.has(scope))
+    hasRequiredScope(identity.scopes, OPERATION_SCOPE[operation])
   );
 }
 

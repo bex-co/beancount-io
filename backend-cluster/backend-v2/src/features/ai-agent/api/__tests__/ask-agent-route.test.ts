@@ -34,6 +34,7 @@ describe("setAskAgentRoute", () => {
   let config: AppConfig;
   let workflow: { streamAnswer: jest.Mock };
   let assertQuota: jest.Mock;
+  let addTokenUsage: jest.Mock;
 
   const makeCtx = (body: unknown) => {
     const res = new PassThrough() as unknown as {
@@ -66,10 +67,16 @@ describe("setAskAgentRoute", () => {
   beforeEach(() => {
     router = new Router();
     assertQuota = jest.fn().mockResolvedValue(undefined);
+    addTokenUsage = jest.fn().mockResolvedValue(undefined);
     layers = {
       database: { db: {}, models: {} },
       clients: { favaClientFactory: {} },
-      services: { aiCfoUsage: { assertQuotaAvailable: assertQuota } },
+      services: {
+        aiCfoUsage: {
+          assertQuotaAvailable: assertQuota,
+          addTokenUsage,
+        },
+      },
       workflows: {},
     } as unknown as AppLayers;
     config = {
@@ -187,8 +194,12 @@ describe("setAskAgentRoute", () => {
         ledgerPassword: "pw_a",
         conversationId: "conv_9",
         mode: "ask",
+        recordTokenUsage: expect.any(Function),
       }),
     );
+    const command = workflow.streamAnswer.mock.calls[0][0];
+    await command.recordTokenUsage(321);
+    expect(addTokenUsage).toHaveBeenCalledWith("usr_1", 321);
     expect(ctx.respond).toBe(false);
   });
 

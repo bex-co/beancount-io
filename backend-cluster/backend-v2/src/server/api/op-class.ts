@@ -1,4 +1,8 @@
-import type { ApiScope, Identity } from "./identity";
+import {
+  hasRequiredScope,
+  type ApiScope,
+  type Identity,
+} from "./identity";
 import { ForbiddenError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import {
@@ -42,23 +46,6 @@ const SCOPE_FOR_CLASS: Record<OpClass, ApiScope | null> = {
   admin: "ledger.admin",
   "session-only": null,
   public: null,
-};
-
-/**
- * Scopes are cumulative, not orthogonal: `ledger.admin` implies `ledger.write`
- * implies `ledger.read`.
- *
- * The alternative — exact match — produces credentials that make no sense: a
- * grant that may rewrite a ledger's contents but is refused a look at them, or
- * one that may delete the ledger outright yet cannot list its files. Every real
- * write flow reads first, so exact match would only teach clients to request
- * all three scopes every time, which is the outcome the deliberately-small
- * vocabulary exists to avoid.
- */
-const IMPLIED_SCOPES: Record<ApiScope, readonly ApiScope[]> = {
-  "ledger.read": ["ledger.read", "ledger.write", "ledger.admin"],
-  "ledger.write": ["ledger.write", "ledger.admin"],
-  "ledger.admin": ["ledger.admin"],
 };
 
 /**
@@ -1397,10 +1384,6 @@ export interface ScopeDecision {
   readonly denyReason?: string;
 }
 
-function satisfies(scopes: ReadonlySet<string>, required: ApiScope): boolean {
-  return IMPLIED_SCOPES[required].some((scope) => scopes.has(scope));
-}
-
 /**
  * Decide, without acting. Separated from {@link requireScopeClass} so shadow
  * mode, the surfaces' differing refusal dialects, and the tests all read the
@@ -1438,7 +1421,7 @@ export function evaluateScope(
         "This operation is not part of the API scope vocabulary and is reachable only from a browser session",
     };
   }
-  if (!satisfies(identity.scopes, requiredScope)) {
+  if (!hasRequiredScope(identity.scopes, requiredScope)) {
     return {
       ...base,
       allowed: false,

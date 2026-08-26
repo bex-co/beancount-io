@@ -117,8 +117,6 @@ export function setAskAgentRoute(
       ledgerId,
       conversationId,
       mode: effectiveMode,
-      recordTokenUsage: (totalTokens: number) =>
-        layers.services.aiCfoUsage.addTokenUsage(user.id, totalTokens),
     });
 
     const workflow = workflowFactory();
@@ -131,6 +129,8 @@ export function setAskAgentRoute(
       ledgerPassword: user.ledger_password,
       conversationId,
       mode: effectiveMode,
+      recordTokenUsage: (totalTokens: number) =>
+        layers.services.aiCfoUsage.addTokenUsage(user.id, totalTokens),
     });
 
     // Bridge the Web Response to the raw Node response: copy status + headers,
