@@ -36,7 +36,10 @@ export type AuthMethod = "password";
 export type DirectiveType = "transaction" | "balance" | "note" | "open";
 
 /** Financial statement and browser output selected from a report page. */
-export type ReportExportType = "balance_sheet" | "profit_and_loss";
+export type ReportExportType =
+  | "balance_sheet"
+  | "profit_and_loss"
+  | "cash_flow";
 export type ReportExportFormat = "csv" | "markdown" | "print";
 export type ReportExportFailure =
   | "csv_generation"

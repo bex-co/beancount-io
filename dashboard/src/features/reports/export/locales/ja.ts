@@ -32,6 +32,12 @@ export default createExportLocale({
   totalRevenue: "収益およびその他の収入合計",
   totalExpenses: "費用合計",
   netLoss: "純損失",
+  netCashOperating: "営業活動によるネットキャッシュフロー",
+  netCashInvesting: "投資活動によるネットキャッシュフロー",
+  netCashFinancing: "財務活動によるネットキャッシュフロー",
+  netChangeInCash: "現金および現金同等物の純増減",
+  openingCash: "期首の現金および現金同等物",
+  closingCash: "期末の現金および現金同等物",
   supportingAccountDetail: "補足勘定明細",
   allActivity: "利用可能なすべての帳簿活動（終了日）",
   dateUnavailable: "報告日を確認できません",
@@ -61,6 +67,10 @@ export default createExportLocale({
     "元帳には流動・非流動の分類情報がないため、勘定は元帳の順序で表示されます。",
   balanceSheetDoesNotReconcileNotice:
     "1つ以上の単位で会計等式が一致していません。外部利用前に、未締切損益、部分フィルター、評価・換算の影響、および元帳エラーを確認してください。この計算書は社内用の草案です。",
+  cashFlowClassificationNotice:
+    "営業活動・投資活動・財務活動の区分は、cash-flow-role が宣言されていない勘定科目については種類と名前から推定されます。宣言のある勘定科目は記載どおりに分類されます。",
+  cashFlowCashEquivalentsNotice:
+    "現金および現金同等物の範囲は勘定科目名から推定されます（当座預金・普通預金・現金系の資産勘定など）。外部利用の前に対象勘定を確認してください。",
   customUnitsNotice: "確認が必要なカスタム帳簿単位:",
   customUnitsDefinitionNotice:
     "このエクスポートには各単位の意味が含まれていません。外部利用前に添付注記で説明してください。",

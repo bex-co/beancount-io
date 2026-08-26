@@ -12,12 +12,16 @@ import {
 import {
   getBalanceSheetSummaryItems,
   getBalanceSheetSupportingSections,
+  getCashFlowSummaryItems,
+  getCashFlowSupportingSections,
   getProfitAndLossSummaryItems,
   getProfitAndLossSupportingSections,
+  cashFlowSummaryLabelKey,
   getStatementPresentationCurrency,
   hasBalanceSheetReconciliationDifference,
   isNegativeStatementAmount,
   type BalanceSheetSummaryKey,
+  type CashFlowSummaryKey,
   type ProfitAndLossSummaryKey,
 } from "./presentation";
 
@@ -172,6 +176,26 @@ function summaryLines(
   );
 }
 
+function cashFlowSummaryLabel(key: CashFlowSummaryKey, t: StatementTranslator) {
+  return t(cashFlowSummaryLabelKey(key));
+}
+
+function cashFlowSummaryLines(
+  document: StatementExportDocument,
+  { locale, t }: MarkdownOptions,
+): string[] {
+  return getCashFlowSummaryItems(document).flatMap((item) =>
+    item.row.amounts.map((amount) => {
+      const label = escapeMarkdown(cashFlowSummaryLabel(item.key, t));
+      const unit = escapeMarkdown(amount.unit);
+      const value = escapeMarkdown(
+        formatStatementAmount(amount.displayAmount, locale),
+      );
+      return `| **${label}** | **${unit}** | **${value}** |`;
+    }),
+  );
+}
+
 export function statementToMarkdown(
   document: StatementExportDocument,
   options: MarkdownOptions,
@@ -221,6 +245,14 @@ export function statementToMarkdown(
       : null,
     document.kind === "balance_sheet"
       ? t("reports.export.balanceSheetClassificationNotice")
+      : null,
+    document.kind === "cash_flow" &&
+    (document.cashFlowInference?.activityRows ?? true)
+      ? t("reports.export.cashFlowClassificationNotice")
+      : null,
+    document.kind === "cash_flow" &&
+    (document.cashFlowInference?.cashEquivalents ?? true)
+      ? t("reports.export.cashFlowCashEquivalentsNotice")
       : null,
     balanceSheetDoesNotReconcile
       ? t("reports.export.balanceSheetDoesNotReconcileNotice")
@@ -294,6 +326,37 @@ export function statementToMarkdown(
     }
 
     const supportingSections = getProfitAndLossSupportingSections(document);
+    if (supportingSections.length > 0) {
+      lines.push(
+        "",
+        `## ${escapeMarkdown(t("reports.export.supportingAccountDetail"))}`,
+      );
+      supportingSections.forEach((section) => {
+        const rows = section.rows.flatMap((row) => rowLines(row, locale));
+        lines.push(
+          "",
+          `### ${escapeMarkdown(section.label)}`,
+          "",
+          `| ${escapeMarkdown(t("common.accountColumn"))} | ${escapeMarkdown(t("reports.export.unit"))} | ${escapeMarkdown(t("reports.export.amount"))} |`,
+          "|:--|:--|--:|",
+          ...rows,
+        );
+      });
+    }
+  } else if (document.kind === "cash_flow") {
+    const summarizedRows = cashFlowSummaryLines(document, options);
+    if (summarizedRows.length > 0) {
+      lines.push(
+        "",
+        `## ${escapeMarkdown(t("reports.export.statementSummary"))}`,
+        "",
+        `| ${escapeMarkdown(t("reports.export.lineItem"))} | ${escapeMarkdown(t("reports.export.unit"))} | ${escapeMarkdown(t("reports.export.amount"))} |`,
+        "|:--|:--|--:|",
+        ...summarizedRows,
+      );
+    }
+
+    const supportingSections = getCashFlowSupportingSections(document);
     if (supportingSections.length > 0) {
       lines.push(
         "",

@@ -349,6 +349,11 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "查看{ledgerName}的资产负债表。在任何时间点分析资产、负债和权益。",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "查看{ledgerName}的现金流量表。追踪经营、投资和筹资活动产生的现金变动。",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "查看和管理{ledgerName}中使用的商品（货币、股票和资产）。跟踪汇率和价格历史。",
@@ -432,6 +437,10 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "资产负债表",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "现金流量表",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "商品",
@@ -614,6 +623,10 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "收入",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "现金流量表",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "损益表",

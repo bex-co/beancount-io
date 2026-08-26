@@ -3,6 +3,7 @@ import {
   extractAccountAtDepth,
   isExcludedAccount,
 } from "./account-categorizer";
+import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 
 type HierarchyNode = {
@@ -69,6 +70,7 @@ function extractNodesAtDepth(
   roots: SerializableTreeNode | undefined | null | HierarchyNode[],
   targetDepth: number,
   inverse = false,
+  accountMeta?: AccountMetaMap,
 ): Map<string, number> {
   const nodeMap = new Map<string, number>();
 
@@ -90,10 +92,11 @@ function extractNodesAtDepth(
     }
 
     const accountAtDepth = extractAccountAtDepth(node.account, targetDepth);
-    const category = categorizeAccount(node.account);
+    const meta = accountMeta?.get(node.account);
+    const category = categorizeAccount(node.account, meta);
 
     // Skip excluded accounts
-    if (category === "exclude" || isExcludedAccount(node.account)) {
+    if (category === "exclude" || isExcludedAccount(node.account, meta)) {
       return;
     }
 
@@ -125,6 +128,12 @@ interface TransformOptions {
   assetsHierarchyData?: SerializableTreeNode;
   liabilitiesHierarchyData?: SerializableTreeNode;
   depth?: 1 | 2 | 3;
+  /**
+   * Open-directive metadata per account (cash-flow-role declarations), the
+   * `meta` of getLedgerAccountDirectives. Omitted/empty means every account
+   * resolves by the name heuristics, exactly as before.
+   */
+  accountMeta?: AccountMetaMap;
 }
 
 /**
@@ -137,20 +146,31 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
     assetsHierarchyData,
     liabilitiesHierarchyData,
     depth = 2,
+    accountMeta,
   } = options;
 
   const nodes: SankeyNode[] = [];
   const links: SankeyLink[] = [];
 
   // Extract nodes at target depth
-  const incomeNodes = extractNodesAtDepth(incomeHierarchyData, depth, true); // Inverse for income
-  const expenseNodes = extractNodesAtDepth(expensesHierarchyData, depth, false);
+  const incomeNodes = extractNodesAtDepth(
+    incomeHierarchyData,
+    depth,
+    true,
+    accountMeta,
+  ); // Inverse for income
+  const expenseNodes = extractNodesAtDepth(
+    expensesHierarchyData,
+    depth,
+    false,
+    accountMeta,
+  );
 
   // Filter assets to only include investing (exclude cash-equivalent)
   const assetNodes = new Map<string, number>();
-  extractNodesAtDepth(assetsHierarchyData, depth, false).forEach(
+  extractNodesAtDepth(assetsHierarchyData, depth, false, accountMeta).forEach(
     (value, key) => {
-      if (!isExcludedAccount(key)) {
+      if (!isExcludedAccount(key, accountMeta?.get(key))) {
         assetNodes.set(key, value);
       }
     },
@@ -160,6 +180,7 @@ export function transformToSankeyData(options: TransformOptions): SankeyData {
     liabilitiesHierarchyData,
     depth,
     false,
+    accountMeta,
   );
 
   // Calculate totals

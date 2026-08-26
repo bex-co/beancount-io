@@ -32,6 +32,12 @@ export default createExportLocale({
   totalRevenue: "Ingressos i altres rendes totals",
   totalExpenses: "Despeses totals",
   netLoss: "Pèrdua neta",
+  netCashOperating: "Flux net de caixa de les activitats operatives",
+  netCashInvesting: "Flux net de caixa de les activitats d'inversió",
+  netCashFinancing: "Flux net de caixa de les activitats de finançament",
+  netChangeInCash: "Variació neta de l'efectiu i equivalents",
+  openingCash: "Efectiu i equivalents a l'inici del període",
+  closingCash: "Efectiu i equivalents al final del període",
   supportingAccountDetail: "Detall de comptes de suport",
   allActivity: "Tota l’activitat disponible del llibre fins al",
   dateUnavailable: "Data de l’informe no disponible",
@@ -61,6 +67,10 @@ export default createExportLocale({
     "El llibre d’origen no proporciona classificacions corrents i no corrents; els comptes es presenten en l’ordre del llibre.",
   balanceSheetDoesNotReconcileNotice:
     "L’equació comptable no concilia per a una o més unitats. Reviseu els resultats no tancats, els filtres parcials, els efectes de valoració o conversió i els errors del llibre abans de l’ús extern. Aquest estat continua sent un esborrany intern.",
+  cashFlowClassificationNotice:
+    "Les activitats operatives, d'inversió i de finançament s'infereixen dels tipus i noms dels comptes sense una cash-flow-role declarada; els comptes que la declaren es classifiquen tal com està escrit.",
+  cashFlowCashEquivalentsNotice:
+    "El conjunt d'efectiu i equivalents s'infereix dels noms dels comptes (comptes corrents, d'estalvi i similars). Revisa els comptes inclosos abans d'un ús extern.",
   customUnitsNotice: "Unitats personalitzades que cal revisar:",
   customUnitsDefinitionNotice:
     "Els seus significats no estan disponibles en aquesta exportació; documenteu-los en una nota adjunta abans de l’ús extern.",

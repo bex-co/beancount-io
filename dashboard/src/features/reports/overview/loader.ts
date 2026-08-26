@@ -1,6 +1,7 @@
 import type { RouteLoader } from "@/common/types/route-loader";
 import { getLedgerSearchParams } from "@/common/lib/ledger-search-params";
 import {
+  GetLedgerAccountMetaDocument,
   GetLedgerFileDocument,
   GetLedgerOverviewDocument,
 } from "@/graphql/definitions";
@@ -26,6 +27,12 @@ export const overviewLoader: RouteLoader<
     context.client.query({
       query: GetLedgerFileDocument,
       variables: { ledgerId, path: "README.md" },
+    }),
+    // Account open-directive metadata (cash-flow-role declarations); the
+    // Sankey degrades to heuristics when this fails or is unsupported.
+    context.client.query({
+      query: GetLedgerAccountMetaDocument,
+      variables: { ledgerId },
     }),
   ]);
 };

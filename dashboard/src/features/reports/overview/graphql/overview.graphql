@@ -82,3 +82,10 @@ query GetLedgerOverview(
     }
   }
 }
+
+query GetLedgerAccountMeta($ledgerId: String!) {
+  getLedgerAccountDirectives(ledgerId: $ledgerId) {
+    account
+    meta
+  }
+}

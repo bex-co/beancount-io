@@ -1,5 +1,6 @@
 import zhAccount from "../account/locales/zh";
 import zhBalanceSheet from "../balance-sheet/locales/zh";
+import zhCashFlow from "../cash-flow/locales/zh";
 import zhIncomeStatement from "../income-statement/locales/zh";
 import zhTrialBalance from "../trial-balance/locales/zh";
 import zhOverview from "../overview/locales/zh";
@@ -38,6 +39,7 @@ const zhReports = {
   ...zhReportsShared,
   ...zhAccount,
   ...zhBalanceSheet,
+  ...zhCashFlow,
   ...zhIncomeStatement,
   ...zhTrialBalance,
   ...zhOverview,

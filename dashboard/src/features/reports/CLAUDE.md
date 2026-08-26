@@ -8,14 +8,15 @@ Financial report visualizations — overview, balance sheet, income statement, t
 
 Each sub-report is a self-contained directory:
 
-| Sub-report          | Key Components                                                                                          |
-| ------------------- | ------------------------------------------------------------------------------------------------------- |
-| `overview/`         | Dashboard cards and Sankey cash flow chart (`overview/components/cash-flow-sankey.tsx`), data pipeline  |
-| `balance-sheet/`    | Tree maps (`hierarchy-tree-map.tsx`), lists (`hierarchy-list.tsx`), line charts (`line-chart.tsx`)      |
-| `income-statement/` | Date-balance charts with single/stacked variants, SSR-safe loader                                       |
-| `trial-balance/`    | Simple tabular report                                                                                   |
-| `account/`          | Individual account detail view                                                                          |
-| `export/`           | Shared Balance Sheet and Income Statement export model with CSV, Markdown, and semantic print renderers |
+| Sub-report          | Key Components                                                                                                      |
+| ------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| `overview/`         | Dashboard cards and Sankey cash flow chart (`overview/components/cash-flow-sankey.tsx`), data pipeline              |
+| `balance-sheet/`    | Tree maps (`hierarchy-tree-map.tsx`), lists (`hierarchy-list.tsx`), line charts (`line-chart.tsx`)                  |
+| `income-statement/` | Date-balance charts with single/stacked variants, SSR-safe loader                                                   |
+| `cash-flow/`        | Operating/investing/financing statement from interval totals + closing CCE balances, SSR-safe loader                |
+| `trial-balance/`    | Simple tabular report                                                                                               |
+| `account/`          | Individual account detail view                                                                                      |
+| `export/`           | Shared Balance Sheet, Income Statement, and Cash Flow export model with CSV, Markdown, and semantic print renderers |
 
 ## Financial Statement Exports
 
@@ -25,8 +26,9 @@ their access path. Keep renderer-neutral statement modeling separate from CSV,
 Markdown, and print renderers. Generic escaping and download lifecycle code
 belongs in `common/lib/export/`, where BQL and legacy table exports reuse it.
 The browser print flow is labeled **Print / Save as PDF** because the browser—not
-the app—creates the PDF. Balance Sheet and Income Statement are the only
-supported statement exports unless product scope is explicitly expanded.
+the app—creates the PDF. Balance Sheet, Income Statement, and Cash Flow are the
+supported statement exports (scope expanded from the original two by
+`docs/adrs/ADR002-dashboard-cash-flow-report.md`).
 Label the statement action **Export**, not **Download**, because it generates a
 new representation of the filtered report. Reserve **Download** for existing
 files and assets.
@@ -60,6 +62,30 @@ current hierarchy payload has no maturity or liquidity metadata, so disclose
 that current/non-current classifications are unavailable and never infer them
 from account names.
 
+Cash Flow Markdown and print exports open with the summary: net cash from
+operating, investing, and financing activities, then the bottom line (opening
+cash and equivalents, net change, closing cash and equivalents). Account detail
+per activity follows as supporting sections. The operating/investing/financing
+split and the cash & equivalents set are resolved per account by
+`cash-flow/lib/role-resolver.ts`: a `cash-flow-role` declaration on the
+account's `open` directive wins (see `docs/adrs/ADR003-dashboard-cash-flow-ledger-roles.md`);
+otherwise the heuristics in `cash-flow/config.ts` (account types and names)
+apply. The classification and CCE-set disclosure notices must appear for every
+row still resolved by heuristics; declared rows carry no disclosure. Cash-flow
+rows are already statement-signed by the cash-flow model; never re-invert them.
+Apply the same multi-unit management-schedule rules as the other statements.
+
+## Hierarchy List Tables
+
+`balance-sheet/hierarchy-list.tsx` (wrapped by `hierarchy-list-card.tsx`) is
+the shared tree table for every statement page. Every tree row is a real
+ledger account whose label links to the account page — never put synthetic
+title or total nodes into the tree. Aggregates go through the `summaryRows`
+prop: plain unlinked rows below the detail rows (root total below detail rows,
+as in the exports). The cash-flow page builds its real-account forests in
+`cash-flow/lib/statement-tree.ts` and labels its summary rows with the shared
+`cashFlowSummaryLabelKey` keys from `export/presentation.ts`.
+
 ## Chart Library
 
 All charts use **ECharts 6+**. Chart options are constructed in component files, not in separate config files.
@@ -73,6 +99,15 @@ GraphQL hierarchy data
   → sankey-colors.ts (assign colors)
   → ECharts Sankey component
 ```
+
+The Sankey categorizer resolves accounts through the shared
+`cash-flow/lib/role-resolver.ts` (a declared `cash-flow-role` wins for
+non-`Income`/`Equity` roots; `Income` stays the source side and `Equity`
+stays excluded). Account `open`-directive metadata is the `meta` field of
+`getLedgerAccountDirectives`: the cash-flow page reads it from its own query,
+while the overview fetches a `{ account meta }` projection separately
+(`GetLedgerAccountMeta`, `Promise.allSettled` in the loader) so a failure
+degrades the Sankey to heuristics instead of failing the page.
 
 ## Route Loaders
 

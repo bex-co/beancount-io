@@ -72,6 +72,15 @@ const koSeo: Record<string, TranslationEntry> = {
     message: "재무상태표 - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "{ledgerName}의 현금흐름표. 영업, 투자, 재무 활동의 현금 흐름을 시간에 따라 추적하세요.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "현금흐름표 - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "{ledgerName}의 상품 목록과 가격. 통화, 주식, 기타 자산을 추적할 수 있습니다.",

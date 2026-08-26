@@ -1,5 +1,6 @@
 import skAccount from "../account/locales/sk";
 import skBalanceSheet from "../balance-sheet/locales/sk";
+import skCashFlow from "../cash-flow/locales/sk";
 import skIncomeStatement from "../income-statement/locales/sk";
 import skTrialBalance from "../trial-balance/locales/sk";
 import skOverview from "../overview/locales/sk";
@@ -40,6 +41,7 @@ const skReports = {
   ...skReportsShared,
   ...skAccount,
   ...skBalanceSheet,
+  ...skCashFlow,
   ...skIncomeStatement,
   ...skTrialBalance,
   ...skOverview,

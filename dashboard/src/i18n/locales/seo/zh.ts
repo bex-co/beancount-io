@@ -79,6 +79,15 @@ const zhSeo: Record<string, TranslationEntry> = {
     message: "资产负债表 - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "{ledgerName}的现金流量表。追踪经营、投资和筹资活动产生的现金变动。",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "现金流量表 - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message: "{ledgerName}的商品列表和价格。跟踪货币、股票和其他资产。",
     description: "Commodities page meta description",

@@ -1,5 +1,6 @@
 import deAccount from "../account/locales/de";
 import deBalanceSheet from "../balance-sheet/locales/de";
+import deCashFlow from "../cash-flow/locales/de";
 import deIncomeStatement from "../income-statement/locales/de";
 import deTrialBalance from "../trial-balance/locales/de";
 import deOverview from "../overview/locales/de";
@@ -40,6 +41,7 @@ const deReports = {
   ...deReportsShared,
   ...deAccount,
   ...deBalanceSheet,
+  ...deCashFlow,
   ...deIncomeStatement,
   ...deTrialBalance,
   ...deOverview,

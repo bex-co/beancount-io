@@ -29,6 +29,8 @@ export type LedgerAccountDirectiveItem = {
   entryCount: number;
   entryHash: string;
   closeEntryHash?: string;
+  /** The `open` directive's metadata (e.g. `cash-flow-role`), when any. */
+  meta?: Record<string, string | number | boolean | null>;
 };
 
 export interface ILedgerAccountService {
@@ -50,7 +52,10 @@ export interface ILedgerAccountService {
   ): Promise<LedgerAccountDirectiveItem[]>;
 }
 
-export class LedgerAccountService extends AuthorizedLedgerService implements ILedgerAccountService {
+export class LedgerAccountService
+  extends AuthorizedLedgerService
+  implements ILedgerAccountService
+{
   private readonly logger = logger.child({ module: "ledger-account-service" });
   async getAccounts(
     ledgerOwner: string,
@@ -149,6 +154,7 @@ export class LedgerAccountService extends AuthorizedLedgerService implements ILe
       balance: balanceMap.get(item.account),
       entryCount: countMap.get(item.account) ?? 0,
       entryHash: item.entry_hash,
+      meta: item.meta ?? undefined,
     }));
   }
 }

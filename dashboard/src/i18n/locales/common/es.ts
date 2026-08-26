@@ -354,6 +354,11 @@ const esCommon: Record<string, TranslationEntry> = {
       "Vista del balance general para {ledgerName}. Analice activos, pasivos y patrimonio en cualquier momento.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "Vea el estado de flujo de efectivo de {ledgerName}. Siga los movimientos de efectivo operativos, de inversión y de financiación a lo largo del tiempo.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "Visualice y gestione materias primas (divisas, acciones y activos) utilizadas en {ledgerName}. Realice un seguimiento de tipos de cambio e historial de precios.",
@@ -441,6 +446,10 @@ const esCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Balance",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Flujo de caja",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Materias primas",
@@ -625,6 +634,10 @@ const esCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "Ingresos",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "Flujo de Caja",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "Estado de Resultados",

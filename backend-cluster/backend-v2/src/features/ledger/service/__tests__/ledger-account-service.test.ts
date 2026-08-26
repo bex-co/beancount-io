@@ -124,7 +124,9 @@ describe("LedgerAccountService", () => {
     it("returns all accounts when no status filter", async () => {
       const result = await service.getAccounts(OWNER, LEDGER);
 
-      expect(result).toEqual(expect.arrayContaining(["Assets:Cash", "Assets:OldBank"]));
+      expect(result).toEqual(
+        expect.arrayContaining(["Assets:Cash", "Assets:OldBank"]),
+      );
     });
 
     it("returns only open accounts when status=open", async () => {
@@ -151,7 +153,13 @@ describe("LedgerAccountService", () => {
             data: {
               total: 1,
               is_empty: false,
-              items: [{ account: "Assets:Cash", date: "2020-01-01", entry_hash: "open1" }],
+              items: [
+                {
+                  account: "Assets:Cash",
+                  date: "2020-01-01",
+                  entry_hash: "open1",
+                },
+              ],
             },
           },
         })
@@ -170,7 +178,10 @@ describe("LedgerAccountService", () => {
       });
 
       mockQueryShell.mockResolvedValue({
-        data: { success: true, data: { result: { rows: [["Assets:Cash", 5]] } } },
+        data: {
+          success: true,
+          data: { result: { rows: [["Assets:Cash", 5]] } },
+        },
       });
     });
 
@@ -187,6 +198,43 @@ describe("LedgerAccountService", () => {
           }),
         ]),
       );
+      // No metadata on the open directive -> no `meta` on the item.
+      expect(result[0].meta).toBeUndefined();
+    });
+
+    it("passes the open directive's metadata through", async () => {
+      mockGetJournal.mockReset();
+      mockGetJournal
+        .mockResolvedValueOnce({
+          data: {
+            success: true,
+            data: {
+              total: 1,
+              is_empty: false,
+              items: [
+                {
+                  account: "Assets:Cash",
+                  date: "2020-01-01",
+                  entry_hash: "open1",
+                  meta: { "cash-flow-role": "cash", filename: "main.bean" },
+                },
+              ],
+            },
+          },
+        })
+        .mockResolvedValueOnce({
+          data: {
+            success: true,
+            data: { total: 0, is_empty: true, items: [] },
+          },
+        });
+
+      const result = await service.getAccountDirectives(OWNER, LEDGER);
+
+      expect(result[0].meta).toEqual({
+        "cash-flow-role": "cash",
+        filename: "main.bean",
+      });
     });
   });
 });

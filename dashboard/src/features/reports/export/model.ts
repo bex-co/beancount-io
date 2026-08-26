@@ -1,13 +1,14 @@
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";
 import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import type { SerializableTreeNode } from "@/graphql/definitions";
+import type { CashFlowStatement } from "../cash-flow/lib/model";
 import {
   resolveReportingPeriod,
   type FiscalYearEnd,
   type StatementReportingPeriod,
 } from "./reporting-period";
 
-export type StatementKind = "balance_sheet" | "profit_and_loss";
+export type StatementKind = "balance_sheet" | "profit_and_loss" | "cash_flow";
 export type StatementRowKind = "total" | "subtotal" | "account";
 export type ReportingEntitySource = "ledger_title" | "ledger_name";
 
@@ -34,7 +35,11 @@ export interface StatementSection {
     | "equity"
     | "income"
     | "expenses"
-    | "net_profit";
+    | "net_profit"
+    | "operating"
+    | "investing"
+    | "financing"
+    | "net_change";
   label: string;
   rows: StatementRow[];
 }
@@ -56,6 +61,16 @@ export interface StatementExportDocument {
   title: string;
   context: StatementExportContext;
   sections: StatementSection[];
+  /**
+   * Cash-flow documents only: which classification axes still rely on the
+   * name heuristics (true) versus declared `cash-flow-role` metadata.
+   * Gates the inferred-classification disclosure notices — a statement
+   * built entirely from declared roles carries no inference disclaimer.
+   */
+  cashFlowInference?: {
+    activityRows: boolean;
+    cashEquivalents: boolean;
+  };
 }
 
 interface StatementContextInput extends Omit<
@@ -87,6 +102,18 @@ interface ProfitAndLossDocumentInput extends StatementContextInput {
     Record<StatementSection["key"], string>,
     "income" | "expenses" | "net_profit"
   >;
+}
+
+interface CashFlowDocumentInput extends StatementContextInput {
+  title: string;
+  statement: CashFlowStatement;
+  labels: Pick<
+    Record<StatementSection["key"], string>,
+    "operating" | "investing" | "financing" | "net_change"
+  > & {
+    openingCash: string;
+    closingCash: string;
+  };
 }
 
 interface FlattenHierarchyOptions {
@@ -319,6 +346,88 @@ export function buildProfitAndLossDocument(
             depth: 0,
             rowKind: "total",
             amounts: amountsFromBalance(netProfit, inverted),
+          },
+        ],
+      },
+    ],
+  };
+}
+
+/**
+ * Cash flow statement from the t001 model. The model already emits
+ * financial-statement signs (+ = cash inflow), so raw and display amounts are
+ * identical — no re-inversion here.
+ */
+export function buildCashFlowDocument(
+  input: CashFlowDocumentInput,
+): StatementExportDocument {
+  const normal = { primaryCurrency: input.primaryCurrency };
+  const { statement, labels } = input;
+
+  const activitySection = (
+    key: "operating" | "investing" | "financing",
+  ): StatementSection => ({
+    key,
+    label: labels[key],
+    rows: [
+      ...statement.rows
+        .filter((row) => row.activity === key)
+        .map((row) => ({
+          accountPath: row.accountPath,
+          label: row.label,
+          depth: 0,
+          rowKind: "account" as const,
+          amounts: amountsFromBalance(row.amounts, normal),
+        })),
+      {
+        accountPath: labels[key],
+        label: labels[key],
+        depth: 0,
+        rowKind: "total" as const,
+        amounts: amountsFromBalance(statement.totals[key], normal),
+      },
+    ],
+  });
+
+  return {
+    kind: "cash_flow",
+    title: input.title,
+    context: buildContext("cash_flow", input),
+    // Threaded from the statement's role resolution, never recomputed here.
+    cashFlowInference: {
+      activityRows: statement.rows.some(
+        (row) => row.roleSource === "heuristic",
+      ),
+      cashEquivalents: statement.hasHeuristicCashAccounts,
+    },
+    sections: [
+      activitySection("operating"),
+      activitySection("investing"),
+      activitySection("financing"),
+      {
+        key: "net_change",
+        label: labels.net_change,
+        rows: [
+          {
+            accountPath: labels.openingCash,
+            label: labels.openingCash,
+            depth: 0,
+            rowKind: "account",
+            amounts: amountsFromBalance(statement.opening, normal),
+          },
+          {
+            accountPath: labels.net_change,
+            label: labels.net_change,
+            depth: 0,
+            rowKind: "subtotal",
+            amounts: amountsFromBalance(statement.netChange, normal),
+          },
+          {
+            accountPath: labels.closingCash,
+            label: labels.closingCash,
+            depth: 0,
+            rowKind: "total",
+            amounts: amountsFromBalance(statement.closing, normal),
           },
         ],
       },

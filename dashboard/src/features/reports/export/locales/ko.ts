@@ -32,6 +32,12 @@ export default createExportLocale({
   totalRevenue: "총수익 및 기타수익",
   totalExpenses: "총비용",
   netLoss: "순손실",
+  netCashOperating: "영업활동 순현금흐름",
+  netCashInvesting: "투자활동 순현금흐름",
+  netCashFinancing: "재무활동 순현금흐름",
+  netChangeInCash: "현금 및 현금성자산 순변동",
+  openingCash: "기초 현금 및 현금성자산",
+  closingCash: "기말 현금 및 현금성자산",
   supportingAccountDetail: "보조 계정 명세",
   allActivity: "사용 가능한 모든 원장 활동, 종료일",
   dateUnavailable: "보고 날짜를 확인할 수 없음",
@@ -61,6 +67,10 @@ export default createExportLocale({
     "원본 원장에는 유동 및 비유동 분류가 없으며 계정은 원장 순서로 표시됩니다.",
   balanceSheetDoesNotReconcileNotice:
     "하나 이상의 단위에서 회계 등식이 일치하지 않습니다. 외부 사용 전에 미결산 손익, 부분 필터, 평가 또는 환산 효과와 원장 오류를 검토하세요. 이 재무제표는 내부 초안입니다.",
+  cashFlowClassificationNotice:
+    "영업·투자·재무 활동 구분은 cash-flow-role이 선언되지 않은 계정의 경우 계정 유형과 이름에서 추론되며, 선언된 계정은 선언된 대로 분류됩니다.",
+  cashFlowCashEquivalentsNotice:
+    "현금 및 현금성자산 범위는 계정 이름에서 추론됩니다(당좌·저축 등 현금성 자산 계정). 외부 사용 전에 포함된 계정을 확인하세요.",
   customUnitsNotice: "검토가 필요한 사용자 지정 원장 단위:",
   customUnitsDefinitionNotice:
     "이 내보내기에는 해당 단위의 의미가 포함되어 있지 않습니다. 외부 사용 전에 첨부 주석에 설명하세요.",

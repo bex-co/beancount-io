@@ -1,5 +1,6 @@
 import enAccount from "../account/locales/en";
 import enBalanceSheet from "../balance-sheet/locales/en";
+import enCashFlow from "../cash-flow/locales/en";
 import enIncomeStatement from "../income-statement/locales/en";
 import enTrialBalance from "../trial-balance/locales/en";
 import enOverview from "../overview/locales/en";
@@ -40,6 +41,7 @@ const enReports = {
   ...enReportsShared,
   ...enAccount,
   ...enBalanceSheet,
+  ...enCashFlow,
   ...enIncomeStatement,
   ...enTrialBalance,
   ...enOverview,

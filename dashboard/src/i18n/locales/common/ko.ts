@@ -354,6 +354,11 @@ const koCommon: Record<string, TranslationEntry> = {
       "{ledgerName}의 재무상태표를 봅니다. 어느 시점에서든 자산, 부채, 자본을 분석할 수 있습니다.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "{ledgerName}의 현금흐름표를 확인하세요. 영업, 투자, 재무 활동의 현금 흐름을 시간에 따라 추적하세요.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "{ledgerName}에서 사용된 상품(통화, 주식, 자산)을 보고 관리합니다. 환율과 가격 내역을 추적할 수 있습니다.",
@@ -441,6 +446,10 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "재무상태표",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "현금흐름표",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "상품",
@@ -624,6 +633,10 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "수입",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "현금흐름표",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "손익계산서",

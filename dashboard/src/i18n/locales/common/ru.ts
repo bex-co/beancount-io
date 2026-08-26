@@ -354,6 +354,11 @@ const ruCommon: Record<string, TranslationEntry> = {
       "Просмотр баланса для {ledgerName}. Анализируйте активы, обязательства и капитал в любой момент времени.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "Просмотр отчета о движении денежных средств для {ledgerName}. Отслеживайте операционные, инвестиционные и финансовые денежные потоки во времени.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "Просматривайте и управляйте товарами (валютами, акциями и активами), используемыми в {ledgerName}. Отслеживайте обменные курсы и историю цен.",
@@ -441,6 +446,10 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Баланс",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Движение денежных средств",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Товары",
@@ -624,6 +633,10 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "Доходы",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "Движение денежных средств",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "Доход Statement",

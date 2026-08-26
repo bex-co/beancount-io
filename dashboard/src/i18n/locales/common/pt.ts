@@ -355,6 +355,11 @@ const ptCommon: Record<string, TranslationEntry> = {
       "Visualize o balanço patrimonial de {ledgerName}. Analise ativos, passivos e patrimônio líquido em qualquer momento.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "Veja a demonstração do fluxo de caixa de {ledgerName}. Acompanhe os movimentos de caixa operacionais, de investimento e de financiamento ao longo do tempo.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "Visualize e gerencie commodities (moedas, ações e ativos) usadas em {ledgerName}. Acompanhe taxas de câmbio e histórico de preços.",
@@ -442,6 +447,10 @@ const ptCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Balanço Patrimonial",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Fluxo de Caixa",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Commodities",
@@ -625,6 +634,10 @@ const ptCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "Renda",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "Fluxo de Caixa",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "Demonstração de Resultados",

@@ -33,6 +33,12 @@ export default createExportLocale({
   totalRevenue: "Totale opbrengsten en overige inkomsten",
   totalExpenses: "Totale kosten",
   netLoss: "Nettoverlies",
+  netCashOperating: "Netto kasstroom uit operationele activiteiten",
+  netCashInvesting: "Netto kasstroom uit investeringsactiviteiten",
+  netCashFinancing: "Netto kasstroom uit financieringsactiviteiten",
+  netChangeInCash: "Netto verandering in kasmiddelen en equivalenten",
+  openingCash: "Kasmiddelen en equivalenten aan het begin van de periode",
+  closingCash: "Kasmiddelen en equivalenten aan het einde van de periode",
   supportingAccountDetail: "Ondersteunende rekeningdetails",
   allActivity: "Alle beschikbare grootboekactiviteit tot en met",
   dateUnavailable: "Rapportdatum niet beschikbaar",
@@ -62,6 +68,10 @@ export default createExportLocale({
     "Het brongrootboek bevat geen classificatie in vlottende en niet-vlottende posten; rekeningen worden in grootboekvolgorde weergegeven.",
   balanceSheetDoesNotReconcileNotice:
     "De boekhoudkundige vergelijking sluit niet aan voor een of meer eenheden. Controleer vóór extern gebruik niet-afgesloten resultaten, gedeeltelijke filters, waarderings- of omrekeningseffecten en grootboekfouten. Deze staat blijft een intern concept.",
+  cashFlowClassificationNotice:
+    "De indeling in operationele, investerings- en financieringsactiviteiten is voor rekeningen zonder gedeclareerde cash-flow-role afgeleid van rekeningtypen en -namen; rekeningen met een declaratie worden geclassificeerd zoals opgegeven.",
+  cashFlowCashEquivalentsNotice:
+    "De verzameling kasmiddelen en equivalenten is afgeleid van rekeningnamen (betaal-, spaar- en kasachtige rekeningen). Controleer de opgenomen rekeningen vóór extern gebruik.",
   customUnitsNotice:
     "Aangepaste grootboekeenheden die moeten worden beoordeeld:",
   customUnitsDefinitionNotice:

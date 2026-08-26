@@ -83,6 +83,15 @@ const frSeo: Record<string, TranslationEntry> = {
     message: "Bilan - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "État des flux de trésorerie de {ledgerName}. Suivez les flux de trésorerie opérationnels, d'investissement et de financement au fil du temps.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Flux de trésorerie - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Liste des produits et prix pour {ledgerName}. Suivez les devises, les actions et autres actifs.",

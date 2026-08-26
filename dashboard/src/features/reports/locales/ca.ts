@@ -1,5 +1,6 @@
 import caAccount from "../account/locales/ca";
 import caBalanceSheet from "../balance-sheet/locales/ca";
+import caCashFlow from "../cash-flow/locales/ca";
 import caIncomeStatement from "../income-statement/locales/ca";
 import caTrialBalance from "../trial-balance/locales/ca";
 import caOverview from "../overview/locales/ca";
@@ -40,6 +41,7 @@ const caReports = {
   ...caReportsShared,
   ...caAccount,
   ...caBalanceSheet,
+  ...caCashFlow,
   ...caIncomeStatement,
   ...caTrialBalance,
   ...caOverview,

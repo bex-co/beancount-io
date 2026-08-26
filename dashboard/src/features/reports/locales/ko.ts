@@ -1,5 +1,6 @@
 import koAccount from "../account/locales/ko";
 import koBalanceSheet from "../balance-sheet/locales/ko";
+import koCashFlow from "../cash-flow/locales/ko";
 import koIncomeStatement from "../income-statement/locales/ko";
 import koTrialBalance from "../trial-balance/locales/ko";
 import koOverview from "../overview/locales/ko";
@@ -39,6 +40,7 @@ const koReports = {
   ...koReportsShared,
   ...koAccount,
   ...koBalanceSheet,
+  ...koCashFlow,
   ...koIncomeStatement,
   ...koTrialBalance,
   ...koOverview,

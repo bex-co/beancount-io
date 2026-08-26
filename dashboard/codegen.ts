@@ -9,9 +9,30 @@ dotenvConfig({ path: resolve(__dirname, ".env") });
 const apiUrl = process.env.VITE_API_URL || "http://localhost:4104/api-gateway/";
 const schemaUrl = `${apiUrl}`;
 
+// Override: load the schema from a local SDL file instead of introspecting
+// the live gateway. Needed when the schema has queries the running backend
+// does not serve yet (emit one from backend-v2 source with its TypeGraphQL
+// buildSchema + printSchema). File loading needs no directive sanitizing —
+// the DIRECTIVE_DEFINITION issue only comes from gateway introspection.
+const schemaFile = process.env.CODEGEN_SCHEMA_FILE;
+
 const config: CodegenConfig = {
   overwrite: true,
-  schema: schemaUrl,
+  // Custom loader: the gateway's introspection reports a non-standard
+  // DIRECTIVE_DEFINITION location on @deprecated, which graphql-js cannot
+  // re-parse; the loader strips unknown directive locations. See the loader
+  // file for details.
+  schema: schemaFile
+    ? {
+        [schemaFile]: {
+          loader: "./scripts/codegen-schema-file-loader.cjs",
+        },
+      }
+    : {
+        [schemaUrl]: {
+          loader: "./scripts/codegen-schema-loader.cjs",
+        },
+      },
   // This assumes that all your source files are in a top-level `src/` directory - you might need to adjust this to your file structure
   documents: ["src/**/*.graphql"],
   // Don't exit with non-zero status when there are no documents

@@ -1,9 +1,11 @@
 # ADR 002: Cash Flow Report — statement page, charts, exports, and account status
 
-- Status: Proposed
+- Status: Accepted (shipped as w4/m2)
 - Date: 2026-08-20
 - Decision owners: Dashboard (client only — no backend changes)
 - Scope: a new cash-flow report page (`/ledger/$ledgerOwner/$ledgerName/cash-flow`) with charts, a three-activity statement, CSV/Markdown/print exports, and a cash-account status panel — what it contains, where its data comes from, and how the export model expands to a third statement kind.
+
+> Extended by [ADR003](./ADR003-dashboard-cash-flow-ledger-roles.md) (2026-08-25): accounts can now declare their classification via `cash-flow-role` metadata on `open` directives, taking precedence over the heuristics described here. The heuristics below remain the fallback for unannotated accounts.
 
 ## Context
 
@@ -31,7 +33,7 @@ Build the cash-flow report as a **direct-method, cash-account-centric statement 
 1. **Statement page** — new `features/reports/cash-flow/` feature + route `ledger.$ledgerOwner.$ledgerName.cash-flow.tsx`, following the income-statement loader/content pattern. Three activity sections (operating, investing, financing) with account detail rows and per-activity subtotals, ending in the **net increase/decrease in CCE** bottom line. Registered in `ledger-sidebar.tsx`'s report menu and every report's `RelatedLinks`.
 2. **Charts** — net cash flow over time (reusing the `DateBalanceChart`/`LineChart` patterns) with the standard interval + conversion selectors, and a per-activity breakdown (stacked bars or waterfall per period). The existing Sankey stays on the overview page; the cash-flow page may link to it, not duplicate it.
 3. **Exports** — extend `StatementKind` with `"cash_flow"`: a `buildCashFlowDocument` builder, section keys for the three activities, and handling in the CSV/Markdown/print renderers. Printed signs follow financial-statement presentation; CSV keeps raw ledger amounts — same rules as w4/m1. The heuristic-classification and CCE-set disclosures ride the existing print notices (`statement-print.css` now ships inline, per the w4/001 fix).
-4. **Account status panel** — "Cash & cash equivalents in this report": each cash account with open/closed status, current balance, and last-activity date, from `GetLedgerAccountDirectives`. Closed, zero-balance accounts hidden by default, consistent with balance-sheet behavior. This panel answers the trust question every heuristic report raises: *what counted as cash?*
+4. **Account status panel** — "Cash & cash equivalents in this report": each cash account with open/closed status, current balance, and last-activity date, from `GetLedgerAccountDirectives`. Closed, zero-balance accounts hidden by default, consistent with balance-sheet behavior. This panel answers the trust question every heuristic report raises: _what counted as cash?_
 
 **Classification strategy:** reuse and extend `account-categorizer.ts` so the Sankey and the statement share one mapping. The **CCE set** is a documented heuristic (checking/savings/cash-style asset accounts) surfaced in the status panel. **Transfers between cash accounts net to zero** and must be excluded from inflow/outflow — a data-pipeline rule, not a UI detail. Multi-currency inherits the export model's presentation-currency / multi-unit-schedule rules rather than inventing new ones.
 
@@ -79,7 +81,7 @@ The overview Sankey is a visualization, not a statement: no subtotals, no CCE bo
 
 ### User-tagged classification via account metadata (deferred, not rejected)
 
-A `cashflow: operating|investing|financing` account-metadata override would fix heuristic misclassifications and is agent-writable via skills (A1 pillar). Deferred to a follow-up milestone so v1 ships without a taxonomy-editing UI.
+A `cashflow: operating|investing|financing` account-metadata override would fix heuristic misclassifications and is agent-writable via skills (A1 pillar). Deferred to a follow-up milestone so v1 ships without a taxonomy-editing UI. **Implemented by [ADR003](./ADR003-dashboard-cash-flow-ledger-roles.md)** as the `cash-flow-role` key.
 
 ## Consequences
 

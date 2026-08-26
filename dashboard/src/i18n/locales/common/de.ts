@@ -356,6 +356,11 @@ const deCommon: Record<string, TranslationEntry> = {
       "Bilanzansicht für {ledgerName}. Analysieren Sie Vermögenswerte, Verbindlichkeiten und Eigenkapital zu jedem Zeitpunkt.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "Kapitalflussrechnung für {ledgerName} ansehen. Verfolgen Sie operative, investive und finanzielle Zahlungsströme im Zeitverlauf.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "Waren (Währungen, Aktien und Vermögenswerte) in {ledgerName} anzeigen und verwalten. Verfolgen Sie Wechselkurse und Preisentwicklung.",
@@ -443,6 +448,10 @@ const deCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Bilanz",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Kapitalflussrechnung",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Waren",
@@ -626,6 +635,10 @@ const deCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "Erträge",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "Kapitalflussrechnung",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "Gewinn- und Verlustrechnung",

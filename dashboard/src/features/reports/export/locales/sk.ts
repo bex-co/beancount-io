@@ -33,6 +33,12 @@ export default createExportLocale({
   totalRevenue: "Celkové výnosy a ostatné príjmy",
   totalExpenses: "Celkové náklady",
   netLoss: "Čistá strata",
+  netCashOperating: "Čistý peňažný tok z prevádzkovej činnosti",
+  netCashInvesting: "Čistý peňažný tok z investičnej činnosti",
+  netCashFinancing: "Čistý peňažný tok z finančnej činnosti",
+  netChangeInCash: "Čistá zmena peňažných prostriedkov a ich ekvivalentov",
+  openingCash: "Peňažné prostriedky a ich ekvivalenty na začiatku obdobia",
+  closingCash: "Peňažné prostriedky a ich ekvivalenty na konci obdobia",
   supportingAccountDetail: "Doplňujúce podrobnosti účtov",
   allActivity: "Všetka dostupná aktivita účtovnej knihy do",
   dateUnavailable: "Dátum výkazu nie je dostupný",
@@ -62,6 +68,10 @@ export default createExportLocale({
     "Zdrojová účtovná kniha neobsahuje klasifikáciu na krátkodobé a dlhodobé položky; účty sú uvedené v poradí knihy.",
   balanceSheetDoesNotReconcileNotice:
     "Účtovná rovnica sa nezhoduje pre jednu alebo viac jednotiek. Pred externým použitím skontrolujte neuzavreté výsledky, čiastkové filtre, vplyvy ocenenia alebo prepočtu a chyby knihy. Výkaz zostáva interným návrhom.",
+  cashFlowClassificationNotice:
+    "Rozdelenie na prevádzkovú, investičnú a finančnú činnosť sa odvodzuje z typov a názvov účtov bez deklarovanej cash-flow-role; účty s deklaráciou sa klasifikujú tak, ako je napísané.",
+  cashFlowCashEquivalentsNotice:
+    "Množina peňažných prostriedkov a ich ekvivalentov sa odvodzuje z názvov účtov (bežné, sporiace a pokladničné účty). Pred externým použitím skontrolujte zahrnuté účty.",
   customUnitsNotice: "Vlastné jednotky vyžadujúce kontrolu:",
   customUnitsDefinitionNotice:
     "Ich význam nie je v tomto exporte k dispozícii; pred externým použitím ho zdokumentujte v sprievodnej poznámke.",

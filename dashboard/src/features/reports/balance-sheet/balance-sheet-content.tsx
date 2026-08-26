@@ -394,6 +394,10 @@ export function BalanceSheetContent({
             to: `/ledger/${ledgerOwner}/${ledgerNameParam}/income-statement`,
           },
           {
+            label: t("common.relatedLinks.cashFlow"),
+            to: `/ledger/${ledgerOwner}/${ledgerNameParam}/cash-flow`,
+          },
+          {
             label: t("common.relatedLinks.trialBalance"),
             to: `/ledger/${ledgerOwner}/${ledgerNameParam}/trial-balance`,
           },

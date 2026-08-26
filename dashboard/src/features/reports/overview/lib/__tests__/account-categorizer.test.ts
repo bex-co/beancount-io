@@ -30,6 +30,48 @@ describe("account-categorizer", () => {
     it("should exclude Equity accounts", () => {
       expect(categorizeAccount("Equity:Opening-Balances")).toBe("exclude");
     });
+
+    it("should honor a declared activity role for non-Income accounts", () => {
+      expect(
+        categorizeAccount("Assets:Investments:Stocks", {
+          "cash-flow-role": "operating",
+        }),
+      ).toBe("operating");
+      expect(
+        categorizeAccount("Expenses:Food", { "cash-flow-role": "financing" }),
+      ).toBe("financing");
+    });
+
+    it("should keep a declared investing account in investing", () => {
+      expect(
+        categorizeAccount("Assets:US:Bank:CD", {
+          "cash-flow-role": "investing",
+        }),
+      ).toBe("investing");
+    });
+
+    it("should fall back to the root category for a declared cash role", () => {
+      // "cash" has no Sankey category; exclusion happens via isExcludedAccount.
+      expect(
+        categorizeAccount("Assets:Property:House", {
+          "cash-flow-role": "cash",
+        }),
+      ).toBe("investing");
+    });
+
+    it("should never remap Income or Equity roots via declarations", () => {
+      expect(
+        categorizeAccount("Income:Salary", { "cash-flow-role": "investing" }),
+      ).toBe("source");
+      expect(
+        categorizeAccount("Income:Salary", { "cash-flow-role": "cash" }),
+      ).toBe("source");
+      expect(
+        categorizeAccount("Equity:Opening-Balances", {
+          "cash-flow-role": "operating",
+        }),
+      ).toBe("exclude");
+    });
   });
 
   describe("isExcludedAccount", () => {
@@ -42,6 +84,41 @@ describe("account-categorizer", () => {
     it("should not exclude investment accounts", () => {
       expect(isExcludedAccount("Assets:Investments:Stocks")).toBe(false);
       expect(isExcludedAccount("Assets:Crypto:BTC")).toBe(false);
+    });
+
+    it("should exclude an account declared cash that the patterns miss", () => {
+      expect(
+        isExcludedAccount("Assets:Property:House", {
+          "cash-flow-role": "cash",
+        }),
+      ).toBe(true);
+    });
+
+    it("should not exclude an account declared with an activity role", () => {
+      expect(
+        isExcludedAccount("Assets:US:Bank:CD", {
+          "cash-flow-role": "investing",
+        }),
+      ).toBe(false);
+    });
+
+    it("should ignore declarations on Income and Equity roots", () => {
+      expect(
+        isExcludedAccount("Income:Salary", { "cash-flow-role": "cash" }),
+      ).toBe(false);
+      expect(
+        isExcludedAccount("Equity:Opening-Balances", {
+          "cash-flow-role": "cash",
+        }),
+      ).toBe(false);
+    });
+
+    it("should treat an invalid declared value as absent", () => {
+      expect(
+        isExcludedAccount("Assets:US:BofA:Checking", {
+          "cash-flow-role": "Cash",
+        }),
+      ).toBe(true);
     });
   });
 

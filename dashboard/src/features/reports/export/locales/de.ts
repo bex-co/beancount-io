@@ -33,6 +33,12 @@ export default createExportLocale({
   totalRevenue: "Gesamterlöse und sonstige Erträge",
   totalExpenses: "Gesamtaufwendungen",
   netLoss: "Nettoverlust",
+  netCashOperating: "Netto-Cashflow aus betrieblicher Tätigkeit",
+  netCashInvesting: "Netto-Cashflow aus Investitionstätigkeit",
+  netCashFinancing: "Netto-Cashflow aus Finanzierungstätigkeit",
+  netChangeInCash: "Nettoveränderung der Zahlungsmittel und -äquivalente",
+  openingCash: "Zahlungsmittel und -äquivalente zu Periodenbeginn",
+  closingCash: "Zahlungsmittel und -äquivalente zu Periodenende",
   supportingAccountDetail: "Ergänzende Kontendetails",
   allActivity: "Alle verfügbaren Buchungsaktivitäten bis",
   dateUnavailable: "Berichtsdatum nicht verfügbar",
@@ -62,6 +68,10 @@ export default createExportLocale({
     "Die Quelldaten enthalten keine Gliederung in kurz- und langfristige Posten; Konten werden in der Reihenfolge des Ledgers dargestellt.",
   balanceSheetDoesNotReconcileNotice:
     "Die Bilanzgleichung stimmt für mindestens eine Einheit nicht überein. Prüfen Sie vor externer Verwendung nicht abgeschlossene Ergebnisse, Teilfilter, Bewertungs- oder Umrechnungseffekte und Ledgerfehler. Dieser Abschluss bleibt ein interner Entwurf.",
+  cashFlowClassificationNotice:
+    "Die Einteilung in betriebliche, Investitions- und Finanzierungstätigkeit wird für Konten ohne deklarierte cash-flow-role aus Kontentypen und -namen abgeleitet; Konten mit einer Deklaration werden wie angegeben eingestuft.",
+  cashFlowCashEquivalentsNotice:
+    "Der Bestand an Zahlungsmitteln und -äquivalenten wird aus Kontonamen abgeleitet (Giro-, Spar- und kasseähnliche Konten). Prüfen Sie die einbezogenen Konten vor externer Verwendung.",
   customUnitsNotice: "Zu prüfende benutzerdefinierte Bucheinheiten:",
   customUnitsDefinitionNotice:
     "Ihre Bedeutung ist in diesem Export nicht verfügbar; dokumentieren Sie sie vor externer Verwendung in einer Begleitnotiz.",

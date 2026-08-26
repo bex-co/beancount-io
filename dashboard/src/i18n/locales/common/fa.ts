@@ -355,6 +355,11 @@ const faCommon: Record<string, TranslationEntry> = {
       "نمای ترازنامه برای {ledgerName}. تجزیه و تحلیل دارایی‌ها، بدهی‌ها و حقوق صاحبان سهام در هر نقطه زمانی.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "صورت جریان نقدینگی {ledgerName} را ببینید. جریان‌های نقدی عملیاتی، سرمایه‌گذاری و تامین مالی را در طول زمان دنبال کنید.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "مشاهده و مدیریت کالاها (ارزها، سهام و دارایی‌ها) استفاده شده در {ledgerName}. پیگیری نرخ ارز و تاریخچه قیمت.",
@@ -442,6 +447,10 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "ترازنامه",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "جریان نقدینگی",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "کالاها",
@@ -625,6 +634,10 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "درآمد",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "جریان نقدینگی",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "صورت سود و زیان",

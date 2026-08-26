@@ -356,6 +356,11 @@ const nlCommon: Record<string, TranslationEntry> = {
       "Balansweergave voor {ledgerName}. Analyseer activa, passiva en eigen vermogen op elk moment.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "Bekijk het kasstroomoverzicht voor {ledgerName}. Volg operationele, investerings- en financieringskasstromen in de loop van de tijd.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "Bekijk en beheer goederen (valuta's, aandelen en activa) die worden gebruikt in {ledgerName}. Volg wisselkoersen en prijsgeschiedenis.",
@@ -443,6 +448,10 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Balans",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Kasstroomoverzicht",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Goederen",
@@ -626,6 +635,10 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "Inkomsten",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "Kasstroomoverzicht",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "Winst- en verliesrekening",

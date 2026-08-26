@@ -355,6 +355,11 @@ const skCommon: Record<string, TranslationEntry> = {
       "Zobrazenie súvahy pre {ledgerName}. Analyzujte aktíva, záväzky a vlastné imanie v ktoromkoľvek bode v čase.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "Zobrazte výkaz peňažných tokov pre {ledgerName}. Sledujte prevádzkové, investičné a finančné peňažné pohyby v čase.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "Zobrazujte a spravujte komodity (meny, akcie a aktíva) používané v {ledgerName}. Sledujte výmenné kurzy a históriu cien.",
@@ -442,6 +447,10 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Súvaha",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Výkaz peňažných tokov",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Komodity",
@@ -625,6 +634,10 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "Príjmy",
     description: "Label for income section",
+  },
+  "common.cashFlow": {
+    message: "Výkaz peňažných tokov",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "Výkaz ziskov a strát",

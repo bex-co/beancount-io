@@ -1,5 +1,6 @@
 import jaAccount from "../account/locales/ja";
 import jaBalanceSheet from "../balance-sheet/locales/ja";
+import jaCashFlow from "../cash-flow/locales/ja";
 import jaIncomeStatement from "../income-statement/locales/ja";
 import jaTrialBalance from "../trial-balance/locales/ja";
 import jaOverview from "../overview/locales/ja";
@@ -38,6 +39,7 @@ const jaReports = {
   ...jaReportsShared,
   ...jaAccount,
   ...jaBalanceSheet,
+  ...jaCashFlow,
   ...jaIncomeStatement,
   ...jaTrialBalance,
   ...jaOverview,

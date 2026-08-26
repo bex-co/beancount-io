@@ -74,6 +74,15 @@ const enSeo: Record<string, TranslationEntry> = {
     message: "Balance Sheet - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Cash flow statement for {ledgerName}. Track operating, investing, and financing cash movements over time.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Cash Flow - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Commodity list and prices for {ledgerName}. Track currencies, stocks, and other assets.",

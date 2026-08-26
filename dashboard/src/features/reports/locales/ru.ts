@@ -1,5 +1,6 @@
 import ruAccount from "../account/locales/ru";
 import ruBalanceSheet from "../balance-sheet/locales/ru";
+import ruCashFlow from "../cash-flow/locales/ru";
 import ruIncomeStatement from "../income-statement/locales/ru";
 import ruTrialBalance from "../trial-balance/locales/ru";
 import ruOverview from "../overview/locales/ru";
@@ -40,6 +41,7 @@ const ruReports = {
   ...ruReportsShared,
   ...ruAccount,
   ...ruBalanceSheet,
+  ...ruCashFlow,
   ...ruIncomeStatement,
   ...ruTrialBalance,
   ...ruOverview,

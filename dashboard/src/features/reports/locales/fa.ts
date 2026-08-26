@@ -1,5 +1,6 @@
 import faAccount from "../account/locales/fa";
 import faBalanceSheet from "../balance-sheet/locales/fa";
+import faCashFlow from "../cash-flow/locales/fa";
 import faIncomeStatement from "../income-statement/locales/fa";
 import faTrialBalance from "../trial-balance/locales/fa";
 import faOverview from "../overview/locales/fa";
@@ -40,6 +41,7 @@ const faReports = {
   ...faReportsShared,
   ...faAccount,
   ...faBalanceSheet,
+  ...faCashFlow,
   ...faIncomeStatement,
   ...faTrialBalance,
   ...faOverview,

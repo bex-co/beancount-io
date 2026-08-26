@@ -83,6 +83,15 @@ const skSeo: Record<string, TranslationEntry> = {
     message: "Súvaha - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Výkaz peňažných tokov pre {ledgerName}. Sledujte prevádzkové, investičné a finančné peňažné pohyby v čase.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Výkaz peňažných tokov - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Zoznam komodít a ceny pre {ledgerName}. Sledujte meny, akcie a ďalšie aktíva.",

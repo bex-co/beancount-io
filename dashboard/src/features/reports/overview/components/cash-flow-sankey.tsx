@@ -4,6 +4,7 @@ import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
 import { transformToSankeyData } from "../lib/sankey-data-transformer";
 import { getSankeyNodeColor } from "../lib/sankey-colors";
+import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
 
 interface CashFlowSankeyProps {
@@ -12,6 +13,8 @@ interface CashFlowSankeyProps {
   assetsHierarchyData?: SerializableTreeNode;
   liabilitiesHierarchyData?: SerializableTreeNode;
   depth?: 1 | 2 | 3;
+  /** Open-directive metadata per account (cash-flow-role declarations). */
+  accountMeta?: AccountMetaMap;
 }
 
 export default function CashFlowSankey({
@@ -20,6 +23,7 @@ export default function CashFlowSankey({
   assetsHierarchyData,
   liabilitiesHierarchyData,
   depth = 2,
+  accountMeta,
 }: CashFlowSankeyProps) {
   const isDark = useIsDarkTheme();
   const formatNum = useFormatNumber();
@@ -31,6 +35,7 @@ export default function CashFlowSankey({
       assetsHierarchyData,
       liabilitiesHierarchyData,
       depth,
+      accountMeta,
     });
   }, [
     incomeHierarchyData,
@@ -38,6 +43,7 @@ export default function CashFlowSankey({
     assetsHierarchyData,
     liabilitiesHierarchyData,
     depth,
+    accountMeta,
   ]);
 
   // Apply colors to nodes
@@ -45,10 +51,14 @@ export default function CashFlowSankey({
     return sankeyData.nodes.map((node) => ({
       ...node,
       itemStyle: {
-        color: getSankeyNodeColor(node.name, isDark),
+        color: getSankeyNodeColor(
+          node.name,
+          isDark,
+          accountMeta?.get(node.name),
+        ),
       },
     }));
-  }, [sankeyData.nodes, isDark]);
+  }, [sankeyData.nodes, isDark, accountMeta]);
 
   const option = {
     tooltip: {

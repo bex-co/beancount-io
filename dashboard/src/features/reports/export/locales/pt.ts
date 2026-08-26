@@ -33,6 +33,12 @@ export default createExportLocale({
   totalRevenue: "Total de rendimentos e outros proveitos",
   totalExpenses: "Total de gastos",
   netLoss: "Prejuízo líquido",
+  netCashOperating: "Fluxo de Caixa Líquido das Atividades Operacionais",
+  netCashInvesting: "Fluxo de Caixa Líquido das Atividades de Investimento",
+  netCashFinancing: "Fluxo de Caixa Líquido das Atividades de Financiamento",
+  netChangeInCash: "Variação Líquida de Caixa e Equivalentes",
+  openingCash: "Caixa e Equivalentes no Início do Período",
+  closingCash: "Caixa e Equivalentes no Fim do Período",
   supportingAccountDetail: "Detalhe complementar de contas",
   allActivity: "Toda a atividade disponível do livro até",
   dateUnavailable: "Data do relatório indisponível",
@@ -62,6 +68,10 @@ export default createExportLocale({
     "O livro de origem não fornece classificações correntes e não correntes; as contas são apresentadas na ordem do livro.",
   balanceSheetDoesNotReconcileNotice:
     "A equação contabilística não reconcilia para uma ou mais unidades. Reveja resultados não encerrados, filtros parciais, efeitos de valorização ou conversão e erros do livro antes da utilização externa. Esta demonstração permanece um rascunho interno.",
+  cashFlowClassificationNotice:
+    "As atividades operacionais, de investimento e de financiamento são inferidas dos tipos e nomes das contas sem um cash-flow-role declarado; as contas que o declaram são classificadas conforme escrito.",
+  cashFlowCashEquivalentsNotice:
+    "O conjunto de caixa e equivalentes é inferido dos nomes das contas (contas correntes, poupança e contas de caixa semelhantes). Revise as contas incluídas antes do uso externo.",
   customUnitsNotice: "Unidades personalizadas que exigem revisão:",
   customUnitsDefinitionNotice:
     "Os seus significados não estão disponíveis nesta exportação; documente-os numa nota anexa antes da utilização externa.",

@@ -33,6 +33,12 @@ export default createExportLocale({
   totalRevenue: "Total des produits et autres revenus",
   totalExpenses: "Total des charges",
   netLoss: "Perte nette",
+  netCashOperating: "Flux net de trésorerie des activités opérationnelles",
+  netCashInvesting: "Flux net de trésorerie des activités d'investissement",
+  netCashFinancing: "Flux net de trésorerie des activités de financement",
+  netChangeInCash: "Variation nette de la trésorerie et équivalents",
+  openingCash: "Trésorerie et équivalents en début de période",
+  closingCash: "Trésorerie et équivalents en fin de période",
   supportingAccountDetail: "Détail complémentaire des comptes",
   allActivity: "Toute l’activité disponible du grand livre jusqu’au",
   dateUnavailable: "Date du rapport indisponible",
@@ -62,6 +68,10 @@ export default createExportLocale({
     "Le grand livre source ne fournit pas de classement courant et non courant ; les comptes sont présentés dans l’ordre du grand livre.",
   balanceSheetDoesNotReconcileNotice:
     "L’équation comptable ne se rapproche pas pour une ou plusieurs unités. Vérifiez les résultats non clôturés, les filtres partiels, les effets d’évaluation ou de conversion et les erreurs du grand livre avant tout usage externe. Cet état reste un projet interne.",
+  cashFlowClassificationNotice:
+    "Les activités opérationnelles, d'investissement et de financement sont déduites des types et noms de comptes pour les comptes sans cash-flow-role déclarée ; les comptes qui en déclarent une sont classés tels qu'écrits.",
+  cashFlowCashEquivalentsNotice:
+    "L'ensemble de la trésorerie et équivalents est déduit des noms de comptes (comptes courants, d'épargne et comptes de caisse similaires). Vérifiez les comptes inclus avant toute utilisation externe.",
   customUnitsNotice: "Unités personnalisées à examiner :",
   customUnitsDefinitionNotice:
     "Leur signification n’est pas disponible dans cet export ; documentez-la dans une note jointe avant tout usage externe.",

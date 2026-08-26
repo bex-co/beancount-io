@@ -1,5 +1,6 @@
 import frAccount from "../account/locales/fr";
 import frBalanceSheet from "../balance-sheet/locales/fr";
+import frCashFlow from "../cash-flow/locales/fr";
 import frIncomeStatement from "../income-statement/locales/fr";
 import frTrialBalance from "../trial-balance/locales/fr";
 import frOverview from "../overview/locales/fr";
@@ -41,6 +42,7 @@ const frReports = {
   ...frReportsShared,
   ...frAccount,
   ...frBalanceSheet,
+  ...frCashFlow,
   ...frIncomeStatement,
   ...frTrialBalance,
   ...frOverview,

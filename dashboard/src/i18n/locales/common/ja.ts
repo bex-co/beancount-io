@@ -354,6 +354,11 @@ const jaCommon: Record<string, TranslationEntry> = {
       "{ledgerName}の貸借対照表を表示します。任意の時点での資産、負債、純資産を分析できます。",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "{ledgerName}のキャッシュフロー計算書を表示します。営業活動、投資活動、財務活動による資金の動きを時系列で追跡します。",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "{ledgerName}で使用されている商品（通貨、株式、資産）を表示・管理します。為替レートと価格履歴を追跡できます。",
@@ -441,6 +446,10 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "貸借対照表",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "キャッシュフロー計算書",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "商品",
@@ -623,6 +632,10 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "収入",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "キャッシュフロー計算書",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "損益計算書",

@@ -83,6 +83,15 @@ const nlSeo: Record<string, TranslationEntry> = {
     message: "Balans - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Kasstroomoverzicht voor {ledgerName}. Volg operationele, investerings- en financieringskasstromen in de loop van de tijd.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Kasstroomoverzicht - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Goederenlijst en prijzen voor {ledgerName}. Volg valuta, aandelen en andere activa.",

@@ -83,6 +83,15 @@ const ptSeo: Record<string, TranslationEntry> = {
     message: "Balanço Patrimonial - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Demonstração do fluxo de caixa de {ledgerName}. Acompanhe os movimentos de caixa operacionais, de investimento e de financiamento ao longo do tempo.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Fluxo de Caixa - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Lista de commodities e preços de {ledgerName}. Acompanhe moedas, ações e outros ativos.",

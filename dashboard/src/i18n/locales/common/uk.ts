@@ -355,6 +355,11 @@ const ukCommon: Record<string, TranslationEntry> = {
       "Перегляд балансу для {ledgerName}. Аналізуйте активи, зобов'язання та власний капітал у будь-який момент часу.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "Переглядайте звіт про рух грошових коштів для {ledgerName}. Відстежуйте операційні, інвестиційні та фінансові грошові потоки з часом.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "Переглядайте та керуйте товарами (валютами, акціями та активами), що використовуються в {ledgerName}. Відстежуйте обмінні курси та історію цін.",
@@ -442,6 +447,10 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Баланс",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Рух грошових коштів",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Товари",
@@ -625,6 +634,10 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "Доходи",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "Рух грошових коштів",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "Звіт про прибутки та збитки",

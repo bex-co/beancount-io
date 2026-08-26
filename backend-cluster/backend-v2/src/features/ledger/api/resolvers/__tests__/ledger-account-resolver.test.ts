@@ -111,5 +111,25 @@ describe("LedgerAccountQueryResolver", () => {
       ).toHaveBeenCalledWith("testuser", "testrepo", IDENTITY);
       expect(result).toEqual(mockDirectives);
     });
+
+    it("passes through the open directive's metadata", async () => {
+      const withMeta = [
+        {
+          account: "Assets:Bank:Checking",
+          openedAt: "2024-01-01",
+          entryCount: 3,
+          entryHash: "hash-1",
+          meta: { "cash-flow-role": "cash", priority: 1, active: true },
+        },
+      ];
+      mockLedgerAccountService.getAccountDirectives.mockResolvedValue(withMeta);
+
+      const result = await queryResolver.getLedgerAccountDirectives(
+        "testuser/testrepo",
+        mockContext,
+      );
+
+      expect(result).toEqual(withMeta);
+    });
   });
 });

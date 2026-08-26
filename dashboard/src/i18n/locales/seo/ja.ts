@@ -73,6 +73,15 @@ const jaSeo: Record<string, TranslationEntry> = {
     message: "貸借対照表 - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "{ledgerName}のキャッシュフロー計算書。営業活動、投資活動、財務活動による資金の動きを時系列で追跡します。",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "キャッシュフロー計算書 - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "{ledgerName}の商品リストと価格。通貨、株式、その他の資産を追跡できます。",

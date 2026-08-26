@@ -5,23 +5,53 @@ import type { SerializableTreeNode } from "@/graphql/definitions";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { cn } from "@/common/lib/utils/utils";
+import { isZeroStatementAmount } from "@/features/reports/export/presentation";
+import type {
+  HierarchyListNode,
+  HierarchySummaryRow,
+} from "./hierarchy-list-types";
 
-type HierarchyListNode = SerializableTreeNode & { inverted?: boolean };
+export type { HierarchyListNode, HierarchySummaryRow };
 
 interface HierarchyListProps {
   data: HierarchyListNode[];
   className?: string;
   primaryCurrency?: string;
   collapsePatterns?: string[];
+  summaryRows?: HierarchySummaryRow[];
 }
 
 interface TreeNodeProps {
   node: HierarchyListNode;
   level: number;
+  /** The rendered parent's account; labels are relative to it. */
+  parentAccount?: string;
   expandedNodes: Set<string>;
   onToggle: (nodePath: string) => void;
   primaryCurrency?: string;
 }
+
+/** Stable empty forest so a null/undefined `data` doesn't churn effect deps. */
+const NO_NODES: HierarchyListNode[] = [];
+
+/** Row shell shared by the header, tree rows, and summary rows. */
+const ROW_CLASS =
+  "grid grid-cols-12 gap-3 items-center py-2 px-3 border-b border-border";
+const ACCOUNT_CELL_CLASS = "col-span-6 flex items-center gap-2 min-w-0";
+const indentStyle = (level: number) => ({ paddingLeft: `${level * 20 + 8}px` });
+/** Keeps rows without an expander aligned with rows that have one. */
+const ExpanderSpacer = () => <div className="w-6" />;
+
+/** Missing or zero amounts ("", "0", "0.00", …) read as a dash. */
+function isZeroAmount(value: unknown): boolean {
+  const text = String(value ?? "").trim();
+  return text === "" || isZeroStatementAmount(text);
+}
+
+const Dash = () => (
+  <div className="text-sm text-muted-foreground font-mono">-</div>
+);
 
 function PrimaryCurrencyColumn({
   balanceData,
@@ -33,11 +63,14 @@ function PrimaryCurrencyColumn({
   inverted?: boolean;
 }) {
   const formatNum = useFormatNumber();
-  const usdBalance = String(balanceData[primaryCurrency] || "") || "0";
-  if (usdBalance === "0")
-    return <div className="text-sm text-muted-foreground font-mono">-</div>;
-  const value = inverted ? -parseFloat(usdBalance) : parseFloat(usdBalance);
-  return <div className="text-sm font-mono">{formatNum(value)}</div>;
+  const raw = balanceData[primaryCurrency];
+  if (isZeroAmount(raw)) return <Dash />;
+  const value = Number(raw);
+  return (
+    <div className="text-sm font-mono">
+      {formatNum(inverted ? -value : value)}
+    </div>
+  );
 }
 
 function OtherBalancesColumn({
@@ -53,38 +86,69 @@ function OtherBalancesColumn({
   const currencyUpper = primaryCurrency?.toUpperCase();
   const currencyLower = primaryCurrency?.toLowerCase();
 
-  // Get balances excluding the primary currency
+  // Non-primary balances; zero legs (e.g. a total whose IRAUSD entries cancel
+  // out) are omitted rather than shown as "0 IRAUSD".
   const otherBalances = useMemo(
     () =>
       Object.entries(balanceData)
-        .filter(([key]) => key !== currencyUpper && key !== currencyLower)
-        .map(([key, value]) => ({
-          commodity: key,
-          value: String(value || ""),
-        })),
+        .filter(
+          ([key, value]) =>
+            key !== currencyUpper &&
+            key !== currencyLower &&
+            !isZeroAmount(value),
+        )
+        .map(([commodity, value]) => ({ commodity, value: Number(value) })),
     [balanceData, currencyUpper, currencyLower],
   );
 
-  if (otherBalances.length > 0) {
-    return (
-      <div className="space-y-1">
-        {otherBalances.slice(0, 3).map(({ commodity, value }) => (
-          <div key={commodity} className="text-sm">
-            <span className="text-muted-foreground font-mono">
-              {formatNum(inverted ? -parseFloat(value) : parseFloat(value))}
-            </span>{" "}
-            <span className="text-muted-foreground">{commodity}</span>
-          </div>
-        ))}
-        {otherBalances.length > 3 && (
-          <div className="text-xs text-muted-foreground">
-            +{otherBalances.length - 3} more
-          </div>
-        )}
+  if (otherBalances.length === 0) return <Dash />;
+  return (
+    <div className="space-y-1">
+      {otherBalances.slice(0, 3).map(({ commodity, value }) => (
+        <div key={commodity} className="text-sm">
+          <span className="text-muted-foreground font-mono">
+            {formatNum(inverted ? -value : value)}
+          </span>{" "}
+          <span className="text-muted-foreground">{commodity}</span>
+        </div>
+      ))}
+      {otherBalances.length > 3 && (
+        <div className="text-xs text-muted-foreground">
+          +{otherBalances.length - 3} more
+        </div>
+      )}
+    </div>
+  );
+}
+
+/** The two amount columns shared by tree rows and summary rows. */
+function AmountColumns({
+  balanceData,
+  primaryCurrency = "USD",
+  inverted,
+}: {
+  balanceData: Record<string, unknown>;
+  primaryCurrency?: string;
+  inverted?: boolean;
+}) {
+  return (
+    <>
+      <div className="col-span-3 text-right">
+        <PrimaryCurrencyColumn
+          balanceData={balanceData}
+          primaryCurrency={primaryCurrency}
+          inverted={inverted}
+        />
       </div>
-    );
-  }
-  return <div className="text-sm text-muted-foreground font-mono">-</div>;
+      <div className="col-span-3 text-right">
+        <OtherBalancesColumn
+          balanceData={balanceData}
+          primaryCurrency={primaryCurrency}
+          inverted={inverted}
+        />
+      </div>
+    </>
+  );
 }
 
 /**
@@ -93,29 +157,33 @@ function OtherBalancesColumn({
 function TreeNode({
   node,
   level,
+  parentAccount,
   expandedNodes,
   onToggle,
   primaryCurrency = "USD",
 }: TreeNodeProps) {
   const hasChildren = node.children && node.children.length > 0;
-  const indentLevel = level * 20;
   const isExpanded = expandedNodes.has(node.account);
   const { ledgerOwner, ledgerName } = useLedger();
+  const { t } = useTranslations();
   // Use balance_children for the total value (includes all children)
   const balanceData: Record<string, unknown> =
     node.balanceChildren || node.balance || {};
+  // Label relative to the rendered parent; rows without one (roots, or a
+  // forest mixing roots) show their full path.
+  const label =
+    parentAccount && node.account.startsWith(`${parentAccount}:`)
+      ? node.account.slice(parentAccount.length + 1)
+      : node.account;
 
   return (
     <div className="w-full">
       <div
-        className="grid grid-cols-12 gap-3 items-center py-2 px-3 hover:bg-muted/50 border-b border-border cursor-pointer"
+        className={cn(ROW_CLASS, "hover:bg-muted/50 cursor-pointer")}
         onClick={hasChildren ? () => onToggle(node.account) : undefined}
       >
         {/* Account Column */}
-        <div
-          className="col-span-6 flex items-center gap-2 min-w-0"
-          style={{ paddingLeft: `${indentLevel + 8}px` }}
-        >
+        <div className={ACCOUNT_CELL_CLASS} style={indentStyle(level)}>
           {hasChildren ? (
             <button
               className="shrink-0 p-1 hover:bg-muted rounded"
@@ -131,7 +199,7 @@ function TreeNode({
               )}
             </button>
           ) : (
-            <div className="w-6" /> // Spacer for alignment
+            <ExpanderSpacer />
           )}
 
           <div className="flex-1 min-w-0 flex flex-row items-center">
@@ -145,28 +213,24 @@ function TreeNode({
               className="font-mono font-medium text-sm text-primary truncate inline-block hover:text-primary/80"
               onClick={(e) => e.stopPropagation()}
             >
-              {node.account.split(":").pop() || node.account}
+              {label}
             </Link>
+            {node.roleSource === "declared" ? (
+              <span
+                className="ml-2 shrink-0 text-xs text-muted-foreground"
+                title={t("page.cashFlow.declaredRoleTooltip")}
+              >
+                {t("page.cashFlow.declaredRoleBadge")}
+              </span>
+            ) : null}
           </div>
         </div>
 
-        {/* USD Column */}
-        <div className="col-span-3 text-right">
-          <PrimaryCurrencyColumn
-            balanceData={balanceData}
-            primaryCurrency={primaryCurrency}
-            inverted={node.inverted}
-          />
-        </div>
-
-        {/* Other Column */}
-        <div className="col-span-3 text-right">
-          <OtherBalancesColumn
-            balanceData={balanceData}
-            primaryCurrency={primaryCurrency}
-            inverted={node.inverted}
-          />
-        </div>
+        <AmountColumns
+          balanceData={balanceData}
+          primaryCurrency={primaryCurrency}
+          inverted={node.inverted}
+        />
       </div>
 
       {hasChildren && isExpanded && (
@@ -179,6 +243,7 @@ function TreeNode({
                 inverted: node.inverted,
               }}
               level={level + 1}
+              parentAccount={node.account}
               expandedNodes={expandedNodes}
               onToggle={onToggle}
               primaryCurrency={primaryCurrency}
@@ -186,6 +251,34 @@ function TreeNode({
           ))}
         </div>
       )}
+    </div>
+  );
+}
+
+/**
+ * Plain summary row (e.g. a section total): label as text, amounts through
+ * the same columns as tree rows. No account link, no expander.
+ */
+function SummaryRow({
+  row,
+  primaryCurrency = "USD",
+}: {
+  row: HierarchySummaryRow;
+  primaryCurrency?: string;
+}) {
+  return (
+    <div className={cn(ROW_CLASS, row.bold && "font-semibold")}>
+      <div className={ACCOUNT_CELL_CLASS} style={indentStyle(0)}>
+        <ExpanderSpacer />
+        {/* Prose label: wrap rather than truncate (account names truncate) */}
+        <span className="text-sm break-words">{row.label}</span>
+      </div>
+
+      <AmountColumns
+        balanceData={row.balance}
+        primaryCurrency={primaryCurrency}
+        inverted={row.inverted}
+      />
     </div>
   );
 }
@@ -246,20 +339,22 @@ function getInitialExpandedNodes(
  * Displays hierarchical data as a collapsible list with parent-child relationships
  */
 export function HierarchyList({
-  data,
+  data: dataProp,
   className,
   primaryCurrency = "USD",
   collapsePatterns = [],
+  summaryRows = [],
 }: HierarchyListProps) {
   const { t } = useTranslations();
+  const data = dataProp ?? NO_NODES;
 
   const [expandedNodes, setExpandedNodes] = useState<Set<string>>(() =>
-    getInitialExpandedNodes(data || [], collapsePatterns),
+    getInitialExpandedNodes(data, collapsePatterns),
   );
 
   // Update expanded nodes when data or collapse patterns change
   useEffect(() => {
-    setExpandedNodes(getInitialExpandedNodes(data || [], collapsePatterns));
+    setExpandedNodes(getInitialExpandedNodes(data, collapsePatterns));
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [data, collapsePatterns.join(",")]);
 
@@ -275,7 +370,7 @@ export function HierarchyList({
     });
   };
 
-  if (!data || data.length === 0) {
+  if (data.length === 0 && summaryRows.length === 0) {
     return (
       <div
         className={`text-center text-muted-foreground py-8 ${className || ""}`}
@@ -317,7 +412,12 @@ export function HierarchyList({
         }}
       >
         {/* Table Header */}
-        <div className="grid grid-cols-12 gap-3 items-center py-2 px-3 bg-muted border-b border-border font-semibold text-sm text-muted-foreground">
+        <div
+          className={cn(
+            ROW_CLASS,
+            "bg-muted font-semibold text-sm text-muted-foreground",
+          )}
+        >
           <div className="col-span-6">{t("common.accountColumn")}</div>
           <div className="col-span-3 text-right">{primaryCurrency}</div>
           <div className="col-span-3 text-right">{t("common.otherColumn")}</div>
@@ -332,6 +432,10 @@ export function HierarchyList({
             onToggle={handleToggle}
             primaryCurrency={primaryCurrency}
           />
+        ))}
+
+        {summaryRows.map((row, index) => (
+          <SummaryRow key={index} row={row} primaryCurrency={primaryCurrency} />
         ))}
       </div>
     </>

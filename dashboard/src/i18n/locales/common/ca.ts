@@ -355,6 +355,11 @@ const caCommon: Record<string, TranslationEntry> = {
       "Vista del balanç per a {ledgerName}. Analitzeu actius, passius i patrimoni en qualsevol moment.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "Consulta l'estat de fluxos de caixa de {ledgerName}. Segueix els moviments de caixa operatius, d'inversió i de finançament al llarg del temps.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "Visualitzeu i gestioneu mercaderies (divises, accions i actius) utilitzades a {ledgerName}. Seguiu tipus de canvi i històric de preus.",
@@ -442,6 +447,10 @@ const caCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Balanç",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Flux de caixa",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Mercaderies",
@@ -627,6 +636,10 @@ const caCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "Ingressos",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "Flux de caixa",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message:

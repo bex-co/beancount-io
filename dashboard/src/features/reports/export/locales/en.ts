@@ -33,6 +33,12 @@ export default createExportLocale({
   totalRevenue: "Total Revenue and Other Income",
   totalExpenses: "Total Expenses",
   netLoss: "Net Loss",
+  netCashOperating: "Net Cash from Operating Activities",
+  netCashInvesting: "Net Cash from Investing Activities",
+  netCashFinancing: "Net Cash from Financing Activities",
+  netChangeInCash: "Net Change in Cash & Equivalents",
+  openingCash: "Cash & Equivalents at Period Start",
+  closingCash: "Cash & Equivalents at Period End",
   supportingAccountDetail: "Supporting Account Detail",
   allActivity: "All available ledger activity through",
   dateUnavailable: "Reporting date unavailable",
@@ -62,6 +68,10 @@ export default createExportLocale({
     "Current and non-current classifications are not available from the source ledger; accounts are presented in ledger order.",
   balanceSheetDoesNotReconcileNotice:
     "The accounting equation does not reconcile for one or more units. Review unclosed earnings, partial filters, valuation or conversion effects, and ledger errors before external use. This statement remains an internal draft.",
+  cashFlowClassificationNotice:
+    "Operating, investing, and financing activities are inferred from account types and names for accounts without a declared cash-flow-role; accounts that declare one are classified as written.",
+  cashFlowCashEquivalentsNotice:
+    "The cash and cash equivalents set is inferred from account names (checking, savings, and cash-style asset accounts). Review the included accounts before external use.",
   customUnitsNotice: "Custom ledger units requiring review:",
   customUnitsDefinitionNotice:
     "Their meanings are not available in this export; document them in an accompanying note before external use.",

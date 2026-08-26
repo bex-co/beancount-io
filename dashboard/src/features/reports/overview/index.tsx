@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
-import type { ReactNode } from "react";
+import { useMemo, type ReactNode } from "react";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
@@ -17,7 +17,11 @@ import {
   SearchCode,
 } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
-import { GetLedgerOverviewDocument } from "@/graphql/definitions";
+import {
+  GetLedgerAccountMetaDocument,
+  GetLedgerOverviewDocument,
+} from "@/graphql/definitions";
+import { toAccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import { Link, useParams } from "@tanstack/react-router";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { createLedgerId } from "@/common/lib/utils/encode";
@@ -83,6 +87,17 @@ export default function LedgerOverviewPage() {
     },
     fetchPolicy: "cache-first",
   });
+
+  // Fetched apart from the overview query so a failure (or an older backend)
+  // degrades the Sankey to heuristics instead of failing the page.
+  const { data: metaData } = useQuery(GetLedgerAccountMetaDocument, {
+    variables: { ledgerId },
+    fetchPolicy: "cache-first",
+  });
+  const accountMeta = useMemo(
+    () => toAccountMetaMap(metaData?.getLedgerAccountDirectives ?? []),
+    [metaData],
+  );
 
   if (isLoading && !data?.getLedgerOverview) {
     return (
@@ -273,6 +288,7 @@ export default function LedgerOverviewPage() {
               expensesHierarchyData={overview?.expensesHierarchyData}
               assetsHierarchyData={overview?.assetsHierarchyData}
               liabilitiesHierarchyData={overview?.liabilitiesHierarchyData}
+              accountMeta={accountMeta}
             />
           </CardContent>
         </Card>
@@ -433,6 +449,10 @@ export default function LedgerOverviewPage() {
           {
             label: t("common.relatedLinks.incomeStatement"),
             to: `/ledger/${ledgerOwner}/${ledgerName}/income-statement`,
+          },
+          {
+            label: t("common.relatedLinks.cashFlow"),
+            to: `/ledger/${ledgerOwner}/${ledgerName}/cash-flow`,
           },
         ]}
       />

@@ -1,5 +1,6 @@
 import esAccount from "../account/locales/es";
 import esBalanceSheet from "../balance-sheet/locales/es";
+import esCashFlow from "../cash-flow/locales/es";
 import esIncomeStatement from "../income-statement/locales/es";
 import esTrialBalance from "../trial-balance/locales/es";
 import esOverview from "../overview/locales/es";
@@ -41,6 +42,7 @@ const esReports = {
   ...esReportsShared,
   ...esAccount,
   ...esBalanceSheet,
+  ...esCashFlow,
   ...esIncomeStatement,
   ...esTrialBalance,
   ...esOverview,

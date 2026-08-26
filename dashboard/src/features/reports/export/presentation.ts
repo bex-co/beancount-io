@@ -35,6 +35,37 @@ export interface ProfitAndLossSummaryItem {
   row: StatementRow;
 }
 
+export type CashFlowSummaryKey =
+  | "net_cash_operating"
+  | "net_cash_investing"
+  | "net_cash_financing"
+  | "net_change"
+  | "opening_cash"
+  | "closing_cash";
+
+/** Locale key for a cash-flow summary line; shared by the page and exports. */
+export function cashFlowSummaryLabelKey(key: CashFlowSummaryKey): string {
+  switch (key) {
+    case "net_cash_operating":
+      return "reports.export.netCashOperating";
+    case "net_cash_investing":
+      return "reports.export.netCashInvesting";
+    case "net_cash_financing":
+      return "reports.export.netCashFinancing";
+    case "opening_cash":
+      return "reports.export.openingCash";
+    case "closing_cash":
+      return "reports.export.closingCash";
+    case "net_change":
+      return "reports.export.netChangeInCash";
+  }
+}
+
+export interface CashFlowSummaryItem {
+  key: CashFlowSummaryKey;
+  row: StatementRow;
+}
+
 function totalRow(section: StatementSection | undefined) {
   return section?.rows.find((row) => row.rowKind === "total");
 }
@@ -187,6 +218,62 @@ export function getProfitAndLossSupportingSections(
 
   return document.sections
     .filter((section) => section.key === "income" || section.key === "expenses")
+    .map((section) => ({
+      ...section,
+      rows: section.rows.filter((row) => row.rowKind !== "total"),
+    }))
+    .filter((section) => section.rows.length > 0);
+}
+
+/**
+ * Direct-method statement face: per-activity net cash totals, then the
+ * opening → net change → closing cash & equivalents reconciliation.
+ */
+export function getCashFlowSummaryItems(
+  document: StatementExportDocument,
+): CashFlowSummaryItem[] {
+  if (document.kind !== "cash_flow") return [];
+
+  const sections = new Map(
+    document.sections.map((section) => [section.key, section]),
+  );
+  const items: Array<CashFlowSummaryItem | null> = (
+    [
+      ["operating", "net_cash_operating"],
+      ["investing", "net_cash_investing"],
+      ["financing", "net_cash_financing"],
+    ] as const
+  ).map(([sectionKey, summaryKey]) => {
+    const row = totalRow(sections.get(sectionKey));
+    return row ? { key: summaryKey, row } : null;
+  });
+
+  const bottomLine = sections.get("net_change");
+  const opening = bottomLine?.rows.find((row) => row.rowKind === "account");
+  const netChange = bottomLine?.rows.find((row) => row.rowKind === "subtotal");
+  const closing = totalRow(bottomLine);
+  items.push(
+    opening ? { key: "opening_cash", row: opening } : null,
+    netChange ? { key: "net_change", row: netChange } : null,
+    closing ? { key: "closing_cash", row: closing } : null,
+  );
+
+  return items.filter((item): item is CashFlowSummaryItem => item !== null);
+}
+
+/** Account detail per activity, without the activity total rows. */
+export function getCashFlowSupportingSections(
+  document: StatementExportDocument,
+): StatementSection[] {
+  if (document.kind !== "cash_flow") return [];
+
+  return document.sections
+    .filter(
+      (section) =>
+        section.key === "operating" ||
+        section.key === "investing" ||
+        section.key === "financing",
+    )
     .map((section) => ({
       ...section,
       rows: section.rows.filter((row) => row.rowKind !== "total"),

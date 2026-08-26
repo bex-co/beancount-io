@@ -92,8 +92,9 @@ WebView object is present. See the mobile README for the minimum-version and
 
 ## Exporting financial statements
 
-Open a ledger's Balance Sheet or Income Statement, apply the time, account,
-advanced, interval, and conversion controls you need, then choose **Download**
+Open a ledger's Balance Sheet, Income Statement, or Cash Flow report, apply
+the time, account,
+advanced, interval, and conversion controls you need, then choose **Export**
 in the report header. **Spreadsheet CSV** downloads the visible filtered
 hierarchy in a formula-safe, Excel-compatible file, including both source-ledger
 and statement-facing signs. **Markdown report** downloads a reviewable,
@@ -103,6 +104,14 @@ revenue, total expenses, and net income or loss—and move the complete account
 hierarchy into a supporting-detail appendix. Multi-unit results are explicitly
 labeled as a management schedule and must not be added across units; select a
 presentation currency for a single-currency statement.
+Cash Flow exports open with net cash from operating, investing, and financing
+activities, then the opening → net change → closing cash bottom line, with
+per-activity account detail as supporting sections. Accounts default to a
+heuristic activity split and cash & equivalents set inferred from account
+names; an account can declare its role explicitly via `cash-flow-role`
+metadata on its `open` directive (see `../docs/adrs/ADR003-dashboard-cash-flow-ledger-roles.md`),
+and cash-flow exports disclose the inference only for rows still resolved by
+the heuristic.
 Balance Sheet exports similarly put an accounting-equation summary first—total
 assets, total liabilities, total equity, total liabilities and equity, and the
 reconciliation difference—then move the complete ledger hierarchy to a new-page

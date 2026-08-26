@@ -42,9 +42,15 @@ export function getSankeyColorScheme(isDark: boolean): SankeyColorScheme {
 }
 
 /**
- * Get color for a specific Sankey node based on its account name
+ * Get color for a specific Sankey node based on its account name.
+ * Optional open-directive `meta` (cash-flow-role declarations) keeps the
+ * color consistent with the category the node was placed in.
  */
-export function getSankeyNodeColor(nodeName: string, isDark: boolean): string {
+export function getSankeyNodeColor(
+  nodeName: string,
+  isDark: boolean,
+  meta?: Record<string, unknown> | null,
+): string {
   const colors = getSankeyColorScheme(isDark);
 
   // Special nodes
@@ -52,7 +58,7 @@ export function getSankeyNodeColor(nodeName: string, isDark: boolean): string {
   if (nodeName === "Savings") return colors.savings;
 
   // Categorize by account type
-  const category = categorizeAccount(nodeName);
+  const category = categorizeAccount(nodeName, meta);
 
   switch (category) {
     case "source":

@@ -32,6 +32,12 @@ export default createExportLocale({
   totalRevenue: "收入及其他收益合计",
   totalExpenses: "费用合计",
   netLoss: "净损失",
+  netCashOperating: "经营活动产生的现金流量净额",
+  netCashInvesting: "投资活动产生的现金流量净额",
+  netCashFinancing: "筹资活动产生的现金流量净额",
+  netChangeInCash: "现金及现金等价物净变动",
+  openingCash: "期初现金及现金等价物",
+  closingCash: "期末现金及现金等价物",
   supportingAccountDetail: "账户明细附表",
   allActivity: "全部可用账本活动，截至",
   dateUnavailable: "无法确定报告日期",
@@ -58,6 +64,10 @@ export default createExportLocale({
     "来源账本未提供流动与非流动分类；账户按账本顺序列示。",
   balanceSheetDoesNotReconcileNotice:
     "一个或多个单位未满足会计恒等式。对外使用前，请复核未结转损益、局部筛选、估值或换算影响以及账本错误；本报表仍属于内部草稿。",
+  cashFlowClassificationNotice:
+    "对于未声明 cash-flow-role 的账户，经营、投资和筹资活动的划分依据账户类型和名称推断；已声明的账户按声明内容分类。",
+  cashFlowCashEquivalentsNotice:
+    "现金及现金等价物的范围根据账户名称推断（支票、储蓄等现金类资产账户）。对外使用前请核对包含的账户。",
   customUnitsNotice: "需要复核的自定义账本单位：",
   customUnitsDefinitionNotice:
     "本次导出未提供其含义；对外使用前请在随附附注中说明。",

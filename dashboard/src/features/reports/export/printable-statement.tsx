@@ -12,12 +12,16 @@ import {
 import {
   getBalanceSheetSummaryItems,
   getBalanceSheetSupportingSections,
+  getCashFlowSummaryItems,
+  getCashFlowSupportingSections,
   getProfitAndLossSummaryItems,
   getProfitAndLossSupportingSections,
+  cashFlowSummaryLabelKey,
   getStatementPresentationCurrency,
   hasBalanceSheetReconciliationDifference,
   isNegativeStatementAmount,
   type BalanceSheetSummaryKey,
+  type CashFlowSummaryKey,
   type ProfitAndLossSummaryKey,
 } from "./presentation";
 
@@ -68,6 +72,8 @@ export function PrintableStatement({
     getBalanceSheetSupportingSections(document);
   const profitAndLossSummary = getProfitAndLossSummaryItems(document);
   const supportingSections = getProfitAndLossSupportingSections(document);
+  const cashFlowSummary = getCashFlowSummaryItems(document);
+  const cashFlowSupportingSections = getCashFlowSupportingSections(document);
   const hasSubtotalAndDetailRows = document.sections.some(
     (section) =>
       section.rows.some((row) => row.rowKind !== "account") &&
@@ -104,6 +110,14 @@ export function PrintableStatement({
       : null,
     document.kind === "balance_sheet"
       ? t("reports.export.balanceSheetClassificationNotice")
+      : null,
+    document.kind === "cash_flow" &&
+    (document.cashFlowInference?.activityRows ?? true)
+      ? t("reports.export.cashFlowClassificationNotice")
+      : null,
+    document.kind === "cash_flow" &&
+    (document.cashFlowInference?.cashEquivalents ?? true)
+      ? t("reports.export.cashFlowCashEquivalentsNotice")
       : null,
     balanceSheetDoesNotReconcile
       ? t("reports.export.balanceSheetDoesNotReconcileNotice")
@@ -144,6 +158,8 @@ export function PrintableStatement({
     }
     return t("reports.export.reconciliationDifference");
   };
+  const cashFlowSummaryLabel = (key: CashFlowSummaryKey) =>
+    t(cashFlowSummaryLabelKey(key));
   const balanceSheetDetailLabel = (
     sectionKey: StatementExportDocument["sections"][number]["key"],
     row: StatementRow,
@@ -267,6 +283,90 @@ export function PrintableStatement({
             <section className="statement-print-supporting-detail">
               <h2>{t("reports.export.supportingAccountDetail")}</h2>
               {supportingSections.map((section) => (
+                <section className="statement-print-section" key={section.key}>
+                  <h3>{section.label}</h3>
+                  <table>
+                    <thead>
+                      <tr>
+                        <th scope="col">{t("common.accountColumn")}</th>
+                        <th scope="col">{t("reports.export.unit")}</th>
+                        <th scope="col">{t("reports.export.amount")}</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {section.rows.flatMap((row) =>
+                        rowAmounts(row).map((amount, amountIndex) => (
+                          <tr
+                            className={`statement-print-row statement-print-row-${row.rowKind}`}
+                            key={`${row.accountPath}-${amount?.unit ?? "empty"}-${amountIndex}`}
+                          >
+                            <th
+                              scope="row"
+                              style={{
+                                paddingInlineStart: `${0.5 + row.depth * 1.25}rem`,
+                              }}
+                            >
+                              {row.label}
+                            </th>
+                            <td>{amount?.unit ?? "—"}</td>
+                            <td className="statement-print-amount">
+                              {amount
+                                ? formatStatementAmount(
+                                    amount.displayAmount,
+                                    i18n.language,
+                                  )
+                                : "—"}
+                            </td>
+                          </tr>
+                        )),
+                      )}
+                    </tbody>
+                  </table>
+                </section>
+              ))}
+            </section>
+          )}
+        </>
+      ) : document.kind === "cash_flow" ? (
+        <>
+          {cashFlowSummary.length > 0 && (
+            <section className="statement-print-section statement-print-summary">
+              <h2>{t("reports.export.statementSummary")}</h2>
+              <table>
+                <thead>
+                  <tr>
+                    <th scope="col">{t("reports.export.lineItem")}</th>
+                    <th scope="col">{t("reports.export.unit")}</th>
+                    <th scope="col">{t("reports.export.amount")}</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {cashFlowSummary.flatMap((item) =>
+                    item.row.amounts.map((amount, amountIndex) => (
+                      <tr
+                        className={`statement-print-row statement-print-summary-row statement-print-summary-row-${item.key}`}
+                        key={`${item.key}-${amount.unit}-${amountIndex}`}
+                      >
+                        <th scope="row">{cashFlowSummaryLabel(item.key)}</th>
+                        <td>{amount.unit}</td>
+                        <td className="statement-print-amount">
+                          {formatStatementAmount(
+                            amount.displayAmount,
+                            i18n.language,
+                          )}
+                        </td>
+                      </tr>
+                    )),
+                  )}
+                </tbody>
+              </table>
+            </section>
+          )}
+
+          {cashFlowSupportingSections.length > 0 && (
+            <section className="statement-print-supporting-detail">
+              <h2>{t("reports.export.supportingAccountDetail")}</h2>
+              {cashFlowSupportingSections.map((section) => (
                 <section className="statement-print-section" key={section.key}>
                   <h3>{section.label}</h3>
                   <table>

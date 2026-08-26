@@ -83,6 +83,15 @@ const esSeo: Record<string, TranslationEntry> = {
     message: "Balance General - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Estado de flujo de efectivo de {ledgerName}. Siga los movimientos de efectivo operativos, de inversión y de financiación a lo largo del tiempo.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Flujo de Caja - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Lista de productos y precios de {ledgerName}. Realice seguimiento de monedas, acciones y otros activos.",

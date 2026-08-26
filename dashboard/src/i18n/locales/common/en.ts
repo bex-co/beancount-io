@@ -355,6 +355,11 @@ const enCommon: Record<string, TranslationEntry> = {
       "View the balance sheet for {ledgerName}. Analyze assets, liabilities, and equity at any point in time.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "View the cash flow statement for {ledgerName}. Track operating, investing, and financing cash movements over time.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "View and manage commodities (currencies, stocks, and assets) used in {ledgerName}. Track exchange rates and price history.",
@@ -442,6 +447,10 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Balance Sheet",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Cash Flow",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Commodities",
@@ -591,6 +600,10 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.balanceSheet": {
     message: "Balance Sheet",
     description: "Navigation label for balance sheet financial report",
+  },
+  "common.cashFlow": {
+    message: "Cash Flow",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "Income Statement",

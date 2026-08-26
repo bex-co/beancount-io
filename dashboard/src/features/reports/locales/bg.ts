@@ -1,5 +1,6 @@
 import bgAccount from "../account/locales/bg";
 import bgBalanceSheet from "../balance-sheet/locales/bg";
+import bgCashFlow from "../cash-flow/locales/bg";
 import bgIncomeStatement from "../income-statement/locales/bg";
 import bgTrialBalance from "../trial-balance/locales/bg";
 import bgOverview from "../overview/locales/bg";
@@ -40,6 +41,7 @@ const bgReports = {
   ...bgReportsShared,
   ...bgAccount,
   ...bgBalanceSheet,
+  ...bgCashFlow,
   ...bgIncomeStatement,
   ...bgTrialBalance,
   ...bgOverview,

@@ -83,6 +83,15 @@ const deSeo: Record<string, TranslationEntry> = {
     message: "Bilanz - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Kapitalflussrechnung für {ledgerName}. Verfolgen Sie operative, investive und finanzielle Zahlungsströme im Zeitverlauf.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Kapitalflussrechnung - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Warenliste und Preise für {ledgerName}. Verfolgen Sie Währungen, Aktien und andere Vermögenswerte.",

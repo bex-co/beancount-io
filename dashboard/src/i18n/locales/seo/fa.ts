@@ -82,6 +82,15 @@ const faSeo: Record<string, TranslationEntry> = {
     message: "ترازنامه - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "صورت جریان نقدینگی برای {ledgerName}. جریان‌های نقدی عملیاتی، سرمایه‌گذاری و تامین مالی را در طول زمان دنبال کنید.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "جریان نقدینگی - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "فهرست کالاها و قیمت‌ها برای {ledgerName}. ارزها، سهام و دارایی‌های دیگر را پیگیری کنید.",

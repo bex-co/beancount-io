@@ -301,6 +301,10 @@ export function TrialBalanceContent({
             to: `/ledger/${ledgerOwner}/${ledgerNameParam}/income-statement`,
           },
           {
+            label: t("common.relatedLinks.cashFlow"),
+            to: `/ledger/${ledgerOwner}/${ledgerNameParam}/cash-flow`,
+          },
+          {
             label: t("common.relatedLinks.overview"),
             to: `/ledger/${ledgerOwner}/${ledgerNameParam}`,
           },

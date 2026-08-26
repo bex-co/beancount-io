@@ -1,5 +1,6 @@
 import ptAccount from "../account/locales/pt";
 import ptBalanceSheet from "../balance-sheet/locales/pt";
+import ptCashFlow from "../cash-flow/locales/pt";
 import ptIncomeStatement from "../income-statement/locales/pt";
 import ptTrialBalance from "../trial-balance/locales/pt";
 import ptOverview from "../overview/locales/pt";
@@ -40,6 +41,7 @@ const ptReports = {
   ...ptReportsShared,
   ...ptAccount,
   ...ptBalanceSheet,
+  ...ptCashFlow,
   ...ptIncomeStatement,
   ...ptTrialBalance,
   ...ptOverview,

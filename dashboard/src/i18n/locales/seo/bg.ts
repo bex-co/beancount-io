@@ -83,6 +83,15 @@ const bgSeo: Record<string, TranslationEntry> = {
     message: "Баланс - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Отчет за паричния поток за {ledgerName}. Проследявайте оперативните, инвестиционните и финансовите парични движения във времето.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Паричен поток - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Списък на стоките и цени за {ledgerName}. Проследявайте валути, акции и други активи.",

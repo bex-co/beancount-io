@@ -26,6 +26,12 @@ class LedgerAccountItem {
 
   @Field(() => String, { nullable: true })
   closeEntryHash?: string;
+
+  @Field(() => GraphQLJSONObject, {
+    nullable: true,
+    description: "Metadata declared on the account's open directive",
+  })
+  meta?: Record<string, string | number | boolean | null>;
 }
 
 @Resolver()
@@ -52,7 +58,7 @@ export class LedgerAccountQueryResolver {
 
   @Query(() => [LedgerAccountItem], {
     description:
-      "Get all accounts with their open/close dates for a specific ledger",
+      "Get all accounts with their open/close dates and open-directive metadata for a specific ledger",
   })
   async getLedgerAccountDirectives(
     @Arg("ledgerId", () => String) ledgerId: string,

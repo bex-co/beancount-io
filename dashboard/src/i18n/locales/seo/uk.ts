@@ -83,6 +83,15 @@ const ukSeo: Record<string, TranslationEntry> = {
     message: "Баланс - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Звіт про рух грошових коштів для {ledgerName}. Відстежуйте операційні, інвестиційні та фінансові грошові потоки з часом.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Рух грошових коштів - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Список товарів та ціни для {ledgerName}. Відстежуйте валюти, акції та інші активи.",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import {
   AlertCircle,
+  ArrowLeftRight,
   BarChart3,
   BookOpen,
   ChevronDown,
@@ -174,6 +175,12 @@ export function LedgerSidebar({ ledgerId, currentPath }: LedgerSidebarProps) {
       label: t("common.balanceSheet"),
       icon: FileSpreadsheet,
       path: `${ledgerPath}/balance-sheet`,
+    },
+    {
+      id: "cash-flow",
+      label: t("common.cashFlow"),
+      icon: ArrowLeftRight,
+      path: `${ledgerPath}/cash-flow`,
     },
     {
       id: "trial-balance",

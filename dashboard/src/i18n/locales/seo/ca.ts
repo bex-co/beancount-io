@@ -83,6 +83,15 @@ const caSeo: Record<string, TranslationEntry> = {
     message: "Balanç - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Estat de fluxos de caixa de {ledgerName}. Segueix els moviments de caixa operatius, d'inversió i de finançament al llarg del temps.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Flux de caixa - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Llista de productes i preus de {ledgerName}. Seguiu monedes, accions i altres actius.",

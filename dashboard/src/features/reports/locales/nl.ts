@@ -1,5 +1,6 @@
 import nlAccount from "../account/locales/nl";
 import nlBalanceSheet from "../balance-sheet/locales/nl";
+import nlCashFlow from "../cash-flow/locales/nl";
 import nlIncomeStatement from "../income-statement/locales/nl";
 import nlTrialBalance from "../trial-balance/locales/nl";
 import nlOverview from "../overview/locales/nl";
@@ -40,6 +41,7 @@ const nlReports = {
   ...nlReportsShared,
   ...nlAccount,
   ...nlBalanceSheet,
+  ...nlCashFlow,
   ...nlIncomeStatement,
   ...nlTrialBalance,
   ...nlOverview,

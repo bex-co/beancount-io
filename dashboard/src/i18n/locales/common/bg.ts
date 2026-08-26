@@ -355,6 +355,11 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Преглед на баланса за {ledgerName}. Анализирайте активи, пасиви и капитал за всеки момент.",
     description: "Description for balance sheet page",
   },
+  "common.pageDescription.cashFlow": {
+    message:
+      "Прегледайте отчета за паричния поток за {ledgerName}. Проследявайте оперативни, инвестиционни и финансови парични движения във времето.",
+    description: "Description for cash flow page",
+  },
   "common.pageDescription.commodities": {
     message:
       "Преглеждайте и управлявайте стоки (валути, акции и активи), използвани в {ledgerName}. Проследявайте обменни курсове и ценова история.",
@@ -442,6 +447,10 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.relatedLinks.balanceSheet": {
     message: "Баланс",
     description: "Link label for balance sheet page",
+  },
+  "common.relatedLinks.cashFlow": {
+    message: "Паричен поток",
+    description: "Link label for cash flow page",
   },
   "common.relatedLinks.commodities": {
     message: "Стоки",
@@ -625,6 +634,10 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.income": {
     message: "Доходи",
     description: "Income category in accounting",
+  },
+  "common.cashFlow": {
+    message: "Паричен поток",
+    description: "Navigation label for cash flow financial report",
   },
   "common.incomeStatement": {
     message: "Отчет за доходите",

@@ -30,6 +30,12 @@ interface ExportLocaleMessages {
   totalRevenue: string;
   totalExpenses: string;
   netLoss: string;
+  netCashOperating: string;
+  netCashInvesting: string;
+  netCashFinancing: string;
+  netChangeInCash: string;
+  openingCash: string;
+  closingCash: string;
   supportingAccountDetail: string;
   allActivity: string;
   dateUnavailable: string;
@@ -49,6 +55,8 @@ interface ExportLocaleMessages {
   partialReportNotice: string;
   balanceSheetClassificationNotice: string;
   balanceSheetDoesNotReconcileNotice: string;
+  cashFlowClassificationNotice: string;
+  cashFlowCashEquivalentsNotice: string;
   customUnitsNotice: string;
   customUnitsDefinitionNotice: string;
   multiUnitScheduleNotice: string;
@@ -186,6 +194,31 @@ export function createExportLocale(messages: ExportLocaleMessages) {
       message: messages.netLoss,
       description: "Statement-facing label when expenses exceed income",
     },
+    "reports.export.netCashOperating": {
+      message: messages.netCashOperating,
+      description: "Cash flow statement net operating activities line",
+    },
+    "reports.export.netCashInvesting": {
+      message: messages.netCashInvesting,
+      description: "Cash flow statement net investing activities line",
+    },
+    "reports.export.netCashFinancing": {
+      message: messages.netCashFinancing,
+      description: "Cash flow statement net financing activities line",
+    },
+    "reports.export.netChangeInCash": {
+      message: messages.netChangeInCash,
+      description:
+        "Cash flow statement net change in cash and equivalents line",
+    },
+    "reports.export.openingCash": {
+      message: messages.openingCash,
+      description: "Cash flow statement opening cash and equivalents line",
+    },
+    "reports.export.closingCash": {
+      message: messages.closingCash,
+      description: "Cash flow statement closing cash and equivalents line",
+    },
     "reports.export.supportingAccountDetail": {
       message: messages.supportingAccountDetail,
       description: "Heading for the detailed account hierarchy appendix",
@@ -269,6 +302,16 @@ export function createExportLocale(messages: ExportLocaleMessages) {
     "reports.export.balanceSheetDoesNotReconcileNotice": {
       message: messages.balanceSheetDoesNotReconcileNotice,
       description: "Notice that assets do not equal liabilities plus equity",
+    },
+    "reports.export.cashFlowClassificationNotice": {
+      message: messages.cashFlowClassificationNotice,
+      description:
+        "Notice that the operating, investing, and financing split is inferred for accounts without a declared cash-flow-role",
+    },
+    "reports.export.cashFlowCashEquivalentsNotice": {
+      message: messages.cashFlowCashEquivalentsNotice,
+      description:
+        "Notice that the cash and cash equivalents set is inferred from account names",
     },
     "reports.export.customUnitsNotice": {
       message: messages.customUnitsNotice,

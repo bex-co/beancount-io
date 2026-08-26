@@ -155,5 +155,134 @@ describe("sankey-data-transformer", () => {
       expect(assetNodes).toHaveLength(1);
       expect(assetNodes[0].name).toBe("Assets:Investments");
     });
+
+    it("should exclude an account declared cash that the patterns miss", () => {
+      const assetsData = {
+        account: "Assets",
+        balance: null,
+        children: [
+          {
+            account: "Assets:Property:House",
+            balance: { USD: 300000 },
+            children: [],
+          },
+          {
+            account: "Assets:Investments:Stocks",
+            balance: { USD: 5000 },
+            children: [],
+          },
+        ],
+      };
+      const accountMeta = new Map([
+        ["Assets:Property:House", { "cash-flow-role": "cash" }],
+      ]);
+
+      const result = transformToSankeyData({
+        assetsHierarchyData: assetsData,
+        depth: 2,
+        accountMeta,
+      });
+
+      const assetNodes = result.nodes.filter((n) =>
+        n.name.startsWith("Assets:"),
+      );
+      expect(assetNodes).toHaveLength(1);
+      expect(assetNodes[0].name).toBe("Assets:Investments");
+    });
+
+    it("should keep an account declared investing that the patterns capture", () => {
+      const assetsData = {
+        account: "Assets",
+        balance: null,
+        children: [
+          {
+            account: "Assets:US:Bank:CD",
+            balance: { USD: 10000 },
+            children: [],
+          },
+        ],
+      };
+
+      // Without metadata the bank account is excluded as cash-equivalent.
+      const unannotated = transformToSankeyData({
+        assetsHierarchyData: assetsData,
+        depth: 2,
+      });
+      expect(
+        unannotated.nodes.filter((n) => n.name.startsWith("Assets:")),
+      ).toHaveLength(0);
+
+      const accountMeta = new Map([
+        ["Assets:US:Bank:CD", { "cash-flow-role": "investing" }],
+      ]);
+      const result = transformToSankeyData({
+        assetsHierarchyData: assetsData,
+        depth: 2,
+        accountMeta,
+      });
+
+      const assetNodes = result.nodes.filter((n) =>
+        n.name.startsWith("Assets:"),
+      );
+      expect(assetNodes).toHaveLength(1);
+      expect(assetNodes[0].name).toBe("Assets:US");
+      const link = result.links.find((l) => l.target === "Assets:US");
+      expect(link?.value).toBe(10000);
+    });
+
+    it("should keep Income nodes as source even when declared cash", () => {
+      const incomeData = {
+        account: "Income",
+        balance: null,
+        children: [
+          { account: "Income:Salary", balance: { USD: -5000 }, children: [] },
+        ],
+      };
+      const accountMeta = new Map([
+        ["Income:Salary", { "cash-flow-role": "cash" }],
+      ]);
+
+      const result = transformToSankeyData({
+        incomeHierarchyData: incomeData,
+        depth: 2,
+        accountMeta,
+      });
+
+      expect(result.nodes.map((n) => n.name)).toContain("Income:Salary");
+      const link = result.links.find((l) => l.source === "Income:Salary");
+      expect(link?.target).toBe("Cash Flow");
+      expect(link?.value).toBe(5000);
+    });
+
+    it("should reproduce unannotated categories when the meta map has no entry", () => {
+      const assetsData = {
+        account: "Assets",
+        balance: null,
+        children: [
+          {
+            account: "Assets:US:BofA:Checking",
+            balance: { USD: 1000 },
+            children: [],
+          },
+          {
+            account: "Assets:Investments:Stocks",
+            balance: { USD: 5000 },
+            children: [],
+          },
+        ],
+      };
+
+      const withoutMeta = transformToSankeyData({
+        assetsHierarchyData: assetsData,
+        depth: 2,
+      });
+      const withEmptyMeta = transformToSankeyData({
+        assetsHierarchyData: assetsData,
+        depth: 2,
+        accountMeta: new Map(),
+      });
+
+      expect(withEmptyMeta).toEqual(withoutMeta);
+    });
   });
 });

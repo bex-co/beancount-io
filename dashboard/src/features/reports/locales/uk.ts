@@ -1,5 +1,6 @@
 import ukAccount from "../account/locales/uk";
 import ukBalanceSheet from "../balance-sheet/locales/uk";
+import ukCashFlow from "../cash-flow/locales/uk";
 import ukIncomeStatement from "../income-statement/locales/uk";
 import ukTrialBalance from "../trial-balance/locales/uk";
 import ukOverview from "../overview/locales/uk";
@@ -40,6 +41,7 @@ const ukReports = {
   ...ukReportsShared,
   ...ukAccount,
   ...ukBalanceSheet,
+  ...ukCashFlow,
   ...ukIncomeStatement,
   ...ukTrialBalance,
   ...ukOverview,

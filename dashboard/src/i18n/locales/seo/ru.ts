@@ -83,6 +83,15 @@ const ruSeo: Record<string, TranslationEntry> = {
     message: "Баланс - {ledgerName}",
     description: "Balance sheet page title with ledger name",
   },
+  "seo.ledgerCashFlow.description": {
+    message:
+      "Отчет о движении денежных средств для {ledgerName}. Отслеживайте операционные, инвестиционные и финансовые денежные потоки во времени.",
+    description: "Cash flow page meta description",
+  },
+  "seo.ledgerCashFlow.title": {
+    message: "Движение денежных средств - {ledgerName}",
+    description: "Cash flow page title with ledger name",
+  },
   "seo.ledgerCommodities.description": {
     message:
       "Список товаров и цены для {ledgerName}. Отслеживайте валюты, акции и другие активы.",

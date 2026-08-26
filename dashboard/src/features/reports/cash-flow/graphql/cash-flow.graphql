@@ -1,0 +1,101 @@
+query GetLedgerCashFlow(
+  $ledgerId: String!
+  $interval: String!
+  $conversion: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  incomeIntervals: getLedgerIntervalTotals(
+    accountName: "Income"
+    ledgerId: $ledgerId
+    interval: $interval
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    balance
+    accountBalances
+  }
+  expenseIntervals: getLedgerIntervalTotals(
+    accountName: "Expenses"
+    ledgerId: $ledgerId
+    interval: $interval
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    balance
+    accountBalances
+  }
+  assetIntervals: getLedgerIntervalTotals(
+    accountName: "Assets"
+    ledgerId: $ledgerId
+    interval: $interval
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    balance
+    accountBalances
+  }
+  liabilityIntervals: getLedgerIntervalTotals(
+    accountName: "Liabilities"
+    ledgerId: $ledgerId
+    interval: $interval
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    balance
+    accountBalances
+  }
+  equityIntervals: getLedgerIntervalTotals(
+    accountName: "Equity"
+    ledgerId: $ledgerId
+    interval: $interval
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    date
+    balance
+    accountBalances
+  }
+  getLedgerBalanceSheet(
+    ledgerId: $ledgerId
+    conversion: $conversion
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    assetsHierarchyData {
+      account
+      balance
+      balanceChildren
+      children
+      hasTxns
+      cost
+      costChildren
+    }
+  }
+  getLedgerAccountDirectives(ledgerId: $ledgerId) {
+    account
+    openedAt
+    closedAt
+    balance
+    entryCount
+    entryHash
+    closeEntryHash
+    meta
+  }
+}
