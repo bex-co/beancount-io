@@ -894,6 +894,14 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
  * rows below are honest about the verb being reachable from both surfaces, and
  * this comment is the honest part about it being reachable two different ways.
  * Converging them belongs with the service-layer work, not with classification.
+ *
+ * What that divergence is no longer allowed to mean is a difference in
+ * AUTHORIZATION. It did once: `LedgerWorkflow` never consulted
+ * `Identity.ledgerScope`, so a credential pinned to one ledger reached every
+ * ledger its user could through the GraphQL twin while the MCP tool refused.
+ * `graphql/ledger-pin-middleware.ts` now enforces the pin for the whole
+ * surface, from the `ledgerId` argument, whichever implementation sits behind
+ * it. Convergence is still owed; the hole it left is closed.
  */
 /**
  * API-key management, on all three surfaces (ADR 0006 D6, w1/m22).

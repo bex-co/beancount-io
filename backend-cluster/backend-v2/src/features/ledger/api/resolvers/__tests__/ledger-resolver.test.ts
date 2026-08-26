@@ -3,6 +3,7 @@ import { LedgerQueryResolver } from "../ledger-resolver.query";
 import { LedgerMutationResolver } from "../ledger-resolver.mutation";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { IContext } from "@/server/graphql/context";
+import { ForbiddenError } from "@/shared/errors";
 
 /**
  * The resolvers are thin transport adapters: they resolve `userId` from context
@@ -217,6 +218,57 @@ describe("Ledger resolvers (delegation)", () => {
       expect(workflow.isLedgerStarred).toHaveBeenCalledWith({
         ledgerId: "o/l",
         userId: USER_ID,
+      });
+    });
+
+    /**
+     * These five take their ledger from the parent object, so the argument-keyed
+     * pin middleware never sees it — and `listLedgers` hands back every ledger
+     * the user can reach. Without a check here a credential confined to one book
+     * reads the contents of all of them, one field resolution at a time.
+     */
+    describe("field resolvers enforce the credential's ledger pin", () => {
+      const pinnedCtx = {
+        ...ctx,
+        identity: {
+          userId: USER_ID,
+          method: "apikey",
+          scopes: new Set(["ledger.read"]),
+          ledgerScope: "o/l",
+          capabilityExempt: false,
+        },
+      } as unknown as IContext;
+
+      const fieldResolvers = [
+        ["attributes", "getLedgerAttributes"],
+        ["options", "getLedgerOptions"],
+        ["favaOptions", "getLedgerFavaOptions"],
+        ["bcioOptions", "getLedgerBcioOptions"],
+        ["isStarred", "isLedgerStarred"],
+      ] as const;
+
+      it.each(fieldResolvers)(
+        "%s refuses a ledger the credential is not pinned to",
+        async (field, delegate) => {
+          await expect(
+            queryResolver[field]({ id: "o/other" } as never, pinnedCtx),
+          ).rejects.toThrow(ForbiddenError);
+          expect(workflow[delegate]).not.toHaveBeenCalled();
+        },
+      );
+
+      it.each(fieldResolvers)("%s allows the pinned ledger", async (field) => {
+        await expect(
+          queryResolver[field]({ id: "o/l" } as never, pinnedCtx),
+        ).resolves.not.toThrow();
+      });
+
+      it("leaves an unpinned caller alone", async () => {
+        // `ctx` carries no identity at all — the anonymous public-ledger read
+        // these fields have always allowed.
+        await expect(
+          queryResolver.attributes({ id: "o/other" } as never, ctx),
+        ).resolves.not.toThrow();
       });
     });
   });

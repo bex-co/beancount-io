@@ -6,7 +6,11 @@ import {
 import { LedgerLegacyMutationResolver } from "../ledger-legacy-resolver.mutation";
 import { IContext } from "@/server/graphql/context";
 import type { Identity } from "@/server/api/identity";
-import { InternalServerError, OperationNotAllowedError } from "@/shared/errors";
+import {
+  ForbiddenError,
+  InternalServerError,
+  OperationNotAllowedError,
+} from "@/shared/errors";
 
 // Define interfaces for test entry input types
 interface PostingInput {
@@ -1300,6 +1304,110 @@ describe("LedgerLegacyResolver", () => {
           sort_order: "desc",
           group_by: "account",
         }),
+      );
+    });
+  });
+  /**
+   * The legacy family is the one place the pin cannot be enforced from the
+   * `ledgerId` argument alone: these verbs declare it nullable (and
+   * `journalEntries` omits it entirely), then fall back to whichever ledger the
+   * account lists first — a ledger no argument named.
+   */
+  describe("ledger pin", () => {
+    const pinnedContext = () =>
+      ({
+        ...mockContext,
+        identity: {
+          userId: "user-123",
+          method: "apikey",
+          scopes: new Set(["ledger.read", "ledger.write"]),
+          ledgerScope: "testuser/pinned",
+          capabilityExempt: false,
+        },
+      }) as unknown as IContext;
+
+    beforeEach(() => {
+      for (const report of [
+        mockFavaApiClient.reports.getLedgerOptions,
+        mockFavaApiClient.reports.getLedgerAttributes,
+        mockFavaApiClient.reports.getLedgerErrors,
+      ]) {
+        report.mockResolvedValue({ data: { success: true, data: {} } });
+      }
+      mockFavaApiClient.reports.getLedgerAttributes.mockResolvedValue({
+        data: { success: true, data: { accounts: [], currencies: [] } },
+      });
+      mockFavaApiClient.reports.getLedgerErrors.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+    });
+
+    it("ledgerMeta defaults a pinned credential to its own ledger", async () => {
+      await queryResolver.ledgerMeta({ userId: "user-123" }, pinnedContext());
+
+      expect(mockFavaApiClient.reports.getLedgerOptions).toHaveBeenCalledWith(
+        "testuser",
+        "pinned",
+      );
+      // The account's ledger list is never consulted: it is the thing that
+      // would have handed back somebody else's book.
+      expect(mockFavaApiClient.ledgers.listLedgers).not.toHaveBeenCalled();
+    });
+
+    it("ledgerMeta refuses a pinned credential naming another ledger", async () => {
+      await expect(
+        queryResolver.ledgerMeta(
+          { userId: "user-123", ledgerId: "testuser/other" },
+          pinnedContext(),
+        ),
+      ).rejects.toThrow(ForbiddenError);
+    });
+
+    it("journalEntries reads the pinned ledger, not the account's first", async () => {
+      mockFavaApiClient.legacy.getLegacyJournal.mockResolvedValue({
+        data: { success: true, data: [] },
+      });
+
+      await queryResolver.journalEntries({} as never, pinnedContext());
+
+      expect(mockFavaApiClient.legacy.getLegacyJournal).toHaveBeenCalledWith(
+        "testuser",
+        "pinned",
+        expect.anything(),
+      );
+      expect(mockFavaApiClient.ledgers.listLedgers).not.toHaveBeenCalled();
+    });
+
+    it("addEntries refuses a pinned credential naming another ledger", async () => {
+      await expect(
+        mutationResolver.addEntries(
+          {
+            ...createEntryInput(),
+            ledgerId: "testuser/other",
+          } as never,
+          pinnedContext(),
+        ),
+      ).rejects.toThrow(ForbiddenError);
+      expect(mockLedgerEntryService.addBulkEntries).not.toHaveBeenCalled();
+    });
+
+    it("leaves an unpinned caller on the original default", async () => {
+      mockFavaApiClient.ledgers.listLedgers.mockResolvedValue({
+        data: {
+          success: true,
+          data: [{ name: "test-ledger", full_name: "testuser/test-ledger" }],
+        },
+      });
+
+      await queryResolver.ledgerMeta(
+        { userId: "user-123" },
+        mockContext as IContext,
+      );
+
+      expect(mockFavaApiClient.ledgers.listLedgers).toHaveBeenCalled();
+      expect(mockFavaApiClient.reports.getLedgerOptions).toHaveBeenCalledWith(
+        "testuser",
+        "test-ledger",
       );
     });
   });

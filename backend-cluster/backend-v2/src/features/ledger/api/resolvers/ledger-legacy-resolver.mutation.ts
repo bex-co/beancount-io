@@ -111,7 +111,8 @@ export class LedgerLegacyMutationResolver extends BaseLedgerResolver {
     @Ctx() ctx: IContext,
   ): Promise<AddEntryResponse> {
     const userId = ctx.getCurrentUserId();
-    const defaultLedgerId = await this.getDefaultLedgerId(
+    const defaultLedgerId = await this.resolveLedgerId(
+      ctx.identity,
       userId,
       entriesInput.ledgerId,
     );

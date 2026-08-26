@@ -10,6 +10,7 @@ import {
 } from "type-graphql";
 import { IContext } from "@/server/graphql/context";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
+import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
 import {
   BcioOptions,
   FavaOptions,
@@ -112,6 +113,11 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<LedgerAttributes> {
+    // The ledger comes from the parent object, not an argument, so the pin
+    // middleware never saw it. `listLedgers` hands back every ledger the user
+    // can reach, which would otherwise let a credential confined to one book
+    // read the contents of all of them one field resolution at a time.
+    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.getLedgerAttributes({
       ledgerId: ledger.id,
       userId: ctx.userId,
@@ -125,6 +131,7 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<LedgerOptions> {
+    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.getLedgerOptions({
       ledgerId: ledger.id,
       userId: ctx.userId,
@@ -138,6 +145,7 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<FavaOptions> {
+    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.getLedgerFavaOptions({
       ledgerId: ledger.id,
       userId: ctx.userId,
@@ -151,6 +159,7 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<BcioOptions> {
+    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.getLedgerBcioOptions({
       ledgerId: ledger.id,
       userId: ctx.userId,
@@ -165,6 +174,7 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<boolean | undefined> {
+    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.isLedgerStarred({
       ledgerId: ledger.id,
       userId: ctx.userId,

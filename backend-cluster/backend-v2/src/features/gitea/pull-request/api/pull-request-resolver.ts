@@ -8,6 +8,7 @@ import {
   Int,
 } from "type-graphql";
 import { IContext } from "@/server/graphql/context";
+import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
 import type { IPullRequestService } from "../service/pull-request-service";
 import {
   CreatePRFromPatchInput,
@@ -25,6 +26,13 @@ export class PullRequestResolver {
     @Arg("input") input: CreatePRFromPatchInput,
     @Ctx() ctx: IContext,
   ): Promise<PullRequestResult> {
+    // The ledger is named inside the input object, so the pin middleware —
+    // which reads top-level arguments — never saw it. Outside the try on
+    // purpose: the catch below turns anything thrown into a `success: false`
+    // payload, and an authorization refusal reported as a failed merge is a
+    // refusal nobody can tell from a git error.
+    assertLedgerScope(ctx.identity, `${input.ledgerOwner}/${input.ledgerName}`);
+
     try {
       const user = await ctx.getCurrentUser();
 

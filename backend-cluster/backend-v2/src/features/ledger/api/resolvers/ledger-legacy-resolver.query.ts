@@ -565,7 +565,8 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
     @Ctx() ctx: IContext,
   ): Promise<LedgerMetaResponse> {
     const userId = ctx.getCurrentUserId();
-    const defaultLedgerId = await this.getDefaultLedgerId(
+    const defaultLedgerId = await this.resolveLedgerId(
+      ctx.identity,
       userId,
       ledgerMetaRequest.ledgerId,
     );
@@ -607,7 +608,8 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
     @Ctx() ctx: IContext,
   ): Promise<AccountHierarchyResponse> {
     const userId = ctx.getCurrentUserId();
-    const defaultLedgerId = await this.getDefaultLedgerId(
+    const defaultLedgerId = await this.resolveLedgerId(
+      ctx.identity,
       userId,
       chartsRequest.ledgerId,
     );
@@ -697,7 +699,8 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
     @Ctx() ctx: IContext,
   ): Promise<HomeChartsResponse> {
     const userId = ctx.getCurrentUserId();
-    const defaultLedgerId = await this.getDefaultLedgerId(
+    const defaultLedgerId = await this.resolveLedgerId(
+      ctx.identity,
       userId,
       chartsRequest.ledgerId,
     );
@@ -742,16 +745,28 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
   ): Promise<JournalEntriesResponse> {
     const { favaApiClient, favaUser } =
       await this.favaClientFactory.getApiContext(ctx.getCurrentUserId());
-    const ledgers = await unwrapFavaResponse(
-      favaApiClient.ledgers.listLedgers(),
-      "get find out the ledgers",
-    );
-    const defaultLedger = ledgers[0];
-    if (!defaultLedger) {
-      throw new InternalServerError("Failed to get the default ledger");
-    }
 
-    const repoName = defaultLedger.name;
+    // This verb names no ledger at all — not even a nullable argument — so a
+    // credential confined to one book would read whichever ledger happened to
+    // sort first. Its own ledger is the only one it may read, so that is the
+    // one it gets; an unpinned caller keeps the original default.
+    let ledgerOwner = favaUser.username;
+    let repoName: string;
+    if (ctx.identity?.ledgerScope) {
+      ({ ledgerOwner, ledgerName: repoName } = parseLedgerId(
+        ctx.identity.ledgerScope,
+      ));
+    } else {
+      const ledgers = await unwrapFavaResponse(
+        favaApiClient.ledgers.listLedgers(),
+        "get find out the ledgers",
+      );
+      const defaultLedger = ledgers[0];
+      if (!defaultLedger) {
+        throw new InternalServerError("Failed to get the default ledger");
+      }
+      repoName = defaultLedger.name;
+    }
     const query = {
       first: journalEntriesArgs.first,
       after: journalEntriesArgs.after,
@@ -769,7 +784,7 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
     };
 
     const resp = await favaApiClient.legacy.getLegacyJournal(
-      favaUser.username,
+      ledgerOwner,
       repoName,
       query,
     );
