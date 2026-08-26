@@ -11,6 +11,12 @@ describe("AccountResolver", () => {
   let resolver: AccountResolver;
   let mockContext: IContext;
   let mockAccountService: jest.Mocked<IAccountService>;
+  const sessionIdentity = {
+    userId: "user-123",
+    method: "session" as const,
+    scopes: new Set<string>(),
+    capabilityExempt: true,
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -35,6 +41,7 @@ describe("AccountResolver", () => {
         URL: new URL("http://localhost:4104"),
       } as any,
       getCurrentUserId: jest.fn().mockReturnValue("user-123"),
+      getCurrentIdentity: jest.fn().mockReturnValue(sessionIdentity),
     } as unknown as IContext;
 
     resolver = new AccountResolver(mockAccountService);
@@ -132,7 +139,9 @@ describe("AccountResolver", () => {
       const result = await resolver.deleteAccount(mockContext);
 
       expect(result).toBe(true);
-      expect(mockAccountService.deleteAccount).toHaveBeenCalledWith("user-123");
+      expect(mockAccountService.deleteAccount).toHaveBeenCalledWith(
+        sessionIdentity,
+      );
     });
 
     it("should return false if delete fails", async () => {

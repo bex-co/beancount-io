@@ -1,7 +1,14 @@
 import { SignJWT, exportJWK, generateKeyPair, type CryptoKey } from "jose";
 import type { AppConfig } from "@/config/config";
 import type { DatabaseLayer } from "@/foundation/composition";
-import { API_SCOPES, resolveIdentity } from "../identity";
+import {
+  API_SCOPES,
+  assertIdentityCapability,
+  assertSessionIdentity,
+  resolveIdentity,
+  type Identity,
+} from "../identity";
+import { ForbiddenError } from "@/shared/errors";
 
 /**
  * `resolveIdentity` is the single authentication gate for GraphQL, REST, and
@@ -400,5 +407,39 @@ describe("API scope vocabulary", () => {
       "ledger.write",
       "ledger.admin",
     ]);
+  });
+
+  it("treats admin as including write and read", () => {
+    const identity: Identity = {
+      userId: "user-oauth",
+      method: "oauth",
+      scopes: new Set(["ledger.admin"]),
+      capabilityExempt: false,
+    };
+
+    expect(() => assertIdentityCapability(identity, "read")).not.toThrow();
+    expect(() => assertIdentityCapability(identity, "write")).not.toThrow();
+    expect(() => assertIdentityCapability(identity, "admin")).not.toThrow();
+  });
+});
+
+describe("full session identity", () => {
+  const session: Identity = {
+    userId: "user-session",
+    method: "session",
+    scopes: new Set(),
+    capabilityExempt: true,
+  };
+
+  it("accepts the browser and mobile session credential", () => {
+    expect(() => assertSessionIdentity(session)).not.toThrow();
+  });
+
+  it.each([
+    { ...session, method: "oauth" as const, capabilityExempt: false },
+    { ...session, method: "apikey" as const, capabilityExempt: false },
+    { ...session, capabilityExempt: false },
+  ])("rejects a delegated or non-exempt identity", (identity) => {
+    expect(() => assertSessionIdentity(identity)).toThrow(ForbiddenError);
   });
 });

@@ -7,6 +7,7 @@ import type { DbExecutor } from "@/drizzle/drizzle";
 import type { GraphQLResolveInfo } from "graphql";
 import { Kind } from "graphql";
 import { config } from "@/config/config";
+import { ForbiddenError } from "@/shared/errors";
 
 // Test constants
 const THIRTY_DAYS_IN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
@@ -60,6 +61,12 @@ describe("SubscriptionResolver", () => {
       userId: "user-123",
       token: "mock-token",
       getCurrentUserId: jest.fn().mockReturnValue("user-123"),
+      getCurrentIdentity: jest.fn().mockReturnValue({
+        userId: "user-123",
+        method: "session",
+        scopes: new Set(),
+        capabilityExempt: true,
+      }),
     } as unknown as IContext;
 
     resolver = new SubscriptionResolver(
@@ -276,6 +283,9 @@ describe("SubscriptionResolver", () => {
         ...mockContext,
         userId: "",
         getCurrentUserId: jest.fn().mockImplementation(() => {
+          throw new Error("User ID not found in context");
+        }),
+        getCurrentIdentity: jest.fn().mockImplementation(() => {
           throw new Error("User ID not found in context");
         }),
       } as unknown as IContext;
@@ -1213,6 +1223,9 @@ describe("SubscriptionResolver", () => {
         getCurrentUserId: jest.fn().mockImplementation(() => {
           throw new Error("User ID not found in context");
         }),
+        getCurrentIdentity: jest.fn().mockImplementation(() => {
+          throw new Error("User ID not found in context");
+        }),
       } as unknown as IContext;
 
       await expect(
@@ -1390,11 +1403,39 @@ describe("SubscriptionResolver", () => {
       mockStripeService.cancelSubscription = jest.fn();
     });
 
+    it("rejects a scoped token before calling Stripe", async () => {
+      const scopedContext = {
+        ...mockContext,
+        getCurrentIdentity: jest.fn().mockReturnValue({
+          userId: "user-123",
+          method: "oauth",
+          scopes: new Set([
+            "ledger.read",
+            "ledger.write",
+            "ledger.admin",
+          ]),
+          capabilityExempt: false,
+        }),
+      } as unknown as IContext;
+
+      await expect(
+        resolver.cancelSubscription(
+          "sub_123",
+          "beancount-web-prod",
+          scopedContext,
+        ),
+      ).rejects.toThrow(ForbiddenError);
+      expect(mockStripeService.cancelSubscription).not.toHaveBeenCalled();
+    });
+
     it("should throw error when userId is not present", async () => {
       const contextWithoutUserId = {
         ...mockContext,
         userId: "",
         getCurrentUserId: jest.fn().mockImplementation(() => {
+          throw new Error("User ID not found in context");
+        }),
+        getCurrentIdentity: jest.fn().mockImplementation(() => {
           throw new Error("User ID not found in context");
         }),
       } as unknown as IContext;
@@ -1455,6 +1496,9 @@ describe("SubscriptionResolver", () => {
         ...mockContext,
         userId: "",
         getCurrentUserId: jest.fn().mockImplementation(() => {
+          throw new Error("User ID not found in context");
+        }),
+        getCurrentIdentity: jest.fn().mockImplementation(() => {
           throw new Error("User ID not found in context");
         }),
       } as unknown as IContext;
@@ -1519,6 +1563,9 @@ describe("SubscriptionResolver", () => {
         ...mockContext,
         userId: "",
         getCurrentUserId: jest.fn().mockImplementation(() => {
+          throw new Error("User ID not found in context");
+        }),
+        getCurrentIdentity: jest.fn().mockImplementation(() => {
           throw new Error("User ID not found in context");
         }),
       } as unknown as IContext;

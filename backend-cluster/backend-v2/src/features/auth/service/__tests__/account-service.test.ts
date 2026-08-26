@@ -3,6 +3,7 @@ import { AccountService } from "../account-service";
 import {
   NotFoundError,
   ConflictError,
+  ForbiddenError,
   InternalServerError,
 } from "@/shared/errors";
 import { ReportStatus } from "@/features/auth/utils/report-status";
@@ -11,6 +12,7 @@ import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factor
 import type { IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
+import type { Identity } from "@/server/api/identity";
 
 jest.mock("@/shared/lock");
 jest.mock("@/features/stripe/operations/get-user-tier");
@@ -19,6 +21,13 @@ jest.mock("@/features/plaid/utils/encryption", () => ({
 }));
 
 import { lock } from "@/shared/lock";
+
+const sessionIdentity = (userId: string): Identity => ({
+  userId,
+  method: "session",
+  scopes: new Set(),
+  capabilityExempt: true,
+});
 
 describe("AccountService", () => {
   let accountService: AccountService;
@@ -311,6 +320,19 @@ describe("AccountService", () => {
   });
 
   describe("deleteAccount", () => {
+    it("rejects a scoped credential before reading account data", async () => {
+      await expect(
+        accountService.deleteAccount({
+          userId: "user-123",
+          method: "oauth",
+          scopes: new Set(["ledger.admin"]),
+          capabilityExempt: false,
+        }),
+      ).rejects.toThrow(ForbiddenError);
+
+      expect(mockModels.user.getById).not.toHaveBeenCalled();
+    });
+
     it("should delete user account with no subscriptions", async () => {
       const userId = "user-123";
       const mockUser = {
@@ -330,7 +352,9 @@ describe("AccountService", () => {
         .mockResolvedValue(undefined);
       mockModels.user.deleteByUserId = jest.fn().mockResolvedValue(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(
+        sessionIdentity(userId),
+      );
 
       expect(result).toBe(true);
       expect(mockModels.user.deleteByUserId).toHaveBeenCalledWith(
@@ -343,10 +367,10 @@ describe("AccountService", () => {
       mockModels.user.getById = jest.fn().mockResolvedValue(null);
 
       await expect(
-        accountService.deleteAccount("nonexistent-user"),
+        accountService.deleteAccount(sessionIdentity("nonexistent-user")),
       ).rejects.toThrow(NotFoundError);
       await expect(
-        accountService.deleteAccount("nonexistent-user"),
+        accountService.deleteAccount(sessionIdentity("nonexistent-user")),
       ).rejects.toThrow(/not found/);
     });
 
@@ -378,7 +402,9 @@ describe("AccountService", () => {
         .mockResolvedValue(undefined);
       mockModels.user.deleteByUserId = jest.fn().mockResolvedValue(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(
+        sessionIdentity(userId),
+      );
 
       expect(result).toBe(true);
       expect(mockStripe.deleteSubscription).toHaveBeenCalledWith(
@@ -410,12 +436,12 @@ describe("AccountService", () => {
         message: "Payment required",
       });
 
-      await expect(accountService.deleteAccount(userId)).rejects.toThrow(
-        InternalServerError,
-      );
-      await expect(accountService.deleteAccount(userId)).rejects.toThrow(
-        "Payment required",
-      );
+      await expect(
+        accountService.deleteAccount(sessionIdentity(userId)),
+      ).rejects.toThrow(InternalServerError);
+      await expect(
+        accountService.deleteAccount(sessionIdentity(userId)),
+      ).rejects.toThrow("Payment required");
     });
 
     it("should skip already canceled subscriptions", async () => {
@@ -454,7 +480,9 @@ describe("AccountService", () => {
         .mockResolvedValue(undefined);
       mockModels.user.deleteByUserId = jest.fn().mockResolvedValue(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(
+        sessionIdentity(userId),
+      );
 
       expect(result).toBe(true);
       expect(mockStripe.deleteSubscription).not.toHaveBeenCalled();
@@ -490,7 +518,9 @@ describe("AccountService", () => {
         .mockResolvedValue(undefined);
       mockModels.user.deleteByUserId = jest.fn().mockResolvedValue(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(
+        sessionIdentity(userId),
+      );
 
       expect(result).toBe(true);
       expect(mockStripe.deleteSubscription).toHaveBeenCalledTimes(1);
@@ -516,7 +546,9 @@ describe("AccountService", () => {
         { id: "pitm_2", accessToken: "encrypted-token-2" },
       ]);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(
+        sessionIdentity(userId),
+      );
 
       expect(result).toBe(true);
       expect(mockPlaidClient.removeItem).toHaveBeenCalledTimes(2);
@@ -545,7 +577,9 @@ describe("AccountService", () => {
         .mockRejectedValueOnce(new Error("Plaid unavailable"))
         .mockResolvedValueOnce(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(
+        sessionIdentity(userId),
+      );
 
       expect(result).toBe(true);
       expect(mockModels.plaidItem.deleteByUserId).toHaveBeenCalledWith(
@@ -570,7 +604,9 @@ describe("AccountService", () => {
       mockModels.paidCustomer.findByUserId = jest.fn().mockResolvedValue([]);
       mockModels.plaidItem.getByUserId = jest.fn().mockResolvedValue([]);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(
+        sessionIdentity(userId),
+      );
 
       expect(result).toBe(true);
       expect(mockPlaidClient.removeItem).not.toHaveBeenCalled();
@@ -596,7 +632,9 @@ describe("AccountService", () => {
           { id: "pitm_1", accessToken: "encrypted-token-1" },
         ]);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(
+        sessionIdentity(userId),
+      );
 
       expect(result).toBe(true);
       expect(mockStripe.deleteSubscription).not.toHaveBeenCalled();

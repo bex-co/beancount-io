@@ -21,7 +21,7 @@ export class PlaidMutationResolver {
     private readonly plaidSyncService: IPlaidSyncService,
   ) {}
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => PlaidLinkToken, {
     description: "Create a Plaid Link token for connecting bank accounts",
   })
@@ -34,7 +34,7 @@ export class PlaidMutationResolver {
     return this.plaidItemService.createLinkToken(identity, ledgerId);
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => PlaidLinkToken, {
     description:
       "Create a Plaid Link token in update mode for reauthentication",
@@ -61,7 +61,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => PlaidAccountReconcileResult, {
     description:
       "Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select.",
@@ -80,7 +80,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => PlaidItemType, {
     description: "Exchange Plaid public token for access token and store Item",
   })
@@ -98,7 +98,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => Boolean, {
     description: "Update the ledger account mapping for a Plaid account",
   })
@@ -118,7 +118,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => Boolean, {
     description: "Update the currency used for a Plaid account's transactions",
   })
@@ -138,7 +138,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => PlaidItemType, {
     description:
       "Refresh Plaid Item status from Plaid API (useful after reauthentication)",
@@ -153,7 +153,7 @@ export class PlaidMutationResolver {
     return this.plaidItemService.refreshItemStatus(identity, itemId, ledgerId);
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => Boolean, {
     description:
       "Unlink a Plaid Item (remove from Plaid and delete from database)",

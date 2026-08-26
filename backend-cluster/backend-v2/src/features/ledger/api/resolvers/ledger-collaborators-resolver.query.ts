@@ -82,7 +82,7 @@ export class LedgerCollaboratorsQueryResolver {
   ) {}
 
   @Query(() => [CollaboratorUser])
-  @Authorized()
+  @Authorized("ledger.admin")
   async listLedgerCollaborators(
     @Arg("ledgerId") ledgerId: string,
     @Args() { page, limit }: PaginationArgs,
@@ -97,7 +97,7 @@ export class LedgerCollaboratorsQueryResolver {
   }
 
   @Query(() => LedgerCollaborator)
-  @Authorized()
+  @Authorized("ledger.admin")
   async getLedgerCollaboratorPermission(
     @Args() { ledgerId, collaborator }: GetCollaboratorPermissionArgs,
     @Ctx() ctx: IContext,

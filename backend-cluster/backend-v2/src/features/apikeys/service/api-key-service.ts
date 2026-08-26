@@ -4,8 +4,11 @@ import type { IModels } from "@/foundation/models";
 import type { ApiKey } from "../data/api-key-model";
 import {
   API_SCOPES,
+  assertIdentityCapability,
+  identityHasCapability,
   type ApiScope,
   type Identity,
+  type OperationClass,
 } from "@/server/api/identity";
 import {
   ForbiddenError,
@@ -23,6 +26,12 @@ const KEY_PREFIX = "bcio_";
 const KEY_ENTROPY_CHARS = 32;
 /** How much of the plaintext is safe to keep for display. */
 const DISPLAY_PREFIX_LENGTH = KEY_PREFIX.length + 8;
+
+const OPERATION_FOR_SCOPE: Record<ApiScope, OperationClass> = {
+  "ledger.read": "read",
+  "ledger.write": "write",
+  "ledger.admin": "admin",
+};
 
 /** What a mint returns. The plaintext exists in this object and nowhere else, ever again. */
 export interface MintedApiKey {
@@ -88,17 +97,19 @@ export const isApiKeyLive = (key: ApiKey, now: Date): boolean =>
  * API keys: durable, scoped credentials for clients that cannot do a browser
  * ceremony — CI, cron, a CLI, an agent (ADR 0006 D6).
  *
- * Three rules are enforced here rather than in the adapters, so they hold on
+ * Four rules are enforced here rather than in the adapters, so they hold on
  * whichever surface is asking:
  *
- * 1. **A key may not mint a key.** A credential that can create its own
+ * 1. **Key management requires `ledger.admin`.** Listing, minting, and
+ *    revocation are control-plane operations, not ledger content access.
+ * 2. **A key may not mint a key.** A credential that can create its own
  *    successor cannot really be revoked: revoke it, and the key it minted
  *    yesterday still works. Minting requires a session or a full OAuth grant,
  *    checked on `Identity.method`.
- * 2. **Minting is a paid feature.** Confirmed as a pricing decision for w1/m22
+ * 3. **Minting is a paid feature.** Confirmed as a pricing decision for w1/m22
  *    (okr.md 杠杆 1). Existing keys keep working if a subscription lapses —
  *    breaking a running integration is a support incident, not a nudge.
- * 3. **Scopes come from the closed vocabulary,** and a key can only ever narrow
+ * 4. **Scopes come from the closed vocabulary,** and a key can only ever narrow
  *    what its minter had, never widen it.
  */
 export class ApiKeyService implements IApiKeyService {
@@ -108,6 +119,8 @@ export class ApiKeyService implements IApiKeyService {
     identity: Identity,
     input: MintApiKeyInput,
   ): Promise<MintedApiKey> {
+    assertIdentityCapability(identity, "admin");
+
     if (identity.method === "apikey") {
       throw new ForbiddenError(
         "An API key cannot mint another API key. Sign in, or use an OAuth grant, to create one.",
@@ -133,8 +146,10 @@ export class ApiKeyService implements IApiKeyService {
     if (!identity.capabilityExempt) {
       // An OAuth grant minting a key may not hand out more than it holds:
       // otherwise `ledger.read` becomes `ledger.admin` in two steps.
-      const held = identity.scopes;
-      const widened = scopes.filter((scope) => !held.has(scope));
+      const widened = scopes.filter(
+        (scope) =>
+          !identityHasCapability(identity, OPERATION_FOR_SCOPE[scope]),
+      );
       if (widened.length > 0) {
         throw new ForbiddenError(
           `A key cannot be granted scopes its creator does not hold: ${widened.join(", ")}`,
@@ -170,10 +185,12 @@ export class ApiKeyService implements IApiKeyService {
   }
 
   async list(identity: Identity): Promise<ApiKey[]> {
+    assertIdentityCapability(identity, "admin");
     return this.deps.models.apiKey.listByUserId(this.deps.db, identity.userId);
   }
 
   async revoke(identity: Identity, id: string): Promise<ApiKey> {
+    assertIdentityCapability(identity, "admin");
     const existing = await this.deps.models.apiKey.findById(this.deps.db, id);
     // Same error for "not yours" and "not there": otherwise revoke becomes a
     // probe for which key ids exist.

@@ -90,7 +90,7 @@ export class LedgerCollaboratorsMutationResolver {
   }
 
   @Mutation(() => DeleteCollaboratorResponse)
-  @Authorized()
+  @Authorized("ledger.admin")
   async leaveLedger(
     @Args() { ledgerId }: LeaveLedgerArgs,
     @Ctx() ctx: IContext,

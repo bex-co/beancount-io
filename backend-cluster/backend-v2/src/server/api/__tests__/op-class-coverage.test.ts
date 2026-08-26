@@ -3,7 +3,8 @@ jest.mock("@ai-sdk/harness-acp", () => ({
   createACP: () => ({}),
 }));
 
-import { classifiedOpIds } from "../op-class";
+import { getMetadataStorage } from "type-graphql";
+import { classifiedOpIds, classifyOp } from "../op-class";
 import { ALWAYS_PUBLIC_OP_IDS } from "../always-public";
 import { assembleTestApi } from "./api-surface";
 
@@ -84,6 +85,24 @@ describe("op-class coverage", () => {
     expect(
       graphqlOps.filter((op) => op.startsWith("GQL Mutation.")).length,
     ).toBe(62);
+  });
+
+  it("does not give an admin-class resolver a weaker auth decorator", () => {
+    const metadata = getMetadataStorage();
+    const weaker: string[] = [];
+
+    for (const [parent, resolvers] of [
+      ["Query", metadata.queries],
+      ["Mutation", metadata.mutations],
+    ] as const) {
+      for (const resolver of resolvers) {
+        const op = `${parent}.${resolver.schemaName}`;
+        if (classifyOp(`GQL ${op}`).class !== "admin") continue;
+        if (!resolver.roles?.includes("ledger.admin")) weaker.push(op);
+      }
+    }
+
+    expect(weaker).toEqual([]);
   });
 
   it("covers every MCP tool, and budgets tools separately from resources", () => {

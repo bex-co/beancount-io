@@ -43,6 +43,16 @@ const readOnlyToken: Identity = {
   capabilityExempt: false,
 };
 
+const writeToken: Identity = {
+  ...readOnlyToken,
+  scopes: new Set(["ledger.write"]),
+};
+
+const adminToken: Identity = {
+  ...readOnlyToken,
+  scopes: new Set(["ledger.admin"]),
+};
+
 const sessionIdentity: Identity = {
   userId: "usr_1",
   method: "session",
@@ -183,6 +193,71 @@ function captureMcpHandlers(
 }
 
 describe("scope enforcement across surfaces", () => {
+  describe("the committed policy closes high-impact scope escalation", () => {
+    it("GraphQL: even every ledger scope cannot unlock a session-only operation", async () => {
+      const allScopes: Identity = {
+        ...adminToken,
+        scopes: new Set([
+          "ledger.read",
+          "ledger.write",
+          "ledger.admin",
+        ]),
+      };
+      const { error, reached } = await driveGraphql(
+        allScopes,
+        makeGraphqlInfo("Mutation", "deleteAccount"),
+        realConfig,
+      );
+
+      expect(reached).toBe(false);
+      expect(error).toBeInstanceOf(ForbiddenError);
+      expect((error as Error).message).toContain("browser session");
+    });
+
+    it("GraphQL: a normal signed-in session still reaches that operation", async () => {
+      const { error, reached } = await driveGraphql(
+        sessionIdentity,
+        makeGraphqlInfo("Mutation", "deleteAccount"),
+        realConfig,
+      );
+
+      expect(error).toBeUndefined();
+      expect(reached).toBe(true);
+    });
+
+    it("MCP: ledger.write cannot list API keys", async () => {
+      const handlers = captureMcpHandlers(writeToken, realConfig);
+      const result = await handlers.get("listApiKeys")!({});
+
+      expect(result.isError).toBe(true);
+      expect(JSON.stringify(result.content)).toContain("ledger.admin");
+    });
+
+    it("MCP: ledger.admin still reaches an admin operation", async () => {
+      const list = jest.fn().mockResolvedValue([]);
+      const handlers = captureMcpHandlers(adminToken, realConfig, {
+        apiKey: { list },
+        ledgerRepo: {},
+        ledgerShell: {},
+      });
+      const result = await handlers.get("listApiKeys")!({});
+
+      expect(result.isError).not.toBe(true);
+      expect(list).toHaveBeenCalledWith(adminToken);
+    });
+
+    it("still lets an unauthenticated signup ceremony reach its resolver", async () => {
+      const { error, reached } = await driveGraphql(
+        undefined,
+        makeGraphqlInfo("Mutation", "signUp"),
+        realConfig,
+      );
+
+      expect(error).toBeUndefined();
+      expect(reached).toBe(true);
+    });
+  });
+
   describe("refuses a read-only token a write op, in each surface's dialect", () => {
     it("REST: 403 with the standard error envelope", async () => {
       const { ctx, reached } = await driveRest(readOnlyToken, enforcing);
@@ -377,7 +452,7 @@ describe("scope enforcement through the real schema", () => {
 
   const forbiddenOps = async (identity: Identity) => {
     const { graphql } = await import("graphql");
-    const schema = await buildGraphqlSchema({ scopeEnforcement: "enforce" });
+    const schema = await buildGraphqlSchema();
     const refused: string[] = [];
     for (const [name, source] of Object.entries(DOCUMENTS)) {
       const result = await graphql({
@@ -442,11 +517,9 @@ describe("scope enforcement through the real schema", () => {
  * protect — it is published with a documented scope model, so a gate that does
  * not actually refuse would be a documented lie.
  */
-describe("shadow mode over the whole live REST surface", () => {
-  it("is what the committed config says", () => {
-    // If this ever fails, someone flipped enforcement on. That is a deliberate
-    // decision — but it should not be one that arrives unnoticed in a diff.
-    expect(realConfig.api.scopeEnforcement).toBe("shadow");
+describe("configured enforcement and the shadow-mode compatibility path", () => {
+  it("commits the product to enforcement", () => {
+    expect(realConfig.api.scopeEnforcement).toBe("enforce");
   });
 
   it("neither refuses nor touches the response on any mount", async () => {

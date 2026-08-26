@@ -151,12 +151,9 @@ export interface ApiConfig {
   /**
    * Whether the op-class matrix denies or only records.
    *
-   * Starts at `shadow`: the matrix classifies 130-odd live ops, and a
-   * misclassification would refuse a real client for a reason nobody can see
-   * from the outside. Shadow mode logs every request that *would* be refused
-   * (`Scope check would deny`), so coverage is confirmed against real traffic
-   * first. Flipping it to `enforce` is a deliberate edit here, reviewed like
-   * any other code change — not a switch someone can flick in an environment.
+   * Kept as reviewed code rather than an environment switch so deployments
+   * cannot silently disagree about authorization. Shadow mode was used while
+   * the matrix was brought up; the committed product policy is enforcement.
    */
   scopeEnforcement: ScopeEnforcementMode;
 }
@@ -301,7 +298,7 @@ const oauthSigningKeys = getOptionalJwks(environment);
 
 export const config: AppConfig = {
   api: {
-    scopeEnforcement: "shadow",
+    scopeEnforcement: "enforce",
   },
   env: environment,
   project: "beancount-io",

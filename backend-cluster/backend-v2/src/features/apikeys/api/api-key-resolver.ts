@@ -90,14 +90,14 @@ export class CreateApiKeyInputType {
 export class ApiKeyResolver {
   constructor(private readonly service: IApiKeyService) {}
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Query(() => [ApiKeyType], { description: "Your API keys" })
   async apiKeys(@Ctx() ctx: IContext): Promise<ApiKeyType[]> {
     const keys = await this.service.list(ctx.getCurrentIdentity());
     return keys.map(toPublicApiKey) as ApiKeyType[];
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => MintedApiKeyType, {
     description:
       "Mint an API key. Requires a paid plan; an API key cannot mint another.",
@@ -119,7 +119,7 @@ export class ApiKeyResolver {
     };
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => ApiKeyType, {
     description: "Revoke an API key, effective on its next use",
   })

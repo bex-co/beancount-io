@@ -23,6 +23,7 @@ import type { DbExecutor } from "@/drizzle/drizzle";
 import type Stripe from "stripe";
 import { logger } from "@/shared/logger";
 import { config } from "@/config/config";
+import { assertSessionIdentity } from "@/server/api/identity";
 
 @ObjectType("SubscriptionPrice")
 class SubscriptionPrice {
@@ -194,6 +195,12 @@ function isOnlyHasActiveSubscriptionRequested(
   return false;
 }
 
+function sessionUserId(context: IContext): string {
+  const identity = context.getCurrentIdentity();
+  assertSessionIdentity(identity, "Managing billing");
+  return identity.userId;
+}
+
 @Resolver()
 export class SubscriptionResolver {
   constructor(
@@ -218,7 +225,7 @@ export class SubscriptionResolver {
     @Ctx() context: IContext,
     @Info() info: GraphQLResolveInfo,
   ): Promise<CustomerSubscriptionStatus> {
-    const userId = context.getCurrentUserId();
+    const userId = sessionUserId(context);
 
     // Optimization: If only hasActiveSubscription is requested and we have a valid currentPeriodEnd, use that
     if (isOnlyHasActiveSubscriptionRequested(info)) {
@@ -462,7 +469,7 @@ export class SubscriptionResolver {
     @Arg("priceId") priceId: string,
     @Ctx() context: IContext,
   ): Promise<SubscriptionSessionResult> {
-    const userId = context.getCurrentUserId();
+    const userId = sessionUserId(context);
 
     const user = await this.models.user.getById(this.db, userId);
     const userEmail = user?.email;
@@ -580,7 +587,7 @@ export class SubscriptionResolver {
     @Arg("clientId") clientId: string,
     @Ctx() context: IContext,
   ): Promise<SubscriptionSessionResult> {
-    const userId = context.getCurrentUserId();
+    const userId = sessionUserId(context);
 
     const result = await this.stripe.createCustomerPortalSession(
       userId,
@@ -602,7 +609,7 @@ export class SubscriptionResolver {
     @Arg("clientId") clientId: string,
     @Ctx() context: IContext,
   ): Promise<SubscriptionActionResult> {
-    const userId = context.getCurrentUserId();
+    const userId = sessionUserId(context);
 
     const result = await this.stripe.cancelSubscription(
       subscriptionId,
@@ -623,7 +630,7 @@ export class SubscriptionResolver {
     @Arg("clientId") clientId: string,
     @Ctx() context: IContext,
   ): Promise<SubscriptionActionResult> {
-    const userId = context.getCurrentUserId();
+    const userId = sessionUserId(context);
 
     const result = await this.stripe.resumeSubscription(
       subscriptionId,
@@ -644,14 +651,7 @@ export class SubscriptionResolver {
     @Arg("priceId") priceId: string,
     @Ctx() context: IContext,
   ): Promise<UpgradeSubscriptionResult> {
-    const { userId } = context;
-
-    if (!userId) {
-      return {
-        success: false,
-        message: "Authentication required",
-      };
-    }
+    const userId = sessionUserId(context);
 
     return this.stripe.upgradeSubscription(userId, clientId, priceId);
   }

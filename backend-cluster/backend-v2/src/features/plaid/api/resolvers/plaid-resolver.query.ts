@@ -24,7 +24,7 @@ import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-led
 export class PlaidQueryResolver {
   constructor(private readonly plaidItemService: IPlaidItemService) {}
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Query(() => [PlaidItemType], {
     description: "Get Plaid Items for the current user, scoped to a ledger.",
   })
@@ -37,7 +37,7 @@ export class PlaidQueryResolver {
     return this.plaidItemService.getItems(identity, ledgerId);
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Query(() => PlaidItemType, {
     description: "Get a single Plaid Item by ID",
   })
@@ -64,7 +64,7 @@ export class PlaidQueryResolver {
     };
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Query(() => [PlaidAccountType], {
     description: "Get all accounts for a specific Plaid Item",
   })
@@ -78,7 +78,7 @@ export class PlaidQueryResolver {
     return this.plaidItemService.getAccounts(identity, itemId, ledgerId);
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Query(() => [PlaidAccountWithInstitutionType], {
     description:
       "Get every Plaid account in a ledger together with its owning institution. Powers ledger-wide account pickers.",

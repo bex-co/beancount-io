@@ -20,7 +20,7 @@ import {
 export class LedgerMutationResolver {
   constructor(private readonly workflow: ILedgerWorkflow) {}
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => Ledger, {
     description: "Create a new ledger for the current user",
   })
@@ -34,7 +34,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Mutation(() => Ledger, {
     description: "Update a specific ledger",
   })

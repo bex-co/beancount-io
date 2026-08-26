@@ -91,6 +91,12 @@ const OPERATION_SCOPE: Record<OperationClass, ApiScope> = {
   admin: "ledger.admin",
 };
 
+const SATISFYING_SCOPES: Record<OperationClass, readonly ApiScope[]> = {
+  read: ["ledger.read", "ledger.write", "ledger.admin"],
+  write: ["ledger.write", "ledger.admin"],
+  admin: ["ledger.admin"],
+};
+
 /**
  * The resolved caller — the single shape GraphQL, REST, and MCP all read.
  *
@@ -142,10 +148,32 @@ export function assertIdentityCapability(
   identity: Identity,
   operation: OperationClass,
 ): void {
-  if (identity.capabilityExempt) return;
+  if (identityHasCapability(identity, operation)) return;
   const required = OPERATION_SCOPE[operation];
-  if (!identity.scopes.has(required)) {
-    throw new ForbiddenError(`Forbidden - ${required} scope required`);
+  throw new ForbiddenError(`Forbidden - ${required} scope required`);
+}
+
+export function identityHasCapability(
+  identity: Identity,
+  operation: OperationClass,
+): boolean {
+  return (
+    identity.capabilityExempt ||
+    SATISFYING_SCOPES[operation].some((scope) => identity.scopes.has(scope))
+  );
+}
+
+/**
+ * Require the product's full signed-in session credential, independently of
+ * the op-class transport gate. Use this for account, billing, and credential
+ * ceremonies that no delegated API scope is allowed to perform.
+ */
+export function assertSessionIdentity(
+  identity: Identity,
+  action = "This operation",
+): void {
+  if (identity.method !== "session" || !identity.capabilityExempt) {
+    throw new ForbiddenError(`${action} requires a full signed-in session`);
   }
 }
 

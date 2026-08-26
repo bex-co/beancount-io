@@ -43,7 +43,9 @@ export async function buildGraphqlSchema(options?: {
       // Budget first, then authorization: refusing an over-budget caller
       // before doing the authorization work is the point of having a limiter.
       graphqlRateLimitMiddleware(),
-      graphqlScopeMiddleware(options?.scopeEnforcement ?? "shadow"),
+      graphqlScopeMiddleware(
+        options?.scopeEnforcement ?? appConfig.api.scopeEnforcement,
+      ),
     ],
     validate: true,
   });

@@ -1,8 +1,11 @@
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { IModels } from "@/foundation/models";
 import type { CliAuthSessionStatus } from "@/features/auth/data/cli-auth-session-model/types";
-import type { Identity } from "@/server/api/identity";
-import { BadUserInputError, ForbiddenError } from "@/shared/errors";
+import {
+  assertSessionIdentity,
+  type Identity,
+} from "@/server/api/identity";
+import { BadUserInputError } from "@/shared/errors";
 
 /** CLI auth sessions expire 10 minutes after creation. */
 const SESSION_TTL_MINS = 10;
@@ -49,7 +52,7 @@ export class CliAuthService implements ICliAuthService {
     sessionId: string,
     identity: Identity,
   ): Promise<void> {
-    this.assertFullSessionIdentity(identity);
+    assertSessionIdentity(identity, "Approving CLI authentication");
     await this.assertPendingSession(sessionId);
 
     const { token, expireAt } = await this.models.jwt.create(
@@ -66,7 +69,7 @@ export class CliAuthService implements ICliAuthService {
 
   /** Deny a pending session. */
   async denySession(sessionId: string, identity: Identity): Promise<void> {
-    this.assertFullSessionIdentity(identity);
+    assertSessionIdentity(identity, "Denying CLI authentication");
     await this.assertPendingSession(sessionId);
     await this.models.cliAuthSession.deny(sessionId);
   }
@@ -121,16 +124,4 @@ export class CliAuthService implements ICliAuthService {
     }
   }
 
-  /**
-   * The CLI ceremony mints a full session credential, so only an existing full
-   * session may approve or deny it. Scoped OAuth tokens and API keys must never
-   * be able to turn themselves into an unscoped session JWT.
-   */
-  private assertFullSessionIdentity(identity: Identity): void {
-    if (identity.method !== "session" || !identity.capabilityExempt) {
-      throw new ForbiddenError(
-        "A full signed-in session is required to approve CLI authentication",
-      );
-    }
-  }
 }

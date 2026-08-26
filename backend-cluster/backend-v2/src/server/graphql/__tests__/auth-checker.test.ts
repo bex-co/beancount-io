@@ -61,6 +61,9 @@ describe("customAuthChecker", () => {
     expect(
       authorize(identity({ scopes: new Set(["ledger.write"]) }), "mutation"),
     ).toBe(true);
+    expect(
+      authorize(identity({ scopes: new Set(["ledger.admin"]) }), "mutation"),
+    ).toBe(true);
   });
 
   it("uses an explicit decorator scope for admin operations", () => {

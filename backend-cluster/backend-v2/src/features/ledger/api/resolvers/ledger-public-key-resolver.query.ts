@@ -10,7 +10,7 @@ import {
 export class LedgerPublicKeyQueryResolver {
   constructor(private readonly publicKeyService: ILedgerPublicKeyService) {}
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Query(() => [PublicKey], {
     description: "List all public keys for the current user",
   })
@@ -24,7 +24,7 @@ export class LedgerPublicKeyQueryResolver {
     });
   }
 
-  @Authorized()
+  @Authorized("ledger.admin")
   @Query(() => PublicKey, {
     description: "Get a specific public key by ID",
     nullable: true,

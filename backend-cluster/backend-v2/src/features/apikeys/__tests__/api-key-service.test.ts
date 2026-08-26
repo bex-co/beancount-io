@@ -38,7 +38,13 @@ const oauthGrant: Identity = {
 const fromKey: Identity = {
   ...oauthGrant,
   method: "apikey",
+  scopes: new Set(["ledger.admin"]),
   tokenId: "akey_1",
+};
+
+const adminOAuthGrant: Identity = {
+  ...oauthGrant,
+  scopes: new Set(["ledger.admin"]),
 };
 
 const storedKey = (over: Partial<ApiKey> = {}): ApiKey => ({
@@ -109,11 +115,21 @@ describe("minting", () => {
     ).rejects.toBeInstanceOf(PremiumRequiredError);
   });
 
-  it("refuses to grant a scope the minter does not hold", async () => {
+  it("requires the admin capability from an OAuth minter", async () => {
     const { service } = makeService();
     await expect(
-      service.mint(oauthGrant, { name: "CI", scopes: ["ledger.admin"] }),
+      service.mint(oauthGrant, { name: "CI", scopes: ["ledger.read"] }),
     ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("lets an admin OAuth grant mint a narrower key", async () => {
+    const { service } = makeService();
+    await expect(
+      service.mint(adminOAuthGrant, {
+        name: "Read-only integration",
+        scopes: ["ledger.read"],
+      }),
+    ).resolves.toBeTruthy();
   });
 
   it("lets a session grant any scope, having no scopes of its own", async () => {
@@ -137,7 +153,7 @@ describe("minting", () => {
   it("inherits the minter's ledger confinement when none is asked for", async () => {
     const { service, created } = makeService();
     await service.mint(
-      { ...oauthGrant, ledgerScope: "alice/main" },
+      { ...adminOAuthGrant, ledgerScope: "alice/main" },
       { name: "CI", scopes: ["ledger.read"] },
     );
     expect(created[0].ledgerScope).toBe("alice/main");
@@ -194,6 +210,15 @@ describe("verification", () => {
 });
 
 describe("revocation", () => {
+  it("refuses a credential without the admin capability", async () => {
+    const { service, model } = makeService({ stored: storedKey() });
+
+    await expect(service.revoke(oauthGrant, "akey_1")).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+    expect(model.findById).not.toHaveBeenCalled();
+  });
+
   it("reads another user's key id as not found", async () => {
     const { service } = makeService({
       stored: storedKey({ userId: "usr_someone_else" }),
@@ -213,6 +238,22 @@ describe("revocation", () => {
     const result = await service.revoke(session, "akey_1");
     expect(result.revokedAt).toEqual(revokedAt);
     expect(model.revoke).not.toHaveBeenCalled();
+  });
+});
+
+describe("listing", () => {
+  it("refuses a credential without the admin capability", async () => {
+    const { service, model } = makeService();
+
+    await expect(service.list(oauthGrant)).rejects.toBeInstanceOf(
+      ForbiddenError,
+    );
+    expect(model.listByUserId).not.toHaveBeenCalled();
+  });
+
+  it("allows an admin OAuth grant", async () => {
+    const { service } = makeService();
+    await expect(service.list(adminOAuthGrant)).resolves.toHaveLength(1);
   });
 });
 

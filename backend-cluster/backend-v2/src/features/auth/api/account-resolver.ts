@@ -141,7 +141,7 @@ export class AccountResolver {
     description: "delete user account and its associated data",
   })
   public async deleteAccount(@Ctx() ctx: IContext): Promise<boolean> {
-    return this.accountService.deleteAccount(ctx.getCurrentUserId());
+    return this.accountService.deleteAccount(ctx.getCurrentIdentity());
   }
 
   @Authorized()
