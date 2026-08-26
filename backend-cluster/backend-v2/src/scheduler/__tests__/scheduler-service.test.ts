@@ -66,6 +66,13 @@ jest.mock("../jobs/oauth-adapter-cleanup-job", () => ({
   })),
 }));
 
+jest.mock("../jobs/ledger-password-rotation-job", () => ({
+  createLedgerPasswordRotationJob: jest.fn((_service, _config) => ({
+    schedule: "* * * * *",
+    task: jest.fn(),
+  })),
+}));
+
 import cron from "node-cron";
 import { logger } from "@/shared/logger";
 import { createJwtCleanupJob } from "../jobs/jwt-cleanup-job";
@@ -74,6 +81,7 @@ import { createPlaidSyncJob } from "../jobs/plaid-sync-job";
 import { createPlaidWebhookProcessorJob } from "../jobs/plaid-webhook-processor-job";
 import { createPlaidWebhookCleanupJob } from "../jobs/plaid-webhook-cleanup-job";
 import { createOauthAdapterCleanupJob } from "../jobs/oauth-adapter-cleanup-job";
+import { createLedgerPasswordRotationJob } from "../jobs/ledger-password-rotation-job";
 
 describe("JobScheduler", () => {
   let mockLayers: AppLayers;
@@ -115,9 +123,10 @@ describe("JobScheduler", () => {
       scheduler.start();
 
       // Should schedule enabled jobs: dev-test + audit-retention + jwt-cleanup +
-      // oauth-adapter-cleanup + plaid-webhook-processor + plaid-webhook-cleanup
+      // oauth-adapter-cleanup + ledger-password-rotation +
+      // plaid-webhook-processor + plaid-webhook-cleanup
       // (plaid-sync is disabled)
-      expect(cron.schedule).toHaveBeenCalledTimes(6);
+      expect(cron.schedule).toHaveBeenCalledTimes(7);
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Started job:"),
       );
@@ -132,9 +141,10 @@ describe("JobScheduler", () => {
       scheduler.start();
 
       // Should schedule audit-retention + jwt-cleanup + oauth-adapter-cleanup +
-      // plaid-webhook-processor + plaid-webhook-cleanup (dev-test disabled in
-      // production, plaid-sync always disabled)
-      expect(cron.schedule).toHaveBeenCalledTimes(5);
+      // ledger-password-rotation + plaid-webhook-processor +
+      // plaid-webhook-cleanup (dev-test disabled in production, plaid-sync
+      // always disabled)
+      expect(cron.schedule).toHaveBeenCalledTimes(6);
       expect(logger.info).toHaveBeenCalledWith(
         expect.stringContaining("Skipping disabled job: dev-test"),
       );
@@ -163,10 +173,14 @@ describe("JobScheduler", () => {
         mockLayers,
         mockConfig,
       );
-      // 6 jobs scheduled in dev (dev-test + audit-retention + jwt-cleanup +
-      // oauth-adapter-cleanup + plaid-webhook-processor + plaid-webhook-cleanup),
-      // plaid-sync is disabled
-      expect(cron.schedule).toHaveBeenCalledTimes(6);
+      expect(createLedgerPasswordRotationJob).toHaveBeenCalledWith(
+        mockLayers,
+        mockConfig,
+      );
+      // 7 jobs scheduled in dev (dev-test + audit-retention + jwt-cleanup +
+      // oauth-adapter-cleanup + ledger-password-rotation +
+      // plaid-webhook-processor + plaid-webhook-cleanup), plaid-sync is disabled
+      expect(cron.schedule).toHaveBeenCalledTimes(7);
     });
   });
 

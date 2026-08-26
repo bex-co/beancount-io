@@ -308,4 +308,43 @@ export class UserPostgresModel implements IUserModel {
       total: countResult[0]?.total ?? 0,
     };
   }
+
+  public async getLedgerPasswordRotationCandidates(
+    db: DbExecutor,
+    currentVersionPrefix: string,
+    limit: number,
+  ): Promise<Array<{ id: string }>> {
+    return db
+      .select({ id: users.id })
+      .from(users)
+      .where(
+        sql<boolean>`left(${users.ledger_password}, ${currentVersionPrefix.length}) <> ${currentVersionPrefix}`,
+      )
+      .limit(limit);
+  }
+
+  public async getByIdForUpdate(
+    db: DbExecutor,
+    id: string,
+  ): Promise<User | null> {
+    const result = await db
+      .select()
+      .from(users)
+      .where(eq(users.id, id))
+      .limit(1)
+      .for("update");
+
+    return result[0] ? this.toPlainObject(result[0]) : null;
+  }
+
+  public async updateLedgerPassword(
+    db: DbExecutor,
+    userId: string,
+    password: string,
+  ): Promise<void> {
+    await db
+      .update(users)
+      .set({ ledger_password: password, updateAt: new Date() })
+      .where(eq(users.id, userId));
+  }
 }

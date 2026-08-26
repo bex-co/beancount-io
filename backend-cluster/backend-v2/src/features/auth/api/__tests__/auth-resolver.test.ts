@@ -446,7 +446,7 @@ describe("AuthResolver", () => {
 
   describe("verifySignUpOtp (delegation)", () => {
     it("delegates to the auth service and sets the auth cookie", async () => {
-      const args = { sessionId: "session-123", otp: "123456" };
+      const args = { sessionId: "session-123", otp: "1234" };
       const mockToken = { token: "jwt-token-123", expireAt: new Date() };
       mockAuthService.verifySignUpOtp.mockResolvedValue(mockToken);
 
@@ -456,7 +456,7 @@ describe("AuthResolver", () => {
       expect(result.expireAt).toBe(mockToken.expireAt);
       expect(mockAuthService.verifySignUpOtp).toHaveBeenCalledWith({
         sessionId: "session-123",
-        otp: "123456",
+        otp: "1234",
       });
       expect((mockContext.koaCtx as any).cookies.set).toHaveBeenCalledWith(
         "authSess:beancount.io",

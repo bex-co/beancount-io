@@ -1,5 +1,8 @@
 import "reflect-metadata";
-import { SignupOtpSessionRedisModel } from "../redis-impl";
+import {
+  generateSignupOtp,
+  SignupOtpSessionRedisModel,
+} from "../redis-impl";
 import type { CreateSessionInput } from "../types";
 
 const mockCache = {
@@ -25,7 +28,7 @@ describe("SignupOtpSessionRedisModel", () => {
   });
 
   describe("createSession", () => {
-    it("should create a session with generated OTP", async () => {
+    it("should create a session with a four-digit OTP", async () => {
       // No existing session for email
       mockCache.get.mockResolvedValue(null);
 
@@ -39,6 +42,18 @@ describe("SignupOtpSessionRedisModel", () => {
       expect(result.id).toBeTruthy();
       expect(result.otp).toMatch(/^\d{4}$/);
       expect(result.expireAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+    });
+
+    it("does not use Math.random to generate the OTP", () => {
+      const mathRandom = jest
+        .spyOn(Math, "random")
+        .mockImplementation(() => {
+          throw new Error("insecure PRNG called");
+        });
+
+      expect(generateSignupOtp()).toMatch(/^\d{4}$/);
+      expect(mathRandom).not.toHaveBeenCalled();
+      mathRandom.mockRestore();
     });
 
     it("should store session and email→session mapping with TTL", async () => {

@@ -1,4 +1,5 @@
 import type { Cache } from "cache-manager";
+import { randomInt } from "node:crypto";
 import { nanoid } from "nanoid";
 import { getExpireEpochMins } from "@/shared/expire-epoch";
 import { CACHE_KEYS } from "@/shared/cache";
@@ -16,19 +17,17 @@ type Opts = {
   cache: Cache;
 };
 
+/** Generate a four-digit OTP code with a cryptographically secure PRNG. */
+export function generateSignupOtp(): string {
+  return randomInt(1_000, 10_000).toString();
+}
+
 export class SignupOtpSessionRedisModel implements ISignupOtpSessionModel {
   // Strict Redis-backed store: a dropped session write must surface (not fail open).
   private store: RedisRecordStore;
 
   constructor({ cache }: Opts) {
     this.store = createRedisRecordStore(cache);
-  }
-
-  /**
-   * Generate a 4-digit OTP code
-   */
-  private generateOTP(): string {
-    return Math.floor(1000 + Math.random() * 9000).toString();
   }
 
   /**
@@ -48,7 +47,7 @@ export class SignupOtpSessionRedisModel implements ISignupOtpSessionModel {
 
     // 2. Generate session ID and OTP
     const id = nanoid();
-    const otp = this.generateOTP();
+    const otp = generateSignupOtp();
     const expireAt = new Date(getExpireEpochMins(expMins));
 
     // 3. Create session data

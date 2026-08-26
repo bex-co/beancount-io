@@ -9,6 +9,7 @@ import { createDevTestJob } from "./jobs/dev-test-job";
 import { createPlaidSyncJob } from "./jobs/plaid-sync-job";
 import { createPlaidWebhookProcessorJob } from "./jobs/plaid-webhook-processor-job";
 import { createPlaidWebhookCleanupJob } from "./jobs/plaid-webhook-cleanup-job";
+import { createLedgerPasswordRotationJob } from "./jobs/ledger-password-rotation-job";
 
 const jobLogger = logger.child({ module: "job-scheduler" });
 
@@ -74,6 +75,10 @@ export class JobScheduler {
       this.layers,
       this.config,
     );
+    const ledgerPasswordRotation = createLedgerPasswordRotationJob(
+      this.layers,
+      this.config,
+    );
     const jobs: ScheduledJob[] = [
       {
         name: "dev-test",
@@ -92,6 +97,12 @@ export class JobScheduler {
         schedule: jwtCleanup.schedule,
         task: jwtCleanup.task,
         enabled: true, // PostgreSQL-backed cleanup
+      },
+      {
+        name: "ledger-password-rotation",
+        schedule: ledgerPasswordRotation.schedule,
+        task: ledgerPasswordRotation.task,
+        enabled: true,
       },
       {
         name: "oauth-adapter-cleanup",

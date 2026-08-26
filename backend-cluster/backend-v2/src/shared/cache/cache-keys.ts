@@ -43,6 +43,9 @@ export const CACHE_KEYS = {
     /** Signup OTP session id for an email (one-to-one mapping). */
     signupOtpSessionByEmail: (email: string) =>
       `auth:signup_otp_session:email:${email}`,
+    /** Atomic signup OTP verification budget, shared across re-issued sessions. */
+    signupOtpAttemptsByEmail: (email: string) =>
+      `auth:signup_otp_attempts:email:${email}`,
     /** CLI auth session by id. */
     cliAuthSessionById: (id: string) => `auth:cli_auth_session:${id}`,
   },
