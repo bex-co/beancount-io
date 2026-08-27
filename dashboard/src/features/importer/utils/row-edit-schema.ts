@@ -16,30 +16,30 @@ import {
 export const editableRowSchema = z.object({
   date: z
     .string()
-    .min(1, "Date is required")
+    .min(1, "importer.validation.dateRequired")
     .refine((val: string) => parseDate(val).valid, {
-      message: "Invalid date format. Expected YYYY-MM-DD",
+      message: "importer.validation.invalidDateFormat",
     }),
 
   payee: z
     .string()
-    .min(1, "Payee is required")
+    .min(1, "importer.validation.payeeRequired")
     .refine((val: string) => validatePayee(val).valid, {
-      message: "Payee cannot be empty",
+      message: "importer.validation.payeeRequired",
     }),
 
   description: z
     .string()
-    .min(1, "Description is required")
+    .min(1, "importer.validation.descriptionRequired")
     .refine((val: string) => validateDescription(val).valid, {
-      message: "Description cannot be empty",
+      message: "importer.validation.descriptionRequired",
     }),
 
   amount: z
     .string()
-    .min(1, "Amount is required")
+    .min(1, "importer.validation.amountRequired")
     .refine((val: string) => parseAmount(val).valid, {
-      message: "Amount must be a valid number",
+      message: "importer.validation.amountInvalid",
     }),
 });
 
@@ -55,3 +55,10 @@ export const previewTableFormSchema = z.object({
  */
 export type EditableRowData = z.infer<typeof editableRowSchema>;
 export type PreviewTableFormData = z.infer<typeof previewTableFormSchema>;
+export type ImporterValidationKey =
+  | "importer.validation.dateRequired"
+  | "importer.validation.invalidDateFormat"
+  | "importer.validation.payeeRequired"
+  | "importer.validation.descriptionRequired"
+  | "importer.validation.amountRequired"
+  | "importer.validation.amountInvalid";

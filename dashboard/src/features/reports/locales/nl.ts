@@ -46,6 +46,22 @@ const nlReports = {
   ...nlTrialBalance,
   ...nlOverview,
   ...nlExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Ledger heeft een succesvolle ster gekregen",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "Kan het grootboek geen sterren geven",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Grootboek heeft de ster succesvol verwijderd",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "Kan de ster van het grootboek niet verwijderen",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default nlReports;

@@ -12,6 +12,7 @@ vi.mock("@/common/hooks/use-translations", () => ({
         "userSettings.lastUsedWeek": "Used this week",
         "userSettings.lastUsed3Weeks": "Used within 3 weeks",
         "userSettings.lastUsed3Months": "Used within 3 months",
+        "userSettings.fingerprint": "fingerprint",
         "userSettings.lastUsedLongAgo": "Used long ago",
         "userSettings.added": "Added",
         "common.delete": "Delete",

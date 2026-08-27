@@ -828,6 +828,62 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "کپی ناموفق بود",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "قدیمی است — برای بازخوانی کلیک کنید",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "مشاهده",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "امروز",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "نویسنده",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "از",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "به",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "گزینه",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "ارزش",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} بیشتر",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "نمودارها را پنهان کنید",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "نمایش نمودارها",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "در حال تغییر مسیر…",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "در حال بارگیری دفتر کل شما",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: 'برای استفاده از "{value}" Enter را فشار دهید',
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default faCommon;

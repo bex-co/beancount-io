@@ -508,6 +508,59 @@ const frAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "Masquer le mot de passe",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "Afficher le mot de passe",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "Veuillez sélectionner un grand livre.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message: "Beancount Mobile souhaite accéder à votre compte.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "Autoriser Beancount Mobile ?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "Cette subvention à l'échelle du compte permet à l'application :",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message: "Impossible de changer de compte. Veuillez réessayer.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "Utiliser un autre compte",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "Identifiez le compte que vous approuvez",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message:
+      "Restez connecté en toute sécurité jusqu'à ce que vous révoquiez l'accès",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "Lisez vos grands livres",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "Créer et mettre à jour les données du grand livre",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "Gérer les grands livres et les collaborateurs",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default frAuth;

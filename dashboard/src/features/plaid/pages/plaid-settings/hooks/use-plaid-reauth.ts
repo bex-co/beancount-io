@@ -14,6 +14,7 @@ import {
   type ReconcilePlaidAccountsMutation,
   type ReconcilePlaidAccountsMutationVariables,
 } from "@/graphql/definitions";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 enum ReauthFlowState {
   IDLE = "idle",
@@ -101,6 +102,13 @@ export function usePlaidReauth(
 ): UsePlaidReauthReturn {
   const { itemId, ledgerId, onError, onSuccess } = options;
   const formatError = useErrorMessage();
+  const { t } = useTranslations();
+  const reconnectedTitle = t("plaid.reauth.reconnected");
+  const reconnectedDescription = t("plaid.reauth.reconnectedDescription");
+  const statusUpdateFailed = t("plaid.reauth.statusUpdateFailed");
+  const statusUpdateFailedDescription = t(
+    "plaid.reauth.statusUpdateFailedDescription",
+  );
   const [flowState, setFlowState] = useState<ReauthFlowState>(
     ReauthFlowState.IDLE,
   );
@@ -163,15 +171,14 @@ export function usePlaidReauth(
         await onSuccess();
       }
 
-      toast.success("Bank Reconnected", {
-        description: "Your bank account has been successfully reconnected.",
+      toast.success(reconnectedTitle, {
+        description: reconnectedDescription,
         duration: 4000,
       });
     } catch {
       setFlowState(ReauthFlowState.ERROR);
-      toast.error("Status Update Failed", {
-        description:
-          "Reconnection succeeded, but failed to update status. Please refresh the page.",
+      toast.error(statusUpdateFailed, {
+        description: statusUpdateFailedDescription,
         duration: 6000,
       });
     }
@@ -188,6 +195,10 @@ export function usePlaidReauth(
     reconcileAccounts,
     itemId,
     ledgerId,
+    reconnectedDescription,
+    reconnectedTitle,
+    statusUpdateFailed,
+    statusUpdateFailedDescription,
   ]);
 
   const onPlaidExit = useCallback(
@@ -199,15 +210,13 @@ export function usePlaidReauth(
 
       // Only show error toast if there was an actual error (not just user cancellation)
       if (error) {
-        toast.error("Reconnection Cancelled", {
-          description:
-            error?.error_message ||
-            "Plaid Link was closed without reconnecting.",
+        toast.error(t("plaid.reauth.cancelled"), {
+          description: error?.error_message || t("plaid.reauth.linkClosed"),
           duration: 4000,
         });
       }
     },
-    [resetToken],
+    [resetToken, t],
   );
 
   const { openPlaidLink, ready: plaidReady } = usePlaidLinkLauncher(
@@ -252,7 +261,7 @@ export function usePlaidReauth(
         onError(error);
       } else {
         // Default: show toast notification
-        toast.error("Reconnection Failed", {
+        toast.error(t("plaid.reauth.failed"), {
           description: formatError(error),
           duration: 6000,
         });
@@ -264,7 +273,7 @@ export function usePlaidReauth(
         setFlowState(ReauthFlowState.IDLE);
       }, 500);
     }
-  }, [error, onError, resetToken, formatError]);
+  }, [error, onError, resetToken, formatError, t]);
 
   // Derive loading state based on flow state
   const isLoading =
@@ -275,16 +284,16 @@ export function usePlaidReauth(
   const isSuccess = currentFlowState === ReauthFlowState.SUCCESS;
 
   // Determine loading message based on flow state
-  let loadingMessage = "Reconnecting...";
+  let loadingMessage = t("plaid.reauth.reconnecting");
   if (currentFlowState === ReauthFlowState.CREATING_TOKEN) {
-    loadingMessage = "Preparing...";
+    loadingMessage = t("plaid.connection.preparing");
   } else if (
     currentFlowState === ReauthFlowState.READY_TO_LAUNCH ||
     currentFlowState === ReauthFlowState.PLAID_OPEN
   ) {
-    loadingMessage = "Waiting for authorization...";
+    loadingMessage = t("plaid.connection.waitingForAuthorization");
   } else if (currentFlowState === ReauthFlowState.REFRESHING_STATUS) {
-    loadingMessage = "Updating status...";
+    loadingMessage = t("plaid.reauth.updatingStatus");
   }
 
   return {

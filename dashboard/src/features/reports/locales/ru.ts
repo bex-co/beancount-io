@@ -46,6 +46,22 @@ const ruReports = {
   ...ruTrialBalance,
   ...ruOverview,
   ...ruExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Леджер успешно снялся",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "Не удалось пометить реестр",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Ledger успешно снял пометку",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "Не удалось снять пометку с бухгалтерской книги.",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default ruReports;

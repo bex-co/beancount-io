@@ -58,9 +58,8 @@ const VARIANT_CONFIG = {
     badgeClass:
       "bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-amber-500/20",
     glowClass: "bg-amber-500/10",
-    title: "Ledger Not Found",
-    description:
-      "The ledger you're looking for doesn't exist, has been deleted, or you don't have permission to access it.",
+    titleKey: "common.pageNotFound",
+    descriptionKey: "common.pageNotFoundDescription",
   },
   network: {
     badge: "Network Error",
@@ -69,8 +68,8 @@ const VARIANT_CONFIG = {
     badgeClass:
       "bg-orange-500/10 text-orange-600 dark:text-orange-400 ring-orange-500/20",
     glowClass: "bg-orange-500/10",
-    title: null, // filled from i18n
-    description: null,
+    titleKey: "common.networkConnectionFailed",
+    descriptionKey: "common.networkErrorDescription",
   },
   server: {
     badge: "500",
@@ -78,9 +77,8 @@ const VARIANT_CONFIG = {
     iconColor: "text-destructive",
     badgeClass: "bg-destructive/10 text-destructive ring-destructive/20",
     glowClass: "bg-destructive/10",
-    title: "Internal Server Error",
-    description:
-      "Something went wrong on our end. This is not your fault. Please try again or return to the dashboard.",
+    titleKey: "common.errorTitle",
+    descriptionKey: "common.errorDescription",
   },
   unauthenticated: {
     badge: "Session Expired",
@@ -89,8 +87,8 @@ const VARIANT_CONFIG = {
     badgeClass:
       "bg-amber-500/10 text-amber-600 dark:text-amber-400 ring-amber-500/20",
     glowClass: "bg-amber-500/10",
-    title: null, // filled from i18n
-    description: null,
+    titleKey: "common.sessionExpiredTitle",
+    descriptionKey: "common.sessionExpiredDescription",
   },
   unknown: {
     badge: "Error",
@@ -98,8 +96,8 @@ const VARIANT_CONFIG = {
     iconColor: "text-destructive",
     badgeClass: "bg-destructive/10 text-destructive ring-destructive/20",
     glowClass: "bg-destructive/10",
-    title: null,
-    description: null,
+    titleKey: "common.failedToLoadLedger",
+    descriptionKey: "common.unexpectedError",
   },
 } as const;
 
@@ -117,21 +115,8 @@ export function LedgerLayoutError({
   const config = VARIANT_CONFIG[variant];
   const { Icon } = config;
 
-  const title =
-    config.title ??
-    (variant === "network"
-      ? t("common.networkConnectionFailed")
-      : variant === "unauthenticated"
-        ? t("common.sessionExpiredTitle")
-        : t("common.failedToLoadLedger"));
-
-  const description =
-    config.description ??
-    (variant === "network"
-      ? t("common.networkErrorDescription")
-      : variant === "unauthenticated"
-        ? t("common.sessionExpiredDescription")
-        : t("common.unexpectedError"));
+  const title = t(config.titleKey);
+  const description = t(config.descriptionKey);
 
   return (
     <div className="h-screen bg-background flex flex-col overflow-hidden">
@@ -211,7 +196,7 @@ export function LedgerLayoutError({
                 >
                   <Link to="/ledger">
                     <LayoutDashboard className="mr-2 h-4 w-4" />
-                    Go to Dashboard
+                    {t("page.dashboard.goToDashboard")}
                   </Link>
                 </Button>
                 <Button

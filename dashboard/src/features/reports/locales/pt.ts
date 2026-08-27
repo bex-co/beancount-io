@@ -46,6 +46,22 @@ const ptReports = {
   ...ptTrialBalance,
   ...ptOverview,
   ...ptExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Ledger estrelou com sucesso",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "Falha ao marcar com estrela o razão",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Razão sem estrela com sucesso",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "Falha ao desmarcar o razão",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default ptReports;

@@ -152,7 +152,7 @@ export function DatePicker({
                 onClick={handleTodayClick}
                 className="h-7 text-xs"
               >
-                Today
+                {t("common.today")}
               </Button>
             </div>
             <Calendar

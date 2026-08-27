@@ -835,6 +835,62 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Kopieren fehlgeschlagen",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "Veraltet – zum Aktualisieren klicken",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "Ansicht",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "Heute",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "Autor",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "Von",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "Zu",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "Option",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "Wert",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} mehr",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "Diagramme ausblenden",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "Diagramme anzeigen",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "Weiterleitung…",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "Laden Sie Ihr Hauptbuch",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: "Drücken Sie die Eingabetaste, um „{value}“ zu verwenden.",
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default deCommon;

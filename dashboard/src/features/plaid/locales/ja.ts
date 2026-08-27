@@ -663,6 +663,93 @@ const jaPlaid: Record<string, TranslationEntry> = {
     message: "取引を削除できませんでした。もう一度お試しください。",
     description: "Toast description for deletion failure",
   },
+  "plaid.institutionNotFound": {
+    message: "機関が見つかりません",
+    description: "Empty state when a Plaid institution is unavailable",
+  },
+  "plaid.thisInstitution": {
+    message: "この機関",
+    description: "Fallback name for a Plaid institution",
+  },
+  "plaid.transactionReview.selectTransaction": {
+    message: "トランザクション {transaction} を選択してください",
+    description: "Accessible label for selecting a Plaid transaction",
+  },
+  "plaid.connection.cancelled": {
+    message: "接続がキャンセルされました",
+    description: "Toast title when Plaid connection is cancelled",
+  },
+  "plaid.connection.linkClosed": {
+    message: "Plaid Link は閉鎖されました。",
+    description: "Toast description when Plaid Link closes",
+  },
+  "plaid.connection.alreadyExists": {
+    message: "接続はすでに存在します",
+    description: "Toast title for a duplicate Plaid connection",
+  },
+  "plaid.connection.alreadyExistsDescription": {
+    message:
+      "{institution} へのアクティブな接続がすでにあります。まず既存の接続のリンクを解除してください。",
+    description: "Toast description for a duplicate Plaid connection",
+  },
+  "plaid.connection.failed": {
+    message: "接続に失敗しました",
+    description: "Toast title when Plaid connection fails",
+  },
+  "plaid.connection.connecting": {
+    message: "接続中…",
+    description: "Status while connecting a bank",
+  },
+  "plaid.connection.preparing": {
+    message: "準備中…",
+    description: "Status while preparing Plaid Link",
+  },
+  "plaid.connection.waitingForAuthorization": {
+    message: "承認を待っています…",
+    description: "Status while waiting for Plaid authorization",
+  },
+  "plaid.connection.finalizing": {
+    message: "最終処理中…",
+    description: "Status while finalizing a Plaid connection",
+  },
+  "plaid.reauth.reconnected": {
+    message: "銀行が再接続されました",
+    description: "Toast title after reconnecting a bank",
+  },
+  "plaid.reauth.reconnectedDescription": {
+    message: "あなたの銀行口座は正常に再接続されました。",
+    description: "Toast description after reconnecting a bank",
+  },
+  "plaid.reauth.statusUpdateFailed": {
+    message: "ステータスの更新に失敗しました",
+    description: "Toast title when a reconnected bank status cannot update",
+  },
+  "plaid.reauth.statusUpdateFailedDescription": {
+    message:
+      "再接続は成功しましたが、ステータスの更新に失敗しました。ページを更新してください。",
+    description:
+      "Toast description when status update fails after reconnection",
+  },
+  "plaid.reauth.cancelled": {
+    message: "再接続がキャンセルされました",
+    description: "Toast title when bank reconnection is cancelled",
+  },
+  "plaid.reauth.linkClosed": {
+    message: "Plaid Link は再接続せずに閉じられました。",
+    description: "Toast description when Plaid Link closes during reconnection",
+  },
+  "plaid.reauth.failed": {
+    message: "再接続に失敗しました",
+    description: "Toast title when bank reconnection fails",
+  },
+  "plaid.reauth.reconnecting": {
+    message: "再接続中…",
+    description: "Status while reconnecting a bank",
+  },
+  "plaid.reauth.updatingStatus": {
+    message: "ステータスを更新中…",
+    description: "Status while updating a reconnected bank",
+  },
 };
 
 export default jaPlaid;

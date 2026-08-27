@@ -526,6 +526,43 @@ const bgUserSettings: Record<string, TranslationEntry> = {
     message: "/month",
     description: "Price interval suffix",
   },
+  "userSettings.aiTokensPerMonth": {
+    message: "{count} AI токени / месец",
+    description: "AI token allowance for a subscription tier",
+  },
+  "userSettings.unlimitedLedgers": {
+    message: "Неограничени счетоводни книги",
+    description: "Unlimited ledger allowance",
+  },
+  "userSettings.includedLedgers": {
+    message: "{count} книга(и)",
+    description: "Ledger allowance for a subscription tier",
+  },
+  "userSettings.unlimitedDirectives": {
+    message: "Неограничени директиви",
+    description: "Unlimited directive allowance",
+  },
+  "userSettings.includedDirectives": {
+    message: "{count} директиви",
+    description: "Directive allowance for a subscription tier",
+  },
+  "userSettings.unlimitedCollaborators": {
+    message: "Неограничен брой сътрудници",
+    description: "Unlimited collaborator allowance",
+  },
+  "userSettings.collaboratorsPerLedger": {
+    message: "До {count} сътрудник(и) на книга",
+    description: "Collaborator allowance for each ledger",
+  },
+  "userSettings.aiUsageUpgradeNudge": {
+    message:
+      "Използвате {percentage}% от месечните си AI токени. Надстройте, за да избегнете прекъсвания.",
+    description: "Upgrade suggestion when AI token usage is high",
+  },
+  "userSettings.fingerprint": {
+    message: "пръстов отпечатък",
+    description: "Label for an SSH key fingerprint",
+  },
 };
 
 export default bgUserSettings;

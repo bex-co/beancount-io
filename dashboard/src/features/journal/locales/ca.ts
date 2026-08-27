@@ -326,6 +326,46 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Unitats",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "La font s'ha modificat",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "L'entrada s'ha desat correctament",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "L'entrada s'ha suprimit correctament",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "No hi ha dades de context d'entrada disponibles",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "acumulat",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "de",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "Esborrat",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "Pendent",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(en blanc)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "automàtic",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default caJournal;

@@ -503,6 +503,58 @@ const ptAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "Ocultar senha",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "Mostrar senha",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "Selecione um razão.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message: "Beancount Mobile deseja acesso à sua conta.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "Permitir Beancount Mobile?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "Esta concessão para toda a conta permite que o aplicativo:",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message: "Não foi possível trocar de conta. Por favor, tente novamente.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "Usar outra conta",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "Identifique a conta que você aprova",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message: "Permaneça conectado com segurança até revogar o acesso",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "Leia seus livros contábeis",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "Criar e atualizar dados contábeis",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "Gerenciar livros contábeis e colaboradores",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default ptAuth;

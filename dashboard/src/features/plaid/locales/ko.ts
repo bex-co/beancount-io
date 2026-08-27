@@ -664,6 +664,93 @@ const koPlaid: Record<string, TranslationEntry> = {
     message: "거래를 삭제하지 못했습니다. 다시 시도해 주세요.",
     description: "Toast description for deletion failure",
   },
+  "plaid.institutionNotFound": {
+    message: "기관을 찾을 수 없습니다",
+    description: "Empty state when a Plaid institution is unavailable",
+  },
+  "plaid.thisInstitution": {
+    message: "이 기관",
+    description: "Fallback name for a Plaid institution",
+  },
+  "plaid.transactionReview.selectTransaction": {
+    message: "거래 선택 {transaction}",
+    description: "Accessible label for selecting a Plaid transaction",
+  },
+  "plaid.connection.cancelled": {
+    message: "연결이 취소되었습니다.",
+    description: "Toast title when Plaid connection is cancelled",
+  },
+  "plaid.connection.linkClosed": {
+    message: "Plaid 링크가 닫혔습니다.",
+    description: "Toast description when Plaid Link closes",
+  },
+  "plaid.connection.alreadyExists": {
+    message: "연결이 이미 존재합니다",
+    description: "Toast title for a duplicate Plaid connection",
+  },
+  "plaid.connection.alreadyExistsDescription": {
+    message:
+      "이미 {institution}에 대한 활성 연결이 있습니다. 먼저 기존 연결을 연결 해제하세요.",
+    description: "Toast description for a duplicate Plaid connection",
+  },
+  "plaid.connection.failed": {
+    message: "연결 실패",
+    description: "Toast title when Plaid connection fails",
+  },
+  "plaid.connection.connecting": {
+    message: "연결 중…",
+    description: "Status while connecting a bank",
+  },
+  "plaid.connection.preparing": {
+    message: "준비 중…",
+    description: "Status while preparing Plaid Link",
+  },
+  "plaid.connection.waitingForAuthorization": {
+    message: "승인을 기다리는 중…",
+    description: "Status while waiting for Plaid authorization",
+  },
+  "plaid.connection.finalizing": {
+    message: "마무리 중…",
+    description: "Status while finalizing a Plaid connection",
+  },
+  "plaid.reauth.reconnected": {
+    message: "은행이 다시 연결됨",
+    description: "Toast title after reconnecting a bank",
+  },
+  "plaid.reauth.reconnectedDescription": {
+    message: "귀하의 은행 계좌가 성공적으로 다시 연결되었습니다.",
+    description: "Toast description after reconnecting a bank",
+  },
+  "plaid.reauth.statusUpdateFailed": {
+    message: "상태 업데이트 실패",
+    description: "Toast title when a reconnected bank status cannot update",
+  },
+  "plaid.reauth.statusUpdateFailedDescription": {
+    message:
+      "재연결에 성공했지만 상태 업데이트에 실패했습니다. 페이지를 새로고침하세요.",
+    description:
+      "Toast description when status update fails after reconnection",
+  },
+  "plaid.reauth.cancelled": {
+    message: "재연결이 취소되었습니다.",
+    description: "Toast title when bank reconnection is cancelled",
+  },
+  "plaid.reauth.linkClosed": {
+    message: "Plaid Link가 재접속 없이 종료되었습니다.",
+    description: "Toast description when Plaid Link closes during reconnection",
+  },
+  "plaid.reauth.failed": {
+    message: "재연결 실패",
+    description: "Toast title when bank reconnection fails",
+  },
+  "plaid.reauth.reconnecting": {
+    message: "다시 연결하는 중…",
+    description: "Status while reconnecting a bank",
+  },
+  "plaid.reauth.updatingStatus": {
+    message: "상태 업데이트 중…",
+    description: "Status while updating a reconnected bank",
+  },
 };
 
 export default koPlaid;

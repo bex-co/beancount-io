@@ -528,6 +528,43 @@ const frUserSettings: Record<string, TranslationEntry> = {
     message: "/month",
     description: "Price interval suffix",
   },
+  "userSettings.aiTokensPerMonth": {
+    message: "{count} jetons IA / mois",
+    description: "AI token allowance for a subscription tier",
+  },
+  "userSettings.unlimitedLedgers": {
+    message: "Grands livres illimités",
+    description: "Unlimited ledger allowance",
+  },
+  "userSettings.includedLedgers": {
+    message: "{count} grand(x) livre(s)",
+    description: "Ledger allowance for a subscription tier",
+  },
+  "userSettings.unlimitedDirectives": {
+    message: "Directives illimitées",
+    description: "Unlimited directive allowance",
+  },
+  "userSettings.includedDirectives": {
+    message: "{count} directives",
+    description: "Directive allowance for a subscription tier",
+  },
+  "userSettings.unlimitedCollaborators": {
+    message: "Collaborateurs illimités",
+    description: "Unlimited collaborator allowance",
+  },
+  "userSettings.collaboratorsPerLedger": {
+    message: "Jusqu'à {count} collaborateur(s) par grand livre",
+    description: "Collaborator allowance for each ledger",
+  },
+  "userSettings.aiUsageUpgradeNudge": {
+    message:
+      "Vous utilisez {percentage} % de vos jetons IA mensuels. Mettez à niveau pour éviter les interruptions.",
+    description: "Upgrade suggestion when AI token usage is high",
+  },
+  "userSettings.fingerprint": {
+    message: "empreinte digitale",
+    description: "Label for an SSH key fingerprint",
+  },
 };
 
 export default frUserSettings;

@@ -527,6 +527,43 @@ const esUserSettings: Record<string, TranslationEntry> = {
     message: "/month",
     description: "Price interval suffix",
   },
+  "userSettings.aiTokensPerMonth": {
+    message: "{count} tokens AI / mes",
+    description: "AI token allowance for a subscription tier",
+  },
+  "userSettings.unlimitedLedgers": {
+    message: "Libros de contabilidad ilimitados",
+    description: "Unlimited ledger allowance",
+  },
+  "userSettings.includedLedgers": {
+    message: "{count} libro mayor(es)",
+    description: "Ledger allowance for a subscription tier",
+  },
+  "userSettings.unlimitedDirectives": {
+    message: "Directivas ilimitadas",
+    description: "Unlimited directive allowance",
+  },
+  "userSettings.includedDirectives": {
+    message: "{count} directivas",
+    description: "Directive allowance for a subscription tier",
+  },
+  "userSettings.unlimitedCollaborators": {
+    message: "Colaboradores ilimitados",
+    description: "Unlimited collaborator allowance",
+  },
+  "userSettings.collaboratorsPerLedger": {
+    message: "Hasta {count} colaboradores por libro mayor",
+    description: "Collaborator allowance for each ledger",
+  },
+  "userSettings.aiUsageUpgradeNudge": {
+    message:
+      "Estás usando el {percentage}% de tus tokens AI mensuales. Actualiza para evitar interrupciones.",
+    description: "Upgrade suggestion when AI token usage is high",
+  },
+  "userSettings.fingerprint": {
+    message: "huella digital",
+    description: "Label for an SSH key fingerprint",
+  },
 };
 
 export default esUserSettings;

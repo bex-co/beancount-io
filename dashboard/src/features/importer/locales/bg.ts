@@ -463,11 +463,6 @@ const bgImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "още грешки",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "Импортирането се провали",
     description: "Title for failed import",
@@ -487,6 +482,46 @@ const bgImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "Умен импорт",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "Забележка",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…и още {count} грешки",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "Редактиране на {field}. Текуща стойност: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "поле",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "Датата е задължителна",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "Невалиден формат на датата. Очаква се ГГГГ-ММ-ДД",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "Изисква се получател",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "Изисква се описание",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "Изисква се сума",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "Сумата трябва да е валидно число",
+    description: "Validation error for an invalid import amount",
   },
 };
 

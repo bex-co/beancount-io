@@ -24,6 +24,11 @@ const nlAllSettings = {
   ...nlFavaOptionsSection,
   ...nlBcioOptionsSection,
   ...nlSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "Deze insluitcode bevat responsieve afmetingen, schaaltransformatie en een knop 'Bekijken op Beancount.io' voor attributie.",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default nlAllSettings;

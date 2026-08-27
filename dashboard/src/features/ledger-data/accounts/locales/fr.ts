@@ -130,6 +130,10 @@ const frAccounts: Record<string, TranslationEntry> = {
     description:
       "Toast shown after an account was closed; {account} is the account name",
   },
+  "page.accounts.accountDeletedToast": {
+    message: "Compte {account} supprimé",
+    description: "Toast shown after deleting an account",
+  },
 };
 
 export default frAccounts;

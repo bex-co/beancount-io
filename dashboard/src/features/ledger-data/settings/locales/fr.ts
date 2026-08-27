@@ -25,6 +25,11 @@ const frAllSettings = {
   ...frFavaOptionsSection,
   ...frBcioOptionsSection,
   ...frSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "Ce code intégré inclut un dimensionnement réactif, une transformation d'échelle et un bouton « Afficher sur Beancount.io » pour l'attribution.",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default frAllSettings;

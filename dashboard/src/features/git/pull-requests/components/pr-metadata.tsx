@@ -6,6 +6,7 @@ import {
 } from "@/common/components/ui/card";
 import { Badge } from "@/common/components/ui/badge";
 import { GitPullRequest } from "lucide-react";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 interface PRMetadataProps {
   title: string;
@@ -26,6 +27,7 @@ export function PRMetadata({
   baseBranch,
   description,
 }: PRMetadataProps) {
+  const { t } = useTranslations();
   // Tinted background + same-hue text, so contrast holds in both themes
   // (a solid brand fill would leave light-on-light text in dark mode).
   const stateColor =
@@ -50,13 +52,13 @@ export function PRMetadata({
       <CardContent className="space-y-4">
         <div className="flex gap-4 text-sm">
           <span>
-            <strong>Author:</strong> {author}
+            <strong>{t("common.author")}:</strong> {author}
           </span>
           <span>
-            <strong>From:</strong> {headBranch}
+            <strong>{t("common.from")}:</strong> {headBranch}
           </span>
           <span>
-            <strong>To:</strong> {baseBranch}
+            <strong>{t("common.to")}:</strong> {baseBranch}
           </span>
         </div>
         {description && (

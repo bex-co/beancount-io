@@ -673,6 +673,93 @@ const esPlaid: Record<string, TranslationEntry> = {
     message: "No se pudieron eliminar las transacciones. Inténtalo de nuevo.",
     description: "Toast description for deletion failure",
   },
+  "plaid.institutionNotFound": {
+    message: "Institución no encontrada",
+    description: "Empty state when a Plaid institution is unavailable",
+  },
+  "plaid.thisInstitution": {
+    message: "esta institución",
+    description: "Fallback name for a Plaid institution",
+  },
+  "plaid.transactionReview.selectTransaction": {
+    message: "Seleccionar transacción {transaction}",
+    description: "Accessible label for selecting a Plaid transaction",
+  },
+  "plaid.connection.cancelled": {
+    message: "Conexión cancelada",
+    description: "Toast title when Plaid connection is cancelled",
+  },
+  "plaid.connection.linkClosed": {
+    message: "Plaid Link estaba cerrado.",
+    description: "Toast description when Plaid Link closes",
+  },
+  "plaid.connection.alreadyExists": {
+    message: "La conexión ya existe",
+    description: "Toast title for a duplicate Plaid connection",
+  },
+  "plaid.connection.alreadyExistsDescription": {
+    message:
+      "Ya tienes una conexión activa con {institution}. Primero desvincule la conexión existente.",
+    description: "Toast description for a duplicate Plaid connection",
+  },
+  "plaid.connection.failed": {
+    message: "Error de conexión",
+    description: "Toast title when Plaid connection fails",
+  },
+  "plaid.connection.connecting": {
+    message: "Conectando…",
+    description: "Status while connecting a bank",
+  },
+  "plaid.connection.preparing": {
+    message: "Preparando…",
+    description: "Status while preparing Plaid Link",
+  },
+  "plaid.connection.waitingForAuthorization": {
+    message: "Esperando autorización…",
+    description: "Status while waiting for Plaid authorization",
+  },
+  "plaid.connection.finalizing": {
+    message: "Finalizando…",
+    description: "Status while finalizing a Plaid connection",
+  },
+  "plaid.reauth.reconnected": {
+    message: "Banco reconectado",
+    description: "Toast title after reconnecting a bank",
+  },
+  "plaid.reauth.reconnectedDescription": {
+    message: "Su cuenta bancaria se ha vuelto a conectar correctamente.",
+    description: "Toast description after reconnecting a bank",
+  },
+  "plaid.reauth.statusUpdateFailed": {
+    message: "Error en la actualización de estado",
+    description: "Toast title when a reconnected bank status cannot update",
+  },
+  "plaid.reauth.statusUpdateFailedDescription": {
+    message:
+      "La reconexión se realizó correctamente, pero no se pudo actualizar el estado. Por favor actualice la página.",
+    description:
+      "Toast description when status update fails after reconnection",
+  },
+  "plaid.reauth.cancelled": {
+    message: "Reconexión cancelada",
+    description: "Toast title when bank reconnection is cancelled",
+  },
+  "plaid.reauth.linkClosed": {
+    message: "Plaid Link se cerró sin volver a conectarse.",
+    description: "Toast description when Plaid Link closes during reconnection",
+  },
+  "plaid.reauth.failed": {
+    message: "Error de reconexión",
+    description: "Toast title when bank reconnection fails",
+  },
+  "plaid.reauth.reconnecting": {
+    message: "Reconectando…",
+    description: "Status while reconnecting a bank",
+  },
+  "plaid.reauth.updatingStatus": {
+    message: "Actualizando estado…",
+    description: "Status while updating a reconnected bank",
+  },
 };
 
 export default esPlaid;

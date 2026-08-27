@@ -82,6 +82,7 @@ function OtherBalancesColumn({
   primaryCurrency?: string;
   inverted?: boolean;
 }) {
+  const { t } = useTranslations();
   const formatNum = useFormatNumber();
   const currencyUpper = primaryCurrency?.toUpperCase();
   const currencyLower = primaryCurrency?.toLowerCase();
@@ -114,7 +115,7 @@ function OtherBalancesColumn({
       ))}
       {otherBalances.length > 3 && (
         <div className="text-xs text-muted-foreground">
-          +{otherBalances.length - 3} more
+          {t("common.moreCount", { count: otherBalances.length - 3 })}
         </div>
       )}
     </div>
@@ -375,7 +376,7 @@ export function HierarchyList({
       <div
         className={`text-center text-muted-foreground py-8 ${className || ""}`}
       >
-        No data available
+        {t("common.noDataFound")}
       </div>
     );
   }

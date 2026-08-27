@@ -46,6 +46,22 @@ const enReports = {
   ...enTrialBalance,
   ...enOverview,
   ...enExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Ledger starred successfully",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "Failed to star ledger",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Ledger unstarred successfully",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "Failed to unstar ledger",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default enReports;

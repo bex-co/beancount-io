@@ -47,6 +47,22 @@ const esReports = {
   ...esTrialBalance,
   ...esOverview,
   ...esExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Ledger protagonizó con éxito",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "No se pudo iniciar el libro mayor",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Libro mayor eliminado exitosamente",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "No se pudo quitar el estrella del libro mayor",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default esReports;

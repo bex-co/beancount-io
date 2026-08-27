@@ -25,6 +25,11 @@ const caAllSettings = {
   ...caFavaOptionsSection,
   ...caBcioOptionsSection,
   ...caSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "Aquest codi d'inserció inclou la mida sensible, la transformació d'escala i un botó \"Mostra a Beancount.io\" per a l'atribució.",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default caAllSettings;

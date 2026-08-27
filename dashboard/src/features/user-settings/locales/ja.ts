@@ -521,6 +521,43 @@ const jaUserSettings: Record<string, TranslationEntry> = {
     message: "/月",
     description: "Price interval suffix",
   },
+  "userSettings.aiTokensPerMonth": {
+    message: "{count} AI トークン / 月",
+    description: "AI token allowance for a subscription tier",
+  },
+  "userSettings.unlimitedLedgers": {
+    message: "無制限の台帳",
+    description: "Unlimited ledger allowance",
+  },
+  "userSettings.includedLedgers": {
+    message: "{count} 元帳",
+    description: "Ledger allowance for a subscription tier",
+  },
+  "userSettings.unlimitedDirectives": {
+    message: "無制限のディレクティブ",
+    description: "Unlimited directive allowance",
+  },
+  "userSettings.includedDirectives": {
+    message: "{count} ディレクティブ",
+    description: "Directive allowance for a subscription tier",
+  },
+  "userSettings.unlimitedCollaborators": {
+    message: "無制限のコラボレーター",
+    description: "Unlimited collaborator allowance",
+  },
+  "userSettings.collaboratorsPerLedger": {
+    message: "元帳ごとに最大 {count} 人の共同作業者",
+    description: "Collaborator allowance for each ledger",
+  },
+  "userSettings.aiUsageUpgradeNudge": {
+    message:
+      "毎月の AI トークンの {percentage}% を使用しています。中断を避けるためにアップグレードしてください。",
+    description: "Upgrade suggestion when AI token usage is high",
+  },
+  "userSettings.fingerprint": {
+    message: "指紋",
+    description: "Label for an SSH key fingerprint",
+  },
 };
 
 export default jaUserSettings;

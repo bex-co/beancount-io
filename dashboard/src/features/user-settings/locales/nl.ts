@@ -525,6 +525,43 @@ const nlUserSettings: Record<string, TranslationEntry> = {
     message: "/month",
     description: "Price interval suffix",
   },
+  "userSettings.aiTokensPerMonth": {
+    message: "{count} AI-tokens/maand",
+    description: "AI token allowance for a subscription tier",
+  },
+  "userSettings.unlimitedLedgers": {
+    message: "Onbeperkte grootboeken",
+    description: "Unlimited ledger allowance",
+  },
+  "userSettings.includedLedgers": {
+    message: "{count} grootboek(en)",
+    description: "Ledger allowance for a subscription tier",
+  },
+  "userSettings.unlimitedDirectives": {
+    message: "Onbeperkte richtlijnen",
+    description: "Unlimited directive allowance",
+  },
+  "userSettings.includedDirectives": {
+    message: "{count} richtlijnen",
+    description: "Directive allowance for a subscription tier",
+  },
+  "userSettings.unlimitedCollaborators": {
+    message: "Onbeperkt aantal bijdragers",
+    description: "Unlimited collaborator allowance",
+  },
+  "userSettings.collaboratorsPerLedger": {
+    message: "Maximaal {count} medewerker(s) per grootboek",
+    description: "Collaborator allowance for each ledger",
+  },
+  "userSettings.aiUsageUpgradeNudge": {
+    message:
+      "Je gebruikt {percentage}% van je maandelijkse AI-tokens. Upgrade om onderbrekingen te voorkomen.",
+    description: "Upgrade suggestion when AI token usage is high",
+  },
+  "userSettings.fingerprint": {
+    message: "vingerafdruk",
+    description: "Label for an SSH key fingerprint",
+  },
 };
 
 export default nlUserSettings;

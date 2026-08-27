@@ -670,6 +670,93 @@ const nlPlaid: Record<string, TranslationEntry> = {
       "De transacties konden niet worden verwijderd. Probeer het opnieuw.",
     description: "Toast description for deletion failure",
   },
+  "plaid.institutionNotFound": {
+    message: "Instelling niet gevonden",
+    description: "Empty state when a Plaid institution is unavailable",
+  },
+  "plaid.thisInstitution": {
+    message: "deze instelling",
+    description: "Fallback name for a Plaid institution",
+  },
+  "plaid.transactionReview.selectTransaction": {
+    message: "Selecteer transactie {transaction}",
+    description: "Accessible label for selecting a Plaid transaction",
+  },
+  "plaid.connection.cancelled": {
+    message: "Verbinding geannuleerd",
+    description: "Toast title when Plaid connection is cancelled",
+  },
+  "plaid.connection.linkClosed": {
+    message: "Plaid-link is gesloten.",
+    description: "Toast description when Plaid Link closes",
+  },
+  "plaid.connection.alreadyExists": {
+    message: "Verbinding bestaat al",
+    description: "Toast title for a duplicate Plaid connection",
+  },
+  "plaid.connection.alreadyExistsDescription": {
+    message:
+      "Je hebt al een actieve verbinding met {institution}. Ontkoppel eerst de bestaande verbinding.",
+    description: "Toast description for a duplicate Plaid connection",
+  },
+  "plaid.connection.failed": {
+    message: "Verbinding mislukt",
+    description: "Toast title when Plaid connection fails",
+  },
+  "plaid.connection.connecting": {
+    message: "Verbinden…",
+    description: "Status while connecting a bank",
+  },
+  "plaid.connection.preparing": {
+    message: "Voorbereiden…",
+    description: "Status while preparing Plaid Link",
+  },
+  "plaid.connection.waitingForAuthorization": {
+    message: "Wachten op autorisatie…",
+    description: "Status while waiting for Plaid authorization",
+  },
+  "plaid.connection.finalizing": {
+    message: "Bezig met afronden…",
+    description: "Status while finalizing a Plaid connection",
+  },
+  "plaid.reauth.reconnected": {
+    message: "Bank opnieuw verbonden",
+    description: "Toast title after reconnecting a bank",
+  },
+  "plaid.reauth.reconnectedDescription": {
+    message: "Uw bankrekening is opnieuw gekoppeld.",
+    description: "Toast description after reconnecting a bank",
+  },
+  "plaid.reauth.statusUpdateFailed": {
+    message: "Statusupdate mislukt",
+    description: "Toast title when a reconnected bank status cannot update",
+  },
+  "plaid.reauth.statusUpdateFailedDescription": {
+    message:
+      "Opnieuw verbinding maken is gelukt, maar de status kan niet worden bijgewerkt. Vernieuw de pagina.",
+    description:
+      "Toast description when status update fails after reconnection",
+  },
+  "plaid.reauth.cancelled": {
+    message: "Opnieuw verbinden geannuleerd",
+    description: "Toast title when bank reconnection is cancelled",
+  },
+  "plaid.reauth.linkClosed": {
+    message: "Plaid Link is gesloten zonder opnieuw verbinding te maken.",
+    description: "Toast description when Plaid Link closes during reconnection",
+  },
+  "plaid.reauth.failed": {
+    message: "Opnieuw verbinden mislukt",
+    description: "Toast title when bank reconnection fails",
+  },
+  "plaid.reauth.reconnecting": {
+    message: "Opnieuw verbinden…",
+    description: "Status while reconnecting a bank",
+  },
+  "plaid.reauth.updatingStatus": {
+    message: "Status bijwerken…",
+    description: "Status while updating a reconnected bank",
+  },
 };
 
 export default nlPlaid;

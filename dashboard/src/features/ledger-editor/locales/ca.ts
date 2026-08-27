@@ -25,4 +25,42 @@ export default {
   ...caCreateFile,
   ...caUploadFiles,
   ...caLedgerEditor,
+  "ledgerEditor.gitClone": {
+    message: "Git Clone",
+    description: "Button for opening Git clone options",
+  },
+  "ledgerEditor.failedToLoadDirectory": {
+    message: "No s'ha pogut carregar el contingut del directori",
+    description: "Error shown when a ledger directory cannot load",
+  },
+  "ledgerEditor.fileContentEmpty": {
+    message: "El contingut del fitxer és buit",
+    description: "Empty state for a file without content",
+  },
+  "ledgerEditor.unableToDisplayImage": {
+    message: "No es pot mostrar el contingut de la imatge",
+    description: "Error shown when image content cannot be displayed",
+  },
+  "ledgerEditor.unsupportedPreviewWithType": {
+    message:
+      "Aquest tipus de fitxer ({type}) no és compatible per a la previsualització",
+    description: "Unsupported preview message including the file type",
+  },
+  "ledgerEditor.unsupportedPreview": {
+    message:
+      "Aquest tipus de fitxer no és compatible per a la previsualització",
+    description: "Unsupported preview message without a file type",
+  },
+  "ledgerEditor.createFileCommit": {
+    message: "Crea un fitxer {path}",
+    description: "Generated commit message for creating a file",
+  },
+  "ledgerEditor.updateFileCommit": {
+    message: "Actualitza el fitxer {path}",
+    description: "Generated commit message for updating a file",
+  },
+  "ledgerEditor.deleteFileCommit": {
+    message: "Suprimeix el fitxer {path}",
+    description: "Generated commit message for deleting a file",
+  },
 };

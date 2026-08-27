@@ -325,6 +325,46 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "نوع دستورالعمل ناشناخته",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "منبع اصلاح شده است",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "ورودی با موفقیت ذخیره شد",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "ورودی با موفقیت حذف شد",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "هیچ داده زمینه ورودی موجود نیست",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "انباشته شده است",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "از",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "پاک شد",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "در انتظار",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(خالی)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "خودکار",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default faJournal;

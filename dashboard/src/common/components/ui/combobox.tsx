@@ -247,7 +247,9 @@ export function Combobox({
                 {defaultEmptyText}
                 {allowCustom && inputValue && (
                   <div className="mt-2 text-xs">
-                    Press Enter to use "{inputValue}"
+                    {t("component.combobox.useCustomValue", {
+                      value: inputValue,
+                    })}
                   </div>
                 )}
               </CommandEmpty>

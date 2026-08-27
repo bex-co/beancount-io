@@ -669,6 +669,93 @@ const skPlaid: Record<string, TranslationEntry> = {
     message: "Transakcie sa nepodarilo odstrániť. Skúste to znova.",
     description: "Toast description for deletion failure",
   },
+  "plaid.institutionNotFound": {
+    message: "Inštitúcia sa nenašla",
+    description: "Empty state when a Plaid institution is unavailable",
+  },
+  "plaid.thisInstitution": {
+    message: "tejto inštitúcie",
+    description: "Fallback name for a Plaid institution",
+  },
+  "plaid.transactionReview.selectTransaction": {
+    message: "Vybrať transakciu {transaction}",
+    description: "Accessible label for selecting a Plaid transaction",
+  },
+  "plaid.connection.cancelled": {
+    message: "Pripojenie zrušené",
+    description: "Toast title when Plaid connection is cancelled",
+  },
+  "plaid.connection.linkClosed": {
+    message: "Plaid Link bol uzavretý.",
+    description: "Toast description when Plaid Link closes",
+  },
+  "plaid.connection.alreadyExists": {
+    message: "Pripojenie už existuje",
+    description: "Toast title for a duplicate Plaid connection",
+  },
+  "plaid.connection.alreadyExistsDescription": {
+    message:
+      "Už máte aktívne pripojenie k {institution}. Najprv zrušte prepojenie existujúceho pripojenia.",
+    description: "Toast description for a duplicate Plaid connection",
+  },
+  "plaid.connection.failed": {
+    message: "Pripojenie zlyhalo",
+    description: "Toast title when Plaid connection fails",
+  },
+  "plaid.connection.connecting": {
+    message: "Pripája sa…",
+    description: "Status while connecting a bank",
+  },
+  "plaid.connection.preparing": {
+    message: "Pripravuje sa…",
+    description: "Status while preparing Plaid Link",
+  },
+  "plaid.connection.waitingForAuthorization": {
+    message: "Čaká sa na autorizáciu…",
+    description: "Status while waiting for Plaid authorization",
+  },
+  "plaid.connection.finalizing": {
+    message: "Dokončuje sa…",
+    description: "Status while finalizing a Plaid connection",
+  },
+  "plaid.reauth.reconnected": {
+    message: "Banka znovu pripojená",
+    description: "Toast title after reconnecting a bank",
+  },
+  "plaid.reauth.reconnectedDescription": {
+    message: "Váš bankový účet bol úspešne prepojený.",
+    description: "Toast description after reconnecting a bank",
+  },
+  "plaid.reauth.statusUpdateFailed": {
+    message: "Aktualizácia stavu zlyhala",
+    description: "Toast title when a reconnected bank status cannot update",
+  },
+  "plaid.reauth.statusUpdateFailedDescription": {
+    message:
+      "Opätovné pripojenie bolo úspešné, ale nepodarilo sa aktualizovať stav. Obnovte stránku.",
+    description:
+      "Toast description when status update fails after reconnection",
+  },
+  "plaid.reauth.cancelled": {
+    message: "Opätovné pripojenie bolo zrušené",
+    description: "Toast title when bank reconnection is cancelled",
+  },
+  "plaid.reauth.linkClosed": {
+    message: "Plaid Link bol zatvorený bez opätovného pripojenia.",
+    description: "Toast description when Plaid Link closes during reconnection",
+  },
+  "plaid.reauth.failed": {
+    message: "Opätovné pripojenie zlyhalo",
+    description: "Toast title when bank reconnection fails",
+  },
+  "plaid.reauth.reconnecting": {
+    message: "Opätovné pripojenie…",
+    description: "Status while reconnecting a bank",
+  },
+  "plaid.reauth.updatingStatus": {
+    message: "Aktualizuje sa stav…",
+    description: "Status while updating a reconnected bank",
+  },
 };
 
 export default skPlaid;

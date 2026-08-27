@@ -23,6 +23,10 @@ vi.mock("@/common/lib/utils/encode", () => ({
   createLedgerId: (owner: string, name: string) => `${owner}/${name}`,
 }));
 
+vi.mock("@/common/hooks/use-translations", () => ({
+  useTranslations: () => ({ t: () => "File" }),
+}));
+
 describe("LedgerFileBreadcrumb", () => {
   beforeEach(() => {
     vi.clearAllMocks();

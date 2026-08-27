@@ -326,6 +326,46 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "Tipo de directiva desconocido",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "La fuente ha sido modificada.",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "Entrada guardada exitosamente",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "Entrada eliminada exitosamente",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "No hay datos de contexto de entrada disponibles",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "acumulado",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "de",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "Borrado",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "Pendiente",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(en blanco)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "automático",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default esJournal;

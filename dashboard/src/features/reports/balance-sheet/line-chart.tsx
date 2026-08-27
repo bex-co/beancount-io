@@ -38,15 +38,7 @@ export function LineChart({
   const chartOption = useMemo((): EChartsOption => {
     if (!data || data.length === 0) {
       return {
-        title: {
-          text: "No Data Available",
-          left: "center",
-          top: "middle",
-          textStyle: {
-            color: "var(--muted-foreground)",
-            fontSize: 16,
-          },
-        },
+        series: [],
       };
     }
 

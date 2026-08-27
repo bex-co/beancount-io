@@ -528,6 +528,43 @@ const deUserSettings: Record<string, TranslationEntry> = {
     message: "/month",
     description: "Price interval suffix",
   },
+  "userSettings.aiTokensPerMonth": {
+    message: "{count} KI-Tokens / Monat",
+    description: "AI token allowance for a subscription tier",
+  },
+  "userSettings.unlimitedLedgers": {
+    message: "Unbegrenzte Hauptbücher",
+    description: "Unlimited ledger allowance",
+  },
+  "userSettings.includedLedgers": {
+    message: "{count} Hauptbuch(er)",
+    description: "Ledger allowance for a subscription tier",
+  },
+  "userSettings.unlimitedDirectives": {
+    message: "Unbegrenzte Anweisungen",
+    description: "Unlimited directive allowance",
+  },
+  "userSettings.includedDirectives": {
+    message: "{count} Direktiven",
+    description: "Directive allowance for a subscription tier",
+  },
+  "userSettings.unlimitedCollaborators": {
+    message: "Unbegrenzte Anzahl an Mitarbeitern",
+    description: "Unlimited collaborator allowance",
+  },
+  "userSettings.collaboratorsPerLedger": {
+    message: "Bis zu {count} Mitarbeiter pro Hauptbuch",
+    description: "Collaborator allowance for each ledger",
+  },
+  "userSettings.aiUsageUpgradeNudge": {
+    message:
+      "Sie verwenden {percentage} % Ihrer monatlichen KI-Tokens. Aktualisieren Sie, um Unterbrechungen zu vermeiden.",
+    description: "Upgrade suggestion when AI token usage is high",
+  },
+  "userSettings.fingerprint": {
+    message: "Fingerabdruck",
+    description: "Label for an SSH key fingerprint",
+  },
 };
 
 export default deUserSettings;

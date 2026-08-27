@@ -325,6 +325,46 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Невідомий тип директиви",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "Джерело змінено",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "Запис успішно збережено",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "Запис успішно видалено",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "Немає даних про контекст запису",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "накопичено",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "від",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "Очищено",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "Очікує на розгляд",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(порожній)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "авто",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default ukJournal;

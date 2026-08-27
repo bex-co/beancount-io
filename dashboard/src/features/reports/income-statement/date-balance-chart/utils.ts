@@ -89,14 +89,6 @@ export function createCommonGridConfig(): EChartsOption["grid"] {
  */
 export function createEmptyChartOption(): EChartsOption {
   return {
-    title: {
-      text: "No Data Available",
-      left: "center",
-      top: "center",
-      textStyle: {
-        color: "#999",
-        fontSize: 16,
-      },
-    },
+    series: [],
   };
 }

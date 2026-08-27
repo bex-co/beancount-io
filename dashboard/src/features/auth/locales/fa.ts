@@ -501,6 +501,58 @@ const faAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "پنهان کردن رمز عبور",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "نمایش رمز عبور",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "لطفا یک دفتر کل انتخاب کنید.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message: "Beancount Mobile می خواهد به حساب شما دسترسی داشته باشد.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "Beancount Mobile مجاز است؟",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "این کمک هزینه در کل حساب به برنامه اجازه می دهد:",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message: "تغییر حساب انجام نشد. لطفا دوباره امتحان کنید.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "از حساب دیگری استفاده کنید",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "حساب مورد تایید خود را شناسایی کنید",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message: "تا زمانی که دسترسی را لغو نکنید، به طور ایمن وارد سیستم بمانید",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "دفتر کل خود را بخوانید",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "داده های دفتر کل را ایجاد و به روز کنید",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "دفتر کل و همکاران را مدیریت کنید",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default faAuth;

@@ -25,6 +25,11 @@ const deAllSettings = {
   ...deFavaOptionsSection,
   ...deBcioOptionsSection,
   ...deSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "Dieser Einbettungscode umfasst responsive Größenanpassung, Skalierungstransformation und eine Schaltfläche „Auf Beancount.io anzeigen“ zur Quellenangabe.",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default deAllSettings;

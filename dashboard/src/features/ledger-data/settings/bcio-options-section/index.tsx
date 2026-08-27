@@ -67,8 +67,8 @@ export function BcioOptionsSection({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead className="w-75">Option</TableHead>
-                <TableHead>Value</TableHead>
+                <TableHead className="w-75">{t("common.option")}</TableHead>
+                <TableHead>{t("common.value")}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>

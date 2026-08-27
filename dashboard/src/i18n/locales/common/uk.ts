@@ -828,6 +828,62 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Не вдалося скопіювати",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "Застарілий — натисніть, щоб оновити",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "Переглянути",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "Сьогодні",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "Автор",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "Від",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "До",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "Варіант",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "Значення",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+ ще {count}",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "Сховати діаграми",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "Показати діаграми",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "Переспрямування…",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "Завантаження вашої книги",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: 'Натисніть Enter, щоб використовувати "{value}"',
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default ukCommon;

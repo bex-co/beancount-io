@@ -458,11 +458,6 @@ const skImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "ďalších chýb",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "Import zlyhal",
     description: "Title for failed import",
@@ -482,6 +477,46 @@ const skImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "Inteligentný import",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "Poznámka",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…a {count} ďalších chýb",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "Upraviť {field}. Aktuálna hodnota: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "pole",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "Vyžaduje sa dátum",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "Neplatný formát dátumu. Očakáva sa RRRR-MM-DD",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "Vyžaduje sa príjemca platby",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "Vyžaduje sa popis",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "Vyžaduje sa suma",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "Čiastka musí byť platné číslo",
+    description: "Validation error for an invalid import amount",
   },
 };
 

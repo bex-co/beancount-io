@@ -813,6 +813,62 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "复制失败",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "已过时 — 单击刷新",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "查看",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "今天",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "作者",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "来自",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "至",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "选项",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "价值",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} 更多",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "隐藏图表",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "显示图表",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "重定向...",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "加载你的账本",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: "按 Enter 键以使用“{value}”",
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default zhCommon;

@@ -24,6 +24,11 @@ const faAllSettings = {
   ...faFavaOptionsSection,
   ...faBcioOptionsSection,
   ...faSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      'این کد جاسازی شده شامل اندازه پاسخگو، تغییر مقیاس، و دکمه "View on Beancount.io" برای انتساب است.',
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default faAllSettings;

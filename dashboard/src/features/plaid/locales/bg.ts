@@ -669,6 +669,93 @@ const bgPlaid: Record<string, TranslationEntry> = {
     message: "Транзакциите не можаха да бъдат изтрити. Опитайте отново.",
     description: "Toast description for deletion failure",
   },
+  "plaid.institutionNotFound": {
+    message: "Институцията не е намерена",
+    description: "Empty state when a Plaid institution is unavailable",
+  },
+  "plaid.thisInstitution": {
+    message: "тази институция",
+    description: "Fallback name for a Plaid institution",
+  },
+  "plaid.transactionReview.selectTransaction": {
+    message: "Изберете транзакция {transaction}",
+    description: "Accessible label for selecting a Plaid transaction",
+  },
+  "plaid.connection.cancelled": {
+    message: "Връзката е отменена",
+    description: "Toast title when Plaid connection is cancelled",
+  },
+  "plaid.connection.linkClosed": {
+    message: "Plaid Link беше затворен.",
+    description: "Toast description when Plaid Link closes",
+  },
+  "plaid.connection.alreadyExists": {
+    message: "Връзката вече съществува",
+    description: "Toast title for a duplicate Plaid connection",
+  },
+  "plaid.connection.alreadyExistsDescription": {
+    message:
+      "Вече имате активна връзка с {institution}. Моля, първо прекъснете съществуващата връзка.",
+    description: "Toast description for a duplicate Plaid connection",
+  },
+  "plaid.connection.failed": {
+    message: "Неуспешна връзка",
+    description: "Toast title when Plaid connection fails",
+  },
+  "plaid.connection.connecting": {
+    message: "Свързване...",
+    description: "Status while connecting a bank",
+  },
+  "plaid.connection.preparing": {
+    message: "Подготвя се...",
+    description: "Status while preparing Plaid Link",
+  },
+  "plaid.connection.waitingForAuthorization": {
+    message: "Изчакване на разрешение…",
+    description: "Status while waiting for Plaid authorization",
+  },
+  "plaid.connection.finalizing": {
+    message: "Финализиране...",
+    description: "Status while finalizing a Plaid connection",
+  },
+  "plaid.reauth.reconnected": {
+    message: "Банката е свързана отново",
+    description: "Toast title after reconnecting a bank",
+  },
+  "plaid.reauth.reconnectedDescription": {
+    message: "Вашата банкова сметка бе успешно свързана отново.",
+    description: "Toast description after reconnecting a bank",
+  },
+  "plaid.reauth.statusUpdateFailed": {
+    message: "Неуспешна актуализация на състоянието",
+    description: "Toast title when a reconnected bank status cannot update",
+  },
+  "plaid.reauth.statusUpdateFailedDescription": {
+    message:
+      "Повторното свързване бе успешно, но не успя да актуализира състоянието. Моля, опреснете страницата.",
+    description:
+      "Toast description when status update fails after reconnection",
+  },
+  "plaid.reauth.cancelled": {
+    message: "Повторното свързване е отменено",
+    description: "Toast title when bank reconnection is cancelled",
+  },
+  "plaid.reauth.linkClosed": {
+    message: "Plaid Link беше затворен без повторно свързване.",
+    description: "Toast description when Plaid Link closes during reconnection",
+  },
+  "plaid.reauth.failed": {
+    message: "Неуспешно повторно свързване",
+    description: "Toast title when bank reconnection fails",
+  },
+  "plaid.reauth.reconnecting": {
+    message: "Повторно свързване...",
+    description: "Status while reconnecting a bank",
+  },
+  "plaid.reauth.updatingStatus": {
+    message: "Състоянието се актуализира...",
+    description: "Status while updating a reconnected bank",
+  },
 };
 
 export default bgPlaid;

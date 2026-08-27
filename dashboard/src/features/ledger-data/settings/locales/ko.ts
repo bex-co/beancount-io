@@ -24,6 +24,11 @@ const koAllSettings = {
   ...koFavaOptionsSection,
   ...koBcioOptionsSection,
   ...koSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      '이 포함 코드에는 반응형 크기 조정, 크기 변환 및 속성을 위한 "Beancount.io에서 보기" 버튼이 포함되어 있습니다.',
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default koAllSettings;

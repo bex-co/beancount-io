@@ -66,15 +66,7 @@ export function HierarchyTreeMap({
   const chartOption = useMemo((): EChartsOption => {
     if (!initialData) {
       return {
-        title: {
-          text: "No Data Available",
-          left: "center",
-          top: "middle",
-          textStyle: {
-            color: "var(--muted-foreground)",
-            fontSize: 16,
-          },
-        },
+        series: [],
       };
     }
 
@@ -156,11 +148,7 @@ export function HierarchyTreeMap({
 
     if (treeMapData.value === 0) {
       return {
-        title: {
-          text: "Chart is empty.",
-          left: "center",
-          top: "middle",
-        },
+        series: [],
       };
     }
 

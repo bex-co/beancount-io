@@ -36,7 +36,11 @@ vi.mock("@/common/hooks/use-format-number", () => ({
 
 vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
-    t: (key: string) => key,
+    t: (key: string, params?: Record<string, number>) => {
+      if (key === "common.noDataFound") return "No data found.";
+      if (key === "common.moreCount") return `+${params?.count} more`;
+      return key;
+    },
   }),
 }));
 
@@ -68,7 +72,7 @@ describe("HierarchyList", () => {
     it("should render empty message when data is empty array", () => {
       render(<HierarchyList data={[]} />);
 
-      expect(screen.getByText("No data available")).toBeInTheDocument();
+      expect(screen.getByText("No data found.")).toBeInTheDocument();
     });
 
     it("should render empty message when data is null", () => {
@@ -76,7 +80,7 @@ describe("HierarchyList", () => {
         <HierarchyList data={null as unknown as SerializableTreeNode[]} />,
       );
 
-      expect(screen.getByText("No data available")).toBeInTheDocument();
+      expect(screen.getByText("No data found.")).toBeInTheDocument();
     });
   });
 
@@ -589,7 +593,7 @@ describe("HierarchyList", () => {
       );
 
       expect(screen.getByText("Financing Activities")).toBeInTheDocument();
-      expect(screen.queryByText("No data available")).not.toBeInTheDocument();
+      expect(screen.queryByText("No data found.")).not.toBeInTheDocument();
       expect(screen.getByText("common.accountColumn")).toBeInTheDocument();
     });
   });

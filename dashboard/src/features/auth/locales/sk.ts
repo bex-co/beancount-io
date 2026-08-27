@@ -501,6 +501,58 @@ const skAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "Skryť heslo",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "Zobraziť heslo",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "Vyberte účtovnú knihu.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message: "Beancount Mobile chce prístup k vášmu účtu.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "Povoliť Beancount Mobile?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "Tento grant pre celý účet umožňuje aplikácii:",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message: "Nepodarilo sa prepnúť účty. Skúste to znova.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "Použite iný účet",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "Identifikujte účet, ktorý schvaľujete",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message: "Zostaňte bezpečne prihlásení, kým nezrušíte prístup",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "Prečítajte si svoje účtovné knihy",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "Vytvárajte a aktualizujte údaje účtovnej knihy",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "Spravujte účtovné knihy a spolupracovníkov",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default skAuth;

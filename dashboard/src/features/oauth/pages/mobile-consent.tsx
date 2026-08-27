@@ -39,7 +39,7 @@ function LoginStep({
           {t("auth.oauthSignInToContinue")}
         </h2>
         <p className="text-sm text-muted-foreground">
-          Beancount Mobile wants access to your account.
+          {t("auth.oauthMobileWantsAccess")}
         </p>
       </div>
       <LoginForm
@@ -137,13 +137,15 @@ function ApproveStep({
   return (
     <div className="space-y-4">
       <div>
-        <h2 className="text-lg font-semibold">Allow Beancount Mobile?</h2>
+        <h2 className="text-lg font-semibold">
+          {t("auth.oauthMobileAllowTitle")}
+        </h2>
         <p className="text-sm text-muted-foreground">
-          This account-wide grant lets the app:
+          {t("auth.oauthMobileGrantDescription")}
         </p>
       </div>
       <ul className="list-disc space-y-1 pl-5 text-sm">
-        {describeMobileScopes(scope).map((permission) => (
+        {describeMobileScopes(scope, t).map((permission) => (
           <li key={permission}>{permission}</li>
         ))}
       </ul>
@@ -172,7 +174,7 @@ function ApproveStep({
             value="cancel"
             variant="outline"
           >
-            Cancel
+            {t("common.cancel")}
           </Button>
         </div>
       </form>
@@ -183,11 +185,11 @@ function ApproveStep({
         onClick={() => {
           setError("");
           void onSwitchAccount().catch(() =>
-            setError("Could not switch accounts. Please try again."),
+            setError(t("auth.oauthSwitchAccountFailed")),
           );
         }}
       >
-        Use another account
+        {t("auth.oauthUseAnotherAccount")}
       </Button>
     </div>
   );

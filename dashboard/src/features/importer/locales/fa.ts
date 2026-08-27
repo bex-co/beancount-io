@@ -461,11 +461,6 @@ const faImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "خطاهای بیشتر",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "واردات ناموفق بود",
     description: "Title for failed import",
@@ -485,6 +480,46 @@ const faImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "واردات هوشمند",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "توجه",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…و {count} خطاهای دیگر",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "ویرایش {field}. مقدار فعلی: {value}\nزمینه",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "فیلد",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "تاریخ لازم است",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "قالب تاریخ نامعتبر است. YYYY-MM-DD مورد انتظار",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "گیرنده پرداخت مورد نیاز است",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "توضیحات لازم است",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "مبلغ مورد نیاز است",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "مبلغ باید یک عدد معتبر باشد",
+    description: "Validation error for an invalid import amount",
   },
 };
 

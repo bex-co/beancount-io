@@ -463,11 +463,6 @@ const deImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "weitere Fehler",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "Import fehlgeschlagen",
     description: "Title for failed import",
@@ -487,6 +482,46 @@ const deImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "Intelligenter Import",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "Hinweis",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…und {count} weitere Fehler",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "Bearbeiten Sie {field}. Aktueller Wert: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "Feld",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "Datum ist erforderlich",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "Ungültiges Datumsformat. Voraussichtlich JJJJ-MM-TT",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "Zahlungsempfänger ist erforderlich",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "Beschreibung ist erforderlich",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "Betrag ist erforderlich",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "Betrag muss eine gültige Zahl sein",
+    description: "Validation error for an invalid import amount",
   },
 };
 

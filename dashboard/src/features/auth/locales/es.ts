@@ -508,6 +508,58 @@ const esAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "Ocultar contraseña",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "Mostrar contraseña",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "Seleccione un libro mayor.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message: "Beancount Mobile quiere acceder a su cuenta.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "¿Permitir Beancount Mobile?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "Esta subvención para toda la cuenta permite a la aplicación:",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message: "No se pudo cambiar de cuenta. Por favor inténtalo de nuevo.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "Usar otra cuenta",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "Identifique la cuenta que aprueba",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message: "Manténgase conectado de forma segura hasta que revoque el acceso",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "Lea sus libros de contabilidad",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "Crear y actualizar datos del libro mayor",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "Administrar libros de contabilidad y colaboradores.",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default esAuth;

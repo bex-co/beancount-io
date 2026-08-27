@@ -25,6 +25,11 @@ const ptAllSettings = {
   ...ptFavaOptionsSection,
   ...ptBcioOptionsSection,
   ...ptSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      'Este código incorporado inclui dimensionamento responsivo, transformação de escala e um botão "Visualizar no Beancount.io" para atribuição.',
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default ptAllSettings;

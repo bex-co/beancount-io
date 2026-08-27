@@ -499,6 +499,61 @@ const jaAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "パスワードを隠す",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "パスワードを表示",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "元帳を選択してください。",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message:
+      "Beancount Mobile があなたのアカウントへのアクセスを求めています。",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "Beancount モバイルを許可しますか?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message:
+      "このアカウント全体の許可により、アプリは次のことが可能になります。",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message:
+      "アカウントを切り替えることができませんでした。もう一度試してください。",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "別のアカウントを使用する",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "承認するアカウントを特定します",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message: "アクセスを取り消すまで安全にサインインしたままにする",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "台帳を読む",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "台帳データの作成と更新",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "台帳と共同作業者を管理する",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default jaAuth;

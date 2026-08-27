@@ -460,11 +460,6 @@ const ukImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "ще помилок",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "Імпорт не вдався",
     description: "Title for failed import",
@@ -484,6 +479,46 @@ const ukImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "Розумний імпорт",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "Примітка",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…і ще {count} помилок",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "Редагувати {field}. Поточне значення: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "поле",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "Дата обов'язкова",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "Недійсний формат дати. Очікується РРРР-ММ-ДД",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "Потрібен одержувач",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "Потрібен опис",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "Необхідна сума",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "Сума має бути дійсним числом",
+    description: "Validation error for an invalid import amount",
   },
 };
 

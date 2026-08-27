@@ -44,6 +44,22 @@ const zhReports = {
   ...zhTrialBalance,
   ...zhOverview,
   ...zhExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Ledger 成功加星",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "未能对分类帐加注星标",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Ledger 成功取消星号",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "未能取消分类账星号",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default zhReports;

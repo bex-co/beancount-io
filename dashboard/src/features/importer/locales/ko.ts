@@ -456,11 +456,6 @@ const koImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "개의 추가 오류",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "가져오기 실패",
     description: "Title for failed import",
@@ -480,6 +475,46 @@ const koImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "스마트 가져오기",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "참고",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…그리고 {count} 오류가 더 많습니다",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "{field}을(를) 편집합니다. 현재 값: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "필드",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "날짜가 필요합니다",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "날짜 형식이 잘못되었습니다. 예상 YYYY-MM-DD",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "수취인이 필요합니다",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "설명이 필요합니다",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "금액이 필요합니다",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "금액은 유효한 숫자여야 합니다.",
+    description: "Validation error for an invalid import amount",
   },
 };
 

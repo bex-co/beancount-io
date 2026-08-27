@@ -25,4 +25,41 @@ export default {
   ...ukCreateFile,
   ...ukUploadFiles,
   ...ukLedgerEditor,
+  "ledgerEditor.gitClone": {
+    message: "Git Clone",
+    description: "Button for opening Git clone options",
+  },
+  "ledgerEditor.failedToLoadDirectory": {
+    message: "Не вдалося завантажити вміст каталогу",
+    description: "Error shown when a ledger directory cannot load",
+  },
+  "ledgerEditor.fileContentEmpty": {
+    message: "Вміст файлу порожній",
+    description: "Empty state for a file without content",
+  },
+  "ledgerEditor.unableToDisplayImage": {
+    message: "Неможливо відобразити вміст зображення",
+    description: "Error shown when image content cannot be displayed",
+  },
+  "ledgerEditor.unsupportedPreviewWithType": {
+    message:
+      "Цей тип файлу ({type}) не підтримується для попереднього перегляду",
+    description: "Unsupported preview message including the file type",
+  },
+  "ledgerEditor.unsupportedPreview": {
+    message: "Цей тип файлу не підтримується для попереднього перегляду",
+    description: "Unsupported preview message without a file type",
+  },
+  "ledgerEditor.createFileCommit": {
+    message: "Створити файл {path}",
+    description: "Generated commit message for creating a file",
+  },
+  "ledgerEditor.updateFileCommit": {
+    message: "Оновити файл {path}",
+    description: "Generated commit message for updating a file",
+  },
+  "ledgerEditor.deleteFileCommit": {
+    message: "Видалити файл {path}",
+    description: "Generated commit message for deleting a file",
+  },
 };

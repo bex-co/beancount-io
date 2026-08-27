@@ -1,9 +1,11 @@
 import { useNavigate, useParams } from "@tanstack/react-router";
 import { Authenticated } from "@/common/components/authenticated";
 import { UserNav } from "@/common/components/user-nav";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 export function UserProfileHeader() {
   const navigate = useNavigate();
+  const { t } = useTranslations();
   const { username } = useParams({ from: "/ledger/$username" });
 
   return (
@@ -19,7 +21,7 @@ export function UserProfileHeader() {
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
               <img
                 src="/lgasset/logo.png"
-                alt="Logo"
+                alt={t("common.beancountLogo")}
                 className="h-8 w-8 rounded"
               />
             </div>

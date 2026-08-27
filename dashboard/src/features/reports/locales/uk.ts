@@ -46,6 +46,22 @@ const ukReports = {
   ...ukTrialBalance,
   ...ukOverview,
   ...ukExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Леджер успішно знявся",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "Не вдалося позначити книгу зірочкою",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Леджер успішно зняв зірочку",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "Не вдалося зняти зірочку з книги",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default ukReports;

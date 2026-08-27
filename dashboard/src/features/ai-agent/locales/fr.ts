@@ -153,6 +153,58 @@ const frAiAgent: Record<string, TranslationEntry> = {
     message: "Faire défiler vers le bas",
     description: "Aria label for the scroll to bottom button in the chat",
   },
+  "aiAgent.attachment": {
+    message: "pièce jointe",
+    description: "Fallback filename for an attachment",
+  },
+  "aiAgent.preparing": {
+    message: "Préparation…",
+    description: "Status while an AI tool is preparing",
+  },
+  "aiAgent.toolFailed": {
+    message: "{tool} a échoué",
+    description: "Fallback error when an AI tool fails",
+  },
+  "aiAgent.toolList": {
+    message: "Liste",
+    description: "Label for the list-files AI tool",
+  },
+  "aiAgent.toolRead": {
+    message: "Lire",
+    description: "Label for the read-file AI tool",
+  },
+  "aiAgent.checkingLedgerContext": {
+    message: "Vérification du contexte du grand livre",
+    description: "Status while AI tools inspect a ledger",
+  },
+  "aiAgent.checkedFiles": {
+    message: "Fichier(s) {count} vérifié(s)",
+    description: "Summary of files inspected by AI tools",
+  },
+  "aiAgent.ranQueries": {
+    message: "a exécuté {count} requête(s)",
+    description: "Summary of queries run by AI tools",
+  },
+  "aiAgent.usedTools": {
+    message: "Outil(s) {count} utilisé(s)",
+    description: "Summary of tools used by the AI",
+  },
+  "aiAgent.unknownBlock": {
+    message: "Bloc inconnu",
+    description: "Fallback label for an unsupported AI message block",
+  },
+  "aiAgent.editApproval.preparingChanges": {
+    message: "Préparer les modifications…",
+    description: "Status while AI file changes are prepared",
+  },
+  "aiAgent.editApproval.appliedOperations": {
+    message: "{count} opération(s) appliquée(s)",
+    description: "Success status for applied AI file operations",
+  },
+  "aiAgent.editApproval.failed": {
+    message: "Échec de la modification",
+    description: "Fallback error for a failed AI file edit",
+  },
 };
 
 export default frAiAgent;

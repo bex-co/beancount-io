@@ -524,6 +524,43 @@ const faUserSettings: Record<string, TranslationEntry> = {
     message: "/month",
     description: "Price interval suffix",
   },
+  "userSettings.aiTokensPerMonth": {
+    message: "{count} نشانه های هوش مصنوعی / ماه",
+    description: "AI token allowance for a subscription tier",
+  },
+  "userSettings.unlimitedLedgers": {
+    message: "دفتر کل نامحدود",
+    description: "Unlimited ledger allowance",
+  },
+  "userSettings.includedLedgers": {
+    message: "{count} دفتر(های)",
+    description: "Ledger allowance for a subscription tier",
+  },
+  "userSettings.unlimitedDirectives": {
+    message: "دستورالعمل های نامحدود\nدستورالعمل های",
+    description: "Unlimited directive allowance",
+  },
+  "userSettings.includedDirectives": {
+    message: "{count}",
+    description: "Directive allowance for a subscription tier",
+  },
+  "userSettings.unlimitedCollaborators": {
+    message: "همکاران نامحدود",
+    description: "Unlimited collaborator allowance",
+  },
+  "userSettings.collaboratorsPerLedger": {
+    message: "حداکثر {count} همکار در هر دفتر",
+    description: "Collaborator allowance for each ledger",
+  },
+  "userSettings.aiUsageUpgradeNudge": {
+    message:
+      "شما از {percentage}٪ از نشانه های ماهانه هوش مصنوعی خود استفاده می کنید. برای جلوگیری از وقفه، ارتقا دهید.",
+    description: "Upgrade suggestion when AI token usage is high",
+  },
+  "userSettings.fingerprint": {
+    message: "اثر انگشت",
+    description: "Label for an SSH key fingerprint",
+  },
 };
 
 export default faUserSettings;

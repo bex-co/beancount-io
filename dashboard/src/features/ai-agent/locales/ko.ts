@@ -150,6 +150,58 @@ const koAiAgent: Record<string, TranslationEntry> = {
     message: "맨 아래로 스크롤",
     description: "Aria label for the scroll to bottom button in the chat",
   },
+  "aiAgent.attachment": {
+    message: "첨부 파일",
+    description: "Fallback filename for an attachment",
+  },
+  "aiAgent.preparing": {
+    message: "준비 중…",
+    description: "Status while an AI tool is preparing",
+  },
+  "aiAgent.toolFailed": {
+    message: "{tool} 실패",
+    description: "Fallback error when an AI tool fails",
+  },
+  "aiAgent.toolList": {
+    message: "목록",
+    description: "Label for the list-files AI tool",
+  },
+  "aiAgent.toolRead": {
+    message: "읽기",
+    description: "Label for the read-file AI tool",
+  },
+  "aiAgent.checkingLedgerContext": {
+    message: "원장 컨텍스트 확인",
+    description: "Status while AI tools inspect a ledger",
+  },
+  "aiAgent.checkedFiles": {
+    message: "{count} 파일을 확인함",
+    description: "Summary of files inspected by AI tools",
+  },
+  "aiAgent.ranQueries": {
+    message: "{count} 쿼리를 실행했습니다.",
+    description: "Summary of queries run by AI tools",
+  },
+  "aiAgent.usedTools": {
+    message: "사용된 {count} 도구",
+    description: "Summary of tools used by the AI",
+  },
+  "aiAgent.unknownBlock": {
+    message: "알 수 없는 블록",
+    description: "Fallback label for an unsupported AI message block",
+  },
+  "aiAgent.editApproval.preparingChanges": {
+    message: "변경 준비 중…",
+    description: "Status while AI file changes are prepared",
+  },
+  "aiAgent.editApproval.appliedOperations": {
+    message: "{count} 작업 적용됨",
+    description: "Success status for applied AI file operations",
+  },
+  "aiAgent.editApproval.failed": {
+    message: "편집 실패",
+    description: "Fallback error for a failed AI file edit",
+  },
 };
 
 export default koAiAgent;

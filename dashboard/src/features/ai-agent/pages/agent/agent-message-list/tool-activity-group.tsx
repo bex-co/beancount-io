@@ -10,10 +10,12 @@ import {
   Loader2,
 } from "lucide-react";
 import type { AgentUITools } from "../../../types/agent-tool-types";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 type AgentToolPart = ToolUIPart<AgentUITools>;
 
 function FileToolStep({ part }: { part: AgentToolPart }) {
+  const { t } = useTranslations();
   const isPending = part.state !== "output-available";
   const isListing = part.type === "tool-listLedgerFiles";
   const label = isListing
@@ -33,7 +35,9 @@ function FileToolStep({ part }: { part: AgentToolPart }) {
         ) : (
           <Icon className="h-3 w-3 text-primary/60 shrink-0" />
         )}
-        <span className="font-semibold">{isListing ? "List" : "Read"}</span>
+        <span className="font-semibold">
+          {isListing ? t("aiAgent.toolList") : t("aiAgent.toolRead")}
+        </span>
         <code className="truncate">{label}</code>
       </div>
     </div>
@@ -63,6 +67,7 @@ function BqlToolStep({ part }: { part: AgentToolPart }) {
 }
 
 export function ToolActivityGroup({ parts }: { parts: AgentToolPart[] }) {
+  const { t } = useTranslations();
   const hasPending = parts.some((part) => part.state !== "output-available");
   const [isOpen, setIsOpen] = useState(false);
 
@@ -75,12 +80,12 @@ export function ToolActivityGroup({ parts }: { parts: AgentToolPart[] }) {
   const queryCount = parts.filter((p) => p.type === "tool-runBqlQuery").length;
 
   const summaryLabel = hasPending
-    ? "Checking ledger context"
+    ? t("aiAgent.checkingLedgerContext")
     : readCount > 0 || listCount > 0
-      ? `Checked ${readCount + listCount} file${readCount + listCount > 1 ? "s" : ""}`
+      ? t("aiAgent.checkedFiles", { count: readCount + listCount })
       : queryCount > 0
-        ? `Ran ${queryCount} quer${queryCount > 1 ? "ies" : "y"}`
-        : `Used ${parts.length} tool${parts.length > 1 ? "s" : ""}`;
+        ? t("aiAgent.ranQueries", { count: queryCount })
+        : t("aiAgent.usedTools", { count: parts.length });
 
   return (
     <div className="my-3 overflow-hidden rounded-xl border border-border/70 bg-muted/20">

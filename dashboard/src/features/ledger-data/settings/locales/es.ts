@@ -25,6 +25,11 @@ const esAllSettings = {
   ...esFavaOptionsSection,
   ...esBcioOptionsSection,
   ...esSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      'Este código de inserción incluye tamaño responsivo, transformación de escala y un botón "Ver en Beancount.io" para atribución.',
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default esAllSettings;

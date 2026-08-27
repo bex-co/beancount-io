@@ -46,6 +46,22 @@ const caReports = {
   ...caTrialBalance,
   ...caOverview,
   ...caExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Ledger s'ha destacat correctament",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "No s'ha pogut destacar el llibre major",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Ledger s'ha desmarcat correctament",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "No s'ha pogut desmarcar el llibre major",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default caReports;

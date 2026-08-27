@@ -129,6 +129,10 @@ const skAccounts: Record<string, TranslationEntry> = {
     description:
       "Toast shown after an account was closed; {account} is the account name",
   },
+  "page.accounts.accountDeletedToast": {
+    message: "Účet {account} bol odstránený",
+    description: "Toast shown after deleting an account",
+  },
 };
 
 export default skAccounts;

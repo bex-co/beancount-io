@@ -1,0 +1,3 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`no untranslated user-facing strings > does not introduce new untranslated production UI copy 1`] = `[]`;

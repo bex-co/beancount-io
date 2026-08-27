@@ -759,7 +759,12 @@ export function TransactionReviewTable({
                         onCheckedChange={(checked) =>
                           handleSelectOne(transaction.id, checked as boolean)
                         }
-                        aria-label={`Select transaction ${transaction.name}`}
+                        aria-label={t(
+                          "plaid.transactionReview.selectTransaction",
+                          {
+                            transaction: transaction.name,
+                          },
+                        )}
                       />
                     </TableCell>
                     <TableCell className="whitespace-nowrap">

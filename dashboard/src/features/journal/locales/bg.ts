@@ -325,6 +325,46 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Неизвестен тип директива",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "Източникът е променен",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "Записът е запазен успешно",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "Записът е изтрит успешно",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "Няма налични данни за контекста на въвеждане",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "натрупани",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "от",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "Изчистено",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "В очакване",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(празно)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "авто",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default bgJournal;

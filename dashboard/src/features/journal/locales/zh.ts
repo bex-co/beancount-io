@@ -325,6 +325,46 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "未知指令类型",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "源已被修改",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "条目保存成功",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "条目删除成功",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "没有可用的条目上下文数据",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "累计",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "来自",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "已清除",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "待定",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "（空白）",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "汽车",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default zhJournal;

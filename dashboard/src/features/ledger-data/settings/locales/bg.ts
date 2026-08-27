@@ -25,6 +25,11 @@ const bgAllSettings = {
   ...bgFavaOptionsSection,
   ...bgBcioOptionsSection,
   ...bgSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "Този код за вграждане включва адаптивно оразмеряване, трансформация на мащаба и бутон „Преглед на Beancount.io“ за приписване.",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default bgAllSettings;

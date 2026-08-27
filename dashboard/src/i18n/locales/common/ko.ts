@@ -826,6 +826,62 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "복사에 실패했습니다",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "오래됨 — 새로 고치려면 클릭하세요.",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "보기",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "오늘",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "작성자",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "보낸 사람",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "받는 사람",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "옵션",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "가치",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} 더 보기",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "차트 숨기기",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "차트 표시",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "리디렉션 중…",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "원장 로드",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: '"{value}"을(를) 사용하려면 Enter 키를 누르세요.',
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default koCommon;

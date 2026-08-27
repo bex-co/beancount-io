@@ -463,11 +463,6 @@ const caImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "més errors",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "Importació fallida",
     description: "Title for failed import",
@@ -487,6 +482,46 @@ const caImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "Importació intel·ligent",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "Nota",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…i {count} més errors",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "Edita {field}. Valor actual: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "camp",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "La data és necessària",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "Format de data no vàlid. S'esperava AAAA-MM-DD",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "Cal el beneficiari",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "És necessària la descripció",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "La quantitat és necessària",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "L'import ha de ser un número vàlid",
+    description: "Validation error for an invalid import amount",
   },
 };
 

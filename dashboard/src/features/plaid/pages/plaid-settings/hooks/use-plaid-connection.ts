@@ -5,6 +5,7 @@ import { usePlaidLinkToken } from "./use-plaid-link-token";
 import { usePlaidLinkLauncher } from "./use-plaid-link-launcher";
 import { usePlaidTokenExchange } from "./use-plaid-token-exchange";
 import { PlaidLinkError } from "react-plaid-link";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 enum FlowState {
   IDLE = "idle",
@@ -78,6 +79,9 @@ export function usePlaidConnection(
 ): UsePlaidConnectionReturn {
   const { ledgerId, onError } = options;
   const formatError = useErrorMessage();
+  const { t } = useTranslations();
+  const connectionCancelled = t("plaid.connection.cancelled");
+  const linkClosed = t("plaid.connection.linkClosed");
   const [flowState, setFlowState] = useState<FlowState>(FlowState.IDLE);
 
   // Step 1: Create link token (lazy - only when user calls connect)
@@ -120,13 +124,13 @@ export function usePlaidConnection(
 
       // Only show error toast if there was an actual error (not just user cancellation)
       if (error) {
-        toast.error("Connection Cancelled", {
-          description: error?.error_message || "Plaid Link was closed.",
+        toast.error(connectionCancelled, {
+          description: error?.error_message || linkClosed,
           duration: 4000,
         });
       }
     },
-    [resetToken],
+    [connectionCancelled, linkClosed, resetToken],
   );
 
   const { openPlaidLink, ready: plaidReady } = usePlaidLinkLauncher(
@@ -178,15 +182,17 @@ export function usePlaidConnection(
           const match = (error.message || "").match(
             /active connection to (.+?)\. Please/,
           );
-          const institutionName = match ? match[1] : "this institution";
+          const institutionName = match ? match[1] : t("plaid.thisInstitution");
 
-          toast.error("Connection Already Exists", {
-            description: `You already have an active connection to ${institutionName}. Please unlink the existing connection first.`,
+          toast.error(t("plaid.connection.alreadyExists"), {
+            description: t("plaid.connection.alreadyExistsDescription", {
+              institution: institutionName,
+            }),
             duration: 7000,
           });
         } else {
           // Generic error
-          toast.error("Connection Failed", {
+          toast.error(t("plaid.connection.failed"), {
             description: formatError(error),
             duration: 6000,
           });
@@ -199,7 +205,7 @@ export function usePlaidConnection(
         setFlowState(FlowState.IDLE);
       }, 500);
     }
-  }, [error, onError, resetToken, formatError]);
+  }, [error, onError, resetToken, formatError, t]);
 
   // Derive loading state based on flow state (not individual loading flags)
   // This ensures loading is shown during the entire flow, including the gap
@@ -212,16 +218,16 @@ export function usePlaidConnection(
   const isSuccess = currentFlowState === FlowState.SUCCESS;
 
   // Determine loading message based on flow state
-  let loadingMessage = "Connecting...";
+  let loadingMessage = t("plaid.connection.connecting");
   if (currentFlowState === FlowState.CREATING_TOKEN) {
-    loadingMessage = "Preparing...";
+    loadingMessage = t("plaid.connection.preparing");
   } else if (
     currentFlowState === FlowState.READY_TO_LAUNCH ||
     currentFlowState === FlowState.PLAID_OPEN
   ) {
-    loadingMessage = "Waiting for authorization...";
+    loadingMessage = t("plaid.connection.waitingForAuthorization");
   } else if (currentFlowState === FlowState.EXCHANGING_TOKEN) {
-    loadingMessage = "Finalizing...";
+    loadingMessage = t("plaid.connection.finalizing");
   }
 
   return {

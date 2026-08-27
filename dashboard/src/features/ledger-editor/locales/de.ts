@@ -25,4 +25,40 @@ export default {
   ...deCreateFile,
   ...deUploadFiles,
   ...deLedgerEditor,
+  "ledgerEditor.gitClone": {
+    message: "Git-Klon",
+    description: "Button for opening Git clone options",
+  },
+  "ledgerEditor.failedToLoadDirectory": {
+    message: "Verzeichnisinhalt konnte nicht geladen werden",
+    description: "Error shown when a ledger directory cannot load",
+  },
+  "ledgerEditor.fileContentEmpty": {
+    message: "Dateiinhalt ist leer",
+    description: "Empty state for a file without content",
+  },
+  "ledgerEditor.unableToDisplayImage": {
+    message: "Bildinhalt kann nicht angezeigt werden",
+    description: "Error shown when image content cannot be displayed",
+  },
+  "ledgerEditor.unsupportedPreviewWithType": {
+    message: "Dieser Dateityp ({type}) wird für die Vorschau nicht unterstützt",
+    description: "Unsupported preview message including the file type",
+  },
+  "ledgerEditor.unsupportedPreview": {
+    message: "Dieser Dateityp wird für die Vorschau nicht unterstützt",
+    description: "Unsupported preview message without a file type",
+  },
+  "ledgerEditor.createFileCommit": {
+    message: "Datei erstellen {path}",
+    description: "Generated commit message for creating a file",
+  },
+  "ledgerEditor.updateFileCommit": {
+    message: "Datei aktualisieren {path}",
+    description: "Generated commit message for updating a file",
+  },
+  "ledgerEditor.deleteFileCommit": {
+    message: "Datei löschen {path}",
+    description: "Generated commit message for deleting a file",
+  },
 };

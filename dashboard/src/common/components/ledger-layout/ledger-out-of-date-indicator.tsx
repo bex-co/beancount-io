@@ -9,10 +9,12 @@ import {
   TooltipTrigger,
 } from "@/common/components/ui/tooltip";
 import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
+import { useTranslations } from "@/common/hooks/use-translations";
 import { GetLatestLedgerCommitDocument } from "@/graphql/definitions";
 
 function OutOfDateIndicatorInner({ ledgerId }: { ledgerId: string }) {
   const clearCache = useApolloCacheClear();
+  const { t } = useTranslations();
   const [localSha, setLocalSha] = useState<string | null>(null);
 
   const { data } = useQuery(GetLatestLedgerCommitDocument, {
@@ -54,7 +56,7 @@ function OutOfDateIndicatorInner({ ledgerId }: { ledgerId: string }) {
           <span className="absolute -top-1 -right-1 h-2 w-2 rounded-full bg-orange-500" />
         </Button>
       </TooltipTrigger>
-      <TooltipContent>Out of date — click to refresh</TooltipContent>
+      <TooltipContent>{t("common.outOfDateRefresh")}</TooltipContent>
     </Tooltip>
   );
 }

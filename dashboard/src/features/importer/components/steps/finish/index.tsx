@@ -42,7 +42,7 @@ export function FinishStep({
             </p>
             {importResult.failureCount > 0 && (
               <p className="text-sm text-orange-600 dark:text-orange-400">
-                Note:{" "}
+                {t("importer.finish.note")}:{" "}
                 {t("importer.finish.partialFailure", {
                   count: importResult.failureCount,
                 })}
@@ -81,8 +81,9 @@ export function FinishStep({
                       ))}
                       {importResult.errors.length > 5 && (
                         <li>
-                          ...and {importResult.errors.length - 5}{" "}
-                          {t("importer.finish.moreErrors")}
+                          {t("importer.finish.andMoreErrors", {
+                            count: importResult.errors.length - 5,
+                          })}
                         </li>
                       )}
                     </ul>

@@ -44,6 +44,22 @@ const jaReports = {
   ...jaTrialBalance,
   ...jaOverview,
   ...jaExport,
+  "page.overview.starButton.starSuccess": {
+    message: "元帳にスターが付けられました",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "元帳にスターを付けることができませんでした",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "元帳のスターが正常に解除されました",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "元帳のスターを外すことができませんでした",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default jaReports;

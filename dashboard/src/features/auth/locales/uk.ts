@@ -502,6 +502,60 @@ const ukAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "Приховати пароль",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "Показати пароль",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "Виберіть книгу.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message:
+      "Beancount Mobile хоче отримати доступ до вашого облікового запису.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "Дозволити Beancount Mobile?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "Цей грант для всього облікового запису дозволяє програмі:",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message: "Не вдалося змінити обліковий запис. Спробуйте ще раз.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "Використовуйте інший обліковий запис",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "Визначте обліковий запис, який ви схвалюєте",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message:
+      "Залишайтеся в безпечному обліковому записі, доки ви не скасуєте доступ",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "Читайте свої книги",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "Створення та оновлення даних книги",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "Керуйте бухгалтерськими книгами та співавторами",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default ukAuth;

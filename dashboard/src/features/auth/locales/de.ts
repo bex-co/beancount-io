@@ -504,6 +504,59 @@ const deAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "Passwort verbergen",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "Passwort anzeigen",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "Bitte wählen Sie ein Hauptbuch aus.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message: "Beancount Mobile möchte Zugriff auf Ihr Konto.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "Beancount Mobile zulassen?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "Diese kontoweite Bewilligung ermöglicht der App:",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message:
+      "Das Konto konnte nicht gewechselt werden. Bitte versuchen Sie es erneut.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "Verwenden Sie ein anderes Konto",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "Identifizieren Sie das Konto, das Sie genehmigen",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message: "Bleiben Sie sicher angemeldet, bis Sie den Zugriff widerrufen",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "Lesen Sie Ihre Geschäftsbücher",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "Hauptbuchdaten erstellen und aktualisieren",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "Hauptbücher und Mitarbeiter verwalten",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default deAuth;

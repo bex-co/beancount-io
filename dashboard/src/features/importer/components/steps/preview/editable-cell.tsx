@@ -133,7 +133,10 @@ export function EditableCell({
         disabled && "cursor-not-allowed opacity-50",
       )}
       role="button"
-      aria-label={`Edit ${placeholder || "field"}. Current value: ${value}`}
+      aria-label={t("importer.preview.editCellLabel", {
+        field: placeholder || t("importer.preview.field"),
+        value,
+      })}
     >
       <div
         className={cn(

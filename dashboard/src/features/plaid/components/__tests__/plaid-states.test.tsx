@@ -15,9 +15,9 @@ describe("PlaidLoadingState", () => {
 });
 
 describe("PlaidErrorState", () => {
-  it("renders 'Failed to Load' heading", () => {
+  it("renders the translated load-error heading", () => {
     render(<PlaidErrorState onRetry={vi.fn()} />);
-    expect(screen.getByText("Failed to Load")).toBeInTheDocument();
+    expect(screen.getByText("Failed to Load Data")).toBeInTheDocument();
   });
 
   it("renders Retry button that calls onRetry when clicked", () => {

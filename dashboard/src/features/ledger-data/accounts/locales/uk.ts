@@ -129,6 +129,10 @@ const ukAccounts: Record<string, TranslationEntry> = {
     description:
       "Toast shown after an account was closed; {account} is the account name",
   },
+  "page.accounts.accountDeletedToast": {
+    message: "Обліковий запис {account} видалено",
+    description: "Toast shown after deleting an account",
+  },
 };
 
 export default ukAccounts;

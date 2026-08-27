@@ -6,6 +6,7 @@ import { useUnstarLedger } from "./use-unstar-ledger";
 import { useState, useEffect } from "react";
 import { useNavigate } from "@tanstack/react-router";
 import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 interface StarButtonProps {
   ledgerId: string;
@@ -19,9 +20,10 @@ export function StarButton({
   ledgerId,
   isStarred: initialIsStarred,
   className,
-  starLabel = "Star",
-  starredLabel = "Starred",
+  starLabel,
+  starredLabel,
 }: StarButtonProps) {
+  const { t } = useTranslations();
   const navigate = useNavigate();
   const { starLedger, loading: starLoading } = useStarLedger(ledgerId);
   const { unstarLedger, loading: unstarLoading } = useUnstarLedger(ledgerId);
@@ -72,7 +74,9 @@ export function StarButton({
           localIsStarred && "fill-amber-400 stroke-amber-400",
         )}
       />
-      {localIsStarred ? starredLabel : starLabel}
+      {localIsStarred
+        ? (starredLabel ?? t("page.overview.starButton.starred"))
+        : (starLabel ?? t("page.overview.starButton.star"))}
     </Button>
   );
 }

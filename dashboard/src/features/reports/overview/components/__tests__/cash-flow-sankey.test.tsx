@@ -20,7 +20,7 @@ vi.mock("@/common/components/react-echarts", () => ({
         const data = item.data;
         return !data || (Array.isArray(data) && data.length === 0);
       });
-    if (isEmpty) return <div>Chart is empty.</div>;
+    if (isEmpty) return <div data-testid="chart-empty" />;
     return <div data-testid="echarts-mock">{JSON.stringify(option)}</div>;
   },
 }));
@@ -43,7 +43,7 @@ vi.mock("@/common/hooks/use-translations", () => ({
 describe("CashFlowSankey", () => {
   it("should render empty state when no data provided", () => {
     render(<CashFlowSankey />);
-    expect(screen.getByText("Chart is empty.")).toBeInTheDocument();
+    expect(screen.getByTestId("chart-empty")).toBeInTheDocument();
   });
 
   it("should render Sankey chart with income and expense data", () => {

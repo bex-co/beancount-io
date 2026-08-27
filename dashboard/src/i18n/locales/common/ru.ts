@@ -830,6 +830,62 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Не удалось скопировать",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "Устарело — нажмите, чтобы обновить",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "Посмотреть",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "Сегодня",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "Автор",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "Откуда",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "Кому",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "Вариант",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "Значение",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} ещё",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "Скрыть графики",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "Показать графики",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "Перенаправление…",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "Загрузка бухгалтерской книги",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: "Нажмите Enter, чтобы использовать «{value}»",
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default ruCommon;

@@ -46,6 +46,22 @@ const faReports = {
   ...faTrialBalance,
   ...faOverview,
   ...faExport,
+  "page.overview.starButton.starSuccess": {
+    message: "لجر با موفقیت بازی کرد",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "ستاره گذاری دفتر کل ناموفق بود",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "لجر با موفقیت لغو ستاره شد",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "حذف ستاره از دفتر کل ناموفق بود",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default faReports;

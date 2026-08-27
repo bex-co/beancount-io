@@ -152,6 +152,58 @@ const zhAiAgent: Record<string, TranslationEntry> = {
     message: "滚动到底部",
     description: "Aria label for the scroll to bottom button in the chat",
   },
+  "aiAgent.attachment": {
+    message: "附件",
+    description: "Fallback filename for an attachment",
+  },
+  "aiAgent.preparing": {
+    message: "准备...",
+    description: "Status while an AI tool is preparing",
+  },
+  "aiAgent.toolFailed": {
+    message: "{tool} 失败",
+    description: "Fallback error when an AI tool fails",
+  },
+  "aiAgent.toolList": {
+    message: "列表",
+    description: "Label for the list-files AI tool",
+  },
+  "aiAgent.toolRead": {
+    message: "阅读",
+    description: "Label for the read-file AI tool",
+  },
+  "aiAgent.checkingLedgerContext": {
+    message: "检查账本上下文",
+    description: "Status while AI tools inspect a ledger",
+  },
+  "aiAgent.checkedFiles": {
+    message: "已检查 {count} 文件",
+    description: "Summary of files inspected by AI tools",
+  },
+  "aiAgent.ranQueries": {
+    message: "执行 {count} 查询或查询",
+    description: "Summary of queries run by AI tools",
+  },
+  "aiAgent.usedTools": {
+    message: "使用过 {count} 工具",
+    description: "Summary of tools used by the AI",
+  },
+  "aiAgent.unknownBlock": {
+    message: "未知块",
+    description: "Fallback label for an unsupported AI message block",
+  },
+  "aiAgent.editApproval.preparingChanges": {
+    message: "准备更改...",
+    description: "Status while AI file changes are prepared",
+  },
+  "aiAgent.editApproval.appliedOperations": {
+    message: "应用了 {count} 操作",
+    description: "Success status for applied AI file operations",
+  },
+  "aiAgent.editApproval.failed": {
+    message: "编辑失败",
+    description: "Fallback error for a failed AI file edit",
+  },
 };
 
 export default zhAiAgent;

@@ -153,6 +153,58 @@ const bgAiAgent: Record<string, TranslationEntry> = {
     message: "Превъртане до края",
     description: "Aria label for the scroll to bottom button in the chat",
   },
+  "aiAgent.attachment": {
+    message: "прикачен файл",
+    description: "Fallback filename for an attachment",
+  },
+  "aiAgent.preparing": {
+    message: "Подготвя се...",
+    description: "Status while an AI tool is preparing",
+  },
+  "aiAgent.toolFailed": {
+    message: "{tool} неуспешно",
+    description: "Fallback error when an AI tool fails",
+  },
+  "aiAgent.toolList": {
+    message: "Списък",
+    description: "Label for the list-files AI tool",
+  },
+  "aiAgent.toolRead": {
+    message: "Прочетете",
+    description: "Label for the read-file AI tool",
+  },
+  "aiAgent.checkingLedgerContext": {
+    message: "Проверка на контекста на счетоводната книга",
+    description: "Status while AI tools inspect a ledger",
+  },
+  "aiAgent.checkedFiles": {
+    message: "Проверени {count} файл(а)",
+    description: "Summary of files inspected by AI tools",
+  },
+  "aiAgent.ranQueries": {
+    message: "Изпълних {count} заявка или заявки",
+    description: "Summary of queries run by AI tools",
+  },
+  "aiAgent.usedTools": {
+    message: "Използвани {count} инструмент(и)",
+    description: "Summary of tools used by the AI",
+  },
+  "aiAgent.unknownBlock": {
+    message: "Неизвестен блок",
+    description: "Fallback label for an unsupported AI message block",
+  },
+  "aiAgent.editApproval.preparingChanges": {
+    message: "Подготвят се промени...",
+    description: "Status while AI file changes are prepared",
+  },
+  "aiAgent.editApproval.appliedOperations": {
+    message: "Приложени {count} операция(и)",
+    description: "Success status for applied AI file operations",
+  },
+  "aiAgent.editApproval.failed": {
+    message: "Неуспешна редакция",
+    description: "Fallback error for a failed AI file edit",
+  },
 };
 
 export default bgAiAgent;

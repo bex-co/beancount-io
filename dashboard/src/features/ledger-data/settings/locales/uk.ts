@@ -24,6 +24,11 @@ const ukAllSettings = {
   ...ukFavaOptionsSection,
   ...ukBcioOptionsSection,
   ...ukSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "Цей код для вбудовування включає адаптивне змінення розміру, трансформацію масштабу та кнопку «Переглянути на Beancount.io» для атрибуції.",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default ukAllSettings;

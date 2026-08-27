@@ -24,6 +24,11 @@ const zhAllSettings = {
   ...zhFavaOptionsSection,
   ...zhBcioOptionsSection,
   ...zhSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "此嵌入代码包括响应式大小调整、比例转换和用于归因的“在 Beancount.io 上查看”按钮。",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default zhAllSettings;

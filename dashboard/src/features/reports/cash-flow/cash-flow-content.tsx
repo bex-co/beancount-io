@@ -201,7 +201,9 @@ export function CashFlowContent({
               variant="outline"
               size="icon-sm"
               onClick={toggleChartsVisible}
-              aria-label={chartsVisible ? "Hide charts" : "Show charts"}
+              aria-label={
+                chartsVisible ? t("common.hideCharts") : t("common.showCharts")
+              }
             >
               {chartsVisible ? <ChevronUp /> : <ChevronDown />}
             </Button>

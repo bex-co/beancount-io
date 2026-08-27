@@ -153,6 +153,58 @@ const faAiAgent: Record<string, TranslationEntry> = {
     message: "پیمایش به پایین",
     description: "Aria label for the scroll to bottom button in the chat",
   },
+  "aiAgent.attachment": {
+    message: "پیوست",
+    description: "Fallback filename for an attachment",
+  },
+  "aiAgent.preparing": {
+    message: "آماده سازی…",
+    description: "Status while an AI tool is preparing",
+  },
+  "aiAgent.toolFailed": {
+    message: "{tool} ناموفق بود",
+    description: "Fallback error when an AI tool fails",
+  },
+  "aiAgent.toolList": {
+    message: "فهرست",
+    description: "Label for the list-files AI tool",
+  },
+  "aiAgent.toolRead": {
+    message: "بخوانید",
+    description: "Label for the read-file AI tool",
+  },
+  "aiAgent.checkingLedgerContext": {
+    message: "بررسی زمینه دفتر کل",
+    description: "Status while AI tools inspect a ledger",
+  },
+  "aiAgent.checkedFiles": {
+    message: "فایل(های) {count} بررسی شد",
+    description: "Summary of files inspected by AI tools",
+  },
+  "aiAgent.ranQueries": {
+    message: "پرس و جو یا جستارهای {count} را اجرا کرد",
+    description: "Summary of queries run by AI tools",
+  },
+  "aiAgent.usedTools": {
+    message: "ابزار(های) {count} استفاده شده",
+    description: "Summary of tools used by the AI",
+  },
+  "aiAgent.unknownBlock": {
+    message: "بلوک ناشناخته",
+    description: "Fallback label for an unsupported AI message block",
+  },
+  "aiAgent.editApproval.preparingChanges": {
+    message: "در حال آماده سازی تغییرات…",
+    description: "Status while AI file changes are prepared",
+  },
+  "aiAgent.editApproval.appliedOperations": {
+    message: "عملیات (های) {count} اعمال شد",
+    description: "Success status for applied AI file operations",
+  },
+  "aiAgent.editApproval.failed": {
+    message: "ویرایش انجام نشد",
+    description: "Fallback error for a failed AI file edit",
+  },
 };
 
 export default faAiAgent;

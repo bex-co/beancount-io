@@ -669,6 +669,93 @@ const caPlaid: Record<string, TranslationEntry> = {
     message: "No s'han pogut suprimir les transaccions. Torneu-ho a provar.",
     description: "Toast description for deletion failure",
   },
+  "plaid.institutionNotFound": {
+    message: "No s'ha trobat la institució",
+    description: "Empty state when a Plaid institution is unavailable",
+  },
+  "plaid.thisInstitution": {
+    message: "aquesta institució",
+    description: "Fallback name for a Plaid institution",
+  },
+  "plaid.transactionReview.selectTransaction": {
+    message: "Selecciona la transacció {transaction}",
+    description: "Accessible label for selecting a Plaid transaction",
+  },
+  "plaid.connection.cancelled": {
+    message: "Connexió cancel·lada",
+    description: "Toast title when Plaid connection is cancelled",
+  },
+  "plaid.connection.linkClosed": {
+    message: "L'enllaç Plaid s'ha tancat.",
+    description: "Toast description when Plaid Link closes",
+  },
+  "plaid.connection.alreadyExists": {
+    message: "La connexió ja existeix",
+    description: "Toast title for a duplicate Plaid connection",
+  },
+  "plaid.connection.alreadyExistsDescription": {
+    message:
+      "Ja teniu una connexió activa a {institution}. Desenllaçeu primer la connexió existent.",
+    description: "Toast description for a duplicate Plaid connection",
+  },
+  "plaid.connection.failed": {
+    message: "La connexió ha fallat",
+    description: "Toast title when Plaid connection fails",
+  },
+  "plaid.connection.connecting": {
+    message: "S'està connectant...",
+    description: "Status while connecting a bank",
+  },
+  "plaid.connection.preparing": {
+    message: "S'està preparant...",
+    description: "Status while preparing Plaid Link",
+  },
+  "plaid.connection.waitingForAuthorization": {
+    message: "S'està esperant l'autorització...",
+    description: "Status while waiting for Plaid authorization",
+  },
+  "plaid.connection.finalizing": {
+    message: "S'està acabant…",
+    description: "Status while finalizing a Plaid connection",
+  },
+  "plaid.reauth.reconnected": {
+    message: "Banc tornat a connectar",
+    description: "Toast title after reconnecting a bank",
+  },
+  "plaid.reauth.reconnectedDescription": {
+    message: "El vostre compte bancari s'ha tornat a connectar correctament.",
+    description: "Toast description after reconnecting a bank",
+  },
+  "plaid.reauth.statusUpdateFailed": {
+    message: "L'actualització d'estat ha fallat",
+    description: "Toast title when a reconnected bank status cannot update",
+  },
+  "plaid.reauth.statusUpdateFailedDescription": {
+    message:
+      "La reconnexió ha estat correcta, però no s'ha pogut actualitzar l'estat. Si us plau, actualitzeu la pàgina.",
+    description:
+      "Toast description when status update fails after reconnection",
+  },
+  "plaid.reauth.cancelled": {
+    message: "Reconnexió cancel·lada",
+    description: "Toast title when bank reconnection is cancelled",
+  },
+  "plaid.reauth.linkClosed": {
+    message: "Plaid Link s'ha tancat sense tornar a connectar-se.",
+    description: "Toast description when Plaid Link closes during reconnection",
+  },
+  "plaid.reauth.failed": {
+    message: "No s'ha pogut tornar a connectar",
+    description: "Toast title when bank reconnection fails",
+  },
+  "plaid.reauth.reconnecting": {
+    message: "S'està tornant a connectar...",
+    description: "Status while reconnecting a bank",
+  },
+  "plaid.reauth.updatingStatus": {
+    message: "S'està actualitzant l'estat...",
+    description: "Status while updating a reconnected bank",
+  },
 };
 
 export default caPlaid;

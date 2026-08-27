@@ -58,43 +58,9 @@ describe("date-balance-chart utils", () => {
       expect(typeof option).toBe("object");
     });
 
-    it("should have a title configuration", () => {
+    it("should have an empty series", () => {
       const option = createEmptyChartOption();
-      expect(option).toHaveProperty("title");
-    });
-
-    it("should display 'No Data Available' text", () => {
-      const option = createEmptyChartOption();
-      const title = option.title as { text: string };
-      expect(title.text).toBe("No Data Available");
-    });
-
-    it("should center the title horizontally", () => {
-      const option = createEmptyChartOption();
-      const title = option.title as { left: string; top: string };
-      expect(title.left).toBe("center");
-    });
-
-    it("should center the title vertically", () => {
-      const option = createEmptyChartOption();
-      const title = option.title as { top: string };
-      expect(title.top).toBe("center");
-    });
-
-    it("should use muted color for title text", () => {
-      const option = createEmptyChartOption();
-      const title = option.title as {
-        textStyle: { color: string; fontSize: number };
-      };
-      expect(title.textStyle.color).toBe("#999");
-    });
-
-    it("should use appropriate font size for title", () => {
-      const option = createEmptyChartOption();
-      const title = option.title as {
-        textStyle: { fontSize: number };
-      };
-      expect(title.textStyle.fontSize).toBe(16);
+      expect(option.series).toEqual([]);
     });
   });
 

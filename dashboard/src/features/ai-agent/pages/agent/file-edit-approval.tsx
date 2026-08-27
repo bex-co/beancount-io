@@ -113,7 +113,7 @@ export function FileEditApproval({
     return (
       <div className="my-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Loader2 className="h-3 w-3 animate-spin" />
-        <span>Preparing changes…</span>
+        <span>{t("aiAgent.editApproval.preparingChanges")}</span>
       </div>
     );
   }
@@ -125,7 +125,9 @@ export function FileEditApproval({
         <span>
           {part.output != null
             ? part.output.ok
-              ? `Applied ${part.output.result.count} operation(s)`
+              ? t("aiAgent.editApproval.appliedOperations", {
+                  count: part.output.result.count,
+                })
               : part.output.error
             : t("aiAgent.editApproval.approved")}
         </span>
@@ -138,7 +140,9 @@ export function FileEditApproval({
       <div className="my-1.5 flex items-center gap-1.5 text-xs text-red-600">
         <XCircle className="h-3 w-3" />
         <span>
-          {"errorText" in part ? String(part.errorText) : "Edit failed"}
+          {"errorText" in part
+            ? String(part.errorText)
+            : t("aiAgent.editApproval.failed")}
         </span>
       </div>
     );

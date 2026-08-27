@@ -128,6 +128,10 @@ const koAccounts: Record<string, TranslationEntry> = {
     description:
       "Toast shown after an account was closed; {account} is the account name",
   },
+  "page.accounts.accountDeletedToast": {
+    message: "계정 {account} 삭제됨",
+    description: "Toast shown after deleting an account",
+  },
 };
 
 export default koAccounts;

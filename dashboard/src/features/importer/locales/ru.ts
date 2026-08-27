@@ -461,11 +461,6 @@ const ruImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "еще ошибок",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "Импорт не удался",
     description: "Title for failed import",
@@ -485,6 +480,46 @@ const ruImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "Умный импорт",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "Примечание",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…и ещё {count} ошибок",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "Изменить {field}. Текущее значение: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "поле",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "Укажите дату",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "Неверный формат даты. Ожидаемый ГГГГ-ММ-ДД",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "Необходимо указать получателя платежа.",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "Требуется описание",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "Требуется сумма",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "Сумма должна быть действительным числом.",
+    description: "Validation error for an invalid import amount",
   },
 };
 

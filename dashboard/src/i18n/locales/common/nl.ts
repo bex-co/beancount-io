@@ -830,6 +830,62 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Kopiëren mislukt",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "Verouderd — klik om te vernieuwen",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "Bekijken",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "Vandaag",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "Auteur",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "Vanaf",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "Aan",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "Optie",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "Waarde",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} meer",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "Diagrammen verbergen",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "Grafieken weergeven",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "Omleiden...",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "Uw grootboek laden",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: 'Druk op Enter om "{value}" te gebruiken',
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default nlCommon;

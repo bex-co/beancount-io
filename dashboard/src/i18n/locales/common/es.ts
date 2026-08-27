@@ -831,6 +831,62 @@ const esCommon: Record<string, TranslationEntry> = {
     message: "No se pudo copiar",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "Desactualizado: haga clic para actualizar",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "Ver",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "hoy",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "Autor",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "De",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "Para",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "Opción",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "Valor",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} más",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "Ocultar gráficos",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "Mostrar gráficos",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "Redirigiendo…",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "Cargando tu libro mayor",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: 'Presione Entrar para usar "{value}"',
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default esCommon;

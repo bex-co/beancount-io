@@ -2,6 +2,7 @@ import { type DynamicToolUIPart } from "ai";
 import { Button } from "@/common/components/ui/button";
 import { Badge } from "@/common/components/ui/badge";
 import { Bot, CheckCircle2, Loader2, XCircle } from "lucide-react";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 export function DynamicToolApproval({
   part,
@@ -12,11 +13,12 @@ export function DynamicToolApproval({
   onApprove: (id: string) => void;
   onDeny: (id: string) => void;
 }) {
+  const { t } = useTranslations();
   if (part.state === "input-streaming" || part.state === "input-available") {
     return (
       <div className="my-1.5 flex items-center gap-1.5 text-xs text-muted-foreground">
         <Loader2 className="h-3 w-3 animate-spin" />
-        <span>Preparing…</span>
+        <span>{t("aiAgent.preparing")}</span>
       </div>
     );
   }
@@ -34,7 +36,9 @@ export function DynamicToolApproval({
     return (
       <div className="my-1.5 flex items-center gap-1.5 text-xs text-red-600">
         <XCircle className="h-3 w-3" />
-        <span>{part.errorText || `${part.toolName} failed`}</span>
+        <span>
+          {part.errorText || t("aiAgent.toolFailed", { tool: part.toolName })}
+        </span>
       </div>
     );
   }
@@ -57,27 +61,29 @@ export function DynamicToolApproval({
             variant={isApproved ? "default" : "outline"}
             className="ml-auto"
           >
-            {isApproved ? "Approved" : "Denied"}
+            {isApproved
+              ? t("aiAgent.editApproval.approved")
+              : t("aiAgent.editApproval.denied")}
           </Badge>
         )}
         {isApproved && <Loader2 className="h-3 w-3 animate-spin ml-1" />}
       </div>
 
       {part.state === "output-denied" && (
-        <Badge variant="outline">Denied</Badge>
+        <Badge variant="outline">{t("aiAgent.editApproval.denied")}</Badge>
       )}
 
       {part.state === "approval-requested" && (
         <div className="flex gap-2 pt-1">
           <Button size="sm" onClick={() => onApprove(approvalId)}>
-            Approve
+            {t("aiAgent.editApproval.approve")}
           </Button>
           <Button
             size="sm"
             variant="outline"
             onClick={() => onDeny(approvalId)}
           >
-            Deny
+            {t("aiAgent.editApproval.deny")}
           </Button>
         </div>
       )}

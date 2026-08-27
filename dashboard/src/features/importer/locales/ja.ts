@@ -458,11 +458,6 @@ const jaImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "件のエラーがあります",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "インポート失敗",
     description: "Title for failed import",
@@ -482,6 +477,46 @@ const jaImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "スマートインポート",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "注",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…さらに {count} 件のエラー",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "{field} を編集します。現在の値: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "フィールド",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "日付は必須です",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "無効な日付形式です。 YYYY-MM-DD予定",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "受取人は必須です",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "説明は必須です",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "金額が必要です",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "金額は有効な数値でなければなりません",
+    description: "Validation error for an invalid import amount",
   },
 };
 

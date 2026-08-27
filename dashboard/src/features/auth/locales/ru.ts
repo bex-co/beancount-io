@@ -503,6 +503,58 @@ const ruAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "Скрыть пароль",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "Показать пароль",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "Пожалуйста, выберите бухгалтерскую книгу.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message: "Beancount Mobile хочет получить доступ к вашей учетной записи.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "Разрешить Beancount Mobile?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "Этот грант на уровне аккаунта позволяет приложению:",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message: "Не удалось переключить аккаунты. Пожалуйста, попробуйте еще раз.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "Используйте другую учетную запись",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "Укажите учетную запись, которую вы одобряете.",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message: "Оставайтесь в безопасности до тех пор, пока не отзовете доступ.",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "Прочтите свои бухгалтерские книги",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "Создание и обновление данных бухгалтерской книги",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "Управление реестрами и соавторами",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default ruAuth;

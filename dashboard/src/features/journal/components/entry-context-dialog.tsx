@@ -292,7 +292,7 @@ function EntryContextMain({
           </div>
           {hasChanges && (
             <div className="p-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20">
-              Source has been modified
+              {t("journal.sourceModified")}
             </div>
           )}
         </CardContent>
@@ -310,7 +310,7 @@ function EntryContextMain({
           ) : (
             <Trash2 className="h-4 w-4 mr-2" />
           )}
-          Delete
+          {t("common.delete")}
         </Button>
         <Button
           onClick={handleSave}
@@ -321,7 +321,7 @@ function EntryContextMain({
           ) : (
             <Save className="h-4 w-4 mr-2" />
           )}
-          Save
+          {t("common.save")}
         </Button>
       </div>
     </div>
@@ -379,7 +379,7 @@ export function EntryContextDialog({
           },
         },
       });
-      toast.success(`Entry saved successfully`);
+      toast.success(t("journal.entrySavedSuccess"));
       onOpenChange(false);
       clearCache();
       onSuccess?.();
@@ -401,7 +401,7 @@ export function EntryContextDialog({
           },
         },
       });
-      toast.success(`Entry deleted successfully`);
+      toast.success(t("journal.entryDeletedSuccess"));
       onOpenChange(false);
       clearCache();
       onSuccess?.();
@@ -437,7 +437,7 @@ export function EntryContextDialog({
             />
           ) : (
             <div className="text-center py-8 text-muted-foreground">
-              No entry context data available
+              {t("journal.noEntryContext")}
             </div>
           )}
         </div>

@@ -830,6 +830,62 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Неуспешно копиране",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "Изтекъл — щракнете, за да опресните",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "Преглед",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "Днес",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "Автор",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "От",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "До",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "Вариант",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "Стойност",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+ още {count}",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "Скриване на диаграмите",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "Показване на диаграми",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "Пренасочване...",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "Зареждане на вашата книга",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: "Натиснете Enter, за да използвате „{value}“",
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default bgCommon;

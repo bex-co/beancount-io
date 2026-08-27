@@ -3,6 +3,7 @@ import { cn } from "@/common/lib/utils/utils";
 import { useParams } from "@tanstack/react-router";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { createLedgerId } from "@/common/lib/utils/encode";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 interface LedgerFileBreadcrumbProps {
   type: "file" | "dir";
@@ -18,6 +19,7 @@ export default function LedgerFileBreadcrumb({
   className,
 }: LedgerFileBreadcrumbProps) {
   const fileNavigate = useFileNavigate();
+  const { t } = useTranslations();
 
   // Try to get params from new routes first, fallback to any route params
   const params = useParams({ strict: false });
@@ -44,7 +46,7 @@ export default function LedgerFileBreadcrumb({
             className="text-foreground hover:underline cursor-pointer"
             onClick={() => handleNavigateDir("")}
           >
-            File
+            {t("ledgerEditor.files")}
           </button>
           {segments.map((seg, idx) => {
             const dirPath = segments.slice(0, idx + 1).join("/");
@@ -77,7 +79,7 @@ export default function LedgerFileBreadcrumb({
           className="text-foreground hover:underline cursor-pointer"
           onClick={() => handleNavigateDir("")}
         >
-          File
+          {t("ledgerEditor.files")}
         </button>
         {parentSegments.map((seg, idx) => {
           const dirPath = parentSegments.slice(0, idx + 1).join("/");

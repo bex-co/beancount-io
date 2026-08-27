@@ -462,11 +462,6 @@ const nlImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "meer fouten",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "Importeren mislukt",
     description: "Title for failed import",
@@ -486,6 +481,46 @@ const nlImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "Slim importeren",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "Opmerking",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…en {count} nog meer fouten",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "Bewerk {field}. Huidige waarde: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "veld",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "Datum is vereist",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "Ongeldig datumformaat. Verwacht JJJJ-MM-DD",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "Begunstigde is vereist",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "Beschrijving is vereist",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "Bedrag is vereist",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "Bedrag moet een geldig getal zijn",
+    description: "Validation error for an invalid import amount",
   },
 };
 

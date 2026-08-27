@@ -25,6 +25,11 @@ const ruAllSettings = {
   ...ruFavaOptionsSection,
   ...ruBcioOptionsSection,
   ...ruSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "Этот код для внедрения включает в себя адаптивный размер, преобразование масштаба и кнопку «Просмотр на Beancount.io» для указания авторства.",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default ruAllSettings;

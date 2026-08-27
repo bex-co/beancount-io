@@ -37,7 +37,7 @@ describe("HierarchyTreeMap", () => {
     node as unknown as Record<string, unknown>;
 
   describe("Empty state", () => {
-    it("should render no data message when data is null", () => {
+    it("should return an empty series when data is null", () => {
       render(
         <HierarchyTreeMap
           data={null as unknown as SerializableTreeNode}
@@ -50,10 +50,10 @@ describe("HierarchyTreeMap", () => {
         chartElement.getAttribute("data-option") || "{}",
       );
 
-      expect(option.title.text).toBe("No Data Available");
+      expect(option.series).toEqual([]);
     });
 
-    it("should render empty message when total value is 0", () => {
+    it("should return an empty series when total value is 0", () => {
       const emptyData = createNode({
         account: "Assets",
         balanceChildren: { USD: 0 },
@@ -66,7 +66,7 @@ describe("HierarchyTreeMap", () => {
         chartElement.getAttribute("data-option") || "{}",
       );
 
-      expect(option.title.text).toBe("Chart is empty.");
+      expect(option.series).toEqual([]);
     });
   });
 

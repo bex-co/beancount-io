@@ -465,11 +465,6 @@ const frImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "erreurs supplémentaires",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "Échec de l'importation",
     description: "Title for failed import",
@@ -489,6 +484,46 @@ const frImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "Import intelligent",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "Remarque",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "… et {count} autres erreurs",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "Modifiez {field}. Valeur actuelle : {value}\nchamp",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "champ",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "La date est requise",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "Format de date invalide. Prévu AAAA-MM-JJ",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "Le bénéficiaire est requis",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "Une description est requise",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "Un montant est requis",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "Le montant doit être un nombre valide",
+    description: "Validation error for an invalid import amount",
   },
 };
 

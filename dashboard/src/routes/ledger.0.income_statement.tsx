@@ -4,11 +4,13 @@ import { decodeLedgerId } from "@/common/lib/utils/encode";
 import { getUserDefaultLedger } from "@/common/lib/utils/ledger-utils";
 import { useEffect } from "react";
 import { useApolloClient } from "@apollo/client/react";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 // Component that handles the redirect on the client side
 function LedgerRedirectComponent() {
   const navigate = useNavigate();
   const client = useApolloClient();
+  const { t } = useTranslations();
 
   useEffect(() => {
     const performRedirect = async () => {
@@ -36,8 +38,10 @@ function LedgerRedirectComponent() {
   return (
     <div className="flex min-h-screen items-center justify-center">
       <div className="text-center">
-        <h2 className="text-lg font-semibold">Redirecting...</h2>
-        <p className="text-sm text-muted-foreground">Loading your ledger</p>
+        <h2 className="text-lg font-semibold">{t("common.redirecting")}</h2>
+        <p className="text-sm text-muted-foreground">
+          {t("common.loadingLedger")}
+        </p>
       </div>
     </div>
   );

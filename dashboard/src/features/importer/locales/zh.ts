@@ -451,11 +451,6 @@ const zhImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "更多错误",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "导入失败",
     description: "Title for failed import",
@@ -475,6 +470,46 @@ const zhImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "智能导入",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "注意",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…以及 {count} 更多错误",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "编辑 {field}。当前值：{value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "领域",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "日期为必填项",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "日期格式无效。预计年-月-日",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "收款人为必填项",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "需要描述",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "金额为必填项",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "金额必须是有效数字",
+    description: "Validation error for an invalid import amount",
   },
 };
 

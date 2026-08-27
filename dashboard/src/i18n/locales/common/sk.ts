@@ -830,6 +830,62 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Kopírovanie zlyhalo",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "Neaktuálne – kliknutím obnovíte",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "Zobraziť",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "Dnes",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "Autor",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "Od",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "Komu",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "Možnosť",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "Hodnota",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} ďalších",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "Skryť grafy",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "Zobraziť grafy",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "Presmerovanie...",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "Načítava sa vaša účtovná kniha",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: "Stlačením klávesu Enter použijete „{value}“",
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default skCommon;

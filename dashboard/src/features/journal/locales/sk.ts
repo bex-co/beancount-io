@@ -325,6 +325,46 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Neznámy typ direktívy",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "Zdroj bol upravený",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "Záznam bol úspešne uložený",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "Záznam bol úspešne odstránený",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "Nie sú k dispozícii žiadne kontextové údaje",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "nahromadených",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "od",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "Vymazané",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "Čaká sa",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(prázdne)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "auto",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default skJournal;

@@ -834,6 +834,62 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Échec de la copie",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "Obsolète — cliquez pour actualiser",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "Afficher",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "Aujourd'hui",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "Auteur",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "De",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "À",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "Option",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "Valeur",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} plus",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "Masquer les graphiques",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "Afficher les graphiques",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "Redirection…",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "Chargement de votre grand livre",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: 'Appuyez sur Entrée pour utiliser "{value}"',
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default frCommon;

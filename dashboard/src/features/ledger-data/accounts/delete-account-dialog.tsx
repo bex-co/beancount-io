@@ -104,7 +104,9 @@ export function DeleteAccountDialog({
       await deleteEntries({
         variables: { ledgerId, input: { entries } },
       });
-      toast.success(`Account ${account.account} deleted`);
+      toast.success(
+        t("page.accounts.accountDeletedToast", { account: account.account }),
+      );
       onSuccess();
       handleOpenChange(false);
     } catch (err) {

@@ -25,4 +25,40 @@ export default {
   ...zhCreateFile,
   ...zhUploadFiles,
   ...zhLedgerEditor,
+  "ledgerEditor.gitClone": {
+    message: "Git 克隆",
+    description: "Button for opening Git clone options",
+  },
+  "ledgerEditor.failedToLoadDirectory": {
+    message: "加载目录内容失败",
+    description: "Error shown when a ledger directory cannot load",
+  },
+  "ledgerEditor.fileContentEmpty": {
+    message: "文件内容为空",
+    description: "Empty state for a file without content",
+  },
+  "ledgerEditor.unableToDisplayImage": {
+    message: "无法显示图像内容",
+    description: "Error shown when image content cannot be displayed",
+  },
+  "ledgerEditor.unsupportedPreviewWithType": {
+    message: "预览不支持此文件类型 ({type})",
+    description: "Unsupported preview message including the file type",
+  },
+  "ledgerEditor.unsupportedPreview": {
+    message: "该文件类型不支持预览",
+    description: "Unsupported preview message without a file type",
+  },
+  "ledgerEditor.createFileCommit": {
+    message: "创建文件 {path}",
+    description: "Generated commit message for creating a file",
+  },
+  "ledgerEditor.updateFileCommit": {
+    message: "更新文件 {path}",
+    description: "Generated commit message for updating a file",
+  },
+  "ledgerEditor.deleteFileCommit": {
+    message: "删除文件 {path}",
+    description: "Generated commit message for deleting a file",
+  },
 };

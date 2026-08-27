@@ -326,6 +326,46 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Type de directive inconnu",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "La source a été modifiée",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "Entrée enregistrée avec succès",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "Entrée supprimée avec succès",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "Aucune donnée de contexte d'entrée disponible",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "accumulés",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "de",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "Effacé",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "En attente",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(vide)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "automatique",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default frJournal;

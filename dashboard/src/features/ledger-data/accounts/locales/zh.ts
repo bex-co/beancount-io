@@ -128,6 +128,10 @@ const zhAccounts: Record<string, TranslationEntry> = {
     description:
       "Toast shown after an account was closed; {account} is the account name",
   },
+  "page.accounts.accountDeletedToast": {
+    message: "帐户 {account} 已删除",
+    description: "Toast shown after deleting an account",
+  },
 };
 
 export default zhAccounts;

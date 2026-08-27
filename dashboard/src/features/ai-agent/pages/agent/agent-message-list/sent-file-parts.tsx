@@ -1,8 +1,10 @@
 import { type FileUIPart } from "ai";
 import { FileImage, FileText } from "lucide-react";
 import type { AgentUIMessage } from "./agent-message-list";
+import { useTranslations } from "@/common/hooks/use-translations";
 
 export function SentFileParts({ parts }: { parts: AgentUIMessage["parts"] }) {
+  const { t } = useTranslations();
   const fileParts = parts.filter((p) => p.type === "file") as FileUIPart[];
   if (fileParts.length === 0) return null;
 
@@ -21,7 +23,7 @@ export function SentFileParts({ parts }: { parts: AgentUIMessage["parts"] }) {
               <FileText className="h-3.5 w-3.5 shrink-0 opacity-70" />
             )}
             <span className="max-w-45 truncate">
-              {fp.filename ?? "attachment"}
+              {fp.filename ?? t("aiAgent.attachment")}
             </span>
           </div>
         );

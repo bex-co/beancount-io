@@ -128,6 +128,10 @@ const jaAccounts: Record<string, TranslationEntry> = {
     description:
       "Toast shown after an account was closed; {account} is the account name",
   },
+  "page.accounts.accountDeletedToast": {
+    message: "アカウント {account} が削除されました",
+    description: "Toast shown after deleting an account",
+  },
 };
 
 export default jaAccounts;

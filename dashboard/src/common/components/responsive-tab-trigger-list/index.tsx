@@ -32,7 +32,7 @@ export const ResponsiveTabTriggerList = ({
   return (
     <div className={className}>
       <Label htmlFor="view-selector" className="sr-only">
-        View
+        {t("common.view")}
       </Label>
       <Select value={selectedTab} onValueChange={setSelectedTab}>
         <SelectTrigger

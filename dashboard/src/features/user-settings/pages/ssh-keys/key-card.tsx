@@ -86,7 +86,7 @@ export function KeyCard({ keyData }: KeyCardProps) {
 
             {/* SHA256 Hash */}
             <span className="hidden sm:block text-xs text-muted-foreground font-mono rounded truncate">
-              fingerprint:{keyData.fingerprint}
+              {t("userSettings.fingerprint")}:{keyData.fingerprint}
             </span>
 
             {/* Added Date and Status */}

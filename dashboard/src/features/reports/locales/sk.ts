@@ -46,6 +46,22 @@ const skReports = {
   ...skTrialBalance,
   ...skOverview,
   ...skExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Ledger bol úspešne označený hviezdičkou",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "Nepodarilo sa označiť knihu hviezdičkou",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Účtovná kniha bola úspešne odstránená hviezdičkou",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "Zrušenie účtovnej knihy hviezdičkou zlyhalo",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default skReports;

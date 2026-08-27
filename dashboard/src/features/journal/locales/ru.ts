@@ -325,6 +325,46 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Неизвестный тип директивы",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "Источник изменен.",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "Запись успешно сохранена",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "Запись успешно удалена",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "Данные контекста ввода недоступны.",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "накопилось",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "из",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "Очистено",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "Ожидается",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(пусто)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "авто",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default ruJournal;

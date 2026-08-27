@@ -506,6 +506,59 @@ const caAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "Amaga la contrasenya",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "Mostra la contrasenya",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "Seleccioneu un llibre major.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message: "Beancount Mobile vol accedir al vostre compte.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "Vols permetre Beancount Mobile?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "Aquesta subvenció per a tot el compte permet a l'aplicació:",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message: "No s'ha pogut canviar de compte. Si us plau, torna-ho a provar.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "Utilitzeu un altre compte",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "Identifiqueu el compte que aproveu",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message:
+      "Manteniu la sessió iniciada de manera segura fins que revoqueu l'accés",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "Llegeix els teus llibres",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "Crear i actualitzar les dades del llibre major",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "Gestionar llibres i col·laboradors",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default caAuth;

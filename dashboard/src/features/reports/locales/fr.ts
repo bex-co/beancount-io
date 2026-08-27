@@ -47,6 +47,22 @@ const frReports = {
   ...frTrialBalance,
   ...frOverview,
   ...frExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Ledger a été joué avec succès",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "Échec de la mise en vedette du grand livre",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Ledger a été supprimé des favoris avec succès",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "Échec de la désactivation du grand livre",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default frReports;

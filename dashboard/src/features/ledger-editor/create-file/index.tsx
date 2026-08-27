@@ -81,7 +81,7 @@ const CreateFilePage = () => {
           ledgerId: ledgerId,
           path: fullPath,
           content: base64Encode(content), // Encode content to base64 with UTF-8 support
-          message: `Create file ${fullPath}`,
+          message: t("ledgerEditor.createFileCommit", { path: fullPath }),
         },
         refetchQueries: [
           {

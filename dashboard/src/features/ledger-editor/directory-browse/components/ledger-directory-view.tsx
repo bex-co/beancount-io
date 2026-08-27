@@ -78,7 +78,7 @@ const DirectoryError = ({ currentPath }: { currentPath?: string }) => {
       <div className="flex items-center justify-center py-8">
         <div className="text-center">
           <p className="text-destructive mb-4">
-            Failed to load directory contents
+            {t("ledgerEditor.failedToLoadDirectory")}
           </p>
           <Button onClick={() => window.location.reload()}>
             {t("common.tryAgain")}

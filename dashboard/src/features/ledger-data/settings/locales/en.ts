@@ -24,6 +24,11 @@ const enAllSettings = {
   ...enFavaOptionsSection,
   ...enBcioOptionsSection,
   ...enSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      'This embed code includes responsive sizing, scale transformation, and a "View on Beancount.io" button for attribution.',
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default enAllSettings;

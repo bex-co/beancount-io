@@ -78,22 +78,30 @@ export function UpgradeTierCards({
 
               <ul className="space-y-1 mb-4 flex-1">
                 <li className="text-xs text-muted-foreground">
-                  {tokens.toLocaleString()} AI tokens / month
+                  {t("userSettings.aiTokensPerMonth", {
+                    count: tokens.toLocaleString(),
+                  })}
                 </li>
                 <li className="text-xs text-muted-foreground">
                   {maxLedgers === -1
-                    ? "Unlimited ledgers"
-                    : `${maxLedgers} ${maxLedgers === 1 ? "ledger" : "ledgers"}`}
+                    ? t("userSettings.unlimitedLedgers")
+                    : t("userSettings.includedLedgers", {
+                        count: String(maxLedgers),
+                      })}
                 </li>
                 <li className="text-xs text-muted-foreground">
                   {maxDirectives === -1
-                    ? "Unlimited directives"
-                    : `${maxDirectives.toLocaleString()} directives`}
+                    ? t("userSettings.unlimitedDirectives")
+                    : t("userSettings.includedDirectives", {
+                        count: maxDirectives.toLocaleString(),
+                      })}
                 </li>
                 <li className="text-xs text-muted-foreground">
                   {maxCollaborators === -1
-                    ? "Unlimited collaborators"
-                    : `Up to ${maxCollaborators} collaborator${maxCollaborators === 1 ? "" : "s"}/ledger`}
+                    ? t("userSettings.unlimitedCollaborators")
+                    : t("userSettings.collaboratorsPerLedger", {
+                        count: String(maxCollaborators),
+                      })}
                 </li>
               </ul>
 

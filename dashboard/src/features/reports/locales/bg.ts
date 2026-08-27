@@ -46,6 +46,22 @@ const bgReports = {
   ...bgTrialBalance,
   ...bgOverview,
   ...bgExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Леджър участва успешно",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "Неуспешно отбелязване на книга със звезда",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Ledger премахна успешно звездата",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "Неуспешно премахване на звездата от счетоводната книга",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default bgReports;

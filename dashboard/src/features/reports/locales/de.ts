@@ -46,6 +46,22 @@ const deReports = {
   ...deTrialBalance,
   ...deOverview,
   ...deExport,
+  "page.overview.starButton.starSuccess": {
+    message: "Ledger spielte erfolgreich die Hauptrolle",
+    description: "Toast shown after starring a ledger",
+  },
+  "page.overview.starButton.starFailed": {
+    message: "Fehler beim Star-Ledger",
+    description: "Toast shown when starring a ledger fails",
+  },
+  "page.overview.starButton.unstarSuccess": {
+    message: "Ledger hat die Markierung erfolgreich aufgehoben",
+    description: "Toast shown after unstarring a ledger",
+  },
+  "page.overview.starButton.unstarFailed": {
+    message: "Fehler beim Entsperren des Hauptbuchs",
+    description: "Toast shown when unstarring a ledger fails",
+  },
 };
 
 export default deReports;

@@ -240,8 +240,10 @@ export function SubscriptionSection() {
                     <AlertCircle className="h-3.5 w-3.5 mt-0.5 shrink-0 text-yellow-600 dark:text-yellow-400" />
                     <span>
                       {ledgerPercentage >= 100
-                        ? "You've reached your ledger limit. Upgrade to create more ledgers."
-                        : `You're using ${Math.round(aiPercentage)}% of your monthly AI tokens. Upgrade to avoid interruptions.`}
+                        ? t("page.dashboard.ledgerLimitReached")
+                        : t("userSettings.aiUsageUpgradeNudge", {
+                            percentage: Math.round(aiPercentage),
+                          })}
                     </span>
                   </div>
                 )}

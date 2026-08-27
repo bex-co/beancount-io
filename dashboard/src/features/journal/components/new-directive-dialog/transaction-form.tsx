@@ -378,9 +378,15 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                     </SelectTrigger>
                   </FormControl>
                   <SelectContent>
-                    <SelectItem value="*">* Cleared</SelectItem>
-                    <SelectItem value="!">! Pending</SelectItem>
-                    <SelectItem value=" ">(blank)</SelectItem>
+                    <SelectItem value="*">
+                      * {t("journal.clearedStatus")}
+                    </SelectItem>
+                    <SelectItem value="!">
+                      ! {t("journal.pendingStatus")}
+                    </SelectItem>
+                    <SelectItem value=" ">
+                      {t("journal.blankStatus")}
+                    </SelectItem>
                   </SelectContent>
                 </Select>
                 <FormMessage />
@@ -486,7 +492,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                             </FormControl>
                             {autoBalance && !field.value && (
                               <div className="absolute right-2 top-2 text-xs text-muted-foreground pointer-events-none">
-                                auto
+                                {t("journal.autoAmount")}
                               </div>
                             )}
                             <FormMessage />

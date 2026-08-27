@@ -493,6 +493,58 @@ const koAuth: Record<string, TranslationEntry> = {
     description:
       "Identity OAuth consent page approve step — shows which account is authorizing",
   },
+  "auth.hidePassword": {
+    message: "비밀번호 숨기기",
+    description: "Accessible label for hiding a password",
+  },
+  "auth.showPassword": {
+    message: "비밀번호 표시",
+    description: "Accessible label for showing a password",
+  },
+  "auth.oauthLedgerRequired": {
+    message: "원장을 선택해주세요.",
+    description: "Validation shown when OAuth consent has no selected ledger",
+  },
+  "auth.oauthMobileWantsAccess": {
+    message: "Beancount Mobile이 귀하의 계정에 액세스하려고 합니다.",
+    description: "Mobile OAuth access request description",
+  },
+  "auth.oauthMobileAllowTitle": {
+    message: "빈카운트 모바일을 허용하시겠습니까?",
+    description: "Mobile OAuth approval title",
+  },
+  "auth.oauthMobileGrantDescription": {
+    message: "이 계정 전체 권한 부여를 통해 앱은 다음을 수행할 수 있습니다.",
+    description: "Introduction to mobile OAuth permissions",
+  },
+  "auth.oauthSwitchAccountFailed": {
+    message: "계정을 전환할 수 없습니다. 다시 시도해 주세요.",
+    description: "Error shown when OAuth account switching fails",
+  },
+  "auth.oauthUseAnotherAccount": {
+    message: "다른 계정 사용",
+    description: "Button for switching OAuth accounts",
+  },
+  "auth.oauthMobileScopeIdentity": {
+    message: "승인한 계정을 식별하세요.",
+    description: "Description of the OpenID mobile permission",
+  },
+  "auth.oauthMobileScopeOfflineAccess": {
+    message: "액세스를 취소할 때까지 안전하게 로그인 상태를 유지하세요",
+    description: "Description of the offline access mobile permission",
+  },
+  "auth.oauthMobileScopeRead": {
+    message: "장부를 읽으세요",
+    description: "Description of the ledger read mobile permission",
+  },
+  "auth.oauthMobileScopeWrite": {
+    message: "원장 데이터 생성 및 업데이트",
+    description: "Description of the ledger write mobile permission",
+  },
+  "auth.oauthMobileScopeAdmin": {
+    message: "원장 및 협력자 관리",
+    description: "Description of the ledger admin mobile permission",
+  },
 };
 
 export default koAuth;

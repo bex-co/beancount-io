@@ -25,4 +25,41 @@ export default {
   ...nlCreateFile,
   ...nlUploadFiles,
   ...nlLedgerEditor,
+  "ledgerEditor.gitClone": {
+    message: "Git-kloon",
+    description: "Button for opening Git clone options",
+  },
+  "ledgerEditor.failedToLoadDirectory": {
+    message: "Kan de mapinhoud niet laden",
+    description: "Error shown when a ledger directory cannot load",
+  },
+  "ledgerEditor.fileContentEmpty": {
+    message: "Bestandsinhoud is leeg",
+    description: "Empty state for a file without content",
+  },
+  "ledgerEditor.unableToDisplayImage": {
+    message: "Kan de afbeeldingsinhoud niet weergeven",
+    description: "Error shown when image content cannot be displayed",
+  },
+  "ledgerEditor.unsupportedPreviewWithType": {
+    message:
+      "Dit bestandstype ({type}) wordt niet ondersteund voor voorbeeldweergave",
+    description: "Unsupported preview message including the file type",
+  },
+  "ledgerEditor.unsupportedPreview": {
+    message: "Dit bestandstype wordt niet ondersteund voor voorbeeldweergave",
+    description: "Unsupported preview message without a file type",
+  },
+  "ledgerEditor.createFileCommit": {
+    message: "Bestand aanmaken {path}",
+    description: "Generated commit message for creating a file",
+  },
+  "ledgerEditor.updateFileCommit": {
+    message: "Bestand bijwerken {path}",
+    description: "Generated commit message for updating a file",
+  },
+  "ledgerEditor.deleteFileCommit": {
+    message: "Bestand verwijderen {path}",
+    description: "Generated commit message for deleting a file",
+  },
 };

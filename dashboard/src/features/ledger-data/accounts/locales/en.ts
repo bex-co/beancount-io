@@ -129,6 +129,10 @@ const enAccounts: Record<string, TranslationEntry> = {
     description:
       "Toast shown after an account was closed; {account} is the account name",
   },
+  "page.accounts.accountDeletedToast": {
+    message: "Account {account} deleted",
+    description: "Toast shown after deleting an account",
+  },
 };
 
 export default enAccounts;

@@ -24,6 +24,11 @@ const skAllSettings = {
   ...skFavaOptionsSection,
   ...skBcioOptionsSection,
   ...skSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "Tento kód na vloženie obsahuje responzívnu veľkosť, transformáciu mierky a tlačidlo „Zobraziť na stránke Beancount.io“ na priradenie.",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default skAllSettings;

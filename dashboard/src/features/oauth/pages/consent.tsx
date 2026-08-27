@@ -150,7 +150,9 @@ function LedgerStep({ uid }: { uid: string }) {
         </p>
       </div>
       {loading ? (
-        <p className="text-sm text-muted-foreground">Loading ledgers…</p>
+        <p className="text-sm text-muted-foreground">
+          {t("page.dashboard.loadingLedgers")}
+        </p>
       ) : ledgers.length === 0 ? (
         <div className="space-y-3">
           <Alert>
@@ -160,7 +162,7 @@ function LedgerStep({ uid }: { uid: string }) {
           </Alert>
           <Link to="/auth/welcome">
             <Button variant="outline" className="w-full">
-              Create a ledger
+              {t("page.dashboard.createLedger")}
             </Button>
           </Link>
         </div>
@@ -205,7 +207,7 @@ function LedgerStep({ uid }: { uid: string }) {
           onSubmit={(e) => {
             if (!selected) {
               e.preventDefault();
-              setError("Please select a ledger.");
+              setError(t("auth.oauthLedgerRequired"));
             }
           }}
         >

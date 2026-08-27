@@ -120,7 +120,7 @@ export default function LedgerFileView({
           path: filePath,
           content: base64Encode(content),
           sha: fileContent.sha,
-          message: `Update file ${filePath}`,
+          message: t("ledgerEditor.updateFileCommit", { path: filePath }),
         },
         onError: (error) => {
           toast.error(formatError(error));
@@ -144,7 +144,7 @@ export default function LedgerFileView({
         ledgerId: ledgerId,
         path: filePath,
         sha: fileContent.sha,
-        message: `Delete file ${filePath}`,
+        message: t("ledgerEditor.deleteFileCommit", { path: filePath }),
       },
       onError: (error) => {
         toast.error(formatError(error));

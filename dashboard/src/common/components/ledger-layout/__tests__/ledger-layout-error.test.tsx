@@ -29,10 +29,10 @@ describe("LedgerLayoutError", () => {
     );
 
     expect(
-      screen.getByRole("heading", { name: "Ledger Not Found" }),
+      screen.getByRole("heading", { name: "Page not found" }),
     ).toBeInTheDocument();
     expect(
-      screen.getByText(/don't have permission to access it/),
+      screen.getByText(/doesn't exist or has been moved/),
     ).toBeInTheDocument();
   });
 });

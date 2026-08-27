@@ -13,6 +13,7 @@ import { EditableCell } from "./editable-cell";
 import {
   editableRowSchema,
   type EditableRowData,
+  type ImporterValidationKey,
 } from "../../../utils/row-edit-schema";
 import type { ParsedRow } from "../../../types";
 
@@ -47,6 +48,8 @@ export function EditablePreviewRow({
   } = form;
 
   const hasErrors = Object.keys(errors).length > 0;
+  const validationMessage = (message?: string) =>
+    message ? t(message as ImporterValidationKey) : undefined;
 
   const handleFieldChange = async (
     field: keyof EditableRowData,
@@ -95,7 +98,7 @@ export function EditablePreviewRow({
                   void handleFieldChange("date", value);
                 }}
                 onBlur={field.onBlur}
-                error={errors.date?.message}
+                error={validationMessage(errors.date?.message)}
                 placeholder={t("importer.preview.dateFormat")}
                 type="text"
               />
@@ -116,7 +119,7 @@ export function EditablePreviewRow({
                   void handleFieldChange("payee", value);
                 }}
                 onBlur={field.onBlur}
-                error={errors.payee?.message}
+                error={validationMessage(errors.payee?.message)}
                 placeholder={t("importer.preview.payeePlaceholder")}
               />
             )}
@@ -136,7 +139,7 @@ export function EditablePreviewRow({
                   void handleFieldChange("description", value);
                 }}
                 onBlur={field.onBlur}
-                error={errors.description?.message}
+                error={validationMessage(errors.description?.message)}
                 placeholder={t("importer.preview.descriptionPlaceholder")}
               />
             )}
@@ -156,7 +159,7 @@ export function EditablePreviewRow({
                   void handleFieldChange("amount", value);
                 }}
                 onBlur={field.onBlur}
-                error={errors.amount?.message}
+                error={validationMessage(errors.amount?.message)}
                 placeholder={t("importer.preview.amountPlaceholder")}
                 type="text"
                 className="text-right"
@@ -189,7 +192,7 @@ export function EditablePreviewRow({
                   <AlertCircle className="w-3 h-3 mt-0.5 shrink-0" />
                   <span>
                     <strong className="capitalize">{field}:</strong>{" "}
-                    {error?.message}
+                    {validationMessage(error?.message)}
                   </span>
                 </div>
               ))}

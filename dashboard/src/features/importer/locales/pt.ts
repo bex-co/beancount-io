@@ -461,11 +461,6 @@ const ptImporter: Record<string, TranslationEntry> = {
     description:
       "Prefix for row number in error messages (e.g. 'Row 5: error')",
   },
-  "importer.finish.moreErrors": {
-    message: "mais erros",
-    description:
-      "Text for showing additional error count (e.g. '...and 10 more errors')",
-  },
   "importer.finish.failedTitle": {
     message: "Importação falhou",
     description: "Title for failed import",
@@ -485,6 +480,46 @@ const ptImporter: Record<string, TranslationEntry> = {
   "page.importer.title": {
     message: "Importação inteligente",
     description: "Page title for the importer page",
+  },
+  "importer.finish.note": {
+    message: "Nota",
+    description: "Label before a partial import note",
+  },
+  "importer.finish.andMoreErrors": {
+    message: "…e {count} mais erros",
+    description: "Count of additional import errors",
+  },
+  "importer.preview.editCellLabel": {
+    message: "Editar {field}. Valor atual: {value}",
+    description: "Accessible label for an editable import cell",
+  },
+  "importer.preview.field": {
+    message: "campo",
+    description: "Fallback name for an editable import field",
+  },
+  "importer.validation.dateRequired": {
+    message: "A data é obrigatória",
+    description: "Validation error for a missing import date",
+  },
+  "importer.validation.invalidDateFormat": {
+    message: "Formato de data inválido. Esperado AAAA-MM-DD",
+    description: "Validation error for an invalid import date",
+  },
+  "importer.validation.payeeRequired": {
+    message: "O beneficiário é obrigatório",
+    description: "Validation error for a missing import payee",
+  },
+  "importer.validation.descriptionRequired": {
+    message: "A descrição é obrigatória",
+    description: "Validation error for a missing import description",
+  },
+  "importer.validation.amountRequired": {
+    message: "O valor é obrigatório",
+    description: "Validation error for a missing import amount",
+  },
+  "importer.validation.amountInvalid": {
+    message: "O valor deve ser um número válido",
+    description: "Validation error for an invalid import amount",
   },
 };
 

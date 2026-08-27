@@ -839,6 +839,62 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "No s'ha pogut copiar",
     description: "Toast when copying to the clipboard failed",
   },
+  "common.outOfDateRefresh": {
+    message: "Obsolet: feu clic per actualitzar",
+    description: "Tooltip for refreshing a stale ledger",
+  },
+  "common.view": {
+    message: "Veure",
+    description: "Accessible label for a view selector",
+  },
+  "common.today": {
+    message: "Avui",
+    description: "Button that selects today's date",
+  },
+  "common.author": {
+    message: "Autor",
+    description: "Label for an author",
+  },
+  "common.from": {
+    message: "De",
+    description: "Label for a source branch or account",
+  },
+  "common.to": {
+    message: "A",
+    description: "Label for a destination branch or account",
+  },
+  "common.option": {
+    message: "Opció",
+    description: "Table heading for an option name",
+  },
+  "common.value": {
+    message: "Valor",
+    description: "Table heading for an option value",
+  },
+  "common.moreCount": {
+    message: "+{count} més",
+    description: "Count of additional hidden items",
+  },
+  "common.hideCharts": {
+    message: "Amaga els gràfics",
+    description: "Accessible label for hiding report charts",
+  },
+  "common.showCharts": {
+    message: "Mostra els gràfics",
+    description: "Accessible label for showing report charts",
+  },
+  "common.redirecting": {
+    message: "S'està redirigint...",
+    description: "Status while redirecting to another page",
+  },
+  "common.loadingLedger": {
+    message: "Carregant el vostre llibre major",
+    description: "Status while loading a ledger",
+  },
+  "component.combobox.useCustomValue": {
+    message: 'Premeu Intro per utilitzar "{value}"',
+    description: "Hint for accepting a custom combobox value",
+  },
 };
 
 export default caCommon;

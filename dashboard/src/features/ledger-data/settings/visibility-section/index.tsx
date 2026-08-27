@@ -252,9 +252,7 @@ export function VisibilitySection({
                 </Button>
               </div>
               <p className="text-sm text-muted-foreground">
-                This embed code includes responsive sizing, scale
-                transformation, and a "View on Beancount.io" button for
-                attribution.
+                {t("page.settings.embedCodeDescription")}
               </p>
             </div>
           </div>

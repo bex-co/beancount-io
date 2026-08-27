@@ -322,6 +322,46 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "알 수 없는 지시어 유형",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "소스가 수정되었습니다",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "항목이 성공적으로 저장되었습니다.",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "항목이 성공적으로 삭제되었습니다.",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "사용 가능한 항목 컨텍스트 데이터가 없습니다.",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "누적",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "에서",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "삭제됨",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "보류 중",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(공백)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "자동",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default koJournal;

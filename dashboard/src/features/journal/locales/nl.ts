@@ -325,6 +325,46 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Onbekend directieftype",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "Bron is aangepast",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "Invoer succesvol opgeslagen",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "Invoer succesvol verwijderd",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "Geen invoercontextgegevens beschikbaar",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "verzameld",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "vanaf",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "Gewist",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "In behandeling",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(leeg)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "automatisch",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default nlJournal;

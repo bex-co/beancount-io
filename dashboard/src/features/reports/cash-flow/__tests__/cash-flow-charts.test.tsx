@@ -69,7 +69,7 @@ describe("NetCashFlowChart", () => {
     render(<NetCashFlowChart data={[]} interval="monthly" />);
 
     const option = captureOption.mock.calls.at(-1)![0];
-    expect((option.title as { text: string }).text).toBe("No Data Available");
+    expect(option.series).toEqual([]);
   });
 });
 

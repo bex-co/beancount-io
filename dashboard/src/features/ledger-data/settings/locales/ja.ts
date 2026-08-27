@@ -24,6 +24,11 @@ const jaAllSettings = {
   ...jaFavaOptionsSection,
   ...jaBcioOptionsSection,
   ...jaSettings,
+  "page.settings.embedCodeDescription": {
+    message:
+      "この埋め込みコードには、レスポンシブなサイジング、スケール変換、および帰属を示すための「Beancount.io で表示」ボタンが含まれています。",
+    description: "Description of the generated public embed code",
+  },
 };
 
 export default jaAllSettings;

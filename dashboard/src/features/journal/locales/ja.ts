@@ -323,6 +323,46 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "不明なディレクティブタイプ",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "ソースが変更されました",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "エントリは正常に保存されました",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "エントリは正常に削除されました",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "使用可能なエントリ コンテキスト データがありません",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "が蓄積されました",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "から",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "クリアされました",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "保留中",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(空白)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "自動",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default jaJournal;

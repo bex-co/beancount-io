@@ -206,6 +206,7 @@ export const ImageFileView = ({
   fileContent,
   onDelete,
 }: NonTextFileViewProps) => {
+  const { t } = useTranslations();
   const filename = getFilename(filePath);
 
   const handleDownloadClick = () => {
@@ -219,7 +220,9 @@ export const ImageFileView = ({
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">File content is empty</p>
+            <p className="text-muted-foreground">
+              {t("ledgerEditor.fileContentEmpty")}
+            </p>
           </div>
         </div>
       );
@@ -242,7 +245,7 @@ export const ImageFileView = ({
           <div className="text-center">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
             <p className="text-muted-foreground">
-              Unable to display image content
+              {t("ledgerEditor.unableToDisplayImage")}
             </p>
           </div>
         </div>
@@ -280,6 +283,7 @@ export const PDFFileView = ({
   fileContent,
   onDelete,
 }: NonTextFileViewProps) => {
+  const { t } = useTranslations();
   const filename = getFilename(filePath);
 
   const handleDownloadClick = () => {
@@ -293,7 +297,9 @@ export const PDFFileView = ({
         <div className="flex items-center justify-center py-8">
           <div className="text-center">
             <FileText className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-            <p className="text-muted-foreground">File content is empty</p>
+            <p className="text-muted-foreground">
+              {t("ledgerEditor.fileContentEmpty")}
+            </p>
           </div>
         </div>
       );
@@ -352,8 +358,8 @@ export const UnknownFileView = ({
           </p>
           <p className="text-sm text-muted-foreground">
             {ext
-              ? `This file type (${ext}) is not supported for preview`
-              : "This file type is not supported for preview"}
+              ? t("ledgerEditor.unsupportedPreviewWithType", { type: ext })
+              : t("ledgerEditor.unsupportedPreview")}
           </p>
         </div>
       </div>

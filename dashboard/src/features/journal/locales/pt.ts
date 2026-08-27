@@ -326,6 +326,46 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Tipo de diretiva desconhecido",
     description: "Message shown for unrecognized beancount directive types",
   },
+  "journal.sourceModified": {
+    message: "A fonte foi modificada",
+    description: "Notice that entry source has unsaved changes",
+  },
+  "journal.entrySavedSuccess": {
+    message: "Entrada salva com sucesso",
+    description: "Toast shown after saving an entry",
+  },
+  "journal.entryDeletedSuccess": {
+    message: "Entrada excluída com sucesso",
+    description: "Toast shown after deleting an entry",
+  },
+  "journal.noEntryContext": {
+    message: "Nenhum dado de contexto de entrada disponível",
+    description: "Empty state for entry context",
+  },
+  "journal.accumulated": {
+    message: "acumulado",
+    description: "Label before an accumulated balance difference",
+  },
+  "journal.fromAccount": {
+    message: "de",
+    description: "Label before a pad source account",
+  },
+  "journal.clearedStatus": {
+    message: "Limpo",
+    description: "Cleared transaction status",
+  },
+  "journal.pendingStatus": {
+    message: "Pendente",
+    description: "Pending transaction status",
+  },
+  "journal.blankStatus": {
+    message: "(em branco)",
+    description: "Blank transaction status option",
+  },
+  "journal.autoAmount": {
+    message: "automático",
+    description: "Label for an automatically balanced amount",
+  },
 };
 
 export default ptJournal;

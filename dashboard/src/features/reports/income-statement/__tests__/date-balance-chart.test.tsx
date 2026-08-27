@@ -24,7 +24,7 @@ vi.mock("@/common/components/react-echarts", () => ({
         const data = item.data;
         return !data || (Array.isArray(data) && data.length === 0);
       });
-    if (isEmpty) return <div>Chart is empty.</div>;
+    if (isEmpty) return <div data-testid="chart-empty" />;
     return (
       <div data-testid="react-echarts" data-option={JSON.stringify(option)}>
         Mocked Chart
@@ -50,13 +50,13 @@ describe("DateBalanceChart", () => {
     it("should render empty message when data is empty", () => {
       render(<DateBalanceChart data={[]} />);
 
-      expect(screen.getByText("Chart is empty.")).toBeInTheDocument();
+      expect(screen.getByTestId("chart-empty")).toBeInTheDocument();
     });
 
     it("should render empty message when data is null-like", () => {
       render(<DateBalanceChart data={null as unknown as DateAndBalance[]} />);
 
-      expect(screen.getByText("Chart is empty.")).toBeInTheDocument();
+      expect(screen.getByTestId("chart-empty")).toBeInTheDocument();
     });
   });
 
