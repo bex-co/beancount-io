@@ -1,12 +1,17 @@
 import "reflect-metadata";
 import { AssetStorageResolver } from "../api/asset-storage-resolver";
 import type { IAssetStorageService } from "../service/asset-storage-service";
+import type { IContext } from "@/server/graphql/context";
 
 describe("AssetStorageResolver", () => {
   let resolver: AssetStorageResolver;
   let mockS3Service: jest.Mocked<
-    Pick<IAssetStorageService, "generateUploadUrl" | "generateDownloadUrl">
+    Pick<
+      IAssetStorageService,
+      "generateUploadUrl" | "generateDownloadUrl" | "generateTempDownloadUrl"
+    >
   >;
+  let mockContext: IContext;
 
   beforeEach(() => {
     mockS3Service = {
@@ -19,7 +24,15 @@ describe("AssetStorageResolver", () => {
         downloadUrl: "https://s3.amazonaws.com/test-bucket/download-url",
         expiresIn: 600,
       }),
+      generateTempDownloadUrl: jest.fn().mockResolvedValue({
+        downloadUrl: "https://s3.amazonaws.com/test-bucket/download-url",
+        expiresIn: 600,
+      }),
     };
+
+    mockContext = {
+      getCurrentUserId: jest.fn().mockReturnValue("user123"),
+    } as unknown as IContext;
 
     resolver = new AssetStorageResolver(
       mockS3Service as unknown as IAssetStorageService,
@@ -31,13 +44,15 @@ describe("AssetStorageResolver", () => {
   });
 
   describe("generateTempAssetUploadUrl", () => {
-    it("should pass filename and mimeType to service and return result", async () => {
+    it("should bind the session user as the upload owner", async () => {
       const result = await resolver.generateTempAssetUploadUrl(
         "application/pdf",
         "invoice.pdf",
+        mockContext,
       );
 
       expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith({
+        ownerId: "user123",
         filename: "invoice.pdf",
         mimeType: "application/pdf",
       });
@@ -49,20 +64,51 @@ describe("AssetStorageResolver", () => {
     });
 
     it("should pass undefined filename when not provided", async () => {
-      await resolver.generateTempAssetUploadUrl("application/pdf", undefined);
+      await resolver.generateTempAssetUploadUrl(
+        "application/pdf",
+        undefined,
+        mockContext,
+      );
 
       expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith({
+        ownerId: "user123",
         filename: undefined,
         mimeType: "application/pdf",
       });
     });
 
     it("should pass undefined mimeType and filename when not provided", async () => {
-      await resolver.generateTempAssetUploadUrl(undefined, undefined);
+      await resolver.generateTempAssetUploadUrl(
+        undefined,
+        undefined,
+        mockContext,
+      );
 
       expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith({
+        ownerId: "user123",
         filename: undefined,
         mimeType: undefined,
+      });
+    });
+  });
+
+  describe("generateTempAssetDownloadUrl", () => {
+    it("should delegate to the ownership-checked temp presign with the session user", async () => {
+      const result = await resolver.generateTempAssetDownloadUrl(
+        "tmp/user123/2026-03-30-testnanoi.pdf",
+        mockContext,
+      );
+
+      expect(mockS3Service.generateTempDownloadUrl).toHaveBeenCalledWith(
+        "tmp/user123/2026-03-30-testnanoi.pdf",
+        "user123",
+      );
+      // The unrestricted presign takes arbitrary bucket keys with no
+      // ownership check — it must not be this resolver's path.
+      expect(mockS3Service.generateDownloadUrl).not.toHaveBeenCalled();
+      expect(result).toEqual({
+        downloadUrl: "https://s3.amazonaws.com/test-bucket/download-url",
+        expiresIn: 600,
       });
     });
   });

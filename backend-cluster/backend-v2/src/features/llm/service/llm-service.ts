@@ -1,5 +1,6 @@
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
+import { assertTempAssetOwnership } from "@/features/s3/service/asset-storage-service";
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import type { AppConfig } from "@/config/config";
 import { LedgerAccountService } from "@/features/ledger/service/ledger-account-service";
@@ -125,6 +126,10 @@ export class LLMService implements ILLMService {
       );
     }
 
+    // The key is the only handle on the upload — check it belongs to the
+    // caller before fetching metadata or minting a read URL.
+    assertTempAssetOwnership(s3ObjectKey, userId);
+
     const { contentType } =
       await this.assetStorage.getObjectMetadata(s3ObjectKey);
     const { downloadUrl } =
@@ -171,6 +176,9 @@ export class LLMService implements ILLMService {
     }
 
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    // The key is the only handle on the upload — check it belongs to the
+    // caller before fetching metadata or minting a read URL.
+    assertTempAssetOwnership(s3ObjectKey, userId);
     const { contentType } =
       await this.assetStorage.getObjectMetadata(s3ObjectKey);
 

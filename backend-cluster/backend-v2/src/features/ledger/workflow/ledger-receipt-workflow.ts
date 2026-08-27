@@ -6,6 +6,7 @@ import { InternalServerError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
+import { assertTempAssetOwnership } from "@/features/s3/service/asset-storage-service";
 import type { ILedgerEntryService } from "@/features/ledger/service/ledger-entry-service";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "@/server/api/identity";
@@ -89,6 +90,10 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     // full seam lives.
     assertLedgerAuthorization(identity, ledgerId, "write");
     const { userId } = identity;
+    // The receipt key is the only handle on the upload — verify the caller
+    // owns it before either strategy reads it or promotes it into the
+    // ledger's permanent asset scope.
+    assertTempAssetOwnership(receiptObjectKey, userId);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,

@@ -1,4 +1,5 @@
-import { Resolver, Mutation, Query, Arg, Authorized } from "type-graphql";
+import { Resolver, Mutation, Query, Arg, Authorized, Ctx } from "type-graphql";
+import { IContext } from "@/server/graphql/context";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
 import {
   TempAssetUploadUrlResponse,
@@ -16,8 +17,15 @@ export class AssetStorageResolver {
     mimeType: string | undefined,
     @Arg("filename", () => String, { nullable: true })
     filename: string | undefined,
+    @Ctx() ctx: IContext,
   ): Promise<TempAssetUploadUrlResponse> {
-    return this.assetStorage.generateUploadUrl({ filename, mimeType });
+    // The uploader is bound into the object key; the session supplies it, so a
+    // key can never be minted under another user's scope.
+    return this.assetStorage.generateUploadUrl({
+      ownerId: ctx.getCurrentUserId(),
+      filename,
+      mimeType,
+    });
   }
 
   @Authorized()
@@ -30,7 +38,13 @@ export class AssetStorageResolver {
       description: "S3 object key returned by generateTempAssetUploadUrl",
     })
     objectKey: string,
+    @Ctx() ctx: IContext,
   ): Promise<TempAssetDownloadUrlResponse> {
-    return this.assetStorage.generateDownloadUrl(objectKey);
+    // Ownership is enforced in the service: only tmp/ keys uploaded by the
+    // caller can be presigned, never another tenant's or a permanent asset.
+    return this.assetStorage.generateTempDownloadUrl(
+      objectKey,
+      ctx.getCurrentUserId(),
+    );
   }
 }

@@ -10,10 +10,15 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { extname } from "path";
 import { nanoid } from "nanoid";
 import type { AssetS3Config } from "@/config/config";
-import { BadUserInputError } from "@/shared/errors";
+import { BadUserInputError, ForbiddenError } from "@/shared/errors";
 
 export const S3_PREFIX_TMP = "tmp";
 export const S3_PREFIX_ASSETS = "assets";
+
+// Uploaders are addressed by one path segment: user ids are ObjectId hex or
+// prefixed base58 nanoids, so this charset covers every shape without
+// admitting separators that would break out of the segment.
+const OWNER_ID_RE = /^[A-Za-z0-9_-]+$/;
 
 /** Build the S3 object key for a ledger repo asset: assets/repo_{repoId}/{filename} */
 export function buildLedgerRepoAssetKey(
@@ -43,6 +48,8 @@ export type CopyTempToPermanentOutput = {
 };
 
 export type GenerateUploadUrlInput = {
+  /** Uploader binding: embedded in the key and enforced at every read. */
+  ownerId: string;
   filename?: string;
   mimeType?: string;
 };
@@ -71,11 +78,48 @@ export interface IAssetStorageService {
     downloadUrl: string;
     expiresIn: number;
   }>;
+  /**
+   * Presign a GET for a temporary asset after verifying the caller owns it.
+   * The only presign path that accepts a caller-supplied key without a
+   * ledger-authorization seam in front of it, so ownership is checked here.
+   */
+  generateTempDownloadUrl(
+    objectKey: string,
+    ownerId: string,
+  ): Promise<{
+    downloadUrl: string;
+    expiresIn: number;
+  }>;
   getObjectMetadata(objectKey: string): Promise<{
     contentType?: string;
     contentLength?: number;
     lastModified?: Date;
   }>;
+}
+
+/**
+ * Assert that a caller-supplied object key is a temporary asset uploaded by
+ * the named user.
+ *
+ * Temp keys are capabilities: `tmp/{ownerId}/{filename}` with no separate
+ * ownership record. Every boundary that accepts a key from a caller — temp
+ * download URL minting, LLM parsing, receipt promotion — must call this before
+ * touching S3, or the key alone authorizes reading another tenant's uploads
+ * (and, for non-tmp keys, their permanent assets).
+ *
+ * @throws ForbiddenError when the key is not under `tmp/{ownerId}/`
+ */
+export function assertTempAssetOwnership(
+  objectKey: string,
+  ownerId: string,
+): void {
+  const expected = `${S3_PREFIX_TMP}/${ownerId}/`;
+  if (!objectKey.startsWith(expected) || objectKey.length === expected.length) {
+    throw new ForbiddenError(
+      "Temporary asset not owned by the caller",
+      "asset",
+    );
+  }
 }
 
 export class AssetStorageService implements IAssetStorageService {
@@ -95,21 +139,26 @@ export class AssetStorageService implements IAssetStorageService {
   /**
    * Generate presigned upload URL
    *
-   * Generates a unique objectKey under the tmp/ prefix:
-   * tmp/{year}-{month}-{day}-{nanoid(8)}{.ext}
+   * Generates a unique objectKey bound to the uploader under the tmp/ prefix:
+   * tmp/{ownerId}/{year}-{month}-{day}-{nanoid(8)}{.ext}
    *
-   * @param params - Optional filename and mimeType
+   * @param params - Owner id plus optional filename and mimeType
    * @returns Presigned upload URL, generated objectKey, and expiry
    */
   async generateUploadUrl(
     params: GenerateUploadUrlInput,
   ): Promise<GenerateUploadUrlOutput> {
+    const { ownerId } = params;
+    if (!OWNER_ID_RE.test(ownerId)) {
+      throw new BadUserInputError("ownerId must be a single path segment");
+    }
+
     const ext = extname(params.filename ?? "");
     const now = new Date();
     const year = now.getFullYear();
     const month = String(now.getMonth() + 1).padStart(2, "0");
     const day = String(now.getDate()).padStart(2, "0");
-    const objectKey = `${S3_PREFIX_TMP}/${year}-${month}-${day}-${nanoid(8)}${ext}`;
+    const objectKey = `${S3_PREFIX_TMP}/${ownerId}/${year}-${month}-${day}-${nanoid(8)}${ext}`;
 
     const command = new PutObjectCommand({
       Bucket: this.config.bucket,
@@ -159,9 +208,14 @@ export class AssetStorageService implements IAssetStorageService {
     }
 
     const relativePath = objectKey.slice(`${S3_PREFIX_TMP}/`.length);
+    // Temp keys embed the uploader as their first segment
+    // (tmp/{ownerId}/{filename}). The owner is addressing, not content, so it
+    // never becomes part of the permanent key or the served filename; keys
+    // without the segment (minted before owner binding) pass through whole.
+    const filename = relativePath.slice(relativePath.indexOf("/") + 1);
     const newObjectKey = scope
-      ? `${S3_PREFIX_ASSETS}/${scope}/${relativePath}`
-      : `${S3_PREFIX_ASSETS}/${relativePath}`;
+      ? `${S3_PREFIX_ASSETS}/${scope}/${filename}`
+      : `${S3_PREFIX_ASSETS}/${filename}`;
 
     await this.s3Client.send(
       new CopyObjectCommand({
@@ -173,7 +227,7 @@ export class AssetStorageService implements IAssetStorageService {
 
     return {
       objectKey: newObjectKey,
-      filename: relativePath,
+      filename,
     };
   }
 
@@ -222,6 +276,17 @@ export class AssetStorageService implements IAssetStorageService {
       downloadUrl,
       expiresIn: this.config.downloadUrlExpiration,
     };
+  }
+
+  async generateTempDownloadUrl(
+    objectKey: string,
+    ownerId: string,
+  ): Promise<{
+    downloadUrl: string;
+    expiresIn: number;
+  }> {
+    assertTempAssetOwnership(objectKey, ownerId);
+    return this.generateDownloadUrl(objectKey);
   }
 
   /**

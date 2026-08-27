@@ -90,7 +90,7 @@ describe("strategy routing", () => {
 
     await workflow.insertReceiptTransaction({
       ledgerId: "owner/ledger",
-      receiptObjectKey: "tmp/r.pdf",
+      receiptObjectKey: "tmp/user_1/r.pdf",
       input: baseInput,
       identity: sessionIdentity,
     });
@@ -111,7 +111,7 @@ describe("strategy routing", () => {
 
     await workflow.insertReceiptTransaction({
       ledgerId: "owner/ledger",
-      receiptObjectKey: "tmp/r.pdf",
+      receiptObjectKey: "tmp/user_1/r.pdf",
       input: baseInput,
       identity: sessionIdentity,
     });
@@ -131,7 +131,7 @@ describe("strategy routing", () => {
 
     await workflow.insertReceiptTransaction({
       ledgerId: "owner/ledger",
-      receiptObjectKey: "tmp/r.pdf",
+      receiptObjectKey: "tmp/user_1/r.pdf",
       input: baseInput,
       identity: sessionIdentity,
     });
@@ -147,7 +147,7 @@ describe("strategy routing", () => {
 
     await workflow.insertReceiptTransaction({
       ledgerId: "owner/ledger",
-      receiptObjectKey: "tmp/r.pdf",
+      receiptObjectKey: "tmp/user_1/r.pdf",
       input: baseInput,
       identity: sessionIdentity,
     });
@@ -191,7 +191,7 @@ describe("s3 receipt storage strategy — temp cleanup ordering", () => {
 
     await workflow.insertReceiptTransaction({
       ledgerId: "owner/ledger",
-      receiptObjectKey: "tmp/2026-06-18-r.pdf",
+      receiptObjectKey: "tmp/user_1/2026-06-18-r.pdf",
       input: baseInput,
       identity: sessionIdentity,
     });
@@ -211,7 +211,7 @@ describe("s3 receipt storage strategy — temp cleanup ordering", () => {
     await expect(
       workflow.insertReceiptTransaction({
         ledgerId: "owner/ledger",
-        receiptObjectKey: "tmp/2026-06-18-r.pdf",
+        receiptObjectKey: "tmp/user_1/2026-06-18-r.pdf",
         input: baseInput,
         identity: sessionIdentity,
       }),
@@ -219,5 +219,51 @@ describe("s3 receipt storage strategy — temp cleanup ordering", () => {
 
     expect(copyTempToPermanent).toHaveBeenCalledTimes(1);
     expect(deleteTempAsset).not.toHaveBeenCalled();
+  });
+});
+
+describe("temp asset ownership", () => {
+  it("refuses a receipt key uploaded by another user before any strategy runs", async () => {
+    const copyTempToPermanent = jest.fn();
+    const createLedgerFile = jest.fn();
+    const addBulkEntries = jest.fn();
+    const workflow = makeWorkflow({
+      bcioData: bcio("s3"),
+      copyTempToPermanent,
+      createLedgerFile,
+      addBulkEntries,
+    });
+
+    await expect(
+      workflow.insertReceiptTransaction({
+        ledgerId: "owner/ledger",
+        receiptObjectKey: "tmp/other-user/r.pdf",
+        input: baseInput,
+        identity: sessionIdentity,
+      }),
+    ).rejects.toThrow("not owned by the caller");
+
+    expect(copyTempToPermanent).not.toHaveBeenCalled();
+    expect(createLedgerFile).not.toHaveBeenCalled();
+    expect(addBulkEntries).not.toHaveBeenCalled();
+  });
+
+  it("refuses an ownerless (pre-binding) key", async () => {
+    const copyTempToPermanent = jest.fn();
+    const workflow = makeWorkflow({
+      bcioData: bcio("s3"),
+      copyTempToPermanent,
+    });
+
+    await expect(
+      workflow.insertReceiptTransaction({
+        ledgerId: "owner/ledger",
+        receiptObjectKey: "tmp/2026-06-18-r.pdf",
+        input: baseInput,
+        identity: sessionIdentity,
+      }),
+    ).rejects.toThrow("not owned by the caller");
+
+    expect(copyTempToPermanent).not.toHaveBeenCalled();
   });
 });

@@ -64,7 +64,9 @@ describe("LedgerReceiptWorkflow authorizes as the caller", () => {
 
   const params = (ledgerId: string, identity: Identity) => ({
     ledgerId,
-    receiptObjectKey: "tmp/r.pdf",
+    // Owner-bound temp key: both fixtures upload as usr_1, so the scope
+    // refusals above are the only thing that can stop these calls.
+    receiptObjectKey: "tmp/usr_1/r.pdf",
     input: {
       date: "2026-06-18",
       payee: "Cafe",
