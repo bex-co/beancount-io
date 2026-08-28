@@ -15,9 +15,10 @@ export function UserProfileHeader() {
         <div className="flex items-center gap-3">
           <button
             onClick={() => navigate({ to: "/ledger" })}
+            aria-label={t("page.dashboard.goToDashboard")}
             className="flex items-center gap-2 hover:opacity-80 transition-opacity cursor-pointer"
           >
-            {/* Logo */}
+            {/* Logo — aria-label names the control by destination; alt describes the logo itself */}
             <div className="flex h-8 w-8 items-center justify-center rounded-lg bg-primary text-primary-foreground shrink-0">
               <img
                 src="/lgasset/logo.png"
