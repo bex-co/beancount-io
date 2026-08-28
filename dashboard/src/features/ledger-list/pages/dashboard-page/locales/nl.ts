@@ -68,11 +68,6 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
     message: "Laden van grootboek mislukts",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "We konden uw grootboeken niet ophalen. Controleer uw verbinding en probeer het opnieuw.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Kan feed niet laden",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const nlDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Beheer uw Beancount grootboeken",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Beheer uw Beancount grootboeken. Klik op een grootboek om de details te bekijken.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "Naam moet minimaal één letter of cijfer bevatten",

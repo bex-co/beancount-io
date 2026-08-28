@@ -160,10 +160,6 @@ const deCommon: Record<string, TranslationEntry> = {
       "Die bereitgestellten URL-Parameter sind nicht gültig. Bitte überprüfen Sie den Link und versuchen Sie es erneut.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Zuletzt aktualisiert",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Hauptbuch-Einstellungen",
     description:
@@ -188,10 +184,6 @@ const deCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "Weitere Seiten",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Name",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "nahe am Limit",
@@ -225,10 +217,6 @@ const deCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Sonstige",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Eigentümer",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Seite nicht gefunden",

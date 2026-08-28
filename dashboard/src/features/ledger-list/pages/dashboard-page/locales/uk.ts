@@ -68,11 +68,6 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
     message: "Не вдалося завантажити книгуs",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "Не вдалося отримати ваші книги. Перевірте підключення та спробуйте ще раз.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Не вдалося завантажити стрічку",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const ukDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Керуйте своїми книгами Beancount",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Керуйте своїми книгами Beancount. Клацніть на книгу, щоб переглянути її деталі.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "Назва повинна містити принаймні одну літеру або цифру",

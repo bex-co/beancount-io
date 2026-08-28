@@ -63,11 +63,6 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
     message: "台帳の読み込みに失敗しました",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "台帳を取得できませんでした。接続を確認してもう一度お試しください。",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.ledgerCreatedSuccess": {
     message: "台帳が正常に作成されました",
     description: "Toast notification when ledger created",
@@ -91,11 +86,6 @@ const jaDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Beancountの台帳を管理する",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Beancountの台帳を管理します。台帳をクリックして詳細を表示します。",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameMaxLength": {
     message: "名前は100文字未満でなければなりません",

@@ -68,11 +68,6 @@ const caDashboardPage: Record<string, TranslationEntry> = {
     message: "Error en carregar els llibres",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "No s'han pogut recuperar els vostres llibres. Si us plau, comproveu la connexió i torneu-ho a intentar.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Error al carregar el feed",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const caDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Gestiona els teus llibres de Beancount",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Gestiona els teus llibres de Beancount. Fes clic en un llibre per veure'n els detalls.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "El nom ha de contenir almenys una lletra o número",

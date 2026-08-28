@@ -68,11 +68,6 @@ const deDashboardPage: Record<string, TranslationEntry> = {
     message: "Laden des Hauptbuchs fehlgeschlagens",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "Wir konnten Ihre Hauptbücher nicht abrufen. Bitte überprüfen Sie Ihre Verbindung und versuchen Sie es erneut.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Fehler beim Laden des Feeds",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const deDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Verwalten Sie Ihre Beancount-Hauptbücher",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Verwalten Sie Ihre Beancount-Hauptbücher. Klicken Sie auf ein Hauptbuch, um dessen Details anzuzeigen.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "Name muss mindestens einen Buchstaben oder eine Zahl enthalten",

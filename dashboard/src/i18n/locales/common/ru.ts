@@ -160,10 +160,6 @@ const ruCommon: Record<string, TranslationEntry> = {
       "Предоставленные параметры URL недействительны. Пожалуйста, проверьте ссылку и попробуйте снова.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Последнее обновление",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Настройки книги",
     description:
@@ -188,10 +184,6 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "Больше страниц",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Имя",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "близко к лимиту",
@@ -225,10 +217,6 @@ const ruCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Прочее",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Владелец",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Страница не найдена",

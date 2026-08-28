@@ -160,10 +160,6 @@ const nlCommon: Record<string, TranslationEntry> = {
       "De opgegeven URL-parameters zijn niet geldig. Controleer de link en probeer het opnieuw.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Laatst bijgewerkt",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Grootboekinstellingen",
     description:
@@ -188,10 +184,6 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "Meer pagina's",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Naam",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "bijna aan de limiet",
@@ -225,10 +217,6 @@ const nlCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Overige",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Eigenaar",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Pagina niet gevonden",

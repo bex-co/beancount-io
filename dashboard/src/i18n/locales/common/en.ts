@@ -160,10 +160,6 @@ const enCommon: Record<string, TranslationEntry> = {
       "The URL parameters provided are not valid. Please check the link and try again.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Last Updated",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Ledger Settings",
     description:
@@ -188,10 +184,6 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "More pages",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Name",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "near limit",
@@ -225,10 +217,6 @@ const enCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Other",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Owner",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Page not found",

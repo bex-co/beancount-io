@@ -68,11 +68,6 @@ const frDashboardPage: Record<string, TranslationEntry> = {
     message: "Échec du chargement des grands livres",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "Nous n'avons pas pu récupérer vos grands livres. Veuillez vérifier votre connexion et réessayer.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Échec du chargement du flux",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const frDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Gérer vos grands livres Beancount",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Gérez vos grands livres Beancount. Cliquez sur un grand livre pour voir ses détails.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "Le nom doit contenir au moins une lettre ou un chiffre",

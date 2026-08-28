@@ -160,10 +160,6 @@ const ukCommon: Record<string, TranslationEntry> = {
       "Надані параметри URL недійсні. Будь ласка, перевірте посилання та спробуйте ще раз.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Останнє оновлення",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Налаштування книги",
     description:
@@ -188,10 +184,6 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "Більше сторінок",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Ім'я",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "близько до ліміту",
@@ -225,10 +217,6 @@ const ukCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Інше",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Власник",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Сторінку не знайдено",

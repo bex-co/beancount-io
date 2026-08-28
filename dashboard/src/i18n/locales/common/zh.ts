@@ -158,10 +158,6 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "提供的 URL 参数无效。请检查链接并重试。",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "最后更新",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "账本设置",
     description:
@@ -186,10 +182,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "更多页面",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "名称",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "接近上限",
@@ -222,10 +214,6 @@ const zhCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "其他",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "所有者",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "页面未找到",

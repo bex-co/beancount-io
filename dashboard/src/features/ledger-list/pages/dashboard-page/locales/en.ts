@@ -63,11 +63,6 @@ const enDashboardPage: Record<string, TranslationEntry> = {
     message: "Failed to Load Ledgers",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "We couldn't retrieve your ledgers. Please check your connection and try again.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.ledgerCreatedSuccess": {
     message: "Ledger created successfully",
     description: "Toast notification when ledger created",
@@ -91,11 +86,6 @@ const enDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Manage your Beancount ledgers",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Manage your Beancount ledgers. Click on a ledger to view its details.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameMaxLength": {
     message: "Name must be less than 100 characters",

@@ -68,11 +68,6 @@ const faDashboardPage: Record<string, TranslationEntry> = {
     message: "بارگذاری دفاتر ناموفق بود",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "امکان بازیابی دفاتر شما وجود نداشت. لطفاً اتصال خود را بررسی کرده و دوباره تلاش کنید.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "بارگذاری خوراک ناموفق بود",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const faDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "مدیریت دفاتر Beancount خود",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "دفاتر Beancount خود را مدیریت کنید. برای مشاهده جزئیات هر دفتر، روی آن کلیک کنید.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "نام باید حداقل یک حرف یا عدد داشته باشد",

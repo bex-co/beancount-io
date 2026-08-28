@@ -68,11 +68,6 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
     message: "Falha ao carregar o livro-razãos",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "Não foi possível recuperar seus livros-razão. Verifique sua conexão e tente novamente.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Falha ao carregar o feed",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const ptDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Gerencie seus livros-razão Beancount",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Gerencie seus livros-razão Beancount. Clique em um livro-razão para ver seus detalhes.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "O nome deve conter pelo menos uma letra ou número",

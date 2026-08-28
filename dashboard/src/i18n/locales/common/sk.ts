@@ -160,10 +160,6 @@ const skCommon: Record<string, TranslationEntry> = {
       "Poskytnuté parametre URL nie sú platné. Skontrolujte odkaz a skúste to znova.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Naposledy aktualizované",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Nastavenia knihy",
     description:
@@ -188,10 +184,6 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "Viac strán",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Názov",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "blízko limitu",
@@ -225,10 +217,6 @@ const skCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Ostatné",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Vlastník",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Stránka nenájdená",

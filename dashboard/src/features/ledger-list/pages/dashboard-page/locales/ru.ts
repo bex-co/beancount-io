@@ -67,11 +67,6 @@ const ruDashboardPage: Record<string, TranslationEntry> = {
     message: "Не удалось загрузить книги",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "Не удалось получить ваши книги. Проверьте соединение и попробуйте снова.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Не удалось загрузить ленту",
     description: "Error message when feed fails to load",
@@ -104,11 +99,6 @@ const ruDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Управление вашими книгами Beancount",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Управляйте вашими книгами Beancount. Нажмите на книгу для просмотра её деталей.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "Имя должно содержать хотя бы одну букву или цифру",

@@ -160,10 +160,6 @@ const caCommon: Record<string, TranslationEntry> = {
       "Els paràmetres d'URL proporcionats no són vàlids. Si us plau, comproveu l'enllaç i torneu-ho a provar.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Darrera actualització",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Configuració del llibre",
     description:
@@ -188,10 +184,6 @@ const caCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "Més pàgines",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Nom",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "prop del límit",
@@ -225,10 +217,6 @@ const caCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Altres",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Propietari",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Pàgina no trobada",

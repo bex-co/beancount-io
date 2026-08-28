@@ -160,10 +160,6 @@ const esCommon: Record<string, TranslationEntry> = {
       "Los parámetros de URL proporcionados no son válidos. Por favor, verifique el enlace e inténtelo de nuevo.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Última actualización",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Configuración del libro",
     description:
@@ -188,10 +184,6 @@ const esCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "Más páginas",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Nombre",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "cerca del límite",
@@ -225,10 +217,6 @@ const esCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Otro",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Propietario",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Página no encontrada",

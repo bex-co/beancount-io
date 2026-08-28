@@ -160,10 +160,6 @@ const bgCommon: Record<string, TranslationEntry> = {
       "Предоставените URL параметри не са валидни. Моля, проверете връзката и опитайте отново.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Последно актуализирано",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Настройки на книга",
     description:
@@ -188,10 +184,6 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "Още страници",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Име",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "близо до лимита",
@@ -225,10 +217,6 @@ const bgCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Други",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Собственик",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Страницата не е намерена",

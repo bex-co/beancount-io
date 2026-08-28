@@ -63,10 +63,6 @@ const koDashboardPage: Record<string, TranslationEntry> = {
     message: "장부를 로드하지 못했습니다",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message: "장부를 가져올 수 없습니다. 연결을 확인하고 다시 시도해 주세요.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.ledgerCreatedSuccess": {
     message: "장부가 성공적으로 생성되었습니다",
     description: "Toast notification when ledger created",
@@ -90,11 +86,6 @@ const koDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Beancount 장부 관리",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Beancount 장부를 관리하세요. 장부를 클릭하여 세부 정보를 확인하세요.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameMaxLength": {
     message: "이름은 100자 미만이어야 합니다",

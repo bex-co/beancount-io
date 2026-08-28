@@ -160,10 +160,6 @@ const jaCommon: Record<string, TranslationEntry> = {
       "指定されたURLパラメーターは有効ではありません。リンクを確認してもう一度お試しください。",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "最終更新",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "台帳設定",
     description:
@@ -188,10 +184,6 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "さらにページ",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "名前",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "制限に近づいています",
@@ -225,10 +217,6 @@ const jaCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "その他",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "オーナー",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "ページが見つかりません",

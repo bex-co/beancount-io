@@ -66,10 +66,6 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
     message: "加载账本失败",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message: "无法获取你的账本。请检查你的连接后重试。",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "加载动态失败",
     description: "Error message when feed fails to load",
@@ -101,10 +97,6 @@ const zhDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "管理你的 Beancount 账本",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message: "管理你的 Beancount 账本。点击账本查看详细信息。",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "名称必须至少包含一个字母或数字",

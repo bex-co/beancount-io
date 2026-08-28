@@ -160,10 +160,6 @@ const koCommon: Record<string, TranslationEntry> = {
       "제공된 URL 매개변수가 유효하지 않습니다. 링크를 확인하고 다시 시도해 주세요.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "마지막 업데이트",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "장부 설정",
     description:
@@ -188,10 +184,6 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "더 많은 페이지",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "이름",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "제한에 가까워짐",
@@ -225,10 +217,6 @@ const koCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "기타",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "소유자",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "페이지를 찾을 수 없습니다",

@@ -160,10 +160,6 @@ const faCommon: Record<string, TranslationEntry> = {
       "پارامترهای URL ارائه شده معتبر نیستند. لطفاً لینک را بررسی کرده و دوباره تلاش کنید.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "آخرین به‌روزرسانی",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "تنظیمات دفتر",
     description:
@@ -188,10 +184,6 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "صفحات بیشتر",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "نام",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "نزدیک به محدودیت",
@@ -225,10 +217,6 @@ const faCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "سایر",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "مالک",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "صفحه یافت نشد",

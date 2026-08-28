@@ -160,10 +160,6 @@ const ptCommon: Record<string, TranslationEntry> = {
       "Os parâmetros de URL fornecidos não são válidos. Por favor, verifique o link e tente novamente.",
     description: "Description for validation error page",
   },
-  "common.lastUpdated": {
-    message: "Última atualização",
-    description: "Table column header for last update time",
-  },
   "common.ledgerSettings": {
     message: "Configurações do livro",
     description:
@@ -188,10 +184,6 @@ const ptCommon: Record<string, TranslationEntry> = {
   "common.morePages": {
     message: "Mais páginas",
     description: "Screen reader label for pagination ellipsis",
-  },
-  "common.name": {
-    message: "Nome",
-    description: "Table column header for name",
   },
   "common.nearLimit": {
     message: "perto do limite",
@@ -225,10 +217,6 @@ const ptCommon: Record<string, TranslationEntry> = {
   "common.otherColumn": {
     message: "Outro",
     description: "Table column header for other currencies/amounts",
-  },
-  "common.owner": {
-    message: "Proprietário",
-    description: "Table column header for owner",
   },
   "common.pageNotFound": {
     message: "Página não encontrada",

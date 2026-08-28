@@ -68,11 +68,6 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
     message: "Неуспешно зареждане на книгите",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "Не можахме да извлечем вашите книги. Моля, проверете връзката си и опитайте отново.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Грешка при зареждане на емисията",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const bgDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Управление на вашите книги на Beancount",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Управление на вашите книги на Beancount. Кликнете върху книга, за да видите подробностите ѝ.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "Името трябва да съдържа поне една буква или число",

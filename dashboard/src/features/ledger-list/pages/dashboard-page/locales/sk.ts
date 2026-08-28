@@ -68,11 +68,6 @@ const skDashboardPage: Record<string, TranslationEntry> = {
     message: "Načítanie kníh zlyhalo",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "Nepodarilo sa načítať vaše knihy. Skontrolujte prosím svoje pripojenie a skúste to znova.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Nepodarilo sa načítať kanál",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const skDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Spravujte svoje Beancount knihy",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Spravujte svoje Beancount knihy. Kliknutím na knihu zobrazíte jej podrobnosti.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "Názov musí obsahovať aspoň jedno písmeno alebo číslo",

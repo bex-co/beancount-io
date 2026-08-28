@@ -68,11 +68,6 @@ const esDashboardPage: Record<string, TranslationEntry> = {
     message: "Error al cargar el libro mayors",
     description: "Error title when ledgers fail to load",
   },
-  "page.dashboard.failedToLoadLedgersDescription": {
-    message:
-      "No pudimos recuperar sus libros mayores. Por favor, verifique su conexión e inténtelo de nuevo.",
-    description: "Detailed error description for ledger loading failure",
-  },
   "page.dashboard.feedError": {
     message: "Error al cargar el feed",
     description: "Error message when feed fails to load",
@@ -105,11 +100,6 @@ const esDashboardPage: Record<string, TranslationEntry> = {
   "page.dashboard.manageLedgers": {
     message: "Administre sus libros mayores de Beancount",
     description: "Description of ledger management",
-  },
-  "page.dashboard.manageLedgersDescription": {
-    message:
-      "Administre sus libros mayores de Beancount. Haga clic en un libro mayor para ver sus detalles.",
-    description: "Detailed description with click instruction",
   },
   "page.dashboard.nameInvalid": {
     message: "El nombre debe contener al menos una letra o número",
