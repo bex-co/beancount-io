@@ -1,8 +1,4 @@
-import {
-  hasRequiredScope,
-  type ApiScope,
-  type Identity,
-} from "./identity";
+import { hasRequiredScope, type ApiScope, type Identity } from "./identity";
 import { ForbiddenError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import {
@@ -327,12 +323,14 @@ const gqlOnly = (
 });
 
 const ACCOUNT_VERBS: readonly VerbEntry[] = [
-  gqlOnly(
-    "Query.userProfile",
-    "session-only",
-    R.accountProfile,
-    M.notAgentShaped,
-  ),
+  // `read`, not `session-only`: the native app treats its access token as
+  // opaque and learns who signed in by asking for its own profile right after
+  // the code exchange, so this is the first call every OAuth session makes.
+  // ADR 0006 D3's wall is for account lifecycle, billing, and credential
+  // minting; a token holder reading their own profile is none of those, and
+  // `ledger.read` — carried by every native and MCP grant — is the right key
+  // (ADR 0008, amendment 2026-08-28).
+  gqlOnly("Query.userProfile", "read", R.accountProfile, M.notAgentShaped),
   gqlOnly(
     "Query.getUserByExactMatch",
     "session-only",

@@ -7,6 +7,8 @@ import type { AppConfig } from "@/config/config";
 import { decodeJwt } from "jose";
 import { getJwks } from "@/config/jwks";
 import { resolveOidcIdentity } from "@/features/oauth/utils/oidc-verify";
+import type { Identity } from "@/server/api/identity";
+import { gqlOpId, requireScopeClass } from "@/server/api/op-class";
 import {
   MOBILE_CLIENT_ID,
   MOBILE_REDIRECT_URIS,
@@ -261,15 +263,38 @@ describe("oidc-route: unified MCP + identity provider", () => {
       },
       config,
     );
+    // A stand-in for the GraphQL gateway that keeps the one thing production
+    // enforces on this call: the op-class gate. The native app resolves who
+    // signed in with `Query.userProfile` right after the exchange, and a table
+    // that files that query as session-only breaks every native sign-in while
+    // a hand-rolled scope check here would still pass.
     router.post("/api-gateway/", async (ctx) => {
       const authorization = ctx.headers.authorization ?? "";
-      const identity = await resolveOidcIdentity(
+      const oidc = await resolveOidcIdentity(
         authorization.replace(/^Bearer\s+/i, ""),
         config,
       );
-      if (!identity || !identity.scopes.includes("ledger.read")) {
+      if (!oidc) {
         ctx.status = 401;
         ctx.body = { errors: [{ message: "unauthenticated" }] };
+        return;
+      }
+      const identity: Identity = {
+        userId: oidc.userId,
+        method: "oauth",
+        scopes: new Set(oidc.scopes),
+        ledgerScope: oidc.ledgerId,
+        tokenId: oidc.tokenId,
+        capabilityExempt: false,
+      };
+      try {
+        requireScopeClass(identity, gqlOpId("Query.userProfile"), "enforce");
+      } catch (error: unknown) {
+        ctx.status = 200;
+        ctx.body = {
+          errors: [{ message: (error as Error).message }],
+          data: { userProfile: null },
+        };
         return;
       }
       ctx.body = {

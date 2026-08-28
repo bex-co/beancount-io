@@ -1,4 +1,5 @@
 import { OAuthAuthorizationError } from "../../../common/oauth/authorization-result";
+import { OAuthDiscoveryError } from "../../../common/oauth/discovery";
 import { runNativeSignIn } from "../native-sign-in-runner";
 
 describe("runNativeSignIn", () => {
@@ -18,17 +19,33 @@ describe("runNativeSignIn", () => {
     expect(outcome).toBe("cancelled");
   });
 
-  it("reports a real authorization error as a failure", async () => {
+  it("reports a real authorization error as a rejection", async () => {
     const outcome = await runNativeSignIn("sign_in", async () => {
       throw new OAuthAuthorizationError("server_error");
     });
-    expect(outcome).toBe("failed");
+    expect(outcome).toBe("rejected");
   });
 
-  it("counts an unexpected exception as a failure too", async () => {
+  it("names a server that cannot be reached or is not a Beancount.io server", async () => {
+    expect(
+      await runNativeSignIn("sign_in", async () => {
+        throw new OAuthDiscoveryError("unreachable", "fetch failed");
+      }),
+    ).toBe("unreachable");
+    expect(
+      await runNativeSignIn("sign_up", async () => {
+        throw new OAuthDiscoveryError(
+          "incompatible",
+          "S256 PKCE is unsupported",
+        );
+      }),
+    ).toBe("incompatible");
+  });
+
+  it("counts an unexpected exception as a rejection", async () => {
     const outcome = await runNativeSignIn("sign_in", async () => {
-      throw new TypeError("Network request failed");
+      throw new TypeError("something else entirely");
     });
-    expect(outcome).toBe("failed");
+    expect(outcome).toBe("rejected");
   });
 });

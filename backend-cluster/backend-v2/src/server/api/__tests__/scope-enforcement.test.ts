@@ -194,14 +194,30 @@ function captureMcpHandlers(
 
 describe("scope enforcement across surfaces", () => {
   describe("the committed policy closes high-impact scope escalation", () => {
+    it("GraphQL: a read token can learn whose token it is — the native app's first call after the code exchange", async () => {
+      const profile = await driveGraphql(
+        readOnlyToken,
+        makeGraphqlInfo("Query", "userProfile"),
+        realConfig,
+      );
+      expect(profile.reached).toBe(true);
+      expect(profile.error).toBeUndefined();
+
+      // Identity-only credentials (no ledger scope at all) still cannot.
+      const bare: Identity = { ...readOnlyToken, scopes: new Set() };
+      const refused = await driveGraphql(
+        bare,
+        makeGraphqlInfo("Query", "userProfile"),
+        realConfig,
+      );
+      expect(refused.reached).toBe(false);
+      expect(refused.error).toBeInstanceOf(ForbiddenError);
+    });
+
     it("GraphQL: even every ledger scope cannot unlock a session-only operation", async () => {
       const allScopes: Identity = {
         ...adminToken,
-        scopes: new Set([
-          "ledger.read",
-          "ledger.write",
-          "ledger.admin",
-        ]),
+        scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
       };
       const { error, reached } = await driveGraphql(
         allScopes,

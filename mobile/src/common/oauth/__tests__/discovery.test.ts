@@ -1,4 +1,8 @@
-import { apiResourceForServer, discoverOAuthServer } from "../discovery";
+import {
+  apiResourceForServer,
+  discoverOAuthServer,
+  OAuthDiscoveryError,
+} from "../discovery";
 
 const serverUrl = "https://books.example.test/beancount/";
 const issuer = "https://books.example.test/beancount";
@@ -115,5 +119,28 @@ describe("OAuth discovery", () => {
       }) as typeof fetch;
       await expectFailure(discoverOAuthServer(serverUrl, fetcher));
     }
+  });
+
+  it("tells a dead host apart from a live server that is not Beancount.io", async () => {
+    const kindOf = async (fetcher: typeof fetch): Promise<string> => {
+      try {
+        await discoverOAuthServer(serverUrl, fetcher);
+        return "resolved";
+      } catch (error: unknown) {
+        return error instanceof OAuthDiscoveryError ? error.kind : "other";
+      }
+    };
+
+    expect(
+      await kindOf((async () => {
+        throw new TypeError("Network request failed");
+      }) as typeof fetch),
+    ).toBe("unreachable");
+    expect(
+      await kindOf(
+        (async () =>
+          ({ ok: false, json: async () => ({}) }) as Response) as typeof fetch,
+      ),
+    ).toBe("incompatible");
   });
 });

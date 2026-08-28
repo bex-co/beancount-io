@@ -2,14 +2,15 @@ import { useCallback, useRef, useState } from "react";
 import { startNativeAuthorization } from "@/common/oauth/start-authorization";
 import {
   runNativeSignIn,
+  type NativeSignInFailure,
   type NativeSignInFlow,
 } from "@/screens/welcome/native-sign-in-runner";
 
 export type NativeSignIn = {
   /** The flow whose browser is open, so only that button shows progress. */
   pendingFlow: NativeSignInFlow | null;
-  /** The flow whose last attempt failed, so the message matches the button. */
-  failedFlow: NativeSignInFlow | null;
+  /** The last failed attempt: which button, and why, so the message fits. */
+  failure: { flow: NativeSignInFlow; reason: NativeSignInFailure } | null;
   start: (flow: NativeSignInFlow) => void;
 };
 
@@ -21,21 +22,23 @@ export type NativeSignIn = {
  */
 export function useNativeSignIn(): NativeSignIn {
   const [pendingFlow, setPendingFlow] = useState<NativeSignInFlow | null>(null);
-  const [failedFlow, setFailedFlow] = useState<NativeSignInFlow | null>(null);
+  const [failure, setFailure] = useState<NativeSignIn["failure"]>(null);
   const running = useRef(false);
 
   const start = useCallback((flow: NativeSignInFlow) => {
     if (running.current) return;
     running.current = true;
     setPendingFlow(flow);
-    setFailedFlow(null);
+    setFailure(null);
 
     void runNativeSignIn(flow, startNativeAuthorization).then((outcome) => {
       running.current = false;
       setPendingFlow(null);
-      if (outcome === "failed") setFailedFlow(flow);
+      if (outcome !== "completed" && outcome !== "cancelled") {
+        setFailure({ flow, reason: outcome });
+      }
     });
   }, []);
 
-  return { pendingFlow, failedFlow, start };
+  return { pendingFlow, failure, start };
 }

@@ -17,10 +17,10 @@ The reasons have been doing a second job they were not meant for: standing in fo
 
 | Class          | Total   | On MCP | On REST |
 | -------------- | ------- | ------ | ------- |
-| `read`         | 55      | 3      | 13      |
+| `read`         | 56      | 3      | 13      |
 | `write`        | 25      | 3      | 8       |
 | `admin`        | 27      | 3      | 3       |
-| `session-only` | 34      | 0      | 0       |
+| `session-only` | 33      | 0      | 0       |
 | `public`       | 2       | 0      | 0       |
 | **Total**      | **143** | **9**  | **24**  |
 
@@ -28,9 +28,9 @@ The gap is 134 verbs on MCP and 119 on REST — 95 and 80 once D4 takes the out-
 
 ### The `session-only` wall
 
-34 of the 143 — a quarter of the table — are `session-only`. That class is not "nobody got to it yet." It is ADR 0006 D3's deliberate statement that **no scope in the vocabulary can unlock these**: account lifecycle, billing, credential minting. The vocabulary is three ledger scopes wide precisely so that a token granted "manage my ledger" cannot also delete the account.
+33 of the 143 — a quarter of the table — are `session-only`. That class is not "nobody got to it yet." It is ADR 0006 D3's deliberate statement that **no scope in the vocabulary can unlock these**: account lifecycle, billing, credential minting. The vocabulary is three ledger scopes wide precisely so that a token granted "manage my ledger" cannot also delete the account.
 
-So these 34 are not a parity backlog. Reaching them from MCP or REST would mean widening the scope vocabulary, which is ADR 0006 D3's decision to re-open, not this one's. They are the largest of three exclusions that D4 names; **parity's denominator is 104, not 143**.
+So these 33 are not a parity backlog. Reaching them from MCP or REST would mean widening the scope vocabulary, which is ADR 0006 D3's decision to re-open, not this one's. They are the largest of three exclusions that D4 names; **parity's denominator is 105, not 143**.
 
 ## Decision Drivers
 
@@ -81,11 +81,11 @@ Grouping is legitimate when the members share a shape and an authorization class
 
 | Excluded                  | Count | Why                                                                                                                                                                                                                            |
 | ------------------------- | ----- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `session-only`            | 34    | Account lifecycle, billing, credential minting. ADR 0006 D3 deliberately gave these no scope, so that a token granted "manage my ledger" cannot also delete the account. Not accounting work, and no credential can reach them |
+| `session-only`            | 33    | Account lifecycle, billing, credential minting. ADR 0006 D3 deliberately gave these no scope, so that a token granted "manage my ledger" cannot also delete the account. Not accounting work, and no credential can reach them |
 | Browser-ceremony verbs    | 3     | The operation **is** a hosted widget: `createPlaidLinkToken`, `createPlaidUpdateModeLinkToken`, `exchangePlaidPublicToken`. There is no API to expose — the customer's action happens inside Plaid Link                        |
 | Screen-shaped projections | 2     | `Query.accountHierarchy`, `Query.homeCharts` — a specific dashboard's layout. The customer-facing thing is the underlying data, which is in scope on its own                                                                   |
 
-**143 − 34 − 3 − 2 = 104.** Of those, 9 are on MCP and 24 on REST. None of the 5 newly-excluded verbs is on either surface today, so this scoping does not retire any existing work.
+**143 − 33 − 3 − 2 = 105.** Of those, 9 are on MCP and 24 on REST. None of the 5 newly-excluded verbs is on either surface today, so this scoping does not retire any existing work.
 
 Two things this rules out. It is not a size argument — 104 is most of the table, and the exclusions are five verbs plus a class that was already structural. And it is not a permanent judgement about Plaid or dashboards: it names _ceremonies_ and _projections_, so a Plaid operation that is neither is in scope, which is exactly what D4a is about.
 
@@ -126,7 +126,7 @@ The number then moves in _either_ direction only by someone editing that line �
 
 Two things are excluded before counting, and the difference between them matters:
 
-- **Out of parity scope** (D4) — the 34 `session-only`, 3 Link-ceremony, and 2 screen-projection verbs. Not targets.
+- **Out of parity scope** (D4) — the 33 `session-only`, 3 Link-ceremony, and 2 screen-projection verbs. Not targets.
 - **In scope, but the surface cannot carry it** — 6 on GraphQL (an archive's bytes, two event streams, two foreign wire formats) and 4 on MCP (the agent transports themselves; a tool for reaching one from inside a tool call would be circular). Targets, physically unreachable there.
 
 Both come from named lists in `op-class.ts`, not from a marker pasted into each exemption string. **An exemption is an argument, and the same argument lands on in-scope and out-of-scope verbs alike** — "credential minting is unreachable by a token" excuses six `session-only` verbs and four in-scope ones, so a prose marker would have to be right in every row it was copied into. That is the failure this record exists to stop. Derive what can be derived.
@@ -255,3 +255,7 @@ External:
 
 - [MCP Resources](https://modelcontextprotocol.io/specification/2025-06-18/server/resources) — URI addressing, templates, pagination, subscriptions
 - [RFC 6570](https://datatracker.ietf.org/doc/html/rfc6570) — URI templates, the parameter form D2's templates use
+
+## Amendments
+
+- **2026-08-28 — `Query.userProfile` moved from `session-only` to `read`.** The native app resolves the signed-in user with this query right after the OAuth code exchange (it treats access tokens as opaque by design), and hosted enforcement refused it, which made every native sign-in fail after Approve. D3's wall is about account lifecycle, billing, and credential minting; a token holder reading their own profile is none of those, and the `ledger.read` scope every native and MCP grant carries is the right key. Counts above are updated (read 56, session-only 33, denominator 105).

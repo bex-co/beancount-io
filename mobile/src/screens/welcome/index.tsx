@@ -8,7 +8,10 @@ import { useThemeStyle } from "@/common/hooks";
 import { useTheme } from "@/common/theme";
 import { Button } from "@/components";
 import { PressableScale } from "@/components/pressable-scale";
-import { useNativeSignIn } from "@/screens/welcome/use-native-sign-in";
+import {
+  useNativeSignIn,
+  type NativeSignIn,
+} from "@/screens/welcome/use-native-sign-in";
 
 const { height } = Dimensions.get("window");
 
@@ -64,11 +67,29 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
+/**
+ * A server problem is named as one — the same words the Server screen's
+ * "Test connection" uses — so a stale custom URL does not read as a wrong
+ * password. Only a rejection blames the sign-in or sign-up itself.
+ */
+function failureMessageKey(
+  failure: NonNullable<NativeSignIn["failure"]>,
+): string {
+  switch (failure.reason) {
+    case "unreachable":
+      return "serverConnectionUnreachable";
+    case "incompatible":
+      return "serverConnectionIncompatible";
+    case "rejected":
+      return failure.flow === "sign_up" ? "signUpFailed" : "signInFailed";
+  }
+}
+
 export function WelcomeScreen(): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
-  const { pendingFlow, failedFlow, start } = useNativeSignIn();
+  const { pendingFlow, failure, start } = useNativeSignIn();
   const busy = pendingFlow !== null;
 
   return (
@@ -109,10 +130,8 @@ export function WelcomeScreen(): JSX.Element {
             {t("signUp")}
           </Button>
         </View>
-        {failedFlow && (
-          <Text style={styles.error}>
-            {failedFlow === "sign_up" ? t("signUpFailed") : t("signInFailed")}
-          </Text>
+        {failure && (
+          <Text style={styles.error}>{t(failureMessageKey(failure))}</Text>
         )}
       </View>
     </View>

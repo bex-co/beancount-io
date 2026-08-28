@@ -73,14 +73,40 @@ export function oauthEndpointWithinIssuer(
   return endpointUrl.toString();
 }
 
+/**
+ * Why discovery failed, in the two words the welcome screen can act on:
+ * `unreachable` means no response came back at all (offline, wrong host, dead
+ * port), `incompatible` means a server answered but is not a Beancount.io
+ * OAuth server the app can use.
+ */
+export class OAuthDiscoveryError extends Error {
+  constructor(
+    readonly kind: "unreachable" | "incompatible",
+    message: string,
+  ) {
+    super(message);
+  }
+}
+
+const incompatible = (message: string) =>
+  new OAuthDiscoveryError("incompatible", message);
+
 async function fetchJson(url: string, fetcher: Fetch, signal?: AbortSignal) {
-  const response = await fetcher(url, {
-    headers: { accept: "application/json" },
-    signal,
-  });
-  if (!response.ok) throw new Error("OAuth metadata is unavailable");
+  let response: Response;
+  try {
+    response = await fetcher(url, {
+      headers: { accept: "application/json" },
+      signal,
+    });
+  } catch (error: unknown) {
+    throw new OAuthDiscoveryError(
+      "unreachable",
+      error instanceof Error ? error.message : "Could not reach the server",
+    );
+  }
+  if (!response.ok) throw incompatible("OAuth metadata is unavailable");
   const body: unknown = await response.json();
-  if (!isObject(body)) throw new Error("OAuth metadata is invalid");
+  if (!isObject(body)) throw incompatible("OAuth metadata is invalid");
   return body;
 }
 
@@ -91,7 +117,7 @@ export async function discoverOAuthServer(
   signal?: AbortSignal,
 ): Promise<OAuthDiscovery> {
   const validation = validateServerUrl(selectedServerUrl);
-  if (!validation.ok) throw new Error("Selected server URL is invalid");
+  if (!validation.ok) throw incompatible("Selected server URL is invalid");
 
   const serverUrl = validation.url;
   const expectedIssuer = issuerForServer(serverUrl);
@@ -102,7 +128,7 @@ export async function discoverOAuthServer(
     signal,
   );
   if (resourceMetadata.resource !== resource) {
-    throw new Error(
+    throw incompatible(
       "Protected-resource metadata does not match the selected server",
     );
   }
@@ -113,14 +139,16 @@ export async function discoverOAuthServer(
     authorizationServers.length !== 1 ||
     authorizationServers[0] !== expectedIssuer
   ) {
-    throw new Error("Authorization server does not match the selected server");
+    throw incompatible(
+      "Authorization server does not match the selected server",
+    );
   }
   if (
     !OAUTH_SCOPES.slice(2).every((scope) =>
       stringArray(resourceMetadata.scopes_supported).includes(scope),
     )
   ) {
-    throw new Error("Protected resource lacks required mobile scopes");
+    throw incompatible("Protected resource lacks required mobile scopes");
   }
 
   const metadata = await fetchJson(
@@ -129,7 +157,7 @@ export async function discoverOAuthServer(
     signal,
   );
   if (metadata.issuer !== expectedIssuer) {
-    throw new Error("Authorization-server issuer mismatch");
+    throw incompatible("Authorization-server issuer mismatch");
   }
   if (
     !stringArray(metadata.response_types_supported).includes("code") ||
@@ -137,21 +165,21 @@ export async function discoverOAuthServer(
       stringArray(metadata.scopes_supported).includes(scope),
     )
   ) {
-    throw new Error("Authorization code flow is unsupported");
+    throw incompatible("Authorization code flow is unsupported");
   }
   if (
     stringArray(metadata.response_types_supported).some((type) =>
       type.includes("token"),
     )
   ) {
-    throw new Error(
+    throw incompatible(
       "Authorization server advertises an implicit response flow",
     );
   }
   if (
     !stringArray(metadata.code_challenge_methods_supported).includes("S256")
   ) {
-    throw new Error("S256 PKCE is unsupported");
+    throw incompatible("S256 PKCE is unsupported");
   }
   if (
     !["authorization_code", "refresh_token"].every((grant) =>
@@ -162,7 +190,7 @@ export async function discoverOAuthServer(
     ) ||
     metadata.authorization_response_iss_parameter_supported !== true
   ) {
-    throw new Error("Authorization server lacks the native OAuth contract");
+    throw incompatible("Authorization server lacks the native OAuth contract");
   }
 
   return {
