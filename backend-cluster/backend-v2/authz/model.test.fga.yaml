@@ -1,0 +1,143 @@
+# Behavioral assertions for authz/model.fga, run by `fga model test` (the
+# OpenFGA CLI evaluates them with its embedded engine — no server needed).
+#
+# This suite pins the RELATIONSHIP ceiling truth table only: which rank
+# follows from the owner/collaborator/public facts. The composed
+# two-ceiling behavior — credential scopes capping these ranks, the
+# session exemption, the ledger pin — is deliberately outside the model
+# (see model.fga header and ADR 0010); its truth table belongs to the
+# conformance fixture run against the real authorizeLedger (ADR 0010
+# follow-up).
+#
+# Subject namespace: FGA subjects are stable internal user IDs
+# (`users.id`, here shaped `usr_*`), NEVER usernames. The `alice` in
+# `ledger:alice/main` is a ledger_username — a different namespace that
+# deliberately does not appear as any subject. The runtime owner check
+# compares internal IDs (`ledgerOwnerUser.id === userId`), not names.
+name: backend-v2 ledger relationship ceiling
+model_file: ./model.fga
+
+tuples:
+  # ledger:alice/main — private; owned by usr_alice (username "alice") +
+  # one collaborator per rank
+  - user: user:usr_alice
+    relation: owner
+    object: ledger:alice/main
+  - user: user:usr_adam
+    relation: collaborator_admin
+    object: ledger:alice/main
+  - user: user:usr_bob
+    relation: collaborator_write
+    object: ledger:alice/main
+  - user: user:usr_carol
+    relation: collaborator_read
+    object: ledger:alice/main
+  # ledger:alice/blog — public (private: false ⇒ wildcard public_reader)
+  - user: user:usr_alice
+    relation: owner
+    object: ledger:alice/blog
+  - user: "user:*"
+    relation: public_reader
+    object: ledger:alice/blog
+
+tests:
+  - name: owner ranks admin
+    check:
+      - user: user:usr_alice
+        object: ledger:alice/main
+        assertions:
+          can_read: true
+          can_write: true
+          can_admin: true
+
+  - name: admin collaborator ranks admin
+    check:
+      - user: user:usr_adam
+        object: ledger:alice/main
+        assertions:
+          can_read: true
+          can_write: true
+          can_admin: true
+
+  - name: write collaborator ranks write — stronger rank implies weaker, never admin
+    check:
+      - user: user:usr_bob
+        object: ledger:alice/main
+        assertions:
+          can_read: true
+          can_write: true
+          can_admin: false
+
+  - name: read collaborator ranks read only
+    check:
+      - user: user:usr_carol
+        object: ledger:alice/main
+        assertions:
+          can_read: true
+          can_write: false
+          can_admin: false
+
+  - name: stranger has no rank on a private ledger
+    check:
+      - user: user:usr_dave
+        object: ledger:alice/main
+        assertions:
+          can_read: false
+          can_write: false
+          can_admin: false
+
+  - name: anonymous sentinel reads a public ledger via the wildcard, nothing more
+    check:
+      - user: user:anonymous
+        object: ledger:alice/blog
+        assertions:
+          can_read: true
+          can_write: false
+          can_admin: false
+
+  - name: anonymous sentinel has no rank on a private ledger
+    check:
+      - user: user:anonymous
+        object: ledger:alice/main
+        assertions:
+          can_read: false
+          can_write: false
+          can_admin: false
+
+  - name: signed-in non-collaborator reads a public ledger via the wildcard, nothing more
+    check:
+      - user: user:usr_dave
+        object: ledger:alice/blog
+        assertions:
+          can_read: true
+          can_write: false
+          can_admin: false
+
+  # Union is monotonic: an ADDITIONAL WEAKER fact (an owner also listed
+  # as a collaborator, a leftover collaborator_read beside
+  # collaborator_write) never lowers an existing rank — that is the safe
+  # direction, pinned here. The dangerous direction — a stale STRONGER
+  # grant surviving revocation — is invisible to the model and must be
+  # prevented by the relationship resolver emitting exactly one effective
+  # rank per caller (README invariants).
+  - name: adding a weaker fact never lowers an existing rank
+    tuples:
+      - user: user:usr_alice
+        relation: collaborator_read
+        object: ledger:alice/main
+      - user: user:usr_bob
+        relation: collaborator_read
+        object: ledger:alice/main
+    check:
+      - user: user:usr_alice
+        object: ledger:alice/main
+        assertions:
+          can_read: true
+          can_write: true
+          can_admin: true
+      - user: user:usr_bob
+        object: ledger:alice/main
+        assertions:
+          can_read: true
+          can_write: true
+          can_admin: false

@@ -1,0 +1,41 @@
+name: CI (authz model)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend-cluster/backend-v2/authz/**"
+      - ".github/workflows/ci-authz-model.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend-cluster/backend-v2/authz/**"
+      - ".github/workflows/ci-authz-model.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+env:
+  FGA_CLI_VERSION: "0.7.20"
+  FGA_CLI_SHA256: "f0136868bdced6f8fded1876d41aa8d594d23588183497f6d876c1a5343529a4"
+
+jobs:
+  authz-model:
+    name: authz-model
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Install OpenFGA CLI
+        run: |
+          curl -fsSL -o fga.tar.gz "https://github.com/openfga/cli/releases/download/v${FGA_CLI_VERSION}/fga_${FGA_CLI_VERSION}_linux_amd64.tar.gz"
+          echo "${FGA_CLI_SHA256}  fga.tar.gz" | sha256sum --check
+          tar -xzf fga.tar.gz fga
+          sudo install fga /usr/local/bin/fga
+          fga version
+      - name: Validate model DSL
+        working-directory: backend-cluster/backend-v2/authz
+        run: fga model validate --file model.fga
+      - name: Run behavioral assertions
+        working-directory: backend-cluster/backend-v2/authz
+        run: fga model test --tests model.test.fga.yaml

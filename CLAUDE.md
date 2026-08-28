@@ -35,7 +35,7 @@ This file holds repo-wide rules. Per-package guidance lives next to the code:
 | `deploy/`          | active | Deployment targets: `deploy/docker-mac/` (Docker Compose, full stack locally), `deploy/dev-sandbox/` (full stack + Ask-AI sandbox for development), `deploy/docker/` (single-host production), and `deploy/bex/` (bex PaaS, no persistent disks — Blueprint at root `bex.yaml`) |
 | `docs/`            | active | Documentation content; `docs/adrs/` centralizes every package's Architecture Decision Records (`ADR<NNN>-<package>-<slug>.md`)                                                                             |
 
-There is no root `package.json`. Each package owns its own dependencies and scripts. Dashboard, mobile, ledger, and CLI also own their tracked lockfiles; backend-v2, agent-box, and the small IDL clients currently do not have one. CI is path-filtered for dashboard, mobile, CLI, and skills (see [Tooling](#tooling)).
+There is no root `package.json`. Each package owns its own dependencies and scripts. Dashboard, mobile, ledger, and CLI also own their tracked lockfiles; backend-v2, agent-box, and the small IDL clients currently do not have one. CI is path-filtered for dashboard, mobile, CLI, skills, and the backend-v2 authz model (see [Tooling](#tooling)).
 
 When a new package gets real code, add a `<package>/CLAUDE.md` documenting its tech stack and conventions (with the `AGENTS.md` symlink per the compatibility rules above).
 
@@ -86,7 +86,8 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
   - `.github/workflows/ci-dashboard.yml` (`CI (dashboard)`) → `dashboard/**`: `yarn format:check`, `yarn lint`, `yarn test`, `yarn build`.
   - `.github/workflows/ci-cli.yml` (`CI (cli)`) → `cli/**`: `make check-all`.
   - `.github/workflows/ci-skills.yml` (`CI (skills)`) → `skills/**`: `python3 skills/scripts/ci-check.py` (SKILL.md frontmatter, evals.json, fixture paths, Python syntax, bean-check on `*ledger.beancount`).
+  - `.github/workflows/ci-authz-model.yml` (`CI (authz model)`) → `backend-cluster/backend-v2/authz/**`: OpenFGA CLI `fga model validate` + `fga model test` on the declarative authorization model.
 - Agent guidance: `.github/workflows/ci-agent-guidance.yml` validates `CLAUDE.md` / `AGENTS.md` and shared-skill symlinks whenever those surfaces change.
-- Backend and deploy packages currently have no package-specific GitHub Actions test workflow; run the commands in their scoped `CLAUDE.md` files before handing off changes.
+- Backend and deploy packages have no package-wide GitHub Actions test workflow (only the authz-model check above); run the commands in their scoped `CLAUDE.md` files before handing off changes.
 - Secret scan: `.github/workflows/secret-scan.yml` runs gitleaks over the whole tree on every push/PR — not path-filtered.
 - Release: `.github/workflows/deploy.yml` (workflow name `Release (mobile)`) runs on every `mobile/**` push to `main` and verifies checks, but deploys only when `mobile/package.json`'s version has no `mobile-v<version>` git tag yet (i.e. after `yarn bump`): it ships the OTA update, runs the Expo EAS build/submit, then pushes the tag and a GitHub Release. A push without a version bump deploys nothing. Tag-after-success makes failed releases retry automatically on the next push.

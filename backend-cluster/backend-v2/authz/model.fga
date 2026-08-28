@@ -1,0 +1,55 @@
+# Declarative model of backend-v2's ledger RELATIONSHIP ceiling, in the
+# OpenFGA modeling language (https://openfga.dev/docs/modeling).
+#
+# Boundary (ADR 0010): this file models exactly the half of authorization
+# an OpenFGA engine could own — who the caller IS to a ledger, and which
+# permission rank follows. The other half — what the caller's CREDENTIAL
+# may do on this request (API scopes with admin ⊇ write ⊇ read
+# implication, the session capability exemption, the Identity.ledgerScope
+# pin) — is the credential layer's contract in src/server/api/identity.ts
+# and is deliberately NOT modeled here: the FGA schema cannot express
+# "contextual-tuple-only", so scope-shaped relations would sit one
+# persisted tuple away from leaking a session's full power to that user's
+# weakest API key. The enforced composition
+#
+#   effective permission = credential ceiling ∩ relationship ceiling
+#
+# lives in authorizeLedger (src/features/ledger/utils/authorize-ledger.ts)
+# and stays there under any future engine adoption.
+#
+# This file is documentation-as-code today: nothing at runtime evaluates
+# it. A semantic change to the relationship resolution
+# (ledger-access-check.ts, authorizeRank) must update this model in the
+# same PR. CI validates the DSL and runs model.test.fga.yaml against it.
+
+model
+  schema 1.1
+
+# Subjects are stable internal user IDs (users.id), never usernames — the
+# owner segment of a ledger ID ("alice" in ledger:alice/main) is a
+# ledger_username, a separate namespace. See README invariants.
+type user
+
+type ledger
+  relations
+    # Facts — resolved per request from the external Gitea-backed ledger
+    # service by ledger-access-check.ts. The resolver must emit exactly
+    # one effective collaborator rank per caller (see README invariants;
+    # union below is monotonic and cannot repair duplicated or stale
+    # grants).
+    define owner: [user]
+    define collaborator_admin: [user]
+    define collaborator_write: [user]
+    define collaborator_read: [user]
+
+    # Present as the wildcard `user:*` iff the ledger is not private. The
+    # type restriction forbids individual users here: this relation can
+    # only ever say "everyone", never smuggle in a person.
+    define public_reader: [user:*]
+
+    # Derived permissions — the rank lattice authorizeRank compares
+    # against: admin ⊇ write ⊇ read; the owner is admin by construction
+    # (ledger-access-check.ts owner branch).
+    define can_admin: owner or collaborator_admin
+    define can_write: can_admin or collaborator_write
+    define can_read: can_write or collaborator_read or public_reader
