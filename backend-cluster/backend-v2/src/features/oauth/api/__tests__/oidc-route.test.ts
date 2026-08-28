@@ -10,9 +10,12 @@ import { resolveOidcIdentity } from "@/features/oauth/utils/oidc-verify";
 import {
   MOBILE_CLIENT_ID,
   MOBILE_REDIRECT_URIS,
+  oauthLifetimes,
   oauthWellKnownPath,
   setOidcRoutes,
+  shouldRotateRefreshToken,
 } from "../oidc-route";
+import { MemoryAdapter } from "../../data/memory-adapter";
 
 // Mock logger to avoid winston-loki dependency issues (same pattern as
 // git-proxy-handler.test.ts).
@@ -39,6 +42,8 @@ jest.mock("@/features/ledger/utils/ledger-access-check", () => ({
 }));
 
 const PORT = 47592; // fixed — issuer must be known before the Provider is constructed
+const MOBILE_SESSION_DAYS = 365;
+const DAY_SECONDS = 24 * 60 * 60;
 const ISSUER = `http://127.0.0.1:${PORT}`;
 const DISCOURSE_CLIENT_ID = "discourse-test";
 const DISCOURSE_CLIENT_SECRET = "test-client-secret-value";
@@ -73,6 +78,71 @@ describe("OAuth well-known URL derivation", () => {
         "https://books.example.test/beancount/v1",
       ),
     ).toBe("/.well-known/oauth-protected-resource/beancount/v1");
+  });
+});
+
+describe("OAuth token lifetimes", () => {
+  const lifetimes = oauthLifetimes(MOBILE_SESSION_DAYS);
+
+  it("gives the native app a year-long idle window, others 30 days", () => {
+    expect(lifetimes.refreshToken(MOBILE_CLIENT_ID)).toBe(365 * DAY_SECONDS);
+    expect(lifetimes.refreshToken("some-mcp-client")).toBe(30 * DAY_SECONDS);
+  });
+
+  it("keeps the native grant alive longer than the token it backs", () => {
+    // `validateGrant` runs before the refresh token is consumed, so a grant
+    // that expires first fails the refresh with invalid_grant even while the
+    // token itself is still valid. The grant must never be the binding cap.
+    expect(lifetimes.grant(MOBILE_CLIENT_ID)).toBeGreaterThan(
+      lifetimes.refreshToken(MOBILE_CLIENT_ID),
+    );
+    expect(lifetimes.grant("some-mcp-client")).toBe(14 * DAY_SECONDS);
+  });
+
+  it("scales the native lifetimes with the configured session length", () => {
+    const tightened = oauthLifetimes(30);
+    expect(tightened.refreshToken(MOBILE_CLIENT_ID)).toBe(30 * DAY_SECONDS);
+    expect(tightened.grant(MOBILE_CLIENT_ID)).toBe(31 * DAY_SECONDS);
+    // Other clients are unaffected by the native knob.
+    expect(tightened.refreshToken("some-mcp-client")).toBe(30 * DAY_SECONDS);
+    expect(tightened.grant("some-mcp-client")).toBe(14 * DAY_SECONDS);
+  });
+});
+
+describe("OAuth refresh-token rotation", () => {
+  const fresh = {
+    totalLifetime: () => 0,
+    isSenderConstrained: () => false,
+    ttlPercentagePassed: () => 0,
+  };
+  const ancient = { ...fresh, totalLifetime: () => 400 * DAY_SECONDS };
+
+  it("rotates the native credential however old the chain is", () => {
+    // Rotation is the only thing that slides the idle window forward — stop
+    // rotating and a phone in daily use still dies at a fixed age.
+    expect(
+      shouldRotateRefreshToken(
+        { clientId: MOBILE_CLIENT_ID, clientAuthMethod: "none" },
+        ancient,
+      ),
+    ).toBe(true);
+  });
+
+  it("leaves other clients on oidc-provider's default policy", () => {
+    const publicClient = { clientId: "mcp-public", clientAuthMethod: "none" };
+    const confidential = {
+      clientId: "mcp-confidential",
+      clientAuthMethod: "client_secret_basic",
+    };
+    expect(shouldRotateRefreshToken(publicClient, fresh)).toBe(true);
+    expect(shouldRotateRefreshToken(publicClient, ancient)).toBe(false);
+    expect(shouldRotateRefreshToken(confidential, fresh)).toBe(false);
+    expect(
+      shouldRotateRefreshToken(confidential, {
+        ...fresh,
+        ttlPercentagePassed: () => 70,
+      }),
+    ).toBe(true);
   });
 });
 
@@ -179,6 +249,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
           clientSecret: DISCOURSE_CLIENT_SECRET,
           redirectUri: DISCOURSE_REDIRECT_URI,
         },
+        mobileSessionDays: MOBILE_SESSION_DAYS,
       },
     } as unknown as AppConfig;
 
@@ -742,6 +813,200 @@ describe("oidc-route: unified MCP + identity provider", () => {
     });
     expect(afterRevoke.status).toBe(400);
     expect((await afterRevoke.json()) as object).toMatchObject({
+      error: "invalid_grant",
+    });
+  });
+
+  it("mobile flow: refreshing slides the grant, so use — not age — keeps a session alive", async () => {
+    const resource = `${ISSUER}/v1`;
+    const redirectUri = MOBILE_REDIRECT_URIS[0];
+    const grants = new MemoryAdapter("Grant");
+    const refreshTokens = new MemoryAdapter("RefreshToken");
+
+    const { code, verifier } = await driveAuthorizationCode({
+      clientId: MOBILE_CLIENT_ID,
+      clientAuth: "",
+      scope: "openid offline_access ledger.read",
+      redirectUri,
+      prompt: "consent",
+      resource,
+    });
+    const tokenBody = await exchangeToken({
+      code,
+      verifier,
+      clientId: MOBILE_CLIENT_ID,
+      redirectUri,
+      resource,
+    });
+
+    const issued = await refreshTokens.find(tokenBody.refresh_token as string);
+    const grantId = issued?.grantId as string;
+    expect(grantId).toEqual(expect.any(String));
+
+    // The grant a fresh sign-in writes must already cover the whole idle
+    // window. Before this was per-client it was a flat 14 days, which capped
+    // the session well before the refresh token it backs ever expired.
+    const now = () => Math.floor(Date.now() / 1000);
+    const atSignIn = await grants.find(grantId);
+    expect((atSignIn?.exp as number) - now()).toBeGreaterThan(
+      MOBILE_SESSION_DAYS * DAY_SECONDS,
+    );
+
+    // Age the grant as if the device had been quiet for most of the window.
+    // oidc-provider only writes a Grant at authorization time, so without the
+    // sliding middleware this expiry would keep counting down to a hard logout
+    // no matter how much the app was used.
+    await grants.upsert(
+      grantId,
+      { ...atSignIn!, exp: now() + 10 * DAY_SECONDS },
+      10 * DAY_SECONDS,
+    );
+
+    const refreshRes = await fetch(`${ISSUER}/api-gateway/oauth/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: tokenBody.refresh_token as string,
+        client_id: MOBILE_CLIENT_ID,
+        resource,
+      }),
+    });
+    expect(refreshRes.status).toBe(200);
+
+    const afterRefresh = await grants.find(grantId);
+    expect((afterRefresh?.exp as number) - now()).toBeGreaterThan(
+      MOBILE_SESSION_DAYS * DAY_SECONDS,
+    );
+  });
+
+  it("mobile flow: a session issued before the long window keeps working and upgrades on its next refresh", async () => {
+    const resource = `${ISSUER}/v1`;
+    const redirectUri = MOBILE_REDIRECT_URIS[0];
+    const grants = new MemoryAdapter("Grant");
+    const refreshTokens = new MemoryAdapter("RefreshToken");
+    const now = () => Math.floor(Date.now() / 1000);
+
+    const { code, verifier } = await driveAuthorizationCode({
+      clientId: MOBILE_CLIENT_ID,
+      clientAuth: "",
+      scope: "openid offline_access ledger.read",
+      redirectUri,
+      prompt: "consent",
+      resource,
+    });
+    const tokenBody = await exchangeToken({
+      code,
+      verifier,
+      clientId: MOBILE_CLIENT_ID,
+      redirectUri,
+      resource,
+    });
+    const legacyToken = tokenBody.refresh_token as string;
+
+    // Rewrite both records into the shapes this server used to write: a 30-day
+    // refresh token backed by a 14-day grant. That is exactly what a phone
+    // installed before this change is still holding, and it has to keep working
+    // on its own terms rather than being invalidated by the new lifetimes.
+    const issued = await refreshTokens.find(legacyToken);
+    const grantId = issued?.grantId as string;
+    await refreshTokens.upsert(
+      legacyToken,
+      { ...issued!, exp: now() + 30 * DAY_SECONDS },
+      30 * DAY_SECONDS,
+    );
+    const grant = await grants.find(grantId);
+    await grants.upsert(
+      grantId,
+      { ...grant!, exp: now() + 14 * DAY_SECONDS },
+      14 * DAY_SECONDS,
+    );
+
+    const refreshRes = await fetch(`${ISSUER}/api-gateway/oauth/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: legacyToken,
+        client_id: MOBILE_CLIENT_ID,
+        resource,
+      }),
+    });
+    expect(refreshRes.status).toBe(200);
+    const refreshed = (await refreshRes.json()) as Record<string, unknown>;
+    const rotated = refreshed.refresh_token as string;
+    expect(rotated).not.toBe(legacyToken);
+
+    // The old credential is honored, and what replaces it carries the new
+    // window — so an existing install migrates itself the first time it
+    // refreshes, with no re-authorization and no forced logout.
+    const rotatedRecord = await refreshTokens.find(rotated);
+    expect((rotatedRecord?.exp as number) - now()).toBeGreaterThan(
+      (MOBILE_SESSION_DAYS - 1) * DAY_SECONDS,
+    );
+    const slid = await grants.find(grantId);
+    expect((slid?.exp as number) - now()).toBeGreaterThan(
+      MOBILE_SESSION_DAYS * DAY_SECONDS,
+    );
+  });
+
+  it("mobile flow: a grant that already lapsed is not resurrected by the longer window", async () => {
+    const resource = `${ISSUER}/v1`;
+    const redirectUri = MOBILE_REDIRECT_URIS[0];
+    const grants = new MemoryAdapter("Grant");
+    const refreshTokens = new MemoryAdapter("RefreshToken");
+    const now = () => Math.floor(Date.now() / 1000);
+
+    const { code, verifier } = await driveAuthorizationCode({
+      clientId: MOBILE_CLIENT_ID,
+      clientAuth: "",
+      scope: "openid offline_access ledger.read",
+      redirectUri,
+      prompt: "consent",
+      resource,
+    });
+    const tokenBody = await exchangeToken({
+      code,
+      verifier,
+      clientId: MOBILE_CLIENT_ID,
+      redirectUri,
+      resource,
+    });
+    const refresh = (token: string) =>
+      fetch(`${ISSUER}/api-gateway/oauth/token`, {
+        method: "POST",
+        headers: { "content-type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams({
+          grant_type: "refresh_token",
+          refresh_token: token,
+          client_id: MOBILE_CLIENT_ID,
+          resource,
+        }),
+      });
+
+    // Refresh once untouched, so the only thing that differs below is the
+    // grant's expiry — the 200 here is what makes the 400 later attributable.
+    const first = await refresh(tokenBody.refresh_token as string);
+    expect(first.status).toBe(200);
+    const stillLive = (await first.json()) as Record<string, unknown>;
+    const staleToken = stillLive.refresh_token as string;
+
+    // The other half of the compatibility contract: sliding must only ever
+    // extend an authorization that is still live. An install whose old 14-day
+    // grant already ran out has to sign in again, exactly as it would have
+    // before this change — a longer window must not resurrect it.
+    const issued = await refreshTokens.find(staleToken);
+    const grantId = issued?.grantId as string;
+    const grant = await grants.find(grantId);
+    await grants.upsert(
+      grantId,
+      { ...grant!, exp: now() - 60 },
+      DAY_SECONDS, // outlives the payload's exp, so the row is found and judged
+    );
+
+    const afterLapse = await refresh(staleToken);
+    expect(afterLapse.status).toBe(400);
+    expect((await afterLapse.json()) as object).toMatchObject({
       error: "invalid_grant",
     });
   });

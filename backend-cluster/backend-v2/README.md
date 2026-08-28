@@ -132,6 +132,42 @@ maximum lifetime is one hour (`ttl.AccessToken`); clients must clear their local
 copy immediately on logout and operators should use signing-key rotation only
 for incident response where immediate global invalidation is required.
 
+#### Session lifetimes
+
+| Credential                    | Lifetime               | Notes                                               |
+| ----------------------------- | ---------------------- | --------------------------------------------------- |
+| Access token (all clients)    | 1 hour                 | Self-contained; revocation cannot cut it short.     |
+| Refresh token (native app)    | 365 days               | Re-issued in full on every refresh.                 |
+| Refresh token (other clients) | 30 days                | Unchanged; oidc-provider's default rotation policy. |
+| Grant (native app)            | session window + 1 day | Slid forward on every refresh.                      |
+| Grant (other clients)         | 14 days                | Unchanged.                                          |
+| Authorization-server session  | 14 days                | The browser SSO cookie, not an app session.         |
+
+A native-app session is an **idle window, not a fixed term**. Its refresh token
+rotates on every refresh and the grant behind it is re-saved with a full fresh
+lifetime, so a device used at least once inside the window stays signed in
+indefinitely, while one that goes quiet for the whole window must re-authorize in
+the system browser. This is deliberate: oidc-provider writes a Grant only at
+authorization time and rejects any refresh whose grant has expired, so a fixed
+grant lifetime — not the refresh token's — is what would otherwise cap the
+session, and its own rotation default stops rotating a chain older than 365.25
+days. Both are overridden for this one client (`oauthLifetimes` and
+`shouldRotateRefreshToken` in `features/oauth/api/oidc-route.ts`); every other
+client keeps oidc-provider's defaults. The window itself is
+`oauth.mobileSessionDays` in `src/config/config.ts` — a code constant, not an
+environment variable, since it is read once at provider construction and is not
+a secret. A deployment that wants a shorter window edits it there.
+
+Revocation is what ends a long session early: logout revokes the refresh
+credential, which revokes the grant with it.
+
+Credentials issued before these lifetimes shipped keep working on their own
+terms: an existing refresh token is honored until its original expiry and the
+replacement it rotates into carries the new window, so an installed app migrates
+itself the first time it refreshes — no re-authorization, no forced logout. A
+grant that had already lapsed is still refused; a longer window never resurrects
+an authorization that has run out.
+
 #### Git over SSH proxy (optional, ADR 0004)
 
 Backend-v2 can serve git over SSH itself instead of Gitea, so that the

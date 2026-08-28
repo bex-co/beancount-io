@@ -120,6 +120,13 @@ while `invalid_grant` clears the server-scoped session and Apollo data. Tokens
 are treated as opaque—the user is resolved by an authenticated GraphQL profile
 query after the code exchange, never by decoding token claims in the app.
 
+A signed-in device stays signed in for as long as it keeps being used. The
+access token lasts an hour and is refreshed about a minute before it expires;
+each refresh rotates the refresh credential and slides the server-side grant
+forward by a full window. That window is 365 days on Beancount.io and it is an
+idle timer, not a fixed term: only a device that never refreshes for the whole
+window has to sign in again. A self-hosted server may build a shorter one.
+
 Logout attempts refresh-token revocation before clearing all local
 server-scoped state. Because API access tokens are self-contained and last at
 most one hour, one already issued token can remain valid until its expiry even

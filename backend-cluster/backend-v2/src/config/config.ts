@@ -140,6 +140,14 @@ interface OAuthConfig {
    * both sides' source — see the comment on buildStaticClients).
    */
   discourseClient: OAuthDiscourseClientConfig;
+  /**
+   * Idle window for a native-app OAuth session, in days. The mobile refresh
+   * token and the grant behind it are both re-issued with this full lifetime on
+   * every refresh, so a device in regular use never gets signed out; only one
+   * that goes quiet for the whole window has to re-authorize in the system
+   * browser.
+   */
+  mobileSessionDays: number;
 }
 
 /**
@@ -422,5 +430,10 @@ export const config: AppConfig = {
       // erroring; the server boots normally either way.
       clientSecret: process.env.OAUTH_DISCOURSE_CLIENT_SECRET || "",
     },
+    // Hardcoded, like the discourse client id above and for the same reason:
+    // it is not sensitive, and a value only ever read at provider construction
+    // is one more thing to get wrong per deployment if it comes from the
+    // environment. A deployment that wants a shorter window edits it here.
+    mobileSessionDays: 365,
   },
 };

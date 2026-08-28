@@ -1,6 +1,7 @@
 import type { IncomingMessage } from "node:http";
 import Router from "@koa/router";
 import { errors, Provider } from "oidc-provider";
+import type { KoaContextWithOIDC } from "oidc-provider";
 import {
   type DatabaseLayer,
   type ClientFactoryLayer,
@@ -23,6 +24,78 @@ export const MOBILE_REDIRECT_URIS = [
   "io.beancount.ios:/oauth/callback",
   "io.beancount.android:/oauth/callback",
 ] as const;
+
+const DAY_SECONDS = 24 * 60 * 60;
+/** Refresh-token lifetime for every client except the native app. */
+const DEFAULT_REFRESH_TTL = 30 * DAY_SECONDS;
+/** Grant lifetime for every client except the native app. */
+const DEFAULT_GRANT_TTL = 14 * DAY_SECONDS;
+/**
+ * oidc-provider's own rotation cutoff (`rotateRefreshToken` in
+ * lib/helpers/defaults.js): a refresh chain older than this stops rotating.
+ * Replicated because the default is not exported and we only override it for
+ * the native client.
+ */
+const ROTATION_LIFETIME_CUTOFF = 365.25 * DAY_SECONDS;
+
+const isMobileClient = (clientId: unknown): boolean =>
+  clientId === MOBILE_CLIENT_ID;
+
+/**
+ * Refresh-token and grant lifetimes in seconds, per client.
+ *
+ * A native-app session is an idle window rather than a fixed term: the rotating
+ * refresh token and the grant behind it are both re-issued with a full lifetime
+ * on every refresh, so a phone in regular use never gets signed out and only one
+ * that goes quiet for the whole window has to re-authorize. Every other client
+ * keeps the lifetimes it had before.
+ */
+export function oauthLifetimes(mobileSessionDays: number): {
+  refreshToken: (clientId: unknown) => number;
+  grant: (clientId: unknown) => number;
+} {
+  const mobileSessionTtl = mobileSessionDays * DAY_SECONDS;
+  // The grant has to outlive the refresh token it backs: `validateGrant` runs
+  // before the token is consumed, so a grant that expires first fails the
+  // refresh with `invalid_grant` even though the token itself is still valid.
+  // A day of slack absorbs clock skew and the ordering of the two writes.
+  const mobileGrantTtl = mobileSessionTtl + DAY_SECONDS;
+  return {
+    refreshToken: (clientId) =>
+      isMobileClient(clientId) ? mobileSessionTtl : DEFAULT_REFRESH_TTL,
+    grant: (clientId) =>
+      isMobileClient(clientId) ? mobileGrantTtl : DEFAULT_GRANT_TTL,
+  };
+}
+
+/**
+ * Whether a refresh exchange should mint a replacement refresh token.
+ *
+ * The native app rotates unconditionally — rotation is what slides its
+ * idle-window session forward, since each rotation mints a token with a full
+ * fresh lifetime, and oidc-provider's default stops rotating a chain older than
+ * {@link ROTATION_LIFETIME_CUTOFF}, which would strand an actively used phone at
+ * a hard cap regardless of activity. Every other client keeps that default,
+ * mirrored here because oidc-provider does not export it.
+ */
+export function shouldRotateRefreshToken(
+  client: { clientId?: string; clientAuthMethod?: string },
+  refreshToken: {
+    totalLifetime(): number;
+    isSenderConstrained(): boolean;
+    ttlPercentagePassed(): number;
+  },
+): boolean {
+  if (isMobileClient(client.clientId)) return true;
+  if (refreshToken.totalLifetime() >= ROTATION_LIFETIME_CUTOFF) return false;
+  if (
+    client.clientAuthMethod === "none" &&
+    !refreshToken.isSenderConstrained()
+  ) {
+    return true;
+  }
+  return refreshToken.ttlPercentagePassed() >= 70;
+}
 
 interface IdentityClaims {
   sub: string;
@@ -122,8 +195,8 @@ export function setOidcRoutes(
 
   const isIdentityClient = (clientId: unknown): boolean =>
     clientId === config.oauth.discourseClient.clientId;
-  const isMobileClient = (clientId: unknown): boolean =>
-    clientId === MOBILE_CLIENT_ID;
+  const lifetimes = oauthLifetimes(config.oauth.mobileSessionDays);
+  const mobileGrantTtl = lifetimes.grant(MOBILE_CLIENT_ID);
 
   const provider = new Provider(config.oauth.issuer, {
     jwks,
@@ -305,10 +378,20 @@ export function setOidcRoutes(
     ttl: {
       AccessToken: 3600,
       AuthorizationCode: 600,
-      RefreshToken: 2592000,
+      RefreshToken: (_ctx, token, client) =>
+        lifetimes.refreshToken(client?.clientId ?? token.clientId),
       Interaction: 600,
+      // The authorization server's own browser SSO cookie — deliberately short
+      // and unrelated to how long an app stays signed in. It only decides
+      // whether a *new* authorization has to re-enter credentials.
       Session: 1209600,
-      Grant: 1209600,
+      Grant: (_ctx, grant) => lifetimes.grant(grant.clientId),
+    },
+
+    rotateRefreshToken: (ctx) => {
+      const { RefreshToken: refreshToken, Client: client } = ctx.oidc.entities;
+      if (!refreshToken || !client) return false;
+      return shouldRotateRefreshToken(client, refreshToken);
     },
 
     ...(config.env !== "production"
@@ -319,6 +402,45 @@ export function setOidcRoutes(
   // Provider extends Koa — proxy=true makes it read X-Forwarded-Host/Proto when
   // building absolute URLs (discovery endpoints, auth-flow redirects).
   provider.proxy = true;
+
+  // oidc-provider writes a Grant only at authorization time, and every refresh
+  // runs `validateGrant` first — so the Grant's expiry, not the refresh token's,
+  // is what actually caps a session. Re-save the native app's grant after a
+  // successful refresh so its expiry slides forward with the rotated token;
+  // without this an actively used phone would still be signed out a fixed term
+  // after it last logged in. `provider.use` inserts ahead of the provider's own
+  // dispatch, so `next()` here is the token endpoint itself.
+  provider.use(async (ctx, next) => {
+    await next();
+    const { oidc } = ctx as unknown as KoaContextWithOIDC;
+    if (oidc?.route !== "token" || ctx.status !== 200) return;
+    const refreshToken = oidc.entities.RefreshToken;
+    if (!refreshToken?.grantId || !isMobileClient(refreshToken.clientId))
+      return;
+
+    try {
+      const grant = await provider.Grant.find(refreshToken.grantId);
+      if (!grant) return;
+      // An active app refreshes hourly; rewriting the row every time buys
+      // nothing. Skip while the grant still holds all but a day of a full term.
+      const now = Math.floor(Date.now() / 1000);
+      if (grant.exp && grant.exp - now > mobileGrantTtl - DAY_SECONDS) return;
+      // `save()` persists `remainingTTL`, which is whatever is *left* once exp
+      // is set. Clearing both cached values makes it compute a fresh full term
+      // from `ttl.Grant` instead of re-saving the time already served.
+      delete grant.exp;
+      delete (grant as { expiresIn?: number }).expiresIn;
+      await grant.save();
+    } catch (error) {
+      // The refresh itself already succeeded — the client keeps its new tokens
+      // and the grant simply does not slide this time. Never turn a bookkeeping
+      // failure into a failed sign-in.
+      oidcLogger.warn("could not extend the mobile grant lifetime", {
+        error: error instanceof Error ? error.message : String(error),
+      });
+    }
+  });
+
   const cb = provider.callback();
 
   // The discovery document and every redirect must reflect the configured issuer
