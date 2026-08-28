@@ -1,6 +1,6 @@
 # w1 · m5 — OAuth 2.1-aligned native mobile authentication
 
-**Worker:** worker1 **Goal:** hosted and self-hosted mobile users authenticate through an external-browser authorization-code flow with PKCE, scoped API access, and safely rotated refresh credentials **Status:** todo (t001, t002, t004–t010 done)
+**Worker:** worker1 **Goal:** hosted and self-hosted mobile users authenticate through an external-browser authorization-code flow with PKCE, scoped API access, and safely rotated refresh credentials **Status:** todo (t001–t010 done; t011 next)
 
 ## Tasks (in order)
 
@@ -8,7 +8,7 @@
 | ---- | ------------------------------------------------------- | --- | --------------------------- |
 | t001 | Externalize and rotate OAuth signing keys               | 1h  | —                           | — **DONE**
 | t002 | Enforce OAuth resources and access-token audiences      | 1h  | t001                        | — **DONE**
-| t003 | Enforce the OAuth operation-scope matrix                | 1h  | t002                        |
+| t003 | Enforce the OAuth operation-scope matrix                | 1h  | t002                        | — **DONE**
 | t004 | Make issuer configuration and discovery self-host safe  | 1h  | t002                        | — **DONE**
 | t005 | Register a code-only public native mobile client        | 45m | t003, t004                  | — **DONE**
 | t006 | Add account-wide mobile OAuth consent                   | 1h  | t005                        | — **DONE**

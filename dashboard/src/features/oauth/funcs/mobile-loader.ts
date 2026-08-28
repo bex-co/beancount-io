@@ -1,14 +1,28 @@
-import type { RouteLoader } from "@/common/types/route-loader";
+import type { RouterContext } from "@/common/types/router-context";
+import {
+  initialMobileOAuthConsentState,
+  type MobileOAuthConsentState,
+  type MobileOAuthScreenHint,
+} from "./mobile-consent-state";
 
-export type MobileOAuthConsentLoaderData = {
-  initialStep: "login" | "approve";
-  email?: string;
+export type MobileOAuthConsentLoaderDeps = {
+  screenHint: MobileOAuthScreenHint;
 };
 
-export const mobileOauthConsentLoader: RouteLoader<
-  "/oauth/mobile-consent",
-  MobileOAuthConsentLoaderData
-> = async ({ context }) =>
-  context.userProfile
-    ? { initialStep: "approve", email: context.userProfile.email }
-    : { initialStep: "login" };
+export type MobileOAuthConsentLoaderData = {
+  initialState: MobileOAuthConsentState;
+};
+
+/** Decides where the interaction opens from the session and the app's hint. */
+export const mobileOauthConsentLoader = async ({
+  context,
+  deps,
+}: {
+  context: RouterContext;
+  deps: MobileOAuthConsentLoaderDeps;
+}): Promise<MobileOAuthConsentLoaderData> => ({
+  initialState: initialMobileOAuthConsentState({
+    userProfile: context.userProfile,
+    screenHint: deps.screenHint,
+  }),
+});

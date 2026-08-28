@@ -511,10 +511,29 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "元帳を選択してください。",
     description: "Validation shown when OAuth consent has no selected ledger",
   },
-  "auth.oauthMobileWantsAccess": {
-    message:
-      "Beancount Mobile があなたのアカウントへのアクセスを求めています。",
-    description: "Mobile OAuth access request description",
+  "auth.oauthMobileSignInTitle": {
+    message: "Beancount にサインイン",
+    description:
+      "Mobile OAuth login step title — first-party app, so it names the product rather than asking for access",
+  },
+  "auth.oauthMobileRegisterTitle": {
+    message: "Beancount アカウントを作成",
+    description: "Mobile OAuth register step title",
+  },
+  "auth.oauthMobileChooseAccountTitle": {
+    message: "アプリで使用するアカウントを選んでください",
+    description:
+      "Mobile OAuth step shown when the browser is signed in but the app's Sign Up button started the flow",
+  },
+  "auth.oauthMobileContinueAs": {
+    message: "{email} として続行",
+    description:
+      "Mobile OAuth button that keeps the signed-in browser account; {email} is the account",
+  },
+  "auth.oauthMobileCreateDifferentAccount": {
+    message: "別のアカウントを作成",
+    description:
+      "Mobile OAuth button that signs the browser out and opens registration",
   },
   "auth.oauthMobileAllowTitle": {
     message: "Beancount モバイルを許可しますか?",

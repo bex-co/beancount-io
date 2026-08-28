@@ -41,6 +41,9 @@ const ROTATION_LIFETIME_CUTOFF = 365.25 * DAY_SECONDS;
 const isMobileClient = (clientId: unknown): boolean =>
   clientId === MOBILE_CLIENT_ID;
 
+/** The one `screen_hint` value this server forwards to the interaction page. */
+const SIGNUP_SCREEN_HINT = "signup";
+
 /**
  * Refresh-token and grant lifetimes in seconds, per client.
  *
@@ -212,6 +215,15 @@ export function setOidcRoutes(
     clients: buildStaticClients(config),
     responseTypes: ["code"],
 
+    // `screen_hint=signup` lets the native app say "the user tapped Sign Up" so
+    // the interaction page can open on registration instead of the login form.
+    // oidc-provider discards any authorization parameter it does not know, so
+    // the name has to be whitelisted here. Values are not validated: it is a
+    // display hint, and an app one release ahead of a self-hosted server must
+    // still get a login form, not an error. `interactions.url` forwards only
+    // the value it understands.
+    extraParams: ["screen_hint"],
+
     features: {
       devInteractions: { enabled: false },
       registration: { enabled: true },
@@ -312,6 +324,12 @@ export function setOidcRoutes(
             "scope",
             (interaction.params.scope as string | undefined) ?? "openid",
           );
+          // Only the native client's interaction page knows what to do with
+          // the hint; MCP and identity clients never see it, and a value this
+          // server does not recognise is simply not forwarded.
+          if (interaction.params.screen_hint === SIGNUP_SCREEN_HINT) {
+            consentUrl.searchParams.set("screen_hint", SIGNUP_SCREEN_HINT);
+          }
         }
         return consentUrl.toString();
       },

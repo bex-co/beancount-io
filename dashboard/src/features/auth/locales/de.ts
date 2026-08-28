@@ -516,9 +516,29 @@ const deAuth: Record<string, TranslationEntry> = {
     message: "Bitte wählen Sie ein Hauptbuch aus.",
     description: "Validation shown when OAuth consent has no selected ledger",
   },
-  "auth.oauthMobileWantsAccess": {
-    message: "Beancount Mobile möchte Zugriff auf Ihr Konto.",
-    description: "Mobile OAuth access request description",
+  "auth.oauthMobileSignInTitle": {
+    message: "Bei Beancount anmelden",
+    description:
+      "Mobile OAuth login step title — first-party app, so it names the product rather than asking for access",
+  },
+  "auth.oauthMobileRegisterTitle": {
+    message: "Erstellen Sie Ihr Beancount-Konto",
+    description: "Mobile OAuth register step title",
+  },
+  "auth.oauthMobileChooseAccountTitle": {
+    message: "Welches Konto soll die App verwenden?",
+    description:
+      "Mobile OAuth step shown when the browser is signed in but the app's Sign Up button started the flow",
+  },
+  "auth.oauthMobileContinueAs": {
+    message: "Weiter als {email}",
+    description:
+      "Mobile OAuth button that keeps the signed-in browser account; {email} is the account",
+  },
+  "auth.oauthMobileCreateDifferentAccount": {
+    message: "Ein anderes Konto erstellen",
+    description:
+      "Mobile OAuth button that signs the browser out and opens registration",
   },
   "auth.oauthMobileAllowTitle": {
     message: "Beancount Mobile zulassen?",

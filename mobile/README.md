@@ -113,6 +113,15 @@ server, then validates the exact resource, issuer, endpoint origin, code-only
 response support, S256 PKCE, and authorization-response issuer. A legacy server
 that only passes the GraphQL health check is reported as incompatible.
 
+The welcome screen's **Sign Up** button sends the same authorization request as
+**Sign In** plus `screen_hint=signup`; Sign In sends no hint. A compatible
+server forwards the hint to its interaction page, which then opens on the
+registration form for a signed-out browser. If the browser already holds a
+session, the page asks whether to continue as that account or create a
+different one rather than silently signing the app into the existing account.
+Registration, e-mail verification, and approval all happen on that one page,
+so the app's callback fires once the new account exists.
+
 The native client is public and has no client secret. Access and rotating
 refresh credentials live only in the OS keychain/keystore. Concurrent requests
 share one refresh; transient offline failures retain the account for retry,

@@ -514,10 +514,29 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "Виберіть книгу.",
     description: "Validation shown when OAuth consent has no selected ledger",
   },
-  "auth.oauthMobileWantsAccess": {
-    message:
-      "Beancount Mobile хоче отримати доступ до вашого облікового запису.",
-    description: "Mobile OAuth access request description",
+  "auth.oauthMobileSignInTitle": {
+    message: "Увійти до Beancount",
+    description:
+      "Mobile OAuth login step title — first-party app, so it names the product rather than asking for access",
+  },
+  "auth.oauthMobileRegisterTitle": {
+    message: "Створіть свій обліковий запис Beancount",
+    description: "Mobile OAuth register step title",
+  },
+  "auth.oauthMobileChooseAccountTitle": {
+    message: "Який обліковий запис має використовувати застосунок?",
+    description:
+      "Mobile OAuth step shown when the browser is signed in but the app's Sign Up button started the flow",
+  },
+  "auth.oauthMobileContinueAs": {
+    message: "Продовжити як {email}",
+    description:
+      "Mobile OAuth button that keeps the signed-in browser account; {email} is the account",
+  },
+  "auth.oauthMobileCreateDifferentAccount": {
+    message: "Створити інший обліковий запис",
+    description:
+      "Mobile OAuth button that signs the browser out and opens registration",
   },
   "auth.oauthMobileAllowTitle": {
     message: "Дозволити Beancount Mobile?",

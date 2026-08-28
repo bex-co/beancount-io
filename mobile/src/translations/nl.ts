@@ -114,24 +114,11 @@ export const nl: typeof en = {
   serverConnectionAdvisory:
     "Je kunt deze URL toch opslaan en inloggen wanneer de server beschikbaar is.",
   restoreDefaultServer: "Standaardinstelling van Beancount.io herstellen",
-  email: "E-mail",
-  password: "Wachtwoord",
-  forgotPassword: "Wachtwoord vergeten?",
-  dontHaveAccount: "Nog geen account? Registreren",
-  confirmPassword: "Wachtwoord bevestigen",
-  alreadyHaveAccount: "Al een account? Inloggen",
   backToSignIn: "Terug naar inloggen",
-  signInOpensBrowser:
-    "Inloggen opent je browser en keert daarna terug naar Beancount.",
   signInFailed: "Inloggen kon niet worden voltooid. Probeer het opnieuw.",
-  resetPassword: "Wachtwoord resetten",
-  resetPasswordDescription:
-    "Voer je e-mailadres in om een link te ontvangen om je wachtwoord te resetten.",
-  resetPasswordEmailSent:
-    "Er is een e-mail verzonden naar je e-mailadres. Controleer je e-mail om je wachtwoord te resetten.",
+  signUpFailed: "Registratie kon niet worden voltooid. Probeer het opnieuw.",
   addTransaction: "Transactie toevoegen",
   assets: "Activa",
-  sendResetPasswordEmail: "Verstuur wachtwoord reset e-mail",
   expenses: "Uitgaven",
   income: "Inkomsten",
   quickAdd: "Snel toevoegen",

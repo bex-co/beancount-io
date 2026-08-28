@@ -672,6 +672,66 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(await rejected.text()).toContain("redirect_uri");
   });
 
+  /** A well-formed mobile authorization request; override what a test is about, "" drops a param. */
+  function mobileAuthUrl(overrides: Record<string, string> = {}): URL {
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    const params: Record<string, string> = {
+      client_id: MOBILE_CLIENT_ID,
+      response_type: "code",
+      scope: "openid ledger.read",
+      redirect_uri: MOBILE_REDIRECT_URIS[0],
+      code_challenge: pkce().codeChallenge,
+      code_challenge_method: "S256",
+      state: "mobile-state",
+      resource: `${ISSUER}/v1`,
+      ...overrides,
+    };
+    for (const [key, value] of Object.entries(params)) {
+      if (value) authUrl.searchParams.set(key, value);
+    }
+    return authUrl;
+  }
+
+  async function interactionUrlFor(authUrl: URL): Promise<URL> {
+    const res = await fetch(authUrl, { redirect: "manual" });
+    return new URL(res.headers.get("location")!);
+  }
+
+  it("mobile flow: forwards screen_hint=signup to the interaction page and ignores other values", async () => {
+    const signIn = await interactionUrlFor(mobileAuthUrl());
+    expect(signIn.pathname).toBe("/oauth/mobile-consent");
+    expect(signIn.searchParams.has("screen_hint")).toBe(false);
+
+    const signUp = await interactionUrlFor(
+      mobileAuthUrl({ screen_hint: "signup" }),
+    );
+    expect(signUp.pathname).toBe("/oauth/mobile-consent");
+    expect(signUp.searchParams.get("screen_hint")).toBe("signup");
+    expect(signUp.searchParams.get("scope")).toBe("openid ledger.read");
+
+    // A hint this server does not know is a newer app talking to an older
+    // server: the user still gets the login form, never an error.
+    const unknown = await interactionUrlFor(
+      mobileAuthUrl({ screen_hint: "login" }),
+    );
+    expect(unknown.pathname).toBe("/oauth/mobile-consent");
+    expect(unknown.searchParams.has("screen_hint")).toBe(false);
+  });
+
+  it("mobile flow: the sign-up hint never reaches another client's interaction page", async () => {
+    const consentUrl = await interactionUrlFor(
+      mobileAuthUrl({
+        client_id: DISCOURSE_CLIENT_ID,
+        scope: "openid",
+        redirect_uri: DISCOURSE_REDIRECT_URI,
+        resource: "",
+        screen_hint: "signup",
+      }),
+    );
+    expect(consentUrl.pathname).toBe("/oauth/identity-consent");
+    expect(consentUrl.searchParams.has("screen_hint")).toBe(false);
+  });
+
   it("mobile flow: rejects the legacy MCP resource and ledger pinning", async () => {
     const { codeChallenge } = pkce();
     const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);

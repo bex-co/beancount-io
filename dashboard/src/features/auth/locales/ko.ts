@@ -505,9 +505,29 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "원장을 선택해주세요.",
     description: "Validation shown when OAuth consent has no selected ledger",
   },
-  "auth.oauthMobileWantsAccess": {
-    message: "Beancount Mobile이 귀하의 계정에 액세스하려고 합니다.",
-    description: "Mobile OAuth access request description",
+  "auth.oauthMobileSignInTitle": {
+    message: "Beancount에 로그인",
+    description:
+      "Mobile OAuth login step title — first-party app, so it names the product rather than asking for access",
+  },
+  "auth.oauthMobileRegisterTitle": {
+    message: "Beancount 계정 만들기",
+    description: "Mobile OAuth register step title",
+  },
+  "auth.oauthMobileChooseAccountTitle": {
+    message: "앱에서 사용할 계정을 선택하세요",
+    description:
+      "Mobile OAuth step shown when the browser is signed in but the app's Sign Up button started the flow",
+  },
+  "auth.oauthMobileContinueAs": {
+    message: "{email}(으)로 계속",
+    description:
+      "Mobile OAuth button that keeps the signed-in browser account; {email} is the account",
+  },
+  "auth.oauthMobileCreateDifferentAccount": {
+    message: "다른 계정 만들기",
+    description:
+      "Mobile OAuth button that signs the browser out and opens registration",
   },
   "auth.oauthMobileAllowTitle": {
     message: "빈카운트 모바일을 허용하시겠습니까?",

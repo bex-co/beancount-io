@@ -115,24 +115,11 @@ export const uk: typeof en = {
   serverConnectionAdvisory:
     "Ви все одно можете зберегти цей URL і ввійти, коли сервер стане доступним.",
   restoreDefaultServer: "Відновити типовий сервер Beancount.io",
-  email: "Електронна пошта",
-  password: "Пароль",
-  forgotPassword: "Забули пароль?",
-  dontHaveAccount: "Немає облікового запису? Зареєструйтеся",
-  confirmPassword: "Підтвердьте пароль",
-  alreadyHaveAccount: "Вже маєте обліковий запис? Увійдіть",
   backToSignIn: "Назад до входу",
-  signInOpensBrowser:
-    "Вхід відкриє ваш браузер, а потім поверне вас до Beancount.",
   signInFailed: "Не вдалося завершити вхід. Спробуйте ще раз.",
-  resetPassword: "Скинути пароль",
-  resetPasswordDescription:
-    "Введіть свою електронну адресу, щоб отримати посилання для скидання пароля.",
-  resetPasswordEmailSent:
-    "Лист було надіслано на вашу електронну адресу. Будь ласка, перевірте пошту для скидання пароля.",
+  signUpFailed: "Не вдалося завершити реєстрацію. Спробуйте ще раз.",
   addTransaction: "Додати транзакцію",
   assets: "Активи",
-  sendResetPasswordEmail: "Надіслати лист для скидання пароля",
   expenses: "Витрати",
   income: "Доходи",
   quickAdd: "Швидке додавання",

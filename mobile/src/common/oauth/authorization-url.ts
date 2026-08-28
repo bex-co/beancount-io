@@ -32,6 +32,10 @@ export function buildAuthorizationUrl(
     // endpoint: the same request without `prompt` returns a consent URL whose
     // scope has lost `offline_access`.
     prompt: "consent",
+    // The welcome screen has separate Sign In and Sign Up buttons; without
+    // this hint the server cannot tell them apart and opens the login form for
+    // both. A server that does not know the hint ignores it.
+    ...(pending.flow === "sign_up" ? { screen_hint: "signup" } : {}),
   }).toString();
   url.hash = "";
   return url.toString();

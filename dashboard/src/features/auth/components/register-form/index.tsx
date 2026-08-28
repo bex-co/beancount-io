@@ -16,6 +16,8 @@ export type RegisterFormProps = {
   isLoading: boolean;
   serverError: string;
   defaultUsername?: string;
+  /** Submit the generated username without showing the field. */
+  hideUsername?: boolean;
   showSignInLink?: boolean;
   onSignInClick?: () => void;
 };
@@ -25,6 +27,7 @@ export function RegisterForm({
   isLoading,
   serverError,
   defaultUsername = "",
+  hideUsername = false,
   showSignInLink = true,
   onSignInClick,
 }: RegisterFormProps) {
@@ -146,26 +149,28 @@ export function RegisterForm({
         )}
       </div>
 
-      <div className="space-y-2">
-        <Label htmlFor="username" className="text-foreground">
-          {t("auth.username")}
-        </Label>
-        <Input
-          id="username"
-          type="text"
-          autoComplete="username"
-          placeholder={t("auth.enterUsername")}
-          className="w-full bg-muted"
-          value={usernameValue || ""}
-          onChange={handleUsernameChange}
-        />
-        <p className="text-xs text-muted-foreground">
-          {t("auth.usernamePublicHint")}
-        </p>
-        {errors.username && (
-          <p className="text-sm text-destructive">{errors.username.message}</p>
-        )}
-      </div>
+      {!hideUsername && (
+        <div className="space-y-2">
+          <Label htmlFor="username" className="text-foreground">
+            {t("auth.username")}
+          </Label>
+          <Input
+            id="username"
+            type="text"
+            autoComplete="username"
+            placeholder={t("auth.enterUsername")}
+            className="w-full bg-muted"
+            value={usernameValue || ""}
+            onChange={handleUsernameChange}
+          />
+          <p className="text-xs text-muted-foreground">
+            {t("auth.usernamePublicHint")}
+          </p>
+        </div>
+      )}
+      {errors.username && (
+        <p className="text-sm text-destructive">{errors.username.message}</p>
+      )}
 
       <div className="space-y-2">
         <Label htmlFor="password" className="text-foreground">

@@ -12,7 +12,10 @@ import { RegisterForm } from "@/features/auth/components/register-form";
 import { OtpForm } from "@/features/auth/components/otp-form";
 import { LogoutDocument } from "@/graphql/definitions";
 import { describeMobileScopes } from "@/features/oauth/funcs/mobile-scope-copy";
-import { mobileOAuthConsentReducer } from "@/features/oauth/funcs/mobile-consent-state";
+import {
+  mobileOAuthConsentReducer,
+  type MobileOAuthConsentAction,
+} from "@/features/oauth/funcs/mobile-consent-state";
 
 const routeApi = getRouteApi("/oauth/mobile-consent");
 
@@ -34,14 +37,9 @@ function LoginStep({
 
   return (
     <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">
-          {t("auth.oauthSignInToContinue")}
-        </h2>
-        <p className="text-sm text-muted-foreground">
-          {t("auth.oauthMobileWantsAccess")}
-        </p>
-      </div>
+      <h2 className="text-lg font-semibold">
+        {t("auth.oauthMobileSignInTitle")}
+      </h2>
       <LoginForm
         onSubmit={onSubmit}
         isLoading={isLoading}
@@ -69,13 +67,16 @@ function RegisterStep({
   return (
     <div className="space-y-4">
       <h2 className="text-lg font-semibold">
-        {t("auth.oauthRegisterToContinue")}
+        {t("auth.oauthMobileRegisterTitle")}
       </h2>
       <RegisterForm
         onSubmit={onSubmit}
         isLoading={isLoading}
         serverError={serverError}
         defaultUsername={defaultUsername}
+        // The generated username is submitted as-is; it can be changed in
+        // settings later, and it is one field fewer to type on a phone.
+        hideUsername={true}
         showSignInLink={true}
         onSignInClick={onSignInClick}
       />
@@ -120,6 +121,77 @@ function OtpStep({
   );
 }
 
+/**
+ * Signs the browser out and moves to another step. Logout can fail (offline,
+ * expired session), so the failure is shown next to the button rather than
+ * leaving the user on a page that silently did nothing.
+ */
+function SwitchAccountButton({
+  label,
+  onSwitch,
+  variant = "ghost",
+}: {
+  label: string;
+  onSwitch: () => Promise<void>;
+  variant?: "ghost" | "outline";
+}) {
+  const { t } = useTranslations();
+  const [error, setError] = useState("");
+
+  return (
+    <>
+      {error && (
+        <Alert variant="destructive">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
+      )}
+      <Button
+        type="button"
+        variant={variant}
+        className="w-full"
+        onClick={() => {
+          setError("");
+          void onSwitch().catch(() =>
+            setError(t("auth.oauthSwitchAccountFailed")),
+          );
+        }}
+      >
+        {label}
+      </Button>
+    </>
+  );
+}
+
+function ChooseAccountStep({
+  email,
+  onContinue,
+  onCreateDifferentAccount,
+}: {
+  email: string;
+  onContinue: () => void;
+  onCreateDifferentAccount: () => Promise<void>;
+}) {
+  const { t } = useTranslations();
+
+  return (
+    <div className="space-y-4">
+      <h2 className="text-lg font-semibold">
+        {t("auth.oauthMobileChooseAccountTitle")}
+      </h2>
+      <div className="grid gap-2">
+        <Button type="button" onClick={onContinue}>
+          {t("auth.oauthMobileContinueAs", { email })}
+        </Button>
+        <SwitchAccountButton
+          label={t("auth.oauthMobileCreateDifferentAccount")}
+          onSwitch={onCreateDifferentAccount}
+          variant="outline"
+        />
+      </div>
+    </div>
+  );
+}
+
 function ApproveStep({
   uid,
   email,
@@ -132,7 +204,6 @@ function ApproveStep({
   onSwitchAccount: () => Promise<void>;
 }) {
   const { t } = useTranslations();
-  const [error, setError] = useState("");
 
   return (
     <div className="space-y-4">
@@ -154,11 +225,6 @@ function ApproveStep({
           {t("auth.oauthIdentitySignedInAs", { email })}
         </p>
       )}
-      {error && (
-        <Alert variant="destructive">
-          <AlertDescription>{error}</AlertDescription>
-        </Alert>
-      )}
       <form
         method="POST"
         action={`/oauth/mobile-consent?${new URLSearchParams({ uid, scope })}`}
@@ -178,37 +244,25 @@ function ApproveStep({
           </Button>
         </div>
       </form>
-      <Button
-        type="button"
-        variant="ghost"
-        className="w-full"
-        onClick={() => {
-          setError("");
-          void onSwitchAccount().catch(() =>
-            setError(t("auth.oauthSwitchAccountFailed")),
-          );
-        }}
-      >
-        {t("auth.oauthUseAnotherAccount")}
-      </Button>
+      <SwitchAccountButton
+        label={t("auth.oauthUseAnotherAccount")}
+        onSwitch={onSwitchAccount}
+      />
     </div>
   );
 }
 
 export default function MobileOAuthConsentPage() {
   const { uid, scope } = routeApi.useSearch();
-  const { initialStep, email: sessionEmail } = routeApi.useLoaderData();
-  const [state, dispatch] = useReducer(mobileOAuthConsentReducer, {
-    step: initialStep,
-    ...(initialStep === "approve" ? { email: sessionEmail } : {}),
-  });
+  const { initialState } = routeApi.useLoaderData();
+  const [state, dispatch] = useReducer(mobileOAuthConsentReducer, initialState);
   const [logout] = useMutation(LogoutDocument);
   const client = useApolloClient();
 
-  const switchAccount = async () => {
+  const switchAccount = async (next: MobileOAuthConsentAction) => {
     await logout();
     await client.clearStore();
-    dispatch({ type: "show_login" });
+    dispatch(next);
   };
 
   return (
@@ -239,12 +293,23 @@ export default function MobileOAuthConsentPage() {
             onBack={() => dispatch({ type: "show_register" })}
           />
         )}
+        {state.step === "choose_account" && (
+          <ChooseAccountStep
+            email={state.email}
+            onContinue={() =>
+              dispatch({ type: "authenticated", email: state.email })
+            }
+            onCreateDifferentAccount={() =>
+              switchAccount({ type: "show_register" })
+            }
+          />
+        )}
         {state.step === "approve" && (
           <ApproveStep
             uid={uid}
             email={state.email}
             scope={scope}
-            onSwitchAccount={switchAccount}
+            onSwitchAccount={() => switchAccount({ type: "show_login" })}
           />
         )}
       </div>

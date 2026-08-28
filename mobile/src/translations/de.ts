@@ -116,25 +116,13 @@ export const de: typeof en = {
   serverConnectionAdvisory:
     "Du kannst diese URL trotzdem speichern und dich anmelden, wenn der Server verfügbar ist.",
   restoreDefaultServer: "Beancount.io-Standard wiederherstellen",
-  email: "E-Mail",
-  password: "Passwort",
-  forgotPassword: "Passwort vergessen?",
-  dontHaveAccount: "Noch kein Konto? Registrieren",
-  confirmPassword: "Passwort bestätigen",
-  alreadyHaveAccount: "Bereits ein Konto? Anmelden",
   backToSignIn: "Zurück zur Anmeldung",
-  signInOpensBrowser:
-    "Die Anmeldung öffnet deinen Browser und kehrt danach zu Beancount zurück.",
   signInFailed:
     "Die Anmeldung konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
-  resetPassword: "Passwort zurücksetzen",
-  resetPasswordDescription:
-    "Geben Sie Ihre E-Mail-Adresse ein, um einen Link zum Zurücksetzen Ihres Passworts zu erhalten.",
-  resetPasswordEmailSent:
-    "Eine E-Mail wurde an Ihre E-Mail-Adresse gesendet. Bitte überprüfen Sie Ihre E-Mail, um Ihr Passwort zurückzusetzen.",
+  signUpFailed:
+    "Die Registrierung konnte nicht abgeschlossen werden. Bitte versuche es erneut.",
   addTransaction: "Transaktion hinzufügen",
   assets: "Vermögen",
-  sendResetPasswordEmail: "Passwort-Reset-E-Mail senden",
   expenses: "Ausgaben",
   income: "Einnahmen",
   quickAdd: "Schnell hinzufügen",

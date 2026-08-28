@@ -117,24 +117,11 @@ export const es: typeof en = {
   serverConnectionAdvisory:
     "Aun así puedes guardar esta URL e iniciar sesión cuando el servidor esté disponible.",
   restoreDefaultServer: "Restaurar el valor predeterminado de Beancount.io",
-  email: "Correo electrónico",
-  password: "Contraseña",
-  forgotPassword: "¿Olvidaste tu contraseña?",
-  dontHaveAccount: "¿No tienes cuenta? Regístrate",
-  confirmPassword: "Confirmar contraseña",
-  alreadyHaveAccount: "¿Ya tienes una cuenta? Inicia sesión",
   backToSignIn: "Volver a iniciar sesión",
-  signInOpensBrowser:
-    "Al iniciar sesión se abre tu navegador y luego vuelve a Beancount.",
   signInFailed: "No se pudo completar el inicio de sesión. Inténtalo de nuevo.",
-  resetPassword: "Restablecer contraseña",
-  resetPasswordDescription:
-    "Introduce tu correo electrónico para recibir un enlace y restablecer la contraseña.",
-  resetPasswordEmailSent:
-    "Se ha enviado un correo electrónico a tu dirección. Revisa tu correo para restablecer la contraseña.",
+  signUpFailed: "No se pudo completar el registro. Inténtalo de nuevo.",
   addTransaction: "Añadir transacción",
   assets: "Activos",
-  sendResetPasswordEmail: "Enviar correo de restablecimiento",
   expenses: "Gastos",
   income: "Ingresos",
   quickAdd: "Añadir rápido",

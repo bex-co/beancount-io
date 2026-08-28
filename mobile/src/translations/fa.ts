@@ -113,24 +113,11 @@ export const fa: typeof en = {
   serverConnectionAdvisory:
     "می‌توانید همچنان این نشانی را ذخیره کنید و وقتی سرور در دسترس است وارد شوید.",
   restoreDefaultServer: "بازگرداندن پیش‌فرض Beancount.io",
-  email: "ایمیل",
-  password: "گذرواژه",
-  forgotPassword: "گذرواژه را فراموش کرده‌اید؟",
-  dontHaveAccount: "حساب ندارید؟ ثبت‌نام کنید",
-  confirmPassword: "تأیید گذرواژه",
-  alreadyHaveAccount: "حساب دارید؟ وارد شوید",
   backToSignIn: "بازگشت به ورود",
-  signInOpensBrowser:
-    "ورود مرورگر شما را باز می‌کند و سپس به Beancount بازمی‌گردد.",
   signInFailed: "ورود کامل نشد. لطفاً دوباره تلاش کنید.",
-  resetPassword: "بازنشانی رمز عبور",
-  resetPasswordDescription:
-    "آدرس ایمیل خود را وارد کنید تا پیوندی برای بازنشانی رمز عبور دریافت کنید.",
-  resetPasswordEmailSent:
-    "ایمیلی به آدرس شما ارسال شده است. لطفاً ایمیل خود را بررسی کنید تا رمز عبور را بازنشانی کنید.",
+  signUpFailed: "ثبت‌نام کامل نشد. لطفاً دوباره تلاش کنید.",
   addTransaction: "افزودن تراکنش",
   assets: "دارایی‌ها",
-  sendResetPasswordEmail: "ارسال ایمیل بازنشانی رمز عبور",
   expenses: "هزینه‌ها",
   income: "درآمد",
   quickAdd: "افزودن سریع",

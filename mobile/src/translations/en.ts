@@ -110,24 +110,11 @@ export const en = {
   serverConnectionAdvisory:
     "You can still save this URL and try signing in when the server is available.",
   restoreDefaultServer: "Restore Beancount.io default",
-  email: "Email",
-  password: "Password",
-  forgotPassword: "Forgot Password?",
-  dontHaveAccount: "Don't have an account? Sign up",
-  confirmPassword: "Confirm Password",
-  alreadyHaveAccount: "Already have an account? Sign in",
   backToSignIn: "Back to Sign in",
-  signInOpensBrowser:
-    "Signing in opens your browser, then returns to Beancount.",
   signInFailed: "Could not complete sign-in. Please try again.",
-  resetPassword: "Reset Password",
-  resetPasswordDescription:
-    "Enter your email address to receive a link to reset your password.",
-  resetPasswordEmailSent:
-    "An email has been sent to your email address. Please check your email to reset your password.",
+  signUpFailed: "Could not complete sign-up. Please try again.",
   addTransaction: "Add Transaction",
   assets: "Assets",
-  sendResetPasswordEmail: "Send Reset Password Email",
   expenses: "Expenses",
   income: "Income",
   quickAdd: "Quick Add",

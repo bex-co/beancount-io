@@ -1,5 +1,6 @@
 import { describe, expect, it } from "vitest";
 import {
+  initialMobileOAuthConsentState,
   mobileOAuthConsentReducer,
   type MobileOAuthConsentState,
 } from "../mobile-consent-state";
@@ -51,5 +52,45 @@ describe("mobile OAuth consent state", () => {
         { type: "authenticated", email: "ada@example.test" },
       ),
     ).toEqual({ step: "approve", email: "ada@example.test" });
+  });
+
+  it("lets a signed-in browser keep its account or start a fresh registration", () => {
+    const chooser: MobileOAuthConsentState = {
+      step: "choose_account",
+      email: "old@example.test",
+    };
+    expect(
+      transition(chooser, { type: "authenticated", email: "old@example.test" }),
+    ).toEqual({ step: "approve", email: "old@example.test" });
+    expect(transition(chooser, { type: "show_register" })).toEqual({
+      step: "register",
+    });
+  });
+});
+
+describe("initialMobileOAuthConsentState", () => {
+  it("opens a signed-out browser on login unless the app said Sign Up", () => {
+    expect(
+      initialMobileOAuthConsentState({
+        userProfile: null,
+        screenHint: undefined,
+      }),
+    ).toEqual({ step: "login" });
+    expect(
+      initialMobileOAuthConsentState({
+        userProfile: null,
+        screenHint: "signup",
+      }),
+    ).toEqual({ step: "register" });
+  });
+
+  it("never approves a signed-in browser silently when the app said Sign Up", () => {
+    const userProfile = { email: "ada@example.test" };
+    expect(
+      initialMobileOAuthConsentState({ userProfile, screenHint: undefined }),
+    ).toEqual({ step: "approve", email: "ada@example.test" });
+    expect(
+      initialMobileOAuthConsentState({ userProfile, screenHint: "signup" }),
+    ).toEqual({ step: "choose_account", email: "ada@example.test" });
   });
 });

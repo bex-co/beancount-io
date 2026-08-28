@@ -115,24 +115,11 @@ export const sk: typeof en = {
   serverConnectionAdvisory:
     "Túto adresu môžete aj tak uložiť a prihlásiť sa, keď bude server dostupný.",
   restoreDefaultServer: "Obnoviť predvolený server Beancount.io",
-  email: "E-mail",
-  password: "Heslo",
-  forgotPassword: "Zabudli ste heslo?",
-  dontHaveAccount: "Nemáte účet? Zaregistrujte sa",
-  confirmPassword: "Potvrdiť heslo",
-  alreadyHaveAccount: "Už máte účet? Prihláste sa",
   backToSignIn: "Späť na prihlásenie",
-  signInOpensBrowser:
-    "Prihlásenie otvorí váš prehliadač a potom sa vráti do Beancountu.",
   signInFailed: "Prihlásenie sa nepodarilo dokončiť. Skúste to znova.",
-  resetPassword: "Resetovať heslo",
-  resetPasswordDescription:
-    "Zadajte svoju e-mailovú adresu pre získanie odkazu na resetovanie hesla.",
-  resetPasswordEmailSent:
-    "E-mail bol odoslaný na vašu adresu. Prosím skontrolujte si e-mail pre resetovanie hesla.",
+  signUpFailed: "Registráciu sa nepodarilo dokončiť. Skúste to znova.",
   addTransaction: "Pridať transakciu",
   assets: "Aktíva",
-  sendResetPasswordEmail: "Odoslať e-mail na resetovanie hesla",
   expenses: "Výdavky",
   income: "Príjmy",
   quickAdd: "Rýchle pridanie",

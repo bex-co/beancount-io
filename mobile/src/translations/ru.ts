@@ -115,24 +115,11 @@ export const ru: typeof en = {
   serverConnectionAdvisory:
     "Вы всё равно можете сохранить этот URL и войти, когда сервер станет доступен.",
   restoreDefaultServer: "Восстановить сервер Beancount.io по умолчанию",
-  email: "Эл. почта",
-  password: "Пароль",
-  forgotPassword: "Забыли пароль?",
-  dontHaveAccount: "Нет аккаунта? Регистрация",
-  confirmPassword: "Подтвердить пароль",
-  alreadyHaveAccount: "Уже есть аккаунт? Войти",
   backToSignIn: "Назад к входу",
-  signInOpensBrowser:
-    "Вход откроет ваш браузер, а затем вернёт вас в Beancount.",
   signInFailed: "Не удалось завершить вход. Попробуйте ещё раз.",
-  resetPassword: "Сброс пароля",
-  resetPasswordDescription:
-    "Введите ваш адрес электронной почты, чтобы получить ссылку для сброса пароля.",
-  resetPasswordEmailSent:
-    "На ваш адрес электронной почты отправлено письмо. Пожалуйста, проверьте почту для сброса пароля.",
+  signUpFailed: "Не удалось завершить регистрацию. Попробуйте ещё раз.",
   addTransaction: "Добавить транзакцию",
   assets: "Активы",
-  sendResetPasswordEmail: "Отправить письмо для сброса пароля",
   expenses: "Расходы",
   income: "Доходы",
   quickAdd: "Быстрое добавление",

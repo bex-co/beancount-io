@@ -117,24 +117,11 @@ export const pt: typeof en = {
   serverConnectionAdvisory:
     "Ainda pode guardar este URL e iniciar sessão quando o servidor estiver disponível.",
   restoreDefaultServer: "Restaurar o predefinido do Beancount.io",
-  email: "E-mail",
-  password: "Senha",
-  forgotPassword: "Esqueceu a senha?",
-  dontHaveAccount: "Ainda não tem conta? Cadastre-se",
-  confirmPassword: "Confirmar senha",
-  alreadyHaveAccount: "Já tem conta? Entrar",
   backToSignIn: "Voltar para entrar",
-  signInOpensBrowser:
-    "Entrar abre o seu navegador e depois volta para o Beancount.",
   signInFailed: "Não foi possível concluir a entrada. Tente novamente.",
-  resetPassword: "Redefinir senha",
-  resetPasswordDescription:
-    "Digite seu endereço de e-mail para receber um link para redefinir sua senha.",
-  resetPasswordEmailSent:
-    "Um e-mail foi enviado para seu endereço. Por favor, verifique seu e-mail para redefinir sua senha.",
+  signUpFailed: "Não foi possível concluir o cadastro. Tente novamente.",
   addTransaction: "Adicionar transação",
   assets: "Ativos",
-  sendResetPasswordEmail: "Enviar e-mail de redefinição de senha",
   expenses: "Despesas",
   income: "Renda",
   quickAdd: "Adicionar rápido",

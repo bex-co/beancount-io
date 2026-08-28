@@ -1,48 +1,41 @@
 import { useCallback, useRef, useState } from "react";
-import { OAuthAuthorizationError } from "@/common/oauth/authorization-result";
 import { startNativeAuthorization } from "@/common/oauth/start-authorization";
-import type { PendingOAuthAuthorization } from "@/common/oauth/authorization-result";
-
-export type NativeSignInFlow = PendingOAuthAuthorization["flow"];
+import {
+  runNativeSignIn,
+  type NativeSignInFlow,
+} from "@/screens/welcome/native-sign-in-runner";
 
 export type NativeSignIn = {
   /** The flow whose browser is open, so only that button shows progress. */
   pendingFlow: NativeSignInFlow | null;
-  failed: boolean;
+  /** The flow whose last attempt failed, so the message matches the button. */
+  failedFlow: NativeSignInFlow | null;
   start: (flow: NativeSignInFlow) => void;
 };
 
 /**
- * Drive the external-browser sign-in from the welcome screen.
- *
- * A successful exchange navigates into the app from the shared finalizer, so
- * there is nothing to do on that path here. Cancelling is not an error — the
- * user closed the browser — and only a real failure (unreachable server,
- * incompatible OAuth contract, rejected exchange) surfaces a message.
+ * Drive the external-browser sign-in or sign-up from the welcome screen. A
+ * successful exchange navigates into the app from the shared finalizer. The
+ * launcher already refuses to open a second browser; the guard here only keeps
+ * a second tap from moving the spinner to the wrong button.
  */
 export function useNativeSignIn(): NativeSignIn {
   const [pendingFlow, setPendingFlow] = useState<NativeSignInFlow | null>(null);
-  const [failed, setFailed] = useState(false);
+  const [failedFlow, setFailedFlow] = useState<NativeSignInFlow | null>(null);
   const running = useRef(false);
 
   const start = useCallback((flow: NativeSignInFlow) => {
     if (running.current) return;
     running.current = true;
     setPendingFlow(flow);
-    setFailed(false);
+    setFailedFlow(null);
 
-    void startNativeAuthorization(flow)
-      .catch((error: unknown) => {
-        if (error instanceof OAuthAuthorizationError && error.cancelled) {
-          return;
-        }
-        setFailed(true);
-      })
-      .finally(() => {
-        running.current = false;
-        setPendingFlow(null);
-      });
+    void runNativeSignIn(flow, startNativeAuthorization).then((outcome) => {
+      running.current = false;
+      setPendingFlow(null);
+      if (outcome === "failed") setFailedFlow(flow);
+    });
   }, []);
 
-  return { pendingFlow, failed, start };
+  return { pendingFlow, failedFlow, start };
 }

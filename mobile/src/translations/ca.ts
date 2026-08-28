@@ -117,24 +117,11 @@ export const ca: typeof en = {
   serverConnectionAdvisory:
     "Podeu desar igualment aquest URL i provar d'iniciar sessió quan el servidor estigui disponible.",
   restoreDefaultServer: "Restaura el valor predeterminat de Beancount.io",
-  email: "Correu electrònic",
-  password: "Contrasenya",
-  forgotPassword: "Has oblidat la contrasenya?",
-  dontHaveAccount: "Encara no tens compte? Registra't",
-  confirmPassword: "Confirma la contrasenya",
-  alreadyHaveAccount: "Ja tens compte? Inicia la sessió",
   backToSignIn: "Torna a l'inici de sessió",
-  signInOpensBrowser:
-    "En iniciar la sessió s'obre el navegador i després torna a Beancount.",
   signInFailed: "No s'ha pogut completar l'inici de sessió. Torna-ho a provar.",
-  resetPassword: "Restablir contrasenya",
-  resetPasswordDescription:
-    "Introdueix la teva adreça de correu electrònic per rebre un enllaç per restablir la contrasenya.",
-  resetPasswordEmailSent:
-    "S'ha enviat un correu electrònic a la teva adreça. Si us plau, revisa el teu correu per restablir la contrasenya.",
+  signUpFailed: "No s'ha pogut completar el registre. Torna-ho a provar.",
   addTransaction: "Afegir transacció",
   assets: "Actius",
-  sendResetPasswordEmail: "Envia correu per restablir contrasenya",
   expenses: "Despeses",
   income: "Ingressos",
   quickAdd: "Afegir ràpid",

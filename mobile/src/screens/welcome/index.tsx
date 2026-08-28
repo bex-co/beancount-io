@@ -56,12 +56,6 @@ const getStyles = (theme: ColorTheme) =>
     flex: {
       flex: 1,
     },
-    hint: {
-      color: theme.black60,
-      fontSize: 13,
-      lineHeight: 18,
-      textAlign: "center",
-    },
     error: {
       color: theme.error,
       fontSize: 13,
@@ -74,7 +68,7 @@ export function WelcomeScreen(): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
-  const { pendingFlow, failed, start } = useNativeSignIn();
+  const { pendingFlow, failedFlow, start } = useNativeSignIn();
   const busy = pendingFlow !== null;
 
   return (
@@ -115,9 +109,11 @@ export function WelcomeScreen(): JSX.Element {
             {t("signUp")}
           </Button>
         </View>
-        <Text style={failed ? styles.error : styles.hint}>
-          {failed ? t("signInFailed") : t("signInOpensBrowser")}
-        </Text>
+        {failedFlow && (
+          <Text style={styles.error}>
+            {failedFlow === "sign_up" ? t("signUpFailed") : t("signInFailed")}
+          </Text>
+        )}
       </View>
     </View>
   );

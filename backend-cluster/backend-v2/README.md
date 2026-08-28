@@ -111,7 +111,13 @@ The proxy must route those well-known paths, the issuer-prefixed
 dashboard respectively. The static `beancount-mobile` client is public (no
 secret), accepts only authorization code plus refresh grants, requires S256
 PKCE, and registers only `io.beancount.ios:/oauth/callback` and
-`io.beancount.android:/oauth/callback`.
+`io.beancount.android:/oauth/callback`. The authorization endpoint also accepts
+`screen_hint=signup` and forwards it to the dashboard's `/oauth/mobile-consent`
+page so a Sign Up tap in the app opens on registration instead of the login
+form. It is a display hint, not a policy: a value this server does not
+recognise is dropped rather than rejected, so an app newer than a self-hosted
+server still gets a login form. The hint is never forwarded to MCP or
+identity-client interaction pages.
 
 OAuth capabilities use one closed operation matrix on GraphQL, REST, and MCP:
 reads require `ledger.read`, ordinary mutations require
