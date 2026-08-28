@@ -1,10 +1,11 @@
 import { useEffect, useRef, useState } from "react";
 import { StyleSheet, Text, View } from "react-native";
-import * as Linking from "expo-linking";
-import { router } from "expo-router";
+import { router, useLocalSearchParams } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { completeOAuthAuthorization } from "@/common/oauth/authorization-completion";
 import { OAuthAuthorizationError } from "@/common/oauth/authorization-result";
+import { callbackUrlFromParams } from "@/common/oauth/callback-url";
+import { currentOAuthRedirectUri } from "@/common/oauth/native-redirect";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import type { ColorTheme } from "@/types/theme-props";
@@ -36,7 +37,10 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 export default function OAuthCallbackRoute(): JSX.Element {
-  const callbackUrl = Linking.useURL();
+  // Expo Router already consumed the deep link; `Linking.useURL()` is null
+  // here on a cold launch, so the URL is rebuilt from the parsed params.
+  const params = useLocalSearchParams<Record<string, string | string[]>>();
+  const callbackUrl = callbackUrlFromParams(currentOAuthRedirectUri(), params);
   const startedFor = useRef<string | undefined>(undefined);
   const [failed, setFailed] = useState(false);
   const styles = useThemeStyle(getStyles);

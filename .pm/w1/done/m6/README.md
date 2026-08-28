@@ -1,6 +1,6 @@
 # w1 · m6 — Native sign-up lands on registration; welcome screen loses the browser explainer
 
-**Worker:** worker1 **Goal:** a newcomer who taps **Sign Up** on the mobile welcome screen is taken straight to a registration form in the system browser and returns to the app signed into the account they just created; the welcome screen stops explaining browsers **Status:** in progress (t001–t008 done and shipped in `d41c26f`; backend-v2 + dashboard deployed 2026-08-28 and the Sign Up → registration, Sign In → login, and dismiss paths verified on hosted from the simulator. Follow-up landed while verifying: the welcome screen now names a server that cannot be reached or is incompatible instead of blaming the sign-in — a stale custom server URL had produced a misleading "Could not complete sign-in". t009 then reproduced the user's "Could not complete sign-in" on hosted: the exchange succeeded but the API refused `Query.userProfile` to the new OAuth token because the op-class table filed it as `session-only` — a pre-existing m5 defect the OAuth test could not catch (its stand-in gateway skipped the gate). Fixed in backend-v2 (`userProfile` → `read`, ADR 0008 amended, the stand-in gateway now runs the real gate); needs a backend-v2 deploy before the remaining two credential-dependent DoD bullets — fresh sign-up through OTP, and the signed-in-browser account choice — can be run)
+**Worker:** worker1 **Goal:** a newcomer who taps **Sign Up** on the mobile welcome screen is taken straight to a registration form in the system browser and returns to the app signed into the account they just created; the welcome screen stops explaining browsers **Status:** done — closed 2026-08-28. Verified on hosted: Sign Up → registration, Sign In → login, dismiss, signed-in browser → account choice. Verified on the local `deploy/docker-mac` stack built from `main`: fresh sign-up → OTP → app signed in, Approve → app (hosted needs the backend-v2 redeploy for those two; fix shipped in `321f870`). Two pre-existing m5 defects found and fixed during closeout: hosted `Query.userProfile` refused OAuth tokens (`session-only`), and the cold/deep-link callback route never completed (`Linking.useURL()` null under Expo Router). Follow-up filed: `w1/003` (`Query.getFeed` is still session-only, so Home's feed is refused for OAuth sessions).
 
 ## Tasks (in order)
 
@@ -14,7 +14,7 @@
 | t006 | Adoption surface                                                                           | 30m | t004, t005   | — **DONE**
 | t007 | Simplify                                                                                   | 30m | t006         | — **DONE**
 | t008 | Test coverage                                                                              | 45m | t006         | — **DONE**
-| t009 | Closeout                                                                                   | 15m | t008         |
+| t009 | Closeout                                                                                   | 15m | t008         | — **DONE**
 
 ## Definition of done
 
