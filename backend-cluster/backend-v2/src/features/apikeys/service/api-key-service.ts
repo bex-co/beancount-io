@@ -18,6 +18,7 @@ import {
 } from "@/shared/errors";
 import { prefixedNanoidBase58 } from "@/shared/nanoid-base58";
 import { logger } from "@/shared/logger";
+import { parseLedgerId } from "@/shared/str";
 
 const keyLogger = logger.child({ module: "api-key-service" });
 
@@ -85,13 +86,54 @@ export function apiKeyDigestsMatch(a: string, b: string): boolean {
   return timingSafeEqual(left, right);
 }
 
+/** Whether a string is a ledger id of the `owner/name` shape. */
+function isLedgerId(value: string): boolean {
+  try {
+    parseLedgerId(value);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * The requested ledger confinement, or `undefined` for "inherit the minter's".
+ *
+ * Blank input means "not asked for" and never becomes a stored `""`: an empty
+ * pin is falsy, which `assertLedgerScope` reads as *unconfined* — the exact
+ * opposite of what a pin is for. Anything non-blank has to be a real ledger id.
+ */
+export function normalizeLedgerScope(
+  value: string | undefined,
+): string | undefined {
+  const trimmed = value?.trim();
+  if (!trimmed) return undefined;
+  if (!isLedgerId(trimmed)) {
+    throw new ValidationError(
+      "ledgerScope",
+      "A ledger scope names one ledger as `owner/name`",
+    );
+  }
+  return trimmed;
+}
+
+/**
+ * A stored pin is either absent or a well-formed ledger id. `mint` never
+ * writes anything else, so a row carrying, say, `""` is refused outright
+ * rather than read as unconfined (see `normalizeLedgerScope`).
+ */
+const hasWellFormedLedgerScope = (key: ApiKey): boolean =>
+  key.ledgerScope === undefined || isLedgerId(key.ledgerScope);
+
 /**
  * Whether a key is usable right now. Exported because the authentication path
  * asks the same question, and two implementations of "is this credential still
  * good" is how a revoked key keeps working on one surface.
  */
 export const isApiKeyLive = (key: ApiKey, now: Date): boolean =>
-  !key.revokedAt && (!key.expiresAt || key.expiresAt > now);
+  !key.revokedAt &&
+  (!key.expiresAt || key.expiresAt > now) &&
+  hasWellFormedLedgerScope(key);
 
 /**
  * API keys: durable, scoped credentials for clients that cannot do a browser
@@ -111,6 +153,9 @@ export const isApiKeyLive = (key: ApiKey, now: Date): boolean =>
  *    breaking a running integration is a support incident, not a nudge.
  * 4. **Scopes come from the closed vocabulary,** and a key can only ever narrow
  *    what its minter had, never widen it.
+ * 5. **A ledger pin is a ceiling too.** A credential confined to one ledger at
+ *    consent time mints keys confined to that same ledger — it may restate the
+ *    pin or inherit it, never name a different ledger or drop it.
  */
 export class ApiKeyService implements IApiKeyService {
   constructor(private readonly deps: ApiKeyServiceDeps) {}
@@ -157,6 +202,22 @@ export class ApiKeyService implements IApiKeyService {
       }
     }
 
+    const requestedLedgerScope = normalizeLedgerScope(input.ledgerScope);
+    if (
+      identity.ledgerScope &&
+      requestedLedgerScope !== undefined &&
+      requestedLedgerScope !== identity.ledgerScope
+    ) {
+      // Same shape as the scope check above: the pin the user consented to is
+      // the most a key minted under it may have. A grant for `alice/main` that
+      // could mint a key for `alice/other` would make the consent screen a
+      // formality.
+      throw new ForbiddenError(
+        "A key cannot be confined to a ledger its creator is not authorized for",
+      );
+    }
+    const ledgerScope = requestedLedgerScope ?? identity.ledgerScope;
+
     if (input.expiresAt && input.expiresAt.getTime() <= Date.now()) {
       throw new ValidationError("expiresAt", "Expiry must be in the future");
     }
@@ -169,7 +230,7 @@ export class ApiKeyService implements IApiKeyService {
       keyDigest: apiKeyDigest(plaintext),
       keyPrefix: plaintext.slice(0, DISPLAY_PREFIX_LENGTH),
       scopes,
-      ledgerScope: input.ledgerScope ?? identity.ledgerScope,
+      ledgerScope,
       expiresAt: input.expiresAt,
     });
 

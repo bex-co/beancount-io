@@ -164,11 +164,12 @@ Every surface authenticates through one gate and classifies every operation:
 
 ### API keys
 
-`src/features/apikeys/` issues durable `bcio_` credentials for CI, cron, CLI, and agents (ADR 0006 D6). Three rules live in the service, not the adapters, so they hold identically on all three surfaces:
+`src/features/apikeys/` issues durable `bcio_` credentials for CI, cron, CLI, and agents (ADR 0006 D6). Four rules live in the service, not the adapters, so they hold identically on all three surfaces:
 
 - **A key cannot mint a key.** Checked on `Identity.method`. A credential that can create its own successor cannot really be revoked.
 - **Minting requires a paid plan.** A pricing decision confirmed in w1/m22; existing keys keep working if a subscription lapses, because breaking a running integration is a support incident rather than a nudge.
 - **A key can only narrow what its minter held,** never widen it.
+- **A ledger pin is a ceiling too.** A credential confined to one ledger mints keys confined to that ledger — it may restate or inherit the pin, never name a different ledger or drop it. A blank `ledgerScope` means "inherit" and is never stored as `""`; a stored pin that is not `owner/name` makes the key not live.
 
 Only a sha256 digest is stored, plus a display prefix. The plaintext is returned by the mint response and is unrecoverable afterwards.
 

@@ -129,6 +129,19 @@ describe("POST /api-gateway/v1/api-keys", () => {
     expect(status).toBe(400);
   });
 
+  it("rejects an empty ledger scope before reaching the service", async () => {
+    // The service normalizes a blank too; the boundary rejects it so a client
+    // sending `""` learns it sent nothing rather than silently inheriting.
+    const { status, body } = await call("POST", "/api-gateway/v1/api-keys", {
+      name: "CI",
+      scopes: ["ledger.read"],
+      ledgerScope: "",
+    });
+    expect(status).toBe(400);
+    expect(body).toMatchObject({ error: { code: "VALIDATION_FAILED" } });
+    expect(apiKeyService.mint).not.toHaveBeenCalled();
+  });
+
   it("surfaces the paid-plan refusal as 402", async () => {
     apiKeyService.mint.mockRejectedValueOnce(
       new PremiumRequiredError("API keys"),

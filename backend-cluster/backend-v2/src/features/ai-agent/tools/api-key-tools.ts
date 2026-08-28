@@ -82,8 +82,11 @@ export const createApiKeyInputSchema = z.object({
     ),
   ledger_scope: z
     .string()
+    .min(1)
     .optional()
-    .describe("Confine the key to one ledger, as `owner/name`."),
+    .describe(
+      "Confine the key to one ledger, as `owner/name`. Omit to inherit the caller's own confinement; a credential pinned to one ledger cannot name a different one.",
+    ),
 });
 
 export const createApiKeyOutputSchema = toolOutputSchema(

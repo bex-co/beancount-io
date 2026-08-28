@@ -818,7 +818,8 @@
           },
           "ledgerScope": {
             "type": "string",
-            "description": "Confine the key to one ledger, as `owner/name`. Omit for all the caller's ledgers.",
+            "minLength": 1,
+            "description": "Confine the key to one ledger, as `owner/name`. Omit to inherit the caller's own confinement (all its ledgers, or the one its credential is pinned to). A credential pinned to one ledger cannot name a different one.",
             "example": "alice/main-ledger"
           },
           "expiresAt": {

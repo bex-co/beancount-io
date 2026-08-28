@@ -28,9 +28,9 @@ export const createApiKeySchema = z
           "What the key may do. A key can never hold more than its creator did.",
         example: ["ledger.read"],
       }),
-    ledgerScope: z.string().optional().openapi({
+    ledgerScope: z.string().min(1).optional().openapi({
       description:
-        "Confine the key to one ledger, as `owner/name`. Omit for all the caller's ledgers.",
+        "Confine the key to one ledger, as `owner/name`. Omit to inherit the caller's own confinement (all its ledgers, or the one its credential is pinned to). A credential pinned to one ledger cannot name a different one.",
       example: "alice/main-ledger",
     }),
     expiresAt: z.coerce.date().optional().openapi({

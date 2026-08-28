@@ -47,6 +47,11 @@ const adminOAuthGrant: Identity = {
   scopes: new Set(["ledger.admin"]),
 };
 
+const pinnedAdminOAuthGrant: Identity = {
+  ...adminOAuthGrant,
+  ledgerScope: "alice/main",
+};
+
 const storedKey = (over: Partial<ApiKey> = {}): ApiKey => ({
   id: "akey_1",
   userId: "usr_1",
@@ -158,6 +163,80 @@ describe("minting", () => {
     );
     expect(created[0].ledgerScope).toBe("alice/main");
   });
+
+  it("refuses a ledger-pinned minter asking for a different ledger", async () => {
+    // The pin is a ceiling, like the scopes: a grant the user consented to for
+    // one ledger must not yield a durable key for another.
+    const { service, model } = makeService();
+    await expect(
+      service.mint(pinnedAdminOAuthGrant, {
+        name: "CI",
+        scopes: ["ledger.read"],
+        ledgerScope: "alice/other",
+      }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+    expect(model.create).not.toHaveBeenCalled();
+  });
+
+  it("lets a ledger-pinned minter restate its own ledger", async () => {
+    const { service, created } = makeService();
+    await service.mint(pinnedAdminOAuthGrant, {
+      name: "CI",
+      scopes: ["ledger.read"],
+      ledgerScope: "alice/main",
+    });
+    expect(created[0].ledgerScope).toBe("alice/main");
+  });
+
+  it.each(["", "   "])(
+    "reads a blank ledger scope (%j) as not asked for, so a pinned minter still inherits",
+    async (blank) => {
+      // `""` is falsy, and `assertLedgerScope` treats a falsy pin as
+      // unconfined — storing it would let a pinned grant mint an unpinned key.
+      const { service, created } = makeService();
+      await service.mint(pinnedAdminOAuthGrant, {
+        name: "CI",
+        scopes: ["ledger.read"],
+        ledgerScope: blank,
+      });
+      expect(created[0].ledgerScope).toBe("alice/main");
+    },
+  );
+
+  it("never stores a blank ledger scope, even from an unconfined session", async () => {
+    const { service, created } = makeService();
+    await service.mint(session, {
+      name: "CI",
+      scopes: ["ledger.read"],
+      ledgerScope: "",
+    });
+    expect(created[0].ledgerScope).toBeUndefined();
+  });
+
+  it("lets an unconfined session pin a key to any ledger", async () => {
+    const { service, created } = makeService();
+    await service.mint(session, {
+      name: "CI",
+      scopes: ["ledger.read"],
+      ledgerScope: "bob/side-ledger",
+    });
+    expect(created[0].ledgerScope).toBe("bob/side-ledger");
+  });
+
+  it.each(["alice", "/main", "alice/"])(
+    "rejects a ledger scope that is not owner/name (%j)",
+    async (malformed) => {
+      const { service, model } = makeService();
+      await expect(
+        service.mint(session, {
+          name: "CI",
+          scopes: ["ledger.read"],
+          ledgerScope: malformed,
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(model.create).not.toHaveBeenCalled();
+    },
+  );
 });
 
 describe("scope validation", () => {
@@ -200,6 +279,15 @@ describe("verification", () => {
     await expect(
       service.verify("bcio_plaintext", new Date("2026-06-01")),
     ).resolves.toBeNull();
+  });
+
+  it("rejects a key whose stored ledger pin is malformed", async () => {
+    // `mint` never writes an empty pin, so a row carrying one is refused rather
+    // than read as unconfined — the reading a falsy pin would otherwise get.
+    const { service } = makeService({
+      stored: storedKey({ ledgerScope: "" }),
+    });
+    await expect(service.verify("bcio_plaintext")).resolves.toBeNull();
   });
 
   it("rejects anything without the key prefix without touching the database", async () => {
