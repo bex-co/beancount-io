@@ -92,15 +92,6 @@ const enSeo: Record<string, TranslationEntry> = {
     message: "Commodities - {ledgerName}",
     description: "Commodities page title with ledger name",
   },
-  "seo.ledgerDashboard.description": {
-    message:
-      "View and manage all your Beancount ledgers. Create new ledgers, access existing ones, and organize your financial records.",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "My Ledgers",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message:
       "Document attachments and receipts for {ledgerName}. Organize supporting files for your transactions.",

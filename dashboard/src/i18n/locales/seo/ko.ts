@@ -90,15 +90,6 @@ const koSeo: Record<string, TranslationEntry> = {
     message: "상품 - {ledgerName}",
     description: "Commodities page title with ledger name",
   },
-  "seo.ledgerDashboard.description": {
-    message:
-      "모든 Beancount 장부를 보고 관리합니다. 새 장부를 만들고, 기존 장부에 접근하고, 재무 기록을 정리하세요.",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "내 장부",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message:
       "{ledgerName}의 문서 첨부와 영수증. 거래의 지원 파일을 정리할 수 있습니다.",

@@ -120,15 +120,6 @@ const nlSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
-  "seo.ledgerDashboard.description": {
-    message:
-      "Bekijk en beheer al uw Beancount-grootboeken. Maak nieuwe grootboeken, open bestaande en organiseer uw financiële gegevens.",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "Mijn Grootboeken",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message:
       "Documentbijlagen en bonnen voor {ledgerName}. Organiseer ondersteunende bestanden voor uw transacties.",

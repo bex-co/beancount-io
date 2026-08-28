@@ -91,15 +91,6 @@ const jaSeo: Record<string, TranslationEntry> = {
     message: "商品 - {ledgerName}",
     description: "Commodities page title with ledger name",
   },
-  "seo.ledgerDashboard.description": {
-    message:
-      "すべてのBeancount台帳を表示・管理します。新しい台帳を作成したり、既存の台帳にアクセスしたり、財務記録を整理できます。",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "マイ台帳",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message:
       "{ledgerName}のドキュメント添付と領収書。取引のサポートファイルを整理できます。",

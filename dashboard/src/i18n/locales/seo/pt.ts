@@ -120,15 +120,6 @@ const ptSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
-  "seo.ledgerDashboard.description": {
-    message:
-      "Visualize e gerencie todos os seus livros-razão Beancount. Crie novos livros-razão, acesse os existentes e organize seus registros financeiros.",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "Meus Livros-Razão",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message:
       "Anexos de documentos e recibos de {ledgerName}. Organize arquivos de suporte para suas transações.",

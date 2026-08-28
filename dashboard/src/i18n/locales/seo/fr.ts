@@ -120,15 +120,6 @@ const frSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
-  "seo.ledgerDashboard.description": {
-    message:
-      "Visualisez et gérez tous vos livres comptables Beancount. Créez de nouveaux livres, accédez aux existants et organisez vos registres financiers.",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "Mes Livres Comptables",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message:
       "Pièces jointes et reçus pour {ledgerName}. Organisez les fichiers justificatifs de vos transactions.",

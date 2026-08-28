@@ -119,15 +119,6 @@ const faSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
-  "seo.ledgerDashboard.description": {
-    message:
-      "تمام دفاتر Beancount خود را مشاهده و مدیریت کنید. دفاتر جدید ایجاد کنید، به موارد موجود دسترسی پیدا کنید و سوابق مالی خود را سازماندهی کنید.",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "دفاتر من",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message:
       "پیوست‌های اسناد و رسیدها برای {ledgerName}. فایل‌های پشتیبان را برای تراکنش‌های خود سازماندهی کنید.",

@@ -120,15 +120,6 @@ const ukSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
-  "seo.ledgerDashboard.description": {
-    message:
-      "Переглядайте та керуйте всіма своїми книгами Beancount. Створюйте нові книги, отримуйте доступ до існуючих та організовуйте свої фінансові записи.",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "Мої Книги",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message:
       "Вкладення документів та квитанції для {ledgerName}. Організуйте підтверджуючі файли для своїх транзакцій.",

@@ -114,15 +114,6 @@ const zhSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
-  "seo.ledgerDashboard.description": {
-    message:
-      "查看和管理你的所有Beancount账本。创建新账本、访问现有账本并整理你的财务记录。",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "我的账本",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message: "{ledgerName}的文档附件和收据。整理交易的支持文件。",
     description: "Documents page meta description",

@@ -120,15 +120,6 @@ const deSeo: Record<string, TranslationEntry> = {
     description: "Commit detail page title with short hash and ledger name",
   },
 
-  "seo.ledgerDashboard.description": {
-    message:
-      "Zeigen Sie alle Ihre Beancount-Hauptbücher an und verwalten Sie sie. Erstellen Sie neue Hauptbücher, greifen Sie auf bestehende zu und organisieren Sie Ihre Finanzunterlagen.",
-    description: "Ledger dashboard page meta description",
-  },
-  "seo.ledgerDashboard.title": {
-    message: "Meine Hauptbücher",
-    description: "Ledger dashboard page title",
-  },
   "seo.ledgerDocuments.description": {
     message:
       "Dokumentanhänge und Belege für {ledgerName}. Organisieren Sie unterstützende Dateien für Ihre Transaktionen.",
