@@ -1,8 +1,7 @@
 import { useCallback, useMemo, useState } from "react";
 import { StyleSheet, View } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
-import { analytics } from "@/common/analytics";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
@@ -60,7 +59,6 @@ const ReportsScreenImpl = (): JSX.Element => {
   const ledgerId = useLedgerGuard();
   const { t } = useTranslations();
   const styles = useThemeStyle(getStyles);
-  usePageView("reports");
 
   const [timeRange, setTimeRange] = useState<TimeRange>("6M");
   const [refreshing, setRefreshing] = useState(false);
@@ -80,11 +78,6 @@ const ReportsScreenImpl = (): JSX.Element => {
     error: incomeError,
   } = useIncomeStatement(ledgerId);
   const stmt = incomeData?.getLedgerIncomeStatement;
-
-  const handleRangeChange = useCallback((range: TimeRange) => {
-    setTimeRange(range);
-    analytics.track("reports_range_change", { range });
-  }, []);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -149,7 +142,7 @@ const ReportsScreenImpl = (): JSX.Element => {
       <TimeRangePills
         value={timeRange}
         options={rangeOptions}
-        onChange={handleRangeChange}
+        onChange={setTimeRange}
       />
       <DashboardScrollView
         refreshing={refreshing}
@@ -196,7 +189,6 @@ const ReportsScreenImpl = (): JSX.Element => {
                 items={topNWithOther(expense.tree, BREAKDOWN_TOP_N, t("other"))}
                 currency={currency}
                 tone={(theme) => theme.error}
-                section="expenses"
               />
             </DashboardCard>
           </FadeInView>
@@ -213,7 +205,6 @@ const ReportsScreenImpl = (): JSX.Element => {
                 items={topNWithOther(income.tree, BREAKDOWN_TOP_N, t("other"))}
                 currency={currency}
                 tone={(theme) => theme.success}
-                section="income"
               />
             </DashboardCard>
           </FadeInView>

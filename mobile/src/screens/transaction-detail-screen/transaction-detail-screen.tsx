@@ -12,7 +12,6 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useApolloClient, useReactiveVar } from "@apollo/client";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
-import { analytics } from "@/common/analytics";
 import {
   fontSizes,
   fontWeights,
@@ -25,7 +24,7 @@ import { AmountText } from "@/components/amount-text";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { LoadingTile } from "@/components/loading-tile";
 import { MenuButton } from "@/components/menu-button";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -247,7 +246,6 @@ const TransactionDetailImpl = ({
   const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
-  usePageView("transaction_detail");
 
   const confirmWrite = useLedgerWrite();
   const stashed = useReactiveVar(selectedTransactionVar);
@@ -267,20 +265,17 @@ const TransactionDetailImpl = ({
 
   const handleEdit = useCallback(() => {
     if (!sha256sum) return;
-    analytics.track("transaction_detail_edit", {});
     openEditTransaction(router, { entryHash, ledgerId });
   }, [sha256sum, entryHash, ledgerId, router]);
 
   const handleDelete = useCallback(() => {
     if (!sha256sum) return;
-    analytics.track("transaction_detail_delete_prompt", {});
     Alert.alert(t("deleteTransactionTitle"), t("deleteTransactionMessage"), [
       { text: t("cancel"), style: "cancel" },
       {
         text: t("deleteTransaction"),
         style: "destructive",
         onPress: async () => {
-          analytics.track("transaction_detail_delete_confirm", {});
           await confirmWrite({
             perform: () =>
               deleteMutation({
@@ -314,7 +309,6 @@ const TransactionDetailImpl = ({
 
   const handlePressAccount = useCallback(
     (account: string) => {
-      analytics.track("transaction_detail_open_account", { account });
       if (originAccount && account === originAccount) {
         router.back();
         return;

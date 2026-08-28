@@ -7,11 +7,10 @@ import { i18n } from "@/translations";
 import { ScreenWidth } from "@/common/screen-util";
 import { QuickAddAccountsSelector } from "@/screens/add-transaction-screen/quick-add-accounts-selector";
 import { getCurrencySymbol } from "@/common/currency-util";
-import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { useToast, usePageView } from "@/common/hooks";
+import { useToast } from "@/common/hooks";
 
 const KeypadPadding = 12;
 const KeyCellWidth = (ScreenWidth - KeypadPadding * 2) / 3;
@@ -94,7 +93,6 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 export function AddTransactionScreen(): JSX.Element {
-  usePageView("add_transaction");
   const Keys = [
     { display: "1", value: 1 },
     { display: "2", value: 2 },
@@ -190,7 +188,7 @@ export function AddTransactionScreen(): JSX.Element {
                   pressed &&
                     (isNext ? styles.nextKeyPressed : styles.keyPressed),
                 ]}
-                onPress={async () => {
+                onPress={() => {
                   if (key.display === "Del" && keyValues.length > 0) {
                     keyValues.pop();
                   } else if (key.value < 10) {
@@ -211,9 +209,6 @@ export function AddTransactionScreen(): JSX.Element {
                       });
                       return;
                     }
-                    await analytics.track("tap_add_transaction_next", {
-                      money: currentMoney,
-                    });
                     router.replace({
                       pathname: "/add-transaction-next",
                       params: {

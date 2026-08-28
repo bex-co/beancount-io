@@ -12,7 +12,6 @@ import {
 } from "react-native-webview";
 import { useReactiveVar } from "@apollo/client";
 import { localeVar } from "@/common/vars";
-import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { StyleSheet } from "react-native";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
@@ -78,7 +77,6 @@ export const DashboardWebView = forwardRef<WebView, DashboardWebViewProps>(
       `;
 
       webViewRef.current.injectJavaScript(script);
-      analytics.track("webview_language_sync", { language });
     };
 
     const handleMessage = (event: WebViewMessageEvent) => {

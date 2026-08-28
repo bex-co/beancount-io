@@ -33,7 +33,6 @@ import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
 import { LedgerDrawerHeader } from "@/components/ledger-drawer";
 import { useLedgerGuard } from "@/components/ledger-guard";
 import { TextInputModal } from "@/components/text-input-modal";
-import { analytics } from "@/common/analytics";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { haptics } from "@/common/haptics";
 import { encodeLedgerFileContent } from "@/common/ledger-file-content";
@@ -328,7 +327,6 @@ export function LedgerFileBrowserScreen(): JSX.Element {
     setRefreshing(true);
     try {
       await refetch();
-      analytics.track("pull_refresh_ledger_files", { path: currentPath });
     } catch (refreshError: unknown) {
       const message =
         refreshError instanceof Error
@@ -363,7 +361,6 @@ export function LedgerFileBrowserScreen(): JSX.Element {
       const filePath = buildLedgerFilePath(currentPath, filename);
       createInFlightRef.current = true;
       setCreateModalVisible(false);
-      analytics.track("create_ledger_file", { path: filePath });
       try {
         const result = await createLedgerFile({
           variables: {
@@ -415,7 +412,6 @@ export function LedgerFileBrowserScreen(): JSX.Element {
 
       deleteInFlightRef.current = true;
       setDeletingPath(entry.path);
-      analytics.track("delete_ledger_file", { path: entry.path });
       try {
         await deleteLedgerFile({
           variables: {
@@ -451,7 +447,6 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const handleDelete = useCallback(
     (entry: DirEntry) => {
       if (!canDeleteLedgerFile(entry.name)) return;
-      analytics.track("delete_ledger_file_prompt", { path: entry.path });
       Alert.alert(
         t("ledgerDeleteFileTitle"),
         t("ledgerDeleteFileMessage", { name: entry.name }),
@@ -471,9 +466,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const handleEntryPress = (entry: DirEntry) => {
     if (entry.type === "dir") {
       setPathStack((prev) => pushPathStack(prev, entry.path));
-      analytics.track("tap_ledger_dir", { path: entry.path });
     } else if (isEditable(entry.name)) {
-      analytics.track("tap_ledger_file", { path: entry.path });
       router.push({
         pathname: "/(app)/ledger-file-editor",
         params: { path: entry.path },

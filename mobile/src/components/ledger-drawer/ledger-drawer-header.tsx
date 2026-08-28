@@ -3,7 +3,6 @@ import { StyleSheet, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { router } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
-import { analytics } from "@/common/analytics";
 import {
   fontSizes,
   fontWeights,
@@ -72,7 +71,6 @@ export function LedgerDrawerButton({ color }: { color?: string }): JSX.Element {
   const { openDrawer } = useLedgerDrawer();
 
   const handlePress = () => {
-    analytics.track("tap_open_ledger_drawer", {});
     openDrawer();
   };
 
@@ -95,7 +93,6 @@ function NotificationsBellButton(): JSX.Element {
   const { count } = useLedgerErrors();
 
   const handlePress = () => {
-    analytics.track("tap_notifications_bell", { errorCount: count });
     router.push("/(app)/notifications");
   };
 

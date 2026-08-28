@@ -18,9 +18,8 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { GetLedgerIntervalTotalsDocument } from "@/generated-graphql/graphql";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
@@ -99,7 +98,6 @@ export function BudgetScreenImpl(): JSX.Element {
   const router = useRouter();
   const ledgerId = useLedgerGuard();
   const client = useApolloClient();
-  usePageView("budget");
 
   const [span, setSpan] = useState<BudgetTimeSpan>(DEFAULT_BUDGET_SPAN);
   const [refreshing, setRefreshing] = useState(false);
@@ -127,7 +125,6 @@ export function BudgetScreenImpl(): JSX.Element {
   // each time `refreshing` or the span toggles.
   const openAdd = useCallback(
     (group?: BudgetGroup) => {
-      analytics.track("tap_budget_add", { update: Boolean(group) });
       router.push({
         pathname: "/add-budget",
         params: group

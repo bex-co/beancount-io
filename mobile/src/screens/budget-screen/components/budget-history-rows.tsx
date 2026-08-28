@@ -12,7 +12,6 @@ import {
 } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { AmountText } from "@/components";
 import { useDeleteBudgetEntry } from "@/screens/budget-screen/hooks/use-delete-budget-entry";
 import { intervalLabelKey } from "@/screens/budget-screen/selectors/budget-labels";
@@ -126,7 +125,6 @@ export function BudgetHistoryRows({
             setError(null);
             const result = await deleteBudgetEntry(entryHash);
             if (result.ok) {
-              analytics.track("budget_deleted", { interval });
               return;
             }
             setError(result.message || t("budgetDeleteFailed"));

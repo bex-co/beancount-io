@@ -1,6 +1,5 @@
 import { makeVar } from "@apollo/client";
 import type { useRouter } from "expo-router";
-import { analytics } from "@/common/analytics";
 import type { JournalTransaction } from "@/screens/transactions-screen/types";
 
 type Router = ReturnType<typeof useRouter>;
@@ -13,21 +12,11 @@ type Router = ReturnType<typeof useRouter>;
  */
 export const selectedTransactionVar = makeVar<JournalTransaction | null>(null);
 
-export type TransactionDetailSource =
-  | "home"
-  | "transactions"
-  | "journal"
-  | "account_detail"
-  | "reports"
-  | "merchants";
-
 export function openTransactionDetail(
   router: Router,
   entry: JournalTransaction,
-  source: TransactionDetailSource,
   originAccount?: string,
 ): void {
-  analytics.track("open_transaction_detail", { source });
   selectedTransactionVar(entry);
   router.push({
     pathname: "/transaction-detail",

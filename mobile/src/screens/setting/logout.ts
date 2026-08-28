@@ -1,4 +1,3 @@
-import { analytics } from "@/common/analytics";
 import type { Session } from "@/common/vars/session";
 import { apolloClient } from "@/common/apollo/client";
 import { LogoutDocument } from "@/generated-graphql/graphql";
@@ -23,7 +22,5 @@ export async function actionLogout(session: Session) {
       });
     },
     clearLocalState: clearServerScopedState,
-    trackLogout: () => analytics.track("logged_out", {}),
-    deleteAnalyticsUser: () => analytics.peopleDeleteUser(),
   });
 }

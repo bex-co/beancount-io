@@ -24,7 +24,6 @@ import {
   isSearchQuery,
   visibleAccountSections,
   type PickerSection,
-  type SelectionSource,
 } from "./picker-sections";
 import { ColorTheme } from "@/types/theme-props";
 import { useLocalSearchParams, useRouter } from "expo-router";
@@ -49,8 +48,6 @@ import {
 } from "@/components/time-range-pills";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
-import { analytics } from "@/common/analytics";
-import { usePageView } from "@/common/hooks";
 import { accountUsageVar, recordAccountUsage } from "@/common/vars";
 import { usageFor, type RankingContext } from "@/common/account-frecency";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
@@ -173,9 +170,7 @@ const getStyles = (theme: ColorTheme) =>
 interface AccountRowProps {
   account: string;
   selected: boolean;
-  /** Which block the row sits in, reported with the confirm event. */
-  source: SelectionSource;
-  onPress: (account: string, source: SelectionSource) => void;
+  onPress: (account: string) => void;
 }
 
 /**
@@ -183,13 +178,11 @@ interface AccountRowProps {
  * so its own cell PureComponent can never bail out — without this, every
  * mounted row re-renders on each keystroke. The theme hooks are called here
  * rather than passed down (`useThemeStyle` memoizes per theme), matching
- * `AccountTableRow` and keeping the memo comparison to primitives — `source`
- * is passed in rather than closed over for the same reason.
+ * `AccountTableRow` and keeping the memo comparison to primitives.
  */
 const AccountRow = memo(function AccountRow({
   account,
   selected,
-  source,
   onPress,
 }: AccountRowProps) {
   const theme = useTheme().colorTheme;
@@ -198,7 +191,7 @@ const AccountRow = memo(function AccountRow({
   return (
     <TouchableOpacity
       style={[styles.listItem, selected && styles.listItemSelected]}
-      onPress={() => onPress(account, source)}
+      onPress={() => onPress(account)}
       accessibilityRole="button"
       accessibilityState={{ selected }}
     >
@@ -218,7 +211,6 @@ const AccountRow = memo(function AccountRow({
 export function AccountPickerScreenComponent(): JSX.Element {
   const router = useRouter();
   const { userId } = useSession();
-  usePageView("account_picker");
   const ledgerId = useLedgerGuard();
   const { type, selectedItem } = useLocalSearchParams<{
     type: string;
@@ -320,19 +312,10 @@ export function AccountPickerScreenComponent(): JSX.Element {
   );
 
   const onPick = useCallback(
-    async (account: string, source: SelectionSource) => {
-      const pickedAt = Date.now();
-      await analytics.track("tap_account_picker_confirm", {
-        selectedAccount: account,
-        // Which of the three routes to an account earned this pick, and how
-        // long it took — the pair that says whether recents and search are
-        // actually saving anyone time.
-        source,
-        timeToSelectMs: pickedAt - ranking.now,
-      });
-      confirmSelection(account, pickedAt);
+    (account: string) => {
+      confirmSelection(account, Date.now());
     },
-    [confirmSelection, ranking],
+    [confirmSelection],
   );
 
   // The create row renders exactly when the empty state does while a query is
@@ -340,33 +323,13 @@ export function AccountPickerScreenComponent(): JSX.Element {
   const trimmedQuery = query.trim();
   const showCreateRow = isSearching && visibleSections.length === 0;
 
-  // One impression per hidden→shown episode: the effect re-runs only when
-  // `showCreateRow` flips (`type` never changes while mounted), so the dep
-  // array itself is the single-fire guard — keystrokes that keep the row
-  // visible don't re-run it.
-  useEffect(() => {
-    if (showCreateRow) {
-      analytics.track("account_picker_create_shown", {
-        pickerType: type ?? "",
-      });
-    }
-  }, [showCreateRow, type]);
-
-  const onCreate = useCallback(async () => {
-    await analytics.track("account_picker_create_tap", {
-      pickerType: type ?? "",
-      query: trimmedQuery,
-    });
+  const onCreate = useCallback(() => {
     pushOpenAccount(router, {
       prefill: trimmedQuery,
       // Destination pickers are choosing where money went, so suggest the
       // Expenses root for a rootless query; source pickers suggest Assets.
       prefillRoot: accountOrderFor(type) === "to" ? "Expenses" : "Assets",
       onCreated: (account) => {
-        analytics.track("account_picker_create_confirm", {
-          pickerType: type ?? "",
-          account,
-        });
         confirmSelection(account, Date.now());
       },
     });
@@ -482,11 +445,10 @@ export function AccountPickerScreenComponent(): JSX.Element {
             )}
           </View>
         }
-        renderItem={({ item, section }) => (
+        renderItem={({ item }) => (
           <AccountRow
             account={item}
             selected={item === selectedItem}
-            source={section.source}
             onPress={onPick}
           />
         )}

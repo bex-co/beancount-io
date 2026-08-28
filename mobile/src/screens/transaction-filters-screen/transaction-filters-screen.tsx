@@ -10,10 +10,9 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { analytics } from "@/common/analytics";
 import { getFormatDate } from "@/common/format-util";
 import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
-import { usePageView, useThemeStyle } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
 import { Button, DatePickerModal } from "@/components";
@@ -29,7 +28,6 @@ import {
   TransactionStatus,
 } from "@/screens/transactions-screen/filters/types";
 import { transactionFiltersVar } from "@/screens/transactions-screen/filters/var";
-import { countActiveFilters } from "@/screens/transactions-screen/filters/select-filter-query";
 
 type PickerTarget = "start" | "end";
 
@@ -158,7 +156,6 @@ export const TransactionFiltersScreen = (): JSX.Element => {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
-  usePageView("transaction_filters");
 
   const [draft, setDraft] = useState<TransactionFilters>(
     transactionFiltersVar(),
@@ -202,12 +199,6 @@ export const TransactionFiltersScreen = (): JSX.Element => {
   };
 
   const apply = () => {
-    analytics.track("apply_transaction_filters", {
-      activeCount: countActiveFilters(draft, new Date()),
-      range: draft.range,
-      statuses: draft.statuses.join(",") || "any",
-      hasAccount: Boolean(draft.account),
-    });
     transactionFiltersVar(draft);
     router.back();
   };

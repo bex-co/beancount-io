@@ -16,22 +16,6 @@ describe("config", () => {
       expect(typeof config.sentryDsn).toBe("string");
     });
 
-    it("has analytics object", () => {
-      const { config } = require("../config");
-      expect(config.analytics).toBeTruthy();
-      expect(typeof config.analytics).toBe("object");
-    });
-
-    it("has googleTid in analytics", () => {
-      const { config } = require("../config");
-      expect(config.analytics.googleTid).toBe("UA-143353833-1");
-    });
-
-    it("has mixpanelProjectToken in analytics", () => {
-      const { config } = require("../config");
-      expect(typeof config.analytics.mixpanelProjectToken).toBe("string");
-    });
-
     it("has serverUrl property", () => {
       const { config } = require("../config");
       expect(typeof config.serverUrl).toBe("string");
@@ -59,15 +43,14 @@ describe("config", () => {
       const keys = Object.keys(config);
       expect(keys.includes("project")).toBe(true);
       expect(keys.includes("sentryDsn")).toBe(true);
-      expect(keys.includes("analytics")).toBe(true);
       expect(keys.includes("serverUrl")).toBe(true);
     });
 
-    it("has all required analytics keys", () => {
+    it("carries no analytics configuration", () => {
+      // The Mixpanel wrapper was retired (.pm w3/001): every event went to a
+      // dead sink. A token reappearing here means the sink came back with it.
       const { config } = require("../config");
-      const analyticsKeys = Object.keys(config.analytics);
-      expect(analyticsKeys.includes("googleTid")).toBe(true);
-      expect(analyticsKeys.includes("mixpanelProjectToken")).toBe(true);
+      expect("analytics" in config).toBe(false);
     });
   });
 });

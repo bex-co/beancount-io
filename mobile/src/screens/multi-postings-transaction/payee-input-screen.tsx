@@ -50,8 +50,6 @@ export function PayeeInputScreen(): JSX.Element {
       initialValue={payee || ""}
       headerTitle={i18n.t("payee")}
       multiline={false}
-      analyticsPageName="payee_input"
-      analyticsSaveEventName="payee_input_save"
       onSave={onSaved}
       suggestions={suggestions}
       suggestionsLoading={loading}

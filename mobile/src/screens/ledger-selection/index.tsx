@@ -10,10 +10,9 @@ import {
 import { useRouter } from "expo-router";
 import { useListLedgersQuery } from "@/generated-graphql/graphql";
 import { useTheme } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { ColorTheme } from "@/types/theme-props";
 import { Ionicons } from "@expo/vector-icons";
-import { analytics } from "@/common/analytics";
 import { ledgerVar } from "@/common/vars";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
@@ -85,14 +84,12 @@ export function LedgerSelectionScreen() {
   const router = useRouter();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
-  usePageView("ledger_selection");
 
   const { data, loading, error } = useListLedgersQuery();
 
   const ledgers = useMemo(() => data?.listLedgers || [], [data?.listLedgers]);
 
-  const handleSelectLedger = async (ledgerId: string) => {
-    await analytics.track("select_ledger", { ledgerId });
+  const handleSelectLedger = (ledgerId: string) => {
     ledgerVar(ledgerId);
     router.back();
   };

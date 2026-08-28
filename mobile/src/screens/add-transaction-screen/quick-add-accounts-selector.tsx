@@ -3,7 +3,6 @@ import { ScrollView, StyleSheet, Text, View } from "react-native";
 import { useReactiveVar } from "@apollo/client";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { getPrimaryCurrency } from "@/common/currency-util";
-import { analytics } from "@/common/analytics";
 import { fontSizes } from "@/common/theme";
 import { i18n } from "@/translations";
 import { ledgerVar } from "@/common/vars";
@@ -120,24 +119,12 @@ export const QuickAddAccountsSelector = (
     }
   }, [toSuggestions.autoFill]);
 
-  const handleFromChipPress = async (account: string) => {
+  const handleFromChipPress = (account: string) => {
     setSelectedAssets(account);
-    await analytics.track("tap_suggestion_chip", {
-      payee: selectedPayee,
-      account,
-      side: "from",
-      source: "history",
-    });
   };
 
-  const handleToChipPress = async (account: string) => {
+  const handleToChipPress = (account: string) => {
     setSelectedExpenses(account);
-    await analytics.track("tap_suggestion_chip", {
-      payee: selectedPayee,
-      account,
-      side: "to",
-      source: "history",
-    });
   };
 
   // Skeleton only on first load — during pull-to-refresh the current
@@ -189,10 +176,7 @@ export const QuickAddAccountsSelector = (
             <ListItem
               title={i18n.t("payee").toUpperCase()}
               content={selectedPayee}
-              onPress={async () => {
-                analytics.track("tap_payee_picker", {
-                  originalPayee: selectedPayee,
-                });
+              onPress={() => {
                 SelectedPayee.setFn((value: string) => {
                   setSelectedPayee(value);
                 });
@@ -209,10 +193,7 @@ export const QuickAddAccountsSelector = (
               title={i18n.t("from").toUpperCase()}
               content={selectedAssets}
               showDivider
-              onPress={async () => {
-                analytics.track("tap_assets_picker", {
-                  originalOption: selectedAssets,
-                });
+              onPress={() => {
                 pushAccountPicker(router, {
                   type: "assets",
                   current: selectedAssets,
@@ -232,10 +213,7 @@ export const QuickAddAccountsSelector = (
               title={i18n.t("to").toUpperCase()}
               content={selectedExpenses}
               showDivider
-              onPress={async () => {
-                analytics.track("tap_expenses_picker", {
-                  originalOption: selectedExpenses,
-                });
+              onPress={() => {
                 pushAccountPicker(router, {
                   type: "expenses",
                   current: selectedExpenses,

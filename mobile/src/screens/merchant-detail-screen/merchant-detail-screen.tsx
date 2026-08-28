@@ -10,7 +10,6 @@ import {
 } from "react-native";
 import { useLocalSearchParams, Stack, useRouter } from "expo-router";
 import { NetworkStatus, useReactiveVar } from "@apollo/client";
-import { analytics } from "@/common/analytics";
 import {
   fontSizes,
   fontWeights,
@@ -18,7 +17,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { formatLedgerDateShort } from "@/common/date-format";
 import { formatMoneyWithCurrency } from "@/common/number-utils";
@@ -246,8 +245,6 @@ function MerchantDetailBody({ payee }: { payee: string }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const pagesFetchedRef = useRef(1);
 
-  usePageView("merchant_detail");
-
   const metaBql = useMemo(() => buildMerchantMetaBql(payee), [payee]);
   const totalsBql = useMemo(
     () => buildMerchantCurrencyTotalsBql(payee),
@@ -417,15 +414,12 @@ function MerchantDetailBody({ payee }: { payee: string }) {
       if (!isJournalTransaction(entry)) {
         return;
       }
-      openTransactionDetail(router, entry, "merchants");
+      openTransactionDetail(router, entry);
     },
     [router],
   );
 
   const onToggleRecurring = () => {
-    analytics.track("merchant_toggle_recurring", {
-      on: !resolved.isRecurring,
-    });
     toggleRecurringOverride(
       ledgerId!,
       payee,

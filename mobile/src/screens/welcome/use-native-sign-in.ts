@@ -1,5 +1,4 @@
 import { useCallback, useRef, useState } from "react";
-import { analytics } from "@/common/analytics";
 import { OAuthAuthorizationError } from "@/common/oauth/authorization-result";
 import { startNativeAuthorization } from "@/common/oauth/start-authorization";
 import type { PendingOAuthAuthorization } from "@/common/oauth/authorization-result";
@@ -31,9 +30,6 @@ export function useNativeSignIn(): NativeSignIn {
     running.current = true;
     setPendingFlow(flow);
     setFailed(false);
-    void analytics.track("tap_login_or_signup", {
-      isSignUp: flow === "sign_up",
-    });
 
     void startNativeAuthorization(flow)
       .catch((error: unknown) => {

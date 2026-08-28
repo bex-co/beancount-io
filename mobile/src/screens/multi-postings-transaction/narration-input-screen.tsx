@@ -22,8 +22,6 @@ export function NarrationInputScreen(): JSX.Element {
       initialValue={narration || ""}
       headerTitle={i18n.t("narration")}
       multiline={true}
-      analyticsPageName="narration_input"
-      analyticsSaveEventName="narration_input_save"
       onSave={onSaved}
       suggestions={data?.getLedgerNarrations}
       suggestionsLoading={loading}

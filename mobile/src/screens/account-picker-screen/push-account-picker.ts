@@ -25,7 +25,7 @@ export const accountOrderFor = (type?: string): "from" | "to" =>
 type PickerRouter = Pick<ReturnType<typeof useRouter>, "push">;
 
 interface PushAccountPickerOptions {
-  /** Which ordering to browse; also what the screen reports to analytics. */
+  /** Which ordering to browse. */
   type: AccountPickerType;
   /** The field's current account, scrolled into view and check-marked. */
   current?: string;

@@ -13,7 +13,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { useApolloClient } from "@apollo/client";
 import { fonts, fontSizes, headerActionStyle, useTheme } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
@@ -22,7 +22,6 @@ import {
   useGetLedgerEntryContextQuery,
   useUpdateLedgerEntrySourceSliceMutation,
 } from "@/generated-graphql/graphql";
-import { analytics } from "@/common/analytics";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 
 const getStyles = (theme: ColorTheme) =>
@@ -88,7 +87,6 @@ export const EditTransactionScreen = (): JSX.Element => {
     entryHash: string;
     ledgerId: string;
   }>();
-  usePageView("edit_transaction");
 
   const { data } = useGetLedgerEntryContextQuery({
     variables: { entryHash: entryHash ?? "", ledgerId: ledgerId ?? "" },
@@ -119,14 +117,12 @@ export const EditTransactionScreen = (): JSX.Element => {
     });
 
   const handleCancel = useCallback(() => {
-    analytics.track("edit_transaction_cancel", {});
     router.back();
   }, [router]);
 
   const handleSave = useCallback(async () => {
     if (!sha256sum || saving) return;
     setSaveError(null);
-    analytics.track("edit_transaction_save", {});
     const outcome = await confirmWrite({
       perform: () =>
         updateMutation({

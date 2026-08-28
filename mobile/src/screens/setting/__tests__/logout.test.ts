@@ -31,8 +31,6 @@ function dependencies(events: string[]): LogoutDependencies {
     clearLocalState: async () => {
       events.push("clear-local");
     },
-    trackLogout: () => events.push("track"),
-    deleteAnalyticsUser: () => events.push("delete-analytics-user"),
   };
 }
 
@@ -40,13 +38,7 @@ describe("performLogout", () => {
   it("revokes OAuth refresh access before clearing local account data", async () => {
     const events: string[] = [];
     await performLogout(oauthSession, dependencies(events));
-    expect(events).toEqual([
-      "cancel-refreshes",
-      "revoke-oauth",
-      "clear-local",
-      "track",
-      "delete-analytics-user",
-    ]);
+    expect(events).toEqual(["cancel-refreshes", "revoke-oauth", "clear-local"]);
   });
 
   it("preserves the legacy server logout path", async () => {
@@ -73,8 +65,6 @@ describe("performLogout", () => {
       "cancel-refreshes",
       "revoke-failed",
       "clear-local",
-      "track",
-      "delete-analytics-user",
     ]);
   });
 });

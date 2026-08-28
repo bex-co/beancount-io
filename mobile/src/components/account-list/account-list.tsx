@@ -21,7 +21,6 @@ import {
 } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { groupThousands } from "@/common/number-utils";
 import { AccountNode } from "./select-account-list";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
@@ -157,9 +156,6 @@ export function AccountListPage({
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
 
   const toggle = (account: string, currentlyExpanded: boolean) => {
-    if (!currentlyExpanded) {
-      analytics.track("home_expand_account", { account });
-    }
     setOverrides((prev) => ({ ...prev, [account]: !currentlyExpanded }));
   };
 

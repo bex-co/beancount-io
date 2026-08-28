@@ -22,14 +22,13 @@ import {
   useTheme,
 } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
-import { useThemeStyle, usePageView, useToast } from "@/common/hooks";
+import { useThemeStyle, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { getFormatDate } from "@/common/format-util";
 import {
   formatMoneyWithCurrency,
   formatSignedMoneyWithCurrency,
 } from "@/common/number-utils";
-import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { LoadingTile } from "@/components/loading-tile";
@@ -314,7 +313,6 @@ const PostingRow = ({
 };
 
 export const MultiPostingsTransactionScreenComponent = () => {
-  usePageView("add_transaction_split");
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
@@ -409,8 +407,6 @@ export const MultiPostingsTransactionScreenComponent = () => {
       toast.showToast({ message: msg, type: "error" });
       return;
     }
-
-    await analytics.track("tap_split_done", { legCount: postings.length });
 
     const entry = buildEntryInput(postings, {
       date,

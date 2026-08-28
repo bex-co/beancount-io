@@ -13,7 +13,6 @@ import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { haptics } from "@/common/haptics";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
-import { usePageView } from "@/common/hooks/use-page-view";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -25,7 +24,6 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
-import { analytics } from "@/common/analytics";
 import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 import { DatePickerModal } from "@/components/date-picker-modal";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -184,8 +182,6 @@ export function AddBudgetScreenImpl(): JSX.Element {
   const lockedAccount = params.account;
   const isUpdate = Boolean(lockedAccount);
 
-  usePageView(isUpdate ? "update_budget" : "add_budget");
-
   const [account, setAccount] = useState(lockedAccount ?? "");
   const [interval, setInterval] = useState(
     (params.interval || "MONTHLY").toUpperCase(),
@@ -234,7 +230,6 @@ export function AddBudgetScreenImpl(): JSX.Element {
     });
 
     if (result.ok) {
-      analytics.track("budget_add_submitted", { update: isUpdate, interval });
       haptics.success();
       router.back();
       return;

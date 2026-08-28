@@ -6,7 +6,7 @@ import { fontSizes } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
-import { HomeDashboardCard } from "./home-dashboard-card";
+import { DashboardCard } from "@/components";
 import { FadeInView } from "@/components/crossfade";
 import { BAR_CHART_HEIGHT, BarChartD3 } from "@/common/d3/bar-chart-d3";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
@@ -86,12 +86,7 @@ export function SpendingCard({
   const { thisMonth, lastMonth } = selectSpendingCompare(entries, currency);
 
   return (
-    <HomeDashboardCard
-      title={t("spending")}
-      onSeeAll={openReports}
-      card="spending"
-      bleed
-    >
+    <DashboardCard title={t("spending")} onSeeAll={openReports} bleed>
       <Text style={styles.subtitle}>{t("spendingSubtitle")}</Text>
       {loading && entries.length === 0 ? (
         <LoadingTile height={BAR_CHART_HEIGHT} mx={16} />
@@ -104,6 +99,6 @@ export function SpendingCard({
           />
         </FadeInView>
       )}
-    </HomeDashboardCard>
+    </DashboardCard>
   );
 }

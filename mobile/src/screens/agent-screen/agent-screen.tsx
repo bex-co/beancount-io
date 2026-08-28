@@ -16,7 +16,7 @@ import { isToolUIPart } from "ai";
 
 import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, fontWeights, space, useTheme } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerGuard } from "@/components/ledger-guard";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
@@ -168,7 +168,6 @@ function AgentScreenImpl() {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
-  usePageView("agent");
 
   const params = useLocalSearchParams<{ q?: string }>();
   const {

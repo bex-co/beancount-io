@@ -5,10 +5,9 @@ import { ColorTheme } from "@/types/theme-props";
 import { fontSizes } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
-import { HomeDashboardCard } from "./home-dashboard-card";
+import { DashboardCard } from "@/components";
 import { useGetLedgerJournalQuery } from "@/generated-graphql/graphql";
 import { EntryRow } from "@/screens/transactions-screen/entry-row";
 import {
@@ -65,17 +64,11 @@ export function RecentTransactionsCard({
     []) as unknown as JournalDirectiveType[];
 
   const onSeeAll = () => {
-    analytics.track("tap_see_all_transactions", {});
     router.navigate({ pathname: "/transactions" });
   };
 
   return (
-    <HomeDashboardCard
-      title={t("recentTransactions")}
-      onSeeAll={onSeeAll}
-      card="recent_transactions"
-      bleed
-    >
+    <DashboardCard title={t("recentTransactions")} onSeeAll={onSeeAll} bleed>
       {loading && entries.length === 0 ? (
         <LoadingTile height={160} mx={16} />
       ) : (
@@ -89,7 +82,7 @@ export function RecentTransactionsCard({
                 entry={entry}
                 onPress={
                   isJournalTransaction(entry)
-                    ? () => openTransactionDetail(router, entry, "home")
+                    ? () => openTransactionDetail(router, entry)
                     : undefined
                 }
               />
@@ -97,6 +90,6 @@ export function RecentTransactionsCard({
           )}
         </FadeInView>
       )}
-    </HomeDashboardCard>
+    </DashboardCard>
   );
 }

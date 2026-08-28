@@ -17,12 +17,11 @@ import { FeedCard } from "@/screens/home-screen/components/feed-card";
 import { AskAiCard } from "@/screens/home-screen/components/ask-ai-card";
 import { config } from "@/config";
 import { getCurrencySymbol, getPrimaryCurrency } from "@/common/currency-util";
-import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
 import { AddTransactionCallback } from "@/common/globalFnFactory";
 import { useSession } from "@/common/hooks/use-session";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTheme } from "@/common/theme";
 import {
   DashboardScrollView,
@@ -44,7 +43,6 @@ const getStyles = (theme: ColorTheme) =>
 export const HomeScreenImpl = (): JSX.Element => {
   const { userId } = useSession();
   const { t } = useTranslations();
-  usePageView("home");
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const router = useRouter();
@@ -111,7 +109,6 @@ export const HomeScreenImpl = (): JSX.Element => {
             testID="home-add-menu-button"
             accessibilityLabel={t("quickAdd")}
             icon={<Ionicons name="add" size={26} color={theme.black} />}
-            onOpen={() => analytics.track("tap_quick_add_menu", {})}
             items={[
               {
                 label: t("enterNewTransaction"),
@@ -123,7 +120,6 @@ export const HomeScreenImpl = (): JSX.Element => {
                   />
                 ),
                 onPress: () => {
-                  analytics.track("tap_quick_add", {});
                   AddTransactionCallback.setFn(onRefresh);
                   router.navigate({ pathname: "/add-transaction" });
                 },
@@ -138,7 +134,6 @@ export const HomeScreenImpl = (): JSX.Element => {
                   />
                 ),
                 onPress: () => {
-                  analytics.track("tap_scan_receipt", {});
                   AddTransactionCallback.setFn(onRefresh);
                   router.navigate({ pathname: "/receipt-capture" });
                 },

@@ -16,7 +16,6 @@ import {
   runAccountCreatedCallback,
 } from "@/common/globalFnFactory";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
-import { usePageView } from "@/common/hooks/use-page-view";
 import { useSession } from "@/common/hooks/use-session";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -179,7 +178,6 @@ const getStyles = (theme: ColorTheme) =>
 type PickerKind = "root" | "currency" | null;
 
 export function OpenAccountScreenComponent(): JSX.Element {
-  usePageView("open_account");
   const { t } = useTranslations();
   const router = useRouter();
   const theme = useTheme().colorTheme;

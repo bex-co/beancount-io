@@ -4,9 +4,7 @@ import { useRouter, useLocalSearchParams } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import * as ImagePicker from "expo-image-picker";
 import * as LegacyFS from "expo-file-system/legacy";
-import { usePageView } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { haptics } from "@/common/haptics";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { useReceiptWorkflow } from "./use-receipt-workflow";
@@ -40,7 +38,6 @@ const ReceiptCaptureScreenImpl = () => {
   const ledgerId = useLedgerGuard();
   const workflow = useReceiptWorkflow();
   const { testMode } = useLocalSearchParams<{ testMode?: string }>();
-  usePageView("receipt_capture");
 
   const [shot, setShot] = useState<CapturedShot | null>(null);
   const launched = useRef(false);
@@ -62,7 +59,6 @@ const ReceiptCaptureScreenImpl = () => {
 
     const asset = result.assets[0];
     const mimeType = asset.mimeType ?? "image/jpeg";
-    analytics.track("receipt_image_selected", { source: "library" });
     setShot({
       uri: asset.uri,
       mimeType,
@@ -71,7 +67,6 @@ const ReceiptCaptureScreenImpl = () => {
   };
 
   const handleCapture = (captured: CapturedShot) => {
-    analytics.track("receipt_image_selected", { source: "camera" });
     setShot(captured);
   };
 
@@ -129,9 +124,6 @@ const ReceiptCaptureScreenImpl = () => {
     if (phase.kind !== "parsed" || handedOff.current) return;
     handedOff.current = true;
 
-    // `receipt_parsed` also marks the reveal appearing — the two are the same
-    // instant, so a second event would only duplicate this one.
-    analytics.track("receipt_parsed", { ledgerId });
     haptics.success();
 
     revealTimer.current = setTimeout(() => {

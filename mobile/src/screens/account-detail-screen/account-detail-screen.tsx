@@ -10,13 +10,11 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { NetworkStatus } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
-import { analytics } from "@/common/analytics";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { getPrimaryCurrency } from "@/common/currency-util";
-import { TimeRange } from "@/common/series-util";
 import { BalanceChartCard } from "@/components";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
@@ -98,7 +96,6 @@ const AccountDetailScreenImpl = ({
   // `.name` is the *resolved* theme — `themeVar` itself can hold "system", so
   // comparing that to "dark" gave every system-theme user the light indicator.
   const { colorTheme: theme, name: themeName } = useTheme();
-  usePageView("account_detail", { account });
 
   const { currencies, refetch: ledgerMetaRefetch } = useLedgerMeta(
     userId,
@@ -213,18 +210,13 @@ const AccountDetailScreenImpl = ({
     }
   };
 
-  const onBalanceRangeChange = useCallback((range: TimeRange) => {
-    analytics.track("account_detail_range", { range });
-  }, []);
-
   const renderItem = useCallback(
     ({ item }: { item: AccountJournalRow }) => {
       const entry = itemsByKey.get(item.key)?.entry as
         JournalDirectiveType | undefined;
       const onPress =
         entry && isJournalTransaction(entry)
-          ? () =>
-              openTransactionDetail(router, entry, "account_detail", account)
+          ? () => openTransactionDetail(router, entry, account)
           : undefined;
       return (
         <AccountEntryRow row={item} currency={currency} onPress={onPress} />
@@ -256,7 +248,6 @@ const AccountDetailScreenImpl = ({
             // it back to a tile.
             loading={reportLoading && !reportData}
             error={Boolean(reportError)}
-            onRangeChange={onBalanceRangeChange}
           />
         </View>
         <Text style={styles.sectionTitle}>{t("transactions")}</Text>
@@ -269,7 +260,6 @@ const AccountDetailScreenImpl = ({
       reportLoading,
       reportData,
       reportError,
-      onBalanceRangeChange,
       styles.sectionTitle,
     ],
   );

@@ -9,7 +9,6 @@ import {
 import { Ionicons } from "@expo/vector-icons";
 import { useReactiveVar } from "@apollo/client";
 import { useRouter } from "expo-router";
-import { analytics } from "@/common/analytics";
 import {
   fontSizes,
   fontWeights,
@@ -18,7 +17,7 @@ import {
   space,
   useTheme,
 } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
 import { useQueryShellQuery } from "@/generated-graphql/graphql";
@@ -142,8 +141,6 @@ function MerchantsDirectory() {
   const [sort, setSort] = useState<MerchantSort>("count");
   const overrides = useReactiveVar(merchantRecurringOverridesVar);
 
-  usePageView("merchants");
-
   const {
     data: rollupData,
     loading: rollupLoading,
@@ -203,16 +200,12 @@ function MerchantsDirectory() {
   const onToggleSort = useCallback(() => {
     setSort((current) => {
       const next: MerchantSort = current === "count" ? "alphabetical" : "count";
-      analytics.track("merchants_sort_change", { sort: next });
       return next;
     });
   }, []);
 
   const onPressRow = useCallback(
     (item: MerchantListItem) => {
-      analytics.track("merchants_tap_row", {
-        recurring: item.resolved.isRecurring,
-      });
       router.push({
         pathname: "/merchant-detail",
         params: { payee: item.merchant.payee },

@@ -111,7 +111,7 @@ export function AccountTransactionsCard({
                 entry={entry}
                 onPress={
                   isJournalTransaction(entry)
-                    ? () => openTransactionDetail(router, entry, "reports")
+                    ? () => openTransactionDetail(router, entry)
                     : undefined
                 }
               />

@@ -12,7 +12,7 @@ React Native iOS/Android app for [Beancount.io](https://beancount.io/), built wi
 - **Styling**: StyleSheet + custom theme system (light / dark / system)
 - **i18n**: `i18n-js` with 13 locales (en, zh, bg, ca, de, es, fa, fr, nl, pt, ru, sk, uk)
 - **Errors**: Sentry (`@sentry/react-native`)
-- **Analytics**: Custom Mixpanel wrapper (`expo-mixpanel-analytics`)
+- **Analytics**: none — the Mixpanel wrapper was retired (`.pm` `w3/001`); the app ships no event tracking
 - **TypeScript**: strict (`noImplicitAny`, `strictNullChecks`, `noUnusedLocals`, …); path alias `@/*` → `src/*`
 
 ## Layout
@@ -99,9 +99,9 @@ Notes that keep costing time when forgotten:
 
 - **Haptics cannot be verified here** — a simulator has no Taptic Engine. Cover the
   intent→call mapping with unit tests and hand the feel check to the user.
-- **Analytics cannot be verified here** — `analytics.track` returns early under
-  `__DEV__` (`src/common/analytics.ts`), so a dev build emits nothing. Prove
-  single-fire structurally (a ref guard) instead.
+- **There is no analytics to verify** — the app emits no events at all. Don't add
+  a tracking call to "measure" a change; there is no sink, and reviving one is a
+  board decision (`.pm` `w3/001`), not a screen-level one.
 - **A missing native permission at runtime means a stale dev build**, not a code bug:
   the installed binary predates an `app.json` change. Rebuild the dev client
   (`SENTRY_DISABLE_AUTO_UPLOAD=true npx expo run:ios`) or work around the screen.
@@ -170,7 +170,7 @@ const currentTheme = useReactiveVar(themeVar);
 
 ### Screens
 
-Screens live in `src/screens/<name>/` and are mounted from a route file under `app/`. Use `SafeAreaView` for spacing and add analytics tracking on mount where applicable.
+Screens live in `src/screens/<name>/` and are mounted from a route file under `app/`. Use `SafeAreaView` for spacing.
 
 ## Configuration files
 

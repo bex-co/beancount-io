@@ -27,7 +27,6 @@ import { router } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
-import { analytics } from "@/common/analytics";
 import { type EdgeSwipeGestureRef } from "@/common/horizontal-swipe-owner";
 import { useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks";
@@ -315,12 +314,9 @@ export function LedgerDrawer({
         onClose();
         return;
       }
-      if (!open) {
-        analytics.track("swipe_open_ledger_drawer", {});
-      }
       onOpen();
     },
-    [open, onOpen, onClose],
+    [onOpen, onClose],
   );
 
   // Bidirectional content drag, Monarch-style. Closed: drags inward from the
@@ -373,7 +369,6 @@ export function LedgerDrawer({
   }));
 
   const handleSelect = (id: string) => {
-    analytics.track("drawer_select_ledger", { ledgerId: id });
     if (id !== ledgerId) {
       ledgerVar(id);
     }
@@ -381,13 +376,11 @@ export function LedgerDrawer({
   };
 
   const handleMerchantsPress = () => {
-    analytics.track("drawer_tap_merchants", {});
     onClose();
     router.push("/(app)/merchants");
   };
 
   const handleSettingsPress = () => {
-    analytics.track("drawer_tap_settings", {});
     onClose();
     router.push("/(app)/settings");
   };

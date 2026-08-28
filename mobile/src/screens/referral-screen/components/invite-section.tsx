@@ -3,7 +3,6 @@ import { useTheme } from "@/common/theme";
 import { contentPadding, ScreenWidth, onePx } from "@/common/screen-util";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { GiftIcon } from "@/screens/referral-screen/components/gift-icon";
-import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { useRouter } from "expo-router";
 
@@ -58,7 +57,6 @@ export function InviteSection(): JSX.Element {
         style={styles.section}
         activeOpacity={0.9}
         onPress={() => {
-          analytics.track("tap_navigate_to_referral", {});
           router.navigate("/(app)/referral");
         }}
       >

@@ -25,7 +25,7 @@ import { ColorTheme } from "@/types/theme-props";
 import { fonts, useTheme } from "@/common/theme";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { haptics } from "@/common/haptics";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useSession } from "@/common/hooks/use-session";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -37,7 +37,6 @@ import {
   KeyboardAccessoryBar,
   KEYBOARD_ACCESSORY_BAR_HEIGHT,
 } from "@/components/keyboard-accessory-bar";
-import { analytics } from "@/common/analytics";
 import {
   decodeLedgerFileContent,
   encodeLedgerFileContent,
@@ -247,7 +246,6 @@ export function LedgerFileEditorScreen(): JSX.Element {
   const ledgerId = useLedgerGuard();
   const { userId } = useSession();
   const { currencies: operatingCurrencies } = useLedgerMeta(userId, ledgerId);
-  usePageView("ledger_file_editor");
 
   const { path, initialLine } = useLocalSearchParams<{
     path: string;
@@ -356,7 +354,6 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
       saveInFlightRef.current = true;
       try {
-        analytics.track("tap_ledger_save", { path });
         const result = await updateLedgerFile({
           variables: {
             ledgerId,
@@ -379,7 +376,6 @@ export function LedgerFileEditorScreen(): JSX.Element {
             latestEditRevisionRef.current > savedEditRevisionRef.current,
           );
         }
-        analytics.track("ledger_save_success", { path });
         // This save stays on the screen and shows no toast, so the haptic is
         // the only confirmation the user gets.
         haptics.success();

@@ -12,11 +12,10 @@ import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { CommonMargin } from "@/common/common-margin";
 import { ReferralGiftIcon } from "@/screens/referral-screen/components/referral-gift-icon";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useSession } from "@/common/hooks/use-session";
-import { useThemeStyle, useToast, usePageView } from "@/common/hooks";
+import { useThemeStyle, useToast } from "@/common/hooks";
 import { buildReferralUrl } from "@/common/referral-url";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
@@ -81,7 +80,6 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 export const ReferralScreen = () => {
-  usePageView("referral");
   const { userId } = useSession();
   const toast = useToast();
   const { t } = useTranslations();
@@ -111,7 +109,6 @@ export const ReferralScreen = () => {
                 message: t("copied"),
                 type: "text",
               });
-              await analytics.track("tap_share_link_copy", { shareLink });
             }}
           >
             <Text style={styles.copy}>{t("copy")}</Text>
@@ -122,8 +119,7 @@ export const ReferralScreen = () => {
         <Button
           style={styles.shareBtn}
           type="outline"
-          onPress={async () => {
-            await analytics.track("tap_share_link_share", { shareLink });
+          onPress={() => {
             Share.share({
               message: `${t("recommend")} ${shareLink}`,
             })

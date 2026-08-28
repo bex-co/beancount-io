@@ -68,7 +68,7 @@ export interface DeriveSuggestionsInput {
 export interface DeriveSuggestionsResult {
   from: SideSuggestions;
   to: SideSuggestions;
-  /** Active source, for analytics + accessibility. Null until resolved. */
+  /** Which branch produced the chips. Null until resolved. */
   source: SuggestionSource | null;
   /** True while a relevant query is in flight and nothing to show yet. */
   loading: boolean;

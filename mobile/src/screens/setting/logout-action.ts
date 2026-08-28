@@ -5,8 +5,6 @@ export type LogoutDependencies = {
   revokeOAuth: (session: OAuthSession) => Promise<void>;
   revokeLegacy: (authToken: string) => Promise<void>;
   clearLocalState: () => Promise<void>;
-  trackLogout: () => void;
-  deleteAnalyticsUser: () => void;
 };
 
 /** Remote revocation is best effort; local account isolation always completes. */
@@ -26,6 +24,4 @@ export async function performLogout(
   }
 
   await dependencies.clearLocalState();
-  dependencies.trackLogout();
-  dependencies.deleteAnalyticsUser();
 }

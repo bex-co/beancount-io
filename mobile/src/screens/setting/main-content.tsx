@@ -4,7 +4,6 @@ import { useState } from "react";
 import { Alert, Platform } from "react-native";
 import { List as List2 } from "@/components";
 
-import { analytics } from "@/common/analytics";
 import { i18n, setLocale } from "@/translations";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useDeleteAccountMutation } from "@/generated-graphql/graphql";
@@ -147,7 +146,6 @@ export const MainContent = () => {
                 : "https://play.google.com/store/apps/details?id=io.beancount.android";
             if (storeUrl) {
               await WebBrowser.openBrowserAsync(storeUrl);
-              await analytics.track("tap_review_app", { storeUrl });
             }
           }}
         />
@@ -157,7 +155,6 @@ export const MainContent = () => {
           onPress={async () => {
             const helpCenterUrl = "https://beancount.io/docs/help-center";
             await WebBrowser.openBrowserAsync(helpCenterUrl);
-            await analytics.track("tap_help_center", { url: helpCenterUrl });
           }}
         />
         {session && (
@@ -231,7 +228,6 @@ export const MainContent = () => {
           localeVar(changeTo);
           i18n.locale = changeTo;
           setLocale(changeTo);
-          await analytics.track("tap_switch_language", { changeTo });
           setLanguageModalVisible(false);
 
           // Crossing the left-to-right / right-to-left boundary is the only
@@ -273,13 +269,12 @@ export const MainContent = () => {
       <Picker
         visible={themeModalVisible}
         items={themeSource}
-        onSelect={async (item) => {
+        onSelect={(item) => {
           const newTheme = item.value as Theme;
           if (newTheme === currentTheme) {
             return;
           }
           themeVar(newTheme);
-          await analytics.track("tap_switch_theme", { mode: newTheme });
           setThemeModalVisible(false);
         }}
         onCancel={() => {

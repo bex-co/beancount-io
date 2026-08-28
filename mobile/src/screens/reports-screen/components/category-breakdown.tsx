@@ -14,7 +14,6 @@ import {
   useTheme,
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { formatMoneyWithCurrency } from "@/common/number-utils";
 import { AmountText } from "@/components/amount-text";
 import { DashboardCard } from "@/components/dashboard-card";
@@ -135,8 +134,6 @@ type CategoryBreakdownProps = {
   currency: string;
   /** Bar fill accent, echoing the chart legend (expenses=error, income=success). */
   tone: (theme: ColorTheme) => string;
-  /** Analytics tag for expand events. */
-  section: "income" | "expenses";
 };
 
 /**
@@ -152,7 +149,6 @@ export function CategoryBreakdown({
   items,
   currency,
   tone,
-  section,
 }: CategoryBreakdownProps): JSX.Element {
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -160,9 +156,6 @@ export function CategoryBreakdown({
   const [overrides, setOverrides] = useState<Record<string, boolean>>({});
 
   const toggle = (account: string, currentlyExpanded: boolean) => {
-    if (!currentlyExpanded) {
-      analytics.track("reports_expand_category", { account, section });
-    }
     setOverrides((prev) => ({ ...prev, [account]: !currentlyExpanded }));
   };
 

@@ -11,7 +11,7 @@ import { useState } from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { ColorTheme } from "@/types/theme-props";
 import { fonts, useTheme } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLedgerErrors } from "@/common/hooks/use-ledger-errors";
 import { useReactiveVar } from "@apollo/client";
@@ -178,7 +178,6 @@ function NotificationsScreenImpl(): JSX.Element {
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
-  usePageView("notifications");
 
   const ledgerId = useReactiveVar(ledgerVar) ?? "";
 

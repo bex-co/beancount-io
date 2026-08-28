@@ -6,7 +6,6 @@ import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, space, useTheme } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { LEADING_TEXT_ALIGN } from "@/common/rtl";
 
 const getStyles = (theme: ColorTheme) =>
@@ -55,7 +54,6 @@ export function AskAiCard() {
       accessibilityLabel={t("agentAskCard")}
       testID="home-ask-ai-card"
       onPress={() => {
-        analytics.track("tap_ask_ai", { surface: "home_card" });
         router.navigate({ pathname: "/agent" });
       }}
     >

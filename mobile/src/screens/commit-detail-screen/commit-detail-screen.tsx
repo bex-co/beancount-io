@@ -3,7 +3,7 @@ import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useLocalSearchParams } from "expo-router";
 import { ColorTheme } from "@/types/theme-props";
 import { fonts } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useReactiveVar } from "@apollo/client";
 import { ledgerVar } from "@/common/vars";
@@ -159,7 +159,6 @@ function CommitDetailScreenImpl(): JSX.Element {
   const { t } = useTranslations();
   const styles = useThemeStyle(getStyles);
   const { sha } = useLocalSearchParams<{ sha: string }>();
-  usePageView("commit_detail");
 
   const ledgerId = useReactiveVar(ledgerVar) ?? "";
   const { data, loading } = useGetCommitDetailsQuery({

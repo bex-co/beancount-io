@@ -17,8 +17,6 @@ import { i18n } from "@/translations";
 import { ColorTheme } from "@/types/theme-props";
 import { router, Stack } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
-import { usePageView } from "@/common/hooks/use-page-view";
-import { analytics } from "@/common/analytics";
 import { Ionicons } from "@expo/vector-icons";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
@@ -110,10 +108,6 @@ type TextInputScreenProps = {
   placeholder?: string;
   /** Whether to allow multiline input */
   multiline?: boolean;
-  /** The analytics page name (will be prefixed with "page_view_") */
-  analyticsPageName: string;
-  /** The analytics event name for saving (without "tap_" prefix) */
-  analyticsSaveEventName: string;
   /** Callback function when the user saves */
   onSave?: (value: string) => void;
   /** Existing values offered below the input; tapping one saves it directly */
@@ -131,14 +125,10 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
   headerTitle,
   placeholder,
   multiline = false,
-  analyticsPageName,
-  analyticsSaveEventName,
   onSave,
   suggestions,
   suggestionsLoading,
 }) => {
-  usePageView(analyticsPageName);
-
   const theme = useTheme().colorTheme;
   const styles = getStyles(theme);
   const [value, setValue] = useState<string>(initialValue);
@@ -168,12 +158,8 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
 
   const showSkeleton = !!suggestionsLoading && matches.length === 0;
 
-  const commit = async (selected: string, source: "input" | "suggestion") => {
+  const commit = (selected: string) => {
     onSave?.(selected);
-    await analytics.track(`tap_${analyticsSaveEventName}`, {
-      value: selected,
-      source,
-    });
     router.back();
   };
 
@@ -183,7 +169,7 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
         options={{
           headerTitle,
           headerRight: () => (
-            <Pressable onPress={() => commit(value, "input")} hitSlop={10}>
+            <Pressable onPress={() => commit(value)} hitSlop={10}>
               <Text style={styles.doneButton}>{i18n.t("save")}</Text>
             </Pressable>
           ),
@@ -237,7 +223,7 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
                       index > 0 && styles.suggestionRowDivider,
                       pressed && styles.suggestionRowPressed,
                     ]}
-                    onPress={() => commit(suggestion, "suggestion")}
+                    onPress={() => commit(suggestion)}
                   >
                     <Ionicons
                       name="time-outline"

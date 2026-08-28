@@ -39,8 +39,6 @@ type BalanceChartCardProps = {
   series: SeriesPoint[];
   loading: boolean;
   error?: boolean;
-  /** Notified when the user picks a range (for analytics); slicing is internal. */
-  onRangeChange?: (range: TimeRange) => void;
 };
 
 /**
@@ -55,7 +53,6 @@ export function BalanceChartCard({
   series,
   loading,
   error,
-  onRangeChange,
 }: BalanceChartCardProps): JSX.Element {
   const { t } = useTranslations();
   const [range, setRange] = useState<TimeRange>("6M");
@@ -91,10 +88,7 @@ export function BalanceChartCard({
       <TimeRangePills
         value={range}
         options={rangeOptions}
-        onChange={(next) => {
-          setRange(next);
-          onRangeChange?.(next);
-        }}
+        onChange={setRange}
       />
     </DashboardCard>
   );

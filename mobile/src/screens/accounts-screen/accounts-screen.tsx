@@ -2,10 +2,9 @@ import { useCallback, useMemo, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { gutter, rowMinHeight, useTheme } from "@/common/theme";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useSession } from "@/common/hooks/use-session";
 import { getPrimaryCurrency } from "@/common/currency-util";
@@ -58,11 +57,9 @@ const AccountsScreenImpl = (): JSX.Element => {
   const router = useRouter();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
-  usePageView("accounts");
 
   const handlePressAccount = useCallback(
     (account: string) => {
-      analytics.track("accounts_open_account", { account });
       router.push({ pathname: "/account-detail", params: { account } });
     },
     [router],
@@ -92,7 +89,6 @@ const AccountsScreenImpl = (): JSX.Element => {
   );
 
   const handleOpenAccount = useCallback(() => {
-    analytics.track("tap_open_account", {});
     router.push("/open-account");
   }, [router]);
 

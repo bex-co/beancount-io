@@ -4,10 +4,8 @@ import { ColorTheme } from "@/types/theme-props";
 import { fontSizes, space } from "@/common/theme";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { formatMoneyWithCurrency } from "@/common/number-utils";
-import { AmountText } from "@/components";
-import { HomeDashboardCard } from "./home-dashboard-card";
+import { AmountText, DashboardCard } from "@/components";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import { BudgetMeter } from "@/screens/budget-screen/components/budget-meter";
@@ -77,7 +75,6 @@ export function BudgetCard({
   });
 
   const openBudget = () => {
-    analytics.track("budget_panel_see_all", { rows: rows.length });
     router.push({ pathname: "/budget" });
   };
 
@@ -133,8 +130,8 @@ export function BudgetCard({
   };
 
   return (
-    <HomeDashboardCard title={t("budget")} onSeeAll={openBudget} card="budget">
+    <DashboardCard title={t("budget")} onSeeAll={openBudget}>
       {renderBody()}
-    </HomeDashboardCard>
+    </DashboardCard>
   );
 }

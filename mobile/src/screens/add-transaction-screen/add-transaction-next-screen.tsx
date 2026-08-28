@@ -13,7 +13,6 @@ import { useAddEntriesToRemote } from "@/screens/multi-postings-transaction/hook
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useSession } from "@/common/hooks/use-session";
 import { getCurrencySymbol } from "@/common/currency-util";
-import { analytics } from "@/common/analytics";
 import { ColorTheme } from "@/types/theme-props";
 import { Stack, useLocalSearchParams, useRouter } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
@@ -23,7 +22,7 @@ import {
   usePayeeAccountSuggestions,
   type AccountTypes,
 } from "@/screens/add-transaction-screen/hooks/use-payee-account-suggestions";
-import { useToast, usePageView } from "@/common/hooks";
+import { useToast } from "@/common/hooks";
 import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { DatePickerModal, LedgerGuard, useLedgerGuard } from "@/components";
 
@@ -95,7 +94,6 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 export const AddTransactionNextScreenComponent = () => {
-  usePageView("add_transaction_next");
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
   const {
@@ -143,7 +141,6 @@ export const AddTransactionNextScreenComponent = () => {
   const {
     from: fromSuggestions,
     to: toSuggestions,
-    source: suggestionSource,
     loading: suggestionsLoading,
   } = usePayeeAccountSuggestions({
     ledgerId,
@@ -159,12 +156,6 @@ export const AddTransactionNextScreenComponent = () => {
   useEffect(() => {
     if (fromSuggestions.autoFill) {
       setAssets(fromSuggestions.autoFill);
-      analytics.track("payee_account_autofill", {
-        payee,
-        account: fromSuggestions.autoFill,
-        side: "from",
-        source: suggestionSource ?? "history",
-      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [fromSuggestions.autoFill]);
@@ -172,54 +163,19 @@ export const AddTransactionNextScreenComponent = () => {
   useEffect(() => {
     if (toSuggestions.autoFill) {
       setExpenses(toSuggestions.autoFill);
-      analytics.track("payee_account_autofill", {
-        payee,
-        account: toSuggestions.autoFill,
-        side: "to",
-        source: suggestionSource ?? "history",
-      });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [toSuggestions.autoFill]);
 
-  useEffect(() => {
-    const chipCount = fromSuggestions.chips.length + toSuggestions.chips.length;
-    if (chipCount > 0 && suggestionSource) {
-      analytics.track("suggestions_shown", {
-        payee,
-        source: suggestionSource,
-        chipCount,
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [
-    suggestionSource,
-    fromSuggestions.chips.length,
-    toSuggestions.chips.length,
-  ]);
-
-  const handleFromChipPress = async (account: string) => {
+  const handleFromChipPress = (account: string) => {
     setAssets(account);
-    await analytics.track("tap_suggestion_chip", {
-      payee,
-      account,
-      side: "from",
-      source: suggestionSource ?? "history",
-    });
   };
 
-  const handleToChipPress = async (account: string) => {
+  const handleToChipPress = (account: string) => {
     setExpenses(account);
-    await analytics.track("tap_suggestion_chip", {
-      payee,
-      account,
-      side: "to",
-      source: suggestionSource ?? "history",
-    });
   };
 
   const addEntries = async () => {
-    await analytics.track("tap_add_transaction_done", {});
     // FROM/TO are no longer pre-filled on quick-add, so guard against an empty
     // selection before submitting.
     if (!assets.trim() || !expenses.trim()) {
@@ -314,10 +270,7 @@ export const AddTransactionNextScreenComponent = () => {
           <ListItem
             title={t("from").toUpperCase()}
             content={assets}
-            onPress={async () => {
-              await analytics.track("tap_assets_picker", {
-                originalOption: assets,
-              });
+            onPress={() => {
               pushAccountPicker(router, {
                 type: "assets",
                 current: assets,
@@ -337,10 +290,7 @@ export const AddTransactionNextScreenComponent = () => {
             title={t("to").toUpperCase()}
             content={expenses}
             showDivider
-            onPress={async () => {
-              analytics.track("tap_expenses_picker", {
-                originalOption: expenses,
-              });
+            onPress={() => {
               pushAccountPicker(router, {
                 type: "expenses",
                 current: expenses,

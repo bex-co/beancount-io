@@ -7,7 +7,6 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { LoadingTile } from "@/components/loading-tile";
 import { FadeInView } from "@/components/crossfade";
 import { DashboardCard } from "@/components/dashboard-card";
-import { analytics } from "@/common/analytics";
 import { useGetFeedQuery } from "@/generated-graphql/graphql";
 import { FeedSource } from "@/generated-graphql/types";
 import { formatFeedDate } from "@/common/date-format";
@@ -53,7 +52,6 @@ function FeedRow({ title, link, publishedAt, source, isFirst }: FeedRowProps) {
   const isExternal = link.startsWith("http");
 
   const handlePress = () => {
-    analytics.track("feed_item_tap", { source, link });
     if (isExternal) {
       Linking.openURL(link);
     }

@@ -24,7 +24,6 @@ type MenuButtonProps = {
   icon: ReactNode;
   accessibilityLabel: string;
   items: MenuButtonItem[];
-  onOpen?: () => void;
   testID?: string;
 };
 
@@ -91,7 +90,6 @@ export const MenuButton = ({
   icon,
   accessibilityLabel,
   items,
-  onOpen,
   testID,
 }: MenuButtonProps): JSX.Element => {
   const styles = useThemeStyle(getStyles);
@@ -100,7 +98,6 @@ export const MenuButton = ({
   const [menuPos, setMenuPos] = useState({ top: 0, right: 0 });
 
   const openMenu = () => {
-    onOpen?.();
     anchorRef.current?.measureInWindow((x, y, width, height) => {
       const screenWidth = Dimensions.get("window").width;
       setMenuPos({ top: y + height + 4, right: screenWidth - (x + width) });

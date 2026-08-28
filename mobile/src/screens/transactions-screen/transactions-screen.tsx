@@ -9,9 +9,8 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { analytics } from "@/common/analytics";
 import { fontSizes, fontWeights, useTheme } from "@/common/theme";
-import { useThemeStyle, usePageView, useDebouncedValue } from "@/common/hooks";
+import { useThemeStyle, useDebouncedValue } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
 import { NetworkStatus, useReactiveVar } from "@apollo/client";
@@ -96,8 +95,6 @@ const TransactionList = () => {
   const { t, locale } = useTranslations();
   const [isRefreshing, setIsRefreshing] = useState<boolean>(false);
   const [searchQuery, setSearchQuery] = useState<string>("");
-
-  usePageView("transactions");
 
   // Search runs server-side through `query.filter`, so it reaches transactions
   // past the first page — but only once typing settles.
@@ -192,7 +189,6 @@ const TransactionList = () => {
   const onRefresh = async () => {
     try {
       setIsRefreshing(true);
-      await analytics.track("tap_refresh", {});
       await refetch();
     } catch (err) {
       console.error("Error refreshing transactions:", err);
@@ -206,18 +202,16 @@ const TransactionList = () => {
       // The query is pinned to transactions, so this guard only ever rejects a
       // surprise from the server — there is no detail screen for other kinds.
       if (!isJournalTransaction(entry)) return;
-      openTransactionDetail(router, entry, "transactions");
+      openTransactionDetail(router, entry);
     },
     [router],
   );
 
   const handleOpenFilters = useCallback(() => {
-    analytics.track("tap_transaction_filters", {});
     router.push({ pathname: "/(app)/transaction-filters" });
   }, [router]);
 
   const handleQuickAdd = useCallback(() => {
-    analytics.track("tap_quick_add", {});
     AddTransactionCallback.setFn(async () => {
       await refetch();
     });

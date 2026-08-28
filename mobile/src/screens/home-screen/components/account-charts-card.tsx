@@ -5,11 +5,8 @@ import { Ionicons } from "@expo/vector-icons";
 import { FadeInView } from "@/components/crossfade";
 import { PressableScale } from "@/components/pressable-scale";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { LoadingTile } from "@/components/loading-tile";
-import { SegmentedPages, TimeRangePills } from "@/components";
-import { HomeDashboardCard } from "./home-dashboard-card";
-import { createHomeCardTapHandler } from "./home-card-tap";
+import { DashboardCard, SegmentedPages, TimeRangePills } from "@/components";
 import { InteractiveLineChartD3 } from "@/common/d3/interactive-line-chart";
 import { fontSizes, fontWeights, space, useTheme } from "@/common/theme";
 import { directionalIcon } from "@/common/rtl";
@@ -89,24 +86,16 @@ export function AccountChartsCard({
   const theme = useTheme().colorTheme;
   const router = useRouter();
   const [range, setRange] = useState<TimeRange>("6M");
-  // Tracked so a range change reports which curve the user was looking at.
-  const [activeIndex, setActiveIndex] = useState(0);
 
   // One door for all three pages: pinned to the tab row (not a lone header
   // above it), so it means the same thing whichever curve is showing. There
   // is no per-page destination — Accounts has no liabilities filter route.
-  // Wired through createHomeCardTapHandler directly because the affordance
-  // lives inside SegmentedPages, not DashboardCard's header slot.
-  const onSeeAll = createHomeCardTapHandler(
-    (event, properties) => analytics.track(event, properties),
-    "accounts",
-    () => router.navigate({ pathname: "/accounts" }),
-  );
-
-  const seeAll = onSeeAll ? (
+  // Rendered here rather than in DashboardCard's header slot because the
+  // affordance lives inside SegmentedPages.
+  const seeAll = (
     <PressableScale
       style={styles.seeAll}
-      onPress={onSeeAll}
+      onPress={() => router.navigate({ pathname: "/accounts" })}
       hitSlop={8}
       accessibilityRole="button"
       accessibilityLabel={t("seeAll")}
@@ -120,14 +109,14 @@ export function AccountChartsCard({
         color={theme.primary}
       />
     </PressableScale>
-  ) : null;
+  );
 
   if (loading || error) {
     return (
       // Same tab-row + see-all as the loaded card: without both the card
       // grows when the data lands. Accounts is reachable whether or not this
       // card's series arrived, so the door is honest while loading.
-      <HomeDashboardCard bleed>
+      <DashboardCard bleed>
         <View style={styles.skeletonTabsRow}>
           <View style={styles.skeletonTabs}>
             {TAB_TILE_WIDTHS.map((width) => (
@@ -141,7 +130,7 @@ export function AccountChartsCard({
           {seeAll}
         </View>
         <LoadingTile height={PAGE_HEIGHT + PILLS_HEIGHT} mx={16} />
-      </HomeDashboardCard>
+      </DashboardCard>
     );
   }
 
@@ -173,7 +162,7 @@ export function AccountChartsCard({
   });
 
   return (
-    <HomeDashboardCard bleed>
+    <DashboardCard bleed>
       {/* Crossfades in over the skeleton, which is sized to this same block. */}
       <FadeInView>
         <SegmentedPages
@@ -181,28 +170,15 @@ export function AccountChartsCard({
           pages={pages}
           height={PAGE_HEIGHT}
           trailing={seeAll}
-          onPageChange={(index) => {
-            setActiveIndex(index);
-            analytics.track("home_chart_page", {
-              index,
-              chart: charts[index].key,
-            });
-          }}
         />
         {/* Outside the pager: one row of pills driving whichever curve is
             shown, so switching tabs keeps the selected range. */}
         <TimeRangePills
           value={range}
           options={rangeOptions}
-          onChange={(next) => {
-            setRange(next);
-            analytics.track("home_chart_range", {
-              chart: charts[activeIndex].key,
-              range: next,
-            });
-          }}
+          onChange={setRange}
         />
       </FadeInView>
-    </HomeDashboardCard>
+    </DashboardCard>
   );
 }

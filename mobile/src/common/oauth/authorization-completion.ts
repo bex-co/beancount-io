@@ -17,6 +17,5 @@ export const completeOAuthAuthorization = createAuthorizationCompleter({
   clearPending: clearPendingAuthorization,
   exchange: createOAuthSessionFromCode,
   persist: persistSession,
-  afterPersist: (session, pending) =>
-    finalizeOAuthSignIn(session, pending.flow),
+  afterPersist: () => finalizeOAuthSignIn(),
 });

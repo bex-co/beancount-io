@@ -24,5 +24,5 @@ From mobile: adding a budget writes a `custom "budget"` directive via `bulkEntri
 
 - **Source:** budget-on-mobile PM spec, 2026-08-09 (`/pm` invocation). Write-path reference: `mobile/src/screens/open-account-screen/` (`useBulkEntriesMutation` + entry-builder pattern), delete-path reference: dashboard `delete-budget-dialog.tsx`.
 - **Goal linkage:** A3 — management parity is what makes mobile a standalone client; "view on phone, edit on desktop" is a churn story. Secondary A2 — setting a first budget in minutes on the phone is the fastest path from installed app to active ledger habit.
-- **Expected outcome:** Budget directives get created and maintained from mobile; measured by `budget_add_submitted` and `budget_deleted` events from the app.
+- **Expected outcome:** Budget directives get created and maintained from mobile; verified in the app (add, update, delete round-trip against a real ledger), since the event funnel this line originally named was retired with the analytics sink — see `w3/done/001.md`.
 - **Why now:** M1 ships the read surfaces this builds on; the write plumbing (`bulkEntries`, `getLedgerEntryContext`, `deleteLedgerEntrySourceSlice`) is already used elsewhere in the app, so this is assembly, not invention. Adoption surface task included: ships user-facing management flows.

@@ -1,8 +1,4 @@
-import type { OAuthSession } from "./session-record";
-
 export type SignedInAccountDependencies = {
-  identify: (userId: string) => void;
-  track: (event: "logged_in" | "signed_up") => void;
   listLedgerIds: () => Promise<string[]>;
   getSelectedLedger: () => string | null;
   setSelectedLedger: (ledgerId: string | null) => void;
@@ -12,13 +8,8 @@ export type SignedInAccountDependencies = {
 
 /** Complete account-local state after OAuth credentials are already durable. */
 export async function initializeSignedInAccount(
-  session: OAuthSession,
-  flow: "sign_in" | "sign_up",
   dependencies: SignedInAccountDependencies,
 ): Promise<void> {
-  dependencies.identify(session.userId);
-  dependencies.track(flow === "sign_up" ? "signed_up" : "logged_in");
-
   try {
     const ledgerIds = await dependencies.listLedgerIds();
     const selected = dependencies.getSelectedLedger();

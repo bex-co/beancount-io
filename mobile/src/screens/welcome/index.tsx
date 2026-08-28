@@ -4,7 +4,7 @@ import { router } from "expo-router";
 import { SafeAreaView } from "react-native-safe-area-context";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ColorTheme } from "@/types/theme-props";
-import { useThemeStyle, usePageView } from "@/common/hooks";
+import { useThemeStyle } from "@/common/hooks";
 import { useTheme } from "@/common/theme";
 import { Button } from "@/components";
 import { PressableScale } from "@/components/pressable-scale";
@@ -71,7 +71,6 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 export function WelcomeScreen(): JSX.Element {
-  usePageView("pre_auth");
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;

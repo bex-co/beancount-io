@@ -20,7 +20,6 @@ import {
   useTheme,
 } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { analytics } from "@/common/analytics";
 import { formatSignedMoneyWithCurrency } from "@/common/number-utils";
 import { AmountText } from "@/components/amount-text";
 import { ThemedRefreshControl } from "@/components/dashboard-scroll-view";
@@ -334,9 +333,6 @@ export function AccountTable({
   );
 
   const onToggle = useCallback((row: TableRow) => {
-    if (!row.expanded) {
-      analytics.track("accounts_expand_row", { account: row.key });
-    }
     setOverrides((prev) => ({ ...prev, [row.key]: !row.expanded }));
   }, []);
 
