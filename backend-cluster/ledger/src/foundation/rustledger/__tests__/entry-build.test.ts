@@ -254,6 +254,62 @@ describe("entryInputToText — Fava-exact serialization parity", () => {
     expect(covered.size).toBe(goldenKeys.length);
   });
 
+  /**
+   * A budget reaches this module as a `custom` directive, because that is the
+   * only shape the bulk-entries contract defines for one — there is no
+   * `budget` entry type on the wire (`EntryAddBulkEntriesRequest` in
+   * `idl/beancount-ledger.openapi.json`). This module used to handle only the
+   * in-process `budget` union, so every budget written through the API failed
+   * with "Cannot read properties of undefined (reading 'type')".
+   */
+  it("renders a wire-shaped custom budget identically to the budget input", () => {
+    const fromWire = entryInputToText({
+      type: "custom",
+      entry: {
+        date: "2024-01-01",
+        type: "budget",
+        values: [
+          { kind: "account", value: "Expenses:Food" },
+          { kind: "text", value: "monthly" },
+          { kind: "amount", number: "500.00", currency: "USD" },
+        ],
+      },
+    });
+
+    expect(fromWire).toBe(goldenText.budget);
+  });
+
+  it("maps every custom value kind onto its beancount rendering", () => {
+    // `text` quotes, `account` does not, `number` is bare, `amount` pairs
+    // number and currency — the four kinds the contract defines.
+    const out = entryInputToText({
+      type: "custom",
+      entry: {
+        date: "2024-03-04",
+        type: "example",
+        values: [
+          { kind: "account", value: "Assets:Checking" },
+          { kind: "text", value: "quoted" },
+          { kind: "number", value: "12.50" },
+          { kind: "amount", number: "3.00", currency: "EUR" },
+        ],
+      },
+    });
+
+    expect(out).toBe(
+      '2024-03-04 custom "example" Assets:Checking "quoted" 12.50 3.00 EUR\n\n',
+    );
+  });
+
+  it("renders a custom directive that carries no values", () => {
+    expect(
+      entryInputToText({
+        type: "custom",
+        entry: { date: "2024-03-04", type: "marker" },
+      }),
+    ).toBe('2024-03-04 custom "marker"\n\n');
+  });
+
   it("appends the trailing blank line that format_entries adds", () => {
     const out = entryInputToText({
       type: "close",

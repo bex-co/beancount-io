@@ -39,3 +39,6 @@ tmp/
 # `asc auth login --local` writes API credentials to ./.asc/config.json, and
 # `asc metadata plan` writes review artifacts here. Never commit either.
 .asc/
+
+# Playwright MCP scratch output (page snapshots, screenshots)
+.playwright-mcp/

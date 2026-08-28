@@ -91,9 +91,12 @@ is a real XCUITest event, so it drives native controls that synthetic events can
 Do **not** set `EXPO_UNSTABLE_MCP_SERVER=1` (2026-08-19): it makes `expo start` dial the
 remote MCP tunnel, which times out and kills the dev server — the same `mcp.expo.dev`
 breakage that makes the hosted server unusable. The local binary above talks to a plain
-dev server and needs no flag. There is **no text-entry tool**, so a flow that requires
-typing has to be reached another way (a `testID` tap, or a deep-link parameter that
-prefills the field).
+dev server and needs no flag. `expo-mcp` has **no text-entry and no scroll tool**.
+Typing still works — activate the Simulator and drive the hardware keyboard with
+`osascript -e 'tell application "Simulator" to activate' -e 'tell application
+"System Events" to keystroke "text"'` (verified 2026-08-27; needs Accessibility
+permission for the terminal). Scrolling has no equivalent, so anything below the
+fold has to be reached by deep link rather than by swiping.
 
 Notes that keep costing time when forgotten:
 

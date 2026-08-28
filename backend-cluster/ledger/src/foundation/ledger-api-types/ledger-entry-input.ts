@@ -65,6 +65,31 @@ export type BudgetInput = {
 };
 
 /**
+ * One value of a custom directive, tagged the way the bulk-entries contract
+ * tags it (`kind`), which is NOT how the engine tags its own values (`type`).
+ * The vocabularies differ too: the wire's `text` is beancount's quoted
+ * `string`, and its `amount` carries `number`/`currency` as siblings where the
+ * engine nests them under `value`. See `CustomDirectiveCreate` in
+ * `idl/beancount-ledger.openapi.json`.
+ */
+export type CustomValueInput =
+  | { kind: "account"; value: string }
+  | { kind: "text"; value: string }
+  | { kind: "number"; value: string | number }
+  | { kind: "amount"; number: string | number; currency: string };
+
+/**
+ * A `custom` directive. This is how a budget reaches the bulk endpoint: the
+ * contract has no `budget` entry type, so callers send
+ * `custom` with `type: "budget"` and account/interval/amount as values.
+ */
+export type CustomInput = {
+  date: string;
+  type: string;
+  values?: CustomValueInput[];
+};
+
+/**
  * Discriminated union of all supported entry inputs. Every variant shares the
  * uniform `{ type, entry }` shape; `type` selects how `entry` is rendered to
  * beancount text (`entryInputToText`) and which file it is routed to.
@@ -77,6 +102,7 @@ export type LedgerEntryInput =
   | { type: "balance"; entry: BalanceInput }
   | { type: "open"; entry: OpenInput }
   | { type: "close"; entry: CloseInput }
+  | { type: "custom"; entry: CustomInput }
   | { type: "budget"; entry: BudgetInput }
   | { type: "document"; entry: DocumentInput }
   | { type: "event"; entry: EventInput };

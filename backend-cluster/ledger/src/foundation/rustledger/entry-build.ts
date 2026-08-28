@@ -1,5 +1,8 @@
 import type { DirectiveJson, TypedValueJson } from "@rustledger/wasm";
-import type { LedgerEntryInput } from "@/foundation/ledger-api-types/ledger-entry-input";
+import type {
+  CustomValueInput,
+  LedgerEntryInput,
+} from "@/foundation/ledger-api-types/ledger-entry-input";
 import { directiveToText } from "@/foundation/rustledger/journal-serialize";
 
 /**
@@ -31,6 +34,29 @@ import { directiveToText } from "@/foundation/rustledger/journal-serialize";
  */
 
 // --- input → DirectiveJson mapping ---------------------------------------
+
+/**
+ * Map a wire custom value onto the engine's `TypedValueJson`. The wire tags by
+ * `kind` and the engine by `type`, and the two name things differently — the
+ * wire's `text` is the engine's quoted `string`, and the wire's flat `amount`
+ * (`number` + `currency` siblings) nests under `value` here. Numbers stay
+ * strings so they are emitted verbatim, matching the rest of this module.
+ */
+function toTypedValue(value: CustomValueInput): TypedValueJson {
+  switch (value.kind) {
+    case "account":
+      return { type: "account", value: value.value };
+    case "text":
+      return { type: "string", value: value.value };
+    case "number":
+      return { type: "number", value: String(value.value) };
+    case "amount":
+      return {
+        type: "amount",
+        value: { number: String(value.number), currency: value.currency },
+      };
+  }
+}
 
 /**
  * Meta on the transaction input is `Record<string, string>`; beancount renders
@@ -119,6 +145,18 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         date: input.entry.date,
         account: input.entry.account,
       };
+    case "custom": {
+      const { entry } = input;
+      return {
+        type: "custom",
+        date: entry.date,
+        custom_type: entry.type,
+        values: (entry.values ?? []).map(toTypedValue),
+      };
+    }
+    // NOTE: the bulk-entries contract has no `budget` entry type — a budget
+    // arrives as `custom` above. This case is reachable only from in-process
+    // callers that build the union directly.
     case "budget": {
       const { entry } = input;
       const values: TypedValueJson[] = [
