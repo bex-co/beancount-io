@@ -3,7 +3,7 @@
   "info": {
     "title": "Beancount.io v1 API",
     "version": "1.0.0",
-    "description": "The public REST API for Beancount.io ledgers.\n\nEvery endpoint addresses a ledger as two path segments — `/api-gateway/v1/ledgers/{owner}/{name}` —\nand returns JSON. Errors share one shape: `{ \"ok\": false, \"error\": { \"code\", \"message\" } }`.\n\n## Authentication\n\nSend a bearer token: an OAuth 2.1 access token from this server's OIDC provider,\nor a session token. Each operation is classified `read`, `write`, or `admin`, and a\ntoken is refused when its scopes (`ledger.read`, `ledger.write`, `ledger.admin`)\ndo not cover the operation's class.\n\nThe one exception is the archive download, which takes a single-use ticket in the\nquery string instead — a browser following a download link cannot send a header.",
+    "description": "The public REST API for Beancount.io ledgers.\n\nEvery endpoint addresses a ledger as two path segments — `/api-gateway/v1/ledgers/{owner}/{name}` —\nand returns JSON. Errors share one shape: `{ \"ok\": false, \"error\": { \"code\", \"message\" } }`.\n\n## Authentication\n\nFor scripts and integrations, create a personal access token at\nhttps://beancount.io/settings/api-keys and send it in the `x-api-key` header. The\nplaintext is shown only once. OAuth 2.1 access tokens and session tokens may instead\nbe sent as bearer tokens. Each operation is classified `read`, `write`, or\n`admin`, and a token is refused when its scopes (`ledger.read`, `ledger.write`,\n`ledger.admin`) do not cover the operation's class.\n\nThe one exception is the archive download, which takes a single-use ticket in the\nquery string instead — a browser following a download link cannot send a header.",
     "contact": {
       "name": "Beancount.io",
       "url": "https://github.com/bex-co/beancount-io"
@@ -43,7 +43,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key",
-        "description": "API key for authenticated endpoints"
+        "description": "A Beancount.io personal access token. Create and manage tokens at https://beancount.io/settings/api-keys, copy the plaintext when it is shown once, and send it in the x-api-key header."
       }
     },
     "schemas": {

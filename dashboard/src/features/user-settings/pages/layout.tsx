@@ -44,12 +44,13 @@ function TopBarNavigation() {
   const navItems = [
     { label: t("userSettings.general"), path: "/settings/general" },
     { label: t("userSettings.sshKeys"), path: "/settings/ssh-keys" },
+    { label: t("userSettings.apiKeys"), path: "/settings/api-keys" },
     { label: t("userSettings.dangerZone"), path: "/settings/danger-zone" },
   ];
 
   return (
     <nav className="border-b bg-background">
-      <div className="flex h-12 items-center px-4 md:px-6 gap-6">
+      <div className="flex h-12 items-center gap-6 overflow-x-auto px-4 md:px-6">
         {navItems.map((item) => {
           const isActive = currentPath === item.path;
           return (

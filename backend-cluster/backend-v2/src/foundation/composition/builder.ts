@@ -87,6 +87,7 @@ export function buildServiceLayer(input: {
     // reached for inside the service, so the key service depends on a question
     // rather than on billing.
     isPremium: async (userId: string) =>
+      input.config.api.developmentPremiumUserIds.has(userId) ||
       (await getUserTier({
         stripe,
         models: input.database.models,

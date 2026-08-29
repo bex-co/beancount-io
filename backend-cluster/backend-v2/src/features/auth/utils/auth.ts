@@ -14,7 +14,16 @@ export const getTokenFromCtx = (ctx: RouterContext): string | undefined => {
     return String(authHeader).replace(/^Bearer\s+/i, "");
   }
 
-  // Priority 2: httpOnly cookie (for browser clients with SSR)
+  // Priority 2: the public API's personal-access-token header. Keep an
+  // explicitly supplied credential ahead of the browser cookie: otherwise a
+  // signed-in browser trying a scoped key would silently exercise its full
+  // session authority instead of the key being tested.
+  const apiKeyHeader = ctx.headers["x-api-key"];
+  if (apiKeyHeader) {
+    return Array.isArray(apiKeyHeader) ? apiKeyHeader[0] : String(apiKeyHeader);
+  }
+
+  // Priority 3: httpOnly cookie (for browser clients with SSR)
   const cookieToken = getAuthCookieFromCtx(ctx as any);
   if (cookieToken) {
     return cookieToken;

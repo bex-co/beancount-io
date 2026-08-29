@@ -118,7 +118,7 @@ function requireIdentity(ctx: RouterContext): Identity {
   const identity = identityFromState(ctx);
   if (!identity) {
     throw new UnauthenticatedError(
-      "This endpoint requires a credential: send `Authorization: Bearer <token>`.",
+      "This endpoint requires a credential: send `x-api-key: <personal-access-token>` or `Authorization: Bearer <token>`.",
     );
   }
   return identity;

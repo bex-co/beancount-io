@@ -39,6 +39,7 @@ vi.mock("@/common/hooks/use-translations", () => ({
         "common.back": "Back",
         "userSettings.general": "General",
         "userSettings.sshKeys": "SSH Keys",
+        "userSettings.apiKeys": "Personal access tokens",
         "userSettings.dangerZone": "Danger Zone",
       };
       return translations[key] || key;
@@ -120,6 +121,9 @@ describe("SettingsLayout", () => {
       expect(
         screen.getByRole("link", { name: "SSH Keys" }),
       ).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "Personal access tokens" }),
+      ).toBeInTheDocument();
     });
 
     it("should link to correct settings paths", () => {
@@ -133,6 +137,9 @@ describe("SettingsLayout", () => {
         "href",
         "/settings/ssh-keys",
       );
+      expect(
+        screen.getByRole("link", { name: "Personal access tokens" }),
+      ).toHaveAttribute("href", "/settings/api-keys");
     });
 
     it("should use replace navigation to avoid polluting browser history", () => {

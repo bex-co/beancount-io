@@ -1,6 +1,8 @@
 import type { TranslationEntry } from "@/i18n";
+import { apiKeyTranslations } from "../pages/api-keys/translations";
 
 const koUserSettings: Record<string, TranslationEntry> = {
+  ...apiKeyTranslations.ko,
   "userSettings.accountDeleted": {
     message: "계정이 성공적으로 삭제되었습니다",
     description: "Success message when account is deleted",

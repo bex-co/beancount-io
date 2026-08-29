@@ -1,9 +1,12 @@
+import { apiKeyTranslations } from "../pages/api-keys/translations";
+
 export interface TranslationEntry {
   message: string;
   description: string;
 }
 
 const deUserSettings: Record<string, TranslationEntry> = {
+  ...apiKeyTranslations.de,
   "userSettings.accessUntil": {
     message: "Zugriff bis",
     description: "Label for access remaining until date",

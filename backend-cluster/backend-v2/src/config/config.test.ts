@@ -1,6 +1,7 @@
 import {
   assertOAuthInteractionHost,
   config,
+  getDevelopmentPremiumUserIds,
   getOAuthPublicUrl,
 } from "./config";
 
@@ -31,6 +32,16 @@ describe("config", () => {
   it("should have correct server defaults", () => {
     expect(config.server.proxy).toBe(true);
     expect(config.server.port).toBe(4104);
+  });
+
+  it("limits local premium-user overrides to development", () => {
+    expect(
+      getDevelopmentPremiumUserIds(" user-a, user-b,user-a ", "development"),
+    ).toEqual(new Set(["user-a", "user-b"]));
+    expect(getDevelopmentPremiumUserIds("user-a", "production")).toEqual(
+      new Set(),
+    );
+    expect(getDevelopmentPremiumUserIds("user-a", "test")).toEqual(new Set());
   });
 
   it("should have correct logger defaults", () => {

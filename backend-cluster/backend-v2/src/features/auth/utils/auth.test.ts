@@ -46,6 +46,24 @@ describe("auth utilities", () => {
       expect(result).toBeUndefined();
     });
 
+    it("extracts a personal access token from x-api-key", () => {
+      const ctx = {
+        headers: { "x-api-key": "bcio_personal-access-token" },
+        cookies: { get: jest.fn() },
+      } as unknown as RouterContext;
+
+      expect(getTokenFromCtx(ctx)).toBe("bcio_personal-access-token");
+    });
+
+    it("prefers an explicit x-api-key over the browser cookie", () => {
+      const ctx = {
+        headers: { "x-api-key": "bcio_personal-access-token" },
+        cookies: { get: jest.fn().mockReturnValue("session-token") },
+      } as unknown as RouterContext;
+
+      expect(getTokenFromCtx(ctx)).toBe("bcio_personal-access-token");
+    });
+
     it("should handle non-Bearer authorization header", () => {
       const ctx = {
         headers: {

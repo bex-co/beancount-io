@@ -19,6 +19,10 @@ backend-v2's database migrations. Re-run it any time.
 
 Then open the dashboard at **http://localhost:42600**.
 
+To exercise paid API-key creation without contacting Stripe, add the local
+test user's backend ID to `DEV_PREMIUM_USER_IDS` in `.env` and recreate
+`backend-v2`. The override is accepted only when `NODE_ENV=development`.
+
 ## Ports
 
 Only three host ports are published, deliberately contiguous so one command

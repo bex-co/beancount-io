@@ -27,7 +27,8 @@ registry.registerComponent("securitySchemes", "apiKey", {
   type: "apiKey",
   in: "header",
   name: "x-api-key",
-  description: "API key for authenticated endpoints",
+  description:
+    "A Beancount.io personal access token. Create and manage tokens at https://beancount.io/settings/api-keys, copy the plaintext when it is shown once, and send it in the x-api-key header.",
 });
 
 const ADMIN_TAG = "Admin API";
@@ -264,10 +265,12 @@ and returns JSON. Errors share one shape: \`{ "ok": false, "error": { "code", "m
 
 ## Authentication
 
-Send a bearer token: an OAuth 2.1 access token from this server's OIDC provider,
-or a session token. Each operation is classified \`read\`, \`write\`, or \`admin\`, and a
-token is refused when its scopes (\`ledger.read\`, \`ledger.write\`, \`ledger.admin\`)
-do not cover the operation's class.
+For scripts and integrations, create a personal access token at
+https://beancount.io/settings/api-keys and send it in the \`x-api-key\` header. The
+plaintext is shown only once. OAuth 2.1 access tokens and session tokens may instead
+be sent as bearer tokens. Each operation is classified \`read\`, \`write\`, or
+\`admin\`, and a token is refused when its scopes (\`ledger.read\`, \`ledger.write\`,
+\`ledger.admin\`) do not cover the operation's class.
 
 The one exception is the archive download, which takes a single-use ticket in the
 query string instead — a browser following a download link cannot send a header.

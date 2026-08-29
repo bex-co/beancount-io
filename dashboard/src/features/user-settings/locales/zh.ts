@@ -1,9 +1,12 @@
+import { apiKeyTranslations } from "../pages/api-keys/translations";
+
 export interface TranslationEntry {
   message: string;
   description: string;
 }
 
 const zhUserSettings: Record<string, TranslationEntry> = {
+  ...apiKeyTranslations.zh,
   "userSettings.accessUntil": {
     message: "访问截止日期",
     description: "Label for access remaining until date",

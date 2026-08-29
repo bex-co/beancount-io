@@ -64,6 +64,19 @@ describe("openapi-registry", () => {
       );
     });
 
+    it("tells API-key users where to create a personal access token", () => {
+      const doc = generatePublicOpenAPIDocument();
+
+      expect(doc.components?.securitySchemes?.apiKey).toMatchObject({
+        type: "apiKey",
+        in: "header",
+        name: "x-api-key",
+        description: expect.stringContaining(
+          "https://beancount.io/settings/api-keys",
+        ),
+      });
+    });
+
     it("should include tags for API grouping, excluding Admin API", () => {
       const doc = generatePublicOpenAPIDocument();
 

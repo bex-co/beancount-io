@@ -1,6 +1,8 @@
 import type { TranslationEntry } from "@/i18n";
+import { apiKeyTranslations } from "../pages/api-keys/translations";
 
 const jaUserSettings: Record<string, TranslationEntry> = {
+  ...apiKeyTranslations.ja,
   "userSettings.accessUntil": {
     message: "アクセス期限",
     description: "Label for access remaining until date",

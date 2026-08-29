@@ -1,9 +1,12 @@
+import { apiKeyTranslations } from "../pages/api-keys/translations";
+
 export interface TranslationEntry {
   message: string;
   description: string;
 }
 
 const enUserSettings: Record<string, TranslationEntry> = {
+  ...apiKeyTranslations.en,
   "userSettings.accountDeleted": {
     message: "Account deleted successfully",
     description: "Success message when account is deleted",

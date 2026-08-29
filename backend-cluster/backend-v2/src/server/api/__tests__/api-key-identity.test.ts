@@ -55,6 +55,10 @@ const bearer = (token: string) => ({
   headers: { authorization: `Bearer ${token}` },
 });
 
+const apiKeyHeader = (token: string) => ({
+  headers: { "x-api-key": token },
+});
+
 describe("resolving an API key", () => {
   it("projects the key's scopes and confinement onto the Identity", async () => {
     const { database } = databaseWith(liveKey);
@@ -73,6 +77,14 @@ describe("resolving an API key", () => {
       "ledger.read",
       "ledger.write",
     ]);
+  });
+
+  it("accepts the x-api-key form published by the OpenAPI contract", async () => {
+    const { database } = databaseWith(liveKey);
+
+    await expect(
+      resolveIdentity(apiKeyHeader(PLAINTEXT), database, config),
+    ).resolves.toMatchObject({ method: "apikey", tokenId: "akey_1" });
   });
 
   it("refuses a revoked key", async () => {

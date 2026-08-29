@@ -1,6 +1,7 @@
 query GetSubscriptionStatus {
   subscriptionStatus {
     subscriptions {
+      __typename
       id
       status
       currentPeriodStart

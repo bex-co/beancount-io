@@ -1,0 +1,32 @@
+fragment ApiKeyFields on ApiKeyType {
+  id
+  name
+  keyPrefix
+  scopes
+  ledgerScope
+  lastUsedAt
+  expiresAt
+  revokedAt
+  createdAt
+}
+
+query ApiKeys {
+  apiKeys {
+    ...ApiKeyFields
+  }
+}
+
+mutation CreateApiKey($input: CreateApiKeyInputType!) {
+  createApiKey(input: $input) {
+    key {
+      ...ApiKeyFields
+    }
+    plaintext
+  }
+}
+
+mutation RevokeApiKey($id: String!) {
+  revokeApiKey(id: $id) {
+    ...ApiKeyFields
+  }
+}

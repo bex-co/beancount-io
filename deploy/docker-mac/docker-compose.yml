@@ -98,6 +98,9 @@ services:
       ADMIN_TOKEN: ${ADMIN_TOKEN:-}
       METRICS_API_TOKEN: ${METRICS_API_TOKEN:-}
       AUTH_JWT_EXP_MINUTES: ${AUTH_JWT_EXP_MINUTES:-525600}
+      # Comma-separated backend user IDs allowed to test paid API-key minting
+      # locally. backend-v2 ignores this outside NODE_ENV=development.
+      DEV_PREMIUM_USER_IDS: ${DEV_PREMIUM_USER_IDS:-}
       # Production passes this via a secret manager. Development deliberately
       # omits it so backend-v2 generates an ephemeral signing key.
       OAUTH_JWKS: ${OAUTH_JWKS:-}

@@ -151,9 +151,9 @@ interface OAuthConfig {
 }
 
 /**
- * The API suite's own settings (ADR 0006). Hardcoded rather than env-sourced,
- * per the repo's env-var policy: this is not a credential and not something a
- * deployment should differ on by accident.
+ * The API suite's own settings (ADR 0006). Authorization policy stays
+ * hard-coded; development-only test affordances are explicitly inert in every
+ * other environment.
  */
 export interface ApiConfig {
   /**
@@ -164,6 +164,27 @@ export interface ApiConfig {
    * the matrix was brought up; the committed product policy is enforcement.
    */
   scopeEnforcement: ScopeEnforcementMode;
+  /**
+   * Explicit local test users that may exercise paid API-key minting without
+   * contacting Stripe. Always empty outside development.
+   */
+  developmentPremiumUserIds: ReadonlySet<string>;
+}
+
+export function getDevelopmentPremiumUserIds(
+  value: string | undefined,
+  environment: Environment,
+): ReadonlySet<string> {
+  if (environment !== "development") {
+    return new Set();
+  }
+
+  return new Set(
+    (value ?? "")
+      .split(",")
+      .map((userId) => userId.trim())
+      .filter(Boolean),
+  );
 }
 
 export interface AppConfig {
@@ -307,6 +328,10 @@ const oauthSigningKeys = getOptionalJwks(environment);
 export const config: AppConfig = {
   api: {
     scopeEnforcement: "enforce",
+    developmentPremiumUserIds: getDevelopmentPremiumUserIds(
+      process.env.DEV_PREMIUM_USER_IDS,
+      environment,
+    ),
   },
   env: environment,
   project: "beancount-io",

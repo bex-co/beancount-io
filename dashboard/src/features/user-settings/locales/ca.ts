@@ -1,9 +1,12 @@
+import { apiKeyTranslations } from "../pages/api-keys/translations";
+
 export interface TranslationEntry {
   message: string;
   description: string;
 }
 
 const caUserSettings: Record<string, TranslationEntry> = {
+  ...apiKeyTranslations.ca,
   "userSettings.accessUntil": {
     message: "Access until",
     description: "Label for access remaining until date",

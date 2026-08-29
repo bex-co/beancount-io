@@ -190,11 +190,12 @@ export function assertSessionIdentity(
  * Resolve the caller from a request — the ONE authentication entry point for
  * every API surface (ADR 0006 D2).
  *
- * Order matters. A bearer-shaped credential is tried against the OAuth
- * verifier first, then the API-key store, and only then the session model:
- * OAuth access tokens and session JWTs both arrive as `Authorization: Bearer`,
- * and only their verification distinguishes them. Session comes last because
- * it is also the cookie path, which the other two never use.
+ * Order matters. The token extractor prefers an Authorization header, then
+ * `x-api-key`, then the browser cookie, so an explicit credential is never
+ * masked by a signed-in session. A bearer-shaped credential is tried against
+ * the OAuth verifier first, then the API-key store, and only then the session
+ * model: OAuth access tokens, personal access tokens, and session JWTs can all
+ * arrive as `Authorization: Bearer`, and only verification distinguishes them.
  *
  * Returns `undefined` for an absent, malformed, expired, or revoked
  * credential — never throws, and never distinguishes the failure modes to the

@@ -71,6 +71,15 @@ be prefixed with `VITE_`.
 | `yarn format:check` | Check formatting (Prettier)                    |
 | `yarn codegen`      | Regenerate GraphQL types from the schema       |
 
+## Personal access tokens
+
+Signed-in paid-plan users can create scoped API credentials from **Settings →
+Personal access tokens**, or open
+[`/settings/api-keys`](https://beancount.io/settings/api-keys) directly. The
+creation flow defaults to read-only access, supports an optional single-ledger
+restriction and expiry, and reveals the plaintext only once. Existing tokens
+show lifecycle metadata and a display prefix, never the recoverable secret.
+
 ## OAuth consent pages
 
 The dashboard serves the human interaction pages for backend-v2's authorization

@@ -80,6 +80,27 @@ and removing the replaced public key from the served JWKS. Deleting a historical
 private key from Git without replacing the accepted live key does not invalidate
 tokens signed with it.
 
+### REST API quickstart
+
+Personal access tokens are available to paid plans. Sign in, open
+[Personal access tokens](https://beancount.io/settings/api-keys), create a token
+with the least privilege your integration needs, and copy it when it is shown.
+The plaintext cannot be recovered later; keep it in a secret manager and never
+commit it.
+
+Start with the safe ledger-listing endpoint:
+
+```bash
+export BEANCOUNT_API_KEY="bcio_your_token_here"
+
+curl --fail-with-body \
+  --header "x-api-key: $BEANCOUNT_API_KEY" \
+  https://api.v3.beancount.io/api-gateway/v1/ledgers
+```
+
+The interactive [API reference](https://beancount.io/docs/api-reference) shows
+the available endpoints, request schemas, and required scope classes.
+
 ### OAuth deployment contract
 
 `DASHBOARD_URL` is the public authorization-server and consent front door in
