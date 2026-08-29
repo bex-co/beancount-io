@@ -16,3 +16,11 @@
 - [x] **m10** — Self-canonical hygiene for all indexable dashboard pages (7 tasks) ← from /pm-brainstorm 2026-08-21 (Search Console: ?lang= variant dilution on account pages, no canonical on most indexable routes)
 - [x] **m11** — Acquisition snippet CTR for login, sign-up and forgot-password (7 tasks) ← from Search Console Diagnosis C 2026-08-22 (generic `Sign In`/`Create Account` predict <3% CTR at position 4–20)
 - [x] **m12** — Minimal centralized authz for mobile user deletion (7 tasks) ← from user-reported mobile deletion failure + `backend-v2/authz/README.md` 2026-08-28
+- [ ] **m13** — Centralized authz foundation for user identity and API credentials (8 tasks) ← from user decision 2026-08-28 after m12
+- [ ] **m14** — Centralized authz for billing and subscriptions (7 tasks) ← from user decision 2026-08-28 after m13
+- [ ] **m15** — Centralized authz for the social graph and starring (7 tasks) ← from user decision 2026-08-28 after m14
+- [ ] **m16** — Centralized authz for AI-assisted ingestion and assets (8 tasks) ← from user decision 2026-08-28 after m15
+- [ ] **m17** — Centralized authz for ledger contents and reporting (9 tasks) ← from user decision 2026-08-28 after m16
+- [ ] **m18** — Centralized authz for ledger administration and collaboration (8 tasks) ← from user decision 2026-08-28 after m17
+- [ ] **m19** — Centralized authz for bank connections and transaction sync (8 tasks) ← from user decision 2026-08-28 after m18
+- [ ] **m20** — Retire distributed authorization gates after domain cutovers (8 tasks) ← from user decision 2026-08-28 after m19
