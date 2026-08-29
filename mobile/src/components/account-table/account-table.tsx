@@ -355,6 +355,7 @@ export function AccountTable({
     <FlatList
       style={styles.list}
       contentContainerStyle={styles.listContent}
+      contentInsetAdjustmentBehavior="automatic"
       alwaysBounceVertical
       data={rows}
       renderItem={renderItem}

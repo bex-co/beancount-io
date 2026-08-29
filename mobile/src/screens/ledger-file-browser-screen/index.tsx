@@ -527,6 +527,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
           <FlatList
             data={sorted}
             contentContainerStyle={styles.listContent}
+            contentInsetAdjustmentBehavior="automatic"
             alwaysBounceVertical
             keyExtractor={(item) => item.path}
             renderItem={({ item, index }) => (

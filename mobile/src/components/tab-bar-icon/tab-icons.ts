@@ -37,6 +37,28 @@ export const tabIcons: Record<TabRouteName, TabIconPair> = {
   ledger: { active: "folder", inactive: "folder-outline" },
 };
 
+/**
+ * Native iOS tabs use SF Symbols so UIKit can apply the platform's own weight,
+ * selection, and Liquid Glass treatments. Keep both states explicit: focus
+ * must remain legible without relying on tint color alone.
+ */
+export const nativeTabIcons = {
+  index: { default: "house", selected: "house.fill" },
+  accounts: {
+    default: "rectangle.stack",
+    selected: "rectangle.stack.fill",
+  },
+  transactions: {
+    default: "list.bullet.rectangle",
+    selected: "list.bullet.rectangle.fill",
+  },
+  reports: { default: "chart.bar", selected: "chart.bar.fill" },
+  ledger: { default: "folder", selected: "folder.fill" },
+} as const satisfies Record<
+  TabRouteName,
+  { default: string; selected: string }
+>;
+
 /** The glyph a tab shows in the given focus state. */
 export function tabIconName(
   route: TabRouteName,

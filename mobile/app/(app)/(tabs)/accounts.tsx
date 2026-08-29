@@ -1,5 +1,10 @@
 import { AccountsScreen } from "@/screens/accounts-screen";
+import { LazyTabScreen } from "@/components/lazy-tab-screen";
 
 export default function Accounts() {
-  return <AccountsScreen />;
+  return (
+    <LazyTabScreen>
+      <AccountsScreen />
+    </LazyTabScreen>
+  );
 }

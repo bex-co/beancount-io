@@ -1,14 +1,22 @@
 import { Tabs } from "expo-router";
+import { NativeTabs } from "expo-router/unstable-native-tabs";
 import { useMemo } from "react";
-import { StyleSheet, Text, type ColorValue, View } from "react-native";
+import {
+  Platform,
+  StyleSheet,
+  Text,
+  type ColorValue,
+  View,
+} from "react-native";
 import {
   SafeAreaView,
   useSafeAreaInsets,
 } from "react-native-safe-area-context";
-import { TabBarIcon } from "@/components/tab-bar-icon";
+import { nativeTabIcons, TabBarIcon } from "@/components/tab-bar-icon";
 import { HapticTab } from "@/components/haptic-tab";
 import { LedgerDrawerProvider } from "@/components/ledger-drawer";
 import { fontSizes, fontWeights, useTheme, withAlpha } from "@/common/theme";
+import type { ColorTheme } from "@/types/theme-props";
 import { i18n } from "@/translations";
 import { localeVar } from "@/common/vars";
 import { useReactiveVar } from "@apollo/client";
@@ -52,6 +60,171 @@ const renderTabBarLabel = ({
   </Text>
 );
 
+type TabTitles = {
+  home: string;
+  accounts: string;
+  transactions: string;
+  reports: string;
+  files: string;
+};
+
+type TabNavigatorProps = {
+  theme: ColorTheme;
+  titles: TabTitles;
+};
+
+/**
+ * UIKit owns the iOS bar. On iOS 26 this is the system Liquid Glass tab bar;
+ * older iOS releases receive their native translucent tab bar automatically.
+ * Deliberately leave background, blur, shadow, sizing, and typography unset so
+ * custom appearance values cannot cover or fight the system material.
+ */
+function NativeTabNavigator({ theme, titles }: TabNavigatorProps): JSX.Element {
+  const contentStyle = { backgroundColor: theme.white } as const;
+
+  return (
+    <NativeTabs tintColor={theme.primary} minimizeBehavior="onScrollDown">
+      <NativeTabs.Trigger name="index" contentStyle={contentStyle}>
+        <NativeTabs.Trigger.Label>{titles.home}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={nativeTabIcons.index} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="accounts" contentStyle={contentStyle}>
+        <NativeTabs.Trigger.Label>{titles.accounts}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={nativeTabIcons.accounts} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="transactions" contentStyle={contentStyle}>
+        <NativeTabs.Trigger.Label>
+          {titles.transactions}
+        </NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={nativeTabIcons.transactions} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="reports" contentStyle={contentStyle}>
+        <NativeTabs.Trigger.Label>{titles.reports}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={nativeTabIcons.reports} />
+      </NativeTabs.Trigger>
+      <NativeTabs.Trigger name="ledger" contentStyle={contentStyle}>
+        <NativeTabs.Trigger.Label>{titles.files}</NativeTabs.Trigger.Label>
+        <NativeTabs.Trigger.Icon sf={nativeTabIcons.ledger} />
+      </NativeTabs.Trigger>
+    </NativeTabs>
+  );
+}
+
+type JavaScriptTabNavigatorProps = TabNavigatorProps & {
+  bottomInset: number;
+  themeName: string;
+};
+
+/** Android keeps the existing custom tab treatment and native haptic wrapper. */
+function JavaScriptTabNavigator({
+  bottomInset,
+  theme,
+  themeName,
+  titles,
+}: JavaScriptTabNavigatorProps): JSX.Element {
+  return (
+    <Tabs
+      initialRouteName="index"
+      screenOptions={{
+        headerShown: false,
+        tabBarButton: HapticTab,
+        tabBarActiveTintColor: theme.primary,
+        // Without an explicit inactive tint, react-navigation falls back to
+        // its light-theme gray, which is unreadable on the dark tab bar.
+        tabBarInactiveTintColor: theme.black80,
+        tabBarShowLabel: true,
+        tabBarLabel: renderTabBarLabel,
+        tabBarInactiveBackgroundColor: "transparent",
+        tabBarItemStyle: {
+          minWidth: 0,
+          marginHorizontal: 3,
+          marginVertical: 7,
+        },
+        tabBarStyle: {
+          position: "absolute",
+          backgroundColor: "transparent",
+          borderTopWidth: 0,
+          borderTopColor: "transparent",
+          elevation: 0,
+          height: TAB_BAR_CONTENT_HEIGHT + bottomInset,
+        },
+        tabBarBackground: () => (
+          <View
+            pointerEvents="none"
+            style={[
+              StyleSheet.absoluteFill,
+              styles.tabBarBackground,
+              {
+                top: TAB_BAR_PILL_INSET,
+                right: TAB_BAR_SIDE_INSET,
+                bottom: bottomInset + TAB_BAR_PILL_INSET,
+                left: TAB_BAR_SIDE_INSET,
+                backgroundColor: withAlpha(
+                  theme.white,
+                  themeName === "dark" ? 0.94 : 0.9,
+                ),
+                borderColor: withAlpha(theme.black40, 0.6),
+                shadowColor: theme.nav01,
+                shadowOpacity: themeName === "dark" ? 0.4 : 0.16,
+              },
+            ]}
+          />
+        ),
+        // Native iOS tabs render eagerly, so the route components carry their
+        // own focus-once guard. The JS navigator can retain its built-in lazy
+        // mounting on Android.
+        lazy: true,
+      }}
+    >
+      <Tabs.Screen
+        name="index"
+        options={{
+          title: titles.home,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon route="index" color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="accounts"
+        options={{
+          title: titles.accounts,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon route="accounts" color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="transactions"
+        options={{
+          title: titles.transactions,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon route="transactions" color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="reports"
+        options={{
+          title: titles.reports,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon route="reports" color={color} focused={focused} />
+          ),
+        }}
+      />
+      <Tabs.Screen
+        name="ledger"
+        options={{
+          title: titles.files,
+          tabBarIcon: ({ color, focused }) => (
+            <TabBarIcon route="ledger" color={color} focused={focused} />
+          ),
+        }}
+      />
+    </Tabs>
+  );
+}
+
 export default function TabLayout() {
   const { colorTheme: theme, name: themeName } = useTheme();
   const insets = useSafeAreaInsets();
@@ -77,117 +250,16 @@ export default function TabLayout() {
         edges={["top"]}
         style={{ flex: 1, backgroundColor: theme.white }}
       >
-        <Tabs
-          initialRouteName="index"
-          screenOptions={{
-            headerShown: false,
-            tabBarButton: HapticTab,
-            tabBarActiveTintColor: theme.primary,
-            // Without an explicit inactive tint, react-navigation falls back to
-            // its light-theme gray, which is unreadable on the dark tab bar.
-            tabBarInactiveTintColor: theme.black80,
-            tabBarShowLabel: true,
-            tabBarLabel: renderTabBarLabel,
-            tabBarInactiveBackgroundColor: "transparent",
-            tabBarItemStyle: {
-              minWidth: 0,
-              marginHorizontal: 3,
-              marginVertical: 7,
-            },
-            tabBarStyle: {
-              position: "absolute",
-              backgroundColor: "transparent",
-              borderTopWidth: 0,
-              borderTopColor: "transparent",
-              elevation: 0,
-              height: TAB_BAR_CONTENT_HEIGHT + insets.bottom,
-            },
-            tabBarBackground: () => (
-              <View
-                pointerEvents="none"
-                style={[
-                  StyleSheet.absoluteFill,
-                  styles.tabBarBackground,
-                  {
-                    top: TAB_BAR_PILL_INSET,
-                    right: TAB_BAR_SIDE_INSET,
-                    bottom: insets.bottom + TAB_BAR_PILL_INSET,
-                    left: TAB_BAR_SIDE_INSET,
-                    backgroundColor: withAlpha(
-                      theme.white,
-                      themeName === "dark" ? 0.94 : 0.9,
-                    ),
-                    borderColor: withAlpha(theme.black40, 0.6),
-                    shadowColor: theme.nav01,
-                    shadowOpacity: themeName === "dark" ? 0.4 : 0.16,
-                  },
-                ]}
-              />
-            ),
-            // Mount a tab the first time it is focused, not at launch. With
-            // `false` all five screens mounted on start and fired their
-            // queries before the user had visited any of them — four screens'
-            // worth of network on the critical path to the first paint, and
-            // four page-view events for screens nobody looked at.
-            //
-            // The tab-switch flicker fix in `83bddba` does not depend on this:
-            // it lifted the single `SafeAreaView` to this layout, so the top
-            // inset is computed once here and a lazily-mounted screen inherits
-            // it already resolved. Every tab renders a themed skeleton while
-            // its first query is in flight.
-            lazy: true,
-          }}
-        >
-          <Tabs.Screen
-            name="index"
-            options={{
-              title: tabTitles.home,
-              tabBarIcon: ({ color, focused }) => (
-                <TabBarIcon route="index" color={color} focused={focused} />
-              ),
-            }}
+        {Platform.OS === "ios" ? (
+          <NativeTabNavigator theme={theme} titles={tabTitles} />
+        ) : (
+          <JavaScriptTabNavigator
+            bottomInset={insets.bottom}
+            theme={theme}
+            themeName={themeName}
+            titles={tabTitles}
           />
-          <Tabs.Screen
-            name="accounts"
-            options={{
-              title: tabTitles.accounts,
-              tabBarIcon: ({ color, focused }) => (
-                <TabBarIcon route="accounts" color={color} focused={focused} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="transactions"
-            options={{
-              title: tabTitles.transactions,
-              tabBarIcon: ({ color, focused }) => (
-                <TabBarIcon
-                  route="transactions"
-                  color={color}
-                  focused={focused}
-                />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="reports"
-            options={{
-              title: tabTitles.reports,
-              tabBarIcon: ({ color, focused }) => (
-                <TabBarIcon route="reports" color={color} focused={focused} />
-              ),
-            }}
-          />
-          <Tabs.Screen
-            name="ledger"
-            options={{
-              title: tabTitles.files,
-              tabBarIcon: ({ color, focused }) => (
-                <TabBarIcon route="ledger" color={color} focused={focused} />
-              ),
-            }}
-          />
-        </Tabs>
+        )}
       </SafeAreaView>
     </LedgerDrawerProvider>
   );

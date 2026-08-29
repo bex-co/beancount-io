@@ -1,5 +1,10 @@
 import { HomeScreen } from "@/screens/home-screen";
+import { LazyTabScreen } from "@/components/lazy-tab-screen";
 
 export default function Home() {
-  return <HomeScreen />;
+  return (
+    <LazyTabScreen>
+      <HomeScreen />
+    </LazyTabScreen>
+  );
 }

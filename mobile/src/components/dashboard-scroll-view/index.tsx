@@ -77,6 +77,9 @@ export function DashboardScrollView({
     <ScrollView
       showsVerticalScrollIndicator={false}
       alwaysBounceVertical
+      // Native iOS tabs float above content. UIKit uses this inset to let the
+      // final card scroll completely above the bar instead of staying shaded.
+      contentInsetAdjustmentBehavior="automatic"
       contentContainerStyle={[styles.content, contentContainerStyle]}
       indicatorStyle={themeName === "dark" ? "white" : "default"}
       refreshControl={

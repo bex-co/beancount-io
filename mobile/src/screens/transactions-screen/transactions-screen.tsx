@@ -259,6 +259,7 @@ const TransactionList = () => {
         }
         style={styles.list}
         contentContainerStyle={styles.listContent}
+        contentInsetAdjustmentBehavior="automatic"
         alwaysBounceVertical
         sections={isInitialLoading || error ? [] : sections}
         renderSectionHeader={renderSectionHeader}
