@@ -20,8 +20,6 @@ import { type ILedgerRepoService } from "@/features/ledger/service/ledger-repo-s
 import { type ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { type ILedgerCollaboratorsWorkflow } from "@/features/ledger/workflow/ledger-collaborators-workflow";
 import { type ILedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
-import { type IAccountWorkflow } from "@/features/auth/workflow/account-workflow";
-import { type IApiKeyWorkflow } from "@/features/apikeys/workflow/api-key-workflow";
 import { type IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { type IPlaidItemService } from "@/features/plaid/service/plaid-item-service";
 import { type IPlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
@@ -100,8 +98,6 @@ export interface WorkflowLayer {
   ledger: ILedgerWorkflow;
   ledgerCollaborators: ILedgerCollaboratorsWorkflow;
   ledgerReceipt: ILedgerReceiptWorkflow;
-  account: IAccountWorkflow;
-  apiKey: IApiKeyWorkflow;
 }
 
 /** All four layers composed — the top-level dependency object passed cross-transport. */

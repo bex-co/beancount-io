@@ -124,7 +124,10 @@ export function buildResolverContainer(
       new PlaidMutationResolver(services.plaidItem, services.plaidSync),
     ],
     [AiCfoUsageResolver, new AiCfoUsageResolver(services.aiCfoUsage)],
-    [AccountResolver, new AccountResolver(workflows.account)],
+    [
+      AccountResolver,
+      new AccountResolver(services.account, services.authorization),
+    ],
     [AuthResolver, new AuthResolver(services.auth)],
     [CliAuthResolver, new CliAuthResolver(services.cliAuth)],
     [UserProfileResolver, new UserProfileResolver(services.userProfile)],
@@ -160,7 +163,7 @@ export function buildResolverContainer(
       LedgerEntryMutationResolver,
       new LedgerEntryMutationResolver(services.ledgerEntry),
     ],
-    [ApiKeyResolver, new ApiKeyResolver(workflows.apiKey)],
+    [ApiKeyResolver, new ApiKeyResolver(services.apiKey)],
     [
       LedgerJournalMutationResolver,
       new LedgerJournalMutationResolver(services.ledgerJournal),

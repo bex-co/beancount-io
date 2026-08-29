@@ -70,6 +70,7 @@ export function setAgentRoute(
         services: {
           ledgerShell: layers.services.ledgerShell,
           ledgerRepo: layers.services.ledgerRepo,
+          apiKey: layers.services.apiKey,
           ledgerData: layers.services.ledgerData,
           ledgerFinance: layers.services.ledgerFinance,
           ledgerJournal: layers.services.ledgerJournal,
@@ -78,7 +79,6 @@ export function setAgentRoute(
           plaidSync: layers.services.plaidSync,
         },
         identity,
-        apiKeyWorkflow: layers.workflows.apiKey,
         mcpToken,
         mcpUrl,
         sessionId,

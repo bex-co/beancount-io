@@ -2,7 +2,6 @@ import type { UIMessage } from "ai";
 import type { ServerResponse } from "node:http";
 import type { Identity } from "@/server/api/identity";
 import type { ToolServices } from "../../tools/types";
-import type { IApiKeyWorkflow } from "@/features/apikeys/workflow/api-key-workflow";
 
 export interface AgentHandlerContext {
   messages: UIMessage[];
@@ -16,7 +15,6 @@ export interface AgentHandlerContext {
    */
   services: ToolServices;
   identity: Identity;
-  apiKeyWorkflow: IApiKeyWorkflow;
   mcpToken: string;
   mcpUrl: string;
   sessionId?: string;

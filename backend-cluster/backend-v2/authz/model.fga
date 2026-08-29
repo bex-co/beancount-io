@@ -8,12 +8,10 @@
 # assurance. Credentials and request context remain inputs to application code;
 # microservices never construct authorization tuples from request credentials.
 #
-# No OpenFGA runtime is deployed. The centralized TypeScript module executes
-# the protected User domain with exact-self checks for profile, credentials,
-# and lifecycle permissions. API-key revoke resolves current row ownership to
-# the owner's User credentials permission; no credential object or tuple enters
-# this model. Ledger relationships stay documentation-as-code until their own
-# migration or an ADR 0010 trigger. CI validates this model and its tests.
+# No OpenFGA runtime is deployed. The centralized TypeScript module currently
+# executes only user.delete with an exact-self check that mirrors
+# can_write_lifecycle. The remaining relationships stay documentation-as-code
+# until an ADR 0010 trigger fires. CI validates this model and its tests.
 
 model
   schema 1.1

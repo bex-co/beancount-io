@@ -1,19 +1,19 @@
 # w2 · m13 — Centralized authz foundation for user identity and API credentials
 
-**Worker:** worker2 **Goal:** establish the reusable TypeScript PDP and route the user/profile/lifecycle/API-key domain through one final authorization decision backed by existing authoritative data **Status:** done
+**Worker:** worker2 **Goal:** establish the reusable TypeScript PDP and route the user/profile/lifecycle/API-key domain through one final authorization decision backed by existing authoritative data **Status:** todo
 
 ## Tasks (in order)
 
 | id   | title                                                    | est | depends_on |
 | ---- | -------------------------------------------------------- | --- | ---------- |
-| t001 | Ratify the source-backed centralized-authz boundary — **DONE** | 35m | —          |
-| t002 | Generalize the canonical action and PDP contract — **DONE**    | 45m | t001       |
-| t003 | Add user-self and API-key relationship evaluators — **DONE**   | 40m | t002       |
-| t004 | Migrate user identity and API-credential operations — **DONE** | 55m | t003       |
-| t005 | Adoption surface — **DONE**                                    | 20m | t004       |
-| t006 | Simplify — **DONE**                                            | 20m | t005       |
-| t007 | Test coverage — **DONE**                                       | 40m | t005       |
-| t008 | Closeout — **DONE**                                            | 10m | t006, t007 |
+| t001 | Ratify the source-backed centralized-authz boundary      | 35m | —          |
+| t002 | Generalize the canonical action and PDP contract         | 45m | t001       |
+| t003 | Add user-self and API-key relationship evaluators        | 40m | t002       |
+| t004 | Migrate user identity and API-credential operations      | 55m | t003       |
+| t005 | Adoption surface                                         | 20m | t004       |
+| t006 | Simplify                                                 | 20m | t005       |
+| t007 | Test coverage                                            | 40m | t005       |
+| t008 | Closeout                                                 | 10m | t006, t007 |
 
 ## Definition of done
 

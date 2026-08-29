@@ -2,7 +2,6 @@ import { z } from "zod";
 import { logger } from "@/shared/logger";
 import { API_SCOPES } from "@/server/api/identity";
 import { toPublicApiKey } from "@/features/apikeys/service/api-key-service";
-import { authorizationRequest } from "@/server/api/authorization";
 import type { ToolContext } from "./types";
 import { toolOutputSchema } from "./types";
 import { runToolSafely } from "../utils/run-tool";
@@ -19,7 +18,8 @@ const toolLogger = logger.child({ module: "tool:api-keys" });
  * mixed in the meantime.
  *
  * An agent reaching these holds an OAuth grant, which may mint — an API *key*
- * may not, and the shared workflow's PDP refuses it regardless of surface.
+ * may not, and the service refuses that on `Identity.method` regardless of
+ * which surface asked.
  */
 
 const publicKeyShape = z.object({
@@ -56,14 +56,14 @@ export const listApiKeysOutputSchema = toolOutputSchema(
 );
 
 export async function executeListApiKeys(
-  ctx: Pick<ToolContext, "apiKeyWorkflow" | "identity">,
+  ctx: Pick<ToolContext, "services" | "identity">,
 ): Promise<z.infer<typeof listApiKeysOutputSchema>> {
   return runToolSafely({
     logger: toolLogger,
     message: "Failed to list API keys",
     execute: async () =>
-      (await ctx.apiKeyWorkflow.list(authorizationRequest(ctx.identity))).map(
-        (key) => present(toPublicApiKey(key)),
+      (await ctx.services.apiKey.list(ctx.identity)).map((key) =>
+        present(toPublicApiKey(key)),
       ),
   });
 }
@@ -94,7 +94,7 @@ export const createApiKeyOutputSchema = toolOutputSchema(
 );
 
 export async function executeCreateApiKey(
-  ctx: Pick<ToolContext, "apiKeyWorkflow" | "identity">,
+  ctx: Pick<ToolContext, "services" | "identity">,
   input: { name: string; scopes: string[]; ledger_scope?: string },
 ): Promise<z.infer<typeof createApiKeyOutputSchema>> {
   return runToolSafely({
@@ -104,14 +104,11 @@ export async function executeCreateApiKey(
     // logs its arguments is one schema change away from logging a secret.
     context: { scopes: input.scopes },
     execute: async () => {
-      const minted = await ctx.apiKeyWorkflow.mint(
-        authorizationRequest(ctx.identity),
-        {
-          name: input.name,
-          scopes: input.scopes,
-          ledgerScope: input.ledger_scope,
-        },
-      );
+      const minted = await ctx.services.apiKey.mint(ctx.identity, {
+        name: input.name,
+        scopes: input.scopes,
+        ledgerScope: input.ledger_scope,
+      });
       return {
         key: present(toPublicApiKey(minted.key)),
         plaintext: minted.plaintext,
@@ -132,7 +129,7 @@ export const revokeApiKeyInputSchema = z.object({
 export const revokeApiKeyOutputSchema = toolOutputSchema(publicKeyShape);
 
 export async function executeRevokeApiKey(
-  ctx: Pick<ToolContext, "apiKeyWorkflow" | "identity">,
+  ctx: Pick<ToolContext, "services" | "identity">,
   input: { id: string },
 ): Promise<z.infer<typeof revokeApiKeyOutputSchema>> {
   return runToolSafely({
@@ -142,10 +139,7 @@ export async function executeRevokeApiKey(
     execute: async () =>
       present(
         toPublicApiKey(
-          await ctx.apiKeyWorkflow.revoke(
-            authorizationRequest(ctx.identity),
-            input.id,
-          ),
+          await ctx.services.apiKey.revoke(ctx.identity, input.id),
         ),
       ),
   });

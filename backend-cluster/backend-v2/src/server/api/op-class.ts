@@ -7,17 +7,12 @@ import {
   shouldAudit,
   type AuditOutcome,
 } from "./audit";
-import {
-  AUTHORIZATION_ACTIONS,
-  type AuthorizationAction,
-} from "./authorization/authorization-contract";
-import { authorizationActionAcceptsDelegatedCredential } from "./authorization/authorization-service";
 
 const scopeLogger = logger.child({ module: "op-class" });
 
 /**
  * How much authority an operation needs, expressed in the closed scope
- * vocabulary of ADR 0006 D3 plus the classes that vocabulary cannot
+ * vocabulary of ADR 0006 D3 plus the two classes that vocabulary cannot
  * express.
  *
  * - `read` / `write` / `admin` map onto `ledger.read` / `ledger.write` /
@@ -26,11 +21,11 @@ const scopeLogger = logger.child({ module: "op-class" });
  *   because an access-control list is not ledger content.
  * - `authz` passes any authenticated credential to the centralized PDP. It is
  *   neither a public operation nor authority granted by a ledger scope; the
- *   domain workflow's one policy decision is the enforcement point.
+ *   resolver's one policy decision is the enforcement point.
  * - `session-only` is the honest name for an op no scope alone can unlock. The
- *   vocabulary is deliberately three ledger scopes wide, so billing and the
- *   remaining browser-only identity ceremonies have no scope that describes
- *   them. Migrated User-domain operations use `authz` above.
+ *   vocabulary is deliberately three ledger scopes wide, so billing,
+ *   credential minting, and remaining browser-only identity ceremonies have no
+ *   scope that describes them. Account deletion uses `authz` above.
  *   Filing them under `admin` would mean a token granted "manage my ledger"
  *   could also delete the account — so they get a class that never matches.
  * - `public` is for the handful of ops that carry no authority at all (a
@@ -120,8 +115,6 @@ export interface VerbEntry {
   /** Stable identifier for the verb itself, independent of any surface. */
   readonly verb: string;
   readonly class: OpClass;
-  /** Canonical PDP action when this transport alias is classed `authz`. */
-  readonly authorizationAction?: AuthorizationAction;
   /** GraphQL root field, e.g. `Query.getLedger`. */
   readonly gql?: string;
   /** REST route as `<METHOD> <path>`, path in `{param}` form. */
@@ -308,12 +301,6 @@ export function isReachableOn(
  * absence that is merely unbuilt can never hide inside it.
  */
 export function isInParityScope(entry: VerbEntry): boolean {
-  if (
-    entry.authorizationAction &&
-    !authorizationActionAcceptsDelegatedCredential(entry.authorizationAction)
-  ) {
-    return false;
-  }
   return (
     entry.class !== "session-only" &&
     !LINK_CEREMONY_VERBS.has(entry.verb) &&
@@ -350,55 +337,38 @@ const gqlOnly = (
 });
 
 const ACCOUNT_VERBS: readonly VerbEntry[] = [
-  // The native app learns who signed in by asking for its profile immediately
-  // after code exchange. The PDP preserves that `ledger.read` credential
-  // ceiling while composing it with exact-self, instead of letting the ledger
-  // scope gate make the final User-domain decision.
-  {
-    ...gqlOnly(
-      "Query.userProfile",
-      "authz",
-      R.accountProfile,
-      M.notAgentShaped,
-    ),
-    authorizationAction: AUTHORIZATION_ACTIONS.USER_PROFILE_READ,
-  },
-  {
-    ...gqlOnly(
-      "Query.getUserByExactMatch",
-      "authz",
-      R.accountProfile,
-      M.notAgentShaped,
-    ),
-    authorizationAction: AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH,
-  },
-  {
-    ...gqlOnly(
-      "Mutation.deleteAccount",
-      "authz",
-      R.sessionCeremony,
-      M.sessionCeremony,
-    ),
-    authorizationAction: AUTHORIZATION_ACTIONS.USER_DELETE,
-  },
-  {
-    ...gqlOnly(
-      "Mutation.updateUsername",
-      "authz",
-      R.accountProfile,
-      M.notAgentShaped,
-    ),
-    authorizationAction: AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
-  },
-  {
-    ...gqlOnly(
-      "Mutation.updateProfile",
-      "authz",
-      R.accountProfile,
-      M.notAgentShaped,
-    ),
-    authorizationAction: AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
-  },
+  // `read`, not `session-only`: the native app treats its access token as
+  // opaque and learns who signed in by asking for its own profile right after
+  // the code exchange, so this is the first call every OAuth session makes.
+  // ADR 0006 D3's wall is for account lifecycle, billing, and credential
+  // minting; a token holder reading their own profile is none of those, and
+  // `ledger.read` — carried by every native and MCP grant — is the right key
+  // (ADR 0008, amendment 2026-08-28).
+  gqlOnly("Query.userProfile", "read", R.accountProfile, M.notAgentShaped),
+  gqlOnly(
+    "Query.getUserByExactMatch",
+    "session-only",
+    R.accountProfile,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.deleteAccount",
+    "authz",
+    R.sessionCeremony,
+    M.sessionCeremony,
+  ),
+  gqlOnly(
+    "Mutation.updateUsername",
+    "session-only",
+    R.accountProfile,
+    M.notAgentShaped,
+  ),
+  gqlOnly(
+    "Mutation.updateProfile",
+    "session-only",
+    R.accountProfile,
+    M.notAgentShaped,
+  ),
 ];
 
 const AUTH_VERBS: readonly VerbEntry[] = [
@@ -948,31 +918,30 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
 /**
  * API-key management, on all three surfaces (ADR 0006 D6, w1/m22).
  *
- * Classified `authz`: the transport gate admits authenticated callers to the
- * centralized PDP, which preserves the existing `ledger.admin` credential
- * ceiling and composes it with current user/API-key ownership.
+ * Classified `admin`: a key is the ledger's access control, not its content, so
+ * minting one needs the same authority as adding a collaborator. That is also
+ * what stops a `ledger.write` grant from quietly upgrading itself — the service
+ * additionally refuses any mint from a caller whose own credential is an API
+ * key, and refuses to grant scopes the minter does not hold.
  */
 const API_KEY_VERBS: readonly VerbEntry[] = [
   {
     verb: "apikeys.list",
-    class: "authz",
-    authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+    class: "admin",
     gql: "Query.apiKeys",
     rest: "GET /api-gateway/v1/api-keys",
     mcp: "listApiKeys",
   },
   {
     verb: "apikeys.create",
-    class: "authz",
-    authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
+    class: "admin",
     gql: "Mutation.createApiKey",
     rest: "POST /api-gateway/v1/api-keys",
     mcp: "createApiKey",
   },
   {
     verb: "apikeys.revoke",
-    class: "authz",
-    authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+    class: "admin",
     gql: "Mutation.revokeApiKey",
     rest: "DELETE /api-gateway/v1/api-keys/{id}",
     mcp: "revokeApiKey",
@@ -1374,11 +1343,6 @@ function buildOpIndex(): ReadonlyMap<string, VerbEntry> {
     index.set(opId, entry);
   };
   for (const entry of VERB_TABLE) {
-    if ((entry.class === "authz") !== Boolean(entry.authorizationAction)) {
-      throw new Error(
-        `op-class: ${entry.verb} must pair class "authz" with one authorizationAction`,
-      );
-    }
     if (entry.gql) claim(gqlOpId(entry.gql), entry);
     if (entry.rest) claim(restOpId(...splitRest(entry.rest)), entry);
     if (entry.mcp) claim(mcpOpId(entry.mcp), entry);
@@ -1399,11 +1363,6 @@ const OP_INDEX = buildOpIndex();
 
 /** Every op id the table classifies, for the coverage test's reverse check. */
 export const classifiedOpIds = (): readonly string[] => [...OP_INDEX.keys()];
-
-/** Canonical action for a GraphQL/REST/MCP alias, when it is PDP-routed. */
-export const authorizationActionForOp = (
-  opId: string,
-): AuthorizationAction | undefined => OP_INDEX.get(opId)?.authorizationAction;
 
 export interface OpClassification {
   readonly class: OpClass;

@@ -53,21 +53,6 @@ tests:
           can_write_billing: true
           can_write_lifecycle: true
 
-  # Runtime API-key list/create/revoke resolve back to these User credential
-  # permissions. The key itself deliberately is not an FGA entity.
-  - name: API-key management derives from the owner's User permission
-    check:
-      - user: user:usr_alice
-        object: user:usr_alice
-        assertions:
-          can_read_credentials: true
-          can_write_credentials: true
-      - user: user:usr_bob
-        object: user:usr_alice
-        assertions:
-          can_read_credentials: false
-          can_write_credentials: false
-
   - name: user permissions do not cross ownership boundaries
     check:
       - user: user:usr_alice

@@ -200,9 +200,9 @@ export const REST_FRAGMENTS: readonly RestFragment[] = [
       setLedgerV1Routes(router, layers, config),
   },
   {
-    // API-key management. The transport gate admits authenticated calls to the
-    // shared API-key workflow; its centralized PDP decision (including no key
-    // self-replication) holds on all three surfaces.
+    // API-key management. Enforced with the rest of v1; the rule that a key
+    // cannot mint a key lives in the service, so it holds on all three
+    // surfaces rather than in this adapter.
     feature: "apikeys",
     gate: "enforced",
     register: (router, { layers, config }) =>

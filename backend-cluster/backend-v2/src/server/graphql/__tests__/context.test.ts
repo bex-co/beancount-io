@@ -216,9 +216,6 @@ describe("Context Types", () => {
         authorization: `Bearer ${mockToken}`,
         "content-type": "application/json",
       });
-      const authzRequest = context.getAuthorizationRequest?.();
-      expect(authzRequest?.principal.userId).toBe(mockUserId);
-      expect(context.getAuthorizationRequest?.()).toBe(authzRequest);
     });
 
     it("should create context with empty userId when no token", async () => {
