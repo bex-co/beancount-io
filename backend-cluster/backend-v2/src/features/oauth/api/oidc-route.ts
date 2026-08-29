@@ -16,14 +16,17 @@ import { legacyMcpResource } from "@/features/oauth/utils/oidc-verify";
 import { apiResource } from "@/features/oauth/utils/oidc-verify";
 import { CATEGORY_HTTP_STATUS, DomainError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
+import {
+  MOBILE_CLIENT_ID,
+  MOBILE_REDIRECT_URIS,
+} from "@/features/oauth/constants";
+
+export {
+  MOBILE_CLIENT_ID,
+  MOBILE_REDIRECT_URIS,
+} from "@/features/oauth/constants";
 
 const oidcLogger = logger.child({ module: "oidc-provider" });
-
-export const MOBILE_CLIENT_ID = "beancount-mobile";
-export const MOBILE_REDIRECT_URIS = [
-  "io.beancount.ios:/oauth/callback",
-  "io.beancount.android:/oauth/callback",
-] as const;
 
 const DAY_SECONDS = 24 * 60 * 60;
 /** Refresh-token lifetime for every client except the native app. */

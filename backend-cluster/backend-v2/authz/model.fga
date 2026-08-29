@@ -1,55 +1,72 @@
-# Declarative model of backend-v2's ledger RELATIONSHIP ceiling, in the
-# OpenFGA modeling language (https://openfga.dev/docs/modeling).
+# Durable domain-relationship model for backend-v2, written in the OpenFGA DSL.
 #
-# Boundary (ADR 0010): this file models exactly the half of authorization
-# an OpenFGA engine could own — who the caller IS to a ledger, and which
-# permission rank follows. The other half — what the caller's CREDENTIAL
-# may do on this request (API scopes with admin ⊇ write ⊇ read
-# implication, the session capability exemption, the Identity.ledgerScope
-# pin) — is the credential layer's contract in src/server/api/identity.ts
-# and is deliberately NOT modeled here: the FGA schema cannot express
-# "contextual-tuple-only", so scope-shaped relations would sit one
-# persisted tuple away from leaking a session's full power to that user's
-# weakest API key. The enforced composition
+# This model answers only the Zanzibar-shaped question:
 #
-#   effective permission = credential ceiling ∩ relationship ceiling
+#   does stable user U have permission P on resource O?
 #
-# lives in authorizeLedger (src/features/ledger/utils/authorize-ledger.ts)
-# and stays there under any future engine adoption.
+# It contains no credentials, token scopes, request tuples, or authentication
+# assurance. A centralized authorization PDP validates the signed subject
+# context and grant envelope, then composes that decision with an OpenFGA Check.
+# Microservices never construct authorization tuples from request credentials.
 #
-# This file is documentation-as-code today: nothing at runtime evaluates
-# it. A semantic change to the relationship resolution
-# (ledger-access-check.ts, authorizeRank) must update this model in the
-# same PR. CI validates the DSL and runs model.test.fga.yaml against it.
+# This model remains documentation-as-code until that centralized PDP adopts it
+# at runtime. CI validates the DSL and executes model.test.fga.yaml.
 
 model
   schema 1.1
 
-# Subjects are stable internal user IDs (users.id), never usernames — the
-# owner segment of a ledger ID ("alice" in ledger:alice/main) is a
-# ledger_username, a separate namespace. See README invariants.
 type user
+  relations
+    # A user is both an authorization subject and a protected User resource,
+    # matching GitHub's User permission domain. `owner` is written only when the
+    # subject and object contain the same stable internal `users.id`.
+    define owner: [user]
+
+    # Permission names follow `<level>_<capability>`. They map mechanically to
+    # the centralized grant vocabulary `<resource>.<capability>:<level>`:
+    # `can_read_profile` ↔ `user.profile:read`, for example. These answer
+    # only the durable-relationship half of the PDP decision.
+    define can_read_profile: owner
+    define can_write_profile: owner
+    define can_read_credentials: owner
+    define can_write_credentials: owner
+    define can_read_billing: owner
+    define can_write_billing: owner
+    define can_write_lifecycle: owner
 
 type ledger
   relations
-    # Facts — resolved per request from the external Gitea-backed ledger
-    # service by ledger-access-check.ts. The resolver must emit exactly
-    # one effective collaborator rank per caller (see README invariants;
-    # union below is monotonic and cannot repair duplicated or stale
-    # grants).
+    # Durable facts resolved from the external Gitea-backed ledger service.
+    # The resolver must emit exactly one effective collaborator rank per user
+    # and ledger.
     define owner: [user]
     define collaborator_admin: [user]
     define collaborator_write: [user]
     define collaborator_read: [user]
 
-    # Present as the wildcard `user:*` iff the ledger is not private. The
-    # type restriction forbids individual users here: this relation can
-    # only ever say "everyone", never smuggle in a person.
+    # Present as `user:*` iff the ledger is public. The type restriction
+    # prevents an individual user from being written to this relation.
     define public_reader: [user:*]
 
-    # Derived permissions — the rank lattice authorizeRank compares
-    # against: admin ⊇ write ⊇ read; the owner is admin by construction
-    # (ledger-access-check.ts owner branch).
-    define can_admin: owner or collaborator_admin
-    define can_write: can_admin or collaborator_write
-    define can_read: can_write or collaborator_read or public_reader
+    # Durable relationship-rank lattice: administrator ⊇ writer ⊇ reader.
+    # Noun names keep these roles distinct from the `can_<level>_<capability>`
+    # permissions below.
+    define administrator: owner or collaborator_admin
+    define writer: administrator or collaborator_write
+    define reader: writer or collaborator_read or public_reader
+
+    # GitHub-style permission families derived from the durable rank. These are
+    # capabilities, not endpoint names. Fine-grained grants remain the PDP's
+    # independent ceiling and use the matching `<resource>.<capability>:<level>`
+    # name.
+    define can_read_contents: reader
+    define can_write_contents: writer
+    define can_read_administration: administrator
+    define can_write_administration: administrator
+    define can_read_collaborators: administrator
+    define can_write_collaborators: administrator
+    define can_read_bank_connections: administrator
+    define can_write_bank_connections: administrator
+    define can_read_assets: reader
+    define can_write_assets: writer
+    define can_write_ai: writer

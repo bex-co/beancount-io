@@ -3,12 +3,15 @@ import type { AppConfig } from "@/config/config";
 import type { DatabaseLayer } from "@/foundation/composition";
 import {
   API_SCOPES,
+  assertAccountDeletionIdentity,
   assertIdentityCapability,
   assertSessionIdentity,
+  canDeleteOwnAccount,
   resolveIdentity,
   type Identity,
 } from "../identity";
 import { ForbiddenError } from "@/shared/errors";
+import { MOBILE_CLIENT_ID } from "@/features/oauth/constants";
 
 /**
  * `resolveIdentity` is the single authentication gate for GraphQL, REST, and
@@ -160,6 +163,7 @@ describe("resolveIdentity — session credential", () => {
 describe("resolveIdentity — OAuth credential", () => {
   it("resolves an access token carrying the API audience", async () => {
     const token = await mintOAuth({
+      client_id: MOBILE_CLIENT_ID,
       scope: "ledger.read ledger.write",
       jti: "tok-1",
     });
@@ -172,6 +176,7 @@ describe("resolveIdentity — OAuth credential", () => {
       userId: "user-oauth",
       method: "oauth",
       capabilityExempt: false,
+      oauthClientId: MOBILE_CLIENT_ID,
       tokenId: "tok-1",
     });
     expect([...(identity?.scopes ?? [])].sort()).toEqual([
@@ -441,5 +446,40 @@ describe("full session identity", () => {
     { ...session, capabilityExempt: false },
   ])("rejects a delegated or non-exempt identity", (identity) => {
     expect(() => assertSessionIdentity(identity)).toThrow(ForbiddenError);
+  });
+});
+
+describe("account deletion identity", () => {
+  const nativeMobile: Identity = {
+    userId: "user-mobile",
+    method: "oauth",
+    oauthClientId: MOBILE_CLIENT_ID,
+    scopes: new Set(["ledger.admin"]),
+    capabilityExempt: false,
+  };
+
+  it("accepts a full browser session or account-wide native app grant", () => {
+    const browser: Identity = {
+      userId: "user-session",
+      method: "session",
+      scopes: new Set(),
+      capabilityExempt: true,
+    };
+
+    expect(canDeleteOwnAccount(browser)).toBe(true);
+    expect(canDeleteOwnAccount(nativeMobile)).toBe(true);
+    expect(() => assertAccountDeletionIdentity(nativeMobile)).not.toThrow();
+  });
+
+  it.each([
+    { ...nativeMobile, oauthClientId: "dynamic-client" },
+    { ...nativeMobile, scopes: new Set(["ledger.write"]) },
+    { ...nativeMobile, ledgerScope: "alice/main" },
+    { ...nativeMobile, method: "apikey" as const },
+  ])("rejects a delegated or narrowed credential", (identity) => {
+    expect(canDeleteOwnAccount(identity)).toBe(false);
+    expect(() => assertAccountDeletionIdentity(identity)).toThrow(
+      ForbiddenError,
+    );
   });
 });

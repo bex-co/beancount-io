@@ -621,6 +621,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const claims = decodeJwt(tokenBody.access_token as string);
     expect(claims.aud).toBe(resource);
     expect(claims.sub).toBe(TEST_USER.id);
+    expect(claims.client_id).toBe(MOBILE_CLIENT_ID);
     expect(claims.ledger_id).toBeUndefined();
 
     const profileResponse = await fetch(`${ISSUER}/api-gateway/`, {

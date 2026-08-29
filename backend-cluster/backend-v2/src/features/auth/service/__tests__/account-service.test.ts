@@ -13,6 +13,7 @@ import type { IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
 import type { Identity } from "@/server/api/identity";
+import { MOBILE_CLIENT_ID } from "@/features/oauth/constants";
 
 jest.mock("@/shared/lock");
 jest.mock("@/features/stripe/operations/get-user-tier");
@@ -27,6 +28,14 @@ const sessionIdentity = (userId: string): Identity => ({
   method: "session",
   scopes: new Set(),
   capabilityExempt: true,
+});
+
+const mobileIdentity = (userId: string): Identity => ({
+  userId,
+  method: "oauth",
+  oauthClientId: MOBILE_CLIENT_ID,
+  scopes: new Set(["ledger.admin"]),
+  capabilityExempt: false,
 });
 
 describe("AccountService", () => {
@@ -225,7 +234,12 @@ describe("AccountService", () => {
       mockModels.paidCustomer.findByUserId = jest
         .fn()
         .mockResolvedValue([
-          { id: "pc1", userId, stripeCustomerId: "cus_1", clientId: "client-a" },
+          {
+            id: "pc1",
+            userId,
+            stripeCustomerId: "cus_1",
+            clientId: "client-a",
+          },
         ]);
 
       const result = await accountService.getUserProfile(userId);
@@ -333,7 +347,7 @@ describe("AccountService", () => {
       expect(mockModels.user.getById).not.toHaveBeenCalled();
     });
 
-    it("should delete user account with no subscriptions", async () => {
+    it("deletes the account for a first-party native app session", async () => {
       const userId = "user-123";
       const mockUser = {
         _id: "507f1f77bcf86cd799439011",
@@ -352,9 +366,7 @@ describe("AccountService", () => {
         .mockResolvedValue(undefined);
       mockModels.user.deleteByUserId = jest.fn().mockResolvedValue(undefined);
 
-      const result = await accountService.deleteAccount(
-        sessionIdentity(userId),
-      );
+      const result = await accountService.deleteAccount(mobileIdentity(userId));
 
       expect(result).toBe(true);
       expect(mockModels.user.deleteByUserId).toHaveBeenCalledWith(

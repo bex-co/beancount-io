@@ -122,6 +122,8 @@ function expectedAudiences(issuer: string, audience: OAuthAudience): string[] {
 /** A verified OAuth access token, projected onto what the API cares about. */
 export interface OidcIdentity {
   userId: string;
+  /** OAuth client that received this token, as asserted by our issuer. */
+  clientId?: string;
   /** Present only when the grant was pinned to one ledger at consent time. */
   ledgerId?: string;
   /** Scopes granted, split from the space-delimited `scope` claim. */
@@ -187,6 +189,10 @@ export async function resolveOidcIdentity(
 
     return {
       userId,
+      clientId:
+        typeof payload.client_id === "string" && payload.client_id
+          ? payload.client_id
+          : undefined,
       ledgerId,
       scopes: typeof payload.scope === "string" ? payload.scope.split(" ") : [],
       tokenId: typeof payload.jti === "string" ? payload.jti : undefined,

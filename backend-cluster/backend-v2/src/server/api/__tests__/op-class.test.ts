@@ -7,6 +7,7 @@ import {
   evaluateScope,
   requireScopeClass,
 } from "../op-class";
+import { MOBILE_CLIENT_ID } from "@/features/oauth/constants";
 
 /**
  * The enforcement machinery itself. The three drift guards test that the table
@@ -35,6 +36,7 @@ const ADMIN_OP = "GQL Mutation.deleteLedger";
 const SESSION_ONLY_OP = "GQL Mutation.signIn";
 const PUBLIC_OP = "GQL Query.health";
 const UNKNOWN_OP = "GQL Query.somethingNobodyClassified";
+const DELETE_ACCOUNT_OP = "GQL Mutation.deleteAccount";
 
 describe("classifyOp", () => {
   it("fails closed on an op the table does not know", () => {
@@ -118,6 +120,21 @@ describe("evaluateScope", () => {
     expect(decision.allowed).toBe(false);
     expect(decision.requiredScope).toBeNull();
     expect(decision.denyReason).toContain("browser session");
+  });
+
+  it("admits only the native product session to account deletion", () => {
+    const mobile = {
+      ...token("ledger.admin"),
+      oauthClientId: MOBILE_CLIENT_ID,
+    };
+
+    expect(evaluateScope(mobile, DELETE_ACCOUNT_OP).allowed).toBe(true);
+    expect(
+      evaluateScope(
+        { ...mobile, oauthClientId: "dynamic-client" },
+        DELETE_ACCOUNT_OP,
+      ).allowed,
+    ).toBe(false);
   });
 
   it("treats an unclassified op as write, and says so", () => {

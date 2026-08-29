@@ -1,4 +1,9 @@
-import { hasRequiredScope, type ApiScope, type Identity } from "./identity";
+import {
+  canDeleteOwnAccount,
+  hasRequiredScope,
+  type ApiScope,
+  type Identity,
+} from "./identity";
 import { ForbiddenError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import {
@@ -19,11 +24,13 @@ const scopeLogger = logger.child({ module: "op-class" });
  *   `ledger.admin`. `admin` is the ledger's own control plane: its existence,
  *   its collaborators, its keys, its bank bindings — and the reads of those,
  *   because an access-control list is not ledger content.
- * - `session-only` is the honest name for an op no scope can unlock. The
+ * - `session-only` is the honest name for an op no scope alone can unlock. The
  *   vocabulary is deliberately three ledger scopes wide, so account lifecycle,
  *   billing, and credential minting simply have no scope that describes them.
  *   Filing them under `admin` would mean a token granted "manage my ledger"
  *   could also delete the account — so they get a class that never matches.
+ *   A narrowly identified first-party product session may still be admitted
+ *   for a named operation without broadening what `ledger.admin` means.
  * - `public` is for the handful of ops that carry no authority at all (a
  *   liveness probe, the feature-flag bootstrap). It exists so "needs nothing"
  *   is stated rather than approximated by `read`.
@@ -1404,7 +1411,7 @@ export function evaluateScope(
   identity: Identity | undefined,
   opId: string,
 ): ScopeDecision {
-  const { class: opClass, found } = classifyOp(opId);
+  const { class: opClass, found, verb } = classifyOp(opId);
   const requiredScope = SCOPE_FOR_CLASS[opClass];
   const base = { opId, opClass, classified: found, requiredScope };
 
@@ -1417,6 +1424,9 @@ export function evaluateScope(
     return { ...base, allowed: true };
   }
   if (opClass === "public") {
+    return { ...base, allowed: true };
+  }
+  if (verb === "Mutation.deleteAccount" && canDeleteOwnAccount(identity)) {
     return { ...base, allowed: true };
   }
   if (requiredScope === null) {

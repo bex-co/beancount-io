@@ -24,6 +24,7 @@ import type { ToolContext } from "@/features/ai-agent/tools/types";
 import type { Identity } from "../identity";
 import { assembleMcpRegistry, type ApiGate } from "../composition-root";
 import { assembleTestApi } from "./api-surface";
+import { MOBILE_CLIENT_ID } from "@/features/oauth/constants";
 
 /**
  * Cross-surface consistency (ADR 0006 D3): one decision, three dialects.
@@ -233,6 +234,20 @@ describe("scope enforcement across surfaces", () => {
     it("GraphQL: a normal signed-in session still reaches that operation", async () => {
       const { error, reached } = await driveGraphql(
         sessionIdentity,
+        makeGraphqlInfo("Mutation", "deleteAccount"),
+        realConfig,
+      );
+
+      expect(error).toBeUndefined();
+      expect(reached).toBe(true);
+    });
+
+    it("GraphQL: the account-wide native app session reaches account deletion", async () => {
+      const { error, reached } = await driveGraphql(
+        {
+          ...adminToken,
+          oauthClientId: MOBILE_CLIENT_ID,
+        },
         makeGraphqlInfo("Mutation", "deleteAccount"),
         realConfig,
       );

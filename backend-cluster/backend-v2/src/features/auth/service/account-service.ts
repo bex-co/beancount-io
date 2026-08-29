@@ -17,7 +17,7 @@ import type { IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { decryptToken } from "@/features/plaid/utils/encryption";
 import { logger } from "@/shared/logger";
 import {
-  assertSessionIdentity,
+  assertAccountDeletionIdentity,
   type Identity,
 } from "@/server/api/identity";
 
@@ -247,7 +247,7 @@ export class AccountService implements IAccountService {
   };
 
   public deleteAccount = async (identity: Identity): Promise<boolean> => {
-    assertSessionIdentity(identity, "Deleting an account");
+    assertAccountDeletionIdentity(identity);
     const { userId } = identity;
     const user = await this.models.user.getById(this.db, userId);
     if (!user) {
