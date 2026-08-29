@@ -1,7 +1,10 @@
 import "reflect-metadata";
 import { validate } from "class-validator";
+import { graphql } from "graphql";
+import { buildSchema, registerEnumType } from "type-graphql";
 import { AccountResolver, SearchUserInput } from "../account-resolver";
 import { IContext } from "@/server/graphql/context";
+import { customAuthChecker } from "@/server/graphql/auth-checker";
 import type { IAccountService } from "@/features/auth/service/account-service";
 import { UnauthenticatedError } from "@/shared/errors";
 import { ReportStatus } from "@/features/auth/utils/report-status";
@@ -60,6 +63,29 @@ describe("AccountResolver", () => {
   });
 
   describe("userProfile", () => {
+    it("returns null for an anonymous caller through the real GraphQL schema", async () => {
+      registerEnumType(ReportStatus, { name: "ReportStatus" });
+      const schema = await buildSchema({
+        resolvers: [AccountResolver],
+        authChecker: customAuthChecker,
+        container: { get: () => resolver },
+      });
+
+      const result = await graphql({
+        schema,
+        source: "query GetCurrentUser { userProfile { id } }",
+        contextValue: {
+          ...mockContext,
+          identity: undefined,
+          userId: undefined,
+        },
+      });
+
+      expect(result.errors).toBeUndefined();
+      expect(result.data).toEqual({ userProfile: null });
+      expect(mockAccountService.getUserProfile).not.toHaveBeenCalled();
+    });
+
     it("should return user profile for authenticated user", async () => {
       const mockProfile = {
         id: "user-123",

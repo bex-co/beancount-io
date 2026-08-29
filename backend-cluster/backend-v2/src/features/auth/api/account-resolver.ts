@@ -121,7 +121,11 @@ export class AccountResolver {
     private readonly authorizationService: IAuthorizationService,
   ) {}
 
-  @Authorized("ledger.read")
+  // Deliberately no @Authorized decorator: this nullable field is the
+  // dashboard's identity probe, so an anonymous caller must reach the resolver
+  // and receive null. The global GraphQL scope middleware still classifies
+  // Query.userProfile as a read and enforces ledger.read when a scoped OAuth or
+  // API-key identity is present.
   @Query(() => UserProfileResponse, {
     description: "get the user",
     nullable: true,
