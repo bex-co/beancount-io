@@ -9,6 +9,7 @@ import {
   type V1Route,
 } from "@/server/rest/v1-route";
 import { toPublicApiKey } from "../service/api-key-service";
+import { authorizationRequest } from "@/server/api/authorization";
 import {
   apiKeyIdSchema,
   createApiKeySchema,
@@ -19,9 +20,8 @@ import {
 /**
  * Key management over REST — the surface the keys are mostly *for*.
  *
- * A CLI or CI job that already holds a key still cannot mint another one: the
- * service refuses on `Identity.method`, not these adapters, so the rule holds
- * identically on GraphQL and MCP.
+ * Every handler delegates to the shared workflow, so the same centralized PDP
+ * decision and no-self-replication rule hold on GraphQL and MCP too.
  */
 export const API_KEY_V1_ROUTES: readonly V1Route<never, never, never>[] = [
   v1Route({
@@ -34,7 +34,9 @@ export const API_KEY_V1_ROUTES: readonly V1Route<never, never, never>[] = [
       200: json("Your API keys", z.array(publicApiKeySchema)),
     },
     handler: async ({ layers }, { identity }) =>
-      (await layers.services.apiKey.list(identity)).map(toPublicApiKey),
+      (await layers.workflows.apiKey.list(authorizationRequest(identity))).map(
+        toPublicApiKey,
+      ),
   }),
 
   v1Route({
@@ -49,7 +51,10 @@ export const API_KEY_V1_ROUTES: readonly V1Route<never, never, never>[] = [
       402: json("Minting API keys requires a paid plan"),
     },
     handler: async ({ layers }, { identity, body }) => {
-      const minted = await layers.services.apiKey.mint(identity, body);
+      const minted = await layers.workflows.apiKey.mint(
+        authorizationRequest(identity),
+        body,
+      );
       return { key: toPublicApiKey(minted.key), plaintext: minted.plaintext };
     },
   }),
@@ -65,7 +70,12 @@ export const API_KEY_V1_ROUTES: readonly V1Route<never, never, never>[] = [
       200: json("The revoked key", publicApiKeySchema),
     },
     handler: async ({ layers }, { identity, params }) =>
-      toPublicApiKey(await layers.services.apiKey.revoke(identity, params.id)),
+      toPublicApiKey(
+        await layers.workflows.apiKey.revoke(
+          authorizationRequest(identity),
+          params.id,
+        ),
+      ),
   }),
 ];
 

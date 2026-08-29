@@ -41,14 +41,14 @@ const storedKey = {
   updatedAt: new Date("2026-01-01"),
 };
 
-const apiKeyService = {
+const apiKeyWorkflow = {
   list: jest.fn(async () => [storedKey]),
   mint: jest.fn(async () => ({ key: storedKey, plaintext: "bcio_secret" })),
   revoke: jest.fn(async () => ({ ...storedKey, revokedAt: new Date() })),
 };
 
 const layers = {
-  services: { apiKey: apiKeyService },
+  workflows: { apiKey: apiKeyWorkflow },
 } as unknown as AppLayers;
 
 const config = {
@@ -118,7 +118,7 @@ describe("POST /api-gateway/v1/api-keys", () => {
     });
     expect(status).toBe(400);
     expect(body).toMatchObject({ error: { code: "VALIDATION_FAILED" } });
-    expect(apiKeyService.mint).not.toHaveBeenCalled();
+    expect(apiKeyWorkflow.mint).not.toHaveBeenCalled();
   });
 
   it("rejects an empty scope list", async () => {
@@ -139,11 +139,11 @@ describe("POST /api-gateway/v1/api-keys", () => {
     });
     expect(status).toBe(400);
     expect(body).toMatchObject({ error: { code: "VALIDATION_FAILED" } });
-    expect(apiKeyService.mint).not.toHaveBeenCalled();
+    expect(apiKeyWorkflow.mint).not.toHaveBeenCalled();
   });
 
   it("surfaces the paid-plan refusal as 402", async () => {
-    apiKeyService.mint.mockRejectedValueOnce(
+    apiKeyWorkflow.mint.mockRejectedValueOnce(
       new PremiumRequiredError("API keys"),
     );
     const { status, body } = await call("POST", "/api-gateway/v1/api-keys", {
@@ -154,16 +154,17 @@ describe("POST /api-gateway/v1/api-keys", () => {
     expect(body).toMatchObject({ error: { code: "PREMIUM_REQUIRED" } });
   });
 
-  it("passes an API-key caller through to the service, which refuses it", async () => {
-    // The no-self-perpetuation rule lives in the service so it holds on all
-    // three surfaces; the adapter's job is only not to bypass it.
+  it("passes an API-key caller to the workflow's centralized decision", async () => {
+    // The adapter does not duplicate the no-self-perpetuation rule.
     server.setIdentity(fromKey);
     await call("POST", "/api-gateway/v1/api-keys", {
       name: "CI",
       scopes: ["ledger.read"],
     });
-    expect(apiKeyService.mint).toHaveBeenCalledWith(
-      expect.objectContaining({ method: "apikey" }),
+    expect(apiKeyWorkflow.mint).toHaveBeenCalledWith(
+      expect.objectContaining({
+        principal: expect.objectContaining({ method: "apikey" }),
+      }),
       expect.anything(),
     );
   });
@@ -177,8 +178,10 @@ describe("DELETE /api-gateway/v1/api-keys/{id}", () => {
     );
     expect(status).toBe(200);
     expect(body).toMatchObject({ id: "akey_1" });
-    expect(apiKeyService.revoke).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: "usr_1" }),
+    expect(apiKeyWorkflow.revoke).toHaveBeenCalledWith(
+      expect.objectContaining({
+        principal: expect.objectContaining({ userId: "usr_1" }),
+      }),
       "akey_1",
     );
   });

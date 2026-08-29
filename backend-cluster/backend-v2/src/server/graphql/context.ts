@@ -4,6 +4,10 @@ import { UnauthenticatedError } from "@/shared/errors";
 import { User } from "@/features/auth/data/user-model";
 import { getTokenFromCtx } from "@/features/auth/utils/auth";
 import { type Identity, resolveIdentity } from "@/server/api/identity";
+import {
+  authorizationRequest,
+  type AuthorizationRequest,
+} from "@/server/api/authorization/authorization-contract";
 import { GraphQLLoaders, createLoaders } from "./loaders";
 import { logger } from "@/shared/logger";
 
@@ -40,7 +44,16 @@ export interface IContext {
   /** `getCurrentUserId`'s sibling for verbs that need the full Identity — the
    * write-class ledger verbs, which `authorizeLedger` requires one for. */
   getCurrentIdentity: () => Identity;
+  /** PDP memo scoped to this GraphQL request and its resolved identity. */
+  getAuthorizationRequest?: () => AuthorizationRequest;
 }
+
+/** Shared request memo in production, with a one-call fallback for thin tests. */
+export const authorizationRequestFromContext = (
+  ctx: Pick<IContext, "getAuthorizationRequest" | "getCurrentIdentity">,
+): AuthorizationRequest =>
+  ctx.getAuthorizationRequest?.() ??
+  authorizationRequest(ctx.getCurrentIdentity());
 
 /**
  * Minimal context interface that provides the properties needed for context creation
@@ -91,6 +104,13 @@ export async function createContext(
     }
     return identity;
   };
+  const authzRequest = identity ? authorizationRequest(identity) : undefined;
+  const getAuthorizationRequest = (): AuthorizationRequest => {
+    if (!authzRequest) {
+      throw new UnauthenticatedError("Authentication required");
+    }
+    return authzRequest;
+  };
 
   const getCurrentUser = async () => {
     const user = await database.models.user.getById(
@@ -127,6 +147,7 @@ export async function createContext(
     getCurrentUserId,
     getCurrentUser,
     getCurrentIdentity,
+    getAuthorizationRequest,
   };
 }
 

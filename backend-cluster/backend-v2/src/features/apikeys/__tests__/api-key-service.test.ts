@@ -35,13 +35,6 @@ const oauthGrant: Identity = {
   capabilityExempt: false,
 };
 
-const fromKey: Identity = {
-  ...oauthGrant,
-  method: "apikey",
-  scopes: new Set(["ledger.admin"]),
-  tokenId: "akey_1",
-};
-
 const adminOAuthGrant: Identity = {
   ...oauthGrant,
   scopes: new Set(["ledger.admin"]),
@@ -106,25 +99,11 @@ describe("minting", () => {
     expect(created[0].keyDigest).toBe(apiKeyDigest(minted.plaintext));
   });
 
-  it("refuses a caller whose own credential is an API key", async () => {
-    const { service } = makeService();
-    await expect(
-      service.mint(fromKey, { name: "CI", scopes: ["ledger.read"] }),
-    ).rejects.toBeInstanceOf(ForbiddenError);
-  });
-
   it("refuses a free-plan user", async () => {
     const { service } = makeService({ premium: false });
     await expect(
       service.mint(session, { name: "CI", scopes: ["ledger.read"] }),
     ).rejects.toBeInstanceOf(PremiumRequiredError);
-  });
-
-  it("requires the admin capability from an OAuth minter", async () => {
-    const { service } = makeService();
-    await expect(
-      service.mint(oauthGrant, { name: "CI", scopes: ["ledger.read"] }),
-    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("lets an admin OAuth grant mint a narrower key", async () => {
@@ -298,22 +277,9 @@ describe("verification", () => {
 });
 
 describe("revocation", () => {
-  it("refuses a credential without the admin capability", async () => {
-    const { service, model } = makeService({ stored: storedKey() });
-
-    await expect(service.revoke(oauthGrant, "akey_1")).rejects.toBeInstanceOf(
-      ForbiddenError,
-    );
-    expect(model.findById).not.toHaveBeenCalled();
-  });
-
-  it("reads another user's key id as not found", async () => {
-    const { service } = makeService({
-      stored: storedKey({ userId: "usr_someone_else" }),
-    });
-    // Not "forbidden": that would confirm the id exists, turning revoke into a
-    // probe for which key ids are real.
-    await expect(service.revoke(session, "akey_1")).rejects.toBeInstanceOf(
+  it("reads a missing key id as not found", async () => {
+    const { service } = makeService({ stored: null });
+    await expect(service.revoke("akey_missing")).rejects.toBeInstanceOf(
       NotFoundError,
     );
   });
@@ -323,25 +289,17 @@ describe("revocation", () => {
     const { service, model } = makeService({
       stored: storedKey({ revokedAt }),
     });
-    const result = await service.revoke(session, "akey_1");
+    const result = await service.revoke("akey_1");
     expect(result.revokedAt).toEqual(revokedAt);
     expect(model.revoke).not.toHaveBeenCalled();
   });
 });
 
 describe("listing", () => {
-  it("refuses a credential without the admin capability", async () => {
+  it("lists only the trusted user id supplied by the workflow", async () => {
     const { service, model } = makeService();
-
-    await expect(service.list(oauthGrant)).rejects.toBeInstanceOf(
-      ForbiddenError,
-    );
-    expect(model.listByUserId).not.toHaveBeenCalled();
-  });
-
-  it("allows an admin OAuth grant", async () => {
-    const { service } = makeService();
-    await expect(service.list(adminOAuthGrant)).resolves.toHaveLength(1);
+    await expect(service.list("usr_1")).resolves.toHaveLength(1);
+    expect(model.listByUserId).toHaveBeenCalledWith(expect.anything(), "usr_1");
   });
 });
 

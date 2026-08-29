@@ -127,20 +127,28 @@ scopes are independent within that ledger vocabulary. User-account lifecycle is
 outside it: no ledger scope, OAuth client id, or ledger relationship authorizes
 `user.delete`.
 
-### User deletion authorization
+### User-domain authorization
 
-`Mutation.deleteAccount` maps to the transport-neutral `user.delete` action in
-the small centralized TypeScript authorization module under
-`src/server/api/authorization/`. The resolver derives `user:<id>` from the
-authenticated identity and makes exactly one authorization call before account
-deletion starts. Browser sessions and OAuth user credentials may delete that
-same user; API keys and cross-user resources are denied.
+Protected user profile, lifecycle, and API-key-management operations map to
+transport-neutral `user.*` actions in the centralized TypeScript PDP under
+`src/server/api/authorization/`. GraphQL, REST, and MCP adapters delegate to
+Account/API-key workflows, which make one final decision before domain reads or
+side effects. Exact-self relationships come from the resolved stable user ID;
+API-key revoke resolves ownership from the current database row without copying
+it into a tuple store.
 
-The GraphQL mutation remains argument-free, so existing dashboard and mobile
-clients do not change. This slice adds no step-up flow, deletion grant, Redis
-state, new scope, or OpenFGA deployment. `authz/model.fga` and the FGA CLI remain
-the declarative relationship boundary; the runtime check mirrors
-`user#can_write_lifecycle` locally.
+Existing credential contracts are preserved. `Mutation.deleteAccount` remains
+argument-free and accepts browser sessions and OAuth user credentials, so the
+mobile deletion fix needs no client change or step-up flow. API keys cannot
+delete the user or mint successor keys. User profile search/update remain
+session-only; profile reads and API-key management keep their prior scope
+ceilings. Paid-plan, scope/pin narrowing, expiry, and one-time-secret handling
+remain enforced after authorization.
+
+There is no OpenFGA runtime, SDK, service, new database, contextual tuple, or
+cross-request authorization cache. `authz/model.fga` and its FGA CLI tests are
+the declarative relationship boundary; current data is evaluated locally and
+fails closed when unavailable. See `authz/README.md` and ADR 0010.
 
 Signing-key rotation is a two-step deployment: replace the secret-backed JWKS,
 deploy, then verify `/api-gateway/oauth/jwks` exposes the new public `kid` only.

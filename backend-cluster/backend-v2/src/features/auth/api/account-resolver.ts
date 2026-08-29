@@ -1,7 +1,6 @@
 import {
   Args,
   ArgsType,
-  Authorized,
   Ctx,
   Field,
   Mutation,
@@ -10,14 +9,11 @@ import {
 } from "type-graphql";
 import { MaxLength, MinLength } from "class-validator";
 import { ReportStatus } from "@/features/auth/utils/report-status";
-import { IContext } from "@/server/graphql/context";
-import type { IAccountService } from "@/features/auth/service/account-service";
-import { UnauthenticatedError } from "@/shared/errors";
 import {
-  type IAuthorizationService,
-  USER_DELETE_ACTION,
-  userResource,
-} from "@/server/api/authorization";
+  IContext,
+  authorizationRequestFromContext,
+} from "@/server/graphql/context";
+import type { IAccountWorkflow } from "@/features/auth/workflow/account-workflow";
 
 @ArgsType()
 class UserProfileRequest {
@@ -116,12 +112,8 @@ class UpdateProfileInput {
 }
 
 export class AccountResolver {
-  constructor(
-    private readonly accountService: IAccountService,
-    private readonly authorizationService: IAuthorizationService,
-  ) {}
+  constructor(private readonly accountWorkflow: IAccountWorkflow) {}
 
-  @Authorized("ledger.read")
   @Query(() => UserProfileResponse, {
     description: "get the user",
     nullable: true,
@@ -132,58 +124,47 @@ export class AccountResolver {
     @Ctx()
     ctx: IContext,
   ): Promise<UserProfileResponse | null> {
-    if (!ctx.userId) {
-      return null;
-    }
-    const userId = args.userId ?? ctx.getCurrentUserId();
-    const currentUserId = ctx.getCurrentUserId();
-    if (userId !== currentUserId || !userId) {
-      throw new UnauthenticatedError("Not authorized user");
-    }
-    const user = await this.accountService.getUserProfile(userId);
-    return user;
+    if (!ctx.identity) return null;
+    const userId = args.userId ?? ctx.identity.userId;
+    return this.accountWorkflow.getUserProfile(
+      authorizationRequestFromContext(ctx),
+      userId,
+    );
   }
 
   @Mutation(() => Boolean, {
     description: "delete user account and its associated data",
   })
   public async deleteAccount(@Ctx() ctx: IContext): Promise<boolean> {
-    const identity = ctx.getCurrentIdentity();
-    await this.authorizationService.authorizeOrThrow({
-      principal: identity,
-      action: USER_DELETE_ACTION,
-      resource: userResource(identity.userId),
-    });
-    return this.accountService.deleteAccount(identity.userId);
+    return this.accountWorkflow.deleteAccount(
+      authorizationRequestFromContext(ctx),
+    );
   }
 
-  @Authorized()
   @Query(() => [SearchUser])
   public async getUserByExactMatch(
     @Ctx() ctx: IContext,
     @Args() args: SearchUserInput,
   ): Promise<SearchUser[]> {
-    const users = await this.accountService.findUsersByEmailOrUsername(
+    const users = await this.accountWorkflow.findUsersByEmailOrUsername(
+      authorizationRequestFromContext(ctx),
       args.keyword,
-      args.includeCurrentUser ? undefined : ctx.getCurrentUserId(),
+      Boolean(args.includeCurrentUser),
     );
     return users.map((u) => ({ email: u.email, username: u.ledger_username }));
   }
 
-  @Authorized()
   @Mutation(() => UserProfileResponse)
   public async updateUsername(
     @Ctx() ctx: IContext,
     @Args() args: UpdateUsernameInput,
   ): Promise<UserProfileResponse | null> {
-    await this.accountService.updateUsername(
-      ctx.getCurrentUserId(),
+    return this.accountWorkflow.updateUsername(
+      authorizationRequestFromContext(ctx),
       args.username,
     );
-    return this.accountService.getUserProfile(ctx.getCurrentUserId());
   }
 
-  @Authorized()
   @Mutation(() => UserProfileResponse, {
     description: "Update user profile (firstName and lastName)",
   })
@@ -191,11 +172,10 @@ export class AccountResolver {
     @Ctx() ctx: IContext,
     @Args() args: UpdateProfileInput,
   ): Promise<UserProfileResponse | null> {
-    await this.accountService.updateProfile(
-      ctx.getCurrentUserId(),
+    return this.accountWorkflow.updateProfile(
+      authorizationRequestFromContext(ctx),
       args.firstName ?? "",
       args.lastName ?? "",
     );
-    return this.accountService.getUserProfile(ctx.getCurrentUserId());
   }
 }

@@ -2,11 +2,13 @@ import { ForbiddenError } from "@/shared/errors";
 import type { Identity } from "../identity";
 import {
   VERB_TABLE,
+  authorizationActionForOp,
   classifiedOpIds,
   classifyOp,
   evaluateScope,
   requireScopeClass,
 } from "../op-class";
+import { AUTHORIZATION_ACTIONS } from "../authorization";
 
 /**
  * The enforcement machinery itself. The three drift guards test that the table
@@ -74,6 +76,42 @@ describe("classifyOp", () => {
     // one verb, two primitives, two ids.
     expect(classifiedOpIds().length).toBeLessThanOrEqual(expected);
     expect(new Set(classifiedOpIds()).size).toBe(classifiedOpIds().length);
+  });
+
+  it("maps every migrated transport alias to one canonical action", () => {
+    expect(
+      [
+        "GQL Query.userProfile",
+        "GQL Query.getUserByExactMatch",
+        "GQL Mutation.updateUsername",
+        "GQL Mutation.updateProfile",
+        "GQL Mutation.deleteAccount",
+        "GQL Query.apiKeys",
+        "REST GET /api-gateway/v1/api-keys",
+        "MCP listApiKeys",
+        "GQL Mutation.createApiKey",
+        "REST POST /api-gateway/v1/api-keys",
+        "MCP createApiKey",
+        "GQL Mutation.revokeApiKey",
+        "REST DELETE /api-gateway/v1/api-keys/{id}",
+        "MCP revokeApiKey",
+      ].map((opId) => authorizationActionForOp(opId)),
+    ).toEqual([
+      AUTHORIZATION_ACTIONS.USER_PROFILE_READ,
+      AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH,
+      AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
+      AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
+      AUTHORIZATION_ACTIONS.USER_DELETE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+    ]);
   });
 });
 

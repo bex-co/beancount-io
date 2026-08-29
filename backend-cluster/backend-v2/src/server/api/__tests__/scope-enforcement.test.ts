@@ -22,6 +22,7 @@ import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { restScopeMiddleware } from "@/server/rest/scope-middleware";
 import type { ToolContext } from "@/features/ai-agent/tools/types";
 import type { Identity } from "../identity";
+import { classifyOp } from "../op-class";
 import { assembleMcpRegistry, type ApiGate } from "../composition-root";
 import { assembleTestApi } from "./api-surface";
 
@@ -181,6 +182,7 @@ function captureMcpHandlers(
           ledgerShell: { queryShellText: jest.fn() },
           ledgerRepo: {},
         },
+        apiKeyWorkflow: services?.apiKeyWorkflow ?? {},
         identity,
         ledgerId: "alice/main",
       } as unknown as ToolContext,
@@ -203,15 +205,16 @@ describe("scope enforcement across surfaces", () => {
       expect(profile.reached).toBe(true);
       expect(profile.error).toBeUndefined();
 
-      // Identity-only credentials (no ledger scope at all) still cannot.
+      // Identity-only credentials reach the PDP too; it owns the credential
+      // ceiling now, rather than this ledger-scope gate.
       const bare: Identity = { ...readOnlyToken, scopes: new Set() };
-      const refused = await driveGraphql(
+      const deferred = await driveGraphql(
         bare,
         makeGraphqlInfo("Query", "userProfile"),
         realConfig,
       );
-      expect(refused.reached).toBe(false);
-      expect(refused.error).toBeInstanceOf(ForbiddenError);
+      expect(deferred.reached).toBe(true);
+      expect(deferred.error).toBeUndefined();
     });
 
     it("GraphQL: ledger scopes do not decide a centralized-authz operation", async () => {
@@ -254,25 +257,34 @@ describe("scope enforcement across surfaces", () => {
       expect(reached).toBe(true);
     });
 
-    it("MCP: ledger.write cannot list API keys", async () => {
-      const handlers = captureMcpHandlers(writeToken, realConfig);
-      const result = await handlers.get("listApiKeys")!({});
-
-      expect(result.isError).toBe(true);
-      expect(JSON.stringify(result.content)).toContain("ledger.admin");
-    });
-
-    it("MCP: ledger.admin still reaches an admin operation", async () => {
+    it("MCP: ledger scopes defer API-key authority to the centralized PDP", async () => {
       const list = jest.fn().mockResolvedValue([]);
-      const handlers = captureMcpHandlers(adminToken, realConfig, {
-        apiKey: { list },
+      const handlers = captureMcpHandlers(writeToken, realConfig, {
+        apiKeyWorkflow: { list },
         ledgerRepo: {},
         ledgerShell: {},
       });
       const result = await handlers.get("listApiKeys")!({});
 
       expect(result.isError).not.toBe(true);
-      expect(list).toHaveBeenCalledWith(adminToken);
+      expect(list).toHaveBeenCalledWith(
+        expect.objectContaining({ principal: writeToken }),
+      );
+    });
+
+    it("MCP: ledger.admin still reaches an admin operation", async () => {
+      const list = jest.fn().mockResolvedValue([]);
+      const handlers = captureMcpHandlers(adminToken, realConfig, {
+        apiKeyWorkflow: { list },
+        ledgerRepo: {},
+        ledgerShell: {},
+      });
+      const result = await handlers.get("listApiKeys")!({});
+
+      expect(result.isError).not.toBe(true);
+      expect(list).toHaveBeenCalledWith(
+        expect.objectContaining({ principal: adminToken }),
+      );
     });
 
     it("still lets an unauthenticated signup ceremony reach its resolver", async () => {
@@ -590,7 +602,10 @@ describe("configured enforcement and the shadow-mode compatibility path", () => 
     const middleware = restScopeMiddleware(shadowing, gates);
     const scopeless: Identity = { ...readOnlyToken, scopes: new Set() };
 
-    const enforced = restMounts.filter((mount) => mount.gate === "enforced");
+    const enforced = restMounts.filter(
+      (mount) =>
+        mount.gate === "enforced" && classifyOp(mount.opId).class !== "authz",
+    );
     // If this is ever empty the test above silently becomes the only one, and
     // v1 could lose its enforcement without anything failing.
     expect(enforced.length).toBeGreaterThan(0);

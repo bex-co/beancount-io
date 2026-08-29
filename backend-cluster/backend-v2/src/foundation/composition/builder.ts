@@ -26,6 +26,8 @@ import { LedgerRepoService } from "@/features/ledger/service/ledger-repo-service
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { LedgerCollaboratorsWorkflow } from "@/features/ledger/workflow/ledger-collaborators-workflow";
 import { LedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
+import { AccountWorkflow } from "@/features/auth/workflow/account-workflow";
+import { ApiKeyWorkflow } from "@/features/apikeys/workflow/api-key-workflow";
 import { AccountService } from "@/features/auth/service/account-service";
 import { AuthService } from "@/features/auth/service/auth-service";
 import { CliAuthService } from "@/features/auth/service/cli-auth-service";
@@ -33,7 +35,10 @@ import { UserProfileService } from "@/features/gitea/user-profile/service/user-p
 import { PullRequestService } from "@/features/gitea/pull-request/service/pull-request-service";
 import { FeedService } from "@/features/gitea/feed/service/feed-service";
 import { CommitsService } from "@/features/gitea/commits/service/commits-service";
-import { AuthorizationService } from "@/server/api/authorization";
+import {
+  AuthorizationService,
+  SourceBackedRelationshipEvaluator,
+} from "@/server/api/authorization";
 import { SendGrid, ConsoleSendGrid } from "@/foundation/sendgrid";
 import {
   type DatabaseLayer,
@@ -80,6 +85,12 @@ export function buildServiceLayer(input: {
   config: AppConfig;
 }): ServiceLayer {
   const stripe = new StripeService(input.database.models, input.database.db);
+  const authorization = new AuthorizationService(
+    new SourceBackedRelationshipEvaluator(
+      input.database.db,
+      input.database.models,
+    ),
+  );
   const apiKey = new ApiKeyService({
     db: input.database.db,
     models: input.database.models,
@@ -212,7 +223,7 @@ export function buildServiceLayer(input: {
       input.database.db,
     ),
     commits: new CommitsService(input.clients.giteaClientFactory),
-    authorization: new AuthorizationService(),
+    authorization,
   };
 }
 
@@ -245,5 +256,13 @@ export function buildWorkflowLayer(input: {
     input.services.ledgerEntry,
     input.config,
   );
-  return { ledger, ledgerCollaborators, ledgerReceipt };
+  const account = new AccountWorkflow(
+    input.services.account,
+    input.services.authorization,
+  );
+  const apiKey = new ApiKeyWorkflow(
+    input.services.apiKey,
+    input.services.authorization,
+  );
+  return { ledger, ledgerCollaborators, ledgerReceipt, account, apiKey };
 }
