@@ -121,11 +121,26 @@ identity-client interaction pages.
 
 OAuth capabilities use one closed operation matrix on GraphQL, REST, and MCP:
 reads require `ledger.read`, ordinary mutations require
-`ledger.write`, and destructive account/ledger operations plus collaborator or
-public-key management require `ledger.admin`. These scopes are independent; an
-admin credential does not implicitly gain read or write access. Legacy browser
-and installed-mobile session JWTs remain capability-exempt only for the stated
-migration window.
+`ledger.write`, and ledger control-plane operations such as deleting a ledger,
+managing collaborators, or managing public keys require `ledger.admin`. The
+scopes are independent within that ledger vocabulary. User-account lifecycle is
+outside it: no ledger scope, OAuth client id, or ledger relationship authorizes
+`user.delete`.
+
+### User deletion authorization
+
+`Mutation.deleteAccount` maps to the transport-neutral `user.delete` action in
+the small centralized TypeScript authorization module under
+`src/server/api/authorization/`. The resolver derives `user:<id>` from the
+authenticated identity and makes exactly one authorization call before account
+deletion starts. Browser sessions and OAuth user credentials may delete that
+same user; API keys and cross-user resources are denied.
+
+The GraphQL mutation remains argument-free, so existing dashboard and mobile
+clients do not change. This slice adds no step-up flow, deletion grant, Redis
+state, new scope, or OpenFGA deployment. `authz/model.fga` and the FGA CLI remain
+the declarative relationship boundary; the runtime check mirrors
+`user#can_write_lifecycle` locally.
 
 Signing-key rotation is a two-step deployment: replace the secret-backed JWKS,
 deploy, then verify `/api-gateway/oauth/jwks` exposes the new public `kid` only.

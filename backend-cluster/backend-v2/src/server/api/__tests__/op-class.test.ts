@@ -7,7 +7,6 @@ import {
   evaluateScope,
   requireScopeClass,
 } from "../op-class";
-import { MOBILE_CLIENT_ID } from "@/features/oauth/constants";
 
 /**
  * The enforcement machinery itself. The three drift guards test that the table
@@ -122,19 +121,11 @@ describe("evaluateScope", () => {
     expect(decision.denyReason).toContain("browser session");
   });
 
-  it("admits only the native product session to account deletion", () => {
-    const mobile = {
-      ...token("ledger.admin"),
-      oauthClientId: MOBILE_CLIENT_ID,
-    };
-
-    expect(evaluateScope(mobile, DELETE_ACCOUNT_OP).allowed).toBe(true);
-    expect(
-      evaluateScope(
-        { ...mobile, oauthClientId: "dynamic-client" },
-        DELETE_ACCOUNT_OP,
-      ).allowed,
-    ).toBe(false);
+  it("defers centralized-authz operations without treating a ledger scope as authority", () => {
+    const decision = evaluateScope(token(), DELETE_ACCOUNT_OP);
+    expect(decision.allowed).toBe(true);
+    expect(decision.opClass).toBe("authz");
+    expect(decision.requiredScope).toBeNull();
   });
 
   it("treats an unclassified op as write, and says so", () => {

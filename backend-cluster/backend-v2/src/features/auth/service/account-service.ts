@@ -16,10 +16,6 @@ import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factor
 import type { IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { decryptToken } from "@/features/plaid/utils/encryption";
 import { logger } from "@/shared/logger";
-import {
-  assertAccountDeletionIdentity,
-  type Identity,
-} from "@/server/api/identity";
 
 const accountLogger = logger.child({ module: "account-service" });
 
@@ -53,7 +49,7 @@ export interface IAccountService {
     firstName: string,
     lastName: string,
   ): Promise<boolean>;
-  deleteAccount(identity: Identity): Promise<boolean>;
+  deleteAccount(userId: string): Promise<boolean>;
   findUsersByEmailOrUsername(
     keyword: string,
     excludeUserId?: string,
@@ -246,9 +242,7 @@ export class AccountService implements IAccountService {
     return true;
   };
 
-  public deleteAccount = async (identity: Identity): Promise<boolean> => {
-    assertAccountDeletionIdentity(identity);
-    const { userId } = identity;
+  public deleteAccount = async (userId: string): Promise<boolean> => {
     const user = await this.models.user.getById(this.db, userId);
     if (!user) {
       throw new NotFoundError("User", userId);

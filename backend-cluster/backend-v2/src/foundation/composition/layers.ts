@@ -32,6 +32,7 @@ import { type IUserProfileService } from "@/features/gitea/user-profile/service/
 import { type IPullRequestService } from "@/features/gitea/pull-request/service/pull-request-service";
 import { type IFeedService } from "@/features/gitea/feed/service/feed-service";
 import { type ICommitsService } from "@/features/gitea/commits/service/commits-service";
+import { type IAuthorizationService } from "@/server/api/authorization";
 
 /**
  * Composition-root layers. Each layer is a narrow interface describing what the
@@ -89,6 +90,7 @@ export interface ServiceLayer {
   pullRequest: IPullRequestService;
   feed: IFeedService;
   commits: ICommitsService;
+  authorization: IAuthorizationService;
 }
 
 /** Layer 4 — Workflows (cross-service orchestration; own transaction boundaries). */

@@ -6,11 +6,16 @@ import type { IAccountService } from "@/features/auth/service/account-service";
 import { UnauthenticatedError } from "@/shared/errors";
 import { ReportStatus } from "@/features/auth/utils/report-status";
 import type { User } from "@/features/auth/data/user-model";
+import {
+  type IAuthorizationService,
+  USER_DELETE_ACTION,
+} from "@/server/api/authorization";
 
 describe("AccountResolver", () => {
   let resolver: AccountResolver;
   let mockContext: IContext;
   let mockAccountService: jest.Mocked<IAccountService>;
+  let mockAuthorizationService: jest.Mocked<IAuthorizationService>;
   const sessionIdentity = {
     userId: "user-123",
     method: "session" as const,
@@ -28,6 +33,10 @@ describe("AccountResolver", () => {
       updateProfile: jest.fn(),
       findUsersByEmailOrUsername: jest.fn(),
     } as unknown as jest.Mocked<IAccountService>;
+    mockAuthorizationService = {
+      authorize: jest.fn(),
+      authorizeOrThrow: jest.fn(),
+    } as jest.Mocked<IAuthorizationService>;
 
     mockContext = {
       userId: "user-123",
@@ -44,7 +53,10 @@ describe("AccountResolver", () => {
       getCurrentIdentity: jest.fn().mockReturnValue(sessionIdentity),
     } as unknown as IContext;
 
-    resolver = new AccountResolver(mockAccountService);
+    resolver = new AccountResolver(
+      mockAccountService,
+      mockAuthorizationService,
+    );
   });
 
   describe("userProfile", () => {
@@ -139,9 +151,15 @@ describe("AccountResolver", () => {
       const result = await resolver.deleteAccount(mockContext);
 
       expect(result).toBe(true);
-      expect(mockAccountService.deleteAccount).toHaveBeenCalledWith(
-        sessionIdentity,
+      expect(mockAuthorizationService.authorizeOrThrow).toHaveBeenCalledWith({
+        principal: sessionIdentity,
+        action: USER_DELETE_ACTION,
+        resource: "user:user-123",
+      });
+      expect(mockAuthorizationService.authorizeOrThrow).toHaveBeenCalledTimes(
+        1,
       );
+      expect(mockAccountService.deleteAccount).toHaveBeenCalledWith("user-123");
     });
 
     it("should return false if delete fails", async () => {
@@ -150,6 +168,17 @@ describe("AccountResolver", () => {
       const result = await resolver.deleteAccount(mockContext);
 
       expect(result).toBe(false);
+    });
+
+    it("performs no account work when centralized authorization denies", async () => {
+      mockAuthorizationService.authorizeOrThrow.mockRejectedValue(
+        new Error("denied"),
+      );
+
+      await expect(resolver.deleteAccount(mockContext)).rejects.toThrow(
+        "denied",
+      );
+      expect(mockAccountService.deleteAccount).not.toHaveBeenCalled();
     });
   });
 

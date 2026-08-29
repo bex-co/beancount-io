@@ -5,12 +5,13 @@
 #   does stable user U have permission P on resource O?
 #
 # It contains no credentials, token scopes, request tuples, or authentication
-# assurance. A centralized authorization PDP validates the signed subject
-# context and grant envelope, then composes that decision with an OpenFGA Check.
-# Microservices never construct authorization tuples from request credentials.
+# assurance. Credentials and request context remain inputs to application code;
+# microservices never construct authorization tuples from request credentials.
 #
-# This model remains documentation-as-code until that centralized PDP adopts it
-# at runtime. CI validates the DSL and executes model.test.fga.yaml.
+# No OpenFGA runtime is deployed. The centralized TypeScript module currently
+# executes only user.delete with an exact-self check that mirrors
+# can_write_lifecycle. The remaining relationships stay documentation-as-code
+# until an ADR 0010 trigger fires. CI validates this model and its tests.
 
 model
   schema 1.1

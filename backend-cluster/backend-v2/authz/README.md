@@ -1,7 +1,7 @@
 # Durable authorization relationships
 
-`model.fga` is the durable relationship model used by backend-v2's target
-centralized authorization service. It answers one Zanzibar-shaped question:
+`model.fga` is backend-v2's durable relationship model. It answers one
+Zanzibar-shaped question:
 
 > Does stable user **U** have permission **P** on resource **O**?
 
@@ -14,46 +14,46 @@ assurance.
 This boundary follows OpenFGA's guidance to
 [model the application domain rather than a meta-model](https://openfga.dev/docs/best-practices/modeling-design-principles).
 The no-engine-yet decision and adoption triggers remain documented in
-[ADR 0010](../../../docs/adrs/ADR010-backend-v2-authz-model.md). The model is
-documentation-as-code today; backend-v2 does not evaluate it at runtime yet.
+[ADR 0010](../../../docs/adrs/ADR010-backend-v2-authz-model.md). No OpenFGA
+server or SDK is deployed. Backend-v2 now executes the `user.delete` slice
+through its small TypeScript PDP and a local relationship adapter that mirrors
+`user#can_write_lifecycle`; the rest of this model remains
+documentation-as-code until an ADR 0010 trigger fires.
 
 ## Centralized authorization in a microservice system
 
-Centralized authorization means one trusted policy decision point (PDP) and one
-service contract. It does not mean representing every request credential as an
-OpenFGA object.
-
-The target flow is:
+Centralized authorization means one trusted policy decision point (PDP) for an
+action. It does not mean representing every request credential as an OpenFGA
+object. The only runtime slice implemented today is:
 
 ```text
-external request
-  → central AuthN / STS validates the credential
-  → signed subject context or durable grant reference
-  → microservice calls Authorize(action, resource, signed context)
-  → central PDP validates grant, resource bound, and assurance
-  → central PDP performs OpenFGA Check(user, relation, resource)
-  → one allow / deny decision
+GraphQL Mutation.deleteAccount
+  → resolveIdentity()
+  → authorize(principal, user.delete, user:<principal.userId>)
+  → permit browser-session or OAuth user credentials
+  → check exact-self user#can_write_lifecycle
+  → one allow / deny decision before AccountService
 ```
 
-Microservices provide only:
+The module lives in `src/server/api/authorization/`. Its local relationship
+adapter evaluates the exact-self fact modeled by
+`user#can_write_lifecycle`. It does not deploy OpenFGA or implement any other
+action. The caller provides only:
 
 - the canonical action;
 - the domain resource ID;
-- signed subject context issued by the trusted AuthN/STS boundary.
+- the already-resolved authenticated identity.
 
-They do not interpret OAuth scopes, manufacture relationship tuples, assert
-that reauthentication happened, or decide which credential kinds an operation
-accepts. Those rules belong to the central PDP. For multi-hop calls, the PDP may
-issue a short-lived, downscoped internal capability bound to the action and
-resource; downstream services verify or exchange that capability instead of
-forwarding ambient browser credentials.
+The resolver does not interpret ledger scopes or manufacture relationship
+tuples. The account service receives an already-authorized user ID and does not
+repeat authorization policy.
 
 ## One permission vocabulary
 
-The target PDP follows GitHub's fine-grained permission shape: permissions are
-grouped by resource domain, named after stable noun capabilities, and assigned
-an independent access level. An endpoint maps to the permissions it requires;
-the endpoint name is not itself a permission.
+The relationship model follows GitHub's fine-grained permission shape:
+permissions are grouped by resource domain, named after stable noun
+capabilities, and assigned an independent access level. An endpoint maps to the
+permissions it requires; the endpoint name is not itself a permission.
 
 The canonical grant name is:
 
@@ -70,11 +70,11 @@ The matching OpenFGA relation is mechanical:
 
 For example:
 
-| Grant permission | OpenFGA relation |
-| --- | --- |
-| `user.profile:read` | `user#can_read_profile` |
-| `user.lifecycle:write` | `user#can_write_lifecycle` |
-| `ledger.contents:write` | `ledger#can_write_contents` |
+| Grant permission              | OpenFGA relation                  |
+| ----------------------------- | --------------------------------- |
+| `user.profile:read`           | `user#can_read_profile`           |
+| `user.lifecycle:write`        | `user#can_write_lifecycle`        |
+| `ledger.contents:write`       | `ledger#can_write_contents`       |
 | `ledger.administration:write` | `ledger#can_write_administration` |
 
 `write` satisfies `read` only within the same capability family. There is no
@@ -107,6 +107,9 @@ ledger.assets:write
 ledger.ai:write
 ```
 
+This vocabulary describes the model's future fine-grained credential ceiling.
+The current `user.delete` runtime slice does not mint or require such a grant.
+
 Do not introduce a global `admin` grant. `administrator` in `model.fga` is the
 durable ledger relationship rank inherited from Gitea; it is not a permission
 level that silently implies every capability. Destructive lifecycle operations
@@ -121,40 +124,26 @@ that shape, not GitHub's product-specific permission names or PAT objects.
 
 ## Actions and transport operations
 
-An action is a stable, transport-independent business verb. GraphQL fields,
-REST routes, and MCP tools are aliases for that action. The centralized PDP
-owns the only operation-to-action mapping and the only action requirements.
+An action is a stable, transport-independent business verb. The implemented
+mapping is deliberately one row:
 
 ```text
-GQL Mutation.deleteAccount         → user.delete
-GQL Mutation.insertReceiptTransaction → ledger.receipt.create
-REST GET .../files/{path}          → ledger.file.read
-MCP editLedgerFiles                → ledger.file.write
+GQL Mutation.deleteAccount → user.delete
 ```
 
-Action requirements compose permission families explicitly:
+Its complete requirement is:
 
-| Action | Grant requirement | OpenFGA requirement | Assurance |
-| --- | --- | --- | --- |
-| `user.profile.read` | `user.profile:read` | `user#can_read_profile` | authenticated |
-| `user.profile.update` | `user.profile:write` | `user#can_write_profile` | authenticated |
-| `user.delete` | `user.lifecycle:write` | `user#can_write_lifecycle` | recent authentication and purpose-bound one-time grant |
-| `ledger.file.read` | `ledger.contents:read` | `ledger#can_read_contents` | authenticated or public relationship |
-| `ledger.file.write` | `ledger.contents:write` | `ledger#can_write_contents` | authenticated |
-| `ledger.receipt.create` | `ledger.contents:write` **and** `ledger.assets:write` | `ledger#can_write_contents` **and** `ledger#can_write_assets` | authenticated |
-| `ledger.delete` | `ledger.administration:write` | `ledger#can_write_administration` | recent authentication |
+| Action        | Accepted credential                 | Relationship requirement                            |
+| ------------- | ----------------------------------- | --------------------------------------------------- |
+| `user.delete` | browser session or OAuth user token | `user#can_write_lifecycle` on that same `user:<id>` |
 
-Some operations may accept alternatives (`anyOf`) and some may require several
-permissions (`allOf`), matching GitHub's endpoint tables. Missing mappings and
-unknown actions fail closed. A denial should return structured
-`requiredPermissions` and `requiredAssurance` metadata so every transport can
-explain the same decision without reimplementing it.
+API keys, cross-user resources, unknown actions, and relationship-evaluator
+failures deny. Denials carry the action, resource, and stable reason metadata.
 
-There is intentionally no inert operation-policy file in this directory. When
-the centralized PDP is implemented, the mapping above becomes its directly
-executed registry and its coverage test must compare that registry against all
-live GraphQL, REST, and MCP operations. Keeping a second documentation-only
-catalog today would create drift without centralizing enforcement.
+There is intentionally no inert operation-policy file in this directory. The
+implemented `user.delete` action lives directly in the TypeScript authorization
+module; transport classification admits the request to that module but cannot
+authorize it. Keeping a second documentation-only catalog would create drift.
 
 ## What OpenFGA owns
 
@@ -194,8 +183,8 @@ can_write_collaborators  = administrator
 can_read_assets          = reader
 ```
 
-Fine-grained token grants are an independent ceiling evaluated by the central
-PDP. For example, a receipt write requires both
+In the broader target model, fine-grained token grants are an independent
+ceiling evaluated by the central PDP. For example, a receipt write requires both
 `ledger#can_write_contents` and `ledger#can_write_assets`; the PDP must also
 require the signed grant to contain both matching permission families. There is
 no endpoint-specific `can_write_receipt` relation.
@@ -212,37 +201,31 @@ The following are not durable resource relationships:
 - service-to-service workload identity;
 - operation-to-policy mapping.
 
-The central AuthN/STS layer verifies credentials and emits a signed subject
-context. The central PDP, not each microservice, interprets that context and
-combines its grant/assurance policy with the OpenFGA relationship result.
+Authentication stays outside the relationship model. The current in-process
+caller passes the resolved `Identity` to the authorization module; a future
+service boundary would need an equivalent trusted subject context.
 
-This separation does not create two independent authorization authorities:
-OpenFGA is a relationship data and evaluation backend inside the PDP. The PDP
-is the only component that returns the application's final authorization
-decision.
+This separation does not create two independent authorization authorities. The
+TypeScript module returns the final decision today; under future engine
+adoption, OpenFGA would be a relationship backend inside that decision point,
+not another application policy layer.
 
 ## User deletion
 
-The complete target decision is:
+The complete executed decision is intentionally small:
 
 ```text
 allow user.delete when
-  signed grant contains user.lifecycle:write
-  AND grant resource == user:<subject>
-  AND credential flow is permitted for user deletion
-  AND authentication age <= 5 minutes
-  AND one-time deletion proof is valid and atomically consumed
-  AND OpenFGA Check(user:<subject>, can_write_lifecycle, user:<subject>) is true
+  credential is a browser session or OAuth user token
+  AND resource == user:<subject>
+  AND RelationshipCheck(user:<subject>, can_write_lifecycle, user:<subject>) is true
 ```
 
-For mobile, the ordinary OAuth access token should not satisfy this policy. The
-client completes a step-up ceremony with the central AuthN/STS service and
-receives a short-lived, purpose-bound deletion grant containing `sub`, action,
-resource, `jti`, and `exp`. The PDP validates and consumes that grant before the
-domain service performs the destructive operation.
-
-The one-time grant is a capability exchanged between trusted services, not an
-OpenFGA relationship tuple. FGA neither authenticates it nor prevents replay.
+The server derives the resource from the authenticated identity, so clients
+cannot select another user. The existing argument-free GraphQL mutation works
+unchanged for both dashboard sessions and the mobile OAuth session. This slice
+does not add step-up login, a deletion grant, Redis state, a new OAuth scope, or
+a mobile/dashboard contract change.
 
 ## Tuple ownership
 
@@ -261,8 +244,8 @@ tuples.
 
 ## Invariants
 
-1. **The PDP is the only final authorization authority.** Microservices call
-   `Authorize`; they do not locally reinterpret scopes or assurance.
+1. **The authorization module is the only final authority for `user.delete`.**
+   The resolver calls it once and the account service does not repeat policy.
 2. **OpenFGA contains only durable domain relationships.** No credential,
    session, token, grant, or `request_*` type/relation belongs in this model.
 3. **Subjects use stable internal user IDs** (`users.id`), never usernames,
@@ -278,8 +261,8 @@ tuples.
 7. **Permission names are resource-scoped capability families.** Endpoint names
    never become permissions, and generic ledger administration cannot imply an
    unrelated user or ledger capability.
-8. **Operation mapping is centralized and fail-closed.** Runtime adoption must
-   cover every live GraphQL, REST, and MCP operation in both directions.
+8. **The runtime slice is fail-closed.** Unknown actions do not inherit a
+   default policy; expanding beyond `user.delete` is separate work.
 9. **Authentication facts remain signed and provenance-preserving across
    service hops.** A downstream service cannot upgrade them.
 
@@ -298,12 +281,9 @@ fga model validate --file model.fga
 fga model test --tests model.test.fga.yaml
 ```
 
-The test suite covers user ownership boundaries, capability-level permission
+The FGA suite covers user ownership boundaries, capability-level permission
 families, ledger rank inheritance, private fail-closed behavior, public reads,
-and monotonic rank semantics. Credential/grant/assurance tests belong to the
-future centralized PDP suite, not the OpenFGA model suite.
-
-Because this work is scoped to `authz/`, it does not change the current runtime
-gates in `identity.ts`, `op-class.ts`, or `authorize-ledger.ts`. Mobile user
-deletion will change only after the centralized PDP and deletion-grant ceremony
-are implemented.
+and monotonic rank semantics. The TypeScript suite separately covers supported
+credential kinds, unknown actions, wrong-user resources, relationship denial,
+and relationship-evaluator failure. Credentials and request context never
+become FGA tuples.

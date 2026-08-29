@@ -33,6 +33,7 @@ import { UserProfileService } from "@/features/gitea/user-profile/service/user-p
 import { PullRequestService } from "@/features/gitea/pull-request/service/pull-request-service";
 import { FeedService } from "@/features/gitea/feed/service/feed-service";
 import { CommitsService } from "@/features/gitea/commits/service/commits-service";
+import { AuthorizationService } from "@/server/api/authorization";
 import { SendGrid, ConsoleSendGrid } from "@/foundation/sendgrid";
 import {
   type DatabaseLayer,
@@ -211,6 +212,7 @@ export function buildServiceLayer(input: {
       input.database.db,
     ),
     commits: new CommitsService(input.clients.giteaClientFactory),
+    authorization: new AuthorizationService(),
   };
 }
 

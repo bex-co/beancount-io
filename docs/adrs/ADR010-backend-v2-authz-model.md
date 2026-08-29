@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-28
 - Decision owners: Backend (`backend-cluster/backend-v2`)
-- Scope: the ledger authorization semantics behind the `authorizeLedger` seam, the declarative model under `backend-cluster/backend-v2/authz/`, where the OpenFGA boundary sits (relationship ceiling in the model, credential ceiling in code), whether and when to adopt an OpenFGA-compatible evaluation engine, and which engine if a trigger fires. Extends ADR 0006 (identity, scopes, op classes); does not change any enforced behavior.
+- Scope: the ledger authorization semantics behind the `authorizeLedger` seam, the declarative model under `backend-cluster/backend-v2/authz/`, where the OpenFGA boundary sits (relationship ceiling in the model, credential ceiling in code), whether and when to adopt an OpenFGA-compatible evaluation engine, and which engine if a trigger fires. Extends ADR 0006 (identity, scopes, op classes). The 2026-08-28 amendment adds the first enforced user-lifecycle slice without deploying an FGA engine.
 
 ## Context
 
@@ -42,8 +42,8 @@ flowchart TB
 
 Two facts constrain any engine adoption:
 
-1. **The relationship data is not ours.** Owner/collaborator/visibility live in the external Gitea-backed ledger service and are resolved per request (`ledger-access-check.ts`); backend-v2's Postgres holds credentials, not relationships. Any tuple-store engine either syncs that data or receives it per check as contextual tuples.
-2. **The model is small.** Three ranks × two ceilings, one resource type. The hand-written evaluation is ~30 lines with tests, drift guards, and audit hooks around it.
+1. **The ledger relationship data is not ours.** Owner/collaborator/visibility live in the external Gitea-backed ledger service and are resolved per request (`ledger-access-check.ts`); backend-v2's Postgres holds credentials, not those relationships. A future tuple-store engine must synchronize that durable data rather than translating each request credential into contextual tuples.
+2. **The model is small.** It has an exact-self user relationship plus three ledger ranks and derived capability families. The hand-written relationship evaluations remain small, tested seams.
 
 A survey of the OpenFGA-compatible ecosystem for Node (2026-08) found: no official in-process engine (OpenFGA is Go; embeddable as a Go library only, no WASM build; `@openfga/sdk` is an HTTP client; `@openfga/syntax-transformer` parses/validates the DSL but does not evaluate). A 2026 wave of community in-process engines exists — `@tsfga/core` (conformance-tested against live OpenFGA, Postgres via Kysely, MIT, single-maintainer, pre-1.0), `@zanzibar-ts/core` (OpenFGA model JSON as IR, Workers/D1-targeted, v0.1.x), `pgfga`/`melange` (evaluate `.fga` semantics inside Postgres over your own tables — moot for us while relationships live in Gitea) — all under a year old. The mature path is an OpenFGA server sidecar (CNCF incubating since 2025-10) plus the JS SDK. Same-family-but-different-DSL servers (SpiceDB, Permify, Ory Keto) and non-ReBAC embedded libraries (node-casbin, CASL, Cerbos embedded, OPA-WASM, deprecated Oso OSS) were considered and set aside: the requirement was OpenFGA's model shape.
 
@@ -51,16 +51,17 @@ A survey of the OpenFGA-compatible ecosystem for Node (2026-08) found: no offici
 
 ### D1 — The model file is the specification of the relationship ceiling
 
-`backend-cluster/backend-v2/authz/model.fga` expresses the relationship ceiling — owner/collaborator/public facts and the derived `can_admin ⊇ can_write ⊇ can_read` rank lattice — in the OpenFGA DSL, with a truth-table assertion suite in `model.test.fga.yaml`. Nothing evaluates it at runtime. A semantic change to relationship resolution (`ledger-access-check.ts`, `authorizeRank`) must update the model in the same PR — recorded in `backend-v2/CLAUDE.md`. CI (`.github/workflows/ci-authz-model.yml`) runs `fga model validate` and `fga model test` with a version- and checksum-pinned OpenFGA CLI; `model test` evaluates with the CLI's embedded engine, so CI needs no server, store, or network.
+`backend-cluster/backend-v2/authz/model.fga` expresses the relationship ceiling — exact-self user ownership plus ledger owner/collaborator/public facts and their derived capability families — in the OpenFGA DSL, with a truth-table assertion suite in `model.test.fga.yaml`. No OpenFGA runtime evaluates it. A semantic change to relationship resolution must update the model in the same PR — recorded in `backend-v2/CLAUDE.md`. CI (`.github/workflows/ci-authz-model.yml`) runs `fga model validate` and `fga model test` with a version- and checksum-pinned OpenFGA CLI; `model test` evaluates with the CLI's embedded engine, so CI needs no server, store, or network.
 
 ### D2 — The two-ceiling intersection is the canonical shape, composed in code
 
 `effective permission = credential ceiling ∩ relationship ceiling`. The halves stay separate because they answer different questions: the relationship half is about people and ledgers (sharing); the credential half is about a person's own credentials (delegation — a read-only CI key, a ledger-pinned agent key, a scoped OAuth grant must stay weaker than the person). GitHub enforces the same intersection — role × fine-grained-PAT permissions — with the token half outside its authorization graph. The composition lives in `authorizeLedger` and stays in code under any adoption:
 
 ```ts
-authorizeLedger = credentialAllows(identity, ledgerId, rel)    // identity.ts
-               && relationshipAllows(userId, ledgerId, rel)    // today: ledger-access-check
-                                                               // future: engine Check
+authorizeLedger =
+  credentialAllows(identity, ledgerId, rel) && // identity.ts
+  relationshipAllows(userId, ledgerId, rel); // today: ledger-access-check
+// future: engine Check
 ```
 
 ### D3 — The model owns only the relationship ceiling
@@ -90,6 +91,28 @@ Any one of these reopens engine selection; absent them, proposals to adopt an en
 ### D6 — Pre-decided engine choice when a trigger fires
 
 To avoid re-litigating the survey: prefer an **OpenFGA server sidecar** (Apache-2.0, CNCF) with Postgres storage — `deploy/bex/` has no persistent disks, so the SQLite backend is not an option there. If in-process evaluation is a hard requirement, take `@tsfga/core` or whatever conformance-tested in-process engine has matured by then, re-verified at that time. Adoption is a one-liner change in shape: `relationshipAllows` swaps its implementation from the Gitea lookup to an engine `Check` on `can_<rel>` (and ListObjects answers T2 directly, since D3 keeps capability out of the object graph); `model.fga` carries over unchanged — that is the point of D1. The relationship half then grows toward the GitHub/Gitea shape additively: widen type restrictions (`[user]` → `[user, team#member]`), add org-default permissions via `from owner_org`; the facts → derived-permissions structure is untouched.
+
+## Amendment — 2026-08-28: one lightweight centralized runtime slice
+
+Mobile account deletion exposed a boundary the ledger-scope matrix cannot
+express: `ledger.admin` is authority over a ledger, not over the user's
+identity. Backend-v2 now executes only `user.delete` through one small
+TypeScript authorization module. The resolver derives the target from the
+authenticated identity and makes one decision before the account service is
+called. Browser-session and OAuth user credentials may act on the exact-self
+resource; API keys and cross-user resources are denied.
+
+This is not an OpenFGA engine adoption and does not fire T1–T3. The relationship
+is evaluated through a local adapter that accepts the same `(user, relation,
+object)` shape an eventual official SDK `Check` would use; `model.fga` and its
+CLI suite remain the relationship specification. The existing
+`authorizeLedger` implementation is unchanged.
+
+The amendment also clarifies D3 for microservices: credential and request facts
+never become persisted or contextual FGA tuples. The operation-class gate only
+routes authenticated deletion requests to the authorization module; it cannot
+authorize deletion itself. This amendment adds no step-up ceremony, grant,
+Redis state, client contract, or OpenFGA runtime.
 
 ## Follow-up (open)
 

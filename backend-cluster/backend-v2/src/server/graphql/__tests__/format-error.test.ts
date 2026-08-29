@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { GraphQLError } from "graphql";
 import { ArgumentValidationError } from "type-graphql";
 import { NotFoundError, InternalServerError } from "@/shared/errors";
+import { AuthorizationDeniedError } from "@/server/api/authorization";
 
 // config.env drives production masking; mock it so we can toggle.
 jest.mock("@/config/config", () => ({
@@ -39,6 +40,25 @@ describe("formatError (GraphQL transport adapter)", () => {
     expect(result.extensions).toMatchObject({ resource: "Ledger", id: "abc" });
     expect(result.message).toBe("Ledger with ID 'abc' not found");
     expect(result.path).toEqual(["someField"]);
+  });
+
+  it("exposes a stable authorization reason", () => {
+    const denial = new AuthorizationDeniedError({
+      allowed: false,
+      action: "user.delete",
+      resource: "user:usr_alice",
+      reason: "relationship_denied",
+    });
+    const { formatted, gqlError } = wrap(denial);
+
+    const result = formatError(formatted, gqlError);
+
+    expect(result.extensions).toMatchObject({
+      code: "FORBIDDEN",
+      action: "user.delete",
+      resource: "user:usr_alice",
+      reason: "relationship_denied",
+    });
   });
 
   it("preserves the message for internal errors in non-production", () => {

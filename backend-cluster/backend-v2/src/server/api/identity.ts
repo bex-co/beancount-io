@@ -14,7 +14,6 @@ import {
 } from "@/features/apikeys/service/api-key-service";
 import { logger } from "@/shared/logger";
 import { ForbiddenError } from "@/shared/errors";
-import { MOBILE_CLIENT_ID } from "@/features/oauth/constants";
 
 const identityLogger = logger.child({ module: "identity" });
 
@@ -185,34 +184,6 @@ export function assertSessionIdentity(
   if (identity.method !== "session" || !identity.capabilityExempt) {
     throw new ForbiddenError(`${action} requires a full signed-in session`);
   }
-}
-
-/**
- * Account deletion is a direct-product action, not authority implied by the
- * public `ledger.admin` scope. Browser sessions remain valid, and the native
- * app's static OAuth grant is admitted narrowly here so moving mobile sign-in
- * to PKCE did not silently remove an in-app account lifecycle operation.
- *
- * The native grant must be account-wide and carry the strongest ledger scope.
- * Dynamic OAuth clients and API keys stay rejected even when they hold every
- * public scope.
- */
-export function canDeleteOwnAccount(identity: Identity): boolean {
-  if (identity.method === "session" && identity.capabilityExempt) return true;
-  return (
-    identity.method === "oauth" &&
-    !identity.capabilityExempt &&
-    identity.oauthClientId === MOBILE_CLIENT_ID &&
-    identity.ledgerScope === undefined &&
-    hasRequiredScope(identity.scopes, "ledger.admin")
-  );
-}
-
-export function assertAccountDeletionIdentity(identity: Identity): void {
-  if (canDeleteOwnAccount(identity)) return;
-  throw new ForbiddenError(
-    "Deleting an account requires a full signed-in Beancount browser or mobile session",
-  );
 }
 
 /**

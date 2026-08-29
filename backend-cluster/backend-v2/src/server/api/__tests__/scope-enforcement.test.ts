@@ -24,7 +24,6 @@ import type { ToolContext } from "@/features/ai-agent/tools/types";
 import type { Identity } from "../identity";
 import { assembleMcpRegistry, type ApiGate } from "../composition-root";
 import { assembleTestApi } from "./api-surface";
-import { MOBILE_CLIENT_ID } from "@/features/oauth/constants";
 
 /**
  * Cross-surface consistency (ADR 0006 D3): one decision, three dialects.
@@ -215,7 +214,7 @@ describe("scope enforcement across surfaces", () => {
       expect(refused.error).toBeInstanceOf(ForbiddenError);
     });
 
-    it("GraphQL: even every ledger scope cannot unlock a session-only operation", async () => {
+    it("GraphQL: ledger scopes do not decide a centralized-authz operation", async () => {
       const allScopes: Identity = {
         ...adminToken,
         scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
@@ -226,9 +225,8 @@ describe("scope enforcement across surfaces", () => {
         realConfig,
       );
 
-      expect(reached).toBe(false);
-      expect(error).toBeInstanceOf(ForbiddenError);
-      expect((error as Error).message).toContain("browser session");
+      expect(error).toBeUndefined();
+      expect(reached).toBe(true);
     });
 
     it("GraphQL: a normal signed-in session still reaches that operation", async () => {
@@ -242,11 +240,11 @@ describe("scope enforcement across surfaces", () => {
       expect(reached).toBe(true);
     });
 
-    it("GraphQL: the account-wide native app session reaches account deletion", async () => {
+    it("GraphQL: a bare token reaches the PDP without gaining deletion authority", async () => {
       const { error, reached } = await driveGraphql(
         {
           ...adminToken,
-          oauthClientId: MOBILE_CLIENT_ID,
+          scopes: new Set(),
         },
         makeGraphqlInfo("Mutation", "deleteAccount"),
         realConfig,

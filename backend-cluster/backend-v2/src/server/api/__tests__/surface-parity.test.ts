@@ -173,10 +173,10 @@ describe("surface parity", () => {
    */
   const DEFERRED: Record<"gql" | "rest" | "mcp", number> = {
     gql: 0,
-    // +1 each on 2026-08-28: `Query.userProfile` left the session-only wall
-    // (ADR 0008 amendment) and now counts as in-scope work with excuses.
-    rest: 46,
-    mcp: 57,
+    // `Query.userProfile` and centralized account deletion are
+    // credential-reachable work whose absent twins carry explicit reasons.
+    rest: 47,
+    mcp: 58,
   };
 
   it("tracks the in-scope gap exactly, so it cannot drift either way", () => {

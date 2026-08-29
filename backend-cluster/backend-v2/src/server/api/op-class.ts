@@ -1,9 +1,4 @@
-import {
-  canDeleteOwnAccount,
-  hasRequiredScope,
-  type ApiScope,
-  type Identity,
-} from "./identity";
+import { hasRequiredScope, type ApiScope, type Identity } from "./identity";
 import { ForbiddenError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import {
@@ -24,13 +19,15 @@ const scopeLogger = logger.child({ module: "op-class" });
  *   `ledger.admin`. `admin` is the ledger's own control plane: its existence,
  *   its collaborators, its keys, its bank bindings — and the reads of those,
  *   because an access-control list is not ledger content.
+ * - `authz` passes any authenticated credential to the centralized PDP. It is
+ *   neither a public operation nor authority granted by a ledger scope; the
+ *   resolver's one policy decision is the enforcement point.
  * - `session-only` is the honest name for an op no scope alone can unlock. The
- *   vocabulary is deliberately three ledger scopes wide, so account lifecycle,
- *   billing, and credential minting simply have no scope that describes them.
+ *   vocabulary is deliberately three ledger scopes wide, so billing,
+ *   credential minting, and remaining browser-only identity ceremonies have no
+ *   scope that describes them. Account deletion uses `authz` above.
  *   Filing them under `admin` would mean a token granted "manage my ledger"
  *   could also delete the account — so they get a class that never matches.
- *   A narrowly identified first-party product session may still be admitted
- *   for a named operation without broadening what `ledger.admin` means.
  * - `public` is for the handful of ops that carry no authority at all (a
  *   liveness probe, the feature-flag bootstrap). It exists so "needs nothing"
  *   is stated rather than approximated by `read`.
@@ -40,13 +37,23 @@ const scopeLogger = logger.child({ module: "op-class" });
  * (`op-class-coverage.test.ts`) is what keeps it from ever firing in
  * production.
  */
-export type OpClass = "read" | "write" | "admin" | "session-only" | "public";
+export type OpClass =
+  | "read"
+  | "write"
+  | "admin"
+  | "authz"
+  | "session-only"
+  | "public";
 
 /** The scope that satisfies each class, or null when no scope can. */
+// TODO(authz): Migrate the remaining protected operations to centralized
+// authorization, using OpenFGA for durable relationship checks when ADR 0010's
+// runtime-adoption trigger fires.
 const SCOPE_FOR_CLASS: Record<OpClass, ApiScope | null> = {
   read: "ledger.read",
   write: "ledger.write",
   admin: "ledger.admin",
+  authz: null,
   "session-only": null,
   public: null,
 };
@@ -346,7 +353,7 @@ const ACCOUNT_VERBS: readonly VerbEntry[] = [
   ),
   gqlOnly(
     "Mutation.deleteAccount",
-    "session-only",
+    "authz",
     R.sessionCeremony,
     M.sessionCeremony,
   ),
@@ -1411,7 +1418,7 @@ export function evaluateScope(
   identity: Identity | undefined,
   opId: string,
 ): ScopeDecision {
-  const { class: opClass, found, verb } = classifyOp(opId);
+  const { class: opClass, found } = classifyOp(opId);
   const requiredScope = SCOPE_FOR_CLASS[opClass];
   const base = { opId, opClass, classified: found, requiredScope };
 
@@ -1426,7 +1433,7 @@ export function evaluateScope(
   if (opClass === "public") {
     return { ...base, allowed: true };
   }
-  if (verb === "Mutation.deleteAccount" && canDeleteOwnAccount(identity)) {
+  if (opClass === "authz") {
     return { ...base, allowed: true };
   }
   if (requiredScope === null) {

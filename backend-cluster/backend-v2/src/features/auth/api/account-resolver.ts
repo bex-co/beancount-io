@@ -13,6 +13,11 @@ import { ReportStatus } from "@/features/auth/utils/report-status";
 import { IContext } from "@/server/graphql/context";
 import type { IAccountService } from "@/features/auth/service/account-service";
 import { UnauthenticatedError } from "@/shared/errors";
+import {
+  type IAuthorizationService,
+  USER_DELETE_ACTION,
+  userResource,
+} from "@/server/api/authorization";
 
 @ArgsType()
 class UserProfileRequest {
@@ -111,7 +116,10 @@ class UpdateProfileInput {
 }
 
 export class AccountResolver {
-  constructor(private readonly accountService: IAccountService) {}
+  constructor(
+    private readonly accountService: IAccountService,
+    private readonly authorizationService: IAuthorizationService,
+  ) {}
 
   @Authorized("ledger.read")
   @Query(() => UserProfileResponse, {
@@ -136,12 +144,17 @@ export class AccountResolver {
     return user;
   }
 
-  @Authorized("ledger.admin")
   @Mutation(() => Boolean, {
     description: "delete user account and its associated data",
   })
   public async deleteAccount(@Ctx() ctx: IContext): Promise<boolean> {
-    return this.accountService.deleteAccount(ctx.getCurrentIdentity());
+    const identity = ctx.getCurrentIdentity();
+    await this.authorizationService.authorizeOrThrow({
+      principal: identity,
+      action: USER_DELETE_ACTION,
+      resource: userResource(identity.userId),
+    });
+    return this.accountService.deleteAccount(identity.userId);
   }
 
   @Authorized()
