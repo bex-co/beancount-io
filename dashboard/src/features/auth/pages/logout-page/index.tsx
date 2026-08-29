@@ -1,11 +1,11 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "@tanstack/react-router";
 import { LogOut, Loader2, CheckCircle } from "lucide-react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { PageSEO } from "@/common/components/seo/page-seo";
-import { useMutation, useApolloClient } from "@apollo/client/react";
+import { useMutation } from "@apollo/client/react";
 import { LogoutDocument } from "@/graphql/definitions";
 import { clearUserId } from "@/common/analytics";
+import { redirectToLoginAfterLogout } from "./redirect-to-login";
 
 /**
  * Logout page component
@@ -13,54 +13,42 @@ import { clearUserId } from "@/common/analytics";
  */
 export default function LogoutPage() {
   const { t } = useTranslations();
-  const navigate = useNavigate();
   const [logoutMutation] = useMutation(LogoutDocument);
   const [status, setStatus] = useState<"logging-out" | "success">(
     "logging-out",
   );
-  const client = useApolloClient();
 
   useEffect(() => {
     const performLogout = async () => {
-      try {
-        // Show logging out status
-        setStatus("logging-out");
+      // Show logging out status
+      setStatus("logging-out");
 
-        // Wait a bit for smooth animation
-        await new Promise((resolve) => setTimeout(resolve, 800));
+      // Wait a bit for smooth animation
+      await new Promise((resolve) => setTimeout(resolve, 800));
 
-        // Call backend logout mutation to clear httpOnly cookie and revoke token
-        await logoutMutation().catch((err) => {
-          // Non-blocking: even if this fails, continue with local cleanup
-          console.warn("Backend logout request failed:", err);
-        });
+      // Call backend logout mutation to clear httpOnly cookie and revoke token
+      await logoutMutation().catch((err) => {
+        // Non-blocking: even if this fails, continue with local cleanup
+        console.warn("Backend logout request failed:", err);
+      });
 
-        // Clear Apollo cache
-        await client.cache.reset();
+      // Clear analytics identity so post-logout events aren't attributed to
+      // the previous user.
+      clearUserId();
 
-        // Clear analytics identity so post-logout events aren't attributed to
-        // the previous user.
-        clearUserId();
+      // Show success status
+      setStatus("success");
 
-        // Show success status
-        setStatus("success");
+      // Wait a bit to show success state
+      await new Promise((resolve) => setTimeout(resolve, 600));
 
-        // Wait a bit to show success state
-        await new Promise((resolve) => setTimeout(resolve, 600));
-
-        // Redirect to login page
-        void navigate({ to: "/auth/login" });
-      } catch (error) {
-        console.error("Logout failed:", error);
-        // Even if something fails, still try to clear and redirect
-        await client.cache.reset().catch((err) => console.error(err));
-        clearUserId();
-        void navigate({ to: "/auth/login" });
-      }
+      // Replacing the document clears Apollo and React state without resetting
+      // live authenticated queries after the backend has revoked the session.
+      redirectToLoginAfterLogout();
     };
 
     void performLogout();
-  }, [navigate, logoutMutation, client]);
+  }, [logoutMutation]);
 
   return (
     <>
