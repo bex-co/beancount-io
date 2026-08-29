@@ -45,6 +45,17 @@ describe("mobile OAuth consent state", () => {
     ).toEqual({ step: "login" });
   });
 
+  it("moves between login and password recovery without losing the consent flow", () => {
+    const recovery = transition(
+      { step: "login" },
+      { type: "show_forgot_password" },
+    );
+    expect(recovery).toEqual({ step: "forgot_password" });
+    expect(transition(recovery, { type: "show_login" })).toEqual({
+      step: "login",
+    });
+  });
+
   it("moves a password login directly to account-wide approval", () => {
     expect(
       transition(

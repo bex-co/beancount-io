@@ -7,6 +7,8 @@ import { useLoginForm } from "@/features/auth/hooks/use-login-form";
 import { useRegisterForm } from "@/features/auth/hooks/use-register-form";
 import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
+import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";
 import { RegisterForm } from "@/features/auth/components/register-form";
 import { OtpForm } from "@/features/auth/components/otp-form";
 
@@ -17,14 +19,16 @@ const routeApi = getRouteApi("/oauth/identity-consent");
 // ledger-selection step — this provider proves identity only (see
 // backend-v2/src/features/oauth/api/identity-oidc-route.ts).
 type IdentityOAuthState =
-  | { step: "login" | "register" | "approve" }
+  | { step: "login" | "forgot_password" | "register" | "approve" }
   | { step: "otp"; sessionId: string; email: string };
 
 function LoginStep({
   onSuccess,
+  onForgotPasswordClick,
   onRegisterClick,
 }: {
   onSuccess: () => void;
+  onForgotPasswordClick: () => void;
   onRegisterClick: () => void;
 }) {
   const { t } = useTranslations();
@@ -38,12 +42,12 @@ function LoginStep({
   });
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-foreground">
           {t("auth.oauthSignInToContinue")}
-        </h2>
-        <p className="text-sm text-muted-foreground">
+        </h1>
+        <p className="text-muted-foreground">
           {t("auth.oauthIdentityWantsAccess")}
         </p>
       </div>
@@ -51,8 +55,7 @@ function LoginStep({
         onSubmit={onSubmit}
         isLoading={isLoading}
         serverError={serverError}
-        showForgotPasswordLink={false}
-        showSignUpLink={true}
+        onForgotPasswordClick={onForgotPasswordClick}
         onRegisterClick={onRegisterClick}
       />
     </div>
@@ -73,12 +76,12 @@ function RegisterStep({
   );
 
   return (
-    <div className="space-y-4">
-      <div>
-        <h2 className="text-lg font-semibold">
+    <div className="space-y-8">
+      <div className="space-y-2">
+        <h1 className="text-3xl font-bold text-foreground">
           {t("auth.oauthRegisterToContinue")}
-        </h2>
-        <p className="text-sm text-muted-foreground">
+        </h1>
+        <p className="text-muted-foreground">
           {t("auth.oauthIdentityWantsAccess")}
         </p>
       </div>
@@ -169,16 +172,30 @@ export default function IdentityOAuthConsentPage() {
   });
   const [approvedEmail, setApprovedEmail] = useState(sessionEmail);
 
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm space-y-6 rounded-xl border bg-card p-6 shadow-sm">
-        <div className="flex items-center gap-2">
-          <span className="text-xl font-bold">Beancount</span>
+  if (state.step === "approve") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-sm space-y-6 rounded-xl border bg-card p-6 shadow-sm">
+          <div className="text-xl font-bold">Beancount</div>
+          <ApproveStep uid={uid} email={approvedEmail} />
         </div>
+      </div>
+    );
+  }
+
+  return (
+    <AuthPageLayout>
+      <div className="space-y-8">
         {state.step === "login" && (
           <LoginStep
             onSuccess={() => setState({ step: "approve" })}
+            onForgotPasswordClick={() => setState({ step: "forgot_password" })}
             onRegisterClick={() => setState({ step: "register" })}
+          />
+        )}
+        {state.step === "forgot_password" && (
+          <ForgotPasswordForm
+            onBackToSignIn={() => setState({ step: "login" })}
           />
         )}
         {state.step === "register" && (
@@ -200,10 +217,7 @@ export default function IdentityOAuthConsentPage() {
             onBack={() => setState({ step: "register" })}
           />
         )}
-        {state.step === "approve" && (
-          <ApproveStep uid={uid} email={approvedEmail} />
-        )}
       </div>
-    </div>
+    </AuthPageLayout>
   );
 }

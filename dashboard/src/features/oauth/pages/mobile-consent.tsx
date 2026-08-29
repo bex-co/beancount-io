@@ -8,6 +8,8 @@ import { useLoginForm } from "@/features/auth/hooks/use-login-form";
 import { useRegisterForm } from "@/features/auth/hooks/use-register-form";
 import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
 import { LoginForm } from "@/features/auth/components/login-form";
+import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
+import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";
 import { RegisterForm } from "@/features/auth/components/register-form";
 import { OtpForm } from "@/features/auth/components/otp-form";
 import { LogoutDocument } from "@/graphql/definitions";
@@ -21,9 +23,11 @@ const routeApi = getRouteApi("/oauth/mobile-consent");
 
 function LoginStep({
   onSuccess,
+  onForgotPasswordClick,
   onRegisterClick,
 }: {
   onSuccess: () => void;
+  onForgotPasswordClick: () => void;
   onRegisterClick: () => void;
 }) {
   const { t } = useTranslations();
@@ -36,16 +40,15 @@ function LoginStep({
   });
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-foreground">
         {t("auth.oauthMobileSignInTitle")}
-      </h2>
+      </h1>
       <LoginForm
         onSubmit={onSubmit}
         isLoading={isLoading}
         serverError={serverError}
-        showForgotPasswordLink={false}
-        showSignUpLink={true}
+        onForgotPasswordClick={onForgotPasswordClick}
         onRegisterClick={onRegisterClick}
       />
     </div>
@@ -65,10 +68,10 @@ function RegisterStep({
   );
 
   return (
-    <div className="space-y-4">
-      <h2 className="text-lg font-semibold">
+    <div className="space-y-8">
+      <h1 className="text-3xl font-bold text-foreground">
         {t("auth.oauthMobileRegisterTitle")}
-      </h2>
+      </h1>
       <RegisterForm
         onSubmit={onSubmit}
         isLoading={isLoading}
@@ -265,14 +268,50 @@ export default function MobileOAuthConsentPage() {
     dispatch(next);
   };
 
+  if (state.step === "choose_account" || state.step === "approve") {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background p-4">
+        <div className="w-full max-w-sm space-y-6 rounded-xl border bg-card p-6 shadow-sm">
+          <div className="text-xl font-bold">Beancount</div>
+          {state.step === "choose_account" && (
+            <ChooseAccountStep
+              email={state.email}
+              onContinue={() =>
+                dispatch({ type: "authenticated", email: state.email })
+              }
+              onCreateDifferentAccount={() =>
+                switchAccount({ type: "show_register" })
+              }
+            />
+          )}
+          {state.step === "approve" && (
+            <ApproveStep
+              uid={uid}
+              email={state.email}
+              scope={scope}
+              onSwitchAccount={() => switchAccount({ type: "show_login" })}
+            />
+          )}
+        </div>
+      </div>
+    );
+  }
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background p-4">
-      <div className="w-full max-w-sm space-y-6 rounded-xl border bg-card p-6 shadow-sm">
-        <div className="text-xl font-bold">Beancount</div>
+    <AuthPageLayout>
+      <div className="space-y-8">
         {state.step === "login" && (
           <LoginStep
             onSuccess={() => dispatch({ type: "authenticated" })}
+            onForgotPasswordClick={() =>
+              dispatch({ type: "show_forgot_password" })
+            }
             onRegisterClick={() => dispatch({ type: "show_register" })}
+          />
+        )}
+        {state.step === "forgot_password" && (
+          <ForgotPasswordForm
+            onBackToSignIn={() => dispatch({ type: "show_login" })}
           />
         )}
         {state.step === "register" && (
@@ -293,26 +332,7 @@ export default function MobileOAuthConsentPage() {
             onBack={() => dispatch({ type: "show_register" })}
           />
         )}
-        {state.step === "choose_account" && (
-          <ChooseAccountStep
-            email={state.email}
-            onContinue={() =>
-              dispatch({ type: "authenticated", email: state.email })
-            }
-            onCreateDifferentAccount={() =>
-              switchAccount({ type: "show_register" })
-            }
-          />
-        )}
-        {state.step === "approve" && (
-          <ApproveStep
-            uid={uid}
-            email={state.email}
-            scope={scope}
-            onSwitchAccount={() => switchAccount({ type: "show_login" })}
-          />
-        )}
       </div>
-    </div>
+    </AuthPageLayout>
   );
 }

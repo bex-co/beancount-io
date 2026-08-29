@@ -2,6 +2,7 @@ import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import ForgotPasswordPage from "../index";
+import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-form";
 
 // Mock dependencies
 const mockMutation = vi.fn();
@@ -47,6 +48,19 @@ describe("ForgotPasswordPage", () => {
     expect(
       screen.getByRole("link", { name: "Back to Sign in" }),
     ).toBeInTheDocument();
+  });
+
+  it("can return to a containing sign-in flow without navigating away", async () => {
+    const user = userEvent.setup();
+    const onBackToSignIn = vi.fn();
+    render(<ForgotPasswordForm onBackToSignIn={onBackToSignIn} />);
+
+    await user.click(screen.getByRole("button", { name: "Back to Sign in" }));
+
+    expect(onBackToSignIn).toHaveBeenCalledOnce();
+    expect(
+      screen.queryByRole("link", { name: "Back to Sign in" }),
+    ).not.toBeInTheDocument();
   });
 
   it("should show validation error for invalid email", async () => {

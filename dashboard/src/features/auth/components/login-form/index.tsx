@@ -21,6 +21,7 @@ export type LoginFormProps = {
   serverError: string;
   showForgotPasswordLink?: boolean;
   showSignUpLink?: boolean;
+  onForgotPasswordClick?: () => void;
   onRegisterClick?: () => void;
 };
 
@@ -30,6 +31,7 @@ export function LoginForm({
   serverError,
   showForgotPasswordLink = true,
   showSignUpLink = true,
+  onForgotPasswordClick,
   onRegisterClick,
 }: LoginFormProps) {
   const { t } = useTranslations();
@@ -91,12 +93,22 @@ export function LoginForm({
         />
         {showForgotPasswordLink && (
           <div className="flex justify-end -mt-1">
-            <Link
-              to="/auth/forgot-password"
-              className="text-sm font-medium text-muted-foreground hover:text-primary/80 transition-colors"
-            >
-              {t("auth.forgotPassword")}
-            </Link>
+            {onForgotPasswordClick ? (
+              <button
+                type="button"
+                onClick={onForgotPasswordClick}
+                className="text-sm font-medium text-muted-foreground hover:text-primary/80 transition-colors"
+              >
+                {t("auth.forgotPassword")}
+              </button>
+            ) : (
+              <Link
+                to="/auth/forgot-password"
+                className="text-sm font-medium text-muted-foreground hover:text-primary/80 transition-colors"
+              >
+                {t("auth.forgotPassword")}
+              </Link>
+            )}
           </div>
         )}
         {errors.password && (

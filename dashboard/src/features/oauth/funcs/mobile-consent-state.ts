@@ -1,13 +1,14 @@
 import type { MobileConsentSearch } from "./mobile-consent-search";
 
 export type MobileOAuthConsentState =
-  | { step: "login" | "register" }
+  | { step: "login" | "forgot_password" | "register" }
   | { step: "otp"; sessionId: string; email: string }
   | { step: "choose_account"; email: string }
   | { step: "approve"; email?: string };
 
 export type MobileOAuthConsentAction =
   | { type: "show_login" }
+  | { type: "show_forgot_password" }
   | { type: "show_register" }
   | { type: "registration_submitted"; sessionId: string; email: string }
   | { type: "authenticated"; email?: string };
@@ -42,6 +43,8 @@ export function mobileOAuthConsentReducer(
   switch (action.type) {
     case "show_login":
       return { step: "login" };
+    case "show_forgot_password":
+      return { step: "forgot_password" };
     case "show_register":
       return { step: "register" };
     case "registration_submitted":
