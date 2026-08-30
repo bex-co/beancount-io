@@ -1,26 +1,27 @@
 # w2 · m15 — Centralized authz for the social graph and starring
 
-**Worker:** worker2 **Goal:** centralize authorization for feed/profile/follow relationships and personal starring without copying Gitea social data into an authorization store **Status:** todo
+**Worker:** worker2 **Goal:** centralize protected social mutations and non-public reads at application-service boundaries while keeping explicitly public discovery public and Gitea as the only social-data source **Status:** todo
 
 ## Tasks (in order)
 
 | id   | title                                      | est | depends_on |
 | ---- | ------------------------------------------ | --- | ---------- |
-| t001 | Define social actions and resource binding | 40m | —          |
-| t002 | Migrate social reads and writes            | 55m | t001       |
-| t003 | Adoption surface                           | 20m | t002       |
-| t004 | Simplify                                   | 15m | t003       |
-| t005 | Test coverage                              | 40m | t003       |
-| t006 | Verify Gitea-source parity                 | 25m | t004, t005 |
-| t007 | Closeout                                   | 10m | t006       |
+| t001 | Catalog social actions, exclusions, and trusted resources | 45m | —          |
+| t002 | Migrate protected social service boundaries               | 60m | t001       |
+| t006 | Verify Gitea-source parity, failures, budgets, and audit   | 35m | t002       |
+| t003 | Adoption surface                                           | 20m | t006       |
+| t004 | Simplify                                                   | 15m | t003       |
+| t005 | Test coverage                                              | 50m | t003       |
+| t007 | Closeout                                                   | 15m | t004, t005 |
 
 ## Definition of done
 
-- Feed, public/user profile, followers/following/starred repositories, follow/unfollow, and star/unstar operations have explicit canonical actions and trusted resource binding.
+- Feed, public/user profile, followers/following/starred repositories, follow/unfollow, and star/unstar operations are inventoried exactly once as a canonical protected action or an explicit public exclusion, with trusted resource binding.
 - The PDP queries current Gitea/backend facts where authorization needs them and does not duplicate the social graph as tuples.
 - Public visibility, authenticated-self mutations, target-user validation, and repository readability keep their current behavior.
-- GraphQL behavior remains compatible and transport aliases cannot create a second authority path.
-- No OpenFGA runtime/storage or new dependency is added; required checks pass.
+- Protected application-service methods receive explicit `Identity`; GraphQL behavior and error categories remain compatible, and transport aliases cannot create a second authority path.
+- Source failures are distinct audited service errors, denials cause no Gitea write, operational budgets remain stable, and no authorization decision is memoized.
+- The shared w2 migration contract is satisfied, including checks, applied migrations, a deployed development social smoke test, and persisted-audit verification.
 
 ## Source + Goal linkage
 
@@ -29,3 +30,4 @@
 - **Expected outcome:** social reads and personal mutations receive one domain decision while Gitea remains the social-data authority.
 - **Why now:** this is another bounded domain with externally owned relationships, useful for proving source-backed evaluators before broad ledger access.
 - **Adoption surface:** included because profiles, feeds, follows, and stars are public/user-facing surfaces.
+- **Migration contract:** inherits `.pm/w2/README.md`; production deployment and social product changes remain separate.

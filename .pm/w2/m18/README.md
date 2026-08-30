@@ -1,19 +1,19 @@
 # w2 · m18 — Centralized authz for ledger administration and collaboration
 
-**Worker:** worker2 **Goal:** centralize ledger creation/update/delete, collaborator management, leave, and public-key control without relying on coarse `ledger.admin` or downstream Gitea rejection **Status:** todo
+**Worker:** worker2 **Goal:** centralize ledger creation/update/delete, collaborator management, leave, and public-key control at protected application boundaries without relying on coarse `ledger.admin` or downstream Gitea rejection **Status:** todo
 
 ## Tasks (in order)
 
 | id   | title                                                | est | depends_on |
 | ---- | ---------------------------------------------------- | --- | ---------- |
-| t001 | Define ledger control-plane actions                  | 45m | —          |
-| t002 | Migrate ledger create, update, and delete            | 60m | t001       |
+| t001 | Catalog ledger control-plane actions and operational risk | 50m | —          |
+| t002 | Migrate ledger create, update, and delete boundaries      | 65m | t001       |
 | t003 | Migrate collaborators, leave, and public keys        | 60m | t002       |
-| t004 | Verify revocation and destructive-operation ordering | 40m | t003       |
+| t004 | Verify revocation, failures, budgets, audit, and ordering | 50m | t003       |
 | t005 | Adoption surface                                     | 20m | t004       |
 | t006 | Simplify                                             | 20m | t005       |
-| t007 | Test coverage                                        | 50m | t005       |
-| t008 | Closeout                                             | 10m | t006, t007 |
+| t007 | Test coverage                                        | 60m | t005       |
+| t008 | Closeout                                             | 15m | t006, t007 |
 
 ## Definition of done
 
@@ -22,7 +22,9 @@
 - Existing ledger changes check current owner/admin relationships before any Gitea/Fava/database/Plaid side effect.
 - Collaborator downgrade/removal, leave, visibility changes, rename, and deletion affect the next request without cross-request authorization caching.
 - Coarse transport `ledger.admin` and downstream Gitea rejection are no longer independent final authorities for this domain.
-- No OpenFGA runtime/store/database/new dependency is added; required checks pass.
+- Destructive mutations retain atomic owner/rank predicates and cleanup ordering as defense-in-depth; no step-up ceremony is added unless an existing product contract already requires it.
+- Source failures surface as audited service-unavailable errors, while denial concealment, rate budgets, actionable errors, operation IDs, and per-call audit are cataloged and regression-tested.
+- The shared w2 migration contract is satisfied, including checks, applied migrations, deployed development lifecycle/collaboration smoke tests, and persisted-audit plus no-side-effect verification.
 
 ## Source + Goal linkage
 
@@ -31,3 +33,4 @@
 - **Expected outcome:** destructive and access-control operations share one explicit decision across surfaces, with immediate relationship-change visibility.
 - **Why now:** this higher-risk control plane follows the lower-risk user/read/write migrations so the PDP and ledger evaluator are already proven.
 - **Adoption surface:** included because ledger ownership, sharing, and keys directly affect users and automation clients.
+- **Migration contract:** inherits `.pm/w2/README.md`; production deployment and new control-plane UX remain separate.

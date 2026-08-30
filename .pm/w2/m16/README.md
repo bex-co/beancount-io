@@ -1,6 +1,6 @@
 # w2 · m16 — Centralized authz for AI-assisted ingestion and assets
 
-**Worker:** worker2 **Goal:** centralize authorization for temporary assets, parsing/category helpers, and AI execution using current user/ledger/S3 facts and explicit multi-permission actions **Status:** todo
+**Worker:** worker2 **Goal:** centralize authorization for temporary assets, parsing/category helpers, and AI execution at their application-service/workflow boundaries using current user/ledger/S3 facts and explicit multi-capability actions **Status:** todo
 
 ## Tasks (in order)
 
@@ -12,16 +12,17 @@
 | t004 | Migrate AI streaming and agent entry points       | 55m | t003       |
 | t005 | Adoption surface                                   | 20m | t004       |
 | t006 | Simplify                                           | 20m | t005       |
-| t007 | Test coverage                                      | 45m | t005       |
-| t008 | Closeout                                           | 10m | t006, t007 |
+| t007 | Test coverage                                      | 55m | t005       |
+| t008 | Closeout                                           | 15m | t006, t007 |
 
 ## Definition of done
 
 - File/receipt parsing, category/account suggestions, temporary upload/download, AI usage, and streaming/agent entry points have explicit canonical actions.
-- Composite actions require every relevant permission family, such as ledger contents plus assets or AI, rather than an endpoint-specific relation.
+- Composite actions are declared once in the TypeScript catalog and require every relevant permission family, such as ledger contents plus assets or AI, rather than endpoint-specific relations.
 - Ledger facts are read from the current Gitea-backed ledger source; temporary-asset ownership is resolved from its trusted user-bound key invariant.
-- The PDP denies before S3, LLM, ledger, or streaming side effects and uses only request-local memoization.
-- No OpenFGA runtime/storage, contextual tuples, new database, or second policy DSL is introduced; required checks pass.
+- The PDP denies before S3, LLM, ledger, or streaming side effects; every call re-evaluates without an authorization decision memo, tuple copy, or cross-request cache.
+- Source failures surface as audited service-unavailable errors, operation IDs stay in AsyncLocalStorage, and existing rate budgets and client error contracts remain stable.
+- The shared w2 migration contract is satisfied, including checks, applied migrations, deployed development smoke tests for upload/AI entry points, and persisted-audit verification.
 
 ## Source + Goal linkage
 
@@ -30,3 +31,4 @@
 - **Expected outcome:** an agent can use assisted ingestion only within its existing credential and ledger relationships, with revocation effective on the next request.
 - **Why now:** this bounded cross-resource domain establishes the reusable ledger-source evaluator and multi-permission composition before the much larger ledger migration.
 - **Adoption surface:** included because AI/MCP and upload flows are directly user- and agent-facing.
+- **Migration contract:** inherits `.pm/w2/README.md`; production deployment and AI/storage product changes remain separate.

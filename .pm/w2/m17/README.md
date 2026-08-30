@@ -1,20 +1,20 @@
 # w2 · m17 — Centralized authz for ledger contents and reporting
 
-**Worker:** worker2 **Goal:** route the large ledger read/write/report/file/entry/repository/pull-request domain through the shared PDP and source-backed ledger evaluator **Status:** todo
+**Worker:** worker2 **Goal:** route the large ledger data plane through protected application-service/workflow boundaries, the one shared PDP catalog, and the source-backed ledger evaluator without changing surface contracts **Status:** todo
 
 ## Tasks (in order)
 
 | id   | title                                            | est | depends_on |
 | ---- | ------------------------------------------------ | --- | ---------- |
-| t001 | Complete the ledger-content action matrix        | 50m | —          |
+| t001 | Complete the ledger-content action catalog and alias matrix | 60m | —          |
 | t002 | Migrate reporting, journal, and account reads    | 60m | t001       |
 | t003 | Migrate files, repository, shell, and archives   | 60m | t001       |
 | t004 | Migrate entries, receipts, and pull requests     | 60m | t002, t003 |
-| t005 | Remove superseded ledger-content policy checks  | 40m | t004       |
+| t005 | Remove competing gates and verify budgets/audit/failures | 50m | t004       |
 | t006 | Adoption surface                                 | 25m | t005       |
 | t007 | Simplify                                         | 25m | t006       |
-| t008 | Test coverage                                    | 60m | t006       |
-| t009 | Closeout                                         | 10m | t007, t008 |
+| t008 | Test coverage                                    | 75m | t006       |
+| t009 | Closeout                                         | 15m | t007, t008 |
 
 ## Definition of done
 
@@ -23,7 +23,9 @@
 - Owner/collaborator/public behavior, credential scopes, ledger pins, safe paths, parsing, and commit semantics remain unchanged.
 - Superseded `authorizeLedger`, `assertLedgerAuthorization`, and transport-only checks no longer act as independent final authorities for this domain.
 - Denied writes perform no ledger, Gitea, Fava, S3, or workflow side effect.
-- No OpenFGA runtime/store/database/new dependency is added; required checks pass.
+- Data-source failures remain audited service errors rather than policy denials; rate budgets, actionable errors, operation-ID attribution, and per-call audit remain stable without decision memoization.
+- Atomic owner/path predicates and repeated source reads remain where they are intentional defense-in-depth rather than competing policy.
+- The shared w2 migration contract is satisfied, including checks, applied migrations, representative deployed GraphQL/REST/MCP smoke tests, and persisted-audit verification.
 
 ## Source + Goal linkage
 
@@ -32,3 +34,4 @@
 - **Expected outcome:** all ledger-content surfaces agree on what an owner, collaborator, public caller, OAuth token, or API key may do.
 - **Why now:** this is the largest ordinary data-plane domain; earlier milestones reduce framework risk before touching its many operations.
 - **Adoption surface:** included because ledger APIs, MCP resources/tools, and user workflows are core adoption surfaces.
+- **Migration contract:** inherits `.pm/w2/README.md`; production deployment and accounting behavior changes remain separate.
