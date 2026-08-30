@@ -1,0 +1,5 @@
+What's New in Version 1.20260829.46:
+
+• Sign in or create an account securely in your system browser, then return directly to Beancount.
+• Navigation now uses native Liquid Glass tabs on supported iOS versions, with better dark-mode styling.
+• Budget entries now save more reliably.

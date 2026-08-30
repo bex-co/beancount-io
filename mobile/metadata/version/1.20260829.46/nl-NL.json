@@ -1,0 +1,8 @@
+{
+  "description": "Je grootboek is een bestand met platte tekst en blijft altijd van jou.\n\nBeancount brengt degelijk dubbel boekhouden naar je telefoon zonder je financiële geschiedenis op te sluiten in een gesloten database. Leg een aankoop in seconden vast, bekijk het onderliggende Beancount-bestand en bewaar elke wijziging in de Git-historie.\n\nFINANCIËLE DUIDELIJKHEID\n• Bekijk nettovermogen, bezittingen, schulden, inkomsten en uitgaven\n• Vergelijk uitgaven per maand, kwartaal of jaar\n• Analyseer kasstroom, winst, budgetten, winkels en accounts\n\nJOUW BOEKEN, JOUW FORMAAT\n• Bewaar echte tekstbestanden met Beancount-syntaxis\n• Bekijk commits, auteurs en verschillen per regel\n• Bewerk het bronbestand direct en neem je bestanden altijd mee\n\nVOOR ECHTE BOEKHOUDING\n• Volledige boekingen, splitsingen, overboekingen en vergoedingen\n• Meerdere boeken, valuta, beleggingen, crypto en vastgoed\n• Bonnen vastleggen, suggesties gebruiken, zoeken en filteren\n\nBeancount is gratis, zonder reclame of in-appaankopen.",
+  "keywords": "financiën,uitgaven,budget,nettovermogen,bonnen,beleggen,aandelen,crypto,kasstroom,sparen",
+  "promotionalText": "Zie al je financiën, behoud je grootboek als platte tekst en begrijp elke wijziging met Git-historie en volledige rapporten.",
+  "marketingUrl": "https://beancount.io",
+  "supportUrl": "https://beancount.io",
+  "whatsNew": "• Meld je veilig aan of maak een account aan in je systeembrowser en keer rechtstreeks terug naar Beancount.\n• De navigatie gebruikt nu native Liquid Glass-tabbladen op ondersteunde iOS-versies, met een verbeterde donkere modus.\n• Budgetboekingen worden nu betrouwbaarder opgeslagen."
+}

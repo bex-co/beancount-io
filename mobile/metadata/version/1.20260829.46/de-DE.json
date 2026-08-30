@@ -1,0 +1,8 @@
+{
+  "description": "Dein Hauptbuch ist eine Klartextdatei und bleibt dauerhaft in deinem Besitz.\n\nBeancount bringt verlässliche doppelte Buchführung aufs Smartphone, ohne deine Finanzhistorie in einer proprietären Datenbank einzuschließen. Erfasse einen Einkauf in Sekunden, öffne die zugrunde liegende Beancount-Datei und bewahre jede Änderung im Git-Verlauf auf.\n\nFINANZEN VERSTEHEN\n• Nettovermögen, Vermögen, Schulden, Einnahmen und Ausgaben im Blick\n• Ausgaben nach Monat, Quartal oder Jahr vergleichen\n• Cashflow, Gewinn, Budgets, Händler und Konten auswerten\n\nDEINE BÜCHER, DEIN FORMAT\n• Echte Textdateien in Beancount-Syntax behalten\n• Commits, Autoren und Änderungen Zeile für Zeile prüfen\n• Quelldateien direkt bearbeiten und jederzeit mitnehmen\n\nFÜR ECHTE BUCHHALTUNG\n• Splits, Umbuchungen, Erstattungen und vollständige Buchungssätze\n• Mehrere Bücher, Währungen, Wertpapiere, Krypto und Immobilien\n• Belege fotografieren, Vorschläge nutzen, suchen und filtern\n\nBeancount ist kostenlos, werbefrei und ohne In-App-Käufe.",
+  "keywords": "finanzen,ausgaben,budget,nettovermögen,belege,depot,krypto,aktien,haushalt,kassenbuch",
+  "promotionalText": "Alle Finanzen im Blick, das Klartext-Hauptbuch behalten und jede Änderung mit Git-Verlauf und vollständigen Berichten verstehen.",
+  "marketingUrl": "https://beancount.io",
+  "supportUrl": "https://beancount.io",
+  "whatsNew": "• Melde dich sicher im Systembrowser an oder erstelle dort ein Konto und kehre direkt zu Beancount zurück.\n• Die Navigation verwendet auf unterstützten iOS-Versionen jetzt native Liquid-Glass-Tabs mit verbesserter Darstellung im Dunkelmodus.\n• Budgeteinträge werden jetzt zuverlässiger gespeichert."
+}

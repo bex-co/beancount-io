@@ -1,0 +1,8 @@
+{
+  "description": "Tu libro contable es un archivo de texto plano y siempre será tuyo.\n\nBeancount lleva la contabilidad rigurosa por partida doble al móvil sin encerrar tu historial financiero en una base de datos propietaria. Registra una compra en segundos, consulta el archivo Beancount original y conserva cada cambio en el historial de Git.\n\nCLARIDAD FINANCIERA\n• Consulta patrimonio neto, activos, pasivos, ingresos y gastos\n• Compara el gasto por meses, trimestres o años\n• Analiza flujo de caja, beneficios, presupuestos, comercios y cuentas\n\nTUS CUENTAS, TU FORMATO\n• Conserva archivos de texto reales con sintaxis Beancount\n• Revisa commits, autores y diferencias línea a línea\n• Edita el libro directamente y llévate tus archivos cuando quieras\n\nPARA UNA CONTABILIDAD REAL\n• Asientos completos, desgloses, transferencias y reembolsos\n• Varios libros, divisas, inversiones, cripto e inmuebles\n• Captura de recibos, sugerencias, búsqueda y filtros\n\nBeancount es gratis, sin anuncios ni compras dentro de la app.",
+  "keywords": "finanzas,gastos,presupuesto,patrimonio,recibos,inversiones,acciones,cripto,ahorro,flujo de caja",
+  "promotionalText": "Entiende todas tus finanzas, conserva el libro en texto plano y revisa cada cambio con el historial de Git e informes completos.",
+  "marketingUrl": "https://beancount.io",
+  "supportUrl": "https://beancount.io",
+  "whatsNew": "• Inicia sesión o crea una cuenta de forma segura en el navegador del sistema y vuelve directamente a Beancount.\n• La navegación ahora usa pestañas nativas Liquid Glass en las versiones de iOS compatibles, con un aspecto mejorado en modo oscuro.\n• Las entradas de presupuesto ahora se guardan de forma más fiable."
+}

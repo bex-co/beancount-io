@@ -1,0 +1,8 @@
+{
+  "description": "Your ledger is a plain-text file. You own it for good.\n\nBeancount brings serious double-entry bookkeeping to your phone without locking your financial history inside a proprietary database. Record a purchase in seconds, inspect the underlying Beancount file, and keep a Git history of every change.\n\nFINANCIAL CLARITY\n• See net worth, assets, liabilities, income, and expenses\n• Compare spending across months, quarters, and years\n• Explore cash flow, profit trends, budgets, merchants, and account reports\n\nYOUR BOOKS, YOUR FORMAT\n• Keep real Beancount-syntax text files\n• Browse commits, authors, and line-by-line changes\n• Edit the ledger source directly and take your files with you\n\nBUILT FOR REAL BOOKS\n• Full double-entry transactions, splits, transfers, and reimbursements\n• Multiple ledgers, currencies, investments, crypto, and property\n• Receipt capture, payee and account suggestions, search, and filters\n\nBeancount is free, with no ads and no in-app purchases.",
+  "keywords": "bookkeeping,expense,budget,networth,crypto,stocks,portfolio,invoice,receipt,journal,tax,currency",
+  "promotionalText": "See your whole financial life, keep the plain-text ledger, and understand every change through Git history and full reports.",
+  "marketingUrl": "https://beancount.io",
+  "supportUrl": "https://beancount.io",
+  "whatsNew": "• Sign in or create an account securely in your system browser, then return directly to Beancount.\n• Navigation now uses native Liquid Glass tabs on supported iOS versions, with better dark-mode styling.\n• Budget entries now save more reliably."
+}
