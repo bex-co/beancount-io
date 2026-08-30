@@ -25,10 +25,6 @@ describe("generateOAuthToken", () => {
     expect(claims.sub).toBe("user-42");
     expect(claims.ledger_id).toBe("ldgr-99");
     expect(claims.iss).toBe("https://beancount.io");
-    // Unchanged by w1/m18: the provider and this helper mint the same audience,
-    // so the resource rename is a single coordinated flip (see legacyMcpResource).
-    // This helper is used only for the internal MCP hop during the documented
-    // legacy-resource window; GraphQL and REST reject this audience.
     expect(claims.aud).toBe("https://beancount.io/api-gateway/mcp");
     expect(claims.scope).toBe("ledger.read ledger.write ledger.admin");
     expect(typeof claims.exp).toBe("number");

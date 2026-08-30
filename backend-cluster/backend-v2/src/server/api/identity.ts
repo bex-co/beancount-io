@@ -2,10 +2,8 @@ import type { RouterContext } from "@koa/router";
 import type { AppConfig } from "@/config/config";
 import type { DatabaseLayer } from "@/foundation/composition";
 import { getTokenFromCtx } from "@/features/auth/utils/auth";
-import {
-  type OAuthAudience,
-  resolveOidcIdentity,
-} from "@/features/oauth/utils/oidc-verify";
+import { resolveOidcIdentity } from "@/features/oauth/utils/oidc-verify";
+import { OAUTH_CONFIG, type OAuthResource } from "@/features/oauth/data/config";
 import {
   API_KEY_PLAINTEXT_PREFIX,
   apiKeyDigest,
@@ -150,7 +148,7 @@ export interface RequestLike {
 }
 
 export interface ResolveIdentityOptions {
-  oauthAudience?: OAuthAudience;
+  oauthResource?: OAuthResource;
 }
 
 export function assertIdentityCapability(
@@ -216,7 +214,7 @@ export async function resolveIdentity(
     (await resolveOAuthIdentity(
       token,
       config,
-      options.oauthAudience ?? "api",
+      options.oauthResource ?? OAUTH_CONFIG.resourceBindings.applicationApi,
     )) ??
     // Between OAuth and session: keys are bearer-presented like OAuth tokens,
     // but are cheap to reject on their prefix before any verification work.
@@ -325,9 +323,9 @@ async function resolveSessionIdentity(
 async function resolveOAuthIdentity(
   token: string,
   config: AppConfig,
-  audience: OAuthAudience,
+  resource: OAuthResource,
 ): Promise<Identity | undefined> {
-  const oidc = await resolveOidcIdentity(token, config, audience);
+  const oidc = await resolveOidcIdentity(token, config, resource);
   if (!oidc) {
     return undefined;
   }

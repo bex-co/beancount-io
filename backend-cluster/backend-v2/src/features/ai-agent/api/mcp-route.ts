@@ -5,6 +5,7 @@ import { StreamableHTTPServerTransport } from "@modelcontextprotocol/sdk/server/
 import { logger } from "@/shared/logger";
 import { type AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
+import { OAUTH_CONFIG } from "@/features/oauth/data/config";
 import type { ToolContext } from "../tools/types";
 import { type Identity, resolveIdentity } from "@/server/api/identity";
 import { ForbiddenError } from "@/shared/errors";
@@ -72,7 +73,7 @@ async function handleMcpRequest(
   // same way as no credential at all, discovery hint included, which is what
   // lets a browser-hosted client go get a real token.
   const identity = await resolveIdentity(ctx, layers.database, config, {
-    oauthAudience: "mcp",
+    oauthResource: OAUTH_CONFIG.resourceBindings.mcp,
   });
   if (!identity || identity.method === "session") {
     refuseUnauthenticated(ctx, config);

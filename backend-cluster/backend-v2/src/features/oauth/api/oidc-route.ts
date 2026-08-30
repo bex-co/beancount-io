@@ -12,96 +12,23 @@ import { createPostgresAdapterFactory } from "../data/oauth-adapter-model";
 import { resolveAuthUser } from "@/features/ai-agent/utils/route-guards";
 import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
 import { API_SCOPES, assertSessionIdentity } from "@/server/api/identity";
-import { legacyMcpResource } from "@/features/oauth/utils/oidc-verify";
-import { apiResource } from "@/features/oauth/utils/oidc-verify";
 import { CATEGORY_HTTP_STATUS, DomainError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import {
+  OAUTH_CONFIG,
   MOBILE_CLIENT_ID,
-  MOBILE_REDIRECT_URIS,
-} from "@/features/oauth/constants";
-
-export {
-  MOBILE_CLIENT_ID,
-  MOBILE_REDIRECT_URIS,
-} from "@/features/oauth/constants";
+  buildStaticOAuthClients,
+  isIdentityOAuthClient,
+  isMobileOAuthClient,
+  oauthLifetimes,
+  oauthResources,
+  shouldRotateRefreshToken,
+} from "@/features/oauth/data/config";
 
 const oidcLogger = logger.child({ module: "oidc-provider" });
 
-const DAY_SECONDS = 24 * 60 * 60;
-/** Refresh-token lifetime for every client except the native app. */
-const DEFAULT_REFRESH_TTL = 30 * DAY_SECONDS;
-/** Grant lifetime for every client except the native app. */
-const DEFAULT_GRANT_TTL = 14 * DAY_SECONDS;
-/**
- * oidc-provider's own rotation cutoff (`rotateRefreshToken` in
- * lib/helpers/defaults.js): a refresh chain older than this stops rotating.
- * Replicated because the default is not exported and we only override it for
- * the native client.
- */
-const ROTATION_LIFETIME_CUTOFF = 365.25 * DAY_SECONDS;
-
-const isMobileClient = (clientId: unknown): boolean =>
-  clientId === MOBILE_CLIENT_ID;
-
 /** The one `screen_hint` value this server forwards to the interaction page. */
-const SIGNUP_SCREEN_HINT = "signup";
-
-/**
- * Refresh-token and grant lifetimes in seconds, per client.
- *
- * A native-app session is an idle window rather than a fixed term: the rotating
- * refresh token and the grant behind it are both re-issued with a full lifetime
- * on every refresh, so a phone in regular use never gets signed out and only one
- * that goes quiet for the whole window has to re-authorize. Every other client
- * keeps the lifetimes it had before.
- */
-export function oauthLifetimes(mobileSessionDays: number): {
-  refreshToken: (clientId: unknown) => number;
-  grant: (clientId: unknown) => number;
-} {
-  const mobileSessionTtl = mobileSessionDays * DAY_SECONDS;
-  // The grant has to outlive the refresh token it backs: `validateGrant` runs
-  // before the token is consumed, so a grant that expires first fails the
-  // refresh with `invalid_grant` even though the token itself is still valid.
-  // A day of slack absorbs clock skew and the ordering of the two writes.
-  const mobileGrantTtl = mobileSessionTtl + DAY_SECONDS;
-  return {
-    refreshToken: (clientId) =>
-      isMobileClient(clientId) ? mobileSessionTtl : DEFAULT_REFRESH_TTL,
-    grant: (clientId) =>
-      isMobileClient(clientId) ? mobileGrantTtl : DEFAULT_GRANT_TTL,
-  };
-}
-
-/**
- * Whether a refresh exchange should mint a replacement refresh token.
- *
- * The native app rotates unconditionally — rotation is what slides its
- * idle-window session forward, since each rotation mints a token with a full
- * fresh lifetime, and oidc-provider's default stops rotating a chain older than
- * {@link ROTATION_LIFETIME_CUTOFF}, which would strand an actively used phone at
- * a hard cap regardless of activity. Every other client keeps that default,
- * mirrored here because oidc-provider does not export it.
- */
-export function shouldRotateRefreshToken(
-  client: { clientId?: string; clientAuthMethod?: string },
-  refreshToken: {
-    totalLifetime(): number;
-    isSenderConstrained(): boolean;
-    ttlPercentagePassed(): number;
-  },
-): boolean {
-  if (isMobileClient(client.clientId)) return true;
-  if (refreshToken.totalLifetime() >= ROTATION_LIFETIME_CUTOFF) return false;
-  if (
-    client.clientAuthMethod === "none" &&
-    !refreshToken.isSenderConstrained()
-  ) {
-    return true;
-  }
-  return refreshToken.ttlPercentagePassed() >= 70;
-}
+const SIGNUP_SCREEN_HINT = OAUTH_CONFIG.interaction.signupScreenHint;
 
 interface IdentityClaims {
   sub: string;
@@ -113,56 +40,22 @@ interface IdentityClaims {
   [key: string]: unknown;
 }
 
-// Static client for third-party identity login (e.g. the Discourse forum's "Log in
-// with Beancount"). No dynamic registration for this one — coexists here with open
-// Dynamic Client Registration for MCP/AI-agent clients (features.registration below);
-// per-client grant_types/scopes keep the two use cases from bleeding into each other.
-//
-// NOT a public/secretless client, despite PKCE being enforced unconditionally below
-// — verified against oidc-provider's own client_auth.js that this can't actually
-// work with discourse-openid-connect: that plugin's OmniAuth strategy always sends
-// client authentication (Authorization: Basic <id>:<secret>, or client_secret_post
-// per its discovery-driven auth_scheme switch — see openid_connect_authenticator.rb
-// `discover!`), it never omits credentials for a "none" client. oidc-provider's
-// client_auth.js explicitly rejects an empty secret in that Authorization header
-// (`if (!clientSecret) throw new InvalidRequest(...)`) before even comparing it
-// against the registered client, so neither `token_endpoint_auth_method: "none"`
-// nor a registered empty-string secret can work — a real secret is required.
-// Omitted entirely (not registered with an empty client_id) when unconfigured.
-function buildStaticClients(
-  config: AppConfig,
-): NonNullable<ConstructorParameters<typeof Provider>[1]>["clients"] {
-  const { clientId, clientSecret, redirectUri } = config.oauth.discourseClient;
-  type StaticClient = NonNullable<
-    NonNullable<ConstructorParameters<typeof Provider>[1]>["clients"]
-  >[number];
-  const clients: StaticClient[] = [
-    {
-      client_id: MOBILE_CLIENT_ID,
-      client_name: "Beancount Mobile",
-      application_type: "native",
-      redirect_uris: [...MOBILE_REDIRECT_URIS],
-      grant_types: ["authorization_code", "refresh_token"],
-      response_types: ["code"],
-      token_endpoint_auth_method: "none",
-      scope: `openid offline_access ${API_SCOPES.join(" ")}`,
-    },
-  ];
-  if (!clientId || !clientSecret) return clients;
-  clients.push({
-    client_id: clientId,
-    client_secret: clientSecret,
-    redirect_uris: [redirectUri],
-    grant_types: ["authorization_code"],
-    response_types: ["code"],
-    token_endpoint_auth_method: "client_secret_basic",
-  });
-  return clients;
-}
-
 export function oauthWellKnownPath(kind: string, absoluteUrl: string): string {
   const path = new URL(absoluteUrl).pathname.replace(/^\/|\/$/g, "");
   return `/.well-known/${kind}${path ? `/${path}` : ""}`;
+}
+
+/** Select one audience when a persisted grant contains multiple resources. */
+export function selectOAuthResource(
+  configuredResource: string | undefined,
+  oneOf?: readonly string[],
+): string {
+  if (!configuredResource) return "";
+  if (!oneOf) return configuredResource;
+  if (oneOf.includes(configuredResource)) return configuredResource;
+  throw new errors.InvalidTarget(
+    "the grant does not contain the client's configured resource",
+  );
 }
 
 export function setOidcRoutes(
@@ -192,17 +85,25 @@ export function setOidcRoutes(
     router.all(
       oauthWellKnownPath(
         "oauth-protected-resource",
-        apiResource(config.oauth.issuer),
+        oauthResources(config.oauth.issuer)[
+          OAUTH_CONFIG.resourceBindings.applicationApi
+        ],
       ),
       unavailable,
     );
     return;
   }
 
-  const isIdentityClient = (clientId: unknown): boolean =>
-    clientId === config.oauth.discourseClient.clientId;
-  const lifetimes = oauthLifetimes(config.oauth.mobileSessionDays);
-  const mobileGrantTtl = lifetimes.grant(MOBILE_CLIENT_ID);
+  const resources = oauthResources(config.oauth.issuer);
+  const lifetimes = oauthLifetimes();
+  const mobileRefreshTokenTtl = lifetimes.refreshToken(MOBILE_CLIENT_ID);
+  const resourceForClient = (clientId: unknown): string | undefined => {
+    if (isIdentityOAuthClient(clientId)) return undefined;
+    const resource = isMobileOAuthClient(clientId)
+      ? OAUTH_CONFIG.clients.mobile.resource
+      : OAUTH_CONFIG.dynamicRegistration.resource;
+    return resources[resource];
+  };
 
   const provider = new Provider(config.oauth.issuer, {
     jwks,
@@ -215,7 +116,10 @@ export function setOidcRoutes(
         ? MemoryAdapter
         : createPostgresAdapterFactory(layers.database.db),
 
-    clients: buildStaticClients(config),
+    clients: buildStaticOAuthClients({
+      apiScopes: API_SCOPES,
+      discourseClientSecret: config.oauth.discourseClientSecret,
+    }),
     responseTypes: ["code"],
 
     // `screen_hint=signup` lets the native app say "the user tapped Sign Up" so
@@ -229,7 +133,7 @@ export function setOidcRoutes(
 
     features: {
       devInteractions: { enabled: false },
-      registration: { enabled: true },
+      registration: { enabled: OAUTH_CONFIG.dynamicRegistration.enabled },
       resourceIndicators: {
         enabled: true,
         // The identity client (Discourse) never gets a resource — leaving it
@@ -237,51 +141,25 @@ export function setOidcRoutes(
         // token instead of one bound to the MCP resource (see oidc-provider's own
         // resourceIndicators docs: "if ... no resource parameter is present — an
         // Access Token for the UserInfo Endpoint is returned").
-        defaultResource: (ctx, client, oneOf) => {
+        defaultResource: (_ctx, client, oneOf) => {
           // Falsy (not just literally undefined) reads as "no resource" —
           // see oidc-provider's checkResource/emptyResource.
-          if (isIdentityClient(client.clientId)) return "";
-          if (oneOf) return oneOf;
-          if (isMobileClient(client.clientId)) {
-            return apiResource(config.oauth.issuer);
-          }
-          // Still the legacy MCP indicator during the compatibility window, on
-          // purpose. A grant stored before this change carries only that
-          // indicator, and oidc-provider rejects a token request naming a
-          // resource its grant does not carry (`resolveResource` ->
-          // InvalidTarget). Switching the default now would break refresh for
-          // every MCP client that authorized earlier. New grants additionally
-          // carry the API indicator (see the consent handler below), so the
-          // default can be flipped to `apiResource` once the window closes —
-          // see legacyMcpResource for the date.
-          return ctx.oidc.route === "authorization"
-            ? [
-                legacyMcpResource(config.oauth.issuer),
-                apiResource(config.oauth.issuer),
-              ]
-            : legacyMcpResource(config.oauth.issuer);
+          const configuredResource = resourceForClient(client.clientId);
+          return selectOAuthResource(configuredResource, oneOf);
         },
         getResourceServerInfo: (_ctx, resourceIndicator, client) => {
-          const canonicalApiResource = apiResource(config.oauth.issuer);
-          if (isIdentityClient(client.clientId)) {
+          const configuredResource = resourceForClient(client.clientId);
+          if (!configuredResource) {
             throw new errors.InvalidTarget(
               "identity clients cannot request an API resource",
             );
           }
-          if (
-            isMobileClient(client.clientId) &&
-            resourceIndicator !== canonicalApiResource
-          ) {
+          if (resourceIndicator !== configuredResource) {
             throw new errors.InvalidTarget(
-              "the native client must use the API resource",
+              isMobileOAuthClient(client.clientId)
+                ? "the native client must use the API resource"
+                : "dynamic clients must use the MCP resource",
             );
-          }
-          const allowed = new Set([
-            canonicalApiResource,
-            legacyMcpResource(config.oauth.issuer),
-          ]);
-          if (!allowed.has(resourceIndicator)) {
-            throw new errors.InvalidTarget("unknown resource indicator");
           }
           return {
             scope: `openid offline_access ${API_SCOPES.join(" ")}`,
@@ -312,9 +190,9 @@ export function setOidcRoutes(
 
     interactions: {
       url: (_ctx, interaction) => {
-        const path = isIdentityClient(interaction.params.client_id)
+        const path = isIdentityOAuthClient(interaction.params.client_id)
           ? "/oauth/identity-consent"
-          : isMobileClient(interaction.params.client_id)
+          : isMobileOAuthClient(interaction.params.client_id)
             ? "/oauth/mobile-consent"
             : "/oauth/consent";
         const consentUrl = new URL(
@@ -322,7 +200,7 @@ export function setOidcRoutes(
           `${config.oauth.interactionUrl}/`,
         );
         consentUrl.searchParams.set("uid", interaction.uid);
-        if (isMobileClient(interaction.params.client_id)) {
+        if (isMobileOAuthClient(interaction.params.client_id)) {
           consentUrl.searchParams.set(
             "scope",
             (interaction.params.scope as string | undefined) ?? "openid",
@@ -397,15 +275,15 @@ export function setOidcRoutes(
     },
 
     ttl: {
-      AccessToken: 3600,
-      AuthorizationCode: 600,
+      AccessToken: OAUTH_CONFIG.ttl.accessTokenSeconds,
+      AuthorizationCode: OAUTH_CONFIG.ttl.authorizationCodeSeconds,
       RefreshToken: (_ctx, token, client) =>
         lifetimes.refreshToken(client?.clientId ?? token.clientId),
-      Interaction: 600,
+      Interaction: OAUTH_CONFIG.ttl.interactionSeconds,
       // The authorization server's own browser SSO cookie — deliberately short
       // and unrelated to how long an app stays signed in. It only decides
       // whether a *new* authorization has to re-enter credentials.
-      Session: 1209600,
+      Session: OAUTH_CONFIG.ttl.authorizationServerSessionSeconds,
       Grant: (_ctx, grant) => lifetimes.grant(grant.clientId),
     },
 
@@ -436,16 +314,18 @@ export function setOidcRoutes(
     const { oidc } = ctx as unknown as KoaContextWithOIDC;
     if (oidc?.route !== "token" || ctx.status !== 200) return;
     const refreshToken = oidc.entities.RefreshToken;
-    if (!refreshToken?.grantId || !isMobileClient(refreshToken.clientId))
+    if (!refreshToken?.grantId || !isMobileOAuthClient(refreshToken.clientId))
       return;
 
     try {
       const grant = await provider.Grant.find(refreshToken.grantId);
       if (!grant) return;
       // An active app refreshes hourly; rewriting the row every time buys
-      // nothing. Skip while the grant still holds all but a day of a full term.
+      // nothing. Skip while the grant still outlives a freshly rotated refresh
+      // token. Compare the two policies directly rather than assuming a fixed
+      // amount of slack between independently configured lifetimes.
       const now = Math.floor(Date.now() / 1000);
-      if (grant.exp && grant.exp - now > mobileGrantTtl - DAY_SECONDS) return;
+      if (grant.exp && grant.exp - now > mobileRefreshTokenTtl) return;
       // `save()` persists `remainingTTL`, which is whatever is *left* once exp
       // is set. Clearing both cached values makes it compute a fresh full term
       // from `ttl.Grant` instead of re-saving the time already served.
@@ -484,22 +364,6 @@ export function setOidcRoutes(
     if (issuerPath) {
       (req as IncomingMessage & { originalUrl?: string }).originalUrl =
         `${issuerPath}${req.url ?? ""}`;
-    }
-  }
-
-  function bridgeMcpAuthorizationResources(req: IncomingMessage): void {
-    if (!req.url) return;
-    const url = new URL(req.url, config.oauth.issuer);
-    if (url.pathname !== "/api-gateway/oauth/auth") return;
-    const clientId = url.searchParams.get("client_id");
-    if (isIdentityClient(clientId) || isMobileClient(clientId)) return;
-
-    const legacy = legacyMcpResource(config.oauth.issuer);
-    const canonical = apiResource(config.oauth.issuer);
-    const resources = url.searchParams.getAll("resource");
-    if (resources.includes(legacy) && !resources.includes(canonical)) {
-      url.searchParams.append("resource", canonical);
-      req.url = `${url.pathname}${url.search}`;
     }
   }
 
@@ -580,7 +444,7 @@ export function setOidcRoutes(
       let accountId: string;
       let grantId: string;
 
-      if (isIdentityClient(params.client_id)) {
+      if (isIdentityOAuthClient(params.client_id)) {
         // Identity-only login (e.g. the Discourse forum) — no ledger concept, no
         // resource scope: this client never gets a resource (see defaultResource).
         accountId = user.id;
@@ -593,13 +457,13 @@ export function setOidcRoutes(
       } else {
         const { ledgerId } = interactionBody;
 
-        if (isMobileClient(params.client_id) && ledgerId) {
+        if (isMobileOAuthClient(params.client_id) && ledgerId) {
           throw new errors.InvalidRequest(
             "the native client grant must be account-wide",
           );
         }
         if (
-          isMobileClient(params.client_id) &&
+          isMobileOAuthClient(params.client_id) &&
           interactionBody.scope !== params.scope
         ) {
           throw new errors.InvalidRequest(
@@ -643,12 +507,6 @@ export function setOidcRoutes(
           )) {
             const scope = scopes.join(" ");
             grant.addResourceScope(indicator, scope);
-            if (
-              !isMobileClient(params.client_id) &&
-              indicator === legacyMcpResource(config.oauth.issuer)
-            ) {
-              grant.addResourceScope(apiResource(config.oauth.issuer), scope);
-            }
           }
         } else {
           const paramResources = Array.isArray(params.resource)
@@ -658,20 +516,17 @@ export function setOidcRoutes(
             : typeof params.resource === "string"
               ? [params.resource]
               : [];
-          const resources =
+          const selectedResources =
             paramResources.length > 0
               ? paramResources
-              : isMobileClient(params.client_id)
-                ? [apiResource(config.oauth.issuer)]
-                : [
-                    legacyMcpResource(config.oauth.issuer),
-                    apiResource(config.oauth.issuer),
-                  ];
+              : isMobileOAuthClient(params.client_id)
+                ? [resources[OAUTH_CONFIG.clients.mobile.resource]]
+                : [resources[OAUTH_CONFIG.dynamicRegistration.resource]];
           // oidc-provider separates the OIDC and resource portions when the
           // grant is evaluated. Passing the original request here is required
           // for it to retain `offline_access` and avoid a second consent loop;
           // unsupported values were already rejected against `scopes` above.
-          for (const resource of resources) {
+          for (const resource of selectedResources) {
             grant.addResourceScope(resource, requestedScope);
           }
         }
@@ -713,7 +568,6 @@ export function setOidcRoutes(
   // Delegate /api-gateway/oauth/* to oidc-provider (no koa-mount, path preserved)
   router.all("/api-gateway/oauth/{*path}", async (ctx) => {
     try {
-      bridgeMcpAuthorizationResources(ctx.req);
       pinRequestToIssuer(ctx.req);
       ctx.respond = false;
       await cb(ctx.req, ctx.res);
@@ -757,23 +611,17 @@ export function setOidcRoutes(
   // RFC 9728: Protected Resource Metadata. Advertises the closed API scope
   // vocabulary so a discovery-driven client requests exactly those
   // (ADR 0006 D3).
-  //
-  // `resource` deliberately still names the MCP endpoint. A client reads this
-  // document and then names that value in its token requests (RFC 8707);
-  // advertising the API resource while grants stored before this change carry
-  // only the legacy one makes those requests fail `invalid_grant` on refresh.
-  // Grants issued from now on carry both indicators, so this flips to
-  // `apiResource` once the window closes — see legacyMcpResource for the date.
   router.get("/.well-known/oauth-protected-resource", async (ctx) => {
     ctx.body = {
-      resource: legacyMcpResource(config.oauth.issuer),
+      resource: resources[OAUTH_CONFIG.dynamicRegistration.resource],
       authorization_servers: [config.oauth.issuer],
       scopes_supported: ["openid", "offline_access", ...API_SCOPES],
       bearer_methods_supported: ["header"],
     };
   });
 
-  const canonicalResource = apiResource(config.oauth.issuer);
+  const canonicalResource =
+    resources[OAUTH_CONFIG.resourceBindings.applicationApi];
   router.get(
     oauthWellKnownPath("oauth-protected-resource", canonicalResource),
     async (ctx) => {

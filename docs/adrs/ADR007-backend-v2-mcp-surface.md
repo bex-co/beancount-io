@@ -59,12 +59,14 @@ This is what the Streamable HTTP spec prescribes for both — `405` for `GET` wh
 
 ### D3 — Authentication is the shared gate's job; MCP states only its extra requirement
 
-`mcp-route.ts` does not authenticate. It calls `resolveIdentity(..., { oauthAudience: "mcp" })` — the one seam (ADR 0006 D2) — and then decides what an unacceptable _MCP_ credential looks like:
+`mcp-route.ts` does not authenticate. It calls `resolveIdentity` with the MCP resource binding from the shared OAuth catalog — the one seam (ADR 0006 D2) — and then decides what an unacceptable _MCP_ credential looks like:
 
 - **A browser session is not an MCP credential.** MCP clients are agents that completed an OAuth ceremony. A session is refused exactly as no credential is, discovery hint included, so a browser-hosted client goes and gets a real token instead of half-working.
 - **The credential must be pinned to one ledger.** MCP has no per-call ledger argument to fall back on, so an unpinned token — legitimate on GraphQL and REST — is refused here with a `ForbiddenError` rather than guessed at. API keys are minted with `ledgerScope: "owner/name"` for this reason.
 
 Both refusals are decided _before_ the tool context is built, so an unusable credential never reaches a registry.
+
+MCP and the application API intentionally remain separate OAuth resources. MCP tokens carry `{issuer}/api-gateway/mcp`; Mobile tokens for GraphQL and REST carry the historical `{issuer}/v1` audience. The latter is a protocol identifier, not an HTTP endpoint. An earlier migration direction proposed converging MCP on the application audience, but that would let a credential minted for one trust boundary be replayed at the other. The split is therefore permanent, while `{issuer}/v1` remains stable for released native clients and their persisted refresh grants despite its version-shaped name.
 
 > **Superseded in part by [D11](#d11--a-credential-may-reach-more-than-one-ledger-and-the-call-says-which).** The second bullet stays true for a pinned credential and stops being the only mode: D11 gives the ledger tools an optional `ledger` argument, so an unpinned credential is refused only when it names no ledger. The session-is-not-a-credential rule is untouched.
 
@@ -183,7 +185,7 @@ flowchart TB
   edge["Edge (Cloudflare + Caddy)<br/>routes /api-gateway/* → backend-v2"]
 
   subgraph route["mcp-route.ts — per request"]
-    id["resolveIdentity(oauthAudience: 'mcp')<br/>the one gate — ADR 0006 D2"]
+    id["resolveIdentity(MCP resource binding)<br/>the one gate — ADR 0006 D2"]
     sess{"session or<br/>no credential?"}
     pin{"ledgerScope<br/>pinned?"}
     meth{"method<br/>= POST?"}
@@ -307,7 +309,6 @@ The remaining production gap is D10 alone, and it is narrower than it was: **OAu
 ## Open Questions
 
 - Should `scopeEnforcement` flip from `"shadow"` to `"enforce"` before or after MCP is publicly advertised? Advertising first means the first external clients are the traffic the shadow mode is meant to observe — which is either the point or exactly backwards.
-- Does the `legacyMcpResource` audience still need honouring after 2026-09-23, or can the compatibility window close on schedule given no external client has successfully authenticated yet?
 - Is a `/mcp` alias worth the edge configuration, or is `/api-gateway/mcp` fine as the documented address? The alias is friendlier in a config file a human types once.
 - Should the conformance checklist run as an automated post-deploy smoke test rather than a document?
 
@@ -321,7 +322,8 @@ Internal:
 - `src/server/api/identity.ts` — `resolveIdentity`, the one gate (ADR 0006 D2)
 - `src/server/api/op-class.ts` — op ids and read/write/admin classification
 - `src/features/oauth/api/oidc-route.ts` — OAuth routes and the `oauth_not_configured` fallback
-- `src/features/oauth/utils/oidc-verify.ts` — `apiResource` / `legacyMcpResource` audiences and the compatibility window
+- `src/features/oauth/data/config.ts` — API/MCP resources and OAuth client/lifetime policy
+- `src/features/oauth/utils/oidc-verify.ts` — access-token signature, issuer, and selected-resource verification
 - `src/server/rest/error-middleware.ts` / `src/server/graphql/format-error.ts` — the two translations D7 aligns
 - `src/features/ai-agent/api/__tests__/mcp-route-methods.test.ts` — D9 property 1
 - `src/server/api/__tests__/scope-enforcement.test.ts` — D9 property 2, both dialects

@@ -117,12 +117,6 @@ export interface PlaidConfig {
 
 export type Environment = "production" | "development" | "test";
 
-interface OAuthDiscourseClientConfig {
-  clientId: string;
-  clientSecret: string;
-  redirectUri: string;
-}
-
 interface OAuthConfig {
   issuer: string;
   /** Public dashboard/front-door origin that serves OAuth interaction pages. */
@@ -131,23 +125,11 @@ interface OAuthConfig {
   jwks?: { keys: object[] };
   unavailableReason?: string;
   /**
-   * Static "discourse" client for third-party identity login (see
-   * features/oauth/api/oidc-route.ts). Confidential client with a real
-   * secret — a public/secretless client can't work here: the
-   * discourse-openid-connect plugin always sends client authentication
-   * (never omits it for "none"), and oidc-provider explicitly rejects an
-   * empty secret rather than treating it as "no secret" (verified against
-   * both sides' source — see the comment on buildStaticClients).
+   * Deployment secret for the static Discourse identity client. Its non-secret
+   * metadata and every other OAuth client policy live together in
+   * features/oauth/data/config.ts. An empty value omits this optional client.
    */
-  discourseClient: OAuthDiscourseClientConfig;
-  /**
-   * Idle window for a native-app OAuth session, in days. The mobile refresh
-   * token and the grant behind it are both re-issued with this full lifetime on
-   * every refresh, so a device in regular use never gets signed out; only one
-   * that goes quiet for the whole window has to re-authorize in the system
-   * browser.
-   */
-  mobileSessionDays: number;
+  discourseClientSecret: string;
 }
 
 /**
@@ -440,25 +422,8 @@ export const config: AppConfig = {
     interactionUrl: oauthInteractionUrl,
     jwks: oauthSigningKeys.jwks,
     unavailableReason: oauthSigningKeys.unavailableReason,
-    discourseClient: {
-      // Hardcoded — not sensitive, and hardcoding removes a source of
-      // config/deploy error. Only clientSecret is env-sourced (see below).
-      clientId: "discourse-forum",
-      // OmniAuth's default /auth/:provider/callback path — the
-      // discourse-openid-connect plugin registers its strategy as "oidc"
-      // (OpenIDConnectAuthenticator#name), combined with this site's
-      // DISCOURSE_RELATIVE_URL_ROOT=/forum.
-      redirectUri: "https://beancount.io/forum/auth/oidc/callback",
-      // The ONLY env var this feature reads. `||` (not `??`) so an empty
-      // string is treated the same as unset — buildStaticClients() in
-      // oidc-route.ts then safely registers no client at all rather than
-      // erroring; the server boots normally either way.
-      clientSecret: process.env.OAUTH_DISCOURSE_CLIENT_SECRET || "",
-    },
-    // Hardcoded, like the discourse client id above and for the same reason:
-    // it is not sensitive, and a value only ever read at provider construction
-    // is one more thing to get wrong per deployment if it comes from the
-    // environment. A deployment that wants a shorter window edits it here.
-    mobileSessionDays: 365,
+    // The only client-specific deployment input. `||` (not `??`) makes empty
+    // equivalent to unset, so the optional client is simply not registered.
+    discourseClientSecret: process.env.OAUTH_DISCOURSE_CLIENT_SECRET || "",
   },
 };

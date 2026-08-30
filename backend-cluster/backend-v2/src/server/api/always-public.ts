@@ -68,7 +68,7 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
   {
     opId: "REST GET /.well-known/oauth-protected-resource/v1",
     reason:
-      "RFC 9728 resource-specific discovery metadata; clients need it before they can present a credential to the v1 API.",
+      "RFC 9728 resource-specific discovery metadata; clients need it before they can present a credential to the application API.",
   },
   {
     opId: "REST GET /.well-known/security.txt",

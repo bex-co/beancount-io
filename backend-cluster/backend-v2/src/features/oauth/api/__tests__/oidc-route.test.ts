@@ -10,12 +10,18 @@ import { resolveOidcIdentity } from "@/features/oauth/utils/oidc-verify";
 import type { Identity } from "@/server/api/identity";
 import { gqlOpId, requireScopeClass } from "@/server/api/op-class";
 import {
+  DISCOURSE_CLIENT_ID,
+  DISCOURSE_REDIRECT_URI,
   MOBILE_CLIENT_ID,
   MOBILE_REDIRECT_URIS,
+  OAUTH_CONFIG,
   oauthLifetimes,
-  oauthWellKnownPath,
-  setOidcRoutes,
   shouldRotateRefreshToken,
+} from "../../data/config";
+import {
+  oauthWellKnownPath,
+  selectOAuthResource,
+  setOidcRoutes,
 } from "../oidc-route";
 import { MemoryAdapter } from "../../data/memory-adapter";
 
@@ -44,12 +50,9 @@ jest.mock("@/features/ledger/utils/ledger-access-check", () => ({
 }));
 
 const PORT = 47592; // fixed — issuer must be known before the Provider is constructed
-const MOBILE_SESSION_DAYS = 365;
 const DAY_SECONDS = 24 * 60 * 60;
 const ISSUER = `http://127.0.0.1:${PORT}`;
-const DISCOURSE_CLIENT_ID = "discourse-test";
 const DISCOURSE_CLIENT_SECRET = "test-client-secret-value";
-const DISCOURSE_REDIRECT_URI = "https://forum.example.test/auth/callback";
 const TEST_TOKEN = "test-bearer-token";
 // A token-shaped credential: scoped, ledger-pinned, and NOT capability-exempt —
 // the shape an API key or a third-party OAuth grant resolves to. It authenticates
@@ -83,8 +86,31 @@ describe("OAuth well-known URL derivation", () => {
   });
 });
 
+describe("OAuth resource selection", () => {
+  it("selects the configured audience from a multi-resource grant", () => {
+    expect(
+      selectOAuthResource("https://books.example.test/api-gateway/mcp", [
+        "https://books.example.test/v1",
+        "https://books.example.test/api-gateway/mcp",
+      ]),
+    ).toBe("https://books.example.test/api-gateway/mcp");
+  });
+
+  it("leaves an identity-only client without a resource", () => {
+    expect(selectOAuthResource(undefined)).toBe("");
+  });
+
+  it("rejects a grant that lacks the client's configured audience", () => {
+    expect(() =>
+      selectOAuthResource("https://books.example.test/api-gateway/mcp", [
+        "https://books.example.test/v1",
+      ]),
+    ).toThrow("invalid_target");
+  });
+});
+
 describe("OAuth token lifetimes", () => {
-  const lifetimes = oauthLifetimes(MOBILE_SESSION_DAYS);
+  const lifetimes = oauthLifetimes();
 
   it("gives the native app a year-long idle window, others 30 days", () => {
     expect(lifetimes.refreshToken(MOBILE_CLIENT_ID)).toBe(365 * DAY_SECONDS);
@@ -101,13 +127,19 @@ describe("OAuth token lifetimes", () => {
     expect(lifetimes.grant("some-mcp-client")).toBe(14 * DAY_SECONDS);
   });
 
-  it("scales the native lifetimes with the configured session length", () => {
-    const tightened = oauthLifetimes(30);
-    expect(tightened.refreshToken(MOBILE_CLIENT_ID)).toBe(30 * DAY_SECONDS);
-    expect(tightened.grant(MOBILE_CLIENT_ID)).toBe(31 * DAY_SECONDS);
-    // Other clients are unaffected by the native knob.
-    expect(tightened.refreshToken("some-mcp-client")).toBe(30 * DAY_SECONDS);
-    expect(tightened.grant("some-mcp-client")).toBe(14 * DAY_SECONDS);
+  it("uses the values declared by the centralized client catalog", () => {
+    expect(lifetimes.refreshToken(MOBILE_CLIENT_ID)).toBe(
+      OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds,
+    );
+    expect(lifetimes.grant(MOBILE_CLIENT_ID)).toBe(
+      OAUTH_CONFIG.clients.mobile.grantTtlSeconds,
+    );
+    expect(lifetimes.refreshToken("some-mcp-client")).toBe(
+      OAUTH_CONFIG.ttl.defaultRefreshTokenSeconds,
+    );
+    expect(lifetimes.grant("some-mcp-client")).toBe(
+      OAUTH_CONFIG.ttl.defaultGrantSeconds,
+    );
   });
 });
 
@@ -246,12 +278,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
         issuer: ISSUER,
         interactionUrl: ISSUER,
         jwks: getJwks("test" as AppConfig["env"]),
-        discourseClient: {
-          clientId: DISCOURSE_CLIENT_ID,
-          clientSecret: DISCOURSE_CLIENT_SECRET,
-          redirectUri: DISCOURSE_REDIRECT_URI,
-        },
-        mobileSessionDays: MOBILE_SESSION_DAYS,
+        discourseClientSecret: DISCOURSE_CLIENT_SECRET,
       },
     } as unknown as AppConfig;
 
@@ -758,7 +785,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(consentUrl.searchParams.has("screen_hint")).toBe(false);
   });
 
-  it("mobile flow: rejects the legacy MCP resource and ledger pinning", async () => {
+  it("mobile flow: rejects the MCP endpoint as a resource and ledger pinning", async () => {
     const { codeChallenge } = pkce();
     const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
     authUrl.searchParams.set("client_id", MOBILE_CLIENT_ID);
@@ -935,7 +962,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const now = () => Math.floor(Date.now() / 1000);
     const atSignIn = await grants.find(grantId);
     expect((atSignIn?.exp as number) - now()).toBeGreaterThan(
-      MOBILE_SESSION_DAYS * DAY_SECONDS,
+      OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds,
     );
 
     // Age the grant as if the device had been quiet for most of the window.
@@ -962,7 +989,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
 
     const afterRefresh = await grants.find(grantId);
     expect((afterRefresh?.exp as number) - now()).toBeGreaterThan(
-      MOBILE_SESSION_DAYS * DAY_SECONDS,
+      OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds,
     );
   });
 
@@ -1028,11 +1055,11 @@ describe("oidc-route: unified MCP + identity provider", () => {
     // refreshes, with no re-authorization and no forced logout.
     const rotatedRecord = await refreshTokens.find(rotated);
     expect((rotatedRecord?.exp as number) - now()).toBeGreaterThan(
-      (MOBILE_SESSION_DAYS - 1) * DAY_SECONDS,
+      OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds - DAY_SECONDS,
     );
     const slid = await grants.find(grantId);
     expect((slid?.exp as number) - now()).toBeGreaterThan(
-      MOBILE_SESSION_DAYS * DAY_SECONDS,
+      OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds,
     );
   });
 
@@ -1107,7 +1134,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
     authUrl.searchParams.set("code_challenge", codeChallenge);
     authUrl.searchParams.set("code_challenge_method", "S256");
     authUrl.searchParams.set("state", "mobile-state");
-    authUrl.searchParams.set("resource", "https://attacker.example.test/api");
+    authUrl.searchParams.set("resource", "https://attacker.example.test/v1");
 
     const res = await fetch(authUrl, { redirect: "manual" });
     expect(res.status).toBe(303);
@@ -1154,6 +1181,26 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const body = (await res.json()) as { client_id: string };
     return { clientId: body.client_id, redirectUri };
   }
+
+  it("resource indicators: dynamic clients cannot request an API token", async () => {
+    const { clientId, redirectUri } = await registerMcpClient();
+    const { codeChallenge } = pkce();
+    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
+    authUrl.search = new URLSearchParams({
+      client_id: clientId,
+      response_type: "code",
+      scope: "openid ledger.read",
+      redirect_uri: redirectUri,
+      code_challenge: codeChallenge,
+      code_challenge_method: "S256",
+      state: "mcp-state",
+      resource: `${ISSUER}/v1`,
+    }).toString();
+
+    const res = await fetch(authUrl, { redirect: "manual" });
+    const location = new URL(res.headers.get("location")!);
+    expect(location.searchParams.get("error")).toBe("invalid_target");
+  });
 
   // Consent is an authorization decision. The grant's authority comes entirely
   // from the request — `params.scope` for the scopes, the body's `ledgerId` for
@@ -1349,23 +1396,9 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(claims.sub).toBe(TEST_USER.id);
   });
 
-  // Guards the transition rule that keeps pre-existing MCP sessions alive.
-  //
-  // A refresh token carries the resource indicator its AUTHORIZATION request
-  // named, and oidc-provider refuses a token request naming any other one
-  // (resolveResource -> InvalidTarget, surfacing as 400 invalid_grant). Clients
-  // learn which resource to name by reading
-  // .well-known/oauth-protected-resource. So advertising a new resource while
-  // grants issued against the old one are still alive kills every one of those
-  // sessions on its next refresh — verified: it returns exactly that error.
-  //
-  // New grants carry both resources so they are ready for the eventual flip,
-  // while discovery keeps naming the legacy resource until the last old-only
-  // grant reaches its 30-day TTL. This test fails if either half is removed.
-  it("bridges new MCP grants while discovery protects pre-existing grants", async () => {
+  it("uses the MCP resource for authorization, refresh, and discovery", async () => {
     const { clientId, redirectUri } = await registerMcpClient();
-    const legacyResource = `${ISSUER}/api-gateway/mcp`;
-    const newResource = `${ISSUER}/v1`;
+    const resource = `${ISSUER}/api-gateway/mcp`;
 
     const { code, verifier } = await driveAuthorizationCode({
       clientId,
@@ -1374,47 +1407,35 @@ describe("oidc-route: unified MCP + identity provider", () => {
       redirectUri,
       loginBody: { ledgerId: "ada/personal" },
       prompt: "consent",
-      resource: legacyResource,
+      resource,
     });
     const tokenBody = await exchangeToken({
       code,
       verifier,
       clientId,
       redirectUri,
-      resource: legacyResource,
+      resource,
     });
     expect(tokenBody.refresh_token).toBeTruthy();
 
-    const refreshWith = async (resource: string) => {
-      const res = await fetch(`${ISSUER}/api-gateway/oauth/token`, {
-        method: "POST",
-        headers: { "content-type": "application/x-www-form-urlencoded" },
-        body: new URLSearchParams({
-          grant_type: "refresh_token",
-          refresh_token: tokenBody.refresh_token as string,
-          client_id: clientId,
-          resource,
-        }),
-      });
-      return {
-        status: res.status,
-        body: (await res.json()) as Record<string, unknown>,
-      };
-    };
+    const refresh = await fetch(`${ISSUER}/api-gateway/oauth/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: tokenBody.refresh_token as string,
+        client_id: clientId,
+        resource,
+      }),
+    });
+    expect(refresh.status).toBe(200);
+    const refreshed = (await refresh.json()) as Record<string, unknown>;
+    expect(decodeJwt(refreshed.access_token as string).aud).toBe(resource);
 
-    // New grants also carry the canonical resource, so they survive the future
-    // discovery flip without a custom token-exchange grant.
-    const switched = await refreshWith(newResource);
-    expect(switched.status).toBe(200);
-    expect(decodeJwt(switched.body.access_token as string).aud).toBe(
-      newResource,
-    );
-
-    // Therefore discovery must keep naming the resource existing grants hold.
     const metadata = (await (
       await fetch(`${ISSUER}/.well-known/oauth-protected-resource`)
     ).json()) as { resource?: string };
-    expect(metadata.resource).toBe(legacyResource);
+    expect(metadata.resource).toBe(resource);
   });
 
   // ── Discovery (consumed by Discourse's openid_connect_discovery_document) ──
@@ -1486,7 +1507,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
 // The config layer now rejects an empty issuer before provider construction.
 // The optional Discourse secret remains allowed to be empty; in that case only
 // the always-present public mobile client is registered.
-describe("oidc-route: missing discourseClient config must not crash the server", () => {
+describe("oidc-route: missing Discourse secret must not crash the server", () => {
   const PORT = 47593;
   const ISSUER = `http://127.0.0.1:${PORT}`;
   let server: http.Server;
@@ -1497,7 +1518,7 @@ describe("oidc-route: missing discourseClient config must not crash the server",
     }
   });
 
-  it("setOidcRoutes does not throw when discourseClient.clientSecret is empty", () => {
+  it("setOidcRoutes does not throw when discourseClientSecret is empty", () => {
     const app = new Koa();
     const router = new Router();
 
@@ -1508,11 +1529,7 @@ describe("oidc-route: missing discourseClient config must not crash the server",
         issuer: "https://beancount.io",
         interactionUrl: "https://beancount.io",
         jwks: getJwks("test" as AppConfig["env"]),
-        discourseClient: {
-          clientId: "discourse-forum",
-          clientSecret: "", // the one field that CAN be empty in production
-          redirectUri: "https://beancount.io/forum/auth/oidc/callback",
-        },
+        discourseClientSecret: "", // may be empty in production
       },
     } as unknown as AppConfig;
 
@@ -1543,11 +1560,7 @@ describe("oidc-route: missing discourseClient config must not crash the server",
         interactionUrl: disabledIssuer,
         jwks: undefined,
         unavailableReason: "OAUTH_JWKS is required in production",
-        discourseClient: {
-          clientId: "discourse-forum",
-          clientSecret: "",
-          redirectUri: "https://beancount.io/forum/auth/oidc/callback",
-        },
+        discourseClientSecret: "",
       },
     } as unknown as AppConfig;
 
@@ -1589,11 +1602,7 @@ describe("oidc-route: missing discourseClient config must not crash the server",
         issuer: ISSUER,
         interactionUrl: ISSUER,
         jwks: getJwks("test" as AppConfig["env"]),
-        discourseClient: {
-          clientId: "discourse-forum",
-          clientSecret: "",
-          redirectUri: "https://beancount.io/forum/auth/oidc/callback",
-        },
+        discourseClientSecret: "",
       },
     } as unknown as AppConfig;
 
@@ -1613,7 +1622,7 @@ describe("oidc-route: missing discourseClient config must not crash the server",
     // Server is up and serving requests at all (the crash regression would
     // have prevented this listen from ever completing).
     const res = await fetch(
-      `${ISSUER}/api-gateway/oauth/auth?client_id=discourse-forum&response_type=code&scope=openid&redirect_uri=https://beancount.io/forum/auth/oidc/callback&code_challenge=test&code_challenge_method=S256&state=test`,
+      `${ISSUER}/api-gateway/oauth/auth?client_id=${DISCOURSE_CLIENT_ID}&response_type=code&scope=openid&redirect_uri=${encodeURIComponent(DISCOURSE_REDIRECT_URI)}&code_challenge=test&code_challenge_method=S256&state=test`,
       { redirect: "manual" },
     );
     // 400 invalid_client, not a connection failure or 500 — the route works,
@@ -1675,11 +1684,7 @@ describe("oidc-route: path-prefixed public issuer", () => {
         issuer: ISSUER,
         interactionUrl: ORIGIN,
         jwks: getJwks("test" as AppConfig["env"]),
-        discourseClient: {
-          clientId: "discourse-forum",
-          clientSecret: "",
-          redirectUri: `${ORIGIN}/forum/callback`,
-        },
+        discourseClientSecret: "",
       },
     } as unknown as AppConfig;
 

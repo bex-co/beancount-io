@@ -1,5 +1,4 @@
-/** MCP keeps its old resource audience only for the documented refresh-token
- * compatibility window. It never accepts an absent or arbitrary audience. */
+/** MCP accepts only its configured resource audience, never the application API's. */
 import { SignJWT, exportJWK, generateKeyPair, type CryptoKey } from "jose";
 import type { AppConfig } from "@/config/config";
 
@@ -40,14 +39,11 @@ function mint(
 }
 
 describe("MCP audience enforcement", () => {
-  it.each([
-    ["the transitional legacy audience", `${ISSUER}/api-gateway/mcp`],
-    ["the canonical API audience", `${ISSUER}/v1`],
-  ])("accepts a ledger-pinned token with %s", async (_label, audience) => {
+  it("accepts a ledger-pinned token with the MCP audience", async () => {
     const identity = await resolveOidcIdentity(
       await mint(
         { sub: "user-1:ada/personal", ledger_id: "ada/personal" },
-        { audience },
+        { audience: `${ISSUER}/api-gateway/mcp` },
       ),
       config,
       "mcp",
@@ -58,7 +54,7 @@ describe("MCP audience enforcement", () => {
     });
   });
 
-  it.each([undefined, "https://other.example/x"])(
+  it.each([undefined, "https://other.example/x", `${ISSUER}/v1`])(
     "rejects a token carrying audience %s",
     async (audience) => {
       const identity = await resolveOidcIdentity(
@@ -83,6 +79,21 @@ describe("MCP audience enforcement", () => {
       "mcp",
     );
     expect(identity?.scopes).toEqual([]);
+  });
+
+  it("fails closed when an untyped caller supplies an unknown resource key", async () => {
+    const token = await mint(
+      { sub: "user-1:ada/personal", ledger_id: "ada/personal" },
+      { audience: `${ISSUER}/api-gateway/mcp` },
+    );
+
+    await expect(
+      Reflect.apply(resolveOidcIdentity, undefined, [
+        token,
+        config,
+        "future-resource",
+      ]),
+    ).resolves.toBeNull();
   });
 
   it("still refuses a token from another issuer, as before", async () => {

@@ -9,7 +9,7 @@ import {
   type Identity,
 } from "../identity";
 import { ForbiddenError } from "@/shared/errors";
-import { MOBILE_CLIENT_ID } from "@/features/oauth/constants";
+import { MOBILE_CLIENT_ID } from "@/features/oauth/data/config";
 
 /**
  * `resolveIdentity` is the single authentication gate for GraphQL, REST, and
@@ -241,7 +241,7 @@ describe("resolveIdentity — OAuth credential", () => {
     ).resolves.toBeUndefined();
   });
 
-  it("rejects the transitional MCP audience on GraphQL and REST", async () => {
+  it("rejects the MCP endpoint URL as an audience", async () => {
     const token = await mintOAuth(
       {},
       { audience: `${ISSUER}/api-gateway/mcp` },
@@ -265,17 +265,18 @@ describe("resolveIdentity — OAuth credential", () => {
     expect(identity?.method).toBe("oauth");
   });
 
-  it("accepts the API and transitional legacy resource on the MCP gate", async () => {
-    for (const audience of [`${ISSUER}/api-gateway/mcp`, `${ISSUER}/v1`]) {
-      const token = await mintOAuth({ ledger_id: "alice/main" }, { audience });
-      const identity = await resolveIdentity(
-        request({ authorization: `Bearer ${token}` }),
-        databaseAccepting(null),
-        config,
-        { oauthAudience: "mcp" },
-      );
-      expect(identity?.method).toBe("oauth");
-    }
+  it("accepts only the MCP resource on the MCP gate", async () => {
+    const token = await mintOAuth(
+      { ledger_id: "alice/main" },
+      { audience: `${ISSUER}/api-gateway/mcp` },
+    );
+    const identity = await resolveIdentity(
+      request({ authorization: `Bearer ${token}` }),
+      databaseAccepting(null),
+      config,
+      { oauthResource: "mcp" },
+    );
+    expect(identity?.method).toBe("oauth");
   });
 
   it("rejects a token from a different issuer", async () => {

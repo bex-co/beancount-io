@@ -1,6 +1,11 @@
 import { createLocalJWKSet, decodeProtectedHeader, jwtVerify } from "jose";
 import { logger } from "@/shared/logger";
 import type { AppConfig } from "@/config/config";
+import {
+  OAUTH_CONFIG,
+  type OAuthResource,
+  oauthResource,
+} from "@/features/oauth/data/config";
 
 const oidcVerifyLogger = logger.child({ module: "oidc-verify" });
 
@@ -55,40 +60,6 @@ function getKeySet(config: AppConfig) {
 }
 
 /**
- * The API's resource identifier — what an access token's `aud` must contain to
- * reach any surface. It names the API as a whole, not one endpoint on it, which
- * is what lets a single token serve GraphQL, REST, and MCP (ADR 0006 D5).
- */
-export function apiResource(issuer: string): string {
-  return `${issuer}/v1`;
-}
-
-/**
- * The resource every token carried before ADR 0006 D5 widened it: the MCP
- * endpoint itself, which confined a token to that one surface.
- *
- * Still the resource we mint against and advertise, and the one existing tokens
- * carry. It cannot be swapped for {@link apiResource} unilaterally: a refresh
- * token is bound to the resource indicator its authorization request named, and
- * oidc-provider refuses a token request naming any other (resolveResource ->
- * InvalidTarget, seen by the client as `400 invalid_grant`). Clients learn which
- * one to name from `.well-known/oauth-protected-resource`, so advertising the
- * new value while old grants are live would kill each of those sessions on its
- * next refresh.
- *
- * Refresh tokens live 30 days (`ttl.RefreshToken` in oidc-route.ts). On or after
- * **2026-09-23** every grant predating the dual-resource deployment has
- * expired, and the switch
- * is safe: point `defaultResource` and the RFC 9728 document at
- * {@link apiResource}, then drop this constant and the audience entry below.
- * `oidc-route.test.ts` ("does not advertise a resource that pre-existing grants
- * cannot refresh against") holds the line until then.
- */
-export function legacyMcpResource(issuer: string): string {
-  return `${issuer}/api-gateway/mcp`;
-}
-
-/**
  * Signature algorithms an OAuth access token of ours may carry. ES256 is what
  * `config.oauth.jwks` holds today; the RSA entries keep this correct if a key of
  * that type is ever added, without re-admitting the symmetric HS* family that
@@ -111,14 +82,6 @@ function isAsymmetricJwt(token: string): boolean {
   }
 }
 
-export type OAuthAudience = "api" | "mcp";
-
-function expectedAudiences(issuer: string, audience: OAuthAudience): string[] {
-  return audience === "mcp"
-    ? [apiResource(issuer), legacyMcpResource(issuer)]
-    : [apiResource(issuer)];
-}
-
 /** A verified OAuth access token, projected onto what the API cares about. */
 export interface OidcIdentity {
   userId: string;
@@ -135,16 +98,14 @@ export interface OidcIdentity {
 /**
  * Verify an OAuth access token and project it onto an {@link OidcIdentity}.
  *
- * API callers accept only the current resource. MCP additionally accepts its
- * legacy audience during the compatibility window described on
- * {@link legacyMcpResource}. Returns null for anything that does not verify —
- * bad signature, wrong issuer, wrong audience, expired — without distinguishing
- * which, so the token is never an oracle.
+ * Each surface accepts only its configured resource. Returns null for anything
+ * that does not verify — bad signature, wrong issuer, wrong audience, expired —
+ * without distinguishing which, so the token is never an oracle.
  */
 export async function resolveOidcIdentity(
   token: string,
   config: AppConfig,
-  audience: OAuthAudience = "api",
+  resource: OAuthResource = OAUTH_CONFIG.resourceBindings.applicationApi,
 ): Promise<OidcIdentity | null> {
   // No issuer configured means there is no authority to verify against, so no
   // token can be an OAuth token. Returning null (rather than throwing) keeps
@@ -152,6 +113,9 @@ export async function resolveOidcIdentity(
   // to the other credential kinds.
   const issuer = config.oauth?.issuer;
   if (!issuer) return null;
+
+  const audience = oauthResource(issuer, resource);
+  if (!audience) return null;
 
   const keySet = getKeySet(config);
   if (!keySet) return null;
@@ -168,7 +132,7 @@ export async function resolveOidcIdentity(
   try {
     const { payload } = await jwtVerify(token, keySet, {
       issuer,
-      audience: expectedAudiences(issuer, audience),
+      audience,
       // Defense in depth alongside isAsymmetricJwt: never let a symmetric
       // algorithm reach the key set, whatever a header claims.
       algorithms: ASYMMETRIC_ALGS,

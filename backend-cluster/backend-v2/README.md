@@ -195,6 +195,27 @@ for incident response where immediate global invalidation is required.
 
 #### Session lifetimes
 
+`src/features/oauth/data/config.ts` is the single source for OAuth client,
+audience, and lifetime policy: the static Mobile and Discourse clients, the
+dynamic-registration profile used by MCP clients, issuer-relative audiences,
+token/grant lifetimes, and refresh rotation. `AppConfig.oauth` contains only
+deployment inputs — the issuer, interaction origin, signing keys, and optional
+Discourse secret — so a test or deployment cannot silently change a client ID,
+redirect URI, audience, or TTL. Dashboard browser sessions are not OAuth
+clients and therefore do not appear in this catalog.
+
+These resource values are OAuth identifiers, not HTTP mounts. GraphQL and REST
+keep their existing transport URLs; the historical `<issuer>/v1` identifier
+names their shared authorization boundary even though no endpoint is mounted
+at that URL. It remains stable because released native clients and persisted
+refresh grants are bound to that exact audience.
+
+| Client/profile         | Registration | Credential at token endpoint | Resource audience                |
+| ---------------------- | ------------ | ---------------------------- | -------------------------------- |
+| Beancount Mobile       | Static       | Public client + PKCE         | Application API (`<issuer>/v1`)  |
+| Discourse forum        | Static       | `client_secret_basic` + PKCE | UserInfo only (no API resource)  |
+| MCP/agent integrations | Dynamic      | Registered client metadata   | MCP (`<issuer>/api-gateway/mcp`) |
+
 | Credential                    | Lifetime               | Notes                                               |
 | ----------------------------- | ---------------------- | --------------------------------------------------- |
 | Access token (all clients)    | 1 hour                 | Self-contained; revocation cannot cut it short.     |
@@ -212,12 +233,11 @@ the system browser. This is deliberate: oidc-provider writes a Grant only at
 authorization time and rejects any refresh whose grant has expired, so a fixed
 grant lifetime — not the refresh token's — is what would otherwise cap the
 session, and its own rotation default stops rotating a chain older than 365.25
-days. Both are overridden for this one client (`oauthLifetimes` and
-`shouldRotateRefreshToken` in `features/oauth/api/oidc-route.ts`); every other
-client keeps oidc-provider's defaults. The window itself is
-`oauth.mobileSessionDays` in `src/config/config.ts` — a code constant, not an
-environment variable, since it is read once at provider construction and is not
-a secret. A deployment that wants a shorter window edits it there.
+days. Both are overridden for this one client by the policy functions in
+`features/oauth/data/config.ts`; every other client keeps oidc-provider's
+defaults. The window is a reviewed code value in that catalog, not an
+environment variable, because deployments should not silently disagree about
+credential lifetime.
 
 Revocation is what ends a long session early: logout revokes the refresh
 credential, which revokes the grant with it.
