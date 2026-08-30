@@ -137,6 +137,34 @@ export interface AnalyticsEvents {
    */
   bql_query_executed: Record<string, never>;
   /**
+   * A bounded interaction with the public Awesome PTA decision tool. The
+   * destination is intentionally a coarse section/category rather than a URL
+   * or project name, keeping the event useful without introducing an
+   * unbounded acquisition dimension.
+   */
+  awesome_pta_action_clicked: {
+    action: "section" | "guide" | "tool" | "hosted" | "contribute";
+    destination:
+      | "comparison"
+      | "catalog"
+      | "method"
+      | "engine"
+      | "editor"
+      | "importer"
+      | "reporting"
+      | "mobile"
+      | "hosted"
+      | "contribute";
+  };
+  /**
+   * Catalog-filter use without the selected value. In particular, free-form
+   * search text never leaves the browser.
+   */
+  awesome_pta_filter_changed: {
+    filter: "search" | "category" | "format" | "workflow";
+    state: "applied" | "cleared";
+  };
+  /**
    * A user invoked a financial-statement export. These events intentionally
    * contain only bounded product dimensions: never ledger identifiers,
    * filenames, filter expressions, account names, or amounts.

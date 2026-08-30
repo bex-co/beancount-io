@@ -24,6 +24,7 @@ import skCommits from "@/features/git/commits/locales/sk";
 import skImporter from "@/features/importer/locales/sk";
 import skPlaid from "@/features/plaid/locales/sk";
 import skReceipt from "@/features/receipt/locales/sk";
+import skAwesome from "@/features/awesome-plain-text-accounting/locales/sk";
 
 const sk: Record<string, string> = {
   ...extractMessages(skCommon),
@@ -51,6 +52,7 @@ const sk: Record<string, string> = {
   ...extractMessages(skImporter),
   ...extractMessages(skPlaid),
   ...extractMessages(skReceipt),
+  ...extractMessages(skAwesome),
 };
 
 export default sk;

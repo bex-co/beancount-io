@@ -17,6 +17,8 @@
   ·
   <a href="https://beancount.io/">Web app</a>
   ·
+  <a href="https://beancount.io/awesome-plain-text-accounting">Choose a PTA stack</a>
+  ·
   <a href="#mobile-apps">Mobile apps</a>
   ·
   <a href="#choose-your-entry-point">Start building</a>

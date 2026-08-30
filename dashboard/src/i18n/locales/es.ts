@@ -24,6 +24,7 @@ import esCommits from "@/features/git/commits/locales/es";
 import esImporter from "@/features/importer/locales/es";
 import esPlaid from "@/features/plaid/locales/es";
 import esReceipt from "@/features/receipt/locales/es";
+import esAwesome from "@/features/awesome-plain-text-accounting/locales/es";
 
 const es: Record<string, string> = {
   ...extractMessages(esCommon),
@@ -51,6 +52,7 @@ const es: Record<string, string> = {
   ...extractMessages(esImporter),
   ...extractMessages(esPlaid),
   ...extractMessages(esReceipt),
+  ...extractMessages(esAwesome),
 };
 
 export default es;

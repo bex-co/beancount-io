@@ -24,6 +24,7 @@ import koCommits from "@/features/git/commits/locales/ko";
 import koImporter from "@/features/importer/locales/ko";
 import koPlaid from "@/features/plaid/locales/ko";
 import koReceipt from "@/features/receipt/locales/ko";
+import koAwesome from "@/features/awesome-plain-text-accounting/locales/ko";
 
 const ko: Record<string, string> = {
   ...extractMessages(koCommon),
@@ -51,6 +52,7 @@ const ko: Record<string, string> = {
   ...extractMessages(koImporter),
   ...extractMessages(koPlaid),
   ...extractMessages(koReceipt),
+  ...extractMessages(koAwesome),
 };
 
 export default ko;

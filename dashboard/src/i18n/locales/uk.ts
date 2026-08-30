@@ -24,6 +24,7 @@ import ukCommits from "@/features/git/commits/locales/uk";
 import ukImporter from "@/features/importer/locales/uk";
 import ukPlaid from "@/features/plaid/locales/uk";
 import ukReceipt from "@/features/receipt/locales/uk";
+import ukAwesome from "@/features/awesome-plain-text-accounting/locales/uk";
 
 const uk: Record<string, string> = {
   ...extractMessages(ukCommon),
@@ -51,6 +52,7 @@ const uk: Record<string, string> = {
   ...extractMessages(ukImporter),
   ...extractMessages(ukPlaid),
   ...extractMessages(ukReceipt),
+  ...extractMessages(ukAwesome),
 };
 
 export default uk;

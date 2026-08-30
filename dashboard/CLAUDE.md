@@ -113,7 +113,7 @@ When adding one, update `src/vite-env.d.ts`, the typed config, `.env.example`, `
 
 The public adoption roadmap is the repository-root `.pm/` board. Use the root `/pm-brainstorm` workflow to propose work; `/pm` is the only writer.
 
-For Search Console evidence, run `yarn search-console-report --markdown --days 28`. It uses the fixed `https://beancount.io/` property and ranks only dashboard-owned paths: `/ledger`, `/login`, `/sign-up`, `/auth`, `/settings`, `/lgasset`, and `/oauth`. Rows that differ only by query parameters are grouped under their canonical page (query and hash stripped), with clicks and impressions summed, position impression-weighted, and a variant count. The same host fronts CMS, forum, and API services, so do not treat `/forum/**`, `/api/**`, `/.well-known`, or CMS content as dashboard opportunities. Confirm route ownership and never put credentials or report user data on the public board.
+For Search Console evidence, run `yarn search-console-report --markdown --days 28`. It uses the fixed `https://beancount.io/` property and ranks only dashboard-owned paths: `/ledger`, `/login`, `/sign-up`, `/auth`, `/settings`, `/lgasset`, `/oauth`, and `/awesome-plain-text-accounting`. Rows that differ only by query parameters are grouped under their canonical page (query and hash stripped), with clicks and impressions summed, position impression-weighted, and a variant count. The same host fronts CMS, forum, and API services, so do not treat `/forum/**`, `/api/**`, `/.well-known`, or other CMS content as dashboard opportunities. Confirm route ownership and never put credentials or report user data on the public board.
 
 ## Code standards
 

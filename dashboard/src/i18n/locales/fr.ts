@@ -24,6 +24,7 @@ import frCommits from "@/features/git/commits/locales/fr";
 import frImporter from "@/features/importer/locales/fr";
 import frPlaid from "@/features/plaid/locales/fr";
 import frReceipt from "@/features/receipt/locales/fr";
+import frAwesome from "@/features/awesome-plain-text-accounting/locales/fr";
 
 const fr: Record<string, string> = {
   ...extractMessages(frCommon),
@@ -51,6 +52,7 @@ const fr: Record<string, string> = {
   ...extractMessages(frImporter),
   ...extractMessages(frPlaid),
   ...extractMessages(frReceipt),
+  ...extractMessages(frAwesome),
 };
 
 export default fr;

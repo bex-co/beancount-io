@@ -24,6 +24,7 @@ import faCommits from "@/features/git/commits/locales/fa";
 import faImporter from "@/features/importer/locales/fa";
 import faPlaid from "@/features/plaid/locales/fa";
 import faReceipt from "@/features/receipt/locales/fa";
+import faAwesome from "@/features/awesome-plain-text-accounting/locales/fa";
 
 const fa: Record<string, string> = {
   ...extractMessages(faCommon),
@@ -51,6 +52,7 @@ const fa: Record<string, string> = {
   ...extractMessages(faImporter),
   ...extractMessages(faPlaid),
   ...extractMessages(faReceipt),
+  ...extractMessages(faAwesome),
 };
 
 export default fa;

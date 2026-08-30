@@ -24,6 +24,7 @@ import deCommits from "@/features/git/commits/locales/de";
 import deImporter from "@/features/importer/locales/de";
 import dePlaid from "@/features/plaid/locales/de";
 import deReceipt from "@/features/receipt/locales/de";
+import deAwesome from "@/features/awesome-plain-text-accounting/locales/de";
 
 const de: Record<string, string> = {
   ...extractMessages(deCommon),
@@ -51,6 +52,7 @@ const de: Record<string, string> = {
   ...extractMessages(deImporter),
   ...extractMessages(dePlaid),
   ...extractMessages(deReceipt),
+  ...extractMessages(deAwesome),
 };
 
 export default de;

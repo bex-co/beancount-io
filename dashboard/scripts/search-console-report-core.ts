@@ -59,6 +59,7 @@ const dashboardPrefixes = [
   "/settings",
   "/lgasset",
   "/oauth",
+  "/awesome-plain-text-accounting",
 ];
 
 const apiBeforeDashboardPrefixes = ["/ledger/editor"];

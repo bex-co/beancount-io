@@ -53,6 +53,11 @@ describe("dashboard Search Console report core", () => {
     expect(classifyDashboardPath("https://beancount.io/login")).toBe(
       "dashboard",
     );
+    expect(
+      classifyDashboardPath(
+        "https://beancount.io/awesome-plain-text-accounting",
+      ),
+    ).toBe("dashboard");
   });
 
   it("aggregates device rows and only ranks dashboard-owned opportunities", () => {
