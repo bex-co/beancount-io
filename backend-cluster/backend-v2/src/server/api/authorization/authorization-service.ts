@@ -55,6 +55,14 @@ const EVERY_CREDENTIAL = ["session", "oauth", "apikey"] as const;
 const INTERACTIVE_OR_OAUTH = ["session", "oauth"] as const;
 const SESSION_ONLY = ["session"] as const;
 
+const BILLING_CREDENTIAL: CredentialRequirement = {
+  methods: SESSION_ONLY,
+  denyMessageByMethod: {
+    oauth: "Managing billing requires a full signed-in session",
+    apikey: "Managing billing requires a full signed-in session",
+  },
+};
+
 /** The one executable policy catalog for the migrated user domain. */
 const ACTION_REQUIREMENTS: Readonly<
   Record<AuthorizationAction, ActionRequirement>
@@ -112,6 +120,42 @@ const ACTION_REQUIREMENTS: Readonly<
       category: ErrorCategory.NOT_FOUND,
       message: "API key not found",
     },
+  },
+  [AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.READ_BILLING,
+    credential: BILLING_CREDENTIAL,
+    auditClass: "read",
+  },
+  [AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    credential: BILLING_CREDENTIAL,
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.USER_BILLING_PORTAL_CREATE]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    credential: BILLING_CREDENTIAL,
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_CANCEL]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    credential: BILLING_CREDENTIAL,
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_RESUME]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    credential: BILLING_CREDENTIAL,
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_UPGRADE]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    credential: BILLING_CREDENTIAL,
+    auditClass: "write",
   },
 };
 

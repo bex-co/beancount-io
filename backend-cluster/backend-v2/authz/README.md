@@ -51,11 +51,20 @@ side effect. The caller provides only:
 - the already-resolved authenticated identity.
 
 Transport adapters do not interpret policy or manufacture relationship tuples.
-The operation-class gate only routes these operations to the PDP. Account and
-API-key services are the application boundary: each protected public method
-calls the PDP before domain work. The migrated profile, lifecycle, and
-credential methods expose no raw user-ID variants, so a new resolver or
-internal caller cannot bypass authorization by skipping a wrapper.
+The operation-class gate only routes these operations to the PDP. Account,
+API-key, and subscription services are the application boundary: each protected
+public method calls the PDP before domain work. The migrated profile, lifecycle,
+credential, and billing methods derive the protected User from `Identity`, so a
+new resolver or internal caller cannot select a different user or bypass
+authorization by skipping a wrapper.
+
+PDP-routed GraphQL fields that require a caller use the transport-only
+`@Authenticated()` decorator. It checks only that `resolveIdentity()` produced
+an `Identity`; it does not inspect scopes, credential methods, resources, or
+relationships and does not emit an authorization audit. This lets every
+authenticated credential reach the application service, where the catalog
+produces the one final allow/deny decision and its actionable error. Nullable
+identity probes and authentication ceremonies remain undecorated.
 
 The evaluator holds no tuple store, decision memo, or cross-request cache.
 Protected service methods receive the resolved `Identity` explicitly; the
@@ -148,15 +157,21 @@ An action is a stable, transport-independent business verb. `op-class.ts`
 records GraphQL/REST/MCP aliases, while each executable requirement lives once
 beside `AuthorizationService`:
 
-| Canonical action          | Transport aliases                              | Preserved credential ceiling                         | Relationship requirement                   |
-| ------------------------- | ---------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ |
-| `user.profile.read`       | `GQL Query.userProfile`                        | session, or OAuth/API key with `ledger.read`         | `user#can_read_profile`                    |
-| `user.profile.search`     | `GQL Query.getUserByExactMatch`                | browser session only                                 | exact-self `user#can_read_profile`         |
-| `user.profile.update`     | `GQL Mutation.updateUsername`, `updateProfile` | browser session only                                 | exact-self `user#can_write_profile`        |
-| `user.delete`             | `GQL Mutation.deleteAccount`                   | browser session or OAuth                             | exact-self `user#can_write_lifecycle`      |
-| `user.credentials.list`   | GraphQL/REST/MCP API-key list                  | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_credentials`     |
-| `user.credentials.create` | GraphQL/REST/MCP API-key create                | session, or OAuth with `ledger.admin`; never API key | exact-self `user#can_write_credentials`    |
-| `user.credentials.revoke` | GraphQL/REST/MCP API-key revoke                | session, or OAuth/API key with `ledger.admin`        | key owner has `user#can_write_credentials` |
+| Canonical action                    | Transport aliases                              | Preserved credential ceiling                         | Relationship requirement                   |
+| ----------------------------------- | ---------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ |
+| `user.profile.read`                 | `GQL Query.userProfile`                        | session, or OAuth/API key with `ledger.read`         | `user#can_read_profile`                    |
+| `user.profile.search`               | `GQL Query.getUserByExactMatch`                | browser session only                                 | exact-self `user#can_read_profile`         |
+| `user.profile.update`               | `GQL Mutation.updateUsername`, `updateProfile` | browser session only                                 | exact-self `user#can_write_profile`        |
+| `user.delete`                       | `GQL Mutation.deleteAccount`                   | browser session or OAuth                             | exact-self `user#can_write_lifecycle`      |
+| `user.credentials.list`             | GraphQL/REST/MCP API-key list                  | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_credentials`     |
+| `user.credentials.create`           | GraphQL/REST/MCP API-key create                | session, or OAuth with `ledger.admin`; never API key | exact-self `user#can_write_credentials`    |
+| `user.credentials.revoke`           | GraphQL/REST/MCP API-key revoke                | session, or OAuth/API key with `ledger.admin`        | key owner has `user#can_write_credentials` |
+| `user.billing.status.read`          | `GQL Query.subscriptionStatus`                 | browser session only                                 | exact-self `user#can_read_billing`         |
+| `user.billing.checkout.create`      | `GQL Mutation.createSubscriptionSession`       | browser session only                                 | exact-self `user#can_write_billing`        |
+| `user.billing.portal.create`        | `GQL Mutation.createStripePortalSession`       | browser session only                                 | exact-self `user#can_write_billing`        |
+| `user.billing.subscription.cancel`  | `GQL Mutation.cancelSubscription`              | browser session only                                 | exact-self `user#can_write_billing`        |
+| `user.billing.subscription.resume`  | `GQL Mutation.resumeSubscription`              | browser session only                                 | exact-self `user#can_write_billing`        |
+| `user.billing.subscription.upgrade` | `GQL Mutation.upgradeSubscription`             | browser session only                                 | exact-self `user#can_write_billing`        |
 
 Cross-user resources, missing or foreign API-key IDs, unknown actions or
 resource types, insufficient credentials, and evaluator failures all deny.
@@ -173,6 +188,21 @@ There is intentionally no inert operation-policy file in this directory. The
 actions live directly in the TypeScript authorization module; transport
 classification admits the request to that module but cannot authorize it.
 Keeping a second documentation-only catalog would create drift.
+
+The `read`/`write` class on protected billing aliases is operational metadata
+for rate limits and legacy audit defaults, not credential reachability. The PDP
+catalog keeps protected billing operations browser-session-only. The static
+tier-quota catalog is explicitly `public` and bypasses the PDP, but an operation
+override keeps its pre-cutover 300-per-minute budget. The protected aliases
+retain the same budget through the read-class default for subscription status
+and explicit overrides for the five mutations, so the cutover does not silently
+tighten or loosen abuse controls.
+
+A relationship-source outage is not a policy denial. It is logged and audited
+as an authorization `error`, surfaces to clients as service unavailable, and
+prevents all Stripe or local billing work. Audit persistence itself remains
+fail-open so an observability outage cannot suppress an otherwise-authorized
+billing operation.
 
 ## What OpenFGA owns
 
@@ -262,6 +292,22 @@ unchanged for both dashboard sessions and the mobile OAuth session. This slice
 does not add step-up login, a deletion grant, Redis state, a new OAuth scope, or
 a mobile/dashboard contract change.
 
+## Self-service billing
+
+`Query.allTierQuotas` returns static product configuration and is deliberately
+reachable without an identity or PDP decision. Every protected GraphQL billing
+alias passes the resolved `Identity` to `SubscriptionService`. The protected
+service method derives `user:<subject>` from that identity and makes exactly
+one PDP call before consulting cached status, account rows, subscription
+configuration, or Stripe. OAuth and API-key credentials are denied with the
+actionable full-session requirement; existing dashboard and mobile session
+flows require no new client step.
+
+Stripe remains authoritative for payment-domain state. Customer binding,
+configured products and prices, active/canceling status, and subscription
+ownership are validated by the billing and Stripe services and never become
+OpenFGA relations or token claims.
+
 ## Relationship sources
 
 Only durable or source-derived domain facts enter the model:
@@ -282,8 +328,9 @@ tuples.
 ## Invariants
 
 1. **The authorization module is the only final authority for migrated User
-   actions.** Protected Account/API-key service methods call it once before
-   domain work; every GraphQL/REST/MCP alias uses those application services.
+   actions.** Protected Account/API-key/subscription service methods call it
+   once before domain work; every GraphQL/REST/MCP alias uses those application
+   services.
 2. **OpenFGA contains only durable domain relationships.** No credential,
    session, token, grant, or `request_*` type/relation belongs in this model.
 3. **Subjects use stable internal user IDs** (`users.id`), never usernames,

@@ -1,7 +1,6 @@
 import { registerEnumType } from "type-graphql";
 import type { buildSchema } from "type-graphql";
 import type {
-  DatabaseLayer,
   ClientFactoryLayer,
   ServiceLayer,
   WorkflowLayer,
@@ -114,7 +113,6 @@ export const resolvers: Resolvers = [
 export function buildResolverContainer(
   services: ServiceLayer,
   workflows: WorkflowLayer,
-  database: DatabaseLayer,
   clients: ClientFactoryLayer,
 ): ResolverContainer {
   const resolverInstances = new Map<ResolverClass, object>([
@@ -134,10 +132,7 @@ export function buildResolverContainer(
     [LedgerMutationResolver, new LedgerMutationResolver(workflows.ledger)],
     [LedgerQueryResolver, new LedgerQueryResolver(workflows.ledger)],
     [AssetStorageResolver, new AssetStorageResolver(services.assetStorage)],
-    [
-      SubscriptionResolver,
-      new SubscriptionResolver(services.stripe, database.models, database.db),
-    ],
+    [SubscriptionResolver, new SubscriptionResolver(services.subscriptions)],
     [LLMParserResolver, new LLMParserResolver(services.llm)],
     [
       LLMCategorizationQueryResolver,

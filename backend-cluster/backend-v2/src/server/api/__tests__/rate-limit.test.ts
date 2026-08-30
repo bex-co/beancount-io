@@ -95,6 +95,23 @@ describe("budgets", () => {
     }
   });
 
+  it("preserves every billing operation's legacy 300-per-minute budget", () => {
+    for (const opId of [
+      "GQL Query.allTierQuotas",
+      "GQL Query.subscriptionStatus",
+      "GQL Mutation.createSubscriptionSession",
+      "GQL Mutation.createStripePortalSession",
+      "GQL Mutation.cancelSubscription",
+      "GQL Mutation.resumeSubscription",
+      "GQL Mutation.upgradeSubscription",
+    ]) {
+      expect(budgetFor(opId, classifyOp(opId).class)).toEqual({
+        windowMs: 60_000,
+        max: 300,
+      });
+    }
+  });
+
   it("keeps the anonymous intakes on separate budgets", () => {
     expect(anonymousFamily("/api-gateway/oauth/token")).toBe("oauth");
     expect(anonymousFamily("/.well-known/oauth-protected-resource")).toBe(

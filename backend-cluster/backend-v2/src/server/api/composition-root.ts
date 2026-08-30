@@ -544,7 +544,6 @@ export async function assembleApi(
     container: buildResolverContainer(
       layers.services,
       layers.workflows,
-      layers.database,
       layers.clients,
     ),
     scopeEnforcement: config.api.scopeEnforcement,

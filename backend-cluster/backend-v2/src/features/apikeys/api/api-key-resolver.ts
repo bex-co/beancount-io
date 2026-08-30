@@ -9,6 +9,7 @@ import {
   Resolver,
 } from "type-graphql";
 import { IContext } from "@/server/graphql/context";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { API_SCOPES } from "@/server/api/identity";
 import { ValidationError } from "@/shared/errors";
 import { toPublicApiKey } from "../service/api-key-service";
@@ -83,6 +84,7 @@ export class CreateApiKeyInputType {
   expiresAt?: Date;
 }
 
+@Authenticated()
 @Resolver()
 export class ApiKeyResolver {
   constructor(private readonly apiKeyService: IApiKeyService) {}

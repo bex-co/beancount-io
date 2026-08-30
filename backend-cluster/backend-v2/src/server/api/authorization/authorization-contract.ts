@@ -12,6 +12,12 @@ export const AUTHORIZATION_ACTIONS = {
   USER_CREDENTIALS_LIST: "user.credentials.list",
   USER_CREDENTIALS_CREATE: "user.credentials.create",
   USER_CREDENTIALS_REVOKE: "user.credentials.revoke",
+  USER_BILLING_STATUS_READ: "user.billing.status.read",
+  USER_BILLING_CHECKOUT_CREATE: "user.billing.checkout.create",
+  USER_BILLING_PORTAL_CREATE: "user.billing.portal.create",
+  USER_BILLING_SUBSCRIPTION_CANCEL: "user.billing.subscription.cancel",
+  USER_BILLING_SUBSCRIPTION_RESUME: "user.billing.subscription.resume",
+  USER_BILLING_SUBSCRIPTION_UPGRADE: "user.billing.subscription.upgrade",
 } as const;
 
 export type AuthorizationAction =
@@ -25,6 +31,8 @@ export const USER_RELATIONSHIPS = {
   WRITE_PROFILE: "can_write_profile",
   READ_CREDENTIALS: "can_read_credentials",
   WRITE_CREDENTIALS: "can_write_credentials",
+  READ_BILLING: "can_read_billing",
+  WRITE_BILLING: "can_write_billing",
   WRITE_LIFECYCLE: "can_write_lifecycle",
 } as const;
 

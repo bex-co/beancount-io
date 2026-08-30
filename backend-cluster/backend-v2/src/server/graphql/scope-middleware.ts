@@ -11,10 +11,11 @@ import { runWithOperationId } from "@/shared/async-context";
  * The GraphQL half of the op-class gate (ADR 0006 D3).
  *
  * A TypeGraphQL global middleware rather than the auth checker, because the
- * checker only runs on fields carrying `@Authorized()` — an op that forgot the
- * decorator would also skip the scope matrix, which is the opposite of failing
- * closed. This runs on every field resolution and narrows to root fields
- * itself: `Query.x` and `Mutation.y` are ops, `Ledger.name` is not.
+ * checker only runs on fields carrying legacy `@Authorized()` — and the newer
+ * `@Authenticated()` intentionally has no scope policy. An op that forgot a
+ * decorator must still not skip the scope matrix. This runs on every field
+ * resolution and narrows to root fields itself: `Query.x` and `Mutation.y` are
+ * ops, `Ledger.name` is not.
  *
  * The refusal is a thrown `ForbiddenError`, which `format-error.ts` already
  * turns into the GraphQL errors array with `extensions.code = FORBIDDEN` —

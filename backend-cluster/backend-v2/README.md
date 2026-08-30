@@ -150,12 +150,12 @@ outside it: no ledger scope, OAuth client id, or ledger relationship authorizes
 
 ### User-domain authorization
 
-Protected user profile, lifecycle, and API-key-management operations map to
+Protected user profile, lifecycle, API-key-management, and billing operations map to
 transport-neutral `user.*` actions in the centralized TypeScript PDP under
 `src/server/api/authorization/`. GraphQL, REST, and MCP adapters delegate to
-Account/API-key application services, whose protected public methods make one
-final decision before domain reads or side effects. Exact-self relationships
-come from the resolved stable user ID;
+Account/API-key/subscription application services, whose protected public
+methods make one final decision before domain reads or side effects. Exact-self
+relationships come from the resolved stable user ID;
 API-key revoke resolves ownership from the current database row without copying
 it into a tuple store.
 
@@ -166,6 +166,16 @@ delete the user or mint successor keys. User profile search/update remain
 session-only; profile reads and API-key management keep their prior scope
 ceilings. Paid-plan, scope/pin narrowing, expiry, and one-time-secret handling
 remain enforced after authorization.
+
+The static tier-quota catalog is deliberately public and does not enter the
+PDP. Subscription status, checkout and portal sessions, cancel, resume, and
+upgrade remain browser-session-only; the PDP catalog owns that credential
+rule. `op-class.ts` separately preserves every billing alias's pre-cutover
+300-per-minute budget, including the public catalog. Stripe customer binding,
+configured products/prices, and subscription ownership remain payment-domain
+checks. A relationship-source outage surfaces as service unavailable rather
+than a policy denial, before Stripe or local billing work begins. Existing
+dashboard and mobile flows require no new client step.
 
 There is no OpenFGA runtime, SDK, service, new database, contextual tuple, or
 cross-request authorization cache. `authz/model.fga` and its FGA CLI tests are

@@ -2,12 +2,15 @@ import "reflect-metadata";
 import { SubscriptionResolver } from "../subscription-resolver";
 import { IContext } from "@/server/graphql/context";
 import type { IStripeService } from "@/features/stripe/service/stripe-service";
+import { SubscriptionService } from "@/features/stripe/service/subscription-service";
 import type { IModels } from "@/foundation/models";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { GraphQLResolveInfo } from "graphql";
-import { Kind } from "graphql";
+import { graphql, Kind } from "graphql";
+import { buildSchema } from "type-graphql";
 import { config } from "@/config/config";
-import { ForbiddenError } from "@/shared/errors";
+import { ErrorCategory } from "@/shared/errors";
+import { AuthorizationService } from "@/server/api/authorization";
 
 // Test constants
 const THIRTY_DAYS_IN_MS = 30 * 24 * 60 * 60 * 1000; // 30 days in milliseconds
@@ -21,6 +24,7 @@ describe("SubscriptionResolver", () => {
     cancelSubscription: jest.Mock;
     resumeSubscription: jest.Mock;
     createCustomerPortalSession: jest.Mock;
+    upgradeSubscription: jest.Mock;
   };
   let mockModels: {
     user: {
@@ -43,6 +47,7 @@ describe("SubscriptionResolver", () => {
       cancelSubscription: jest.fn(),
       resumeSubscription: jest.fn(),
       createCustomerPortalSession: jest.fn(),
+      upgradeSubscription: jest.fn(),
     };
 
     mockModels = {
@@ -69,11 +74,15 @@ describe("SubscriptionResolver", () => {
       }),
     } as unknown as IContext;
 
-    resolver = new SubscriptionResolver(
+    const subscriptions = new SubscriptionService(
       mockStripeService as unknown as IStripeService,
       mockModels as unknown as Pick<IModels, "paidCustomer" | "user">,
       {} as DbExecutor,
+      new AuthorizationService({
+        check: async ({ user, object }) => user === object,
+      }),
     );
+    resolver = new SubscriptionResolver(subscriptions);
   });
 
   describe("subscriptionStatus", () => {
@@ -1246,6 +1255,10 @@ describe("SubscriptionResolver", () => {
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Invalid client ID");
+      expect(mockModels.user.getById).not.toHaveBeenCalled();
+      expect(
+        mockModels.paidCustomer.findByUserIdAndClientId,
+      ).not.toHaveBeenCalled();
     });
 
     it("should reject the dev client ID when running in production", async () => {
@@ -1261,6 +1274,7 @@ describe("SubscriptionResolver", () => {
 
         expect(result.success).toBe(false);
         expect(result.message).toContain("Invalid client ID");
+        expect(mockModels.user.getById).not.toHaveBeenCalled();
       } finally {
         config.env = originalEnv;
       }
@@ -1275,6 +1289,10 @@ describe("SubscriptionResolver", () => {
 
       expect(result.success).toBe(false);
       expect(result.message).toContain("Invalid price ID for client");
+      expect(mockModels.user.getById).not.toHaveBeenCalled();
+      expect(
+        mockModels.paidCustomer.findByUserIdAndClientId,
+      ).not.toHaveBeenCalled();
     });
 
     it("should create session successfully with new customer", async () => {
@@ -1313,6 +1331,7 @@ describe("SubscriptionResolver", () => {
           customer_email: "test@example.com",
         }),
       );
+      expect(mockModels.user.getById).toHaveBeenCalledTimes(1);
     });
 
     it("should create session successfully with existing customer", async () => {
@@ -1349,6 +1368,7 @@ describe("SubscriptionResolver", () => {
           customer: "cus_existing_123",
         }),
       );
+      expect(mockModels.user.getById).not.toHaveBeenCalled();
     });
 
     it("should handle Stripe API errors gracefully", async () => {
@@ -1409,11 +1429,7 @@ describe("SubscriptionResolver", () => {
         getCurrentIdentity: jest.fn().mockReturnValue({
           userId: "user-123",
           method: "oauth",
-          scopes: new Set([
-            "ledger.read",
-            "ledger.write",
-            "ledger.admin",
-          ]),
+          scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
           capabilityExempt: false,
         }),
       } as unknown as IContext;
@@ -1424,7 +1440,7 @@ describe("SubscriptionResolver", () => {
           "beancount-web-prod",
           scopedContext,
         ),
-      ).rejects.toThrow(ForbiddenError);
+      ).rejects.toMatchObject({ category: ErrorCategory.FORBIDDEN });
       expect(mockStripeService.cancelSubscription).not.toHaveBeenCalled();
     });
 
@@ -1633,8 +1649,23 @@ describe("SubscriptionResolver", () => {
   });
 
   describe("allTierQuotas", () => {
-    it("should return quota items for all 5 tiers", () => {
-      const result = resolver.allTierQuotas();
+    it("is reachable anonymously through the real GraphQL schema", async () => {
+      const schema = await buildSchema({
+        resolvers: [SubscriptionResolver],
+        container: { get: () => resolver },
+      });
+      const result = await graphql({
+        schema,
+        source: "query { allTierQuotas { tier } }",
+        contextValue: { identity: undefined },
+      });
+
+      expect(result.errors).toBeUndefined();
+      expect(result.data?.allTierQuotas).toHaveLength(5);
+    });
+
+    it("should return quota items for all 5 tiers", async () => {
+      const result = await resolver.allTierQuotas();
       expect(result).toHaveLength(5);
       expect(result.map((r) => r.tier)).toEqual(
         expect.arrayContaining([
@@ -1647,10 +1678,10 @@ describe("SubscriptionResolver", () => {
       );
     });
 
-    it("should return correct limits for PREMIUM", () => {
-      const premium = resolver
-        .allTierQuotas()
-        .find((r) => r.tier === "PREMIUM");
+    it("should return correct limits for PREMIUM", async () => {
+      const premium = (await resolver.allTierQuotas()).find(
+        (r) => r.tier === "PREMIUM",
+      );
       expect(premium).toEqual({
         tier: "PREMIUM",
         aiCfoTokensMax: 500_000,
@@ -1660,15 +1691,19 @@ describe("SubscriptionResolver", () => {
       });
     });
 
-    it("should return -1 for ENTERPRISE (unlimited)", () => {
-      const ent = resolver.allTierQuotas().find((r) => r.tier === "ENTERPRISE");
+    it("should return -1 for ENTERPRISE (unlimited)", async () => {
+      const ent = (await resolver.allTierQuotas()).find(
+        (r) => r.tier === "ENTERPRISE",
+      );
       expect(ent?.aiCfoTokensMax).toBe(-1);
       expect(ent?.maxLedgers).toBe(-1);
       expect(ent?.maxCollaboratorsPerLedger).toBe(-1);
     });
 
-    it("should return correct limits for FREE", () => {
-      const free = resolver.allTierQuotas().find((r) => r.tier === "FREE");
+    it("should return correct limits for FREE", async () => {
+      const free = (await resolver.allTierQuotas()).find(
+        (r) => r.tier === "FREE",
+      );
       expect(free).toEqual({
         tier: "FREE",
         aiCfoTokensMax: 20_000,

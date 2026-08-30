@@ -95,6 +95,12 @@ describe("classifyOp", () => {
         "GQL Mutation.revokeApiKey",
         "REST DELETE /api-gateway/v1/api-keys/{id}",
         "MCP revokeApiKey",
+        "GQL Query.subscriptionStatus",
+        "GQL Mutation.createSubscriptionSession",
+        "GQL Mutation.createStripePortalSession",
+        "GQL Mutation.cancelSubscription",
+        "GQL Mutation.resumeSubscription",
+        "GQL Mutation.upgradeSubscription",
       ].map((opId) => authorizationActionForOp(opId)),
     ).toEqual([
       AUTHORIZATION_ACTIONS.USER_PROFILE_READ,
@@ -111,6 +117,12 @@ describe("classifyOp", () => {
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+      AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ,
+      AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE,
+      AUTHORIZATION_ACTIONS.USER_BILLING_PORTAL_CREATE,
+      AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_CANCEL,
+      AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_RESUME,
+      AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_UPGRADE,
     ]);
   });
 });
@@ -182,15 +194,38 @@ describe("evaluateScope", () => {
   });
 
   it("keeps API-key operations on the admin risk class while deferring policy", () => {
-    const decision = evaluateScope(
-      token("ledger.write"),
-      "MCP revokeApiKey",
-    );
+    const decision = evaluateScope(token("ledger.write"), "MCP revokeApiKey");
     expect(decision).toMatchObject({
       allowed: true,
       opClass: "admin",
       requiredScope: "ledger.admin",
       authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+    });
+  });
+
+  it("keeps tier quotas public and defers protected billing credentials to the PDP", () => {
+    expect(
+      [
+        "GQL Query.allTierQuotas",
+        "GQL Query.subscriptionStatus",
+        "GQL Mutation.createSubscriptionSession",
+        "GQL Mutation.createStripePortalSession",
+        "GQL Mutation.cancelSubscription",
+        "GQL Mutation.resumeSubscription",
+        "GQL Mutation.upgradeSubscription",
+      ].map((opId) => classifyOp(opId).class),
+    ).toEqual(["public", "read", "write", "write", "write", "write", "write"]);
+    expect(evaluateScope(token(), "GQL Query.allTierQuotas")).toMatchObject({
+      allowed: true,
+      opClass: "public",
+    });
+    expect(authorizationActionForOp("GQL Query.allTierQuotas")).toBeUndefined();
+    expect(
+      evaluateScope(token(), "GQL Mutation.cancelSubscription"),
+    ).toMatchObject({
+      allowed: true,
+      authorizationAction:
+        AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_CANCEL,
     });
   });
 

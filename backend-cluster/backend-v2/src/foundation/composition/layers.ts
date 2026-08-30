@@ -5,6 +5,7 @@ import { type CacheHelper } from "@/shared/cache";
 import { type IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import { type IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import { type IStripeService } from "@/features/stripe/service/stripe-service";
+import { type ISubscriptionService } from "@/features/stripe/service/subscription-service";
 import { type IApiKeyService } from "@/features/apikeys/service/api-key-service";
 import { type IAssetStorageService } from "@/features/s3/service/asset-storage-service";
 import { type ILLMService } from "@/features/llm/service/llm-service";
@@ -68,6 +69,7 @@ export interface ClientFactoryLayer {
  */
 export interface ServiceLayer {
   stripe: IStripeService;
+  subscriptions: ISubscriptionService;
   apiKey: IApiKeyService;
   assetStorage: IAssetStorageService;
   llm: ILLMService;

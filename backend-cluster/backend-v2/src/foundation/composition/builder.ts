@@ -8,6 +8,7 @@ import { PlaidItemService } from "@/features/plaid/service/plaid-item-service";
 import { PlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
 import { AssetStorageService } from "@/features/s3/service/asset-storage-service";
 import { StripeService } from "@/features/stripe/service/stripe-service";
+import { SubscriptionService } from "@/features/stripe/service/subscription-service";
 import { ApiKeyService } from "@/features/apikeys/service/api-key-service";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
@@ -89,6 +90,12 @@ export function buildServiceLayer(input: {
       input.database.models,
     ),
   );
+  const subscriptions = new SubscriptionService(
+    stripe,
+    input.database.models,
+    input.database.db,
+    authorization,
+  );
   const apiKey = new ApiKeyService({
     db: input.database.db,
     models: input.database.models,
@@ -118,6 +125,7 @@ export function buildServiceLayer(input: {
   );
   return {
     stripe,
+    subscriptions,
     apiKey,
     assetStorage,
     featureUsage,

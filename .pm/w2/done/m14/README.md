@@ -4,22 +4,22 @@
 
 ## Tasks (in order)
 
-| id   | title                                        | est | depends_on |
-| ---- | -------------------------------------------- | --- | ---------- |
+| id   | title                                                                         | est | depends_on |
+| ---- | ----------------------------------------------------------------------------- | --- | ---------- |
 | t001 | Catalog billing actions, credential ceilings, and operational risk — **DONE** | 40m | —          |
 | t002 | Migrate subscription application-service boundaries — **DONE**                | 60m | t001       |
-| t006 | Verify domain isolation, failures, budgets, and audit — **DONE**               | 35m | t002       |
-| t003 | Adoption surface — **DONE**                                                    | 20m | t006       |
-| t004 | Simplify — **DONE**                                                            | 15m | t003       |
-| t005 | Test coverage — **DONE**                                                       | 45m | t003       |
-| t007 | Closeout — **DONE**                                                            | 15m | t004, t005 |
+| t006 | Verify domain isolation, failures, budgets, and audit — **DONE**              | 35m | t002       |
+| t003 | Adoption surface — **DONE**                                                   | 20m | t006       |
+| t004 | Simplify — **DONE**                                                           | 15m | t003       |
+| t005 | Test coverage — **DONE**                                                      | 45m | t003       |
+| t007 | Closeout — **DONE**                                                           | 15m | t004, t005 |
 
 ## Definition of done
 
-- Subscription status, checkout/portal, cancel/resume/upgrade, and tier-quota operations have explicit canonical actions in the one executable TypeScript catalog and one final service-boundary PDP call.
-- User billing eligibility comes from `user#can_read/write_billing`; accepted credential methods and legacy scope ceilings live in the PDP catalog, while `op-class.ts` preserves operational budgets and transport aliases.
+- Subscription status, checkout/portal, cancel/resume/upgrade operations have explicit canonical actions in the one executable TypeScript catalog and one final service-boundary PDP call. The static tier-quota catalog is an explicit public exception with no identity or PDP ceremony.
+- Protected user billing eligibility comes from `user#can_read/write_billing`; accepted credential methods and legacy scope ceilings live in the PDP catalog, while `op-class.ts` preserves operational budgets and transport aliases. An explicit override also preserves the public tier-quota catalog's legacy budget.
 - Stripe customer binding and subscription-state checks remain domain invariants, not FGA relationships.
-- No billing operation becomes reachable by an API key or OAuth credential that was previously denied.
+- No protected billing operation becomes reachable by an API key or OAuth credential that was previously denied; public tier quotas preserve their pre-cutover anonymous contract.
 - Denials preserve actionable client errors, relationship-source failures surface as audited service-unavailable errors, and each call emits the expected audit behavior without a decision memo.
 - The shared w2 migration contract is satisfied, including focused/full checks, applied migrations, a deployed development billing smoke test, and persisted-audit verification.
 

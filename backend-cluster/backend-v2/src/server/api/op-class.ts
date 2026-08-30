@@ -147,6 +147,8 @@ const R = {
     "Credential minting is deliberately unreachable by a token credential (ADR 0006 D6: an API key may not create an API key), so a REST twin would exist only to be refused.",
   billing:
     "Billing verbs return Stripe-hosted URLs a human must visit in a browser; a curl client cannot complete checkout or the customer portal, so the endpoint would hand back a link to nowhere.",
+  publicPricingCatalog:
+    "The public pricing catalog currently has only a GraphQL consumer. A REST representation is useful when a non-GraphQL pricing client asks for it, not before its contract is known.",
   coveredByV1List:
     "Covered by `GET /api-gateway/v1/ledgers`, which already returns every ledger the caller can reach. Owner-filtering and search are paging concerns of one screen; a client holding the list can do both itself.",
   coveredByV1Journal:
@@ -194,6 +196,8 @@ const M = {
     "Credential minting is deliberately unreachable by a token credential (ADR 0006 D6), and an agent minting its own successor credential is precisely the loop that rule closes.",
   billing:
     "Billing is a human decision with a hosted checkout page; an agent has nothing to do with the URL it would receive.",
+  publicPricingCatalog:
+    "An agent has no workflow that needs the static pricing catalog, and adding a dedicated tool would spend the deliberately-small MCP tool budget without helping ledger work.",
   plaidBinding:
     "Bank binding runs through the Plaid Link browser widget, which an agent cannot drive. Covers the Link ceremony only — three verbs. Operating an already-linked bank is `plaidOperation` (ADR 0008 D4a).",
   plaidOperation:
@@ -489,23 +493,49 @@ const AUTH_VERBS: readonly VerbEntry[] = [
 ];
 
 const BILLING_VERBS: readonly VerbEntry[] = [
-  gqlOnly("Query.allTierQuotas", "session-only", R.billing, M.billing),
-  gqlOnly("Query.subscriptionStatus", "session-only", R.billing, M.billing),
+  // Static product configuration, not user billing state. Keep it public so a
+  // pricing surface can render before sign-in; protected billing starts below.
   gqlOnly(
-    "Mutation.createSubscriptionSession",
-    "session-only",
-    R.billing,
-    M.billing,
+    "Query.allTierQuotas",
+    "public",
+    R.publicPricingCatalog,
+    M.publicPricingCatalog,
   ),
-  gqlOnly(
-    "Mutation.createStripePortalSession",
-    "session-only",
-    R.billing,
-    M.billing,
-  ),
-  gqlOnly("Mutation.cancelSubscription", "session-only", R.billing, M.billing),
-  gqlOnly("Mutation.resumeSubscription", "session-only", R.billing, M.billing),
-  gqlOnly("Mutation.upgradeSubscription", "session-only", R.billing, M.billing),
+  {
+    ...gqlOnly("Query.subscriptionStatus", "read", R.billing, M.billing),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ,
+  },
+  {
+    ...gqlOnly(
+      "Mutation.createSubscriptionSession",
+      "write",
+      R.billing,
+      M.billing,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE,
+  },
+  {
+    ...gqlOnly(
+      "Mutation.createStripePortalSession",
+      "write",
+      R.billing,
+      M.billing,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_BILLING_PORTAL_CREATE,
+  },
+  {
+    ...gqlOnly("Mutation.cancelSubscription", "write", R.billing, M.billing),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_CANCEL,
+  },
+  {
+    ...gqlOnly("Mutation.resumeSubscription", "write", R.billing, M.billing),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_RESUME,
+  },
+  {
+    ...gqlOnly("Mutation.upgradeSubscription", "write", R.billing, M.billing),
+    authorizationAction:
+      AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_UPGRADE,
+  },
 ];
 
 const PROBE_VERBS: readonly VerbEntry[] = [

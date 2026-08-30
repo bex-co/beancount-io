@@ -31,6 +31,15 @@ const selfService = () =>
     check: async ({ user, object }) => user === object,
   });
 
+const BILLING_ACTIONS = [
+  AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ,
+  AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE,
+  AUTHORIZATION_ACTIONS.USER_BILLING_PORTAL_CREATE,
+  AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_CANCEL,
+  AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_RESUME,
+  AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_UPGRADE,
+] as const;
+
 describe("AuthorizationService", () => {
   afterEach(() => setAuditSink(undefined));
 
@@ -67,6 +76,66 @@ describe("AuthorizationService", () => {
       reason: "credential_not_permitted",
     });
   });
+
+  it.each(BILLING_ACTIONS)(
+    "allows a browser session to perform %s for its own billing resource",
+    async (action) => {
+      const service = selfService();
+      await expect(
+        service.authorize({
+          principal: identity("session"),
+          action,
+          resource: userResource("usr_alice"),
+        }),
+      ).resolves.toMatchObject({ allowed: true, action });
+    },
+  );
+
+  it.each(
+    BILLING_ACTIONS.flatMap((action) =>
+      (["oauth", "apikey"] as const).map((method) => [action, method] as const),
+    ),
+  )(
+    "denies %s to a %s credential before relationship evaluation",
+    async (action, method) => {
+      const relationships: IRelationshipEvaluator = {
+        check: jest.fn(async () => true),
+      };
+      const service = new AuthorizationService(relationships);
+      await expect(
+        service.authorizeOrThrow({
+          principal: identity(method, "usr_alice", [
+            "ledger.read",
+            "ledger.write",
+            "ledger.admin",
+          ]),
+          action,
+          resource: userResource("usr_alice"),
+        }),
+      ).rejects.toMatchObject({
+        category: ErrorCategory.FORBIDDEN,
+        message: "Managing billing requires a full signed-in session",
+      });
+      expect(relationships.check).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(BILLING_ACTIONS)(
+    "denies cross-user billing relationship for %s",
+    async (action) => {
+      const service = selfService();
+      await expect(
+        service.authorize({
+          principal: identity("session", "usr_alice"),
+          action,
+          resource: userResource("usr_bob"),
+        }),
+      ).resolves.toMatchObject({
+        allowed: false,
+        reason: "relationship_denied",
+      });
+    },
+  );
 
   it("does not use transport operation metadata as an authorization input", async () => {
     const service = selfService();

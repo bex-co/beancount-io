@@ -173,10 +173,11 @@ describe("surface parity", () => {
    */
   const DEFERRED: Record<"gql" | "rest" | "mcp", number> = {
     gql: 0,
-    // `Query.userProfile` and centralized account deletion are
-    // credential-reachable work whose absent twins carry explicit reasons.
-    rest: 47,
-    mcp: 58,
+    // `Query.userProfile`, centralized account deletion, and the now-explicit
+    // public tier-quota catalog are reachable work whose absent twins carry
+    // explicit reasons.
+    rest: 48,
+    mcp: 59,
   };
 
   it("tracks the in-scope gap exactly, so it cannot drift either way", () => {

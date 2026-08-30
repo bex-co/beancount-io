@@ -10,6 +10,7 @@ import {
 import { MaxLength, MinLength } from "class-validator";
 import { ReportStatus } from "@/features/auth/utils/report-status";
 import { IContext } from "@/server/graphql/context";
+import { Authenticated } from "@/server/graphql/authenticated";
 import type { IAccountService } from "@/features/auth/service/account-service";
 
 @ArgsType()
@@ -134,6 +135,7 @@ export class AccountResolver {
     return this.accountService.getUserProfile(identity, userId);
   }
 
+  @Authenticated()
   @Mutation(() => Boolean, {
     description: "delete user account and its associated data",
   })
@@ -141,6 +143,7 @@ export class AccountResolver {
     return this.accountService.deleteAccount(ctx.getCurrentIdentity());
   }
 
+  @Authenticated()
   @Query(() => [SearchUser])
   public async getUserByExactMatch(
     @Ctx() ctx: IContext,
@@ -154,6 +157,7 @@ export class AccountResolver {
     return users.map((u) => ({ email: u.email, username: u.ledger_username }));
   }
 
+  @Authenticated()
   @Mutation(() => UserProfileResponse)
   public async updateUsername(
     @Ctx() ctx: IContext,
@@ -165,6 +169,7 @@ export class AccountResolver {
     );
   }
 
+  @Authenticated()
   @Mutation(() => UserProfileResponse, {
     description: "Update user profile (firstName and lastName)",
   })
