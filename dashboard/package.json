@@ -31,8 +31,7 @@
     "kill": "lsof -n -i4TCP:5173 | grep LISTEN | awk '{ print $2 }' | xargs kill",
     "i18n:prepare": "tsx scripts/prepare-translations.ts",
     "i18n:flatten": "tsx scripts/flatten-translation-keys.ts",
-    "search-console-report": "node --import tsx scripts/search-console-report.ts",
-    "check:awesome-links": "node --import tsx scripts/check-awesome-pta-links.ts"
+    "search-console-report": "node --import tsx scripts/search-console-report.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.73",

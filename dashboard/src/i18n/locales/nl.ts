@@ -24,7 +24,6 @@ import nlCommits from "@/features/git/commits/locales/nl";
 import nlImporter from "@/features/importer/locales/nl";
 import nlPlaid from "@/features/plaid/locales/nl";
 import nlReceipt from "@/features/receipt/locales/nl";
-import nlAwesome from "@/features/awesome-plain-text-accounting/locales/nl";
 
 const nl: Record<string, string> = {
   ...extractMessages(nlCommon),
@@ -52,7 +51,6 @@ const nl: Record<string, string> = {
   ...extractMessages(nlImporter),
   ...extractMessages(nlPlaid),
   ...extractMessages(nlReceipt),
-  ...extractMessages(nlAwesome),
 };
 
 export default nl;

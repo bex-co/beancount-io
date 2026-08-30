@@ -24,7 +24,6 @@ import ruCommits from "@/features/git/commits/locales/ru";
 import ruImporter from "@/features/importer/locales/ru";
 import ruPlaid from "@/features/plaid/locales/ru";
 import ruReceipt from "@/features/receipt/locales/ru";
-import ruAwesome from "@/features/awesome-plain-text-accounting/locales/ru";
 
 const ru: Record<string, string> = {
   ...extractMessages(ruCommon),
@@ -52,7 +51,6 @@ const ru: Record<string, string> = {
   ...extractMessages(ruImporter),
   ...extractMessages(ruPlaid),
   ...extractMessages(ruReceipt),
-  ...extractMessages(ruAwesome),
 };
 
 export default ru;

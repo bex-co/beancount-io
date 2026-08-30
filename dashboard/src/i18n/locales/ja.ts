@@ -24,7 +24,6 @@ import jaCommits from "@/features/git/commits/locales/ja";
 import jaImporter from "@/features/importer/locales/ja";
 import jaPlaid from "@/features/plaid/locales/ja";
 import jaReceipt from "@/features/receipt/locales/ja";
-import jaAwesome from "@/features/awesome-plain-text-accounting/locales/ja";
 
 const ja: Record<string, string> = {
   ...extractMessages(jaCommon),
@@ -52,7 +51,6 @@ const ja: Record<string, string> = {
   ...extractMessages(jaImporter),
   ...extractMessages(jaPlaid),
   ...extractMessages(jaReceipt),
-  ...extractMessages(jaAwesome),
 };
 
 export default ja;

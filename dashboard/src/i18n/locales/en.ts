@@ -25,7 +25,6 @@ import enAiAgent from "@/features/ai-agent/locales/en";
 import enImporter from "@/features/importer/locales/en";
 import enPlaid from "@/features/plaid/locales/en";
 import enReceipt from "@/features/receipt/locales/en";
-import enAwesome from "@/features/awesome-plain-text-accounting/locales/en";
 
 const en: Record<string, string> = {
   ...extractMessages(enCommon),
@@ -54,7 +53,6 @@ const en: Record<string, string> = {
   ...extractMessages(enImporter),
   ...extractMessages(enPlaid),
   ...extractMessages(enReceipt),
-  ...extractMessages(enAwesome),
 };
 
 export default en;

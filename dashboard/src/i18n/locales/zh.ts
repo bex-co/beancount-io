@@ -24,7 +24,6 @@ import zhCommits from "@/features/git/commits/locales/zh";
 import zhImporter from "@/features/importer/locales/zh";
 import zhPlaid from "@/features/plaid/locales/zh";
 import zhReceipt from "@/features/receipt/locales/zh";
-import zhAwesome from "@/features/awesome-plain-text-accounting/locales/zh";
 
 const zh: Record<string, string> = {
   ...extractMessages(zhCommon),
@@ -52,7 +51,6 @@ const zh: Record<string, string> = {
   ...extractMessages(zhImporter),
   ...extractMessages(zhPlaid),
   ...extractMessages(zhReceipt),
-  ...extractMessages(zhAwesome),
 };
 
 export default zh;

@@ -1,7 +1,7 @@
 # Event Taxonomy — Beancount Dashboard
 
 **Owner:** Product Analytics
-**Status:** live — **registration, login, page views** (v1 baseline) + activation/engagement events (`directive_added`, `file_edited`, `ai_agent_message_sent`, `bql_query_executed`, Awesome PTA directory interactions, financial-statement export lifecycle) + first monetization-intent events (`upgrade_prompt_clicked`, `checkout_started`)
+**Status:** live — **registration, login, page views** (v1 baseline) + activation/engagement events (`directive_added`, `file_edited`, `ai_agent_message_sent`, `bql_query_executed`, financial-statement export lifecycle) + first monetization-intent events (`upgrade_prompt_clicked`, `checkout_started`)
 **Code:** `src/common/analytics/events.ts` (registry + typed `track()`)
 **Related:** `docs/product-analytics-review.md` (why these events)
 
@@ -124,8 +124,6 @@ Exactly what ships now. The auth + activation events are in the typed registry; 
 | `file_edited` | custom | `features/ledger-editor/file-editor/components/ledger-file-view/index.tsx → handleSaveFile` (save mutation `onCompleted`) | — (no path sent, see §4) | Engagement: do users edit raw ledger files directly? |
 | `ai_agent_message_sent` | custom | `features/ai-agent/pages/agent/page.tsx` — `handleSubmit` (chat-input send, `surface=chat_input`) and the `?q=` auto-submit effect (`surface=deep_link`); NOT the SDK's post-approval auto-continuation | `has_attachment`, `surface` (no message text / file content, see §4) | Engagement: how often do users chat with the agent? (frequency per user / session; slice `has_attachment` for file-processing use) |
 | `bql_query_executed` | custom | `features/bql/pages/index.tsx → executeQueryAndCache` (single choke point for manual submit / history re-run / `?query=` deep-link; fires per execution, success and failure alike) | — (**bare by design**, see note) | Engagement: how often do users run BQL queries? (frequency per user, by `event_name`) |
-| `awesome_pta_action_clicked` | custom | `features/awesome-plain-text-accounting/page.tsx` — section navigation, workflow guides, outbound project links, hosted-product CTAs, and the public contribution link | `action` (`section \| guide \| tool \| hosted \| contribute`), `destination` (bounded page section or catalog layer) | Acquisition: which decision-tool paths help visitors investigate a stack or take a qualified next step? |
-| `awesome_pta_filter_changed` | custom | Same page — when search becomes active/clear or a category, format, or workflow filter changes | `filter` (`search \| category \| format \| workflow`), `state` (`applied \| cleared`) | Utility: do visitors narrow the catalog, and which filter controls are useful? |
 | `report_export_started` | custom | `features/reports/export/statement-export-menu.tsx → runAction` before CSV, Markdown, or print handoff | `report_type` (`balance_sheet \| profit_and_loss`), `format` (`csv \| markdown \| print`) | Adoption: which statement export paths do users invoke? |
 | `report_export_completed` | custom | Same handler, once after the browser accepts the download or print action | `report_type`, `format` | Reliability: which export actions reach browser handoff? |
 | `report_export_failed` | custom | Same handler's catch branch, at most once per action | `report_type`, `format`, `failure_category` (`csv_generation \| markdown_generation \| print_dialog`) | Reliability: which bounded failure class prevents export? |
@@ -137,12 +135,6 @@ Exactly what ships now. The auth + activation events are in the typed registry; 
 > **Why `file_edited` sends no path.** A raw file path can encode ledger/account structure; §4 forbids it. The event fires in the save mutation's `onCompleted` only, and the editor guards against saving unchanged content (`text-file-view.tsx`), so one genuine save = one event.
 >
 > **Why `bql_query_executed` is bare (no `success`/`duration_ms`).** GA4 event-scoped custom dimensions are capped (50 on standard properties), and every event parameter you want to slice on consumes one slot — whereas `event_name` is a free, always-on dimension. So this event carries **no** parameters: it answers "how often does a user run BQL?" from the event count alone, at zero custom-dimension cost. The raw BQL text is also PII (embeds account names, §4) and must never be sent; `success`/`duration_ms` were deliberately dropped rather than spend two slots on a single event. If a success/latency breakdown is ever needed, prefer a separate `bql_query_failed` event name (still free) over adding a param.
->
-> **Why Awesome PTA events use coarse dimensions only.** Search text, project names,
-> outbound URLs, and typed filter values are never sent. The bounded action,
-> destination, filter, and state enums answer whether the decision tool helps
-> visitors navigate and narrow the catalog without collecting free-form intent or
-> creating high-cardinality dimensions.
 >
 > **Why statement export events use bounded dimensions only.** Ledger names,
 > filenames, time/account/advanced filters, account paths, currencies, and

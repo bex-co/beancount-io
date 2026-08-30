@@ -24,7 +24,6 @@ import bgCommits from "@/features/git/commits/locales/bg";
 import bgImporter from "@/features/importer/locales/bg";
 import bgPlaid from "@/features/plaid/locales/bg";
 import bgReceipt from "@/features/receipt/locales/bg";
-import bgAwesome from "@/features/awesome-plain-text-accounting/locales/bg";
 
 const bg: Record<string, string> = {
   ...extractMessages(bgCommon),
@@ -52,7 +51,6 @@ const bg: Record<string, string> = {
   ...extractMessages(bgImporter),
   ...extractMessages(bgPlaid),
   ...extractMessages(bgReceipt),
-  ...extractMessages(bgAwesome),
 };
 
 export default bg;

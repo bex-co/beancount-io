@@ -24,7 +24,6 @@ import caCommits from "@/features/git/commits/locales/ca";
 import caImporter from "@/features/importer/locales/ca";
 import caPlaid from "@/features/plaid/locales/ca";
 import caReceipt from "@/features/receipt/locales/ca";
-import caAwesome from "@/features/awesome-plain-text-accounting/locales/ca";
 
 const ca: Record<string, string> = {
   ...extractMessages(caCommon),
@@ -52,7 +51,6 @@ const ca: Record<string, string> = {
   ...extractMessages(caImporter),
   ...extractMessages(caPlaid),
   ...extractMessages(caReceipt),
-  ...extractMessages(caAwesome),
 };
 
 export default ca;

@@ -24,7 +24,6 @@ import ptCommits from "@/features/git/commits/locales/pt";
 import ptImporter from "@/features/importer/locales/pt";
 import ptPlaid from "@/features/plaid/locales/pt";
 import ptReceipt from "@/features/receipt/locales/pt";
-import ptAwesome from "@/features/awesome-plain-text-accounting/locales/pt";
 
 const pt: Record<string, string> = {
   ...extractMessages(ptCommon),
@@ -52,7 +51,6 @@ const pt: Record<string, string> = {
   ...extractMessages(ptImporter),
   ...extractMessages(ptPlaid),
   ...extractMessages(ptReceipt),
-  ...extractMessages(ptAwesome),
 };
 
 export default pt;

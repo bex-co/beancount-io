@@ -10,8 +10,7 @@ Set GOOGLE_SERVICE_ACCOUNT_JSON_B64 in the local .env or CI secret, then run:
     yarn search-console-report --markdown --days 28 --inspect-limit 5
 
 The report covers dashboard paths such as /ledger, /login, /sign-up, /auth, /settings, /lgasset,
-/oauth, and /awesome-plain-text-accounting. It does not treat /forum, /api, or other CMS content
-paths as dashboard opportunities.
+and /oauth. It does not treat /forum, /api, or CMS content paths as dashboard opportunities.
 
 Indexability (crawlers): public ledger **read/social** surfaces, user profiles,
 the base Ask/agent landing page, and acquisition pages (login, sign-up, forgot
@@ -62,29 +61,15 @@ be prefixed with `VITE_`.
 
 ## Scripts
 
-| Script                     | Description                                    |
-| -------------------------- | ---------------------------------------------- |
-| `yarn dev`                 | Start the dev server (port 5173) with HMR      |
-| `yarn build`               | Production build                               |
-| `yarn start`               | Serve the built SSR server                     |
-| `yarn lint`                | Generate routes, type-check (`tsc -b`), ESLint |
-| `yarn test`                | Run the test suite (Vitest)                    |
-| `yarn format:check`        | Check formatting (Prettier)                    |
-| `yarn codegen`             | Regenerate GraphQL types from the schema       |
-| `yarn check:awesome-links` | Verify every maintained directory destination  |
-
-## Awesome Plain Text Accounting directory
-
-The public [`/awesome-plain-text-accounting`](https://beancount.io/awesome-plain-text-accounting)
-route is a maintained decision tool for choosing a plain-text accounting stack. Its typed catalog,
-review date, comparison data, filtering, metadata, and contribution URL live in
-`src/features/awesome-plain-text-accounting/`; the route owns its canonical and structured data in
-`src/routes/awesome-plain-text-accounting.tsx`.
-
-When adding or changing a listing, include a working HTTPS destination, supported format and
-workflow labels, a specific best-fit statement, and a meaningful limitation. Update the review date,
-run `yarn check:awesome-links`, and add focused catalog tests. Public corrections should use the
-prefilled issue link on the page so the rationale and maintenance evidence remain reviewable.
+| Script              | Description                                    |
+| ------------------- | ---------------------------------------------- |
+| `yarn dev`          | Start the dev server (port 5173) with HMR      |
+| `yarn build`        | Production build                               |
+| `yarn start`        | Serve the built SSR server                     |
+| `yarn lint`         | Generate routes, type-check (`tsc -b`), ESLint |
+| `yarn test`         | Run the test suite (Vitest)                    |
+| `yarn format:check` | Check formatting (Prettier)                    |
+| `yarn codegen`      | Regenerate GraphQL types from the schema       |
 
 ## Personal access tokens
 
