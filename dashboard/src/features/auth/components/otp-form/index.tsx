@@ -1,7 +1,9 @@
+import { useEffect, useRef } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { Mail } from "lucide-react";
+import { REGEXP_ONLY_DIGITS } from "input-otp";
 import { Button } from "@/common/components/ui/button";
 import { Label } from "@/common/components/ui/label";
 import {
@@ -32,6 +34,7 @@ export function OtpForm({
   onBack,
 }: OtpFormProps) {
   const { t } = useTranslations();
+  const otpInputRef = useRef<HTMLInputElement>(null);
 
   const otpSchema = z.object({
     otp: z
@@ -61,6 +64,53 @@ export function OtpForm({
     void handleSubmit(onSubmit)();
   };
 
+  useEffect(() => {
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (
+        event.defaultPrevented ||
+        event.target === otpInputRef.current ||
+        event.ctrlKey ||
+        event.metaKey ||
+        event.altKey ||
+        !/^\d$/.test(event.key)
+      ) {
+        return;
+      }
+
+      const nextValue = `${otpValue || ""}${event.key}`.slice(0, 4);
+      event.preventDefault();
+      otpInputRef.current?.focus();
+      setValue("otp", nextValue, { shouldValidate: true });
+    };
+
+    const handlePaste = (event: ClipboardEvent) => {
+      if (event.defaultPrevented || event.target === otpInputRef.current) {
+        return;
+      }
+
+      const pastedDigits = event.clipboardData
+        ?.getData("text")
+        .replace(/\D/g, "")
+        .slice(0, 4);
+
+      if (!pastedDigits) {
+        return;
+      }
+
+      event.preventDefault();
+      otpInputRef.current?.focus();
+      setValue("otp", pastedDigits, { shouldValidate: true });
+    };
+
+    document.addEventListener("keydown", handleKeyDown);
+    document.addEventListener("paste", handlePaste);
+
+    return () => {
+      document.removeEventListener("keydown", handleKeyDown);
+      document.removeEventListener("paste", handlePaste);
+    };
+  }, [otpValue, setValue]);
+
   return (
     <div className="space-y-4">
       <div className="flex flex-col items-center gap-2">
@@ -84,7 +134,10 @@ export function OtpForm({
           </Label>
           <div className="flex justify-center">
             <InputOTP
+              ref={otpInputRef}
               maxLength={4}
+              pattern={REGEXP_ONLY_DIGITS}
+              pasteTransformer={(value) => value.replace(/\D/g, "")}
               value={otpValue || ""}
               onChange={handleOtpChange}
               onComplete={handleOtpComplete}
