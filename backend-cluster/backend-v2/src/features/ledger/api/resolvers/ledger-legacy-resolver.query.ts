@@ -1,6 +1,5 @@
 import {
   ArgsType,
-  Authorized,
   Field,
   ObjectType,
   Query,
@@ -8,6 +7,7 @@ import {
   Ctx,
   Int,
 } from "type-graphql";
+import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { InternalServerError } from "@/shared/errors";
 import { GraphQLJSONObject } from "graphql-scalars";
@@ -556,7 +556,7 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
     super(favaClientFactory);
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => LedgerMetaResponse, {
     description: "Get a specific ledger",
   })
@@ -601,7 +601,7 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
     };
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => AccountHierarchyResponse)
   async accountHierarchy(
     @Args() chartsRequest: ChartsRequest,
@@ -692,7 +692,7 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
     };
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => HomeChartsResponse)
   async homeCharts(
     @Args() chartsRequest: ChartsRequest,
@@ -734,7 +734,7 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
     };
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => JournalEntriesResponse, {
     description:
       "Get journal entries with enhanced search, filtering, and pagination",
@@ -920,6 +920,7 @@ export class LedgerLegacyQueryResolver extends BaseLedgerResolver {
   }
 
   // legacy feature flags(used by the mobile app)
+  @AllowAnonymous()
   @Query(() => GraphQLJSONObject)
   public async featureFlags(
     @Args() { userId }: FeatureFlagRequest,

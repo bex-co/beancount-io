@@ -84,17 +84,18 @@ export class CreateApiKeyInputType {
   expiresAt?: Date;
 }
 
-@Authenticated()
 @Resolver()
 export class ApiKeyResolver {
   constructor(private readonly apiKeyService: IApiKeyService) {}
 
+  @Authenticated()
   @Query(() => [ApiKeyType], { description: "Your API keys" })
   async apiKeys(@Ctx() ctx: IContext): Promise<ApiKeyType[]> {
     const keys = await this.apiKeyService.list(ctx.getCurrentIdentity());
     return keys.map(toPublicApiKey) as ApiKeyType[];
   }
 
+  @Authenticated()
   @Mutation(() => MintedApiKeyType, {
     description:
       "Mint an API key. Requires a paid plan; an API key cannot mint another.",
@@ -119,6 +120,7 @@ export class ApiKeyResolver {
     };
   }
 
+  @Authenticated()
   @Mutation(() => ApiKeyType, {
     description: "Revoke an API key, effective on its next use",
   })

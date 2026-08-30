@@ -12,7 +12,7 @@ import {
 import { type GraphQLResolveInfo, Kind } from "graphql";
 import type { ISubscriptionService } from "@/features/stripe/service/subscription-service";
 import type { IContext } from "@/server/graphql/context";
-import { Authenticated } from "@/server/graphql/authenticated";
+import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 
 @ObjectType("SubscriptionPrice")
 class SubscriptionPrice {
@@ -181,6 +181,7 @@ function isOnlyHasActiveSubscriptionRequested(
 export class SubscriptionResolver {
   constructor(private readonly subscriptions: ISubscriptionService) {}
 
+  @AllowAnonymous()
   @Query(() => [TierQuotaItem], {
     description: "Returns the public quota limits for all subscription tiers.",
   })

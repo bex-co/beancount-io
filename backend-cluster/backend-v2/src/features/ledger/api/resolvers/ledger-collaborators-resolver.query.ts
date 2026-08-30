@@ -2,13 +2,13 @@ import {
   Arg,
   Args,
   ArgsType,
-  Authorized,
   Ctx,
   Field,
   ObjectType,
   Query,
   Resolver,
 } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILedgerCollaboratorsWorkflow } from "@/features/ledger/workflow/ledger-collaborators-workflow";
 
@@ -82,7 +82,7 @@ export class LedgerCollaboratorsQueryResolver {
   ) {}
 
   @Query(() => [CollaboratorUser])
-  @Authorized("ledger.admin")
+  @Authenticated()
   async listLedgerCollaborators(
     @Arg("ledgerId") ledgerId: string,
     @Args() { page, limit }: PaginationArgs,
@@ -97,7 +97,7 @@ export class LedgerCollaboratorsQueryResolver {
   }
 
   @Query(() => LedgerCollaborator)
-  @Authorized("ledger.admin")
+  @Authenticated()
   async getLedgerCollaboratorPermission(
     @Args() { ledgerId, collaborator }: GetCollaboratorPermissionArgs,
     @Ctx() ctx: IContext,

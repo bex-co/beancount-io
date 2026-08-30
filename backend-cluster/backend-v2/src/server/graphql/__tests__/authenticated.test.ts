@@ -3,18 +3,30 @@ import { graphql, type GraphQLSchema } from "graphql";
 import { Ctx, Query, Resolver, buildSchema } from "type-graphql";
 import type { Identity } from "@/server/api/identity";
 import { UnauthenticatedError } from "@/shared/errors";
-import { Authenticated } from "../authenticated";
+import { AllowAnonymous, Authenticated } from "../authenticated";
 import type { IContext } from "../context";
 
-@Authenticated()
 @Resolver()
 class AuthenticationOnlyResolver {
   public calls = 0;
 
+  @Authenticated()
   @Query(() => String)
   authenticationOnly(@Ctx() context: IContext): string {
     this.calls += 1;
     return context.identity?.method ?? "missing";
+  }
+}
+
+@Resolver()
+class AnonymousResolver {
+  public calls = 0;
+
+  @AllowAnonymous()
+  @Query(() => String)
+  anonymous(@Ctx() context: IContext): string {
+    this.calls += 1;
+    return context.identity?.method ?? "anonymous";
   }
 }
 
@@ -69,6 +81,50 @@ describe("@Authenticated", () => {
 
       expect(result.errors).toBeUndefined();
       expect(result.data).toEqual({ authenticationOnly: method });
+      expect(resolver.calls).toBe(1);
+    },
+  );
+});
+
+describe("@AllowAnonymous", () => {
+  let resolver: AnonymousResolver;
+  let schema: GraphQLSchema;
+
+  beforeAll(async () => {
+    resolver = new AnonymousResolver();
+    schema = await buildSchema({
+      resolvers: [AnonymousResolver],
+      container: { get: () => resolver },
+    });
+  });
+
+  beforeEach(() => {
+    resolver.calls = 0;
+  });
+
+  it("admits an anonymous request", async () => {
+    const result = await graphql({
+      schema,
+      source: "query { anonymous }",
+      contextValue: { identity: undefined },
+    });
+
+    expect(result.errors).toBeUndefined();
+    expect(result.data).toEqual({ anonymous: "anonymous" });
+    expect(resolver.calls).toBe(1);
+  });
+
+  it.each(["session", "oauth", "apikey"] as const)(
+    "admits an authenticated %s identity",
+    async (method) => {
+      const result = await graphql({
+        schema,
+        source: "query { anonymous }",
+        contextValue: { identity: identity(method) },
+      });
+
+      expect(result.errors).toBeUndefined();
+      expect(result.data).toEqual({ anonymous: method });
       expect(resolver.calls).toBe(1);
     },
   );

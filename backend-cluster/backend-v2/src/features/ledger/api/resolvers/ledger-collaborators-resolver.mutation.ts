@@ -1,13 +1,13 @@
 import {
   Args,
   ArgsType,
-  Authorized,
   Ctx,
   Field,
   Mutation,
   ObjectType,
   Resolver,
 } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILedgerCollaboratorsWorkflow } from "@/features/ledger/workflow/ledger-collaborators-workflow";
 
@@ -63,7 +63,7 @@ export class LedgerCollaboratorsMutationResolver {
   ) {}
 
   @Mutation(() => AddCollaboratorResponse)
-  @Authorized("ledger.admin")
+  @Authenticated()
   async addOrUpdateLedgerCollaborator(
     @Args() { ledgerId, collaborator, permission }: AddCollaboratorArgs,
     @Ctx() ctx: IContext,
@@ -77,7 +77,7 @@ export class LedgerCollaboratorsMutationResolver {
   }
 
   @Mutation(() => DeleteCollaboratorResponse)
-  @Authorized("ledger.admin")
+  @Authenticated()
   async deleteLedgerCollaborator(
     @Args() { ledgerId, collaborator }: DeleteCollaboratorArgs,
     @Ctx() ctx: IContext,
@@ -90,7 +90,7 @@ export class LedgerCollaboratorsMutationResolver {
   }
 
   @Mutation(() => DeleteCollaboratorResponse)
-  @Authorized("ledger.admin")
+  @Authenticated()
   async leaveLedger(
     @Args() { ledgerId }: LeaveLedgerArgs,
     @Ctx() ctx: IContext,

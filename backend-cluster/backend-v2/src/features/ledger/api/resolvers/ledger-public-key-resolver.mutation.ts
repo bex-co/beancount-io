@@ -1,4 +1,5 @@
-import { Arg, Args, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
+import { Arg, Args, Ctx, Mutation, Resolver } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILedgerPublicKeyService } from "@/features/ledger/service/ledger-public-key-service";
 import {
@@ -11,7 +12,7 @@ import {
 export class LedgerPublicKeyMutationResolver {
   constructor(private readonly publicKeyService: ILedgerPublicKeyService) {}
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => PublicKey, {
     description: "Create a new public key for the current user",
   })
@@ -26,7 +27,7 @@ export class LedgerPublicKeyMutationResolver {
     });
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => DeletePublicKeyResponse, {
     description: "Delete a specific public key by ID",
   })

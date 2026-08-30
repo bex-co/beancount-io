@@ -1,7 +1,6 @@
 import {
   Args,
   ArgsType,
-  Authorized,
   Ctx,
   Field,
   Mutation,
@@ -9,6 +8,7 @@ import {
   Query,
   registerEnumType,
 } from "type-graphql";
+import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ICliAuthService } from "@/features/auth/service/cli-auth-service";
 import type { CliAuthSessionStatus } from "@/features/auth/data/cli-auth-session-model/types";
@@ -79,6 +79,7 @@ const STATUS_TO_GRAPHQL: Record<CliAuthSessionStatus, CliAuthStatus> = {
 export class CliAuthResolver {
   constructor(private readonly cliAuthService: ICliAuthService) {}
 
+  @AllowAnonymous()
   @Mutation(() => CreateCliAuthSessionResponse, {
     description:
       "Initiate a CLI authentication session. Returns a sessionId the CLI uses to poll for completion.",
@@ -87,7 +88,7 @@ export class CliAuthResolver {
     return this.cliAuthService.createSession();
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => ConfirmCliAuthSessionResponse, {
     description:
       "Authorize a pending CLI session. Issues a JWT token for the CLI and stores it in the session.",
@@ -103,7 +104,7 @@ export class CliAuthResolver {
     return { success: true };
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => DenyCliAuthSessionResponse, {
     description: "Deny a pending CLI authentication session.",
   })
@@ -118,6 +119,7 @@ export class CliAuthResolver {
     return { success: true };
   }
 
+  @AllowAnonymous()
   @Query(() => GetCliAuthSessionResponse, {
     description:
       "Poll the status of a CLI authentication session. When AUTHORIZED, returns the token stored in the session.",
@@ -133,6 +135,7 @@ export class CliAuthResolver {
     };
   }
 
+  @AllowAnonymous()
   @Mutation(() => ConsumeCliAuthSessionResponse, {
     description:
       "Retrieve and consume the token from an authorized CLI auth session. Single-use: clears the token from the session after returning it. Only the CLI should call this.",

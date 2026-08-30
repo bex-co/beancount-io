@@ -8,6 +8,7 @@ import {
   Query,
   Resolver,
 } from "type-graphql";
+import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { filterNullish } from "@/shared/tools";
 import { GraphQLJSONObject } from "graphql-scalars";
@@ -163,6 +164,7 @@ class IncomeStatementArgs extends ConversionArgs {}
 export class LedgerFinanceQueryResolver {
   constructor(private readonly financeService: ILedgerFinanceService) {}
 
+  @AllowAnonymous()
   @Query(() => LedgerOverview, {
     description: "Get the overview of a specific ledger",
   })
@@ -222,6 +224,7 @@ export class LedgerFinanceQueryResolver {
     };
   }
 
+  @AllowAnonymous()
   @Query(() => IncomeStatementData, {
     description: "Get the income statement of a specific ledger",
   })
@@ -261,6 +264,7 @@ export class LedgerFinanceQueryResolver {
     };
   }
 
+  @AllowAnonymous()
   @Query(() => BalanceSheetData, {
     description: "Get the balance sheet of a specific ledger",
   })
@@ -305,6 +309,7 @@ export class LedgerFinanceQueryResolver {
     };
   }
 
+  @AllowAnonymous()
   @Query(() => TrialBalanceData, {
     description: "Get the trial balance of a specific ledger",
   })

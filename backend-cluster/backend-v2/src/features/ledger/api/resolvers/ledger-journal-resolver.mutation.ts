@@ -1,6 +1,5 @@
 import {
   Arg,
-  Authorized,
   Ctx,
   Field,
   ObjectType,
@@ -8,6 +7,7 @@ import {
   Mutation,
   Resolver,
 } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
 
@@ -81,7 +81,7 @@ class UpdateSourceSliceResponse {
 export class LedgerJournalMutationResolver {
   constructor(private readonly journalService: ILedgerJournalService) {}
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => DeleteSourceSliceResponse, {
     description: "Delete a source slice for a specific journal entry",
   })
@@ -98,7 +98,7 @@ export class LedgerJournalMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => DeleteMultiSourceSlicesResponse, {
     description:
       "Delete multiple source slices for journal entries in a single operation",
@@ -119,7 +119,7 @@ export class LedgerJournalMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => UpdateSourceSliceResponse, {
     description: "Update a source slice for a specific journal entry",
   })

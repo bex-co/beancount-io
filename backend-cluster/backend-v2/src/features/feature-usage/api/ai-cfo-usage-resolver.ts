@@ -1,11 +1,5 @@
-import {
-  Authorized,
-  Ctx,
-  Field,
-  ObjectType,
-  Query,
-  Resolver,
-} from "type-graphql";
+import { Ctx, Field, ObjectType, Query, Resolver } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 
@@ -22,7 +16,7 @@ class AiCfoUsageResponse {
 export class AiCfoUsageResolver {
   constructor(private readonly aiCfoUsageService: IAiCfoUsageService) {}
 
-  @Authorized()
+  @Authenticated()
   @Query(() => AiCfoUsageResponse, {
     description: "Get AI CFO usage for the current billing month",
   })

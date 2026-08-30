@@ -1,6 +1,5 @@
 import {
   Arg,
-  Authorized,
   Ctx,
   Field,
   Mutation,
@@ -8,6 +7,7 @@ import {
   InputType,
   Resolver,
 } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type {
   ILedgerReceiptWorkflow,
@@ -54,7 +54,7 @@ class InsertReceiptResult {
 export class LedgerReceiptMutationResolver {
   constructor(private readonly receiptWorkflow: ILedgerReceiptWorkflow) {}
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => InsertReceiptResult, {
     description:
       "Upload a receipt and insert a transaction entry. Storage strategy (S3 or git) is controlled by the `receipt_storage` beancountio-option.",

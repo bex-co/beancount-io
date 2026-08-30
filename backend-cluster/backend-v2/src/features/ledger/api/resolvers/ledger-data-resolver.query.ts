@@ -8,6 +8,7 @@ import {
   Query,
   Resolver,
 } from "type-graphql";
+import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { InternalServerError } from "@/shared/errors";
 import { IContext } from "@/server/graphql/context";
 import { filterNullish } from "@/shared/tools";
@@ -195,6 +196,7 @@ class AccountReportArgs extends ConversionArgs {
 export class LedgerDataQueryResolver {
   constructor(private readonly dataService: ILedgerDataService) {}
 
+  @AllowAnonymous()
   @Query(() => LedgerAttributes, {
     description: "Get the filter options of a specific ledger",
   })
@@ -216,6 +218,7 @@ export class LedgerDataQueryResolver {
     };
   }
 
+  @AllowAnonymous()
   @Query(() => [CommodityPairWithPrices], {
     description: "Get the commodities of a specific ledger",
   })
@@ -237,6 +240,7 @@ export class LedgerDataQueryResolver {
     }));
   }
 
+  @AllowAnonymous()
   @Query(() => [Event], {
     description: "Export events from a specific ledger with optional filtering",
   })
@@ -259,6 +263,7 @@ export class LedgerDataQueryResolver {
     }));
   }
 
+  @AllowAnonymous()
   @Query(() => [Document], {
     description: "Get documents from a specific ledger with optional filtering",
   })
@@ -284,6 +289,7 @@ export class LedgerDataQueryResolver {
     }));
   }
 
+  @AllowAnonymous()
   @Query(() => Transaction, {
     description: "Get the transactions for a payee",
   })
@@ -315,6 +321,7 @@ export class LedgerDataQueryResolver {
     };
   }
 
+  @AllowAnonymous()
   @Query(() => Transaction, {
     description: "Get the transactions for a narration",
   })
@@ -346,6 +353,7 @@ export class LedgerDataQueryResolver {
     };
   }
 
+  @AllowAnonymous()
   @Query(() => [String], {
     description: "Get the accounts for a payee",
   })
@@ -361,6 +369,7 @@ export class LedgerDataQueryResolver {
     });
   }
 
+  @AllowAnonymous()
   @Query(() => [BeancountError], {
     description: "Get all errors from the ledger",
   })
@@ -379,6 +388,7 @@ export class LedgerDataQueryResolver {
     }));
   }
 
+  @AllowAnonymous()
   @Query(() => [String], {
     description: "Get the currencies of a specific ledger",
   })
@@ -389,6 +399,7 @@ export class LedgerDataQueryResolver {
     return this.dataService.getCurrencies({ ledgerId, identity: ctx.identity });
   }
 
+  @AllowAnonymous()
   @Query(() => [String], {
     description:
       "Get the Beancount source files of a ledger (main.bean plus every file it includes)",
@@ -397,9 +408,13 @@ export class LedgerDataQueryResolver {
     @Arg("ledgerId", () => String) ledgerId: string,
     @Ctx() ctx: IContext,
   ): Promise<string[]> {
-    return this.dataService.getSourceFiles({ ledgerId, identity: ctx.identity });
+    return this.dataService.getSourceFiles({
+      ledgerId,
+      identity: ctx.identity,
+    });
   }
 
+  @AllowAnonymous()
   @Query(() => [String], {
     description: "Get the tags of a specific ledger",
   })
@@ -410,6 +425,7 @@ export class LedgerDataQueryResolver {
     return this.dataService.getTags({ ledgerId, identity: ctx.identity });
   }
 
+  @AllowAnonymous()
   @Query(() => [String], {
     description: "Get the years of a specific ledger",
   })
@@ -420,6 +436,7 @@ export class LedgerDataQueryResolver {
     return this.dataService.getYears({ ledgerId, identity: ctx.identity });
   }
 
+  @AllowAnonymous()
   @Query(() => [String], {
     description: "Get the links of a specific ledger",
   })
@@ -430,6 +447,7 @@ export class LedgerDataQueryResolver {
     return this.dataService.getLinks({ ledgerId, identity: ctx.identity });
   }
 
+  @AllowAnonymous()
   @Query(() => [String])
   async getLedgerNarrations(
     @Arg("ledgerId", () => String) ledgerId: string,
@@ -438,6 +456,7 @@ export class LedgerDataQueryResolver {
     return this.dataService.getNarrations({ ledgerId, identity: ctx.identity });
   }
 
+  @AllowAnonymous()
   @Query(() => [String], {
     description: "Get the payees of a specific ledger",
   })
@@ -448,6 +467,7 @@ export class LedgerDataQueryResolver {
     return this.dataService.getPayees({ ledgerId, identity: ctx.identity });
   }
 
+  @AllowAnonymous()
   @Query(() => [AccountLastEntry], {
     description: "Get the last entries of assets and liabilities accounts",
   })
@@ -473,6 +493,7 @@ export class LedgerDataQueryResolver {
     }));
   }
 
+  @AllowAnonymous()
   @Query(() => [EntriesByType], {
     description: "Get the count of entries per type",
   })
@@ -497,6 +518,7 @@ export class LedgerDataQueryResolver {
     }));
   }
 
+  @AllowAnonymous()
   @Query(() => AccountReport, {
     description: "Get the report of a specific account",
   })
@@ -533,6 +555,7 @@ export class LedgerDataQueryResolver {
     };
   }
 
+  @AllowAnonymous()
   @Query(() => [IntervalTotalItem], {
     description: "Get interval totals for a specific account",
   })

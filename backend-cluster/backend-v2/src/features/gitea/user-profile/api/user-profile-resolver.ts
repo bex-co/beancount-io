@@ -1,4 +1,5 @@
-import { Authorized, Args, Ctx, Query, Mutation, Resolver } from "type-graphql";
+import { Args, Ctx, Query, Mutation, Resolver } from "type-graphql";
+import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { IUserProfileService } from "../service/user-profile-service";
 import {
@@ -23,6 +24,7 @@ export class UserProfileResolver {
    * @param ctx GraphQL context
    * @returns PublicUserProfileResponse with profile data
    */
+  @AllowAnonymous()
   @Query(() => PublicUserProfileResponse, {
     description: "Get user profile by username",
   })
@@ -40,7 +42,7 @@ export class UserProfileResolver {
    * @param ctx GraphQL context
    * @returns FollowUserResponse with success status
    */
-  @Authorized()
+  @Authenticated()
   @Mutation(() => FollowUserResponse, { description: "Follow a user" })
   async followUser(
     @Args() args: FollowUserArgs,
@@ -59,7 +61,7 @@ export class UserProfileResolver {
    * @param ctx GraphQL context
    * @returns FollowUserResponse with success status
    */
-  @Authorized()
+  @Authenticated()
   @Mutation(() => FollowUserResponse, { description: "Unfollow a user" })
   async unfollowUser(
     @Args() args: FollowUserArgs,
@@ -77,6 +79,7 @@ export class UserProfileResolver {
    * @param ctx GraphQL context
    * @returns UserListResponse with followers
    */
+  @AllowAnonymous()
   @Query(() => UserListResponse, { description: "Get user's followers" })
   async getUserFollowers(
     @Args() args: GetUserListArgs,
@@ -94,6 +97,7 @@ export class UserProfileResolver {
    * @param ctx GraphQL context
    * @returns UserListResponse with following
    */
+  @AllowAnonymous()
   @Query(() => UserListResponse, {
     description: "Get users that this user is following",
   })
@@ -113,6 +117,7 @@ export class UserProfileResolver {
    * @param ctx GraphQL context
    * @returns RepositoryListResponse with starred repos
    */
+  @AllowAnonymous()
   @Query(() => RepositoryListResponse, {
     description: "Get user's starred repositories",
   })

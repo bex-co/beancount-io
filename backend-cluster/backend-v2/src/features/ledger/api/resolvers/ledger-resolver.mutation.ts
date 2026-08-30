@@ -1,4 +1,5 @@
-import { Arg, Args, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
+import { Arg, Args, Ctx, Mutation, Resolver } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import {
@@ -20,7 +21,7 @@ import {
 export class LedgerMutationResolver {
   constructor(private readonly workflow: ILedgerWorkflow) {}
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => Ledger, {
     description: "Create a new ledger for the current user",
   })
@@ -34,7 +35,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => Ledger, {
     description: "Update a specific ledger",
   })
@@ -50,7 +51,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => DeleteLedgerResponse, {
     description: "Delete a specific ledger",
   })
@@ -64,7 +65,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => LedgerFileContent, {
     description: "Create a new file in a specific ledger",
   })
@@ -81,7 +82,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => LedgerFileContent, {
     description: "Update an existing file in a specific ledger",
   })
@@ -98,7 +99,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => DeleteLedgerFileResponse, {
     description: "Delete a file from a specific ledger",
   })
@@ -114,7 +115,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => RenameLedgerFileResponse, {
     description: "Rename a file in a specific ledger",
   })
@@ -130,7 +131,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => StarLedgerResponse, {
     description: "Star a specific ledger",
   })
@@ -144,7 +145,7 @@ export class LedgerMutationResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => StarLedgerResponse, {
     description: "Unstar a specific ledger",
   })

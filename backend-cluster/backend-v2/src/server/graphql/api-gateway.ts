@@ -14,7 +14,6 @@ import { resolvers, type ResolverContainer } from "./resolver-registry";
 
 import type { IContext } from "./context";
 import { createContext } from "./context";
-import { customAuthChecker } from "./auth-checker";
 import { graphqlScopeMiddleware } from "./scope-middleware";
 import { graphqlLedgerPinMiddleware } from "./ledger-pin-middleware";
 import { errorLoggingPlugin } from "./plugins/error-logging";
@@ -39,7 +38,6 @@ export async function buildGraphqlSchema(options?: {
   return buildSchema({
     resolvers,
     ...(options?.container ? { container: options.container } : {}),
-    authChecker: customAuthChecker,
     globalMiddlewares: [
       // Budget first, then authorization: refusing an over-budget caller
       // before doing the authorization work is the point of having a limiter.

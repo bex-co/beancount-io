@@ -1,13 +1,13 @@
 import {
   Arg,
   Args,
-  Authorized,
   Ctx,
   FieldResolver,
   Query,
   Resolver,
   Root,
 } from "type-graphql";
+import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
@@ -30,7 +30,7 @@ import {
 export class LedgerQueryResolver {
   constructor(private readonly workflow: ILedgerWorkflow) {}
 
-  @Authorized()
+  @Authenticated()
   @Query(() => [Ledger], {
     description: "List all ledgers for the current user",
   })
@@ -41,7 +41,7 @@ export class LedgerQueryResolver {
     return this.workflow.listLedgers({ userId: ctx.getCurrentUserId(), args });
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => [Ledger], {
     description: "List all user owned ledgers for the current user",
   })
@@ -55,7 +55,7 @@ export class LedgerQueryResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => [Ledger], {
     description: "Search for ledgers/repositories",
   })
@@ -69,6 +69,7 @@ export class LedgerQueryResolver {
     });
   }
 
+  @AllowAnonymous()
   @Query(() => Ledger, {
     description: "Get a specific ledger",
   })
@@ -79,6 +80,7 @@ export class LedgerQueryResolver {
     return this.workflow.getLedger({ ledgerId, userId: ctx.userId });
   }
 
+  @AllowAnonymous()
   @Query(() => LedgerFileContent, {
     description: "Get the content of a specific ledger file",
     nullable: true,
@@ -91,6 +93,7 @@ export class LedgerQueryResolver {
     return this.workflow.getLedgerFile({ ledgerId, userId: ctx.userId, args });
   }
 
+  @AllowAnonymous()
   @Query(() => [LedgerFileContent], {
     description: "Get the content of a specific ledger directory",
   })

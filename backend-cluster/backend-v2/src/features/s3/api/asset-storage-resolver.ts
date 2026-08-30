@@ -1,4 +1,5 @@
-import { Resolver, Mutation, Query, Arg, Authorized, Ctx } from "type-graphql";
+import { Resolver, Mutation, Query, Arg, Ctx } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
 import {
@@ -10,7 +11,7 @@ import {
 export class AssetStorageResolver {
   constructor(private readonly assetStorage: IAssetStorageService) {}
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => TempAssetUploadUrlResponse)
   async generateTempAssetUploadUrl(
     @Arg("mimeType", () => String, { nullable: true })
@@ -28,7 +29,7 @@ export class AssetStorageResolver {
     });
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => TempAssetDownloadUrlResponse, {
     description:
       "Generate a presigned download URL for a previously uploaded temporary asset. Use this to obtain a short-lived GET URL for an objectKey returned by generateTempAssetUploadUrl.",

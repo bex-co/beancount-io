@@ -1,12 +1,5 @@
-import {
-  Resolver,
-  Query,
-  Mutation,
-  Arg,
-  Ctx,
-  Authorized,
-  Int,
-} from "type-graphql";
+import { Resolver, Query, Mutation, Arg, Ctx, Int } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
 import type { IPullRequestService } from "../service/pull-request-service";
@@ -20,7 +13,7 @@ import {
 export class PullRequestResolver {
   constructor(private readonly pullRequestService: IPullRequestService) {}
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => PullRequestResult)
   async createPullRequestFromPatch(
     @Arg("input") input: CreatePRFromPatchInput,
@@ -69,7 +62,7 @@ export class PullRequestResolver {
     }
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => PullRequestDetails)
   async getPullRequestDetails(
     @Arg("ledgerOwner") ledgerOwner: string,
@@ -91,7 +84,7 @@ export class PullRequestResolver {
     );
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => PullRequestResult)
   async approvePullRequest(
     @Arg("ledgerOwner") ledgerOwner: string,
@@ -121,7 +114,7 @@ export class PullRequestResolver {
     };
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => PullRequestResult)
   async rejectPullRequest(
     @Arg("ledgerOwner") ledgerOwner: string,

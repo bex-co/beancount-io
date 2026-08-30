@@ -1,12 +1,5 @@
-import {
-  Arg,
-  Authorized,
-  Ctx,
-  FieldResolver,
-  Query,
-  Resolver,
-  Root,
-} from "type-graphql";
+import { Arg, Ctx, FieldResolver, Query, Resolver, Root } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import {
   PlaidItemType,
@@ -24,7 +17,7 @@ import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-led
 export class PlaidQueryResolver {
   constructor(private readonly plaidItemService: IPlaidItemService) {}
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Query(() => [PlaidItemType], {
     description: "Get Plaid Items for the current user, scoped to a ledger.",
   })
@@ -37,7 +30,7 @@ export class PlaidQueryResolver {
     return this.plaidItemService.getItems(identity, ledgerId);
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Query(() => PlaidItemType, {
     description: "Get a single Plaid Item by ID",
   })
@@ -64,7 +57,7 @@ export class PlaidQueryResolver {
     };
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Query(() => [PlaidAccountType], {
     description: "Get all accounts for a specific Plaid Item",
   })
@@ -78,7 +71,7 @@ export class PlaidQueryResolver {
     return this.plaidItemService.getAccounts(identity, itemId, ledgerId);
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Query(() => [PlaidAccountWithInstitutionType], {
     description:
       "Get every Plaid account in a ledger together with its owning institution. Powers ledger-wide account pickers.",
@@ -89,13 +82,10 @@ export class PlaidQueryResolver {
   ): Promise<PlaidAccountWithInstitutionType[]> {
     const identity = ctx.getCurrentIdentity();
     assertLedgerAuthorization(identity, ledgerId, "read");
-    return this.plaidItemService.getAccountsForLedger(
-      identity,
-      ledgerId,
-    );
+    return this.plaidItemService.getAccountsForLedger(identity, ledgerId);
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => [PlaidTransactionType], {
     description:
       "Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted",
@@ -115,7 +105,7 @@ export class PlaidQueryResolver {
     );
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => [CategorySuggestion], {
     description:
       "Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted",
@@ -135,7 +125,7 @@ export class PlaidQueryResolver {
     );
   }
 
-  @Authorized()
+  @Authenticated()
   @Query(() => [PlaidAccountMappingSuggestion], {
     description:
       "Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI",

@@ -1,4 +1,5 @@
-import { Arg, Authorized, Ctx, Query, Resolver } from "type-graphql";
+import { Arg, Ctx, Query, Resolver } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILedgerRepoService } from "@/features/ledger/service/ledger-repo-service";
 import { LedgerCommit } from "./ledger-repo-resolver.types";
@@ -7,7 +8,7 @@ import { LedgerCommit } from "./ledger-repo-resolver.types";
 export class LedgerRepoQueryResolver {
   constructor(private readonly repoService: ILedgerRepoService) {}
 
-  @Authorized()
+  @Authenticated()
   @Query(() => LedgerCommit, { nullable: true })
   async getLatestLedgerCommit(
     @Arg("ledgerId") ledgerId: string,

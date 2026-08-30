@@ -1,4 +1,5 @@
 import { Arg, Ctx, Field, ObjectType, Query, Resolver } from "type-graphql";
+import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { GraphQLJSONObject } from "graphql-scalars";
 import { IContext } from "@/server/graphql/context";
 import { parseLedgerId } from "@/shared/str";
@@ -38,6 +39,7 @@ class LedgerAccountItem {
 export class LedgerAccountQueryResolver {
   constructor(private readonly ledgerAccount: ILedgerAccountService) {}
 
+  @AllowAnonymous()
   @Query(() => [String], {
     description:
       "Get the accounts of a specific ledger. Optional status filter: 'open' (no closeDate) or 'closed' (has closeDate). Returns all accounts when omitted.",
@@ -56,6 +58,7 @@ export class LedgerAccountQueryResolver {
     );
   }
 
+  @AllowAnonymous()
   @Query(() => [LedgerAccountItem], {
     description:
       "Get all accounts with their open/close dates and open-directive metadata for a specific ledger",

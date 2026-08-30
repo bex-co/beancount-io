@@ -4,7 +4,6 @@ import { graphql } from "graphql";
 import { buildSchema, registerEnumType } from "type-graphql";
 import { AccountResolver, SearchUserInput } from "../account-resolver";
 import type { IContext } from "@/server/graphql/context";
-import { customAuthChecker } from "@/server/graphql/auth-checker";
 import type { IAccountService } from "@/features/auth/service/account-service";
 import { ReportStatus } from "@/features/auth/utils/report-status";
 import type { User } from "@/features/auth/data/user-model";
@@ -61,7 +60,6 @@ describe("AccountResolver", () => {
       registerEnumType(ReportStatus, { name: "ReportStatus" });
       const schema = await buildSchema({
         resolvers: [AccountResolver],
-        authChecker: customAuthChecker,
         container: { get: () => resolver },
       });
 

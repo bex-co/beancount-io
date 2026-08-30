@@ -1,13 +1,13 @@
 import {
   Args,
   ArgsType,
-  Authorized,
   Ctx,
   Field,
   Mutation,
   ObjectType,
   Query,
 } from "type-graphql";
+import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 import { Matches, MaxLength } from "class-validator";
 import { IContext } from "@/server/graphql/context";
 import type { IAuthService } from "@/features/auth/service/auth-service";
@@ -151,7 +151,7 @@ class VerifySignUpOtpInput {
 export class AuthResolver {
   constructor(private readonly authService: IAuthService) {}
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => LogoutResponse, {
     description: "Logout user, revoke JWT token and clear httpOnly cookie",
   })
@@ -163,6 +163,7 @@ export class AuthResolver {
     return { success: true };
   }
 
+  @AllowAnonymous()
   @Mutation(() => TokenAuthResponse)
   public async signIn(
     @Ctx() ctx: IContext,
@@ -181,7 +182,7 @@ export class AuthResolver {
     return { token: result.token, expireAt: result.expireAt };
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => TokenAuthResponse, {
     description:
       "Refresh authentication token - issues a new token and revokes the current one",
@@ -203,6 +204,7 @@ export class AuthResolver {
     return { token: result.token, expireAt: result.expireAt };
   }
 
+  @AllowAnonymous()
   @Mutation(() => TokenAuthResponse)
   public async signInWithOneTimeToken(
     @Ctx() ctx: IContext,
@@ -220,7 +222,7 @@ export class AuthResolver {
     return { token: result.token, expireAt: result.expireAt };
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => CreateOneTimeTokenResponse)
   public async createOneTimeToken(
     @Ctx() ctx: IContext,
@@ -231,6 +233,7 @@ export class AuthResolver {
     return { id: result.id, expireAt: result.expireAt };
   }
 
+  @AllowAnonymous()
   @Mutation(() => SendForgotPasswordLinkResponse, {
     description: "Send a password reset link to the user's email",
   })
@@ -250,6 +253,7 @@ export class AuthResolver {
     return { success: true };
   }
 
+  @AllowAnonymous()
   @Mutation(() => ResetPasswordResponse, {
     description:
       "Reset user password using a token from the password reset email",
@@ -262,6 +266,7 @@ export class AuthResolver {
     return { success: true };
   }
 
+  @AllowAnonymous()
   @Query(() => ValidateEmailTokenResponse, {
     description: "Validate whether an email token is valid and not expired",
   })
@@ -273,6 +278,7 @@ export class AuthResolver {
     return { isValid };
   }
 
+  @AllowAnonymous()
   @Mutation(() => SignUpResponse, {
     description:
       "Start signup by creating an OTP session. Sends a verification code to the user's email.",
@@ -303,6 +309,7 @@ export class AuthResolver {
     return { sessionId, expireAt: session.expireAt };
   }
 
+  @AllowAnonymous()
   @Mutation(() => TokenAuthResponse, {
     description: "Verify OTP and create user account to complete signup",
   })

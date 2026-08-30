@@ -1,4 +1,5 @@
-import { Arg, Args, Authorized, Ctx, Query, Resolver } from "type-graphql";
+import { Arg, Args, Ctx, Query, Resolver } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILedgerPublicKeyService } from "@/features/ledger/service/ledger-public-key-service";
 import {
@@ -10,7 +11,7 @@ import {
 export class LedgerPublicKeyQueryResolver {
   constructor(private readonly publicKeyService: ILedgerPublicKeyService) {}
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Query(() => [PublicKey], {
     description: "List all public keys for the current user",
   })
@@ -24,7 +25,7 @@ export class LedgerPublicKeyQueryResolver {
     });
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Query(() => PublicKey, {
     description: "Get a specific public key by ID",
     nullable: true,

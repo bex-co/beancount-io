@@ -10,7 +10,7 @@ import {
 import { MaxLength, MinLength } from "class-validator";
 import { ReportStatus } from "@/features/auth/utils/report-status";
 import { IContext } from "@/server/graphql/context";
-import { Authenticated } from "@/server/graphql/authenticated";
+import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 import type { IAccountService } from "@/features/auth/service/account-service";
 
 @ArgsType()
@@ -112,11 +112,11 @@ class UpdateProfileInput {
 export class AccountResolver {
   constructor(private readonly accountService: IAccountService) {}
 
-  // Deliberately no @Authorized decorator: this nullable field is the
-  // dashboard's identity probe, so an anonymous caller must reach the resolver
-  // and receive null. The global GraphQL scope middleware still classifies
-  // Query.userProfile as a read and enforces ledger.read when a scoped OAuth or
-  // API-key identity is present.
+  // This nullable field is the dashboard's identity probe, so an anonymous
+  // caller must reach the resolver and receive null. The global GraphQL scope
+  // middleware still classifies Query.userProfile as a read and enforces
+  // ledger.read when a scoped OAuth or API-key identity is present.
+  @AllowAnonymous()
   @Query(() => UserProfileResponse, {
     description: "get the user",
     nullable: true,

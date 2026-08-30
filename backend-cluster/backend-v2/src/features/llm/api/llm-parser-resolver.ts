@@ -1,4 +1,5 @@
-import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
+import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ILLMService } from "../service/llm-service";
 import {
@@ -10,7 +11,7 @@ import {
 export class LLMParserResolver {
   constructor(private readonly llm: ILLMService) {}
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => FileParseResult, {
     description:
       "Parse an uploaded file (multimodal support for PDF/images/any format) into structured transactions. File must be uploaded to S3 first.",
@@ -33,7 +34,7 @@ export class LLMParserResolver {
     );
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => ReceiptParseResult, {
     description:
       "Parse a receipt image or PDF and return a single summarized transaction with account recommendations. File must be uploaded to S3 first.",

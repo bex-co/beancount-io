@@ -20,7 +20,24 @@ export const authenticatedMiddleware: MiddlewareFn<IContext> = (
   return next();
 };
 
+/**
+ * Explicit marker for a GraphQL root field that accepts anonymous callers.
+ *
+ * This middleware deliberately performs no work. Its presence makes the
+ * access contract inspectable in TypeGraphQL metadata so the schema coverage
+ * guard can require every root field to choose exactly one access mode.
+ */
+export const allowAnonymousMiddleware: MiddlewareFn<IContext> = (
+  _resolverData,
+  next,
+) => next();
+
 /** Apply the authentication-only middleware to a resolver class or method. */
 export function Authenticated(): ReturnType<typeof UseMiddleware> {
   return UseMiddleware(authenticatedMiddleware);
+}
+
+/** Mark a GraphQL root field as intentionally reachable without an identity. */
+export function AllowAnonymous(): ReturnType<typeof UseMiddleware> {
+  return UseMiddleware(allowAnonymousMiddleware);
 }

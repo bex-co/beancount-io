@@ -1,4 +1,5 @@
-import { Arg, Authorized, Ctx, Mutation, Resolver } from "type-graphql";
+import { Arg, Ctx, Mutation, Resolver } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import {
   PlaidLinkToken,
@@ -21,7 +22,7 @@ export class PlaidMutationResolver {
     private readonly plaidSyncService: IPlaidSyncService,
   ) {}
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => PlaidLinkToken, {
     description: "Create a Plaid Link token for connecting bank accounts",
   })
@@ -34,7 +35,7 @@ export class PlaidMutationResolver {
     return this.plaidItemService.createLinkToken(identity, ledgerId);
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => PlaidLinkToken, {
     description:
       "Create a Plaid Link token in update mode for reauthentication",
@@ -61,7 +62,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => PlaidAccountReconcileResult, {
     description:
       "Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select.",
@@ -80,7 +81,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => PlaidItemType, {
     description: "Exchange Plaid public token for access token and store Item",
   })
@@ -98,7 +99,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => Boolean, {
     description: "Update the ledger account mapping for a Plaid account",
   })
@@ -118,7 +119,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => Boolean, {
     description: "Update the currency used for a Plaid account's transactions",
   })
@@ -138,7 +139,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => PlaidItemType, {
     description:
       "Refresh Plaid Item status from Plaid API (useful after reauthentication)",
@@ -153,7 +154,7 @@ export class PlaidMutationResolver {
     return this.plaidItemService.refreshItemStatus(identity, itemId, ledgerId);
   }
 
-  @Authorized("ledger.admin")
+  @Authenticated()
   @Mutation(() => Boolean, {
     description:
       "Unlink a Plaid Item (remove from Plaid and delete from database)",
@@ -171,7 +172,7 @@ export class PlaidMutationResolver {
     return true;
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => PlaidSyncResult, {
     description: "Manually sync transactions for a specific Plaid Item",
   })
@@ -190,7 +191,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => PlaidSubmitResult, {
     description:
       "Submit Plaid transactions with user-reviewed target accounts to ledger",
@@ -219,7 +220,7 @@ export class PlaidMutationResolver {
     );
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => PlaidDeleteResult, {
     description:
       "Delete pending (unsynced) Plaid transactions from the review list",

@@ -12,6 +12,7 @@ import {
   Query,
   Resolver,
 } from "type-graphql";
+import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { BadUserInputError } from "@/shared/errors";
 import type { ILedgerAssetService } from "@/features/ledger/service/ledger-asset-service";
@@ -26,6 +27,7 @@ export class LedgerAssetDownloadUrlResult {
 export class LedgerAssetQueryResolver {
   constructor(private readonly assetService: ILedgerAssetService) {}
 
+  @AllowAnonymous()
   @Query(() => LedgerAssetDownloadUrlResult, {
     description:
       "Get a presigned S3 download URL for a ledger asset. Validates ledger access — public ledgers require no auth; private ledgers require a valid session.",
@@ -47,6 +49,7 @@ export class LedgerAssetQueryResolver {
     return { downloadUrl };
   }
 
+  @AllowAnonymous()
   @Query(() => LedgerAssetDownloadUrlResult, {
     description:
       "Get a downloadable URL for a ledger Git archive (main.zip). " +

@@ -1,6 +1,5 @@
 import {
   ArgsType,
-  Authorized,
   Field,
   ObjectType,
   Args,
@@ -9,6 +8,7 @@ import {
   InputType,
   Resolver,
 } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { BadUserInputError } from "@/shared/errors";
 import { GraphQLJSONObject } from "graphql-scalars";
@@ -104,7 +104,7 @@ export class LedgerLegacyMutationResolver extends BaseLedgerResolver {
     super(favaClientFactory);
   }
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => AddEntryResponse)
   async addEntries(
     @Args() entriesInput: EntriesInput,

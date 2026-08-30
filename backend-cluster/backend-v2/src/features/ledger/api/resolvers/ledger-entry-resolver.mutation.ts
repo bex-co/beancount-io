@@ -1,6 +1,5 @@
 import {
   Arg,
-  Authorized,
   Ctx,
   Field,
   Mutation,
@@ -9,6 +8,7 @@ import {
   Resolver,
   registerEnumType,
 } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { BadUserInputError } from "@/shared/errors";
 import { parseLedgerId } from "@/shared/str";
@@ -303,7 +303,7 @@ function requirePayload<T>(input: AddEntryInput, payload: T | undefined): T {
 export class LedgerEntryMutationResolver {
   constructor(private readonly ledgerEntry: ILedgerEntryService) {}
 
-  @Authorized()
+  @Authenticated()
   @Mutation(() => AddLedgerEntryResponse, {
     description: "Add one or more entries to a specific ledger (atomic)",
   })

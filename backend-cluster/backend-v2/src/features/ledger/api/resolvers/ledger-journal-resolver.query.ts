@@ -7,6 +7,7 @@ import {
   Query,
   Resolver,
 } from "type-graphql";
+import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { GraphQLJSONObject } from "graphql-scalars";
 import {
@@ -150,6 +151,7 @@ class AccountJournalQueryInput {
 export class LedgerJournalQueryResolver {
   constructor(private readonly journalService: ILedgerJournalService) {}
 
+  @AllowAnonymous()
   @Query(() => JournalResponse, {
     description: "Get journal entries for a specific ledger",
   })
@@ -166,6 +168,7 @@ export class LedgerJournalQueryResolver {
     });
   }
 
+  @AllowAnonymous()
   @Query(() => EntryContext, {
     description: "Get context for a specific journal entry",
   })
@@ -181,6 +184,7 @@ export class LedgerJournalQueryResolver {
     });
   }
 
+  @AllowAnonymous()
   @Query(() => PlaintextJournalResponse, {
     description: "Get plaintext journal in beancount format",
   })
@@ -197,6 +201,7 @@ export class LedgerJournalQueryResolver {
     });
   }
 
+  @AllowAnonymous()
   @Query(() => AccountJournalResponse, {
     description: "Get account journal with change and balance information",
   })

@@ -1,4 +1,5 @@
-import { Authorized, Args, Ctx, Query, Resolver } from "type-graphql";
+import { Args, Ctx, Query, Resolver } from "type-graphql";
+import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { IFeedService } from "../service/feed-service";
 import { FeedResponse, GetFeedArgs } from "./feed-resolver.types";
@@ -14,7 +15,7 @@ export class FeedResolver {
    * @param ctx GraphQL context
    * @returns Paginated feed response
    */
-  @Authorized()
+  @Authenticated()
   @Query(() => FeedResponse)
   async getFeed(
     @Args() args: GetFeedArgs,

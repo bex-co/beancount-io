@@ -4,9 +4,13 @@ jest.mock("@ai-sdk/harness-acp", () => ({
 }));
 
 import { getMetadataStorage } from "type-graphql";
-import { VERB_TABLE, classifiedOpIds, classifyOp } from "../op-class";
+import { VERB_TABLE, classifiedOpIds } from "../op-class";
 import { ALWAYS_PUBLIC_OP_IDS } from "../always-public";
 import { assembleTestApi } from "./api-surface";
+import {
+  allowAnonymousMiddleware,
+  authenticatedMiddleware,
+} from "@/server/graphql/authenticated";
 
 /**
  * ADR 0006 D9, test 2 — the op-class table matches what the process serves, in
@@ -87,9 +91,11 @@ describe("op-class coverage", () => {
     ).toBe(62);
   });
 
-  it("does not give a legacy admin resolver a weaker auth decorator", () => {
+  it("gives every GraphQL root field exactly one explicit access mode", () => {
     const metadata = getMetadataStorage();
-    const weaker: string[] = [];
+    const missing: string[] = [];
+    const conflicting: string[] = [];
+    const legacyAuthorized: string[] = [];
 
     for (const [parent, resolvers] of [
       ["Query", metadata.queries],
@@ -97,17 +103,27 @@ describe("op-class coverage", () => {
     ] as const) {
       for (const resolver of resolvers) {
         const op = `${parent}.${resolver.schemaName}`;
-        const classification = classifyOp(`GQL ${op}`);
-        if (classification.class !== "admin") continue;
-        // A migrated resolver's final credential and relationship decision is
-        // made by the centralized PDP. Requiring the legacy scope decorator as
-        // well would recreate two policy evaluators for the same operation.
-        if (classification.authorizationAction) continue;
-        if (!resolver.roles?.includes("ledger.admin")) weaker.push(op);
+        const middlewares = metadata.middlewares
+          .filter(
+            (entry) =>
+              entry.target === resolver.target &&
+              entry.fieldName === resolver.methodName,
+          )
+          .flatMap((entry) => entry.middlewares);
+        const authenticated = middlewares.includes(authenticatedMiddleware);
+        const anonymous = middlewares.includes(allowAnonymousMiddleware);
+
+        if (!authenticated && !anonymous) missing.push(op);
+        if (authenticated && anonymous) conflicting.push(op);
+        if (resolver.roles !== undefined) legacyAuthorized.push(op);
       }
     }
 
-    expect(weaker).toEqual([]);
+    expect({ missing, conflicting, legacyAuthorized }).toEqual({
+      missing: [],
+      conflicting: [],
+      legacyAuthorized: [],
+    });
   });
 
   it("does not encode PDP credential reachability as an operational class", () => {

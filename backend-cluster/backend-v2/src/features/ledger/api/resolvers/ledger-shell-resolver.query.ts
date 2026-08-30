@@ -7,6 +7,7 @@ import {
   Query,
   Resolver,
 } from "type-graphql";
+import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { GraphQLJSON } from "graphql-scalars";
 import type { ILedgerShellService } from "@/features/ledger/service/ledger-shell-service";
@@ -77,6 +78,7 @@ class ShellQueryArgs {
 export class LedgerShellQueryResolver {
   constructor(private readonly shellService: ILedgerShellService) {}
 
+  @AllowAnonymous()
   @Query(() => QueryResult, {
     description: "Execute a shell query on a ledger",
     nullable: true,
@@ -92,6 +94,7 @@ export class LedgerShellQueryResolver {
     });
   }
 
+  @AllowAnonymous()
   @Query(() => QueryShellTextResult, {
     description:
       "Execute a shell query on a ledger and return plain text output",
