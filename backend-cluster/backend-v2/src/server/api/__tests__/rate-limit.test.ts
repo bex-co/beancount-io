@@ -15,6 +15,7 @@ import {
 } from "../rate-limit";
 import { RateLimitedError } from "@/shared/errors";
 import type { Identity } from "../identity";
+import { classifyOp } from "../op-class";
 
 /**
  * The limiter that replaced two hand-attached in-process ones.
@@ -61,6 +62,37 @@ describe("budgets", () => {
     expect(budgetFor("GQL Mutation.somethingElse", "write")).toEqual(
       CLASS_BUDGETS.write,
     );
+  });
+
+  it("preserves admin budgets for API-key list and revoke on every surface", () => {
+    const operations = [
+      "GQL Query.apiKeys",
+      "REST GET /api-gateway/v1/api-keys",
+      "MCP listApiKeys",
+      "GQL Mutation.revokeApiKey",
+      "REST DELETE /api-gateway/v1/api-keys/{id}",
+      "MCP revokeApiKey",
+    ];
+    for (const opId of operations) {
+      const classification = classifyOp(opId);
+      expect(classification.class).toBe("admin");
+      expect(budgetFor(opId, classification.class)).toEqual(
+        CLASS_BUDGETS.admin,
+      );
+    }
+  });
+
+  it("keeps the five-per-minute create-key override on every surface", () => {
+    for (const opId of [
+      "GQL Mutation.createApiKey",
+      "REST POST /api-gateway/v1/api-keys",
+      "MCP createApiKey",
+    ]) {
+      expect(budgetFor(opId, classifyOp(opId).class)).toEqual({
+        windowMs: 60_000,
+        max: 5,
+      });
+    }
   });
 
   it("keeps the anonymous intakes on separate budgets", () => {

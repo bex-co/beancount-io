@@ -1,6 +1,5 @@
 import {
   Arg,
-  Authorized,
   Ctx,
   Field,
   InputType,
@@ -12,10 +11,8 @@ import {
 import { IContext } from "@/server/graphql/context";
 import { API_SCOPES } from "@/server/api/identity";
 import { ValidationError } from "@/shared/errors";
-import {
-  toPublicApiKey,
-  type IApiKeyService,
-} from "../service/api-key-service";
+import { toPublicApiKey } from "../service/api-key-service";
+import type { IApiKeyService } from "../service/api-key-service";
 
 /**
  * Key management over GraphQL — where the dashboard will call it from.
@@ -88,16 +85,14 @@ export class CreateApiKeyInputType {
 
 @Resolver()
 export class ApiKeyResolver {
-  constructor(private readonly service: IApiKeyService) {}
+  constructor(private readonly apiKeyService: IApiKeyService) {}
 
-  @Authorized("ledger.admin")
   @Query(() => [ApiKeyType], { description: "Your API keys" })
   async apiKeys(@Ctx() ctx: IContext): Promise<ApiKeyType[]> {
-    const keys = await this.service.list(ctx.getCurrentIdentity());
+    const keys = await this.apiKeyService.list(ctx.getCurrentIdentity());
     return keys.map(toPublicApiKey) as ApiKeyType[];
   }
 
-  @Authorized("ledger.admin")
   @Mutation(() => MintedApiKeyType, {
     description:
       "Mint an API key. Requires a paid plan; an API key cannot mint another.",
@@ -112,14 +107,16 @@ export class ApiKeyResolver {
         "A key with no scopes can do nothing",
       );
     }
-    const minted = await this.service.mint(ctx.getCurrentIdentity(), input);
+    const minted = await this.apiKeyService.mint(
+      ctx.getCurrentIdentity(),
+      input,
+    );
     return {
       key: toPublicApiKey(minted.key) as ApiKeyType,
       plaintext: minted.plaintext,
     };
   }
 
-  @Authorized("ledger.admin")
   @Mutation(() => ApiKeyType, {
     description: "Revoke an API key, effective on its next use",
   })
@@ -127,7 +124,10 @@ export class ApiKeyResolver {
     @Arg("id", () => String) id: string,
     @Ctx() ctx: IContext,
   ): Promise<ApiKeyType> {
-    const revoked = await this.service.revoke(ctx.getCurrentIdentity(), id);
+    const revoked = await this.apiKeyService.revoke(
+      ctx.getCurrentIdentity(),
+      id,
+    );
     return toPublicApiKey(revoked) as ApiKeyType;
   }
 }

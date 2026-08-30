@@ -154,9 +154,8 @@ describe("POST /api-gateway/v1/api-keys", () => {
     expect(body).toMatchObject({ error: { code: "PREMIUM_REQUIRED" } });
   });
 
-  it("passes an API-key caller through to the service, which refuses it", async () => {
-    // The no-self-perpetuation rule lives in the service so it holds on all
-    // three surfaces; the adapter's job is only not to bypass it.
+  it("passes an API-key caller to the service's centralized decision", async () => {
+    // The adapter does not duplicate the no-self-perpetuation rule.
     server.setIdentity(fromKey);
     await call("POST", "/api-gateway/v1/api-keys", {
       name: "CI",

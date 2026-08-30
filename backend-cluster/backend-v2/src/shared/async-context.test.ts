@@ -1,8 +1,10 @@
 import {
   asyncContext,
+  getOperationId,
   getRequestContext,
   getRequestId,
   getUserId,
+  runWithOperationId,
   updateRequestContext,
 } from "./async-context";
 
@@ -104,6 +106,58 @@ describe("async-context", () => {
         const userId = getUserId();
         expect(userId).toBeUndefined();
       });
+    });
+  });
+
+  describe("runWithOperationId", () => {
+    it("runs unchanged when there is no request context", async () => {
+      await expect(
+        runWithOperationId("GQL Query.userProfile", async () =>
+          getOperationId(),
+        ),
+      ).resolves.toBeUndefined();
+    });
+
+    it("isolates concurrent operations and restores the parent context", async () => {
+      await asyncContext.run(
+        { requestId: "req-ops", userId: "usr_1" },
+        async () => {
+          const [profileOp, keysOp] = await Promise.all([
+            runWithOperationId("GQL Query.userProfile", async () => {
+              await new Promise((resolve) => setTimeout(resolve, 5));
+              return {
+                operationId: getOperationId(),
+                context: getRequestContext(),
+              };
+            }),
+            runWithOperationId("GQL Query.apiKeys", async () => {
+              await Promise.resolve();
+              return {
+                operationId: getOperationId(),
+                context: getRequestContext(),
+              };
+            }),
+          ]);
+
+          expect(profileOp).toEqual({
+            operationId: "GQL Query.userProfile",
+            context: {
+              requestId: "req-ops",
+              userId: "usr_1",
+              operationId: "GQL Query.userProfile",
+            },
+          });
+          expect(keysOp).toEqual({
+            operationId: "GQL Query.apiKeys",
+            context: {
+              requestId: "req-ops",
+              userId: "usr_1",
+              operationId: "GQL Query.apiKeys",
+            },
+          });
+          expect(getOperationId()).toBeUndefined();
+        },
+      );
     });
   });
 

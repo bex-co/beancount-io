@@ -2,6 +2,7 @@ import type { UIMessage } from "ai";
 import type { ServerResponse } from "node:http";
 import type { Identity } from "@/server/api/identity";
 import type { ToolServices } from "../../tools/types";
+import type { IApiKeyService } from "@/features/apikeys/service/api-key-service";
 
 export interface AgentHandlerContext {
   messages: UIMessage[];
@@ -15,6 +16,7 @@ export interface AgentHandlerContext {
    */
   services: ToolServices;
   identity: Identity;
+  apiKeyService: IApiKeyService;
   mcpToken: string;
   mcpUrl: string;
   sessionId?: string;

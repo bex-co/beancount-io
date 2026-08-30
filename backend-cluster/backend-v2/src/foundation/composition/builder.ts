@@ -33,7 +33,10 @@ import { UserProfileService } from "@/features/gitea/user-profile/service/user-p
 import { PullRequestService } from "@/features/gitea/pull-request/service/pull-request-service";
 import { FeedService } from "@/features/gitea/feed/service/feed-service";
 import { CommitsService } from "@/features/gitea/commits/service/commits-service";
-import { AuthorizationService } from "@/server/api/authorization";
+import {
+  AuthorizationService,
+  SourceBackedRelationshipEvaluator,
+} from "@/server/api/authorization";
 import { SendGrid, ConsoleSendGrid } from "@/foundation/sendgrid";
 import {
   type DatabaseLayer,
@@ -80,9 +83,16 @@ export function buildServiceLayer(input: {
   config: AppConfig;
 }): ServiceLayer {
   const stripe = new StripeService(input.database.models, input.database.db);
+  const authorization = new AuthorizationService(
+    new SourceBackedRelationshipEvaluator(
+      input.database.db,
+      input.database.models,
+    ),
+  );
   const apiKey = new ApiKeyService({
     db: input.database.db,
     models: input.database.models,
+    authorization,
     // Minting is a paid feature (w1/m22). Injected as a predicate rather than
     // reached for inside the service, so the key service depends on a question
     // rather than on billing.
@@ -185,6 +195,7 @@ export function buildServiceLayer(input: {
       stripe,
       input.clients.favaClientFactory,
       input.clients.plaidClient,
+      authorization,
     ),
     auth: new AuthService(
       input.database.models,
@@ -213,7 +224,6 @@ export function buildServiceLayer(input: {
       input.database.db,
     ),
     commits: new CommitsService(input.clients.giteaClientFactory),
-    authorization: new AuthorizationService(),
   };
 }
 

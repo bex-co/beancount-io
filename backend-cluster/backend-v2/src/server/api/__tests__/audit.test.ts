@@ -69,10 +69,11 @@ describe("the event shape", () => {
 });
 
 describe("what is recorded", () => {
-  it("records every denial, whatever the class", () => {
+  it("records every denial or infrastructure error, whatever the class", () => {
     for (const opClass of ["read", "write", "admin", "public"]) {
       expect(shouldAudit("denied", opClass)).toBe(true);
       expect(shouldAudit("shadow-denied", opClass)).toBe(true);
+      expect(shouldAudit("error", opClass)).toBe(true);
     }
   });
 

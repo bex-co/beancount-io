@@ -82,12 +82,19 @@ export class ApiKeyPostgresModel implements IApiKeyModel {
   public async revoke(
     db: DbExecutor,
     id: string,
+    ownerUserId: string,
     revokedAt: Date,
   ): Promise<ApiKey | null> {
     const rows = await db
       .update(apiKeys)
-      .set({ revokedAt, updatedAt: revokedAt })
-      .where(eq(apiKeys.id, id))
+      // Preserve the first revocation timestamp while keeping the operation
+      // idempotent. Ownership is part of the atomic write predicate so a
+      // direct service call cannot revoke another user's credential.
+      .set({
+        revokedAt: sql`coalesce(${apiKeys.revokedAt}, ${revokedAt})`,
+        updatedAt: revokedAt,
+      })
+      .where(and(eq(apiKeys.id, id), eq(apiKeys.userId, ownerUserId)))
       .returning();
     return rows[0] ? this.toPlainObject(rows[0]) : null;
   }

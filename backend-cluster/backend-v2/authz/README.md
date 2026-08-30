@@ -15,38 +15,57 @@ This boundary follows OpenFGA's guidance to
 [model the application domain rather than a meta-model](https://openfga.dev/docs/best-practices/modeling-design-principles).
 The no-engine-yet decision and adoption triggers remain documented in
 [ADR 0010](../../../docs/adrs/ADR010-backend-v2-authz-model.md). No OpenFGA
-server or SDK is deployed. Backend-v2 now executes the `user.delete` slice
-through its small TypeScript PDP and a local relationship adapter that mirrors
-`user#can_write_lifecycle`; the rest of this model remains
-documentation-as-code until an ADR 0010 trigger fires.
+server or SDK is deployed. Backend-v2 executes the protected user/profile/
+lifecycle/API-key-management domain through a small TypeScript PDP. Its
+source-backed evaluator mirrors exact-self User permissions and resolves
+API-key ownership from the current `api_keys` row. Ledger relationships remain
+documentation-as-code until their own domain milestone or an ADR 0010 trigger.
 
 ## Centralized authorization in a microservice system
 
 Centralized authorization means one trusted policy decision point (PDP) for an
-action. It does not mean representing every request credential as an OpenFGA
-object. The only runtime slice implemented today is:
+action. It does not require centralized relationship storage and does not mean
+representing every request credential as an OpenFGA object. The runtime topology
+for this domain is:
 
 ```text
-GraphQL Mutation.deleteAccount
+GraphQL / REST / MCP alias
   → resolveIdentity()
-  → authorize(principal, user.delete, user:<principal.userId>)
-  → permit browser-session or OAuth user credentials
-  → check exact-self user#can_write_lifecycle
-  → one allow / deny decision before AccountService
+  → AccountService or ApiKeyService (application-service boundary)
+  → authorize(requestIdentity, canonicalAction, trustedResource)
+      → credential ceiling
+      → exact-self fact or current api_keys.owner lookup
+      → modeled user#can_* relationship
+      → one fail-closed allow / deny; source failure is an explicit error
+      → one audit event per authorization call
+  → domain work
 ```
 
-The module lives in `src/server/api/authorization/`. Its local relationship
-adapter evaluates the exact-self fact modeled by
-`user#can_write_lifecycle`. It does not deploy OpenFGA or implement any other
-action. The caller provides only:
+The PDP lives in `src/server/api/authorization/`. Application services derive
+User targets from the authenticated identity; API-key revoke supplies only the
+stable key ID, which the evaluator resolves through the database before any
+side effect. The caller provides only:
 
 - the canonical action;
 - the domain resource ID;
 - the already-resolved authenticated identity.
 
-The resolver does not interpret ledger scopes or manufacture relationship
-tuples. The account service receives an already-authorized user ID and does not
-repeat authorization policy.
+Transport adapters do not interpret policy or manufacture relationship tuples.
+The operation-class gate only routes these operations to the PDP. Account and
+API-key services are the application boundary: each protected public method
+calls the PDP before domain work. The migrated profile, lifecycle, and
+credential methods expose no raw user-ID variants, so a new resolver or
+internal caller cannot bypass authorization by skipping a wrapper.
+
+The evaluator holds no tuple store, decision memo, or cross-request cache.
+Protected service methods receive the resolved `Identity` explicitly; the
+stable transport operation ID is observability metadata propagated in an
+isolated AsyncLocalStorage child context by the GraphQL, REST, and MCP gates.
+Concurrent GraphQL root fields and MCP calls therefore cannot overwrite one
+another. A direct service call with no request context audits its canonical
+action instead. Every authorization call re-evaluates the current relationship,
+even when a GraphQL document invokes the same field more than once. PostgreSQL
+remains the one copy of API-key ownership; exact-self remains an identity fact.
 
 ## One permission vocabulary
 
@@ -108,7 +127,8 @@ ledger.ai:write
 ```
 
 This vocabulary describes the model's future fine-grained credential ceiling.
-The current `user.delete` runtime slice does not mint or require such a grant.
+The current runtime preserves the existing three ledger scopes and session
+restrictions for compatibility; it does not mint or require these future grants.
 
 Do not introduce a global `admin` grant. `administrator` in `model.fga` is the
 durable ledger relationship rank inherited from Gitea; it is not a permission
@@ -124,26 +144,35 @@ that shape, not GitHub's product-specific permission names or PAT objects.
 
 ## Actions and transport operations
 
-An action is a stable, transport-independent business verb. The implemented
-mapping is deliberately one row:
+An action is a stable, transport-independent business verb. `op-class.ts`
+records GraphQL/REST/MCP aliases, while each executable requirement lives once
+beside `AuthorizationService`:
 
-```text
-GQL Mutation.deleteAccount → user.delete
-```
+| Canonical action          | Transport aliases                              | Preserved credential ceiling                         | Relationship requirement                   |
+| ------------------------- | ---------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ |
+| `user.profile.read`       | `GQL Query.userProfile`                        | session, or OAuth/API key with `ledger.read`         | `user#can_read_profile`                    |
+| `user.profile.search`     | `GQL Query.getUserByExactMatch`                | browser session only                                 | exact-self `user#can_read_profile`         |
+| `user.profile.update`     | `GQL Mutation.updateUsername`, `updateProfile` | browser session only                                 | exact-self `user#can_write_profile`        |
+| `user.delete`             | `GQL Mutation.deleteAccount`                   | browser session or OAuth                             | exact-self `user#can_write_lifecycle`      |
+| `user.credentials.list`   | GraphQL/REST/MCP API-key list                  | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_credentials`     |
+| `user.credentials.create` | GraphQL/REST/MCP API-key create                | session, or OAuth with `ledger.admin`; never API key | exact-self `user#can_write_credentials`    |
+| `user.credentials.revoke` | GraphQL/REST/MCP API-key revoke                | session, or OAuth/API key with `ledger.admin`        | key owner has `user#can_write_credentials` |
 
-Its complete requirement is:
-
-| Action        | Accepted credential                 | Relationship requirement                            |
-| ------------- | ----------------------------------- | --------------------------------------------------- |
-| `user.delete` | browser session or OAuth user token | `user#can_write_lifecycle` on that same `user:<id>` |
-
-API keys, cross-user resources, unknown actions, and relationship-evaluator
-failures deny. Denials carry the action, resource, and stable reason metadata.
+Cross-user resources, missing or foreign API-key IDs, unknown actions or
+resource types, insufficient credentials, and evaluator failures all deny.
+Missing, blank, and foreign key IDs all surface as not found, so revoke does
+not become an enumeration oracle. Request-bound audit events carry the exact
+transport operation ID; direct service calls use the canonical action. Both
+carry subject metadata, including the credential's ledger pin when
+present; the operation table maps that ID to the canonical action. Events never
+carry secrets or request arguments. Relationship-source failures are logged at
+error level, audited as `error`, and surface as service unavailable rather than
+as a policy denial.
 
 There is intentionally no inert operation-policy file in this directory. The
-implemented `user.delete` action lives directly in the TypeScript authorization
-module; transport classification admits the request to that module but cannot
-authorize it. Keeping a second documentation-only catalog would create drift.
+actions live directly in the TypeScript authorization module; transport
+classification admits the request to that module but cannot authorize it.
+Keeping a second documentation-only catalog would create drift.
 
 ## What OpenFGA owns
 
@@ -163,6 +192,12 @@ That ownership relation derives eligibility for the User permission families.
 `user#can_write_lifecycle` means “this user is operating on itself and is
 therefore relationship-eligible for a lifecycle write.” It is necessary but
 not sufficient for an authorized deletion request.
+
+API keys used as authentication credentials do not become FGA entities. For a
+revoke operation, `api_key:<id>` is only an in-process target locator: the
+source-backed evaluator loads the current row, resolves its owner to
+`user:<ownerId>`, and applies `user#can_write_credentials`. The locator is never
+stored as a tuple and does not extend `model.fga` with credential objects.
 
 ### Ledgers
 
@@ -227,11 +262,13 @@ unchanged for both dashboard sessions and the mobile OAuth session. This slice
 does not add step-up login, a deletion grant, Redis state, a new OAuth scope, or
 a mobile/dashboard contract change.
 
-## Tuple ownership
+## Relationship sources
 
 Only durable or source-derived domain facts enter the model:
 
 - `user#owner` from the user database, only when subject ID equals object ID;
+- API-key owner from current `api_keys.user_id`, resolved to that User's
+  credentials permission without copying it;
 - `ledger#owner` from the ledger owner lookup;
 - exactly one effective `ledger#collaborator_*` rank per caller;
 - `ledger#public_reader@user:*` iff the ledger is public.
@@ -244,8 +281,9 @@ tuples.
 
 ## Invariants
 
-1. **The authorization module is the only final authority for `user.delete`.**
-   The resolver calls it once and the account service does not repeat policy.
+1. **The authorization module is the only final authority for migrated User
+   actions.** Protected Account/API-key service methods call it once before
+   domain work; every GraphQL/REST/MCP alias uses those application services.
 2. **OpenFGA contains only durable domain relationships.** No credential,
    session, token, grant, or `request_*` type/relation belongs in this model.
 3. **Subjects use stable internal user IDs** (`users.id`), never usernames,
@@ -261,8 +299,8 @@ tuples.
 7. **Permission names are resource-scoped capability families.** Endpoint names
    never become permissions, and generic ledger administration cannot imply an
    unrelated user or ledger capability.
-8. **The runtime slice is fail-closed.** Unknown actions do not inherit a
-   default policy; expanding beyond `user.delete` is separate work.
+8. **The runtime is fail-closed.** Unknown actions/resources and source lookup
+   failures do not inherit a default policy.
 9. **Authentication facts remain signed and provenance-preserving across
    service hops.** A downstream service cannot upgrade them.
 
@@ -283,7 +321,7 @@ fga model test --tests model.test.fga.yaml
 
 The FGA suite covers user ownership boundaries, capability-level permission
 families, ledger rank inheritance, private fail-closed behavior, public reads,
-and monotonic rank semantics. The TypeScript suite separately covers supported
-credential kinds, unknown actions, wrong-user resources, relationship denial,
-and relationship-evaluator failure. Credentials and request context never
-become FGA tuples.
+and monotonic rank semantics. The TypeScript suite covers every implemented
+action, credential ceiling, wrong-user/foreign-key resources, independent
+per-call evaluation and audit, source failure, and GraphQL/REST/MCP aliases.
+Credentials and request context never become FGA tuples.

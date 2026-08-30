@@ -13,15 +13,19 @@ const auditLogger = logger.child({ module: "audit" });
  * "a bit more context" has to widen this interface, which is a diff a reviewer
  * sees, rather than passing an extra property into a bag.
  *
- * **Emission hooks the enforcement seam, not each verb.** `requireScopeClass`
- * and `authorizeLedger` are where every surface's authorization decision is
- * actually made, so coverage is a property of the architecture rather than of
- * whether the author of the 137th verb remembered to call an audit function.
+ * **Emission hooks the enforcement seams, not each verb.** Legacy scope and
+ * ledger decisions emit from their shared gates; centralized-PDP decisions
+ * emit from `AuthorizationService`. Coverage is therefore a property of the
+ * architecture rather than of whether the author of the 137th verb remembered
+ * to call an audit function.
  */
-export type AuditOutcome = "allowed" | "denied" | "shadow-denied";
+export type AuditOutcome = "allowed" | "denied" | "shadow-denied" | "error";
 
 export interface AuditEvent {
-  /** Stable op id (`REST POST /api-gateway/v1/...`, `GQL Mutation.x`, `MCP y`). */
+  /**
+   * Stable operation identifier: the exact transport op while handling a
+   * request, or the canonical authorization action for a direct service call.
+   */
   readonly op: string;
   readonly userId?: string;
   readonly method?: AuthMethod;
@@ -75,7 +79,8 @@ export function emitAuditEvent(event: AuditEvent): void {
 /**
  * Whether an outcome is worth recording for an op of this class.
  *
- * Denials always are — they are the security signal. Allowed *writes* are, too:
+ * Denials and infrastructure errors always are — they are the security and
+ * availability signals. Allowed *writes* are, too:
  * reconstructing what changed a ledger is the question an incident actually
  * asks. Allowed reads are not: they are the overwhelming majority of traffic,
  * and recording them would bury the events someone needs to find.

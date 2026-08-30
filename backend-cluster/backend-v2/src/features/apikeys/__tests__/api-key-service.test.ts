@@ -12,6 +12,10 @@ import {
   PremiumRequiredError,
   ValidationError,
 } from "@/shared/errors";
+import {
+  AUTHORIZATION_ACTIONS,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 
 /**
  * The rules that make an API key safe to hand out (ADR 0006 D6).
@@ -33,13 +37,6 @@ const oauthGrant: Identity = {
   scopes: new Set(["ledger.read"]),
   tokenId: "tok_1",
   capabilityExempt: false,
-};
-
-const fromKey: Identity = {
-  ...oauthGrant,
-  method: "apikey",
-  scopes: new Set(["ledger.admin"]),
-  tokenId: "akey_1",
 };
 
 const adminOAuthGrant: Identity = {
@@ -75,19 +72,96 @@ function makeService(opts: { premium?: boolean; stored?: ApiKey | null } = {}) {
     findById: jest.fn(async () => opts.stored ?? null),
     listByUserId: jest.fn(async () => [storedKey()]),
     countLiveByUserId: jest.fn(async () => 0),
-    revoke: jest.fn(async (_db: unknown, id: string, revokedAt: Date) =>
-      storedKey({ id, revokedAt }),
+    revoke: jest.fn(
+      async (
+        _db: unknown,
+        id: string,
+        ownerUserId: string,
+        revokedAt: Date,
+      ) => {
+        const existing = opts.stored === undefined ? storedKey() : opts.stored;
+        if (
+          !existing ||
+          existing.id !== id ||
+          existing.userId !== ownerUserId
+        ) {
+          return null;
+        }
+        return { ...existing, revokedAt: existing.revokedAt ?? revokedAt };
+      },
     ),
     touchLastUsedAt: jest.fn(async () => undefined),
     deleteByUserId: jest.fn(async () => undefined),
   };
+  const authorization = {
+    authorize: jest.fn(),
+    authorizeOrThrow: jest.fn(async (input) => ({
+      allowed: true as const,
+      action: input.action,
+      resource: input.resource,
+    })),
+  } as jest.Mocked<IAuthorizationService>;
   const service = new ApiKeyService({
     db: {} as never,
     models: { apiKey: model } as never,
+    authorization,
     isPremium: async () => opts.premium ?? true,
   });
-  return { service, model, created };
+  return { service, model, authorization, created };
 }
+
+describe("centralized authorization boundary", () => {
+  it("maps every public use case to its canonical action", async () => {
+    const { service, authorization } = makeService();
+    await service.list(session);
+    await service.mint(session, {
+      name: "CI",
+      scopes: ["ledger.read"],
+    });
+    await service.revoke(session, "akey_1");
+
+    expect(
+      authorization.authorizeOrThrow.mock.calls.map(([input]) => ({
+        action: input.action,
+        resource: input.resource,
+      })),
+    ).toEqual([
+      {
+        action: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+        resource: "user:usr_1",
+      },
+      {
+        action: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
+        resource: "user:usr_1",
+      },
+      {
+        action: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+        resource: "api_key:akey_1",
+      },
+    ]);
+  });
+
+  it.each(["list", "mint", "revoke"] as const)(
+    "performs no domain work when %s authorization denies",
+    async (operation) => {
+      const { service, model, authorization } = makeService();
+      authorization.authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      const result =
+        operation === "list"
+          ? service.list(session)
+          : operation === "mint"
+            ? service.mint(session, {
+                name: "CI",
+                scopes: ["ledger.read"],
+              })
+            : service.revoke(session, "akey_1");
+      await expect(result).rejects.toThrow("denied");
+      expect(model.listByUserId).not.toHaveBeenCalled();
+      expect(model.create).not.toHaveBeenCalled();
+      expect(model.revoke).not.toHaveBeenCalled();
+    },
+  );
+});
 
 describe("minting", () => {
   it("returns the plaintext once and stores only its digest", async () => {
@@ -106,25 +180,11 @@ describe("minting", () => {
     expect(created[0].keyDigest).toBe(apiKeyDigest(minted.plaintext));
   });
 
-  it("refuses a caller whose own credential is an API key", async () => {
-    const { service } = makeService();
-    await expect(
-      service.mint(fromKey, { name: "CI", scopes: ["ledger.read"] }),
-    ).rejects.toBeInstanceOf(ForbiddenError);
-  });
-
   it("refuses a free-plan user", async () => {
     const { service } = makeService({ premium: false });
     await expect(
       service.mint(session, { name: "CI", scopes: ["ledger.read"] }),
     ).rejects.toBeInstanceOf(PremiumRequiredError);
-  });
-
-  it("requires the admin capability from an OAuth minter", async () => {
-    const { service } = makeService();
-    await expect(
-      service.mint(oauthGrant, { name: "CI", scopes: ["ledger.read"] }),
-    ).rejects.toBeInstanceOf(ForbiddenError);
   });
 
   it("lets an admin OAuth grant mint a narrower key", async () => {
@@ -298,23 +358,25 @@ describe("verification", () => {
 });
 
 describe("revocation", () => {
-  it("refuses a credential without the admin capability", async () => {
-    const { service, model } = makeService({ stored: storedKey() });
-
-    await expect(service.revoke(oauthGrant, "akey_1")).rejects.toBeInstanceOf(
-      ForbiddenError,
-    );
-    expect(model.findById).not.toHaveBeenCalled();
+  it("reads a missing key id as not found", async () => {
+    const { service } = makeService({ stored: null });
+    await expect(
+      service.revoke(session, "akey_missing"),
+    ).rejects.toBeInstanceOf(NotFoundError);
   });
 
-  it("reads another user's key id as not found", async () => {
-    const { service } = makeService({
-      stored: storedKey({ userId: "usr_someone_else" }),
+  it("binds revocation to the trusted owner id", async () => {
+    const { service, model } = makeService({
+      stored: storedKey({ userId: "usr_other" }),
     });
-    // Not "forbidden": that would confirm the id exists, turning revoke into a
-    // probe for which key ids are real.
     await expect(service.revoke(session, "akey_1")).rejects.toBeInstanceOf(
       NotFoundError,
+    );
+    expect(model.revoke).toHaveBeenCalledWith(
+      expect.anything(),
+      "akey_1",
+      "usr_1",
+      expect.any(Date),
     );
   });
 
@@ -325,23 +387,16 @@ describe("revocation", () => {
     });
     const result = await service.revoke(session, "akey_1");
     expect(result.revokedAt).toEqual(revokedAt);
-    expect(model.revoke).not.toHaveBeenCalled();
+    expect(model.revoke).toHaveBeenCalledTimes(1);
+    expect(model.findById).not.toHaveBeenCalled();
   });
 });
 
 describe("listing", () => {
-  it("refuses a credential without the admin capability", async () => {
+  it("lists only the trusted user id supplied by the workflow", async () => {
     const { service, model } = makeService();
-
-    await expect(service.list(oauthGrant)).rejects.toBeInstanceOf(
-      ForbiddenError,
-    );
-    expect(model.listByUserId).not.toHaveBeenCalled();
-  });
-
-  it("allows an admin OAuth grant", async () => {
-    const { service } = makeService();
-    await expect(service.list(adminOAuthGrant)).resolves.toHaveLength(1);
+    await expect(service.list(session)).resolves.toHaveLength(1);
+    expect(model.listByUserId).toHaveBeenCalledWith(expect.anything(), "usr_1");
   });
 });
 

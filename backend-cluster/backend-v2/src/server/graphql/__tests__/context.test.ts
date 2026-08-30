@@ -16,21 +16,26 @@ jest.mock("@/foundation/fava", () => ({
   createFavaApi: jest.fn(),
 }));
 
+const makeTestContext = (overrides: Partial<IContext> = {}): IContext => ({
+  reqHeaders: {},
+  platform: "web",
+  config: {} as AppConfig,
+  koaCtx: {} as IContext["koaCtx"],
+  loaders: {} as GraphQLLoaders,
+  getCurrentUserId: jest.fn(),
+  getCurrentUser: jest.fn(),
+  getCurrentIdentity: jest.fn(),
+  ...overrides,
+});
+
 describe("Context Types", () => {
   describe("IContext", () => {
     it("should accept valid context with all required fields", () => {
-      const context: IContext = {
+      const context = makeTestContext({
         userId: "user-123",
         token: "jwt-token",
         reqHeaders: { authorization: "Bearer token" },
-        platform: "web",
-        config: {} as AppConfig,
-        koaCtx: {} as any,
-        loaders: {} as GraphQLLoaders,
-        getCurrentUserId: jest.fn(),
-        getCurrentUser: jest.fn(),
-        getCurrentIdentity: jest.fn(),
-      };
+      });
 
       expect(context.userId).toBe("user-123");
       expect(context.token).toBe("jwt-token");
@@ -39,50 +44,26 @@ describe("Context Types", () => {
     });
 
     it("should accept context without optional token field", () => {
-      const context: IContext = {
+      const context = makeTestContext({
         userId: "user-123",
-        reqHeaders: {},
-        platform: "web",
-        config: {} as AppConfig,
-        koaCtx: {} as any,
-        loaders: {} as GraphQLLoaders,
-        getCurrentUserId: jest.fn(),
-        getCurrentUser: jest.fn(),
-        getCurrentIdentity: jest.fn(),
-      };
+      });
 
       expect(context.token).toBeUndefined();
       expect(context.userId).toBe("user-123");
     });
 
     it("should accept empty userId", () => {
-      const context: IContext = {
+      const context = makeTestContext({
         userId: "",
-        reqHeaders: {},
-        platform: "web",
-        config: {} as AppConfig,
-        koaCtx: {} as any,
-        loaders: {} as GraphQLLoaders,
-        getCurrentUserId: jest.fn(),
-        getCurrentUser: jest.fn(),
-        getCurrentIdentity: jest.fn(),
-      };
+      });
 
       expect(context.userId).toBe("");
     });
 
     it("should accept empty reqHeaders", () => {
-      const context: IContext = {
+      const context = makeTestContext({
         userId: "user-123",
-        reqHeaders: {},
-        platform: "web",
-        config: {} as AppConfig,
-        koaCtx: {} as any,
-        loaders: {} as GraphQLLoaders,
-        getCurrentUserId: jest.fn(),
-        getCurrentUser: jest.fn(),
-        getCurrentIdentity: jest.fn(),
-      };
+      });
 
       expect(context.reqHeaders).toEqual({});
     });
@@ -94,17 +75,10 @@ describe("Context Types", () => {
         "x-custom-header": "value",
       };
 
-      const context: IContext = {
+      const context = makeTestContext({
         userId: "user-123",
         reqHeaders: headers,
-        platform: "web",
-        config: {} as AppConfig,
-        koaCtx: {} as any,
-        loaders: {} as GraphQLLoaders,
-        getCurrentUserId: jest.fn(),
-        getCurrentUser: jest.fn(),
-        getCurrentIdentity: jest.fn(),
-      };
+      });
 
       expect(context.reqHeaders).toEqual(headers);
     });
@@ -141,24 +115,18 @@ describe("Context Types", () => {
 
   describe("Context integration", () => {
     it("should support full context structure", () => {
-      const context: IContext = {
+      const context = makeTestContext({
         userId: "user-123",
         token: "jwt-token",
         reqHeaders: {
           authorization: "Bearer jwt-token",
         },
-        platform: "web",
         config: {
           favaApi: {
             baseUrl: "http://localhost:5000",
           },
         } as unknown as AppConfig,
-        koaCtx: {} as any,
-        loaders: {} as GraphQLLoaders,
-        getCurrentUserId: jest.fn(),
-        getCurrentUser: jest.fn(),
-        getCurrentIdentity: jest.fn(),
-      };
+      });
 
       // Verify context structure
       expect(context.userId).toBeTruthy();
@@ -216,6 +184,7 @@ describe("Context Types", () => {
         authorization: `Bearer ${mockToken}`,
         "content-type": "application/json",
       });
+      expect(context.getCurrentIdentity().userId).toBe(mockUserId);
     });
 
     it("should create context with empty userId when no token", async () => {
@@ -244,6 +213,7 @@ describe("Context Types", () => {
       expect(context.userId).toBeUndefined();
       expect(context.token).toBeUndefined();
       expect(mockService.models.jwt.verify).not.toHaveBeenCalled();
+      expect(() => context.getCurrentIdentity()).toThrow(UnauthenticatedError);
     });
 
     it("should handle array headers by taking first value", async () => {

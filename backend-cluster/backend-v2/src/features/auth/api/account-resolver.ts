@@ -1,7 +1,6 @@
 import {
   Args,
   ArgsType,
-  Authorized,
   Ctx,
   Field,
   Mutation,
@@ -12,12 +11,6 @@ import { MaxLength, MinLength } from "class-validator";
 import { ReportStatus } from "@/features/auth/utils/report-status";
 import { IContext } from "@/server/graphql/context";
 import type { IAccountService } from "@/features/auth/service/account-service";
-import { UnauthenticatedError } from "@/shared/errors";
-import {
-  type IAuthorizationService,
-  USER_DELETE_ACTION,
-  userResource,
-} from "@/server/api/authorization";
 
 @ArgsType()
 class UserProfileRequest {
@@ -116,10 +109,7 @@ class UpdateProfileInput {
 }
 
 export class AccountResolver {
-  constructor(
-    private readonly accountService: IAccountService,
-    private readonly authorizationService: IAuthorizationService,
-  ) {}
+  constructor(private readonly accountService: IAccountService) {}
 
   // Deliberately no @Authorized decorator: this nullable field is the
   // dashboard's identity probe, so an anonymous caller must reach the resolver
@@ -139,55 +129,42 @@ export class AccountResolver {
     if (!ctx.userId) {
       return null;
     }
-    const userId = args.userId ?? ctx.getCurrentUserId();
-    const currentUserId = ctx.getCurrentUserId();
-    if (userId !== currentUserId || !userId) {
-      throw new UnauthenticatedError("Not authorized user");
-    }
-    const user = await this.accountService.getUserProfile(userId);
-    return user;
+    const identity = ctx.getCurrentIdentity();
+    const userId = args.userId ?? identity.userId;
+    return this.accountService.getUserProfile(identity, userId);
   }
 
   @Mutation(() => Boolean, {
     description: "delete user account and its associated data",
   })
   public async deleteAccount(@Ctx() ctx: IContext): Promise<boolean> {
-    const identity = ctx.getCurrentIdentity();
-    await this.authorizationService.authorizeOrThrow({
-      principal: identity,
-      action: USER_DELETE_ACTION,
-      resource: userResource(identity.userId),
-    });
-    return this.accountService.deleteAccount(identity.userId);
+    return this.accountService.deleteAccount(ctx.getCurrentIdentity());
   }
 
-  @Authorized()
   @Query(() => [SearchUser])
   public async getUserByExactMatch(
     @Ctx() ctx: IContext,
     @Args() args: SearchUserInput,
   ): Promise<SearchUser[]> {
     const users = await this.accountService.findUsersByEmailOrUsername(
+      ctx.getCurrentIdentity(),
       args.keyword,
-      args.includeCurrentUser ? undefined : ctx.getCurrentUserId(),
+      Boolean(args.includeCurrentUser),
     );
     return users.map((u) => ({ email: u.email, username: u.ledger_username }));
   }
 
-  @Authorized()
   @Mutation(() => UserProfileResponse)
   public async updateUsername(
     @Ctx() ctx: IContext,
     @Args() args: UpdateUsernameInput,
   ): Promise<UserProfileResponse | null> {
-    await this.accountService.updateUsername(
-      ctx.getCurrentUserId(),
+    return this.accountService.updateUsername(
+      ctx.getCurrentIdentity(),
       args.username,
     );
-    return this.accountService.getUserProfile(ctx.getCurrentUserId());
   }
 
-  @Authorized()
   @Mutation(() => UserProfileResponse, {
     description: "Update user profile (firstName and lastName)",
   })
@@ -195,11 +172,10 @@ export class AccountResolver {
     @Ctx() ctx: IContext,
     @Args() args: UpdateProfileInput,
   ): Promise<UserProfileResponse | null> {
-    await this.accountService.updateProfile(
-      ctx.getCurrentUserId(),
+    return this.accountService.updateProfile(
+      ctx.getCurrentIdentity(),
       args.firstName ?? "",
       args.lastName ?? "",
     );
-    return this.accountService.getUserProfile(ctx.getCurrentUserId());
   }
 }

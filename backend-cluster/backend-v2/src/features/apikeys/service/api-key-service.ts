@@ -4,7 +4,6 @@ import type { IModels } from "@/foundation/models";
 import type { ApiKey } from "../data/api-key-model";
 import {
   API_SCOPES,
-  assertIdentityCapability,
   identityHasCapability,
   type ApiScope,
   type Identity,
@@ -19,6 +18,12 @@ import {
 import { prefixedNanoidBase58 } from "@/shared/nanoid-base58";
 import { logger } from "@/shared/logger";
 import { parseLedgerId } from "@/shared/str";
+import {
+  apiKeyResource,
+  AUTHORIZATION_ACTIONS,
+  type IAuthorizationService,
+  userResource,
+} from "@/server/api/authorization";
 
 const keyLogger = logger.child({ module: "api-key-service" });
 
@@ -61,6 +66,7 @@ export interface IApiKeyService {
 export interface ApiKeyServiceDeps {
   db: DbExecutor;
   models: Pick<IModels, "apiKey">;
+  authorization: IAuthorizationService;
   /** Whether this user's plan may mint keys. Injected so the service does not reach into billing. */
   isPremium: (userId: string) => Promise<boolean>;
 }
@@ -139,21 +145,15 @@ export const isApiKeyLive = (key: ApiKey, now: Date): boolean =>
  * API keys: durable, scoped credentials for clients that cannot do a browser
  * ceremony — CI, cron, a CLI, an agent (ADR 0006 D6).
  *
- * Four rules are enforced here rather than in the adapters, so they hold on
- * whichever surface is asking:
+ * This application service is the one public use-case boundary shared by every
+ * adapter. Each protected method authorizes first, then applies these rules:
  *
- * 1. **Key management requires `ledger.admin`.** Listing, minting, and
- *    revocation are control-plane operations, not ledger content access.
- * 2. **A key may not mint a key.** A credential that can create its own
- *    successor cannot really be revoked: revoke it, and the key it minted
- *    yesterday still works. Minting requires a session or a full OAuth grant,
- *    checked on `Identity.method`.
- * 3. **Minting is a paid feature.** Confirmed as a pricing decision for w1/m22
+ * 1. **Minting is a paid feature.** Confirmed as a pricing decision for w1/m22
  *    (okr.md 杠杆 1). Existing keys keep working if a subscription lapses —
  *    breaking a running integration is a support incident, not a nudge.
- * 4. **Scopes come from the closed vocabulary,** and a key can only ever narrow
+ * 2. **Scopes come from the closed vocabulary,** and a key can only ever narrow
  *    what its minter had, never widen it.
- * 5. **A ledger pin is a ceiling too.** A credential confined to one ledger at
+ * 3. **A ledger pin is a ceiling too.** A credential confined to one ledger at
  *    consent time mints keys confined to that same ledger — it may restate the
  *    pin or inherit it, never name a different ledger or drop it.
  */
@@ -164,14 +164,11 @@ export class ApiKeyService implements IApiKeyService {
     identity: Identity,
     input: MintApiKeyInput,
   ): Promise<MintedApiKey> {
-    assertIdentityCapability(identity, "admin");
-
-    if (identity.method === "apikey") {
-      throw new ForbiddenError(
-        "An API key cannot mint another API key. Sign in, or use an OAuth grant, to create one.",
-      );
-    }
-
+    await this.deps.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
+      resource: userResource(identity.userId),
+    });
     if (!(await this.deps.isPremium(identity.userId))) {
       throw new PremiumRequiredError(
         "API keys",
@@ -192,8 +189,7 @@ export class ApiKeyService implements IApiKeyService {
       // An OAuth grant minting a key may not hand out more than it holds:
       // otherwise `ledger.read` becomes `ledger.admin` in two steps.
       const widened = scopes.filter(
-        (scope) =>
-          !identityHasCapability(identity, OPERATION_FOR_SCOPE[scope]),
+        (scope) => !identityHasCapability(identity, OPERATION_FOR_SCOPE[scope]),
       );
       if (widened.length > 0) {
         throw new ForbiddenError(
@@ -246,27 +242,30 @@ export class ApiKeyService implements IApiKeyService {
   }
 
   async list(identity: Identity): Promise<ApiKey[]> {
-    assertIdentityCapability(identity, "admin");
-    return this.deps.models.apiKey.listByUserId(this.deps.db, identity.userId);
+    const { userId } = identity;
+    await this.deps.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+      resource: userResource(userId),
+    });
+    return this.deps.models.apiKey.listByUserId(this.deps.db, userId);
   }
 
   async revoke(identity: Identity, id: string): Promise<ApiKey> {
-    assertIdentityCapability(identity, "admin");
-    const existing = await this.deps.models.apiKey.findById(this.deps.db, id);
-    // Same error for "not yours" and "not there": otherwise revoke becomes a
-    // probe for which key ids exist.
-    if (!existing || existing.userId !== identity.userId) {
-      throw new NotFoundError("API key", id);
-    }
-    if (existing.revokedAt) return existing;
-
+    const ownerUserId = identity.userId;
+    await this.deps.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+      resource: apiKeyResource(id),
+    });
     const revoked = await this.deps.models.apiKey.revoke(
       this.deps.db,
       id,
+      ownerUserId,
       new Date(),
     );
     if (!revoked) throw new NotFoundError("API key", id);
-    keyLogger.info("API key revoked", { keyId: id, userId: identity.userId });
+    keyLogger.info("API key revoked", { keyId: id, userId: ownerUserId });
     return revoked;
   }
 

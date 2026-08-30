@@ -13,7 +13,7 @@ export const auditEvents = pgTable(
   "audit_events",
   {
     id: text("id").primaryKey(),
-    /** Stable op id: `REST POST /api-gateway/v1/...`, `GQL Mutation.x`, `MCP y`. */
+    /** Transport op ID, or a canonical action for a direct service call. */
     op: text("op").notNull(),
     /** The user, when the request had one. */
     userId: text("user_id"),
@@ -23,7 +23,7 @@ export const auditEvents = pgTable(
     tokenId: text("token_id"),
     /** `owner/name` of the ledger acted on, when the op names one. */
     ledgerId: text("ledger_id"),
-    /** allowed | denied | shadow-denied. */
+    /** allowed | denied | shadow-denied | error. */
     outcome: text("outcome").notNull(),
     at: timestamp("at").notNull().defaultNow(),
   },

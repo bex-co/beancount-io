@@ -14,6 +14,7 @@ import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { config as realConfig, type AppConfig } from "@/config/config";
 import { ForbiddenError } from "@/shared/errors";
+import { asyncContext, getOperationId } from "@/shared/async-context";
 import { formatError } from "@/server/graphql/format-error";
 import type { IContext } from "@/server/graphql/context";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
@@ -22,6 +23,7 @@ import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { restScopeMiddleware } from "@/server/rest/scope-middleware";
 import type { ToolContext } from "@/features/ai-agent/tools/types";
 import type { Identity } from "../identity";
+import { authorizationActionForOp } from "../op-class";
 import { assembleMcpRegistry, type ApiGate } from "../composition-root";
 import { assembleTestApi } from "./api-surface";
 
@@ -82,6 +84,7 @@ function buildRestRouter(identity: Identity | undefined, config: AppConfig) {
     ["REST ALL /git{/*path}", "outside"],
   ]);
   const reached: string[] = [];
+  const operationIds: Array<string | undefined> = [];
   router.use(restErrorMiddleware());
   router.use(async (ctx, next) => {
     ctx.state.identity = identity;
@@ -92,12 +95,13 @@ function buildRestRouter(identity: Identity | undefined, config: AppConfig) {
     (name: string): Router.Middleware =>
     (ctx) => {
       reached.push(name);
+      operationIds.push(getOperationId());
       ctx.status = 204;
     };
   router.post("/api-gateway/agent", answer("agent"));
   router.get("/healthz", answer("healthz"));
   router.all("/git{/*path}", answer("git"));
-  return { dispatch: router.routes(), reached };
+  return { dispatch: router.routes(), reached, operationIds };
 }
 
 async function driveRest(
@@ -105,8 +109,12 @@ async function driveRest(
   config: AppConfig,
   method = "POST",
   path = "/api-gateway/agent",
-): Promise<{ ctx: RouterContext; reached: string[] }> {
-  const { dispatch, reached } = buildRestRouter(identity, config);
+): Promise<{
+  ctx: RouterContext;
+  reached: string[];
+  operationIds: Array<string | undefined>;
+}> {
+  const { dispatch, reached, operationIds } = buildRestRouter(identity, config);
   const ctx = {
     method,
     path,
@@ -117,7 +125,7 @@ async function driveRest(
     request: {},
   } as unknown as RouterContext;
   await dispatch(ctx, async () => undefined);
-  return { ctx, reached };
+  return { ctx, reached, operationIds };
 }
 
 // --- GraphQL -----------------------------------------------------------
@@ -181,6 +189,7 @@ function captureMcpHandlers(
           ledgerShell: { queryShellText: jest.fn() },
           ledgerRepo: {},
         },
+        apiKeyService: services?.apiKeyService ?? {},
         identity,
         ledgerId: "alice/main",
       } as unknown as ToolContext,
@@ -193,6 +202,57 @@ function captureMcpHandlers(
 }
 
 describe("scope enforcement across surfaces", () => {
+  describe("operation metadata uses isolated request sub-contexts", () => {
+    it("keeps concurrent GraphQL root fields from overwriting each other", async () => {
+      const middleware = graphqlScopeMiddleware("enforce");
+      const execute = (fieldName: string, delayMs: number) =>
+        middleware(
+          {
+            context: { identity: sessionIdentity } as IContext,
+            info: makeGraphqlInfo("Query", fieldName),
+          } as never,
+          async () => {
+            await new Promise((resolve) => setTimeout(resolve, delayMs));
+            return getOperationId();
+          },
+        );
+
+      await asyncContext.run({ requestId: "req-graphql" }, async () => {
+        await expect(
+          Promise.all([execute("userProfile", 5), execute("apiKeys", 0)]),
+        ).resolves.toEqual(["GQL Query.userProfile", "GQL Query.apiKeys"]);
+        expect(getOperationId()).toBeUndefined();
+      });
+    });
+
+    it("keeps the matched REST route operation through its handler", async () => {
+      await asyncContext.run({ requestId: "req-rest" }, async () => {
+        const { operationIds } = await driveRest(sessionIdentity, enforcing);
+        expect(operationIds).toEqual(["REST POST /api-gateway/agent"]);
+        expect(getOperationId()).toBeUndefined();
+      });
+    });
+
+    it("keeps the MCP operation through the tool's service call", async () => {
+      const seen: Array<string | undefined> = [];
+      const list = jest.fn(async () => {
+        seen.push(getOperationId());
+        return [];
+      });
+      const handlers = captureMcpHandlers(adminToken, enforcing, {
+        apiKeyService: { list },
+        ledgerRepo: {},
+        ledgerShell: {},
+      });
+
+      await asyncContext.run({ requestId: "req-mcp" }, async () => {
+        await handlers.get("listApiKeys")!({});
+        expect(getOperationId()).toBeUndefined();
+      });
+      expect(seen).toEqual(["MCP listApiKeys"]);
+    });
+  });
+
   describe("the committed policy closes high-impact scope escalation", () => {
     it("GraphQL: a read token can learn whose token it is — the native app's first call after the code exchange", async () => {
       const profile = await driveGraphql(
@@ -203,15 +263,16 @@ describe("scope enforcement across surfaces", () => {
       expect(profile.reached).toBe(true);
       expect(profile.error).toBeUndefined();
 
-      // Identity-only credentials (no ledger scope at all) still cannot.
+      // Identity-only credentials reach the PDP too; it owns the credential
+      // ceiling now, rather than this ledger-scope gate.
       const bare: Identity = { ...readOnlyToken, scopes: new Set() };
-      const refused = await driveGraphql(
+      const deferred = await driveGraphql(
         bare,
         makeGraphqlInfo("Query", "userProfile"),
         realConfig,
       );
-      expect(refused.reached).toBe(false);
-      expect(refused.error).toBeInstanceOf(ForbiddenError);
+      expect(deferred.reached).toBe(true);
+      expect(deferred.error).toBeUndefined();
     });
 
     it("GraphQL: ledger scopes do not decide a centralized-authz operation", async () => {
@@ -254,18 +315,23 @@ describe("scope enforcement across surfaces", () => {
       expect(reached).toBe(true);
     });
 
-    it("MCP: ledger.write cannot list API keys", async () => {
-      const handlers = captureMcpHandlers(writeToken, realConfig);
+    it("MCP: ledger scopes defer API-key authority to the centralized PDP", async () => {
+      const list = jest.fn().mockResolvedValue([]);
+      const handlers = captureMcpHandlers(writeToken, realConfig, {
+        apiKeyService: { list },
+        ledgerRepo: {},
+        ledgerShell: {},
+      });
       const result = await handlers.get("listApiKeys")!({});
 
-      expect(result.isError).toBe(true);
-      expect(JSON.stringify(result.content)).toContain("ledger.admin");
+      expect(result.isError).not.toBe(true);
+      expect(list).toHaveBeenCalledWith(writeToken);
     });
 
     it("MCP: ledger.admin still reaches an admin operation", async () => {
       const list = jest.fn().mockResolvedValue([]);
       const handlers = captureMcpHandlers(adminToken, realConfig, {
-        apiKey: { list },
+        apiKeyService: { list },
         ledgerRepo: {},
         ledgerShell: {},
       });
@@ -590,7 +656,10 @@ describe("configured enforcement and the shadow-mode compatibility path", () => 
     const middleware = restScopeMiddleware(shadowing, gates);
     const scopeless: Identity = { ...readOnlyToken, scopes: new Set() };
 
-    const enforced = restMounts.filter((mount) => mount.gate === "enforced");
+    const enforced = restMounts.filter(
+      (mount) =>
+        mount.gate === "enforced" && !authorizationActionForOp(mount.opId),
+    );
     // If this is ever empty the test above silently becomes the only one, and
     // v1 could lose its enforcement without anything failing.
     expect(enforced.length).toBeGreaterThan(0);

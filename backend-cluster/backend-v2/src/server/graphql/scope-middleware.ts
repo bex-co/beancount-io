@@ -5,6 +5,7 @@ import {
   gqlOpId,
   type ScopeEnforcementMode,
 } from "@/server/api/op-class";
+import { runWithOperationId } from "@/shared/async-context";
 
 /**
  * The GraphQL half of the op-class gate (ADR 0006 D3).
@@ -32,11 +33,8 @@ export function graphqlScopeMiddleware(
     if (parent !== "Query" && parent !== "Mutation") {
       return next();
     }
-    requireScopeClass(
-      context.identity,
-      gqlOpId(`${parent}.${info.fieldName}`),
-      mode,
-    );
-    return next();
+    const opId = gqlOpId(`${parent}.${info.fieldName}`);
+    requireScopeClass(context.identity, opId, mode);
+    return runWithOperationId(opId, next);
   };
 }

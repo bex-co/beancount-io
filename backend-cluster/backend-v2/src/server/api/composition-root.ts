@@ -12,6 +12,7 @@ import type { ZodTypeAny } from "zod";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { logger } from "@/shared/logger";
+import { runWithOperationId } from "@/shared/async-context";
 
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { restIdentityMiddleware } from "@/server/rest/identity-middleware";
@@ -200,9 +201,9 @@ export const REST_FRAGMENTS: readonly RestFragment[] = [
       setLedgerV1Routes(router, layers, config),
   },
   {
-    // API-key management. Enforced with the rest of v1; the rule that a key
-    // cannot mint a key lives in the service, so it holds on all three
-    // surfaces rather than in this adapter.
+    // API-key management. The transport gate admits authenticated calls to the
+    // shared API-key workflow; its centralized PDP decision (including no key
+    // self-replication) holds on all three surfaces.
     feature: "apikeys",
     gate: "enforced",
     register: (router, { layers, config }) =>
@@ -450,16 +451,18 @@ function makeMcpResourceHandler(
     variables: Record<string, string | string[]>,
   ): Promise<ReadResourceResult> => {
     const opId = mcpResourceOpId(descriptor.name);
-    mcpLogger.info("MCP resource read", {
-      resource: descriptor.name,
-      ledgerId: toolCtx.ledgerId,
-      userId: toolCtx.identity.userId,
+    return runWithOperationId(opId, async () => {
+      mcpLogger.info("MCP resource read", {
+        resource: descriptor.name,
+        ledgerId: toolCtx.ledgerId,
+        userId: toolCtx.identity.userId,
+      });
+      await gateMcpCall(opId, toolCtx, config);
+      const text = await descriptor.read(toolCtx, variables);
+      return {
+        contents: [{ uri: uri.href, mimeType: descriptor.mimeType, text }],
+      };
     });
-    await gateMcpCall(opId, toolCtx, config);
-    const text = await descriptor.read(toolCtx, variables);
-    return {
-      contents: [{ uri: uri.href, mimeType: descriptor.mimeType, text }],
-    };
   };
 }
 
@@ -469,42 +472,49 @@ function makeMcpToolHandler(
   config: AppConfig,
 ) {
   return async (input: never): Promise<CallToolResult> => {
-    mcpLogger.info("MCP tool invoked", {
-      tool: descriptor.name,
-      ledgerId: toolCtx.ledgerId,
-      userId: toolCtx.identity.userId,
-    });
-    try {
-      // MCP's refusal dialect is an `isError` result, not a transport-level
-      // status: the client is an agent mid-conversation, and a thrown HTTP
-      // error would end the session instead of telling it what it lacks. The
-      // catch below turns the ForbiddenError into exactly that.
-      await gateMcpCall(mcpOpId(descriptor.name), toolCtx, config);
-      const result = await descriptor.execute(toolCtx, input);
-      // `runToolSafely` is the tools' error boundary: it turns a throw into the
-      // ordinary-looking value `{ ok: false, error }` and returns it. Without
-      // the flag below, that reaches the client as a *successful* tool result —
-      // so a revoked ledger grant, which every tool re-checks per call through
-      // `authorizeLedger` precisely so revocation bites on the next call, was
-      // announced to the agent as success. `isError` is MCP's dialect for a
-      // failure inside a tool, and it is the one an agent branches on.
-      const failed =
-        typeof result === "object" &&
-        result !== null &&
-        (result as { ok?: unknown }).ok === false;
-      return {
-        ...(failed && { isError: true }),
-        content: [{ type: "text", text: JSON.stringify(result) }],
-        structuredContent: result as Record<string, unknown>,
-      };
-    } catch (err) {
-      const text = err instanceof Error ? err.message : "Tool execution failed";
-      mcpLogger.error("MCP tool execution failed", {
+    const opId = mcpOpId(descriptor.name);
+    return runWithOperationId(opId, async () => {
+      mcpLogger.info("MCP tool invoked", {
         tool: descriptor.name,
-        error: text,
+        ledgerId: toolCtx.ledgerId,
+        userId: toolCtx.identity.userId,
       });
-      return { isError: true, content: [{ type: "text", text }] };
-    }
+      try {
+        // MCP's refusal dialect is an `isError` result, not a transport-level
+        // status: the client is an agent mid-conversation, and a thrown HTTP
+        // error would end the session instead of telling it what it lacks. The
+        // catch below turns the ForbiddenError into exactly that.
+        await gateMcpCall(opId, toolCtx, config);
+        const result = await descriptor.execute(toolCtx, input);
+        // `runToolSafely` is the tools' error boundary: it turns a throw into the
+        // ordinary-looking value `{ ok: false, error }` and returns it. Without
+        // the flag below, that reaches the client as a *successful* tool result —
+        // so a revoked ledger grant, which every tool re-checks per call through
+        // `authorizeLedger` precisely so revocation bites on the next call, was
+        // announced to the agent as success. `isError` is MCP's dialect for a
+        // failure inside a tool, and it is the one an agent branches on.
+        const failed =
+          typeof result === "object" &&
+          result !== null &&
+          (result as { ok?: unknown }).ok === false;
+        return {
+          ...(failed && { isError: true }),
+          content: [{ type: "text" as const, text: JSON.stringify(result) }],
+          structuredContent: result as Record<string, unknown>,
+        };
+      } catch (err) {
+        const text =
+          err instanceof Error ? err.message : "Tool execution failed";
+        mcpLogger.error("MCP tool execution failed", {
+          tool: descriptor.name,
+          error: text,
+        });
+        return {
+          isError: true,
+          content: [{ type: "text" as const, text }],
+        };
+      }
+    });
   };
 }
 

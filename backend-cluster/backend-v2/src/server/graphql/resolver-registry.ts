@@ -124,10 +124,7 @@ export function buildResolverContainer(
       new PlaidMutationResolver(services.plaidItem, services.plaidSync),
     ],
     [AiCfoUsageResolver, new AiCfoUsageResolver(services.aiCfoUsage)],
-    [
-      AccountResolver,
-      new AccountResolver(services.account, services.authorization),
-    ],
+    [AccountResolver, new AccountResolver(services.account)],
     [AuthResolver, new AuthResolver(services.auth)],
     [CliAuthResolver, new CliAuthResolver(services.cliAuth)],
     [UserProfileResolver, new UserProfileResolver(services.userProfile)],

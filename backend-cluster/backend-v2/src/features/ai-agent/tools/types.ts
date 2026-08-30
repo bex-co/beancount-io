@@ -2,6 +2,7 @@ import { z } from "zod";
 import type { ServiceLayer } from "@/foundation/composition";
 import type { ILLMService } from "@/features/llm/service/llm-service";
 import type { ILedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
+import type { IApiKeyService } from "@/features/apikeys/service/api-key-service";
 import type { Identity } from "@/server/api/identity";
 
 /**
@@ -13,7 +14,6 @@ export type ToolServices = Pick<
   ServiceLayer,
   | "ledgerShell"
   | "ledgerRepo"
-  | "apiKey"
   | "ledgerData"
   | "ledgerFinance"
   | "ledgerJournal"
@@ -35,6 +35,7 @@ export interface ToolContext {
   identity: Identity;
   ledgerId: string;
   llmService: ILLMService;
+  apiKeyService: IApiKeyService;
   ledgerReceiptWorkflow: ILedgerReceiptWorkflow;
 }
 

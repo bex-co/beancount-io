@@ -18,8 +18,7 @@ const toolLogger = logger.child({ module: "tool:api-keys" });
  * mixed in the meantime.
  *
  * An agent reaching these holds an OAuth grant, which may mint — an API *key*
- * may not, and the service refuses that on `Identity.method` regardless of
- * which surface asked.
+ * may not, and the shared application service's PDP refuses it on every surface.
  */
 
 const publicKeyShape = z.object({
@@ -56,13 +55,13 @@ export const listApiKeysOutputSchema = toolOutputSchema(
 );
 
 export async function executeListApiKeys(
-  ctx: Pick<ToolContext, "services" | "identity">,
+  ctx: Pick<ToolContext, "apiKeyService" | "identity">,
 ): Promise<z.infer<typeof listApiKeysOutputSchema>> {
   return runToolSafely({
     logger: toolLogger,
     message: "Failed to list API keys",
     execute: async () =>
-      (await ctx.services.apiKey.list(ctx.identity)).map((key) =>
+      (await ctx.apiKeyService.list(ctx.identity)).map((key) =>
         present(toPublicApiKey(key)),
       ),
   });
@@ -94,7 +93,7 @@ export const createApiKeyOutputSchema = toolOutputSchema(
 );
 
 export async function executeCreateApiKey(
-  ctx: Pick<ToolContext, "services" | "identity">,
+  ctx: Pick<ToolContext, "apiKeyService" | "identity">,
   input: { name: string; scopes: string[]; ledger_scope?: string },
 ): Promise<z.infer<typeof createApiKeyOutputSchema>> {
   return runToolSafely({
@@ -104,7 +103,7 @@ export async function executeCreateApiKey(
     // logs its arguments is one schema change away from logging a secret.
     context: { scopes: input.scopes },
     execute: async () => {
-      const minted = await ctx.services.apiKey.mint(ctx.identity, {
+      const minted = await ctx.apiKeyService.mint(ctx.identity, {
         name: input.name,
         scopes: input.scopes,
         ledgerScope: input.ledger_scope,
@@ -129,7 +128,7 @@ export const revokeApiKeyInputSchema = z.object({
 export const revokeApiKeyOutputSchema = toolOutputSchema(publicKeyShape);
 
 export async function executeRevokeApiKey(
-  ctx: Pick<ToolContext, "services" | "identity">,
+  ctx: Pick<ToolContext, "apiKeyService" | "identity">,
   input: { id: string },
 ): Promise<z.infer<typeof revokeApiKeyOutputSchema>> {
   return runToolSafely({
@@ -138,9 +137,7 @@ export async function executeRevokeApiKey(
     context: { keyId: input.id },
     execute: async () =>
       present(
-        toPublicApiKey(
-          await ctx.services.apiKey.revoke(ctx.identity, input.id),
-        ),
+        toPublicApiKey(await ctx.apiKeyService.revoke(ctx.identity, input.id)),
       ),
   });
 }

@@ -11,6 +11,11 @@ import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factor
 import type { IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
 import { SubscriptionTier } from "@/features/stripe/service/stripe";
+import {
+  AUTHORIZATION_ACTIONS,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
+import type { Identity } from "@/server/api/identity";
 
 jest.mock("@/shared/lock");
 jest.mock("@/features/stripe/operations/get-user-tier");
@@ -27,6 +32,16 @@ describe("AccountService", () => {
   let mockStripe: jest.Mocked<IStripeService>;
   let mockFavaClientFactory: jest.Mocked<IFavaClientFactory>;
   let mockPlaidClient: jest.Mocked<IPlaidClient>;
+  let mockAuthorization: jest.Mocked<IAuthorizationService>;
+
+  const identity = (userId: string): Identity => {
+    return {
+      userId,
+      method: "session",
+      scopes: new Set(),
+      capabilityExempt: true,
+    };
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -71,6 +86,15 @@ describe("AccountService", () => {
       removeItem: jest.fn().mockResolvedValue(undefined),
     } as unknown as jest.Mocked<IPlaidClient>;
 
+    mockAuthorization = {
+      authorize: jest.fn(),
+      authorizeOrThrow: jest.fn(async (input) => ({
+        allowed: true as const,
+        action: input.action,
+        resource: input.resource,
+      })),
+    } as jest.Mocked<IAuthorizationService>;
+
     mockModels = {
       user: {
         getByMail: jest.fn(),
@@ -103,6 +127,47 @@ describe("AccountService", () => {
       mockStripe,
       mockFavaClientFactory,
       mockPlaidClient,
+      mockAuthorization,
+    );
+  });
+
+  describe("centralized authorization boundary", () => {
+    it.each([
+      ["profile read", AUTHORIZATION_ACTIONS.USER_PROFILE_READ],
+      ["profile search", AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH],
+      ["username update", AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE],
+      ["profile update", AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE],
+      ["account deletion", AUTHORIZATION_ACTIONS.USER_DELETE],
+    ] as const)(
+      "maps %s to its canonical action before domain work",
+      async (operation, action) => {
+        mockAuthorization.authorizeOrThrow.mockRejectedValueOnce(
+          new Error("denied"),
+        );
+        const principal = identity("user-123");
+        const result =
+          operation === "profile read"
+            ? accountService.getUserProfile(principal, "user-123")
+            : operation === "profile search"
+              ? accountService.findUsersByEmailOrUsername(
+                  principal,
+                  "alice@example.com",
+                  false,
+                )
+              : operation === "username update"
+                ? accountService.updateUsername(principal, "alice")
+                : operation === "profile update"
+                  ? accountService.updateProfile(principal, "Alice", "A")
+                  : accountService.deleteAccount(principal);
+
+        await expect(result).rejects.toThrow("denied");
+        expect(mockAuthorization.authorizeOrThrow).toHaveBeenCalledWith({
+          principal,
+          action,
+          resource: "user:user-123",
+        });
+        expect(mockModels.user.getById).not.toHaveBeenCalled();
+      },
     );
   });
 
@@ -132,7 +197,10 @@ describe("AccountService", () => {
         favaUser: { username: "johndoe", password: "password" },
       });
 
-      const result = await accountService.getUserProfile(userId);
+      const result = await accountService.getUserProfile(
+        identity(userId),
+        userId,
+      );
 
       expect(result).toEqual({
         id: userId,
@@ -178,7 +246,10 @@ describe("AccountService", () => {
         favaUser: { username: "user123", password: "password" },
       });
 
-      const result = await accountService.getUserProfile(userId);
+      const result = await accountService.getUserProfile(
+        identity(userId),
+        userId,
+      );
 
       expect(result).toEqual({
         id: userId,
@@ -222,7 +293,10 @@ describe("AccountService", () => {
         },
       ]);
 
-      const result = await accountService.getUserProfile(userId);
+      const result = await accountService.getUserProfile(
+        identity(userId),
+        userId,
+      );
 
       expect(result!.hasEverSubscribed).toBe(true);
     });
@@ -230,7 +304,10 @@ describe("AccountService", () => {
     it("should return null if user not found", async () => {
       mockModels.user.getById = jest.fn().mockResolvedValue(null);
 
-      const result = await accountService.getUserProfile("nonexistent-user");
+      const result = await accountService.getUserProfile(
+        identity("nonexistent-user"),
+        "nonexistent-user",
+      );
 
       expect(result).toBeNull();
     });
@@ -260,7 +337,10 @@ describe("AccountService", () => {
         favaUser: { username: "johndoe", password: "password" },
       });
 
-      const result = await accountService.getUserProfile(userId);
+      const result = await accountService.getUserProfile(
+        identity(userId),
+        userId,
+      );
 
       expect(result).not.toBeNull();
       expect(result!.limits.ledgersUsed).toBe(0);
@@ -307,7 +387,10 @@ describe("AccountService", () => {
         favaUser: { username: "johndoe", password: "password" },
       });
 
-      const result = await accountService.getUserProfile(userId);
+      const result = await accountService.getUserProfile(
+        identity(userId),
+        userId,
+      );
 
       expect(result!.limits.ledgersUsed).toBe(1);
     });
@@ -333,7 +416,7 @@ describe("AccountService", () => {
         .mockResolvedValue(undefined);
       mockModels.user.deleteByUserId = jest.fn().mockResolvedValue(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(identity(userId));
 
       expect(result).toBe(true);
       expect(mockModels.user.deleteByUserId).toHaveBeenCalledWith(
@@ -346,10 +429,10 @@ describe("AccountService", () => {
       mockModels.user.getById = jest.fn().mockResolvedValue(null);
 
       await expect(
-        accountService.deleteAccount("nonexistent-user"),
+        accountService.deleteAccount(identity("nonexistent-user")),
       ).rejects.toThrow(NotFoundError);
       await expect(
-        accountService.deleteAccount("nonexistent-user"),
+        accountService.deleteAccount(identity("nonexistent-user")),
       ).rejects.toThrow(/not found/);
     });
 
@@ -381,7 +464,7 @@ describe("AccountService", () => {
         .mockResolvedValue(undefined);
       mockModels.user.deleteByUserId = jest.fn().mockResolvedValue(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(identity(userId));
 
       expect(result).toBe(true);
       expect(mockStripe.deleteSubscription).toHaveBeenCalledWith(
@@ -413,12 +496,12 @@ describe("AccountService", () => {
         message: "Payment required",
       });
 
-      await expect(accountService.deleteAccount(userId)).rejects.toThrow(
-        InternalServerError,
-      );
-      await expect(accountService.deleteAccount(userId)).rejects.toThrow(
-        "Payment required",
-      );
+      await expect(
+        accountService.deleteAccount(identity(userId)),
+      ).rejects.toThrow(InternalServerError);
+      await expect(
+        accountService.deleteAccount(identity(userId)),
+      ).rejects.toThrow("Payment required");
     });
 
     it("should skip already canceled subscriptions", async () => {
@@ -457,7 +540,7 @@ describe("AccountService", () => {
         .mockResolvedValue(undefined);
       mockModels.user.deleteByUserId = jest.fn().mockResolvedValue(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(identity(userId));
 
       expect(result).toBe(true);
       expect(mockStripe.deleteSubscription).not.toHaveBeenCalled();
@@ -493,7 +576,7 @@ describe("AccountService", () => {
         .mockResolvedValue(undefined);
       mockModels.user.deleteByUserId = jest.fn().mockResolvedValue(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(identity(userId));
 
       expect(result).toBe(true);
       expect(mockStripe.deleteSubscription).toHaveBeenCalledTimes(1);
@@ -519,7 +602,7 @@ describe("AccountService", () => {
         { id: "pitm_2", accessToken: "encrypted-token-2" },
       ]);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(identity(userId));
 
       expect(result).toBe(true);
       expect(mockPlaidClient.removeItem).toHaveBeenCalledTimes(2);
@@ -548,7 +631,7 @@ describe("AccountService", () => {
         .mockRejectedValueOnce(new Error("Plaid unavailable"))
         .mockResolvedValueOnce(undefined);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(identity(userId));
 
       expect(result).toBe(true);
       expect(mockModels.plaidItem.deleteByUserId).toHaveBeenCalledWith(
@@ -573,7 +656,7 @@ describe("AccountService", () => {
       mockModels.paidCustomer.findByUserId = jest.fn().mockResolvedValue([]);
       mockModels.plaidItem.getByUserId = jest.fn().mockResolvedValue([]);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(identity(userId));
 
       expect(result).toBe(true);
       expect(mockPlaidClient.removeItem).not.toHaveBeenCalled();
@@ -599,7 +682,7 @@ describe("AccountService", () => {
           { id: "pitm_1", accessToken: "encrypted-token-1" },
         ]);
 
-      const result = await accountService.deleteAccount(userId);
+      const result = await accountService.deleteAccount(identity(userId));
 
       expect(result).toBe(true);
       expect(mockStripe.deleteSubscription).not.toHaveBeenCalled();
@@ -624,7 +707,7 @@ describe("AccountService", () => {
         async (_key, callback) => await callback(),
       );
 
-      await accountService.updateUsername(userId, newUsername);
+      await accountService.updateUsername(identity(userId), newUsername);
 
       expect(mockModels.user.updateUsername).toHaveBeenCalledWith(
         expect.any(Object),
@@ -651,7 +734,7 @@ describe("AccountService", () => {
       );
 
       await expect(
-        accountService.updateUsername(userId, "newusername"),
+        accountService.updateUsername(identity(userId), "newusername"),
       ).rejects.toThrow("Database error");
     });
 
@@ -662,10 +745,16 @@ describe("AccountService", () => {
       );
 
       await expect(
-        accountService.updateUsername("nonexistent-user", "newusername"),
+        accountService.updateUsername(
+          identity("nonexistent-user"),
+          "newusername",
+        ),
       ).rejects.toThrow(NotFoundError);
       await expect(
-        accountService.updateUsername("nonexistent-user", "newusername"),
+        accountService.updateUsername(
+          identity("nonexistent-user"),
+          "newusername",
+        ),
       ).rejects.toThrow(/not found/);
     });
 
@@ -693,7 +782,7 @@ describe("AccountService", () => {
       );
 
       await expect(
-        accountService.updateUsername(userId, "takenusername"),
+        accountService.updateUsername(identity(userId), "takenusername"),
       ).rejects.toThrow(ConflictError);
     });
 
@@ -722,7 +811,7 @@ describe("AccountService", () => {
         async (_key, callback) => await callback(),
       );
 
-      await accountService.updateUsername(userId, "sameusername");
+      await accountService.updateUsername(identity(userId), "sameusername");
 
       expect(mockModels.user.updateUsername).toHaveBeenCalledWith(
         expect.any(Object),
@@ -951,9 +1040,13 @@ describe("AccountService", () => {
         updateLastName: jest.fn().mockResolvedValue(undefined),
       };
 
-      const result = await accountService.updateProfile(userId, "John", "Doe");
+      const result = await accountService.updateProfile(
+        identity(userId),
+        "John",
+        "Doe",
+      );
 
-      expect(result).toBe(true);
+      expect(result).not.toBeNull();
       expect(mockModels.user.updateFirstName).toHaveBeenCalledWith(
         expect.any(Object),
         userId,
@@ -970,10 +1063,18 @@ describe("AccountService", () => {
       mockModels.user.getById = jest.fn().mockResolvedValue(null);
 
       await expect(
-        accountService.updateProfile("nonexistent-user", "John", "Doe"),
+        accountService.updateProfile(
+          identity("nonexistent-user"),
+          "John",
+          "Doe",
+        ),
       ).rejects.toThrow(NotFoundError);
       await expect(
-        accountService.updateProfile("nonexistent-user", "John", "Doe"),
+        accountService.updateProfile(
+          identity("nonexistent-user"),
+          "John",
+          "Doe",
+        ),
       ).rejects.toThrow(/not found/);
     });
 
@@ -991,9 +1092,13 @@ describe("AccountService", () => {
         updateLastName: jest.fn().mockResolvedValue(undefined),
       };
 
-      const result = await accountService.updateProfile(userId, "", "");
+      const result = await accountService.updateProfile(
+        identity(userId),
+        "",
+        "",
+      );
 
-      expect(result).toBe(true);
+      expect(result).not.toBeNull();
       expect(mockModels.user.updateFirstName).toHaveBeenCalledWith(
         expect.any(Object),
         userId,

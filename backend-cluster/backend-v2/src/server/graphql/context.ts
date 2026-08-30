@@ -91,7 +91,6 @@ export async function createContext(
     }
     return identity;
   };
-
   const getCurrentUser = async () => {
     const user = await database.models.user.getById(
       database.db,

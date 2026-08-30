@@ -2,11 +2,13 @@ import { ForbiddenError } from "@/shared/errors";
 import type { Identity } from "../identity";
 import {
   VERB_TABLE,
+  authorizationActionForOp,
   classifiedOpIds,
   classifyOp,
   evaluateScope,
   requireScopeClass,
 } from "../op-class";
+import { AUTHORIZATION_ACTIONS } from "../authorization";
 
 /**
  * The enforcement machinery itself. The three drift guards test that the table
@@ -75,6 +77,42 @@ describe("classifyOp", () => {
     expect(classifiedOpIds().length).toBeLessThanOrEqual(expected);
     expect(new Set(classifiedOpIds()).size).toBe(classifiedOpIds().length);
   });
+
+  it("maps every migrated transport alias to one canonical action", () => {
+    expect(
+      [
+        "GQL Query.userProfile",
+        "GQL Query.getUserByExactMatch",
+        "GQL Mutation.updateUsername",
+        "GQL Mutation.updateProfile",
+        "GQL Mutation.deleteAccount",
+        "GQL Query.apiKeys",
+        "REST GET /api-gateway/v1/api-keys",
+        "MCP listApiKeys",
+        "GQL Mutation.createApiKey",
+        "REST POST /api-gateway/v1/api-keys",
+        "MCP createApiKey",
+        "GQL Mutation.revokeApiKey",
+        "REST DELETE /api-gateway/v1/api-keys/{id}",
+        "MCP revokeApiKey",
+      ].map((opId) => authorizationActionForOp(opId)),
+    ).toEqual([
+      AUTHORIZATION_ACTIONS.USER_PROFILE_READ,
+      AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH,
+      AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
+      AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
+      AUTHORIZATION_ACTIONS.USER_DELETE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+    ]);
+  });
 });
 
 describe("evaluateScope", () => {
@@ -124,8 +162,36 @@ describe("evaluateScope", () => {
   it("defers centralized-authz operations without treating a ledger scope as authority", () => {
     const decision = evaluateScope(token(), DELETE_ACCOUNT_OP);
     expect(decision.allowed).toBe(true);
-    expect(decision.opClass).toBe("authz");
-    expect(decision.requiredScope).toBeNull();
+    expect(decision.opClass).toBe("admin");
+    expect(decision.requiredScope).toBe("ledger.admin");
+    expect(decision.authorizationAction).toBe(
+      AUTHORIZATION_ACTIONS.USER_DELETE,
+    );
+  });
+
+  it("classifies migrated account operations by operational risk", () => {
+    expect(
+      [
+        "GQL Query.userProfile",
+        "GQL Query.getUserByExactMatch",
+        "GQL Mutation.updateUsername",
+        "GQL Mutation.updateProfile",
+        "GQL Mutation.deleteAccount",
+      ].map((opId) => classifyOp(opId).class),
+    ).toEqual(["read", "read", "write", "write", "admin"]);
+  });
+
+  it("keeps API-key operations on the admin risk class while deferring policy", () => {
+    const decision = evaluateScope(
+      token("ledger.write"),
+      "MCP revokeApiKey",
+    );
+    expect(decision).toMatchObject({
+      allowed: true,
+      opClass: "admin",
+      requiredScope: "ledger.admin",
+      authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+    });
   });
 
   it("treats an unclassified op as write, and says so", () => {

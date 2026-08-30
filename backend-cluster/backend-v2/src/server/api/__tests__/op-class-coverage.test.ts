@@ -4,7 +4,7 @@ jest.mock("@ai-sdk/harness-acp", () => ({
 }));
 
 import { getMetadataStorage } from "type-graphql";
-import { classifiedOpIds, classifyOp } from "../op-class";
+import { VERB_TABLE, classifiedOpIds, classifyOp } from "../op-class";
 import { ALWAYS_PUBLIC_OP_IDS } from "../always-public";
 import { assembleTestApi } from "./api-surface";
 
@@ -87,7 +87,7 @@ describe("op-class coverage", () => {
     ).toBe(62);
   });
 
-  it("does not give an admin-class resolver a weaker auth decorator", () => {
+  it("does not give a legacy admin resolver a weaker auth decorator", () => {
     const metadata = getMetadataStorage();
     const weaker: string[] = [];
 
@@ -97,12 +97,27 @@ describe("op-class coverage", () => {
     ] as const) {
       for (const resolver of resolvers) {
         const op = `${parent}.${resolver.schemaName}`;
-        if (classifyOp(`GQL ${op}`).class !== "admin") continue;
+        const classification = classifyOp(`GQL ${op}`);
+        if (classification.class !== "admin") continue;
+        // A migrated resolver's final credential and relationship decision is
+        // made by the centralized PDP. Requiring the legacy scope decorator as
+        // well would recreate two policy evaluators for the same operation.
+        if (classification.authorizationAction) continue;
         if (!resolver.roles?.includes("ledger.admin")) weaker.push(op);
       }
     }
 
     expect(weaker).toEqual([]);
+  });
+
+  it("does not encode PDP credential reachability as an operational class", () => {
+    const misleading = VERB_TABLE.filter(
+      (entry) =>
+        entry.authorizationAction &&
+        (entry.class === "session-only" || entry.class === "public"),
+    ).map((entry) => entry.verb);
+
+    expect(misleading).toEqual([]);
   });
 
   it("covers every MCP tool, and budgets tools separately from resources", () => {

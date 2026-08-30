@@ -48,6 +48,7 @@ describe("formatError (GraphQL transport adapter)", () => {
       action: "user.delete",
       resource: "user:usr_alice",
       reason: "relationship_denied",
+      message: "Authorization denied",
     });
     const { formatted, gqlError } = wrap(denial);
 

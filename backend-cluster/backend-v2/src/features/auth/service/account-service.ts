@@ -16,6 +16,12 @@ import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factor
 import type { IPlaidClient } from "@/features/plaid/service/plaid-client";
 import { decryptToken } from "@/features/plaid/utils/encryption";
 import { logger } from "@/shared/logger";
+import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  type IAuthorizationService,
+  userResource,
+} from "@/server/api/authorization";
 
 const accountLogger = logger.child({ module: "account-service" });
 
@@ -26,7 +32,7 @@ type UserLimits = {
   maxDirectives: number;
 };
 
-type UserProfile = {
+export type UserProfile = {
   id: string;
   email: string;
   locale: string;
@@ -41,18 +47,25 @@ type UserProfile = {
 };
 
 export interface IAccountService {
-  getUserProfile(userId: string): Promise<UserProfile | null>;
-  updateUsername(userId: string, username: string): Promise<void>;
+  getUserProfile(
+    identity: Identity,
+    targetUserId: string,
+  ): Promise<UserProfile | null>;
+  updateUsername(
+    identity: Identity,
+    username: string,
+  ): Promise<UserProfile | null>;
   updateEmail(userId: string, email: string): Promise<void>;
   updateProfile(
-    userId: string,
+    identity: Identity,
     firstName: string,
     lastName: string,
-  ): Promise<boolean>;
-  deleteAccount(userId: string): Promise<boolean>;
+  ): Promise<UserProfile | null>;
+  deleteAccount(identity: Identity): Promise<boolean>;
   findUsersByEmailOrUsername(
+    identity: Identity,
     keyword: string,
-    excludeUserId?: string,
+    includeCurrentUser: boolean,
   ): Promise<User[]>;
 }
 
@@ -66,9 +79,22 @@ export class AccountService implements IAccountService {
     private readonly stripe: IStripeService,
     private readonly favaClientFactory: IFavaClientFactory,
     private readonly plaidClient: IPlaidClient,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   public getUserProfile = async (
+    identity: Identity,
+    targetUserId: string,
+  ): Promise<UserProfile | null> => {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_PROFILE_READ,
+      resource: userResource(targetUserId),
+    });
+    return this.loadUserProfile(targetUserId);
+  };
+
+  private loadUserProfile = async (
     userId: string,
   ): Promise<UserProfile | null> => {
     const user = await this.models.user.getById(this.db, userId);
@@ -124,9 +150,15 @@ export class AccountService implements IAccountService {
   };
 
   public updateUsername = async (
-    userId: string,
+    identity: Identity,
     username: string,
-  ): Promise<void> => {
+  ): Promise<UserProfile | null> => {
+    const { userId } = identity;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
+      resource: userResource(userId),
+    });
     const lockKey = LOCK_KEYS.USER.updateUsername(userId);
     await lock.acquire(lockKey, async () => {
       const user = await this.models.user.getById(this.db, userId);
@@ -150,6 +182,7 @@ export class AccountService implements IAccountService {
         });
       });
     });
+    return this.loadUserProfile(userId);
   };
 
   public updateEmail = async (userId: string, email: string): Promise<void> => {
@@ -229,20 +262,32 @@ export class AccountService implements IAccountService {
   };
 
   public updateProfile = async (
-    userId: string,
+    identity: Identity,
     firstName: string,
     lastName: string,
-  ): Promise<boolean> => {
+  ): Promise<UserProfile | null> => {
+    const { userId } = identity;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
+      resource: userResource(userId),
+    });
     const user = await this.models.user.getById(this.db, userId);
     if (!user) {
       throw new NotFoundError("User", userId);
     }
     await this.models.user.updateFirstName(this.db, userId, firstName);
     await this.models.user.updateLastName(this.db, userId, lastName);
-    return true;
+    return this.loadUserProfile(userId);
   };
 
-  public deleteAccount = async (userId: string): Promise<boolean> => {
+  public deleteAccount = async (identity: Identity): Promise<boolean> => {
+    const { userId } = identity;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_DELETE,
+      resource: userResource(userId),
+    });
     const user = await this.models.user.getById(this.db, userId);
     if (!user) {
       throw new NotFoundError("User", userId);
@@ -337,14 +382,21 @@ export class AccountService implements IAccountService {
   };
 
   public findUsersByEmailOrUsername = async (
+    identity: Identity,
     keyword: string,
-    excludeUserId?: string,
+    includeCurrentUser: boolean,
   ): Promise<User[]> => {
+    const { userId } = identity;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH,
+      resource: userResource(userId),
+    });
     const users = await this.models.user.findUserByEmailOrUsername(
       this.db,
       keyword,
     );
-    if (!excludeUserId) return users;
-    return users.filter((u) => u.id !== excludeUserId);
+    if (includeCurrentUser) return users;
+    return users.filter((u) => u.id !== userId);
   };
 }

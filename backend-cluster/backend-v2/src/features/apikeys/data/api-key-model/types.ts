@@ -35,7 +35,12 @@ export interface IApiKeyModel {
   /** A user's keys, newest first, revoked ones included so a list is a full account. */
   listByUserId(db: DbExecutor, userId: string): Promise<ApiKey[]>;
   countLiveByUserId(db: DbExecutor, userId: string, now: Date): Promise<number>;
-  revoke(db: DbExecutor, id: string, revokedAt: Date): Promise<ApiKey | null>;
+  revoke(
+    db: DbExecutor,
+    id: string,
+    ownerUserId: string,
+    revokedAt: Date,
+  ): Promise<ApiKey | null>;
   touchLastUsedAt(db: DbExecutor, id: string, at: Date): Promise<void>;
   deleteByUserId(db: DbExecutor, userId: string): Promise<void>;
 }

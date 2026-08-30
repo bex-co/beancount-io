@@ -42,7 +42,6 @@ export const CLASS_BUDGETS: Record<OpClass, Budget> = {
   read: { windowMs: MINUTE, max: 300 },
   write: { windowMs: MINUTE, max: 60 },
   admin: { windowMs: MINUTE, max: 30 },
-  authz: { windowMs: MINUTE, max: 300 },
   // A class no scope can satisfy is reached by sessions only; the browser is
   // not the abuse vector these budgets are for.
   "session-only": { windowMs: MINUTE, max: 300 },

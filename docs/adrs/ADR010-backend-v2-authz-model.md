@@ -3,7 +3,7 @@
 - Status: Accepted
 - Date: 2026-08-28
 - Decision owners: Backend (`backend-cluster/backend-v2`)
-- Scope: the ledger authorization semantics behind the `authorizeLedger` seam, the declarative model under `backend-cluster/backend-v2/authz/`, where the OpenFGA boundary sits (relationship ceiling in the model, credential ceiling in code), whether and when to adopt an OpenFGA-compatible evaluation engine, and which engine if a trigger fires. Extends ADR 0006 (identity, scopes, op classes). The 2026-08-28 amendment adds the first enforced user-lifecycle slice without deploying an FGA engine.
+- Scope: the ledger authorization semantics behind the `authorizeLedger` seam, the declarative model under `backend-cluster/backend-v2/authz/`, where the OpenFGA boundary sits (relationship ceiling in the model, credential ceiling in code), whether and when to adopt an OpenFGA-compatible evaluation engine, and which engine if a trigger fires. Extends ADR 0006 (identity, scopes, op classes). The amendments add the source-backed centralized PDP for the User domain without deploying an FGA engine.
 
 ## Context
 
@@ -114,6 +114,65 @@ routes authenticated deletion requests to the authorization module; it cannot
 authorize deletion itself. This amendment adds no step-up ceremony, grant,
 Redis state, client contract, or OpenFGA runtime.
 
+## Amendment — 2026-08-29: source-backed PDP for the User domain
+
+The lightweight runtime boundary now covers protected user profile, lifecycle,
+and API-key-management operations. “Centralized” means that one TypeScript PDP
+returns the final decision; it does **not** mean centralizing or copying every
+relationship into another database. Protected Account and API-key application
+service methods call the PDP once before domain reads or side effects, and
+GraphQL/REST/MCP aliases all use those services. There is no authorization-only
+workflow wrapper that another caller could accidentally bypass.
+
+The source-backed evaluator derives exact-self User ownership from the stable
+resolved `users.id`. For API-key revoke it reads the current `api_keys` row,
+resolves the owner to that owner's User credentials permission, and returns the
+same not-found result for missing, blank, and foreign IDs. PostgreSQL and the
+resolved identity remain authoritative. The evaluator stores no tuple, has no
+request-local decision memo or cross-request cache, and receives no contextual
+tuple. Protected service methods receive the resolved identity explicitly.
+GraphQL, REST, and MCP gates propagate the exact transport operation ID for
+audit through isolated AsyncLocalStorage child contexts, so concurrent
+operations cannot overwrite one another. A direct service call outside a
+request audits its canonical action instead. Each authorization call evaluates
+again.
+
+The runtime topology is therefore:
+
+```text
+transport alias → identity/op-class gate → application service
+  → TypeScript PDP (credential ceiling ∩ source-backed relationship ceiling)
+  → existing AccountService / ApiKeyService
+
+model.fga + model.test.fga.yaml → CI conformance specification only
+```
+
+This amendment introduces no OpenFGA service, SDK, database, relationship copy,
+or new dependency. Authentication ceremonies (signup, signin, OTP, OIDC,
+logout), step-up/confirmation state, and non-User business domains stay outside
+this slice. Existing credential behavior is preserved: profile reads keep their
+legacy read ceiling; profile search/update remain session-only; deletion remains
+session-or-OAuth and denies API keys; API-key management keeps the existing
+admin ceiling, while key creation also denies API-key callers. Paid-plan,
+scope-narrowing, ledger-pin, expiry, and secret-handling rules remain domain
+constraints after the PDP decision.
+
+Unknown actions, malformed or action-incompatible resources, insufficient
+credentials, and relationship denials all fail closed. Relationship-source
+failures are not disguised as policy denials: they are logged at error level,
+audited with outcome `error`, and surface as service unavailable. Every denial
+and allowed write/admin call emits an audit event with the exact transport
+operation ID when request-bound, or the canonical action for a direct service
+call, plus the credential ledger pin, without resource arguments or secrets;
+the operation table provides the canonical-action mapping. Audit persistence
+itself remains fail-open.
+
+D5's engine triggers are unchanged. If T1, T2, or T3 fires, the
+`IRelationshipEvaluator` implementation is the replacement seam: adopt the
+pre-decided OpenFGA backend and fail closed when it is unavailable. Until then,
+adding a service and tuple database would duplicate authoritative domain data
+without improving the decision boundary.
+
 ## Follow-up (open)
 
 A **neutral fixture matrix** — rows of (relationship, credential scope, pin, expected read/write/admin) — consumed by both the FGA assertion suite (relationship rows) and a Jest conformance test against the real `authorizeLedger` (all rows, Gitea/Fava dependencies stubbed). Today `fga model test` proves the model agrees with itself, and the same-PR rule is a discipline; the shared fixture is what makes model ↔ implementation agreement machine-checked. The composed two-ceiling truth table lives there, not in the FGA suite.
@@ -121,6 +180,6 @@ A **neutral fixture matrix** — rows of (relationship, credential scope, pin, e
 ## Artifacts
 
 - `backend-cluster/backend-v2/authz/model.fga` — the relationship-ceiling model (D1, D3).
-- `backend-cluster/backend-v2/authz/model.test.fga.yaml` — 9 scenarios / 30 checks: rank per relationship, wildcard public access, fail-closed no-relation rows, union monotonicity.
+- `backend-cluster/backend-v2/authz/model.test.fga.yaml` — truth-table scenarios for exact-self User permissions, rank per ledger relationship, wildcard public access, fail-closed no-relation rows, and union monotonicity.
 - `backend-cluster/backend-v2/authz/README.md` — boundary rationale, implementation mapping, tuple derivation, adoption invariants.
 - `.github/workflows/ci-authz-model.yml` — pinned-CLI validation on every change under `authz/`.

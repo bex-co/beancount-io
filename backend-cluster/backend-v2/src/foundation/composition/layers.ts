@@ -32,7 +32,6 @@ import { type IUserProfileService } from "@/features/gitea/user-profile/service/
 import { type IPullRequestService } from "@/features/gitea/pull-request/service/pull-request-service";
 import { type IFeedService } from "@/features/gitea/feed/service/feed-service";
 import { type ICommitsService } from "@/features/gitea/commits/service/commits-service";
-import { type IAuthorizationService } from "@/server/api/authorization";
 
 /**
  * Composition-root layers. Each layer is a narrow interface describing what the
@@ -62,8 +61,10 @@ export interface ClientFactoryLayer {
 }
 
 /**
- * Layer 3 — Services (single-concern business units). Depend on Database +
- * ClientFactory, never on a sibling Service.
+ * Layer 3 — Services (single-concern business/application units). Depend on
+ * Database + ClientFactory; protected application services may additionally
+ * depend on the centralized authorization PDP assembled at the composition
+ * root, never on an arbitrary sibling Service.
  */
 export interface ServiceLayer {
   stripe: IStripeService;
@@ -90,7 +91,6 @@ export interface ServiceLayer {
   pullRequest: IPullRequestService;
   feed: IFeedService;
   commits: ICommitsService;
-  authorization: IAuthorizationService;
 }
 
 /** Layer 4 — Workflows (cross-service orchestration; own transaction boundaries). */

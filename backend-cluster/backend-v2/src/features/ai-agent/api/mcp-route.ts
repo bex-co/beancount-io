@@ -118,7 +118,6 @@ async function handleMcpRequest(
     services: {
       ledgerShell: layers.services.ledgerShell,
       ledgerRepo: layers.services.ledgerRepo,
-      apiKey: layers.services.apiKey,
       ledgerData: layers.services.ledgerData,
       ledgerFinance: layers.services.ledgerFinance,
       ledgerJournal: layers.services.ledgerJournal,
@@ -129,6 +128,7 @@ async function handleMcpRequest(
     identity,
     ledgerId,
     llmService: layers.services.llm,
+    apiKeyService: layers.services.apiKey,
     ledgerReceiptWorkflow: layers.workflows.ledgerReceipt,
   };
 

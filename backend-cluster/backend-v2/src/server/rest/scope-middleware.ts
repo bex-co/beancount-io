@@ -3,6 +3,7 @@ import type { AppConfig } from "@/config/config";
 import { identityFromState } from "./identity-middleware";
 import { requireScopeClass } from "@/server/api/op-class";
 import { requestOpId } from "@/server/api/rest-op-id";
+import { runWithOperationId } from "@/shared/async-context";
 // Type-only, so the composition root can keep importing this module without a
 // runtime cycle.
 import type { ApiGate } from "@/server/api/composition-root";
@@ -45,7 +46,11 @@ export function restScopeMiddleware(
         gate === "enforced" ? "enforce" : config.api.scopeEnforcement,
       );
     }
-    await next();
+    if (opId) {
+      await runWithOperationId(opId, next);
+    } else {
+      await next();
+    }
   };
 }
 

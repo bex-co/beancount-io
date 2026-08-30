@@ -1,6 +1,6 @@
 import { type DbExecutor } from "@/drizzle/drizzle";
 
-export type AuditOutcome = "allowed" | "denied" | "shadow-denied";
+export type AuditOutcome = "allowed" | "denied" | "shadow-denied" | "error";
 
 /**
  * One audit record.

@@ -19,9 +19,9 @@ import {
 /**
  * Key management over REST — the surface the keys are mostly *for*.
  *
- * A CLI or CI job that already holds a key still cannot mint another one: the
- * service refuses on `Identity.method`, not these adapters, so the rule holds
- * identically on GraphQL and MCP.
+ * Every handler delegates to the shared application service, so the same
+ * centralized PDP decision and no-self-replication rule hold on GraphQL and
+ * MCP too.
  */
 export const API_KEY_V1_ROUTES: readonly V1Route<never, never, never>[] = [
   v1Route({

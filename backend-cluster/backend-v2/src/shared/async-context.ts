@@ -17,6 +17,12 @@ export interface RequestContext {
   userId?: string;
 
   /**
+   * Stable transport operation ID for logs and audit events. This is
+   * observability metadata, never an authorization input.
+   */
+  operationId?: string;
+
+  /**
    * Additional contextual data that can be added during request processing
    */
   [key: string]: unknown;
@@ -69,6 +75,29 @@ export function getRequestId(): string | undefined {
  */
 export function getUserId(): string | undefined {
   return asyncContext.getStore()?.userId;
+}
+
+/** Get the operation currently executing within this request, if any. */
+export function getOperationId(): string | undefined {
+  return asyncContext.getStore()?.operationId;
+}
+
+/**
+ * Run one transport operation in an isolated child context.
+ *
+ * GraphQL root fields and MCP batch entries may execute concurrently inside
+ * one request. Cloning the parent store prevents one operation ID from
+ * overwriting a sibling's. Outside a request context (for example, a direct
+ * service call in a job or unit test), the callback runs unchanged and callers
+ * can fall back to their canonical domain action.
+ */
+export function runWithOperationId<T>(
+  operationId: string,
+  callback: () => T,
+): T {
+  const current = asyncContext.getStore();
+  if (!current) return callback();
+  return asyncContext.run({ ...current, operationId }, callback);
 }
 
 /**
