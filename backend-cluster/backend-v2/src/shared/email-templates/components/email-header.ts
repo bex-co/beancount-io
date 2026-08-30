@@ -1,15 +1,19 @@
 import { escapeHtml } from "../utils/url-validator";
+import { EMAIL_THEME } from "./email-theme";
 
 /**
  * Shared email header component for Beancount.io
  */
 export function renderEmailHeader(productName: string): string {
-  // Escape product name to prevent XSS
   const safeProductName = escapeHtml(productName);
+  const { light } = EMAIL_THEME;
 
   return `
-    <div style="background: #ffffff; padding: 35px 30px; text-align: center; border-radius: 12px 12px 0 0; border-bottom: 2px solid #e5e7eb;">
-      <h1 style="color: #1a1a1a; margin: 0; font-size: 26px; font-weight: 700; letter-spacing: -0.5px;">${safeProductName}</h1>
-    </div>
+    <tr>
+      <td class="email-header" style="background-color: ${light.card}; padding: 30px 40px; text-align: center; border-bottom: 1px solid ${light.border};">
+        <h1 class="email-brand" style="color: ${light.foreground}; margin: 0; font-size: 26px; line-height: 1.25; font-weight: 700; letter-spacing: -0.5px;">${safeProductName}</h1>
+        <div class="email-brand-mark" aria-hidden="true" style="width: 40px; height: 3px; margin: 12px auto 0; background-color: ${light.primary}; border-radius: 999px;"></div>
+      </td>
+    </tr>
   `;
 }

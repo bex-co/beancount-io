@@ -1,4 +1,5 @@
 import { renderEmailWrapper } from "../components/email-wrapper";
+import { EMAIL_STYLES } from "../components/email-theme";
 import { validateEmailUrl } from "../utils/url-validator";
 
 export interface PasswordResetParams {
@@ -6,40 +7,41 @@ export interface PasswordResetParams {
 }
 
 export function renderPasswordResetHtml(params: PasswordResetParams): string {
-  // Validate URLs to prevent XSS attacks
   const resetLink = validateEmailUrl(params.resetLink);
 
   const content = `
-    <h2 style="margin-top: 0; color: #1e293b;">Reset Your Password</h2>
+    <h2 class="email-heading" style="${EMAIL_STYLES.heading}">Reset Your Password</h2>
 
-    <p style="margin-bottom: 16px; font-size: 16px;">
+    <p class="email-body-copy" style="${EMAIL_STYLES.paragraph}">
       Hi, we've received a request to reset your password. If you didn't make the request, just ignore this message.
     </p>
 
-    <p style="margin-bottom: 16px; font-size: 16px;">
+    <p class="email-body-copy" style="${EMAIL_STYLES.paragraph}">
       Otherwise, you can reset your password using the button below:
     </p>
 
-    <div style="text-align: center; margin: 30px 0;">
-      <a href="${resetLink}" style="background-color: #2563eb; color: white; padding: 12px 24px; text-decoration: none; border-radius: 6px; font-weight: 600; display: inline-block;">
-        Reset Password
-      </a>
-    </div>
+    <table role="presentation" class="email-action-row" width="100%" cellpadding="0" cellspacing="0" border="0" style="${EMAIL_STYLES.actionRow}">
+      <tr>
+        <td align="center">
+          <a class="email-action" href="${resetLink}" style="${EMAIL_STYLES.primaryAction}">Reset Password</a>
+        </td>
+      </tr>
+    </table>
 
-    <div style="background: white; border: 1px solid #e2e8f0; border-radius: 6px; padding: 20px; margin: 20px 0;">
-      <p style="margin: 0 0 12px 0; color: #1e293b; font-size: 14px; font-weight: 600;">
+    <div class="email-callout" style="${EMAIL_STYLES.callout}">
+      <p class="email-callout-title" style="${EMAIL_STYLES.calloutTitle}">
         Security Note
       </p>
-      <p style="margin: 0; color: #64748b; font-size: 14px;">
+      <p class="email-muted" style="margin: 0; ${EMAIL_STYLES.mutedText}">
         This link will expire in 24 hours. Don't share this link with anyone.
       </p>
     </div>
 
-    <p style="margin-bottom: 16px; color: #64748b; font-size: 15px;">
+    <p class="email-muted" style="margin: 0 0 10px; ${EMAIL_STYLES.mutedText} font-size: 15px;">
       If the button doesn't work, copy and paste this link into your browser:
     </p>
 
-    <p style="margin-bottom: 16px; color: #64748b; font-size: 13px; word-break: break-all;">
+    <p class="email-muted email-breakable" style="${EMAIL_STYLES.breakableUrl}">
       ${resetLink}
     </p>
   `;

@@ -1,4 +1,5 @@
 import { renderEmailWrapper, type EmailWrapperParams } from "../email-wrapper";
+import { EMAIL_THEME } from "../email-theme";
 
 describe("Email Wrapper", () => {
   const defaultParams: EmailWrapperParams = {
@@ -31,7 +32,12 @@ describe("Email Wrapper", () => {
     it("should include responsive styles for mobile", () => {
       const html = renderEmailWrapper(defaultParams);
       expect(html).toContain("@media only screen and (max-width: 600px)");
-      expect(html).toContain(".email-content { padding: 20px !important; }");
+      expect(html).toContain(
+        ".email-content { padding: 28px 20px !important; }",
+      );
+      expect(html).toContain(
+        ".email-action { display: block !important; width: 100% !important; }",
+      );
     });
 
     it("should include email-body styles", () => {
@@ -44,7 +50,25 @@ describe("Email Wrapper", () => {
     it("should include email-content wrapper", () => {
       const html = renderEmailWrapper(defaultParams);
       expect(html).toContain('class="email-content"');
-      expect(html).toContain("background: #ffffff");
+      expect(html).toContain(`background-color: ${EMAIL_THEME.light.card}`);
+    });
+
+    it("should include supported-client dark mode metadata and roles", () => {
+      const html = renderEmailWrapper(defaultParams);
+      expect(html).toContain('<meta name="color-scheme" content="light dark">');
+      expect(html).toContain("@media (prefers-color-scheme: dark)");
+      expect(html).toContain("[data-ogsc] .email-card");
+      expect(html).toContain(EMAIL_THEME.dark.primary);
+    });
+
+    it("should keep legible inline light fallbacks without embedded CSS", () => {
+      const html = renderEmailWrapper(defaultParams).replace(
+        /<style>[\s\S]*?<\/style>/,
+        "",
+      );
+      expect(html).toContain(`background-color: ${EMAIL_THEME.light.canvas}`);
+      expect(html).toContain(`background-color: ${EMAIL_THEME.light.card}`);
+      expect(html).toContain(`color: ${EMAIL_THEME.light.foreground}`);
     });
   });
 
@@ -169,8 +193,7 @@ describe("Email Wrapper", () => {
       const html = renderEmailWrapper(defaultParams);
       // Email HTML should use inline styles
       expect(html).toContain("style=");
-      // Should not use class-based styling for content (except container classes)
-      expect(html.match(/background:/g)?.length).toBeGreaterThan(1);
+      expect(html.match(/background-color:/g)?.length).toBeGreaterThan(3);
     });
 
     it("should be trimmed (no leading/trailing whitespace)", () => {

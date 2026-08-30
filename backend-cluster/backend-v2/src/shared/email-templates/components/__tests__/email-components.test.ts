@@ -1,5 +1,6 @@
 import { renderEmailHeader } from "../email-header";
 import { renderEmailFooter, type EmailFooterParams } from "../email-footer";
+import { EMAIL_THEME } from "../email-theme";
 
 describe("Email Components", () => {
   describe("renderEmailHeader", () => {
@@ -14,7 +15,8 @@ describe("Email Components", () => {
       const html = renderEmailHeader("Test Product");
       expect(html).toContain("text-align: center");
       expect(html).toContain("font-weight: 700");
-      expect(html).toContain("background: #ffffff");
+      expect(html).toContain(`background-color: ${EMAIL_THEME.light.card}`);
+      expect(html).toContain(`background-color: ${EMAIL_THEME.light.primary}`);
     });
 
     it("should escape HTML in product name", () => {
@@ -92,8 +94,8 @@ describe("Email Components", () => {
     it("should apply correct styles", () => {
       const html = renderEmailFooter();
       expect(html).toContain("text-align: center");
-      expect(html).toContain("background: #f8f9fa");
-      expect(html).toContain("color: #6b7280");
+      expect(html).toContain(`background-color: ${EMAIL_THEME.light.muted}`);
+      expect(html).toContain(`color: ${EMAIL_THEME.light.mutedForeground}`);
     });
   });
 });

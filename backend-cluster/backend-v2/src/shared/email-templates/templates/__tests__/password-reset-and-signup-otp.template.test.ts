@@ -39,6 +39,15 @@ describe("Password Reset Email Template", () => {
       expect(linkCount).toBeGreaterThanOrEqual(2); // Button + plain text
     });
 
+    it("should make unusually long fallback links wrap on narrow layouts", () => {
+      const html = renderPasswordResetHtml({
+        resetLink: `https://dashboard.beancount.io/reset?token=${"a".repeat(500)}`,
+      });
+      expect(html).toContain('class="email-muted email-breakable"');
+      expect(html).toContain("word-break: break-all");
+      expect(html).toContain("overflow-wrap: anywhere");
+    });
+
     it("should include security note", () => {
       const html = renderPasswordResetHtml(validParams);
       expect(html).toContain("Security Note");
@@ -129,9 +138,10 @@ describe("Signup OTP Email Template", () => {
 
     it("should style OTP with monospace font", () => {
       const html = renderSignupOtpHtml(validParams);
-      expect(html).toContain("font-family: monospace");
+      expect(html).toContain("font-family: ui-monospace");
       expect(html).toContain("font-size: 32px");
       expect(html).toContain("letter-spacing: 8px");
+      expect(html).toContain("white-space: nowrap");
     });
 
     it("should render complete HTML document", () => {
@@ -148,6 +158,7 @@ describe("Signup OTP Email Template", () => {
     it("should handle 4-digit OTP", () => {
       const html = renderSignupOtpHtml({ otp: "1234" });
       expect(html).toContain("1234");
+      expect(html).toContain('class="email-code-value"');
     });
   });
 

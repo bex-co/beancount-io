@@ -3,6 +3,7 @@ import {
   renderWelcomeText,
   type WelcomeParams,
 } from "../welcome.template";
+import { EMAIL_THEME } from "../../components/email-theme";
 
 describe("Welcome Email Template", () => {
   const validParams: WelcomeParams = {
@@ -96,16 +97,19 @@ describe("Welcome Email Template", () => {
 
       it("should apply proper styling to links", () => {
         const html = renderWelcomeHtml(validParams);
-        expect(html).toContain("color: #2563eb");
-        expect(html).toContain("text-decoration: none");
+        expect(html).toContain(`color: ${EMAIL_THEME.light.primary}`);
+        expect(html).toContain('class="email-link"');
+        expect(html).toContain("text-decoration: underline");
         expect(html).toContain("font-weight: 600");
       });
 
       it("should include a prominent CTA button", () => {
         const html = renderWelcomeHtml(validParams);
         expect(html).toContain("display: inline-block");
-        expect(html).toContain("background: #2563eb");
-        expect(html).toContain("color: #ffffff");
+        expect(html).toContain(
+          `background-color: ${EMAIL_THEME.light.primary}`,
+        );
+        expect(html).toContain(`color: ${EMAIL_THEME.light.primaryForeground}`);
         expect(html).toContain("border-radius: 8px");
       });
 

@@ -12,3 +12,4 @@
 - [x] **m6** — Native sign-up lands on registration; welcome screen loses the browser explainer (9 tasks) ← from `/pm-brainstorm` 2026-08-27 (mobile sign-up reproduced broken against the hosted service)
 - [ ] **m7** — First-party sign-in without a consent screen (8 tasks) ← from `/pm-brainstorm` 2026-08-27 — sequenced after m6 (both edit the dashboard mobile interaction page)
 - [x] **m8** — Awesome Plain Text Accounting decision tool (8 tasks) ← from `w1/004` product review (2026-08-29)
+- [x] **m9** — Email templates match the dashboard theme and visual language (8 tasks) ← from `/pm` request to polish email styling (2026-08-29)
