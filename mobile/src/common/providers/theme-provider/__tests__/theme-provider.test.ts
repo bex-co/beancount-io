@@ -1,3 +1,7 @@
+import fs from "fs";
+import path from "path";
+import { nativeColorSchemeForTheme } from "../../../theme/palette";
+
 describe("ThemeProvider", () => {
   // Helper function to simulate theme resolution logic
   function resolveTheme(
@@ -88,6 +92,29 @@ describe("ThemeProvider", () => {
     it("should respect system setting and follow system theme", () => {
       const effectiveTheme = resolveTheme("system", "dark");
       expect(effectiveTheme).toBe("dark");
+    });
+  });
+
+  describe("native appearance synchronization", () => {
+    it("forces explicit app themes onto native controls", () => {
+      expect(nativeColorSchemeForTheme("light")).toBe("light");
+      expect(nativeColorSchemeForTheme("dark")).toBe("dark");
+    });
+
+    it("removes the app override when following the system", () => {
+      expect(nativeColorSchemeForTheme("system")).toBe("unspecified");
+    });
+
+    it("provides the resolved theme to Expo Router navigation", () => {
+      const provider = fs.readFileSync(
+        path.join(__dirname, "..", "theme-provider.tsx"),
+        "utf8",
+      );
+
+      expect(provider.includes("<NavigationThemeProvider")).toBe(true);
+      expect(
+        provider.includes("Appearance.setColorScheme(nativeColorScheme)"),
+      ).toBe(true);
     });
   });
 

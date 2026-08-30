@@ -55,6 +55,7 @@ export {
 export {
   themes,
   effectiveThemeName,
+  nativeColorSchemeForTheme,
   type ThemeName,
   type ThemeSetting,
 } from "./palette";

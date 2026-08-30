@@ -32,6 +32,17 @@ export function effectiveThemeName(
 }
 
 /**
+ * The app theme also has to reach UIKit/Android native controls. `unspecified`
+ * removes React Native's app-level override so the OS remains authoritative in
+ * system mode; explicit choices override only this app, never the device.
+ */
+export function nativeColorSchemeForTheme(
+  setting: ThemeSetting,
+): ThemeName | "unspecified" {
+  return setting === "system" ? "unspecified" : setting;
+}
+
+/**
  * Brand palette — https://beancount.io/brand-assets.
  *
  * Built directly from the official swatches (Brand Green #5FC535, Deep Green
