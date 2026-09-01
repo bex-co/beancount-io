@@ -89,7 +89,7 @@ export class LedgerCollaboratorsQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<CollaboratorUser[]> {
     return this.collaboratorsWorkflow.listCollaborators({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
       page,
       limit,
@@ -103,7 +103,7 @@ export class LedgerCollaboratorsQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<LedgerCollaborator> {
     return this.collaboratorsWorkflow.getCollaboratorPermission({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
       collaborator,
     });

@@ -142,6 +142,7 @@ export function buildServiceLayer(input: {
     ),
     ledgerPublicKey: new LedgerPublicKeyService(
       input.clients.favaClientFactory,
+      authorization,
     ),
     ledgerRepo: new LedgerRepoService(
       input.clients.favaClientFactory,
@@ -224,6 +225,7 @@ export function buildWorkflowLayer(input: {
     input.services.stripe,
     input.database.models,
     input.database.db,
+    input.services.authorization,
   );
   const ledgerReceipt = new LedgerReceiptWorkflow(
     input.clients.favaClientFactory,

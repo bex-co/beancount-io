@@ -12,6 +12,12 @@ import { parseLedgerId } from "@/shared/str";
 import { InternalServerError } from "@/shared/errors";
 import { UserPublic } from "@/foundation/fava";
 import { logger } from "@/shared/logger";
+import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  ledgerResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 
 const moduleLogger = logger.child({ module: "ledger-collaborators-workflow" });
 
@@ -44,33 +50,33 @@ export type CollaboratorPermissionData = {
 
 export interface ILedgerCollaboratorsWorkflow {
   addOrUpdateCollaborator(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     collaborator: string;
     permission?: "read" | "write" | "admin";
   }): Promise<{ success: boolean; message?: string }>;
 
   deleteCollaborator(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     collaborator: string;
   }): Promise<{ success: boolean; message?: string }>;
 
   listCollaborators(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     page?: number;
     limit?: number;
   }): Promise<CollaboratorData[]>;
 
   getCollaboratorPermission(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     collaborator: string;
   }): Promise<CollaboratorPermissionData>;
 
   leaveLedger(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
   }): Promise<{ success: boolean; message?: string }>;
 }
@@ -81,15 +87,22 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
     private readonly stripe: IStripeService,
     private readonly models: Pick<IModels, "paidCustomer">,
     private readonly db: DbExecutor,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   async addOrUpdateCollaborator(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     collaborator: string;
     permission?: "read" | "write" | "admin";
   }): Promise<{ success: boolean; message?: string }> {
-    const { userId, ledgerId, collaborator, permission } = params;
+    const { identity, ledgerId, collaborator, permission } = params;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -147,11 +160,17 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
   }
 
   async deleteCollaborator(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     collaborator: string;
   }): Promise<{ success: boolean; message?: string }> {
-    const { userId, ledgerId, collaborator } = params;
+    const { identity, ledgerId, collaborator } = params;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -172,12 +191,18 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
   }
 
   async listCollaborators(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     page?: number;
     limit?: number;
   }): Promise<CollaboratorData[]> {
-    const { userId, ledgerId, page = 1, limit = 10 } = params;
+    const { identity, ledgerId, page = 1, limit = 10 } = params;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LIST,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -243,11 +268,17 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
   }
 
   async getCollaboratorPermission(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     collaborator: string;
   }): Promise<CollaboratorPermissionData> {
-    const { userId, ledgerId, collaborator } = params;
+    const { identity, ledgerId, collaborator } = params;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -285,10 +316,16 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
   }
 
   async leaveLedger(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
   }): Promise<{ success: boolean; message?: string }> {
-    const { userId, ledgerId } = params;
+    const { identity, ledgerId } = params;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     const { favaUser } = await this.favaClientFactory.getApiContext(userId);
     const favaAdminApiClient = this.favaClientFactory.getAdminClient();
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);

@@ -69,7 +69,7 @@ export class LedgerCollaboratorsMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<AddCollaboratorResponse> {
     return this.collaboratorsWorkflow.addOrUpdateCollaborator({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
       collaborator,
       permission,
@@ -83,7 +83,7 @@ export class LedgerCollaboratorsMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<DeleteCollaboratorResponse> {
     return this.collaboratorsWorkflow.deleteCollaborator({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
       collaborator,
     });
@@ -96,7 +96,7 @@ export class LedgerCollaboratorsMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<DeleteCollaboratorResponse> {
     return this.collaboratorsWorkflow.leaveLedger({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
     });
   }

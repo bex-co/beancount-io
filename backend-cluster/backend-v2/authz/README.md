@@ -125,6 +125,9 @@ user.billing:write
 user.lifecycle:write
 user.social:read
 user.social:write
+user.ledgers:write
+user.public_keys:read
+user.public_keys:write
 
 ledger.contents:read
 ledger.contents:write
@@ -161,27 +164,39 @@ An action is a stable, transport-independent business verb. `op-class.ts`
 records GraphQL/REST/MCP aliases, while each executable requirement lives once
 beside `AuthorizationService`:
 
-| Canonical action                    | Transport aliases                              | Preserved credential ceiling                         | Relationship requirement                   |
-| ----------------------------------- | ---------------------------------------------- | ---------------------------------------------------- | ------------------------------------------ |
-| `user.profile.read`                 | `GQL Query.userProfile`                        | session, or OAuth/API key with `ledger.read`         | `user#can_read_profile`                    |
-| `user.profile.search`               | `GQL Query.getUserByExactMatch`                | browser session only                                 | exact-self `user#can_read_profile`         |
-| `user.profile.update`               | `GQL Mutation.updateUsername`, `updateProfile` | browser session only                                 | exact-self `user#can_write_profile`        |
-| `user.delete`                       | `GQL Mutation.deleteAccount`                   | browser session or OAuth                             | exact-self `user#can_write_lifecycle`      |
-| `user.credentials.list`             | GraphQL/REST/MCP API-key list                  | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_credentials`     |
-| `user.credentials.create`           | GraphQL/REST/MCP API-key create                | session, or OAuth with `ledger.admin`; never API key | exact-self `user#can_write_credentials`    |
-| `user.credentials.revoke`           | GraphQL/REST/MCP API-key revoke                | session, or OAuth/API key with `ledger.admin`        | key owner has `user#can_write_credentials` |
-| `user.billing.status.read`          | `GQL Query.subscriptionStatus`                 | browser session only                                 | exact-self `user#can_read_billing`         |
-| `user.billing.checkout.create`      | `GQL Mutation.createSubscriptionSession`       | browser session only                                 | exact-self `user#can_write_billing`        |
-| `user.billing.portal.create`        | `GQL Mutation.createStripePortalSession`       | browser session only                                 | exact-self `user#can_write_billing`        |
-| `user.billing.subscription.cancel`  | `GQL Mutation.cancelSubscription`              | browser session only                                 | exact-self `user#can_write_billing`        |
-| `user.billing.subscription.resume`  | `GQL Mutation.resumeSubscription`              | browser session only                                 | exact-self `user#can_write_billing`        |
-| `user.billing.subscription.upgrade` | `GQL Mutation.upgradeSubscription`             | browser session only                                 | exact-self `user#can_write_billing`        |
-| `user.social.feed.read`             | `GQL Query.getFeed`                            | browser session only                                 | exact-self `user#can_read_social`          |
-| `user.social.follow.create`         | `GQL Mutation.followUser`                      | browser session only                                 | exact-self `user#can_write_social`         |
-| `user.social.follow.delete`         | `GQL Mutation.unfollowUser`                    | browser session only                                 | exact-self `user#can_write_social`         |
-| `ledger.social.star.status.read`    | authenticated `Ledger.isStarred`               | session, or OAuth/API key with `ledger.read`         | current `ledger#can_read_contents`         |
-| `ledger.social.star.create`         | `GQL Mutation.starLedger`                      | session, or OAuth/API key with `ledger.write`        | current `ledger#can_read_contents`         |
-| `ledger.social.star.delete`         | `GQL Mutation.unstarLedger`                    | session, or OAuth/API key with `ledger.write`        | current `ledger#can_read_contents`         |
+| Canonical action                       | Transport aliases                              | Preserved credential ceiling                         | Relationship requirement                         |
+| -------------------------------------- | ---------------------------------------------- | ---------------------------------------------------- | ------------------------------------------------ |
+| `user.profile.read`                    | `GQL Query.userProfile`                        | session, or OAuth/API key with `ledger.read`         | `user#can_read_profile`                          |
+| `user.profile.search`                  | `GQL Query.getUserByExactMatch`                | browser session only                                 | exact-self `user#can_read_profile`               |
+| `user.profile.update`                  | `GQL Mutation.updateUsername`, `updateProfile` | browser session only                                 | exact-self `user#can_write_profile`              |
+| `user.delete`                          | `GQL Mutation.deleteAccount`                   | browser session or OAuth                             | exact-self `user#can_write_lifecycle`            |
+| `user.credentials.list`                | GraphQL/REST/MCP API-key list                  | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_credentials`           |
+| `user.credentials.create`              | GraphQL/REST/MCP API-key create                | session, or OAuth with `ledger.admin`; never API key | exact-self `user#can_write_credentials`          |
+| `user.credentials.revoke`              | GraphQL/REST/MCP API-key revoke                | session, or OAuth/API key with `ledger.admin`        | key owner has `user#can_write_credentials`       |
+| `user.billing.status.read`             | `GQL Query.subscriptionStatus`                 | browser session only                                 | exact-self `user#can_read_billing`               |
+| `user.billing.checkout.create`         | `GQL Mutation.createSubscriptionSession`       | browser session only                                 | exact-self `user#can_write_billing`              |
+| `user.billing.portal.create`           | `GQL Mutation.createStripePortalSession`       | browser session only                                 | exact-self `user#can_write_billing`              |
+| `user.billing.subscription.cancel`     | `GQL Mutation.cancelSubscription`              | browser session only                                 | exact-self `user#can_write_billing`              |
+| `user.billing.subscription.resume`     | `GQL Mutation.resumeSubscription`              | browser session only                                 | exact-self `user#can_write_billing`              |
+| `user.billing.subscription.upgrade`    | `GQL Mutation.upgradeSubscription`             | browser session only                                 | exact-self `user#can_write_billing`              |
+| `user.social.feed.read`                | `GQL Query.getFeed`                            | browser session only                                 | exact-self `user#can_read_social`                |
+| `user.social.follow.create`            | `GQL Mutation.followUser`                      | browser session only                                 | exact-self `user#can_write_social`               |
+| `user.social.follow.delete`            | `GQL Mutation.unfollowUser`                    | browser session only                                 | exact-self `user#can_write_social`               |
+| `ledger.social.star.status.read`       | authenticated `Ledger.isStarred`               | session, or OAuth/API key with `ledger.read`         | current `ledger#can_read_contents`               |
+| `ledger.social.star.create`            | `GQL Mutation.starLedger`                      | session, or OAuth/API key with `ledger.write`        | current `ledger#can_read_contents`               |
+| `ledger.social.star.delete`            | `GQL Mutation.unstarLedger`                    | session, or OAuth/API key with `ledger.write`        | current `ledger#can_read_contents`               |
+| `ledger.create`                        | `GQL Mutation.createLedger`                    | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_write_ledgers`              |
+| `ledger.administration.update`         | `GQL Mutation.updateLedger`                    | session, or OAuth/API key with `ledger.admin`        | current `ledger#can_write_administration`        |
+| `ledger.administration.delete`         | `GQL Mutation.deleteLedger`                    | session, or OAuth/API key with `ledger.admin`        | current `ledger#can_write_administration`        |
+| `ledger.collaborators.list`            | `GQL Query.listLedgerCollaborators`            | session, or OAuth/API key with `ledger.admin`        | current `ledger#can_read_collaborators`          |
+| `ledger.collaborators.permission.read` | `GQL Query.getLedgerCollaboratorPermission`    | session, or OAuth/API key with `ledger.admin`        | current `ledger#can_read_collaborators`          |
+| `ledger.collaborators.update`          | `GQL Mutation.addOrUpdateLedgerCollaborator`   | session, or OAuth/API key with `ledger.admin`        | current `ledger#can_write_collaborators`         |
+| `ledger.collaborators.delete`          | `GQL Mutation.deleteLedgerCollaborator`        | session, or OAuth/API key with `ledger.admin`        | current `ledger#can_write_collaborators`         |
+| `ledger.collaborators.leave`           | `GQL Mutation.leaveLedger`                     | session, or OAuth/API key with `ledger.admin`        | current explicit collaborator `ledger#can_leave` |
+| `user.public_keys.list`                | `GQL Query.listPublicKeys`                     | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_public_keys`           |
+| `user.public_keys.read`                | `GQL Query.getPublicKey`                       | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_public_keys`           |
+| `user.public_keys.create`              | `GQL Mutation.createPublicKey`                 | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_write_public_keys`          |
+| `user.public_keys.delete`              | `GQL Mutation.deletePublicKey`                 | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_write_public_keys`          |
 
 The public social exclusions live executably in `SOCIAL_PUBLIC_EXCLUSIONS`
 beside the operation table: `getUserProfile`, `getUserFollowers`,
@@ -218,6 +233,23 @@ as an authorization `error`, surfaces to clients as service unavailable, and
 prevents all Stripe or local billing work. Audit persistence itself remains
 fail-open so an observability outage cannot suppress an otherwise-authorized
 billing operation.
+
+The ledger control plane follows the same split. `ledger.admin` is the
+backward-compatible credential ceiling, while current Gitea ownership or an
+admin collaborator rank supplies the independent durable relationship for
+administration and collaborator actions. The operation's `admin` class remains
+only its destructive rate/audit class and cannot grant reachability. Creation
+targets the caller's User resource because the ledger does not exist yet;
+quota checks remain domain rules, and successful Fava/Gitea creation is the
+source of ownership without a tuple write.
+
+Lifecycle and collaborator methods re-read Gitea on every authorization call.
+A downgrade, removal, leave, visibility change, or rename therefore changes the
+next decision without a request memo or cross-request cache. Relationship
+denials are concealed as `Ledger not found`; Gitea source outages are audited
+errors and surface as service unavailable before Fava, Gitea mutation, Plaid
+cleanup, or database work. Existing Fava owner/rank predicates, creation quotas,
+locks, transaction order, and delete cleanup remain defense in depth.
 
 ## Social graph and starring
 
@@ -268,6 +300,13 @@ source-backed evaluator loads the current row, resolves its owner to
 `user:<ownerId>`, and applies `user#can_write_credentials`. The locator is never
 stored as a tuple and does not extend `model.fga` with credential objects.
 
+Ledger creation and SSH public-key management also target the caller's exact
+self User resource. `user#can_write_ledgers` authorizes only the relationship
+half of creating a new ledger; it fabricates no ledger relation. Public-key
+list/get/create/delete use `user#can_read_public_keys` and
+`user#can_write_public_keys` and preserve the current key format and Fava
+ownership/not-found behavior.
+
 ### Ledgers
 
 A ledger has durable owner, collaborator, and public-access relationships:
@@ -276,6 +315,7 @@ A ledger has durable owner, collaborator, and public-access relationships:
 administrator = owner ∪ collaborator_admin
 writer        = administrator ∪ collaborator_write
 reader        = writer ∪ collaborator_read ∪ public_reader
+can_leave     = collaborator_admin ∪ collaborator_write ∪ collaborator_read
 ```
 
 Capability permissions derive from that rank:
@@ -353,6 +393,7 @@ Only durable or source-derived domain facts enter the model:
 
 - `user#owner` from the user database, only when subject ID equals object ID;
 - exact-self social read/write eligibility from that same stable User owner;
+- exact-self ledger-creation and public-key eligibility from that User owner;
 - API-key owner from current `api_keys.user_id`, resolved to that User's
   credentials permission without copying it;
 - `ledger#owner` from the ledger owner lookup;
@@ -360,6 +401,8 @@ Only durable or source-derived domain facts enter the model:
 - `ledger#public_reader@user:*` iff the ledger is public;
 - runtime social-star readability from a fresh authenticated Gitea repository
   lookup, without persisting the result.
+- runtime administration rank and explicit self-collaborator membership from a
+  fresh Gitea lookup for every control-plane decision.
 
 Today ledger relationships are resolved from the external Gitea-backed ledger
 service. Under engine adoption they may initially be supplied to the PDP for a
@@ -370,9 +413,9 @@ tuples.
 ## Invariants
 
 1. **The authorization module is the only final authority for migrated User
-   actions.** Protected Account/API-key/subscription service methods call it
-   once before domain work; every GraphQL/REST/MCP alias uses those application
-   services.
+   and ledger control-plane actions.** Protected application services and
+   workflows call it once before domain work; every transport alias uses those
+   boundaries.
 2. **OpenFGA contains only durable domain relationships.** No credential,
    session, token, grant, or `request_*` type/relation belongs in this model.
 3. **Subjects use stable internal user IDs** (`users.id`), never usernames,

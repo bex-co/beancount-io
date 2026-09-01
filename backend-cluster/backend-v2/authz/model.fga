@@ -38,6 +38,9 @@ type user
     define can_write_lifecycle: owner
     define can_read_social: owner
     define can_write_social: owner
+    define can_write_ledgers: owner
+    define can_read_public_keys: owner
+    define can_write_public_keys: owner
 
 type ledger
   relations
@@ -70,6 +73,9 @@ type ledger
     define can_write_administration: administrator
     define can_read_collaborators: administrator
     define can_write_collaborators: administrator
+    # Self-leave applies only to explicit collaborators, never owners or the
+    # public-reader wildcard.
+    define can_leave: collaborator_admin or collaborator_write or collaborator_read
     define can_read_bank_connections: administrator
     define can_write_bank_connections: administrator
     define can_read_assets: reader

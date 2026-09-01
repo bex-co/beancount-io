@@ -12,7 +12,9 @@ import {
   type AuthorizationResource,
   type IRelationshipEvaluator,
   ledgerResource,
+  LEDGER_RELATIONSHIPS,
   userResource,
+  USER_RELATIONSHIPS,
 } from "..";
 
 function identity(
@@ -52,6 +54,57 @@ const LEDGER_SOCIAL_ACTIONS = [
   AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_STATUS_READ,
   AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
   AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,
+] as const;
+
+const LEDGER_ADMIN_ACTIONS = [
+  [
+    AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE,
+    LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
+  ],
+  [
+    AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+    LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
+  ],
+  [
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LIST,
+    LEDGER_RELATIONSHIPS.READ_COLLABORATORS,
+  ],
+  [
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ,
+    LEDGER_RELATIONSHIPS.READ_COLLABORATORS,
+  ],
+  [
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE,
+    LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS,
+  ],
+  [
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE,
+    LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS,
+  ],
+  [
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
+    LEDGER_RELATIONSHIPS.LEAVE,
+  ],
+] as const;
+
+const USER_CONTROL_PLANE_ACTIONS = [
+  [AUTHORIZATION_ACTIONS.LEDGER_CREATE, USER_RELATIONSHIPS.WRITE_LEDGERS],
+  [
+    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST,
+    USER_RELATIONSHIPS.READ_PUBLIC_KEYS,
+  ],
+  [
+    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ,
+    USER_RELATIONSHIPS.READ_PUBLIC_KEYS,
+  ],
+  [
+    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_CREATE,
+    USER_RELATIONSHIPS.WRITE_PUBLIC_KEYS,
+  ],
+  [
+    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE,
+    USER_RELATIONSHIPS.WRITE_PUBLIC_KEYS,
+  ],
 ] as const;
 
 describe("AuthorizationService", () => {
@@ -175,6 +228,108 @@ describe("AuthorizationService", () => {
       });
     },
   );
+
+  it.each(LEDGER_ADMIN_ACTIONS)(
+    "requires the explicit %s control-plane relationship",
+    async (action, relation) => {
+      const relationships = { check: jest.fn(async () => true) };
+      const principal = identity("apikey", "usr_alice", ["ledger.admin"]);
+      const resource = ledgerResource("alice/main");
+      await expect(
+        new AuthorizationService(relationships).authorize({
+          principal,
+          action,
+          resource,
+        }),
+      ).resolves.toMatchObject({ allowed: true, action, resource });
+      expect(relationships.check).toHaveBeenCalledWith({
+        user: userResource(principal.userId),
+        relation,
+        object: resource,
+      });
+    },
+  );
+
+  it.each(USER_CONTROL_PLANE_ACTIONS)(
+    "requires the explicit %s exact-self relationship",
+    async (action, relation) => {
+      const relationships = { check: jest.fn(async () => true) };
+      const principal = identity("oauth", "usr_alice", ["ledger.admin"]);
+      const resource = userResource(principal.userId);
+      await expect(
+        new AuthorizationService(relationships).authorize({
+          principal,
+          action,
+          resource,
+        }),
+      ).resolves.toMatchObject({ allowed: true, action, resource });
+      expect(relationships.check).toHaveBeenCalledWith({
+        user: resource,
+        relation,
+        object: resource,
+      });
+    },
+  );
+
+  it.each([
+    ...LEDGER_ADMIN_ACTIONS.map(([action]) => action),
+    ...USER_CONTROL_PLANE_ACTIONS.map(([action]) => action),
+  ])("preserves the ledger.admin credential ceiling for %s", async (action) => {
+    const relationships = { check: jest.fn(async () => true) };
+    const principal = identity("oauth", "usr_alice", ["ledger.write"]);
+    const resource =
+      action.startsWith("user.") || action === "ledger.create"
+        ? userResource(principal.userId)
+        : ledgerResource("alice/main");
+    await expect(
+      new AuthorizationService(relationships).authorize({
+        principal,
+        action,
+        resource,
+      }),
+    ).resolves.toMatchObject({
+      allowed: false,
+      reason: "credential_not_permitted",
+    });
+    expect(relationships.check).not.toHaveBeenCalled();
+  });
+
+  it("conceals ledger administration and collaborator relationship denials", async () => {
+    const principal = identity("oauth", "usr_alice", ["ledger.admin"]);
+    for (const [action] of LEDGER_ADMIN_ACTIONS) {
+      await expect(
+        new AuthorizationService({ check: async () => false }).authorizeOrThrow(
+          {
+            principal,
+            action,
+            resource: ledgerResource("alice/private"),
+          },
+        ),
+      ).rejects.toMatchObject({
+        category: ErrorCategory.NOT_FOUND,
+        message: "Ledger not found",
+      });
+    }
+  });
+
+  it("checks a ledger pin before any control-plane relationship lookup", async () => {
+    const relationships = { check: jest.fn(async () => true) };
+    const principal = {
+      ...identity("apikey", "usr_alice", ["ledger.admin"]),
+      ledgerScope: "alice/allowed",
+    };
+    await expect(
+      new AuthorizationService(relationships).authorize({
+        principal,
+        action: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+        resource: ledgerResource("alice/other"),
+      }),
+    ).resolves.toMatchObject({
+      allowed: false,
+      reason: "credential_not_permitted",
+    });
+    expect(relationships.check).not.toHaveBeenCalled();
+  });
 
   it("enforces a delegated credential's ledger pin before Gitea lookup", async () => {
     const relationships = { check: jest.fn(async () => true) };
@@ -579,6 +734,91 @@ describe("AuthorizationService", () => {
     );
     expect(events).toHaveLength(3);
     expect(events.every((event) => event.ledgerId === "alice/main")).toBe(true);
+  });
+
+  it("keeps concurrent control-plane operation IDs isolated and audits duplicate roots independently", async () => {
+    const events: AuditEvent[] = [];
+    setAuditSink(async (event) => {
+      events.push(event);
+    });
+    const principal = identity("session");
+    const service = new AuthorizationService({ check: async () => true });
+    const authorize = (op: string, action: AuthorizationAction) =>
+      runWithOperationId(op, () =>
+        service.authorizeOrThrow({
+          principal,
+          action,
+          resource: ledgerResource("alice/main"),
+        }),
+      );
+
+    await asyncContext.run({ requestId: "req_control" }, () =>
+      Promise.all([
+        authorize(
+          "GQL Mutation.updateLedger",
+          AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE,
+        ),
+        authorize(
+          "GQL Mutation.deleteLedger",
+          AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+        ),
+        authorize(
+          "GQL Mutation.updateLedger",
+          AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE,
+        ),
+      ]),
+    );
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(events.map((event) => event.op).sort()).toEqual(
+      [
+        "GQL Mutation.updateLedger",
+        "GQL Mutation.deleteLedger",
+        "GQL Mutation.updateLedger",
+      ].sort(),
+    );
+    expect(events).toHaveLength(3);
+    expect(events.every((event) => event.ledgerId === "alice/main")).toBe(true);
+  });
+
+  it("uses the control-plane canonical action for direct calls", async () => {
+    const events: AuditEvent[] = [];
+    setAuditSink(async (event) => {
+      events.push(event);
+    });
+    const principal = identity("session");
+    await new AuthorizationService({
+      check: async () => true,
+    }).authorizeOrThrow({
+      principal,
+      action: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+      resource: ledgerResource("alice/main"),
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+    expect(events).toEqual([
+      expect.objectContaining({
+        op: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+        ledgerId: "alice/main",
+        outcome: "allowed",
+      }),
+    ]);
+  });
+
+  it("fails open when the audit hook throws", async () => {
+    const principal = identity("session");
+    const service = new AuthorizationService(
+      { check: async () => true },
+      () => {
+        throw new Error("audit sink unavailable");
+      },
+    );
+    await expect(
+      service.authorizeOrThrow({
+        principal,
+        action: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+        resource: ledgerResource("alice/main"),
+      }),
+    ).resolves.toMatchObject({ allowed: true });
   });
 
   it("returns actionable credential denial messages", async () => {

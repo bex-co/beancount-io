@@ -1,19 +1,19 @@
 # w2 · m18 — Centralized authz for ledger administration and collaboration
 
-**Worker:** worker2 **Goal:** centralize ledger creation/update/delete, collaborator management, leave, and public-key control at protected application boundaries without relying on coarse `ledger.admin` or downstream Gitea rejection **Status:** todo
+**Worker:** worker2 **Goal:** centralize ledger creation/update/delete, collaborator management, leave, and public-key control at protected application boundaries without relying on coarse `ledger.admin` or downstream Gitea rejection **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                | est | depends_on |
 | ---- | ---------------------------------------------------- | --- | ---------- |
-| t001 | Catalog ledger control-plane actions and operational risk | 50m | —          |
-| t002 | Migrate ledger create, update, and delete boundaries      | 65m | t001       |
-| t003 | Migrate collaborators, leave, and public keys        | 60m | t002       |
-| t004 | Verify revocation, failures, budgets, audit, and ordering | 50m | t003       |
-| t005 | Adoption surface                                     | 20m | t004       |
-| t006 | Simplify                                             | 20m | t005       |
-| t007 | Test coverage                                        | 60m | t005       |
-| t008 | Closeout                                             | 15m | t006, t007 |
+| t001 | Catalog ledger control-plane actions and operational risk — **DONE** | 50m | —          |
+| t002 | Migrate ledger create, update, and delete boundaries — **DONE**      | 65m | t001       |
+| t003 | Migrate collaborators, leave, and public keys — **DONE**             | 60m | t002       |
+| t004 | Verify revocation, failures, budgets, audit, and ordering — **DONE** | 50m | t003       |
+| t005 | Adoption surface — **DONE**                                           | 20m | t004       |
+| t006 | Simplify — **DONE**                                                   | 20m | t005       |
+| t007 | Test coverage — **DONE**                                              | 60m | t005       |
+| t008 | Closeout — **DONE**                                                   | 15m | t006, t007 |
 
 ## Definition of done
 

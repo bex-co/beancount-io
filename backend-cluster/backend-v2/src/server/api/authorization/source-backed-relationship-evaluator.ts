@@ -25,6 +25,14 @@ const USER_RELATIONSHIP_SET = new Set<AuthorizationRelationship>(
   Object.values(USER_RELATIONSHIPS),
 );
 
+const LEDGER_SOURCE_RELATIONSHIP_SET = new Set<AuthorizationRelationship>([
+  LEDGER_RELATIONSHIPS.READ_CONTENTS,
+  LEDGER_RELATIONSHIPS.READ_ADMINISTRATION,
+  LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
+  LEDGER_RELATIONSHIPS.READ_COLLABORATORS,
+  LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS,
+]);
+
 const deniedGiteaStatus = (error: unknown): boolean => {
   if (typeof error !== "object" || error === null || !("status" in error)) {
     return false;
@@ -40,7 +48,7 @@ const deniedGiteaStatus = (error: unknown): boolean => {
 export class SourceBackedRelationshipEvaluator implements IRelationshipEvaluator {
   constructor(
     private readonly db: DbExecutor,
-    private readonly models: Pick<IModels, "apiKey">,
+    private readonly models: Pick<IModels, "apiKey" | "user">,
     private readonly giteaClientFactory: IGiteaClientFactory,
   ) {}
 
@@ -63,15 +71,45 @@ export class SourceBackedRelationshipEvaluator implements IRelationshipEvaluator
       return Boolean(apiKey && input.user === userResource(apiKey.userId));
     }
 
-    if (input.relation !== LEDGER_RELATIONSHIPS.READ_CONTENTS) return false;
     const userId = input.user.slice("user:".length);
-    const { ledgerOwner, ledgerName } = parseLedgerId(resource.id);
-    const client = await this.giteaClientFactory.getUserApiClient(userId);
+    let ledgerOwner: string;
+    let ledgerName: string;
     try {
+      ({ ledgerOwner, ledgerName } = parseLedgerId(resource.id));
+    } catch {
+      return false;
+    }
+    try {
+      if (input.relation === LEDGER_RELATIONSHIPS.LEAVE) {
+        const user = await this.models.user.getById(this.db, userId);
+        if (!user || user.ledger_username === ledgerOwner) return false;
+        await this.giteaClientFactory
+          .getAdminApiClient()
+          .repos.repoCheckCollaborator(
+            ledgerOwner,
+            ledgerName,
+            user.ledger_username,
+          );
+        return true;
+      }
+
+      if (!LEDGER_SOURCE_RELATIONSHIP_SET.has(input.relation)) return false;
+      const client = await this.giteaClientFactory.getUserApiClient(userId);
       const response = await client.repos.repoGet(ledgerOwner, ledgerName, {
         format: "json",
       });
-      return Boolean(response.data);
+      if (input.relation === LEDGER_RELATIONSHIPS.READ_CONTENTS) {
+        return Boolean(response.data);
+      }
+      if (
+        input.relation === LEDGER_RELATIONSHIPS.READ_ADMINISTRATION ||
+        input.relation === LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION ||
+        input.relation === LEDGER_RELATIONSHIPS.READ_COLLABORATORS ||
+        input.relation === LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS
+      ) {
+        return response.data?.permissions?.admin === true;
+      }
+      return false;
     } catch (error) {
       if (deniedGiteaStatus(error)) return false;
       throw error;

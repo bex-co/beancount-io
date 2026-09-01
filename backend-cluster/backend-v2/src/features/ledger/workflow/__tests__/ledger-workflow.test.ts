@@ -11,6 +11,11 @@ import {
   defaultLedgerTemplate,
   ledgerWithMultipleFilesTemplate,
 } from "@/features/ledger/utils/ledger-template";
+import {
+  AUTHORIZATION_ACTIONS,
+  ledgerResource,
+  userResource,
+} from "@/server/api/authorization";
 
 jest.mock("@/features/plaid/utils/encryption", () => ({
   decryptToken: jest.fn().mockReturnValue("decrypted-access-token"),
@@ -149,6 +154,24 @@ describe("LedgerWorkflow", () => {
   describe("updateLedger", () => {
     const ledgerId = "testuser/test-ledger";
 
+    it("authorizes before provisioning a Fava client", async () => {
+      authorization.authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(
+        workflow.updateLedger({
+          identity: IDENTITY,
+          ledgerId,
+          input: { name: "new-name" },
+        }),
+      ).rejects.toThrow("denied");
+      expect(authorization.authorizeOrThrow).toHaveBeenCalledWith({
+        principal: IDENTITY,
+        action: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE,
+        resource: ledgerResource(ledgerId),
+      });
+      expect(favaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+      expect(mockFavaApiClient.ledgers.updateLedger).not.toHaveBeenCalled();
+    });
+
     it("should update ledger with name change and return new ledger ID", async () => {
       mockFavaApiClient.ledgers.updateLedger.mockResolvedValue({
         data: {
@@ -168,7 +191,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.updateLedger({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId,
         input: {
           name: "My New Ledger",
@@ -199,7 +222,7 @@ describe("LedgerWorkflow", () => {
 
       await expect(
         workflow.updateLedger({
-          userId: USER_ID,
+          identity: IDENTITY,
           ledgerId,
           input: { name: "New Name" },
         }),
@@ -213,7 +236,7 @@ describe("LedgerWorkflow", () => {
 
       await expect(
         workflow.updateLedger({
-          userId: USER_ID,
+          identity: IDENTITY,
           ledgerId,
           input: { description: "Test" },
         }),
@@ -239,7 +262,7 @@ describe("LedgerWorkflow", () => {
       });
 
       await workflow.updateLedger({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId: "anotheruser/another-ledger",
         input: { description: "Test" },
       });
@@ -253,6 +276,24 @@ describe("LedgerWorkflow", () => {
   });
 
   describe("createLedger", () => {
+    it("authorizes before locking, quota reads, or ledger creation", async () => {
+      authorization.authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(
+        workflow.createLedger({
+          identity: IDENTITY,
+          input: { name: "new-ledger" },
+        }),
+      ).rejects.toThrow("denied");
+      expect(authorization.authorizeOrThrow).toHaveBeenCalledWith({
+        principal: IDENTITY,
+        action: AUTHORIZATION_ACTIONS.LEDGER_CREATE,
+        resource: userResource(USER_ID),
+      });
+      expect(favaClientFactory.getApiContext).not.toHaveBeenCalled();
+      expect(models.paidCustomer.findByUserId).not.toHaveBeenCalled();
+      expect(mockFavaApiClient.ledgers.createLedger).not.toHaveBeenCalled();
+    });
+
     it("should create ledger and return correct data", async () => {
       mockFavaApiClient.ledgers.listLedgers.mockResolvedValue({
         data: { success: true, data: [] },
@@ -275,7 +316,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.createLedger({
-        userId: USER_ID,
+        identity: IDENTITY,
         input: {
           name: "New Ledger",
           description: "Test ledger",
@@ -313,7 +354,7 @@ describe("LedgerWorkflow", () => {
       });
 
       await workflow.createLedger({
-        userId: USER_ID,
+        identity: IDENTITY,
         input: {
           name: "sample-ledger",
           private: true,
@@ -330,6 +371,23 @@ describe("LedgerWorkflow", () => {
   describe("deleteLedger", () => {
     const ledgerId = "testuser/test-ledger";
     const LEDGER_REPO_ID = 42;
+
+    it("authorizes before repository lookup, Plaid cleanup, or a transaction", async () => {
+      authorization.authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(
+        workflow.deleteLedger({ identity: IDENTITY, ledgerId }),
+      ).rejects.toThrow("denied");
+      expect(authorization.authorizeOrThrow).toHaveBeenCalledWith({
+        principal: IDENTITY,
+        action: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+        resource: ledgerResource(ledgerId),
+      });
+      expect(favaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+      expect(models.plaidItem.getByLedgerRepoId).not.toHaveBeenCalled();
+      expect(plaidClient.removeItem).not.toHaveBeenCalled();
+      expect(db.transaction).not.toHaveBeenCalled();
+      expect(mockFavaApiClient.ledgers.deleteLedger).not.toHaveBeenCalled();
+    });
 
     const mockGetLedgerSuccess = () => {
       mockFavaApiClient.ledgers.getLedger.mockResolvedValue({
@@ -356,7 +414,10 @@ describe("LedgerWorkflow", () => {
         data: { success: true },
       });
 
-      const result = await workflow.deleteLedger({ userId: USER_ID, ledgerId });
+      const result = await workflow.deleteLedger({
+        identity: IDENTITY,
+        ledgerId,
+      });
 
       expect(mockFavaApiClient.ledgers.getLedger).toHaveBeenCalledWith(
         "testuser",
@@ -380,7 +441,7 @@ describe("LedgerWorkflow", () => {
       });
 
       await expect(
-        workflow.deleteLedger({ userId: USER_ID, ledgerId }),
+        workflow.deleteLedger({ identity: IDENTITY, ledgerId }),
       ).rejects.toThrow(InternalServerError);
     });
 
@@ -394,7 +455,10 @@ describe("LedgerWorkflow", () => {
         { id: "pitm_2", accessToken: "enc-2" },
       ]);
 
-      const result = await workflow.deleteLedger({ userId: USER_ID, ledgerId });
+      const result = await workflow.deleteLedger({
+        identity: IDENTITY,
+        ledgerId,
+      });
 
       expect(models.plaidItem.getByLedgerRepoId).toHaveBeenCalledWith(
         expect.any(Object),
@@ -424,7 +488,10 @@ describe("LedgerWorkflow", () => {
         .mockRejectedValueOnce(new Error("already removed"))
         .mockResolvedValueOnce(undefined);
 
-      const result = await workflow.deleteLedger({ userId: USER_ID, ledgerId });
+      const result = await workflow.deleteLedger({
+        identity: IDENTITY,
+        ledgerId,
+      });
 
       expect(models.plaidItem.deleteByLedgerRepoId).toHaveBeenCalledWith(
         expect.any(Object),
@@ -440,7 +507,10 @@ describe("LedgerWorkflow", () => {
       });
       models.plaidItem.getByLedgerRepoId.mockResolvedValue([]);
 
-      const result = await workflow.deleteLedger({ userId: USER_ID, ledgerId });
+      const result = await workflow.deleteLedger({
+        identity: IDENTITY,
+        ledgerId,
+      });
 
       expect(plaidClient.removeItem).not.toHaveBeenCalled();
       expect(models.plaidItem.deleteByLedgerRepoId).toHaveBeenCalledWith(
@@ -458,7 +528,10 @@ describe("LedgerWorkflow", () => {
         data: { success: true },
       });
 
-      const result = await workflow.deleteLedger({ userId: USER_ID, ledgerId });
+      const result = await workflow.deleteLedger({
+        identity: IDENTITY,
+        ledgerId,
+      });
 
       expect(models.plaidItem.getByLedgerRepoId).not.toHaveBeenCalled();
       expect(models.plaidItem.deleteByLedgerRepoId).not.toHaveBeenCalled();

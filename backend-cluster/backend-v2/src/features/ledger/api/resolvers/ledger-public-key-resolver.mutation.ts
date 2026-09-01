@@ -20,7 +20,7 @@ export class LedgerPublicKeyMutationResolver {
     @Args() input: CreatePublicKeyInput,
     @Ctx() ctx: IContext,
   ): Promise<PublicKey> {
-    return this.publicKeyService.createPublicKey(ctx.getCurrentUserId(), {
+    return this.publicKeyService.createPublicKey(ctx.getCurrentIdentity(), {
       key: input.key,
       title: input.title,
       readOnly: input.readOnly,
@@ -35,6 +35,9 @@ export class LedgerPublicKeyMutationResolver {
     @Arg("keyId", () => Number) keyId: number,
     @Ctx() ctx: IContext,
   ): Promise<DeletePublicKeyResponse> {
-    return this.publicKeyService.deletePublicKey(ctx.getCurrentUserId(), keyId);
+    return this.publicKeyService.deletePublicKey(
+      ctx.getCurrentIdentity(),
+      keyId,
+    );
   }
 }

@@ -35,7 +35,7 @@ const session: Identity = {
 
 const READ_OP = "GQL Query.queryShellText";
 const WRITE_OP = "GQL Mutation.createLedgerFile";
-const ADMIN_OP = "GQL Mutation.deleteLedger";
+const ADMIN_OP = "GQL Mutation.createPlaidLinkToken";
 const SESSION_ONLY_OP = "GQL Mutation.signIn";
 const PUBLIC_OP = "GQL Query.health";
 const UNKNOWN_OP = "GQL Query.somethingNobodyClassified";
@@ -137,6 +137,42 @@ describe("classifyOp", () => {
       AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,
     ]);
   });
+
+  it("maps every ledger control-plane verb exactly once", () => {
+    const fields = [
+      "Mutation.createLedger",
+      "Mutation.updateLedger",
+      "Mutation.deleteLedger",
+      "Query.listPublicKeys",
+      "Query.getPublicKey",
+      "Mutation.createPublicKey",
+      "Mutation.deletePublicKey",
+      "Query.listLedgerCollaborators",
+      "Query.getLedgerCollaboratorPermission",
+      "Mutation.addOrUpdateLedgerCollaborator",
+      "Mutation.deleteLedgerCollaborator",
+      "Mutation.leaveLedger",
+    ];
+    expect(
+      fields.map((field) => authorizationActionForOp(gqlOpId(field))),
+    ).toEqual([
+      AUTHORIZATION_ACTIONS.LEDGER_CREATE,
+      AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE,
+      AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+      AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST,
+      AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ,
+      AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_CREATE,
+      AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE,
+      AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LIST,
+      AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE,
+      AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE,
+      AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
+    ]);
+    for (const field of fields) {
+      expect(VERB_TABLE.filter((entry) => entry.gql === field)).toHaveLength(1);
+    }
+  });
 });
 
 describe("evaluateScope", () => {
@@ -213,6 +249,24 @@ describe("evaluateScope", () => {
       requiredScope: "ledger.admin",
       authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
     });
+  });
+
+  it("defers ledger control-plane reachability to the PDP while preserving admin risk", () => {
+    for (const opId of [
+      "GQL Mutation.createLedger",
+      "GQL Mutation.updateLedger",
+      "GQL Mutation.deleteLedger",
+      "GQL Query.listPublicKeys",
+      "GQL Query.listLedgerCollaborators",
+      "GQL Mutation.leaveLedger",
+    ]) {
+      expect(evaluateScope(token(), opId)).toMatchObject({
+        allowed: true,
+        opClass: "admin",
+        requiredScope: "ledger.admin",
+      });
+      expect(authorizationActionForOp(opId)).toBeDefined();
+    }
   });
 
   it("keeps tier quotas public and defers protected billing credentials to the PDP", () => {

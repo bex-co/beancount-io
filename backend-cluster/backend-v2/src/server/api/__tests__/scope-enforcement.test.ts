@@ -535,7 +535,7 @@ describe("scope enforcement through the real schema", () => {
     readQuery:
       'query { queryShellText(ledgerId: "alice/main", query: "SELECT 1") { __typename } }',
     adminMutation:
-      'mutation { deleteLedger(ledgerId: "alice/main") { __typename } }',
+      'mutation { createPlaidLinkToken(ledgerId: "alice/main") { __typename } }',
   };
 
   const contextFor = (identity: Identity): IContext =>

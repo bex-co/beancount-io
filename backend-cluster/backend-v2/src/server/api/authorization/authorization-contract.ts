@@ -24,6 +24,18 @@ export const AUTHORIZATION_ACTIONS = {
   LEDGER_SOCIAL_STAR_STATUS_READ: "ledger.social.star.status.read",
   LEDGER_SOCIAL_STAR_CREATE: "ledger.social.star.create",
   LEDGER_SOCIAL_STAR_DELETE: "ledger.social.star.delete",
+  LEDGER_CREATE: "ledger.create",
+  LEDGER_ADMINISTRATION_UPDATE: "ledger.administration.update",
+  LEDGER_ADMINISTRATION_DELETE: "ledger.administration.delete",
+  LEDGER_COLLABORATORS_LIST: "ledger.collaborators.list",
+  LEDGER_COLLABORATORS_PERMISSION_READ: "ledger.collaborators.permission.read",
+  LEDGER_COLLABORATORS_UPDATE: "ledger.collaborators.update",
+  LEDGER_COLLABORATORS_DELETE: "ledger.collaborators.delete",
+  LEDGER_COLLABORATORS_LEAVE: "ledger.collaborators.leave",
+  USER_PUBLIC_KEYS_LIST: "user.public_keys.list",
+  USER_PUBLIC_KEYS_READ: "user.public_keys.read",
+  USER_PUBLIC_KEYS_CREATE: "user.public_keys.create",
+  USER_PUBLIC_KEYS_DELETE: "user.public_keys.delete",
 } as const;
 
 export type AuthorizationAction =
@@ -39,6 +51,9 @@ export const USER_RELATIONSHIPS = {
   WRITE_LIFECYCLE: "can_write_lifecycle",
   READ_SOCIAL: "can_read_social",
   WRITE_SOCIAL: "can_write_social",
+  WRITE_LEDGERS: "can_write_ledgers",
+  READ_PUBLIC_KEYS: "can_read_public_keys",
+  WRITE_PUBLIC_KEYS: "can_write_public_keys",
 } as const;
 
 export type UserRelationship =
@@ -46,6 +61,11 @@ export type UserRelationship =
 
 export const LEDGER_RELATIONSHIPS = {
   READ_CONTENTS: "can_read_contents",
+  READ_ADMINISTRATION: "can_read_administration",
+  WRITE_ADMINISTRATION: "can_write_administration",
+  READ_COLLABORATORS: "can_read_collaborators",
+  WRITE_COLLABORATORS: "can_write_collaborators",
+  LEAVE: "can_leave",
 } as const;
 
 export type LedgerRelationship =

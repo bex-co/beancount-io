@@ -82,6 +82,29 @@ describe("budgets", () => {
     }
   });
 
+  it("preserves the destructive admin budget for every ledger control-plane verb", () => {
+    for (const opId of [
+      "GQL Mutation.createLedger",
+      "GQL Mutation.updateLedger",
+      "GQL Mutation.deleteLedger",
+      "GQL Query.listPublicKeys",
+      "GQL Query.getPublicKey",
+      "GQL Mutation.createPublicKey",
+      "GQL Mutation.deletePublicKey",
+      "GQL Query.listLedgerCollaborators",
+      "GQL Query.getLedgerCollaboratorPermission",
+      "GQL Mutation.addOrUpdateLedgerCollaborator",
+      "GQL Mutation.deleteLedgerCollaborator",
+      "GQL Mutation.leaveLedger",
+    ]) {
+      const classification = classifyOp(opId);
+      expect(classification.class).toBe("admin");
+      expect(budgetFor(opId, classification.class)).toEqual(
+        CLASS_BUDGETS.admin,
+      );
+    }
+  });
+
   it("keeps the five-per-minute create-key override on every surface", () => {
     for (const opId of [
       "GQL Mutation.createApiKey",

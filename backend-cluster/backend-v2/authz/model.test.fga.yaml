@@ -54,6 +54,9 @@ tests:
           can_write_lifecycle: true
           can_read_social: true
           can_write_social: true
+          can_write_ledgers: true
+          can_read_public_keys: true
+          can_write_public_keys: true
 
   # Runtime API-key list/create/revoke resolve back to these User credential
   # permissions. The key itself deliberately is not an FGA entity.
@@ -84,12 +87,18 @@ tests:
           can_write_lifecycle: false
           can_read_social: false
           can_write_social: false
+          can_write_ledgers: false
+          can_read_public_keys: false
+          can_write_public_keys: false
       - user: user:usr_dave
         object: user:usr_alice
         assertions:
           can_read_profile: false
           can_write_profile: false
           can_write_lifecycle: false
+          can_write_ledgers: false
+          can_read_public_keys: false
+          can_write_public_keys: false
 
   - name: ledger owner has every ledger relationship permission
     check:
@@ -105,6 +114,7 @@ tests:
           can_write_administration: true
           can_read_collaborators: true
           can_write_collaborators: true
+          can_leave: false
           can_read_bank_connections: true
           can_write_bank_connections: true
           can_read_assets: true
@@ -123,6 +133,7 @@ tests:
           can_write_contents: true
           can_write_administration: true
           can_write_collaborators: true
+          can_leave: true
           can_write_bank_connections: true
 
   - name: write collaborator cannot cross into ledger administration
@@ -138,6 +149,7 @@ tests:
           can_read_administration: false
           can_write_administration: false
           can_write_collaborators: false
+          can_leave: true
           can_write_bank_connections: false
           can_write_assets: true
           can_write_ai: true
@@ -155,6 +167,7 @@ tests:
           can_read_assets: true
           can_write_assets: false
           can_write_administration: false
+          can_leave: true
 
   - name: stranger has no relationship permission on a private ledger
     check:
@@ -167,6 +180,7 @@ tests:
           can_read_contents: false
           can_write_contents: false
           can_write_administration: false
+          can_leave: false
 
   - name: anonymous and signed-in strangers read a public ledger only
     check:
@@ -179,6 +193,7 @@ tests:
           can_read_contents: true
           can_read_assets: true
           can_write_administration: false
+          can_leave: false
       - user: user:usr_dave
         object: ledger:alice/blog
         assertions:
@@ -186,6 +201,7 @@ tests:
           writer: false
           administrator: false
           can_read_contents: true
+          can_leave: false
       - user: user:anonymous
         object: ledger:alice/main
         assertions:

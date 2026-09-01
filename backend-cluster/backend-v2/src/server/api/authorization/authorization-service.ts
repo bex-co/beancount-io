@@ -88,6 +88,23 @@ const LEDGER_SOCIAL_WRITE_CREDENTIAL: CredentialRequirement = {
   enforceLedgerScope: true,
 };
 
+const LEDGER_CONTROL_PLANE_CREDENTIAL: CredentialRequirement = {
+  methods: EVERY_CREDENTIAL,
+  capability: "admin",
+  enforceLedgerScope: true,
+};
+
+const USER_CONTROL_PLANE_CREDENTIAL: CredentialRequirement = {
+  methods: EVERY_CREDENTIAL,
+  capability: "admin",
+};
+
+const LEDGER_NOT_FOUND_CONCEALMENT: DenialConcealment = {
+  reasons: ["relationship_denied", "unknown_resource"],
+  category: ErrorCategory.NOT_FOUND,
+  message: "Ledger not found",
+};
+
 /** The one executable policy catalog for migrated application domains. */
 const ACTION_REQUIREMENTS: Readonly<
   Record<AuthorizationAction, ActionRequirement>
@@ -217,6 +234,85 @@ const ACTION_REQUIREMENTS: Readonly<
     relationship: LEDGER_RELATIONSHIPS.READ_CONTENTS,
     credential: LEDGER_SOCIAL_WRITE_CREDENTIAL,
     auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_CREATE]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_LEDGERS,
+    credential: USER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
+    credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
+    credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LIST]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.READ_COLLABORATORS,
+    credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.READ_COLLABORATORS,
+    credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS,
+    credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS,
+    credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.LEAVE,
+    credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+    concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
+  },
+  [AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.READ_PUBLIC_KEYS,
+    credential: USER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+  },
+  [AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.READ_PUBLIC_KEYS,
+    credential: USER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+  },
+  [AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_CREATE]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_PUBLIC_KEYS,
+    credential: USER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
+  },
+  [AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_PUBLIC_KEYS,
+    credential: USER_CONTROL_PLANE_CREDENTIAL,
+    auditClass: "admin",
   },
 };
 

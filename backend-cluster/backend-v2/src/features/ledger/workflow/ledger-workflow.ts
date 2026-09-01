@@ -65,6 +65,7 @@ import {
   AUTHORIZATION_ACTIONS,
   ledgerResource,
   type IAuthorizationService,
+  userResource,
 } from "@/server/api/authorization";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 
@@ -85,16 +86,16 @@ const DIRECTIVE_COUNT_CONCURRENCY = 3;
  */
 export interface ILedgerWorkflow {
   createLedger(params: {
-    userId: string;
+    identity: Identity;
     input: CreateLedgerCommand;
   }): Promise<LedgerData>;
   updateLedger(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: UpdateLedgerCommand;
   }): Promise<LedgerData>;
   deleteLedger(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
   }): Promise<DeleteLedgerResult>;
   createLedgerFile(params: {
@@ -202,12 +203,18 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   // --- Mutations ---------------------------------------------------------
 
   async createLedger({
-    userId,
+    identity,
     input,
   }: {
-    userId: string;
+    identity: Identity;
     input: CreateLedgerCommand;
   }): Promise<LedgerData> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_CREATE,
+      resource: userResource(identity.userId),
+    });
+    const userId = identity.userId;
     const ledgerCreate: LedgerCreate = {
       name: input.name,
       description: input.description,
@@ -239,14 +246,20 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async updateLedger({
-    userId,
+    identity,
     ledgerId,
     input,
   }: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: UpdateLedgerCommand;
   }): Promise<LedgerData> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     const ledgerUpdate: LedgerUpdate = {
       name: input.name,
       description: input.description,
@@ -270,12 +283,18 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async deleteLedger({
-    userId,
+    identity,
     ledgerId,
   }: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
   }): Promise<DeleteLedgerResult> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,

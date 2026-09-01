@@ -5,6 +5,12 @@ import { IContext } from "@/server/graphql/context";
 import { InternalServerError } from "@/shared/errors";
 
 describe("LedgerCollaboratorsResolver", () => {
+  const identity = {
+    userId: "user-123",
+    method: "session",
+    scopes: new Set<string>(),
+    capabilityExempt: true,
+  } as const;
   let queryResolver: LedgerCollaboratorsQueryResolver;
   let mutationResolver: LedgerCollaboratorsMutationResolver;
   let mockContext: IContext;
@@ -34,6 +40,7 @@ describe("LedgerCollaboratorsResolver", () => {
       service: {} as any,
       config: {},
       getCurrentUserId: jest.fn().mockReturnValue("user-123"),
+      getCurrentIdentity: jest.fn().mockReturnValue(identity),
     } as unknown as IContext;
 
     queryResolver = new LedgerCollaboratorsQueryResolver(
@@ -82,7 +89,7 @@ describe("LedgerCollaboratorsResolver", () => {
       );
 
       expect(mockCollaboratorsWorkflow.listCollaborators).toHaveBeenCalledWith({
-        userId: "user-123",
+        identity,
         ledgerId,
         page: 1,
         limit: 10,
@@ -96,7 +103,7 @@ describe("LedgerCollaboratorsResolver", () => {
       await queryResolver.listLedgerCollaborators(ledgerId, {}, mockContext);
 
       expect(mockCollaboratorsWorkflow.listCollaborators).toHaveBeenCalledWith({
-        userId: "user-123",
+        identity,
         ledgerId,
         page: undefined,
         limit: undefined,
@@ -146,7 +153,7 @@ describe("LedgerCollaboratorsResolver", () => {
       expect(
         mockCollaboratorsWorkflow.getCollaboratorPermission,
       ).toHaveBeenCalledWith({
-        userId: "user-123",
+        identity,
         ledgerId,
         collaborator,
       });
@@ -188,7 +195,7 @@ describe("LedgerCollaboratorsResolver", () => {
       expect(
         mockCollaboratorsWorkflow.addOrUpdateCollaborator,
       ).toHaveBeenCalledWith({
-        userId: "user-123",
+        identity,
         ledgerId,
         collaborator,
         permission: "write",
@@ -210,7 +217,7 @@ describe("LedgerCollaboratorsResolver", () => {
       expect(
         mockCollaboratorsWorkflow.addOrUpdateCollaborator,
       ).toHaveBeenCalledWith({
-        userId: "user-123",
+        identity,
         ledgerId,
         collaborator,
         permission: undefined,
@@ -249,7 +256,7 @@ describe("LedgerCollaboratorsResolver", () => {
 
       expect(mockCollaboratorsWorkflow.deleteCollaborator).toHaveBeenCalledWith(
         {
-          userId: "user-123",
+          identity,
           ledgerId,
           collaborator,
         },
@@ -287,7 +294,7 @@ describe("LedgerCollaboratorsResolver", () => {
       );
 
       expect(mockCollaboratorsWorkflow.leaveLedger).toHaveBeenCalledWith({
-        userId: "user-123",
+        identity,
         ledgerId,
       });
       expect(result).toEqual(expected);

@@ -30,7 +30,7 @@ export class LedgerMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<Ledger> {
     return this.workflow.createLedger({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       input,
     });
   }
@@ -45,7 +45,7 @@ export class LedgerMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<Ledger> {
     return this.workflow.updateLedger({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
       input,
     });
@@ -60,7 +60,7 @@ export class LedgerMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<DeleteLedgerResponse> {
     return this.workflow.deleteLedger({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
     });
   }

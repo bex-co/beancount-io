@@ -1,5 +1,11 @@
 import { unwrapFavaResponse } from "@/foundation/fava";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
+import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  type IAuthorizationService,
+  userResource,
+} from "@/server/api/authorization";
 
 export type PublicKeyData = {
   id: number;
@@ -12,31 +18,38 @@ export type PublicKeyData = {
 
 export interface ILedgerPublicKeyService {
   listPublicKeys(
-    userId: string,
+    identity: Identity,
     opts?: { page?: number; limit?: number },
   ): Promise<PublicKeyData[]>;
 
-  getPublicKey(userId: string, keyId: number): Promise<PublicKeyData>;
+  getPublicKey(identity: Identity, keyId: number): Promise<PublicKeyData>;
 
   createPublicKey(
-    userId: string,
+    identity: Identity,
     input: { key: string; title: string; readOnly?: boolean },
   ): Promise<PublicKeyData>;
 
-  deletePublicKey(userId: string, keyId: number): Promise<{ id: number }>;
+  deletePublicKey(identity: Identity, keyId: number): Promise<{ id: number }>;
 }
 
 export class LedgerPublicKeyService implements ILedgerPublicKeyService {
   constructor(
     private readonly favaClientFactory: IFavaClientFactory,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   async listPublicKeys(
-    userId: string,
+    identity: Identity,
     opts?: { page?: number; limit?: number },
   ): Promise<PublicKeyData[]> {
-    const { favaApiClient } =
-      await this.favaClientFactory.getApiContext(userId);
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST,
+      resource: userResource(identity.userId),
+    });
+    const { favaApiClient } = await this.favaClientFactory.getApiContext(
+      identity.userId,
+    );
     const data = await unwrapFavaResponse(
       favaApiClient.keys.listPublicKeys({
         page: opts?.page,
@@ -54,9 +67,18 @@ export class LedgerPublicKeyService implements ILedgerPublicKeyService {
     }));
   }
 
-  async getPublicKey(userId: string, keyId: number): Promise<PublicKeyData> {
-    const { favaApiClient } =
-      await this.favaClientFactory.getApiContext(userId);
+  async getPublicKey(
+    identity: Identity,
+    keyId: number,
+  ): Promise<PublicKeyData> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ,
+      resource: userResource(identity.userId),
+    });
+    const { favaApiClient } = await this.favaClientFactory.getApiContext(
+      identity.userId,
+    );
     const data = await unwrapFavaResponse(
       favaApiClient.keys.getPublicKey(keyId),
       "get public key",
@@ -72,11 +94,17 @@ export class LedgerPublicKeyService implements ILedgerPublicKeyService {
   }
 
   async createPublicKey(
-    userId: string,
+    identity: Identity,
     input: { key: string; title: string; readOnly?: boolean },
   ): Promise<PublicKeyData> {
-    const { favaApiClient } =
-      await this.favaClientFactory.getApiContext(userId);
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_CREATE,
+      resource: userResource(identity.userId),
+    });
+    const { favaApiClient } = await this.favaClientFactory.getApiContext(
+      identity.userId,
+    );
     const data = await unwrapFavaResponse(
       favaApiClient.keys.createPublicKey({
         key: input.key,
@@ -97,11 +125,17 @@ export class LedgerPublicKeyService implements ILedgerPublicKeyService {
   }
 
   async deletePublicKey(
-    userId: string,
+    identity: Identity,
     keyId: number,
   ): Promise<{ id: number }> {
-    const { favaApiClient } =
-      await this.favaClientFactory.getApiContext(userId);
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE,
+      resource: userResource(identity.userId),
+    });
+    const { favaApiClient } = await this.favaClientFactory.getApiContext(
+      identity.userId,
+    );
     await unwrapFavaResponse(
       favaApiClient.keys.deletePublicKey(keyId),
       "delete public key",

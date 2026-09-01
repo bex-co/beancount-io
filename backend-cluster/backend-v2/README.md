@@ -148,6 +148,15 @@ scopes are independent within that ledger vocabulary. User-account lifecycle is
 outside it: no ledger scope, OAuth client id, or ledger relationship authorizes
 `user.delete`.
 
+For ledger lifecycle, collaborator, leave, and SSH public-key operations,
+`ledger.admin` is only the delegated credential ceiling. The centralized PDP
+also requires the current exact-self User or Gitea-backed ledger relationship
+at the application-service/workflow boundary. The operation's `admin` class is
+rate-limit and audit metadata, not another grant. Relationship denials conceal
+ledger existence; relationship-source outages return service unavailable and
+run no Fava/Gitea mutation, Plaid cleanup, or database side effect. Existing
+dashboard and mobile GraphQL contracts are unchanged.
+
 ### User-domain authorization
 
 Protected user profile, lifecycle, API-key-management, and billing operations map to

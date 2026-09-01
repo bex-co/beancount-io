@@ -60,33 +60,33 @@ describe("Ledger resolvers (delegation)", () => {
   });
 
   describe("LedgerMutationResolver", () => {
-    it("createLedger delegates with userId + input", async () => {
+    it("createLedger delegates with identity + input", async () => {
       const input = { name: "ledger" };
       workflow.createLedger.mockResolvedValue({ id: "x" } as never);
 
       const result = await mutationResolver.createLedger(input as never, ctx);
 
       expect(workflow.createLedger).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         input,
       });
       expect(result).toEqual({ id: "x" });
     });
 
-    it("updateLedger delegates with userId + ledgerId + input", async () => {
+    it("updateLedger delegates with identity + ledgerId + input", async () => {
       const input = { name: "new" };
       await mutationResolver.updateLedger("o/l", input as never, ctx);
       expect(workflow.updateLedger).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId: "o/l",
         input,
       });
     });
 
-    it("deleteLedger delegates with userId + ledgerId", async () => {
+    it("deleteLedger delegates with identity + ledgerId", async () => {
       await mutationResolver.deleteLedger("o/l", ctx);
       expect(workflow.deleteLedger).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId: "o/l",
       });
     });

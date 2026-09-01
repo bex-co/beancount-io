@@ -19,7 +19,7 @@ export class LedgerPublicKeyQueryResolver {
     @Args() args: ListPublicKeysArgs,
     @Ctx() ctx: IContext,
   ): Promise<PublicKey[]> {
-    return this.publicKeyService.listPublicKeys(ctx.getCurrentUserId(), {
+    return this.publicKeyService.listPublicKeys(ctx.getCurrentIdentity(), {
       page: args.page,
       limit: args.limit,
     });
@@ -34,6 +34,6 @@ export class LedgerPublicKeyQueryResolver {
     @Arg("keyId", () => Number) keyId: number,
     @Ctx() ctx: IContext,
   ): Promise<PublicKey | null> {
-    return this.publicKeyService.getPublicKey(ctx.getCurrentUserId(), keyId);
+    return this.publicKeyService.getPublicKey(ctx.getCurrentIdentity(), keyId);
   }
 }

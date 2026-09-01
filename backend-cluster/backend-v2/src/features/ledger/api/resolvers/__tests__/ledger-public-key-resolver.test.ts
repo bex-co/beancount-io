@@ -5,6 +5,12 @@ import { IContext } from "@/server/graphql/context";
 import { InternalServerError } from "@/shared/errors";
 
 describe("LedgerPublicKeyResolver", () => {
+  const identity = {
+    userId: "user-123",
+    method: "session",
+    scopes: new Set<string>(),
+    capabilityExempt: true,
+  } as const;
   let mutationResolver: LedgerPublicKeyMutationResolver;
   let queryResolver: LedgerPublicKeyQueryResolver;
   let mockContext: IContext;
@@ -32,6 +38,7 @@ describe("LedgerPublicKeyResolver", () => {
       service: {} as any,
       config: {},
       getCurrentUserId: jest.fn().mockReturnValue("user-123"),
+      getCurrentIdentity: jest.fn().mockReturnValue(identity),
     } as unknown as IContext;
 
     mutationResolver = new LedgerPublicKeyMutationResolver(
@@ -62,7 +69,7 @@ describe("LedgerPublicKeyResolver", () => {
       const result = await mutationResolver.createPublicKey(input, mockContext);
 
       expect(mockPublicKeyService.createPublicKey).toHaveBeenCalledWith(
-        "user-123",
+        identity,
         { key: "ssh-rsa AAAAB3...", title: "My SSH Key", readOnly: false },
       );
       expect(result).toEqual(expected);
@@ -110,7 +117,7 @@ describe("LedgerPublicKeyResolver", () => {
       );
 
       expect(mockPublicKeyService.listPublicKeys).toHaveBeenCalledWith(
-        "user-123",
+        identity,
         { page: 1, limit: 10 },
       );
       expect(result).toEqual(expected);
@@ -122,7 +129,7 @@ describe("LedgerPublicKeyResolver", () => {
       await queryResolver.listPublicKeys({}, mockContext);
 
       expect(mockPublicKeyService.listPublicKeys).toHaveBeenCalledWith(
-        "user-123",
+        identity,
         { page: undefined, limit: undefined },
       );
     });
@@ -153,7 +160,7 @@ describe("LedgerPublicKeyResolver", () => {
       const result = await queryResolver.getPublicKey(1, mockContext);
 
       expect(mockPublicKeyService.getPublicKey).toHaveBeenCalledWith(
-        "user-123",
+        identity,
         1,
       );
       expect(result).toEqual(expected);
@@ -183,7 +190,7 @@ describe("LedgerPublicKeyResolver", () => {
       const result = await queryResolver.getPublicKey(42, mockContext);
 
       expect(mockPublicKeyService.getPublicKey).toHaveBeenCalledWith(
-        "user-123",
+        identity,
         42,
       );
       expect(result).toEqual(expected);
@@ -198,7 +205,7 @@ describe("LedgerPublicKeyResolver", () => {
       const result = await mutationResolver.deletePublicKey(1, mockContext);
 
       expect(mockPublicKeyService.deletePublicKey).toHaveBeenCalledWith(
-        "user-123",
+        identity,
         1,
       );
       expect(result).toEqual(expected);
@@ -220,7 +227,7 @@ describe("LedgerPublicKeyResolver", () => {
       const result = await mutationResolver.deletePublicKey(42, mockContext);
 
       expect(mockPublicKeyService.deletePublicKey).toHaveBeenCalledWith(
-        "user-123",
+        identity,
         42,
       );
       expect(result.id).toBe(42);

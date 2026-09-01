@@ -145,6 +145,8 @@ const R = {
     "Identity, not ledger content: a token client already gets these facts from the OIDC userinfo endpoint, so a REST twin would be a second source of the same data, free to drift.",
   credentialMinting:
     "Credential minting is deliberately unreachable by a token credential (ADR 0006 D6: an API key may not create an API key), so a REST twin would exist only to be refused.",
+  userPublicKeys:
+    "User SSH public-key management is account control-plane behavior outside the ledger-resource contract published by v1. The existing GraphQL client remains the sole supported surface.",
   billing:
     "Billing verbs return Stripe-hosted URLs a human must visit in a browser; a curl client cannot complete checkout or the customer portal, so the endpoint would hand back a link to nowhere.",
   publicPricingCatalog:
@@ -563,78 +565,67 @@ const PROBE_VERBS: readonly VerbEntry[] = [
  * content, and a grant that says "read my books" should not also enumerate who
  * else can reach them.
  */
+const ledgerAdminGqlOnly = (
+  gql: string,
+  action: AuthorizationAction,
+  restExempt: string = R.ledgerControlPlane,
+): VerbEntry => ({
+  ...gqlOnly(gql, "admin", restExempt, M.notAgentShaped),
+  authorizationAction: action,
+});
+
 const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Mutation.createLedger",
-    "admin",
-    R.ledgerControlPlane,
-    M.notAgentShaped,
+    AUTHORIZATION_ACTIONS.LEDGER_CREATE,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Mutation.updateLedger",
-    "admin",
-    R.ledgerControlPlane,
-    M.notAgentShaped,
+    AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Mutation.deleteLedger",
-    "admin",
-    R.ledgerControlPlane,
-    M.notAgentShaped,
+    AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Query.listPublicKeys",
-    "admin",
-    R.credentialMinting,
-    M.credentialMinting,
+    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST,
+    R.userPublicKeys,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Query.getPublicKey",
-    "admin",
-    R.credentialMinting,
-    M.credentialMinting,
+    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ,
+    R.userPublicKeys,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Mutation.createPublicKey",
-    "admin",
-    R.credentialMinting,
-    M.credentialMinting,
+    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_CREATE,
+    R.userPublicKeys,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Mutation.deletePublicKey",
-    "admin",
-    R.credentialMinting,
-    M.credentialMinting,
+    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE,
+    R.userPublicKeys,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Query.listLedgerCollaborators",
-    "admin",
-    R.ledgerControlPlane,
-    M.notAgentShaped,
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LIST,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Query.getLedgerCollaboratorPermission",
-    "admin",
-    R.ledgerControlPlane,
-    M.notAgentShaped,
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Mutation.addOrUpdateLedgerCollaborator",
-    "admin",
-    R.ledgerControlPlane,
-    M.notAgentShaped,
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Mutation.deleteLedgerCollaborator",
-    "admin",
-    R.ledgerControlPlane,
-    M.notAgentShaped,
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE,
   ),
-  gqlOnly(
+  ledgerAdminGqlOnly(
     "Mutation.leaveLedger",
-    "admin",
-    R.ledgerControlPlane,
-    M.notAgentShaped,
+    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
   ),
 ];
 

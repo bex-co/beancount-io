@@ -19,18 +19,29 @@ function makeEvaluator(ownerId: string | null = "usr_alice") {
         }
       : null,
   );
-  const repoGet = jest.fn(async () => ({ data: { id: 42 } }));
+  const repoGet = jest.fn(async () => ({
+    data: { id: 42, permissions: { admin: true, push: true, pull: true } },
+  }));
   const getUserApiClient = jest.fn(async () => ({ repos: { repoGet } }));
+  const repoCheckCollaborator = jest.fn(async () => ({ data: {} }));
+  const getAdminApiClient = jest.fn(() => ({
+    repos: { repoCheckCollaborator },
+  }));
+  const getById = jest.fn(async () => ({ ledger_username: "alice" }));
   return {
     findById,
     repoGet,
     getUserApiClient,
+    getAdminApiClient,
+    repoCheckCollaborator,
+    getById,
     evaluator: new SourceBackedRelationshipEvaluator(
       {} as never,
       {
         apiKey: { findById } as never,
+        user: { getById } as never,
       },
-      { getUserApiClient } as never,
+      { getUserApiClient, getAdminApiClient } as never,
     ),
   };
 }
@@ -100,6 +111,109 @@ describe("SourceBackedRelationshipEvaluator", () => {
     expect(repoGet).toHaveBeenCalledWith("alice", "main", {
       format: "json",
     });
+  });
+
+  it.each([
+    LEDGER_RELATIONSHIPS.READ_ADMINISTRATION,
+    LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
+    LEDGER_RELATIONSHIPS.READ_COLLABORATORS,
+    LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS,
+  ])(
+    "requires current Gitea administrator permission for %s",
+    async (relation) => {
+      const { evaluator, repoGet } = makeEvaluator();
+      const check = {
+        user: userResource("usr_alice"),
+        relation,
+        object: ledgerResource("alice/main"),
+      };
+      await expect(evaluator.check(check)).resolves.toBe(true);
+      repoGet.mockResolvedValueOnce({
+        data: { id: 42, permissions: { admin: false, push: true, pull: true } },
+      });
+      await expect(evaluator.check(check)).resolves.toBe(false);
+      expect(repoGet).toHaveBeenCalledTimes(2);
+    },
+  );
+
+  it("rechecks explicit collaborator membership for every leave decision", async () => {
+    const {
+      evaluator,
+      getById,
+      getAdminApiClient,
+      getUserApiClient,
+      repoCheckCollaborator,
+    } = makeEvaluator();
+    const check = {
+      user: userResource("usr_alice"),
+      relation: LEDGER_RELATIONSHIPS.LEAVE,
+      object: ledgerResource("owner/main"),
+    };
+    await expect(evaluator.check(check)).resolves.toBe(true);
+    await expect(evaluator.check(check)).resolves.toBe(true);
+    expect(getById).toHaveBeenCalledTimes(2);
+    expect(getAdminApiClient).toHaveBeenCalledTimes(2);
+    expect(getUserApiClient).not.toHaveBeenCalled();
+    expect(repoCheckCollaborator).toHaveBeenCalledTimes(2);
+    expect(repoCheckCollaborator).toHaveBeenCalledWith(
+      "owner",
+      "main",
+      "alice",
+    );
+  });
+
+  it.each([403, 404])(
+    "treats a Gitea %s collaborator check as a leave denial",
+    async (status) => {
+      const { evaluator, repoCheckCollaborator } = makeEvaluator();
+      repoCheckCollaborator.mockRejectedValueOnce({ status });
+      await expect(
+        evaluator.check({
+          user: userResource("usr_alice"),
+          relation: LEDGER_RELATIONSHIPS.LEAVE,
+          object: ledgerResource("owner/main"),
+        }),
+      ).resolves.toBe(false);
+    },
+  );
+
+  it("denies owner self-leave without consulting collaborator membership", async () => {
+    const { evaluator, getById, getAdminApiClient, repoCheckCollaborator } =
+      makeEvaluator();
+    await expect(
+      evaluator.check({
+        user: userResource("usr_alice"),
+        relation: LEDGER_RELATIONSHIPS.LEAVE,
+        object: ledgerResource("alice/main"),
+      }),
+    ).resolves.toBe(false);
+    expect(getById).toHaveBeenCalledWith(expect.anything(), "usr_alice");
+    expect(getAdminApiClient).not.toHaveBeenCalled();
+    expect(repoCheckCollaborator).not.toHaveBeenCalled();
+  });
+
+  it("propagates a collaborator-source outage", async () => {
+    const { evaluator, repoCheckCollaborator } = makeEvaluator();
+    repoCheckCollaborator.mockRejectedValueOnce({ status: 503 });
+    await expect(
+      evaluator.check({
+        user: userResource("usr_alice"),
+        relation: LEDGER_RELATIONSHIPS.LEAVE,
+        object: ledgerResource("owner/main"),
+      }),
+    ).rejects.toEqual({ status: 503 });
+  });
+
+  it("denies a malformed ledger locator without calling Gitea", async () => {
+    const { evaluator, getUserApiClient } = makeEvaluator();
+    await expect(
+      evaluator.check({
+        user: userResource("usr_alice"),
+        relation: LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
+        object: ledgerResource("malformed"),
+      }),
+    ).resolves.toBe(false);
+    expect(getUserApiClient).not.toHaveBeenCalled();
   });
 
   it.each([403, 404])(
