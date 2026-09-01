@@ -15,7 +15,6 @@ describe("LLMParserResolver", () => {
     method: "oauth",
     scopes: new Set(["ledger.read", "ledger.write"]),
     ledgerScope: "ledger123",
-    capabilityExempt: false,
   };
 
   beforeEach(() => {

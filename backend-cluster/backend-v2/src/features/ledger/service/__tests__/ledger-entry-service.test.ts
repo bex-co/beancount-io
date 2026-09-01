@@ -13,7 +13,6 @@ const IDENTITY: Identity = {
   userId: "user-123",
   method: "oauth",
   scopes: new Set(),
-  capabilityExempt: false,
 };
 
 const mockAddBulkEntries = jest.fn();

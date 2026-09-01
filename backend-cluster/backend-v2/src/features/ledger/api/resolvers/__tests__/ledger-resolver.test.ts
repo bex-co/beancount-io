@@ -16,7 +16,6 @@ describe("Ledger resolvers (delegation)", () => {
     userId: USER_ID,
     method: "session",
     scopes: new Set<string>(),
-    capabilityExempt: true,
   } as const;
 
   let workflow: jest.Mocked<ILedgerWorkflow>;
@@ -243,7 +242,6 @@ describe("Ledger resolvers (delegation)", () => {
           method: "apikey",
           scopes: new Set(["ledger.read"]),
           ledgerScope: "o/l",
-          capabilityExempt: false,
         },
       } as unknown as IContext;
 

@@ -36,7 +36,6 @@ const IDENTITY: Identity = {
   userId: "user-123",
   method: "oauth",
   scopes: new Set(),
-  capabilityExempt: false,
 };
 
 describe("LedgerLegacyResolver", () => {
@@ -1322,7 +1321,6 @@ describe("LedgerLegacyResolver", () => {
           method: "apikey",
           scopes: new Set(["ledger.read", "ledger.write"]),
           ledgerScope: "testuser/pinned",
-          capabilityExempt: false,
         },
       }) as unknown as IContext;
 

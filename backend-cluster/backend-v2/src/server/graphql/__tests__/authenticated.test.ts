@@ -34,7 +34,6 @@ const identity = (method: Identity["method"]): Identity => ({
   userId: "user-123",
   method,
   scopes: new Set(),
-  capabilityExempt: method === "session",
 });
 
 describe("@Authenticated", () => {

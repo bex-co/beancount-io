@@ -7,8 +7,8 @@ import {
   parseAuthorizationResource,
   userResource,
   USER_RELATIONSHIPS,
-  type AuthorizationResource,
   type AuthorizationRelationship,
+  type AuthorizationResource,
 } from "./authorization-contract";
 
 export interface RelationshipCheck {

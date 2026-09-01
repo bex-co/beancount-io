@@ -33,7 +33,6 @@ const IDENTITY: Identity = {
   userId: USER_ID,
   method: "oauth",
   scopes: new Set(),
-  capabilityExempt: false,
 };
 
 describe("LedgerRepoService", () => {

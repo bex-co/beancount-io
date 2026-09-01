@@ -197,7 +197,7 @@ export class PlaidItemService implements IPlaidItemService {
   /**
    * Authorize as the caller, not as a full-power session.
    *
-   * Built `trustedIdentity(userId)` until w3/m9 — `capabilityExempt`, so the
+   * Built `trustedIdentity(userId)` until w3/m9 — full authority, so the
    * scope check short-circuited and the transport gate was the only thing
    * between a narrow token and a bank connection. Unattended callers name
    * their exemption at the call site (`systemIdentity`) instead.

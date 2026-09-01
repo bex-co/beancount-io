@@ -242,7 +242,6 @@ describe("oidc-route: unified MCP + identity provider", () => {
           userId: TEST_USER.id,
           method: "session",
           scopes: new Set(),
-          capabilityExempt: true,
         };
       } else if (ctx.headers.authorization === `Bearer ${TEST_SCOPED_TOKEN}`) {
         ctx.state.identity = {
@@ -251,7 +250,6 @@ describe("oidc-route: unified MCP + identity provider", () => {
           scopes: new Set(["ledger.read"]),
           ledgerScope: "ada/personal",
           tokenId: "akey_test",
-          capabilityExempt: false,
         };
       }
       await next();
@@ -312,7 +310,6 @@ describe("oidc-route: unified MCP + identity provider", () => {
         scopes: new Set(oidc.scopes),
         ledgerScope: oidc.ledgerId,
         tokenId: oidc.tokenId,
-        capabilityExempt: false,
       };
       try {
         requireScopeClass(identity, gqlOpId("Query.userProfile"), "enforce");
@@ -1663,7 +1660,6 @@ describe("oidc-route: path-prefixed public issuer", () => {
           userId: TEST_USER.id,
           method: "session",
           scopes: new Set(),
-          capabilityExempt: true,
         };
       } else if (ctx.headers.authorization === `Bearer ${TEST_SCOPED_TOKEN}`) {
         ctx.state.identity = {
@@ -1672,7 +1668,6 @@ describe("oidc-route: path-prefixed public issuer", () => {
           scopes: new Set(["ledger.read"]),
           ledgerScope: "ada/personal",
           tokenId: "akey_test",
-          capabilityExempt: false,
         };
       }
       await next();

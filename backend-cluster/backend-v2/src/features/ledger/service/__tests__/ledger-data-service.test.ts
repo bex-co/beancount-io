@@ -45,7 +45,6 @@ const IDENTITY: Identity = {
   userId: USER_ID,
   method: "oauth",
   scopes: new Set(),
-  capabilityExempt: false,
 };
 
 const ok = <T>(data: T) => ({ data: { success: true, data } });

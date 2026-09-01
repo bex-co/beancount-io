@@ -111,7 +111,6 @@ describe("setAskAgentRoute", () => {
         userId: "usr_1",
         method: "oauth",
         scopes: new Set(["ledger.read", "ledger.write"]),
-        capabilityExempt: false,
       },
     } as never);
     mockAuthorizeLedger.mockResolvedValue({

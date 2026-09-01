@@ -48,7 +48,6 @@ const apiKeyIdentity: Identity = {
   method: "apikey",
   scopes: new Set(["ledger.read"]),
   tokenId: "akey_read",
-  capabilityExempt: false,
 };
 
 let server: V1TestServer;

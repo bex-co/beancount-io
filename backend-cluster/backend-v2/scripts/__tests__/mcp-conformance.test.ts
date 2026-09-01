@@ -38,7 +38,6 @@ const ledgerScoped: Identity = {
   scopes: new Set(["ledger.read", "ledger.write"]),
   tokenId: "tok_1",
   ledgerScope: "alice/main",
-  capabilityExempt: false,
 };
 
 const readOnly: Identity = { ...ledgerScoped, scopes: new Set(["ledger.read"]) };

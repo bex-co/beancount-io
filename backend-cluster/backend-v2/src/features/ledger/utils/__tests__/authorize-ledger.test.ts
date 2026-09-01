@@ -36,7 +36,6 @@ function identity(overrides: Partial<Identity> = {}): Identity {
     userId: "user-1",
     method: "oauth",
     scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
-    capabilityExempt: false,
     ...overrides,
   };
 }
@@ -100,7 +99,6 @@ describe("authorizeLedger", () => {
           identity({
             method: "session",
             scopes: new Set(),
-            capabilityExempt: true,
           }),
           "owner/main",
           "admin",

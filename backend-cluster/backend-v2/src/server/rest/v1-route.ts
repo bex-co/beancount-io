@@ -6,6 +6,7 @@ import type { ZodType } from "zod";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
+import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
 import { identityFromState } from "./identity-middleware";
 import { registerRoute, V1_TAG } from "./openapi-registry";
 import { validateRequest, validatedFromState } from "./validation-middleware";
@@ -112,6 +113,15 @@ function requireIdentity(ctx: RouterContext): Identity {
   return identity;
 }
 
+/** The ledger named by the uniform v1 `{owner}/{name}` path convention. */
+function ledgerIdFromParams(params: unknown): string | undefined {
+  if (!params || typeof params !== "object") return undefined;
+  const { owner, name } = params as Record<string, unknown>;
+  return typeof owner === "string" && owner && typeof name === "string" && name
+    ? `${owner}/${name}`
+    : undefined;
+}
+
 /** Mount one route and register it with the spec, from one declaration. */
 function registerV1Route<P, Q, B>(
   router: Router,
@@ -130,11 +140,14 @@ function registerV1Route<P, Q, B>(
 
   router[route.method](toKoaPath(route.path), ...middlewares, async (ctx) => {
     const validated = validatedFromState(ctx);
+    const identity = requireIdentity(ctx);
+    const ledgerId = ledgerIdFromParams(validated.params);
+    if (ledgerId) assertLedgerScope(identity, ledgerId);
     const result = await route.handler(deps, {
       params: validated.params as P,
       query: validated.query as Q,
       body: validated.body as B,
-      identity: requireIdentity(ctx),
+      identity,
       ctx,
     });
     if (result !== undefined) ctx.body = result;

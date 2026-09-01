@@ -13,7 +13,6 @@ describe("AccountResolver", () => {
     userId: "user-123",
     method: "session" as const,
     scopes: new Set<string>(),
-    capabilityExempt: true,
   };
   let resolver: AccountResolver;
   let context: IContext;

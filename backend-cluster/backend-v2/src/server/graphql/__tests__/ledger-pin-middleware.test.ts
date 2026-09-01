@@ -29,7 +29,6 @@ const pinned: Identity = {
   scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
   ledgerScope: "alice/main",
   tokenId: "akey_1",
-  capabilityExempt: false,
 };
 
 const unpinned: Identity = {
@@ -37,14 +36,12 @@ const unpinned: Identity = {
   method: "oauth",
   scopes: new Set(["ledger.read"]),
   tokenId: "tok_1",
-  capabilityExempt: false,
 };
 
 const session: Identity = {
   userId: "usr_1",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 async function drive(

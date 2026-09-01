@@ -19,11 +19,20 @@ export const LEDGER_ROUTES = [
     responses: {
       200: json("The caller's ledgers", z.array(z.unknown())),
     },
-    handler: async ({ layers }, { identity, query }) =>
-      layers.workflows.ledger.listLedgers({
+    handler: async ({ layers }, { identity, query }) => {
+      if (identity.ledgerScope) {
+        return [
+          await layers.workflows.ledger.getLedger({
+            ledgerId: identity.ledgerScope,
+            userId: identity.userId,
+          }),
+        ];
+      }
+      return layers.workflows.ledger.listLedgers({
         userId: identity.userId,
         args: { page: query.page, limit: query.limit },
-      }),
+      });
+    },
   }),
 
   v1Route({

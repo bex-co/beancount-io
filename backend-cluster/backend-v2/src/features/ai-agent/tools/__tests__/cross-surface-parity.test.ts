@@ -42,7 +42,6 @@ describe("cross-surface parity: MCP runBqlQuery vs GraphQL queryShellText", () =
     userId: "alice",
     method: "oauth",
     scopes: new Set(["ledger.read"]),
-    capabilityExempt: false,
   };
 
   it("MCP tool and GraphQL resolver return the same text for the same query", async () => {

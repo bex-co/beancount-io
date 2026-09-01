@@ -26,7 +26,6 @@ const identity: Identity = {
   method: "oauth",
   scopes: new Set(["ledger.admin"]),
   tokenId: "tok_1",
-  capabilityExempt: false,
 };
 
 /**

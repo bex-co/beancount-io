@@ -19,7 +19,6 @@ const browserIdentity: Identity = {
   userId: "user-1",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 const scopedIdentity = (
@@ -30,7 +29,6 @@ const scopedIdentity = (
   method,
   scopes: new Set(scopes),
   tokenId: `${method}-1`,
-  capabilityExempt: false,
 });
 
 describe("CliAuthService", () => {
@@ -130,11 +128,11 @@ describe("CliAuthService", () => {
       },
     );
 
-    it("rejects a non-exempt identity even if it claims the session method", async () => {
+    it("rejects a non-interactive identity even if it claims the session method", async () => {
       await expect(
         service.authorizeSession("cli-session-1", {
           ...browserIdentity,
-          capabilityExempt: false,
+          assurance: { type: "delegated" },
         }),
       ).rejects.toThrow(ForbiddenError);
 

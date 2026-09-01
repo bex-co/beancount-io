@@ -6,6 +6,19 @@ import {
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import { ForbiddenError, UnauthenticatedError } from "@/shared/errors";
 import {
+  AUTHORIZATION_ACTIONS,
+  AuthorizationDeniedError,
+  AuthorizationService,
+  LEDGER_RELATIONSHIPS,
+  ledgerResource,
+  parseAuthorizationResource,
+  userResource,
+  type AuthorizationAction,
+  type IRelationshipEvaluator,
+  type LedgerRelationship,
+  type RelationshipCheck,
+} from "@/server/api/authorization";
+import {
   auditSubject,
   emitAuditEvent,
   shouldAudit,
@@ -25,6 +38,18 @@ const PERMISSION_RANK: Record<LedgerPermission, number> = {
   read: 0,
   write: 1,
   admin: 2,
+};
+
+const ACTION_FOR_REL: Record<LedgerRel, AuthorizationAction> = {
+  read: AUTHORIZATION_ACTIONS.LEDGER_READ,
+  write: AUTHORIZATION_ACTIONS.LEDGER_WRITE,
+  admin: AUTHORIZATION_ACTIONS.LEDGER_ADMIN,
+};
+
+const LEDGER_REL_RANK: Partial<Record<LedgerRelationship, number>> = {
+  [LEDGER_RELATIONSHIPS.READ]: 0,
+  [LEDGER_RELATIONSHIPS.WRITE]: 1,
+  [LEDGER_RELATIONSHIPS.ADMIN]: 2,
 };
 
 export type AuthorizeLedgerDeps = AssertLedgerAccessDeps;
@@ -68,6 +93,42 @@ function memoizedAssertLedgerAccess(
     forIdentity.set(ledgerId, lookup);
   }
   return lookup;
+}
+
+/** Runtime adapter from current Gitea/Fava facts to the shared PDP contract. */
+class LedgerRelationshipEvaluator implements IRelationshipEvaluator {
+  public failure: unknown;
+
+  constructor(
+    private readonly identity: Identity,
+    private readonly deps: AuthorizeLedgerDeps,
+  ) {}
+
+  public async check(input: RelationshipCheck): Promise<boolean> {
+    const resource = parseAuthorizationResource(input.object);
+    if (!resource || resource.type !== "ledger") return false;
+    if (input.user !== userResource(this.identity.userId)) return false;
+
+    const requiredRank =
+      LEDGER_REL_RANK[input.relation as LedgerRelationship];
+    if (requiredRank === undefined) return false;
+
+    try {
+      const { permission } = await memoizedAssertLedgerAccess(
+        this.identity,
+        resource.id,
+        this.deps,
+      );
+      const permissionRank = PERMISSION_RANK[permission];
+      return permissionRank !== undefined && permissionRank >= requiredRank;
+    } catch (error) {
+      // `authorizeLedger` historically propagated relationship-source domain
+      // errors verbatim. Record it while returning policy false, then let the
+      // compatibility seam rethrow it after the centralized decision.
+      this.failure = error;
+      return false;
+    }
+  }
 }
 
 /**
@@ -129,10 +190,6 @@ export async function authorizeLedger(
   deps: AuthorizeLedgerDeps,
 ): Promise<AuthorizedLedger> {
   try {
-    if (identity) {
-      assertLedgerAuthorization(identity, ledgerId, rel);
-    }
-
     if (!identity) {
       if (rel !== "read") {
         throw new UnauthenticatedError("Authentication required");
@@ -147,6 +204,28 @@ export async function authorizeLedger(
       );
       auditLedgerAccess(identity, ledgerId, rel, "allowed");
       return authorized;
+    }
+
+    const relationships = new LedgerRelationshipEvaluator(identity, deps);
+    const authorization = new AuthorizationService(
+      relationships,
+      // Keep the existing ledger audit record and operation naming during the
+      // compatibility phase; the decision itself is centralized below.
+      () => undefined,
+    );
+    try {
+      await authorization.authorizeOrThrow({
+        principal: identity,
+        action: ACTION_FOR_REL[rel],
+        resource: ledgerResource(ledgerId),
+        context: { ledgerId },
+      });
+    } catch (error) {
+      if (error instanceof AuthorizationDeniedError) {
+        if (relationships.failure) throw relationships.failure;
+        throw new ForbiddenError(`Forbidden - ${rel} access required`);
+      }
+      throw error;
     }
 
     const { permission, ledgerOwnerId, ledgerRepoId } =

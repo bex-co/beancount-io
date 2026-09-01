@@ -24,7 +24,6 @@ describe("LLMService authorizes as the caller", () => {
     scopes: new Set(["ledger.read", "ledger.write"]),
     ledgerScope: "alice/a",
     tokenId: "tok_1",
-    capabilityExempt: false,
   };
 
   /** An API key minted against no particular ledger: narrowed by scope only. */
@@ -33,7 +32,6 @@ describe("LLMService authorizes as the caller", () => {
     method: "apikey",
     scopes: new Set(["ledger.read"]),
     tokenId: "key_1",
-    capabilityExempt: false,
   };
 
   const usageCheck = jest.fn();

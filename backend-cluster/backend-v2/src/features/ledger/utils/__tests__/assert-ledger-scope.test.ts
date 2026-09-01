@@ -19,7 +19,6 @@ describe("assertLedgerScope", () => {
       method: "oauth",
       ledgerScope: ledgerId,
       scopes: new Set(["ledger.read", "ledger.write"]),
-      capabilityExempt: false,
     };
   }
 
@@ -38,7 +37,6 @@ describe("assertLedgerScope", () => {
       userId: "user-1",
       method: "session",
       scopes: new Set(),
-      capabilityExempt: true,
     };
     expect(() => assertLedgerScope(unpinned, "alice/main")).not.toThrow();
     expect(() => assertLedgerScope(unpinned, "bob/other")).not.toThrow();

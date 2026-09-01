@@ -30,14 +30,12 @@ const token: Identity = {
   method: "oauth",
   scopes: new Set(["ledger.read"]),
   tokenId: "tok_1",
-  capabilityExempt: false,
 };
 
 const session: Identity = {
   userId: "usr_1",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 /** Answer the Nth call with a given count. */

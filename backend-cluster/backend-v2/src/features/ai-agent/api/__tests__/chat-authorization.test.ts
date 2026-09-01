@@ -18,7 +18,6 @@ function credential(scope: "ledger.read" | "ledger.write" | "ledger.admin"):
     method: "oauth",
     scopes: new Set([scope]),
     ledgerScope: LEDGER_ID,
-    capabilityExempt: false,
   };
 }
 

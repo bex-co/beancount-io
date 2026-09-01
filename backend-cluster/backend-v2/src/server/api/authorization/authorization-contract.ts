@@ -36,6 +36,9 @@ export const AUTHORIZATION_ACTIONS = {
   USER_PUBLIC_KEYS_READ: "user.public_keys.read",
   USER_PUBLIC_KEYS_CREATE: "user.public_keys.create",
   USER_PUBLIC_KEYS_DELETE: "user.public_keys.delete",
+  LEDGER_READ: "ledger.read",
+  LEDGER_WRITE: "ledger.write",
+  LEDGER_ADMIN: "ledger.admin",
 } as const;
 
 export type AuthorizationAction =
@@ -66,6 +69,9 @@ export const LEDGER_RELATIONSHIPS = {
   READ_COLLABORATORS: "can_read_collaborators",
   WRITE_COLLABORATORS: "can_write_collaborators",
   LEAVE: "can_leave",
+  READ: "reader",
+  WRITE: "writer",
+  ADMIN: "administrator",
 } as const;
 
 export type LedgerRelationship =
@@ -136,4 +142,6 @@ export interface AuthorizeInput {
   principal: Identity;
   action: AuthorizationAction;
   resource: AuthorizationResource;
+  /** Trusted request attributes that do not belong in the relationship graph. */
+  context?: Readonly<Record<string, unknown>>;
 }

@@ -183,17 +183,15 @@ export class ApiKeyService implements IApiKeyService {
     }
 
     const scopes = normalizeScopes(input.scopes);
-    if (!identity.capabilityExempt) {
-      // An OAuth grant minting a key may not hand out more than it holds:
-      // otherwise `ledger.read` becomes `ledger.admin` in two steps.
-      const widened = scopes.filter(
-        (scope) => !identityHasCapability(identity, OPERATION_FOR_SCOPE[scope]),
+    // A delegated credential may not hand out more than its computed effective
+    // capabilities. Full session/workload capabilities satisfy this naturally.
+    const widened = scopes.filter(
+      (scope) => !identityHasCapability(identity, OPERATION_FOR_SCOPE[scope]),
+    );
+    if (widened.length > 0) {
+      throw new ForbiddenError(
+        `A key cannot be granted scopes its creator does not hold: ${widened.join(", ")}`,
       );
-      if (widened.length > 0) {
-        throw new ForbiddenError(
-          `A key cannot be granted scopes its creator does not hold: ${widened.join(", ")}`,
-        );
-      }
     }
 
     const requestedLedgerScope = normalizeLedgerScope(input.ledgerScope);

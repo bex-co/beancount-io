@@ -38,7 +38,6 @@ function identityFor(userId: string): Identity {
     userId,
     method: "oauth",
     scopes: new Set(),
-    capabilityExempt: false,
   };
 }
 

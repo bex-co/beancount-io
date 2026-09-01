@@ -8,7 +8,6 @@ const identity = {
   userId: "usr_admin",
   method: "session",
   scopes: new Set<string>(),
-  capabilityExempt: true,
 } as const;
 const ledgerId = "owner/main";
 

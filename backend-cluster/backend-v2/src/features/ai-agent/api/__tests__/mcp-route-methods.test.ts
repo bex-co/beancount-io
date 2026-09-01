@@ -27,7 +27,6 @@ const ledgerScoped: Identity = {
   scopes: new Set(["ledger.read"]),
   tokenId: "tok_1",
   ledgerScope: "alice/personal",
-  capabilityExempt: false,
 };
 
 const layers = {

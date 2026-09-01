@@ -40,7 +40,6 @@ const writeOAuth: Identity = {
   userId: "usr_alice",
   method: "oauth",
   scopes: new Set(["ledger.write"]),
-  capabilityExempt: false,
 };
 
 const adminApiKey: Identity = {

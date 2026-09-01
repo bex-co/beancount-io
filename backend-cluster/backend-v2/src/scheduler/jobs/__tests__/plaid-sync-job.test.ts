@@ -106,7 +106,13 @@ describe("createPlaidSyncJob", () => {
       // the service (w3/m9).
       expect.objectContaining({
         userId: item.userId,
-        capabilityExempt: true,
+        method: "system",
+        principal: {
+          type: "service",
+          id: "backend-v2",
+          onBehalfOfUserId: item.userId,
+        },
+        assurance: { type: "workload" },
       }),
       item.id,
       "scheduled",

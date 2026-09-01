@@ -93,6 +93,10 @@ export interface OidcIdentity {
   scopes: string[];
   /** The token's `jti`, for audit and revocation. Never its secret material. */
   tokenId?: string;
+  /** RFC 9470 authentication assurance claims, when the grant carries them. */
+  authenticatedAt?: number;
+  acr?: string;
+  amr?: string[];
 }
 
 /**
@@ -160,6 +164,14 @@ export async function resolveOidcIdentity(
       ledgerId,
       scopes: typeof payload.scope === "string" ? payload.scope.split(" ") : [],
       tokenId: typeof payload.jti === "string" ? payload.jti : undefined,
+      authenticatedAt:
+        typeof payload.auth_time === "number" ? payload.auth_time : undefined,
+      acr: typeof payload.acr === "string" ? payload.acr : undefined,
+      amr: Array.isArray(payload.amr)
+        ? payload.amr.filter(
+            (value): value is string => typeof value === "string",
+          )
+        : undefined,
     };
   } catch (err) {
     oidcVerifyLogger.debug("OIDC token verification failed", {

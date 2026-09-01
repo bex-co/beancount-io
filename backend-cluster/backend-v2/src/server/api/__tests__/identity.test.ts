@@ -131,7 +131,7 @@ describe("resolveIdentity — no credential", () => {
 });
 
 describe("resolveIdentity — session credential", () => {
-  it("resolves a valid session JWT and marks it capability-exempt", async () => {
+  it("resolves a valid session JWT with explicit full capabilities", async () => {
     const identity = await resolveIdentity(
       request({ authorization: "Bearer session-token" }),
       databaseAccepting("session-token"),
@@ -139,11 +139,17 @@ describe("resolveIdentity — session credential", () => {
     );
     expect(identity).toMatchObject({
       userId: "user-session",
+      principal: { type: "user", id: "user-session" },
       method: "session",
-      capabilityExempt: true,
+      assurance: { type: "interactive" },
     });
-    // A browser session is full-power by construction, so it carries no scopes
-    // rather than an implicit full set.
+    expect([...(identity?.capabilities ?? [])].sort()).toEqual([
+      "admin",
+      "read",
+      "write",
+    ]);
+    // Raw grants remain empty for a session; effective capabilities are the
+    // normalized authorization input.
     expect(identity?.scopes.size).toBe(0);
     expect(identity?.ledgerScope).toBeUndefined();
   });
@@ -164,6 +170,9 @@ describe("resolveIdentity — OAuth credential", () => {
       client_id: MOBILE_CLIENT_ID,
       scope: "ledger.read ledger.write",
       jti: "tok-1",
+      auth_time: 1_788_000_000,
+      acr: "urn:beancount:password",
+      amr: ["pwd"],
     });
     const identity = await resolveIdentity(
       request({ authorization: `Bearer ${token}` }),
@@ -172,8 +181,14 @@ describe("resolveIdentity — OAuth credential", () => {
     );
     expect(identity).toMatchObject({
       userId: "user-oauth",
+      principal: { type: "user", id: "user-oauth" },
       method: "oauth",
-      capabilityExempt: false,
+      assurance: {
+        type: "delegated",
+        authenticatedAt: 1_788_000_000,
+        acr: "urn:beancount:password",
+        amr: ["pwd"],
+      },
       oauthClientId: MOBILE_CLIENT_ID,
       tokenId: "tok-1",
     });
@@ -418,7 +433,6 @@ describe("API scope vocabulary", () => {
       userId: "user-oauth",
       method: "oauth",
       scopes: new Set(["ledger.admin"]),
-      capabilityExempt: false,
     };
 
     expect(() => assertIdentityCapability(identity, "read")).not.toThrow();
@@ -430,9 +444,11 @@ describe("API scope vocabulary", () => {
 describe("full session identity", () => {
   const session: Identity = {
     userId: "user-session",
+    principal: { type: "user", id: "user-session" },
     method: "session",
     scopes: new Set(),
-    capabilityExempt: true,
+    capabilities: new Set(["read", "write", "admin"]),
+    assurance: { type: "interactive" },
   };
 
   it("accepts the browser and mobile session credential", () => {
@@ -440,10 +456,18 @@ describe("full session identity", () => {
   });
 
   it.each([
-    { ...session, method: "oauth" as const, capabilityExempt: false },
-    { ...session, method: "apikey" as const, capabilityExempt: false },
-    { ...session, capabilityExempt: false },
-  ])("rejects a delegated or non-exempt identity", (identity) => {
+    {
+      ...session,
+      method: "oauth" as const,
+      assurance: { type: "delegated" as const },
+    },
+    {
+      ...session,
+      method: "apikey" as const,
+      assurance: { type: "delegated" as const },
+    },
+    { ...session, assurance: { type: "workload" as const } },
+  ])("rejects a delegated or non-interactive identity", (identity) => {
     expect(() => assertSessionIdentity(identity)).toThrow(ForbiddenError);
   });
 });

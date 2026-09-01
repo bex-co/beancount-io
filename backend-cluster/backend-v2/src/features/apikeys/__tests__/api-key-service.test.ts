@@ -28,7 +28,6 @@ const session: Identity = {
   userId: "usr_1",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 const oauthGrant: Identity = {
@@ -36,7 +35,6 @@ const oauthGrant: Identity = {
   method: "oauth",
   scopes: new Set(["ledger.read"]),
   tokenId: "tok_1",
-  capabilityExempt: false,
 };
 
 const adminOAuthGrant: Identity = {

@@ -1,6 +1,8 @@
 import {
   identityAllowsLedgerScope,
+  identityAssuranceIsValid,
   identityHasCapability,
+  identityUserId,
   type AuthMethod,
   type Identity,
   type OperationClass,
@@ -65,6 +67,12 @@ type ActionRequirement = {
 );
 
 const EVERY_CREDENTIAL = ["session", "oauth", "apikey"] as const;
+const EVERY_AUTHENTICATED_ACTOR = [
+  "session",
+  "oauth",
+  "apikey",
+  "system",
+] as const;
 const INTERACTIVE_OR_OAUTH = ["session", "oauth"] as const;
 const SESSION_ONLY = ["session"] as const;
 
@@ -314,6 +322,33 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: USER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
   },
+  [AUTHORIZATION_ACTIONS.LEDGER_READ]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.READ,
+    credential: {
+      methods: EVERY_AUTHENTICATED_ACTOR,
+      capability: "read",
+    },
+    auditClass: "read",
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_WRITE]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.WRITE,
+    credential: {
+      methods: EVERY_AUTHENTICATED_ACTOR,
+      capability: "write",
+    },
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_ADMIN]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.ADMIN,
+    credential: {
+      methods: EVERY_AUTHENTICATED_ACTOR,
+      capability: "admin",
+    },
+    auditClass: "admin",
+  },
 };
 
 /** Used by surface-parity accounting without duplicating credential policy. */
@@ -332,10 +367,7 @@ const credentialDenial = (
   requirement: CredentialRequirement,
   resource?: { type: AuthorizationResourceType; id: string },
 ): string | undefined => {
-  // Preserve provenance: only a real session is capability-exempt, and every
-  // delegated credential is scope-constrained. A malformed envelope fails
-  // closed instead of turning `capabilityExempt` into a privilege bit.
-  if (identity.capabilityExempt !== (identity.method === "session")) {
+  if (!identityAssuranceIsValid(identity)) {
     return "Authorization denied";
   }
   if (!requirement.methods.includes(identity.method)) {
@@ -494,10 +526,28 @@ export class AuthorizationService implements IAuthorizationService {
       });
     }
 
+    if (
+      resource.type === "ledger" &&
+      input.principal.ledgerScope &&
+      input.principal.ledgerScope !== resource.id
+    ) {
+      return deny("credential_not_permitted", {
+        message: "This credential is not authorized for this ledger",
+        auditClass: requirement.auditClass,
+      });
+    }
+
+    const userId = identityUserId(input.principal);
+    if (!userId) {
+      return deny("credential_not_permitted", {
+        auditClass: requirement.auditClass,
+      });
+    }
+
     let relationshipAllowed: boolean;
     try {
       relationshipAllowed = await this.relationships.check({
-        user: userResource(input.principal.userId),
+        user: userResource(userId),
         relation: requirement.relationship,
         object: input.resource,
       });
@@ -505,7 +555,7 @@ export class AuthorizationService implements IAuthorizationService {
       authorizationLogger.error("Relationship evaluation unavailable", {
         op: getOperationId() ?? action,
         action,
-        userId: input.principal.userId,
+        userId,
         error: error instanceof Error ? error.message : String(error),
       });
       this.recordAudit(

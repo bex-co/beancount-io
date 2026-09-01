@@ -71,7 +71,6 @@ describe("resolving an API key", () => {
       // The key's id, so an audit trail and a revocation both have something to
       // name — never the key.
       tokenId: "akey_1",
-      capabilityExempt: false,
     });
     expect([...(identity?.scopes ?? [])].sort()).toEqual([
       "ledger.read",

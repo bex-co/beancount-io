@@ -42,7 +42,6 @@ const readOnlyToken: Identity = {
   method: "oauth",
   scopes: new Set(["ledger.read"]),
   tokenId: "tok_1",
-  capabilityExempt: false,
 };
 
 const writeToken: Identity = {
@@ -59,7 +58,6 @@ const sessionIdentity: Identity = {
   userId: "usr_1",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 const enforcing = { api: { scopeEnforcement: "enforce" } } as AppConfig;
@@ -417,7 +415,6 @@ describe("scope enforcement across surfaces", () => {
           // Holds the scope — this denial comes from the ledger, not the gate.
           scopes: new Set(["ledger.read"]),
           tokenId: "tok_1",
-          capabilityExempt: false,
         },
         enforcing,
         {

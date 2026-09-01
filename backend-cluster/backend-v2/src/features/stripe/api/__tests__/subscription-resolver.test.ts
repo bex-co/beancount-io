@@ -70,7 +70,6 @@ describe("SubscriptionResolver", () => {
         userId: "user-123",
         method: "session",
         scopes: new Set(),
-        capabilityExempt: true,
       }),
     } as unknown as IContext;
 
@@ -1430,7 +1429,6 @@ describe("SubscriptionResolver", () => {
           userId: "user-123",
           method: "oauth",
           scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
-          capabilityExempt: false,
         }),
       } as unknown as IContext;
 

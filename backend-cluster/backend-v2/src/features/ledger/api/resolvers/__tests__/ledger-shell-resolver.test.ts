@@ -9,7 +9,6 @@ const IDENTITY: Identity = {
   userId: "user-123",
   method: "oauth",
   scopes: new Set(),
-  capabilityExempt: false,
 };
 
 describe("LedgerShellResolver", () => {

@@ -100,7 +100,6 @@ export const sessionIdentity: Identity = {
   userId: "usr_session",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 export const readOnlyToken: Identity = {
@@ -108,13 +107,18 @@ export const readOnlyToken: Identity = {
   method: "oauth",
   scopes: new Set(["ledger.read"]),
   tokenId: "tok_read",
-  capabilityExempt: false,
 };
 
 export const writeToken: Identity = {
   ...readOnlyToken,
   scopes: new Set(["ledger.write"]),
   tokenId: "tok_write",
+};
+
+export const pinnedReadToken: Identity = {
+  ...readOnlyToken,
+  ledgerScope: "alice/main",
+  tokenId: "tok_pinned_read",
 };
 
 export const scopelessToken: Identity = {

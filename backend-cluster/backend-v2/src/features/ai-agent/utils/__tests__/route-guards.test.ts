@@ -18,7 +18,6 @@ function oauth(scopes: string[]): Identity {
     userId: "user-1",
     method: "oauth",
     scopes: new Set(scopes),
-    capabilityExempt: false,
   };
 }
 
@@ -57,7 +56,6 @@ describe("resolveAuthUser", () => {
       userId: "user-1",
       method: "session",
       scopes: new Set(),
-      capabilityExempt: true,
     };
     await expect(
       resolveAuthUser(ctx(identity), deps, "admin"),

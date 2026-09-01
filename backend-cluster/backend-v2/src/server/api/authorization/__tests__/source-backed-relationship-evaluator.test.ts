@@ -252,7 +252,6 @@ describe("SourceBackedRelationshipEvaluator", () => {
       userId: "usr_alice",
       method: "session" as const,
       scopes: new Set<string>(),
-      capabilityExempt: true,
     };
 
     await expect(

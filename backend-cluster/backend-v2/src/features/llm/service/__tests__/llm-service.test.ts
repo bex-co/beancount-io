@@ -15,7 +15,6 @@ describe("LLMService temp-asset ownership", () => {
     userId: "usr_1",
     method: "session",
     scopes: new Set(),
-    capabilityExempt: true,
   };
 
   const getObjectMetadata = jest.fn();

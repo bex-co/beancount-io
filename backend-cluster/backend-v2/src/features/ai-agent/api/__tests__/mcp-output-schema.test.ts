@@ -29,7 +29,6 @@ function toolCtx(ledgerShell: unknown): ToolContext {
       ]),
       tokenId: "tok_1",
       ledgerScope: "alice/main",
-      capabilityExempt: false,
     },
     ledgerId: "alice/main",
     llmService: {},

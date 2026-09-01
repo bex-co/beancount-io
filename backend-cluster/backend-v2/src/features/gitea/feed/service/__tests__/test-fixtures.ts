@@ -62,7 +62,6 @@ export function createMockContext(
       userId: mockUser.id,
       method: "session",
       scopes: new Set(),
-      capabilityExempt: true,
     }),
     ...overrides,
   } as jest.Mocked<IContext>;

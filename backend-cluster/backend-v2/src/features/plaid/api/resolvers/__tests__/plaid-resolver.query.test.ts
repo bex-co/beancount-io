@@ -26,7 +26,6 @@ function buildMockContext(userId = "user_test"): IContext {
       userId,
       method: "session",
       scopes: new Set(),
-      capabilityExempt: true,
     }),
     loaders: {
       plaidSyncLogsByItemId: { load: jest.fn() },

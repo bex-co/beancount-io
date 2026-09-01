@@ -23,14 +23,12 @@ const token = (...scopes: string[]): Identity => ({
   method: "oauth",
   scopes: new Set(scopes),
   tokenId: "tok_1",
-  capabilityExempt: false,
 });
 
 const session: Identity = {
   userId: "usr_1",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 const READ_OP = "GQL Query.queryShellText";

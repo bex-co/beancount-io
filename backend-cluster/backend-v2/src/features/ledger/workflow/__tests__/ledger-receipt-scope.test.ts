@@ -31,7 +31,6 @@ describe("LedgerReceiptWorkflow authorizes as the caller", () => {
     scopes: new Set(["ledger.read", "ledger.write"]),
     ledgerScope: "alice/a",
     tokenId: "tok_1",
-    capabilityExempt: false,
   };
 
   const readOnlyKey: Identity = {
@@ -39,7 +38,6 @@ describe("LedgerReceiptWorkflow authorizes as the caller", () => {
     method: "apikey",
     scopes: new Set(["ledger.read"]),
     tokenId: "key_1",
-    capabilityExempt: false,
   };
 
   const getPublicApiClient = jest.fn();
@@ -115,16 +113,14 @@ describe("LedgerReceiptWorkflow authorizes as the caller", () => {
   });
 
   it("hands the caller's own identity to addBulkEntries, still narrowed", async () => {
-    await makeWorkflow().insertReceiptTransaction(
-      params("alice/a", pinnedToA),
-    );
+    await makeWorkflow().insertReceiptTransaction(params("alice/a", pinnedToA));
 
     expect(addBulkEntries).toHaveBeenCalledTimes(1);
     const identity = addBulkEntries.mock.calls[0]![0]! as Identity;
     expect(identity).toBe(pinnedToA);
     // The pre-fix shape: same user, entirely different authority. If this ever
     // holds again, `authorizeLedger` downstream has no pin left to check.
-    expect(identity.capabilityExempt).not.toBe(true);
+    expect(identity.method).toBe("oauth");
     expect(identity.ledgerScope).toBe("alice/a");
   });
 });

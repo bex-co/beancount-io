@@ -9,7 +9,7 @@
 
 Ledger authorization is enforced by hand-written code with a deliberately small shape (ADR 0006): a closed three-scope vocabulary with implication (`ledger.admin` ⊇ `ledger.write` ⊇ `ledger.read`, `identity.ts`), an op-class matrix consulted by all three surfaces (`op-class.ts`), and one per-ledger seam — `authorizeLedger(identity, ledgerId, rel)` — that intersects two independent ceilings:
 
-- **Credential ceiling** — what the presented credential may do on this request: sessions are capability-exempt, API keys and OAuth tokens carry granted scopes, a credential can be pinned to one ledger (`Identity.ledgerScope`).
+- **Credential ceiling** — what the presented credential may do on this request: sessions compute a full effective-capability set, API keys and OAuth tokens compute capabilities from granted scopes, a credential can be pinned to one ledger (`Identity.ledgerScope`), and internal work carries a distinct service principal.
 - **Relationship ceiling** — what the caller is to the ledger: owner ⇒ admin, collaborator at read/write/admin, public ledger ⇒ read, else nothing.
 
 ```mermaid
@@ -19,8 +19,8 @@ flowchart TB
   subgraph bv2["backend-v2 (Koa service)"]
     gates["surface gates: GraphQL · REST · MCP (op-class matrix)"]
     resolve["resolveIdentity (session | OAuth | API key)"]
-    seam["authorizeLedger — credentialAllows ∩ relationshipAllows"]
-    cap["credential ceiling (identity.ts: scopes admin ⊇ write ⊇ read, session exempt, ledgerScope pin)"]
+    seam["AuthorizationService via authorizeLedger — credentialAllows ∩ relationshipAllows"]
+    cap["credential ceiling (identity.ts: effective capabilities, assurance, ledgerScope pin)"]
     relc["relationship ceiling (owner ⇒ admin, collaborator r/w/a, public ⇒ read)"]
   end
 
@@ -66,7 +66,7 @@ authorizeLedger =
 
 ### D3 — The model owns only the relationship ceiling
 
-The credential ceiling (scopes, session exemption, `ledgerScope` pin) is deliberately not in the FGA model.
+The credential ceiling (effective capabilities derived from scopes/session/workload provenance, authentication assurance, and `ledgerScope` pin) is deliberately not in the FGA model.
 
 **Rejected alternative:** an earlier draft encoded it as `request_scope_*` relations supplied as contextual tuples, giving one model whose `can_* = rel_* and cap_*` intersection mirrored the full seam. OpenFGA supports that pattern (token claims as contextual tuples), but it was rescinded for three reasons:
 
@@ -172,6 +172,39 @@ D5's engine triggers are unchanged. If T1, T2, or T3 fires, the
 pre-decided OpenFGA backend and fail closed when it is unavailable. Until then,
 adding a service and tuple database would duplicate authoritative domain data
 without improving the decision boundary.
+
+## Amendment — 2026-08-31: normalized principals and one authenticated ledger PDP contract
+
+Resolved request identities now carry an explicit user principal, computed
+effective operation capabilities, and authentication assurance. The old
+`capabilityExempt` flag has been removed. Sessions compute full
+read/write/admin capabilities; OAuth and API keys compute the same vocabulary
+from their granted scopes. OAuth additionally
+preserves `auth_time`, `acr`, and `amr` when present so later step-up policy does
+not require another identity-envelope migration.
+
+Internal scheduled/webhook work no longer fabricates a session. It uses the
+`system` method with a service principal and an explicit on-behalf-of stable
+user ID. The PDP rejects method/principal mismatches. Existing workload
+authority is preserved: the service principal has the same full effective
+ledger capability ceiling, while the user's current durable ledger
+relationship still constrains the requested resource.
+
+Authenticated `authorizeLedger` calls now translate their existing
+`read`/`write`/`admin` input to the shared
+`authorize(principal, action, resource, context)` contract. The action catalog
+maps those actions to the model's `ledger#reader`, `ledger#writer`, and
+`ledger#administrator` relations. A local relationship evaluator obtains the
+same authoritative Gitea/Fava permission as before and keeps the existing
+per-request memo; the compatibility seam still returns ledger repository/owner
+metadata and emits the established ledger audit record. Anonymous public reads
+retain the existing branch because they are not one of the three authenticated
+credential kinds.
+
+This amendment changes no durable relationship semantics and introduces no FGA
+runtime, tuple store, dependency, token format, scope, route, or client
+contract. `model.fga` already expressed the exact ledger rank lattice consumed
+by the runtime adapter, so only its runtime-mapping commentary changes.
 
 ## Follow-up (open)
 

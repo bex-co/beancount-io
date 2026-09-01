@@ -8,7 +8,6 @@ const identity: Identity = {
   userId: "user-1",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 describe("CliAuthResolver", () => {

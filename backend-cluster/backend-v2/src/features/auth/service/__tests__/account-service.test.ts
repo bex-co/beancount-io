@@ -39,7 +39,6 @@ describe("AccountService", () => {
       userId,
       method: "session",
       scopes: new Set(),
-      capabilityExempt: true,
     };
   };
 

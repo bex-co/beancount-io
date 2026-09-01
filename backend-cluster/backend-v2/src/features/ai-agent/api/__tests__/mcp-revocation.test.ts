@@ -31,7 +31,6 @@ describe("MCP per-call authorization: mid-session revocation", () => {
       method: "oauth",
       ledgerScope: LEDGER_ID,
       scopes: new Set(["ledger.read"]),
-      capabilityExempt: false,
     };
   }
 

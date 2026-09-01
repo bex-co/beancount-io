@@ -20,7 +20,6 @@ const sessionIdentity: Identity = {
   userId: "user_1",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 const baseInput = {

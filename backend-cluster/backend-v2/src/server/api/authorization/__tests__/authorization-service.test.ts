@@ -1,4 +1,4 @@
-import type { Identity } from "@/server/api/identity";
+import { systemIdentity, type Identity } from "@/server/api/identity";
 import { setAuditSink, type AuditEvent } from "@/server/api/audit";
 import { ErrorCategory } from "@/shared/errors";
 import { asyncContext, runWithOperationId } from "@/shared/async-context";
@@ -26,7 +26,6 @@ function identity(
     userId,
     method,
     scopes: new Set(scopes),
-    capabilityExempt: method === "session",
   };
 }
 
@@ -351,6 +350,53 @@ describe("AuthorizationService", () => {
     expect(relationships.check).not.toHaveBeenCalled();
   });
 
+  it("authorizes a workload principal through the same ledger action contract", async () => {
+    const relationships: IRelationshipEvaluator = {
+      check: jest.fn(async () => true),
+    };
+    const service = new AuthorizationService(relationships);
+
+    await expect(
+      service.authorize({
+        principal: systemIdentity("usr_alice", "plaid-sync"),
+        action: AUTHORIZATION_ACTIONS.LEDGER_WRITE,
+        resource: ledgerResource("alice/main"),
+        context: { ledgerId: "alice/main" },
+      }),
+    ).resolves.toMatchObject({
+      allowed: true,
+      action: AUTHORIZATION_ACTIONS.LEDGER_WRITE,
+      resource: "ledger:alice/main",
+    });
+    expect(relationships.check).toHaveBeenCalledWith({
+      user: "user:usr_alice",
+      relation: "writer",
+      object: "ledger:alice/main",
+    });
+  });
+
+  it("denies a ledger-pinned credential before relationship evaluation", async () => {
+    const relationships: IRelationshipEvaluator = {
+      check: jest.fn(async () => true),
+    };
+    const service = new AuthorizationService(relationships);
+
+    await expect(
+      service.authorize({
+        principal: {
+          ...identity("oauth", "usr_alice", ["ledger.read"]),
+          ledgerScope: "alice/main",
+        },
+        action: AUTHORIZATION_ACTIONS.LEDGER_READ,
+        resource: ledgerResource("alice/other"),
+      }),
+    ).resolves.toMatchObject({
+      allowed: false,
+      reason: "credential_not_permitted",
+    });
+    expect(relationships.check).not.toHaveBeenCalled();
+  });
+
   it.each(BILLING_ACTIONS)(
     "allows a browser session to perform %s for its own billing resource",
     async (action) => {
@@ -433,16 +479,33 @@ describe("AuthorizationService", () => {
     });
   });
 
-  it("rejects a malformed identity envelope instead of trusting its exemption bit", async () => {
+  it("rejects an identity whose principal disagrees with its acting user", async () => {
     const malformed = {
       ...identity("oauth", "usr_alice", []),
-      capabilityExempt: true,
+      principal: { type: "user" as const, id: "usr_mallory" },
     };
     const service = new AuthorizationService({ check: async () => true });
     await expect(
       service.authorize({
         principal: malformed,
         action: AUTHORIZATION_ACTIONS.USER_DELETE,
+        resource: userResource("usr_alice"),
+      }),
+    ).resolves.toMatchObject({
+      allowed: false,
+      reason: "credential_not_permitted",
+    });
+  });
+
+  it("rejects an identity whose assurance disagrees with its method", async () => {
+    const service = new AuthorizationService({ check: async () => true });
+    await expect(
+      service.authorize({
+        principal: {
+          ...identity("oauth", "usr_alice", ["ledger.read"]),
+          assurance: { type: "interactive" },
+        },
+        action: AUTHORIZATION_ACTIONS.USER_PROFILE_READ,
         resource: userResource("usr_alice"),
       }),
     ).resolves.toMatchObject({

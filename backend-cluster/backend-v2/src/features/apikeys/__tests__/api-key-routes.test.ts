@@ -19,7 +19,6 @@ const session: Identity = {
   userId: "usr_1",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 const fromKey: Identity = {
@@ -27,7 +26,6 @@ const fromKey: Identity = {
   method: "apikey",
   scopes: new Set(["ledger.admin"]),
   tokenId: "akey_1",
-  capabilityExempt: false,
 };
 
 const storedKey = {

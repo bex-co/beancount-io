@@ -49,7 +49,6 @@ const IDENTITY = {
   userId: USER_ID,
   method: "session",
   scopes: new Set<string>(),
-  capabilityExempt: true,
 } as const;
 
 describe("LedgerWorkflow", () => {

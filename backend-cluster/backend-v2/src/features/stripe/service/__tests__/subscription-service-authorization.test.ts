@@ -16,14 +16,12 @@ const session: Identity = {
   userId: "usr_alice",
   method: "session",
   scopes: new Set(),
-  capabilityExempt: true,
 };
 
 const oauth: Identity = {
   userId: "usr_alice",
   method: "oauth",
   scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
-  capabilityExempt: false,
 };
 
 function makeDeps() {

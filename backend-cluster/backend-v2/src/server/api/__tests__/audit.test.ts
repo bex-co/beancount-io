@@ -21,7 +21,6 @@ const token: Identity = {
   scopes: new Set(["ledger.write"]),
   tokenId: "akey_1",
   ledgerScope: "alice/main",
-  capabilityExempt: false,
 };
 
 afterEach(() => setAuditSink(undefined));
@@ -102,7 +101,6 @@ describe("coverage through the enforcement seam", () => {
     method: "oauth",
     scopes: new Set(["ledger.read"]),
     tokenId: "tok_1",
-    capabilityExempt: false,
   };
 
   const collect = async (run: () => void): Promise<AuditEvent[]> => {

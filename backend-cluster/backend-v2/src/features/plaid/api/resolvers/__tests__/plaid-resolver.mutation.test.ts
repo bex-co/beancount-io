@@ -27,7 +27,6 @@ function buildMockContext(userId = "user_test"): IContext {
       userId,
       method: "session",
       scopes: new Set(),
-      capabilityExempt: true,
     }),
   } as unknown as IContext;
 }
@@ -420,7 +419,6 @@ describe("PlaidMutationResolver", () => {
           method: "oauth",
           ledgerScope: ledgerId,
           scopes: new Set(["ledger.write"]),
-          capabilityExempt: false,
         }),
       } as unknown as IContext;
     }

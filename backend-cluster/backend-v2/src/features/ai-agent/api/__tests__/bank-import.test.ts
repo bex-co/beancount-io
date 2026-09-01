@@ -52,7 +52,6 @@ function ctx(services: ReturnType<typeof fakeServices>): ToolContext {
       scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
       tokenId: "tok_1",
       ledgerScope: LEDGER,
-      capabilityExempt: false,
     },
     ledgerId: LEDGER,
     llmService: {},

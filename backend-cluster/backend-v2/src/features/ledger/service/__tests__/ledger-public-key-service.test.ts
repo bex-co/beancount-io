@@ -8,7 +8,6 @@ const identity = {
   userId: "usr_alice",
   method: "session",
   scopes: new Set<string>(),
-  capabilityExempt: true,
 } as const;
 
 const key = {

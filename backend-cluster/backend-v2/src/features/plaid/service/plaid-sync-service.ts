@@ -110,7 +110,7 @@ export class PlaidSyncService implements IPlaidSyncService {
   /** Item-management mutations require at least write tier — a read-only collaborator may not. */
   /**
    * Authorize as the caller. Previously `trustedIdentity(userId)`, which is
-   * `capabilityExempt` and so skipped the scope check entirely — see m9.
+   * a fabricated full-authority identity and skipped the scope check — see m9.
    */
   private assertLedgerWriteAccess(ledgerId: string, identity: Identity) {
     return authorizeLedger(identity, ledgerId, "write", {

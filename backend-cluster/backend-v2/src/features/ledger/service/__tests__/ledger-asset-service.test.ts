@@ -33,7 +33,6 @@ const IDENTITY: Identity = {
   userId: "alice",
   method: "oauth",
   scopes: new Set(["ledger.read"]),
-  capabilityExempt: false,
 };
 
 describe("LedgerAssetService", () => {

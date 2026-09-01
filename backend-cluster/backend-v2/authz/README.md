@@ -20,8 +20,10 @@ lifecycle/API-key-management/billing/social domain through a small TypeScript PD
 source-backed evaluator mirrors exact-self User permissions and resolves
 API-key ownership from the current `api_keys` row. Social star decisions query
 current Gitea repository readability without copying the social graph into
-tuples. Other ledger relationships remain documentation-as-code until their
-own domain milestone or an ADR 0010 trigger.
+tuples. Authenticated single-ledger calls enter that same PDP contract through
+`authorizeLedger`, whose relationship adapter maps current Gitea/Fava facts to
+the modeled ledger rank. The FGA file remains an executable specification in
+CI; no FGA service is deployed.
 
 ## Centralized authorization in a microservice system
 
@@ -34,10 +36,12 @@ for this domain is:
 GraphQL / REST / MCP alias
   → resolveIdentity()
   → protected application service/workflow boundary
-  → authorize(requestIdentity, canonicalAction, trustedResource)
+      or authorizeLedger compatibility seam
+  → authorize(principal, canonicalAction, trustedResource, context)
       → credential ceiling
-      → exact-self fact, current api_keys.owner lookup, or current Gitea readability
-      → modeled user#can_* relationship
+      → exact-self, current api_keys.owner, current Gitea readability,
+        or current ledger-access lookup
+      → modeled user#can_* or ledger#reader/writer/administrator relationship
       → one fail-closed allow / deny; source failure is an explicit error
       → one audit event per authorization call
   → domain work
@@ -50,7 +54,8 @@ side effect. The caller provides only:
 
 - the canonical action;
 - the domain resource ID;
-- the already-resolved authenticated identity.
+- the already-resolved authenticated principal;
+- trusted request context, when an action needs it.
 
 Transport adapters do not interpret policy or manufacture relationship tuples.
 The operation-class gate only routes these operations to the PDP. Account,
@@ -68,8 +73,10 @@ authenticated credential reach the application service, where the catalog
 produces the one final allow/deny decision and its actionable error. Nullable
 identity probes and authentication ceremonies remain undecorated.
 
-The evaluator holds no tuple store, decision memo, or cross-request cache.
-Protected service methods receive the resolved `Identity` explicitly; the
+The evaluators hold no tuple store or cross-request cache. The ledger adapter
+retains only the existing identity-object-keyed per-request lookup memo so one
+request does not repeat the external relationship lookup. Protected service
+methods receive the resolved `Identity` explicitly; the
 stable transport operation ID is observability metadata propagated in an
 isolated AsyncLocalStorage child context by the GraphQL, REST, and MCP gates.
 Concurrent GraphQL root fields and MCP calls therefore cannot overwrite one
@@ -143,8 +150,9 @@ ledger.ai:write
 ```
 
 This vocabulary describes the model's future fine-grained credential ceiling.
-The current runtime preserves the existing three ledger scopes and session
-restrictions for compatibility; it does not mint or require these future grants.
+The current runtime preserves the existing three ledger scopes and credential
+reachability for compatibility, normalizing them to effective capabilities and
+authentication assurance; it does not mint or require these future grants.
 
 Do not introduce a global `admin` grant. `administrator` in `model.fga` is the
 durable ledger relationship rank inherited from Gitea; it is not a permission
@@ -197,6 +205,9 @@ beside `AuthorizationService`:
 | `user.public_keys.read`                | `GQL Query.getPublicKey`                       | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_public_keys`           |
 | `user.public_keys.create`              | `GQL Mutation.createPublicKey`                 | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_write_public_keys`          |
 | `user.public_keys.delete`              | `GQL Mutation.deletePublicKey`                 | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_write_public_keys`          |
+| `ledger.read`                          | authenticated `authorizeLedger(..., read)`     | session/system or OAuth/API key with `ledger.read`   | current `ledger#reader`                          |
+| `ledger.write`                         | authenticated `authorizeLedger(..., write)`    | session/system or OAuth/API key with `ledger.write`  | current `ledger#writer`                          |
+| `ledger.admin`                         | authenticated `authorizeLedger(..., admin)`    | session/system or OAuth/API key with `ledger.admin`  | current `ledger#administrator`                   |
 
 The public social exclusions live executably in `SOCIAL_PUBLIC_EXCLUSIONS`
 beside the operation table: `getUserProfile`, `getUserFollowers`,
@@ -405,17 +416,18 @@ Only durable or source-derived domain facts enter the model:
   fresh Gitea lookup for every control-plane decision.
 
 Today ledger relationships are resolved from the external Gitea-backed ledger
-service. Under engine adoption they may initially be supplied to the PDP for a
-Check and later synchronized to OpenFGA when ADR 0010's reverse-query trigger
-is reached. No microservice may write credential-derived or request-derived
-tuples.
+service. The `authorizeLedger` adapter supplies their decision to the same
+TypeScript PDP contract without creating tuples. Under engine adoption they may
+later be synchronized to OpenFGA when ADR 0010's reverse-query trigger is
+reached. No microservice may write credential-derived or request-derived tuples.
 
 ## Invariants
 
 1. **The authorization module is the only final authority for migrated User
-   and ledger control-plane actions.** Protected application services and
-   workflows call it once before domain work; every transport alias uses those
-   boundaries.
+   actions, ledger control-plane actions, and authenticated single-ledger rank
+   decisions.** Protected application services, workflows, and the
+   `authorizeLedger` compatibility seam call it before domain work; every
+   transport alias uses those boundaries.
 2. **OpenFGA contains only durable domain relationships.** No credential,
    session, token, grant, or `request_*` type/relation belongs in this model.
 3. **Subjects use stable internal user IDs** (`users.id`), never usernames,
@@ -454,6 +466,7 @@ fga model test --tests model.test.fga.yaml
 The FGA suite covers user ownership boundaries, capability-level permission
 families, ledger rank inheritance, private fail-closed behavior, public reads,
 and monotonic rank semantics. The TypeScript suite covers every implemented
-action, credential ceiling, wrong-user/foreign-key resources, independent
-per-call evaluation and audit, source failure, and GraphQL/REST/MCP aliases.
-Credentials and request context never become FGA tuples.
+action, credential ceiling, ledger pin, service-principal provenance,
+wrong-user/foreign-key resources, independent per-call evaluation and audit,
+source failure, and GraphQL/REST/MCP aliases. Credentials and request context
+never become FGA tuples.

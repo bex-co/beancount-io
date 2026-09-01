@@ -15,7 +15,6 @@ const IDENTITY: Identity = {
   userId: "user-123",
   method: "oauth",
   scopes: new Set(["ledger.read", "ledger.write"]),
-  capabilityExempt: false,
 };
 const LEDGER_ID = "alice/personal";
 

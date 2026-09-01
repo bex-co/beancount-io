@@ -12,8 +12,10 @@
 # the protected User domain with exact-self checks for profile, credentials,
 # and lifecycle permissions. API-key revoke resolves current row ownership to
 # the owner's User credentials permission; no credential object or tuple enters
-# this model. Ledger relationships stay documentation-as-code until their own
-# migration or an ADR 0010 trigger. CI validates this model and its tests.
+# this model. Authenticated `authorizeLedger` calls now use the same TypeScript
+# PDP contract and map current Gitea/Fava facts to the modeled ledger
+# reader/writer/administrator relations. The model remains CI-evaluated only;
+# no OpenFGA runtime or tuple store is deployed.
 
 model
   schema 1.1

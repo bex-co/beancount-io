@@ -18,13 +18,18 @@ const identityLogger = logger.child({ module: "identity" });
 /** Shared empty set, so every session identity does not allocate its own. */
 const EMPTY_SCOPES: ReadonlySet<string> = new Set<string>();
 
+const ALL_OPERATION_CAPABILITIES: ReadonlySet<OperationClass> = new Set([
+  "read",
+  "write",
+  "admin",
+]);
+
 /**
- * A full-capability identity for a caller that has none: a cron run, a webhook,
- * an admin endpoint naming its subject by email.
+ * A full-capability workload identity for a caller that has none: a cron run,
+ * a webhook, or an internal workflow acting for one user.
  *
- * `capabilityExempt: true` matches a session's semantics — full trust, no scope
- * narrowing — which is exactly why this must never stand in for a caller who
- * *does* have an identity. A predecessor named `trustedIdentity` was built
+ * This is deliberately a `service` principal using the `system` method, not a
+ * fabricated browser session. A predecessor named `trustedIdentity` was built
  * *inside* service methods, where claiming full capability was invisible: a
  * scoped token reached the service, the service promptly forgot it was scoped,
  * and the transport gate became the only enforcement (w3/m9). Worse, the
@@ -38,25 +43,47 @@ const EMPTY_SCOPES: ReadonlySet<string> = new Set<string>();
  * Use it only where there genuinely is no caller. If a request reached you, its
  * identity is what should authorize — thread it through instead.
  */
-export function systemIdentity(userId: string): Identity {
+export function systemIdentity(
+  userId: string,
+  serviceId = "backend-v2",
+): Identity {
   return {
     userId,
-    method: "session",
+    principal: { type: "service", id: serviceId, onBehalfOfUserId: userId },
+    method: "system",
     scopes: EMPTY_SCOPES,
-    capabilityExempt: true,
+    capabilities: ALL_OPERATION_CAPABILITIES,
+    assurance: { type: "workload" },
   };
 }
 
 /**
- * How the caller proved who they are. One value per credential kind the API
- * suite accepts (ADR 0006 D2).
+ * How the caller proved who they are. The three request credential kinds are
+ * joined by `system`, which exists only for trusted internal workloads.
  *
  * - `session` — the browser/mobile session JWT minted by our own auth flow,
  *   presented as a bearer or an httpOnly cookie.
  * - `oauth`   — an OAuth 2.1 access token from our OIDC provider (PKCE, DCR).
  * - `apikey`  — a durable `bcio_` key for CLI/CI/cron clients (w1/m22).
  */
-export type AuthMethod = "session" | "oauth" | "apikey";
+export type AuthMethod = "session" | "oauth" | "apikey" | "system";
+
+type Principal =
+  | { readonly type: "user"; readonly id: string }
+  | {
+      readonly type: "service";
+      readonly id: string;
+      /** Stable user whose durable resource relationships constrain the work. */
+      readonly onBehalfOfUserId: string;
+    };
+
+export interface AuthenticationAssurance {
+  readonly type: "interactive" | "delegated" | "workload";
+  /** Seconds since Unix epoch, when the issuer supplied an authentication time. */
+  readonly authenticatedAt?: number;
+  readonly acr?: string;
+  readonly amr?: readonly string[];
+}
 
 /**
  * The API scope vocabulary. Deliberately closed and only three wide (ADR 0006
@@ -95,7 +122,7 @@ const SATISFYING_SCOPES: Record<ApiScope, readonly ApiScope[]> = {
   "ledger.admin": ["ledger.admin"],
 };
 
-export function hasRequiredScope(
+function hasRequiredScope(
   scopes: ReadonlySet<string>,
   required: ApiScope,
 ): boolean {
@@ -112,14 +139,20 @@ export function hasRequiredScope(
  */
 export interface Identity {
   userId: string;
+  /** Who is acting. Runtime-resolved identities always carry this explicitly. */
+  principal?: Principal;
   method: AuthMethod;
   /** OAuth client that received this credential, when `method` is `oauth`. */
   oauthClientId?: string;
   /**
    * Scopes granted to this credential. Empty for sessions, which are not
-   * scope-constrained — see `capabilityExempt`.
+   * scope-constrained. Authorization consumes `capabilities`, not this raw set.
    */
   scopes: ReadonlySet<string>;
+  /** Effective operation capabilities computed once from the credential grant. */
+  capabilities?: ReadonlySet<OperationClass>;
+  /** Authentication provenance/strength, kept separate from authorization. */
+  assurance?: AuthenticationAssurance;
   /**
    * The single ledger this credential is confined to, when it is confined at
    * all. Set from an OAuth grant's `ledger_id` claim (a grant pinned to one
@@ -133,13 +166,71 @@ export interface Identity {
    * audit and revocation. Never the credential's secret material.
    */
   tokenId?: string;
-  /**
-   * True when the scope matrix does not apply. A browser session is full-power
-   * by construction — the user is driving the product UI directly — so
-   * constraining it by scope would express nothing. Token-shaped credentials
-   * (`oauth`, `apikey`) are always false.
-   */
-  capabilityExempt: boolean;
+}
+
+/** Resolve the effective actor while old in-process fixtures are migrated. */
+function identityPrincipal(identity: Identity): Principal | undefined {
+  if (identity.principal) return identity.principal;
+  if (identity.method === "system") return undefined;
+  return { type: "user", id: identity.userId };
+}
+
+/** User whose durable relationships constrain this request, if well formed. */
+export function identityUserId(identity: Identity): string | undefined {
+  const principal = identityPrincipal(identity);
+  if (!principal) return undefined;
+  if (
+    (identity.method === "system" && principal.type !== "service") ||
+    (identity.method !== "system" && principal.type !== "user")
+  ) {
+    return undefined;
+  }
+  const principalUserId =
+    principal.type === "user" ? principal.id : principal.onBehalfOfUserId;
+  return principalUserId === identity.userId ? principalUserId : undefined;
+}
+
+export function identityAssurance(identity: Identity): AuthenticationAssurance {
+  if (identity.assurance) {
+    const expected =
+      identity.method === "session"
+        ? "interactive"
+        : identity.method === "system"
+          ? "workload"
+          : "delegated";
+    if (identity.assurance.type === expected) return identity.assurance;
+    return { type: "delegated" };
+  }
+  if (identity.method === "session") return { type: "interactive" };
+  if (identity.method === "system") return { type: "workload" };
+  return { type: "delegated" };
+}
+
+export function identityAssuranceIsValid(identity: Identity): boolean {
+  if (!identity.assurance) return true;
+  const expected =
+    identity.method === "session"
+      ? "interactive"
+      : identity.method === "system"
+        ? "workload"
+        : "delegated";
+  return identity.assurance.type === expected;
+}
+
+function effectiveCapabilities(
+  identity: Identity,
+): ReadonlySet<OperationClass> {
+  if (identity.capabilities) return identity.capabilities;
+  if (identity.method === "session" || identity.method === "system") {
+    return ALL_OPERATION_CAPABILITIES;
+  }
+  const capabilities = new Set<OperationClass>();
+  for (const operation of ["read", "write", "admin"] as const) {
+    if (hasRequiredScope(identity.scopes, OPERATION_SCOPE[operation])) {
+      capabilities.add(operation);
+    }
+  }
+  return capabilities;
 }
 
 /** The minimal Koa-ish shape `resolveIdentity` needs: just headers. */
@@ -164,10 +255,7 @@ export function identityHasCapability(
   identity: Identity,
   operation: OperationClass,
 ): boolean {
-  return (
-    identity.capabilityExempt ||
-    hasRequiredScope(identity.scopes, OPERATION_SCOPE[operation])
-  );
+  return effectiveCapabilities(identity).has(operation);
 }
 
 /** Whether the credential's optional single-ledger ceiling admits this id. */
@@ -189,7 +277,10 @@ export function assertSessionIdentity(
   identity: Identity,
   action = "This operation",
 ): void {
-  if (identity.method !== "session" || !identity.capabilityExempt) {
+  if (
+    identity.method !== "session" ||
+    identityAssurance(identity).type !== "interactive"
+  ) {
     throw new ForbiddenError(`${action} requires a full signed-in session`);
   }
 }
@@ -267,11 +358,13 @@ async function resolveApiKeyIdentity(
 
   return {
     userId: key.userId,
+    principal: { type: "user", id: key.userId },
     method: "apikey",
     scopes: new Set(key.scopes),
+    capabilities: capabilitiesFromScopes(key.scopes),
+    assurance: { type: "delegated" },
     ledgerScope: key.ledgerScope,
     tokenId: key.id,
-    capabilityExempt: false,
   };
 }
 
@@ -320,9 +413,11 @@ async function resolveSessionIdentity(
   }
   return {
     userId,
+    principal: { type: "user", id: userId },
     method: "session",
     scopes: EMPTY_SCOPES,
-    capabilityExempt: true,
+    capabilities: ALL_OPERATION_CAPABILITIES,
+    assurance: { type: "interactive" },
   };
 }
 
@@ -345,11 +440,31 @@ async function resolveOAuthIdentity(
   });
   return {
     userId: oidc.userId,
+    principal: { type: "user", id: oidc.userId },
     method: "oauth",
     oauthClientId: oidc.clientId,
     scopes: new Set(oidc.scopes),
+    capabilities: capabilitiesFromScopes(oidc.scopes),
+    assurance: {
+      type: "delegated",
+      authenticatedAt: oidc.authenticatedAt,
+      acr: oidc.acr,
+      amr: oidc.amr,
+    },
     ledgerScope: oidc.ledgerId,
     tokenId: oidc.tokenId,
-    capabilityExempt: false,
   };
+}
+
+function capabilitiesFromScopes(
+  scopes: Iterable<string>,
+): ReadonlySet<OperationClass> {
+  const scopeSet = scopes instanceof Set ? scopes : new Set(scopes);
+  const capabilities = new Set<OperationClass>();
+  for (const operation of ["read", "write", "admin"] as const) {
+    if (hasRequiredScope(scopeSet, OPERATION_SCOPE[operation])) {
+      capabilities.add(operation);
+    }
+  }
+  return capabilities;
 }

@@ -17,7 +17,6 @@ describe("LLMCategorizationQueryResolver", () => {
     method: "oauth",
     scopes: new Set(["ledger.read"]),
     ledgerScope: testLedgerId,
-    capabilityExempt: false,
   };
 
   beforeEach(() => {

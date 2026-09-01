@@ -1,4 +1,9 @@
-import { hasRequiredScope, type ApiScope, type Identity } from "./identity";
+import {
+  identityAssurance,
+  identityHasCapability,
+  type ApiScope,
+  type Identity,
+} from "./identity";
 import { ForbiddenError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import {
@@ -978,9 +983,10 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
  * AUTHORIZATION. It did once: `LedgerWorkflow` never consulted
  * `Identity.ledgerScope`, so a credential pinned to one ledger reached every
  * ledger its user could through the GraphQL twin while the MCP tool refused.
- * `graphql/ledger-pin-middleware.ts` now enforces the pin for the whole
- * surface, from the `ledgerId` argument, whichever implementation sits behind
- * it. Convergence is still owed; the hole it left is closed.
+ * `graphql/ledger-pin-middleware.ts` and the v1 route adapter now enforce the
+ * pin for their whole surfaces from the ledger argument/path, whichever
+ * implementation sits behind them. Convergence is still owed; the hole it
+ * left is closed.
  */
 /**
  * API-key management, on all three surfaces (ADR 0006 D6, w1/m22).
@@ -1501,9 +1507,10 @@ export function evaluateScope(
   if (!identity) {
     return { ...base, allowed: true };
   }
-  // A browser session is full-power by construction — the user is driving the
-  // product directly — so narrowing it by scope would express nothing.
-  if (identity.capabilityExempt) {
+  // Interactive first-party and trusted workload callers may reach operations
+  // outside the delegated scope vocabulary. OAuth/API keys remain delegated
+  // even when their effective capability set happens to contain every class.
+  if (identityAssurance(identity).type !== "delegated") {
     return { ...base, allowed: true };
   }
   if (opClass === "public") {
@@ -1520,7 +1527,14 @@ export function evaluateScope(
         "This operation is not part of the API scope vocabulary and is reachable only from a browser session",
     };
   }
-  if (!hasRequiredScope(identity.scopes, requiredScope)) {
+  if (opClass !== "read" && opClass !== "write" && opClass !== "admin") {
+    return {
+      ...base,
+      allowed: false,
+      denyReason: "This operation is not available to this credential",
+    };
+  }
+  if (!identityHasCapability(identity, opClass)) {
     return {
       ...base,
       allowed: false,
@@ -1545,7 +1559,11 @@ export function requireScopeClass(
 ): ScopeDecision {
   const decision = evaluateScope(identity, opId);
 
-  if (!decision.classified && identity && !identity.capabilityExempt) {
+  if (
+    !decision.classified &&
+    identity &&
+    identityAssurance(identity).type === "delegated"
+  ) {
     scopeLogger.warn("Unclassified op treated as write", {
       opId: decision.opId,
       userId: identity.userId,

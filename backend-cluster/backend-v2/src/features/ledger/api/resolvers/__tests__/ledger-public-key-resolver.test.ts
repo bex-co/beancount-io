@@ -9,7 +9,6 @@ describe("LedgerPublicKeyResolver", () => {
     userId: "user-123",
     method: "session",
     scopes: new Set<string>(),
-    capabilityExempt: true,
   } as const;
   let mutationResolver: LedgerPublicKeyMutationResolver;
   let queryResolver: LedgerPublicKeyQueryResolver;

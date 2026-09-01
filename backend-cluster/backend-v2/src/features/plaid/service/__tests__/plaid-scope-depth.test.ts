@@ -42,7 +42,6 @@ describe("Plaid services authorize as the caller, not as a session", () => {
     method: "oauth",
     scopes: new Set(["ledger.read"]),
     tokenId: "tok_1",
-    capabilityExempt: false,
   };
 
   let service: PlaidItemService;
@@ -71,18 +70,16 @@ describe("Plaid services authorize as the caller, not as a session", () => {
     expect(authorize).toHaveBeenCalledTimes(1);
     const identity = authorize.mock.calls[0]![0]!;
     expect(identity).toBe(narrowed);
-    expect(identity.capabilityExempt).toBe(false);
     expect([...identity.scopes]).toEqual(["ledger.read"]);
   });
 
-  it("does not widen a scoped credential into a capability-exempt one", async () => {
+  it("does not widen a scoped credential into a full-capability one", async () => {
     await service.getItems(narrowed, "alice/main");
 
     const identity = authorize.mock.calls[0]![0]!;
     // The pre-m9 shape: same user, entirely different authority. If this ever
     // holds again, the scope check downstream cannot tell a scoped agent from
     // a browser session.
-    expect(identity.capabilityExempt).not.toBe(true);
     expect(identity.method).toBe("oauth");
   });
 
@@ -92,7 +89,18 @@ describe("Plaid services authorize as the caller, not as a session", () => {
     await service.getItems(system, "alice/main");
 
     const identity = authorize.mock.calls[0]![0]!;
-    expect(identity.capabilityExempt).toBe(true);
+    expect(identity.method).toBe("system");
+    expect(identity.principal).toEqual({
+      type: "service",
+      id: "backend-v2",
+      onBehalfOfUserId: "usr_1",
+    });
+    expect(identity.assurance).toEqual({ type: "workload" });
+    expect([...(identity.capabilities ?? [])].sort()).toEqual([
+      "admin",
+      "read",
+      "write",
+    ]);
     expect(identity.userId).toBe("usr_1");
   });
 });

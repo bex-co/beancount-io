@@ -29,7 +29,6 @@ function ctx(
       scopes: new Set(["ledger.read", "ledger.write"]),
       tokenId: "tok_1",
       ledgerScope,
-      capabilityExempt: false,
     },
     ledgerId: LEDGER,
     llmService: {},

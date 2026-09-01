@@ -2,6 +2,7 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import {
   readOnlyToken,
+  pinnedReadToken,
   scopelessToken,
   sessionIdentity,
   startV1TestServer,
@@ -171,6 +172,28 @@ describe("v1 authentication and scope", () => {
     server.setIdentity(readOnlyToken);
     const { status } = await call("GET", `${LEDGER}/accounts`);
     expect(status).toBe(200);
+  });
+
+  it("refuses a ledger-pinned token on a different ledger before the handler", async () => {
+    server.setIdentity(pinnedReadToken);
+    const { status } = await call(
+      "GET",
+      "/api-gateway/v1/ledgers/alice/other",
+    );
+    expect(status).toBe(403);
+    expect(workflows.ledger.getLedger).not.toHaveBeenCalled();
+  });
+
+  it("limits ledger listing to the credential's pinned ledger", async () => {
+    server.setIdentity(pinnedReadToken);
+    const { status, body } = await call("GET", "/api-gateway/v1/ledgers");
+    expect(status).toBe(200);
+    expect(body).toEqual([{ id: "alice/main" }]);
+    expect(workflows.ledger.getLedger).toHaveBeenCalledWith({
+      ledgerId: "alice/main",
+      userId: pinnedReadToken.userId,
+    });
+    expect(workflows.ledger.listLedgers).not.toHaveBeenCalled();
   });
 });
 
