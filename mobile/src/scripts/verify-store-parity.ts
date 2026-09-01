@@ -7,6 +7,7 @@ import {
   loadStoreLocaleManifest,
   storeInputDigest,
   StoreStagingReceipt,
+  writeStoreStagingReceipt,
 } from "./store-metadata";
 
 interface RemoteLocalization {
@@ -207,12 +208,7 @@ const receipt: StoreStagingReceipt = {
   screenshotsPerSet: screenshotManifest.stories.length,
   inputDigest: storeInputDigest(root, version),
 };
-const receiptDirectory = path.join(root, "metadata/releases");
-fs.mkdirSync(receiptDirectory, { recursive: true });
-fs.writeFileSync(
-  path.join(receiptDirectory, `${version}.json`),
-  `${JSON.stringify(receipt, null, 2)}\n`,
-);
+writeStoreStagingReceipt(root, receipt);
 console.log(
   `Remote metadata and screenshots match; wrote staging receipt for ${version}.`,
 );

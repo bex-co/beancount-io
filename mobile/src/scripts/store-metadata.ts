@@ -140,6 +140,26 @@ function writeJson(filePath: string, value: unknown): void {
   fs.writeFileSync(filePath, `${JSON.stringify(value, null, 2)}\n`);
 }
 
+export function writeStoreStagingReceipt(
+  root: string,
+  receipt: StoreStagingReceipt,
+): string {
+  const receiptDirectory = path.join(root, "metadata/releases");
+  const receiptPath = path.join(receiptDirectory, `${receipt.version}.json`);
+  fs.mkdirSync(receiptDirectory, { recursive: true });
+  writeJson(receiptPath, receipt);
+
+  // JSON.stringify and Prettier intentionally wrap arrays differently. Run the
+  // repository-pinned formatter at the producer boundary so a freshly verified
+  // release receipt cannot fail the next CI format check.
+  execFileSync(
+    process.execPath,
+    [require.resolve("prettier/bin/prettier.cjs"), receiptPath, "--write"],
+    { cwd: root, stdio: "pipe" },
+  );
+  return receiptPath;
+}
+
 function sorted(values: readonly string[]): string[] {
   return [...values].sort((left, right) => left.localeCompare(right));
 }

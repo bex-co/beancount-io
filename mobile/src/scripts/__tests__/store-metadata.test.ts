@@ -1,6 +1,7 @@
 import * as fs from "fs";
 import * as os from "os";
 import * as path from "path";
+import { execFileSync } from "child_process";
 import {
   bumpVersion,
   keywordValidationErrors,
@@ -18,6 +19,7 @@ import {
   validateReleaseGate,
   validateScreenshotManifest,
   validateStoreStagingReceipt,
+  writeStoreStagingReceipt,
 } from "../store-metadata";
 
 const root = process.cwd();
@@ -248,6 +250,40 @@ describe("version metadata scaffolding", () => {
 });
 
 describe("remote release gate", () => {
+  it("writes staging receipts in canonical Prettier format", () => {
+    const fixtureRoot = fs.mkdtempSync(
+      path.join(os.tmpdir(), "beancount-store-receipt-"),
+    );
+    const receipt = {
+      schemaVersion: 1,
+      appId: "1527950512",
+      version: "1.20260829.46",
+      verifiedState: "PREPARE_FOR_SUBMISSION",
+      storeLocales: ["en-US", "zh-Hans"],
+      displayTypes: ["APP_IPHONE_65", "APP_IPAD_PRO_3GEN_129"],
+      screenshotsPerSet: 3,
+      inputDigest: "sha256:test",
+    };
+
+    try {
+      const receiptPath = writeStoreStagingReceipt(fixtureRoot, receipt);
+      expect(JSON.parse(fs.readFileSync(receiptPath, "utf8"))).toEqual(receipt);
+      expect(() =>
+        execFileSync(
+          process.execPath,
+          [
+            require.resolve("prettier/bin/prettier.cjs"),
+            receiptPath,
+            "--check",
+          ],
+          { cwd: fixtureRoot, stdio: "pipe" },
+        ),
+      ).not.toThrow();
+    } finally {
+      fs.rmSync(fixtureRoot, { recursive: true, force: true });
+    }
+  });
+
   it("requires editable, confirmed, independently reviewed release phases", () => {
     const fixtureRoot = fs.mkdtempSync(
       path.join(os.tmpdir(), "beancount-gate-"),
