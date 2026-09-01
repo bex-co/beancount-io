@@ -27,18 +27,6 @@ export const ledgerEditorErrorSchema = z
       "Error response when authentication token is missing or invalid",
   });
 
-export const ledgerEditorWithIdQuerySchema = z
-  .object({
-    ledgerId: z.string().openapi({
-      description:
-        "Ledger identifier in owner/name format (e.g., 'user123/main-ledger'). Legacy base64url format is also accepted.",
-      example: "user123/main-ledger",
-    }),
-  })
-  .openapi("LedgerEditorWithIdQuery", {
-    description: "Query parameters for ledger editor with specific ledger",
-  });
-
 export const ledgerEditorOptionalIdQuerySchema = z
   .object({
     ledgerId: z.string().optional().openapi({

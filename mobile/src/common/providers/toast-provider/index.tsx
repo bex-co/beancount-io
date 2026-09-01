@@ -28,7 +28,7 @@ interface ToastContextType {
   showToast: (message: Omit<ToastMessage, "id">) => () => void;
 }
 
-export const ToastContext = createContext<ToastContextType>({
+const ToastContext = createContext<ToastContextType>({
   showToast: () => () => {},
 });
 

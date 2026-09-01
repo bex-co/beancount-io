@@ -13,7 +13,7 @@ import { execFileSync } from "node:child_process";
  * Everything else generates keys through ssh2 instead, so the suite as a whole
  * depends on no external binary.
  */
-export const hasSshKeygen: boolean = (() => {
+const hasSshKeygen: boolean = (() => {
   try {
     execFileSync("ssh-keygen", ["-h"], { stdio: "ignore" });
     return true;

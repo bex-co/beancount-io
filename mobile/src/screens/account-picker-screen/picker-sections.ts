@@ -23,7 +23,7 @@ export const ALL_ROOTS = null;
 export const RECENT_LIMIT = 5;
 
 /** Which of the three ways to reach an account a row represents. */
-export type SelectionSource = "recents" | "search" | "browse";
+type SelectionSource = "recents" | "search" | "browse";
 
 /**
  * A section of the picker list. `source` is stamped where the section is built,

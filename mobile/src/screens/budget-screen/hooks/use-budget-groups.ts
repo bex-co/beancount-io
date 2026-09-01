@@ -16,7 +16,7 @@ import {
  * response carries `total`, and `transactions-screen` already pages a journal
  * query with `fetchMore` — page to completion here rather than raising the cap.
  */
-export const BUDGET_DIRECTIVE_LIMIT = 500;
+const BUDGET_DIRECTIVE_LIMIT = 500;
 
 const BUDGET_QUERY = {
   offset: 0,
@@ -26,7 +26,7 @@ const BUDGET_QUERY = {
 };
 
 /** Shared variables so the page and the home panel hit the same cache entry. */
-export function budgetJournalVariables(ledgerId: string) {
+function budgetJournalVariables(ledgerId: string) {
   return { ledgerId, query: BUDGET_QUERY };
 }
 

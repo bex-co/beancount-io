@@ -32,7 +32,7 @@ import { useThemeStyle } from "@/common/hooks/use-theme-style";
  */
 export type PillKey = string | null;
 
-export type PillOption<T extends PillKey> = {
+type PillOption<T extends PillKey> = {
   key: T;
   label: string;
 };

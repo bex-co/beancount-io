@@ -208,7 +208,7 @@ const AccountRow = memo(function AccountRow({
   );
 });
 
-export function AccountPickerScreenComponent(): JSX.Element {
+function AccountPickerScreenComponent(): JSX.Element {
   const router = useRouter();
   const { userId } = useSession();
   const ledgerId = useLedgerGuard();

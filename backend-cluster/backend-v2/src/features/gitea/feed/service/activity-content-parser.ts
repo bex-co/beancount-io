@@ -36,7 +36,7 @@ interface GiteaPushCommits {
 // Parsed content types
 // ---------------------------------------------------------------------------
 
-export interface ParsedPushContent {
+interface ParsedPushContent {
   kind: "push";
   commits: Array<{
     sha1: string;
@@ -49,7 +49,7 @@ export interface ParsedPushContent {
   totalCount: number;
 }
 
-export interface ParsedIssueContent {
+interface ParsedIssueContent {
   kind: "issue";
   issueIndex: number;
   title: string;
@@ -57,7 +57,7 @@ export interface ParsedIssueContent {
   extra?: string;
 }
 
-export interface ParsedRawContent {
+interface ParsedRawContent {
   kind: "raw";
   text: string;
 }
@@ -68,7 +68,7 @@ export interface ParsedRawContent {
  * it round-trips cleanly through the Activity object without any
  * string-concatenation hacks.
  */
-export interface ParsedAggregatedContent {
+interface ParsedAggregatedContent {
   kind: "aggregated";
   count: number;
   /** First-line subjects collected from all aggregated activities */

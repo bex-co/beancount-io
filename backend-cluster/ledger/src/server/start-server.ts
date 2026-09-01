@@ -19,7 +19,7 @@ import { setLegacyHandler } from "@/api/legacy";
 import { setMetricsHandler } from "@/api/metrics";
 import { restErrorMiddleware } from "@/server/error-middleware";
 
-export function buildApp(): Koa {
+function buildApp(): Koa {
   const app = new Koa();
   const router = new Router();
 

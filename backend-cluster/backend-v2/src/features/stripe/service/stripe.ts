@@ -82,7 +82,7 @@ export function getTierLimits(tier: SubscriptionTier): TierLimits {
 /**
  * Interface for plan configuration
  */
-export interface PlanConfig {
+interface PlanConfig {
   /** Price ID for this plan */
   priceId: string;
   /** Payment type (subscription or one-time) */
@@ -230,8 +230,7 @@ export const SUBSCRIPTION_CONFIG: SubscriptionConfigMap = {
       {
         priceId: "price_1L9cmbEqsEqs2tLVsGOgOQYg",
         type: PaymentType.RECURRING,
-        description:
-          "Beancount.io Basic - Yearly - $99.99/year (Legacy, Test)",
+        description: "Beancount.io Basic - Yearly - $99.99/year (Legacy, Test)",
         tier: SubscriptionTier.PREMIUM,
       },
       {

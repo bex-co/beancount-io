@@ -87,7 +87,7 @@ export interface GetLedgerDirContentParams {
 
 // --- Outputs (results) ------------------------------------------------------
 
-export interface LedgerPermissionData {
+interface LedgerPermissionData {
   admin: boolean;
   pull: boolean;
   push: boolean;

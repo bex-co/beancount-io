@@ -38,7 +38,7 @@ export type ShellQueryResult = {
 
 export type ShellTextResult = { text: string };
 
-export interface ILedgerShellService {
+interface ILedgerShellService {
   queryShell(params: {
     ledgerId: string;
     userId: string | undefined;

@@ -10,7 +10,7 @@
  * library only has to hand over a string.
  */
 
-export type GitService = "git-upload-pack" | "git-receive-pack";
+type GitService = "git-upload-pack" | "git-receive-pack";
 
 export interface GitExecRequest {
   service: GitService;

@@ -2,7 +2,7 @@ import { Context } from "koa";
 
 export const COOKIE_NAME = "authSess:beancount.io";
 
-export interface CookieOptions {
+interface CookieOptions {
   maxAge: number;
   httpOnly: boolean;
   secure: boolean;

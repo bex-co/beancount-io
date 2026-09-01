@@ -1,4 +1,4 @@
-export type DiffLineType = "added" | "removed" | "context";
+type DiffLineType = "added" | "removed" | "context";
 
 export type DiffLine = {
   type: DiffLineType;

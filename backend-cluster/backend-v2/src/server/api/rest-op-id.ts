@@ -18,7 +18,7 @@ import { restOpId } from "./op-class";
  * explicit multi-method call are indistinguishable, so the comparison has to be
  * against whatever this version of @koa/router considers "every method".
  */
-export const ALL_METHODS: ReadonlySet<string> = new Set<string>(
+const ALL_METHODS: ReadonlySet<string> = new Set<string>(
   new Router().all("/__probe__", () => undefined).stack[0].methods,
 );
 
@@ -35,7 +35,7 @@ export function normalizeRestPath(path: string | RegExp): string {
 }
 
 /** True when a layer was registered with `router.all()`. */
-export function isCatchAllMethods(methods: readonly string[]): boolean {
+function isCatchAllMethods(methods: readonly string[]): boolean {
   const set = new Set(methods);
   return (
     set.size >= ALL_METHODS.size && [...ALL_METHODS].every((m) => set.has(m))

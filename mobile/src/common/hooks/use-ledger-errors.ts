@@ -2,7 +2,7 @@ import { useReactiveVar } from "@apollo/client";
 import { ledgerVar } from "@/common/vars";
 import { useGetLedgerErrorsQuery } from "@/generated-graphql/graphql";
 
-export type LedgerError = {
+type LedgerError = {
   filename: string | null | undefined;
   lineno: number | null | undefined;
   message: string;

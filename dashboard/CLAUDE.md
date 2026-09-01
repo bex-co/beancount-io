@@ -73,13 +73,16 @@ yarn install --immutable
 yarn dev
 yarn typecheck
 yarn lint
+yarn lint:deadcode
+yarn lint:deadcode:fix
 yarn test
 yarn build
 yarn format:check
 yarn codegen
 ```
 
-- `yarn lint` runs route generation, TypeScript, and ESLint.
+- `yarn lint` runs route generation, TypeScript, ESLint, and Knip dead-code detection.
+- `yarn lint:deadcode:fix` removes unused files, exports, and exported types; review its diff before keeping the changes.
 - `yarn typecheck` generates routes before `tsc -b`.
 - `yarn test` is the non-watch Vitest suite; `yarn test:watch` and `yarn test:coverage` are available locally.
 - The handoff/CI gate is `yarn format:check && yarn lint && yarn test && yarn build`.

@@ -35,7 +35,7 @@ import {
  * moved; until then it is marked `deprecated` in the spec so nobody adopts it
  * by accident.
  */
-export const downloadArchiveParamsSchema = z
+const downloadArchiveParamsSchema = z
   .object({
     ledgerId: z.string().openapi({
       description:

@@ -341,10 +341,6 @@ export function getRustledgerWorkerPool(): RustledgerWorkerPool {
   return sharedPool;
 }
 
-export async function warmRustledgerWorkerPool(): Promise<void> {
-  await getRustledgerWorkerPool().warmup();
-}
-
 export async function closeRustledgerWorkerPool(): Promise<void> {
   const pool = sharedPool;
   sharedPool = undefined;

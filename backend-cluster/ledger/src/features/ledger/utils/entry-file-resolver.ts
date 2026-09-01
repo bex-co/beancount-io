@@ -23,7 +23,7 @@ type EntryType =
  *   {quarter} — quarter number 1–4 (e.g. 1)
  *   {date}    — full ISO 8601 date (e.g. 2025-03-15)
  */
-export function interpolateFilePath(template: string, date: Date): string {
+function interpolateFilePath(template: string, date: Date): string {
   const year = date.getUTCFullYear().toString().padStart(4, "0");
   const month = String(date.getUTCMonth() + 1).padStart(2, "0");
   const quarter = String(Math.ceil((date.getUTCMonth() + 1) / 3));

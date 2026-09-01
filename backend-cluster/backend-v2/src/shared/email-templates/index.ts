@@ -9,17 +9,14 @@
 export {
   renderWelcomeHtml,
   renderWelcomeText,
-  type WelcomeParams,
 } from "./templates/welcome.template";
 
 export {
   renderPasswordResetHtml,
   renderPasswordResetText,
-  type PasswordResetParams,
 } from "./templates/password-reset.template";
 
 export {
   renderSignupOtpHtml,
   renderSignupOtpText,
-  type SignupOtpParams,
 } from "./templates/signup-otp.template";

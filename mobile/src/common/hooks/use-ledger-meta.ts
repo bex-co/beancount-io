@@ -4,7 +4,7 @@ import { useLedgerMetaQuery } from "@/generated-graphql/graphql";
 import { getAccountsAndCurrency } from "../ledger-meta-utils";
 
 /** Default for screen mounts — render cache, refetch in background (m34). */
-export const LEDGER_META_FETCH_POLICY = "cache-and-network" as const;
+const LEDGER_META_FETCH_POLICY = "cache-and-network" as const;
 
 interface UseLedgerMetaOptions {
   /**

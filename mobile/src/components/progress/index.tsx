@@ -80,5 +80,3 @@ export const Progress = ({
     </RNView>
   );
 };
-
-export default Progress;

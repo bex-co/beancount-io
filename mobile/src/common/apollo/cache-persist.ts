@@ -5,13 +5,13 @@ import { cache } from "@/common/apollo/cache";
 import { getServerUrl } from "@/common/vars/server-url";
 
 /** Storage key — exported so purge tests can assert the key is gone. */
-export const APOLLO_CACHE_PERSIST_KEY = "apollo-cache-persist";
+const APOLLO_CACHE_PERSIST_KEY = "apollo-cache-persist";
 
 /**
  * Explicit size cap (1 MiB). Unbounded persistence of a large ledger is a
  * footgun; Android AsyncStorage also rejects reads past ~2 MiB per key.
  */
-export const APOLLO_CACHE_MAX_SIZE = 1024 * 1024;
+const APOLLO_CACHE_MAX_SIZE = 1024 * 1024;
 
 type ScopedCacheEnvelope = {
   serverUrl: string;
@@ -52,7 +52,7 @@ class ServerScopedAsyncStorage extends AsyncStorageWrapper {
   }
 }
 
-export const cachePersistor = new CachePersistor({
+const cachePersistor = new CachePersistor({
   cache,
   storage: new ServerScopedAsyncStorage(AsyncStorage),
   key: APOLLO_CACHE_PERSIST_KEY,

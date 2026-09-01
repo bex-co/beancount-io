@@ -16,15 +16,6 @@ export interface SitemapUrl {
 }
 
 /**
- * Options for sitemap generation
- */
-export interface SitemapGenerationOptions {
-  baseUrl: string;
-  maxRepositoriesPerUser?: number; // Limit repos per user (default: 100)
-  maxTotalUrls?: number; // Limit total URLs (default: 50000)
-}
-
-/**
  * Internal data structures for efficient processing
  */
 export interface UserRepositories {

@@ -21,7 +21,13 @@ const mockFetch = jest.fn();
 jest.mock("node-fetch", () => mockFetch);
 
 // Import after mocking
-import { setGitProxyHandler } from "../git-proxy-handler";
+import {
+  buildRejectionReport,
+  disallowedRefs,
+  parseReceivePackRefs,
+  pktLine as pkt,
+  setGitProxyHandler,
+} from "../git-proxy-handler";
 import { clearRateLimitStores } from "@/shared/rate-limiter";
 
 describe("setGitProxyHandler", () => {
@@ -669,13 +675,6 @@ describe("setGitProxyHandler", () => {
   // state: the ref names sit in plain pkt-lines at the head of the
   // git-receive-pack body, before the PACK data.
   describe("main-only ref policy", () => {
-    const {
-      parseReceivePackRefs,
-      disallowedRefs,
-      buildRejectionReport,
-      pktLine: pkt,
-    } = jest.requireActual("../git-proxy-handler");
-
     it("reads a single ref update", () => {
       const body = Buffer.from(
         pkt("old new refs/heads/main\0report-status side-band-64k\n") +

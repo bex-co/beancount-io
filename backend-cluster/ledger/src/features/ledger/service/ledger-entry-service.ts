@@ -115,7 +115,7 @@ const ENTRY_FILE_TYPE: Record<
   event: "Event",
 };
 
-export interface ILedgerEntryService {
+interface ILedgerEntryService {
   /**
    * Render + commit ledger entries in ONE atomic Gitea commit. Optional
    * `attachments` (e.g. a receipt binary) are created in the SAME commit as the

@@ -2,7 +2,7 @@ import { useTrialBalanceQuery } from "@/generated-graphql/graphql";
 import { BALANCE_CONVERSION } from "@/common/balance-util";
 
 /** Pinned for offline cold start — see m34 fetch-policy audit. */
-export const TRIAL_BALANCE_FETCH_POLICY = "cache-and-network" as const;
+const TRIAL_BALANCE_FETCH_POLICY = "cache-and-network" as const;
 
 /**
  * Trial balance for a ledger: all five root categories with their account trees,

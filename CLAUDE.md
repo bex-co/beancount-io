@@ -81,6 +81,9 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
   - `backend-cluster/ledger/` → Yarn 4.17.0 (Berry); installs with `yarn install --immutable`.
   - `backend-cluster/backend-v2/`, `backend-cluster/agent-box/` (Yarn Classic/npm, `yarn install`; deploys with `wrangler deploy`), and the IDL clients use their package-local setup; none currently has a tracked lockfile.
 - Python package `cli/` uses [uv](https://docs.astral.sh/uv/): `uv sync --all-groups`, then `make check-all`.
+- Every JavaScript/TypeScript package exposes `lint:deadcode` (detect unused files, exports, and exported types) and `lint:deadcode:fix` (apply Knip's removals, including orphan files). Detection is part of each package's normal lint gate. Review the fix command's diff before keeping it.
+- The Python CLI exposes `make deadcode` for high-confidence Vulture detection and `make deadcode-fix` for Ruff-removable unused imports/variables; `make check-all` includes detection.
+- From the repository root, `scripts/lint-deadcode.sh` runs every package's detector plus Vulture over the root and skills support scripts; `scripts/fix-deadcode.sh` applies every package's safe fixes. The latter can delete files; always review its diff and run the native package checks afterward.
 - CI — path-filtered workflows on push/PR to `main`:
   - `.github/workflows/ci.yml` (`CI`) → `mobile/**`: `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit`.
   - `.github/workflows/ci-dashboard.yml` (`CI (dashboard)`) → `dashboard/**`: `yarn format:check`, `yarn lint`, `yarn test`, `yarn build`.

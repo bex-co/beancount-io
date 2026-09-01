@@ -11,5 +11,3 @@ export const AGENT_PRESET_KEYS = [
   "agentPresetTopSpending",
   "agentPresetThisMonth",
 ] as const;
-
-export type AgentPresetKey = (typeof AGENT_PRESET_KEYS)[number];

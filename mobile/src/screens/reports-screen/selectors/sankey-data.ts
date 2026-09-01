@@ -3,16 +3,16 @@ import { leafName } from "../../../common/account-util";
 import { topNWithOther } from "./select-breakdown-rows";
 
 /** Depth of account path the Sankey draws — matches the web transformer. */
-export const SANKEY_DEPTH = 2;
+const SANKEY_DEPTH = 2;
 
 /**
  * Visible category nodes per side before the tail folds into "Other".
  * Chosen in m33/t001: 5 ranked by value share keeps labels readable at 402pt.
  */
-export const SANKEY_TOP_N = 5;
+const SANKEY_TOP_N = 5;
 
 /** Max characters of a beside-node label before ellipsis (t001). */
-export const SANKEY_LABEL_MAX_CHARS = 10;
+const SANKEY_LABEL_MAX_CHARS = 10;
 
 export const CASH_FLOW_ID = "cash-flow";
 export const SAVINGS_ID = "savings";
@@ -27,7 +27,7 @@ export type SankeyNodeDatum = {
   role: SankeyRole;
 };
 
-export type SankeyLinkDatum = {
+type SankeyLinkDatum = {
   source: string;
   target: string;
   value: number;

@@ -19,7 +19,6 @@ export {
   fontSizes,
   fontWeights,
   headerActionStyle,
-  monoMinFontSize,
 } from "./typography";
 
 export { withAlpha } from "./color-utils";
@@ -36,18 +35,7 @@ export {
 // `./motion-easing` imports Reanimated, and this barrel is reachable from the
 // unit-test runner, which cannot resolve it — import easing curves from
 // `@/common/theme/motion-easing` directly.
-export {
-  durations,
-  loopDurations,
-  dwellDurations,
-  easings,
-  springs,
-  clamp01,
-  staggeredProgress,
-  STAGGER_WINDOW,
-  MAX_TRANSITION_MS,
-  MAX_FEEDBACK_MS,
-} from "./motion";
+export { durations, loopDurations, springs, staggeredProgress } from "./motion";
 
 // The palettes themselves live in the import-free `./palette` so the test
 // runner can read them without React Native; only the platform-dependent
@@ -56,8 +44,6 @@ export {
   themes,
   effectiveThemeName,
   nativeColorSchemeForTheme,
-  type ThemeName,
-  type ThemeSetting,
 } from "./palette";
 
 export const getSystemColorScheme = (): "light" | "dark" => {
@@ -67,6 +53,6 @@ export const getSystemColorScheme = (): "light" | "dark" => {
 
 const colorMode = getSystemColorScheme();
 
-const { ThemeProvider, withTheme, useTheme } = createTheming(themes[colorMode]);
+const { ThemeProvider, useTheme } = createTheming(themes[colorMode]);
 
-export { ThemeProvider, withTheme, useTheme, colorMode };
+export { ThemeProvider, useTheme };

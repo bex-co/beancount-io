@@ -19,7 +19,7 @@ import {
   type ResolvedRecurring,
 } from "./resolve-recurring";
 
-export type MerchantSectionKey = "recurring" | "all";
+type MerchantSectionKey = "recurring" | "all";
 
 export interface MerchantListItem {
   merchant: MerchantAggregate;

@@ -54,7 +54,7 @@ import type { DirectiveJson, MetaValueJson } from "@rustledger/wasm";
  */
 
 /** `AccountDataPublic.last_entry` — the account's last non-close entry. */
-export interface AccountLastEntry {
+interface AccountLastEntry {
   /** ISO `YYYY-MM-DD` date of the last referencing directive. */
   date: string;
   /**

@@ -39,7 +39,7 @@ export interface ToolContext {
   ledgerReceiptWorkflow: ILedgerReceiptWorkflow;
 }
 
-export const toolErrorSchema = z.object({
+const toolErrorSchema = z.object({
   ok: z.literal(false),
   error: z.string(),
 });

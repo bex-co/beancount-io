@@ -266,20 +266,6 @@ function remapMaterializedError(
   };
 }
 
-/**
- * Materialize a post-plugin directive stream as a self-contained ledger. The
- * entry-point options are retained (custom account roots, tolerances, etc.), but
- * includes/plugins are intentionally absent: their effects are already present
- * in `directives` and running them again would duplicate transformations.
- */
-export function materializeDirectiveStream(
-  directives: DirectiveJson[],
-  entryPointSource: string | undefined,
-): FileMap {
-  return materializeDirectiveStreamWithSourceMap(directives, entryPointSource)
-    .files;
-}
-
 /** Re-run the built-in pad plugin after a TS user plugin changed the stream. */
 async function expandTransformedPads(
   directives: DirectiveJson[],
@@ -290,8 +276,10 @@ async function expandTransformedPads(
     directives,
     entryPointSource,
   );
-  return withLedger(materialized.files, MATERIALIZED_ENTRY_POINT, (ledger) =>
-    ledger.expandPads().padding_transactions,
+  return withLedger(
+    materialized.files,
+    MATERIALIZED_ENTRY_POINT,
+    (ledger) => ledger.expandPads().padding_transactions,
   );
 }
 
@@ -647,7 +635,7 @@ export async function queryLedgerFilesResult(
 }
 
 /** Worker-local implementation; request-path callers use queryLedgerFilesResult. */
-export async function queryLedgerFilesResultInProcess(
+async function queryLedgerFilesResultInProcess(
   files: FileMap,
   entryPoint: string,
   query: string,

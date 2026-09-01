@@ -4,10 +4,5 @@ export type {
   ServiceLayer,
   WorkflowLayer,
   AppLayers,
-  ResolverDeps,
 } from "./layers";
-export {
-  buildClientFactoryLayer,
-  buildServiceLayer,
-  buildWorkflowLayer,
-} from "./builder";
+export { buildServiceLayer, buildWorkflowLayer } from "./builder";

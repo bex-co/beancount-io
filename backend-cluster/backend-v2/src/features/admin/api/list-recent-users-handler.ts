@@ -40,7 +40,7 @@ const recentUserSchema = z
   })
   .openapi("RecentUser");
 
-export const listRecentUsersResponseSchema = z
+const listRecentUsersResponseSchema = z
   .object({
     ok: z.literal(true).openapi({ description: "Indicates request succeeded" }),
     users: z.array(recentUserSchema),

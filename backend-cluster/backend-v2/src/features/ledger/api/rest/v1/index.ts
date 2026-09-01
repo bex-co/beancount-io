@@ -28,7 +28,7 @@ import { registerV1Routes, type V1Route } from "@/server/rest/v1-route";
  * Split into two fragments because they sit on opposite sides of the identity
  * gate — see `ARCHIVE_DOWNLOAD_ROUTES`.
  */
-export const V1_SCOPED_ROUTES: readonly V1Route<never, never, never>[] = [
+const V1_SCOPED_ROUTES: readonly V1Route<never, never, never>[] = [
   ...LEDGER_ROUTES,
   ...QUERY_ROUTES,
   ...REPORT_ROUTES,
@@ -40,7 +40,7 @@ export const V1_SCOPED_ROUTES: readonly V1Route<never, never, never>[] = [
   ...ARCHIVE_TICKET_ROUTES,
 ];
 
-export const V1_TICKET_ROUTES: readonly V1Route<never, never, never>[] = [
+const V1_TICKET_ROUTES: readonly V1Route<never, never, never>[] = [
   ...ARCHIVE_DOWNLOAD_ROUTES,
 ];
 

@@ -11,8 +11,6 @@ export interface AgentHandlerContext {
   /**
    * The ledger services + caller identity a locally-run agent
    * (`SelfHostedAgentHandler`) needs to build its `ToolContext`.
-   * `SandboxProxyAgentHandler` never reads these — it forwards `mcpToken` and
-   * lets the sandboxed agent authenticate its own MCP calls instead.
    */
   services: ToolServices;
   identity: Identity;

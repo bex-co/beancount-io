@@ -13,7 +13,9 @@
     "test": "npm run lint && npm run typecheck && npm run test:unit",
     "test:unit": "node ./scripts/jest-lite-runner.js",
     "typecheck": "tsc --noEmit",
-    "lint": "tsc --noEmit && eslint src --quiet --cache --fix --ext .js,.tsx,.ts ",
+    "lint": "tsc --noEmit && eslint src --quiet --cache --fix --ext .js,.tsx,.ts && yarn lint:deadcode",
+    "lint:deadcode": "knip --include files,exports,types",
+    "lint:deadcode:fix": "knip --include files,exports,types --fix --fix-type files,exports,types --allow-remove-files --format",
     "format": "prettier . --cache --write",
     "format:check": "prettier . --cache --check",
     "codegen": "graphql-codegen",
@@ -117,6 +119,7 @@
     "eslint-config-prettier": "^10.1.5",
     "eslint-plugin-prettier": "^5.4.1",
     "expo-mcp": "~0.2.1",
+    "knip": "6.34.0",
     "prettier": "^3.7.4",
     "typescript": "~6.0.3"
   },

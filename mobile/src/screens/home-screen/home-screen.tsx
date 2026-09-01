@@ -40,7 +40,7 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-export const HomeScreenImpl = (): JSX.Element => {
+const HomeScreenImpl = (): JSX.Element => {
   const { userId } = useSession();
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;

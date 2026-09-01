@@ -37,7 +37,7 @@ export interface PlaidTokenExchangeResult {
 /**
  * Error information from Plaid
  */
-export interface PlaidError {
+interface PlaidError {
   errorCode: string;
   errorMessage: string;
 }
@@ -65,7 +65,7 @@ export interface PlaidAccountInfo {
 /**
  * Transaction from Plaid API
  */
-export interface PlaidApiTransaction {
+interface PlaidApiTransaction {
   transactionId: string;
   accountId: string;
   amount: number;
@@ -99,28 +99,7 @@ export interface PlaidInstitutionDetails {
 // Re-export Data Model Types for Convenience
 // ============================================================================
 
-export type {
-  PlaidItem,
-  CreatePlaidItemInput,
-  UpdatePlaidItemInput,
-} from "./data/plaid-item-model/types";
-
-export type {
-  PlaidAccount,
-  CreatePlaidAccountInput,
-  UpdatePlaidAccountInput,
-} from "./data/plaid-account-model/types";
-
-export type {
-  PlaidTransaction,
-  CreatePlaidTransactionInput,
-  UpdatePlaidTransactionInput,
-} from "./data/plaid-transaction-model/types";
-
-export type {
-  PlaidSyncLog,
-  CreatePlaidSyncLogInput,
-} from "./data/plaid-sync-log-model/types";
+export type { PlaidTransaction } from "./data/plaid-transaction-model/types";
 
 // ============================================================================
 // Mapper Types

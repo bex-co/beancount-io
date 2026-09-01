@@ -30,16 +30,16 @@ export interface RecurrenceVerdict {
 }
 
 /** Minimum distinct event dates before a cadence can be inferred. */
-export const MIN_EVENT_DATES = 3;
+const MIN_EVENT_DATES = 3;
 
 /** Accept a median gap only when MAD/median stays under this. */
-export const MAX_GAP_DISPERSION = 0.25;
+const MAX_GAP_DISPERSION = 0.25;
 
 /** Flag typical amount as approximate when (max−min)/|median| exceeds this. */
-export const APPROXIMATE_AMOUNT_SPREAD = 0.1;
+const APPROXIMATE_AMOUNT_SPREAD = 0.1;
 
 /** Overdue grace as a fraction of the median gap. */
-export const OVERDUE_GRACE_FRACTION = 0.25;
+const OVERDUE_GRACE_FRACTION = 0.25;
 
 const MS_PER_DAY = 86_400_000;
 

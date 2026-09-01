@@ -109,9 +109,7 @@ function isLedgerId(value: string): boolean {
  * pin is falsy, which `assertLedgerScope` reads as *unconfined* — the exact
  * opposite of what a pin is for. Anything non-blank has to be a real ledger id.
  */
-export function normalizeLedgerScope(
-  value: string | undefined,
-): string | undefined {
+function normalizeLedgerScope(value: string | undefined): string | undefined {
   const trimmed = value?.trim();
   if (!trimmed) return undefined;
   if (!isLedgerId(trimmed)) {

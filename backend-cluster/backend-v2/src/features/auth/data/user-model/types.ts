@@ -47,7 +47,7 @@ export interface UpdateUserInput {
  * Database executor type - represents any database connection/transaction.
  * This allows the interface to remain database-agnostic while supporting transactions.
  */
-export type DbExecutor = any;
+type DbExecutor = any;
 
 /**
  * Database-agnostic user model interface.

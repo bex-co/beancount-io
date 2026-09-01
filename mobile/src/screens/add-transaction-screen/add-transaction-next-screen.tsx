@@ -93,7 +93,7 @@ const getStyles = (theme: ColorTheme) =>
     doneButton: headerActionStyle(theme),
   });
 
-export const AddTransactionNextScreenComponent = () => {
+const AddTransactionNextScreenComponent = () => {
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
   const {

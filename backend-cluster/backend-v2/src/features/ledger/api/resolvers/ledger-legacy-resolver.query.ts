@@ -83,7 +83,7 @@ class ChartsRequest {
   ledgerId?: string | null;
 }
 
-export interface IAccountBalance {
+interface IAccountBalance {
   account: string;
   balance: Record<string, number>;
   balance_children: Record<string, number>;
@@ -126,7 +126,7 @@ class AccountHierarchyResponse {
   success: boolean;
 }
 
-export interface IChartItem {
+interface IChartItem {
   balance: Record<string, number>;
   budgets: Record<string, number>;
   date: string;
@@ -510,7 +510,7 @@ interface IAddedPosting {
   };
 }
 
-export interface IAddedEntry {
+interface IAddedEntry {
   // Common fields for all entry types
   type: string; // "Transaction", "Open", "Close", "Balance", "Note", etc.
   date: string;

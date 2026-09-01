@@ -282,7 +282,7 @@ export const V1_DECLARED_ROUTES = [
  * declared alongside it: a hand-written list of routes is exactly the thing
  * that drifts, and drift is what this milestone exists to make impossible.
  */
-export function assembleRestRouter(router: Router, deps: ApiDeps): RestMount[] {
+function assembleRestRouter(router: Router, deps: ApiDeps): RestMount[] {
   // The gate index the scope middleware reads. It is handed over empty and
   // filled by the loop below, because the middleware has to be registered
   // ahead of the routes it guards (Koa matches layers in registration order)
@@ -340,7 +340,7 @@ function collectMounts(
 // ---------------------------------------------------------------------------
 
 /** Every root field of the schema, as op ids (`GQL Query.x` / `GQL Mutation.y`). */
-export function listGraphqlOps(schema: GraphQLSchema): string[] {
+function listGraphqlOps(schema: GraphQLSchema): string[] {
   const ops: string[] = [];
   const collect = (parent: "Query" | "Mutation", fields: object) => {
     for (const field of Object.keys(fields)) {
@@ -359,7 +359,7 @@ export function listGraphqlOps(schema: GraphQLSchema): string[] {
 // ---------------------------------------------------------------------------
 
 /** Every tool and resource in the MCP fragment, as op ids. */
-export function listMcpOps(): string[] {
+function listMcpOps(): string[] {
   return [
     ...MCP_TOOLS.map((tool) => mcpOpId(tool.name)),
     ...MCP_RESOURCES.map((resource) => mcpResourceOpId(resource.name)),

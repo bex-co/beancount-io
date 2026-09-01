@@ -66,7 +66,7 @@ const GIT_REPO_PATH = new RegExp(`^/(${GIT_SEGMENT})/(${GIT_SEGMENT})/`);
  * gives byte-identical results on every shape, including dotted repository
  * names like `my.book.git`, and reads as what it does.
  */
-export function parseGitRepoPath(
+function parseGitRepoPath(
   path: string,
 ): { owner: string; repo: string } | null {
   const m = GIT_REPO_PATH.exec(path);
@@ -370,7 +370,7 @@ async function rejectNonMainPush(
  * @param method HTTP method of the incoming request
  * @param path   Path after the `/git` prefix, with a leading slash
  */
-export function isGitSmartHttpRequest(method: string, path: string): boolean {
+function isGitSmartHttpRequest(method: string, path: string): boolean {
   const verb = method.toUpperCase();
   if (verb === "GET" || verb === "HEAD") {
     return GIT_REF_ADVERTISEMENT.test(path);

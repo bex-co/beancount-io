@@ -7,7 +7,6 @@ import {
   pluginError,
   type PluginContext,
   type PluginFn,
-  type PluginResult,
 } from "./types";
 import { amortizeOver } from "./amortize-over";
 import { forecast } from "./forecast";
@@ -25,25 +24,16 @@ export {
 } from "./provenance";
 
 export { pluginError };
-export type { PluginContext, PluginFn, PluginResult };
-export {
-  stripFavaPlugins,
-  neutralizeIncludedOptionsAndPlugins,
-  type StripResult,
-  type StrippedPlugin,
-} from "./strip";
-export {
-  collectLedgerPlugins,
-  PLUGIN_LINE_RE,
-  decodeStringLiteral,
-} from "./collect-plugins";
+export type { PluginContext, PluginFn };
+export { stripFavaPlugins, neutralizeIncludedOptionsAndPlugins } from "./strip";
+export { collectLedgerPlugins } from "./collect-plugins";
 
 /**
  * Registry of fava plugins reimplemented in the TypeScript post-parse layer,
  * keyed by their full `plugin "..."` name. Applied by {@link applyPlugins} after
  * the WASM parse (their source directives are stripped by `stripFavaPlugins`).
  */
-export const PLUGIN_REGISTRY: Record<string, PluginFn> = {
+const PLUGIN_REGISTRY: Record<string, PluginFn> = {
   "fava.plugins.amortize_over": amortizeOver,
   "fava.plugins.forecast": forecast,
   "fava.plugins.link_documents": linkDocuments,

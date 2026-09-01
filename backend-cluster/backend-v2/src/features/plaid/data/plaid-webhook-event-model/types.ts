@@ -17,12 +17,6 @@ export interface CreatePlaidWebhookEventInput {
   rawBody: string;
 }
 
-export interface UpdatePlaidWebhookEventStatusInput {
-  status: PlaidWebhookEventStatus;
-  processedAt?: Date;
-  errorMessage?: string;
-}
-
 export interface IPlaidWebhookEventModel {
   create(
     db: DbExecutor,

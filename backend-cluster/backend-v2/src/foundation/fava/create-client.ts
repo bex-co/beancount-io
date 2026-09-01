@@ -16,20 +16,6 @@ export const createFavaApi = (
   });
 };
 
-export const createAPIKeyFavaApi = (
-  baseUrl: string,
-  apiKey: string,
-): FavaApiClient => {
-  return new ApiClient({
-    baseUrl,
-    baseApiParams: {
-      headers: {
-        Authorization: `token ${apiKey}`,
-      },
-    },
-  });
-};
-
 /**
  * Ask ledger-v2 to use Gitea's unauthenticated client. This private protocol
  * can read public repositories only and carries no reusable user credential.

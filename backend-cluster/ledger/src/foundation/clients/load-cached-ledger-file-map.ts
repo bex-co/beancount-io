@@ -17,7 +17,7 @@ import { lock } from "@/shared/lock";
 const log = logger.child({ module: "cached-file-map" });
 const FILE_MAP_HEAD_LOCK_PREFIX = "cache:file-map-head:";
 /** Keep Redis serialization/deserialization off the event loop for large books. */
-export const MAX_CACHED_FILE_MAP_BYTES = 4 * 1024 * 1024;
+const MAX_CACHED_FILE_MAP_BYTES = 4 * 1024 * 1024;
 
 /**
  * Redis cache for a ledger's loaded `.bean` FileMap, keyed by the repo's HEAD
@@ -57,7 +57,7 @@ export const MAX_CACHED_FILE_MAP_BYTES = 4 * 1024 * 1024;
  */
 
 /** The extra Gitea method the cached loader needs beyond {@link GiteaClientLike}. */
-export interface GiteaCommitReposClient extends GiteaReposContentClient {
+interface GiteaCommitReposClient extends GiteaReposContentClient {
   repoGetAllCommits(
     owner: string,
     repo: string,

@@ -37,7 +37,7 @@ const translations = {
   uk,
 };
 
-export const SUPPORTED_LOCALES = Object.keys(translations);
+const SUPPORTED_LOCALES = Object.keys(translations);
 
 const getLocale = () => {
   const locales = Localization.getLocales();

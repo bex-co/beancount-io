@@ -2,7 +2,7 @@ import { useIncomeStatementQuery } from "@/generated-graphql/graphql";
 import { BALANCE_CONVERSION } from "@/common/balance-util";
 
 /** Pinned for offline cold start — see m34 fetch-policy audit. */
-export const INCOME_STATEMENT_FETCH_POLICY = "cache-and-network" as const;
+const INCOME_STATEMENT_FETCH_POLICY = "cache-and-network" as const;
 
 /** Holdings are valued per {@link BALANCE_CONVERSION}; see that constant for why
  * leaving `conversion` unset silently returns raw share counts. */

@@ -1,9 +1,4 @@
 import { type AppConfig } from "@/config/config";
-import { type Cache } from "cache-manager";
-import { createCacheHelper } from "@/shared/cache";
-import { FavaClientFactory } from "@/foundation/clients/fava-client-factory";
-import { GiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
-import { PlaidClient } from "@/features/plaid/service/plaid-client";
 import { PlaidItemService } from "@/features/plaid/service/plaid-item-service";
 import { PlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
 import { AssetStorageService } from "@/features/s3/service/asset-storage-service";
@@ -38,44 +33,12 @@ import {
   AuthorizationService,
   SourceBackedRelationshipEvaluator,
 } from "@/server/api/authorization";
-import { SendGrid, ConsoleSendGrid } from "@/foundation/sendgrid";
 import {
   type DatabaseLayer,
   type ClientFactoryLayer,
   type ServiceLayer,
   type WorkflowLayer,
 } from "./layers";
-
-/** Build the external-API client factory layer from the Database layer + config. */
-export function buildClientFactoryLayer(input: {
-  database: DatabaseLayer;
-  config: AppConfig;
-  cache: Cache;
-}): ClientFactoryLayer {
-  const sendGridOpts = {
-    apiKey: input.config.sendGrid.apiKey,
-    retryLimit: 2,
-    defaultFrom: "Beancount.io <noreply@mail.beancount.io>",
-  };
-  return {
-    favaClientFactory: new FavaClientFactory(
-      input.database.models,
-      input.database.db,
-      input.config,
-    ),
-    giteaClientFactory: new GiteaClientFactory(
-      input.database.models,
-      input.database.db,
-      input.config,
-    ),
-    plaidClient: new PlaidClient(input.config.plaid),
-    sendgrid:
-      input.config.env === "production"
-        ? new SendGrid(sendGridOpts)
-        : new ConsoleSendGrid(sendGridOpts),
-    cacheHelper: createCacheHelper(input.cache),
-  };
-}
 
 /** Build the service layer from the layers below it + config. */
 export function buildServiceLayer(input: {

@@ -19,7 +19,7 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
  * How far a control shrinks while held. Small on purpose: the press has to read
  * as the surface giving way, not as the control resizing.
  */
-export const PRESS_SCALE = 0.96;
+const PRESS_SCALE = 0.96;
 
 /**
  * The press-down/release spring, reusable by controls that cannot be a

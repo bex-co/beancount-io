@@ -7,13 +7,7 @@
 
 import type { MockedFunction } from "vitest";
 import { vi } from "vitest";
-import type {
-  ListLedgersQuery,
-  CreateLedgerMutation,
-  UpdateLedgerMutation,
-  DeleteLedgerMutation,
-  GetCurrentUserQuery,
-} from "@/graphql/definitions";
+import type { GetCurrentUserQuery } from "@/graphql/definitions";
 
 /**
  * Type-safe mock return for useQuery hook
@@ -113,11 +107,4 @@ export function createMockLazyQueryTuple<TData>(
   ];
 }
 
-// Type aliases for common query/mutation types used in ledger-list
-export type ListLedgersQueryResult = MockQueryResult<ListLedgersQuery>;
-export type CreateLedgerMutationTuple = MockMutationTuple<CreateLedgerMutation>;
-export type UpdateLedgerMutationTuple = MockMutationTuple<UpdateLedgerMutation>;
-export type DeleteLedgerMutationTuple = MockMutationTuple<DeleteLedgerMutation>;
 export type GetCurrentUserQueryResult = MockQueryResult<GetCurrentUserQuery>;
-
-export { vi };

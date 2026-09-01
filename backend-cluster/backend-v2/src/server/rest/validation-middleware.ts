@@ -20,7 +20,7 @@ export interface RequestSchemas {
 }
 
 /** Where the parsed request lands, keyed so a handler reads it without re-parsing. */
-export interface ValidatedState {
+interface ValidatedState {
   validated?: {
     params: unknown;
     query: unknown;

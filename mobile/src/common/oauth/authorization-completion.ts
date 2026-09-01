@@ -7,11 +7,6 @@ import {
   loadPendingAuthorization,
 } from "./pending-authorization-storage";
 
-export {
-  createAuthorizationCompleter,
-  type AuthorizationCompletionDependencies,
-} from "./authorization-completer";
-
 export const completeOAuthAuthorization = createAuthorizationCompleter({
   loadPending: loadPendingAuthorization,
   clearPending: clearPendingAuthorization,

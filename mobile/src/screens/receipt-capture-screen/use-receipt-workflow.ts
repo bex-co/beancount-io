@@ -6,7 +6,7 @@ import {
 } from "@/generated-graphql/graphql";
 import { receiptDate } from "./receipt-utils";
 
-export type ParsedReceipt = {
+type ParsedReceipt = {
   date: string;
   payee: string;
   description: string;
@@ -15,7 +15,7 @@ export type ParsedReceipt = {
   targetAccount: string;
 };
 
-export type ReceiptPhase =
+type ReceiptPhase =
   | { kind: "idle" }
   | { kind: "uploading" }
   | { kind: "parsing" }

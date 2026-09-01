@@ -7,20 +7,20 @@ import { runToolSafely } from "../utils/run-tool";
 
 const toolLogger = logger.child({ module: "tool:parse-receipt" });
 
-export const description =
+const description =
   "Parse a receipt or invoice file that has been uploaded to S3. " +
   "Extracts structured transaction data (date, payee, description, amount) and recommends " +
   "the most likely expense and payment accounts from the user's ledger. " +
   "Only call this tool when the file is clearly a receipt, invoice, or purchase document. " +
   "Use the S3 object key from the [Uploaded file references] section of the message.";
 
-export const parseReceiptInputSchema = z.object({
+const parseReceiptInputSchema = z.object({
   objectKey: z
     .string()
     .describe("S3 object key of the uploaded receipt file (starts with tmp/)"),
 });
 
-export const parseReceiptOutputSchema = toolOutputSchema(
+const parseReceiptOutputSchema = toolOutputSchema(
   z.object({
     date: z
       .string()
@@ -44,7 +44,7 @@ export const parseReceiptOutputSchema = toolOutputSchema(
 
 export type ParseReceiptOutput = z.infer<typeof parseReceiptOutputSchema>;
 
-export async function executeParseReceipt(
+async function executeParseReceipt(
   ctx: Pick<ToolContext, "llmService" | "identity" | "ledgerId">,
   input: z.infer<typeof parseReceiptInputSchema>,
 ): Promise<ParseReceiptOutput> {

@@ -259,7 +259,7 @@ export type AccountJournalQueryParams = {
   conversion?: string;
 };
 
-export interface ILedgerJournalService {
+interface ILedgerJournalService {
   getJournal(params: {
     ledgerId: string;
     userId: string | undefined;

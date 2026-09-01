@@ -30,7 +30,7 @@ import {
 } from "../selectors/sankey-data";
 
 /** Plot height; the skeleton is this plus the legend so the card does not jump. */
-export const SANKEY_HEIGHT = 280;
+const SANKEY_HEIGHT = 280;
 
 const NODE_WIDTH = 16;
 const NODE_PADDING = 10;

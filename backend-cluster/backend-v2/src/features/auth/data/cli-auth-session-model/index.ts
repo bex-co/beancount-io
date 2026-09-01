@@ -1,6 +1,2 @@
-export type {
-  CliAuthSession,
-  CliAuthSessionStatus,
-  ICliAuthSessionModel,
-} from "./types";
+export type { ICliAuthSessionModel } from "./types";
 export { CliAuthSessionRedisModel } from "./redis-impl";

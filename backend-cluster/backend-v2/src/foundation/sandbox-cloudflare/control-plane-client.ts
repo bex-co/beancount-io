@@ -42,14 +42,14 @@ export interface ProcessStatusWire {
   found: boolean;
 }
 
-export class ControlPlaneError extends Error {
+class ControlPlaneError extends Error {
   constructor(
     message: string,
     readonly status: number,
     readonly body: string,
   ) {
     super(message);
-    this.name = 'ControlPlaneError';
+    this.name = "ControlPlaneError";
   }
 }
 
@@ -60,7 +60,7 @@ export class ControlPlaneClient {
 
   constructor(options: ControlPlaneClientOptions) {
     // Trailing slash would double up against the leading slash of each path.
-    this.baseUrl = options.baseUrl.replace(/\/+$/, '');
+    this.baseUrl = options.baseUrl.replace(/\/+$/, "");
     this.adminToken = options.adminToken;
     this.fetchImpl = options.fetchImpl ?? ((input, init) => fetch(input, init));
   }
@@ -71,8 +71,8 @@ export class ControlPlaneClient {
 
   private headers(): Record<string, string> {
     return {
-      'Content-Type': 'application/json',
-      'x-admin-token': this.adminToken,
+      "Content-Type": "application/json",
+      "x-admin-token": this.adminToken,
     };
   }
 
@@ -83,7 +83,7 @@ export class ControlPlaneClient {
     abortSignal?: AbortSignal,
   ): Promise<T> {
     const res = await this.fetchImpl(this.url(name, suffix), {
-      method: 'POST',
+      method: "POST",
       headers: this.headers(),
       body: body === undefined ? undefined : JSON.stringify(body),
       signal: abortSignal,
@@ -93,15 +93,15 @@ export class ControlPlaneClient {
 
   private async getJson<T>(name: string, suffix: string): Promise<T> {
     const res = await this.fetchImpl(this.url(name, suffix), {
-      method: 'GET',
-      headers: { 'x-admin-token': this.adminToken },
+      method: "GET",
+      headers: { "x-admin-token": this.adminToken },
     });
     return this.readJson<T>(res, suffix);
   }
 
   private async readJson<T>(res: Response, suffix: string): Promise<T> {
     if (!res.ok) {
-      const text = await res.text().catch(() => '');
+      const text = await res.text().catch(() => "");
       throw new ControlPlaneError(
         `Control plane ${suffix} failed: ${res.status}`,
         res.status,
@@ -112,7 +112,7 @@ export class ControlPlaneClient {
   }
 
   ensure(name: string, abortSignal?: AbortSignal): Promise<EnsureResultWire> {
-    return this.postJson(name, '/ensure', undefined, abortSignal);
+    return this.postJson(name, "/ensure", undefined, abortSignal);
   }
 
   exec(
@@ -125,7 +125,7 @@ export class ControlPlaneClient {
     },
     abortSignal?: AbortSignal,
   ): Promise<ExecResultWire> {
-    return this.postJson(name, '/exec', req, abortSignal);
+    return this.postJson(name, "/exec", req, abortSignal);
   }
 
   spawn(
@@ -133,7 +133,7 @@ export class ControlPlaneClient {
     req: { command: string; cwd?: string; env?: Record<string, string> },
     abortSignal?: AbortSignal,
   ): Promise<{ processId: string; pid?: number }> {
-    return this.postJson(name, '/spawn', req, abortSignal);
+    return this.postJson(name, "/spawn", req, abortSignal);
   }
 
   /**
@@ -147,10 +147,14 @@ export class ControlPlaneClient {
   ): Promise<ReadableStream<Uint8Array>> {
     const res = await this.fetchImpl(
       this.url(name, `/process/${encodeURIComponent(processId)}/logs`),
-      { method: 'GET', headers: { 'x-admin-token': this.adminToken }, signal: abortSignal },
+      {
+        method: "GET",
+        headers: { "x-admin-token": this.adminToken },
+        signal: abortSignal,
+      },
     );
     if (!res.ok || !res.body) {
-      const text = await res.text().catch(() => '');
+      const text = await res.text().catch(() => "");
       throw new ControlPlaneError(
         `Control plane process logs failed: ${res.status}`,
         res.status,
@@ -160,10 +164,7 @@ export class ControlPlaneClient {
     return res.body;
   }
 
-  processStatus(
-    name: string,
-    processId: string,
-  ): Promise<ProcessStatusWire> {
+  processStatus(name: string, processId: string): Promise<ProcessStatusWire> {
     return this.getJson(
       name,
       `/process/${encodeURIComponent(processId)}/status`,
@@ -175,9 +176,13 @@ export class ControlPlaneClient {
     processId: string,
     signal?: string,
   ): Promise<{ ok: true }> {
-    return this.postJson(name, `/process/${encodeURIComponent(processId)}/kill`, {
-      signal,
-    });
+    return this.postJson(
+      name,
+      `/process/${encodeURIComponent(processId)}/kill`,
+      {
+        signal,
+      },
+    );
   }
 
   writeFile(
@@ -185,7 +190,7 @@ export class ControlPlaneClient {
     req: { path: string; content: string; encoding?: string },
     abortSignal?: AbortSignal,
   ): Promise<{ ok: true }> {
-    return this.postJson(name, '/write', req, abortSignal);
+    return this.postJson(name, "/write", req, abortSignal);
   }
 
   readFile(
@@ -193,18 +198,18 @@ export class ControlPlaneClient {
     req: { path: string; encoding?: string },
     abortSignal?: AbortSignal,
   ): Promise<{ exists: boolean; content?: string }> {
-    return this.postJson(name, '/read', req, abortSignal);
+    return this.postJson(name, "/read", req, abortSignal);
   }
 
   exposePort(
     name: string,
     req: { port: number; hostname: string; name?: string; token?: string },
   ): Promise<{ url: string; port: number }> {
-    return this.postJson(name, '/expose', req);
+    return this.postJson(name, "/expose", req);
   }
 
   unexposePort(name: string, port: number): Promise<{ ok: true }> {
-    return this.postJson(name, '/unexpose', { port });
+    return this.postJson(name, "/unexpose", { port });
   }
 
   getExposedPorts(
@@ -218,10 +223,10 @@ export class ControlPlaneClient {
   }
 
   stop(name: string): Promise<{ ok: true }> {
-    return this.postJson(name, '/stop');
+    return this.postJson(name, "/stop");
   }
 
   destroy(name: string): Promise<{ ok: true }> {
-    return this.postJson(name, '/destroy');
+    return this.postJson(name, "/destroy");
   }
 }

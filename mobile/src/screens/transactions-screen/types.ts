@@ -22,14 +22,14 @@ export interface JournalAmount {
   currency: string;
 }
 
-export interface JournalCost {
+interface JournalCost {
   number: string; // Decimal as string for precision
   currency: string;
   date: string; // ISO date string
   label?: string | null;
 }
 
-export interface JournalPosition {
+interface JournalPosition {
   units: JournalAmount;
   cost?: JournalCost | null;
 }
@@ -43,7 +43,7 @@ export interface JournalPosting extends JournalPosition {
   flag?: string | null;
 }
 
-export interface JournalDirective {
+interface JournalDirective {
   entry_hash: string;
   date: string; // ISO date string
   meta?: Record<string, unknown> | null;
@@ -59,12 +59,12 @@ export interface JournalTransaction extends JournalDirective {
   links: string[];
 }
 
-export interface JournalBalance extends JournalDirective {
+interface JournalBalance extends JournalDirective {
   account: string;
   diff_amount?: JournalAmount | null;
 }
 
-export interface JournalCommodity extends JournalDirective {
+interface JournalCommodity extends JournalDirective {
   currency: string;
 }
 
@@ -77,19 +77,19 @@ export interface JournalCustom extends JournalDirective {
   values: unknown[];
 }
 
-export interface JournalDocument extends JournalDirective {
+interface JournalDocument extends JournalDirective {
   filename: string;
   account: string;
   tags: string[];
   links: string[];
 }
 
-export interface JournalEvent extends JournalDirective {
+interface JournalEvent extends JournalDirective {
   type: string;
   description: string;
 }
 
-export interface JournalNote extends JournalDirective {
+interface JournalNote extends JournalDirective {
   account: string;
   comment: string;
 }
@@ -100,19 +100,14 @@ export interface JournalOpen extends JournalDirective {
   booking?: string | null;
 }
 
-export interface JournalPad extends JournalDirective {
+interface JournalPad extends JournalDirective {
   account: string;
   source_account: string;
 }
 
-export interface JournalPrice extends JournalDirective {
+interface JournalPrice extends JournalDirective {
   currency: string;
   amount: JournalAmount;
-}
-
-export interface JournalTxnPosting {
-  txn: JournalTransaction;
-  posting: JournalPosting;
 }
 
 // Union type for all directive types

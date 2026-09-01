@@ -16,7 +16,7 @@ const BEAN_FILE_RE = /\.(bean|beancount)$/;
 /**
  * Python `DirectiveLimitExceededError` → 403 `directive_limit_exceeded`.
  */
-export class DirectiveLimitExceededError extends DomainError {
+class DirectiveLimitExceededError extends DomainError {
   constructor(limit: number, currentEstimate: number) {
     super(
       ErrorCategory.RESOURCE_LIMIT_REACHED,

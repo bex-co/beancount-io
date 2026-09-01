@@ -1,0 +1,9 @@
+{
+  "$schema": "./node_modules/knip/schema-jsonc.json",
+  "entry": [
+    "src/**/*.test.ts",
+    "scripts/**/*.ts",
+    // Standalone local SSE diagnostic client.
+    "test-sse-local.js",
+  ],
+}

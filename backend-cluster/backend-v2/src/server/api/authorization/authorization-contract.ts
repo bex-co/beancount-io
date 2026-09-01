@@ -23,9 +23,6 @@ export const AUTHORIZATION_ACTIONS = {
 export type AuthorizationAction =
   (typeof AUTHORIZATION_ACTIONS)[keyof typeof AUTHORIZATION_ACTIONS];
 
-/** Kept as a named export for the already-shipped m12 call site. */
-export const USER_DELETE_ACTION = AUTHORIZATION_ACTIONS.USER_DELETE;
-
 export const USER_RELATIONSHIPS = {
   READ_PROFILE: "can_read_profile",
   WRITE_PROFILE: "can_write_profile",

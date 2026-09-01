@@ -9,9 +9,7 @@ import Animated, {
 import { springs } from "@/common/theme";
 import { tabIconName, type TabRouteName } from "./tab-icons";
 
-export { nativeTabIcons, tabIcons, tabIconName } from "./tab-icons";
-export type { TabRouteName, TabIconPair } from "./tab-icons";
-
+export { nativeTabIcons } from "./tab-icons";
 /** Glyph size — matches what the tab bar rendered before the swap. */
 const ICON_SIZE = 28;
 

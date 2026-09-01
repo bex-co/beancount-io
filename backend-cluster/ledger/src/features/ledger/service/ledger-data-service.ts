@@ -64,7 +64,7 @@ type ConversionParams = FilterParams & {
 };
 type AccountReportParams = ConversionParams & { accountName: string };
 
-export interface ILedgerDataService {
+interface ILedgerDataService {
   getAttributes(params: BaseParams): Promise<AttributesPublic>;
 
   getCommodities(params: BaseParams): Promise<CommodityPairWithPricesPublic[]>;

@@ -22,7 +22,7 @@ import {
 } from "@/screens/home-screen/selectors/select-budget-panel";
 
 /** Rows the panel displays. */
-export const BUDGET_PANEL_ROWS = 3;
+const BUDGET_PANEL_ROWS = 3;
 
 /**
  * Ceiling on how many budgets the panel will price before ranking. Ranking by
@@ -35,7 +35,7 @@ export const BUDGET_PANEL_ROWS = 3;
  * budgets returned with their current-period actuals in one request. With that,
  * the panel ranks the whole set in a single round-trip and the cap goes away.
  */
-export const BUDGET_PANEL_QUERY_CAP = 12;
+const BUDGET_PANEL_QUERY_CAP = 12;
 
 /**
  * Fetches current-period actuals for the ledger's budgets and ranks them.

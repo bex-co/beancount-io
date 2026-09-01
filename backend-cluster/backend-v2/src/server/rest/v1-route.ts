@@ -34,9 +34,9 @@ export const V1_PREFIX = "/api-gateway/v1";
  * Path syntax for a route declaration: OpenAPI-style `{param}`, plus `{*param}`
  * for a trailing wildcard that swallows slashes (file paths).
  */
-export type V1Path = `${typeof V1_PREFIX}/${string}`;
+type V1Path = `${typeof V1_PREFIX}/${string}`;
 
-export type V1Method = "get" | "post" | "put" | "delete";
+type V1Method = "get" | "post" | "put" | "delete";
 
 /**
  * How the caller proves the right to this route.
@@ -47,14 +47,14 @@ export type V1Method = "get" | "post" | "put" | "delete";
  *   deliberately outside the identity gate (the archive download; see
  *   `archive-handler.ts`).
  */
-export type V1Auth = "identity" | "ticket";
+type V1Auth = "identity" | "ticket";
 
 export interface V1Deps {
   readonly layers: AppLayers;
   readonly config: AppConfig;
 }
 
-export interface V1Input<P, Q, B> {
+interface V1Input<P, Q, B> {
   readonly params: P;
   readonly query: Q;
   readonly body: B;
@@ -125,7 +125,7 @@ function requireIdentity(ctx: RouterContext): Identity {
 }
 
 /** Mount one route and register it with the spec, from one declaration. */
-export function registerV1Route<P, Q, B>(
+function registerV1Route<P, Q, B>(
   router: Router,
   deps: V1Deps,
   route: V1Route<P, Q, B>,

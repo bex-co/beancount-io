@@ -5,7 +5,7 @@ import type { IAdminService } from "../service/admin-service";
 import { apiTokenRequired } from "./admin-api-middleware";
 import { errorResponseSchema } from "./admin-error-schema";
 
-export const runMigrationsResponseSchema = z
+const runMigrationsResponseSchema = z
   .object({
     ok: z.literal(true).openapi({ description: "Indicates request succeeded" }),
     message: z.string().openapi({

@@ -25,7 +25,7 @@ export const [
   {},
 );
 
-export function setRecurringOverride(
+function setRecurringOverride(
   ledgerId: string,
   payee: string,
   override: RecurringOverride,
@@ -41,7 +41,7 @@ export function setRecurringOverride(
   });
 }
 
-export function clearRecurringOverride(ledgerId: string, payee: string): void {
+function clearRecurringOverride(ledgerId: string, payee: string): void {
   const current = merchantRecurringOverridesVar();
   const forLedger = current[ledgerId];
   if (!forLedger || !(payee in forLedger)) {

@@ -6,6 +6,9 @@
   "scripts": {
     "codegen": "sh codegen.sh",
     "dev": "tsx src/index.ts",
+    "lint": "yarn typecheck && yarn lint:deadcode",
+    "lint:deadcode": "knip --include files,exports,types",
+    "lint:deadcode:fix": "knip --include files,exports,types --fix --fix-type files,exports,types --allow-remove-files --format",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
@@ -15,6 +18,7 @@
   },
   "devDependencies": {
     "@types/node": "^25.6.0",
+    "knip": "6.34.0",
     "openapi-typescript": "^7.6.1",
     "swagger2openapi": "^7.0.8",
     "tsx": "^4.19.2",

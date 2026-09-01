@@ -43,7 +43,7 @@ type ConversionParams = {
   interval?: string;
 };
 
-export interface ILedgerFinanceService {
+interface ILedgerFinanceService {
   getOverview(params: BaseParams & ConversionParams): Promise<OverviewPublic>;
 
   getIncomeStatement(

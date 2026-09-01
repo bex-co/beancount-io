@@ -26,15 +26,13 @@ import { oauthTokenManager } from "@/common/oauth/oauth-token-manager";
  *   the cookie expired. Omitting cookies makes the Bearer token the only
  *   credential, so the header is load-bearing and failures are honest.
  */
-export const AGENT_SESSION_PREFIX = "aisess_";
+const AGENT_SESSION_PREFIX = "aisess_";
 
 /** Server memory is keyed on this; New chat mints a fresh one. */
 function generateSessionId(): string {
   const rand = Math.random().toString(36).slice(2, 10);
   return `${AGENT_SESSION_PREFIX}${Date.now().toString(36)}${rand}`;
 }
-
-export type AgentChatStatus = "ready" | "submitted" | "streaming" | "error";
 
 export function useAgentChat() {
   const { t } = useTranslations();

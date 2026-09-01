@@ -312,7 +312,7 @@ export function isReachableOn(
  * so an absence that is genuinely out of reach never inflates the debt and an
  * absence that is merely unbuilt can never hide inside it.
  */
-export function isInParityScope(entry: VerbEntry): boolean {
+function isInParityScope(entry: VerbEntry): boolean {
   if (entry.authorizationAction) {
     // Operational risk and credential reachability are deliberately separate.
     // Parity follows the PDP catalog, while `class` continues to select the

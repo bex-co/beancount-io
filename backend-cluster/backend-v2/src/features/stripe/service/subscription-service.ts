@@ -13,7 +13,7 @@ import { logger } from "@/shared/logger";
 import { SUBSCRIPTION_CONFIG, TIER_LIMITS, SubscriptionTier } from "./stripe";
 import type { IStripeService } from "./stripe-service";
 
-export interface SubscriptionPriceView {
+interface SubscriptionPriceView {
   id: string;
   amount: number;
   currency: string;
@@ -22,21 +22,21 @@ export interface SubscriptionPriceView {
   trialPeriodDays?: number;
 }
 
-export interface SubscriptionProductView {
+interface SubscriptionProductView {
   id: string;
   name: string;
   description?: string;
   images?: string[];
 }
 
-export interface SubscriptionItemView {
+interface SubscriptionItemView {
   id: string;
   price: SubscriptionPriceView;
   product?: SubscriptionProductView;
   quantity: number;
 }
 
-export interface SubscriptionView {
+interface SubscriptionView {
   id: string;
   status: string;
   currentPeriodStart: Date;

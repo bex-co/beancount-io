@@ -1,7 +1,7 @@
 import type { AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
 
-export interface JobDefinition {
+interface JobDefinition {
   schedule: string;
   task: () => Promise<void>;
 }

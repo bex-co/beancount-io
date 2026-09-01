@@ -29,6 +29,9 @@ Each CLI sub-package follows the same pattern:
 ```bash
 yarn codegen       # Regenerate types from OpenAPI spec
 yarn dev           # Run CLI (tsx src/index.ts)
+yarn lint          # TypeScript + Knip dead-code gate
+yarn lint:deadcode # Detect unused files, exports, and exported types
+yarn lint:deadcode:fix # Apply Knip removals; review the diff
 yarn typecheck     # TypeScript check
 ```
 

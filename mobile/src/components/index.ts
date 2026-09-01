@@ -14,7 +14,6 @@ export * from "./search-bar";
 export * from "./list";
 export * from "./text-input-modal";
 export * from "./text-input-screen";
-export * from "./dashboard-webview";
 export * from "./ledger-guard";
 export * from "./ledger-drawer";
 export * from "./account-list";

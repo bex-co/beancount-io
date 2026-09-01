@@ -44,6 +44,7 @@ dev = [
     "mypy>=1.17.1",
     "ariadne-codegen>=0.14",
     "types-python-dateutil>=2.9.0.20251008",
+    "vulture>=2.14",
 ]
 
 [tool.ariadne-codegen]

@@ -6,7 +6,7 @@ import { setAskAgentRoute } from "./ask-agent-route";
 import { setOpenAIChatCompletionsRoute } from "./openai-chat-completions-route";
 import { setAnthropicMessagesRoute } from "./anthropic-messages-route";
 
-export { setMcpRoute, type McpServerFactory } from "./mcp-route";
+export { setMcpRoute } from "./mcp-route";
 
 /**
  * The AI streaming routes. The MCP transport is registered separately

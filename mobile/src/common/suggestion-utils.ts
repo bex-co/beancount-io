@@ -126,7 +126,7 @@ export function splitAccountsBySide(
 }
 
 /** Top account auto-fills; the rest (up to the cap) are runner-up chips. */
-export function buildSide(
+function buildSide(
   accounts: string[],
   source: SuggestionSource,
 ): SideSuggestions {
@@ -231,7 +231,7 @@ export function deriveSuggestions(
 // ─────────────────────────────────────────────────────────────────────────────
 
 /** Minimal shape of a journal posting read off the JSONObject. */
-export interface JournalPostingLike {
+interface JournalPostingLike {
   account: string;
   /** Decimal amount, usually a string from getLedgerJournal; Number() coerces. */
   units?: { number: string | number | null } | null;

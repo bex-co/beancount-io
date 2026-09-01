@@ -39,7 +39,7 @@ const TREE_PAGE_LIMIT = 100;
 export const GITEA_FILE_FETCH_CONCURRENCY = 8;
 /** Hard operational limits independent of subscription-tier repo quotas. */
 export const MAX_LEDGER_SOURCE_FILE_BYTES = 8 * 1024 * 1024;
-export const MAX_LEDGER_FILE_MAP_BYTES = 32 * 1024 * 1024;
+const MAX_LEDGER_FILE_MAP_BYTES = 32 * 1024 * 1024;
 export const MAX_LEDGER_FILE_MAP_FILES = 4_096;
 /** Upper bound on aggregate NFA state/path work across include glob expansion. */
 export const MAX_INCLUDE_GLOB_WORK = 10_000_000;

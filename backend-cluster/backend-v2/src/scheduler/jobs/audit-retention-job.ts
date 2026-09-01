@@ -12,7 +12,7 @@ const jobLogger = logger.child({ module: "AuditRetentionJob" });
  * alternative, and it turns a decision nobody made into an ops problem later,
  * at the point where it is expensive to change.
  */
-export const AUDIT_RETENTION_DAYS = 90;
+const AUDIT_RETENTION_DAYS = 90;
 
 export const createAuditRetentionJob: JobFactory = (layers, _config) => {
   return {

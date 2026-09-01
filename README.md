@@ -179,6 +179,10 @@ Every active package has path-filtered CI so unrelated changes stay fast:
 | Skills    | `python3 skills/scripts/ci-check.py`                                              |
 
 A repository-wide secret scan also gates every push and pull request.
+Run `scripts/lint-deadcode.sh` from the repository root to check every executable
+package and support script for unused files and symbols. `scripts/fix-deadcode.sh`
+applies the available removals; review its diff and rerun the affected packages'
+full checks.
 
 ## Contributing
 

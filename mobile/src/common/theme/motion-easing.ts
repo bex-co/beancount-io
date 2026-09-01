@@ -16,6 +16,3 @@ export const easeDecelerate = Easing.bezier(...easings.decelerate);
 
 /** Transitions between two on-screen states. */
 export const easeStandard = Easing.bezier(...easings.standard);
-
-/** Exits — accelerates away. */
-export const easeAccelerate = Easing.bezier(...easings.accelerate);

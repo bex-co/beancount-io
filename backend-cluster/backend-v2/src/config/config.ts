@@ -58,7 +58,7 @@ export interface GiteaConfig {
   /** Where Gitea's SSH listens inside the compose network. */
 }
 
-export interface SshProxyConfig {
+interface SshProxyConfig {
   enabled: boolean;
   port: number;
   hostKey: string;
@@ -106,7 +106,7 @@ interface LokiConfig {
   host: string;
 }
 
-export type PlaidEnvironment = "sandbox" | "development" | "production";
+type PlaidEnvironment = "sandbox" | "development" | "production";
 
 export interface PlaidConfig {
   clientId: string;
@@ -137,7 +137,7 @@ interface OAuthConfig {
  * hard-coded; development-only test affordances are explicitly inert in every
  * other environment.
  */
-export interface ApiConfig {
+interface ApiConfig {
   /**
    * Whether the op-class matrix denies or only records.
    *

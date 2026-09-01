@@ -10,11 +10,6 @@ import {
 import { useTheme, gutter } from "@/common/theme";
 import { refreshAppearance } from "./refresh-appearance";
 
-export {
-  refreshAppearance,
-  type RefreshAppearance,
-} from "./refresh-appearance";
-
 const styles = StyleSheet.create({
   content: {
     // Side gutters keep cards off the screen edges — the app-wide inset.

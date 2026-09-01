@@ -5,12 +5,7 @@ import {
   type Session,
 } from "@/common/oauth/session-record";
 
-export {
-  deserializeSession,
-  type LegacySession,
-  type OAuthSession,
-  type Session,
-} from "@/common/oauth/session-record";
+export { type Session } from "@/common/oauth/session-record";
 
 export const [sessionVar, loadSession, flushSession] =
   createPersistentVar<Session | null>(

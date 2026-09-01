@@ -14,9 +14,4 @@ export const PlaidWebhookRequestSchema = z.object({
     .describe("Raw JSON string of the webhook payload"),
 });
 
-export const PlaidWebhookResponseSchema = z.object({
-  received: z.boolean().describe("Whether webhook was received successfully"),
-});
-
 export type PlaidWebhookRequest = z.infer<typeof PlaidWebhookRequestSchema>;
-export type PlaidWebhookResponse = z.infer<typeof PlaidWebhookResponseSchema>;

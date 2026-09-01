@@ -1,0 +1,14 @@
+{
+  "$schema": "./node_modules/knip/schema-jsonc.json",
+  "entry": [
+    "server.ts",
+    // These are standalone operational/codegen programs or Promptfoo adapters.
+    "scripts/**/*.ts",
+    "evals/**/*.ts",
+  ],
+  "ignoreIssues": {
+    // Generated clients intentionally expose the upstream service schemas.
+    "src/features/gitea/client/gitea-api.ts": ["exports", "types"],
+    "src/foundation/fava/Api.ts": ["exports", "types"],
+  },
+}

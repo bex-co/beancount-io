@@ -5,7 +5,7 @@ import { BadUserInputError } from "@/shared/errors";
  * character excludes the special `.` and `..` segments; the remaining grammar
  * covers the formats the API supports (`zip`, `tar.gz`, `gitea-main.zip`).
  */
-export const SAFE_ARCHIVE_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$/;
+const SAFE_ARCHIVE_NAME_PATTERN = /^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$/;
 
 export function assertSafeArchiveName(
   archive: unknown,

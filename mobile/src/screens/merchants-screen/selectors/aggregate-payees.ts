@@ -36,7 +36,7 @@ const COL = {
 export const PAYEE_ROLLUP_BQL =
   "SELECT payee, count(*) as transaction_count, min(date) as first_date, max(date) as last_date WHERE payee != '' GROUP BY payee ORDER BY transaction_count DESC";
 
-export interface QueryColumnLike {
+interface QueryColumnLike {
   name: string;
   dtype: string;
 }

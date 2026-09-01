@@ -61,7 +61,7 @@ export interface FilterOptions {
 }
 
 /** Keep user-authored regex programs small before they enter a worker. */
-export const MAX_FILTER_PATTERN_LENGTH = 256;
+const MAX_FILTER_PATTERN_LENGTH = 256;
 
 /**
  * Thrown when `time` cannot be parsed to a range — mirrors Fava's

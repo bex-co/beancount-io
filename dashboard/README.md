@@ -63,15 +63,17 @@ be prefixed with `VITE_`.
 
 ## Scripts
 
-| Script              | Description                                    |
-| ------------------- | ---------------------------------------------- |
-| `yarn dev`          | Start the dev server (port 5173) with HMR      |
-| `yarn build`        | Production build                               |
-| `yarn start`        | Serve the built SSR server                     |
-| `yarn lint`         | Generate routes, type-check (`tsc -b`), ESLint |
-| `yarn test`         | Run the test suite (Vitest)                    |
-| `yarn format:check` | Check formatting (Prettier)                    |
-| `yarn codegen`      | Regenerate GraphQL types from the schema       |
+| Script                   | Description                                                  |
+| ------------------------ | ------------------------------------------------------------ |
+| `yarn dev`               | Start the dev server (port 5173) with HMR                    |
+| `yarn build`             | Production build                                             |
+| `yarn start`             | Serve the built SSR server                                   |
+| `yarn lint`              | Generate routes, type-check, ESLint, and dead-code detection |
+| `yarn lint:deadcode`     | Report unused files, exports, and exported types with Knip   |
+| `yarn lint:deadcode:fix` | Remove reported dead code; review the resulting diff         |
+| `yarn test`              | Run the test suite (Vitest)                                  |
+| `yarn format:check`      | Check formatting (Prettier)                                  |
+| `yarn codegen`           | Regenerate GraphQL types from the schema                     |
 
 ## Personal access tokens
 

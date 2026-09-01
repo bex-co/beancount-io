@@ -1,4 +1,4 @@
-export type LegacySession = {
+type LegacySession = {
   kind: "legacy";
   userId: string;
   authToken: string;

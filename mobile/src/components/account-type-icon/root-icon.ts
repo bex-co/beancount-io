@@ -15,7 +15,7 @@ export type RootIcon = {
  * the row's icon signals *what kind of account* the entry hits, and the text
  * carries the rest. No per-category guessing, so it is never wrong.
  */
-export const ROOT_ICONS: Record<AccountRoot, RootIcon> = {
+const ROOT_ICONS: Record<AccountRoot, RootIcon> = {
   expenses: { glyph: "receipt", tone: (theme) => theme.secondary },
   // `cash` rather than a "$" glyph: ledgers are not necessarily USD.
   income: { glyph: "cash", tone: (theme) => theme.success },

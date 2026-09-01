@@ -161,7 +161,7 @@ function FormRow({
   );
 }
 
-export function AddBudgetScreenImpl(): JSX.Element {
+function AddBudgetScreenImpl(): JSX.Element {
   const { t } = useTranslations();
   const router = useRouter();
   const theme = useTheme().colorTheme;

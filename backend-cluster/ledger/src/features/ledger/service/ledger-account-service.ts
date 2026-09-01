@@ -38,7 +38,7 @@ export type LedgerAccountDirectiveItem = {
   closeEntryHash?: string;
 };
 
-export interface ILedgerAccountService {
+interface ILedgerAccountService {
   getAccounts(
     ledgerOwner: string,
     ledgerName: string,

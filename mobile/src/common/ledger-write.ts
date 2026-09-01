@@ -22,7 +22,7 @@
  * makes the branching testable in the jest-lite runner.
  */
 
-export type LedgerWriteToast = "loading" | "success" | "error";
+type LedgerWriteToast = "loading" | "success" | "error";
 
 export type LedgerWriteDeps = {
   /** Show a toast; the returned function dismisses it early. */

@@ -20,7 +20,7 @@ import type {
   LedgerEntryInput,
 } from "@/features/ledger/service/ledger-entry-service";
 
-export interface IEntryMeta {
+interface IEntryMeta {
   __tolerances__: Record<string, number>;
   filename: string;
   lineno: number;

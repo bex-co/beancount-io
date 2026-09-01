@@ -5,7 +5,7 @@ import { PLUGIN_LINE_RE, decodeStringLiteral } from "./collect-plugins";
 /** The python-only plugin namespace the WASM engine cannot run (emits `E8005`). */
 const FAVA_PREFIX = "fava.plugins.";
 
-export interface StrippedPlugin {
+interface StrippedPlugin {
   name: string;
   /** 1-based line number of the stripped `plugin` directive in the entry-point. */
   line: number;

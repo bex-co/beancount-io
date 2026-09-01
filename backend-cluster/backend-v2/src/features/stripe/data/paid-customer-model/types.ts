@@ -35,7 +35,7 @@ export interface UpdatePaidCustomerInput {
  * Database executor type - represents any database connection/transaction.
  * This allows the interface to remain database-agnostic while supporting transactions.
  */
-export type DbExecutor = any;
+type DbExecutor = any;
 
 // Database-agnostic interface
 // All methods now accept a DbExecutor as the first parameter to support transactions.

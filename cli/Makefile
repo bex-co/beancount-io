@@ -1,6 +1,6 @@
 # Beancount CLI - Development Makefile
 
-.PHONY: help install install-dev install-tool reinstall-tool dev lint format format-check typecheck test codegen check-all
+.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all
 
 # Default target
 help:
@@ -11,6 +11,8 @@ help:
 	@echo "  make reinstall-tool   - Reinstall CLI tool"
 	@echo "  make dev              - Show CLI help"
 	@echo "  make lint             - Run ruff linter"
+	@echo "  make deadcode         - Detect unused Python code with Vulture"
+	@echo "  make deadcode-fix     - Remove fixable unused imports and variables"
 	@echo "  make format           - Format code with ruff"
 	@echo "  make format-check     - Check formatting without modifying files"
 	@echo "  make typecheck        - Run mypy type checks"
@@ -35,6 +37,13 @@ dev:
 
 lint:
 	uv run ruff check src/ tests/
+
+deadcode:
+	uv run vulture src/cli src/fava --min-confidence 100 --exclude src/cli/api/gql_client/ --ignore-names repo
+
+deadcode-fix:
+	uv run ruff check src/ tests/ --fix --select F401,F841
+	$(MAKE) deadcode
 
 format:
 	uv run ruff format src/cli tests/
@@ -67,4 +76,4 @@ codegen:
 	curl -sf https://beancount.io/api-gateway/schema.graphql > graphql/schema.graphql
 	uv run ariadne-codegen
 
-check-all: lint format-check typecheck test
+check-all: lint deadcode format-check typecheck test

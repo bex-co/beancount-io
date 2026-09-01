@@ -7,12 +7,12 @@ import { runToolSafely } from "../utils/run-tool";
 
 const toolLogger = logger.child({ module: "tool:insert-receipt-transaction" });
 
-export const description =
+const description =
   "Insert a receipt-linked transaction into the ledger. " +
   "Only call this tool after the user has reviewed and confirmed the transaction details. " +
   "The receipt file is permanently stored and linked to the transaction entry.";
 
-export const insertReceiptTransactionInputSchema = z.object({
+const insertReceiptTransactionInputSchema = z.object({
   receiptObjectKey: z
     .string()
     .describe("S3 object key of the receipt file (starts with tmp/)"),
@@ -43,7 +43,7 @@ export const insertReceiptTransactionInputSchema = z.object({
     ),
 });
 
-export const insertReceiptTransactionOutputSchema = toolOutputSchema(
+const insertReceiptTransactionOutputSchema = toolOutputSchema(
   z.object({ success: z.boolean() }),
 );
 
@@ -51,7 +51,7 @@ export type InsertReceiptTransactionOutput = z.infer<
   typeof insertReceiptTransactionOutputSchema
 >;
 
-export async function executeInsertReceiptTransaction(
+async function executeInsertReceiptTransaction(
   ctx: Pick<ToolContext, "ledgerReceiptWorkflow" | "identity" | "ledgerId">,
   input: z.infer<typeof insertReceiptTransactionInputSchema>,
 ): Promise<InsertReceiptTransactionOutput> {

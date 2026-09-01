@@ -39,14 +39,14 @@ export const readLedgerFilesInputSchema = z.object({
     ),
 });
 
-export const readLedgerFileSectionSchema = z.object({
+const readLedgerFileSectionSchema = z.object({
   path: z.string(),
   startLine: z.number().int(),
   endLine: z.number().int(),
   totalLines: z.number().int(),
   content: z.string(),
 });
-export type ReadLedgerFileSection = z.infer<typeof readLedgerFileSectionSchema>;
+type ReadLedgerFileSection = z.infer<typeof readLedgerFileSectionSchema>;
 
 export const readLedgerFilesOutputSchema = toolOutputSchema(
   z.array(readLedgerFileSectionSchema),
@@ -106,7 +106,11 @@ export function createReadLedgerFilesTool(ctx: ToolContext) {
     outputSchema: readLedgerFilesOutputSchema,
     execute: (input) =>
       executeReadLedgerFiles(
-        { services: ctx.services, identity: ctx.identity, ledgerId: ctx.ledgerId },
+        {
+          services: ctx.services,
+          identity: ctx.identity,
+          ledgerId: ctx.ledgerId,
+        },
         input,
       ),
   });

@@ -65,22 +65,6 @@ export const loopDurations = {
 } as const;
 
 /**
- * Deliberate waits — a length the user is *meant* to perceive, where the
- * animation exists to explain the wait rather than the wait existing to fit the
- * animation. Not transitions, so the budget above does not apply; keep this
- * list very short, because every entry is a second of someone's life.
- */
-export const dwellDurations = {
-  /**
-   * How long the logout screen holds before the sign-out request goes out. The
-   * progress bar fills over exactly this, so the two are one number: signing
-   * out is the app's most consequential action and it gets a beat to register
-   * rather than yanking the user back to the login screen mid-tap.
-   */
-  logout: 2000,
-} as const;
-
-/**
  * Easing curves as cubic-bezier control points `[x1, y1, x2, y2]`, ready for
  * `Easing.bezier(...)`. See `motion-easing.ts` for the materialized versions.
  */

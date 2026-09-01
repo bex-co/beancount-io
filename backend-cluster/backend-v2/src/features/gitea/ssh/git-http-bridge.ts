@@ -18,9 +18,6 @@
  *    every command is self-contained, so each one becomes exactly one POST.
  */
 
-/** A pkt-line's four hex length bytes count themselves; `0000` is a flush. */
-export const FLUSH = "0000";
-
 /**
  * Note on the other pkt-line reader. `advanceCommandListScan` in the HTTP proxy
  * parses the same framing, and merging the two was considered and rejected:

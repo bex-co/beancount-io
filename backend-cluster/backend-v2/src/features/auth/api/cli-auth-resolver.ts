@@ -13,7 +13,7 @@ import { IContext } from "@/server/graphql/context";
 import type { ICliAuthService } from "@/features/auth/service/cli-auth-service";
 import type { CliAuthSessionStatus } from "@/features/auth/data/cli-auth-session-model/types";
 
-export enum CliAuthStatus {
+enum CliAuthStatus {
   PENDING = "PENDING",
   AUTHORIZED = "AUTHORIZED",
   DENIED = "DENIED",

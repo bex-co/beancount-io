@@ -3,16 +3,16 @@
 // so the engine's entry-build module has no service-layer dependency. The
 // adapted entry service must import LedgerEntryInput from here.
 
-export type AmountInput = { number: string; currency: string };
+type AmountInput = { number: string; currency: string };
 
-export type PostingInput = {
+type PostingInput = {
   units: AmountInput;
   account: string;
   price?: AmountInput;
   flag?: string;
 };
 
-export type TransactionInput = {
+type TransactionInput = {
   date: string;
   flag: string;
   payee?: string;
@@ -23,27 +23,27 @@ export type TransactionInput = {
   meta?: Record<string, string>;
 };
 
-export type CommodityInput = { date: string; currency: string };
+type CommodityInput = { date: string; currency: string };
 
-export type PriceInput = {
+type PriceInput = {
   date: string;
   currency: string;
   amount: AmountInput;
 };
 
-export type NoteInput = { date: string; content: string; account: string };
+type NoteInput = { date: string; content: string; account: string };
 
-export type BalanceInput = {
+type BalanceInput = {
   date: string;
   account: string;
   amount: AmountInput;
 };
 
-export type OpenInput = { date: string; account: string; currencies: string[] };
+type OpenInput = { date: string; account: string; currencies: string[] };
 
-export type CloseInput = { date: string; account: string };
+type CloseInput = { date: string; account: string };
 
-export type DocumentInput = {
+type DocumentInput = {
   date: string;
   account: string;
   filename: string;
@@ -51,13 +51,13 @@ export type DocumentInput = {
   links?: string[];
 };
 
-export type EventInput = {
+type EventInput = {
   date: string;
   type: string;
   description: string;
 };
 
-export type BudgetInput = {
+type BudgetInput = {
   date: string;
   account: string;
   interval: string;
@@ -83,7 +83,7 @@ export type CustomValueInput =
  * contract has no `budget` entry type, so callers send
  * `custom` with `type: "budget"` and account/interval/amount as values.
  */
-export type CustomInput = {
+type CustomInput = {
   date: string;
   type: string;
   values?: CustomValueInput[];

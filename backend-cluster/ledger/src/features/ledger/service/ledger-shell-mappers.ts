@@ -62,7 +62,7 @@ function unitsToCurrencyMap(units: AmountValue[]): CurrencyMap {
  * every row avoids first-row null mistakes; the name fallback preserves types
  * for empty result sets on the standard entries schema.
  */
-export function classifyColumnDtype(
+function classifyColumnDtype(
   rows: CellValue[][],
   columnIndex: number,
   columnName = "",
@@ -161,7 +161,7 @@ function dtypeFromColumnName(name: string): string {
  * - arrays (tags/links) and any other object → their string form (fava
  *   `SetColumn`/`ObjectColumn` → `str`).
  */
-export function toShellCell(cell: CellValue): ShellCell {
+function toShellCell(cell: CellValue): ShellCell {
   // The pre-migration backend-v2 adapter converted Fava's nullable cells to an
   // empty string before exposing them through GraphQL.
   if (cell === null || cell === undefined) return "";

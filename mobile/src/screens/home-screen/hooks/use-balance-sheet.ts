@@ -2,7 +2,7 @@ import { useBalanceSheetQuery } from "@/generated-graphql/graphql";
 import { BALANCE_CONVERSION } from "@/common/balance-util";
 
 /** Pinned for offline cold start — see m34 fetch-policy audit. */
-export const BALANCE_SHEET_FETCH_POLICY = "cache-and-network" as const;
+const BALANCE_SHEET_FETCH_POLICY = "cache-and-network" as const;
 
 /**
  * Balance sheet for a ledger: net-worth / assets / liabilities series plus the

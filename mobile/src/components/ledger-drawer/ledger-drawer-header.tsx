@@ -66,7 +66,7 @@ const getStyles = (theme: ColorTheme) =>
   });
 
 /** Top-left hamburger that opens the shared ledger drawer. */
-export function LedgerDrawerButton({ color }: { color?: string }): JSX.Element {
+function LedgerDrawerButton({ color }: { color?: string }): JSX.Element {
   const theme = useTheme().colorTheme;
   const { openDrawer } = useLedgerDrawer();
 

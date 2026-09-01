@@ -39,7 +39,7 @@ export interface AdminPaidUser extends AdminUser {
   currentPeriodEnd: string;
 }
 
-export interface AdminPaidCustomerDetail {
+interface AdminPaidCustomerDetail {
   clientId: string;
   stripeCustomerId: string;
   email?: string;
@@ -50,7 +50,7 @@ export interface AdminPaidCustomerDetail {
   updatedAt: string;
 }
 
-export interface AdminSubscriptionItemDetail {
+interface AdminSubscriptionItemDetail {
   id: string;
   priceId: string;
   productId?: string;
@@ -60,7 +60,7 @@ export interface AdminSubscriptionItemDetail {
   interval: string;
 }
 
-export interface AdminSubscriptionDetail {
+interface AdminSubscriptionDetail {
   id: string;
   clientId: string;
   status: string;

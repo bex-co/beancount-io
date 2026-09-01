@@ -6,7 +6,6 @@ import {
 import {
   buildLlmTransaction,
   deriveSuggestions,
-  type AccountSuggestion,
   type AccountTypes,
   type SideSuggestions,
   type SuggestionSource,
@@ -102,4 +101,4 @@ export function usePayeeAccountSuggestions(
 }
 
 // Re-export the value module's types for callers that build chips by hand.
-export type { AccountSuggestion, AccountTypes, SideSuggestions };
+export type { AccountTypes };

@@ -3,7 +3,7 @@ import { StyleProp, StyleSheet, View, ViewStyle } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 
-export const ListDivider = () => {
+const ListDivider = () => {
   const styles = useThemeStyle((theme: ColorTheme) =>
     StyleSheet.create({
       divider: {

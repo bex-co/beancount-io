@@ -14,5 +14,3 @@ export type ShellQueryResult = {
     t?: string;
   };
 };
-
-export type ShellTextResult = { text: string };

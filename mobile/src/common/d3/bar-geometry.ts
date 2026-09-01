@@ -47,7 +47,7 @@ export function barRectAt(
  * Smallest height a bar is drawn at, so a period worth almost nothing still
  * reads as a bar rather than as missing data.
  */
-export const MIN_BAR_HEIGHT = 2;
+const MIN_BAR_HEIGHT = 2;
 
 /**
  * A bar's resting rectangle: where it sits and how tall it is once fully grown.

@@ -112,13 +112,3 @@ export interface AppLayers {
   services: ServiceLayer;
   workflows: WorkflowLayer;
 }
-
-/**
- * What the resolver wiring needs. Resolvers may call a Service directly (simple
- * CRUD) or a Workflow (orchestration); the Database layer is deliberately not
- * exposed — the "resolvers never touch models" boundary holds.
- */
-export interface ResolverDeps {
-  services: ServiceLayer;
-  workflows: WorkflowLayer;
-}

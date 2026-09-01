@@ -27,7 +27,7 @@ const LEDGER_PERMISSIONS: readonly string[] = ["read", "write", "admin"];
  * outside the three levels we understand is treated as no collaborator grant
  * at all and falls through to the public-visibility check.
  */
-export function asLedgerPermission(
+function asLedgerPermission(
   value: string | null | undefined,
 ): LedgerPermission | null {
   return typeof value === "string" && LEDGER_PERMISSIONS.includes(value)

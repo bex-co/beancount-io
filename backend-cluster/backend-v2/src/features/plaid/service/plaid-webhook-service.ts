@@ -32,7 +32,7 @@ function readStringField(
   return typeof value === "string" && value ? value : undefined;
 }
 
-export interface IPlaidWebhookService {
+interface IPlaidWebhookService {
   handleEvent(event: PlaidWebhookRequest): Promise<void>;
 }
 

@@ -89,7 +89,7 @@ const getStyles = (theme: ColorTheme) =>
 /** Roughly a loaded card: header, stats, meter, chart. */
 const CARD_SKELETON_HEIGHT = 320;
 
-export function BudgetScreenImpl(): JSX.Element {
+function BudgetScreenImpl(): JSX.Element {
   const styles = useThemeStyle(getStyles);
   // `.name` is the *resolved* theme — `themeVar` itself can hold "system".
   const { colorTheme: theme, name: themeName } = useTheme();

@@ -185,7 +185,7 @@ export function renderPreviewPage(
     .trim();
 }
 
-export function writePreview(): string {
+function writePreview(): string {
   const outputPath = path.join(__dirname, "all-templates.html");
   fs.writeFileSync(outputPath, renderPreviewPage());
   return outputPath;

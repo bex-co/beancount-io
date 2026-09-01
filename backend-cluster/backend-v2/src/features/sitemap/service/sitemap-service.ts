@@ -12,7 +12,7 @@ import { CACHE_KEYS, TTL } from "@/shared/cache";
  * Service for generating sitemap.xml
  * Collects all public repositories and user profiles
  */
-export interface ISitemapService {
+interface ISitemapService {
   generateSitemap(): Promise<string>;
 }
 

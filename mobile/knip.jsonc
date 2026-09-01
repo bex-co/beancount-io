@@ -1,0 +1,17 @@
+{
+  "$schema": "./node_modules/knip/schema-jsonc.json",
+  "entry": [
+    // Expo Router loads route modules by filesystem convention.
+    "app/**/*.{ts,tsx}",
+    // The package's lightweight test runner discovers tests by filename.
+    "src/**/*.test.{ts,tsx}",
+    // Release and metadata scripts are standalone package entry points.
+    "src/scripts/**/*.{ts,tsx}",
+    "scripts/**/*.{js,ts}",
+    "babel.config.js",
+  ],
+  "ignoreIssues": {
+    // GraphQL Code Generator owns this public generated API.
+    "src/generated-graphql/**": ["exports", "types"],
+  },
+}

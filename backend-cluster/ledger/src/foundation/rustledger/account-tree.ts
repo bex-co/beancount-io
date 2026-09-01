@@ -65,7 +65,7 @@ interface MutableNode {
  * empty accounts (`has_txns=false`). Cost lots are preserved so the tree can be
  * valued `at_cost` / `at_value` / in a currency (see {@link accountHierarchy}).
  */
-export function buildAccountTree(
+function buildAccountTree(
   directives: DirectiveJson[],
 ): Map<string, MutableNode> {
   const nodes = new Map<string, MutableNode>();
@@ -144,7 +144,7 @@ function serialiseInventory(
 }
 
 /** Serialise the subtree rooted at `account` into fava's tree-node shape. */
-export function serialiseSubtree(
+function serialiseSubtree(
   nodes: Map<string, MutableNode>,
   account: string,
   target: string,

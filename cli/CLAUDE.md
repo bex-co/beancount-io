@@ -23,6 +23,8 @@ Run from `cli/`:
 uv sync --all-groups
 uv run beancount-cli --help
 make lint
+make deadcode
+make deadcode-fix
 make format-check
 make typecheck
 make test
@@ -31,6 +33,9 @@ make codegen
 ```
 
 `make check-all` is the handoff gate and matches `../.github/workflows/ci-cli.yml`.
+It includes high-confidence Vulture dead-code detection. `make deadcode-fix`
+removes Ruff-fixable unused imports and variables, then reruns Vulture; review
+the resulting diff.
 
 ## Conventions
 

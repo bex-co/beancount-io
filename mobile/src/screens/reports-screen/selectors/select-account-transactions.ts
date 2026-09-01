@@ -6,7 +6,7 @@ import {
 import { rangeStartMonth, TimeRange } from "../../../common/series-util";
 
 /** Max number of account transactions to surface in a report list. */
-export const ACCOUNT_TRANSACTIONS_LIMIT = 10;
+const ACCOUNT_TRANSACTIONS_LIMIT = 10;
 
 /**
  * Predicate + type guard: a transaction with at least one posting under the

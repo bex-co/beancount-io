@@ -129,18 +129,6 @@ export const ListItemHorizontal = ({
   );
 };
 
-export const ItemDescription = ({ text }: { text: string }) => {
-  const styles = useThemeStyle((theme: ColorTheme) =>
-    StyleSheet.create({
-      text: {
-        fontSize: 14,
-        color: theme.black60,
-      },
-    }),
-  );
-  return <Text style={styles.text}>{text}</Text>;
-};
-
 export const SectionHeader = ({ title }: { title: string }) => {
   const styles = useThemeStyle((theme: ColorTheme) =>
     StyleSheet.create({

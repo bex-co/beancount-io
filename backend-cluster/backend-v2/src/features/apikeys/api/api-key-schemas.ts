@@ -9,7 +9,7 @@ import { API_SCOPES } from "@/server/api/identity";
  * object.
  */
 
-export const scopeSchema = z.enum(API_SCOPES).openapi({
+const scopeSchema = z.enum(API_SCOPES).openapi({
   description: "One of the three ledger scopes",
   example: "ledger.read",
 });

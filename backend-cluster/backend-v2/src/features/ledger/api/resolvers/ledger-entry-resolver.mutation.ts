@@ -17,7 +17,7 @@ import type {
   LedgerEntryInput,
 } from "@/features/ledger/service/ledger-entry-service";
 
-export enum BudgetInterval {
+enum BudgetInterval {
   DAILY = "daily",
   WEEKLY = "weekly",
   MONTHLY = "monthly",

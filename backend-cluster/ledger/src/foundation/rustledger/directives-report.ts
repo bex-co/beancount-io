@@ -194,7 +194,7 @@ export function collectEvents(directives: DirectiveJson[]): LedgerEvent[] {
     }));
 }
 
-export interface CommodityPricePoint {
+interface CommodityPricePoint {
   date: string;
   value: string;
 }

@@ -49,7 +49,9 @@ Run all from inside `mobile/`.
 | `yarn start`                        | Expo dev server (`--tunnel`)                                |
 | `yarn ios` / `yarn android`         | Build and run the native app in simulator/emulator          |
 | `yarn ios:device`                   | Build and install on a connected iOS device                 |
-| `yarn lint`                         | `tsc --noEmit` + ESLint with autofix                        |
+| `yarn lint`                         | TypeScript + ESLint autofix + Knip dead-code detection      |
+| `yarn lint:deadcode`                | Detect unused files, exports, and exported types            |
+| `yarn lint:deadcode:fix`            | Remove detected dead code; review the resulting diff        |
 | `yarn typecheck`                    | `tsc --noEmit` only                                         |
 | `yarn test:unit`                    | Custom Jest-lite runner in `scripts/`                       |
 | `yarn test`                         | Aggregate lint + typecheck + unit-test gate                 |

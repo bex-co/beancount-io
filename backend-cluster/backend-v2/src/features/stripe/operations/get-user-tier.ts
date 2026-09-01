@@ -15,7 +15,7 @@ import type { IStripeService } from "../service/stripe-service";
  * backend-v2/CLAUDE.md. `stripe` is the shared instance (`service.stripe`),
  * forwarded by the caller rather than constructed here.
  */
-export type TierDeps = {
+type TierDeps = {
   stripe: IStripeService;
   models: Pick<IModels, "paidCustomer">;
   postgresDb: NodePgDatabase;

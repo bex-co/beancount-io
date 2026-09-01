@@ -238,7 +238,7 @@ export class AuthorizationDeniedError extends DomainError {
   }
 }
 
-export class AuthorizationUnavailableError extends DomainError {
+class AuthorizationUnavailableError extends DomainError {
   constructor(action: string) {
     super(
       ErrorCategory.SERVICE_UNAVAILABLE,

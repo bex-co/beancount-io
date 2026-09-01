@@ -2,7 +2,7 @@ import { useAccountReportQuery } from "@/generated-graphql/graphql";
 import { BALANCE_CONVERSION } from "@/common/balance-util";
 
 /** Pinned for offline cold start — see m34 fetch-policy audit. */
-export const ACCOUNT_REPORT_FETCH_POLICY = "cache-and-network" as const;
+const ACCOUNT_REPORT_FETCH_POLICY = "cache-and-network" as const;
 
 /**
  * Report for a single account: `linechartData` is its balance history over

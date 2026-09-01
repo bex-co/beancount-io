@@ -419,7 +419,7 @@ When adding new progress messages:
 When making changes:
 1. Follow existing code patterns and naming conventions
 2. Add/update tests for new functionality
-3. Run full CI suite before committing: `npm run typecheck && npm run lint:check && npm test`
+3. Run full CI suite before committing: `npm run typecheck && npm run lint:check && npm test` (`lint:check` includes Knip dead-code detection; `npm run lint:deadcode:fix` applies removals)
 4. Update this documentation for significant changes
 5. Use conventional commit messages: `feat:`, `fix:`, `docs:`, `test:`
 

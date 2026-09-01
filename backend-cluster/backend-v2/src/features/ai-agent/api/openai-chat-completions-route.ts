@@ -32,7 +32,7 @@ const chatMessageSchema = z.union([
   }),
 ]);
 
-export const chatCompletionBodySchema = z.object({
+const chatCompletionBodySchema = z.object({
   model: z.string().optional().default("gpt-4o"),
   messages: z.array(chatMessageSchema).min(1),
   temperature: z.number().min(0).max(2).optional(),

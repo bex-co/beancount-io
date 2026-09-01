@@ -1,0 +1,15 @@
+{
+  "$schema": "./node_modules/knip/schema-jsonc.json",
+  "entry": [
+    "server.ts",
+    "scripts/**/*.ts",
+    // The retired parity harness remains executable historical tooling.
+    "parity/**/*.{ts,js}",
+    "jest.parity.config.js",
+  ],
+  "ignoreIssues": {
+    // Generated clients intentionally expose their complete wire contracts.
+    "src/features/gitea/client/gitea-api.ts": ["exports", "types"],
+    "src/foundation/ledger-api-types/index.ts": ["exports", "types"],
+  },
+}

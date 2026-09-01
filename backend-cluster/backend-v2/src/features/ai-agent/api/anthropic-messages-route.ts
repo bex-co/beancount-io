@@ -24,7 +24,7 @@ const anthropicToolSchema = z.object({
   }),
 });
 
-export const anthropicMessageBodySchema = z.object({
+const anthropicMessageBodySchema = z.object({
   model: z.string().optional().default("claude-sonnet-4-5-20250929"),
   messages: z.array(anthropicMessageSchema).min(1),
   max_tokens: z.number().int().positive().default(1024),

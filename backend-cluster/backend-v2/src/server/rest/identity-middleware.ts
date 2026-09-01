@@ -9,7 +9,7 @@ import { type Identity, resolveIdentity } from "@/server/api/identity";
  * this, each route did its own thing (`download-archive-handler` even accepted
  * a JWT in the query string).
  */
-export interface IdentityState {
+interface IdentityState {
   identity?: Identity;
 }
 

@@ -24,7 +24,7 @@ import {
 import type { RecentTransactionExample } from "../types";
 
 // Domain types (transport-agnostic, no TypeGraphQL decorators)
-export type ParsedTransaction = {
+type ParsedTransaction = {
   date: string;
   payee: string;
   description: string;

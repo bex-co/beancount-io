@@ -1,7 +1,7 @@
 import { createPrivateKey, generateKeyPairSync } from "node:crypto";
 import type { Environment } from "@/config/config";
 
-export interface SigningJwk extends JsonWebKey {
+interface SigningJwk extends JsonWebKey {
   kid: string;
   kty: "EC";
   crv: "P-256";

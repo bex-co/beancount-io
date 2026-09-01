@@ -312,7 +312,7 @@ const PostingRow = ({
   );
 };
 
-export const MultiPostingsTransactionScreenComponent = () => {
+const MultiPostingsTransactionScreenComponent = () => {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const { t } = useTranslations();
