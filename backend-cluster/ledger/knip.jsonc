@@ -3,6 +3,9 @@
   "entry": [
     "server.ts",
     "scripts/**/*.ts",
+    // Worker threads load this computed path at runtime, so Knip cannot infer
+    // its reachability from a static import graph.
+    "src/foundation/rustledger/rustledger-worker.ts",
     // The retired parity harness remains executable historical tooling.
     "parity/**/*.{ts,js}",
     "jest.parity.config.js",

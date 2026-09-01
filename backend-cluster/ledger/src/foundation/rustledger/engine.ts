@@ -635,7 +635,7 @@ export async function queryLedgerFilesResult(
 }
 
 /** Worker-local implementation; request-path callers use queryLedgerFilesResult. */
-async function queryLedgerFilesResultInProcess(
+export async function queryLedgerFilesResultInProcess(
   files: FileMap,
   entryPoint: string,
   query: string,
