@@ -4,6 +4,7 @@ import type { DatabaseLayer } from "@/foundation/composition";
 import { getTokenFromCtx } from "@/features/auth/utils/auth";
 import { resolveOidcIdentity } from "@/features/oauth/utils/oidc-verify";
 import { OAUTH_CONFIG, type OAuthResource } from "@/features/oauth/data/config";
+import { isDashboardOAuthClient } from "@/features/oauth/data/config";
 import {
   API_KEY_PLAINTEXT_PREFIX,
   apiKeyDigest,
@@ -171,16 +172,33 @@ export function identityHasCapability(
 }
 
 /**
- * Require the product's full signed-in session credential, independently of
- * the op-class transport gate. Use this for account, billing, and credential
- * ceremonies that no delegated API scope is allowed to perform.
+ * Whether this credential represents the person driving the first-party web
+ * product. The signed client id comes from verified OAuth claims; request
+ * headers, cookie names, scopes, and caller-supplied arguments never classify
+ * a delegated credential as interactive.
+ *
+ * A verified legacy session remains admitted only as the one-way compatibility
+ * exception, so an already-signed-in browser keeps its historical authority
+ * and can authorize its PKCE upgrade. Dashboard credential forms cannot issue
+ * such a session.
  */
-export function assertSessionIdentity(
+export function isFirstPartyInteractiveIdentity(identity: Identity): boolean {
+  if (identity.method === "session") return identity.capabilityExempt;
+  return (
+    identity.method === "oauth" &&
+    !identity.capabilityExempt &&
+    isDashboardOAuthClient(identity.oauthClientId)
+  );
+}
+
+export function assertFirstPartyInteractiveIdentity(
   identity: Identity,
   action = "This operation",
 ): void {
-  if (identity.method !== "session" || !identity.capabilityExempt) {
-    throw new ForbiddenError(`${action} requires a full signed-in session`);
+  if (!isFirstPartyInteractiveIdentity(identity)) {
+    throw new ForbiddenError(
+      `${action} requires the signed-in first-party Dashboard`,
+    );
   }
 }
 

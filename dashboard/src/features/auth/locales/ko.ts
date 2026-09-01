@@ -5,10 +5,6 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "이미 계정이 있으신가요?",
     description: "Prompt asking if user has existing account",
   },
-  "auth.authenticating": {
-    message: "인증 중...",
-    description: "Message shown during authentication process",
-  },
   "auth.backToSignIn": {
     message: "로그인으로 돌아가기",
     description: "Link text to return to sign in page",

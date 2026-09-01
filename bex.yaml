@@ -51,6 +51,8 @@ services:
       # because Docker builds get no build args.
       - key: SSR_API_URL
         value: http://beancount-api:3000/api-gateway/
+      - key: DASHBOARD_OAUTH_TRANSACTION_SECRET
+        generateValue: true
 
   # ---------------------------------------------------------------- backend-v2
   - name: beancount-api

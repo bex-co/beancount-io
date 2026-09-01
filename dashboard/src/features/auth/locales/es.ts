@@ -12,10 +12,6 @@ const esAuth: Record<string, TranslationEntry> = {
     message: "y",
     description: "Conjunction between terms and privacy links",
   },
-  "auth.authenticating": {
-    message: "Autenticando...",
-    description: "Message shown during authentication process",
-  },
   "auth.backToSignIn": {
     message: "Volver a iniciar sesión",
     description: "Link text to return to sign in page",

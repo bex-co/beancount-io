@@ -2,7 +2,7 @@ import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 import type { IModels } from "@/foundation/models";
 import type { CliAuthSessionStatus } from "@/features/auth/data/cli-auth-session-model/types";
 import {
-  assertSessionIdentity,
+  assertFirstPartyInteractiveIdentity,
   type Identity,
 } from "@/server/api/identity";
 import { BadUserInputError } from "@/shared/errors";
@@ -45,14 +45,14 @@ export class CliAuthService implements ICliAuthService {
   }
 
   /**
-   * Authorize a pending session from a full session identity: issues a JWT and
-   * stores it in the session for the CLI to consume.
+   * Authorize a pending session from the exact first-party Dashboard identity:
+   * issues a JWT and stores it in the session for the CLI to consume.
    */
-  async authorizeSession(
-    sessionId: string,
-    identity: Identity,
-  ): Promise<void> {
-    assertSessionIdentity(identity, "Approving CLI authentication");
+  async authorizeSession(sessionId: string, identity: Identity): Promise<void> {
+    assertFirstPartyInteractiveIdentity(
+      identity,
+      "Approving CLI authentication",
+    );
     await this.assertPendingSession(sessionId);
 
     const { token, expireAt } = await this.models.jwt.create(
@@ -69,7 +69,7 @@ export class CliAuthService implements ICliAuthService {
 
   /** Deny a pending session. */
   async denySession(sessionId: string, identity: Identity): Promise<void> {
-    assertSessionIdentity(identity, "Denying CLI authentication");
+    assertFirstPartyInteractiveIdentity(identity, "Denying CLI authentication");
     await this.assertPendingSession(sessionId);
     await this.models.cliAuthSession.deny(sessionId);
   }
@@ -123,5 +123,4 @@ export class CliAuthService implements ICliAuthService {
       throw new BadUserInputError("CLI auth session has already been used");
     }
   }
-
 }

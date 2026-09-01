@@ -12,10 +12,6 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "和",
     description: "Conjunction between terms and privacy links",
   },
-  "auth.authenticating": {
-    message: "验证中...",
-    description: "Message shown during authentication process",
-  },
   "auth.backToSignIn": {
     message: "返回登录",
     description: "Link text to return to sign in page",

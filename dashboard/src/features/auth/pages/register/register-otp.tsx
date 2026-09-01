@@ -10,33 +10,31 @@ import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
+import { useDashboardOAuthOtp } from "@/features/auth/hooks/use-dashboard-oauth-auth";
 import { OtpForm } from "@/features/auth/components/otp-form";
-import { postLegacyMobileAuthToken } from "@/common/providers/react-native-bridge-provider/legacy-auth-bridge";
 
 type SignUpOtpPageProps = {
+  interactionUid: string;
+  next?: string;
   sessionId: string;
   email: string;
-  onSuccess?: () => void;
   onBack?: () => void;
 };
 
 export default function SignUpOtpPage({
+  interactionUid,
+  next,
   sessionId,
   email,
-  onSuccess,
   onBack,
 }: SignUpOtpPageProps) {
   const { t } = useTranslations();
   const navigate = useNavigate();
 
-  const { onSubmit, isLoading, serverError } = useOtpForm({
+  const { onSubmit, isLoading, serverError } = useDashboardOAuthOtp({
+    uid: interactionUid,
+    next,
     sessionId,
-    onSuccess: async (token) => {
-      postLegacyMobileAuthToken(token.accessToken, "otp");
-      onSuccess?.();
-      void navigate({ to: "/auth/welcome" });
-    },
   });
 
   if (!sessionId) {
@@ -76,7 +74,12 @@ export default function SignUpOtpPage({
                   ) : (
                     <Button
                       variant="link"
-                      onClick={() => navigate({ to: "/auth/sign-up" })}
+                      onClick={() =>
+                        navigate({
+                          to: "/auth/sign-up",
+                          search: { interaction: interactionUid, next },
+                        })
+                      }
                       className="text-sm font-medium text-muted-foreground hover:text-primary/80"
                     >
                       {t("auth.backToSignUp")}
@@ -107,7 +110,14 @@ export default function SignUpOtpPage({
                 onSubmit={onSubmit}
                 isLoading={isLoading}
                 serverError={serverError}
-                onBack={onBack ?? (() => navigate({ to: "/auth/sign-up" }))}
+                onBack={
+                  onBack ??
+                  (() =>
+                    navigate({
+                      to: "/auth/sign-up",
+                      search: { interaction: interactionUid, next },
+                    }))
+                }
               />
             </CardContent>
           </Card>

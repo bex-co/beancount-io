@@ -153,7 +153,8 @@ export class AuthResolver {
 
   @Authenticated()
   @Mutation(() => LogoutResponse, {
-    description: "Logout user, revoke JWT token and clear httpOnly cookie",
+    description:
+      "Clear the browser auth cookie and revoke a database-backed legacy session when present",
   })
   public async logout(@Ctx() ctx: IContext): Promise<LogoutResponse> {
     if (ctx.token) {

@@ -20,6 +20,7 @@ import {
 } from "@/server/api/authorization";
 import type { Identity } from "@/server/api/identity";
 import type { IContext } from "@/server/graphql/context";
+import { DASHBOARD_CLIENT_ID } from "@/features/oauth/data/config";
 import {
   startV1TestServer,
   type V1TestServer,
@@ -53,6 +54,7 @@ const adminApiKey: Identity = {
 const adminOAuth: Identity = {
   ...writeOAuth,
   scopes: new Set(["ledger.admin"]),
+  oauthClientId: DASHBOARD_CLIENT_ID,
 };
 
 const relationships: IRelationshipEvaluator = {
@@ -149,12 +151,12 @@ describe("API-key authorization parity", () => {
     expect(model.listByUserId).not.toHaveBeenCalled();
   });
 
-  it("denies a non-admin OAuth minter before domain work on every surface", async () => {
+  it("denies a delegated OAuth minter before domain work on every surface", async () => {
     const input = { name: "CI", scopes: ["ledger.read"] };
     server.setIdentity(writeOAuth);
     await expect(
       resolver.createApiKey(input, gqlContext(writeOAuth)),
-    ).rejects.toThrow('requires the "ledger.admin" scope');
+    ).rejects.toThrow("requires the signed-in first-party Dashboard");
     await expect(
       restCall(server, "POST", "/api-gateway/v1/api-keys", input),
     ).resolves.toBe(403);
@@ -165,7 +167,9 @@ describe("API-key authorization parity", () => {
       ),
     ).resolves.toMatchObject({
       ok: false,
-      error: expect.stringContaining('requires the "ledger.admin" scope'),
+      error: expect.stringContaining(
+        "requires the signed-in first-party Dashboard",
+      ),
     });
     expect(model.create).not.toHaveBeenCalled();
   });

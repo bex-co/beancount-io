@@ -60,6 +60,7 @@ export class SignupOtpSessionRedisModel implements ISignupOtpSessionModel {
       username: sessionData.username ?? null,
       ip: sessionData.ip,
       withDefaultLedger: sessionData.withDefaultLedger ?? false,
+      oauthInteractionUid: sessionData.oauthInteractionUid,
       otp,
       expireAt: expireAt.toISOString(),
     };

@@ -23,7 +23,11 @@ import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { restScopeMiddleware } from "@/server/rest/scope-middleware";
 import type { ToolContext } from "@/features/ai-agent/tools/types";
 import type { Identity } from "../identity";
-import { authorizationActionForOp } from "../op-class";
+import { authorizationActionForOp, evaluateScope } from "../op-class";
+import {
+  DASHBOARD_CLIENT_ID,
+  MOBILE_CLIENT_ID,
+} from "@/features/oauth/data/config";
 import { assembleMcpRegistry, type ApiGate } from "../composition-root";
 import { assembleTestApi } from "./api-surface";
 
@@ -60,6 +64,11 @@ const sessionIdentity: Identity = {
   method: "session",
   scopes: new Set(),
   capabilityExempt: true,
+};
+
+const dashboardIdentity: Identity = {
+  ...adminToken,
+  oauthClientId: DASHBOARD_CLIENT_ID,
 };
 
 const enforcing = { api: { scopeEnforcement: "enforce" } } as AppConfig;
@@ -202,6 +211,28 @@ function captureMcpHandlers(
 }
 
 describe("scope enforcement across surfaces", () => {
+  it("admits session-only operations only for sessions and exact Dashboard OAuth", () => {
+    const opId = "GQL Mutation.createOneTimeToken";
+    expect(evaluateScope(sessionIdentity, opId).allowed).toBe(true);
+    expect(evaluateScope(dashboardIdentity, opId).allowed).toBe(true);
+    expect(
+      evaluateScope({ ...adminToken, oauthClientId: MOBILE_CLIENT_ID }, opId)
+        .allowed,
+    ).toBe(false);
+    expect(
+      evaluateScope(
+        { ...adminToken, oauthClientId: "dynamically-registered-client" },
+        opId,
+      ).allowed,
+    ).toBe(false);
+    expect(
+      evaluateScope(
+        { ...adminToken, method: "apikey", oauthClientId: undefined },
+        opId,
+      ).allowed,
+    ).toBe(false);
+  });
+
   describe("operation metadata uses isolated request sub-contexts", () => {
     it("keeps concurrent GraphQL root fields from overwriting each other", async () => {
       const middleware = graphqlScopeMiddleware("enforce");

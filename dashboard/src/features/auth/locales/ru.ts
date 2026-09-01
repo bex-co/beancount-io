@@ -12,10 +12,6 @@ const ruAuth: Record<string, TranslationEntry> = {
     message: "и",
     description: "Conjunction between terms and privacy links",
   },
-  "auth.authenticating": {
-    message: "Аутентификация...",
-    description: "Message shown during authentication process",
-  },
   "auth.backToSignIn": {
     message: "Назад к входу",
     description: "Link text to return to sign in page",

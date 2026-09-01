@@ -19,6 +19,11 @@ backend-v2's database migrations. Re-run it any time.
 
 Then open the dashboard at **http://localhost:42600**.
 
+The Dashboard OAuth callback is
+`http://localhost:42600/oauth/dashboard/callback`. Keep
+`DASHBOARD_OAUTH_TRANSACTION_SECRET` stable while the stack is running; the
+example value is local-only, and production must use a generated 32-byte secret.
+
 To exercise paid API-key creation without contacting Stripe, add the local
 test user's backend ID to `DEV_PREMIUM_USER_IDS` in `.env` and recreate
 `backend-v2`. The override is accepted only when `NODE_ENV=development`.
@@ -102,3 +107,6 @@ Set `DASHBOARD_URL` to the public HTTPS dashboard front door; it is also the
 production OAuth issuer and interaction origin. Keep `OAUTH_JWKS` in the secret
 manager. If no valid signing JWKS is available, backend-v2 continues serving
 legacy login and API traffic while OAuth endpoints return `503`.
+The same front door must route `/api-gateway/*` and the OAuth well-known paths;
+the Dashboard image provides that proxy and dials backend-v2 through
+`SSR_API_URL`.

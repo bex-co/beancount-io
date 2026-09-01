@@ -12,10 +12,6 @@ const bgAuth: Record<string, TranslationEntry> = {
     message: "и",
     description: "Conjunction between terms and privacy links",
   },
-  "auth.authenticating": {
-    message: "Удостоверяване...",
-    description: "Message shown during authentication process",
-  },
   "auth.backToSignIn": {
     message: "Обратно към вход",
     description: "Link text to return to sign in page",

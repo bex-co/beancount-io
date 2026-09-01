@@ -13,11 +13,8 @@ export type Scalars = {
   Boolean: { input: boolean; output: boolean; }
   Int: { input: number; output: number; }
   Float: { input: number; output: number; }
-  /** A date-time string at UTC, such as 2007-12-03T10:15:30Z, compliant with the `date-time` format outlined in section 5.6 of the RFC 3339 profile of the ISO 8601 standard for representation of dates and times using the Gregorian calendar.This scalar is serialized to a string in ISO 8601 format and parsed from a string in ISO 8601 format. */
   DateTimeISO: { input: string; output: string; }
-  /** The `JSON` scalar type represents JSON values as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSON: { input: unknown; output: unknown; }
-  /** The `JSONObject` scalar type represents JSON objects as specified by [ECMA-404](http://www.ecma-international.org/publications/files/ECMA-ST/ECMA-404.pdf). */
   JSONObject: { input: Record<string, unknown>; output: Record<string, unknown>; }
 };
 
@@ -857,6 +854,7 @@ export type Mutation = {
   approvePullRequest: PullRequestResult;
   /** Add one or more entries to a specific ledger (atomic) */
   bulkEntries: AddLedgerEntryResponse;
+  /** Schedules your subscription to cancel. Requires the signed-in first-party Dashboard. */
   cancelSubscription: SubscriptionActionResult;
   /** Authorize a pending CLI session. Issues a JWT token for the CLI and stores it in the session. */
   confirmCliAuthSession: ConfirmCliAuthSessionResponse;
@@ -878,7 +876,9 @@ export type Mutation = {
   /** Create a new public key for the current user */
   createPublicKey: PublicKey;
   createPullRequestFromPatch: PullRequestResult;
+  /** Creates a Stripe-hosted customer portal session. Requires the signed-in first-party Dashboard. */
   createStripePortalSession: SubscriptionSessionResult;
+  /** Creates a Stripe-hosted checkout session. Requires the signed-in first-party Dashboard. */
   createSubscriptionSession: SubscriptionSessionResult;
   /** delete user account and its associated data */
   deleteAccount: Scalars['Boolean']['output'];
@@ -905,7 +905,7 @@ export type Mutation = {
   /** Upload a receipt and insert a transaction entry. Storage strategy (S3 or git) is controlled by the `receipt_storage` beancountio-option. */
   insertReceiptTransaction: InsertReceiptResult;
   leaveLedger: DeleteCollaboratorResponse;
-  /** Logout user, revoke JWT token and clear httpOnly cookie */
+  /** Clear the browser auth cookie and revoke a database-backed legacy session when present */
   logout: LogoutResponse;
   /** Parse an uploaded file (multimodal support for PDF/images/any format) into structured transactions. File must be uploaded to S3 first. */
   parseFile: FileParseResult;
@@ -922,6 +922,7 @@ export type Mutation = {
   renameLedgerFile: RenameLedgerFileResponse;
   /** Reset user password using a token from the password reset email */
   resetPassword: ResetPasswordResponse;
+  /** Resumes your subscription. Requires the signed-in first-party Dashboard. */
   resumeSubscription: SubscriptionActionResult;
   /** Revoke an API key, effective on its next use */
   revokeApiKey: ApiKeyType;
@@ -956,6 +957,7 @@ export type Mutation = {
   /** Update user profile (firstName and lastName) */
   updateProfile: UserProfileResponse;
   updateUsername: UserProfileResponse;
+  /** Upgrades your subscription. Requires the signed-in first-party Dashboard. */
   upgradeSubscription: UpgradeSubscriptionResult;
   /** Verify OTP and create user account to complete signup */
   verifySignUpOtp: TokenAuthResponse;
@@ -1579,7 +1581,7 @@ export type Query = {
   accountHierarchy: AccountHierarchyResponse;
   /** Get AI CFO usage for the current billing month */
   aiCfoUsage: AiCfoUsageResponse;
-  /** Returns quota limits for all subscription tiers */
+  /** Returns the public quota limits for all subscription tiers. */
   allTierQuotas: Array<TierQuotaItem>;
   /** Your API keys */
   apiKeys: Array<ApiKeyType>;
@@ -1702,6 +1704,7 @@ export type Query = {
   queryShellText: Maybe<QueryShellTextResult>;
   /** Search for ledgers/repositories */
   searchLedgers: Array<Ledger>;
+  /** Returns your subscription status. Requires the signed-in first-party Dashboard. */
   subscriptionStatus: CustomerSubscriptionStatus;
   /** Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI */
   suggestPlaidAccountMapping: Array<PlaidAccountMappingSuggestion>;
@@ -2971,18 +2974,6 @@ export type GetAiCfoUsageQueryVariables = Exact<{ [key: string]: never; }>;
 
 export type GetAiCfoUsageQuery = { aiCfoUsage: { __typename: 'AiCfoUsageResponse', aiCfoTokensUsed: number, aiCfoTokensMax: number } };
 
-export type SignInWithOneTimeTokenMutationVariables = Exact<{
-  token: Scalars['String']['input'];
-}>;
-
-
-export type SignInWithOneTimeTokenMutation = { signInWithOneTimeToken: { __typename: 'TokenAuthResponse', token: string, expireAt: string } };
-
-export type RefreshTokenMutationVariables = Exact<{ [key: string]: never; }>;
-
-
-export type RefreshTokenMutation = { refreshToken: { __typename: 'TokenAuthResponse', token: string, expireAt: string } };
-
 export type DeleteAccountMutationVariables = Exact<{ [key: string]: never; }>;
 
 
@@ -3564,8 +3555,6 @@ export const IsAuthenticatedDocument = {"kind":"Document","definitions":[{"kind"
 export const SignInDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SignIn"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"password"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"signIn"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}},{"kind":"Argument","name":{"kind":"Name","value":"password"},"value":{"kind":"Variable","name":{"kind":"Name","value":"password"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}}]}}]}}]} as unknown as DocumentNode<SignInMutation, SignInMutationVariables>;
 export const GetCurrentUserDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetCurrentUser"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"userProfile"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"locale"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"emailReportStatus"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"tier"}},{"kind":"Field","name":{"kind":"Name","value":"hasEverSubscribed"}},{"kind":"Field","name":{"kind":"Name","value":"limits"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"ledgersUsed"}},{"kind":"Field","name":{"kind":"Name","value":"ledgersMax"}},{"kind":"Field","name":{"kind":"Name","value":"collaboratorsPerLedgerMax"}},{"kind":"Field","name":{"kind":"Name","value":"maxDirectives"}}]}}]}}]}}]} as unknown as DocumentNode<GetCurrentUserQuery, GetCurrentUserQueryVariables>;
 export const GetAiCfoUsageDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetAiCfoUsage"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"aiCfoUsage"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"aiCfoTokensUsed"}},{"kind":"Field","name":{"kind":"Name","value":"aiCfoTokensMax"}}]}}]}}]} as unknown as DocumentNode<GetAiCfoUsageQuery, GetAiCfoUsageQueryVariables>;
-export const SignInWithOneTimeTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SignInWithOneTimeToken"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"token"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"signInWithOneTimeToken"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"token"},"value":{"kind":"Variable","name":{"kind":"Name","value":"token"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}}]}}]}}]} as unknown as DocumentNode<SignInWithOneTimeTokenMutation, SignInWithOneTimeTokenMutationVariables>;
-export const RefreshTokenDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"RefreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"refreshToken"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}}]}}]}}]} as unknown as DocumentNode<RefreshTokenMutation, RefreshTokenMutationVariables>;
 export const DeleteAccountDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteAccount"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteAccount"}}]}}]} as unknown as DocumentNode<DeleteAccountMutation, DeleteAccountMutationVariables>;
 export const LogoutDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"Logout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"logout"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<LogoutMutation, LogoutMutationVariables>;
 export const UpdateUsernameDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"UpdateUsername"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"username"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"updateUsername"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"username"},"value":{"kind":"Variable","name":{"kind":"Name","value":"username"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"username"}},{"kind":"Field","name":{"kind":"Name","value":"locale"}},{"kind":"Field","name":{"kind":"Name","value":"lastName"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"firstName"}},{"kind":"Field","name":{"kind":"Name","value":"emailReportStatus"}},{"kind":"Field","name":{"kind":"Name","value":"email"}}]}}]}}]} as unknown as DocumentNode<UpdateUsernameMutation, UpdateUsernameMutationVariables>;

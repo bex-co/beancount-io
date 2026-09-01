@@ -177,6 +177,16 @@ without improving the decision boundary.
 
 A **neutral fixture matrix** — rows of (relationship, credential scope, pin, expected read/write/admin) — consumed by both the FGA assertion suite (relationship rows) and a Jest conformance test against the real `authorizeLedger` (all rows, Gitea/Fava dependencies stubbed). Today `fga model test` proves the model agrees with itself, and the same-PR rule is a discipline; the shared fixture is what makes model ↔ implementation agreement machine-checked. The composed two-ceiling truth table lives there, not in the FGA suite.
 
+## Amendments
+
+- **2026-08-30 — Dashboard OAuth migration.** ADR 0011 replaces the literal
+  session ceiling for profile search/update, account deletion, API-key
+  creation, billing, and credential approval with one exact first-party
+  interactive predicate: a valid legacy session during migration or an OAuth
+  access token whose verified `client_id` is `beancount-dashboard`. Mobile,
+  DCR/MCP, API keys, and arbitrary issuer-signed clients remain denied. The
+  original credential summary above is retained as the pre-migration decision.
+
 ## Artifacts
 
 - `backend-cluster/backend-v2/authz/model.fga` — the relationship-ceiling model (D1, D3).

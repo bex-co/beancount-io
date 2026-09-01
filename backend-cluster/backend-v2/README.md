@@ -140,13 +140,34 @@ recognise is dropped rather than rejected, so an app newer than a self-hosted
 server still gets a login form. The hint is never forwarded to MCP or
 identity-client interaction pages.
 
+The static `beancount-dashboard` client is also public and uses authorization
+code with S256 PKCE only. Its callback is derived as
+`<DASHBOARD_URL>/oauth/dashboard/callback`, including any issuer path prefix;
+its resource is `<DASHBOARD_URL>/v1`, it receives no refresh token, and only its
+access token receives the exact 365-day lifetime. Mobile, MCP/DCR, and Discourse
+access tokens remain one hour. The Dashboard server performs the code exchange
+and stores the bearer only in its secure HttpOnly cookie.
+
+Clearing that cookie logs out that browser but cannot revoke a copied
+self-contained Dashboard token. The compromise response is OAuth signing-key
+rotation: install a replacement, remove the affected public key from the
+accepted JWKS, redeploy, review audit events, and require sign-in again. This is
+issuer-wide invalidation, not per-token revocation. New Dashboard password,
+OTP, and magic-link authentication completes the exact OAuth interaction
+directly and never creates an intermediate legacy session. Already-issued valid
+legacy Dashboard tokens remain accepted read-only until their own expiry (no
+later than 2027-08-30 for pre-cutover tokens), are never renewed, and may be
+silently upgraded without being destroyed on upgrade failure. See
+`../../docs/adrs/ADR011-dashboard-oauth.md`.
+
 OAuth capabilities use one closed operation matrix on GraphQL, REST, and MCP:
 reads require `ledger.read`, ordinary mutations require
 `ledger.write`, and ledger control-plane operations such as deleting a ledger,
 managing collaborators, or managing public keys require `ledger.admin`. The
 scopes are independent within that ledger vocabulary. User-account lifecycle is
-outside it: no ledger scope, OAuth client id, or ledger relationship authorizes
-`user.delete`.
+outside it: only a legacy browser session or the verified
+`beancount-dashboard` OAuth client may reach the exact-self lifecycle decision;
+no ledger scope or relationship alone authorizes `user.delete`.
 
 ### User-domain authorization
 
@@ -160,16 +181,17 @@ API-key revoke resolves ownership from the current database row without copying
 it into a tuple store.
 
 Existing credential contracts are preserved. `Mutation.deleteAccount` remains
-argument-free and accepts browser sessions and OAuth user credentials, so the
-mobile deletion fix needs no client change or step-up flow. API keys cannot
-delete the user or mint successor keys. User profile search/update remain
-session-only; profile reads and API-key management keep their prior scope
-ceilings. Paid-plan, scope/pin narrowing, expiry, and one-time-secret handling
-remain enforced after authorization.
+argument-free and accepts legacy browser sessions plus the exact Dashboard
+OAuth client; Mobile, MCP/DCR, Discourse, arbitrary OAuth clients, and API keys
+cannot inherit lifecycle authority. Profile search/update, billing, and API-key
+creation use the same first-party predicate, while profile reads and delegated
+API-key listing/revocation keep their prior scope ceilings. Paid-plan,
+scope/pin narrowing, expiry, and one-time-secret handling remain enforced after
+authorization.
 
 The static tier-quota catalog is deliberately public and does not enter the
 PDP. Subscription status, checkout and portal sessions, cancel, resume, and
-upgrade remain browser-session-only; the PDP catalog owns that credential
+upgrade remain first-party-Dashboard-only; the PDP catalog owns that credential
 rule. `op-class.ts` separately preserves every billing alias's pre-cutover
 300-per-minute budget, including the public catalog. Stripe customer binding,
 configured products/prices, and subscription ownership remain payment-domain

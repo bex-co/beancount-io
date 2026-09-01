@@ -121,7 +121,7 @@ interface OAuthConfig {
   issuer: string;
   /** Public dashboard/front-door origin that serves OAuth interaction pages. */
   interactionUrl: string;
-  /** Undefined means OAuth is unavailable but legacy login remains available. */
+  /** Undefined means OAuth endpoints are unavailable; it never re-enables Dashboard legacy login. */
   jwks?: { keys: object[] };
   unavailableReason?: string;
   /**
@@ -239,17 +239,6 @@ export function getOAuthPublicUrl(
   return url.toString().replace(/\/$/, "");
 }
 
-export function assertOAuthInteractionHost(
-  issuer: string,
-  interactionUrl: string,
-): void {
-  if (new URL(issuer).hostname !== new URL(interactionUrl).hostname) {
-    throw new Error(
-      "DASHBOARD_URL must use the issuer hostname so interaction cookies remain available",
-    );
-  }
-}
-
 function getPlaidEnvironment(env: unknown): PlaidEnvironment {
   if (typeof env !== "string") {
     return "sandbox";
@@ -288,23 +277,11 @@ const dashboardUrl = getOAuthPublicUrl(
   "DASHBOARD_URL",
   environment,
 );
-const developmentOAuthIssuer = getOAuthPublicUrl(
-  process.env.SERVER_URL,
-  environment === "production"
-    ? "https://beancount.io"
-    : "http://localhost:4104",
-  "SERVER_URL",
-  environment,
-);
-const oauthIssuer =
-  environment === "production" ? dashboardUrl : developmentOAuthIssuer;
-const oauthInteractionUrl = getOAuthPublicUrl(
-  process.env.DASHBOARD_URL,
-  environment === "production" ? dashboardUrl : "http://localhost:5173",
-  "DASHBOARD_URL",
-  environment,
-);
-assertOAuthInteractionHost(oauthIssuer, oauthInteractionUrl);
+// One public front door in every environment. The Dashboard proxies provider,
+// discovery, and API paths to this process, so its origin can also host the
+// static browser callback and the provider's interaction pages.
+const oauthIssuer = dashboardUrl;
+const oauthInteractionUrl = dashboardUrl;
 const oauthSigningKeys = getOptionalJwks(environment);
 
 export const config: AppConfig = {

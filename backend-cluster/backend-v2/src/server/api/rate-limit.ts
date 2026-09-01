@@ -67,7 +67,7 @@ export const OP_BUDGETS: Record<string, Budget> = {
   // The public quota catalog and protected billing mutations all used the
   // legacy `session-only` class. Keep that 300/minute budget while op classes
   // now describe public reachability or read/write risk independently from the
-  // protected operations' browser-session credential ceiling. Subscription
+  // protected operations' first-party Dashboard credential ceiling. Subscription
   // status gets the same budget from the default read class.
   "GQL Query.allTierQuotas": CLASS_BUDGETS["session-only"],
   "GQL Mutation.createSubscriptionSession": CLASS_BUDGETS["session-only"],

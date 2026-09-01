@@ -8,27 +8,18 @@ export interface CookieOptions {
   secure: boolean;
   sameSite: "strict" | "lax" | "none";
   path: string;
-  domain?: string;
 }
 
 export function setAuthCookie(
   ctx: Context,
   token: string,
   expireAt: Date,
-  isProduction: boolean,
+  _isProduction: boolean,
 ): void {
-  ctx.cookies.set(
-    COOKIE_NAME,
-    token,
-    getCookieOptions(ctx, expireAt, isProduction),
-  );
+  ctx.cookies.set(COOKIE_NAME, token, getCookieOptions(ctx, expireAt));
 }
 
-function getCookieOptions(
-  context: Context,
-  expireAt: Date,
-  isProduction: boolean,
-): CookieOptions {
+function getCookieOptions(context: Context, expireAt: Date): CookieOptions {
   return {
     // Mirrors the JWT's own expiry so the cookie never outlives the token it carries.
     maxAge: Math.max(0, expireAt.getTime() - Date.now()),
@@ -36,9 +27,6 @@ function getCookieOptions(
     secure: context.URL.protocol === "https:", // HTTPS only in production
     sameSite: "lax", // CSRF protection
     path: "/",
-    // Set domain for cross-subdomain access in production
-    // .beancount.io allows cookie to be shared across api.v3.beancount.io, dashboard.v3.beancount.io, etc.
-    domain: isProduction ? ".beancount.io" : undefined,
   };
 }
 

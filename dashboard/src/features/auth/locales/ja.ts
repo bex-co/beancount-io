@@ -5,10 +5,6 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "すでにアカウントをお持ちですか？",
     description: "Prompt asking if user has existing account",
   },
-  "auth.authenticating": {
-    message: "認証中...",
-    description: "Message shown during authentication process",
-  },
   "auth.backToSignIn": {
     message: "サインインに戻る",
     description: "Link text to return to sign in page",

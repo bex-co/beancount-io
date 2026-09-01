@@ -3,13 +3,16 @@ import type { AppConfig } from "@/config/config";
 import type { DatabaseLayer } from "@/foundation/composition";
 import {
   API_SCOPES,
+  assertFirstPartyInteractiveIdentity,
   assertIdentityCapability,
-  assertSessionIdentity,
   resolveIdentity,
   type Identity,
 } from "../identity";
 import { ForbiddenError } from "@/shared/errors";
-import { MOBILE_CLIENT_ID } from "@/features/oauth/data/config";
+import {
+  DASHBOARD_CLIENT_ID,
+  MOBILE_CLIENT_ID,
+} from "@/features/oauth/data/config";
 
 /**
  * `resolveIdentity` is the single authentication gate for GraphQL, REST, and
@@ -427,7 +430,7 @@ describe("API scope vocabulary", () => {
   });
 });
 
-describe("full session identity", () => {
+describe("first-party interactive identity", () => {
   const session: Identity = {
     userId: "user-session",
     method: "session",
@@ -435,15 +438,42 @@ describe("full session identity", () => {
     capabilityExempt: true,
   };
 
-  it("accepts the browser and mobile session credential", () => {
-    expect(() => assertSessionIdentity(session)).not.toThrow();
-  });
+  it("accepts only legacy sessions and the verified Dashboard OAuth client as interactive", () => {
+    expect(() => assertFirstPartyInteractiveIdentity(session)).not.toThrow();
+    expect(() =>
+      assertFirstPartyInteractiveIdentity({
+        ...session,
+        method: "oauth",
+        oauthClientId: DASHBOARD_CLIENT_ID,
+        scopes: new Set(API_SCOPES),
+        capabilityExempt: false,
+      }),
+    ).not.toThrow();
 
-  it.each([
-    { ...session, method: "oauth" as const, capabilityExempt: false },
-    { ...session, method: "apikey" as const, capabilityExempt: false },
-    { ...session, capabilityExempt: false },
-  ])("rejects a delegated or non-exempt identity", (identity) => {
-    expect(() => assertSessionIdentity(identity)).toThrow(ForbiddenError);
+    for (const identity of [
+      {
+        ...session,
+        method: "oauth" as const,
+        oauthClientId: MOBILE_CLIENT_ID,
+        capabilityExempt: false,
+      },
+      {
+        ...session,
+        method: "oauth" as const,
+        oauthClientId: "dynamically-registered-client",
+        capabilityExempt: false,
+      },
+      { ...session, method: "apikey" as const, capabilityExempt: false },
+      {
+        ...session,
+        method: "oauth" as const,
+        oauthClientId: DASHBOARD_CLIENT_ID,
+        capabilityExempt: true,
+      },
+    ]) {
+      expect(() => assertFirstPartyInteractiveIdentity(identity)).toThrow(
+        ForbiddenError,
+      );
+    }
   });
 });

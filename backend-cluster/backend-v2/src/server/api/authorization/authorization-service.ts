@@ -1,5 +1,6 @@
 import {
   identityHasCapability,
+  isFirstPartyInteractiveIdentity,
   type AuthMethod,
   type Identity,
   type OperationClass,
@@ -32,6 +33,7 @@ const authorizationLogger = logger.child({ module: "authorization" });
 type CredentialRequirement = {
   readonly methods: readonly AuthMethod[];
   readonly capability?: OperationClass;
+  readonly firstPartyInteractive?: boolean;
   readonly denyMessageByMethod?: Partial<Record<AuthMethod, string>>;
 };
 
@@ -53,13 +55,17 @@ interface ActionRequirement {
 
 const EVERY_CREDENTIAL = ["session", "oauth", "apikey"] as const;
 const INTERACTIVE_OR_OAUTH = ["session", "oauth"] as const;
-const SESSION_ONLY = ["session"] as const;
+
+const FIRST_PARTY_INTERACTIVE: CredentialRequirement = {
+  methods: INTERACTIVE_OR_OAUTH,
+  firstPartyInteractive: true,
+};
 
 const BILLING_CREDENTIAL: CredentialRequirement = {
-  methods: SESSION_ONLY,
+  ...FIRST_PARTY_INTERACTIVE,
   denyMessageByMethod: {
-    oauth: "Managing billing requires a full signed-in session",
-    apikey: "Managing billing requires a full signed-in session",
+    oauth: "Managing billing requires the signed-in first-party Dashboard",
+    apikey: "Managing billing requires the signed-in first-party Dashboard",
   },
 };
 
@@ -76,19 +82,19 @@ const ACTION_REQUIREMENTS: Readonly<
   [AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH]: {
     resourceType: "user",
     relationship: USER_RELATIONSHIPS.READ_PROFILE,
-    credential: { methods: SESSION_ONLY },
+    credential: FIRST_PARTY_INTERACTIVE,
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE]: {
     resourceType: "user",
     relationship: USER_RELATIONSHIPS.WRITE_PROFILE,
-    credential: { methods: SESSION_ONLY },
+    credential: FIRST_PARTY_INTERACTIVE,
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.USER_DELETE]: {
     resourceType: "user",
     relationship: USER_RELATIONSHIPS.WRITE_LIFECYCLE,
-    credential: { methods: INTERACTIVE_OR_OAUTH },
+    credential: FIRST_PARTY_INTERACTIVE,
     auditClass: "admin",
   },
   [AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST]: {
@@ -101,7 +107,7 @@ const ACTION_REQUIREMENTS: Readonly<
     resourceType: "user",
     relationship: USER_RELATIONSHIPS.WRITE_CREDENTIALS,
     credential: {
-      methods: INTERACTIVE_OR_OAUTH,
+      ...FIRST_PARTY_INTERACTIVE,
       capability: "admin",
       denyMessageByMethod: {
         apikey:
@@ -162,10 +168,11 @@ const ACTION_REQUIREMENTS: Readonly<
 /** Used by surface-parity accounting without duplicating credential policy. */
 export const authorizationActionAcceptsDelegatedCredential = (
   action: AuthorizationAction,
-): boolean =>
-  ACTION_REQUIREMENTS[action].credential.methods.some(
-    (method) => method !== "session",
-  );
+): boolean => {
+  const requirement = ACTION_REQUIREMENTS[action].credential;
+  if (requirement.firstPartyInteractive) return false;
+  return requirement.methods.some((method) => method !== "session");
+};
 
 const isAuthorizationAction = (action: string): action is AuthorizationAction =>
   Object.prototype.hasOwnProperty.call(ACTION_REQUIREMENTS, action);
@@ -191,6 +198,15 @@ const credentialDenial = (
       return "This operation is reachable only from a browser session";
     }
     return "This credential type cannot perform this operation";
+  }
+  if (
+    requirement.firstPartyInteractive &&
+    !isFirstPartyInteractiveIdentity(identity)
+  ) {
+    return (
+      requirement.denyMessageByMethod?.[identity.method] ??
+      "This operation requires the signed-in first-party Dashboard"
+    );
   }
   if (
     requirement.capability !== undefined &&
