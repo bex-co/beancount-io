@@ -17,6 +17,12 @@ import type { LedgerPublic } from "@/foundation/fava/Api";
 import { stripHtml } from "./html-utils";
 import { logger } from "@/shared/logger";
 import { CACHE_KEYS, TTL, type CacheHelper } from "@/shared/cache";
+import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  userResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 
 const CACHE_TTL_MS = TTL.MIN_5;
 const BLOG_BASE_URL = "https://beancount.io";
@@ -40,7 +46,7 @@ interface BlogFeedItemInternal extends BaseFeedItem {
 }
 
 export interface IFeedService {
-  getFeed(args: GetFeedArgs, userId: string): Promise<FeedResponse>;
+  getFeed(args: GetFeedArgs, identity: Identity): Promise<FeedResponse>;
 }
 
 /**
@@ -56,6 +62,7 @@ export class FeedService implements IFeedService {
     private readonly giteaClientFactory: IGiteaClientFactory,
     private readonly models: Pick<IModels, "user">,
     private readonly db: DbExecutor,
+    private readonly authorization: IAuthorizationService,
   ) {
     this.parser = new Parser({
       customFields: {
@@ -67,14 +74,19 @@ export class FeedService implements IFeedService {
   /**
    * Get feed items with pagination
    * @param args Pagination and filter arguments
-   * @param userId The authenticated user's id
+   * @param identity The authenticated caller
    * @returns Paginated feed response
    */
-  async getFeed(args: GetFeedArgs, userId: string): Promise<FeedResponse> {
+  async getFeed(args: GetFeedArgs, identity: Identity): Promise<FeedResponse> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ,
+      resource: userResource(identity.userId),
+    });
     const { offset = 0, limit = 10, locale: clientLocale } = args;
 
     // Get user locale from current user
-    const user = await this.models.user.getById(this.db, userId);
+    const user = await this.models.user.getById(this.db, identity.userId);
     if (!user) {
       throw new UnauthenticatedError("User not found");
     }

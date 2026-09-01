@@ -1,4 +1,5 @@
 import {
+  identityAllowsLedgerScope,
   identityHasCapability,
   type AuthMethod,
   type Identity,
@@ -15,14 +16,17 @@ import { logger } from "@/shared/logger";
 import { getOperationId } from "@/shared/async-context";
 import {
   AUTHORIZATION_ACTIONS,
+  LEDGER_RELATIONSHIPS,
   parseAuthorizationResource,
   userResource,
   USER_RELATIONSHIPS,
   type AuthorizationAction,
   type AuthorizationDecision,
   type AuthorizationDenyReason,
+  type AuthorizationResource,
   type AuthorizationResourceType,
   type AuthorizeInput,
+  type LedgerRelationship,
   type UserRelationship,
 } from "./authorization-contract";
 import type { IRelationshipEvaluator } from "./source-backed-relationship-evaluator";
@@ -33,6 +37,7 @@ type CredentialRequirement = {
   readonly methods: readonly AuthMethod[];
   readonly capability?: OperationClass;
   readonly denyMessageByMethod?: Partial<Record<AuthMethod, string>>;
+  readonly enforceLedgerScope?: boolean;
 };
 
 type AuditClass = "read" | "write" | "admin";
@@ -43,13 +48,21 @@ interface DenialConcealment {
   readonly message: string;
 }
 
-interface ActionRequirement {
-  readonly resourceType: AuthorizationResourceType;
-  readonly relationship: UserRelationship;
+type ActionRequirement = {
   readonly credential: CredentialRequirement;
   readonly auditClass: AuditClass;
   readonly concealDenialAs?: DenialConcealment;
-}
+} & (
+  | { readonly resourceType: "user"; readonly relationship: UserRelationship }
+  | {
+      readonly resourceType: "api_key";
+      readonly relationship: UserRelationship;
+    }
+  | {
+      readonly resourceType: "ledger";
+      readonly relationship: LedgerRelationship;
+    }
+);
 
 const EVERY_CREDENTIAL = ["session", "oauth", "apikey"] as const;
 const INTERACTIVE_OR_OAUTH = ["session", "oauth"] as const;
@@ -63,7 +76,19 @@ const BILLING_CREDENTIAL: CredentialRequirement = {
   },
 };
 
-/** The one executable policy catalog for the migrated user domain. */
+const LEDGER_SOCIAL_READ_CREDENTIAL: CredentialRequirement = {
+  methods: EVERY_CREDENTIAL,
+  capability: "read",
+  enforceLedgerScope: true,
+};
+
+const LEDGER_SOCIAL_WRITE_CREDENTIAL: CredentialRequirement = {
+  methods: EVERY_CREDENTIAL,
+  capability: "write",
+  enforceLedgerScope: true,
+};
+
+/** The one executable policy catalog for migrated application domains. */
 const ACTION_REQUIREMENTS: Readonly<
   Record<AuthorizationAction, ActionRequirement>
 > = {
@@ -157,6 +182,42 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: BILLING_CREDENTIAL,
     auditClass: "write",
   },
+  [AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.READ_SOCIAL,
+    credential: { methods: SESSION_ONLY },
+    auditClass: "read",
+  },
+  [AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_SOCIAL,
+    credential: { methods: SESSION_ONLY },
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_DELETE]: {
+    resourceType: "user",
+    relationship: USER_RELATIONSHIPS.WRITE_SOCIAL,
+    credential: { methods: SESSION_ONLY },
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_STATUS_READ]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+    credential: LEDGER_SOCIAL_READ_CREDENTIAL,
+    auditClass: "read",
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+    credential: LEDGER_SOCIAL_WRITE_CREDENTIAL,
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE]: {
+    resourceType: "ledger",
+    relationship: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+    credential: LEDGER_SOCIAL_WRITE_CREDENTIAL,
+    auditClass: "write",
+  },
 };
 
 /** Used by surface-parity accounting without duplicating credential policy. */
@@ -173,6 +234,7 @@ const isAuthorizationAction = (action: string): action is AuthorizationAction =>
 const credentialDenial = (
   identity: Identity,
   requirement: CredentialRequirement,
+  resource?: { type: AuthorizationResourceType; id: string },
 ): string | undefined => {
   // Preserve provenance: only a real session is capability-exempt, and every
   // delegated credential is scope-constrained. A malformed envelope fails
@@ -197,6 +259,13 @@ const credentialDenial = (
     !identityHasCapability(identity, requirement.capability)
   ) {
     return `This operation requires the "ledger.${requirement.capability}" scope`;
+  }
+  if (
+    requirement.enforceLedgerScope &&
+    (resource?.type !== "ledger" ||
+      !identityAllowsLedgerScope(identity, resource.id))
+  ) {
+    return "This credential is not authorized for this ledger";
   }
   return undefined;
 };
@@ -248,18 +317,26 @@ export type AuthorizationAuditHook = (
   principal: Identity,
   record: AuthorizationAuditRecord,
   auditClass: AuditClass | undefined,
+  resource?: AuthorizationResource,
 ) => void;
 
 const emitAuthorizationAudit: AuthorizationAuditHook = (
   principal,
   record,
   auditClass,
+  resource,
 ) => {
   if (!shouldAudit(record.outcome, auditClass ?? "read")) return;
+  const parsedResource = resource
+    ? parseAuthorizationResource(resource)
+    : undefined;
   emitAuditEvent({
     op: getOperationId() ?? record.action,
     ...auditSubject(principal),
-    ledgerId: principal.ledgerScope,
+    ledgerId:
+      parsedResource?.type === "ledger"
+        ? parsedResource.id
+        : principal.ledgerScope,
     outcome: record.outcome,
     at: new Date(),
   });
@@ -277,6 +354,7 @@ export class AuthorizationService implements IAuthorizationService {
 
   private async decide(input: AuthorizeInput): Promise<AuthorizationDecision> {
     const action = input.action as string;
+    let auditResource: AuthorizationResource | undefined;
     const deny = (
       reason: AuthorizationDenyReason,
       options: { message?: string; auditClass?: AuditClass } = {},
@@ -291,6 +369,7 @@ export class AuthorizationService implements IAuthorizationService {
           message: options.message ?? "Authorization denied",
         },
         options.auditClass,
+        auditResource,
       );
     const requirement = isAuthorizationAction(action)
       ? ACTION_REQUIREMENTS[action]
@@ -300,6 +379,9 @@ export class AuthorizationService implements IAuthorizationService {
     }
 
     const resource = parseAuthorizationResource(input.resource);
+    if (resource?.type === "ledger" && requirement.resourceType === "ledger") {
+      auditResource = input.resource;
+    }
     if (!resource || resource.type !== requirement.resourceType) {
       return deny("unknown_resource", { auditClass: requirement.auditClass });
     }
@@ -307,6 +389,7 @@ export class AuthorizationService implements IAuthorizationService {
     const credentialMessage = credentialDenial(
       input.principal,
       requirement.credential,
+      resource,
     );
     if (credentialMessage) {
       return deny("credential_not_permitted", {
@@ -333,6 +416,7 @@ export class AuthorizationService implements IAuthorizationService {
         input.principal,
         { action, outcome: "error" },
         requirement.auditClass,
+        auditResource,
       );
       throw new AuthorizationUnavailableError(action);
     }
@@ -347,6 +431,7 @@ export class AuthorizationService implements IAuthorizationService {
       input.principal,
       { allowed: true, action: input.action, resource: input.resource },
       requirement.auditClass,
+      auditResource,
     );
   }
 
@@ -354,6 +439,7 @@ export class AuthorizationService implements IAuthorizationService {
     principal: Identity,
     decision: TDecision,
     auditClass?: AuditClass,
+    resource?: AuthorizationResource,
   ): TDecision {
     this.recordAudit(
       principal,
@@ -362,6 +448,7 @@ export class AuthorizationService implements IAuthorizationService {
         outcome: decision.allowed ? "allowed" : "denied",
       },
       auditClass,
+      resource,
     );
     return decision;
   }
@@ -370,9 +457,14 @@ export class AuthorizationService implements IAuthorizationService {
     principal: Identity,
     record: AuthorizationAuditRecord,
     auditClass?: AuditClass,
+    resource?: AuthorizationResource,
   ): void {
     try {
-      this.audit(principal, record, auditClass);
+      if (resource) {
+        this.audit(principal, record, auditClass, resource);
+      } else {
+        this.audit(principal, record, auditClass);
+      }
     } catch {
       // Auditing is observability, never an availability dependency.
     }

@@ -60,7 +60,12 @@ import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-
 import { filterNullish } from "@/shared/tools";
 import { processBatch } from "@/shared/batch-processor";
 import { logger } from "@/shared/logger";
-import { systemIdentity } from "@/server/api/identity";
+import { systemIdentity, type Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  ledgerResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
@@ -115,11 +120,11 @@ export interface ILedgerWorkflow {
     input: RenameLedgerFileCommand;
   }): Promise<RenameLedgerFileResult>;
   starLedger(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
   }): Promise<StarLedgerResult>;
   unstarLedger(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
   }): Promise<StarLedgerResult>;
 
@@ -174,7 +179,7 @@ export interface ILedgerWorkflow {
   }): Promise<BcioOptionsData>;
   isLedgerStarred(params: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<boolean | undefined>;
 }
 
@@ -191,6 +196,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     >,
     private readonly db: DbExecutor,
     private readonly config: Pick<AppConfig, "gitea">,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   // --- Mutations ---------------------------------------------------------
@@ -499,16 +505,33 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async starLedger({
-    userId,
+    identity,
     ledgerId,
   }: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
   }): Promise<StarLedgerResult> {
+    let ledgerOwner: string;
+    let ledgerName: string;
     try {
-      const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
-      const giteaClient =
-        await this.giteaClientFactory.getUserApiClient(userId);
+      ({ ledgerOwner, ledgerName } = parseLedgerId(ledgerId));
+    } catch (error) {
+      workflowLogger.error("Failed to star ledger", { ledgerId, error });
+      return {
+        success: false,
+        isStarred: false,
+        message: "Failed to star ledger",
+      };
+    }
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
+      resource: ledgerResource(ledgerId),
+    });
+    try {
+      const giteaClient = await this.giteaClientFactory.getUserApiClient(
+        identity.userId,
+      );
 
       await giteaClient.user.userCurrentPutStar(ledgerOwner, ledgerName, {
         format: "json",
@@ -530,16 +553,33 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async unstarLedger({
-    userId,
+    identity,
     ledgerId,
   }: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
   }): Promise<StarLedgerResult> {
+    let ledgerOwner: string;
+    let ledgerName: string;
     try {
-      const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
-      const giteaClient =
-        await this.giteaClientFactory.getUserApiClient(userId);
+      ({ ledgerOwner, ledgerName } = parseLedgerId(ledgerId));
+    } catch (error) {
+      workflowLogger.error("Failed to unstar ledger", { ledgerId, error });
+      return {
+        success: false,
+        isStarred: true,
+        message: "Failed to unstar ledger",
+      };
+    }
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,
+      resource: ledgerResource(ledgerId),
+    });
+    try {
+      const giteaClient = await this.giteaClientFactory.getUserApiClient(
+        identity.userId,
+      );
 
       await giteaClient.user.userCurrentDeleteStar(ledgerOwner, ledgerName, {
         format: "json",
@@ -932,20 +972,34 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
   async isLedgerStarred({
     ledgerId,
-    userId,
+    identity,
   }: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<boolean | undefined> {
     // Only check if the user is authenticated.
-    if (!userId) {
+    if (!identity) {
       return undefined;
     }
 
+    let ledgerOwner: string;
+    let ledgerName: string;
     try {
-      const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
-      const giteaClient =
-        await this.giteaClientFactory.getUserApiClient(userId);
+      ({ ledgerOwner, ledgerName } = parseLedgerId(ledgerId));
+    } catch {
+      return false;
+    }
+
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_STATUS_READ,
+      resource: ledgerResource(ledgerId),
+    });
+
+    try {
+      const giteaClient = await this.giteaClientFactory.getUserApiClient(
+        identity.userId,
+      );
       const response = await giteaClient.user.userCurrentCheckStarring(
         ledgerOwner,
         ledgerName,

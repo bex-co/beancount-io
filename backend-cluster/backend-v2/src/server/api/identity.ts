@@ -170,6 +170,16 @@ export function identityHasCapability(
   );
 }
 
+/** Whether the credential's optional single-ledger ceiling admits this id. */
+export function identityAllowsLedgerScope(
+  identity: Identity | undefined,
+  ledgerId: string,
+): boolean {
+  return (
+    identity?.ledgerScope === undefined || identity.ledgerScope === ledgerId
+  );
+}
+
 /**
  * Require the product's full signed-in session credential, independently of
  * the op-class transport gate. Use this for account, billing, and credential

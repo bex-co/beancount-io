@@ -50,7 +50,7 @@ export class UserProfileResolver {
   ): Promise<FollowUserResponse> {
     return this.userProfileService.followUser(
       args.username,
-      ctx.getCurrentUserId(),
+      ctx.getCurrentIdentity(),
     );
   }
 
@@ -69,7 +69,7 @@ export class UserProfileResolver {
   ): Promise<FollowUserResponse> {
     return this.userProfileService.unfollowUser(
       args.username,
-      ctx.getCurrentUserId(),
+      ctx.getCurrentIdentity(),
     );
   }
 

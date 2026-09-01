@@ -112,6 +112,31 @@ describe("budgets", () => {
     }
   });
 
+  it("preserves social budgets while reachability moves to public/PDP classes", () => {
+    for (const opId of [
+      "GQL Query.getFeed",
+      "GQL Query.getUserProfile",
+      "GQL Query.getUserFollowers",
+      "GQL Query.getUserFollowing",
+      "GQL Query.getUserStarredRepos",
+      "GQL Mutation.followUser",
+      "GQL Mutation.unfollowUser",
+    ]) {
+      expect(budgetFor(opId, classifyOp(opId).class)).toEqual({
+        windowMs: 60_000,
+        max: 300,
+      });
+    }
+    for (const opId of [
+      "GQL Mutation.starLedger",
+      "GQL Mutation.unstarLedger",
+    ]) {
+      expect(budgetFor(opId, classifyOp(opId).class)).toEqual(
+        CLASS_BUDGETS.write,
+      );
+    }
+  });
+
   it("keeps the anonymous intakes on separate budgets", () => {
     expect(anonymousFamily("/api-gateway/oauth/token")).toBe("oauth");
     expect(anonymousFamily("/.well-known/oauth-protected-resource")).toBe(

@@ -18,7 +18,7 @@
 - [x] **m12** — Minimal centralized authz for mobile user deletion (7 tasks) ← from user-reported mobile deletion failure + `backend-v2/authz/README.md` 2026-08-28
 - [x] **m13** — Centralized authz foundation for user identity and API credentials (8 tasks) ← from user decision 2026-08-28 after m12
 - [x] **m14** — Centralized authz for billing and subscriptions (7 tasks) ← from user decision 2026-08-28 after m13
-- [ ] **m15** — Centralized authz for the social graph and starring (7 tasks) ← from user decision 2026-08-28 after m14
+- [x] **m15** — Centralized authz for the social graph and starring (7 tasks) ← from user decision 2026-08-28 after m14
 - [ ] **m16** — Centralized authz for AI-assisted ingestion and assets (8 tasks) ← from user decision 2026-08-28 after m15
 - [ ] **m17** — Centralized authz for ledger contents and reporting (9 tasks) ← from user decision 2026-08-28 after m16
 - [ ] **m18** — Centralized authz for ledger administration and collaboration (8 tasks) ← from user decision 2026-08-28 after m17

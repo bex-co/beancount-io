@@ -140,7 +140,7 @@ export class LedgerMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<StarLedgerResponse> {
     return this.workflow.starLedger({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
     });
   }
@@ -154,7 +154,7 @@ export class LedgerMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<StarLedgerResponse> {
     return this.workflow.unstarLedger({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
     });
   }

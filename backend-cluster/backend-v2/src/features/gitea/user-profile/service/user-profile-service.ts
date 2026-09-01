@@ -14,14 +14,23 @@ import {
   RepositoryListResponse,
 } from "../api/user-profile-resolver.types";
 import { logger } from "@/shared/logger";
+import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  userResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 
 export interface IUserProfileService {
   getUserProfile(
     username: string,
     userId?: string,
   ): Promise<PublicUserProfileResponse>;
-  followUser(username: string, userId: string): Promise<FollowUserResponse>;
-  unfollowUser(username: string, userId: string): Promise<FollowUserResponse>;
+  followUser(username: string, identity: Identity): Promise<FollowUserResponse>;
+  unfollowUser(
+    username: string,
+    identity: Identity,
+  ): Promise<FollowUserResponse>;
   getUserFollowers(
     username: string,
     page?: number,
@@ -48,6 +57,7 @@ export class UserProfileService implements IUserProfileService {
     private readonly giteaClientFactory: IGiteaClientFactory,
     private readonly models: Pick<IModels, "user">,
     private readonly db: DbExecutor,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   /**
@@ -203,11 +213,19 @@ export class UserProfileService implements IUserProfileService {
    */
   async followUser(
     username: string,
-    userId: string,
+    identity: Identity,
   ): Promise<FollowUserResponse> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
+      resource: userResource(identity.userId),
+    });
     try {
       // Get current user to check if they're trying to follow themselves
-      const currentUser = await this.models.user.getById(this.db, userId);
+      const currentUser = await this.models.user.getById(
+        this.db,
+        identity.userId,
+      );
       if (currentUser?.ledger_username === username) {
         return {
           success: false,
@@ -216,8 +234,9 @@ export class UserProfileService implements IUserProfileService {
         };
       }
 
-      const giteaClient =
-        await this.giteaClientFactory.getUserApiClient(userId);
+      const giteaClient = await this.giteaClientFactory.getUserApiClient(
+        identity.userId,
+      );
       await giteaClient.user.userCurrentPutFollow(username, {
         format: "json",
       });
@@ -244,11 +263,17 @@ export class UserProfileService implements IUserProfileService {
    */
   async unfollowUser(
     username: string,
-    userId: string,
+    identity: Identity,
   ): Promise<FollowUserResponse> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_DELETE,
+      resource: userResource(identity.userId),
+    });
     try {
-      const giteaClient =
-        await this.giteaClientFactory.getUserApiClient(userId);
+      const giteaClient = await this.giteaClientFactory.getUserApiClient(
+        identity.userId,
+      );
       await giteaClient.user.userCurrentDeleteFollow(username, {
         format: "json",
       });

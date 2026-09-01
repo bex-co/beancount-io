@@ -1,9 +1,14 @@
 import {
   apiKeyResource,
+  AUTHORIZATION_ACTIONS,
+  AuthorizationService,
+  ledgerResource,
+  LEDGER_RELATIONSHIPS,
   SourceBackedRelationshipEvaluator,
   userResource,
   USER_RELATIONSHIPS,
 } from "..";
+import { ErrorCategory } from "@/shared/errors";
 
 function makeEvaluator(ownerId: string | null = "usr_alice") {
   const findById = jest.fn(async () =>
@@ -14,11 +19,19 @@ function makeEvaluator(ownerId: string | null = "usr_alice") {
         }
       : null,
   );
+  const repoGet = jest.fn(async () => ({ data: { id: 42 } }));
+  const getUserApiClient = jest.fn(async () => ({ repos: { repoGet } }));
   return {
     findById,
-    evaluator: new SourceBackedRelationshipEvaluator({} as never, {
-      apiKey: { findById } as never,
-    }),
+    repoGet,
+    getUserApiClient,
+    evaluator: new SourceBackedRelationshipEvaluator(
+      {} as never,
+      {
+        apiKey: { findById } as never,
+      },
+      { getUserApiClient } as never,
+    ),
   };
 }
 
@@ -70,4 +83,79 @@ describe("SourceBackedRelationshipEvaluator", () => {
       ).resolves.toBe(false);
     },
   );
+
+  it("checks current Gitea readability for every ledger authorization", async () => {
+    const { evaluator, getUserApiClient, repoGet } = makeEvaluator();
+    const check = {
+      user: userResource("usr_alice"),
+      relation: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+      object: ledgerResource("alice/main"),
+    };
+
+    await expect(evaluator.check(check)).resolves.toBe(true);
+    await expect(evaluator.check(check)).resolves.toBe(true);
+    expect(getUserApiClient).toHaveBeenCalledTimes(2);
+    expect(getUserApiClient).toHaveBeenCalledWith("usr_alice");
+    expect(repoGet).toHaveBeenCalledTimes(2);
+    expect(repoGet).toHaveBeenCalledWith("alice", "main", {
+      format: "json",
+    });
+  });
+
+  it.each([403, 404])(
+    "treats Gitea %s as an unreadable-ledger relationship denial",
+    async (status) => {
+      const { evaluator, repoGet } = makeEvaluator();
+      repoGet.mockRejectedValueOnce({ status });
+      await expect(
+        evaluator.check({
+          user: userResource("usr_alice"),
+          relation: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+          object: ledgerResource("alice/private"),
+        }),
+      ).resolves.toBe(false);
+    },
+  );
+
+  it("propagates Gitea outages instead of converting them to denial", async () => {
+    const { evaluator, repoGet } = makeEvaluator();
+    repoGet.mockRejectedValueOnce({ status: 503 });
+    await expect(
+      evaluator.check({
+        user: userResource("usr_alice"),
+        relation: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+        object: ledgerResource("alice/main"),
+      }),
+    ).rejects.toEqual({ status: 503 });
+  });
+
+  it("surfaces and audits a Gitea source outage as an authorization error", async () => {
+    const { evaluator, repoGet } = makeEvaluator();
+    repoGet.mockRejectedValueOnce({ status: 503 });
+    const audit = jest.fn();
+    const service = new AuthorizationService(evaluator, audit);
+    const principal = {
+      userId: "usr_alice",
+      method: "session" as const,
+      scopes: new Set<string>(),
+      capabilityExempt: true,
+    };
+
+    await expect(
+      service.authorizeOrThrow({
+        principal,
+        action: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
+        resource: ledgerResource("alice/main"),
+      }),
+    ).rejects.toMatchObject({ category: ErrorCategory.SERVICE_UNAVAILABLE });
+    expect(audit).toHaveBeenCalledWith(
+      principal,
+      {
+        action: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
+        outcome: "error",
+      },
+      "write",
+      ledgerResource("alice/main"),
+    );
+  });
 });

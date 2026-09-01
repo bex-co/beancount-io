@@ -6,7 +6,9 @@ import {
   classifiedOpIds,
   classifyOp,
   evaluateScope,
+  gqlOpId,
   requireScopeClass,
+  SOCIAL_PUBLIC_EXCLUSIONS,
 } from "../op-class";
 import { AUTHORIZATION_ACTIONS } from "../authorization";
 
@@ -101,6 +103,11 @@ describe("classifyOp", () => {
         "GQL Mutation.cancelSubscription",
         "GQL Mutation.resumeSubscription",
         "GQL Mutation.upgradeSubscription",
+        "GQL Query.getFeed",
+        "GQL Mutation.followUser",
+        "GQL Mutation.unfollowUser",
+        "GQL Mutation.starLedger",
+        "GQL Mutation.unstarLedger",
       ].map((opId) => authorizationActionForOp(opId)),
     ).toEqual([
       AUTHORIZATION_ACTIONS.USER_PROFILE_READ,
@@ -123,6 +130,11 @@ describe("classifyOp", () => {
       AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_CANCEL,
       AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_RESUME,
       AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_UPGRADE,
+      AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ,
+      AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
+      AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_DELETE,
+      AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
+      AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,
     ]);
   });
 });
@@ -227,6 +239,26 @@ describe("evaluateScope", () => {
       authorizationAction:
         AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_CANCEL,
     });
+  });
+
+  it("makes public social discovery explicit and PDP-routes protected social roots", () => {
+    for (const [field, reason] of Object.entries(SOCIAL_PUBLIC_EXCLUSIONS)) {
+      const opId = gqlOpId(field);
+      expect(reason.length).toBeGreaterThan(20);
+      expect(classifyOp(opId).class).toBe("public");
+      expect(authorizationActionForOp(opId)).toBeUndefined();
+      expect(evaluateScope(token(), opId).allowed).toBe(true);
+    }
+
+    expect(
+      [
+        "GQL Query.getFeed",
+        "GQL Mutation.followUser",
+        "GQL Mutation.unfollowUser",
+        "GQL Mutation.starLedger",
+        "GQL Mutation.unstarLedger",
+      ].map((opId) => classifyOp(opId).class),
+    ).toEqual(["read", "write", "write", "write", "write"]);
   });
 
   it("treats an unclassified op as write, and says so", () => {

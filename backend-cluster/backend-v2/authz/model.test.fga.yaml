@@ -52,6 +52,8 @@ tests:
           can_read_billing: true
           can_write_billing: true
           can_write_lifecycle: true
+          can_read_social: true
+          can_write_social: true
 
   # Runtime API-key list/create/revoke resolve back to these User credential
   # permissions. The key itself deliberately is not an FGA entity.
@@ -80,6 +82,8 @@ tests:
           can_read_billing: false
           can_write_billing: false
           can_write_lifecycle: false
+          can_read_social: false
+          can_write_social: false
       - user: user:usr_dave
         object: user:usr_alice
         assertions:

@@ -1,18 +1,18 @@
 # w2 · m15 — Centralized authz for the social graph and starring
 
-**Worker:** worker2 **Goal:** centralize protected social mutations and non-public reads at application-service boundaries while keeping explicitly public discovery public and Gitea as the only social-data source **Status:** todo
+**Worker:** worker2 **Goal:** centralize protected social mutations and non-public reads at application-service boundaries while keeping explicitly public discovery public and Gitea as the only social-data source **Status:** done
 
 ## Tasks (in order)
 
-| id   | title                                      | est | depends_on |
-| ---- | ------------------------------------------ | --- | ---------- |
-| t001 | Catalog social actions, exclusions, and trusted resources | 45m | —          |
-| t002 | Migrate protected social service boundaries               | 60m | t001       |
-| t006 | Verify Gitea-source parity, failures, budgets, and audit   | 35m | t002       |
-| t003 | Adoption surface                                           | 20m | t006       |
-| t004 | Simplify                                                   | 15m | t003       |
-| t005 | Test coverage                                              | 50m | t003       |
-| t007 | Closeout                                                   | 15m | t004, t005 |
+| id   | title                                                                | est | depends_on |
+| ---- | -------------------------------------------------------------------- | --- | ---------- |
+| t001 | Catalog social actions, exclusions, and trusted resources — **DONE** | 45m | —          |
+| t002 | Migrate protected social service boundaries — **DONE**               | 60m | t001       |
+| t006 | Verify Gitea-source parity, failures, budgets, and audit — **DONE**  | 35m | t002       |
+| t003 | Adoption surface — **DONE**                                          | 20m | t006       |
+| t004 | Simplify — **DONE**                                                  | 15m | t003       |
+| t005 | Test coverage — **DONE**                                             | 50m | t003       |
+| t007 | Closeout — **DONE**                                                  | 15m | t004, t005 |
 
 ## Definition of done
 

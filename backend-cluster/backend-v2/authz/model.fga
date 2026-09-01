@@ -36,6 +36,8 @@ type user
     define can_read_billing: owner
     define can_write_billing: owner
     define can_write_lifecycle: owner
+    define can_read_social: owner
+    define can_write_social: owner
 
 type ledger
   relations

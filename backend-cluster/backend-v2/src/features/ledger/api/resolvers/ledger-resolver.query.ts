@@ -177,10 +177,9 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<boolean | undefined> {
-    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.isLedgerStarred({
       ledgerId: ledger.id,
-      userId: ctx.userId,
+      identity: ctx.identity,
     });
   }
 }

@@ -27,7 +27,10 @@ describe("FeedResolver (delegation)", () => {
 
       const result = await resolver.getFeed(mockArgs, mockContext);
 
-      expect(mockService.getFeed).toHaveBeenCalledWith(mockArgs, "user-123");
+      expect(mockService.getFeed).toHaveBeenCalledWith(
+        mockArgs,
+        mockContext.getCurrentIdentity(),
+      );
       expect(result).toBe(mockResponse);
     });
 
@@ -50,7 +53,10 @@ describe("FeedResolver (delegation)", () => {
 
       const result = await resolver.getFeed(mockArgs, mockContext);
 
-      expect(mockService.getFeed).toHaveBeenCalledWith(mockArgs, "user-123");
+      expect(mockService.getFeed).toHaveBeenCalledWith(
+        mockArgs,
+        mockContext.getCurrentIdentity(),
+      );
       expect(result.items).toHaveLength(1);
     });
 

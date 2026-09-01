@@ -182,6 +182,18 @@ const R = {
     "Server-sent streaming: the response is an event stream tied to one long-lived HTTP request, which is what the dedicated AI routes already are.",
 } as const;
 
+/** Deliberately anonymous Gitea discovery; absence of an action is explicit. */
+export const SOCIAL_PUBLIC_EXCLUSIONS = {
+  "Query.getUserProfile":
+    "Profiles and their public activities/repositories are community discovery; authenticated self-enrichment does not change target visibility.",
+  "Query.getUserFollowers":
+    "Follower lists are public social-graph discovery in the current product contract.",
+  "Query.getUserFollowing":
+    "Following lists are public social-graph discovery in the current product contract.",
+  "Query.getUserStarredRepos":
+    "Starred repository lists are public discovery and return only the established public response shape.",
+} as const;
+
 /**
  * Why a verb has no MCP tool. Tool count is the dominant cost in an agent's
  * tool selection, so "an agent could conceivably call this" is not sufficient
@@ -901,8 +913,19 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
 ];
 
 const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
-  gqlOnly("Mutation.starLedger", "write", R.giteaSocial, M.notAgentShaped),
-  gqlOnly("Mutation.unstarLedger", "write", R.giteaSocial, M.notAgentShaped),
+  {
+    ...gqlOnly("Mutation.starLedger", "write", R.giteaSocial, M.notAgentShaped),
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
+  },
+  {
+    ...gqlOnly(
+      "Mutation.unstarLedger",
+      "write",
+      R.giteaSocial,
+      M.notAgentShaped,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,
+  },
   gqlAndRest(
     "Mutation.bulkEntries",
     "write",
@@ -1083,43 +1106,26 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
 ];
 
 const GITEA_SOCIAL_VERBS: readonly VerbEntry[] = [
-  gqlOnly("Query.getFeed", "session-only", R.giteaSocial, M.notAgentShaped),
-  gqlOnly(
-    "Query.getUserProfile",
-    "session-only",
-    R.giteaSocial,
-    M.notAgentShaped,
+  {
+    ...gqlOnly("Query.getFeed", "read", R.giteaSocial, M.notAgentShaped),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ,
+  },
+  ...Object.keys(SOCIAL_PUBLIC_EXCLUSIONS).map((gql) =>
+    gqlOnly(gql, "public", R.giteaSocial, M.notAgentShaped),
   ),
-  gqlOnly(
-    "Query.getUserFollowers",
-    "session-only",
-    R.giteaSocial,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Query.getUserFollowing",
-    "session-only",
-    R.giteaSocial,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Query.getUserStarredRepos",
-    "session-only",
-    R.giteaSocial,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.followUser",
-    "session-only",
-    R.giteaSocial,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.unfollowUser",
-    "session-only",
-    R.giteaSocial,
-    M.notAgentShaped,
-  ),
+  {
+    ...gqlOnly("Mutation.followUser", "write", R.giteaSocial, M.notAgentShaped),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
+  },
+  {
+    ...gqlOnly(
+      "Mutation.unfollowUser",
+      "write",
+      R.giteaSocial,
+      M.notAgentShaped,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_DELETE,
+  },
   gqlOnly(
     "Query.getPullRequestDetails",
     "read",

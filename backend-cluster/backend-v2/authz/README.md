@@ -16,10 +16,12 @@ This boundary follows OpenFGA's guidance to
 The no-engine-yet decision and adoption triggers remain documented in
 [ADR 0010](../../../docs/adrs/ADR010-backend-v2-authz-model.md). No OpenFGA
 server or SDK is deployed. Backend-v2 executes the protected user/profile/
-lifecycle/API-key-management domain through a small TypeScript PDP. Its
+lifecycle/API-key-management/billing/social domain through a small TypeScript PDP. Its
 source-backed evaluator mirrors exact-self User permissions and resolves
-API-key ownership from the current `api_keys` row. Ledger relationships remain
-documentation-as-code until their own domain milestone or an ADR 0010 trigger.
+API-key ownership from the current `api_keys` row. Social star decisions query
+current Gitea repository readability without copying the social graph into
+tuples. Other ledger relationships remain documentation-as-code until their
+own domain milestone or an ADR 0010 trigger.
 
 ## Centralized authorization in a microservice system
 
@@ -31,10 +33,10 @@ for this domain is:
 ```text
 GraphQL / REST / MCP alias
   → resolveIdentity()
-  → AccountService or ApiKeyService (application-service boundary)
+  → protected application service/workflow boundary
   → authorize(requestIdentity, canonicalAction, trustedResource)
       → credential ceiling
-      → exact-self fact or current api_keys.owner lookup
+      → exact-self fact, current api_keys.owner lookup, or current Gitea readability
       → modeled user#can_* relationship
       → one fail-closed allow / deny; source failure is an explicit error
       → one audit event per authorization call
@@ -52,11 +54,11 @@ side effect. The caller provides only:
 
 Transport adapters do not interpret policy or manufacture relationship tuples.
 The operation-class gate only routes these operations to the PDP. Account,
-API-key, and subscription services are the application boundary: each protected
-public method calls the PDP before domain work. The migrated profile, lifecycle,
-credential, and billing methods derive the protected User from `Identity`, so a
-new resolver or internal caller cannot select a different user or bypass
-authorization by skipping a wrapper.
+API-key, subscription, feed, user-profile, and ledger-social methods are the
+application boundary: each protected public method calls the PDP before domain
+work. User-owned resources derive from `Identity`, so a new resolver or
+internal caller cannot select a different user or bypass authorization by
+skipping a wrapper.
 
 PDP-routed GraphQL fields that require a caller use the transport-only
 `@Authenticated()` decorator. It checks only that `resolveIdentity()` produced
@@ -121,6 +123,8 @@ user.credentials:write
 user.billing:read
 user.billing:write
 user.lifecycle:write
+user.social:read
+user.social:write
 
 ledger.contents:read
 ledger.contents:write
@@ -172,6 +176,17 @@ beside `AuthorizationService`:
 | `user.billing.subscription.cancel`  | `GQL Mutation.cancelSubscription`              | browser session only                                 | exact-self `user#can_write_billing`        |
 | `user.billing.subscription.resume`  | `GQL Mutation.resumeSubscription`              | browser session only                                 | exact-self `user#can_write_billing`        |
 | `user.billing.subscription.upgrade` | `GQL Mutation.upgradeSubscription`             | browser session only                                 | exact-self `user#can_write_billing`        |
+| `user.social.feed.read`             | `GQL Query.getFeed`                            | browser session only                                 | exact-self `user#can_read_social`          |
+| `user.social.follow.create`         | `GQL Mutation.followUser`                      | browser session only                                 | exact-self `user#can_write_social`         |
+| `user.social.follow.delete`         | `GQL Mutation.unfollowUser`                    | browser session only                                 | exact-self `user#can_write_social`         |
+| `ledger.social.star.status.read`    | authenticated `Ledger.isStarred`               | session, or OAuth/API key with `ledger.read`         | current `ledger#can_read_contents`         |
+| `ledger.social.star.create`         | `GQL Mutation.starLedger`                      | session, or OAuth/API key with `ledger.write`        | current `ledger#can_read_contents`         |
+| `ledger.social.star.delete`         | `GQL Mutation.unstarLedger`                    | session, or OAuth/API key with `ledger.write`        | current `ledger#can_read_contents`         |
+
+The public social exclusions live executably in `SOCIAL_PUBLIC_EXCLUSIONS`
+beside the operation table: `getUserProfile`, `getUserFollowers`,
+`getUserFollowing`, and `getUserStarredRepos`. They remain anonymous by product
+contract and have no canonical protected action.
 
 Cross-user resources, missing or foreign API-key IDs, unknown actions or
 resource types, insufficient credentials, and evaluator failures all deny.
@@ -203,6 +218,30 @@ as an authorization `error`, surfaces to clients as service unavailable, and
 prevents all Stripe or local billing work. Audit persistence itself remains
 fail-open so an observability outage cannot suppress an otherwise-authorized
 billing operation.
+
+## Social graph and starring
+
+Gitea remains the only source for profiles, follows, stars, and repository
+visibility. Feed, follow/unfollow, and star/unstar methods receive the resolved
+`Identity` explicitly. Feed and follow preferences bind to
+`user:<identity.userId>`; caller-supplied target usernames are domain arguments
+only after that self relationship is authorized. Star operations bind to the
+canonical `ledger:<owner/name>` resource and the evaluator calls Gitea on every
+decision with the current user's client. A 403/404 is an unreadable
+relationship denial; transport, credential-source, and 5xx failures are
+audited authorization errors and surface as service unavailable. No Gitea
+mutation client is provisioned after either outcome.
+
+Public profile/follower/following/starred-list queries keep their historical
+anonymous and nullable/empty-result contracts. Those are discovery responses,
+not fallback authorization decisions. `Ledger.isStarred` remains nullable for
+an anonymous parent query; when an identity exists, its preference read is
+PDP-protected and repository-readable.
+
+Public discovery plus feed/follow retain their old 300/minute budget through
+operation overrides; star and unstar retain the write-class 60/minute budget.
+No authorization decision is cached, so duplicate roots and direct calls each
+recheck current facts and audit independently.
 
 ## What OpenFGA owns
 
@@ -313,11 +352,14 @@ OpenFGA relations or token claims.
 Only durable or source-derived domain facts enter the model:
 
 - `user#owner` from the user database, only when subject ID equals object ID;
+- exact-self social read/write eligibility from that same stable User owner;
 - API-key owner from current `api_keys.user_id`, resolved to that User's
   credentials permission without copying it;
 - `ledger#owner` from the ledger owner lookup;
 - exactly one effective `ledger#collaborator_*` rank per caller;
-- `ledger#public_reader@user:*` iff the ledger is public.
+- `ledger#public_reader@user:*` iff the ledger is public;
+- runtime social-star readability from a fresh authenticated Gitea repository
+  lookup, without persisting the result.
 
 Today ledger relationships are resolved from the external Gitea-backed ledger
 service. Under engine adoption they may initially be supplied to the PDP for a

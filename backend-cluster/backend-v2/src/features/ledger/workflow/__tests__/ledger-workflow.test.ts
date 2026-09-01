@@ -40,6 +40,12 @@ interface MockFavaApiClient {
 }
 
 const USER_ID = "user-123";
+const IDENTITY = {
+  userId: USER_ID,
+  method: "session",
+  scopes: new Set<string>(),
+  capabilityExempt: true,
+} as const;
 
 describe("LedgerWorkflow", () => {
   let workflow: LedgerWorkflow;
@@ -64,6 +70,7 @@ describe("LedgerWorkflow", () => {
     };
   };
   let db: { transaction: jest.Mock };
+  let authorization: { authorizeOrThrow: jest.Mock };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -120,6 +127,9 @@ describe("LedgerWorkflow", () => {
       },
     };
     db = { transaction: jest.fn((callback) => callback({})) };
+    authorization = {
+      authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+    };
 
     const config = { gitea: { hostName: "gitea", httpPort: 3000 } };
 
@@ -132,6 +142,7 @@ describe("LedgerWorkflow", () => {
       models as never,
       db as never,
       config as never,
+      authorization as never,
     );
   });
 
@@ -1305,7 +1316,10 @@ describe("LedgerWorkflow", () => {
       };
       giteaClientFactory.getUserApiClient.mockResolvedValue(giteaClient);
 
-      const result = await workflow.starLedger({ userId: USER_ID, ledgerId });
+      const result = await workflow.starLedger({
+        identity: IDENTITY,
+        ledgerId,
+      });
 
       expect(giteaClient.user.userCurrentPutStar).toHaveBeenCalledWith(
         "testuser",
@@ -1326,10 +1340,33 @@ describe("LedgerWorkflow", () => {
       };
       giteaClientFactory.getUserApiClient.mockResolvedValue(giteaClient);
 
-      const result = await workflow.starLedger({ userId: USER_ID, ledgerId });
+      const result = await workflow.starLedger({
+        identity: IDENTITY,
+        ledgerId,
+      });
 
       expect(result.success).toBe(false);
       expect(result.isStarred).toBe(false);
+    });
+
+    it("does not provision a Gitea writer when authorization denies", async () => {
+      authorization.authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(
+        workflow.starLedger({ identity: IDENTITY, ledgerId }),
+      ).rejects.toThrow("denied");
+      expect(giteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
+    });
+
+    it("preserves the failure response for an invalid ledger id", async () => {
+      await expect(
+        workflow.starLedger({ identity: IDENTITY, ledgerId: "invalid" }),
+      ).resolves.toEqual({
+        success: false,
+        isStarred: false,
+        message: "Failed to star ledger",
+      });
+      expect(authorization.authorizeOrThrow).not.toHaveBeenCalled();
+      expect(giteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
     });
   });
 
@@ -1344,7 +1381,10 @@ describe("LedgerWorkflow", () => {
       };
       giteaClientFactory.getUserApiClient.mockResolvedValue(giteaClient);
 
-      const result = await workflow.unstarLedger({ userId: USER_ID, ledgerId });
+      const result = await workflow.unstarLedger({
+        identity: IDENTITY,
+        ledgerId,
+      });
 
       expect(giteaClient.user.userCurrentDeleteStar).toHaveBeenCalledWith(
         "testuser",
@@ -1365,7 +1405,10 @@ describe("LedgerWorkflow", () => {
       };
       giteaClientFactory.getUserApiClient.mockResolvedValue(giteaClient);
 
-      const result = await workflow.unstarLedger({ userId: USER_ID, ledgerId });
+      const result = await workflow.unstarLedger({
+        identity: IDENTITY,
+        ledgerId,
+      });
 
       expect(result.success).toBe(false);
       expect(result.isStarred).toBe(true);
@@ -1393,7 +1436,7 @@ describe("LedgerWorkflow", () => {
 
       const result = await workflow.isLedgerStarred({
         ledgerId: mockLedger.id,
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       expect(result).toBe(true);
@@ -1416,7 +1459,7 @@ describe("LedgerWorkflow", () => {
 
       const result = await workflow.isLedgerStarred({
         ledgerId: mockLedger.id,
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       expect(result).toBe(false);
@@ -1425,7 +1468,7 @@ describe("LedgerWorkflow", () => {
     it("should return undefined when user is not authenticated", async () => {
       const result = await workflow.isLedgerStarred({
         ledgerId: mockLedger.id,
-        userId: undefined,
+        identity: undefined,
       });
 
       expect(result).toBeUndefined();
@@ -1444,10 +1487,21 @@ describe("LedgerWorkflow", () => {
 
       const result = await workflow.isLedgerStarred({
         ledgerId: mockLedger.id,
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       expect(result).toBe(false);
+    });
+
+    it("preserves false for an invalid ledger id without source work", async () => {
+      await expect(
+        workflow.isLedgerStarred({
+          ledgerId: "invalid",
+          identity: IDENTITY,
+        }),
+      ).resolves.toBe(false);
+      expect(authorization.authorizeOrThrow).not.toHaveBeenCalled();
+      expect(giteaClientFactory.getUserApiClient).not.toHaveBeenCalled();
     });
   });
 });

@@ -1,4 +1,8 @@
-import { assertIdentityCapability, type Identity } from "@/server/api/identity";
+import {
+  assertIdentityCapability,
+  identityAllowsLedgerScope,
+  type Identity,
+} from "@/server/api/identity";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import { ForbiddenError, UnauthenticatedError } from "@/shared/errors";
 import {
@@ -89,7 +93,7 @@ export function assertLedgerScope(
   identity: Identity | undefined,
   ledgerId: string,
 ): void {
-  if (identity?.ledgerScope && identity.ledgerScope !== ledgerId) {
+  if (!identityAllowsLedgerScope(identity, ledgerId)) {
     throw new ForbiddenError(
       "Forbidden - this credential is not authorized for this ledger",
     );

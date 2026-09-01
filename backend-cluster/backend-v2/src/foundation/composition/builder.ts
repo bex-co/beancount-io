@@ -51,6 +51,7 @@ export function buildServiceLayer(input: {
     new SourceBackedRelationshipEvaluator(
       input.database.db,
       input.database.models,
+      input.clients.giteaClientFactory,
     ),
   );
   const subscriptions = new SubscriptionService(
@@ -87,6 +88,7 @@ export function buildServiceLayer(input: {
     input.database.db,
   );
   return {
+    authorization,
     stripe,
     subscriptions,
     apiKey,
@@ -181,6 +183,7 @@ export function buildServiceLayer(input: {
       input.clients.giteaClientFactory,
       input.database.models,
       input.database.db,
+      authorization,
     ),
     pullRequest: new PullRequestService(
       input.clients.giteaClientFactory,
@@ -193,6 +196,7 @@ export function buildServiceLayer(input: {
       input.clients.giteaClientFactory,
       input.database.models,
       input.database.db,
+      authorization,
     ),
     commits: new CommitsService(input.clients.giteaClientFactory),
   };
@@ -214,6 +218,7 @@ export function buildWorkflowLayer(input: {
     input.database.models,
     input.database.db,
     input.config,
+    input.services.authorization,
   );
   const ledgerCollaborators = new LedgerCollaboratorsWorkflow(
     input.clients.favaClientFactory,

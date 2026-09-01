@@ -13,6 +13,17 @@ Git-server integration for API reads, commits and pull requests, user activity, 
 
 Application services should depend on `IGiteaClientFactory` from `src/foundation/clients/gitea-client-factory.ts`; it provisions the appropriate low-level client without exposing user credentials.
 
+## Social authorization
+
+Public profile, follower, following, and starred-repository discovery remains
+anonymous and is explicitly inventoried in `server/api/op-class.ts`. Protected
+feed, follow/unfollow, star/unstar, and authenticated star-status methods take
+the resolved `Identity` and authorize at their application boundary before
+Gitea work. The PDP checks star targets against current Gitea readability on
+every call; 403/404 is a relationship denial, while source outages are audited
+service-unavailable errors. Never cache that decision or copy the social graph
+into authorization tuples.
+
 ## Push policy
 
 - HTTP and SSH must enforce the same repository-path grammar, `refs/heads/main` rule, and directive-limit decision. Shared decisions belong in `policy/`; transport files should only parse/encode their protocol.

@@ -102,7 +102,7 @@ describe("UserProfileResolver (delegation)", () => {
 
       expect(mockService.followUser).toHaveBeenCalledWith(
         "targetuser",
-        "user-123",
+        mockContext.getCurrentIdentity(),
       );
       expect(result).toEqual(mockResponse);
     });
@@ -134,7 +134,7 @@ describe("UserProfileResolver (delegation)", () => {
 
       expect(mockService.unfollowUser).toHaveBeenCalledWith(
         "targetuser",
-        "user-123",
+        mockContext.getCurrentIdentity(),
       );
       expect(result).toEqual(mockResponse);
     });

@@ -2,6 +2,10 @@ import "reflect-metadata";
 import { UserProfileService } from "../user-profile-service";
 import { IContext } from "@/server/graphql/context";
 import {
+  AUTHORIZATION_ACTIONS,
+  userResource,
+} from "@/server/api/authorization";
+import {
   createMockContext,
   createMockUser,
   createMockGiteaClient,
@@ -16,6 +20,7 @@ describe("UserProfileService", () => {
   let mockGiteaClient: ReturnType<typeof createMockGiteaClient>;
   let mockModels: { user: { getById: jest.Mock } };
   let mockGetUserApiClient: jest.Mock;
+  let authorizeOrThrow: jest.Mock;
   let mockGiteaClientFactory: {
     getAnonymousApiClient: jest.Mock;
     getAdminApiClient: jest.Mock;
@@ -30,6 +35,7 @@ describe("UserProfileService", () => {
     mockModels = { user: { getById: jest.fn() } };
 
     mockGetUserApiClient = jest.fn();
+    authorizeOrThrow = jest.fn().mockResolvedValue({ allowed: true });
     mockGiteaClientFactory = {
       getAnonymousApiClient: jest.fn().mockReturnValue(mockGiteaClient),
       getAdminApiClient: jest.fn().mockReturnValue(mockGiteaClient),
@@ -40,6 +46,7 @@ describe("UserProfileService", () => {
       mockGiteaClientFactory as never,
       mockModels as never,
       {} as never,
+      { authorizeOrThrow } as never,
     );
   });
 
@@ -250,13 +257,18 @@ describe("UserProfileService", () => {
 
       const result = await service.followUser(
         "targetuser",
-        mockContext.userId ?? "user-123",
+        mockContext.getCurrentIdentity(),
       );
 
       expect(mockGiteaClient.user.userCurrentPutFollow).toHaveBeenCalledWith(
         "targetuser",
         { format: "json" },
       );
+      expect(authorizeOrThrow).toHaveBeenCalledWith({
+        principal: mockContext.getCurrentIdentity(),
+        action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
+        resource: userResource("user-123"),
+      });
       expect(result).toEqual({
         success: true,
         isFollowing: true,
@@ -270,7 +282,7 @@ describe("UserProfileService", () => {
 
       const result = await service.followUser(
         "testuser",
-        mockContext.userId ?? "user-123",
+        mockContext.getCurrentIdentity(),
       );
 
       expect(mockGiteaClient.user.userCurrentPutFollow).not.toHaveBeenCalled();
@@ -291,7 +303,7 @@ describe("UserProfileService", () => {
 
       const result = await service.followUser(
         "targetuser",
-        mockContext.userId ?? "user-123",
+        mockContext.getCurrentIdentity(),
       );
 
       expect(result).toEqual({
@@ -309,13 +321,18 @@ describe("UserProfileService", () => {
 
       const result = await service.unfollowUser(
         "targetuser",
-        mockContext.userId ?? "user-123",
+        mockContext.getCurrentIdentity(),
       );
 
       expect(mockGiteaClient.user.userCurrentDeleteFollow).toHaveBeenCalledWith(
         "targetuser",
         { format: "json" },
       );
+      expect(authorizeOrThrow).toHaveBeenCalledWith({
+        principal: mockContext.getCurrentIdentity(),
+        action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_DELETE,
+        resource: userResource("user-123"),
+      });
       expect(result).toEqual({
         success: true,
         isFollowing: false,
@@ -331,7 +348,7 @@ describe("UserProfileService", () => {
 
       const result = await service.unfollowUser(
         "targetuser",
-        mockContext.userId ?? "user-123",
+        mockContext.getCurrentIdentity(),
       );
 
       expect(result).toEqual({
@@ -339,6 +356,17 @@ describe("UserProfileService", () => {
         isFollowing: true,
         message: "Failed to unfollow targetuser",
       });
+    });
+
+    it("makes no Gitea write when authorization denies", async () => {
+      authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(
+        service.unfollowUser("targetuser", mockContext.getCurrentIdentity()),
+      ).rejects.toThrow("denied");
+      expect(mockGetUserApiClient).not.toHaveBeenCalled();
+      expect(
+        mockGiteaClient.user.userCurrentDeleteFollow,
+      ).not.toHaveBeenCalled();
     });
   });
 

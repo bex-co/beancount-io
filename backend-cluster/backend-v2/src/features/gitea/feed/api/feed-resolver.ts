@@ -21,6 +21,6 @@ export class FeedResolver {
     @Args() args: GetFeedArgs,
     @Ctx() ctx: IContext,
   ): Promise<FeedResponse> {
-    return this.feedService.getFeed(args, ctx.getCurrentUserId());
+    return this.feedService.getFeed(args, ctx.getCurrentIdentity());
   }
 }

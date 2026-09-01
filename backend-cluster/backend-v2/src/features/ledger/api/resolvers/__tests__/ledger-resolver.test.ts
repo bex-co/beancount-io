@@ -12,6 +12,12 @@ import { ForbiddenError } from "@/shared/errors";
  */
 describe("Ledger resolvers (delegation)", () => {
   const USER_ID = "user-123";
+  const IDENTITY = {
+    userId: USER_ID,
+    method: "session",
+    scopes: new Set<string>(),
+    capabilityExempt: true,
+  } as const;
 
   let workflow: jest.Mocked<ILedgerWorkflow>;
   let mutationResolver: LedgerMutationResolver;
@@ -46,8 +52,10 @@ describe("Ledger resolvers (delegation)", () => {
     queryResolver = new LedgerQueryResolver(workflow);
     ctx = {
       userId: USER_ID,
+      identity: IDENTITY,
       platform: "web",
       getCurrentUserId: () => USER_ID,
+      getCurrentIdentity: () => IDENTITY,
     } as unknown as IContext;
   });
 
@@ -128,12 +136,12 @@ describe("Ledger resolvers (delegation)", () => {
     it("starLedger / unstarLedger delegate", async () => {
       await mutationResolver.starLedger("o/l", ctx);
       expect(workflow.starLedger).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId: "o/l",
       });
       await mutationResolver.unstarLedger("o/l", ctx);
       expect(workflow.unstarLedger).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId: "o/l",
       });
     });
@@ -217,12 +225,12 @@ describe("Ledger resolvers (delegation)", () => {
       await queryResolver.isStarred(ledger, ctx);
       expect(workflow.isLedgerStarred).toHaveBeenCalledWith({
         ledgerId: "o/l",
-        userId: USER_ID,
+        identity: IDENTITY,
       });
     });
 
     /**
-     * These five take their ledger from the parent object, so the argument-keyed
+     * These four take their ledger from the parent object, so the argument-keyed
      * pin middleware never sees it — and `listLedgers` hands back every ledger
      * the user can reach. Without a check here a credential confined to one book
      * reads the contents of all of them, one field resolution at a time.
@@ -244,7 +252,6 @@ describe("Ledger resolvers (delegation)", () => {
         ["options", "getLedgerOptions"],
         ["favaOptions", "getLedgerFavaOptions"],
         ["bcioOptions", "getLedgerBcioOptions"],
-        ["isStarred", "isLedgerStarred"],
       ] as const;
 
       it.each(fieldResolvers)(
@@ -269,6 +276,14 @@ describe("Ledger resolvers (delegation)", () => {
         await expect(
           queryResolver.attributes({ id: "o/other" } as never, ctx),
         ).resolves.not.toThrow();
+      });
+
+      it("passes star status and the pinned identity to the service PDP", async () => {
+        await queryResolver.isStarred({ id: "o/other" } as never, pinnedCtx);
+        expect(workflow.isLedgerStarred).toHaveBeenCalledWith({
+          ledgerId: "o/other",
+          identity: pinnedCtx.identity,
+        });
       });
     });
   });
