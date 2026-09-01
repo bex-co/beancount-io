@@ -3,15 +3,10 @@ import { setAuditSink, type AuditEvent } from "@/server/api/audit";
 import { ErrorCategory } from "@/shared/errors";
 import { asyncContext, runWithOperationId } from "@/shared/async-context";
 import {
-  DASHBOARD_CLIENT_ID,
-  MOBILE_CLIENT_ID,
-} from "@/features/oauth/data/config";
-import {
   apiKeyResource,
   AUTHORIZATION_ACTIONS,
   AuthorizationDeniedError,
   AuthorizationService,
-  authorizationActionAcceptsDelegatedCredential,
   type AuthorizationAction,
   type AuthorizationResource,
   type IRelationshipEvaluator,
@@ -22,13 +17,11 @@ function identity(
   method: Identity["method"] = "oauth",
   userId = "usr_alice",
   scopes: string[] = [],
-  oauthClientId?: string,
 ): Identity {
   return {
     userId,
     method,
     scopes: new Set(scopes),
-    ...(oauthClientId ? { oauthClientId } : {}),
     capabilityExempt: method === "session",
   };
 }
@@ -47,23 +40,17 @@ const BILLING_ACTIONS = [
   AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_UPGRADE,
 ] as const;
 
-const dashboardIdentity = (scopes: string[] = []) =>
-  identity("oauth", "usr_alice", scopes, DASHBOARD_CLIENT_ID);
-
 describe("AuthorizationService", () => {
   afterEach(() => setAuditSink(undefined));
 
-  it.each([
-    ["legacy session", identity("session")],
-    ["Dashboard OAuth", dashboardIdentity()],
-  ] as const)(
+  it.each(["session", "oauth"] as const)(
     "allows an authenticated %s user to delete itself",
-    async (_name, principal) => {
+    async (method) => {
       const service = selfService();
 
       await expect(
         service.authorize({
-          principal,
+          principal: identity(method),
           action: AUTHORIZATION_ACTIONS.USER_DELETE,
           resource: userResource("usr_alice"),
         }),
@@ -90,27 +77,6 @@ describe("AuthorizationService", () => {
     });
   });
 
-  it.each([
-    AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH,
-    AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
-    AUTHORIZATION_ACTIONS.USER_DELETE,
-    AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
-    ...BILLING_ACTIONS,
-  ])(
-    "does not classify first-party-only action %s as delegated parity work",
-    (action) => {
-      expect(authorizationActionAcceptsDelegatedCredential(action)).toBe(false);
-    },
-  );
-
-  it("keeps delegated API-key listing in parity scope", () => {
-    expect(
-      authorizationActionAcceptsDelegatedCredential(
-        AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
-      ),
-    ).toBe(true);
-  });
-
   it.each(BILLING_ACTIONS)(
     "allows a browser session to perform %s for its own billing resource",
     async (action) => {
@@ -118,20 +84,6 @@ describe("AuthorizationService", () => {
       await expect(
         service.authorize({
           principal: identity("session"),
-          action,
-          resource: userResource("usr_alice"),
-        }),
-      ).resolves.toMatchObject({ allowed: true, action });
-    },
-  );
-
-  it.each(BILLING_ACTIONS)(
-    "allows Dashboard OAuth to perform %s for its own billing resource",
-    async (action) => {
-      const service = selfService();
-      await expect(
-        service.authorize({
-          principal: dashboardIdentity(["ledger.admin"]),
           action,
           resource: userResource("usr_alice"),
         }),
@@ -162,8 +114,7 @@ describe("AuthorizationService", () => {
         }),
       ).rejects.toMatchObject({
         category: ErrorCategory.FORBIDDEN,
-        message:
-          "Managing billing requires the signed-in first-party Dashboard",
+        message: "Managing billing requires a full signed-in session",
       });
       expect(relationships.check).not.toHaveBeenCalled();
     },
@@ -231,7 +182,7 @@ describe("AuthorizationService", () => {
 
     await expect(
       service.authorize({
-        principal: dashboardIdentity(),
+        principal: identity(),
         action: AUTHORIZATION_ACTIONS.USER_DELETE,
         resource: userResource("usr_bob"),
       }),
@@ -244,9 +195,7 @@ describe("AuthorizationService", () => {
   it.each([
     [AUTHORIZATION_ACTIONS.USER_PROFILE_READ, "oauth", ["ledger.read"], "user"],
     [AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH, "session", [], "user"],
-    [AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH, "oauth", [], "user"],
     [AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE, "session", [], "user"],
-    [AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE, "oauth", [], "user"],
     [AUTHORIZATION_ACTIONS.USER_DELETE, "oauth", [], "user"],
     [
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
@@ -280,53 +229,13 @@ describe("AuthorizationService", () => {
 
       await expect(
         service.authorize({
-          principal: identity(
-            method,
-            "usr_alice",
-            [...scopes],
-            method === "oauth" &&
-              (action === AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH ||
-                action === AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE ||
-                action === AUTHORIZATION_ACTIONS.USER_DELETE ||
-                action === AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE)
-              ? DASHBOARD_CLIENT_ID
-              : undefined,
-          ),
+          principal: identity(method, "usr_alice", [...scopes]),
           action,
           resource,
         }),
       ).resolves.toMatchObject({ allowed: true, action, resource });
     },
   );
-
-  it.each([
-    AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH,
-    AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE,
-    AUTHORIZATION_ACTIONS.USER_DELETE,
-    AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
-    ...BILLING_ACTIONS,
-  ])("denies Mobile OAuth for first-party-only action %s", async (action) => {
-    const relationships: IRelationshipEvaluator = {
-      check: jest.fn(async () => true),
-    };
-    const service = new AuthorizationService(relationships);
-    await expect(
-      service.authorize({
-        principal: identity(
-          "oauth",
-          "usr_alice",
-          ["ledger.read", "ledger.write", "ledger.admin"],
-          MOBILE_CLIENT_ID,
-        ),
-        action,
-        resource: userResource("usr_alice"),
-      }),
-    ).resolves.toMatchObject({
-      allowed: false,
-      reason: "credential_not_permitted",
-    });
-    expect(relationships.check).not.toHaveBeenCalled();
-  });
 
   it.each([
     [AUTHORIZATION_ACTIONS.USER_PROFILE_READ, "oauth", []],
@@ -398,7 +307,7 @@ describe("AuthorizationService", () => {
     };
     const audit = jest.fn();
     const service = new AuthorizationService(relationships, audit);
-    const principal = dashboardIdentity();
+    const principal = identity();
 
     await expect(
       service.authorize({
@@ -490,7 +399,7 @@ describe("AuthorizationService", () => {
     setAuditSink(async (event) => {
       events.push(event);
     });
-    const principal = dashboardIdentity();
+    const principal = identity("oauth");
     const service = selfService();
 
     await service.authorizeOrThrow({
@@ -512,18 +421,11 @@ describe("AuthorizationService", () => {
     const service = new AuthorizationService({ check: async () => true });
     await expect(
       service.authorizeOrThrow({
-        principal: dashboardIdentity(["ledger.write"]),
+        principal: identity("oauth", "usr_alice", ["ledger.write"]),
         action: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
         resource: userResource("usr_alice"),
       }),
     ).rejects.toThrow('requires the "ledger.admin" scope');
-    await expect(
-      service.authorizeOrThrow({
-        principal: identity("oauth", "usr_alice", ["ledger.admin"]),
-        action: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
-        resource: userResource("usr_alice"),
-      }),
-    ).rejects.toThrow("requires the signed-in first-party Dashboard");
     await expect(
       service.authorizeOrThrow({
         principal: identity("apikey", "usr_alice", ["ledger.admin"]),

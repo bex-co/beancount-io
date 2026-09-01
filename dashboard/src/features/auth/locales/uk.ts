@@ -12,6 +12,10 @@ const ukAuth: Record<string, TranslationEntry> = {
     message: "та",
     description: "Conjunction between terms and privacy links",
   },
+  "auth.authenticating": {
+    message: "Автентифікація...",
+    description: "Message shown during authentication process",
+  },
   "auth.backToSignIn": {
     message: "Назад to Sign in",
     description: "Link text to return to sign in page",

@@ -1,36 +1,27 @@
 import { Lock, BarChart3, Heart } from "lucide-react";
 import { PageSEO } from "@/common/components/seo/page-seo";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useNavigate } from "@tanstack/react-router";
-import { useDashboardOAuthRegister } from "@/features/auth/hooks/use-dashboard-oauth-auth";
+import { useRegisterForm } from "@/features/auth/hooks/use-register-form";
 import { RegisterForm } from "@/features/auth/components/register-form";
-import { Alert, AlertDescription } from "@/common/components/ui/alert";
 
 type RegisterPageProps = {
-  interactionUid: string;
-  next?: string;
   withDefaultLedger?: boolean;
-  interactionExpired?: boolean;
+  inviteSrc?: string;
+  inviteBy?: string;
   onSuccess: (sessionId: string, email: string) => void;
 };
 
 export default function RegisterPage({
-  interactionUid,
-  next,
   withDefaultLedger = false,
-  interactionExpired = false,
+  inviteSrc,
+  inviteBy,
   onSuccess,
 }: RegisterPageProps) {
   const { t } = useTranslations();
-  const navigate = useNavigate();
 
-  const { onSubmit, isLoading, serverError, defaultUsername } =
-    useDashboardOAuthRegister({
-      uid: interactionUid,
-      next,
-      withDefaultLedger,
-      onSuccess,
-    });
+  const { onSubmit, isLoading, serverError, defaultUsername } = useRegisterForm(
+    { withDefaultLedger, inviteSrc, inviteBy, onSuccess },
+  );
 
   const features = [
     {
@@ -73,30 +64,11 @@ export default function RegisterPage({
                 {t("auth.enterDetailsToGetStarted")}
               </p>
             </div>
-            {interactionExpired && (
-              <Alert>
-                <AlertDescription>
-                  {t("auth.sessionExpiredMessage")}
-                </AlertDescription>
-              </Alert>
-            )}
             <RegisterForm
               onSubmit={onSubmit}
               isLoading={isLoading}
               serverError={serverError}
               defaultUsername={defaultUsername}
-              onSignInClick={() =>
-                void navigate({
-                  to: "/auth/login",
-                  search: {
-                    interaction: interactionUid,
-                    next,
-                    reason: interactionExpired
-                      ? "interaction_expired"
-                      : undefined,
-                  },
-                })
-              }
             />
           </div>
         </div>

@@ -25,7 +25,7 @@ describe("cookie-utils", () => {
   });
 
   describe("setAuthCookie", () => {
-    it("sets production cookies as secure and host-only", () => {
+    it("should set cookie with secure=true for https context in production", () => {
       const expireAt = new Date(Date.now() + 60 * 60 * 1000);
       setAuthCookie(mockCtx, "mytoken", expireAt, true);
       expect(mockCtx.cookies.set).toHaveBeenCalledWith(
@@ -36,9 +36,9 @@ describe("cookie-utils", () => {
           secure: true,
           sameSite: "lax",
           path: "/",
+          domain: ".beancount.io",
         }),
       );
-      expect(mockCtx.cookies.set.mock.calls[0][2]).not.toHaveProperty("domain");
     });
 
     it("should set cookie with secure=false for http context in development", () => {
@@ -53,6 +53,7 @@ describe("cookie-utils", () => {
         "mytoken",
         expect.objectContaining({
           secure: false,
+          domain: undefined,
         }),
       );
     });

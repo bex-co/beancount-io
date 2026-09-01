@@ -104,13 +104,11 @@ Prefer runtime logic or typed configuration in `src/config/`. Add a Vite environ
 
 Current variables:
 
-| Variable                             | Required   | Purpose                                                                                               |
-| ------------------------------------ | ---------- | ----------------------------------------------------------------------------------------------------- |
-| `VITE_API_URL`                       | Yes        | Same-origin browser gateway path (`/api-gateway/`) so the host-only OAuth cookie is sent.             |
-| `VITE_SSR_API_URL`                   | Local      | Direct backend URL for local SSR/proxy development.                                                   |
-| `SSR_API_URL`                        | Deployed   | Runtime-only internal backend URL for deployed SSR and the same-origin proxy.                         |
-| `VITE_GA_MEASUREMENT_ID`             | No         | Per-environment GA4 stream; unset disables analytics. Non-production builds use debug mode.           |
-| `DASHBOARD_OAUTH_TRANSACTION_SECRET` | Production | Runtime-only HMAC key for the Dashboard OAuth transaction cookie; never expose with a `VITE_` prefix. |
+| Variable                 | Required | Purpose                                                                                     |
+| ------------------------ | -------- | ------------------------------------------------------------------------------------------- |
+| `VITE_API_URL`           | Yes      | Public GraphQL/API gateway URL used by the browser.                                         |
+| `VITE_SSR_API_URL`       | No       | Internal URL for SSR; falls back to `VITE_API_URL`.                                         |
+| `VITE_GA_MEASUREMENT_ID` | No       | Per-environment GA4 stream; unset disables analytics. Non-production builds use debug mode. |
 
 When adding one, update `src/vite-env.d.ts`, the typed config, `.env.example`, `README.md`, and any applicable deployment definitions (`../deploy/docker-mac/` and root `bex.yaml`). Never put a secret in a `VITE_*` variable.
 

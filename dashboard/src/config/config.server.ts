@@ -31,28 +31,8 @@ function resolveSsrApiUrl(): string {
 export interface ServerConfig {
   /** API base URL the SSR server dials for its own data fetching. */
   apiUrl: string;
-  /**
-   * HMAC key for the short-lived PKCE transaction cookie. Read only at request
-   * time so the same production image can receive it from the deployment
-   * secret store when the container starts.
-   */
-  oauthTransactionSecret(): string;
-}
-
-function resolveOAuthTransactionSecret(): string {
-  const value = process.env.DASHBOARD_OAUTH_TRANSACTION_SECRET?.trim();
-  if (value && Buffer.byteLength(value, "utf8") >= 32) return value;
-  if (process.env.NODE_ENV === "production") {
-    throw new Error(
-      "DASHBOARD_OAUTH_TRANSACTION_SECRET must contain at least 32 bytes",
-    );
-  }
-  // Local-only fallback. A restart invalidates an in-flight authorization, but
-  // no durable credential; deployed environments must use the branch above.
-  return "beancount-dashboard-local-oauth-transaction-only";
 }
 
 export const serverConfig: ServerConfig = {
   apiUrl: resolveSsrApiUrl(),
-  oauthTransactionSecret: resolveOAuthTransactionSecret,
 };

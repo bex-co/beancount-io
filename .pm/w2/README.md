@@ -24,9 +24,6 @@
 - [ ] **m18** — Centralized authz for ledger administration and collaboration (8 tasks) ← from user decision 2026-08-28 after m17
 - [ ] **m19** — Centralized authz for bank connections and transaction sync (8 tasks) ← from user decision 2026-08-28 after m18
 - [ ] **m20** — Retire distributed authorization gates after domain cutovers (8 tasks) ← from user decision 2026-08-28 after m19
-- [x] **m21** — Dashboard OAuth 2.1 migration with a one-year first-party access token (10 tasks; phase 1, continued by m23) ← from user request 2026-08-30
-- [ ] **m22** — Replace personal API keys with OAuth credentials for CLI, agents, and workloads (11 tasks) ← from user request 2026-08-30
-- [x] **m23** — Complete Dashboard OAuth-only login and retire legacy session issuance (11 tasks) ← continuation of m21 after live development validation 2026-08-30
 
 ## Centralized-authz migration contract for m14–m20
 

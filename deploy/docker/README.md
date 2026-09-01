@@ -40,9 +40,7 @@ Edit `.env`:
 
 1. Set `APP_DOMAIN`, `API_DOMAIN`, `GIT_DOMAIN`, and `ACME_EMAIL`.
 2. Replace every `change-me` value. `openssl rand -hex 32` produces values that
-   are both strong and safe inside the generated PostgreSQL URI. Keep
-   `DASHBOARD_OAUTH_TRANSACTION_SECRET` stable across dashboard replicas so an
-   in-flight PKCE transaction can finish.
+   are both strong and safe inside the generated PostgreSQL URI.
 3. Configure optional integrations only when you need them. The committed
    BlockEden placeholder lets the API boot but does not enable AI.
 
@@ -67,11 +65,6 @@ Once the health checks pass, open:
 | Dashboard | `https://<APP_DOMAIN>` |
 | API | `https://<API_DOMAIN>/api-gateway/` |
 | Gitea | `https://<GIT_DOMAIN>` |
-
-The Dashboard origin is also the browser API and OAuth front door. Its
-same-origin `/api-gateway/*` proxy reaches backend-v2 internally, and the
-registered first-party callback is
-`https://<APP_DOMAIN>/oauth/dashboard/callback`.
 
 If startup stops at either one-shot service, inspect it directly:
 

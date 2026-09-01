@@ -259,9 +259,3 @@ External:
 ## Amendments
 
 - **2026-08-28 — `Query.userProfile` moved from `session-only` to `read`.** The native app resolves the signed-in user with this query right after the OAuth code exchange (it treats access tokens as opaque by design), and hosted enforcement refused it, which made every native sign-in fail after Approve. D3's wall is about account lifecycle, billing, and credential minting; a token holder reading their own profile is none of those, and the `ledger.read` scope every native and MCP grant carries is the right key. Counts above are updated (read 56, session-only 33, denominator 105).
-- **2026-08-30 — exact first-party Dashboard OAuth.** ADR 0011 admits only the
-  verified `beancount-dashboard` OAuth client (plus legacy sessions during the
-  migration window) to lifecycle, profile-management, billing, API-key-create,
-  and credential-approval ceremonies. That is not delegated REST/MCP parity:
-  Mobile, DCR/MCP, API keys, and arbitrary OAuth clients remain denied. The
-  executable deferred-gap ratchet is now REST 47 / MCP 58.

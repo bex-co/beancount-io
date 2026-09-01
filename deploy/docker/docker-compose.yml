@@ -73,7 +73,7 @@ services:
       dockerfile: Dockerfile
       args:
         # Browser URL is compiled into the client bundle.
-        VITE_API_URL: https://${APP_DOMAIN:?Set APP_DOMAIN in .env}/api-gateway/
+        VITE_API_URL: https://${API_DOMAIN:?Set API_DOMAIN in .env}/api-gateway/
         # SSR stays on the private Compose network.
         VITE_SSR_API_URL: http://backend-v2:4104/api-gateway/
         VITE_GA_MEASUREMENT_ID: ${VITE_GA_MEASUREMENT_ID:-}
@@ -85,8 +85,6 @@ services:
       - private
     expose:
       - "3000"
-    environment:
-      DASHBOARD_OAUTH_TRANSACTION_SECRET: ${DASHBOARD_OAUTH_TRANSACTION_SECRET:?Set DASHBOARD_OAUTH_TRANSACTION_SECRET in .env}
     depends_on:
       backend-v2:
         condition: service_healthy

@@ -138,7 +138,7 @@ export const REST_FRAGMENTS: readonly RestFragment[] = [
     feature: "oauth",
     gate: "outside",
     register: (router, { layers, config }) =>
-      setOidcRoutes(router, layers, config, layers.services.auth),
+      setOidcRoutes(router, layers, config),
   },
   {
     feature: "well-known",

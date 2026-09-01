@@ -118,8 +118,8 @@ Exactly what ships now. The auth + activation events are in the typed registry; 
 
 | Event | GA4 type | Fire at (file → handler) | Params | Question it answers |
 |---|---|---|---|---|
-| `sign_up` | recommended | `features/auth/hooks/use-dashboard-oauth-auth.ts → useDashboardOAuthOtp` (after the OAuth-bound OTP succeeds) | `method` | Verified signups by method/language; top of funnel |
-| `login` | recommended | `features/auth/hooks/use-dashboard-oauth-auth.ts → useDashboardOAuthLogin` (password) | `method` (`"password"`) | DAU/WAU/MAU, retention |
+| `sign_up` | recommended | `features/auth/hooks/use-otp-form.ts → onSubmit` (after `VerifySignUpOtp` succeeds) | `method` | Verified signups by method/language; top of funnel |
+| `login` | recommended | `features/auth/hooks/use-login-form.ts → onSubmit` (password) | `method` (`"password"`) | DAU/WAU/MAU, retention |
 | `directive_added` | custom | `features/journal/components/new-directive-dialog/{transaction,balance,note,open-account}-form.tsx` — each form's mutation-success branch (next to `onSuccess?.()`) | `directive_type` (`transaction \| balance \| note \| open`) | Activation: do users add directives? Which kinds? (filter `directive_type=transaction` for transactions specifically) |
 | `file_edited` | custom | `features/ledger-editor/file-editor/components/ledger-file-view/index.tsx → handleSaveFile` (save mutation `onCompleted`) | — (no path sent, see §4) | Engagement: do users edit raw ledger files directly? |
 | `ai_agent_message_sent` | custom | `features/ai-agent/pages/agent/page.tsx` — `handleSubmit` (chat-input send, `surface=chat_input`) and the `?q=` auto-submit effect (`surface=deep_link`); NOT the SDK's post-approval auto-continuation | `has_attachment`, `surface` (no message text / file content, see §4) | Engagement: how often do users chat with the agent? (frequency per user / session; slice `has_attachment` for file-processing use) |
@@ -142,9 +142,9 @@ Exactly what ships now. The auth + activation events are in the typed registry; 
 > failure category are sufficient to measure adoption and reliability without
 > exposing financial context or creating high-cardinality analytics data.
 
-**Why `sign_up` fires at OTP verification, not form submit.** The account is only confirmed after the email OTP step completes the active OAuth interaction. Firing at form submit would inflate the signup count with abandoned/unverified attempts — the same metric-hygiene reasoning behind suppressing automatic page views. The register-form submit can be added later as a separate funnel-entry event (`sign_up_started`) if we want drop-off between submit and verification.
+**Why `sign_up` fires at OTP verification, not form submit.** The account is only confirmed after the email OTP step (`VerifySignUpOtp` returns the session token). Firing at form submit would inflate the signup count with abandoned/unverified attempts — the same metric-hygiene reasoning behind suppressing automatic page views. The register-form submit can be added later as a separate funnel-entry event (`sign_up_started`) if we want drop-off between submit and verification.
 
-**Scope note.** The Dashboard's password and signup events are emitted when their first-party credential checks complete the OAuth interaction; the generic OAuth callback only exchanges the authorization code and does not duplicate those events. When social/SSO login is instrumented, extend `AuthMethod` (for example, `"google"`) and emit `login` from the authentication decision point, not the code callback.
+**Scope note.** v1 instruments only the password path, so `AuthMethod` is just `"password"` and the OAuth / one-time-token callback (`auth-callback-page`) is intentionally **not** tracked yet. When social/SSO login is instrumented, extend `AuthMethod` (e.g. `"google"`, `"one_time_token"`) and fire `login` there — noting the callback can't reliably distinguish a new OAuth account from a returning one, so it should emit `login`, not `sign_up`, unless the backend signals "new user".
 
 ### 6.1 page_view — manual only, automatic collection disabled
 

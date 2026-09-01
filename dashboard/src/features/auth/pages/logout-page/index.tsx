@@ -26,9 +26,7 @@ export default function LogoutPage() {
       // Wait a bit for smooth animation
       await new Promise((resolve) => setTimeout(resolve, 800));
 
-      // Best-effort legacy cleanup. This revokes a database-backed legacy
-      // session when present; the following OAuth logout route owns the
-      // self-contained Dashboard cookie and provider browser state.
+      // Call backend logout mutation to clear httpOnly cookie and revoke token
       await logoutMutation().catch((err) => {
         // Non-blocking: even if this fails, continue with local cleanup
         console.warn("Backend logout request failed:", err);
@@ -45,7 +43,7 @@ export default function LogoutPage() {
       await new Promise((resolve) => setTimeout(resolve, 600));
 
       // Replacing the document clears Apollo and React state without resetting
-      // live authenticated queries while local authority is being removed.
+      // live authenticated queries after the backend has revoked the session.
       redirectToLoginAfterLogout();
     };
 

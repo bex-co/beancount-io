@@ -7,10 +7,6 @@ import type {
 } from "@/features/auth/data/cli-auth-session-model/types";
 import type { Identity } from "@/server/api/identity";
 import { BadUserInputError, ForbiddenError } from "@/shared/errors";
-import {
-  DASHBOARD_CLIENT_ID,
-  MOBILE_CLIENT_ID,
-} from "@/features/oauth/data/config";
 
 const session = (overrides: Partial<CliAuthSession> = {}): CliAuthSession => ({
   id: "cli-session-1",
@@ -29,21 +25,13 @@ const browserIdentity: Identity = {
 const scopedIdentity = (
   method: "apikey" | "oauth",
   scopes: string[] = ["ledger.write"],
-  oauthClientId?: string,
 ): Identity => ({
   userId: "user-1",
   method,
   scopes: new Set(scopes),
   tokenId: `${method}-1`,
-  ...(oauthClientId ? { oauthClientId } : {}),
   capabilityExempt: false,
 });
-
-const dashboardIdentity = scopedIdentity(
-  "oauth",
-  ["ledger.read", "ledger.write", "ledger.admin"],
-  DASHBOARD_CLIENT_ID,
-);
 
 describe("CliAuthService", () => {
   let service: CliAuthService;
@@ -105,17 +93,6 @@ describe("CliAuthService", () => {
       );
     });
 
-    it("admits the exact Dashboard OAuth client", async () => {
-      const expireAt = new Date("2026-01-01T01:00:00.000Z");
-      mockCliAuthSession.findById.mockResolvedValue(session());
-      mockJwt.create.mockResolvedValue({ token: "jwt-token", expireAt });
-
-      await service.authorizeSession("cli-session-1", dashboardIdentity);
-
-      expect(mockJwt.create).toHaveBeenCalledWith(mockPostgresDb, "user-1");
-      expect(mockCliAuthSession.authorize).toHaveBeenCalled();
-    });
-
     it("throws when the session does not exist", async () => {
       mockCliAuthSession.findById.mockResolvedValue(null);
 
@@ -137,21 +114,14 @@ describe("CliAuthService", () => {
       expect(mockJwt.create).not.toHaveBeenCalled();
     });
 
-    it.each([
-      ["API key", scopedIdentity("apikey", ["ledger.admin"])],
-      [
-        "dynamic OAuth",
-        scopedIdentity("oauth", ["ledger.admin"], "dcr-client"),
-      ],
-      [
-        "Mobile OAuth",
-        scopedIdentity("oauth", ["ledger.admin"], MOBILE_CLIENT_ID),
-      ],
-    ] as const)(
+    it.each(["apikey", "oauth"] as const)(
       "rejects a scoped %s credential before minting a JWT",
-      async (_name, principal) => {
+      async (method) => {
         await expect(
-          service.authorizeSession("cli-session-1", principal),
+          service.authorizeSession(
+            "cli-session-1",
+            scopedIdentity(method, ["ledger.write", "ledger.admin"]),
+          ),
         ).rejects.toThrow(ForbiddenError);
 
         expect(mockCliAuthSession.findById).not.toHaveBeenCalled();
@@ -181,14 +151,6 @@ describe("CliAuthService", () => {
       expect(mockCliAuthSession.deny).toHaveBeenCalledWith("cli-session-1");
     });
 
-    it("allows the exact Dashboard OAuth client to deny a pending session", async () => {
-      mockCliAuthSession.findById.mockResolvedValue(session());
-
-      await service.denySession("cli-session-1", dashboardIdentity);
-
-      expect(mockCliAuthSession.deny).toHaveBeenCalledWith("cli-session-1");
-    });
-
     it("throws when the session is not pending", async () => {
       mockCliAuthSession.findById.mockResolvedValue(
         session({ status: "denied" }),
@@ -200,24 +162,17 @@ describe("CliAuthService", () => {
       expect(mockCliAuthSession.deny).not.toHaveBeenCalled();
     });
 
-    it.each([
-      ["API key", scopedIdentity("apikey")],
-      [
-        "dynamic OAuth",
-        scopedIdentity("oauth", ["ledger.admin"], "dcr-client"),
-      ],
-      [
-        "Mobile OAuth",
-        scopedIdentity("oauth", ["ledger.admin"], MOBILE_CLIENT_ID),
-      ],
-    ] as const)("rejects a scoped %s credential", async (_name, principal) => {
-      await expect(
-        service.denySession("cli-session-1", principal),
-      ).rejects.toThrow(ForbiddenError);
+    it.each(["apikey", "oauth"] as const)(
+      "rejects a scoped %s credential",
+      async (method) => {
+        await expect(
+          service.denySession("cli-session-1", scopedIdentity(method)),
+        ).rejects.toThrow(ForbiddenError);
 
-      expect(mockCliAuthSession.findById).not.toHaveBeenCalled();
-      expect(mockCliAuthSession.deny).not.toHaveBeenCalled();
-    });
+        expect(mockCliAuthSession.findById).not.toHaveBeenCalled();
+        expect(mockCliAuthSession.deny).not.toHaveBeenCalled();
+      },
+    );
   });
 
   describe("getSessionStatus", () => {

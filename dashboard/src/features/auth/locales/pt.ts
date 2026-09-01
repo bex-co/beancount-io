@@ -12,6 +12,10 @@ const ptAuth: Record<string, TranslationEntry> = {
     message: "e",
     description: "Conjunction between terms and privacy links",
   },
+  "auth.authenticating": {
+    message: "Autenticando...",
+    description: "Message shown during authentication process",
+  },
   "auth.backToSignIn": {
     message: "Voltar ao login",
     description: "Link text to return to sign in page",

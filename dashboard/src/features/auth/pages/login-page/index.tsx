@@ -1,20 +1,36 @@
 import { useNavigate, useSearch } from "@tanstack/react-router";
+import { useApolloClient } from "@apollo/client/react";
 import { PageSEO } from "@/common/components/seo/page-seo";
+import { decodeLedgerId } from "@/common/lib/utils/encode";
+import { getUserDefaultLedger } from "@/common/lib/utils/ledger-utils";
+import { getSafeRedirectPath } from "@/common/lib/auth/auth";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { useDashboardOAuthLogin } from "@/features/auth/hooks/use-dashboard-oauth-auth";
+import { useLoginForm } from "@/features/auth/hooks/use-login-form";
 import { LoginForm } from "@/features/auth/components/login-form";
 import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
+import { postLegacyMobileAuthToken } from "@/common/providers/react-native-bridge-provider/legacy-auth-bridge";
 
 export default function LoginPage() {
+  const navigate = useNavigate();
   const search = useSearch({ from: "/auth/login/" });
   const { t } = useTranslations();
-  const navigate = useNavigate();
+  const client = useApolloClient();
 
-  const { onSubmit, isLoading, serverError } = useDashboardOAuthLogin(
-    search.interaction ?? "",
-    search.next,
-  );
+  const { onSubmit, isLoading, serverError } = useLoginForm({
+    onSuccess: async (token) => {
+      postLegacyMobileAuthToken(token.accessToken, "password");
+      const defaultLedger = await getUserDefaultLedger(client);
+      if (defaultLedger) {
+        const { ledgerOwner, ledgerName } = decodeLedgerId(defaultLedger.id);
+        void navigate({ to: `/ledger/${ledgerOwner}/${ledgerName}` });
+      } else {
+        void navigate({
+          to: getSafeRedirectPath(search.next) ?? "/auth/welcome",
+        });
+      }
+    },
+  });
 
   return (
     <>
@@ -30,8 +46,7 @@ export default function LoginPage() {
             </h1>
             <p className="text-muted-foreground">{t("auth.signInToAccount")}</p>
           </div>
-          {(search.reason === "expired" ||
-            search.reason === "interaction_expired") && (
+          {search.reason === "expired" && (
             <Alert>
               <AlertDescription>
                 {t("auth.loginSessionExpiredMessage")}
@@ -42,19 +57,6 @@ export default function LoginPage() {
             onSubmit={onSubmit}
             isLoading={isLoading}
             serverError={serverError}
-            onRegisterClick={() =>
-              void navigate({
-                to: "/auth/sign-up",
-                search: {
-                  interaction: search.interaction ?? "",
-                  next: search.next,
-                  reason:
-                    search.reason === "interaction_expired"
-                      ? search.reason
-                      : undefined,
-                },
-              })
-            }
           />
         </div>
       </AuthPageLayout>

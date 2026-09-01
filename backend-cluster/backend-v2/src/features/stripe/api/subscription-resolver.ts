@@ -192,7 +192,7 @@ export class SubscriptionResolver {
   @Authenticated()
   @Query(() => CustomerSubscriptionStatus, {
     description:
-      "Returns your subscription status. Requires the signed-in first-party Dashboard.",
+      "Returns your subscription status. Requires a full signed-in session.",
   })
   async subscriptionStatus(
     @Ctx() context: IContext,
@@ -207,7 +207,7 @@ export class SubscriptionResolver {
   @Authenticated()
   @Mutation(() => SubscriptionSessionResult, {
     description:
-      "Creates a Stripe-hosted checkout session. Requires the signed-in first-party Dashboard.",
+      "Creates a Stripe-hosted checkout session. Requires a full signed-in session.",
   })
   async createSubscriptionSession(
     @Arg("clientId") clientId: string,
@@ -224,7 +224,7 @@ export class SubscriptionResolver {
   @Authenticated()
   @Mutation(() => SubscriptionSessionResult, {
     description:
-      "Creates a Stripe-hosted customer portal session. Requires the signed-in first-party Dashboard.",
+      "Creates a Stripe-hosted customer portal session. Requires a full signed-in session.",
   })
   async createStripePortalSession(
     @Arg("clientId") clientId: string,
@@ -239,7 +239,7 @@ export class SubscriptionResolver {
   @Authenticated()
   @Mutation(() => SubscriptionActionResult, {
     description:
-      "Schedules your subscription to cancel. Requires the signed-in first-party Dashboard.",
+      "Schedules your subscription to cancel. Requires a full signed-in session.",
   })
   async cancelSubscription(
     @Arg("subscriptionId") subscriptionId: string,
@@ -256,7 +256,7 @@ export class SubscriptionResolver {
   @Authenticated()
   @Mutation(() => SubscriptionActionResult, {
     description:
-      "Resumes your subscription. Requires the signed-in first-party Dashboard.",
+      "Resumes your subscription. Requires a full signed-in session.",
   })
   async resumeSubscription(
     @Arg("subscriptionId") subscriptionId: string,
@@ -273,7 +273,7 @@ export class SubscriptionResolver {
   @Authenticated()
   @Mutation(() => UpgradeSubscriptionResult, {
     description:
-      "Upgrades your subscription. Requires the signed-in first-party Dashboard.",
+      "Upgrades your subscription. Requires a full signed-in session.",
   })
   async upgradeSubscription(
     @Arg("clientId") clientId: string,

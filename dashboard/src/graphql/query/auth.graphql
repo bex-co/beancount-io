@@ -53,6 +53,20 @@ query GetAiCfoUsage {
   }
 }
 
+mutation SignInWithOneTimeToken($token: String!) {
+  signInWithOneTimeToken(token: $token) {
+    token
+    expireAt
+  }
+}
+
+mutation RefreshToken {
+  refreshToken {
+    token
+    expireAt
+  }
+}
+
 mutation DeleteAccount {
   deleteAccount
 }

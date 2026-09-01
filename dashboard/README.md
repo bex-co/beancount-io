@@ -37,7 +37,7 @@ Part of the [`beancount-io`](https://github.com/bex-co/beancount-io) monorepo.
 
 - Node.js ≥ 22
 - Yarn 4 via Corepack (`corepack enable`)
-- A running Beancount.io backend for the Dashboard server's `SSR_API_URL`
+- A running Beancount.io backend (GraphQL API gateway) for `VITE_API_URL` to point at
 
 ## Getting started
 
@@ -53,13 +53,11 @@ yarn dev               # http://localhost:5173
 Copy `.env.example` to `.env` and fill in values. All client-side variables must
 be prefixed with `VITE_`.
 
-| Variable                             | Required   | Purpose                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ------------------------------------ | ---------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `VITE_API_URL`                       | Yes        | Same-origin browser gateway path; use `/api-gateway/` so the host-only OAuth cookie reaches every CSR request.                                                                                                                                                                                                                                                                                               |
-| `VITE_SSR_API_URL`                   | Local      | Direct backend URL used by local SSR/proxy development.                                                                                                                                                                                                                                                                                                                                                      |
-| `SSR_API_URL`                        | Deployed   | Runtime-only internal backend URL used by the deployed SSR server and same-origin proxy.                                                                                                                                                                                                                                                                                                                     |
-| `VITE_GA_MEASUREMENT_ID`             | No         | GA4 Measurement ID for this environment's analytics data stream. Use a **separate stream per environment** (set the dev/staging stream's ID locally and the production stream's ID in prod). When unset, analytics is disabled and no GA script loads. Non-production builds send events with GA4 `debug_mode` so you can validate instrumentation in GA4 DebugView before it reaches the production stream. |
-| `DASHBOARD_OAUTH_TRANSACTION_SECRET` | Production | Server-only HMAC key for the ten-minute state/PKCE transaction cookie. Generate at least 32 bytes; never prefix it with `VITE_`.                                                                                                                                                                                                                                                                             |
+| Variable                 | Required | Purpose                                                                                                                                                                                                                                                                                                                                                                                                      |
+| ------------------------ | -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `VITE_API_URL`           | Yes      | Public API Gateway URL used by the browser.                                                                                                                                                                                                                                                                                                                                                                  |
+| `VITE_SSR_API_URL`       | No       | Internal API URL for the SSR server. Defaults to `VITE_API_URL`.                                                                                                                                                                                                                                                                                                                                             |
+| `VITE_GA_MEASUREMENT_ID` | No       | GA4 Measurement ID for this environment's analytics data stream. Use a **separate stream per environment** (set the dev/staging stream's ID locally and the production stream's ID in prod). When unset, analytics is disabled and no GA script loads. Non-production builds send events with GA4 `debug_mode` so you can validate instrumentation in GA4 DebugView before it reaches the production stream. |
 
 ## Scripts
 
@@ -90,46 +88,18 @@ The dashboard serves the human interaction pages for backend-v2's authorization
 server. `/oauth/mobile-consent` reuses the normal login, registration, and OTP
 forms, then shows an account-wide native-app approval; it never posts a bearer
 token to a WebView. The backend issuer redirects here through backend-v2's
-`DASHBOARD_URL`. The Dashboard, authorization server, discovery documents, and
-browser API share that one public front door in every environment; server-side
-Dashboard requests reach backend-v2 through the internal `SSR_API_URL`.
+`DASHBOARD_URL`, which must resolve to the same hostname as the issuer —
+backend-v2 refuses to start otherwise, because the interaction cookie the
+authorization server sets would not be readable from a different host. Keep the
+dashboard and issuer behind one HTTPS front door in production; the documented
+loopback stack is the development exception, where both sides are `localhost`
+on different ports and cookies are shared regardless of port.
 
-## Dashboard OAuth session
-
-The Dashboard is the static public OAuth client `beancount-dashboard`. Password,
-signup OTP, and magic-link entry points begin authorization code + S256 PKCE
-before accepting credentials. Password verification, one-time-link consumption,
-and OTP account creation finish the exact Dashboard interaction directly; none
-issues an intermediate legacy session. Credential forms POST through the
-interaction-scoped Dashboard consent route, which validates the signed HttpOnly
-transaction before forwarding to backend-v2. The callback requests the application
-resource `<issuer>/v1`, exchanges the code server-side, and stores the access
-token only in the `Secure`, `HttpOnly`, `SameSite=Lax`
-`authSess:beancount.io` cookie. Browser JavaScript, storage, URLs, analytics,
-HTML, and logs never receive that token or the PKCE verifier.
-
-Already-issued valid legacy Dashboard tokens remain accepted by the identity
-resolver until their own expiry and may be silently upgraded on a protected
-route. They are never renewed or reissued, and a failed upgrade does not delete
-the still-valid credential. New unauthenticated Dashboard login cannot reach
-that compatibility verifier as an issuer.
-
-The Dashboard token lasts exactly 365 days and has no refresh token. Logging out
-clears this browser's cookie and authorization-server browser state; it cannot
-revoke a copied self-contained token before its expiry. For a confirmed token
-compromise, operators must rotate the OAuth signing key, remove the compromised
-public key from the accepted JWKS, redeploy, and review authorization audit
-events. This invalidates every token signed only by that key.
-
-Deploy the Dashboard and OAuth issuer behind one public origin. Browser
-GraphQL, REST, agent, `/api-gateway/oauth/*`, and RFC well-known requests enter
-through the Dashboard's same-origin proxy and reach backend-v2 through the
-runtime `SSR_API_URL`. For an issuer `https://books.example/beancount`, the
-registered callback is
-`https://books.example/beancount/oauth/dashboard/callback`; the public proxy
-must preserve that prefix. See
-[`ADR 0011`](../docs/adrs/ADR011-dashboard-oauth.md) for migration,
-credential-boundary, and revocation semantics.
+The older login/signup `postMessage` bridge remains solely for already-released
+mobile versions. It emits a bounded, token-free
+`legacy_mobile_auth_completed` retirement signal only when the React Native
+WebView object is present. See the mobile README for the minimum-version and
+30-day-zero-use removal gate.
 
 ## Exporting financial statements
 

@@ -1,9 +1,4 @@
-import {
-  hasRequiredScope,
-  isFirstPartyInteractiveIdentity,
-  type ApiScope,
-  type Identity,
-} from "./identity";
+import { hasRequiredScope, type ApiScope, type Identity } from "./identity";
 import { ForbiddenError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import {
@@ -28,11 +23,9 @@ const scopeLogger = logger.child({ module: "op-class" });
  *   `ledger.admin`. `admin` is the ledger's own control plane: its existence,
  *   its collaborators, its keys, its bank bindings — and the reads of those,
  *   because an access-control list is not ledger content.
- * - `session-only` is the historical catalog name for an op no delegated scope
- *   alone can unlock. The exact first-party Dashboard OAuth client and valid
- *   legacy sessions can reach it; Mobile, DCR/MCP, API keys, and arbitrary
- *   issuer-signed clients cannot. The vocabulary stays three ledger scopes
- *   wide, so billing and browser-only ceremonies have no scope that describes
+ * - `session-only` is the honest name for an op no scope alone can unlock. The
+ *   vocabulary is deliberately three ledger scopes wide, so billing and the
+ *   remaining browser-only identity ceremonies have no scope that describes
  *   them.
  *   Filing them under `admin` would mean a token granted "manage my ledger"
  *   could also delete the account — so they get a class that never matches.
@@ -1509,10 +1502,9 @@ export function evaluateScope(
   if (!identity) {
     return { ...base, allowed: true };
   }
-  // A legacy session or the exact first-party Dashboard OAuth client means the
-  // person is driving the product directly. Other issuer-signed OAuth clients
-  // remain delegated credentials even when they carry every ledger scope.
-  if (isFirstPartyInteractiveIdentity(identity)) {
+  // A browser session is full-power by construction — the user is driving the
+  // product directly — so narrowing it by scope would express nothing.
+  if (identity.capabilityExempt) {
     return { ...base, allowed: true };
   }
   if (opClass === "public") {

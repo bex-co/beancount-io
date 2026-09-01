@@ -26,6 +26,12 @@ export default function RegisterFlow() {
     setStep("otp");
   };
 
+  // Handle successful OTP verification
+  const handleOtpSuccess = () => {
+    // Navigation to welcome page will be handled by SignUpOtpPage
+    // This component just manages the flow state
+  };
+
   // Handle going back to registration form
   const handleBackToRegister = () => {
     setStep("register");
@@ -35,10 +41,9 @@ export default function RegisterFlow() {
   if (step === "otp" && registrationData) {
     return (
       <SignUpOtpPage
-        interactionUid={search.interaction ?? ""}
-        next={search.next}
         sessionId={registrationData.sessionId}
         email={registrationData.email}
+        onSuccess={handleOtpSuccess}
         onBack={handleBackToRegister}
       />
     );
@@ -46,10 +51,9 @@ export default function RegisterFlow() {
 
   return (
     <RegisterPage
-      interactionUid={search.interaction ?? ""}
-      next={search.next}
       withDefaultLedger={search.withDefaultLedger ?? false}
-      interactionExpired={search.reason === "interaction_expired"}
+      inviteSrc={search.src}
+      inviteBy={search.by}
       onSuccess={handleRegisterSuccess}
     />
   );

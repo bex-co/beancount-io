@@ -1,6 +1,5 @@
 import { ErrorLink } from "@apollo/client/link/error";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { dashboardAuthLoginHref } from "@/features/oauth/dashboard-oauth";
 
 /**
  * These mutations return UNAUTHENTICATED as an expected outcome (e.g. an
@@ -8,7 +7,13 @@ import { dashboardAuthLoginHref } from "@/features/oauth/dashboard-oauth";
  * *current* session just died — redirecting on them would loop back into
  * the page we're trying to leave.
  */
-const AUTH_FLOW_OPERATIONS = new Set(["SignIn", "Logout", "VerifySignUpOtp"]);
+const AUTH_FLOW_OPERATIONS = new Set([
+  "SignIn",
+  "SignInWithOneTimeToken",
+  "RefreshToken",
+  "Logout",
+  "VerifySignUpOtp",
+]);
 
 /**
  * These nullable queries ask whether there is a current viewer. They also run
@@ -47,7 +52,7 @@ export function shouldRedirectForUnauthenticatedError(
 }
 
 /**
- * Catches UNAUTHENTICATED GraphQL errors (expired or invalid auth cookie) from
+ * Catches UNAUTHENTICATED GraphQL errors (expired/revoked JWT cookie) from
  * authenticated queries and mutations *mounted on the client* and bounces the
  * user to the login page instead of letting the error surface as a generic
  * "something went wrong" screen. Nullable identity probes are intentionally
@@ -73,5 +78,7 @@ export const authErrorLink = new ErrorLink(({ error, operation }) => {
 
   redirecting = true;
   const next = window.location.pathname + window.location.search;
-  window.location.assign(dashboardAuthLoginHref(next));
+  window.location.assign(
+    `/auth/login?next=${encodeURIComponent(next)}&reason=expired`,
+  );
 });

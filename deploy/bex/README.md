@@ -61,9 +61,8 @@ all, so a fresh deploy cannot touch ledger data by accident.
 | `BACKEND_V2_ADMIN_TOKEN` | ledger | empty ⇒ the directive-limit check fails **open** |
 | `BLOCKEDEN_ACCESS_KEY` | api | seeded with the `.env.example` placeholder so the service boots; replace for real AI features |
 
-`AUTH_SECRET`, `COOKIE_SECRETS`, `DASHBOARD_OAUTH_TRANSACTION_SECRET`, and
-`METRICS_API_TOKEN` are `generateValue` and need no action. Gitea admin user
-creation is still a one-time
+`AUTH_SECRET`, `COOKIE_SECRETS`, and `METRICS_API_TOKEN` are `generateValue`
+and need no action. Gitea admin user creation is still a one-time
 `gitea admin user create` on whatever host runs Gitea.
 
 ## Things that bit us, so they don't bite you again

@@ -1,4 +1,5 @@
 import {
+  assertOAuthInteractionHost,
   config,
   getDevelopmentPremiumUserIds,
   getOAuthPublicUrl,
@@ -113,9 +114,19 @@ describe("config", () => {
       ).toThrow(Error);
     });
 
-    it("uses the Dashboard as the authorization issuer and interaction origin", () => {
-      expect(config.oauth.issuer).toBe(config.dashboard.url);
-      expect(config.oauth.interactionUrl).toBe(config.dashboard.url);
+    it("requires interaction pages to share the issuer hostname", () => {
+      expect(() =>
+        assertOAuthInteractionHost(
+          "http://localhost:42601",
+          "http://localhost:42600",
+        ),
+      ).not.toThrow();
+      expect(() =>
+        assertOAuthInteractionHost(
+          "https://auth.example.test",
+          "https://dashboard.example.test",
+        ),
+      ).toThrow(Error);
     });
   });
 

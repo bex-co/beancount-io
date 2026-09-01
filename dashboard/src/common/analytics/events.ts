@@ -81,7 +81,7 @@ export interface AnalyticsEvents {
   // --- Acquisition (GA4 recommended names) ---
   /**
    * Account created. Fired once registration actually completes — i.e. after
-   * email OTP verification (use-dashboard-oauth-auth.ts), NOT at form submit — so the metric
+   * email OTP verification (use-otp-form.ts), NOT at form submit — so the metric
    * counts verified accounts and is not inflated by abandoned attempts.
    */
   sign_up: { method: AuthMethod };

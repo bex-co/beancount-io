@@ -12,6 +12,10 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "a",
     description: "Conjunction between terms and privacy links",
   },
+  "auth.authenticating": {
+    message: "Overujem...",
+    description: "Message shown during authentication process",
+  },
   "auth.backToSignIn": {
     message: "Späť na prihlásenie",
     description: "Link text to return to sign in page",

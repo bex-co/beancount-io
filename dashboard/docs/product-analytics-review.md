@@ -83,9 +83,9 @@ Below are the events that should exist, mapped to the exact handler where each s
 ### Acquisition & onboarding
 | Recommended event | Fire at | Why it matters |
 |---|---|---|
-| `sign_up` | OAuth-bound OTP success in `use-dashboard-oauth-auth.ts` | Top of every funnel. Distinguish `sign_up_started` vs `sign_up` (verified). |
-| `login` | OAuth-bound password success in `use-dashboard-oauth-auth.ts` | Returning-user signal; powers DAU/WAU/MAU and retention. |
-| `sign_up_otp_submitted` / `_failed` | `use-dashboard-oauth-auth.ts` | Email-verification drop-off is a classic silent funnel killer. |
+| `sign_up` | `use-register-form.ts:onSubmit` (~L36); OTP verify `use-otp-form.ts:onSubmit` (~L25) | Top of every funnel. Distinguish `sign_up_started` vs `sign_up` (verified). |
+| `login` | `use-login-form.ts:onSubmit` (~L15); OAuth `auth-callback-page/index.tsx` (~L35) | Returning-user signal; powers DAU/WAU/MAU and retention. |
+| `sign_up_otp_submitted` / `_failed` | `use-otp-form.ts` | Email-verification drop-off is a classic silent funnel killer. |
 | `password_reset_requested` / `password_reset_completed` | `forgot-password-page` (~L100), `reset-password-page` (~L100) | Account-recovery friction = lost reactivations. |
 | `onboarding_welcome_viewed` | `welcome-page/index.tsx` | Start of the activation funnel (§8). |
 
@@ -176,8 +176,8 @@ GA4 gives special reporting treatment (and Google Ads / predictive-audience elig
 
 | GA4 recommended event | Map to product action | Handler |
 |---|---|---|
-| `sign_up` | Account creation (with `method`: password/google/github) | OAuth-bound account-verification handler |
-| `login` | Returning sign-in (with `method`) | OAuth-bound authentication handler |
+| `sign_up` | Account creation (with `method`: password/google/github) | `use-register-form.ts`, `auth-callback-page` |
+| `login` | Returning sign-in (with `method`) | `use-login-form.ts`, OAuth callback |
 | `tutorial_begin` | Welcome/onboarding viewed | `welcome-page/index.tsx` |
 | `tutorial_complete` | First ledger created (end of onboarding) | `ledger-list.tsx:handleCreateLedger` |
 | `generate_lead` / `begin_checkout` | Subscription session created | `use-create-subscription-session.ts` |

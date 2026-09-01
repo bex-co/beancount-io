@@ -50,20 +50,6 @@ export const OAUTH_CONFIG = {
       // absorbs clock skew and the ordering of the two persistence writes.
       grantTtlSeconds: 366 * DAY_SECONDS,
     },
-    dashboard: {
-      registration: "static",
-      clientId: "beancount-dashboard",
-      clientName: "Beancount Dashboard",
-      applicationType: "web",
-      redirectPath: "/oauth/dashboard/callback",
-      postLogoutRedirectPath: "/auth/login",
-      grantTypes: ["authorization_code"],
-      responseTypes: ["code"],
-      tokenEndpointAuthMethod: "none",
-      scopePrefix: ["openid"],
-      resource: OAUTH_RESOURCE_BINDINGS.applicationApi,
-      accessTokenTtlSeconds: 365 * DAY_SECONDS,
-    },
     discourse: {
       registration: "static",
       clientId: "discourse-forum",
@@ -99,7 +85,6 @@ export const OAUTH_CONFIG = {
 
 export const MOBILE_CLIENT_ID = OAUTH_CONFIG.clients.mobile.clientId;
 export const MOBILE_REDIRECT_URIS = OAUTH_CONFIG.clients.mobile.redirectUris;
-export const DASHBOARD_CLIENT_ID = OAUTH_CONFIG.clients.dashboard.clientId;
 export const DISCOURSE_CLIENT_ID = OAUTH_CONFIG.clients.discourse.clientId;
 export const DISCOURSE_REDIRECT_URI =
   OAUTH_CONFIG.clients.discourse.redirectUris[0];
@@ -135,35 +120,15 @@ export function oauthResource(
 export const isMobileOAuthClient = (clientId: unknown): boolean =>
   clientId === MOBILE_CLIENT_ID;
 
-export const isDashboardOAuthClient = (clientId: unknown): boolean =>
-  clientId === DASHBOARD_CLIENT_ID;
-
 export const isIdentityOAuthClient = (clientId: unknown): boolean =>
   clientId === DISCOURSE_CLIENT_ID;
 
-/** Issuer-relative Dashboard URLs, including an issuer path prefix. */
-export function dashboardOAuthUrls(issuer: string): {
-  redirectUri: string;
-  postLogoutRedirectUri: string;
-} {
-  const dashboard = OAUTH_CONFIG.clients.dashboard;
-  return {
-    redirectUri: `${issuer}${dashboard.redirectPath}`,
-    postLogoutRedirectUri: `${issuer}${dashboard.postLogoutRedirectPath}`,
-  };
-}
-
-/** Access-token, refresh-token, and grant lifetimes selected by client. */
+/** Refresh-token and grant lifetimes in seconds, selected by client. */
 export function oauthLifetimes(): {
-  accessToken: (clientId: unknown) => number;
   refreshToken: (clientId: unknown) => number;
   grant: (clientId: unknown) => number;
 } {
   return {
-    accessToken: (clientId) =>
-      isDashboardOAuthClient(clientId)
-        ? OAUTH_CONFIG.clients.dashboard.accessTokenTtlSeconds
-        : OAUTH_CONFIG.ttl.accessTokenSeconds,
     refreshToken: (clientId) =>
       isMobileOAuthClient(clientId)
         ? OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds
@@ -215,14 +180,11 @@ type StaticClient = NonNullable<
  * it with an empty secret would be both unusable and rejected by oidc-provider.
  */
 export function buildStaticOAuthClients(input: {
-  issuer: string;
   apiScopes: readonly string[];
   discourseClientSecret: string;
 }): StaticClient[] {
   const mobile = OAUTH_CONFIG.clients.mobile;
-  const dashboard = OAUTH_CONFIG.clients.dashboard;
   const discourse = OAUTH_CONFIG.clients.discourse;
-  const dashboardUrls = dashboardOAuthUrls(input.issuer);
   const clients: StaticClient[] = [
     {
       client_id: mobile.clientId,
@@ -233,17 +195,6 @@ export function buildStaticOAuthClients(input: {
       response_types: [...mobile.responseTypes],
       token_endpoint_auth_method: mobile.tokenEndpointAuthMethod,
       scope: [...mobile.scopePrefix, ...input.apiScopes].join(" "),
-    },
-    {
-      client_id: dashboard.clientId,
-      client_name: dashboard.clientName,
-      application_type: dashboard.applicationType,
-      redirect_uris: [dashboardUrls.redirectUri],
-      post_logout_redirect_uris: [dashboardUrls.postLogoutRedirectUri],
-      grant_types: [...dashboard.grantTypes],
-      response_types: [...dashboard.responseTypes],
-      token_endpoint_auth_method: dashboard.tokenEndpointAuthMethod,
-      scope: [...dashboard.scopePrefix, ...input.apiScopes].join(" "),
     },
   ];
 

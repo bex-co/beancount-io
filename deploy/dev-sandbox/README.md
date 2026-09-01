@@ -37,11 +37,6 @@ Then:
    and chat. The first turn is slow: the sandbox container image is built,
    the ledger repo is cloned, and the ACP bridge bootstraps.
 
-Dashboard sign-in completes through the local first-party OAuth callback at
-`http://localhost:42610/oauth/dashboard/callback`. `up.sh` generates the
-server-only `DASHBOARD_OAUTH_TRANSACTION_SECRET`; keep it stable across a smoke
-run so an in-flight PKCE transaction can be verified.
-
 Stop everything with `./down.sh` (data survives in `./data/`).
 
 ## Ports

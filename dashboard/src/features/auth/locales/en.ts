@@ -8,6 +8,10 @@ const enAuth: Record<string, TranslationEntry> = {
     message: "Already have an account?",
     description: "Prompt asking if user has existing account",
   },
+  "auth.authenticating": {
+    message: "Authenticating...",
+    description: "Message shown during authentication process",
+  },
   "auth.backToSignIn": {
     message: "Back to Sign in",
     description: "Link text to return to sign in page",

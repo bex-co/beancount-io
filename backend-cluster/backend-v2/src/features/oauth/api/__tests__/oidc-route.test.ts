@@ -10,13 +10,11 @@ import { resolveOidcIdentity } from "@/features/oauth/utils/oidc-verify";
 import type { Identity } from "@/server/api/identity";
 import { gqlOpId, requireScopeClass } from "@/server/api/op-class";
 import {
-  DASHBOARD_CLIENT_ID,
   DISCOURSE_CLIENT_ID,
   DISCOURSE_REDIRECT_URI,
   MOBILE_CLIENT_ID,
   MOBILE_REDIRECT_URIS,
   OAUTH_CONFIG,
-  dashboardOAuthUrls,
   oauthLifetimes,
   shouldRotateRefreshToken,
 } from "../../data/config";
@@ -61,9 +59,6 @@ const TEST_TOKEN = "test-bearer-token";
 // as the same user as TEST_TOKEN, which is the whole point: consent has to turn
 // on *how* the caller proved themselves, not on who they are.
 const TEST_SCOPED_TOKEN = "test-scoped-api-key";
-const TEST_DASHBOARD_OAUTH_TOKEN = "test-dashboard-oauth-token";
-const TEST_MOBILE_OAUTH_TOKEN = "test-mobile-oauth-token";
-const TEST_ARBITRARY_OAUTH_TOKEN = "test-arbitrary-oauth-token";
 const TEST_USER = {
   id: "user_test123",
   email: "ada@example.com",
@@ -117,21 +112,6 @@ describe("OAuth resource selection", () => {
 describe("OAuth token lifetimes", () => {
   const lifetimes = oauthLifetimes();
 
-  it("materializes Dashboard callbacks from a path-prefixed issuer", () => {
-    expect(dashboardOAuthUrls("https://books.example.test/beancount")).toEqual({
-      redirectUri:
-        "https://books.example.test/beancount/oauth/dashboard/callback",
-      postLogoutRedirectUri: "https://books.example.test/beancount/auth/login",
-    });
-  });
-
-  it("gives only the exact Dashboard client a 365-day access token", () => {
-    expect(lifetimes.accessToken(DASHBOARD_CLIENT_ID)).toBe(365 * DAY_SECONDS);
-    expect(lifetimes.accessToken(MOBILE_CLIENT_ID)).toBe(60 * 60);
-    expect(lifetimes.accessToken(DISCOURSE_CLIENT_ID)).toBe(60 * 60);
-    expect(lifetimes.accessToken("some-mcp-client")).toBe(60 * 60);
-  });
-
   it("gives the native app a year-long idle window, others 30 days", () => {
     expect(lifetimes.refreshToken(MOBILE_CLIENT_ID)).toBe(365 * DAY_SECONDS);
     expect(lifetimes.refreshToken("some-mcp-client")).toBe(30 * DAY_SECONDS);
@@ -148,9 +128,6 @@ describe("OAuth token lifetimes", () => {
   });
 
   it("uses the values declared by the centralized client catalog", () => {
-    expect(lifetimes.accessToken(DASHBOARD_CLIENT_ID)).toBe(
-      OAUTH_CONFIG.clients.dashboard.accessTokenTtlSeconds,
-    );
     expect(lifetimes.refreshToken(MOBILE_CLIENT_ID)).toBe(
       OAUTH_CONFIG.clients.mobile.refreshTokenTtlSeconds,
     );
@@ -240,20 +217,6 @@ function pkce() {
 
 describe("oidc-route: unified MCP + identity provider", () => {
   let server: http.Server;
-  const dashboardAuthService = {
-    authenticateDashboardPassword: jest.fn(async () => TEST_USER.id),
-    consumeDashboardMagicLink: jest.fn(async () => TEST_USER.id),
-    startDashboardSignup: jest.fn(async () => ({
-      sessionId: "dashboard-signup-session",
-      expireAt: new Date(Date.now() + 600_000).toISOString(),
-    })),
-    finishDashboardSignup: jest.fn(async () => TEST_USER.id),
-  };
-  const jwtModel = {
-    verify: jest.fn(async (_db: unknown, token: string) =>
-      token === TEST_TOKEN ? TEST_USER.id : null,
-    ),
-  };
 
   beforeAll(async () => {
     const app = new Koa();
@@ -290,36 +253,6 @@ describe("oidc-route: unified MCP + identity provider", () => {
           tokenId: "akey_test",
           capabilityExempt: false,
         };
-      } else if (
-        ctx.headers.authorization === `Bearer ${TEST_DASHBOARD_OAUTH_TOKEN}`
-      ) {
-        ctx.state.identity = {
-          userId: TEST_USER.id,
-          method: "oauth",
-          oauthClientId: DASHBOARD_CLIENT_ID,
-          scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
-          capabilityExempt: false,
-        };
-      } else if (
-        ctx.headers.authorization === `Bearer ${TEST_MOBILE_OAUTH_TOKEN}`
-      ) {
-        ctx.state.identity = {
-          userId: TEST_USER.id,
-          method: "oauth",
-          oauthClientId: MOBILE_CLIENT_ID,
-          scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
-          capabilityExempt: false,
-        };
-      } else if (
-        ctx.headers.authorization === `Bearer ${TEST_ARBITRARY_OAUTH_TOKEN}`
-      ) {
-        ctx.state.identity = {
-          userId: TEST_USER.id,
-          method: "oauth",
-          oauthClientId: "dynamically-registered-client",
-          scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
-          capabilityExempt: false,
-        };
       }
       await next();
     });
@@ -331,7 +264,11 @@ describe("oidc-route: unified MCP + identity provider", () => {
           id === TEST_USER.id ? TEST_USER : null,
         ),
       },
-      jwt: jwtModel,
+      jwt: {
+        verify: jest.fn(async (_db: unknown, token: string) =>
+          token === TEST_TOKEN ? TEST_USER.id : null,
+        ),
+      },
     };
 
     const config = {
@@ -352,7 +289,6 @@ describe("oidc-route: unified MCP + identity provider", () => {
         clients: {} as never,
       },
       config,
-      dashboardAuthService,
     );
     // A stand-in for the GraphQL gateway that keeps the one thing production
     // enforces on this call: the op-class gate. The native app resolves who
@@ -446,9 +382,6 @@ describe("oidc-route: unified MCP + identity provider", () => {
         },
         body: new URLSearchParams({
           ...(opts.clientId === MOBILE_CLIENT_ID ? { scope: opts.scope } : {}),
-          ...(opts.clientId === DASHBOARD_CLIENT_ID
-            ? { dashboardClientId: DASHBOARD_CLIENT_ID }
-            : {}),
           ...opts.loginBody,
         }),
         redirect: "manual",
@@ -687,259 +620,6 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const res = await fetch(authUrl, { redirect: "manual" });
     const location = new URL(res.headers.get("location")!);
     expect(location.pathname).toBe("/oauth/identity-consent");
-  });
-
-  // ── First-party Dashboard flow (static public web client) ────────────────
-
-  async function startDashboardInteraction(): Promise<{
-    jar: CookieJar;
-    uid: string;
-  }> {
-    const jar = new CookieJar();
-    const { codeChallenge } = pkce();
-    const { redirectUri } = dashboardOAuthUrls(ISSUER);
-    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
-    authUrl.search = new URLSearchParams({
-      client_id: DASHBOARD_CLIENT_ID,
-      response_type: "code",
-      scope: "openid ledger.read ledger.write ledger.admin",
-      redirect_uri: redirectUri,
-      code_challenge: codeChallenge,
-      code_challenge_method: "S256",
-      state: crypto.randomBytes(8).toString("hex"),
-      resource: `${ISSUER}/v1`,
-    }).toString();
-    const response = await fetch(authUrl, { redirect: "manual" });
-    expect(response.status).toBe(303);
-    jar.absorb(response);
-    const uid = new URL(response.headers.get("location")!).searchParams.get(
-      "uid",
-    );
-    expect(uid).toBeTruthy();
-    return { jar, uid: uid! };
-  }
-
-  it("dashboard flow: password completes the OAuth interaction without a legacy credential", async () => {
-    dashboardAuthService.authenticateDashboardPassword.mockClear();
-    const { jar, uid } = await startDashboardInteraction();
-    const response = await fetch(
-      `${ISSUER}/api-gateway/oauth/interaction/${uid}/dashboard`,
-      {
-        method: "POST",
-        headers: {
-          cookie: jar.header(),
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "password",
-          email: "ADA@example.com",
-          password: "correct horse battery staple",
-        }),
-        redirect: "manual",
-      },
-    );
-
-    expect(response.status).toBe(303);
-    expect(response.headers.get("location")).toBeTruthy();
-    expect(
-      dashboardAuthService.authenticateDashboardPassword,
-    ).toHaveBeenCalledWith({
-      email: "ada@example.com",
-      password: "correct horse battery staple",
-    });
-    // The test database model intentionally exposes verify only. Any attempt by
-    // this route to mint a legacy JWT would throw instead of reaching the 303.
-    expect("create" in jwtModel).toBe(false);
-  });
-
-  it("dashboard flow: reports an expired interaction before checking credentials", async () => {
-    dashboardAuthService.authenticateDashboardPassword.mockClear();
-    const response = await fetch(
-      `${ISSUER}/api-gateway/oauth/interaction/expireduid/dashboard`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify({
-          action: "password",
-          email: "ada@example.com",
-          password: "correct horse battery staple",
-        }),
-      },
-    );
-
-    expect(response.status).toBe(410);
-    expect(await response.json()).toEqual({
-      error: "oauth_interaction_expired",
-    });
-    expect(
-      dashboardAuthService.authenticateDashboardPassword,
-    ).not.toHaveBeenCalled();
-  });
-
-  it("dashboard flow: consumes a magic link inside the OAuth interaction without a legacy credential", async () => {
-    dashboardAuthService.consumeDashboardMagicLink.mockClear();
-    const { jar, uid } = await startDashboardInteraction();
-    const response = await fetch(
-      `${ISSUER}/api-gateway/oauth/interaction/${uid}/dashboard`,
-      {
-        method: "POST",
-        headers: {
-          cookie: jar.header(),
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "magic_link",
-          token: "single-use-magic-link",
-        }),
-        redirect: "manual",
-      },
-    );
-
-    expect(response.status).toBe(303);
-    expect(dashboardAuthService.consumeDashboardMagicLink).toHaveBeenCalledWith(
-      "single-use-magic-link",
-    );
-    expect("create" in jwtModel).toBe(false);
-  });
-
-  it("dashboard flow: binds signup and OTP completion to the same interaction", async () => {
-    dashboardAuthService.startDashboardSignup.mockClear();
-    dashboardAuthService.finishDashboardSignup.mockClear();
-    const { jar, uid } = await startDashboardInteraction();
-    const start = await fetch(
-      `${ISSUER}/api-gateway/oauth/interaction/${uid}/dashboard`,
-      {
-        method: "POST",
-        headers: {
-          cookie: jar.header(),
-          "content-type": "application/json",
-          "x-forwarded-for": "203.0.113.4",
-        },
-        body: JSON.stringify({
-          action: "signup",
-          email: "new@example.com",
-          password: "correct horse battery staple",
-          firstName: "New",
-          lastName: "User",
-          username: "new_user",
-          withDefaultLedger: true,
-        }),
-      },
-    );
-    expect(start.status).toBe(200);
-    expect(await start.json()).toMatchObject({
-      sessionId: "dashboard-signup-session",
-    });
-    expect(dashboardAuthService.startDashboardSignup).toHaveBeenCalledWith(
-      expect.objectContaining({
-        oauthInteractionUid: uid,
-        ip: "203.0.113.4",
-      }),
-    );
-
-    const finish = await fetch(
-      `${ISSUER}/api-gateway/oauth/interaction/${uid}/dashboard`,
-      {
-        method: "POST",
-        headers: {
-          cookie: jar.header(),
-          "content-type": "application/json",
-        },
-        body: JSON.stringify({
-          action: "otp",
-          sessionId: "dashboard-signup-session",
-          otp: "1234",
-        }),
-        redirect: "manual",
-      },
-    );
-    expect(finish.status).toBe(303);
-    expect(dashboardAuthService.finishDashboardSignup).toHaveBeenCalledWith({
-      oauthInteractionUid: uid,
-      sessionId: "dashboard-signup-session",
-      otp: "1234",
-    });
-  });
-
-  it("dashboard flow: mints an exact one-year API token without a refresh credential", async () => {
-    const { redirectUri } = dashboardOAuthUrls(ISSUER);
-    const resource = `${ISSUER}/v1`;
-    const { code, verifier } = await driveAuthorizationCode({
-      clientId: DASHBOARD_CLIENT_ID,
-      clientAuth: "",
-      scope: "openid ledger.read ledger.write ledger.admin",
-      redirectUri,
-      resource,
-    });
-    const tokenBody = await exchangeToken({
-      code,
-      verifier,
-      clientId: DASHBOARD_CLIENT_ID,
-      redirectUri,
-      resource,
-    });
-
-    expect(tokenBody.expires_in).toBe(365 * DAY_SECONDS);
-    expect(tokenBody.refresh_token).toBeUndefined();
-    const claims = decodeJwt(tokenBody.access_token as string);
-    expect(claims).toMatchObject({
-      iss: ISSUER,
-      aud: resource,
-      sub: TEST_USER.id,
-      client_id: DASHBOARD_CLIENT_ID,
-    });
-    expect(claims.ledger_id).toBeUndefined();
-    expect((claims.exp as number) - (claims.iat as number)).toBe(
-      365 * DAY_SECONDS,
-    );
-  });
-
-  it("dashboard flow: rejects a ledger-pinned grant", async () => {
-    const { redirectUri } = dashboardOAuthUrls(ISSUER);
-    await expect(
-      driveAuthorizationCode({
-        clientId: DASHBOARD_CLIENT_ID,
-        clientAuth: "",
-        scope: "openid ledger.read ledger.write ledger.admin",
-        redirectUri,
-        resource: `${ISSUER}/v1`,
-        loginBody: { ledgerId: "ada/personal" },
-      }),
-    ).rejects.toMatchObject({ status: 400 });
-  });
-
-  it("dashboard flow: uses its path-aware callback and API resource only", async () => {
-    const { codeChallenge } = pkce();
-    const { redirectUri } = dashboardOAuthUrls(ISSUER);
-    const authUrl = new URL(`${ISSUER}/api-gateway/oauth/auth`);
-    authUrl.search = new URLSearchParams({
-      client_id: DASHBOARD_CLIENT_ID,
-      response_type: "code",
-      scope: "openid ledger.read",
-      redirect_uri: redirectUri,
-      code_challenge: codeChallenge,
-      code_challenge_method: "S256",
-      state: "dashboard-state",
-      resource: `${ISSUER}/v1`,
-    }).toString();
-    const consent = await fetch(authUrl, { redirect: "manual" });
-    expect(new URL(consent.headers.get("location")!).pathname).toBe(
-      "/oauth/dashboard-consent",
-    );
-
-    authUrl.searchParams.set(
-      "redirect_uri",
-      "https://attacker.example.test/callback",
-    );
-    const wrongRedirect = await fetch(authUrl, { redirect: "manual" });
-    expect(wrongRedirect.status).toBe(400);
-
-    authUrl.searchParams.set("redirect_uri", redirectUri);
-    authUrl.searchParams.set("resource", `${ISSUER}/api-gateway/mcp`);
-    const wrongResource = await fetch(authUrl, { redirect: "manual" });
-    expect(
-      new URL(wrongResource.headers.get("location")!).searchParams.get("error"),
-    ).toBe("invalid_target");
   });
 
   // ── Native mobile flow (static public client) ─────────────────────────────
@@ -1587,7 +1267,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
 
     expect(res.status).toBe(403);
     const body = (await res.json()) as { error?: string };
-    expect(body.error).toContain("first-party Dashboard");
+    expect(body.error).toContain("full signed-in session");
     // And the interaction is not finished: no redirect back to the client, so
     // there is no authorization code to redeem.
     expect(res.headers.get("location")).toBeNull();
@@ -1608,43 +1288,6 @@ describe("oidc-route: unified MCP + identity provider", () => {
 
     expect(res.status).toBe(403);
   });
-
-  it("consent: the exact Dashboard OAuth client can approve another client", async () => {
-    const { jar, uid } = await startAuthorization();
-    const res = await postInteractionLogin({
-      uid,
-      jar,
-      bearer: TEST_DASHBOARD_OAUTH_TOKEN,
-    });
-    expect(res.status).toBe(303);
-    expect(res.headers.get("location")).toBeTruthy();
-  });
-
-  it("consent: rejects the silent Dashboard marker for another client's interaction", async () => {
-    const { jar, uid } = await startAuthorization();
-    const res = await postInteractionLogin({
-      uid,
-      jar,
-      bearer: TEST_DASHBOARD_OAUTH_TOKEN,
-      body: { dashboardClientId: DASHBOARD_CLIENT_ID },
-    });
-    expect(res.status).toBe(400);
-    expect(await res.json()).toMatchObject({ error: "invalid_request" });
-    expect(res.headers.get("location")).toBeNull();
-  });
-
-  it.each([
-    ["Mobile", TEST_MOBILE_OAUTH_TOKEN],
-    ["an arbitrary OAuth client", TEST_ARBITRARY_OAUTH_TOKEN],
-  ])(
-    "consent: %s cannot inherit Dashboard approval authority",
-    async (_name, bearer) => {
-      const { jar, uid } = await startAuthorization();
-      const res = await postInteractionLogin({ uid, jar, bearer });
-      expect(res.status).toBe(403);
-      expect(res.headers.get("location")).toBeNull();
-    },
-  );
 
   it("consent: an unauthenticated approval is refused, not treated as a bad form", async () => {
     const { jar, uid } = await startAuthorization();

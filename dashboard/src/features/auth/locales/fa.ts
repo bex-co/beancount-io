@@ -12,6 +12,10 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "و",
     description: "Conjunction between terms and privacy links",
   },
+  "auth.authenticating": {
+    message: "در حال احراز هویت...",
+    description: "Message shown during authentication process",
+  },
   "auth.backToSignIn": {
     message: "بازگشت به صفحه ورود",
     description: "Link text to return to sign in page",

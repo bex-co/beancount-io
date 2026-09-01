@@ -30,7 +30,6 @@ if [ ! -f .env ]; then
     gen() { openssl rand -hex 24; }
     sed -i '' \
         -e "s|^AUTH_SECRET=.*|AUTH_SECRET=$(gen)|" \
-        -e "s|^DASHBOARD_OAUTH_TRANSACTION_SECRET=.*|DASHBOARD_OAUTH_TRANSACTION_SECRET=$(gen)|" \
         -e "s|^COOKIE_SECRETS=.*|COOKIE_SECRETS=[\"$(gen)\"]|" \
         -e "s|^ADMIN_TOKEN=.*|ADMIN_TOKEN=$(gen)|" \
         -e "s|^FAVA_API_ADMIN_PASSWORD=.*|FAVA_API_ADMIN_PASSWORD=$(gen)|" \

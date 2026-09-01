@@ -8,8 +8,6 @@ export interface SignupOtpSession {
   username?: string | null;
   ip: string;
   withDefaultLedger: boolean;
-  /** OAuth interaction this session may complete; absent for legacy callers. */
-  oauthInteractionUid?: string;
   otp: string;
   expireAt: string;
 }
@@ -23,7 +21,6 @@ export interface CreateSessionInput {
   username?: string | null;
   ip: string;
   withDefaultLedger?: boolean;
-  oauthInteractionUid?: string;
 }
 
 // Database-agnostic interface

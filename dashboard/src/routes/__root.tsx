@@ -1,4 +1,4 @@
-import { createRootRouteWithContext, redirect } from "@tanstack/react-router";
+import { createRootRouteWithContext } from "@tanstack/react-router";
 import type { RouterContext } from "@/router";
 import NotFoundPage from "@/common/root-route/not-found-page";
 import ErrorPage from "@/common/root-route/error-page";
@@ -7,7 +7,6 @@ import { RootComponent } from "@/common/root-route/root-component";
 import { fetchUserProfile } from "@/common/server-fn";
 import i18n from "@/i18n/init";
 import { detectLanguage } from "@/i18n/detect-language";
-import { getLegacyDashboardSessionUpgradeHref } from "@/features/oauth/dashboard-session-upgrade";
 
 import appCss from "../style.css?inline";
 
@@ -51,12 +50,9 @@ export const Route = createRootRouteWithContext<RouterContext>()({
       }
     }
 
-    const userProfile = await fetchUserProfile(context.client);
-    if (userProfile) {
-      const upgradeHref = getLegacyDashboardSessionUpgradeHref();
-      if (upgradeHref) throw redirect({ href: upgradeHref });
-    }
-    return { userProfile };
+    return {
+      userProfile: await fetchUserProfile(context.client),
+    };
   },
   loader: ({ context }) => {
     return {

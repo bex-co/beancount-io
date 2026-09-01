@@ -191,8 +191,7 @@ Keeping a second documentation-only catalog would create drift.
 
 The `read`/`write` class on protected billing aliases is operational metadata
 for rate limits and legacy audit defaults, not credential reachability. The PDP
-catalog keeps protected billing operations limited to the exact first-party
-Dashboard identity (or a valid legacy session during migration). The static
+catalog keeps protected billing operations browser-session-only. The static
 tier-quota catalog is explicitly `public` and bypasses the PDP, but an operation
 override keeps its pre-cutover 300-per-minute budget. The protected aliases
 retain the same budget through the read-class default for subscription status

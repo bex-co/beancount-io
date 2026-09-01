@@ -12,6 +12,10 @@ const caAuth: Record<string, TranslationEntry> = {
     message: "i",
     description: "Conjunction between terms and privacy links",
   },
+  "auth.authenticating": {
+    message: "Autenticant...",
+    description: "Message shown during authentication process",
+  },
   "auth.backToSignIn": {
     message: "Tornar a iniciar sessió",
     description: "Link text to return to sign in page",

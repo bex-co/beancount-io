@@ -53,7 +53,6 @@ type CreateSignUpSessionParams = {
   username?: string | null;
   ip: string;
   withDefaultLedger?: boolean;
-  oauthInteractionUid?: string;
 };
 
 type FinishSignupSessionParams = {
@@ -74,31 +73,6 @@ type AuthResponse = {
   token: string;
   expireAt: Date;
 };
-
-export type DashboardSignupParams = Omit<
-  CreateSignUpSessionParams,
-  "oauthInteractionUid"
-> & {
-  oauthInteractionUid: string;
-};
-
-/**
- * Credential checks used only while completing the first-party Dashboard OAuth
- * interaction. These methods deliberately return an account id, never a legacy
- * session token.
- */
-export interface IDashboardOAuthAuthService {
-  authenticateDashboardPassword(params: LoginUserParams): Promise<string>;
-  consumeDashboardMagicLink(token: string): Promise<string>;
-  startDashboardSignup(
-    params: DashboardSignupParams,
-  ): Promise<{ sessionId: string; expireAt: string }>;
-  finishDashboardSignup(params: {
-    oauthInteractionUid: string;
-    sessionId: string;
-    otp: string;
-  }): Promise<string>;
-}
 
 const MAX_PASSWORD_LENGTH = 128;
 const SIGNUP_OTP_ATTEMPT_WINDOW_MS = 10 * 60 * 1000;
@@ -162,7 +136,7 @@ export interface IAuthService {
   deleteSignupOtpSession(sessionId: string): Promise<void>;
 }
 
-export class AuthService implements IAuthService, IDashboardOAuthAuthService {
+export class AuthService implements IAuthService {
   constructor(
     private readonly models: Pick<
       IModels,
@@ -183,13 +157,6 @@ export class AuthService implements IAuthService, IDashboardOAuthAuthService {
   public registerUser = async (
     params: RegisterUserParams,
   ): Promise<AuthResponse> => {
-    const userId = await this.registerUserAccount(params);
-    return this.models.jwt.create(this.db, userId);
-  };
-
-  private registerUserAccount = async (
-    params: RegisterUserParams,
-  ): Promise<string> => {
     const { email, password, firstName, lastName, username } = params;
     const locale = "en";
     const ledger_username = username ?? email.split("@")[0];
@@ -218,6 +185,8 @@ export class AuthService implements IAuthService, IDashboardOAuthAuthService {
           ledger_password,
         });
         const userId = user.id;
+
+        const { token, expireAt } = await this.models.jwt.create(tx, userId);
 
         try {
           await favaAdminApiClient.admin.createUser(
@@ -253,21 +222,13 @@ export class AuthService implements IAuthService, IDashboardOAuthAuthService {
           });
         });
 
-        return userId;
+        return { token, expireAt };
       });
     });
     return result;
   };
 
   public loginUser = async (params: LoginUserParams): Promise<AuthResponse> => {
-    const userId = await this.authenticateDashboardPassword(params);
-    const { token, expireAt } = await this.models.jwt.create(this.db, userId);
-    return { token, expireAt };
-  };
-
-  public authenticateDashboardPassword = async (
-    params: LoginUserParams,
-  ): Promise<string> => {
     const { email, password } = params;
     // Reject overlong passwords before touching the database or bcrypt.
     // Use the same generic error as wrong password to avoid leaking signal.
@@ -292,18 +253,15 @@ export class AuthService implements IAuthService, IDashboardOAuthAuthService {
         "User is banned. If you need help, please contact https://beancount.io/tg.",
       );
     }
-    return user.id;
+    const { token, expireAt } = await this.models.jwt.create(this.db, user.id);
+    return { token, expireAt };
   };
 
   public signInWithMagicLinkToken = async (
     params: SignInWithOneTimeTokenParams,
   ): Promise<AuthResponse> => {
-    const userId = await this.consumeDashboardMagicLink(params.token);
-    const { token, expireAt } = await this.models.jwt.create(this.db, userId);
-    return { token, expireAt };
-  };
+    const { token } = params;
 
-  public consumeDashboardMagicLink = async (token: string): Promise<string> => {
     const oneTimeToken =
       await this.models.magicLinkToken.findOneAndDelete(token);
     if (!oneTimeToken) {
@@ -320,7 +278,11 @@ export class AuthService implements IAuthService, IDashboardOAuthAuthService {
       );
     }
 
-    return user.id;
+    const { token: jwtToken, expireAt } = await this.models.jwt.create(
+      this.db,
+      user.id,
+    );
+    return { token: jwtToken, expireAt };
   };
 
   public refreshToken = async (
@@ -554,7 +516,6 @@ export class AuthService implements IAuthService, IDashboardOAuthAuthService {
         username: usernameToUse,
         ip,
         withDefaultLedger: params.withDefaultLedger ?? false,
-        oauthInteractionUid: params.oauthInteractionUid,
       },
       10, // 10 minutes expiration
     );
@@ -568,57 +529,6 @@ export class AuthService implements IAuthService, IDashboardOAuthAuthService {
     });
 
     return session.id;
-  };
-
-  public startDashboardSignup = async (
-    params: DashboardSignupParams,
-  ): Promise<{ sessionId: string; expireAt: string }> => {
-    const sessionId = await this.createSignUpSession(params);
-    const session = await this.getSignupOtpSession(sessionId);
-    if (!session) {
-      throw new ServiceUnavailableError("Signup session");
-    }
-    return { sessionId, expireAt: session.expireAt };
-  };
-
-  public finishDashboardSignup = async (params: {
-    oauthInteractionUid: string;
-    sessionId: string;
-    otp: string;
-  }): Promise<string> => {
-    const session = await this.models.signupOtpSession.getSessionById(
-      params.sessionId,
-    );
-    if (
-      !session ||
-      !session.oauthInteractionUid ||
-      !secureStringEqual(
-        session.oauthInteractionUid,
-        params.oauthInteractionUid,
-      )
-    ) {
-      throw new BadUserInputError("Invalid or expired session");
-    }
-
-    await this.consumeSignupOtpAttempt(session.email);
-    if (!secureStringEqual(session.otp, params.otp)) {
-      throw new BadUserInputError("Invalid OTP code");
-    }
-
-    const userId = await this.registerUserAccount({
-      email: session.email,
-      password: session.password,
-      firstName: session.firstName,
-      lastName: session.lastName,
-      username: session.username ?? null,
-      ip: session.ip,
-    });
-
-    if (session.withDefaultLedger) {
-      await this.createDefaultLedgerForUser(userId);
-    }
-    await this.deleteSignupOtpSession(params.sessionId);
-    return userId;
   };
 
   public finishSignupSession = async (
@@ -736,17 +646,6 @@ export class AuthService implements IAuthService, IDashboardOAuthAuthService {
       if (!userId) {
         return;
       }
-      await this.createDefaultLedgerForUser(userId);
-    } catch (error) {
-      logger.error("Failed to create default ledger", { error });
-    }
-  };
-
-  /** Create the default ledger without deriving identity from a credential. */
-  private createDefaultLedgerForUser = async (
-    userId: string,
-  ): Promise<void> => {
-    try {
       const { favaApiClient } =
         await this.favaClientFactory.getApiContext(userId);
       await createLedger({

@@ -12,6 +12,10 @@ const deAuth: Record<string, TranslationEntry> = {
     message: "und",
     description: "Conjunction between terms and privacy links",
   },
+  "auth.authenticating": {
+    message: "Authentifizierung läuft...",
+    description: "Message shown during authentication process",
+  },
   "auth.backToSignIn": {
     message: "Zurück zur Anmeldung",
     description: "Link text to return to sign in page",

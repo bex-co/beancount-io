@@ -27,10 +27,7 @@ import { type IPlaidSyncService } from "@/features/plaid/service/plaid-sync-serv
 import { type IFeatureUsageService } from "@/features/feature-usage/service/feature-usage-service";
 import { type IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import { type IAccountService } from "@/features/auth/service/account-service";
-import {
-  type IAuthService,
-  type IDashboardOAuthAuthService,
-} from "@/features/auth/service/auth-service";
+import { type IAuthService } from "@/features/auth/service/auth-service";
 import { type ICliAuthService } from "@/features/auth/service/cli-auth-service";
 import { type IUserProfileService } from "@/features/gitea/user-profile/service/user-profile-service";
 import { type IPullRequestService } from "@/features/gitea/pull-request/service/pull-request-service";
@@ -90,7 +87,7 @@ export interface ServiceLayer {
   featureUsage: IFeatureUsageService;
   aiCfoUsage: IAiCfoUsageService;
   account: IAccountService;
-  auth: IAuthService & IDashboardOAuthAuthService;
+  auth: IAuthService;
   cliAuth: ICliAuthService;
   userProfile: IUserProfileService;
   pullRequest: IPullRequestService;

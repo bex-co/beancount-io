@@ -2,7 +2,6 @@ import type { IncomingMessage } from "node:http";
 import Router from "@koa/router";
 import { errors, Provider } from "oidc-provider";
 import type { KoaContextWithOIDC } from "oidc-provider";
-import { z } from "zod";
 import {
   type DatabaseLayer,
   type ClientFactoryLayer,
@@ -12,19 +11,13 @@ import { MemoryAdapter } from "../data/memory-adapter";
 import { createPostgresAdapterFactory } from "../data/oauth-adapter-model";
 import { resolveAuthUser } from "@/features/ai-agent/utils/route-guards";
 import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
-import {
-  API_SCOPES,
-  assertFirstPartyInteractiveIdentity,
-} from "@/server/api/identity";
+import { API_SCOPES, assertSessionIdentity } from "@/server/api/identity";
 import { CATEGORY_HTTP_STATUS, DomainError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
-import type { IDashboardOAuthAuthService } from "@/features/auth/service/auth-service";
 import {
   OAUTH_CONFIG,
-  DASHBOARD_CLIENT_ID,
   MOBILE_CLIENT_ID,
   buildStaticOAuthClients,
-  isDashboardOAuthClient,
   isIdentityOAuthClient,
   isMobileOAuthClient,
   oauthLifetimes,
@@ -36,40 +29,6 @@ const oidcLogger = logger.child({ module: "oidc-provider" });
 
 /** The one `screen_hint` value this server forwards to the interaction page. */
 const SIGNUP_SCREEN_HINT = OAUTH_CONFIG.interaction.signupScreenHint;
-
-const dashboardInteractionBodySchema = z.discriminatedUnion("action", [
-  z
-    .object({
-      action: z.literal("password"),
-      email: z.string().email(),
-      password: z.string().max(128),
-    })
-    .strict(),
-  z
-    .object({
-      action: z.literal("signup"),
-      email: z.string().email(),
-      password: z.string().max(128),
-      firstName: z.string().max(50),
-      lastName: z.string().max(50),
-      username: z.string().max(20).nullable().optional(),
-      withDefaultLedger: z.boolean().optional(),
-    })
-    .strict(),
-  z
-    .object({
-      action: z.literal("otp"),
-      sessionId: z.string().min(1).max(200),
-      otp: z.string().regex(/^\d{4}$/),
-    })
-    .strict(),
-  z
-    .object({
-      action: z.literal("magic_link"),
-      token: z.string().min(1).max(500),
-    })
-    .strict(),
-]);
 
 interface IdentityClaims {
   sub: string;
@@ -103,7 +62,6 @@ export function setOidcRoutes(
   router: Router,
   layers: { database: DatabaseLayer; clients: ClientFactoryLayer },
   config: AppConfig,
-  dashboardAuthService?: IDashboardOAuthAuthService,
 ): void {
   const jwks = config.oauth.jwks;
   if (!jwks) {
@@ -141,10 +99,9 @@ export function setOidcRoutes(
   const mobileRefreshTokenTtl = lifetimes.refreshToken(MOBILE_CLIENT_ID);
   const resourceForClient = (clientId: unknown): string | undefined => {
     if (isIdentityOAuthClient(clientId)) return undefined;
-    const resource =
-      isMobileOAuthClient(clientId) || isDashboardOAuthClient(clientId)
-        ? OAUTH_CONFIG.resourceBindings.applicationApi
-        : OAUTH_CONFIG.dynamicRegistration.resource;
+    const resource = isMobileOAuthClient(clientId)
+      ? OAUTH_CONFIG.clients.mobile.resource
+      : OAUTH_CONFIG.dynamicRegistration.resource;
     return resources[resource];
   };
 
@@ -160,7 +117,6 @@ export function setOidcRoutes(
         : createPostgresAdapterFactory(layers.database.db),
 
     clients: buildStaticOAuthClients({
-      issuer: config.oauth.issuer,
       apiScopes: API_SCOPES,
       discourseClientSecret: config.oauth.discourseClientSecret,
     }),
@@ -202,9 +158,7 @@ export function setOidcRoutes(
             throw new errors.InvalidTarget(
               isMobileOAuthClient(client.clientId)
                 ? "the native client must use the API resource"
-                : isDashboardOAuthClient(client.clientId)
-                  ? "the Dashboard client must use the API resource"
-                  : "dynamic clients must use the MCP resource",
+                : "dynamic clients must use the MCP resource",
             );
           }
           return {
@@ -240,9 +194,7 @@ export function setOidcRoutes(
           ? "/oauth/identity-consent"
           : isMobileOAuthClient(interaction.params.client_id)
             ? "/oauth/mobile-consent"
-            : isDashboardOAuthClient(interaction.params.client_id)
-              ? "/oauth/dashboard-consent"
-              : "/oauth/consent";
+            : "/oauth/consent";
         const consentUrl = new URL(
           path.replace(/^\//, ""),
           `${config.oauth.interactionUrl}/`,
@@ -253,15 +205,12 @@ export function setOidcRoutes(
             "scope",
             (interaction.params.scope as string | undefined) ?? "openid",
           );
-        }
-        // Only the native and Dashboard interaction pages know what to do with
-        // the hint; MCP and identity clients never see it.
-        if (
-          (isMobileOAuthClient(interaction.params.client_id) ||
-            isDashboardOAuthClient(interaction.params.client_id)) &&
-          interaction.params.screen_hint === SIGNUP_SCREEN_HINT
-        ) {
-          consentUrl.searchParams.set("screen_hint", SIGNUP_SCREEN_HINT);
+          // Only the native client's interaction page knows what to do with
+          // the hint; MCP and identity clients never see it, and a value this
+          // server does not recognise is simply not forwarded.
+          if (interaction.params.screen_hint === SIGNUP_SCREEN_HINT) {
+            consentUrl.searchParams.set("screen_hint", SIGNUP_SCREEN_HINT);
+          }
         }
         return consentUrl.toString();
       },
@@ -326,8 +275,7 @@ export function setOidcRoutes(
     },
 
     ttl: {
-      AccessToken: (_ctx, token, client) =>
-        lifetimes.accessToken(client?.clientId ?? token.clientId),
+      AccessToken: OAUTH_CONFIG.ttl.accessTokenSeconds,
       AuthorizationCode: OAUTH_CONFIG.ttl.authorizationCodeSeconds,
       RefreshToken: (_ctx, token, client) =>
         lifetimes.refreshToken(client?.clientId ?? token.clientId),
@@ -441,139 +389,6 @@ export function setOidcRoutes(
     }
   });
 
-  const finishDashboardInteraction = async (
-    ctx: Router.RouterContext,
-    interaction: Awaited<ReturnType<typeof provider.interactionDetails>>,
-    userId: string,
-  ): Promise<void> => {
-    const { params } = interaction;
-    if (!isDashboardOAuthClient(params.client_id)) {
-      throw new errors.InvalidRequest(
-        "Dashboard credentials may only complete the Dashboard OAuth client",
-      );
-    }
-
-    const requestedScope = (params.scope as string | undefined) ?? "openid";
-    const grant = new provider.Grant({
-      accountId: userId,
-      clientId: DASHBOARD_CLIENT_ID,
-    });
-    grant.addOIDCScope(requestedScope);
-
-    const requestedResources = Array.isArray(params.resource)
-      ? params.resource.filter(
-          (resource): resource is string => typeof resource === "string",
-        )
-      : typeof params.resource === "string"
-        ? [params.resource]
-        : [resources[OAUTH_CONFIG.resourceBindings.applicationApi]];
-    for (const resource of requestedResources) {
-      grant.addResourceScope(resource, requestedScope);
-    }
-
-    const grantId = await grant.save();
-    await provider.interactionFinished(
-      ctx.req,
-      ctx.res,
-      {
-        login: { accountId: userId },
-        consent: { grantId },
-      },
-      { mergeWithLastSubmission: false },
-    );
-    ctx.respond = false;
-  };
-
-  router.post("/api-gateway/oauth/interaction/:uid/dashboard", async (ctx) => {
-    if (!dashboardAuthService) {
-      ctx.status = 503;
-      ctx.body = { error: "Dashboard OAuth login is unavailable" };
-      return;
-    }
-
-    pinRequestToIssuer(ctx.req);
-    let interaction: Awaited<ReturnType<typeof provider.interactionDetails>>;
-    try {
-      interaction = await provider.interactionDetails(ctx.req, ctx.res);
-    } catch (err) {
-      oidcLogger.info("Dashboard OAuth interaction expired", {
-        uid: ctx.params.uid,
-        error: err instanceof Error ? err.message : String(err),
-      });
-      ctx.status = 410;
-      ctx.body = { error: "oauth_interaction_expired" };
-      return;
-    }
-
-    try {
-      if (
-        interaction.uid !== ctx.params.uid ||
-        !isDashboardOAuthClient(interaction.params.client_id)
-      ) {
-        throw new errors.InvalidRequest(
-          "Dashboard credentials do not match this OAuth interaction",
-        );
-      }
-      const body = dashboardInteractionBodySchema.parse(ctx.request.body);
-
-      if (body.action === "signup") {
-        const forwardedFor = ctx.headers["x-forwarded-for"];
-        const realIp = ctx.headers["x-real-ip"];
-        const ip =
-          (typeof forwardedFor === "string" &&
-            forwardedFor.split(",")[0]?.trim()) ||
-          (typeof realIp === "string" ? realIp : undefined) ||
-          ctx.ip ||
-          "unknown";
-        const session = await dashboardAuthService.startDashboardSignup({
-          email: body.email.toLowerCase().trim(),
-          password: body.password,
-          firstName: body.firstName,
-          lastName: body.lastName,
-          username: body.username ?? null,
-          withDefaultLedger: body.withDefaultLedger ?? false,
-          ip,
-          oauthInteractionUid: interaction.uid,
-        });
-        ctx.body = session;
-        return;
-      }
-
-      const userId =
-        body.action === "password"
-          ? await dashboardAuthService.authenticateDashboardPassword({
-              email: body.email.toLowerCase().trim(),
-              password: body.password,
-            })
-          : body.action === "magic_link"
-            ? await dashboardAuthService.consumeDashboardMagicLink(body.token)
-            : await dashboardAuthService.finishDashboardSignup({
-                oauthInteractionUid: interaction.uid,
-                sessionId: body.sessionId,
-                otp: body.otp,
-              });
-
-      await finishDashboardInteraction(ctx, interaction, userId);
-    } catch (err) {
-      oidcLogger.warn("Dashboard interaction authentication failed", {
-        uid: ctx.params.uid,
-        error: err instanceof Error ? err.message : String(err),
-      });
-      ctx.status =
-        err instanceof DomainError
-          ? (err.httpStatusHint ?? CATEGORY_HTTP_STATUS[err.category])
-          : 400;
-      ctx.body = {
-        error:
-          err instanceof z.ZodError
-            ? "Invalid Dashboard authentication request"
-            : err instanceof Error
-              ? err.message
-              : "Dashboard authentication failed",
-      };
-    }
-  });
-
   router.post("/api-gateway/oauth/interaction/:uid/login", async (ctx) => {
     try {
       pinRequestToIssuer(ctx.req);
@@ -582,7 +397,6 @@ export function setOidcRoutes(
 
       const interactionBody = ctx.request.body as {
         decision?: string;
-        dashboardClientId?: string;
         ledgerId?: string;
         scope?: string;
       };
@@ -612,27 +426,12 @@ export function setOidcRoutes(
       // two hops, no browser, no user interaction.
       //
       // A delegated scope cannot express "this person agreed", so the credential
-      // must be the exact first-party Dashboard identity — the same rule CLI
-      // device approval applies (`cli-auth-service.authorizeSession`). This route sits outside
+      // must be the product's own session — the same rule CLI device approval
+      // applies (`cli-auth-service.authorizeSession`). This route sits outside
       // the op-class gate by necessity (always-public.ts: requiring a token to
       // obtain a token closes the only door in), which is exactly why the check
       // has to live here.
-      assertFirstPartyInteractiveIdentity(
-        identity,
-        "Approving an OAuth authorization",
-      );
-
-      // A verified existing Dashboard credential may approve silently, but its
-      // server-side handler must never become a generic auto-consent endpoint
-      // for a Mobile, DCR/MCP, or identity-client interaction uid.
-      const dashboardBootstrapMatches = isDashboardOAuthClient(params.client_id)
-        ? interactionBody.dashboardClientId === DASHBOARD_CLIENT_ID
-        : interactionBody.dashboardClientId === undefined;
-      if (!dashboardBootstrapMatches) {
-        throw new errors.InvalidRequest(
-          "the Dashboard approval marker does not match the OAuth client",
-        );
-      }
+      assertSessionIdentity(identity, "Approving an OAuth authorization");
 
       // oidc-provider v9 requires an explicit Grant document to issue an auth code.
       // Without grantId in the consent result, the resumed auth endpoint finds no grant
@@ -658,11 +457,6 @@ export function setOidcRoutes(
       } else {
         const { ledgerId } = interactionBody;
 
-        if (isDashboardOAuthClient(params.client_id) && ledgerId) {
-          throw new errors.InvalidRequest(
-            "the Dashboard client grant must be account-wide",
-          );
-        }
         if (isMobileOAuthClient(params.client_id) && ledgerId) {
           throw new errors.InvalidRequest(
             "the native client grant must be account-wide",
@@ -725,9 +519,8 @@ export function setOidcRoutes(
           const selectedResources =
             paramResources.length > 0
               ? paramResources
-              : isMobileOAuthClient(params.client_id) ||
-                  isDashboardOAuthClient(params.client_id)
-                ? [resources[OAUTH_CONFIG.resourceBindings.applicationApi]]
+              : isMobileOAuthClient(params.client_id)
+                ? [resources[OAUTH_CONFIG.clients.mobile.resource]]
                 : [resources[OAUTH_CONFIG.dynamicRegistration.resource]];
           // oidc-provider separates the OIDC and resource portions when the
           // grant is evaluated. Passing the original request here is required

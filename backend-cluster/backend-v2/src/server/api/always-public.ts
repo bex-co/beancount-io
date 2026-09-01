@@ -49,11 +49,7 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
   },
   {
     opId: "REST POST /api-gateway/oauth/interaction/{uid}/login",
-    reason: `${OIDC_CEREMONY} The scope vocabulary cannot express consent anyway — a delegated scope says what a credential may do, not that a person agreed — so the handler requires the exact first-party Dashboard identity or an already-valid verify-only legacy credential before it will build a Grant.`,
-  },
-  {
-    opId: "REST POST /api-gateway/oauth/interaction/{uid}/dashboard",
-    reason: `${OIDC_CEREMONY} The handler accepts credentials only for an exact beancount-dashboard interaction and completes it directly without issuing a legacy application session.`,
+    reason: `${OIDC_CEREMONY} The scope vocabulary cannot express consent anyway — a delegated scope says what a credential may do, not that a person agreed — so the handler requires a full signed-in session (\`assertSessionIdentity\`) before it will build a Grant.`,
   },
   {
     opId: "REST ALL /api-gateway/oauth/{*path}",

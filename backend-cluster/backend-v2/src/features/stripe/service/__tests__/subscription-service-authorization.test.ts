@@ -157,8 +157,7 @@ describe("SubscriptionService authorization boundary", () => {
 
       await expect(call(service, oauth)).rejects.toMatchObject({
         category: ErrorCategory.FORBIDDEN,
-        message:
-          "Managing billing requires the signed-in first-party Dashboard",
+        message: "Managing billing requires a full signed-in session",
       });
       expectNoBillingWork(deps);
     },

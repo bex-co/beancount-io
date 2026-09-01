@@ -45,7 +45,7 @@ services:
       dockerfile: Dockerfile
       args:
         # Baked into the client bundle at build time: the URL the BROWSER uses.
-        VITE_API_URL: ${VITE_API_URL:-/api-gateway/}
+        VITE_API_URL: ${VITE_API_URL:-http://localhost:42611/api-gateway/}
         # Internal URL the SSR server uses from inside the compose network.
         VITE_SSR_API_URL: ${VITE_SSR_API_URL:-http://backend-v2:4104/api-gateway/}
         # Leave unset to ship without analytics (never bake the prod stream id).
@@ -56,8 +56,6 @@ services:
       - beancount
     ports:
       - "42610:3000"
-    environment:
-      DASHBOARD_OAUTH_TRANSACTION_SECRET: ${DASHBOARD_OAUTH_TRANSACTION_SECRET:-change-me-dashboard-oauth-transaction-secret}
     depends_on:
       backend-v2:
         condition: service_healthy

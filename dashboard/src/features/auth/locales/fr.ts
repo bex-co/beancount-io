@@ -12,6 +12,10 @@ const frAuth: Record<string, TranslationEntry> = {
     message: "et",
     description: "Conjunction between terms and privacy links",
   },
+  "auth.authenticating": {
+    message: "Authentification en cours...",
+    description: "Message shown during authentication process",
+  },
   "auth.backToSignIn": {
     message: "Retour à la connexion",
     description: "Link text to return to sign in page",

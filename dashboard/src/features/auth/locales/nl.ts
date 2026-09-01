@@ -12,6 +12,10 @@ const nlAuth: Record<string, TranslationEntry> = {
     message: "en",
     description: "Conjunction between terms and privacy links",
   },
+  "auth.authenticating": {
+    message: "Authenticeren...",
+    description: "Message shown during authentication process",
+  },
   "auth.backToSignIn": {
     message: "Terug to Sign in",
     description: "Link text to return to sign in page",
