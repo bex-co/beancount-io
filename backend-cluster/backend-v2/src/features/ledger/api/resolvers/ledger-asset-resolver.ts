@@ -53,7 +53,7 @@ export class LedgerAssetQueryResolver {
   @Query(() => LedgerAssetDownloadUrlResult, {
     description:
       "Get a downloadable URL for a ledger Git archive (main.zip). " +
-      "Authenticated callers receive a single-use, 60-second ticket URL; " +
+      "Authenticated callers receive the standard token-authenticated v1 URL; " +
       "public ledgers are readable without auth.",
   })
   async getLedgerArchiveDownloadUrl(

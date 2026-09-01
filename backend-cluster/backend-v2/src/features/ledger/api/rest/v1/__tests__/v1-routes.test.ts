@@ -1,7 +1,6 @@
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import {
-  makeFakeCache,
   readOnlyToken,
   scopelessToken,
   sessionIdentity,
@@ -18,8 +17,6 @@ import {
  * are the paths a published API gets probed on, and the ones no client
  * exercises for us.
  */
-
-const cache = makeFakeCache();
 
 const services = {
   ledgerShell: {
@@ -62,7 +59,7 @@ const workflows = {
 
 const layers = {
   database: { db: undefined, models: {} },
-  clients: { cacheHelper: cache.helper },
+  clients: {},
   services,
   workflows,
 } as unknown as AppLayers;

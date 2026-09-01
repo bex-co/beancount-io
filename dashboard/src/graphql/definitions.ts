@@ -857,6 +857,7 @@ export type Mutation = {
   approvePullRequest: PullRequestResult;
   /** Add one or more entries to a specific ledger (atomic) */
   bulkEntries: AddLedgerEntryResponse;
+  /** Schedules your subscription to cancel. Requires a full signed-in session. */
   cancelSubscription: SubscriptionActionResult;
   /** Authorize a pending CLI session. Issues a JWT token for the CLI and stores it in the session. */
   confirmCliAuthSession: ConfirmCliAuthSessionResponse;
@@ -878,7 +879,9 @@ export type Mutation = {
   /** Create a new public key for the current user */
   createPublicKey: PublicKey;
   createPullRequestFromPatch: PullRequestResult;
+  /** Creates a Stripe-hosted customer portal session. Requires a full signed-in session. */
   createStripePortalSession: SubscriptionSessionResult;
+  /** Creates a Stripe-hosted checkout session. Requires a full signed-in session. */
   createSubscriptionSession: SubscriptionSessionResult;
   /** delete user account and its associated data */
   deleteAccount: Scalars['Boolean']['output'];
@@ -922,6 +925,7 @@ export type Mutation = {
   renameLedgerFile: RenameLedgerFileResponse;
   /** Reset user password using a token from the password reset email */
   resetPassword: ResetPasswordResponse;
+  /** Resumes your subscription. Requires a full signed-in session. */
   resumeSubscription: SubscriptionActionResult;
   /** Revoke an API key, effective on its next use */
   revokeApiKey: ApiKeyType;
@@ -956,6 +960,7 @@ export type Mutation = {
   /** Update user profile (firstName and lastName) */
   updateProfile: UserProfileResponse;
   updateUsername: UserProfileResponse;
+  /** Upgrades your subscription. Requires a full signed-in session. */
   upgradeSubscription: UpgradeSubscriptionResult;
   /** Verify OTP and create user account to complete signup */
   verifySignUpOtp: TokenAuthResponse;
@@ -1579,7 +1584,7 @@ export type Query = {
   accountHierarchy: AccountHierarchyResponse;
   /** Get AI CFO usage for the current billing month */
   aiCfoUsage: AiCfoUsageResponse;
-  /** Returns quota limits for all subscription tiers */
+  /** Returns the public quota limits for all subscription tiers. */
   allTierQuotas: Array<TierQuotaItem>;
   /** Your API keys */
   apiKeys: Array<ApiKeyType>;
@@ -1603,7 +1608,7 @@ export type Query = {
   getLedgerAccountReport: AccountReport;
   /** Get the accounts of a specific ledger. Optional status filter: 'open' (no closeDate) or 'closed' (has closeDate). Returns all accounts when omitted. */
   getLedgerAccounts: Array<Scalars['String']['output']>;
-  /** Get a downloadable URL for a ledger Git archive (main.zip). Authenticated callers receive a single-use, 60-second ticket URL; public ledgers are readable without auth. */
+  /** Get a downloadable URL for a ledger Git archive (main.zip). Authenticated callers receive the standard token-authenticated v1 URL; public ledgers are readable without auth. */
   getLedgerArchiveDownloadUrl: LedgerAssetDownloadUrlResult;
   /** Get a presigned S3 download URL for a ledger asset. Validates ledger access — public ledgers require no auth; private ledgers require a valid session. */
   getLedgerAssetDownloadUrl: LedgerAssetDownloadUrlResult;
@@ -1702,6 +1707,7 @@ export type Query = {
   queryShellText: Maybe<QueryShellTextResult>;
   /** Search for ledgers/repositories */
   searchLedgers: Array<Ledger>;
+  /** Returns your subscription status. Requires a full signed-in session. */
   subscriptionStatus: CustomerSubscriptionStatus;
   /** Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI */
   suggestPlaidAccountMapping: Array<PlaidAccountMappingSuggestion>;

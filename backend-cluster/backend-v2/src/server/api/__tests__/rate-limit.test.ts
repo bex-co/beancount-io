@@ -137,15 +137,40 @@ describe("budgets", () => {
     }
   });
 
+  it("limits both archive download routes to 30 per minute", () => {
+    for (const opId of [
+      "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
+      "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
+    ]) {
+      expect(budgetFor(opId, classifyOp(opId).class)).toEqual({
+        windowMs: 60_000,
+        max: 30,
+      });
+    }
+    expect(budgetFor("GQL Query.listLedgers", "read")).toEqual(
+      CLASS_BUDGETS.read,
+    );
+  });
+
   it("keeps the anonymous intakes on separate budgets", () => {
     expect(anonymousFamily("/api-gateway/oauth/token")).toBe("oauth");
     expect(anonymousFamily("/.well-known/oauth-protected-resource")).toBe(
       "oauth",
     );
     expect(anonymousFamily("/api-gateway/stripe/webhook")).toBe("webhook");
+    expect(
+      anonymousFamily(
+        "/api-gateway/v1/ledgers/alice/main/archive/main.zip",
+      ),
+    ).toBe("archive");
+    expect(
+      anonymousFamily(
+        "/api-gateway/ledgers/alice%2Fmain/archive/main.tar.gz",
+      ),
+    ).toBe("archive");
     expect(anonymousFamily("/api-gateway/v1/ledgers")).toBe("default");
     // A flood against one must not be able to exhaust another.
-    expect(new Set(Object.keys(ANONYMOUS_BUDGETS)).size).toBe(3);
+    expect(new Set(Object.keys(ANONYMOUS_BUDGETS)).size).toBe(4);
   });
 });
 
@@ -185,6 +210,43 @@ describe("charging", () => {
     const [first] = counter.mock.calls[0];
     const [second] = counter.mock.calls[1];
     expect(first).not.toEqual(second);
+  });
+
+  it("shares one counter between canonical and compatibility archive routes", async () => {
+    respond(1);
+    respond(2);
+    await consume({
+      opId:
+        "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
+      identity: token,
+      ip: "ip",
+    });
+    await consume({
+      opId: "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
+      identity: token,
+      ip: "ip",
+    });
+    const [first] = counter.mock.calls[0];
+    const [second] = counter.mock.calls[1];
+    expect(first).toEqual(second);
+    expect(first).toContain("REST archive-download");
+  });
+
+  it("charges anonymous archive downloads to their own 30-per-minute bucket", async () => {
+    respond(ANONYMOUS_BUDGETS.archive.max + 1);
+    await expect(
+      consumeAnonymous({
+        path: "/api-gateway/ledgers/alice%2Fmain/archive/main.zip",
+        ip: "1.2.3.4",
+      }),
+    ).resolves.toMatchObject({
+      allowed: false,
+      budget: { windowMs: 60_000, max: 30 },
+    });
+    expect(counter).toHaveBeenCalledWith(
+      "ratelimit:anon:archive:1.2.3.4",
+      60_000,
+    );
   });
 });
 

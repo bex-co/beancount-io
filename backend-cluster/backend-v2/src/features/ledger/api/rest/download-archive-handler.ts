@@ -22,14 +22,11 @@ import {
  * an encoded `%2F` survives Cloudflare and Caddy unchanged. v1 splits it into
  * two segments.
  *
- * The other reason for v1 — this route's acceptance of `?token=<JWT>`, the
- * caller's long-lived session credential in a URL — is no longer a property of
- * the route: the query parameter is not read, so a credential in the query
- * string buys nothing here. `Authorization: Bearer` still works, and anonymous
- * reads of public ledgers still work; everything else should mint a ticket via
- * `POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets` or
- * `Query.getLedgerArchiveDownloadUrl`, both of which return the single-use
- * 60-second ticket URL.
+ * The other reason for v1 — this route's former acceptance of `?token=<JWT>`,
+ * the caller's long-lived session credential in a URL — is no longer a
+ * property of either route. Query-string credentials are ignored;
+ * `Authorization: Bearer` still works here, anonymous reads of public ledgers
+ * remain compatible, and the v1 route uses the standard identity gate.
  *
  * Removal of the route itself is a separate, dated decision once clients have
  * moved; until then it is marked `deprecated` in the spec so nobody adopts it
@@ -97,10 +94,10 @@ export function registerDownloadArchiveRoute(
     summary: "Download ledger archive file (deprecated)",
     description: `Downloads a ledger archive in the specified format (e.g., tar.gz, zip).
 
-**Deprecated.** Use \`POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets\` followed by
-\`GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}?ticket=...\` instead. This route
-addresses the ledger as a single \`owner%2Fname\` path segment, and a private ledger needs an
-\`Authorization\` header — a credential in the query string is not read by this route.
+**Deprecated.** Use
+\`GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}\` with a session cookie,
+OAuth bearer token, or personal API key instead. This route addresses the ledger as a single
+\`owner%2Fname\` path segment. A credential in the query string is not read by either route.
 
 Common archive formats:
 - 'gitea-main.zip' - Git archive from Gitea repository (main branch)

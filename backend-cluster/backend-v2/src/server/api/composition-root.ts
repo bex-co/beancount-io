@@ -36,7 +36,6 @@ import { setV1CompatRedirectRoutes } from "@/features/v1-compat/api/redirect-han
 import { setLedgerApiHandler } from "@/features/ledger/api/rest/ledger-api-handler";
 import {
   setLedgerV1Routes,
-  setLedgerV1TicketRoutes,
   V1_ROUTES as LEDGER_V1_ROUTES,
 } from "@/features/ledger/api/rest/v1";
 import {
@@ -208,16 +207,6 @@ export const REST_FRAGMENTS: readonly RestFragment[] = [
     gate: "enforced",
     register: (router, { layers, config }) =>
       setApiKeyRoutes(router, layers, config),
-  },
-  {
-    // The archive download. Outside the gate because the request carries a
-    // single-use ticket instead of a caller identity — a browser following a
-    // download link cannot attach a bearer token. The authenticated,
-    // scope-checked half is the mint endpoint in the fragment above.
-    feature: "ledger-v1-archive",
-    gate: "outside",
-    register: (router, { layers, config }) =>
-      setLedgerV1TicketRoutes(router, layers, config),
   },
   {
     feature: "sitemap",

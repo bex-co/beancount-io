@@ -63,7 +63,7 @@
         "type": "apiKey",
         "in": "header",
         "name": "x-api-key",
-        "description": "API key for authenticated endpoints"
+        "description": "A Beancount.io personal access token. Create and manage tokens at https://beancount.io/settings/api-keys, copy the plaintext when it is shown once, and send it in the x-api-key header."
       }
     },
     "schemas": {
@@ -2029,7 +2029,7 @@
       "get": {
         "deprecated": true,
         "summary": "Download ledger archive file (deprecated)",
-        "description": "Downloads a ledger archive in the specified format (e.g., tar.gz, zip).\n\n**Deprecated.** Use `POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets` followed by\n`GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}?ticket=...` instead. This route\naddresses the ledger as a single `owner%2Fname` path segment, and a private ledger needs an\n`Authorization` header — a credential in the query string is not read by this route.\n\nCommon archive formats:\n- 'gitea-main.zip' - Git archive from Gitea repository (main branch)\n- 'tar.gz' - Tarball archive\n- 'zip' - ZIP archive",
+        "description": "Downloads a ledger archive in the specified format (e.g., tar.gz, zip).\n\n**Deprecated.** Use\n`GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}` with a session cookie,\nOAuth bearer token, or personal API key instead. This route addresses the ledger as a single\n`owner%2Fname` path segment. A credential in the query string is not read by either route.\n\nCommon archive formats:\n- 'gitea-main.zip' - Git archive from Gitea repository (main branch)\n- 'tar.gz' - Tarball archive\n- 'zip' - ZIP archive",
         "tags": [
           "Ledger"
         ],

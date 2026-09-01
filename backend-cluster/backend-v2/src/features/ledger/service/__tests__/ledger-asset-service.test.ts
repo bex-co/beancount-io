@@ -2,7 +2,6 @@ import { LedgerAssetService } from "../ledger-asset-service";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
 import { NotFoundError, ForbiddenError } from "@/shared/errors";
-import { makeFakeCache } from "@/server/rest/__tests__/v1-test-server";
 
 // Exercises this service's own behavior; authorizeLedger has its own suite.
 jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
@@ -21,12 +20,13 @@ const mockFavaClientFactory = {
 };
 
 const mockAssetStorage = {
-  generateDownloadUrl: jest.fn().mockResolvedValue({ downloadUrl: "https://s3.example/signed" }),
+  generateDownloadUrl: jest
+    .fn()
+    .mockResolvedValue({ downloadUrl: "https://s3.example/signed" }),
 };
 
 const mockConfig = {
   server: { url: "https://beancount.io/" },
-  jwt: { secret: "test-secret" },
 };
 
 const IDENTITY: Identity = {
@@ -37,7 +37,6 @@ const IDENTITY: Identity = {
 };
 
 describe("LedgerAssetService", () => {
-  const cache = makeFakeCache();
   let service: LedgerAssetService;
 
   beforeEach(() => {
@@ -51,7 +50,6 @@ describe("LedgerAssetService", () => {
       {} as any,
       {} as any,
       mockAssetStorage as any,
-      cache.helper as any,
       mockConfig as any,
     );
   });
@@ -62,7 +60,11 @@ describe("LedgerAssetService", () => {
         data: { success: true, data: { id: 42, full_name: "alice/personal" } },
       });
 
-      const url = await service.getAssetDownloadUrl(42, "receipt.png", IDENTITY);
+      const url = await service.getAssetDownloadUrl(
+        42,
+        "receipt.png",
+        IDENTITY,
+      );
 
       expect(authorizeLedger).toHaveBeenCalledWith(
         IDENTITY,
@@ -85,7 +87,9 @@ describe("LedgerAssetService", () => {
       mockGetLedgerByRepoId.mockResolvedValue({
         data: { success: true, data: { id: 42, full_name: "alice/personal" } },
       });
-      (authorizeLedger as jest.Mock).mockRejectedValue(new ForbiddenError("no"));
+      (authorizeLedger as jest.Mock).mockRejectedValue(
+        new ForbiddenError("no"),
+      );
 
       await expect(
         service.getAssetDownloadUrl(42, "x.png", undefined),
@@ -95,7 +99,7 @@ describe("LedgerAssetService", () => {
   });
 
   describe("getLedgerArchiveDownloadUrl", () => {
-    it("mints a single-use ticket URL for an authenticated caller — no session JWT in the URL", async () => {
+    it("returns the stable v1 URL for an authenticated caller without embedding a credential", async () => {
       mockGetLedger.mockResolvedValue({
         data: { success: true, data: { private: true } },
       });
@@ -111,10 +115,10 @@ describe("LedgerAssetService", () => {
         "read",
         expect.anything(),
       );
-      expect(url).toMatch(
-        /^https:\/\/beancount\.io\/api-gateway\/v1\/ledgers\/alice\/personal\/archive\/main\.zip\?ticket=v1\./,
+      expect(url).toBe(
+        "https://beancount.io/api-gateway/v1/ledgers/alice/personal/archive/main.zip",
       );
-      // The property the fix exists for: no long-lived credential in the URL.
+      expect(url).not.toContain("ticket=");
       expect(url).not.toContain("token=");
     });
 
@@ -133,37 +137,17 @@ describe("LedgerAssetService", () => {
       );
     });
 
-    it("refuses to mint when no signing secret is configured", async () => {
+    it("denies before returning a URL when authorizeLedger rejects", async () => {
       mockGetLedger.mockResolvedValue({
         data: { success: true, data: { private: true } },
       });
-      const unconfigured = new LedgerAssetService(
-        mockFavaClientFactory as any,
-        {} as any,
-        {} as any,
-        mockAssetStorage as any,
-        cache.helper as any,
-        { ...mockConfig, jwt: { secret: "" } } as any,
+      (authorizeLedger as jest.Mock).mockRejectedValue(
+        new ForbiddenError("no"),
       );
 
-      const noncesBefore = cache.size();
-      await expect(
-        unconfigured.getLedgerArchiveDownloadUrl("alice/personal", IDENTITY),
-      ).rejects.toThrow(ForbiddenError);
-      expect(cache.size()).toBe(noncesBefore);
-    });
-
-    it("denies before minting anything when authorizeLedger rejects", async () => {
-      mockGetLedger.mockResolvedValue({
-        data: { success: true, data: { private: true } },
-      });
-      (authorizeLedger as jest.Mock).mockRejectedValue(new ForbiddenError("no"));
-
-      const noncesBefore = cache.size();
       await expect(
         service.getLedgerArchiveDownloadUrl("alice/personal", IDENTITY),
       ).rejects.toThrow(ForbiddenError);
-      expect(cache.size()).toBe(noncesBefore);
     });
   });
 });

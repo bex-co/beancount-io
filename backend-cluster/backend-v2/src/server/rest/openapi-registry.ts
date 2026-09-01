@@ -260,20 +260,18 @@ export function generateV1OpenAPIDocument() {
       description: `
 The public REST API for Beancount.io ledgers.
 
-Every endpoint addresses a ledger as two path segments — \`/api-gateway/v1/ledgers/{owner}/{name}\` —
-and returns JSON. Errors share one shape: \`{ "ok": false, "error": { "code", "message" } }\`.
+Every endpoint addresses a ledger as two path segments — \`/api-gateway/v1/ledgers/{owner}/{name}\`.
+Resource responses are JSON except for archive downloads, which stream bytes. Errors share one
+shape: \`{ "ok": false, "error": { "code", "message" } }\`.
 
 ## Authentication
 
 For scripts and integrations, create a personal access token at
 https://beancount.io/settings/api-keys and send it in the \`x-api-key\` header. The
-plaintext is shown only once. OAuth 2.1 access tokens and session tokens may instead
-be sent as bearer tokens. Each operation is classified \`read\`, \`write\`, or
+plaintext is shown only once. OAuth 2.1 access tokens may instead be sent as bearer
+tokens, and signed-in browsers use their session cookie. Each operation is classified \`read\`, \`write\`, or
 \`admin\`, and a token is refused when its scopes (\`ledger.read\`, \`ledger.write\`,
 \`ledger.admin\`) do not cover the operation's class.
-
-The one exception is the archive download, which takes a single-use ticket in the
-query string instead — a browser following a download link cannot send a header.
       `.trim(),
       contact: {
         name: "Beancount.io",

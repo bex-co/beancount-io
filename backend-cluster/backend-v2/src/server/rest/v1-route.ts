@@ -38,17 +38,6 @@ type V1Path = `${typeof V1_PREFIX}/${string}`;
 
 type V1Method = "get" | "post" | "put" | "delete";
 
-/**
- * How the caller proves the right to this route.
- *
- * - `identity` — an authenticated caller is required; the op-class gate has
- *   already checked their scopes by the time the handler runs.
- * - `ticket` — the request carries its own single-use credential and is
- *   deliberately outside the identity gate (the archive download; see
- *   `archive-handler.ts`).
- */
-type V1Auth = "identity" | "ticket";
-
 export interface V1Deps {
   readonly layers: AppLayers;
   readonly config: AppConfig;
@@ -58,7 +47,7 @@ interface V1Input<P, Q, B> {
   readonly params: P;
   readonly query: Q;
   readonly body: B;
-  /** The authenticated caller. Present unless the route is ticket-authenticated. */
+  /** The authenticated caller, required for every v1 resource route. */
   readonly identity: Identity;
   readonly ctx: RouterContext;
 }
@@ -69,7 +58,6 @@ export interface V1Route<P = unknown, Q = unknown, B = unknown> {
   readonly path: V1Path;
   readonly summary: string;
   readonly description: string;
-  readonly auth?: V1Auth;
   readonly params?: ZodType<P>;
   readonly query?: ZodType<Q>;
   readonly body?: ZodType<B>;
@@ -146,10 +134,7 @@ function registerV1Route<P, Q, B>(
       params: validated.params as P,
       query: validated.query as Q,
       body: validated.body as B,
-      identity:
-        route.auth === "ticket"
-          ? (undefined as unknown as Identity)
-          : requireIdentity(ctx),
+      identity: requireIdentity(ctx),
       ctx,
     });
     if (result !== undefined) ctx.body = result;
@@ -161,9 +146,7 @@ function registerV1Route<P, Q, B>(
     summary: route.summary,
     description: route.description,
     tags: [V1_TAG],
-    ...(route.auth === "ticket"
-      ? {}
-      : { security: [{ bearerAuth: [] }, { apiKey: [] }] }),
+    security: [{ bearerAuth: [] }, { apiKey: [] }],
     request: {
       ...(route.params ? { params: route.params } : {}),
       ...(route.query ? { query: route.query } : {}),

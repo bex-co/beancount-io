@@ -66,6 +66,7 @@ describe("streamLedgerArchive", () => {
     expect(
       appLayers.database.models.user.getUserByUsername,
     ).not.toHaveBeenCalled();
+    expect(ctx.set).toHaveBeenCalledWith("Cache-Control", "private, no-store");
     expect(ctx.body).toBe("archive-bytes");
   });
 

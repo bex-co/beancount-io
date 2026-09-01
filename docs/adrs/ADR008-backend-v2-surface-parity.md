@@ -193,7 +193,7 @@ Every one of the 80 in-scope verbs missing from REST is **also** missing from MC
 | Ledger vocabulary reads    | 11    | `w3/m6`   | Uniform, no arguments — where the porting pattern gets proven cheaply                                                                             |
 | Report and journal reads   | 16    | `w3/m7`   | One design question: parameter and bounding shape for the family                                                                                  |
 | Bank import (Plaid)        | 15    | `w3/m8`   | The D4a family. Needs an authorization decision before a port                                                                                     |
-| Files and documents        | 10    | —         | Asset upload/download URLs raise a ticket-vs-header question like the archive route's                                                             |
+| Files and documents        | 10    | —         | Asset upload/download URLs need a separate decision because they redirect to object storage; archive downloads now use standard v1 identity auth  |
 | Ledger lifecycle and misc  | 10    | —         | `createLedger` / `deleteLedger` / star, plus `health` and `featureFlags` (`public`)                                                               |
 | Collaboration and keys     | 8     | —         | All `admin`. Whether an agent should add collaborators is the same shape of question as m8/t001                                                   |
 | Git and version history    | 7     | —         | Commits, pull requests. Reads are easy; the PR verbs need a decision                                                                              |

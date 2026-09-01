@@ -29,6 +29,13 @@ export interface Budget {
 
 const MINUTE = 60_000;
 
+const ARCHIVE_DOWNLOAD_BUDGET: Budget = { windowMs: MINUTE, max: 30 };
+const ARCHIVE_DOWNLOAD_OP_IDS = new Set([
+  "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
+  "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
+]);
+const ARCHIVE_DOWNLOAD_BUCKET = "REST archive-download";
+
 /**
  * Budgets by op class. Writes are deliberately much smaller than reads: a read
  * that costs us a Fava query is bounded work, while a write commits to a git
@@ -64,6 +71,13 @@ export const OP_BUDGETS: Record<string, Budget> = {
   "GQL Mutation.createApiKey": { windowMs: MINUTE, max: 5 },
   "REST POST /api-gateway/v1/api-keys": { windowMs: MINUTE, max: 5 },
   "MCP createApiKey": { windowMs: MINUTE, max: 5 },
+  // Archive generation and transfer are substantially more expensive than a
+  // normal metadata read. The canonical and compatibility routes share one
+  // counter (see `operationBucket`) so changing URL cannot double this budget.
+  "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}":
+    ARCHIVE_DOWNLOAD_BUDGET,
+  "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}":
+    ARCHIVE_DOWNLOAD_BUDGET,
   // The public quota catalog and protected billing mutations all used the
   // legacy `session-only` class. Keep that 300/minute budget while op classes
   // now describe public reachability or read/write risk independently from the
@@ -95,6 +109,9 @@ export const OP_BUDGETS: Record<string, Budget> = {
  * neighbour could stop us taking payments by hammering a login page.
  */
 export const ANONYMOUS_BUDGETS: Record<string, Budget> = {
+  // The compatibility archive route remains public for existing browser links.
+  // Keep its expensive byte stream out of the general anonymous intake bucket.
+  archive: ARCHIVE_DOWNLOAD_BUDGET,
   oauth: { windowMs: MINUTE, max: 60 },
   webhook: { windowMs: MINUTE, max: 120 },
   default: { windowMs: MINUTE, max: 120 },
@@ -102,6 +119,13 @@ export const ANONYMOUS_BUDGETS: Record<string, Budget> = {
 
 /** Which anonymous family a path belongs to. */
 export function anonymousFamily(path: string): keyof typeof ANONYMOUS_BUDGETS {
+  if (
+    /^\/api-gateway\/(?:v1\/ledgers\/[^/]+\/[^/]+|ledgers\/[^/]+)\/archive\/[^/]+$/.test(
+      path,
+    )
+  ) {
+    return "archive";
+  }
   if (path.includes("/oauth") || path.includes("/.well-known/")) return "oauth";
   if (path.includes("/webhook")) return "webhook";
   return "default";
@@ -125,6 +149,13 @@ export function budgetFor(opId: string, opClass: OpClass): Budget {
   return OP_BUDGETS[opId] ?? CLASS_BUDGETS[opClass];
 }
 
+/** Compatibility spellings of one operation must spend the same budget. */
+function operationBucket(opId: string): string {
+  return ARCHIVE_DOWNLOAD_OP_IDS.has(opId)
+    ? ARCHIVE_DOWNLOAD_BUCKET
+    : opId;
+}
+
 export interface RateLimitDecision {
   readonly allowed: boolean;
   readonly retryAfterSeconds: number;
@@ -144,7 +175,7 @@ export async function consume(args: {
 }): Promise<RateLimitDecision> {
   const { class: opClass } = classifyOp(args.opId);
   const budget = budgetFor(args.opId, opClass);
-  const key = `ratelimit:${subjectKey(args.identity, args.ip)}:${args.opId}`;
+  const key = `ratelimit:${subjectKey(args.identity, args.ip)}:${operationBucket(args.opId)}`;
 
   const result = await incrementInWindow(key, budget.windowMs);
   if (!result) {

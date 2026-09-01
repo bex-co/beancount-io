@@ -174,10 +174,11 @@ describe("surface parity", () => {
   const DEFERRED: Record<"gql" | "rest" | "mcp", number> = {
     gql: 0,
     // `Query.userProfile`, centralized account deletion, the public tier-quota
-    // catalog, and four deliberately public social-discovery queries are
-    // reachable work whose absent twins carry explicit reasons. m15 preserves
-    // current clients rather than adding new REST/MCP surfaces.
-    rest: 52,
+    // catalog, four deliberately public social-discovery queries, and
+    // browser-only archive URL discovery are reachable work whose absent twins
+    // carry explicit reasons. m15 preserves current clients rather than adding
+    // new REST/MCP surfaces.
+    rest: 53,
     mcp: 63,
   };
 

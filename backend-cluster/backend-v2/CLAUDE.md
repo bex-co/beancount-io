@@ -147,11 +147,11 @@ Prompt and agent-routing evals live entirely under `evals/`. Use the focused `ya
 
 `src/features/ledger/api/rest/v1/` is the public API (ADR 0006 D7). It is deliberately small: the bar for an endpoint is that a caller who has never read the GraphQL schema can do the thing with curl in ten minutes. Everything else stays GraphQL-only with a written `restExempt` reason in the op-class table.
 
-- **Add an endpoint** by declaring a `v1Route({...})` in the relevant `*-handler.ts` and listing it in `v1/index.ts`. `registerV1Route` mounts it, validates it, and registers it with the spec from that one declaration, so the mounted path, the enforced schema, and the documented contract cannot disagree.
+- **Add an endpoint** by declaring a `v1Route({...})` in the relevant `*-handler.ts` and listing it in `v1/index.ts`. `registerV1Route` mounts it, validates it, requires the shared request identity, and registers it with the spec from that one declaration, so the mounted path, enforced schema/authentication, and documented contract cannot disagree.
 - **Paths address a ledger as `{owner}/{name}`,** two segments, never one `{ledgerId}`. A single segment needs `%2F` to survive Cloudflare and Caddy unchanged.
 - **Classify the new op** in `op-class.ts` — the coverage test fails otherwise — and remember the class comes from the table, not the HTTP method: `POST .../query` is `read`.
 - **Regenerate the snapshot** with `yarn generate-v1-openapi`; `openapi-completeness.test.ts` fails when `docs/openapi/v1.json` and the live document disagree, so a contract change shows up as a reviewable diff.
-- The v1 fragments are gated `enforced`, so scopes are denied on this surface regardless of `config.api.scopeEnforcement`. The archive download is the one v1 route outside the identity gate: it carries a single-use HMAC ticket instead, because a browser following a download link cannot send a header.
+- The v1 fragment is gated `enforced`, so scopes are denied on this surface regardless of `config.api.scopeEnforcement`. Every v1 resource route, including archive downloads, uses the shared identity gate; browsers present their session cookie and non-browser clients use OAuth bearer tokens or personal API keys.
 
 ### Identity and op classes
 

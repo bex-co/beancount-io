@@ -1,11 +1,9 @@
-import { ForbiddenError, NotFoundError } from "@/shared/errors";
-import type { CacheHelper } from "@/shared/cache";
+import { NotFoundError } from "@/shared/errors";
 import { buildLedgerRepoAssetKey } from "@/features/s3/service/asset-storage-service";
 import { parseLedgerId } from "@/shared/str";
 import { unwrapFavaResponse } from "@/foundation/fava";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
-import { mintArchiveTicket } from "@/features/ledger/api/rest/v1/archive-ticket";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "@/server/api/identity";
 import {
@@ -35,8 +33,7 @@ export class LedgerAssetService
     models: AuthorizeLedgerDeps["models"],
     db: AuthorizeLedgerDeps["db"],
     private readonly assetStorage: IAssetStorageService,
-    private readonly cacheHelper: CacheHelper,
-    private readonly config: Pick<AppConfig, "server" | "jwt">,
+    private readonly config: Pick<AppConfig, "server">,
   ) {
     super(favaClientFactory, models, db);
   }
@@ -72,16 +69,15 @@ export class LedgerAssetService
   /**
    * Return a URL that downloads the ledger's `main.zip` archive.
    *
-   * An authenticated caller gets the v1 single-use ticket URL — the same
-   * capability `POST /archive-tickets` mints — so what the URL leaves behind in
-   * an access log, a Referer header, or browser history is a spent,
-   * one-archive capability rather than the caller's session JWT, which is what
-   * the `?token=<JWT>` URL this replaces embedded.
+   * An authenticated caller gets the stable v1 URL. Browser navigation sends
+   * the HttpOnly session cookie to that endpoint; CLI and third-party callers
+   * send their normal bearer token or personal API key directly to it. No
+   * credential is embedded in the URL.
    *
    * Anonymous callers can only be reading a public ledger (authorizeLedger
-   * refuses everything else) and have no identity to bind a ticket to, so they
-   * get the credential-free legacy URL — the ledger service forwards those
-   * requests to Gitea with no credential at all.
+   * refuses everything else), so they get the credential-free legacy URL,
+   * preserving the existing public archive behavior while the v1 resource
+   * surface remains authenticated by default.
    */
   async getLedgerArchiveDownloadUrl(
     ledgerId: string,
@@ -100,17 +96,7 @@ export class LedgerAssetService
     const baseUrl = this.config.server.url.replace(/\/$/, "");
 
     if (identity?.userId) {
-      if (!this.config.jwt.secret) {
-        // Without a signing secret every ticket would verify against an empty
-        // key — the same refusal the v1 route makes.
-        throw new ForbiddenError("Archive tickets are not configured");
-      }
-      const { ticket } = await mintArchiveTicket(
-        { userId: identity.userId, ledgerId, archive: "main.zip" },
-        this.config.jwt.secret,
-        this.cacheHelper,
-      );
-      return `${baseUrl}/api-gateway/v1/ledgers/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/archive/main.zip?ticket=${encodeURIComponent(ticket)}`;
+      return `${baseUrl}/api-gateway/v1/ledgers/${encodeURIComponent(ledgerOwner)}/${encodeURIComponent(ledgerName)}/archive/main.zip`;
     }
 
     // The legacy route addresses the ledger as one `owner%2Fname` segment.

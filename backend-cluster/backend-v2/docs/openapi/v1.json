@@ -3,7 +3,7 @@
   "info": {
     "title": "Beancount.io v1 API",
     "version": "1.0.0",
-    "description": "The public REST API for Beancount.io ledgers.\n\nEvery endpoint addresses a ledger as two path segments — `/api-gateway/v1/ledgers/{owner}/{name}` —\nand returns JSON. Errors share one shape: `{ \"ok\": false, \"error\": { \"code\", \"message\" } }`.\n\n## Authentication\n\nFor scripts and integrations, create a personal access token at\nhttps://beancount.io/settings/api-keys and send it in the `x-api-key` header. The\nplaintext is shown only once. OAuth 2.1 access tokens and session tokens may instead\nbe sent as bearer tokens. Each operation is classified `read`, `write`, or\n`admin`, and a token is refused when its scopes (`ledger.read`, `ledger.write`,\n`ledger.admin`) do not cover the operation's class.\n\nThe one exception is the archive download, which takes a single-use ticket in the\nquery string instead — a browser following a download link cannot send a header.",
+    "description": "The public REST API for Beancount.io ledgers.\n\nEvery endpoint addresses a ledger as two path segments — `/api-gateway/v1/ledgers/{owner}/{name}`.\nResource responses are JSON except for archive downloads, which stream bytes. Errors share one\nshape: `{ \"ok\": false, \"error\": { \"code\", \"message\" } }`.\n\n## Authentication\n\nFor scripts and integrations, create a personal access token at\nhttps://beancount.io/settings/api-keys and send it in the `x-api-key` header. The\nplaintext is shown only once. OAuth 2.1 access tokens may instead be sent as bearer\ntokens, and signed-in browsers use their session cookie. Each operation is classified `read`, `write`, or\n`admin`, and a token is refused when its scopes (`ledger.read`, `ledger.write`,\n`ledger.admin`) do not cover the operation's class.",
     "contact": {
       "name": "Beancount.io",
       "url": "https://github.com/bex-co/beancount-io"
@@ -685,41 +685,6 @@
         "required": [
           "currency"
         ]
-      },
-      "ArchiveTicket": {
-        "type": "object",
-        "properties": {
-          "url": {
-            "type": "string",
-            "description": "The download URL, ticket included. Valid once, for 60 seconds.",
-            "example": "/api-gateway/v1/ledgers/alice/main-ledger/archive/gitea-main.zip?ticket=v1.eyJ1c2VySWQi..."
-          },
-          "expiresAt": {
-            "type": "string",
-            "description": "When the ticket stops being redeemable (ISO 8601)",
-            "example": "2026-08-23T12:00:60.000Z"
-          }
-        },
-        "required": [
-          "url",
-          "expiresAt"
-        ],
-        "description": "A single-use archive download ticket"
-      },
-      "ArchiveTicketRequest": {
-        "type": "object",
-        "properties": {
-          "archive": {
-            "type": "string",
-            "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$",
-            "description": "Archive to download. Git archives are `gitea-<branch>.zip`; `tar.gz` and `zip` are also accepted.",
-            "example": "gitea-main.zip"
-          }
-        },
-        "required": [
-          "archive"
-        ],
-        "description": "Which archive the ticket should authorize"
       },
       "ApiKey": {
         "type": "object",
@@ -6413,10 +6378,10 @@
         }
       }
     },
-    "/api-gateway/v1/ledgers/{owner}/{name}/archive-tickets": {
-      "post": {
-        "summary": "Mint an archive download ticket",
-        "description": "Returns a URL that downloads the archive once, within 60 seconds. The ticket is bound to the caller, the ledger, and the archive name, and is refused on a second use.",
+    "/api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}": {
+      "get": {
+        "summary": "Download a ledger archive",
+        "description": "Streams the archive for an authenticated caller with read access to the ledger. Send a session cookie, OAuth bearer token, or personal API key.",
         "tags": [
           "Ledger v1"
         ],
@@ -6452,24 +6417,34 @@
             "description": "Ledger (repository) name",
             "name": "name",
             "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$",
+              "description": "Archive to download. Git archives are `gitea-<branch>.zip`; `tar.gz` and `zip` are also accepted.",
+              "example": "gitea-main.zip"
+            },
+            "required": true,
+            "description": "Archive to download. Git archives are `gitea-<branch>.zip`; `tar.gz` and `zip` are also accepted.",
+            "name": "archive",
+            "in": "path"
           }
         ],
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/ArchiveTicketRequest"
-              }
-            }
-          }
-        },
         "responses": {
           "200": {
-            "description": "A single-use download URL",
+            "description": "The archive bytes",
             "content": {
-              "application/json": {
+              "application/zip": {
                 "schema": {
-                  "$ref": "#/components/schemas/ArchiveTicket"
+                  "type": "string",
+                  "format": "binary"
+                }
+              },
+              "application/gzip": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
                 }
               }
             }
@@ -6741,131 +6716,6 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ApiKey"
-                }
-              }
-            }
-          },
-          "400": {
-            "description": "Request failed validation against the documented schema",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V1Error"
-                }
-              }
-            }
-          },
-          "401": {
-            "description": "No credential, or a credential that no longer resolves",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V1Error"
-                }
-              }
-            }
-          },
-          "403": {
-            "description": "The credential lacks the scope this operation's class requires",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V1Error"
-                }
-              }
-            }
-          },
-          "404": {
-            "description": "No such ledger, or no access to it",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V1Error"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Rate limited",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/V1Error"
-                }
-              }
-            }
-          }
-        }
-      }
-    },
-    "/api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}": {
-      "get": {
-        "summary": "Download a ledger archive",
-        "description": "Streams the archive. Requires a ticket from the archive-tickets endpoint; no bearer token is read here, and a ticket works exactly once.",
-        "tags": [
-          "Ledger v1"
-        ],
-        "parameters": [
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "description": "Ledger owner's username",
-              "example": "alice"
-            },
-            "required": true,
-            "description": "Ledger owner's username",
-            "name": "owner",
-            "in": "path"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "description": "Ledger (repository) name",
-              "example": "main-ledger"
-            },
-            "required": true,
-            "description": "Ledger (repository) name",
-            "name": "name",
-            "in": "path"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "pattern": "^[A-Za-z0-9][A-Za-z0-9._-]{0,254}$",
-              "description": "Archive to download. Git archives are `gitea-<branch>.zip`; `tar.gz` and `zip` are also accepted.",
-              "example": "gitea-main.zip"
-            },
-            "required": true,
-            "description": "Archive to download. Git archives are `gitea-<branch>.zip`; `tar.gz` and `zip` are also accepted.",
-            "name": "archive",
-            "in": "path"
-          },
-          {
-            "schema": {
-              "type": "string",
-              "minLength": 1,
-              "description": "Single-use ticket from POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets"
-            },
-            "required": true,
-            "description": "Single-use ticket from POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets",
-            "name": "ticket",
-            "in": "query"
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "The archive bytes",
-            "content": {
-              "application/zip": {
-                "schema": {
-                  "type": "string"
-                }
-              },
-              "application/gzip": {
-                "schema": {
-                  "type": "string"
                 }
               }
             }

@@ -11,10 +11,7 @@ import { normalizeRestPath, opMethodsForLayer } from "@/server/api/rest-op-id";
 import { restErrorMiddleware } from "../error-middleware";
 import { restScopeMiddleware } from "../scope-middleware";
 
-import {
-  setLedgerV1Routes,
-  setLedgerV1TicketRoutes,
-} from "@/features/ledger/api/rest/v1";
+import { setLedgerV1Routes } from "@/features/ledger/api/rest/v1";
 import { setApiKeyRoutes } from "@/features/apikeys/api/api-key-rest";
 
 /**
@@ -30,39 +27,6 @@ import { setApiKeyRoutes } from "@/features/apikeys/api/api-key-rest";
  * tests (w1/m18), and minting real tokens here would test that instead of
  * this.
  */
-
-/** In-memory stand-in for the Redis-backed strict cache the tickets use. */
-export function makeFakeCache() {
-  const store = new Map<string, { value: unknown; expiresAt: number }>();
-  let now = Date.now();
-  return {
-    /** Move the clock, for expiry tests. */
-    advance(ms: number) {
-      now += ms;
-    },
-    get now() {
-      return now;
-    },
-    helper: {
-      getStrict: async <T>(key: string): Promise<T | undefined> => {
-        const hit = store.get(key);
-        if (!hit) return undefined;
-        if (hit.expiresAt <= now) {
-          store.delete(key);
-          return undefined;
-        }
-        return hit.value as T;
-      },
-      setStrict: async <T>(key: string, value: T, ttlMs: number) => {
-        store.set(key, { value, expiresAt: now + ttlMs });
-      },
-      delStrict: async (key: string) => {
-        store.delete(key);
-      },
-    },
-    size: () => store.size,
-  };
-}
 
 /**
  * Which fragments the server under test should mount. Defaults to all of them,
@@ -99,19 +63,15 @@ export async function startV1TestServer(
   const before = router.stack.length;
   if (fragments.ledger !== false) setLedgerV1Routes(router, layers, config);
   if (fragments.apiKeys !== false) setApiKeyRoutes(router, layers, config);
-  // Everything registered so far is scope-enforced; the ticket fragment that
-  // follows deliberately sits outside the identity gate.
-  const scopedUntil = router.stack.length;
-  if (fragments.ledger !== false)
-    setLedgerV1TicketRoutes(router, layers, config);
-
   // The gate index the composition root builds at assembly time, rebuilt here
   // the same way — off the router, not off a second list that could disagree.
-  router.stack.slice(before).forEach((layer, index) => {
+  router.stack.slice(before).forEach((layer) => {
     if (layer.methods.length === 0) return;
-    const gate: ApiGate = before + index < scopedUntil ? "enforced" : "outside";
     for (const method of opMethodsForLayer(layer.methods)) {
-      gates.set(restOpId(method, normalizeRestPath(layer.path)), gate);
+      gates.set(
+        restOpId(method, normalizeRestPath(layer.path)),
+        "enforced" satisfies ApiGate,
+      );
     }
   });
 

@@ -171,6 +171,8 @@ const R = {
     "Plaid binding runs through Link, a browser widget — the link token and its public-token exchange are only meaningful as callbacks from that widget. Covers the Link ceremony only; operating an already-linked bank is `plaidOperation` (ADR 0008 D4a).",
   plaidOperation:
     "Operating an already-linked bank — listing items, mapping accounts, syncing and submitting transactions — needs no browser and is squarely customer-facing. Deferred pending the authorization decision in w3/m8/t001, not excused (ADR 0008 D4a).",
+  archiveDownload:
+    "REST callers download the archive bytes directly from the v1 archive endpoint. This GraphQL field only gives the browser that endpoint's URL, so publishing a second REST URL-discovery operation would add an unnecessary round trip.",
   llm: "LLM-assisted helper whose contract is a prompt and its response shape, both still moving. Publishing it as REST would freeze what we are still iterating on.",
   assetStorage:
     "Pre-signed S3 URL minting is an implementation detail of the dashboard's upload widget, not a ledger resource.",
@@ -229,7 +231,7 @@ const M = {
 /** Why a verb has no GraphQL field. */
 const G = {
   bytesNotFields:
-    "Serves bytes, not fields: a GraphQL response cannot stream an archive, so the field mints the ticket and the REST route serves the download.",
+    "Serves bytes, not fields: a GraphQL response cannot stream an archive, so the URL field points browsers at the REST route that serves the download.",
   streamingOnly:
     "Server-sent streaming over a long-lived HTTP request; GraphQL's request/response shape cannot carry it, and the dashboard consumes the stream directly.",
   wireCompat:
@@ -891,10 +893,10 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = [
     R.assetStorage,
     M.notAgentShaped,
   ),
-  gqlAndRest(
+  gqlOnly(
     "Query.getLedgerArchiveDownloadUrl",
     "read",
-    "POST /api-gateway/v1/ledgers/{owner}/{name}/archive-tickets",
+    R.archiveDownload,
     M.notAgentShaped,
   ),
   gqlOnly(

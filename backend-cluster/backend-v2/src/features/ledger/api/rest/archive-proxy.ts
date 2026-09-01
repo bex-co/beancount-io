@@ -9,9 +9,9 @@ import { assertSafeArchiveName } from "./safe-archive-name";
 /**
  * Streaming a ledger archive from the ledger service.
  *
- * Shared by the v1 ticket-authenticated route and the legacy `?token=` one, so
- * the two differ only in how the caller proved the right to the bytes — which
- * is the whole point of the v1 route, and the only thing that should differ.
+ * Shared by the identity-authenticated v1 route and the legacy public-compatible
+ * route, so archive validation, upstream credentials, and response handling stay
+ * consistent between them.
  */
 export async function streamLedgerArchive(
   ctx: RouterContext,
@@ -64,5 +64,6 @@ export async function streamLedgerArchive(
     const value = response.headers.get(header);
     if (value) ctx.set(header, value);
   }
+  ctx.set("Cache-Control", "private, no-store");
   ctx.body = response.body;
 }

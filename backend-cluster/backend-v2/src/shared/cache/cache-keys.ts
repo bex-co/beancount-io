@@ -72,30 +72,6 @@ export const CACHE_KEYS = {
   },
 
   /**
-   * Ledger feature caches.
-   */
-  ledger: {
-    /**
-     * Short-lived marker that a pending write for this ledger owner is
-     * exempt from the free-tier directive limit (mobile-originated writes).
-     * Read by both beancount-ledger's own API-layer pre-check and the Gitea
-     * pre-receive hook's webhook check — see
-     * `features/ledger/operations/directive-limit-bypass.ts`.
-     */
-
-    /**
-     * Unclaimed archive download ticket, by nonce.
-     *
-     * A Redis-backed record, not a cache: it is the single-use half of the
-     * download credential (ADR 0006 security repair 1), so it persists through
-     * the strict helpers that throw rather than fail open. Written when a
-     * ticket is minted, deleted when it is redeemed — a second redemption
-     * finds nothing and is refused.
-     */
-    archiveTicketNonce: (nonce: string) => `ledger:archive_ticket:${nonce}`,
-  },
-
-  /**
    * Sitemap caches (growth feature).
    *
    * NOTE: the sitemap cache is intentionally file-backed (Docker-volume

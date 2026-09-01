@@ -16,8 +16,8 @@ export interface ResolveLedgerCallerDeps {
  * Authenticated callers never reach this helper: they resolve through
  * `resolveIdentity` + `authorizeLedger` upstream. There is deliberately no
  * token parameter — this route family once accepted `?token=<JWT>`, which put
- * a long-lived credential into every URL it touched; the single-use ticket
- * flow (`v1/archive-handler.ts`) is the replacement for link-shaped downloads.
+ * a long-lived credential into every URL it touched. The v1 archive route now
+ * uses the same header/cookie identity authentication as every other v1 route.
  */
 export async function resolveLedgerCaller(
   ledgerId: string,

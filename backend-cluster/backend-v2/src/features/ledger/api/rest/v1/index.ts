@@ -10,10 +10,7 @@ import { ENTRY_ROUTES } from "./entries-handler";
 import { VOCABULARY_ROUTES } from "./vocabulary-handler";
 import { ANALYSIS_ROUTES } from "./analysis-handler";
 import { BANK_ROUTES } from "./banks-handler";
-import {
-  ARCHIVE_DOWNLOAD_ROUTES,
-  ARCHIVE_TICKET_ROUTES,
-} from "./archive-handler";
+import { ARCHIVE_DOWNLOAD_ROUTES } from "./archive-handler";
 import { registerV1Routes, type V1Route } from "@/server/rest/v1-route";
 
 /**
@@ -25,8 +22,7 @@ import { registerV1Routes, type V1Route } from "@/server/rest/v1-route";
  * bar is here; everything else stays GraphQL-only with a written reason in the
  * op-class table, where the parity test reads it.
  *
- * Split into two fragments because they sit on opposite sides of the identity
- * gate — see `ARCHIVE_DOWNLOAD_ROUTES`.
+ * Every route uses the shared v1 identity and scope gate.
  */
 const V1_SCOPED_ROUTES: readonly V1Route<never, never, never>[] = [
   ...LEDGER_ROUTES,
@@ -37,18 +33,11 @@ const V1_SCOPED_ROUTES: readonly V1Route<never, never, never>[] = [
   ...VOCABULARY_ROUTES,
   ...ANALYSIS_ROUTES,
   ...BANK_ROUTES,
-  ...ARCHIVE_TICKET_ROUTES,
-];
-
-const V1_TICKET_ROUTES: readonly V1Route<never, never, never>[] = [
   ...ARCHIVE_DOWNLOAD_ROUTES,
 ];
 
-/** Every v1 route, both fragments — what the completeness test enumerates. */
-export const V1_ROUTES: readonly V1Route<never, never, never>[] = [
-  ...V1_SCOPED_ROUTES,
-  ...V1_TICKET_ROUTES,
-];
+/** Every v1 route — what the completeness test enumerates. */
+export const V1_ROUTES = V1_SCOPED_ROUTES;
 
 /** The scoped fragment: everything a credential-bearing caller reaches. */
 export function setLedgerV1Routes(
@@ -57,13 +46,4 @@ export function setLedgerV1Routes(
   config: AppConfig,
 ): void {
   registerV1Routes(router, { layers, config }, V1_SCOPED_ROUTES);
-}
-
-/** The ticket-authenticated fragment: the archive download, and only that. */
-export function setLedgerV1TicketRoutes(
-  router: Router,
-  layers: AppLayers,
-  config: AppConfig,
-): void {
-  registerV1Routes(router, { layers, config }, V1_TICKET_ROUTES);
 }
