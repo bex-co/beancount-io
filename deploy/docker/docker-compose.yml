@@ -254,6 +254,12 @@ services:
       GITEA__database__NAME: ${GITEA_DB_NAME:-gitea}
       GITEA__database__USER: ${GITEA_DB_USER:-gitea}
       GITEA__database__PASSWD: ${GITEA_DB_PASSWORD:?Set GITEA_DB_PASSWORD in .env}
+      # Cap the DB pool below Postgres's max_connections=100 so request bursts
+      # queue inside Gitea instead of failing with "pq: sorry, too many clients
+      # already" (Gitea's default MAX_OPEN_CONNS=0 means unlimited).
+      GITEA__database__MAX_OPEN_CONNS: 50
+      GITEA__database__MAX_IDLE_CONNS: 10
+      GITEA__database__CONN_MAX_LIFETIME: 5m
       GITEA__server__DOMAIN: ${GIT_DOMAIN:?Set GIT_DOMAIN in .env}
       GITEA__server__ROOT_URL: https://${GIT_DOMAIN:?Set GIT_DOMAIN in .env}/
       GITEA__server__HTTP_PORT: 3000
