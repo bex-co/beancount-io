@@ -122,15 +122,4 @@ export interface IUserModel {
     },
   ): Promise<{ users: User[]; total: number }>;
   countUsers(db: DbExecutor): Promise<number>;
-  getLedgerPasswordRotationCandidates(
-    db: DbExecutor,
-    currentVersionPrefix: string,
-    limit: number,
-  ): Promise<Array<{ id: string }>>;
-  getByIdForUpdate(db: DbExecutor, id: string): Promise<User | null>;
-  updateLedgerPassword(
-    db: DbExecutor,
-    userId: string,
-    password: string,
-  ): Promise<void>;
 }

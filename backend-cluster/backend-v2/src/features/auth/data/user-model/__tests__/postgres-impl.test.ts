@@ -22,7 +22,6 @@ const mockDb = {
   from: jest.fn().mockReturnThis(),
   where: jest.fn().mockReturnThis(),
   limit: jest.fn().mockReturnThis(),
-  for: jest.fn(),
   update: jest.fn().mockReturnThis(),
   set: jest.fn().mockReturnThis(),
   delete: jest.fn().mockReturnThis(),
@@ -58,7 +57,6 @@ describe("UserPostgresModel", () => {
     mockDb.from.mockReturnThis();
     mockDb.where.mockReturnThis();
     mockDb.limit.mockReturnThis();
-    mockDb.for.mockReturnThis();
     mockDb.update.mockReturnThis();
     mockDb.set.mockReturnThis();
     mockDb.delete.mockReturnThis();
@@ -345,41 +343,6 @@ describe("UserPostgresModel", () => {
           updateAt: expect.any(Date),
         }),
       );
-    });
-  });
-
-  describe("ledger password rotation", () => {
-    it("lists a bounded batch whose password lacks the current prefix", async () => {
-      mockDb.limit.mockResolvedValue([{ id: "user1" }]);
-
-      await expect(
-        model.getLedgerPasswordRotationCandidates(mockDb, "v2_", 100),
-      ).resolves.toEqual([{ id: "user1" }]);
-
-      expect(mockDb.limit).toHaveBeenCalledWith(100);
-      const predicate = mockDb.where.mock.calls[0][0];
-      const query = new PgDialect().sqlToQuery(predicate);
-      expect(query.sql.toLowerCase()).toContain("left");
-      expect(query.params).toEqual([3, "v2_"]);
-    });
-
-    it("locks a user row before returning it for rotation", async () => {
-      mockDb.for.mockResolvedValue([mockUserRow]);
-
-      const result = await model.getByIdForUpdate(mockDb, "user-id-1");
-
-      expect(mockDb.for).toHaveBeenCalledWith("update");
-      expect(result?.id).toBe("user-id-1");
-    });
-
-    it("updates only the existing ledger password column", async () => {
-      await model.updateLedgerPassword(mockDb, "user1", "v2_secure");
-
-      expect(mockDb.set).toHaveBeenCalledWith({
-        ledger_password: "v2_secure",
-        updateAt: expect.any(Date),
-      });
-      expect(mockDb.where).toHaveBeenCalled();
     });
   });
 });
