@@ -9,6 +9,7 @@ export const fr: typeof en = {
   journal: "Journal",
   settings: "Paramètres",
   merchants: "Commerçants",
+  visitWebsite: "Visiter le site web",
   merchantsSearchPlaceholder: {
     one: "Rechercher {{count}} commerçant…",
     other: "Rechercher {{count}} commerçants…",

@@ -9,6 +9,7 @@ export const fa: typeof en = {
   journal: "روزنامه",
   settings: "تنظیمات",
   merchants: "پذیرندگان",
+  visitWebsite: "بازدید از وب‌سایت",
   merchantsSearchPlaceholder: {
     one: "جستجوی {{count}} پذیرنده…",
     other: "جستجوی {{count}} پذیرنده…",

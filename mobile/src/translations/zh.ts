@@ -9,6 +9,7 @@ export const zh: typeof en = {
   journal: "流水",
   settings: "设置",
   merchants: "商户",
+  visitWebsite: "访问网站",
   merchantsSearchPlaceholder: {
     one: "搜索 {{count}} 个商户…",
     other: "搜索 {{count}} 个商户…",

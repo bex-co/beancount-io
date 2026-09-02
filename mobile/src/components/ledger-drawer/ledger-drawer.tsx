@@ -3,6 +3,7 @@ import {
   ActivityIndicator,
   BackHandler,
   Image,
+  Linking,
   Pressable,
   SectionList,
   StyleSheet,
@@ -69,6 +70,7 @@ const ACTIVATE_OFFSET_SIGNED = ACTIVATE_OFFSET_X * layoutDirectionFactor();
 // menu's right edge. The release velocity is layered on at the call site so a
 // flick keeps the speed the finger gave it.
 const SETTLE_SPRING = SnappySpringConfig;
+const WEB_LEDGER_URL = "https://beancount.io/ledger";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -380,6 +382,11 @@ export function LedgerDrawer({
     router.push("/(app)/merchants");
   };
 
+  const handleWebsitePress = () => {
+    onClose();
+    void Linking.openURL(WEB_LEDGER_URL);
+  };
+
   const handleSettingsPress = () => {
     onClose();
     router.push("/(app)/settings");
@@ -492,6 +499,16 @@ export function LedgerDrawer({
               color={theme.black60}
             />
             <Text style={styles.menuItemText}>{t("merchants")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="drawer-website-row"
+            style={styles.menuItem}
+            onPress={handleWebsitePress}
+            activeOpacity={0.7}
+            accessibilityRole="link"
+          >
+            <Ionicons name="open-outline" size={22} color={theme.black60} />
+            <Text style={styles.menuItemText}>{t("visitWebsite")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="drawer-settings-row"

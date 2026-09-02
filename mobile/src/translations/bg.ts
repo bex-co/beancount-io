@@ -9,6 +9,7 @@ export const bg: typeof en = {
   journal: "Журнал",
   settings: "Настройки",
   merchants: "Търговци",
+  visitWebsite: "Посетете уебсайта",
   merchantsSearchPlaceholder: {
     one: "Търсене в {{count}} търговец…",
     other: "Търсене в {{count}} търговци…",

@@ -9,6 +9,7 @@ export const ca: typeof en = {
   journal: "Diari",
   settings: "Configuració",
   merchants: "Comerciants",
+  visitWebsite: "Visita el lloc web",
   merchantsSearchPlaceholder: {
     one: "Cerca {{count}} comerciant…",
     other: "Cerca {{count}} comerciants…",

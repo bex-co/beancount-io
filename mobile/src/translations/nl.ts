@@ -9,6 +9,7 @@ export const nl: typeof en = {
   journal: "Journaal",
   settings: "Instellingen",
   merchants: "Winkels",
+  visitWebsite: "Website bezoeken",
   merchantsSearchPlaceholder: {
     one: "{{count}} winkel zoeken…",
     other: "{{count}} winkels zoeken…",

@@ -9,6 +9,7 @@ export const sk: typeof en = {
   journal: "Denník",
   settings: "Nastavenia",
   merchants: "Obchodníci",
+  visitWebsite: "Navštíviť web",
   merchantsSearchPlaceholder: {
     one: "Hľadať {{count}} obchodníka…",
     other: "Hľadať {{count}} obchodníkov…",

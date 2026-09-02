@@ -9,6 +9,7 @@ export const pt: typeof en = {
   journal: "Diário",
   settings: "Configurações",
   merchants: "Comerciantes",
+  visitWebsite: "Visitar site",
   merchantsSearchPlaceholder: {
     one: "Pesquisar {{count}} comerciante…",
     other: "Pesquisar {{count}} comerciantes…",

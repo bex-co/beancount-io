@@ -6,6 +6,7 @@ export const en = {
   journal: "Journal",
   settings: "Settings",
   merchants: "Merchants",
+  visitWebsite: "Visit website",
   merchantsSearchPlaceholder: {
     one: "Search {{count}} merchant…",
     other: "Search {{count}} merchants…",

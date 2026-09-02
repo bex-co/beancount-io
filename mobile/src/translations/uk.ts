@@ -9,6 +9,7 @@ export const uk: typeof en = {
   journal: "Журнал",
   settings: "Налаштування",
   merchants: "Отримувачі",
+  visitWebsite: "Відвідати сайт",
   merchantsSearchPlaceholder: {
     one: "Пошук серед {{count}} отримувача…",
     other: "Пошук серед {{count}} отримувачів…",
