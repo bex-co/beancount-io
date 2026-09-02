@@ -3,7 +3,7 @@ import { MonacoEditor as Editor } from "@/common/components/monaco-editor";
 import type * as monaco from "monaco-editor";
 import type { BeancountError } from "@/graphql/definitions";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
-import { getFileExtension } from "../../../shared/lib/utils";
+import { getFileLanguage } from "../../../shared/lib/utils";
 import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-language-vscode";
 import { registerEditorShortcuts } from "@/common/lib/editor/monaco-beancount-actions";
 import { beancountErrorsToMarkers } from "./text-editor-utils";
@@ -43,8 +43,7 @@ export const TextEditor = ({
   const [editorMounted, setEditorMounted] = useState(false);
   const isProgrammaticScrollRef = useRef(false);
 
-  const ext = getFileExtension(filename);
-  const language = ext === "beancount" || ext === "bean" ? "beancount" : ext;
+  const language = getFileLanguage(filename);
   const theme =
     language === "beancount"
       ? isDarkTheme
