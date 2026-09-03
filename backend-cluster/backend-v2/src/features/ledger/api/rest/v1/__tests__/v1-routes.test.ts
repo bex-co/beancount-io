@@ -184,14 +184,17 @@ describe("v1 authentication and scope", () => {
     expect(status).toBe(200);
   });
 
-  it("refuses a ledger-pinned token on a different ledger before the handler", async () => {
+  it("lets the protected workflow's PDP enforce the ledger pin", async () => {
     server.setIdentity(pinnedReadToken);
-    const { status } = await call(
-      "GET",
-      "/api-gateway/v1/ledgers/alice/other",
+    workflows.ledger.getLedger.mockRejectedValueOnce(
+      new ForbiddenError("credential is pinned to alice/main"),
     );
+    const { status } = await call("GET", "/api-gateway/v1/ledgers/alice/other");
     expect(status).toBe(403);
-    expect(workflows.ledger.getLedger).not.toHaveBeenCalled();
+    expect(workflows.ledger.getLedger).toHaveBeenCalledWith({
+      ledgerId: "alice/other",
+      identity: pinnedReadToken,
+    });
   });
 
   it("limits ledger listing to the credential's pinned ledger", async () => {

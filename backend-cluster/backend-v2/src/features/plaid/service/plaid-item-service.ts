@@ -28,7 +28,6 @@ import type { CategorySuggestion } from "@/features/llm/api/ai-categorization-re
 import type { PlaidAccountMappingSuggestion } from "../api/resolvers/plaid-resolver.types";
 import type { PlaidTransaction } from "../data/plaid-transaction-model/types";
 import type { PlaidAccount } from "../data/plaid-account-model/types";
-import { ledgerResource } from "@/server/api/authorization";
 
 const itemServiceLogger = logger.child({ module: "plaid-item-service" });
 
@@ -525,11 +524,6 @@ export class PlaidItemService implements IPlaidItemService {
     accountId?: string,
   ): Promise<CategorySuggestion[]> {
     const { userId } = identity;
-    await this.authorization.authorizeOrThrow({
-      principal: identity,
-      action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
-      resource: ledgerResource(ledgerId),
-    });
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
     const { transactions } = await this.getUnsyncedTransactionsForScope(
@@ -584,11 +578,6 @@ export class PlaidItemService implements IPlaidItemService {
     itemId: string,
   ): Promise<PlaidAccountMappingSuggestion[]> {
     const { userId } = identity;
-    await this.authorization.authorizeOrThrow({
-      principal: identity,
-      action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
-      resource: ledgerResource(ledgerId),
-    });
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
     const { ledgerRepoId } = await this.authorizeBankAction(
@@ -821,8 +810,8 @@ export class PlaidItemService implements IPlaidItemService {
     try {
       await this.authorization.authorizeOrThrow({
         principal: identity,
-        action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
-        resource: ledgerResource(ledgerId),
+        action: AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_SUGGEST,
+        resource: bankConnectionResource(ledgerId, itemId),
       });
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
       const existingAccounts = await this.getOpenLedgerAccounts(

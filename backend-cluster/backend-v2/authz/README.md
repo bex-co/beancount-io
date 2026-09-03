@@ -56,7 +56,8 @@ principal rather than a fabricated session. The caller provides only:
 - trusted request context, when an action needs it.
 
 Transport adapters do not interpret policy or manufacture relationship tuples.
-The operation-class gate only routes these operations to the PDP. Account,
+The operation-class gate isolates the transport operation ID and supplies rate
+and observability metadata; it is not a final authority. Account,
 API-key, subscription, feed, user-profile, ledger-social/control-plane,
 asset-storage, LLM, Plaid suggestion, receipt workflow, and agent execution
 methods are protected application boundaries. Each calls the PDP before S3,
@@ -73,10 +74,8 @@ authenticated credential reach the application service, where the catalog
 produces the one final allow/deny decision and its actionable error. Nullable
 identity probes and authentication ceremonies remain undecorated.
 
-The evaluators hold no tuple store or cross-request cache. The ledger adapter
-retains only the existing identity-object-keyed per-request lookup memo so one
-request does not repeat the external relationship lookup. Protected service
-methods receive the resolved `Identity` explicitly; the
+The evaluators hold no tuple store, decision memo, or cross-request permission
+cache. Protected service methods receive the resolved `Identity` explicitly; the
 stable transport operation ID is observability metadata propagated in an
 isolated AsyncLocalStorage child context by the GraphQL, REST, and MCP gates.
 Concurrent GraphQL root fields and MCP calls therefore cannot overwrite one
@@ -191,6 +190,7 @@ beside `AuthorizationService`:
 | `user.billing.subscription.cancel`     | `GQL Mutation.cancelSubscription`              | browser session only                                 | exact-self `user#can_write_billing`              |
 | `user.billing.subscription.resume`     | `GQL Mutation.resumeSubscription`              | browser session only                                 | exact-self `user#can_write_billing`              |
 | `user.billing.subscription.upgrade`    | `GQL Mutation.upgradeSubscription`             | browser session only                                 | exact-self `user#can_write_billing`              |
+| `user.ai_usage.read`                   | `GQL Query.aiCfoUsage`                         | session, or OAuth/API key with `ledger.read`         | exact-self `user#owner`                          |
 | `user.social.feed.read`                | `GQL Query.getFeed`                            | browser session only                                 | exact-self `user#can_read_social`                |
 | `user.social.follow.create`            | `GQL Mutation.followUser`                      | browser session only                                 | exact-self `user#can_write_social`               |
 | `user.social.follow.delete`            | `GQL Mutation.unfollowUser`                    | browser session only                                 | exact-self `user#can_write_social`               |
@@ -208,7 +208,6 @@ beside `AuthorizationService`:
 | `ledger.shell.read`                    | BQL GraphQL + REST/MCP                         | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
 | `ledger.archive.read`                  | archive REST and signed-URL GraphQL            | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
 | `ledger.entries.write`                 | entry GraphQL + REST/MCP edit                  | session, or OAuth/API key with `ledger.write`        | current `ledger#can_write_contents`              |
-| `ledger.receipts.write`                | receipt promotion GraphQL/MCP workflow         | session, or OAuth/API key with `ledger.write`        | current content write + asset write              |
 | `ledger.pull_request.read`             | pull-request details GraphQL                   | session, or OAuth/API key with `ledger.read`         | current `ledger#can_read_contents`               |
 | `ledger.pull_request.create`           | pull-request creation GraphQL                  | session, or OAuth/API key with `ledger.write`        | current `ledger#can_write_contents`              |
 | `ledger.pull_request.approve`          | pull-request approval GraphQL                  | session, or OAuth/API key with `ledger.write`        | current `ledger#can_write_contents`              |
@@ -225,9 +224,6 @@ beside `AuthorizationService`:
 | `user.public_keys.read`                | `GQL Query.getPublicKey`                       | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_read_public_keys`           |
 | `user.public_keys.create`              | `GQL Mutation.createPublicKey`                 | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_write_public_keys`          |
 | `user.public_keys.delete`              | `GQL Mutation.deletePublicKey`                 | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_write_public_keys`          |
-| `ledger.read`                          | authenticated `authorizeLedger(..., read)`     | session/system or OAuth/API key with `ledger.read`   | current `ledger#reader`                          |
-| `ledger.write`                         | authenticated `authorizeLedger(..., write)`    | session/system or OAuth/API key with `ledger.write`  | current `ledger#writer`                          |
-| `ledger.admin`                         | authenticated `authorizeLedger(..., admin)`    | session/system or OAuth/API key with `ledger.admin`  | current `ledger#administrator`                   |
 
 These actions are permissions; the `read`/`write` operational class in
 `op-class.ts` is only the stable rate-budget and legacy audit category. Every
@@ -236,9 +232,9 @@ access. A signed caller who lacks the relationship receives the existing
 actionable forbidden error; an anonymous caller to a private ledger receives
 authentication-required. A Gitea/database relationship-source outage is logged
 and audited as `error` and surfaces as service unavailable, never as forbidden,
-not-found, or empty data. Composite receipt authorization reads one fresh source
-snapshot for all required relationships and emits one decision; a later call
-re-reads the source and audits independently.
+not-found, or empty data. Composite authorization reads one fresh source snapshot
+per resource for all relationships in that action and emits one decision; a
+later call re-reads every source and audits independently.
 
 Plaid uses a runtime-only `bank_connection` locator that contains the canonical
 ledger ID and, when targeted, internal item row IDs. The locator is never a
@@ -259,8 +255,8 @@ user and immutable ledger binding to match the current Gitea repository.
 | `bank.account.currency.update`        | update account currency         | session, or OAuth/API key with `ledger.admin`                   | bound item + bank-connection write                              |
 | `bank.connection.status.refresh`      | refresh item status             | session, or OAuth/API key with `ledger.admin`                   | bound item + bank-connection write                              |
 | `bank.transactions.read`              | list staged transactions        | session, or OAuth/API key with `ledger.read`                    | bank read + ledger-content read                                 |
-| `bank.transaction.categories.suggest` | suggest categories              | session, or OAuth/API key with `ledger.read`                    | bank read + ledger-content read                                 |
-| `bank.account.mapping.suggest`        | suggest account mappings        | session, or OAuth/API key with `ledger.read`                    | bound item + bank read + ledger-content read                    |
+| `bank.transaction.categories.suggest` | suggest categories              | session, or OAuth/API key with `ledger.read`                    | bank read + ledger-content read + AI write                      |
+| `bank.account.mapping.suggest`        | suggest account mappings        | session, or OAuth/API key with `ledger.read`                    | bound item + bank read + ledger-content read + AI write         |
 | `bank.transactions.sync`              | manual/webhook/scheduled sync   | session/OAuth/API key with `ledger.write`; webhook or scheduler | bound item + bank write + ledger-content write                  |
 | `bank.transactions.submit`            | submit staged transactions      | session, or OAuth/API key with `ledger.write`                   | all bound items + bank write + ledger-content write             |
 | `bank.transactions.delete`            | delete staged transactions      | session, or OAuth/API key with `ledger.write`                   | all bound items + bank write + ledger-content write             |
@@ -275,26 +271,35 @@ above before doing work. GraphQL and REST aliases map directly to the same
 actions. Operation IDs remain AsyncLocalStorage audit metadata and are never
 service parameters, relationship facts, or tuples.
 
-The public social exclusions live executably in `SOCIAL_PUBLIC_EXCLUSIONS`
-beside the operation table: `getUserProfile`, `getUserFollowers`,
-`getUserFollowing`, and `getUserStarredRepos`. They remain anonymous by product
-contract and have no canonical protected action.
+Every operation-table row has exactly one of a canonical action or an explicit
+`nonPdpReason`. Authentication ceremonies, public product configuration, public
+probes, and the public social exclusions therefore cannot become silent gaps.
+Mounts outside the application gate—including signed webhooks, metrics/admin
+ingress, infrastructure routes, and discovery—are independently exhaustive in
+`always-public.ts`. Protected actions invoked below a transport root are listed
+with their rationale in `DIRECT_ONLY_ACTIONS`. Coverage tests enforce all three
+inventories in both directions.
 
 Additional composite assisted-ingestion and AI actions:
 
-| Canonical action                        | Transport aliases                                | Preserved credential ceiling                          | Relationship requirement                         |
-| --------------------------------------- | ------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------ |
-| `assisted.file.parse`                   | `GQL Mutation.parseFile`                         | session, or OAuth/API key with `ledger.read`          | exact-self + temporary-asset owner               |
-| `assisted.receipt.parse`                | GraphQL and agent receipt parser                 | session, or OAuth/API key with `ledger.read`          | temp owner + ledger contents/assets read         |
-| `assisted.categories.suggest`           | `GQL Query.suggestTransactionCategories`         | session, or OAuth/API key with `ledger.read`          | ledger contents read + AI write                  |
-| `assisted.bank_categories.suggest`      | GraphQL, REST, and MCP bank-category resources   | session, or OAuth/API key with `ledger.read`          | ledger contents/bank connections read + AI write |
-| `assisted.bank_account_mapping.suggest` | GraphQL, REST, MCP, and automatic bank mapping   | session, or OAuth/API key with `ledger.read`          | ledger contents/bank connections read + AI write |
-| `assisted.receipt.insert`               | GraphQL and agent receipt insertion              | session, or OAuth/API key with `ledger.write`         | temp owner + ledger contents/assets write        |
-| `temp_asset.upload.create`              | `GQL Mutation.generateTempAssetUploadUrl`        | session, or OAuth/API key with `ledger.read`          | exact-self uploader                              |
-| `temp_asset.download.read`              | `GQL Query.generateTempAssetDownloadUrl`         | session, or OAuth/API key with `ledger.read`          | temporary-asset owner                            |
-| `ai.model.invoke`                       | OpenAI- and Anthropic-compatible REST routes     | session, or OAuth/API key with `ledger.write`         | exact-self AI caller                             |
-| `ai.ledger.ask`                         | all agent routes and effective read-only mode    | session, or OAuth/API key with `ledger.read`          | ledger contents read                             |
-| `ai.ledger.agent`                       | write upgrade for self-hosted and sandbox agents | session, OAuth/API key with `ledger.write`, or system | ledger contents write + AI write                 |
+| Canonical action              | Transport aliases                                | Preserved credential ceiling                          | Relationship requirement                  |
+| ----------------------------- | ------------------------------------------------ | ----------------------------------------------------- | ----------------------------------------- |
+| `assisted.file.parse`         | `GQL Mutation.parseFile`                         | session, or OAuth/API key with `ledger.read`          | exact-self + temporary-asset owner        |
+| `assisted.receipt.parse`      | GraphQL and agent receipt parser                 | session, or OAuth/API key with `ledger.read`          | temp owner + ledger contents/assets read  |
+| `assisted.categories.suggest` | `GQL Query.suggestTransactionCategories`         | session, or OAuth/API key with `ledger.read`          | ledger contents read + AI write           |
+| `assisted.receipt.insert`     | GraphQL and agent receipt insertion              | session, or OAuth/API key with `ledger.write`         | temp owner + ledger contents/assets write |
+| `temp_asset.upload.create`    | `GQL Mutation.generateTempAssetUploadUrl`        | session, or OAuth/API key with `ledger.read`          | exact-self uploader                       |
+| `temp_asset.download.read`    | `GQL Query.generateTempAssetDownloadUrl`         | session, or OAuth/API key with `ledger.read`          | temporary-asset owner                     |
+| `ai.model.invoke`             | OpenAI- and Anthropic-compatible REST routes     | session, or OAuth/API key with `ledger.write`         | exact-self AI caller                      |
+| `ai.ledger.ask`               | all agent routes and effective read-only mode    | session, or OAuth/API key with `ledger.read`          | ledger contents read                      |
+| `ai.ledger.agent`             | write upgrade for self-hosted and sandbox agents | session, OAuth/API key with `ledger.write`, or system | ledger contents write + AI write          |
+
+Agent mode always authorizes `ai.ledger.ask` first. If the caller can read a
+public or shared ledger but the independent `ai.ledger.agent` write upgrade is
+denied, the turn continues in read-only mode: edit tools are absent, the sandbox
+remote is removed, and read-only instructions prohibit mutation. A relationship
+source error still fails closed instead of being mistaken for an ordinary
+read-only downgrade.
 
 Cross-user resources, missing or foreign API-key IDs, unknown actions or
 resource types, insufficient credentials, and evaluator failures all deny.
@@ -546,10 +551,10 @@ request-derived tuples.
 
 ## Invariants
 
-1. **The authorization module is the only final authority for migrated
+1. **The authorization module is the only final authority for protected
    actions and authenticated single-ledger rank decisions.** Protected
    Account/API-key/subscription/social/ledger-control-plane/asset/LLM services,
-   receipt/agent workflows, and the `authorizeLedger` compatibility seam call
+   receipt/agent workflows, and the thin `authorizeLedger` PEP call
    it before domain work; every alias uses those application boundaries.
 2. **OpenFGA contains only durable domain relationships.** No credential,
    session, token, grant, or `request_*` type/relation belongs in this model.

@@ -27,7 +27,11 @@ import { PlaidItemService } from "../plaid-item-service";
 import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
 import { BadUserInputError, ForbiddenError } from "@/shared/errors";
 import { suggestAccountMapping as mockSuggestAccountMappingLLM } from "@/features/llm/utils/suggest-account-mapping";
-import { parseBankConnectionResource } from "@/server/api/authorization";
+import {
+  AUTHORIZATION_ACTIONS,
+  bankConnectionResource,
+  parseBankConnectionResource,
+} from "@/server/api/authorization";
 
 const mockAssertLedgerAccess = assertLedgerAccess as jest.Mock;
 
@@ -894,8 +898,8 @@ describe("PlaidItemService", () => {
       expect(result).toEqual([]);
       expect(mockAuthorization.authorizeOrThrow).toHaveBeenCalledWith({
         principal: expect.objectContaining({ userId: "user_owner" }),
-        action: "assisted.bank_categories.suggest",
-        resource: "ledger:owner/ledger",
+        action: AUTHORIZATION_ACTIONS.BANK_TRANSACTION_CATEGORIES_SUGGEST,
+        resource: bankConnectionResource("owner/ledger", "pitm_1"),
       });
     });
 
@@ -911,7 +915,10 @@ describe("PlaidItemService", () => {
           "pacc_1",
         ),
       ).rejects.toThrow("source unavailable");
-      expect(mockPlaidAccountModel.getById).not.toHaveBeenCalled();
+      expect(mockPlaidAccountModel.getById).toHaveBeenCalledWith(
+        mockDb,
+        "pacc_1",
+      );
       expect(
         mockPlaidTransactionModel.getUnsyncedByAccountId,
       ).not.toHaveBeenCalled();

@@ -33,8 +33,8 @@ const ALL_OPERATION_CAPABILITIES: ReadonlySet<OperationClass> = new Set([
  * *inside* service methods, where claiming full capability was invisible: a
  * scoped token reached the service, the service promptly forgot it was scoped,
  * and the transport gate became the only enforcement (w3/m9). Worse, the
- * rebuilt value carries no `ledgerScope`, so `assertLedgerScope` downstream has
- * nothing left to check and silently passes.
+ * rebuilt value carries no `ledgerScope`, so the PDP has nothing left to check
+ * and silently passes.
  *
  * Every remaining claim of exemption now happens at a call site under this one
  * name, so `grep systemIdentity` enumerates them. There is deliberately no
@@ -240,15 +240,6 @@ export interface RequestLike {
 
 export interface ResolveIdentityOptions {
   oauthResource?: OAuthResource;
-}
-
-export function assertIdentityCapability(
-  identity: Identity,
-  operation: OperationClass,
-): void {
-  if (identityHasCapability(identity, operation)) return;
-  const required = OPERATION_SCOPE[operation];
-  throw new ForbiddenError(`Forbidden - ${required} scope required`);
 }
 
 export function identityHasCapability(

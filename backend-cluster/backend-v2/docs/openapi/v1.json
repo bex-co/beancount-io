@@ -3,7 +3,7 @@
   "info": {
     "title": "Beancount.io v1 API",
     "version": "1.0.0",
-    "description": "The public REST API for Beancount.io ledgers.\n\nEvery endpoint addresses a ledger as two path segments — `/api-gateway/v1/ledgers/{owner}/{name}`.\nResource responses are JSON except for archive downloads, which stream bytes. Errors share one\nshape: `{ \"ok\": false, \"error\": { \"code\", \"message\" } }`.\n\n## Authentication\n\nFor scripts and integrations, create a personal access token at\nhttps://beancount.io/settings/api-keys and send it in the `x-api-key` header. The\nplaintext is shown only once. OAuth 2.1 access tokens may instead be sent as bearer\ntokens, and signed-in browsers use their session cookie. Each operation is classified `read`, `write`, or\n`admin`, and a token is refused when its scopes (`ledger.read`, `ledger.write`,\n`ledger.admin`) do not cover the operation's class.",
+    "description": "The public REST API for Beancount.io ledgers.\n\nEvery endpoint addresses a ledger as two path segments — `/api-gateway/v1/ledgers/{owner}/{name}`.\nResource responses are JSON except for archive downloads, which stream bytes. Errors share one\nshape: `{ \"ok\": false, \"error\": { \"code\", \"message\" } }`.\n\n## Authentication\n\nFor scripts and integrations, create a personal access token at\nhttps://beancount.io/settings/api-keys and send it in the `x-api-key` header. The\nplaintext is shown only once. OAuth 2.1 access tokens may instead be sent as bearer\ntokens, and signed-in browsers use their session cookie. Each protected operation maps\nto a business permission. A token's `ledger.read`, `ledger.write`, or `ledger.admin`\nscope is a credential ceiling; the token's ledger pin and the caller's current ledger\nrelationship must also authorize the action. A scope alone never grants access.",
     "contact": {
       "name": "Beancount.io",
       "url": "https://github.com/bex-co/beancount-io"
@@ -881,7 +881,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -986,7 +986,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -1105,7 +1105,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -1263,7 +1263,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -1385,7 +1385,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -1546,7 +1546,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -1665,7 +1665,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -1782,7 +1782,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -1906,7 +1906,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -2030,7 +2030,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -2155,7 +2155,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -2263,7 +2263,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -2371,7 +2371,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -2479,7 +2479,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -2587,7 +2587,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -2695,7 +2695,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -2803,7 +2803,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -2911,7 +2911,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -3019,7 +3019,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -3127,7 +3127,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -3232,7 +3232,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -3392,7 +3392,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -3562,7 +3562,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -3733,7 +3733,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -3871,7 +3871,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -4009,7 +4009,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -4124,7 +4124,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -4239,7 +4239,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -4354,7 +4354,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -4469,7 +4469,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -4574,7 +4574,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -4679,7 +4679,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -4794,7 +4794,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -4918,7 +4918,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -5033,7 +5033,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -5138,7 +5138,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -5253,7 +5253,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -5366,7 +5366,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -5481,7 +5481,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -5607,7 +5607,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -5732,7 +5732,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -5857,7 +5857,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -5983,7 +5983,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -6098,7 +6098,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -6222,7 +6222,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -6346,7 +6346,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -6470,7 +6470,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -6552,7 +6552,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -6648,7 +6648,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {
@@ -6741,7 +6741,7 @@
             }
           },
           "403": {
-            "description": "The credential lacks the scope this operation's class requires",
+            "description": "The credential lacks the permission this business action requires",
             "content": {
               "application/json": {
                 "schema": {

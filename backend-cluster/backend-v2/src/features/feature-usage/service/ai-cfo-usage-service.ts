@@ -9,6 +9,12 @@ import type {
 } from "./feature-usage-service";
 import { RateLimitedError, ServiceUnavailableError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
+import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  userResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 
 const usageLogger = logger.child({ module: "ai-cfo-usage-service" });
 
@@ -29,7 +35,7 @@ export interface IAiCfoUsageService {
   check(userId: string): Promise<UsageCheckResult>;
   assertQuotaAvailable(userId: string): Promise<void>;
   addTokenUsage(userId: string, totalTokens: number): Promise<void>;
-  getUsage(userId: string): Promise<AiCfoUsageInfo>;
+  getUsage(identity: Identity): Promise<AiCfoUsageInfo>;
 }
 
 export class AiCfoUsageService implements IAiCfoUsageService {
@@ -38,6 +44,7 @@ export class AiCfoUsageService implements IAiCfoUsageService {
     private readonly stripe: IStripeService,
     private readonly models: Pick<IModels, "paidCustomer">,
     private readonly postgresDb: NodePgDatabase,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   /**
@@ -105,7 +112,13 @@ export class AiCfoUsageService implements IAiCfoUsageService {
   /**
    * Read-only usage info for display (e.g., user profile).
    */
-  async getUsage(userId: string): Promise<AiCfoUsageInfo> {
+  async getUsage(identity: Identity): Promise<AiCfoUsageInfo> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_AI_USAGE_READ,
+      resource: userResource(identity.userId),
+    });
+    const { userId } = identity;
     const tier = await getUserTier({
       stripe: this.stripe,
       models: this.models,

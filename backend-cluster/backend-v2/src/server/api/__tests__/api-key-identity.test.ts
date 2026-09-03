@@ -107,8 +107,8 @@ describe("resolving an API key", () => {
   });
 
   it("refuses a key whose stored ledger pin is malformed", async () => {
-    // An empty pin is falsy, which `assertLedgerScope` would read as "not
-    // confined". The row is not one `mint` writes, so the key is not live.
+    // An empty pin is falsy, which the PDP would read as "not confined". The
+    // row is not one `mint` writes, so the key is not live.
     const { database } = databaseWith({ ...liveKey, ledgerScope: "" });
     await expect(
       resolveIdentity(bearer(PLAINTEXT), database, config),

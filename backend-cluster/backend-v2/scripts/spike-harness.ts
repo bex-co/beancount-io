@@ -44,6 +44,10 @@ async function main() {
         packageName: "@agentclientprotocol/claude-agent-acp",
       },
       executable: "claude-agent-acp",
+      modelMapping: {
+        type: "session-config-option",
+        path: "model",
+      },
       modelId: MODEL,
       auth: "direct",
       permissionModeMapping: ACP_PERMISSION_MODES,

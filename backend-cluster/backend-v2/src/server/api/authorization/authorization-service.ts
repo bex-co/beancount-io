@@ -40,7 +40,10 @@ import {
   type AuthorizationPrincipal,
   type PlaidBackgroundProvenance,
 } from "./authorization-contract";
-import type { IRelationshipEvaluator } from "./source-backed-relationship-evaluator";
+import type {
+  IRelationshipEvaluator,
+  RelationshipCheck,
+} from "./source-backed-relationship-evaluator";
 
 const authorizationLogger = logger.child({ module: "authorization" });
 
@@ -103,7 +106,7 @@ const LEDGER_SOCIAL_WRITE_CREDENTIAL: CredentialRequirement = {
 };
 
 const LEDGER_CONTENT_READ_CREDENTIAL: CredentialRequirement = {
-  methods: EVERY_CREDENTIAL,
+  methods: EVERY_AUTHENTICATED_ACTOR,
   allowAnonymous: true,
   capability: "read",
   enforceLedgerScope: true,
@@ -177,7 +180,7 @@ const ledgerContentReadRequirement = (): ActionRequirement => ({
   auditClass: "read",
 });
 
-/** The one executable policy catalog for migrated application domains. */
+/** The one executable policy catalog for protected application domains. */
 const relationship = (
   resourceType: AuthorizationResourceType,
   required: AuthorizationRelationship,
@@ -277,6 +280,11 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: BILLING_CREDENTIAL,
     auditClass: "write",
   },
+  [AUTHORIZATION_ACTIONS.USER_AI_USAGE_READ]: {
+    relationships: userRelationship(USER_RELATIONSHIPS.OWNER),
+    credential: { methods: EVERY_CREDENTIAL, capability: "read" },
+    auditClass: "read",
+  },
   [AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ]: {
     relationships: userRelationship(USER_RELATIONSHIPS.READ_SOCIAL),
     credential: { methods: SESSION_ONLY },
@@ -309,7 +317,7 @@ const ACTION_REQUIREMENTS: Readonly<
   },
   [AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ]: {
     relationships: userRelationship(USER_RELATIONSHIPS.READ_LEDGERS),
-    credential: { methods: EVERY_CREDENTIAL, capability: "read" },
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.LEDGER_METADATA_READ]: ledgerContentReadRequirement(),
@@ -333,14 +341,6 @@ const ACTION_REQUIREMENTS: Readonly<
   [AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE]: {
     relationships: [
       relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS),
-    ],
-    credential: LEDGER_CONTENT_WRITE_CREDENTIAL,
-    auditClass: "write",
-  },
-  [AUTHORIZATION_ACTIONS.LEDGER_RECEIPTS_WRITE]: {
-    relationships: [
-      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS),
-      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_ASSETS),
     ],
     credential: LEDGER_CONTENT_WRITE_CREDENTIAL,
     auditClass: "write",
@@ -445,30 +445,6 @@ const ACTION_REQUIREMENTS: Readonly<
     credential: USER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
   },
-  [AUTHORIZATION_ACTIONS.LEDGER_READ]: {
-    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ)],
-    credential: {
-      methods: EVERY_AUTHENTICATED_ACTOR,
-      capability: "read",
-    },
-    auditClass: "read",
-  },
-  [AUTHORIZATION_ACTIONS.LEDGER_WRITE]: {
-    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.WRITE)],
-    credential: {
-      methods: EVERY_AUTHENTICATED_ACTOR,
-      capability: "write",
-    },
-    auditClass: "write",
-  },
-  [AUTHORIZATION_ACTIONS.LEDGER_ADMIN]: {
-    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.ADMIN)],
-    credential: {
-      methods: EVERY_AUTHENTICATED_ACTOR,
-      capability: "admin",
-    },
-    auditClass: "admin",
-  },
   [AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE]: {
     relationships: [
       relationship("user", USER_RELATIONSHIPS.OWNER),
@@ -491,24 +467,6 @@ const ACTION_REQUIREMENTS: Readonly<
   [AUTHORIZATION_ACTIONS.ASSISTED_CATEGORIES_SUGGEST]: {
     relationships: [
       relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS),
-      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_AI),
-    ],
-    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
-    auditClass: "read",
-  },
-  [AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST]: {
-    relationships: [
-      relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS),
-      relationship("ledger", LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS),
-      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_AI),
-    ],
-    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
-    auditClass: "read",
-  },
-  [AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST]: {
-    relationships: [
-      relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS),
-      relationship("ledger", LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS),
       relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_AI),
     ],
     credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
@@ -690,6 +648,7 @@ const ACTION_REQUIREMENTS: Readonly<
         LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS,
       ),
       relationship("bank_connection", LEDGER_RELATIONSHIPS.READ_CONTENTS),
+      relationship("bank_connection", LEDGER_RELATIONSHIPS.WRITE_AI),
     ],
     credential: BANK_TRANSACTION_READ_CREDENTIAL,
     auditClass: "read",
@@ -702,6 +661,7 @@ const ACTION_REQUIREMENTS: Readonly<
         LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS,
       ),
       relationship("bank_connection", LEDGER_RELATIONSHIPS.READ_CONTENTS),
+      relationship("bank_connection", LEDGER_RELATIONSHIPS.WRITE_AI),
     ],
     credential: BANK_TRANSACTION_READ_CREDENTIAL,
     auditClass: "read",
@@ -1033,15 +993,45 @@ export class AuthorizationService implements IAuthorizationService {
       });
     }
 
+    const relationshipGroups = new Map<
+      AuthorizationResource,
+      {
+        resourceType: AuthorizationResourceType;
+        checks: RelationshipCheck[];
+      }
+    >();
     for (const relationshipRequirement of requirement.relationships) {
       const object = resourcesByType.get(relationshipRequirement.resourceType);
+      const existing = relationshipGroups.get(object!.raw);
+      const check: RelationshipCheck = {
+        user: userResource(userId),
+        relation: relationshipRequirement.relationship,
+        object: object!.raw,
+      };
+      if (existing) {
+        existing.checks.push(check);
+      } else {
+        relationshipGroups.set(object!.raw, {
+          resourceType: relationshipRequirement.resourceType,
+          checks: [check],
+        });
+      }
+    }
+
+    for (const group of relationshipGroups.values()) {
       let relationshipAllowed: boolean;
       try {
-        relationshipAllowed = await this.relationships.check({
-          user: userResource(userId),
-          relation: relationshipRequirement.relationship,
-          object: object!.raw,
-        });
+        if (this.relationships.checkAll) {
+          relationshipAllowed = await this.relationships.checkAll(group.checks);
+        } else {
+          relationshipAllowed = true;
+          for (const check of group.checks) {
+            if (!(await this.relationships.check(check))) {
+              relationshipAllowed = false;
+              break;
+            }
+          }
+        }
       } catch (error) {
         authorizationLogger.error("Relationship evaluation unavailable", {
           op: getOperationId() ?? action,
@@ -1064,7 +1054,7 @@ export class AuthorizationService implements IAuthorizationService {
       if (!relationshipAllowed) {
         return deny("relationship_denied", {
           auditClass: requirement.auditClass,
-          failedResourceType: relationshipRequirement.resourceType,
+          failedResourceType: group.resourceType,
           ledgerId: auditLedgerId,
         });
       }

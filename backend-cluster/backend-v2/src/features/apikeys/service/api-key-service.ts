@@ -106,7 +106,7 @@ function isLedgerId(value: string): boolean {
  * The requested ledger confinement, or `undefined` for "inherit the minter's".
  *
  * Blank input means "not asked for" and never becomes a stored `""`: an empty
- * pin is falsy, which `assertLedgerScope` reads as *unconfined* — the exact
+ * pin is falsy, which the PDP reads as *unconfined* — the exact
  * opposite of what a pin is for. Anything non-blank has to be a real ledger id.
  */
 function normalizeLedgerScope(value: string | undefined): string | undefined {

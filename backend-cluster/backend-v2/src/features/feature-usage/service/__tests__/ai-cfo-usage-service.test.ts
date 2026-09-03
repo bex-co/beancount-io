@@ -5,6 +5,8 @@ import type { IStripeService } from "@/features/stripe/service/stripe-service";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
 import type { IModels } from "@/foundation/models";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
+import type { Identity } from "@/server/api/identity";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization";
 
 // Mock the cross-service tier operation; the pure getTierLimits runs for real.
 jest.mock("@/features/stripe/operations/get-user-tier");
@@ -25,6 +27,12 @@ describe("AiCfoUsageService", () => {
   const mockPostgresDb = {} as NodePgDatabase;
   // stripe is forwarded to getUserTier (mocked) and never called here.
   const mockStripe = {} as jest.Mocked<IStripeService>;
+  const identity: Identity = {
+    userId: "user1",
+    method: "session",
+    scopes: new Set(),
+  };
+  const authorizeOrThrow = jest.fn();
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -41,6 +49,7 @@ describe("AiCfoUsageService", () => {
       mockStripe,
       mockModels,
       mockPostgresDb,
+      { authorize: jest.fn(), authorizeOrThrow },
     );
   });
 
@@ -133,7 +142,7 @@ describe("AiCfoUsageService", () => {
         billingMonth: "2025-01",
       });
 
-      const result = await service.getUsage("user1");
+      const result = await service.getUsage(identity);
 
       expect(result.currentCount).toBe(3000);
       expect(result.maxAllowed).toBe(FREE_TOKENS);
@@ -148,12 +157,27 @@ describe("AiCfoUsageService", () => {
         billingMonth: "2025-01",
       });
 
-      await service.getUsage("user123");
+      await service.getUsage({ ...identity, userId: "user123" });
 
       expect(mockFeatureUsageService.getUsage).toHaveBeenCalledWith(
         "user123",
         FEATURE_KEY_AI_CFO,
       );
+    });
+
+    it("authorizes exact-self usage before reading billing or usage data", async () => {
+      const denied = new Error("denied");
+      authorizeOrThrow.mockRejectedValueOnce(denied);
+
+      await expect(service.getUsage(identity)).rejects.toBe(denied);
+
+      expect(authorizeOrThrow).toHaveBeenCalledWith({
+        principal: identity,
+        action: AUTHORIZATION_ACTIONS.USER_AI_USAGE_READ,
+        resource: "user:user1",
+      });
+      expect(mockGetUserTier).not.toHaveBeenCalled();
+      expect(mockFeatureUsageService.getUsage).not.toHaveBeenCalled();
     });
   });
 });

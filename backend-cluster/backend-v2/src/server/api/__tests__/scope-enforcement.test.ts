@@ -355,8 +355,8 @@ describe("scope enforcement across surfaces", () => {
     });
   });
 
-  describe("routes migrated writes to the PDP while retaining grouped-dispatcher scope checks", () => {
-    it("REST: defers a migrated ledger write to its protected service", async () => {
+  describe("routes protected writes to the PDP while retaining grouped-dispatcher scope checks", () => {
+    it("REST: defers a protected ledger write to its service", async () => {
       const { ctx, reached } = await driveRest(
         readOnlyToken,
         enforcing,
@@ -372,7 +372,7 @@ describe("scope enforcement across surfaces", () => {
       ).toBeDefined();
     });
 
-    it("GraphQL: defers a migrated assisted write to the PDP", async () => {
+    it("GraphQL: defers a protected assisted write to the PDP", async () => {
       const { error, reached } = await driveGraphql(
         readOnlyToken,
         makeGraphqlInfo("Mutation", "parseFile"),
@@ -380,9 +380,7 @@ describe("scope enforcement across surfaces", () => {
       );
       expect(reached).toBe(true);
       expect(error).toBeUndefined();
-      expect(
-        authorizationActionForOp("GQL Mutation.parseFile"),
-      ).toBeDefined();
+      expect(authorizationActionForOp("GQL Mutation.parseFile")).toBeDefined();
     });
 
     it("MCP: an isError tool result rather than a dead connection", async () => {
@@ -583,14 +581,12 @@ describe("scope enforcement through the real schema", () => {
     expect(await forbiddenOps(readOnlyToken)).toEqual(["sessionOnlyMutation"]);
   });
 
-  it("refuses a scopeless token everything but the public op", async () => {
-    // Pins down that `readQuery` passing above is the read scope working, not
-    // the gate quietly skipping the field.
+  it("defers a protected read for a scopeless token while refusing a ceremony", async () => {
+    // aiCfoUsage now reaches its protected service, where the action catalog
+    // makes the one credential decision. The authentication ceremony remains
+    // transport-classified because it establishes the identity itself.
     const scopeless: Identity = { ...readOnlyToken, scopes: new Set() };
-    expect(await forbiddenOps(scopeless)).toEqual([
-      "readQuery",
-      "sessionOnlyMutation",
-    ]);
+    expect(await forbiddenOps(scopeless)).toEqual(["sessionOnlyMutation"]);
   });
 });
 
@@ -645,7 +641,7 @@ describe("configured enforcement and the shadow-mode compatibility path", () => 
     expect(restMounts.length).toBeGreaterThan(30);
   });
 
-  it("still refuses on a mount whose fragment asked to be enforced", async () => {
+  it("defers every enforced v1 mount to its protected service", async () => {
     const { restMounts } = await assembleTestApi();
     const gates = new Map<string, ApiGate>(
       restMounts.map((mount) => [mount.opId, mount.gate]),
@@ -653,20 +649,16 @@ describe("configured enforcement and the shadow-mode compatibility path", () => 
     const middleware = restScopeMiddleware(shadowing, gates);
     const scopeless: Identity = { ...readOnlyToken, scopes: new Set() };
 
-    const legacyEnforced = restMounts.filter(
-      (mount) =>
-        mount.gate === "enforced" && !authorizationActionForOp(mount.opId),
-    );
-    const migratedEnforced = restMounts.filter(
+    const protectedEnforced = restMounts.filter(
       (mount) =>
         mount.gate === "enforced" && authorizationActionForOp(mount.opId),
     );
-    // Every currently enforced v1 mount has migrated. The transport gate must
-    // therefore defer instead of independently intersecting the PDP.
-    expect(legacyEnforced).toEqual([]);
-    expect(migratedEnforced.length).toBeGreaterThan(0);
+    expect(restMounts.filter((mount) => mount.gate === "enforced")).toEqual(
+      protectedEnforced,
+    );
+    expect(protectedEnforced.length).toBeGreaterThan(0);
 
-    for (const mount of legacyEnforced) {
+    for (const mount of protectedEnforced) {
       const ctx = {
         method: mount.method === "ALL" ? "POST" : mount.method,
         path: mount.path,
@@ -675,9 +667,9 @@ describe("configured enforcement and the shadow-mode compatibility path", () => 
         state: { identity: scopeless },
         matched: [{ methods: [mount.method], path: mount.path }],
       } as unknown as RouterContext;
-      await expect(middleware(ctx, async () => {})).rejects.toThrow(
-        ForbiddenError,
-      );
+      const next = jest.fn(async () => undefined);
+      await expect(middleware(ctx, next)).resolves.toBeUndefined();
+      expect(next).toHaveBeenCalledTimes(1);
     }
   });
 });

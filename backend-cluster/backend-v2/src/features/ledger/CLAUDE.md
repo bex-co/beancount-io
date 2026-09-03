@@ -17,7 +17,7 @@ Core ledger GraphQL and REST behavior: repository lifecycle, entries, journal, r
 ## Authorization and identity
 
 - Resolve the authenticated caller and requested ledger separately; never assume the ledger owner is the caller.
-- Every protected data-plane service/workflow method accepts the resolved `Identity` (or explicitly supports anonymous reads) and selects one canonical `ledger.*` action before Fava, Gitea, S3, or ledger work. `utils/authorize-ledger.ts` is a thin PEP over the shared PDP; `ledger-access-check.ts` is legacy/defense-in-depth code, not a final authority for migrated methods.
+- Every protected data-plane service/workflow method accepts the resolved `Identity` (or explicitly supports anonymous reads) and selects one canonical `ledger.*` action before Fava, Gitea, S3, or ledger work. `utils/authorize-ledger.ts` is a thin PEP over the shared PDP; `ledger-access-check.ts` resolves current ledger facts and preserves domain defense in depth, but is not a separate final authority.
 - Preserve the three-party cases covered by the access tests: owner, collaborator, and anonymous/public access.
 - Pass `Identity`/ledger ID as protected method input. Resolvers do not interpret scopes, pins, relationships, or provision clients themselves.
 

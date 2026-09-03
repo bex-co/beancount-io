@@ -4,8 +4,12 @@ jest.mock("@ai-sdk/harness-acp", () => ({
 }));
 
 import { getMetadataStorage } from "type-graphql";
-import { VERB_TABLE, classifiedOpIds } from "../op-class";
+import { DIRECT_ONLY_ACTIONS, VERB_TABLE, classifiedOpIds } from "../op-class";
 import { ALWAYS_PUBLIC_OP_IDS } from "../always-public";
+import {
+  AUTHORIZATION_ACTIONS,
+  type AuthorizationAction,
+} from "../authorization";
 import { assembleTestApi } from "./api-surface";
 import {
   allowAnonymousMiddleware,
@@ -134,6 +138,57 @@ describe("op-class coverage", () => {
     ).map((entry) => entry.verb);
 
     expect(misleading).toEqual([]);
+  });
+
+  it("partitions every verb between one PDP action and one explicit non-PDP reason", () => {
+    const invalid = VERB_TABLE.filter((entry) => {
+      const hasAction = entry.authorizationAction !== undefined;
+      const hasReason = Boolean(entry.nonPdpReason?.trim());
+      return hasAction === hasReason;
+    }).map((entry) => entry.verb);
+    const protectedWithoutPdp = VERB_TABLE.filter(
+      (entry) =>
+        !entry.authorizationAction &&
+        entry.class !== "public" &&
+        entry.class !== "session-only",
+    ).map((entry) => entry.verb);
+    const vagueReasons = VERB_TABLE.filter(
+      (entry) =>
+        entry.nonPdpReason !== undefined &&
+        entry.nonPdpReason.trim().length < 40,
+    ).map((entry) => entry.verb);
+
+    expect({ invalid, protectedWithoutPdp, vagueReasons }).toEqual({
+      invalid: [],
+      protectedWithoutPdp: [],
+      vagueReasons: [],
+    });
+  });
+
+  it("accounts for every canonical action through an alias or a direct-call reason", () => {
+    const aliased = new Set(
+      VERB_TABLE.flatMap((entry) =>
+        entry.authorizationAction ? [entry.authorizationAction] : [],
+      ),
+    );
+    const direct = new Set(
+      Object.entries(DIRECT_ONLY_ACTIONS)
+        .filter(([, reason]) => Boolean(reason?.trim()))
+        .map(([action]) => action as AuthorizationAction),
+    );
+    const duplicated = [...direct].filter((action) => aliased.has(action));
+    const missing = Object.values(AUTHORIZATION_ACTIONS).filter(
+      (action) => !aliased.has(action) && !direct.has(action),
+    );
+    const unknown = [...direct].filter(
+      (action) => !Object.values(AUTHORIZATION_ACTIONS).includes(action),
+    );
+
+    expect({ missing, duplicated, unknown }).toEqual({
+      missing: [],
+      duplicated: [],
+      unknown: [],
+    });
   });
 
   it("covers every MCP tool, and budgets tools separately from resources", () => {

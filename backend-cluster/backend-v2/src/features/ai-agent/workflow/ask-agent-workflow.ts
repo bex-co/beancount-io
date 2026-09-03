@@ -164,12 +164,16 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
           packageVersion: CLAUDE_AGENT_ACP_VERSION,
         },
         executable: "claude-agent-acp",
+        modelMapping: {
+          type: "session-config-option",
+          path: "model",
+        },
         modelId: this.deps.model,
         auth: "direct",
         // Mirrors @ai-sdk/harness-claude-code's own split: secrets go through
         // credentialEnv, the non-secret gateway root through forwardEnv.
         credentialEnv: ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"],
-        // harness-acp@1.0.23 refuses credentialEnv without credentialBrokering.
+        // harness-acp refuses credentialEnv without credentialBrokering.
         // Brokering only applies when the sandbox session exposes
         // addRequestTransformations; the Cloudflare provider has no primitive
         // for that (ADR 0005), so the harness warns and falls back to direct
@@ -210,8 +214,7 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
       // Ensure the ledger repo is cloned before the agent runs. onSession fires
       // per session start; the clone is made idempotent (skip when repo/.git
       // already exists) so a reused/resumed container is not re-cloned. This is
-      // the harness-native hook available in harness@1.0.74 (the version
-      // harness-claude-code pins); it replaces the caller-owned-sandbox path.
+      // This harness-native hook replaces the caller-owned-sandbox path.
       sandboxConfig: {
         onSession: async ({ session }) => {
           // Free the bridge port before the harness (re)spawns bridge.mjs. On a

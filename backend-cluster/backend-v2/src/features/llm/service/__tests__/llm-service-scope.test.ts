@@ -9,7 +9,7 @@ import { AuthorizationService } from "@/server/api/authorization";
  * seam of their own — they build a Fava client straight from the user id. Until
  * this fix they also rebuilt `trustedIdentity(userId)` internally, so a
  * ledger-pinned OAuth grant arrived pinned and was immediately widened to a
- * capability-exempt session: `assertLedgerScope` had nothing left to compare
+ * capability-exempt session: the PDP had nothing left to compare
  * and the whole check passed. A grant confined to ledger A could then read
  * ledger B's accounts and recent transactions whenever the underlying user
  * happened to be a collaborator on B.

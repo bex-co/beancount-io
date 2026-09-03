@@ -46,9 +46,6 @@ const scopeLogger = logger.child({ module: "op-class" });
 export type OpClass = "read" | "write" | "admin" | "session-only" | "public";
 
 /** The scope that satisfies each class, or null when no scope can. */
-// TODO(authz): Migrate the remaining protected operations to centralized
-// authorization, using OpenFGA for durable relationship checks when ADR 0010's
-// runtime-adoption trigger fires.
 const SCOPE_FOR_CLASS: Record<OpClass, ApiScope | null> = {
   read: "ledger.read",
   write: "ledger.write",
@@ -121,6 +118,8 @@ export interface VerbEntry {
   readonly class: OpClass;
   /** Canonical PDP action, independent of rate/audit operational class. */
   readonly authorizationAction?: AuthorizationAction;
+  /** Why this operation has no PDP action (authentication or public only). */
+  readonly nonPdpReason?: string;
   /** GraphQL root field, e.g. `Query.getLedger`. */
   readonly gql?: string;
   /** REST route as `<METHOD> <path>`, path in `{param}` form. */
@@ -243,6 +242,15 @@ const G = {
     "Server-sent streaming over a long-lived HTTP request; GraphQL's request/response shape cannot carry it, and the dashboard consumes the stream directly.",
   wireCompat:
     "Exists to speak a foreign wire format (OpenAI / Anthropic / MCP) so third-party clients work unchanged; a GraphQL twin would have no client.",
+} as const;
+
+const NON_PDP = {
+  authenticationCeremony:
+    "Authentication ceremony: it establishes, refreshes, or ends the caller identity that the PDP consumes, so no pre-existing application principal exists to authorize.",
+  publicProductConfiguration:
+    "Public product configuration with no user or ledger data; pricing must render before sign-in and therefore has no protected business resource for the PDP.",
+  publicProbe:
+    "Public process/bootstrap probe with no user or ledger data; it reports service or client configuration rather than performing a protected business action.",
 } as const;
 
 /**
@@ -516,17 +524,23 @@ const AUTH_VERBS: readonly VerbEntry[] = [
     R.credentialMinting,
     M.credentialMinting,
   ),
-];
+].map((entry) => ({
+  ...entry,
+  nonPdpReason: NON_PDP.authenticationCeremony,
+}));
 
 const BILLING_VERBS: readonly VerbEntry[] = [
   // Static product configuration, not user billing state. Keep it public so a
   // pricing surface can render before sign-in; protected billing starts below.
-  gqlOnly(
-    "Query.allTierQuotas",
-    "public",
-    R.publicPricingCatalog,
-    M.publicPricingCatalog,
-  ),
+  {
+    ...gqlOnly(
+      "Query.allTierQuotas",
+      "public",
+      R.publicPricingCatalog,
+      M.publicPricingCatalog,
+    ),
+    nonPdpReason: NON_PDP.publicProductConfiguration,
+  },
   {
     ...gqlOnly("Query.subscriptionStatus", "read", R.billing, M.billing),
     authorizationAction: AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ,
@@ -567,7 +581,7 @@ const BILLING_VERBS: readonly VerbEntry[] = [
 const PROBE_VERBS: readonly VerbEntry[] = [
   gqlOnly("Query.health", "public", R.internalProbe, M.notAgentShaped),
   gqlOnly("Query.featureFlags", "public", R.internalProbe, M.notAgentShaped),
-];
+].map((entry) => ({ ...entry, nonPdpReason: NON_PDP.publicProbe }));
 
 /**
  * The ledger's own control plane. Both the writes and the reads are `admin`:
@@ -988,7 +1002,7 @@ const LEDGER_WRITE_ACTION_BY_VERB = {
   "Mutation.unstarLedger": AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,
   "Mutation.bulkEntries": AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
   "Mutation.insertReceiptTransaction":
-    AUTHORIZATION_ACTIONS.LEDGER_RECEIPTS_WRITE,
+    AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
   "Mutation.deleteLedgerEntrySourceSlice":
     AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
   "Mutation.deleteMultipleLedgerEntrySourceSlices":
@@ -1027,15 +1041,12 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     "POST /api-gateway/v1/ledgers/{owner}/{name}/entries",
     M.coveredByEditFiles,
   ),
-  {
-    ...gqlOnly(
-      "Mutation.insertReceiptTransaction",
-      "write",
-      R.notInV1Table,
-      M.notAgentShaped,
-    ),
-    authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
-  },
+  gqlOnly(
+    "Mutation.insertReceiptTransaction",
+    "write",
+    R.notInV1Table,
+    M.notAgentShaped,
+  ),
   gqlOnly(
     "Mutation.deleteLedgerEntrySourceSlice",
     "write",
@@ -1208,9 +1219,10 @@ const GITEA_SOCIAL_VERBS: readonly VerbEntry[] = [
     ...gqlOnly("Query.getFeed", "read", R.giteaSocial, M.notAgentShaped),
     authorizationAction: AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ,
   },
-  ...Object.keys(SOCIAL_PUBLIC_EXCLUSIONS).map((gql) =>
-    gqlOnly(gql, "public", R.giteaSocial, M.notAgentShaped),
-  ),
+  ...Object.entries(SOCIAL_PUBLIC_EXCLUSIONS).map(([gql, reason]) => ({
+    ...gqlOnly(gql, "public", R.giteaSocial, M.notAgentShaped),
+    nonPdpReason: reason,
+  })),
   {
     ...gqlOnly("Mutation.followUser", "write", R.giteaSocial, M.notAgentShaped),
     authorizationAction: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
@@ -1297,7 +1309,10 @@ const LLM_VERBS: readonly VerbEntry[] = [
     ...gqlOnly("Mutation.parseReceipt", "write", R.llm, M.notAgentShaped),
     authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
   },
-  gqlOnly("Query.aiCfoUsage", "read", R.llm, M.notAgentShaped),
+  {
+    ...gqlOnly("Query.aiCfoUsage", "read", R.llm, M.notAgentShaped),
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_AI_USAGE_READ,
+  },
 ];
 
 const ASSET_VERBS: readonly VerbEntry[] = [
@@ -1549,6 +1564,22 @@ export const VERB_TABLE: readonly VerbEntry[] = [
   ...PLAID_VERBS,
   ...AI_ROUTE_VERBS,
 ];
+
+/**
+ * Protected actions invoked below a transport root rather than represented by
+ * their own GraphQL/REST/MCP alias. Keeping the reasons executable makes an
+ * orphan action a CI failure instead of an undocumented compatibility path.
+ */
+export const DIRECT_ONLY_ACTIONS: Readonly<
+  Partial<Record<AuthorizationAction, string>>
+> = {
+  [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_STATUS_READ]:
+    "GraphQL resolves Ledger.isStarred as a nested field after the root ledger read; the field-level service call authorizes independently and audits with the canonical action fallback.",
+  [AUTHORIZATION_ACTIONS.AI_LEDGER_AGENT]:
+    "The agent route first authorizes read access, then uses this action as an optional write-authority upgrade; it is not a separate transport operation.",
+  [AUTHORIZATION_ACTIONS.BANK_WEBHOOK_ITEM_APPLY]:
+    "The signed Plaid webhook ingress resolves the current item binding, then this background-only action authorizes each protected item mutation before domain work.",
+};
 
 // ---------------------------------------------------------------------------
 // Lookup

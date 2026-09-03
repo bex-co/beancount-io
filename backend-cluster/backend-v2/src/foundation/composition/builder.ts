@@ -93,6 +93,7 @@ export function buildServiceLayer(input: {
     stripe,
     input.database.models,
     input.database.db,
+    authorization,
   );
   const ledgerEntryWriter = createLedgerEntryWriter(
     input.clients.favaClientFactory,

@@ -79,7 +79,7 @@ describe("classifyOp", () => {
     expect(new Set(classifiedOpIds()).size).toBe(classifiedOpIds().length);
   });
 
-  it("maps every migrated transport alias to one canonical action", () => {
+  it("maps every protected transport alias to one canonical action", () => {
     expect(
       [
         "GQL Query.userProfile",
@@ -221,7 +221,7 @@ describe("classifyOp", () => {
     ],
     [
       "GQL Mutation.insertReceiptTransaction",
-      AUTHORIZATION_ACTIONS.LEDGER_RECEIPTS_WRITE,
+      AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
       "write",
     ],
     [
@@ -275,7 +275,7 @@ describe("classifyOp", () => {
       AUTHORIZATION_ACTIONS.LEDGER_SHELL_READ,
       AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
-      AUTHORIZATION_ACTIONS.LEDGER_RECEIPTS_WRITE,
+      AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
       AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_READ,
       AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE,
       AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE,

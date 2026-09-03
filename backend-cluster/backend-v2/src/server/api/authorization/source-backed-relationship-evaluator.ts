@@ -70,7 +70,7 @@ const deniedGiteaStatus = (error: unknown): boolean => {
 };
 
 /**
- * Evaluates migrated domains directly from their authoritative backend facts.
+ * Evaluates protected domains directly from their authoritative backend facts.
  * Nothing is persisted or cached here.
  */
 export class SourceBackedRelationshipEvaluator implements IRelationshipEvaluator {

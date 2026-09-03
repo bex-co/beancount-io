@@ -1,8 +1,13 @@
-import { ForbiddenError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import { evaluateScope } from "@/server/api/op-class";
-import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
-import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization";
+import {
+  AUTHORIZATION_ACTIONS,
+  AuthorizationDeniedError,
+  AuthorizationService,
+  LEDGER_RELATIONSHIPS,
+  type RelationshipCheck,
+} from "@/server/api/authorization";
+import { resolveAgentAccessMode } from "../../agent-access";
 
 const LEDGER_ID = "alice/main";
 const CHAT_OPS = [
@@ -40,31 +45,38 @@ describe("chat authorization contract", () => {
     },
   );
 
-  it.each(["ledger.write", "ledger.admin"] as const)(
-    "lets a %s chat credential read before it writes",
-    (scope) => {
-      const identity = credential(scope);
+  it("keeps agent mode useful for a reader while the PDP rejects writes", async () => {
+    const check = jest.fn(
+      async ({ relation }: RelationshipCheck) =>
+        relation === LEDGER_RELATIONSHIPS.READ_CONTENTS,
+    );
 
-      for (const op of CHAT_OPS) {
-        expect(evaluateScope(identity, op).allowed).toBe(true);
-      }
-      expect(() =>
-        assertLedgerAuthorization(identity, LEDGER_ID, "read"),
-      ).not.toThrow();
-      expect(() =>
-        assertLedgerAuthorization(identity, LEDGER_ID, "write"),
-      ).not.toThrow();
-    },
-  );
+    await expect(
+      resolveAgentAccessMode({
+        authorization: new AuthorizationService({ check }),
+        identity: credential("ledger.read"),
+        ledgerId: LEDGER_ID,
+        requestedMode: "agent",
+      }),
+    ).resolves.toBe("read");
+    expect(check.mock.calls.map(([input]) => input.relation)).toEqual([
+      LEDGER_RELATIONSHIPS.READ_CONTENTS,
+    ]);
+  });
 
-  it("does not turn cumulative scopes into broader ledger access", () => {
+  it("does not turn cumulative scopes into broader ledger access", async () => {
     const identity = {
       ...credential("ledger.write"),
       ledgerScope: "alice/other",
     };
 
-    expect(() =>
-      assertLedgerAuthorization(identity, LEDGER_ID, "read"),
-    ).toThrow(ForbiddenError);
+    await expect(
+      resolveAgentAccessMode({
+        authorization: new AuthorizationService({ check: jest.fn() }),
+        identity,
+        ledgerId: LEDGER_ID,
+        requestedMode: "ask",
+      }),
+    ).rejects.toThrow(AuthorizationDeniedError);
   });
 });

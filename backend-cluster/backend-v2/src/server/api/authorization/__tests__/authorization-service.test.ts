@@ -17,6 +17,7 @@ import {
   type AuthorizationAction,
   type AuthorizationResource,
   type IRelationshipEvaluator,
+  type RelationshipCheck,
   plaidBackgroundPrincipal,
   userResource,
   USER_RELATIONSHIPS,
@@ -167,26 +168,6 @@ const ASSISTED_ACTION_CASES = [
     ],
   },
   {
-    action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
-    scope: "ledger.read",
-    resource: ledgerResource("alice/main"),
-    checks: [
-      ["ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS],
-      ["ledger", LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS],
-      ["ledger", LEDGER_RELATIONSHIPS.WRITE_AI],
-    ],
-  },
-  {
-    action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
-    scope: "ledger.read",
-    resource: ledgerResource("alice/main"),
-    checks: [
-      ["ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS],
-      ["ledger", LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS],
-      ["ledger", LEDGER_RELATIONSHIPS.WRITE_AI],
-    ],
-  },
-  {
     action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
     scope: "ledger.write",
     resource: [
@@ -320,27 +301,6 @@ describe("AuthorizationService", () => {
         resource: ledgerResource("alice/private"),
       }),
     ).rejects.toBeInstanceOf(UnauthenticatedError);
-  });
-
-  it("requires both content and asset writes before a receipt workflow", async () => {
-    const relationships = { check: jest.fn(async (_input: unknown) => true) };
-    const principal = identity("oauth", "usr_alice", ["ledger.write"]);
-    const resource = ledgerResource("alice/main");
-    await expect(
-      new AuthorizationService(relationships).authorize({
-        principal,
-        action: AUTHORIZATION_ACTIONS.LEDGER_RECEIPTS_WRITE,
-        resource,
-      }),
-    ).resolves.toMatchObject({ allowed: true });
-    expect(
-      relationships.check.mock.calls.map(
-        ([call]) => (call as { relation: string }).relation,
-      ),
-    ).toEqual([
-      LEDGER_RELATIONSHIPS.WRITE_CONTENTS,
-      LEDGER_RELATIONSHIPS.WRITE_ASSETS,
-    ]);
   });
 
   it.each(["session", "oauth"] as const)(
@@ -668,30 +628,36 @@ describe("AuthorizationService", () => {
     expect(relationships.check).not.toHaveBeenCalled();
   });
 
-  it("authorizes a workload principal through the same ledger action contract", async () => {
-    const relationships: IRelationshipEvaluator = {
-      check: jest.fn(async () => true),
-    };
-    const service = new AuthorizationService(relationships);
+  it.each([
+    [
+      AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
+      userResource("usr_alice"),
+      USER_RELATIONSHIPS.READ_LEDGERS,
+    ],
+    [
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+      ledgerResource("alice/main"),
+      LEDGER_RELATIONSHIPS.READ_CONTENTS,
+    ],
+  ] as const)(
+    "authorizes a workload principal through the canonical %s contract",
+    async (action, resource, relation) => {
+      const relationships: IRelationshipEvaluator = {
+        check: jest.fn(async () => true),
+      };
+      const service = new AuthorizationService(relationships);
+      const principal = systemIdentity("usr_alice", "directive-counts");
 
-    await expect(
-      service.authorize({
-        principal: systemIdentity("usr_alice", "plaid-sync"),
-        action: AUTHORIZATION_ACTIONS.LEDGER_WRITE,
-        resource: ledgerResource("alice/main"),
-        context: { ledgerId: "alice/main" },
-      }),
-    ).resolves.toMatchObject({
-      allowed: true,
-      action: AUTHORIZATION_ACTIONS.LEDGER_WRITE,
-      resource: "ledger:alice/main",
-    });
-    expect(relationships.check).toHaveBeenCalledWith({
-      user: "user:usr_alice",
-      relation: "writer",
-      object: "ledger:alice/main",
-    });
-  });
+      await expect(
+        service.authorize({ principal, action, resource }),
+      ).resolves.toMatchObject({ allowed: true, action, resource });
+      expect(relationships.check).toHaveBeenCalledWith({
+        user: "user:usr_alice",
+        relation,
+        object: resource,
+      });
+    },
+  );
 
   it("denies a ledger-pinned credential before relationship evaluation", async () => {
     const relationships: IRelationshipEvaluator = {
@@ -705,7 +671,7 @@ describe("AuthorizationService", () => {
           ...identity("oauth", "usr_alice", ["ledger.read"]),
           ledgerScope: "alice/main",
         },
-        action: AUTHORIZATION_ACTIONS.LEDGER_READ,
+        action: AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
         resource: ledgerResource("alice/other"),
       }),
     ).resolves.toMatchObject({
@@ -997,8 +963,12 @@ describe("AuthorizationService", () => {
   });
 
   it("rechecks and audits every relationship in two identical composite calls", async () => {
+    const checkAll = jest.fn(
+      async (_checks: readonly RelationshipCheck[]) => true,
+    );
     const relationships: IRelationshipEvaluator = {
-      check: jest.fn(async () => true),
+      check: jest.fn(async (_input: RelationshipCheck) => true),
+      checkAll,
     };
     const audit = jest.fn();
     const service = new AuthorizationService(relationships, audit);
@@ -1018,7 +988,11 @@ describe("AuthorizationService", () => {
     await service.authorizeOrThrow(input);
     await service.authorizeOrThrow(input);
 
-    expect(relationships.check).toHaveBeenCalledTimes(6);
+    expect(relationships.check).not.toHaveBeenCalled();
+    expect(checkAll).toHaveBeenCalledTimes(4);
+    expect(checkAll.mock.calls.map(([checks]) => checks.length)).toEqual([
+      1, 2, 1, 2,
+    ]);
     expect(audit).toHaveBeenCalledTimes(2);
     expect(audit).toHaveBeenCalledWith(
       principal,
@@ -1343,6 +1317,55 @@ describe("AuthorizationService", () => {
       message: 'This operation requires the "ledger.admin" scope',
     });
   });
+
+  it("protects AI usage as an exact-self read", async () => {
+    const relationships = {
+      check: jest.fn(async (_input: RelationshipCheck) => true),
+    };
+    const principal = identity("oauth", "usr_alice", ["ledger.read"]);
+    const resource = userResource(principal.userId);
+
+    await expect(
+      new AuthorizationService(relationships).authorizeOrThrow({
+        principal,
+        action: AUTHORIZATION_ACTIONS.USER_AI_USAGE_READ,
+        resource,
+      }),
+    ).resolves.toMatchObject({ allowed: true });
+    expect(relationships.check).toHaveBeenCalledWith({
+      user: resource,
+      relation: USER_RELATIONSHIPS.OWNER,
+      object: resource,
+    });
+  });
+
+  it.each([
+    AUTHORIZATION_ACTIONS.BANK_TRANSACTION_CATEGORIES_SUGGEST,
+    AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_SUGGEST,
+  ])(
+    "composes bank, ledger-read, and AI authority once for %s",
+    async (action) => {
+      const relationships = {
+        check: jest.fn(async (_input: RelationshipCheck) => true),
+      };
+      const resource = bankConnectionResource("alice/main", "pitm_1");
+
+      await expect(
+        new AuthorizationService(relationships).authorizeOrThrow({
+          principal: identity("oauth", "usr_alice", ["ledger.read"]),
+          action,
+          resource,
+        }),
+      ).resolves.toMatchObject({ allowed: true });
+      expect(
+        relationships.check.mock.calls.map(([check]) => check.relation),
+      ).toEqual([
+        LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS,
+        LEDGER_RELATIONSHIPS.READ_CONTENTS,
+        LEDGER_RELATIONSHIPS.WRITE_AI,
+      ]);
+    },
+  );
 
   it("requires both bank-control and ledger-content relationships for transaction writes", async () => {
     const relationships = { check: jest.fn(async () => true) };

@@ -22,7 +22,8 @@ import fs from "fs";
 import path from "path";
 
 import { config } from "@/config/config";
-import { REST_FRAGMENTS } from "@/server/api/composition-root";
+import { setLedgerV1Routes } from "@/features/ledger/api/rest/v1";
+import { setApiKeyRoutes } from "@/features/apikeys/api/api-key-rest";
 import { generateV1OpenAPIDocument } from "@/server/rest/openapi-registry";
 
 /**
@@ -38,15 +39,15 @@ const stub = new Proxy(function stub() {} as never, {
   construct: () => stub,
 }) as never;
 
-// Every REST fragment, not a hand-kept list of the v1 ones: the document is
-// filtered by tag, so registering everything and filtering is the same result
-// with none of the drift. A fragment added without being listed here is
-// exactly the bug `openapi-completeness.test.ts` exists to catch, and this
-// script should not be able to cause it.
+// Register only the fragments that own public v1 declarations. Pulling in the
+// whole composition root also initializes unrelated AI transports and their
+// runtime-only dependencies, even though OpenAPI generation never calls them.
+// `openapi-completeness.test.ts` independently compares the complete live REST
+// assembly and `V1_DECLARED_ROUTES` in both directions, so a new v1 fragment
+// cannot pass CI merely because this generator forgot it.
 const router = new Router();
-for (const fragment of REST_FRAGMENTS) {
-  fragment.register(router, { layers: stub, config });
-}
+setLedgerV1Routes(router, stub, config);
+setApiKeyRoutes(router, stub, config);
 
 const outputPath = path.resolve(__dirname, "../docs/openapi/v1.json");
 fs.mkdirSync(path.dirname(outputPath), { recursive: true });

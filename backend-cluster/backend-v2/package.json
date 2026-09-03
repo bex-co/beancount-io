@@ -78,10 +78,10 @@
     "yaml": "^2.9.0"
   },
   "dependencies": {
-    "@ai-sdk/anthropic": "^4.0.40",
-    "@ai-sdk/harness": "1.0.74",
-    "@ai-sdk/harness-acp": "1.0.23",
-    "@ai-sdk/openai": "^4.0.44",
+    "@ai-sdk/anthropic": "4.0.49",
+    "@ai-sdk/harness": "1.0.100",
+    "@ai-sdk/harness-acp": "1.0.38",
+    "@ai-sdk/openai": "4.0.57",
     "@apollo/server": "^5.4.0",
     "@as-integrations/koa": "^1.1.1",
     "@asteasolutions/zod-to-openapi": "8.4.0",
@@ -93,7 +93,7 @@
     "@koa/cors": "^5.0.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@sendgrid/mail": "^8.1.6",
-    "ai": "^7.0.70",
+    "ai": "7.0.91",
     "async-lock": "^1.4.1",
     "axios": "1.14.0",
     "bcryptjs": "3.0.3",
@@ -145,8 +145,7 @@
     "esbuild": "^0.27.2",
     "fast-xml-parser": "^5.3.4",
     "node-fetch": "^2.7.0",
-    "js-yaml": "^4.1.0",
-    "@ai-sdk/provider-utils": "5.0.33"
+    "js-yaml": "^4.1.0"
   },
   "private": true
 }

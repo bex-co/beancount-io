@@ -99,7 +99,7 @@ curl --fail-with-body \
 ```
 
 The interactive [API reference](https://beancount.io/docs/api-reference) shows
-the available endpoints, request schemas, and required scope classes.
+the available endpoints, request schemas, and required permissions.
 
 ### OAuth deployment contract
 
@@ -174,6 +174,13 @@ service unavailable and are audited as errors. File path validation, archive
 name validation, commit construction, receipt ownership/cleanup, and atomic
 entry behavior remain domain invariants after authorization. No authorization
 decision is cached, so revocation or visibility changes affect the next call.
+
+A logged-in reader can ask questions about a public or shared ledger, including
+when the UI requests agent mode. The agent first authorizes the read-only
+`ai.ledger.ask` action, then attempts a separate `ai.ledger.agent` write upgrade.
+If that upgrade is denied, the answer still runs in read-only mode without edit
+tools or a writable Git remote; an authorization-source outage still fails
+closed.
 
 ### User-domain authorization
 

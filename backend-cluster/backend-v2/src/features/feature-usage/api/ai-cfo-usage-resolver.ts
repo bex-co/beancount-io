@@ -21,7 +21,9 @@ export class AiCfoUsageResolver {
     description: "Get AI CFO usage for the current billing month",
   })
   async aiCfoUsage(@Ctx() ctx: IContext): Promise<AiCfoUsageResponse> {
-    const usage = await this.aiCfoUsageService.getUsage(ctx.getCurrentUserId());
+    const usage = await this.aiCfoUsageService.getUsage(
+      ctx.getCurrentIdentity(),
+    );
     return {
       aiCfoTokensUsed: usage.currentCount,
       aiCfoTokensMax: usage.maxAllowed,

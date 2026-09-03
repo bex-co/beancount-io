@@ -60,7 +60,13 @@ beforeAll(async () => {
     database: {},
     services: {
       ledgerShell: { queryShellText: async () => "Assets:Cash 100 USD" },
-      ledgerRepo: {},
+      ledgerRepo: {
+        changeFiles: async ({ identity }: { identity: Identity }) => {
+          if (!identity.scopes.has("ledger.write")) {
+            throw new Error('This operation requires the "ledger.write" scope');
+          }
+        },
+      },
       apiKey: {},
       llm: {},
     },

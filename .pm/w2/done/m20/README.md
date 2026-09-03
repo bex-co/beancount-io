@@ -1,19 +1,19 @@
 # w2 · m20 — Retire distributed authorization gates after domain cutovers
 
-**Worker:** worker2 **Goal:** complete backend-v2 convergence on one final PDP after every business-domain milestone is done, while retaining explicit authentication/public/webhook/infrastructure boundaries **Status:** todo
+**Worker:** worker2 **Goal:** complete backend-v2 convergence on one final PDP after every business-domain milestone is done, while retaining explicit authentication/public/webhook/infrastructure boundaries **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                               | est | depends_on |
 | ---- | --------------------------------------------------- | --- | ---------- |
-| t001 | Audit action-catalog, alias, and explicit-exclusion coverage | 60m | —          |
-| t002 | Retire duplicate transport and service policy gates          | 75m | t001       |
-| t003 | Consolidate per-call audit and failure behavior        | 50m | t002       |
-| t004 | Run whole-backend authorization parity validation   | 75m | t003       |
-| t005 | Adoption surface                                    | 25m | t004       |
-| t006 | Simplify                                            | 25m | t005       |
-| t007 | Test coverage                                       | 75m | t005       |
-| t008 | Closeout                                            | 15m | t006, t007 |
+| t001 | Audit action-catalog, alias, and explicit-exclusion coverage — **DONE** | 60m | —          |
+| t002 | Retire duplicate transport and service policy gates — **DONE**          | 75m | t001       |
+| t003 | Consolidate per-call audit and failure behavior — **DONE**        | 50m | t002       |
+| t004 | Run whole-backend authorization parity validation — **DONE**   | 75m | t003       |
+| t005 | Adoption surface — **DONE**                                    | 25m | t004       |
+| t006 | Simplify — **DONE**                                            | 25m | t005       |
+| t007 | Test coverage — **DONE**                                       | 75m | t005       |
+| t008 | Closeout — **DONE**                                            | 15m | t006, t007 |
 
 ## Definition of done
 

@@ -269,9 +269,10 @@ shape: \`{ "ok": false, "error": { "code", "message" } }\`.
 For scripts and integrations, create a personal access token at
 https://beancount.io/settings/api-keys and send it in the \`x-api-key\` header. The
 plaintext is shown only once. OAuth 2.1 access tokens may instead be sent as bearer
-tokens, and signed-in browsers use their session cookie. Each operation is classified \`read\`, \`write\`, or
-\`admin\`, and a token is refused when its scopes (\`ledger.read\`, \`ledger.write\`,
-\`ledger.admin\`) do not cover the operation's class.
+tokens, and signed-in browsers use their session cookie. Each protected operation maps
+to a business permission. A token's \`ledger.read\`, \`ledger.write\`, or \`ledger.admin\`
+scope is a credential ceiling; the token's ledger pin and the caller's current ledger
+relationship must also authorize the action. A scope alone never grants access.
       `.trim(),
       contact: {
         name: "Beancount.io",

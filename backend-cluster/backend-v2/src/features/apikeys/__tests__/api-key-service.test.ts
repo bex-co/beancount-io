@@ -249,7 +249,7 @@ describe("minting", () => {
   it.each(["", "   "])(
     "reads a blank ledger scope (%j) as not asked for, so a pinned minter still inherits",
     async (blank) => {
-      // `""` is falsy, and `assertLedgerScope` treats a falsy pin as
+      // `""` is falsy, and the PDP treats a falsy pin as
       // unconfined — storing it would let a pinned grant mint an unpinned key.
       const { service, created } = makeService();
       await service.mint(pinnedAdminOAuthGrant, {

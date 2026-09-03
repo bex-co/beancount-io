@@ -107,7 +107,7 @@ export interface ApiDeps {
 export type ApiGate = "scoped" | "enforced" | "outside";
 
 /** A feature's REST contribution: routes, plus where they sit w.r.t. the gate. */
-export interface RestFragment {
+interface RestFragment {
   readonly feature: string;
   readonly gate: ApiGate;
   register(router: Router, deps: ApiDeps): void;
@@ -130,7 +130,7 @@ export interface RestMount {
  * this list is behaviour, not just bookkeeping (the OIDC interaction routes
  * must precede the OIDC catch-all).
  */
-export const REST_FRAGMENTS: readonly RestFragment[] = [
+const REST_FRAGMENTS: readonly RestFragment[] = [
   {
     // OAuth 2.1 + OIDC provider: dynamic client registration for MCP/AI-agent
     // clients, plus the static client for third-party identity login.

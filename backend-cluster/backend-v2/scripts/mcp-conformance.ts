@@ -325,7 +325,11 @@ async function checkScopeRefusal(o: Options): Promise<CheckResult> {
         name: "editLedgerFiles",
         arguments: {
           description: "conformance probe — expected to be refused",
-          files: [{ operation: "delete", path: ".mcp-conformance-probe" }],
+          // Creating main.bean reaches the service's write PEP without a
+          // preparatory file read. If authorization regresses and lets the
+          // call through, the existing root file makes the operation fail
+          // without changing the ledger.
+          files: [{ operation: "create", path: "main.bean", content: "" }],
         },
       },
       3,
@@ -337,10 +341,25 @@ async function checkScopeRefusal(o: Options): Promise<CheckResult> {
       `expected a 200 carrying an isError result, got ${res.status}. A transport error ends the agent's session instead of telling it what it lacked`,
     );
   }
-  const result = parseRpc(res.body)?.result as { isError?: boolean } | undefined;
+  const result = parseRpc(res.body)?.result as
+    | {
+        isError?: boolean;
+        content?: Array<{ text?: string }>;
+        structuredContent?: { error?: string };
+      }
+    | undefined;
   if (result?.isError !== true) {
     return v.fail(
       "the refusal did not set isError — an agent branching on it reads this as success",
+    );
+  }
+  const refusalText = [
+    ...(result.content ?? []).map(({ text }) => text ?? ""),
+    result.structuredContent?.error ?? "",
+  ].join(" ");
+  if (!refusalText.includes("ledger.write")) {
+    return v.fail(
+      "the tool failed, but not because write authority was refused — an unrelated validation or repository error is not authorization evidence",
     );
   }
   return v.pass("refused with isError: true");

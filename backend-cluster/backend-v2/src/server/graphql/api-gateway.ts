@@ -15,7 +15,6 @@ import { resolvers, type ResolverContainer } from "./resolver-registry";
 import type { IContext } from "./context";
 import { createContext } from "./context";
 import { graphqlScopeMiddleware } from "./scope-middleware";
-import { graphqlLedgerPinMiddleware } from "./ledger-pin-middleware";
 import { errorLoggingPlugin } from "./plugins/error-logging";
 import { formatError } from "./format-error";
 import { setAuthCookie, getAuthCookieFromCtx } from "@/shared/cookie-utils";
@@ -45,9 +44,6 @@ export async function buildGraphqlSchema(options?: {
       graphqlScopeMiddleware(
         options?.scopeEnforcement ?? appConfig.api.scopeEnforcement,
       ),
-      // Scope check first, then the ledger pin: a credential missing
-      // `ledger.write` should be told that, not that it named the wrong ledger.
-      graphqlLedgerPinMiddleware(),
     ],
     validate: true,
   });

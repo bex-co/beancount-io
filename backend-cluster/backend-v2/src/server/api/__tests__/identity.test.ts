@@ -3,8 +3,8 @@ import type { AppConfig } from "@/config/config";
 import type { DatabaseLayer } from "@/foundation/composition";
 import {
   API_SCOPES,
-  assertIdentityCapability,
   assertSessionIdentity,
+  identityHasCapability,
   resolveIdentity,
   type Identity,
 } from "../identity";
@@ -435,9 +435,9 @@ describe("API scope vocabulary", () => {
       scopes: new Set(["ledger.admin"]),
     };
 
-    expect(() => assertIdentityCapability(identity, "read")).not.toThrow();
-    expect(() => assertIdentityCapability(identity, "write")).not.toThrow();
-    expect(() => assertIdentityCapability(identity, "admin")).not.toThrow();
+    expect(identityHasCapability(identity, "read")).toBe(true);
+    expect(identityHasCapability(identity, "write")).toBe(true);
+    expect(identityHasCapability(identity, "admin")).toBe(true);
   });
 });
 
