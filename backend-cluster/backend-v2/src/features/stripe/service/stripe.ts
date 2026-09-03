@@ -200,7 +200,9 @@ export const SUBSCRIPTION_CONFIG: SubscriptionConfigMap = {
     stripePriKey: config.stripe.privateKey,
     successUrl: "https://beancount.io/pricing/?success=true",
     cancelUrl: "https://beancount.io/pricing",
-    portalReturnUrl: "https://beancount.io/profile/settings",
+    // The dashboard's subscription-management page — /profile/settings was a
+    // legacy-dashboard route that now 404s.
+    portalReturnUrl: "https://beancount.io/settings/general",
     webhook: "https://beancount.io/api-gateway/stripe/webhook",
   },
   "beancount-web-dev": {
@@ -273,7 +275,7 @@ export const SUBSCRIPTION_CONFIG: SubscriptionConfigMap = {
     stripePriKey: config.stripe.dev.privateKey,
     successUrl: "https://beancount.io/pricing/?success=true&env=dev",
     cancelUrl: "https://beancount.io/pricing?env=dev",
-    portalReturnUrl: "https://beancount.io/profile/settings?env=dev",
+    portalReturnUrl: "https://beancount.io/settings/general?env=dev",
     webhook: "https://beancount.io/api-gateway/stripe/webhook",
   },
 };

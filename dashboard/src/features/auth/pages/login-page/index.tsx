@@ -4,6 +4,7 @@ import { PageSEO } from "@/common/components/seo/page-seo";
 import { decodeLedgerId } from "@/common/lib/utils/encode";
 import { getUserDefaultLedger } from "@/common/lib/utils/ledger-utils";
 import { getSafeRedirectPath } from "@/common/lib/auth/auth";
+import { hardNavigate } from "@/common/lib/navigation/hard-navigate";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useLoginForm } from "@/features/auth/hooks/use-login-form";
 import { LoginForm } from "@/features/auth/components/login-form";
@@ -20,14 +21,21 @@ export default function LoginPage() {
   const { onSubmit, isLoading, serverError } = useLoginForm({
     onSuccess: async (token) => {
       postLegacyMobileAuthToken(token.accessToken, "password");
+      // An explicit `?next=` states the visitor's intent (e.g. the marketing
+      // /pricing page mid-checkout, or requireAuth's original destination) and
+      // outranks the default-ledger convenience jump. It may target a
+      // cross-app page this router has no route for, so navigate the document.
+      const safeNext = getSafeRedirectPath(search.next);
+      if (safeNext) {
+        hardNavigate(safeNext);
+        return;
+      }
       const defaultLedger = await getUserDefaultLedger(client);
       if (defaultLedger) {
         const { ledgerOwner, ledgerName } = decodeLedgerId(defaultLedger.id);
         void navigate({ to: `/ledger/${ledgerOwner}/${ledgerName}` });
       } else {
-        void navigate({
-          to: getSafeRedirectPath(search.next) ?? "/auth/welcome",
-        });
+        void navigate({ to: "/auth/welcome" });
       }
     },
   });

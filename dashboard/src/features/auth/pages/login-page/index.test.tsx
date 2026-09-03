@@ -5,8 +5,13 @@ import LoginPage from ".";
 const mocks = vi.hoisted(() => ({
   getDefaultLedger: vi.fn(),
   navigate: vi.fn(),
+  hardNavigate: vi.fn(),
   onSuccess: null as null | ((token: { accessToken: string }) => Promise<void>),
   search: {} as { next?: string; reason?: string },
+}));
+
+vi.mock("@/common/lib/navigation/hard-navigate", () => ({
+  hardNavigate: (...args: unknown[]) => mocks.hardNavigate(...args),
 }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -54,17 +59,32 @@ describe("LoginPage redirect continuation", () => {
     vi.spyOn(window, "postMessage").mockImplementation(() => undefined);
   });
 
-  it("returns to a relative next path when no default ledger exists", async () => {
-    mocks.search = { next: "/ledger/alice/book/journal" };
+  it("returns to a relative next path with a document navigation", async () => {
+    mocks.search = { next: "/pricing?billing=yearly" };
     render(<LoginPage />);
 
     await act(async () => {
       await mocks.onSuccess?.({ accessToken: "auth-token" });
     });
 
-    expect(mocks.navigate).toHaveBeenCalledWith({
-      to: "/ledger/alice/book/journal",
+    // Cross-app targets (marketing /pricing) have no route in this router, so
+    // the continuation must reload the document, never SPA-navigate.
+    expect(mocks.hardNavigate).toHaveBeenCalledWith("/pricing?billing=yearly");
+    expect(mocks.navigate).not.toHaveBeenCalled();
+  });
+
+  it("prefers the stated next destination over the default-ledger jump", async () => {
+    mocks.search = { next: "/settings/general" };
+    mocks.getDefaultLedger.mockResolvedValue({ id: "alice/book" });
+    render(<LoginPage />);
+
+    await act(async () => {
+      await mocks.onSuccess?.({ accessToken: "auth-token" });
     });
+
+    expect(mocks.hardNavigate).toHaveBeenCalledWith("/settings/general");
+    expect(mocks.getDefaultLedger).not.toHaveBeenCalled();
+    expect(mocks.navigate).not.toHaveBeenCalled();
   });
 
   it.each([
@@ -80,6 +100,6 @@ describe("LoginPage redirect continuation", () => {
     });
 
     expect(mocks.navigate).toHaveBeenCalledWith({ to: "/auth/welcome" });
-    expect(mocks.navigate).not.toHaveBeenCalledWith({ to: next });
+    expect(mocks.hardNavigate).not.toHaveBeenCalled();
   });
 });

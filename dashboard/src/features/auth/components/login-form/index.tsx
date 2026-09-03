@@ -147,6 +147,10 @@ export function LoginForm({
           ) : (
             <Link
               to="/auth/sign-up"
+              // Carry the current search along (each route's schema strips
+              // what it doesn't declare) so a `?next=` destination — e.g. the
+              // pricing page mid-checkout — survives the login ⇄ sign-up hop.
+              search={(prev) => prev}
               className="text-primary hover:text-primary/80 transition-colors font-medium"
             >
               {t("auth.signUp")}

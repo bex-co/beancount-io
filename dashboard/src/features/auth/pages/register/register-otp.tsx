@@ -12,11 +12,15 @@ import { PageSEO } from "@/common/components/seo/page-seo";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useOtpForm } from "@/features/auth/hooks/use-otp-form";
 import { OtpForm } from "@/features/auth/components/otp-form";
+import { getSafeRedirectPath } from "@/common/lib/auth/auth";
+import { hardNavigate } from "@/common/lib/navigation/hard-navigate";
 import { postLegacyMobileAuthToken } from "@/common/providers/react-native-bridge-provider/legacy-auth-bridge";
 
 type SignUpOtpPageProps = {
   sessionId: string;
   email: string;
+  /** Post-signup destination from `?next=`; validated before use. */
+  next?: string;
   onSuccess?: () => void;
   onBack?: () => void;
 };
@@ -24,6 +28,7 @@ type SignUpOtpPageProps = {
 export default function SignUpOtpPage({
   sessionId,
   email,
+  next,
   onSuccess,
   onBack,
 }: SignUpOtpPageProps) {
@@ -35,6 +40,13 @@ export default function SignUpOtpPage({
     onSuccess: async (token) => {
       postLegacyMobileAuthToken(token.accessToken, "otp");
       onSuccess?.();
+      const safeNext = getSafeRedirectPath(next);
+      if (safeNext) {
+        // `next` may target a cross-app page (the marketing site's /pricing),
+        // which this router has no route for — a hard navigation is required.
+        hardNavigate(safeNext);
+        return;
+      }
       void navigate({ to: "/auth/welcome" });
     },
   });

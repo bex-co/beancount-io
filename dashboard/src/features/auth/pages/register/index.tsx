@@ -43,6 +43,7 @@ export default function RegisterFlow() {
       <SignUpOtpPage
         sessionId={registrationData.sessionId}
         email={registrationData.email}
+        next={search.next}
         onSuccess={handleOtpSuccess}
         onBack={handleBackToRegister}
       />
