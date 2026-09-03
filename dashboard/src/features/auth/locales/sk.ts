@@ -482,6 +482,61 @@ const skAuth: Record<string, TranslationEntry> = {
     message: "Túto kartu môžete zavrieť.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.cliAuthCodeEntryTitle": {
+    message: "Autorizovať zariadenie",
+    description: "Title of the CLI device code entry card",
+  },
+  "auth.cliAuthCodeEntryDescription": {
+    message: "Zadajte jednorazový kód zobrazený vo vašom termináli.",
+    description: "Description under the CLI device code entry title",
+  },
+  "auth.cliAuthCodeLabel": {
+    message: "Jednorazový kód",
+    description: "Label of the CLI one-time code input",
+  },
+  "auth.cliAuthCodeContinue": {
+    message: "Pokračovať",
+    description: "Button to submit the entered CLI one-time code",
+  },
+  "auth.cliAuthCodeInvalid": {
+    message: "Zadajte 8-znakový kód zobrazený vo vašom termináli.",
+    description: "Error shown when the entered CLI code is not the right shape",
+  },
+  "auth.cliAuthRequestedBy": {
+    message: "Požiadavka od",
+    description: "Heading above the requesting device's reported details",
+  },
+  "auth.cliAuthClientLabel": {
+    message: "Klient",
+    description: "Label for the requesting client's name",
+  },
+  "auth.cliAuthDeviceLabel": {
+    message: "Zariadenie",
+    description: "Label for the requesting device's machine name",
+  },
+  "auth.cliAuthPlatformLabel": {
+    message: "Systém",
+    description: "Label for the requesting device's operating system",
+  },
+  "auth.cliAuthIpLabel": {
+    message: "IP adresa",
+    description: "Label for the requesting device's IP address",
+  },
+  "auth.cliAuthSelfReported": {
+    message:
+      "Tieto údaje uviedlo samotné zariadenie. Potvrďte len vtedy, ak ide o terminál, ktorý ste práve použili.",
+    description:
+      "Warning that the requesting device's details are self-reported",
+  },
+  "auth.cliAuthUseAnotherCode": {
+    message: "Použiť iný kód",
+    description: "Button to enter a different CLI one-time code",
+  },
+  "auth.cliAuthPermissionExpiry": {
+    message: "Zostať prihlásený na tomto zariadení 30 dní",
+    description:
+      "CLI permission list item for how long the device stays signed in",
+  },
   "auth.oauthIdentityWantsAccess": {
     message:
       "Aplikácia chce, aby ste sa prihlásili pomocou svojho účtu Beancount.",

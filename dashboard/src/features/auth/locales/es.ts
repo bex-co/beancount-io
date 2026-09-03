@@ -489,6 +489,61 @@ const esAuth: Record<string, TranslationEntry> = {
     message: "Puedes cerrar esta pestaña.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.cliAuthCodeEntryTitle": {
+    message: "Autorizar un dispositivo",
+    description: "Title of the CLI device code entry card",
+  },
+  "auth.cliAuthCodeEntryDescription": {
+    message: "Introduce el código de un solo uso que aparece en tu terminal.",
+    description: "Description under the CLI device code entry title",
+  },
+  "auth.cliAuthCodeLabel": {
+    message: "Código de un solo uso",
+    description: "Label of the CLI one-time code input",
+  },
+  "auth.cliAuthCodeContinue": {
+    message: "Continuar",
+    description: "Button to submit the entered CLI one-time code",
+  },
+  "auth.cliAuthCodeInvalid": {
+    message: "Introduce el código de 8 caracteres que aparece en tu terminal.",
+    description: "Error shown when the entered CLI code is not the right shape",
+  },
+  "auth.cliAuthRequestedBy": {
+    message: "Solicitado por",
+    description: "Heading above the requesting device's reported details",
+  },
+  "auth.cliAuthClientLabel": {
+    message: "Cliente",
+    description: "Label for the requesting client's name",
+  },
+  "auth.cliAuthDeviceLabel": {
+    message: "Dispositivo",
+    description: "Label for the requesting device's machine name",
+  },
+  "auth.cliAuthPlatformLabel": {
+    message: "Sistema",
+    description: "Label for the requesting device's operating system",
+  },
+  "auth.cliAuthIpLabel": {
+    message: "Dirección IP",
+    description: "Label for the requesting device's IP address",
+  },
+  "auth.cliAuthSelfReported": {
+    message:
+      "Datos facilitados por el propio dispositivo. Autoriza solo si es la terminal que acabas de usar.",
+    description:
+      "Warning that the requesting device's details are self-reported",
+  },
+  "auth.cliAuthUseAnotherCode": {
+    message: "Usar otro código",
+    description: "Button to enter a different CLI one-time code",
+  },
+  "auth.cliAuthPermissionExpiry": {
+    message: "Mantener la sesión iniciada en ese dispositivo durante 30 días",
+    description:
+      "CLI permission list item for how long the device stays signed in",
+  },
   "auth.oauthIdentityWantsAccess": {
     message:
       "Una aplicación quiere que inicies sesión con tu cuenta de Beancount.",

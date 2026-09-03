@@ -485,6 +485,61 @@ const ruAuth: Record<string, TranslationEntry> = {
     message: "Можете закрыть эту вкладку.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.cliAuthCodeEntryTitle": {
+    message: "Авторизация устройства",
+    description: "Title of the CLI device code entry card",
+  },
+  "auth.cliAuthCodeEntryDescription": {
+    message: "Введите одноразовый код, показанный в вашем терминале.",
+    description: "Description under the CLI device code entry title",
+  },
+  "auth.cliAuthCodeLabel": {
+    message: "Одноразовый код",
+    description: "Label of the CLI one-time code input",
+  },
+  "auth.cliAuthCodeContinue": {
+    message: "Продолжить",
+    description: "Button to submit the entered CLI one-time code",
+  },
+  "auth.cliAuthCodeInvalid": {
+    message: "Введите 8-символьный код из вашего терминала.",
+    description: "Error shown when the entered CLI code is not the right shape",
+  },
+  "auth.cliAuthRequestedBy": {
+    message: "Запрос от",
+    description: "Heading above the requesting device's reported details",
+  },
+  "auth.cliAuthClientLabel": {
+    message: "Клиент",
+    description: "Label for the requesting client's name",
+  },
+  "auth.cliAuthDeviceLabel": {
+    message: "Устройство",
+    description: "Label for the requesting device's machine name",
+  },
+  "auth.cliAuthPlatformLabel": {
+    message: "Система",
+    description: "Label for the requesting device's operating system",
+  },
+  "auth.cliAuthIpLabel": {
+    message: "IP-адрес",
+    description: "Label for the requesting device's IP address",
+  },
+  "auth.cliAuthSelfReported": {
+    message:
+      "Эти данные сообщило само устройство. Подтверждайте только если это тот терминал, которым вы только что пользовались.",
+    description:
+      "Warning that the requesting device's details are self-reported",
+  },
+  "auth.cliAuthUseAnotherCode": {
+    message: "Использовать другой код",
+    description: "Button to enter a different CLI one-time code",
+  },
+  "auth.cliAuthPermissionExpiry": {
+    message: "Оставаться в системе на этом устройстве 30 дней",
+    description:
+      "CLI permission list item for how long the device stays signed in",
+  },
   "auth.oauthIdentityWantsAccess": {
     message: "Приложение хочет, чтобы вы вошли с учётной записью Beancount.",
     description: "Identity OAuth consent page login step description",

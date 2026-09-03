@@ -485,6 +485,62 @@ const deAuth: Record<string, TranslationEntry> = {
     message: "Sie können diesen Tab schließen.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.cliAuthCodeEntryTitle": {
+    message: "Gerät autorisieren",
+    description: "Title of the CLI device code entry card",
+  },
+  "auth.cliAuthCodeEntryDescription": {
+    message:
+      "Geben Sie den Einmalcode ein, der in Ihrem Terminal angezeigt wird.",
+    description: "Description under the CLI device code entry title",
+  },
+  "auth.cliAuthCodeLabel": {
+    message: "Einmalcode",
+    description: "Label of the CLI one-time code input",
+  },
+  "auth.cliAuthCodeContinue": {
+    message: "Weiter",
+    description: "Button to submit the entered CLI one-time code",
+  },
+  "auth.cliAuthCodeInvalid": {
+    message: "Geben Sie den 8-stelligen Code aus Ihrem Terminal ein.",
+    description: "Error shown when the entered CLI code is not the right shape",
+  },
+  "auth.cliAuthRequestedBy": {
+    message: "Angefragt von",
+    description: "Heading above the requesting device's reported details",
+  },
+  "auth.cliAuthClientLabel": {
+    message: "Client",
+    description: "Label for the requesting client's name",
+  },
+  "auth.cliAuthDeviceLabel": {
+    message: "Gerät",
+    description: "Label for the requesting device's machine name",
+  },
+  "auth.cliAuthPlatformLabel": {
+    message: "System",
+    description: "Label for the requesting device's operating system",
+  },
+  "auth.cliAuthIpLabel": {
+    message: "IP-Adresse",
+    description: "Label for the requesting device's IP address",
+  },
+  "auth.cliAuthSelfReported": {
+    message:
+      "Diese Angaben stammen vom Gerät selbst. Bestätigen Sie nur, wenn dies das Terminal ist, das Sie gerade verwendet haben.",
+    description:
+      "Warning that the requesting device's details are self-reported",
+  },
+  "auth.cliAuthUseAnotherCode": {
+    message: "Anderen Code verwenden",
+    description: "Button to enter a different CLI one-time code",
+  },
+  "auth.cliAuthPermissionExpiry": {
+    message: "30 Tage lang auf diesem Gerät angemeldet bleiben",
+    description:
+      "CLI permission list item for how long the device stays signed in",
+  },
   "auth.oauthIdentityWantsAccess": {
     message:
       "Eine App möchte, dass du dich mit deinem Beancount-Konto anmeldest.",

@@ -489,6 +489,61 @@ const frAuth: Record<string, TranslationEntry> = {
     message: "Vous pouvez fermer cet onglet.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.cliAuthCodeEntryTitle": {
+    message: "Autoriser un appareil",
+    description: "Title of the CLI device code entry card",
+  },
+  "auth.cliAuthCodeEntryDescription": {
+    message: "Saisissez le code à usage unique affiché dans votre terminal.",
+    description: "Description under the CLI device code entry title",
+  },
+  "auth.cliAuthCodeLabel": {
+    message: "Code à usage unique",
+    description: "Label of the CLI one-time code input",
+  },
+  "auth.cliAuthCodeContinue": {
+    message: "Continuer",
+    description: "Button to submit the entered CLI one-time code",
+  },
+  "auth.cliAuthCodeInvalid": {
+    message: "Saisissez le code de 8 caractères affiché dans votre terminal.",
+    description: "Error shown when the entered CLI code is not the right shape",
+  },
+  "auth.cliAuthRequestedBy": {
+    message: "Demandé par",
+    description: "Heading above the requesting device's reported details",
+  },
+  "auth.cliAuthClientLabel": {
+    message: "Client",
+    description: "Label for the requesting client's name",
+  },
+  "auth.cliAuthDeviceLabel": {
+    message: "Appareil",
+    description: "Label for the requesting device's machine name",
+  },
+  "auth.cliAuthPlatformLabel": {
+    message: "Système",
+    description: "Label for the requesting device's operating system",
+  },
+  "auth.cliAuthIpLabel": {
+    message: "Adresse IP",
+    description: "Label for the requesting device's IP address",
+  },
+  "auth.cliAuthSelfReported": {
+    message:
+      "Informations déclarées par l'appareil lui-même. N'autorisez que s'il s'agit du terminal que vous venez d'utiliser.",
+    description:
+      "Warning that the requesting device's details are self-reported",
+  },
+  "auth.cliAuthUseAnotherCode": {
+    message: "Utiliser un autre code",
+    description: "Button to enter a different CLI one-time code",
+  },
+  "auth.cliAuthPermissionExpiry": {
+    message: "Rester connecté sur cet appareil pendant 30 jours",
+    description:
+      "CLI permission list item for how long the device stays signed in",
+  },
   "auth.oauthIdentityWantsAccess": {
     message:
       "Une application souhaite que vous vous connectiez avec votre compte Beancount.",

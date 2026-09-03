@@ -23,6 +23,11 @@ class FeedSource(str, Enum):
     LEDGER_RSS = "LEDGER_RSS"
 
 
+class LedgerTemplate(str, Enum):
+    STARTER = "STARTER"
+    SAMPLE = "SAMPLE"
+
+
 class LedgerEntryType(str, Enum):
     TRANSACTION = "TRANSACTION"
     COMMODITY = "COMMODITY"

@@ -27,8 +27,17 @@ export class JwtPostgresModel implements IJwtModel {
   public async create(
     db: DbExecutor,
     userId: string,
+    expiresInMins?: number,
   ): Promise<{ token: string; expireAt: Date }> {
-    const expireAt = new Date(getExpireEpoch(this.expMins));
+    // A caller may only shorten the configured life, never extend it: the
+    // narrowing exists for credentials that should live less than a browser
+    // session, and an argument that could widen it would be a way to mint a
+    // longer-lived token than the deployment configured.
+    const lifetimeMins =
+      expiresInMins === undefined
+        ? this.expMins
+        : Math.min(expiresInMins, this.expMins);
+    const expireAt = new Date(getExpireEpoch(lifetimeMins));
     const createAt = new Date();
 
     // Generate UUID for new PostgreSQL JWTs (not ObjectId)

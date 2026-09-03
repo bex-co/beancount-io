@@ -184,6 +184,26 @@ export type ChartItemV2 = {
   date: Scalars['String']['output'];
 };
 
+export type CliAuthClientInfoInput = {
+  /** Machine name the client runs on. */
+  deviceLabel?: InputMaybe<Scalars['String']['input']>;
+  /** Client name, e.g. `beancount-cli`. */
+  name?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  version?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** How the requesting device describes itself. Self-reported and unverified: show it so a person can recognize their own terminal, never treat it as evidence. */
+export type CliAuthClientInfoType = {
+  __typename: 'CliAuthClientInfoType';
+  deviceLabel: Maybe<Scalars['String']['output']>;
+  /** Forwarded address seen when the request was made. */
+  ipAddress: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  platform: Maybe<Scalars['String']['output']>;
+  version: Maybe<Scalars['String']['output']>;
+};
+
 /** Status of a CLI authentication session */
 export enum CliAuthStatus {
   Authorized = 'AUTHORIZED',
@@ -276,8 +296,13 @@ export type CreateApiKeyInputType = {
 
 export type CreateCliAuthSessionResponse = {
   __typename: 'CreateCliAuthSessionResponse';
+  /** The CLI's private verifier. Keep it in the process; never put it in a URL, a log, or the browser. */
+  deviceCode: Scalars['String']['output'];
   expiresAt: Scalars['String']['output'];
-  sessionId: Scalars['String']['output'];
+  /** Seconds the CLI should wait between status polls. */
+  pollIntervalSeconds: Scalars['Int']['output'];
+  /** Short code to display so the person can enter it in the browser. */
+  userCode: Scalars['String']['output'];
 };
 
 export type CreateOneTimeTokenResponse = {
@@ -483,6 +508,14 @@ export type FollowUserResponse = {
   isFollowing: Maybe<Scalars['Boolean']['output']>;
   message: Maybe<Scalars['String']['output']>;
   success: Scalars['Boolean']['output'];
+};
+
+export type GetCliAuthRequestResponse = {
+  __typename: 'GetCliAuthRequestResponse';
+  client: CliAuthClientInfoType;
+  expiresAt: Scalars['String']['output'];
+  requestedAt: Scalars['String']['output'];
+  status: CliAuthStatus;
 };
 
 export type GetCliAuthSessionResponse = {
@@ -859,13 +892,13 @@ export type Mutation = {
   bulkEntries: AddLedgerEntryResponse;
   /** Schedules your subscription to cancel. Requires a full signed-in session. */
   cancelSubscription: SubscriptionActionResult;
-  /** Authorize a pending CLI session. Issues a JWT token for the CLI and stores it in the session. */
+  /** Authorize the pending CLI session a user code names. Issues a JWT for the CLI and stores it for the matching device code to collect. */
   confirmCliAuthSession: ConfirmCliAuthSessionResponse;
-  /** Retrieve and consume the token from an authorized CLI auth session. Single-use: clears the token from the session after returning it. Only the CLI should call this. */
+  /** Retrieve and consume the token from an authorized CLI auth session. Single-use, and only redeemable by the device code the session was created with. */
   consumeCliAuthSession: ConsumeCliAuthSessionResponse;
   /** Mint an API key. Requires a paid plan; an API key cannot mint another. */
   createApiKey: MintedApiKeyType;
-  /** Initiate a CLI authentication session. Returns a sessionId the CLI uses to poll for completion. */
+  /** Initiate a CLI authentication session. Returns the device code the CLI polls with and the user code to display for the person to enter in the browser. */
   createCliAuthSession: CreateCliAuthSessionResponse;
   /** Create a new ledger for the current user */
   createLedger: Ledger;
@@ -898,7 +931,7 @@ export type Mutation = {
   deletePlaidTransactions: PlaidDeleteResult;
   /** Delete a specific public key by ID */
   deletePublicKey: DeletePublicKeyResponse;
-  /** Deny a pending CLI authentication session. */
+  /** Deny the pending CLI authentication request a user code names. */
   denyCliAuthSession: DenyCliAuthSessionResponse;
   /** Exchange Plaid public token for access token and store Item */
   exchangePlaidPublicToken: PlaidItemType;
@@ -1000,17 +1033,22 @@ export type MutationCancelSubscriptionArgs = {
 
 
 export type MutationConfirmCliAuthSessionArgs = {
-  sessionId: Scalars['String']['input'];
+  userCode: Scalars['String']['input'];
 };
 
 
 export type MutationConsumeCliAuthSessionArgs = {
-  sessionId: Scalars['String']['input'];
+  deviceCode: Scalars['String']['input'];
 };
 
 
 export type MutationCreateApiKeyArgs = {
   input: CreateApiKeyInputType;
+};
+
+
+export type MutationCreateCliAuthSessionArgs = {
+  client?: InputMaybe<CliAuthClientInfoInput>;
 };
 
 
@@ -1108,7 +1146,7 @@ export type MutationDeletePublicKeyArgs = {
 
 
 export type MutationDenyCliAuthSessionArgs = {
-  sessionId: Scalars['String']['input'];
+  userCode: Scalars['String']['input'];
 };
 
 
@@ -1591,7 +1629,9 @@ export type Query = {
   featureFlags: Scalars['JSONObject']['output'];
   /** Generate a presigned download URL for a previously uploaded temporary asset. Use this to obtain a short-lived GET URL for an objectKey returned by generateTempAssetUploadUrl. */
   generateTempAssetDownloadUrl: TempAssetDownloadUrl;
-  /** Poll the status of a CLI authentication session. When AUTHORIZED, returns the token stored in the session. */
+  /** Describe the CLI authentication request a user code names, so the consent screen can show who is asking before anyone approves. */
+  getCliAuthRequest: GetCliAuthRequestResponse;
+  /** Poll the status of a CLI authentication session. Only the initiating CLI can call this: it takes the device code, which never leaves that process. */
   getCliAuthSession: GetCliAuthSessionResponse;
   getCommitDetails: CommitDetails;
   getFeed: FeedResponse;
@@ -1738,8 +1778,13 @@ export type QueryGenerateTempAssetDownloadUrlArgs = {
 };
 
 
+export type QueryGetCliAuthRequestArgs = {
+  userCode: Scalars['String']['input'];
+};
+
+
 export type QueryGetCliAuthSessionArgs = {
-  sessionId: Scalars['String']['input'];
+  deviceCode: Scalars['String']['input'];
 };
 
 
@@ -3059,25 +3104,25 @@ export type VerifySignUpOtpMutationVariables = Exact<{
 export type VerifySignUpOtpMutation = { verifySignUpOtp: { __typename: 'TokenAuthResponse', token: string, expireAt: string } };
 
 export type ConfirmCliAuthSessionMutationVariables = Exact<{
-  sessionId: Scalars['String']['input'];
+  userCode: Scalars['String']['input'];
 }>;
 
 
 export type ConfirmCliAuthSessionMutation = { confirmCliAuthSession: { __typename: 'ConfirmCliAuthSessionResponse', success: boolean } };
 
 export type DenyCliAuthSessionMutationVariables = Exact<{
-  sessionId: Scalars['String']['input'];
+  userCode: Scalars['String']['input'];
 }>;
 
 
 export type DenyCliAuthSessionMutation = { denyCliAuthSession: { __typename: 'DenyCliAuthSessionResponse', success: boolean } };
 
-export type GetCliAuthSessionQueryVariables = Exact<{
-  sessionId: Scalars['String']['input'];
+export type GetCliAuthRequestQueryVariables = Exact<{
+  userCode: Scalars['String']['input'];
 }>;
 
 
-export type GetCliAuthSessionQuery = { getCliAuthSession: { __typename: 'GetCliAuthSessionResponse', status: CliAuthStatus } };
+export type GetCliAuthRequestQuery = { getCliAuthRequest: { __typename: 'GetCliAuthRequestResponse', status: CliAuthStatus, requestedAt: string, expiresAt: string, client: { __typename: 'CliAuthClientInfoType', name: string, version: string | null, deviceLabel: string | null, platform: string | null, ipAddress: string | null } } };
 
 export type ListLedgerCollaboratorsQueryVariables = Exact<{
   ledgerId: Scalars['String']['input'];
@@ -3581,9 +3626,9 @@ export const ValidateEmailTokenDocument = {"kind":"Document","definitions":[{"ki
 export const ResetPasswordDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ResetPassword"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"token"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"newPassword"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"resetPassword"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"token"},"value":{"kind":"Variable","name":{"kind":"Name","value":"token"}}},{"kind":"Argument","name":{"kind":"Name","value":"newPassword"},"value":{"kind":"Variable","name":{"kind":"Name","value":"newPassword"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<ResetPasswordMutation, ResetPasswordMutationVariables>;
 export const SignUpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"SignUp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"email"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"password"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"firstName"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"lastName"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"inviteBy"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"inviteSrc"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"username"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"withDefaultLedger"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Boolean"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"signUp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"email"},"value":{"kind":"Variable","name":{"kind":"Name","value":"email"}}},{"kind":"Argument","name":{"kind":"Name","value":"password"},"value":{"kind":"Variable","name":{"kind":"Name","value":"password"}}},{"kind":"Argument","name":{"kind":"Name","value":"firstName"},"value":{"kind":"Variable","name":{"kind":"Name","value":"firstName"}}},{"kind":"Argument","name":{"kind":"Name","value":"lastName"},"value":{"kind":"Variable","name":{"kind":"Name","value":"lastName"}}},{"kind":"Argument","name":{"kind":"Name","value":"inviteBy"},"value":{"kind":"Variable","name":{"kind":"Name","value":"inviteBy"}}},{"kind":"Argument","name":{"kind":"Name","value":"inviteSrc"},"value":{"kind":"Variable","name":{"kind":"Name","value":"inviteSrc"}}},{"kind":"Argument","name":{"kind":"Name","value":"username"},"value":{"kind":"Variable","name":{"kind":"Name","value":"username"}}},{"kind":"Argument","name":{"kind":"Name","value":"withDefaultLedger"},"value":{"kind":"Variable","name":{"kind":"Name","value":"withDefaultLedger"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"sessionId"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}}]}}]}}]} as unknown as DocumentNode<SignUpMutation, SignUpMutationVariables>;
 export const VerifySignUpOtpDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"VerifySignUpOtp"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"otp"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"verifySignUpOtp"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}}},{"kind":"Argument","name":{"kind":"Name","value":"otp"},"value":{"kind":"Variable","name":{"kind":"Name","value":"otp"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"token"}},{"kind":"Field","name":{"kind":"Name","value":"expireAt"}}]}}]}}]} as unknown as DocumentNode<VerifySignUpOtpMutation, VerifySignUpOtpMutationVariables>;
-export const ConfirmCliAuthSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConfirmCliAuthSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"confirmCliAuthSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<ConfirmCliAuthSessionMutation, ConfirmCliAuthSessionMutationVariables>;
-export const DenyCliAuthSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DenyCliAuthSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"denyCliAuthSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<DenyCliAuthSessionMutation, DenyCliAuthSessionMutationVariables>;
-export const GetCliAuthSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetCliAuthSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getCliAuthSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"sessionId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"sessionId"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}}]}}]}}]} as unknown as DocumentNode<GetCliAuthSessionQuery, GetCliAuthSessionQueryVariables>;
+export const ConfirmCliAuthSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"ConfirmCliAuthSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userCode"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"confirmCliAuthSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userCode"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userCode"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<ConfirmCliAuthSessionMutation, ConfirmCliAuthSessionMutationVariables>;
+export const DenyCliAuthSessionDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DenyCliAuthSession"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userCode"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"denyCliAuthSession"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userCode"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userCode"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}}]}}]}}]} as unknown as DocumentNode<DenyCliAuthSessionMutation, DenyCliAuthSessionMutationVariables>;
+export const GetCliAuthRequestDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"GetCliAuthRequest"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"userCode"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"getCliAuthRequest"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"userCode"},"value":{"kind":"Variable","name":{"kind":"Name","value":"userCode"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"status"}},{"kind":"Field","name":{"kind":"Name","value":"requestedAt"}},{"kind":"Field","name":{"kind":"Name","value":"expiresAt"}},{"kind":"Field","name":{"kind":"Name","value":"client"},"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"name"}},{"kind":"Field","name":{"kind":"Name","value":"version"}},{"kind":"Field","name":{"kind":"Name","value":"deviceLabel"}},{"kind":"Field","name":{"kind":"Name","value":"platform"}},{"kind":"Field","name":{"kind":"Name","value":"ipAddress"}}]}}]}}]}}]} as unknown as DocumentNode<GetCliAuthRequestQuery, GetCliAuthRequestQueryVariables>;
 export const ListLedgerCollaboratorsDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"query","name":{"kind":"Name","value":"ListLedgerCollaborators"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"limit"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"page"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"Float"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"listLedgerCollaborators"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}},{"kind":"Argument","name":{"kind":"Name","value":"limit"},"value":{"kind":"Variable","name":{"kind":"Name","value":"limit"}}},{"kind":"Argument","name":{"kind":"Name","value":"page"},"value":{"kind":"Variable","name":{"kind":"Name","value":"page"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"login"}},{"kind":"Field","name":{"kind":"Name","value":"lastLogin"}},{"kind":"Field","name":{"kind":"Name","value":"isAdmin"}},{"kind":"Field","name":{"kind":"Name","value":"id"}},{"kind":"Field","name":{"kind":"Name","value":"fullName"}},{"kind":"Field","name":{"kind":"Name","value":"email"}},{"kind":"Field","name":{"kind":"Name","value":"created"}},{"kind":"Field","name":{"kind":"Name","value":"active"}},{"kind":"Field","name":{"kind":"Name","value":"permission"}}]}}]}}]} as unknown as DocumentNode<ListLedgerCollaboratorsQuery, ListLedgerCollaboratorsQueryVariables>;
 export const AddLedgerCollaboratorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"AddLedgerCollaborator"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"collaborator"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"permission"}},"type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"addOrUpdateLedgerCollaborator"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}},{"kind":"Argument","name":{"kind":"Name","value":"collaborator"},"value":{"kind":"Variable","name":{"kind":"Name","value":"collaborator"}}},{"kind":"Argument","name":{"kind":"Name","value":"permission"},"value":{"kind":"Variable","name":{"kind":"Name","value":"permission"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]} as unknown as DocumentNode<AddLedgerCollaboratorMutation, AddLedgerCollaboratorMutationVariables>;
 export const DeleteLedgerCollaboratorDocument = {"kind":"Document","definitions":[{"kind":"OperationDefinition","operation":"mutation","name":{"kind":"Name","value":"DeleteLedgerCollaborator"},"variableDefinitions":[{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}},{"kind":"VariableDefinition","variable":{"kind":"Variable","name":{"kind":"Name","value":"collaborator"}},"type":{"kind":"NonNullType","type":{"kind":"NamedType","name":{"kind":"Name","value":"String"}}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"deleteLedgerCollaborator"},"arguments":[{"kind":"Argument","name":{"kind":"Name","value":"ledgerId"},"value":{"kind":"Variable","name":{"kind":"Name","value":"ledgerId"}}},{"kind":"Argument","name":{"kind":"Name","value":"collaborator"},"value":{"kind":"Variable","name":{"kind":"Name","value":"collaborator"}}}],"selectionSet":{"kind":"SelectionSet","selections":[{"kind":"Field","name":{"kind":"Name","value":"success"}},{"kind":"Field","name":{"kind":"Name","value":"message"}}]}}]}}]} as unknown as DocumentNode<DeleteLedgerCollaboratorMutation, DeleteLedgerCollaboratorMutationVariables>;

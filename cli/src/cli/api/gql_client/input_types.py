@@ -49,6 +49,15 @@ class TransactionToCategorizeInput(BaseModel):
     amount: float
 
 
+class CliAuthClientInfoInput(BaseModel):
+    name: Optional[str] = None
+    "Client name, e.g. `beancount-cli`."
+    version: Optional[str] = None
+    device_label: Optional[str] = Field(alias="deviceLabel", default=None)
+    "Machine name the client runs on."
+    platform: Optional[str] = None
+
+
 class AddEntryInput(BaseModel):
     type_: LedgerEntryType = Field(alias="type")
     transaction: Optional["LedgerTransactionInput"] = None
@@ -206,6 +215,16 @@ class FileChangeInput(BaseModel):
 class PlaidTransactionSubmitInput(BaseModel):
     transaction_id: str = Field(alias="transactionId")
     target_account: str = Field(alias="targetAccount")
+    source_account: Optional[str] = Field(alias="sourceAccount", default=None)
+    "Overrides the source account normally derived from the Plaid account's mapping"
+
+
+class CreateApiKeyInputType(BaseModel):
+    name: str
+    scopes: list[str]
+    "Any of: ledger.read, ledger.write, ledger.admin"
+    ledger_scope: Optional[str] = Field(alias="ledgerScope", default=None)
+    expires_at: Optional[Any] = Field(alias="expiresAt", default=None)
 
 
 AddEntryInput.model_rebuild()

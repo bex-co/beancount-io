@@ -13,19 +13,35 @@ import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
   ConfirmCliAuthSessionDocument,
   DenyCliAuthSessionDocument,
+  type GetCliAuthRequestQuery,
 } from "@/graphql/definitions";
 import { DeviceAuthCard } from "./device-auth-card";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useTranslations } from "@/common/hooks/use-translations";
 
+type CliAuthClient = GetCliAuthRequestQuery["getCliAuthRequest"]["client"];
+
 interface CliAuthPendingViewProps {
-  sessionId: string;
-  onComplete: () => void;
+  userCode: string;
+  client: CliAuthClient;
+  onAuthorized: () => void;
+  onDenied: () => void;
 }
 
+/**
+ * The consent screen.
+ *
+ * It names the device that is asking, because "a CLI wants access" is a prompt
+ * nobody can refuse intelligently — the whole question is whether *this* is the
+ * terminal you just typed a command into. The details are what the requester
+ * reported about itself, so the screen says so rather than presenting them as
+ * verified facts.
+ */
 export function CliAuthPendingView({
-  sessionId,
-  onComplete,
+  userCode,
+  client,
+  onAuthorized,
+  onDenied,
 }: CliAuthPendingViewProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -41,8 +57,8 @@ export function CliAuthPendingView({
   const handleAuthorize = async () => {
     try {
       setError("");
-      await confirmSession({ variables: { sessionId } });
-      onComplete();
+      await confirmSession({ variables: { userCode } });
+      onAuthorized();
     } catch (err: unknown) {
       setError(formatError(err));
     }
@@ -51,12 +67,19 @@ export function CliAuthPendingView({
   const handleDeny = async () => {
     try {
       setError("");
-      await denySession({ variables: { sessionId } });
-      onComplete();
+      await denySession({ variables: { userCode } });
+      onDenied();
     } catch (err: unknown) {
       setError(formatError(err));
     }
   };
+
+  const details: Array<[string, string | null]> = [
+    [t("auth.cliAuthClientLabel"), clientLabel(client)],
+    [t("auth.cliAuthDeviceLabel"), client.deviceLabel],
+    [t("auth.cliAuthPlatformLabel"), client.platform],
+    [t("auth.cliAuthIpLabel"), client.ipAddress],
+  ];
 
   return (
     <DeviceAuthCard>
@@ -73,12 +96,29 @@ export function CliAuthPendingView({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
+          <p className="text-sm font-medium">{t("auth.cliAuthRequestedBy")}</p>
+          <dl className="text-sm space-y-1">
+            {details.map(([label, value]) =>
+              value ? (
+                <div key={label} className="flex justify-between gap-4">
+                  <dt className="text-muted-foreground">{label}</dt>
+                  <dd className="font-mono text-right break-all">{value}</dd>
+                </div>
+              ) : null,
+            )}
+          </dl>
+          <p className="text-xs text-muted-foreground">
+            {t("auth.cliAuthSelfReported")}
+          </p>
+        </div>
+        <div className="rounded-lg border bg-muted/40 p-4 space-y-2">
           <p className="text-sm font-medium">
             {t("auth.cliAuthPermissionsIntro")}
           </p>
           <ul className="text-sm text-muted-foreground space-y-1 list-disc list-inside">
             <li>{t("auth.cliAuthPermissionLedgers")}</li>
             <li>{t("auth.cliAuthPermissionAccount")}</li>
+            <li>{t("auth.cliAuthPermissionExpiry")}</li>
           </ul>
         </div>
         {error && (
@@ -108,4 +148,8 @@ export function CliAuthPendingView({
       </CardFooter>
     </DeviceAuthCard>
   );
+}
+
+function clientLabel(client: CliAuthClient): string {
+  return client.version ? `${client.name} ${client.version}` : client.name;
 }

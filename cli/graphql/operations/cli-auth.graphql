@@ -1,18 +1,20 @@
-mutation CreateCliAuthSession {
-  createCliAuthSession {
-    sessionId
+mutation CreateCliAuthSession($client: CliAuthClientInfoInput) {
+  createCliAuthSession(client: $client) {
+    deviceCode
+    userCode
     expiresAt
+    pollIntervalSeconds
   }
 }
 
-query GetCliAuthSession($sessionId: String!) {
-  getCliAuthSession(sessionId: $sessionId) {
+query GetCliAuthSession($deviceCode: String!) {
+  getCliAuthSession(deviceCode: $deviceCode) {
     status
   }
 }
 
-mutation ConsumeCliAuthSession($sessionId: String!) {
-  consumeCliAuthSession(sessionId: $sessionId) {
+mutation ConsumeCliAuthSession($deviceCode: String!) {
+  consumeCliAuthSession(deviceCode: $deviceCode) {
     token
     expireAt
   }

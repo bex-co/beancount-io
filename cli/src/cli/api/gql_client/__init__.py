@@ -18,6 +18,7 @@ from .enums import (
     CliAuthStatus,
     FeedSource,
     LedgerEntryType,
+    LedgerTemplate,
     ReportStatus,
 )
 from .exceptions import (
@@ -33,6 +34,8 @@ from .get_ledger import GetLedger, GetLedgerGetLedger
 from .input_types import (
     AccountJournalQueryInput,
     AddEntryInput,
+    CliAuthClientInfoInput,
+    CreateApiKeyInputType,
     CreatePRFromPatchInput,
     DeleteMultiSourceSliceItemInput,
     DeleteMultiSourceSlicesInput,
@@ -69,10 +72,12 @@ __all__ = [
     "BaseClient",
     "BaseModel",
     "BudgetInterval",
+    "CliAuthClientInfoInput",
     "CliAuthStatus",
     "Client",
     "ConsumeCliAuthSession",
     "ConsumeCliAuthSessionConsumeCliAuthSession",
+    "CreateApiKeyInputType",
     "CreateCliAuthSession",
     "CreateCliAuthSessionCreateCliAuthSession",
     "CreateLedger",
@@ -111,6 +116,7 @@ __all__ = [
     "LedgerOpenInput",
     "LedgerPostingInput",
     "LedgerPriceInput",
+    "LedgerTemplate",
     "LedgerTransactionInput",
     "ListLedgers",
     "ListLedgersListLedgers",

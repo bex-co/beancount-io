@@ -48,6 +48,20 @@ export const CACHE_KEYS = {
       `auth:signup_otp_attempts:email:${email}`,
     /** CLI auth session by id. */
     cliAuthSessionById: (id: string) => `auth:cli_auth_session:${id}`,
+    /** CLI auth session id by device-code digest (the CLI's private verifier). */
+    cliAuthSessionByDeviceDigest: (digest: string) =>
+      `auth:cli_auth_session:device:${digest}`,
+    /** CLI auth session id by the short code the person types in the browser. */
+    cliAuthSessionByUserCode: (userCode: string) =>
+      `auth:cli_auth_session:user_code:${userCode}`,
+    /** Atomic budget for user-code lookups, per approving user. */
+    cliAuthUserCodeAttemptsByUser: (userId: string) =>
+      `auth:cli_auth_user_code_attempts:user:${userId}`,
+    /** Atomic single-approval claim for one CLI auth session. */
+    cliAuthApprovalClaim: (id: string) => `auth:cli_auth_approval_claim:${id}`,
+    /** Atomic single-redemption claim for one CLI auth session. */
+    cliAuthRedemptionClaim: (id: string) =>
+      `auth:cli_auth_redemption_claim:${id}`,
   },
 
   /**

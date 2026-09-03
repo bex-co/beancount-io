@@ -501,6 +501,12 @@ const AUTH_VERBS: readonly VerbEntry[] = [
     M.credentialMinting,
   ),
   gqlOnly(
+    "Query.getCliAuthRequest",
+    "session-only",
+    R.credentialMinting,
+    M.credentialMinting,
+  ),
+  gqlOnly(
     "Mutation.createCliAuthSession",
     "session-only",
     R.credentialMinting,

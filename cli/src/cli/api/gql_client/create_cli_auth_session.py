@@ -13,8 +13,10 @@ class CreateCliAuthSession(BaseModel):
 
 
 class CreateCliAuthSessionCreateCliAuthSession(BaseModel):
-    session_id: str = Field(alias="sessionId")
+    device_code: str = Field(alias="deviceCode")
+    user_code: str = Field(alias="userCode")
     expires_at: str = Field(alias="expiresAt")
+    poll_interval_seconds: int = Field(alias="pollIntervalSeconds")
 
 
 CreateCliAuthSession.model_rebuild()

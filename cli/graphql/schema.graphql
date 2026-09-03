@@ -7,9 +7,14 @@ type Query {
   validateEmailToken(token: String!): ValidateEmailTokenResponse!
 
   """
-  Poll the status of a CLI authentication session. When AUTHORIZED, returns the token stored in the session.
+  Describe the CLI authentication request a user code names, so the consent screen can show who is asking before anyone approves.
   """
-  getCliAuthSession(sessionId: String!): GetCliAuthSessionResponse!
+  getCliAuthRequest(userCode: String!): GetCliAuthRequestResponse!
+
+  """
+  Poll the status of a CLI authentication session. Only the initiating CLI can call this: it takes the device code, which never leaves that process.
+  """
+  getCliAuthSession(deviceCode: String!): GetCliAuthSessionResponse!
 
   """List all ledgers for the current user"""
   listLedgers(page: Float, limit: Float): [Ledger!]!
@@ -68,6 +73,11 @@ type Query {
   """Get the currencies of a specific ledger"""
   getLedgerCurrencies(ledgerId: String!): [String!]!
 
+  """
+  Get the Beancount source files of a ledger (main.bean plus every file it includes)
+  """
+  getLedgerSourceFiles(ledgerId: String!): [String!]!
+
   """Get the tags of a specific ledger"""
   getLedgerTags(ledgerId: String!): [String!]!
 
@@ -96,8 +106,10 @@ type Query {
   """is the server healthy?"""
   health: String!
 
-  """Returns quota limits for all subscription tiers"""
+  """Returns the public quota limits for all subscription tiers."""
   allTierQuotas: [TierQuotaItem!]!
+
+  """Returns your subscription status. Requires a full signed-in session."""
   subscriptionStatus: CustomerSubscriptionStatus!
 
   """List all public keys for the current user"""
@@ -131,7 +143,9 @@ type Query {
   """
   getLedgerAccounts(status: String, ledgerId: String!): [String!]!
 
-  """Get all accounts with their open/close dates for a specific ledger"""
+  """
+  Get all accounts with their open/close dates and open-directive metadata for a specific ledger
+  """
   getLedgerAccountDirectives(ledgerId: String!): [LedgerAccountItem!]!
 
   """
@@ -140,7 +154,7 @@ type Query {
   getLedgerAssetDownloadUrl(filename: String!, ledgerRepoId: Int!): LedgerAssetDownloadUrlResult!
 
   """
-  Get a downloadable URL for a ledger Git archive (gitea-main.zip). Public ledgers require no auth; private ledgers require a valid session.
+  Get a downloadable URL for a ledger Git archive (main.zip). Authenticated callers receive the standard token-authenticated v1 URL; public ledgers are readable without auth.
   """
   getLedgerArchiveDownloadUrl(ledgerId: String!): LedgerAssetDownloadUrlResult!
 
@@ -249,23 +263,40 @@ type Query {
     objectKey: String!
   ): TempAssetDownloadUrl!
 
-  """Get all Plaid Items for the current user"""
-  getPlaidItems: [PlaidItemType!]!
+  """Get Plaid Items for the current user, scoped to a ledger."""
+  getPlaidItems(ledgerId: String!): [PlaidItemType!]!
 
   """Get a single Plaid Item by ID"""
   getPlaidItem(id: String!): PlaidItemType!
 
   """Get all accounts for a specific Plaid Item"""
-  getPlaidAccounts(itemId: String!): [PlaidAccountType!]!
+  getPlaidAccounts(ledgerId: String!, itemId: String!): [PlaidAccountType!]!
 
-  """Get unsynced transactions for a specific Plaid account"""
-  getUnsyncedPlaidTransactions(accountId: String!): [PlaidTransactionType!]!
+  """
+  Get every Plaid account in a ledger together with its owning institution. Powers ledger-wide account pickers.
+  """
+  getPlaidAccountsForLedger(ledgerId: String!): [PlaidAccountWithInstitutionType!]!
 
-  """Suggest target accounts for unsynced Plaid transactions using AI"""
-  suggestPlaidTransactionCategories(accountId: String!, ledgerId: String!): [CategorySuggestion!]!
+  """
+  Get unsynced transactions for a Plaid account, or for the whole ledger when accountId is omitted
+  """
+  getUnsyncedPlaidTransactions(accountId: String, ledgerId: String!): [PlaidTransactionType!]!
+
+  """
+  Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted
+  """
+  suggestPlaidTransactionCategories(accountId: String, ledgerId: String!): [CategorySuggestion!]!
+
+  """
+  Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI
+  """
+  suggestPlaidAccountMapping(itemId: String!, ledgerId: String!): [PlaidAccountMappingSuggestion!]!
 
   """Get AI CFO usage for the current billing month"""
   aiCfoUsage: AiCfoUsageResponse!
+
+  """Your API keys"""
+  apiKeys: [ApiKeyType!]!
 }
 
 type UserProfileResponse {
@@ -278,6 +309,7 @@ type UserProfileResponse {
   username: String
   tier: String!
   limits: UserLimits!
+  hasEverSubscribed: Boolean!
 }
 
 """The email report status (deprecated)"""
@@ -291,6 +323,7 @@ type UserLimits {
   ledgersUsed: Float!
   ledgersMax: Float!
   collaboratorsPerLedgerMax: Float!
+  maxDirectives: Float!
 }
 
 type SearchUser {
@@ -302,8 +335,11 @@ type ValidateEmailTokenResponse {
   isValid: Boolean!
 }
 
-type GetCliAuthSessionResponse {
+type GetCliAuthRequestResponse {
   status: CliAuthStatus!
+  client: CliAuthClientInfoType!
+  requestedAt: String!
+  expiresAt: String!
 }
 
 """Status of a CLI authentication session"""
@@ -313,6 +349,23 @@ enum CliAuthStatus {
   DENIED
   EXPIRED
   CONSUMED
+}
+
+"""
+How the requesting device describes itself. Self-reported and unverified: show it so a person can recognize their own terminal, never treat it as evidence.
+"""
+type CliAuthClientInfoType {
+  name: String!
+  version: String
+  deviceLabel: String
+  platform: String
+
+  """Forwarded address seen when the request was made."""
+  ipAddress: String
+}
+
+type GetCliAuthSessionResponse {
+  status: CliAuthStatus!
 }
 
 type Ledger {
@@ -565,6 +618,7 @@ type TierQuotaItem {
   aiCfoTokensMax: Float!
   maxLedgers: Float!
   maxCollaboratorsPerLedger: Float!
+  maxDirectives: Float!
 }
 
 type CustomerSubscriptionStatus {
@@ -752,6 +806,9 @@ type LedgerAccountItem {
   entryCount: Float!
   entryHash: String!
   closeEntryHash: String
+
+  """Metadata declared on the account's open directive"""
+  meta: JSONObject
 }
 
 type LedgerAssetDownloadUrlResult {
@@ -1107,9 +1164,32 @@ type PlaidAccountType {
   accountSubtype: String
   mask: String
   ledgerAccount: String
+
+  """Currency used when writing this account's transactions to the ledger"""
+  currency: String!
   enabled: Boolean!
   createdAt: DateTimeISO!
   updatedAt: DateTimeISO!
+}
+
+type PlaidAccountWithInstitutionType {
+  id: String!
+  plaidItemId: String!
+  accountId: String!
+  accountName: String!
+  accountType: String!
+  accountSubtype: String
+  mask: String
+  ledgerAccount: String
+
+  """Currency used when writing this account's transactions to the ledger"""
+  currency: String!
+  enabled: Boolean!
+  createdAt: DateTimeISO!
+  updatedAt: DateTimeISO!
+
+  """Name of the institution this account belongs to"""
+  institutionName: String!
 }
 
 type PlaidTransactionType {
@@ -1124,11 +1204,41 @@ type PlaidTransactionType {
   isPending: Boolean!
   syncedToLedger: Boolean!
   createdAt: DateTimeISO!
+
+  """Name of the source Plaid account this transaction belongs to"""
+  accountName: String!
+
+  """Name of the institution this transaction was synced from"""
+  institutionName: String!
+
+  """Beancount account the source Plaid account is mapped to"""
+  ledgerAccount: String
+}
+
+type PlaidAccountMappingSuggestion {
+  accountId: String!
+  suggestedAccount: String!
+  confidence: Float!
+  reasoning: String
 }
 
 type AiCfoUsageResponse {
   aiCfoTokensUsed: Float!
   aiCfoTokensMax: Float!
+}
+
+type ApiKeyType {
+  id: String!
+  name: String!
+
+  """The key's first characters, for telling keys apart"""
+  keyPrefix: String!
+  scopes: [String!]!
+  ledgerScope: String
+  lastUsedAt: DateTimeISO
+  expiresAt: DateTimeISO
+  revokedAt: DateTimeISO
+  createdAt: DateTimeISO!
 }
 
 type Mutation {
@@ -1165,25 +1275,25 @@ type Mutation {
   verifySignUpOtp(sessionId: String!, otp: String!): TokenAuthResponse!
 
   """
-  Initiate a CLI authentication session. Returns a sessionId the CLI uses to poll for completion.
+  Initiate a CLI authentication session. Returns the device code the CLI polls with and the user code to display for the person to enter in the browser.
   """
-  createCliAuthSession: CreateCliAuthSessionResponse!
+  createCliAuthSession(client: CliAuthClientInfoInput): CreateCliAuthSessionResponse!
 
   """
-  Authorize a pending CLI session. Issues a JWT token for the CLI and stores it in the session.
+  Authorize the pending CLI session a user code names. Issues a JWT for the CLI and stores it for the matching device code to collect.
   """
-  confirmCliAuthSession(sessionId: String!): ConfirmCliAuthSessionResponse!
+  confirmCliAuthSession(userCode: String!): ConfirmCliAuthSessionResponse!
 
-  """Deny a pending CLI authentication session."""
-  denyCliAuthSession(sessionId: String!): DenyCliAuthSessionResponse!
+  """Deny the pending CLI authentication request a user code names."""
+  denyCliAuthSession(userCode: String!): DenyCliAuthSessionResponse!
 
   """
-  Retrieve and consume the token from an authorized CLI auth session. Single-use: clears the token from the session after returning it. Only the CLI should call this.
+  Retrieve and consume the token from an authorized CLI auth session. Single-use, and only redeemable by the device code the session was created with.
   """
-  consumeCliAuthSession(sessionId: String!): ConsumeCliAuthSessionResponse!
+  consumeCliAuthSession(deviceCode: String!): ConsumeCliAuthSessionResponse!
 
   """Create a new ledger for the current user"""
-  createLedger(name: String!, description: String, private: Boolean): Ledger!
+  createLedger(name: String!, description: String, private: Boolean, template: LedgerTemplate): Ledger!
 
   """Update a specific ledger"""
   updateLedger(name: String, description: String, private: Boolean, ledgerId: String!): Ledger!
@@ -1208,9 +1318,26 @@ type Mutation {
 
   """Unstar a specific ledger"""
   unstarLedger(ledgerId: String!): StarLedgerResponse!
+
+  """
+  Creates a Stripe-hosted checkout session. Requires a full signed-in session.
+  """
   createSubscriptionSession(priceId: String!, clientId: String!): SubscriptionSessionResult!
+
+  """
+  Creates a Stripe-hosted customer portal session. Requires a full signed-in session.
+  """
   createStripePortalSession(clientId: String!): SubscriptionSessionResult!
+
+  """
+  Schedules your subscription to cancel. Requires a full signed-in session.
+  """
   cancelSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
+
+  """Resumes your subscription. Requires a full signed-in session."""
+  resumeSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
+
+  """Upgrades your subscription. Requires a full signed-in session."""
   upgradeSubscription(priceId: String!, clientId: String!): UpgradeSubscriptionResult!
 
   """Create a new public key for the current user"""
@@ -1281,30 +1408,61 @@ type Mutation {
   generateTempAssetUploadUrl(filename: String, mimeType: String): TempAssetUploadUrl!
 
   """Create a Plaid Link token for connecting bank accounts"""
-  createPlaidLinkToken: PlaidLinkToken!
+  createPlaidLinkToken(ledgerId: String!): PlaidLinkToken!
 
   """Create a Plaid Link token in update mode for reauthentication"""
-  createPlaidUpdateModeLinkToken(itemId: String!): PlaidLinkToken!
+  createPlaidUpdateModeLinkToken(
+    """
+    Request Plaid's Account Select pane so the user can add or remove accounts. A no-op at OAuth institutions, which always show it in update mode.
+    """
+    accountSelection: Boolean = false
+    ledgerId: String!
+    itemId: String!
+  ): PlaidLinkToken!
+
+  """
+  Re-read the accounts Plaid shares for an Item and reconcile them against stored accounts. Call this after an update-mode Link session with Account Select.
+  """
+  reconcilePlaidAccounts(ledgerId: String!, itemId: String!): PlaidAccountReconcileResult!
 
   """Exchange Plaid public token for access token and store Item"""
-  exchangePlaidPublicToken(publicToken: String!): PlaidItemType!
+  exchangePlaidPublicToken(publicToken: String!, ledgerId: String!): PlaidItemType!
 
   """Update the ledger account mapping for a Plaid account"""
-  updatePlaidAccountMapping(ledgerAccount: String!, accountId: String!): Boolean!
+  updatePlaidAccountMapping(ledgerId: String!, ledgerAccount: String!, accountId: String!): Boolean!
+
+  """Update the currency used for a Plaid account's transactions"""
+  updatePlaidAccountCurrency(ledgerId: String!, currency: String!, accountId: String!): Boolean!
 
   """
   Refresh Plaid Item status from Plaid API (useful after reauthentication)
   """
-  refreshPlaidItemStatus(itemId: String!): PlaidItemType!
+  refreshPlaidItemStatus(ledgerId: String!, itemId: String!): PlaidItemType!
 
   """Unlink a Plaid Item (remove from Plaid and delete from database)"""
-  unlinkPlaidItem(itemId: String!): Boolean!
+  unlinkPlaidItem(ledgerId: String!, itemId: String!): Boolean!
 
   """Manually sync transactions for a specific Plaid Item"""
-  syncPlaidTransactions(itemId: String!): PlaidSyncResult!
+  syncPlaidTransactions(ledgerId: String!, itemId: String!): PlaidSyncResult!
 
   """Submit Plaid transactions with user-reviewed target accounts to ledger"""
-  submitPlaidTransactionsToLedger(transactions: [PlaidTransactionSubmitInput!]!, ledgerId: String!): PlaidSubmitResult!
+  submitPlaidTransactionsToLedger(
+    """
+    Existing ledger file to write the transactions to; defaults to main.bean
+    """
+    filename: String
+    transactions: [PlaidTransactionSubmitInput!]!
+    ledgerId: String!
+  ): PlaidSubmitResult!
+
+  """Delete pending (unsynced) Plaid transactions from the review list"""
+  deletePlaidTransactions(transactionIds: [String!]!, ledgerId: String!): PlaidDeleteResult!
+
+  """Mint an API key. Requires a paid plan; an API key cannot mint another."""
+  createApiKey(input: CreateApiKeyInputType!): MintedApiKeyType!
+
+  """Revoke an API key, effective on its next use"""
+  revokeApiKey(id: String!): ApiKeyType!
 }
 
 type LogoutResponse {
@@ -1335,8 +1493,27 @@ type SignUpResponse {
 }
 
 type CreateCliAuthSessionResponse {
-  sessionId: String!
+  """
+  The CLI's private verifier. Keep it in the process; never put it in a URL, a log, or the browser.
+  """
+  deviceCode: String!
+
+  """Short code to display so the person can enter it in the browser."""
+  userCode: String!
   expiresAt: String!
+
+  """Seconds the CLI should wait between status polls."""
+  pollIntervalSeconds: Int!
+}
+
+input CliAuthClientInfoInput {
+  """Client name, e.g. `beancount-cli`."""
+  name: String
+  version: String
+
+  """Machine name the client runs on."""
+  deviceLabel: String
+  platform: String
 }
 
 type ConfirmCliAuthSessionResponse {
@@ -1350,6 +1527,12 @@ type DenyCliAuthSessionResponse {
 type ConsumeCliAuthSessionResponse {
   token: String!
   expireAt: String!
+}
+
+"""Template used to populate a newly created ledger"""
+enum LedgerTemplate {
+  STARTER
+  SAMPLE
 }
 
 type DeleteLedgerResponse {
@@ -1655,6 +1838,18 @@ type PlaidLinkToken {
   linkToken: String!
 }
 
+type PlaidAccountReconcileResult {
+  success: Boolean!
+
+  """Accounts Plaid now shares that we had not stored yet"""
+  addedCount: Float!
+
+  """
+  Stored accounts Plaid no longer shares; these were deleted along with their transactions
+  """
+  removedCount: Float!
+}
+
 type PlaidSyncResult {
   success: Boolean!
   transactionsFetched: Float!
@@ -1673,4 +1868,31 @@ type PlaidSubmitResult {
 input PlaidTransactionSubmitInput {
   transactionId: String!
   targetAccount: String!
+
+  """
+  Overrides the source account normally derived from the Plaid account's mapping
+  """
+  sourceAccount: String
+}
+
+type PlaidDeleteResult {
+  success: Boolean!
+  deletedCount: Float!
+  message: String
+}
+
+type MintedApiKeyType {
+  key: ApiKeyType!
+
+  """The key itself. Returned by this mutation and never retrievable again."""
+  plaintext: String!
+}
+
+input CreateApiKeyInputType {
+  name: String!
+
+  """Any of: ledger.read, ledger.write, ledger.admin"""
+  scopes: [String!]!
+  ledgerScope: String
+  expiresAt: DateTimeISO
 }

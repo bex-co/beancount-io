@@ -16,9 +16,15 @@ type DbExecutor = any;
 // Database-agnostic interface
 // All methods now accept a DbExecutor as the first parameter to support transactions.
 export interface IJwtModel {
+  /**
+   * Mint a session JWT. `expiresInMins` narrows this one token's life below the
+   * configured session default — a credential handed to a non-browser client
+   * has no reason to inherit a browser session's year.
+   */
   create(
     db: DbExecutor,
     userId: string,
+    expiresInMins?: number,
   ): Promise<{ token: string; expireAt: Date }>;
   verify(db: DbExecutor, token: string): Promise<UserId | null>;
   revoke(db: DbExecutor, token: string): Promise<void>;

@@ -151,20 +151,29 @@ mutation VerifySignUpOtp($sessionId: String!, $otp: String!) {
   }
 }
 
-mutation ConfirmCliAuthSession($sessionId: String!) {
-  confirmCliAuthSession(sessionId: $sessionId) {
+mutation ConfirmCliAuthSession($userCode: String!) {
+  confirmCliAuthSession(userCode: $userCode) {
     success
   }
 }
 
-mutation DenyCliAuthSession($sessionId: String!) {
-  denyCliAuthSession(sessionId: $sessionId) {
+mutation DenyCliAuthSession($userCode: String!) {
+  denyCliAuthSession(userCode: $userCode) {
     success
   }
 }
 
-query GetCliAuthSession($sessionId: String!) {
-  getCliAuthSession(sessionId: $sessionId) {
+query GetCliAuthRequest($userCode: String!) {
+  getCliAuthRequest(userCode: $userCode) {
     status
+    requestedAt
+    expiresAt
+    client {
+      name
+      version
+      deviceLabel
+      platform
+      ipAddress
+    }
   }
 }

@@ -4,8 +4,10 @@
 
 All commands that talk to the API require a session. Authentication uses a browser-based device flow — run it once and the token is stored at `~/.beancount-cli/credentials.json`.
 
+`auth login` prints a one-time code and opens the dashboard's device page. Enter the code there, check that the device shown is this machine, and approve; the CLI then collects a credential good for 30 days. The link itself carries no secret, so a device page opened from anywhere else cannot authorize this CLI.
+
 ```bash
-# Open browser for login, store token locally
+# Print a one-time code, open the browser, store the token locally
 beancount-cli auth login
 
 # Print current user

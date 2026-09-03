@@ -12,6 +12,7 @@ from .delete_ledger import DeleteLedger
 from .get_cli_auth_session import GetCliAuthSession
 from .get_current_user import GetCurrentUser
 from .get_ledger import GetLedger
+from .input_types import CliAuthClientInfoInput
 from .list_ledgers import ListLedgers
 from .logout import Logout
 
@@ -54,16 +55,22 @@ class Client(BaseClient):
         data = self.get_data(response)
         return GetCurrentUser.model_validate(data)
 
-    def create_cli_auth_session(self, **kwargs: Any) -> CreateCliAuthSession:
+    def create_cli_auth_session(
+        self,
+        client: Union[Optional[CliAuthClientInfoInput], UnsetType] = UNSET,
+        **kwargs: Any,
+    ) -> CreateCliAuthSession:
         query = gql("""
-            mutation CreateCliAuthSession {
-              createCliAuthSession {
-                sessionId
+            mutation CreateCliAuthSession($client: CliAuthClientInfoInput) {
+              createCliAuthSession(client: $client) {
+                deviceCode
+                userCode
                 expiresAt
+                pollIntervalSeconds
               }
             }
             """)
-        variables: dict[str, object] = {}
+        variables: dict[str, object] = {"client": client}
         response = self.execute(
             query=query,
             operation_name="CreateCliAuthSession",
@@ -73,15 +80,17 @@ class Client(BaseClient):
         data = self.get_data(response)
         return CreateCliAuthSession.model_validate(data)
 
-    def get_cli_auth_session(self, session_id: str, **kwargs: Any) -> GetCliAuthSession:
+    def get_cli_auth_session(
+        self, device_code: str, **kwargs: Any
+    ) -> GetCliAuthSession:
         query = gql("""
-            query GetCliAuthSession($sessionId: String!) {
-              getCliAuthSession(sessionId: $sessionId) {
+            query GetCliAuthSession($deviceCode: String!) {
+              getCliAuthSession(deviceCode: $deviceCode) {
                 status
               }
             }
             """)
-        variables: dict[str, object] = {"sessionId": session_id}
+        variables: dict[str, object] = {"deviceCode": device_code}
         response = self.execute(
             query=query,
             operation_name="GetCliAuthSession",
@@ -92,17 +101,17 @@ class Client(BaseClient):
         return GetCliAuthSession.model_validate(data)
 
     def consume_cli_auth_session(
-        self, session_id: str, **kwargs: Any
+        self, device_code: str, **kwargs: Any
     ) -> ConsumeCliAuthSession:
         query = gql("""
-            mutation ConsumeCliAuthSession($sessionId: String!) {
-              consumeCliAuthSession(sessionId: $sessionId) {
+            mutation ConsumeCliAuthSession($deviceCode: String!) {
+              consumeCliAuthSession(deviceCode: $deviceCode) {
                 token
                 expireAt
               }
             }
             """)
-        variables: dict[str, object] = {"sessionId": session_id}
+        variables: dict[str, object] = {"deviceCode": device_code}
         response = self.execute(
             query=query,
             operation_name="ConsumeCliAuthSession",

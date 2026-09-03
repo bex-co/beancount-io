@@ -88,7 +88,7 @@ describe("op-class coverage", () => {
     // silently shrank would leave this test green on a table full of stale
     // rows the reverse check would then have to catch alone.
     expect(graphqlOps.filter((op) => op.startsWith("GQL Query.")).length).toBe(
-      75,
+      76,
     );
     expect(
       graphqlOps.filter((op) => op.startsWith("GQL Mutation.")).length,

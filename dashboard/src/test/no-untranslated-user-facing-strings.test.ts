@@ -57,6 +57,9 @@ const INTENTIONAL_LITERALS = new Set([
   "MM/DD/YYYY",
   "SSH",
   "USD",
+  // Shape of the CLI one-time code, not prose: the same eight characters and
+  // hyphen in every language.
+  "XXXX-XXXX",
 ]);
 
 /**

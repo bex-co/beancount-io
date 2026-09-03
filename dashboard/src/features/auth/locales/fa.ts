@@ -483,6 +483,61 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "می‌توانید این برگه را ببندید.",
     description: "Hint shown after the CLI session was denied",
   },
+  "auth.cliAuthCodeEntryTitle": {
+    message: "مجاز کردن یک دستگاه",
+    description: "Title of the CLI device code entry card",
+  },
+  "auth.cliAuthCodeEntryDescription": {
+    message: "کد یک‌بارمصرف نمایش‌داده‌شده در ترمینال خود را وارد کنید.",
+    description: "Description under the CLI device code entry title",
+  },
+  "auth.cliAuthCodeLabel": {
+    message: "کد یک‌بارمصرف",
+    description: "Label of the CLI one-time code input",
+  },
+  "auth.cliAuthCodeContinue": {
+    message: "ادامه",
+    description: "Button to submit the entered CLI one-time code",
+  },
+  "auth.cliAuthCodeInvalid": {
+    message: "کد ۸ نویسه‌ای نمایش‌داده‌شده در ترمینال خود را وارد کنید.",
+    description: "Error shown when the entered CLI code is not the right shape",
+  },
+  "auth.cliAuthRequestedBy": {
+    message: "درخواست از",
+    description: "Heading above the requesting device's reported details",
+  },
+  "auth.cliAuthClientLabel": {
+    message: "کلاینت",
+    description: "Label for the requesting client's name",
+  },
+  "auth.cliAuthDeviceLabel": {
+    message: "دستگاه",
+    description: "Label for the requesting device's machine name",
+  },
+  "auth.cliAuthPlatformLabel": {
+    message: "سیستم",
+    description: "Label for the requesting device's operating system",
+  },
+  "auth.cliAuthIpLabel": {
+    message: "نشانی IP",
+    description: "Label for the requesting device's IP address",
+  },
+  "auth.cliAuthSelfReported": {
+    message:
+      "این اطلاعات را خود دستگاه گزارش کرده است. تنها در صورتی تأیید کنید که همان ترمینالی باشد که همین حالا استفاده کردید.",
+    description:
+      "Warning that the requesting device's details are self-reported",
+  },
+  "auth.cliAuthUseAnotherCode": {
+    message: "استفاده از کد دیگر",
+    description: "Button to enter a different CLI one-time code",
+  },
+  "auth.cliAuthPermissionExpiry": {
+    message: "۳۰ روز روی آن دستگاه وارد بمانید",
+    description:
+      "CLI permission list item for how long the device stays signed in",
+  },
   "auth.oauthIdentityWantsAccess": {
     message: "یک برنامه می‌خواهد با حساب Beancount خود وارد شوید.",
     description: "Identity OAuth consent page login step description",
