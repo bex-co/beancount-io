@@ -4,6 +4,25 @@ import {
   selectTransactionAmount,
 } from "../../transactions-screen/utils/transaction-display-utils";
 
+// Beancount/Fava reserve these flags for entries synthesized by reports or
+// plugins. They are not standalone source directives, so asking the source
+// context API to edit or delete one either fails or resolves to the directive
+// that generated it (for example, a `pad` directive instead of its `P`
+// transaction).
+const GENERATED_TRANSACTION_FLAGS = new Set([
+  "P",
+  "S",
+  "T",
+  "C",
+  "U",
+  "R",
+  "M",
+]);
+
+export function hasEditableSource(txn: JournalTransaction): boolean {
+  return !GENERATED_TRANSACTION_FLAGS.has(txn.flag);
+}
+
 /** Headline amount for the detail screen, matching the list rows' convention:
  * `+` prefix for cash inflows, unsigned otherwise. */
 export type HeroAmount = {

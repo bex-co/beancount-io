@@ -1,4 +1,5 @@
 import {
+  hasEditableSource,
   selectHeroAmount,
   selectPostingRows,
   selectTransactionTitle,
@@ -132,5 +133,19 @@ describe("selectTransactionTitle", () => {
     expect(
       selectTransactionTitle(txn([], { payee: null, narration: null })),
     ).toBe("");
+  });
+});
+
+describe("hasEditableSource", () => {
+  it("allows ordinary cleared, pending, and custom-flagged transactions", () => {
+    expect(hasEditableSource(txn([], { flag: "*" }))).toBe(true);
+    expect(hasEditableSource(txn([], { flag: "!" }))).toBe(true);
+    expect(hasEditableSource(txn([], { flag: "?" }))).toBe(true);
+  });
+
+  it("rejects Beancount-generated transaction flags", () => {
+    for (const flag of ["P", "S", "T", "C", "U", "R", "M"]) {
+      expect(hasEditableSource(txn([], { flag }))).toBe(false);
+    }
   });
 });

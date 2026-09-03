@@ -43,6 +43,7 @@ import {
 import { formatLedgerDate } from "@/common/date-format";
 import { selectedTransactionVar } from "./open-transaction-detail";
 import {
+  hasEditableSource,
   selectHeroAmount,
   selectPostingRows,
   selectTransactionTitle,
@@ -250,12 +251,14 @@ const TransactionDetailImpl = ({
   const confirmWrite = useLedgerWrite();
   const stashed = useReactiveVar(selectedTransactionVar);
   const client = useApolloClient();
+  const stashedEntry = stashed?.entry_hash === entryHash ? stashed : null;
+  const shouldLoadContext = !stashedEntry || hasEditableSource(stashedEntry);
 
   // Also serves as the fallback entry source when the stash is cold (deep
   // link or remount) — the context payload carries the full entry JSON.
   const { data, loading, error } = useGetLedgerEntryContextQuery({
     variables: { entryHash, ledgerId },
-    skip: !entryHash,
+    skip: !entryHash || !shouldLoadContext,
   });
 
   const [deleteMutation, { loading: deleting }] =
@@ -297,15 +300,15 @@ const TransactionDetailImpl = ({
   }, [sha256sum, entryHash, ledgerId, deleteMutation, client, t, confirmWrite]);
 
   const entry: JournalTransaction | null = useMemo(() => {
-    if (stashed && stashed.entry_hash === entryHash) {
-      return stashed;
+    if (stashedEntry) {
+      return stashedEntry;
     }
     const contextEntry = data?.getLedgerEntryContext?.entry as unknown as
       JournalDirectiveType | undefined;
     return contextEntry && isJournalTransaction(contextEntry)
       ? contextEntry
       : null;
-  }, [stashed, entryHash, data]);
+  }, [stashedEntry, data]);
 
   const handlePressAccount = useCallback(
     (account: string) => {
@@ -358,6 +361,7 @@ const TransactionDetailImpl = ({
     amount: Number.parseFloat(posting.units.number),
   }));
   const hasMetadata = Boolean(entry.tags?.length || entry.links?.length);
+  const entryHasEditableSource = hasEditableSource(entry);
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
@@ -520,15 +524,17 @@ const TransactionDetailImpl = ({
           </>
         )}
 
-        <View>
-          <EntryContext
-            entry={entry}
-            ledgerId={ledgerId}
-            contextData={data?.getLedgerEntryContext}
-            contextLoading={loading}
-            contextError={error}
-          />
-        </View>
+        {entryHasEditableSource ? (
+          <View>
+            <EntryContext
+              entry={entry}
+              ledgerId={ledgerId}
+              contextData={data?.getLedgerEntryContext}
+              contextLoading={loading}
+              contextError={error}
+            />
+          </View>
+        ) : null}
       </ScrollView>
     </SafeAreaView>
   );
