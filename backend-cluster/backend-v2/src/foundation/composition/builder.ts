@@ -52,6 +52,7 @@ export function buildServiceLayer(input: {
       input.database.db,
       input.database.models,
       input.clients.giteaClientFactory,
+      input.clients.favaClientFactory,
     ),
   );
   const subscriptions = new SubscriptionService(
@@ -76,7 +77,10 @@ export function buildServiceLayer(input: {
         userId,
       })) !== SubscriptionTier.FREE,
   });
-  const assetStorage = new AssetStorageService(input.config.tempAssetS3);
+  const assetStorage = new AssetStorageService(
+    input.config.tempAssetS3,
+    authorization,
+  );
   const featureUsage = new FeatureUsageService(
     input.database.models,
     input.database.db,
@@ -102,6 +106,7 @@ export function buildServiceLayer(input: {
       input.config,
       input.database.models,
       input.database.db,
+      authorization,
     ),
     ledgerAccount: new LedgerAccountService(
       input.clients.favaClientFactory,
@@ -155,6 +160,7 @@ export function buildServiceLayer(input: {
       input.database.models,
       input.database.db,
       input.config,
+      authorization,
     ),
     plaidSync: new PlaidSyncService(
       input.clients.plaidClient,
@@ -232,6 +238,7 @@ export function buildWorkflowLayer(input: {
     input.services.assetStorage,
     input.services.ledgerEntry,
     input.config,
+    input.services.authorization,
   );
   return { ledger, ledgerCollaborators, ledgerReceipt };
 }

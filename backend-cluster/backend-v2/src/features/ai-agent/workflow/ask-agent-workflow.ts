@@ -6,25 +6,32 @@
  * route only sees plain params + a Response (backend-v2 CLAUDE.md layering).
  */
 
-import { HarnessAgent } from '@ai-sdk/harness/agent';
-import { createACP, type ACPPermissionModeMapping } from '@ai-sdk/harness-acp';
-import type { ToolSet } from 'ai';
-import { generateGiteaUrl } from '@/shared/gitea-utils';
-import type { GiteaConfig } from '@/config/config';
-import { logger } from '@/shared/logger';
+import { HarnessAgent } from "@ai-sdk/harness/agent";
+import { createACP, type ACPPermissionModeMapping } from "@ai-sdk/harness-acp";
+import type { ToolSet } from "ai";
+import { generateGiteaUrl } from "@/shared/gitea-utils";
+import type { GiteaConfig } from "@/config/config";
+import { logger } from "@/shared/logger";
 import {
   createCloudflareSandbox,
   type HarnessV1SandboxProvider,
-} from '@/foundation/sandbox-cloudflare';
-import { createOpenPullRequestTool } from './open-pull-request-tool';
+  type SandboxSession,
+} from "@/foundation/sandbox-cloudflare";
+import { createOpenPullRequestTool } from "./open-pull-request-tool";
+import type { Identity } from "@/server/api/identity";
+import { type IAuthorizationService } from "@/server/api/authorization";
+import {
+  resolveAgentAccessMode,
+  type AgentRequestedMode,
+} from "../agent-access";
 
-const workflowLogger = logger.child({ module: 'ask-agent-workflow' });
+const workflowLogger = logger.child({ module: "ask-agent-workflow" });
 
 /**
  * Pinned so a new upstream release cannot silently change the in-sandbox agent.
  * Bump deliberately.
  */
-const CLAUDE_AGENT_ACP_VERSION = '0.70.0';
+const CLAUDE_AGENT_ACP_VERSION = "0.70.0";
 
 /**
  * harness permission mode → claude-agent-acp session mode id.
@@ -36,13 +43,13 @@ const CLAUDE_AGENT_ACP_VERSION = '0.70.0';
  * product's trust boundary, not an implementation detail.
  */
 export const ACP_PERMISSION_MODES = {
-  'allow-reads': { type: 'session-mode', modeId: 'default' },
-  'allow-edits': { type: 'session-mode', modeId: 'acceptEdits' },
-  'allow-all': { type: 'session-mode', modeId: 'bypassPermissions' },
+  "allow-reads": { type: "session-mode", modeId: "default" },
+  "allow-edits": { type: "session-mode", modeId: "acceptEdits" },
+  "allow-all": { type: "session-mode", modeId: "bypassPermissions" },
 } as const satisfies ACPPermissionModeMapping;
 
-// ASK = read-only Q&A; AGENT = may edit files (writes gated by the PR flow).
-export type AskAgentMode = 'ask' | 'agent';
+// ASK = read-only Q&A; AGENT requests edits, but readers are downgraded safely.
+export type AskAgentMode = AgentRequestedMode;
 
 export interface AskAgentDeps {
   controlPlaneUrl: string;
@@ -50,6 +57,7 @@ export interface AskAgentDeps {
   gitea: GiteaConfig;
   /** Anthropic model id for the Claude Code harness. */
   model: string;
+  authorization: IAuthorizationService;
 }
 
 export interface AskAgentCommand {
@@ -64,6 +72,8 @@ export interface AskAgentCommand {
   /** Stable per-conversation id → sandbox container key + harness sessionId. */
   conversationId: string;
   mode: AskAgentMode;
+  identity: Identity;
+  assertQuotaAvailable: () => Promise<void>;
   abortSignal?: AbortSignal;
   /**
    * Debits this turn's tokens against the caller's AI CFO quota. Optional so
@@ -73,7 +83,7 @@ export interface AskAgentCommand {
 }
 
 const ASK_INSTRUCTIONS = `You are the Beancount.io ledger assistant. The user's plain-text accounting repo is cloned at the absolute path /workspace/repo (the main ledger is typically /workspace/repo/main.bean). Always work against /workspace/repo, not your current directory.
-Answer questions about the ledger by reading files and running beancount/bean-query as needed. Do NOT modify files in ASK mode.`;
+Answer questions about the ledger by reading files and running beancount/bean-query as needed. Do NOT modify files in ASK mode. If the user asks for a change, explain that this conversation is read-only and provide a proposed Beancount entry or exact steps instead of attempting the mutation.`;
 
 const AGENT_INSTRUCTIONS = `You are the Beancount.io ledger agent. The user's plain-text accounting repo is cloned at the absolute path /workspace/repo (the main ledger is typically /workspace/repo/main.bean). Always work against /workspace/repo, not your current directory.
 When asked to change the books: read the relevant files first, make the edit, run bean-check to validate, commit on a new branch named claude/<short-slug> (never commit to main), and push. Report what you changed.`;
@@ -111,6 +121,14 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
   }
 
   async streamAnswer(command: AskAgentCommand): Promise<Response> {
+    const accessMode = await resolveAgentAccessMode({
+      authorization: this.deps.authorization,
+      identity: command.identity,
+      ledgerId: command.ledgerId,
+      requestedMode: command.mode,
+    });
+    await command.assertQuotaAvailable();
+
     const cloneUrl = buildAuthenticatedCloneUrl(
       this.deps.gitea,
       command.ledgerId,
@@ -118,10 +136,10 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
       command.ledgerPassword,
     );
 
-    // In AGENT mode the model can open a Gitea PR from the branch it pushed;
-    // ASK mode is read-only so it gets no mutating host tools.
+    // Only an authorized writer gets the Gitea PR tool. A requested AGENT
+    // session that resolved to read access uses the same safe toolset as ASK.
     const tools: ToolSet | undefined =
-      command.mode === 'agent'
+      accessMode === "write"
         ? {
             openPullRequest: createOpenPullRequestTool({
               gitea: this.deps.gitea,
@@ -135,22 +153,22 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
 
     const agent = new HarnessAgent({
       harness: createACP({
-        harnessId: 'claude-agent-acp',
+        harnessId: "claude-agent-acp",
         // ACP is the driver so the agent is swappable (ADR 0005 修订 A). Pointing
         // this at codex-acp/gemini is a change to `source` + `executable`, not to
         // the call stack. The package is installed inside the sandbox, so it is
         // not a backend-v2 dependency; pin it for reproducible bootstraps.
         source: {
-          type: 'npm-simple',
-          packageName: '@agentclientprotocol/claude-agent-acp',
+          type: "npm-simple",
+          packageName: "@agentclientprotocol/claude-agent-acp",
           packageVersion: CLAUDE_AGENT_ACP_VERSION,
         },
-        executable: 'claude-agent-acp',
+        executable: "claude-agent-acp",
         modelId: this.deps.model,
-        auth: 'direct',
+        auth: "direct",
         // Mirrors @ai-sdk/harness-claude-code's own split: secrets go through
         // credentialEnv, the non-secret gateway root through forwardEnv.
-        credentialEnv: ['ANTHROPIC_API_KEY', 'ANTHROPIC_AUTH_TOKEN'],
+        credentialEnv: ["ANTHROPIC_API_KEY", "ANTHROPIC_AUTH_TOKEN"],
         // harness-acp@1.0.23 refuses credentialEnv without credentialBrokering.
         // Brokering only applies when the sandbox session exposes
         // addRequestTransformations; the Cloudflare provider has no primitive
@@ -165,17 +183,17 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
         // API_TIMEOUT_MS raises the Claude Code binary's per-request timeout;
         // local model servers can take minutes to prefill the system prompt.
         forwardEnv: [
-          'ANTHROPIC_BASE_URL',
-          'ANTHROPIC_MODEL',
-          'ANTHROPIC_SMALL_FAST_MODEL',
-          'API_TIMEOUT_MS',
+          "ANTHROPIC_BASE_URL",
+          "ANTHROPIC_MODEL",
+          "ANTHROPIC_SMALL_FAST_MODEL",
+          "API_TIMEOUT_MS",
         ],
         // claude-agent-acp only offers `bypassPermissions` when
         // `!IS_ROOT || IS_SANDBOX` (acp-agent.js: ALLOW_BYPASS). Our container
         // runs as root, so without this flag the allow-all mapping above would
         // name a mode the agent never advertises. We *are* an isolated,
         // ephemeral sandbox, which is exactly what the flag asserts.
-        env: { IS_SANDBOX: '1' },
+        env: { IS_SANDBOX: "1" },
         permissionModeMapping: ACP_PERMISSION_MODES,
         // The bridge listens on this port inside the container; our provider
         // exposes it via getPortEndpoint. Avoid 39001 (the CF sandbox runtime's
@@ -183,15 +201,12 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
         port: 8080,
       }),
       sandbox: this.provider,
-      // ASK is a frictionless read-only Q&A surface: the sandbox is an isolated,
-      // ephemeral clone with no mutating host tools and nothing is pushed, so the
-      // agent's read/query tools (bash `find`, `bean-query`, file reads) auto-run
-      // ('allow-all') instead of stalling on a per-command approval the ask UI
-      // doesn't surface. AGENT keeps 'allow-edits' so edits/PRs stay human-gated.
-      permissionMode: command.mode === 'agent' ? 'allow-edits' : 'allow-all',
+      // Read-only sessions auto-run reads but cannot approve edits. Authorized
+      // writers keep allow-edits so the existing human-gated PR flow is intact.
+      permissionMode: accessMode === "write" ? "allow-edits" : "allow-reads",
       tools,
       instructions:
-        command.mode === 'agent' ? AGENT_INSTRUCTIONS : ASK_INSTRUCTIONS,
+        accessMode === "write" ? AGENT_INSTRUCTIONS : ASK_INSTRUCTIONS,
       // Ensure the ledger repo is cloned before the agent runs. onSession fires
       // per session start; the clone is made idempotent (skip when repo/.git
       // already exists) so a reused/resumed container is not re-cloned. This is
@@ -208,25 +223,37 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
           // start clean; the on-disk bridge-state-dir preserves continuity.
           await session.run({
             command: "pkill -f bridge.mjs 2>/dev/null; sleep 1; true",
-            workingDirectory: '/workspace',
+            workingDirectory: "/workspace",
           });
           const already = await session.run({
-            command: 'test -d repo/.git && echo yes || echo no',
-            workingDirectory: '/workspace',
+            command: "test -d repo/.git && echo yes || echo no",
+            workingDirectory: "/workspace",
           });
-          if (already.stdout.trim() === 'yes') return;
-          workflowLogger.debug('Cloning ledger into sandbox', {
+          if (already.stdout.trim() === "yes") {
+            await configureSandboxRemote({
+              session,
+              accessMode,
+              cloneUrl,
+            });
+            return;
+          }
+          workflowLogger.debug("Cloning ledger into sandbox", {
             ledgerId: command.ledgerId,
           });
           const clone = await session.run({
-            command: `git clone ${cloneUrl} repo`,
-            workingDirectory: '/workspace',
+            command: `git clone -- ${quoteShellArg(cloneUrl)} repo`,
+            workingDirectory: "/workspace",
           });
           if (clone.exitCode !== 0) {
             throw new Error(
               `git clone failed (exit ${clone.exitCode}): ${clone.stderr || clone.stdout}`,
             );
           }
+          await configureSandboxRemote({
+            session,
+            accessMode,
+            cloneUrl,
+          });
         },
       },
     });
@@ -249,7 +276,7 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
         if (totalTokens === 0) {
           // ACP v1 carries no per-step usage, so a turn may report nothing.
           // Log it rather than debiting a bogus 0.
-          workflowLogger.warn('Turn reported no token usage; nothing debited', {
+          workflowLogger.warn("Turn reported no token usage; nothing debited", {
             ledgerId: command.ledgerId,
             conversationId: command.conversationId,
           });
@@ -259,7 +286,7 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
           await command.recordTokenUsage?.(totalTokens);
         } catch (err) {
           // Never fail the user's answer over accounting.
-          workflowLogger.error('Failed to record token usage', {
+          workflowLogger.error("Failed to record token usage", {
             ledgerId: command.ledgerId,
             totalTokens,
             error: err instanceof Error ? err.message : String(err),
@@ -269,6 +296,29 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
     });
 
     return result.toUIMessageStreamResponse();
+  }
+}
+
+function quoteShellArg(value: string): string {
+  return `'${value.replaceAll("'", `'"'"'`)}'`;
+}
+
+/** @internal Exported for the credential-boundary regression test. */
+export async function configureSandboxRemote(args: {
+  session: SandboxSession;
+  accessMode: "read" | "write";
+  cloneUrl: string;
+}): Promise<void> {
+  const command =
+    args.accessMode === "write"
+      ? `git remote get-url origin >/dev/null 2>&1 && git remote set-url origin ${quoteShellArg(args.cloneUrl)} || git remote add origin ${quoteShellArg(args.cloneUrl)}`
+      : "git remote remove origin >/dev/null 2>&1 || true";
+  const result = await args.session.run({
+    command,
+    workingDirectory: "/workspace/repo",
+  });
+  if (result.exitCode !== 0) {
+    throw new Error("failed to configure sandbox Git remote");
   }
 }
 

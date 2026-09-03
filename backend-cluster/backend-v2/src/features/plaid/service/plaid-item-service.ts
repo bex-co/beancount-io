@@ -19,6 +19,11 @@ import type { CategorySuggestion } from "@/features/llm/api/ai-categorization-re
 import type { PlaidAccountMappingSuggestion } from "../api/resolvers/plaid-resolver.types";
 import type { PlaidTransaction } from "../data/plaid-transaction-model/types";
 import type { PlaidAccount } from "../data/plaid-account-model/types";
+import {
+  AUTHORIZATION_ACTIONS,
+  ledgerResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 
 const itemServiceLogger = logger.child({ module: "plaid-item-service" });
 
@@ -192,6 +197,7 @@ export class PlaidItemService implements IPlaidItemService {
     >,
     private readonly db: DbExecutor,
     private readonly config: Pick<AppConfig, "blockeden">,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   /**
@@ -203,6 +209,9 @@ export class PlaidItemService implements IPlaidItemService {
    * their exemption at the call site (`systemIdentity`) instead.
    */
   private assertLedgerAccess(ledgerId: string, identity: Identity) {
+    // The migrated suggestion methods call the PDP before reaching this seam.
+    // It remains until m19 because every bank method also needs the resolved
+    // repository id for owner-bound row predicates, not just an allow/deny bit.
     return authorizeLedger(identity, ledgerId, "read", {
       models: this.models,
       db: this.db,
@@ -440,6 +449,11 @@ export class PlaidItemService implements IPlaidItemService {
     accountId?: string,
   ): Promise<CategorySuggestion[]> {
     const { userId } = identity;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
+      resource: ledgerResource(ledgerId),
+    });
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
     const { transactions } = await this.getUnsyncedTransactionsForScope(
@@ -493,6 +507,11 @@ export class PlaidItemService implements IPlaidItemService {
     itemId: string,
   ): Promise<PlaidAccountMappingSuggestion[]> {
     const { userId } = identity;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
+      resource: ledgerResource(ledgerId),
+    });
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
 
     const item = await this.models.plaidItem.getById(this.db, itemId);
@@ -708,6 +727,11 @@ export class PlaidItemService implements IPlaidItemService {
   ): Promise<void> {
     const { userId } = identity;
     try {
+      await this.authorization.authorizeOrThrow({
+        principal: identity,
+        action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
+        resource: ledgerResource(ledgerId),
+      });
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
       const existingAccounts = await this.getOpenLedgerAccounts(
         ledgerId,

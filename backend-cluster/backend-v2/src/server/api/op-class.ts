@@ -930,12 +930,15 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     "POST /api-gateway/v1/ledgers/{owner}/{name}/entries",
     M.coveredByEditFiles,
   ),
-  gqlOnly(
-    "Mutation.insertReceiptTransaction",
-    "write",
-    R.notInV1Table,
-    M.notAgentShaped,
-  ),
+  {
+    ...gqlOnly(
+      "Mutation.insertReceiptTransaction",
+      "write",
+      R.notInV1Table,
+      M.notAgentShaped,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
+  },
   gqlOnly(
     "Mutation.deleteLedgerEntrySourceSlice",
     "write",
@@ -1152,33 +1155,48 @@ const GITEA_SOCIAL_VERBS: readonly VerbEntry[] = [
 ];
 
 const LLM_VERBS: readonly VerbEntry[] = [
-  gqlOnly(
-    "Query.suggestTransactionCategories",
-    "read",
-    R.llm,
-    M.notAgentShaped,
-  ),
+  {
+    ...gqlOnly(
+      "Query.suggestTransactionCategories",
+      "read",
+      R.llm,
+      M.notAgentShaped,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_CATEGORIES_SUGGEST,
+  },
   // Mutations by TypeGraphQL, and left at `write` deliberately: they spend the
   // account's LLM budget, which a read-scoped credential has no business doing
   // even though no ledger bytes change.
-  gqlOnly("Mutation.parseFile", "write", R.llm, M.notAgentShaped),
-  gqlOnly("Mutation.parseReceipt", "write", R.llm, M.notAgentShaped),
+  {
+    ...gqlOnly("Mutation.parseFile", "write", R.llm, M.notAgentShaped),
+    authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE,
+  },
+  {
+    ...gqlOnly("Mutation.parseReceipt", "write", R.llm, M.notAgentShaped),
+    authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
+  },
   gqlOnly("Query.aiCfoUsage", "read", R.llm, M.notAgentShaped),
 ];
 
 const ASSET_VERBS: readonly VerbEntry[] = [
-  gqlOnly(
-    "Query.generateTempAssetDownloadUrl",
-    "read",
-    R.assetStorage,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.generateTempAssetUploadUrl",
-    "write",
-    R.assetStorage,
-    M.notAgentShaped,
-  ),
+  {
+    ...gqlOnly(
+      "Query.generateTempAssetDownloadUrl",
+      "read",
+      R.assetStorage,
+      M.notAgentShaped,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.TEMP_ASSET_DOWNLOAD_READ,
+  },
+  {
+    ...gqlOnly(
+      "Mutation.generateTempAssetUploadUrl",
+      "write",
+      R.assetStorage,
+      M.notAgentShaped,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.TEMP_ASSET_UPLOAD_CREATE,
+  },
 ];
 
 /**
@@ -1289,6 +1307,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
   {
     verb: "Query.suggestPlaidTransactionCategories",
     class: "read",
+    authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
     gql: "Query.suggestPlaidTransactionCategories",
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/suggested-categories",
     mcpResource: "bankSuggestedCategories",
@@ -1298,6 +1317,8 @@ const PLAID_VERBS: readonly VerbEntry[] = [
   {
     verb: "Query.suggestPlaidAccountMapping",
     class: "read",
+    authorizationAction:
+      AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
     gql: "Query.suggestPlaidAccountMapping",
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/suggested-mapping",
     mcpResource: "bankSuggestedMapping",
@@ -1328,14 +1349,15 @@ const PLAID_VERBS: readonly VerbEntry[] = [
 ];
 
 /**
- * The AI routes. All `write`: each one hands an agent a tool belt that includes
- * `editLedgerFiles`, so the class has to describe what the agent may end up
- * doing, not what the HTTP request looks like.
+ * The AI routes stay in the expensive-operation `write` rate bucket. Their
+ * explicit authorization actions, rather than this operational class, decide
+ * whether a delegated credential needs read or write capability.
  */
 const AI_ROUTE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ai.agent",
     class: "write",
+    authorizationAction: AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
     rest: "POST /api-gateway/agent",
     gqlExempt: G.streamingOnly,
     mcpExempt: M.transportOnly,
@@ -1343,6 +1365,7 @@ const AI_ROUTE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ai.askAgent",
     class: "write",
+    authorizationAction: AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
     rest: "POST /api-gateway/ask-agent",
     gqlExempt: G.streamingOnly,
     mcpExempt: M.transportOnly,
@@ -1350,6 +1373,7 @@ const AI_ROUTE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ai.openaiChatCompletions",
     class: "write",
+    authorizationAction: AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
     rest: "POST /api-gateway/ai/openai/chat/completions",
     gqlExempt: G.wireCompat,
     mcpExempt: M.transportOnly,
@@ -1357,6 +1381,7 @@ const AI_ROUTE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ai.anthropicMessages",
     class: "write",
+    authorizationAction: AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
     rest: "POST /api-gateway/ai/anthropic/v1/messages",
     gqlExempt: G.wireCompat,
     mcpExempt: M.transportOnly,

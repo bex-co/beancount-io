@@ -12,6 +12,15 @@ const frAiAgent: Record<string, TranslationEntry> = {
     message: "Posez-moi des questions sur Beancount...",
     description: "Input placeholder text",
   },
+  "aiAgent.readOnlyTitle": {
+    message: "Agent en lecture seule",
+    description: "Title of the agent permission notice",
+  },
+  "aiAgent.readOnlyDescription": {
+    message:
+      "Vous pouvez poser des questions et analyser des fichiers. Les modifications nécessitent un accès en écriture, mais je peux les préparer pour vous.",
+    description: "Explanation shown when the agent cannot change the ledger",
+  },
   "aiAgent.welcome": {
     message:
       "Bonjour ! Je suis votre assistant IA Beancount, ici pour vous aider avec votre comptabilité en texte brut.\n\n" +

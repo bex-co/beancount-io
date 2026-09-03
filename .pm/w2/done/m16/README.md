@@ -1,19 +1,19 @@
 # w2 · m16 — Centralized authz for AI-assisted ingestion and assets
 
-**Worker:** worker2 **Goal:** centralize authorization for temporary assets, parsing/category helpers, and AI execution at their application-service/workflow boundaries using current user/ledger/S3 facts and explicit multi-capability actions **Status:** todo
+**Worker:** worker2 **Goal:** centralize authorization for temporary assets, parsing/category helpers, and AI execution at their application-service/workflow boundaries using current user/ledger/S3 facts and explicit multi-capability actions **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                              | est | depends_on |
 | ---- | -------------------------------------------------- | --- | ---------- |
-| t001 | Define assisted-ingestion action composition       | 40m | —          |
-| t002 | Add source-backed ledger and asset evaluators      | 55m | t001       |
-| t003 | Migrate parsing, suggestion, and temporary assets | 55m | t002       |
-| t004 | Migrate AI streaming and agent entry points       | 55m | t003       |
-| t005 | Adoption surface                                   | 20m | t004       |
-| t006 | Simplify                                           | 20m | t005       |
-| t007 | Test coverage                                      | 55m | t005       |
-| t008 | Closeout                                           | 15m | t006, t007 |
+| t001 | Define assisted-ingestion action composition — **DONE**       | 40m | —          |
+| t002 | Add source-backed ledger and asset evaluators — **DONE**      | 55m | t001       |
+| t003 | Migrate parsing, suggestion, and temporary assets — **DONE** | 55m | t002       |
+| t004 | Migrate AI streaming and agent entry points — **DONE**       | 55m | t003       |
+| t005 | Adoption surface — **DONE**                                   | 20m | t004       |
+| t006 | Simplify — **DONE**                                           | 20m | t005       |
+| t007 | Test coverage — **DONE**                                      | 55m | t005       |
+| t008 | Closeout — **DONE**                                           | 15m | t006, t007 |
 
 ## Definition of done
 

@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { LedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
 import type { BcioOptionsPublic } from "@/foundation/fava";
 import type { Identity } from "@/server/api/identity";
+import { AuthorizationService } from "@/server/api/authorization";
 
 jest.mock("@/foundation/fava", () => ({
   unwrapFavaResponse: jest.fn(async (promise: Promise<unknown>) => promise),
@@ -74,6 +75,18 @@ function makeWorkflow({
     mockAssetStorage as any,
     mockLedgerEntry as any,
     mockConfig as any,
+    new AuthorizationService({
+      check: async ({ user, object }) => {
+        if (object.startsWith("ledger:")) return true;
+        if (!object.startsWith("temp_asset:")) return false;
+        const ownerId = user.slice("user:".length);
+        const key = object.slice("temp_asset:".length);
+        return (
+          key.startsWith(`tmp/${ownerId}/`) &&
+          key.length > `tmp/${ownerId}/`.length
+        );
+      },
+    }),
   );
 }
 
@@ -240,7 +253,7 @@ describe("temp asset ownership", () => {
         input: baseInput,
         identity: sessionIdentity,
       }),
-    ).rejects.toThrow("not owned by the caller");
+    ).rejects.toThrow("Temporary asset not found");
 
     expect(copyTempToPermanent).not.toHaveBeenCalled();
     expect(createLedgerFile).not.toHaveBeenCalled();
@@ -261,7 +274,7 @@ describe("temp asset ownership", () => {
         input: baseInput,
         identity: sessionIdentity,
       }),
-    ).rejects.toThrow("not owned by the caller");
+    ).rejects.toThrow("Temporary asset not found");
 
     expect(copyTempToPermanent).not.toHaveBeenCalled();
   });

@@ -2,9 +2,14 @@ import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import { parseLedgerId } from "@/shared/str";
+import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
+import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
+import { isTempAssetOwnedBy } from "@/features/s3/temp-asset-key";
+import { DomainError, ErrorCategory } from "@/shared/errors";
 import {
   LEDGER_RELATIONSHIPS,
   parseAuthorizationResource,
+  TEMP_ASSET_RELATIONSHIPS,
   userResource,
   USER_RELATIONSHIPS,
   type AuthorizationRelationship,
@@ -24,9 +29,22 @@ export interface IRelationshipEvaluator {
 const USER_RELATIONSHIP_SET = new Set<AuthorizationRelationship>(
   Object.values(USER_RELATIONSHIPS),
 );
+const LEDGER_RELATIONSHIP_RANK: Readonly<
+  Partial<Record<AuthorizationRelationship, number>>
+> = {
+  [LEDGER_RELATIONSHIPS.READ_CONTENTS]: 0,
+  [LEDGER_RELATIONSHIPS.READ_ASSETS]: 0,
+  [LEDGER_RELATIONSHIPS.WRITE_CONTENTS]: 1,
+  [LEDGER_RELATIONSHIPS.WRITE_ASSETS]: 1,
+  [LEDGER_RELATIONSHIPS.WRITE_AI]: 1,
+  [LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS]: 2,
+  [LEDGER_RELATIONSHIPS.READ]: 0,
+  [LEDGER_RELATIONSHIPS.WRITE]: 1,
+  [LEDGER_RELATIONSHIPS.ADMIN]: 2,
+};
+const PERMISSION_RANK = { read: 0, write: 1, admin: 2 } as const;
 
 const LEDGER_SOURCE_RELATIONSHIP_SET = new Set<AuthorizationRelationship>([
-  LEDGER_RELATIONSHIPS.READ_CONTENTS,
   LEDGER_RELATIONSHIPS.READ_ADMINISTRATION,
   LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
   LEDGER_RELATIONSHIPS.READ_COLLABORATORS,
@@ -42,7 +60,7 @@ const deniedGiteaStatus = (error: unknown): boolean => {
 };
 
 /**
- * Evaluates migrated relationships directly from authoritative backend facts.
+ * Evaluates migrated domains directly from their authoritative backend facts.
  * Nothing is persisted or cached here.
  */
 export class SourceBackedRelationshipEvaluator implements IRelationshipEvaluator {
@@ -50,6 +68,7 @@ export class SourceBackedRelationshipEvaluator implements IRelationshipEvaluator
     private readonly db: DbExecutor,
     private readonly models: Pick<IModels, "apiKey" | "user">,
     private readonly giteaClientFactory: IGiteaClientFactory,
+    private readonly favaClientFactory: IFavaClientFactory,
   ) {}
 
   public async check(input: RelationshipCheck): Promise<boolean> {
@@ -72,6 +91,42 @@ export class SourceBackedRelationshipEvaluator implements IRelationshipEvaluator
     }
 
     const userId = input.user.slice("user:".length);
+    if (resource.type === "temp_asset") {
+      return (
+        input.relation === TEMP_ASSET_RELATIONSHIPS.OWNER &&
+        isTempAssetOwnedBy(resource.id, userId)
+      );
+    }
+
+    const requiredRank = LEDGER_RELATIONSHIP_RANK[input.relation];
+    if (requiredRank !== undefined) {
+      try {
+        const { permission } = await assertLedgerAccess(
+          resource.id,
+          userId,
+          {
+            db: this.db,
+            models: this.models,
+            favaClientFactory: this.favaClientFactory,
+          },
+          { sourceFailures: "throw" },
+        );
+        return PERMISSION_RANK[permission] >= requiredRank;
+      } catch (error) {
+        if (
+          error instanceof DomainError &&
+          [
+            ErrorCategory.FORBIDDEN,
+            ErrorCategory.NOT_FOUND,
+            ErrorCategory.UNAUTHENTICATED,
+          ].includes(error.category)
+        ) {
+          return false;
+        }
+        throw error;
+      }
+    }
+
     let ledgerOwner: string;
     let ledgerName: string;
     try {

@@ -462,6 +462,9 @@ export const sk: typeof en = {
   agentWelcome:
     "Opýtaj sa ma na čokoľvek o svojej účtovnej knihe — zostatky, výdavky alebo ako vzniklo dané číslo.",
   agentPlaceholder: "Opýtaj sa na svoju knihu",
+  agentReadOnlyTitle: "Agent iba na čítanie",
+  agentReadOnlyBody:
+    "Môžete klásť otázky a analyzovať súbory. Zmeny vyžadujú právo na zápis, ale môžem ich pre vás pripraviť.",
   agentThinking: "Premýšľam…",
   agentWorking: "Prezerám tvoju knihu…",
   agentSend: "Odoslať",

@@ -1,13 +1,14 @@
 import { S3Client } from "@aws-sdk/client-s3";
 import {
   AssetStorageService,
-  assertTempAssetOwnership,
   S3_PREFIX_TMP,
   S3_PREFIX_ASSETS,
 } from "../service/asset-storage-service";
 import type { AssetS3Config } from "@/config/config";
 import * as S3Presigner from "@aws-sdk/s3-request-presigner";
-import { BadUserInputError, ForbiddenError } from "@/shared/errors";
+import { BadUserInputError } from "@/shared/errors";
+import type { Identity } from "@/server/api/identity";
+import { AuthorizationService } from "@/server/api/authorization";
 
 // Mock AWS SDK
 jest.mock("@aws-sdk/client-s3");
@@ -20,6 +21,11 @@ jest.mock("nanoid", () => ({
 describe("AssetStorageService", () => {
   let mockConfig: AssetS3Config;
   let s3Service: AssetStorageService;
+  const identity = (userId = "user123"): Identity => ({
+    userId,
+    method: "session",
+    scopes: new Set(),
+  });
 
   beforeEach(() => {
     mockConfig = {
@@ -39,7 +45,18 @@ describe("AssetStorageService", () => {
         "https://s3.amazonaws.com/test-bucket/test-key?signature=abc123",
       );
 
-    s3Service = new AssetStorageService(mockConfig);
+    s3Service = new AssetStorageService(
+      mockConfig,
+      new AuthorizationService({
+        check: async ({ user, object }) => {
+          if (object.startsWith("user:")) return user === object;
+          if (!object.startsWith("temp_asset:")) return false;
+          const key = object.slice("temp_asset:".length);
+          const prefix = `tmp/${user.slice("user:".length)}/`;
+          return key.startsWith(prefix) && key.length > prefix.length;
+        },
+      }),
+    );
   });
 
   afterEach(() => {
@@ -48,8 +65,7 @@ describe("AssetStorageService", () => {
 
   describe("generateUploadUrl", () => {
     it("should generate presigned upload URL bound to the uploader", async () => {
-      const result = await s3Service.generateUploadUrl({
-        ownerId: "user123",
+      const result = await s3Service.generateUploadUrl(identity(), {
         filename: "receipt.pdf",
         mimeType: "application/pdf",
       });
@@ -66,8 +82,7 @@ describe("AssetStorageService", () => {
     });
 
     it("should generate upload URL without filename (no extension)", async () => {
-      const result = await s3Service.generateUploadUrl({
-        ownerId: "user123",
+      const result = await s3Service.generateUploadUrl(identity(), {
         filename: undefined,
       });
 
@@ -84,55 +99,14 @@ describe("AssetStorageService", () => {
 
     it("should reject an ownerId that could break out of its path segment", async () => {
       await expect(
-        s3Service.generateUploadUrl({ ownerId: "user/123" }),
+        s3Service.generateUploadUrl(identity("user/123"), {}),
       ).rejects.toThrow(BadUserInputError);
-      await expect(s3Service.generateUploadUrl({ ownerId: "" })).rejects.toThrow(
-        BadUserInputError,
-      );
       await expect(
-        s3Service.generateUploadUrl({ ownerId: "../escape" }),
+        s3Service.generateUploadUrl(identity(""), {}),
+      ).rejects.toThrow();
+      await expect(
+        s3Service.generateUploadUrl(identity("../escape"), {}),
       ).rejects.toThrow(BadUserInputError);
-    });
-  });
-
-  describe("assertTempAssetOwnership", () => {
-    it("should accept a key under the caller's tmp/ scope", () => {
-      expect(() =>
-        assertTempAssetOwnership("tmp/user123/2026-01-01-abc.pdf", "user123"),
-      ).not.toThrow();
-    });
-
-    it("should reject another tenant's tmp/ key", () => {
-      expect(() =>
-        assertTempAssetOwnership("tmp/other/2026-01-01-abc.pdf", "user123"),
-      ).toThrow(ForbiddenError);
-    });
-
-    it("should reject a similar ownerId prefix as a different owner", () => {
-      expect(() =>
-        assertTempAssetOwnership("tmp/user1234/2026-01-01-abc.pdf", "user123"),
-      ).toThrow(ForbiddenError);
-    });
-
-    it("should reject keys with no owner segment (pre-binding format)", () => {
-      expect(() =>
-        assertTempAssetOwnership("tmp/2026-01-01-abc.pdf", "user123"),
-      ).toThrow(ForbiddenError);
-    });
-
-    it("should reject permanent-asset keys", () => {
-      expect(() =>
-        assertTempAssetOwnership("assets/repo_42/2026-01-01-abc.pdf", "user123"),
-      ).toThrow(ForbiddenError);
-    });
-
-    it("should reject an empty filename and non-tmp keys", () => {
-      expect(() => assertTempAssetOwnership("tmp/user123/", "user123")).toThrow(
-        ForbiddenError,
-      );
-      expect(() => assertTempAssetOwnership("user123/file.pdf", "user123")).toThrow(
-        ForbiddenError,
-      );
     });
   });
 
@@ -250,8 +224,8 @@ describe("AssetStorageService", () => {
   describe("generateTempDownloadUrl", () => {
     it("should presign a temp key owned by the caller", async () => {
       const result = await s3Service.generateTempDownloadUrl(
+        identity(),
         "tmp/user123/2026-01-01-abc.pdf",
-        "user123",
       );
 
       expect(result).toEqual({
@@ -267,20 +241,20 @@ describe("AssetStorageService", () => {
 
       await expect(
         s3Service.generateTempDownloadUrl(
+          identity(),
           "tmp/other/2026-01-01-abc.pdf",
-          "user123",
         ),
-      ).rejects.toThrow(ForbiddenError);
+      ).rejects.toMatchObject({ category: "NOT_FOUND" });
       expect(presign).not.toHaveBeenCalled();
     });
 
     it("should refuse permanent-asset keys", async () => {
       await expect(
         s3Service.generateTempDownloadUrl(
+          identity(),
           "assets/repo_42/2026-01-01-abc.pdf",
-          "user123",
         ),
-      ).rejects.toThrow(ForbiddenError);
+      ).rejects.toMatchObject({ category: "NOT_FOUND" });
     });
   });
 });

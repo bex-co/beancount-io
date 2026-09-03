@@ -15,15 +15,14 @@ This boundary follows OpenFGA's guidance to
 [model the application domain rather than a meta-model](https://openfga.dev/docs/best-practices/modeling-design-principles).
 The no-engine-yet decision and adoption triggers remain documented in
 [ADR 0010](../../../docs/adrs/ADR010-backend-v2-authz-model.md). No OpenFGA
-server or SDK is deployed. Backend-v2 executes the protected user/profile/
-lifecycle/API-key-management/billing/social domain through a small TypeScript PDP. Its
-source-backed evaluator mirrors exact-self User permissions and resolves
-API-key ownership from the current `api_keys` row. Social star decisions query
-current Gitea repository readability without copying the social graph into
-tuples. Authenticated single-ledger calls enter that same PDP contract through
-`authorizeLedger`, whose relationship adapter maps current Gitea/Fava facts to
-the modeled ledger rank. The FGA file remains an executable specification in
-CI; no FGA service is deployed.
+server or SDK is deployed. Backend-v2 executes protected user/profile/lifecycle,
+API-key-management, billing, social, ledger-control-plane, assisted-ingestion,
+temporary-asset, and AI actions through a small TypeScript PDP. Its source-backed
+evaluator mirrors exact-self User permissions, resolves API-key ownership from
+the current `api_keys` row, reads current Gitea/Fava ledger facts, and verifies
+temporary-asset ownership from the trusted `tmp/{userId}/...` key invariant.
+Authenticated single-ledger calls enter that same PDP contract through
+`authorizeLedger`; the FGA file remains an executable specification in CI.
 
 ## Centralized authorization in a microservice system
 
@@ -37,11 +36,10 @@ GraphQL / REST / MCP alias
   → resolveIdentity()
   → protected application service/workflow boundary
       or authorizeLedger compatibility seam
-  → authorize(principal, canonicalAction, trustedResource, context)
+  → authorize(principal, canonicalAction, trustedResource(s), context)
       → credential ceiling
-      → exact-self, current api_keys.owner, current Gitea readability,
-        or current ledger-access lookup
-      → modeled user#can_* or ledger#reader/writer/administrator relationship
+      → exact-self, current api_keys.owner, ledger-rank, and temp-key facts
+      → every modeled relationship required by the action (AND composition)
       → one fail-closed allow / deny; source failure is an explicit error
       → one audit event per authorization call
   → domain work
@@ -53,17 +51,19 @@ stable key ID, which the evaluator resolves through the database before any
 side effect. The caller provides only:
 
 - the canonical action;
-- the domain resource ID;
+- the typed domain resource ID or explicit composite resource set;
 - the already-resolved authenticated principal;
 - trusted request context, when an action needs it.
 
 Transport adapters do not interpret policy or manufacture relationship tuples.
 The operation-class gate only routes these operations to the PDP. Account,
-API-key, subscription, feed, user-profile, and ledger-social methods are the
-application boundary: each protected public method calls the PDP before domain
-work. User-owned resources derive from `Identity`, so a new resolver or
-internal caller cannot select a different user or bypass authorization by
-skipping a wrapper.
+API-key, subscription, feed, user-profile, ledger-social/control-plane,
+asset-storage, LLM, Plaid suggestion, receipt workflow, and agent execution
+methods are protected application boundaries. Each calls the PDP before S3,
+ledger, LLM, tool, stream, or other domain work. User-owned resources derive
+from `Identity`, so a new GraphQL, REST, internal-agent-tool, or MCP-mediated
+caller reaches the same decision without manufacturing another user or
+duplicating policy in its adapter.
 
 PDP-routed GraphQL fields that require a caller use the transport-only
 `@Authenticated()` decorator. It checks only that `resolveIdentity()` produced
@@ -83,7 +83,9 @@ Concurrent GraphQL root fields and MCP calls therefore cannot overwrite one
 another. A direct service call with no request context audits its canonical
 action instead. Every authorization call re-evaluates the current relationship,
 even when a GraphQL document invokes the same field more than once. PostgreSQL
-remains the one copy of API-key ownership; exact-self remains an identity fact.
+remains the one copy of API-key ownership, the Gitea-backed ledger source remains
+the ledger authority, the object key remains the temporary-asset ownership
+binding, and exact-self remains an identity fact.
 
 ## One permission vocabulary
 
@@ -214,6 +216,22 @@ beside the operation table: `getUserProfile`, `getUserFollowers`,
 `getUserFollowing`, and `getUserStarredRepos`. They remain anonymous by product
 contract and have no canonical protected action.
 
+Additional composite assisted-ingestion and AI actions:
+
+| Canonical action                        | Transport aliases                                | Preserved credential ceiling                          | Relationship requirement                         |
+| --------------------------------------- | ------------------------------------------------ | ----------------------------------------------------- | ------------------------------------------------ |
+| `assisted.file.parse`                   | `GQL Mutation.parseFile`                         | session, or OAuth/API key with `ledger.read`          | exact-self + temporary-asset owner               |
+| `assisted.receipt.parse`                | GraphQL and agent receipt parser                 | session, or OAuth/API key with `ledger.read`          | temp owner + ledger contents/assets read         |
+| `assisted.categories.suggest`           | `GQL Query.suggestTransactionCategories`         | session, or OAuth/API key with `ledger.read`          | ledger contents read + AI write                  |
+| `assisted.bank_categories.suggest`      | GraphQL, REST, and MCP bank-category resources   | session, or OAuth/API key with `ledger.read`          | ledger contents/bank connections read + AI write |
+| `assisted.bank_account_mapping.suggest` | GraphQL, REST, MCP, and automatic bank mapping   | session, or OAuth/API key with `ledger.read`          | ledger contents/bank connections read + AI write |
+| `assisted.receipt.insert`               | GraphQL and agent receipt insertion              | session, or OAuth/API key with `ledger.write`         | temp owner + ledger contents/assets write        |
+| `temp_asset.upload.create`              | `GQL Mutation.generateTempAssetUploadUrl`        | session, or OAuth/API key with `ledger.read`          | exact-self uploader                              |
+| `temp_asset.download.read`              | `GQL Query.generateTempAssetDownloadUrl`         | session, or OAuth/API key with `ledger.read`          | temporary-asset owner                            |
+| `ai.model.invoke`                       | OpenAI- and Anthropic-compatible REST routes     | session, or OAuth/API key with `ledger.write`         | exact-self AI caller                             |
+| `ai.ledger.ask`                         | all agent routes and effective read-only mode    | session, or OAuth/API key with `ledger.read`          | ledger contents read                             |
+| `ai.ledger.agent`                       | write upgrade for self-hosted and sandbox agents | session, OAuth/API key with `ledger.write`, or system | ledger contents write + AI write                 |
+
 Cross-user resources, missing or foreign API-key IDs, unknown actions or
 resource types, insufficient credentials, and evaluator failures all deny.
 Missing, blank, and foreign key IDs all surface as not found, so revoke does
@@ -229,6 +247,14 @@ There is intentionally no inert operation-policy file in this directory. The
 actions live directly in the TypeScript authorization module; transport
 classification admits the request to that module but cannot authorize it.
 Keeping a second documentation-only catalog would create drift.
+
+Operational `read`/`write` classes continue to select rate budgets and carry
+transport operation IDs; they are not permissions. A PDP-routed adapter admits
+the authenticated request to its protected boundary, where the catalog applies
+the exact credential ceiling and relationship composition. Relationship denial
+is a policy-shaped forbidden/not-found result. Failure to read an authoritative
+ledger or ownership source is logged and audited as `error` and surfaces as
+service unavailable.
 
 The `read`/`write` class on protected billing aliases is operational metadata
 for rate limits and legacy audit defaults, not credential reachability. The PDP
@@ -338,11 +364,13 @@ can_write_collaborators  = administrator
 can_read_assets          = reader
 ```
 
-In the broader target model, fine-grained token grants are an independent
-ceiling evaluated by the central PDP. For example, a receipt write requires both
-`ledger#can_write_contents` and `ledger#can_write_assets`; the PDP must also
-require the signed grant to contain both matching permission families. There is
-no endpoint-specific `can_write_receipt` relation.
+The runtime now evaluates these relationships for assisted ingestion and AI.
+For example, a receipt write requires both `ledger#can_write_contents` and
+`ledger#can_write_assets`, while receipt parsing requires only contents/assets
+reads. Starting an agent conversation requires ledger read access; the separate
+write upgrade retains `ledger#can_write_ai`. There is no endpoint-specific
+`can_write_receipt` relation. The current credential ceiling remains the
+existing three scopes; this cutover does not mint a new scope vocabulary.
 
 ## What OpenFGA does not own
 
@@ -400,7 +428,7 @@ OpenFGA relations or token claims.
 
 ## Relationship sources
 
-Only durable or source-derived domain facts enter the model:
+Only durable or source-derived domain facts enter the relationship evaluator:
 
 - `user#owner` from the user database, only when subject ID equals object ID;
 - exact-self social read/write eligibility from that same stable User owner;
@@ -414,20 +442,23 @@ Only durable or source-derived domain facts enter the model:
   lookup, without persisting the result.
 - runtime administration rank and explicit self-collaborator membership from a
   fresh Gitea lookup for every control-plane decision.
+- temporary-asset owner from the current `tmp/{userId}/...` key binding. This
+  is a trusted ephemeral invariant, not a durable OpenFGA tuple.
 
-Today ledger relationships are resolved from the external Gitea-backed ledger
-service. The `authorizeLedger` adapter supplies their decision to the same
-TypeScript PDP contract without creating tuples. Under engine adoption they may
-later be synchronized to OpenFGA when ADR 0010's reverse-query trigger is
-reached. No microservice may write credential-derived or request-derived tuples.
+Ledger relationships are resolved afresh from current Gitea/Fava facts for each
+authorization call. The `authorizeLedger` adapter supplies their decision to
+the same TypeScript PDP contract without creating tuples. Under engine adoption
+they may later be synchronized to OpenFGA when ADR 0010's reverse-query trigger
+is reached. No microservice may write credential-derived, temp-key-derived, or
+request-derived tuples.
 
 ## Invariants
 
-1. **The authorization module is the only final authority for migrated User
-   actions, ledger control-plane actions, and authenticated single-ledger rank
-   decisions.** Protected application services, workflows, and the
-   `authorizeLedger` compatibility seam call it before domain work; every
-   transport alias uses those boundaries.
+1. **The authorization module is the only final authority for migrated
+   actions and authenticated single-ledger rank decisions.** Protected
+   Account/API-key/subscription/social/ledger-control-plane/asset/LLM services,
+   receipt/agent workflows, and the `authorizeLedger` compatibility seam call
+   it before domain work; every alias uses those application boundaries.
 2. **OpenFGA contains only durable domain relationships.** No credential,
    session, token, grant, or `request_*` type/relation belongs in this model.
 3. **Subjects use stable internal user IDs** (`users.id`), never usernames,
@@ -466,7 +497,7 @@ fga model test --tests model.test.fga.yaml
 The FGA suite covers user ownership boundaries, capability-level permission
 families, ledger rank inheritance, private fail-closed behavior, public reads,
 and monotonic rank semantics. The TypeScript suite covers every implemented
-action, credential ceiling, ledger pin, service-principal provenance,
-wrong-user/foreign-key resources, independent per-call evaluation and audit,
-source failure, and GraphQL/REST/MCP aliases. Credentials and request context
-never become FGA tuples.
+action, composite permission, credential ceiling, service-principal provenance,
+wrong-user/foreign-key/temp-key resources, ledger pins, revocation, independent
+per-call evaluation and audit, source failure, and GraphQL/REST/MCP-mediated
+aliases. Credentials and request context never become FGA tuples.

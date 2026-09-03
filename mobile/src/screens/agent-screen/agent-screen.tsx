@@ -178,6 +178,7 @@ function AgentScreenImpl() {
     error,
     regenerate,
     startNewChat,
+    isReadOnly,
   } = useAgentChat();
 
   // A `?q=` deep link prefills and never submits. Any app can open this scheme
@@ -302,6 +303,15 @@ function AgentScreenImpl() {
 
           {showTyping && (
             <Text style={styles.typing}>{t("agentThinking")}</Text>
+          )}
+
+          {isReadOnly && (
+            <Notice
+              styles={styles}
+              testID="agent-read-only-notice"
+              title={t("agentReadOnlyTitle")}
+              body={t("agentReadOnlyBody")}
+            />
           )}
 
           {awaitingApproval && (

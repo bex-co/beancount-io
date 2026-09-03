@@ -256,7 +256,7 @@ const bankResources: readonly McpResourceDescriptor[] = [
     name: "bankSuggestedCategories",
     title: "Suggested Categories For Unsynced Transactions",
     description:
-      "A ledger account suggested for each staged transaction, drawn from the ledger's own history.",
+      "A ledger account suggested for each staged transaction, drawn from the ledger's own history. Requires ledger-content read, bank-connection read, and AI-use authority.",
     mimeType: "application/json",
     uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/bank-transactions/suggested-categories`,
     read: async (ctx, vars) =>
@@ -273,7 +273,7 @@ const bankResources: readonly McpResourceDescriptor[] = [
     name: "bankSuggestedMapping",
     title: "Suggested Ledger Account Per Bank Account",
     description:
-      "Which ledger account each of a bank's accounts most likely corresponds to.",
+      "Which ledger account each of a bank's accounts most likely corresponds to. Requires ledger-content read, bank-connection read, and AI-use authority.",
     mimeType: "application/json",
     uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/banks/{itemId}/suggested-mapping`,
     read: async (ctx, vars) =>

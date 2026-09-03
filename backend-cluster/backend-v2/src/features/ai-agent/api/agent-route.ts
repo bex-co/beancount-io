@@ -5,7 +5,6 @@ import { AppConfig } from "@/config/config";
 import { logger } from "@/shared/logger";
 import { BadUserInputError } from "@/shared/errors";
 import { resolveAuthUser } from "../utils/route-guards";
-import { generateOAuthToken } from "@/features/oauth/utils/oauth-token-gen";
 import {
   SelfHostedAgentHandler,
   type IAgentHandler,
@@ -24,6 +23,7 @@ export function setAgentRoute(
     layers.services.aiCfoUsage,
     layers.services.llm,
     layers.workflows.ledgerReceipt,
+    layers.services.authorization,
   );
 
   router.post("/api-gateway/agent", async (ctx) => {
@@ -48,20 +48,11 @@ export function setAgentRoute(
       throw new BadUserInputError("ledgerId is required");
     }
 
-    const { user, identity } = await resolveAuthUser(
-      ctx,
-      {
-        models: layers.database.models,
-        db: layers.database.db,
-      },
-      "write",
-    );
-    await layers.services.aiCfoUsage.assertQuotaAvailable(user.id);
+    const { user, identity } = await resolveAuthUser(ctx, {
+      models: layers.database.models,
+      db: layers.database.db,
+    });
 
-    const mcpToken = await generateOAuthToken(user.id, ledgerId, config);
-    const mcpUrl = `${config.server.url}/api-gateway/mcp`;
-
-    ctx.respond = false;
     await handler.handle(
       {
         messages,
@@ -79,9 +70,10 @@ export function setAgentRoute(
         },
         identity,
         apiKeyService: layers.services.apiKey,
-        mcpToken,
-        mcpUrl,
         sessionId,
+        onStreamReady: () => {
+          ctx.respond = false;
+        },
       },
       ctx.res,
     );

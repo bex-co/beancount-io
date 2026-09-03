@@ -465,6 +465,9 @@ export const ca: typeof en = {
   agentWelcome:
     "Pregunta'm el que vulguis sobre el teu llibre: saldos, despeses o d'on surt una xifra.",
   agentPlaceholder: "Pregunta sobre el teu llibre",
+  agentReadOnlyTitle: "Assistent de només lectura",
+  agentReadOnlyBody:
+    "Pots fer preguntes i analitzar fitxers. Els canvis requereixen permís d'escriptura, però puc preparar-los per a tu.",
   agentThinking: "Pensant…",
   agentWorking: "Consultant el teu llibre…",
   agentSend: "Envia",

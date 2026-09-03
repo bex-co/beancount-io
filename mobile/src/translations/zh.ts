@@ -439,6 +439,9 @@ export const zh: typeof en = {
   agentWelcome:
     "关于你的账本，什么都可以问我——余额、支出，或者某个数字是怎么来的。",
   agentPlaceholder: "询问你的账本",
+  agentReadOnlyTitle: "只读助手",
+  agentReadOnlyBody:
+    "你可以提问和分析文件。更改账本需要写入权限，但我可以为你起草更改内容。",
   agentThinking: "思考中…",
   agentWorking: "正在查阅你的账本…",
   agentSend: "发送",

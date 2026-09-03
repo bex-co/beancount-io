@@ -16,18 +16,12 @@ jest.mock("@ai-sdk/harness-acp", () => ({
   createACP: () => ({}),
 }));
 jest.mock("../../utils/route-guards");
-jest.mock("@/features/ledger/utils/authorize-ledger");
 
 import { resolveAuthUser } from "../../utils/route-guards";
-import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 
 const mockResolveAuthUser = resolveAuthUser as jest.MockedFunction<
   typeof resolveAuthUser
 >;
-const mockAuthorizeLedger = authorizeLedger as jest.MockedFunction<
-  typeof authorizeLedger
->;
-
 describe("setAskAgentRoute", () => {
   let router: Router;
   let layers: AppLayers;
@@ -113,10 +107,6 @@ describe("setAskAgentRoute", () => {
         scopes: new Set(["ledger.read", "ledger.write"]),
       },
     } as never);
-    mockAuthorizeLedger.mockResolvedValue({
-      ledgerRepoId: 1,
-      ownerUserId: "usr_1",
-    });
   });
 
   afterEach(() => jest.clearAllMocks());
@@ -163,7 +153,7 @@ describe("setAskAgentRoute", () => {
     expect(ctx.status).toBe(400);
   });
 
-  it("runs quota + access guards then delegates to the workflow with a mapped command", async () => {
+  it("delegates identity and guard callbacks to the protected workflow", async () => {
     register();
     const ctx = makeCtx({
       messages: [
@@ -179,14 +169,6 @@ describe("setAskAgentRoute", () => {
     expect(mockResolveAuthUser).toHaveBeenCalledWith(
       expect.any(Object),
       expect.any(Object),
-      "read",
-    );
-    expect(assertQuota).toHaveBeenCalledWith("usr_1");
-    expect(mockAuthorizeLedger).toHaveBeenCalledWith(
-      expect.objectContaining({ userId: "usr_1" }),
-      "alice/default",
-      "read",
-      expect.any(Object),
     );
     expect(workflow.streamAnswer).toHaveBeenCalledWith(
       expect.objectContaining({
@@ -198,10 +180,15 @@ describe("setAskAgentRoute", () => {
         ledgerPassword: "pw_a",
         conversationId: "conv_9",
         mode: "ask",
+        identity: expect.objectContaining({ userId: "usr_1" }),
+        assertQuotaAvailable: expect.any(Function),
         recordTokenUsage: expect.any(Function),
       }),
     );
     const command = workflow.streamAnswer.mock.calls[0][0];
+    expect(assertQuota).not.toHaveBeenCalled();
+    await command.assertQuotaAvailable();
+    expect(assertQuota).toHaveBeenCalledWith("usr_1");
     await command.recordTokenUsage(321);
     expect(addTokenUsage).toHaveBeenCalledWith("usr_1", 321);
     expect(ctx.respond).toBe(false);
@@ -254,7 +241,6 @@ describe("setAskAgentRoute", () => {
     expect(mockResolveAuthUser).toHaveBeenLastCalledWith(
       expect.any(Object),
       expect.any(Object),
-      "write",
     );
     expect(workflow.streamAnswer).toHaveBeenCalledWith(
       expect.objectContaining({ mode: "agent" }),
@@ -271,7 +257,6 @@ describe("setAskAgentRoute", () => {
     expect(mockResolveAuthUser).toHaveBeenLastCalledWith(
       expect.any(Object),
       expect.any(Object),
-      "read",
     );
     expect(workflow.streamAnswer).toHaveBeenCalledWith(
       expect.objectContaining({ mode: "ask" }),

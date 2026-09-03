@@ -77,6 +77,9 @@ const mockDb: any = {
   ),
 };
 const mockConfig = { blockeden: { accessKey: "key" } } as any;
+const mockAuthorization = {
+  authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+} as any;
 
 function makeItem(overrides: Record<string, unknown> = {}) {
   const now = new Date();
@@ -114,6 +117,7 @@ describe("PlaidItemService", () => {
       mockModels,
       mockDb,
       mockConfig,
+      mockAuthorization,
     );
   });
 
@@ -826,6 +830,29 @@ describe("PlaidItemService", () => {
       );
 
       expect(result).toEqual([]);
+      expect(mockAuthorization.authorizeOrThrow).toHaveBeenCalledWith({
+        principal: expect.objectContaining({ userId: "user_other" }),
+        action: "assisted.bank_categories.suggest",
+        resource: "ledger:owner/ledger",
+      });
+    });
+
+    it("denies before reading staged transactions", async () => {
+      mockAuthorization.authorizeOrThrow.mockRejectedValueOnce(
+        new Error("source unavailable"),
+      );
+
+      await expect(
+        service.suggestCategories(
+          systemIdentity("user_owner"),
+          "owner/ledger",
+          "pacc_1",
+        ),
+      ).rejects.toThrow("source unavailable");
+      expect(mockPlaidAccountModel.getById).not.toHaveBeenCalled();
+      expect(
+        mockPlaidTransactionModel.getUnsyncedByAccountId,
+      ).not.toHaveBeenCalled();
     });
 
     it("rejects when the item belongs to a different ledger than the one resolved", async () => {
@@ -873,6 +900,22 @@ describe("PlaidItemService", () => {
       );
 
       expect(result).toEqual([]);
+      expect(mockSuggestAccountMappingLLM).not.toHaveBeenCalled();
+    });
+
+    it("denies before reading the Plaid item", async () => {
+      mockAuthorization.authorizeOrThrow.mockRejectedValueOnce(
+        new Error("source unavailable"),
+      );
+
+      await expect(
+        service.suggestAccountMapping(
+          systemIdentity("user_owner"),
+          "owner/ledger",
+          "pitm_1",
+        ),
+      ).rejects.toThrow("source unavailable");
+      expect(mockPlaidItemModel.getById).not.toHaveBeenCalled();
       expect(mockSuggestAccountMappingLLM).not.toHaveBeenCalled();
     });
 

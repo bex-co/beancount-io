@@ -6,6 +6,8 @@ import { BadUserInputError } from "@/shared/errors";
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import type { ILLMService } from "@/features/llm/service/llm-service";
 import type { ILedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
+import type { IAuthorizationService } from "@/server/api/authorization";
+import { resolveAgentAccessMode } from "../../agent-access";
 import { BeancountAgent } from "./beancount-agent";
 import type { IAgentHandler, AgentHandlerContext } from "./agent-handler";
 
@@ -50,11 +52,20 @@ export class SelfHostedAgentHandler implements IAgentHandler {
     private readonly aiCfoUsage: IAiCfoUsageService,
     private readonly llmService: ILLMService,
     private readonly ledgerReceiptWorkflow: ILedgerReceiptWorkflow,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   async handle(ctx: AgentHandlerContext, res: ServerResponse): Promise<void> {
     const { messages, ledgerId, userId, services, identity, apiKeyService } =
       ctx;
+
+    const accessMode = await resolveAgentAccessMode({
+      authorization: this.authorization,
+      identity,
+      ledgerId,
+      requestedMode: "agent",
+    });
+    await this.aiCfoUsage.assertQuotaAvailable(userId);
 
     let modelMessages;
     try {
@@ -66,14 +77,18 @@ export class SelfHostedAgentHandler implements IAgentHandler {
       throw new BadUserInputError("invalid message format");
     }
 
-    const agent = new BeancountAgent(this.model, {
-      services,
-      identity,
-      ledgerId,
-      llmService: this.llmService,
-      apiKeyService,
-      ledgerReceiptWorkflow: this.ledgerReceiptWorkflow,
-    });
+    const agent = new BeancountAgent(
+      this.model,
+      {
+        services,
+        identity,
+        ledgerId,
+        llmService: this.llmService,
+        apiKeyService,
+        ledgerReceiptWorkflow: this.ledgerReceiptWorkflow,
+      },
+      accessMode,
+    );
 
     const result = await agent.stream(modelMessages, {
       onFinish: async ({ totalUsage }) => {
@@ -97,6 +112,7 @@ export class SelfHostedAgentHandler implements IAgentHandler {
       },
     });
 
+    ctx.onStreamReady?.();
     result.pipeUIMessageStreamToResponse(res);
   }
 }

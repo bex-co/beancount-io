@@ -32,6 +32,8 @@ describe("LLMCategorizationQueryResolver", () => {
           reasoning: "Known coffee shop",
         },
       ]),
+      invokeOpenAI: jest.fn(),
+      invokeAnthropic: jest.fn(),
     };
 
     mockContext = {

@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { AssetStorageResolver } from "../api/asset-storage-resolver";
 import type { IAssetStorageService } from "../service/asset-storage-service";
 import type { IContext } from "@/server/graphql/context";
+import type { Identity } from "@/server/api/identity";
 
 describe("AssetStorageResolver", () => {
   let resolver: AssetStorageResolver;
@@ -12,6 +13,11 @@ describe("AssetStorageResolver", () => {
     >
   >;
   let mockContext: IContext;
+  const identity: Identity = {
+    userId: "user123",
+    method: "session",
+    scopes: new Set(),
+  };
 
   beforeEach(() => {
     mockS3Service = {
@@ -32,6 +38,7 @@ describe("AssetStorageResolver", () => {
 
     mockContext = {
       getCurrentUserId: jest.fn().mockReturnValue("user123"),
+      getCurrentIdentity: jest.fn().mockReturnValue(identity),
     } as unknown as IContext;
 
     resolver = new AssetStorageResolver(
@@ -51,8 +58,7 @@ describe("AssetStorageResolver", () => {
         mockContext,
       );
 
-      expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith({
-        ownerId: "user123",
+      expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith(identity, {
         filename: "invoice.pdf",
         mimeType: "application/pdf",
       });
@@ -70,8 +76,7 @@ describe("AssetStorageResolver", () => {
         mockContext,
       );
 
-      expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith({
-        ownerId: "user123",
+      expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith(identity, {
         filename: undefined,
         mimeType: "application/pdf",
       });
@@ -84,8 +89,7 @@ describe("AssetStorageResolver", () => {
         mockContext,
       );
 
-      expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith({
-        ownerId: "user123",
+      expect(mockS3Service.generateUploadUrl).toHaveBeenCalledWith(identity, {
         filename: undefined,
         mimeType: undefined,
       });
@@ -100,8 +104,8 @@ describe("AssetStorageResolver", () => {
       );
 
       expect(mockS3Service.generateTempDownloadUrl).toHaveBeenCalledWith(
+        identity,
         "tmp/user123/2026-03-30-testnanoi.pdf",
-        "user123",
       );
       // The unrestricted presign takes arbitrary bucket keys with no
       // ownership check — it must not be this resolver's path.

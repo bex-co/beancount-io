@@ -20,16 +20,17 @@ import {
   AUTHORIZATION_ACTIONS,
   LEDGER_RELATIONSHIPS,
   parseAuthorizationResource,
+  TEMP_ASSET_RELATIONSHIPS,
   userResource,
   USER_RELATIONSHIPS,
   type AuthorizationAction,
   type AuthorizationDecision,
   type AuthorizationDenyReason,
+  type AuthorizationRelationship,
   type AuthorizationResource,
   type AuthorizationResourceType,
+  type AuthorizationTarget,
   type AuthorizeInput,
-  type LedgerRelationship,
-  type UserRelationship,
 } from "./authorization-contract";
 import type { IRelationshipEvaluator } from "./source-backed-relationship-evaluator";
 
@@ -46,25 +47,20 @@ type AuditClass = "read" | "write" | "admin";
 
 interface DenialConcealment {
   readonly reasons: readonly AuthorizationDenyReason[];
+  readonly resourceTypes?: readonly AuthorizationResourceType[];
   readonly category: ErrorCategory;
   readonly message: string;
 }
 
-type ActionRequirement = {
+interface ActionRequirement {
+  readonly relationships: readonly {
+    readonly resourceType: AuthorizationResourceType;
+    readonly relationship: AuthorizationRelationship;
+  }[];
   readonly credential: CredentialRequirement;
   readonly auditClass: AuditClass;
   readonly concealDenialAs?: DenialConcealment;
-} & (
-  | { readonly resourceType: "user"; readonly relationship: UserRelationship }
-  | {
-      readonly resourceType: "api_key";
-      readonly relationship: UserRelationship;
-    }
-  | {
-      readonly resourceType: "ledger";
-      readonly relationship: LedgerRelationship;
-    }
-);
+}
 
 const EVERY_CREDENTIAL = ["session", "oauth", "apikey"] as const;
 const EVERY_AUTHENTICATED_ACTOR = [
@@ -114,42 +110,53 @@ const LEDGER_NOT_FOUND_CONCEALMENT: DenialConcealment = {
 };
 
 /** The one executable policy catalog for migrated application domains. */
+const relationship = (
+  resourceType: AuthorizationResourceType,
+  required: AuthorizationRelationship,
+) => ({ resourceType, relationship: required });
+
+const userRelationship = (required: AuthorizationRelationship) => [
+  relationship("user", required),
+];
+
+const TEMP_ASSET_NOT_FOUND: DenialConcealment = {
+  reasons: ["relationship_denied"],
+  resourceTypes: ["temp_asset"],
+  category: ErrorCategory.NOT_FOUND,
+  message: "Temporary asset not found",
+};
+
+/** Helpers for declaring exact single- and multi-resource requirements. */
 const ACTION_REQUIREMENTS: Readonly<
   Record<AuthorizationAction, ActionRequirement>
 > = {
   [AUTHORIZATION_ACTIONS.USER_PROFILE_READ]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.READ_PROFILE,
+    relationships: userRelationship(USER_RELATIONSHIPS.READ_PROFILE),
     credential: { methods: EVERY_CREDENTIAL, capability: "read" },
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.READ_PROFILE,
+    relationships: userRelationship(USER_RELATIONSHIPS.READ_PROFILE),
     credential: { methods: SESSION_ONLY },
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.USER_PROFILE_UPDATE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_PROFILE,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_PROFILE),
     credential: { methods: SESSION_ONLY },
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.USER_DELETE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_LIFECYCLE,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_LIFECYCLE),
     credential: { methods: INTERACTIVE_OR_OAUTH },
     auditClass: "admin",
   },
   [AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.READ_CREDENTIALS,
+    relationships: userRelationship(USER_RELATIONSHIPS.READ_CREDENTIALS),
     credential: { methods: EVERY_CREDENTIAL, capability: "admin" },
     auditClass: "admin",
   },
   [AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_CREDENTIALS,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_CREDENTIALS),
     credential: {
       methods: INTERACTIVE_OR_OAUTH,
       capability: "admin",
@@ -161,8 +168,9 @@ const ACTION_REQUIREMENTS: Readonly<
     auditClass: "admin",
   },
   [AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE]: {
-    resourceType: "api_key",
-    relationship: USER_RELATIONSHIPS.WRITE_CREDENTIALS,
+    relationships: [
+      relationship("api_key", USER_RELATIONSHIPS.WRITE_CREDENTIALS),
+    ],
     credential: { methods: EVERY_CREDENTIAL, capability: "admin" },
     auditClass: "admin",
     concealDenialAs: {
@@ -172,159 +180,146 @@ const ACTION_REQUIREMENTS: Readonly<
     },
   },
   [AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.READ_BILLING,
+    relationships: userRelationship(USER_RELATIONSHIPS.READ_BILLING),
     credential: BILLING_CREDENTIAL,
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_BILLING),
     credential: BILLING_CREDENTIAL,
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.USER_BILLING_PORTAL_CREATE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_BILLING),
     credential: BILLING_CREDENTIAL,
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_CANCEL]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_BILLING),
     credential: BILLING_CREDENTIAL,
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_RESUME]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_BILLING),
     credential: BILLING_CREDENTIAL,
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.USER_BILLING_SUBSCRIPTION_UPGRADE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_BILLING,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_BILLING),
     credential: BILLING_CREDENTIAL,
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.READ_SOCIAL,
+    relationships: userRelationship(USER_RELATIONSHIPS.READ_SOCIAL),
     credential: { methods: SESSION_ONLY },
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_SOCIAL,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_SOCIAL),
     credential: { methods: SESSION_ONLY },
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_DELETE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_SOCIAL,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_SOCIAL),
     credential: { methods: SESSION_ONLY },
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_STATUS_READ]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS)],
     credential: LEDGER_SOCIAL_READ_CREDENTIAL,
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS)],
     credential: LEDGER_SOCIAL_WRITE_CREDENTIAL,
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS)],
     credential: LEDGER_SOCIAL_WRITE_CREDENTIAL,
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.LEDGER_CREATE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_LEDGERS,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_LEDGERS),
     credential: USER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
   },
   [AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION),
+    ],
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION,
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_ADMINISTRATION),
+    ],
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LIST]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.READ_COLLABORATORS,
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.READ_COLLABORATORS),
+    ],
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.READ_COLLABORATORS,
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.READ_COLLABORATORS),
+    ],
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS,
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS),
+    ],
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS,
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_COLLABORATORS),
+    ],
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.LEAVE,
+    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.LEAVE)],
     credential: LEDGER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
     concealDenialAs: LEDGER_NOT_FOUND_CONCEALMENT,
   },
   [AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.READ_PUBLIC_KEYS,
+    relationships: userRelationship(USER_RELATIONSHIPS.READ_PUBLIC_KEYS),
     credential: USER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
   },
   [AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.READ_PUBLIC_KEYS,
+    relationships: userRelationship(USER_RELATIONSHIPS.READ_PUBLIC_KEYS),
     credential: USER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
   },
   [AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_CREATE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_PUBLIC_KEYS,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_PUBLIC_KEYS),
     credential: USER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
   },
   [AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE]: {
-    resourceType: "user",
-    relationship: USER_RELATIONSHIPS.WRITE_PUBLIC_KEYS,
+    relationships: userRelationship(USER_RELATIONSHIPS.WRITE_PUBLIC_KEYS),
     credential: USER_CONTROL_PLANE_CREDENTIAL,
     auditClass: "admin",
   },
   [AUTHORIZATION_ACTIONS.LEDGER_READ]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.READ,
+    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ)],
     credential: {
       methods: EVERY_AUTHENTICATED_ACTOR,
       capability: "read",
@@ -332,8 +327,7 @@ const ACTION_REQUIREMENTS: Readonly<
     auditClass: "read",
   },
   [AUTHORIZATION_ACTIONS.LEDGER_WRITE]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.WRITE,
+    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.WRITE)],
     credential: {
       methods: EVERY_AUTHENTICATED_ACTOR,
       capability: "write",
@@ -341,13 +335,96 @@ const ACTION_REQUIREMENTS: Readonly<
     auditClass: "write",
   },
   [AUTHORIZATION_ACTIONS.LEDGER_ADMIN]: {
-    resourceType: "ledger",
-    relationship: LEDGER_RELATIONSHIPS.ADMIN,
+    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.ADMIN)],
     credential: {
       methods: EVERY_AUTHENTICATED_ACTOR,
       capability: "admin",
     },
     auditClass: "admin",
+  },
+  [AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE]: {
+    relationships: [
+      relationship("user", USER_RELATIONSHIPS.OWNER),
+      relationship("temp_asset", TEMP_ASSET_RELATIONSHIPS.OWNER),
+    ],
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
+    auditClass: "read",
+    concealDenialAs: TEMP_ASSET_NOT_FOUND,
+  },
+  [AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE]: {
+    relationships: [
+      relationship("temp_asset", TEMP_ASSET_RELATIONSHIPS.OWNER),
+      relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS),
+      relationship("ledger", LEDGER_RELATIONSHIPS.READ_ASSETS),
+    ],
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
+    auditClass: "read",
+    concealDenialAs: TEMP_ASSET_NOT_FOUND,
+  },
+  [AUTHORIZATION_ACTIONS.ASSISTED_CATEGORIES_SUGGEST]: {
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS),
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_AI),
+    ],
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
+    auditClass: "read",
+  },
+  [AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST]: {
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS),
+      relationship("ledger", LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS),
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_AI),
+    ],
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
+    auditClass: "read",
+  },
+  [AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST]: {
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS),
+      relationship("ledger", LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS),
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_AI),
+    ],
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
+    auditClass: "read",
+  },
+  [AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT]: {
+    relationships: [
+      relationship("temp_asset", TEMP_ASSET_RELATIONSHIPS.OWNER),
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS),
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_ASSETS),
+    ],
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "write" },
+    auditClass: "write",
+    concealDenialAs: TEMP_ASSET_NOT_FOUND,
+  },
+  [AUTHORIZATION_ACTIONS.TEMP_ASSET_UPLOAD_CREATE]: {
+    relationships: userRelationship(USER_RELATIONSHIPS.OWNER),
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.TEMP_ASSET_DOWNLOAD_READ]: {
+    relationships: [relationship("temp_asset", TEMP_ASSET_RELATIONSHIPS.OWNER)],
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
+    auditClass: "read",
+    concealDenialAs: TEMP_ASSET_NOT_FOUND,
+  },
+  [AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE]: {
+    relationships: userRelationship(USER_RELATIONSHIPS.OWNER),
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "write" },
+    auditClass: "write",
+  },
+  [AUTHORIZATION_ACTIONS.AI_LEDGER_ASK]: {
+    relationships: [relationship("ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS)],
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "read" },
+    auditClass: "read",
+  },
+  [AUTHORIZATION_ACTIONS.AI_LEDGER_AGENT]: {
+    relationships: [
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS),
+      relationship("ledger", LEDGER_RELATIONSHIPS.WRITE_AI),
+    ],
+    credential: { methods: EVERY_AUTHENTICATED_ACTOR, capability: "write" },
+    auditClass: "write",
   },
 };
 
@@ -404,22 +481,35 @@ export class AuthorizationDeniedError extends DomainError {
       ? ACTION_REQUIREMENTS[decision.action]
       : undefined;
     const concealment = requirement?.concealDenialAs;
-    const concealed = concealment?.reasons.includes(decision.reason)
-      ? concealment
-      : undefined;
+    const concealed =
+      concealment?.reasons.includes(decision.reason) &&
+      (!concealment.resourceTypes ||
+        (decision.failedResourceType !== undefined &&
+          concealment.resourceTypes.includes(decision.failedResourceType)))
+        ? concealment
+        : undefined;
+    const parsedResource =
+      typeof decision.resource === "string"
+        ? parseAuthorizationResource(decision.resource)
+        : undefined;
     super(
       concealed?.category ?? ErrorCategory.FORBIDDEN,
       concealed?.message ?? decision.message,
       {
         action: decision.action,
-        resource: decision.resource,
+        ...(parsedResource?.type !== "temp_asset" && parsedResource
+          ? { resource: decision.resource }
+          : {}),
         reason: decision.reason,
+        ...(decision.failedResourceType && {
+          resourceType: decision.failedResourceType,
+        }),
       },
     );
   }
 }
 
-class AuthorizationUnavailableError extends DomainError {
+export class AuthorizationUnavailableError extends DomainError {
   constructor(action: string) {
     super(
       ErrorCategory.SERVICE_UNAVAILABLE,
@@ -439,32 +529,26 @@ export interface IAuthorizationService {
 export interface AuthorizationAuditRecord {
   readonly action: string;
   readonly outcome: Extract<AuditOutcome, "allowed" | "denied" | "error">;
+  /** Validated target ledger; falls back to a credential pin when absent. */
+  readonly ledgerId?: string;
 }
 
 export type AuthorizationAuditHook = (
   principal: Identity,
   record: AuthorizationAuditRecord,
   auditClass: AuditClass | undefined,
-  resource?: AuthorizationResource,
 ) => void;
 
 const emitAuthorizationAudit: AuthorizationAuditHook = (
   principal,
   record,
   auditClass,
-  resource,
 ) => {
   if (!shouldAudit(record.outcome, auditClass ?? "read")) return;
-  const parsedResource = resource
-    ? parseAuthorizationResource(resource)
-    : undefined;
   emitAuditEvent({
     op: getOperationId() ?? record.action,
     ...auditSubject(principal),
-    ledgerId:
-      parsedResource?.type === "ledger"
-        ? parsedResource.id
-        : principal.ledgerScope,
+    ledgerId: record.ledgerId ?? principal.ledgerScope,
     outcome: record.outcome,
     at: new Date(),
   });
@@ -482,10 +566,14 @@ export class AuthorizationService implements IAuthorizationService {
 
   private async decide(input: AuthorizeInput): Promise<AuthorizationDecision> {
     const action = input.action as string;
-    let auditResource: AuthorizationResource | undefined;
     const deny = (
       reason: AuthorizationDenyReason,
-      options: { message?: string; auditClass?: AuditClass } = {},
+      options: {
+        message?: string;
+        auditClass?: AuditClass;
+        failedResourceType?: AuthorizationResourceType;
+        ledgerId?: string;
+      } = {},
     ): Extract<AuthorizationDecision, { allowed: false }> =>
       this.finish(
         input.principal,
@@ -495,9 +583,12 @@ export class AuthorizationService implements IAuthorizationService {
           resource: input.resource,
           reason,
           message: options.message ?? "Authorization denied",
+          ...(options.failedResourceType && {
+            failedResourceType: options.failedResourceType,
+          }),
         },
         options.auditClass,
-        auditResource,
+        options.ledgerId,
       );
     const requirement = isAuthorizationAction(action)
       ? ACTION_REQUIREMENTS[action]
@@ -506,34 +597,61 @@ export class AuthorizationService implements IAuthorizationService {
       return deny("unknown_action");
     }
 
-    const resource = parseAuthorizationResource(input.resource);
-    if (resource?.type === "ledger" && requirement.resourceType === "ledger") {
-      auditResource = input.resource;
+    const resources = normalizeAuthorizationTarget(input.resource);
+    const parsedResources = resources.map((raw) => ({
+      raw,
+      parsed: parseAuthorizationResource(raw),
+    }));
+    const requiredTypes = new Set(
+      requirement.relationships.map(({ resourceType }) => resourceType),
+    );
+    const resourcesByType = new Map<
+      AuthorizationResourceType,
+      { raw: AuthorizationResource; id: string }
+    >();
+    for (const entry of parsedResources) {
+      if (
+        !entry.parsed ||
+        !requiredTypes.has(entry.parsed.type) ||
+        resourcesByType.has(entry.parsed.type)
+      ) {
+        return deny("unknown_resource", { auditClass: requirement.auditClass });
+      }
+      resourcesByType.set(entry.parsed.type, {
+        raw: entry.raw,
+        id: entry.parsed.id,
+      });
     }
-    if (!resource || resource.type !== requirement.resourceType) {
+    if (resourcesByType.size !== requiredTypes.size) {
       return deny("unknown_resource", { auditClass: requirement.auditClass });
     }
+    const ledger = resourcesByType.get("ledger");
+    const auditLedgerId = ledger?.id;
 
     const credentialMessage = credentialDenial(
       input.principal,
       requirement.credential,
-      resource,
+      ledger ? { type: "ledger", id: ledger.id } : undefined,
     );
     if (credentialMessage) {
       return deny("credential_not_permitted", {
         message: credentialMessage,
         auditClass: requirement.auditClass,
+        ledgerId: auditLedgerId,
       });
     }
 
     if (
-      resource.type === "ledger" &&
+      ledger &&
       input.principal.ledgerScope &&
-      input.principal.ledgerScope !== resource.id
+      input.principal.ledgerScope !== ledger.id
     ) {
       return deny("credential_not_permitted", {
-        message: "This credential is not authorized for this ledger",
+        message:
+          "Forbidden - this credential is not authorized for this ledger",
         auditClass: requirement.auditClass,
+        failedResourceType: "ledger",
+        ledgerId: auditLedgerId,
       });
     }
 
@@ -541,43 +659,52 @@ export class AuthorizationService implements IAuthorizationService {
     if (!userId) {
       return deny("credential_not_permitted", {
         auditClass: requirement.auditClass,
+        ledgerId: auditLedgerId,
       });
     }
 
-    let relationshipAllowed: boolean;
-    try {
-      relationshipAllowed = await this.relationships.check({
-        user: userResource(userId),
-        relation: requirement.relationship,
-        object: input.resource,
-      });
-    } catch (error) {
-      authorizationLogger.error("Relationship evaluation unavailable", {
-        op: getOperationId() ?? action,
-        action,
-        userId,
-        error: error instanceof Error ? error.message : String(error),
-      });
-      this.recordAudit(
-        input.principal,
-        { action, outcome: "error" },
-        requirement.auditClass,
-        auditResource,
-      );
-      throw new AuthorizationUnavailableError(action);
-    }
+    for (const relationshipRequirement of requirement.relationships) {
+      const object = resourcesByType.get(relationshipRequirement.resourceType);
+      let relationshipAllowed: boolean;
+      try {
+        relationshipAllowed = await this.relationships.check({
+          user: userResource(userId),
+          relation: relationshipRequirement.relationship,
+          object: object!.raw,
+        });
+      } catch (error) {
+        authorizationLogger.error("Relationship evaluation unavailable", {
+          op: getOperationId() ?? action,
+          action,
+          userId,
+          error: error instanceof Error ? error.message : String(error),
+        });
+        this.recordAudit(
+          input.principal,
+          {
+            action,
+            outcome: "error",
+            ...(auditLedgerId && { ledgerId: auditLedgerId }),
+          },
+          requirement.auditClass,
+        );
+        throw new AuthorizationUnavailableError(action);
+      }
 
-    if (!relationshipAllowed) {
-      return deny("relationship_denied", {
-        auditClass: requirement.auditClass,
-      });
+      if (!relationshipAllowed) {
+        return deny("relationship_denied", {
+          auditClass: requirement.auditClass,
+          failedResourceType: relationshipRequirement.resourceType,
+          ledgerId: auditLedgerId,
+        });
+      }
     }
 
     return this.finish(
       input.principal,
       { allowed: true, action: input.action, resource: input.resource },
       requirement.auditClass,
-      auditResource,
+      auditLedgerId,
     );
   }
 
@@ -585,16 +712,16 @@ export class AuthorizationService implements IAuthorizationService {
     principal: Identity,
     decision: TDecision,
     auditClass?: AuditClass,
-    resource?: AuthorizationResource,
+    ledgerId?: string,
   ): TDecision {
     this.recordAudit(
       principal,
       {
         action: decision.action,
         outcome: decision.allowed ? "allowed" : "denied",
+        ...(ledgerId && { ledgerId }),
       },
       auditClass,
-      resource,
     );
     return decision;
   }
@@ -603,14 +730,9 @@ export class AuthorizationService implements IAuthorizationService {
     principal: Identity,
     record: AuthorizationAuditRecord,
     auditClass?: AuditClass,
-    resource?: AuthorizationResource,
   ): void {
     try {
-      if (resource) {
-        this.audit(principal, record, auditClass, resource);
-      } else {
-        this.audit(principal, record, auditClass);
-      }
+      this.audit(principal, record, auditClass);
     } catch {
       // Auditing is observability, never an availability dependency.
     }
@@ -623,4 +745,10 @@ export class AuthorizationService implements IAuthorizationService {
     if (!decision.allowed) throw new AuthorizationDeniedError(decision);
     return decision;
   }
+}
+
+function normalizeAuthorizationTarget(
+  target: AuthorizationTarget,
+): readonly AuthorizationResource[] {
+  return typeof target === "string" ? [target] : target;
 }

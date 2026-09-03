@@ -108,7 +108,7 @@ export class PlaidQueryResolver {
   @Authenticated()
   @Query(() => [CategorySuggestion], {
     description:
-      "Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted",
+      "Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted. Requires ledger-content read, bank-connection read, and AI-use authority.",
   })
   async suggestPlaidTransactionCategories(
     @Arg("ledgerId", () => String) ledgerId: string,
@@ -117,7 +117,6 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<CategorySuggestion[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.suggestCategories(
       identity,
       ledgerId,
@@ -128,7 +127,7 @@ export class PlaidQueryResolver {
   @Authenticated()
   @Query(() => [PlaidAccountMappingSuggestion], {
     description:
-      "Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI",
+      "Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI. Requires ledger-content read, bank-connection read, and AI-use authority.",
   })
   async suggestPlaidAccountMapping(
     @Arg("ledgerId", () => String) ledgerId: string,
@@ -136,7 +135,6 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidAccountMappingSuggestion[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.suggestAccountMapping(
       identity,
       ledgerId,

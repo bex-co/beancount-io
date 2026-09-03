@@ -466,6 +466,9 @@ export const pt: typeof en = {
   agentWelcome:
     "Pergunte-me qualquer coisa sobre o seu livro: saldos, gastos ou como um número foi obtido.",
   agentPlaceholder: "Pergunte sobre o seu livro",
+  agentReadOnlyTitle: "Agente somente leitura",
+  agentReadOnlyBody:
+    "Você pode fazer perguntas e analisar arquivos. As alterações exigem acesso de gravação, mas posso prepará-las para você.",
   agentThinking: "A pensar…",
   agentWorking: "A consultar o seu livro…",
   agentSend: "Enviar",

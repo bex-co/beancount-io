@@ -8,13 +8,22 @@ import type { ToolContext } from "./types";
 
 export type { ToolContext };
 
-export function createAgentTools(ctx: ToolContext) {
-  return {
+export function createAgentTools(
+  ctx: ToolContext,
+  accessMode: "read" | "write" = "write",
+) {
+  const readTools = {
     runBqlQuery: createBqlQueryTool(ctx),
     readLedgerFiles: createReadLedgerFilesTool(ctx),
     listLedgerFiles: createListLedgerFilesTool(ctx),
-    editLedgerFiles: createEditLedgerFilesTool(ctx),
     parseReceipt: createParseReceiptTool(ctx),
+  };
+
+  if (accessMode === "read") return readTools;
+
+  return {
+    ...readTools,
+    editLedgerFiles: createEditLedgerFilesTool(ctx),
     insertReceiptTransaction: createInsertReceiptTransactionTool(ctx),
   };
 }

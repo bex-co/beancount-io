@@ -12,6 +12,15 @@ const zhAiAgent: Record<string, TranslationEntry> = {
     message: "询问我关于 Beancount 的任何问题...",
     description: "Input placeholder text",
   },
+  "aiAgent.readOnlyTitle": {
+    message: "只读助手",
+    description: "Title of the agent permission notice",
+  },
+  "aiAgent.readOnlyDescription": {
+    message:
+      "你可以提问和分析文件。更改账本需要写入权限，但我可以为你起草更改内容。",
+    description: "Explanation shown when the agent cannot change the ledger",
+  },
   "aiAgent.welcome": {
     message:
       "你好！我是你的 Beancount AI 助手，帮助你进行纯文本记账。\n\n" +

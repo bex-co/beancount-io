@@ -9,6 +9,15 @@ const jaAiAgent: Record<string, TranslationEntry> = {
     message: "Beancountについて何でも聞いてください...",
     description: "Input placeholder text",
   },
+  "aiAgent.readOnlyTitle": {
+    message: "読み取り専用エージェント",
+    description: "Title of the agent permission notice",
+  },
+  "aiAgent.readOnlyDescription": {
+    message:
+      "質問やファイルの分析はできます。変更には書き込み権限が必要ですが、変更案を作成できます。",
+    description: "Explanation shown when the agent cannot change the ledger",
+  },
   "aiAgent.welcome": {
     message:
       "こんにちは！私はBeancountのAIアシスタントです。プレーンテキスト会計をサポートします。\n\n" +

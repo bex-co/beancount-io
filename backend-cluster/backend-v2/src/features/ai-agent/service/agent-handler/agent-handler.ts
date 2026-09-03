@@ -15,9 +15,9 @@ export interface AgentHandlerContext {
   services: ToolServices;
   identity: Identity;
   apiKeyService: IApiKeyService;
-  mcpToken: string;
-  mcpUrl: string;
   sessionId?: string;
+  /** Called only after authorization/quota/model setup, immediately before piping. */
+  onStreamReady?: () => void;
 }
 
 export interface IAgentHandler {

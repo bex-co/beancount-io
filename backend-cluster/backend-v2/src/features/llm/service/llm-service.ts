@@ -1,14 +1,17 @@
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
-import { assertTempAssetOwnership } from "@/features/s3/service/asset-storage-service";
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import type { AppConfig } from "@/config/config";
 import { LedgerAccountService } from "@/features/ledger/service/ledger-account-service";
-import {
-  assertLedgerAuthorization,
-  type AuthorizeLedgerDeps,
-} from "@/features/ledger/utils/authorize-ledger";
+import type { AuthorizeLedgerDeps } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  ledgerResource,
+  tempAssetResource,
+  type IAuthorizationService,
+  userResource,
+} from "@/server/api/authorization";
 import { LLMClient } from "../utils/llm-client";
 import { extractTransactionsFromFile } from "../utils/extract-transactions-from-file";
 import { extractReceiptFromFile } from "../utils/extract-receipt-from-file";
@@ -57,12 +60,10 @@ export type CategorySuggestionResult = {
 };
 
 /**
- * Every verb takes the caller's real `Identity`, never a rebuilt one: the two
- * ledger-reading verbs feed it straight to the authorization seam, so a
- * ledger-pinned or scope-narrowed credential stays narrow all the way down
- * (w3/m9). `parseFile` names no ledger, so it has nothing to authorize against
- * beyond the transport gate's op class — it takes an `Identity` anyway so that
- * no signature here invites a caller to hand over a bare userId out of habit.
+ * Every public verb takes the caller's real `Identity` and makes its canonical
+ * PDP decision before quota, S3, ledger, or model work. Receipt parsing and
+ * categorization compose current ledger relationships with AI/asset authority;
+ * file parsing composes exact-self AI use with the uploader-bound temp key.
  */
 export interface ILLMService {
   parseFile(
@@ -80,6 +81,14 @@ export interface ILLMService {
     ledgerId: string,
     transactions: TransactionToCategorizeDomain[],
   ): Promise<CategorySuggestionResult[]>;
+  invokeOpenAI(
+    identity: Identity,
+    request: Readonly<Record<string, unknown>>,
+  ): Promise<unknown>;
+  invokeAnthropic(
+    identity: Identity,
+    request: Readonly<Record<string, unknown>>,
+  ): Promise<unknown>;
 }
 
 function getFormatFromContentType(contentType: string): string {
@@ -102,6 +111,7 @@ export class LLMService implements ILLMService {
     private readonly config: Pick<AppConfig, "blockeden">,
     models: AuthorizeLedgerDeps["models"],
     db: AuthorizeLedgerDeps["db"],
+    private readonly authorization: IAuthorizationService,
   ) {
     this.llmClient = new LLMClient(config.blockeden.accessKey);
     this.ledgerAccountService = new LedgerAccountService(
@@ -117,6 +127,11 @@ export class LLMService implements ILLMService {
     fileFormat: string,
   ): Promise<ParseFileResult> {
     const { userId } = identity;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE,
+      resource: [userResource(userId), tempAssetResource(s3ObjectKey)],
+    });
     const usageCheck = await this.aiCfoUsageService.check(userId);
     if (!usageCheck.allowed) {
       throw new ResourceLimitReachedError(
@@ -125,10 +140,6 @@ export class LLMService implements ILLMService {
         usageCheck.currentCount,
       );
     }
-
-    // The key is the only handle on the upload — check it belongs to the
-    // caller before fetching metadata or minting a read URL.
-    assertTempAssetOwnership(s3ObjectKey, userId);
 
     const { contentType } =
       await this.assetStorage.getObjectMetadata(s3ObjectKey);
@@ -162,10 +173,12 @@ export class LLMService implements ILLMService {
     s3ObjectKey: string,
     ledgerId: string,
   ): Promise<ParseReceiptResult> {
-    // Fail before any LLM spend or S3 work when the credential is pinned to a
-    // different ledger than the one named.
-    assertLedgerAuthorization(identity, ledgerId, "read");
     const { userId } = identity;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
+      resource: [tempAssetResource(s3ObjectKey), ledgerResource(ledgerId)],
+    });
     const usageCheck = await this.aiCfoUsageService.check(userId);
     if (!usageCheck.allowed) {
       throw new ResourceLimitReachedError(
@@ -176,9 +189,6 @@ export class LLMService implements ILLMService {
     }
 
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
-    // The key is the only handle on the upload — check it belongs to the
-    // caller before fetching metadata or minting a read URL.
-    assertTempAssetOwnership(s3ObjectKey, userId);
     const { contentType } =
       await this.assetStorage.getObjectMetadata(s3ObjectKey);
 
@@ -239,10 +249,12 @@ export class LLMService implements ILLMService {
     ledgerId: string,
     transactions: TransactionToCategorizeDomain[],
   ): Promise<CategorySuggestionResult[]> {
-    // The journal and plugin reads below go straight to Fava with no seam of
-    // their own; assert here so a mismatched ledger never reaches them.
-    assertLedgerAuthorization(identity, ledgerId, "read");
     const { userId } = identity;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.ASSISTED_CATEGORIES_SUGGEST,
+      resource: ledgerResource(ledgerId),
+    });
     const usageCheck = await this.aiCfoUsageService.check(userId);
     if (!usageCheck.allowed) {
       throw new ResourceLimitReachedError(
@@ -332,5 +344,75 @@ export class LLMService implements ILLMService {
       source: "llm" as const,
       reasoning: s.reasoning,
     }));
+  }
+
+  async invokeOpenAI(
+    identity: Identity,
+    request: Readonly<Record<string, unknown>>,
+  ): Promise<unknown> {
+    const response = await this.invokeModelProxy(
+      identity,
+      `https://api.blockeden.xyz/openai/${this.config.blockeden.accessKey}/v1/chat/completions`,
+      request,
+    );
+    const usage = (response as { usage?: { total_tokens?: number } }).usage;
+    await this.recordProxyUsage(identity.userId, usage?.total_tokens ?? 0);
+    return response;
+  }
+
+  async invokeAnthropic(
+    identity: Identity,
+    request: Readonly<Record<string, unknown>>,
+  ): Promise<unknown> {
+    const response = await this.invokeModelProxy(
+      identity,
+      `https://api.blockeden.xyz/anthropic/${this.config.blockeden.accessKey}/v1/messages`,
+      request,
+      { "anthropic-version": "2023-06-01" },
+    );
+    const usage = (
+      response as {
+        usage?: { input_tokens?: number; output_tokens?: number };
+      }
+    ).usage;
+    await this.recordProxyUsage(
+      identity.userId,
+      (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0),
+    );
+    return response;
+  }
+
+  private async invokeModelProxy(
+    identity: Identity,
+    url: string,
+    request: Readonly<Record<string, unknown>>,
+    headers: Readonly<Record<string, string>> = {},
+  ): Promise<unknown> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
+      resource: userResource(identity.userId),
+    });
+    await this.aiCfoUsageService.assertQuotaAvailable(identity.userId);
+
+    const upstream = await fetch(url, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...headers },
+      body: JSON.stringify({ ...request, stream: false }),
+    });
+    if (!upstream.ok) {
+      const text = await upstream.text();
+      throw new InternalServerError(text, undefined, upstream.status);
+    }
+    return upstream.json();
+  }
+
+  private async recordProxyUsage(
+    userId: string,
+    totalTokens: number,
+  ): Promise<void> {
+    if (totalTokens > 0) {
+      await this.aiCfoUsageService.addTokenUsage(userId, totalTokens);
+    }
   }
 }

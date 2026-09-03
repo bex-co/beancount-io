@@ -24,7 +24,7 @@ export function setupAiAgentRoutes(
   // the composition root; routes here just throw DomainErrors.
   setAgentRoute(aiRouter, layers, config);
   setAskAgentRoute(aiRouter, layers, config);
-  setOpenAIChatCompletionsRoute(aiRouter, layers, config);
-  setAnthropicMessagesRoute(aiRouter, layers, config);
+  setOpenAIChatCompletionsRoute(aiRouter, layers);
+  setAnthropicMessagesRoute(aiRouter, layers);
   router.use(aiRouter.routes(), aiRouter.allowedMethods());
 }

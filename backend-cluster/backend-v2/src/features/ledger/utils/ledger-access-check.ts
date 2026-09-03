@@ -1,4 +1,4 @@
-import { unwrapFavaResponse } from "@/foundation/fava";
+import { FavaApiError, unwrapFavaResponse } from "@/foundation/fava";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IModels } from "@/foundation/models/types";
 import type { DbExecutor } from "@/drizzle/drizzle";
@@ -12,6 +12,11 @@ export interface AssertLedgerAccessDeps {
   models: Pick<IModels, "user">;
   db: DbExecutor;
   favaClientFactory: IFavaClientFactory;
+}
+
+export interface AssertLedgerAccessOptions {
+  /** Fail closed on dependency outages instead of the legacy public fallback. */
+  sourceFailures?: "fallback" | "throw";
 }
 
 /** The closed vocabulary of ledger permissions this service understands. */
@@ -48,6 +53,7 @@ export async function assertLedgerAccess(
   ledgerId: string,
   userId: string | undefined,
   deps: AssertLedgerAccessDeps,
+  options: AssertLedgerAccessOptions = {},
 ): Promise<{
   permission: LedgerPermission;
   ledgerOwnerId: string;
@@ -83,12 +89,37 @@ export async function assertLedgerAccess(
   // Fetched once, up front, so every permission branch below (admin,
   // collaborator, public) can return the numeric ledgerRepoId.
   const adminClient = deps.favaClientFactory.getAdminClient();
-  const ledgerData = await unwrapFavaResponse(
-    adminClient.ledgers.getLedger(ledgerOwner, ledgerName),
-    "fetch ledger detail",
-    () =>
-      new ForbiddenError("Forbidden - you do not have access to this ledger"),
-  );
+  let ledgerData: { id: number; private: boolean };
+  if (options.sourceFailures === "throw") {
+    try {
+      const response = await adminClient.ledgers.getLedger(
+        ledgerOwner,
+        ledgerName,
+      );
+      if (!response.data.success) {
+        throw new Error("Ledger source returned an unsuccessful response");
+      }
+      ledgerData = response.data.data;
+    } catch (error) {
+      if (
+        error instanceof FavaApiError &&
+        error.status !== undefined &&
+        [401, 403, 404].includes(error.status)
+      ) {
+        throw new ForbiddenError(
+          "Forbidden - you do not have access to this ledger",
+        );
+      }
+      throw error;
+    }
+  } else {
+    ledgerData = await unwrapFavaResponse(
+      adminClient.ledgers.getLedger(ledgerOwner, ledgerName),
+      "fetch ledger detail",
+      () =>
+        new ForbiddenError("Forbidden - you do not have access to this ledger"),
+    );
+  }
   const ledgerRepoId = ledgerData.id;
 
   if (userId !== undefined && ledgerOwnerUser.id === userId) {
@@ -115,20 +146,31 @@ export async function assertLedgerAccess(
     let collaboratorPermission: LedgerPermission | null = null;
 
     try {
-      const data = await unwrapFavaResponse(
-        favaApiClient.collaborators.getLedgerCollaboratorPermission(
+      const response =
+        await favaApiClient.collaborators.getLedgerCollaboratorPermission(
           ledgerOwner,
           ledgerName,
           requestingUser.ledger_username,
-        ),
-        "check collaborator permission",
-        () =>
-          new ForbiddenError(
-            "Forbidden - you do not have access to this ledger",
-          ),
+        );
+      if (!response.data.success && options.sourceFailures === "throw") {
+        throw new Error(
+          "Ledger collaborator source returned an unsuccessful response",
+        );
+      }
+      collaboratorPermission = asLedgerPermission(
+        response.data.success ? response.data.data?.permission : null,
       );
-      collaboratorPermission = asLedgerPermission(data?.permission);
     } catch (error) {
+      if (
+        options.sourceFailures === "throw" &&
+        !(
+          error instanceof FavaApiError &&
+          error.status !== undefined &&
+          [401, 403, 404].includes(error.status)
+        )
+      ) {
+        throw error;
+      }
       accessLogger.warn(
         "Failed to fetch collaborator permission, falling back to visibility check",
         {

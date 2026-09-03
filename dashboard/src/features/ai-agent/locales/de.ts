@@ -12,6 +12,15 @@ const deAiAgent: Record<string, TranslationEntry> = {
     message: "Frag mich alles über Beancount...",
     description: "Input placeholder text",
   },
+  "aiAgent.readOnlyTitle": {
+    message: "Agent mit Lesezugriff",
+    description: "Title of the agent permission notice",
+  },
+  "aiAgent.readOnlyDescription": {
+    message:
+      "Du kannst Fragen stellen und Dateien analysieren. Änderungen benötigen Schreibzugriff, aber ich kann sie für dich entwerfen.",
+    description: "Explanation shown when the agent cannot change the ledger",
+  },
   "aiAgent.welcome": {
     message:
       "Hallo! Ich bin dein Beancount KI-Assistent und helfe dir bei deiner Textbuchhaltung.\n\n" +

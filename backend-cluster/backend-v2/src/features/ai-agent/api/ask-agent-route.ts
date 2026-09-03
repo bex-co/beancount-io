@@ -6,7 +6,6 @@ import { logger } from "@/shared/logger";
 import { BadUserInputError } from "@/shared/errors";
 import { parseLedgerId } from "@/shared/str";
 import { resolveAuthUser } from "../utils/route-guards";
-import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import {
   AskAgentWorkflow,
   type AskAgentMode,
@@ -69,6 +68,7 @@ export function setAskAgentRoute(
       adminToken: config.adminToken,
       gitea: config.gitea,
       model: ASK_AGENT_MODEL,
+      authorization: layers.services.authorization,
     }),
 ): void {
   router.post("/api-gateway/ask-agent", async (ctx) => {
@@ -89,21 +89,9 @@ export function setAskAgentRoute(
 
     const effectiveMode: AskAgentMode = mode === "agent" ? "agent" : "ask";
 
-    const operation = effectiveMode === "agent" ? "write" : "read";
-    const { user, identity } = await resolveAuthUser(
-      ctx,
-      {
-        models: layers.database.models,
-        db: layers.database.db,
-      },
-      operation,
-    );
-
-    await layers.services.aiCfoUsage.assertQuotaAvailable(user.id);
-    await authorizeLedger(identity, ledgerId, operation, {
+    const { user, identity } = await resolveAuthUser(ctx, {
       models: layers.database.models,
       db: layers.database.db,
-      favaClientFactory: layers.clients.favaClientFactory,
     });
 
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
@@ -129,6 +117,9 @@ export function setAskAgentRoute(
       ledgerPassword: user.ledger_password,
       conversationId,
       mode: effectiveMode,
+      identity,
+      assertQuotaAvailable: () =>
+        layers.services.aiCfoUsage.assertQuotaAvailable(user.id),
       recordTokenUsage: (totalTokens: number) =>
         layers.services.aiCfoUsage.addTokenUsage(user.id, totalTokens),
     });

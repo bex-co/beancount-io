@@ -454,6 +454,9 @@ export const en = {
   agentWelcome:
     "Ask me anything about your ledger — balances, spending, or how a number came to be.",
   agentPlaceholder: "Ask about your ledger",
+  agentReadOnlyTitle: "Read-only agent",
+  agentReadOnlyBody:
+    "You can ask questions and analyze files. Changes require writer access, but I can draft them for you.",
   agentThinking: "Thinking…",
   agentWorking: "Looking through your ledger…",
   agentSend: "Send",

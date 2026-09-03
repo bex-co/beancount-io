@@ -78,6 +78,7 @@ function buildRestRouter(identity: Identity | undefined, config: AppConfig) {
   const router = new Router();
   const gates = new Map<string, ApiGate>([
     ["REST POST /api-gateway/agent", "scoped"],
+    ["REST POST /api-gateway/v1/ledgers/{owner}/{name}/entries", "scoped"],
     ["REST GET /healthz", "outside"],
     ["REST ALL /git{/*path}", "outside"],
   ]);
@@ -97,6 +98,10 @@ function buildRestRouter(identity: Identity | undefined, config: AppConfig) {
       ctx.status = 204;
     };
   router.post("/api-gateway/agent", answer("agent"));
+  router.post(
+    "/api-gateway/v1/ledgers/:owner/:name/entries",
+    answer("entries"),
+  );
   router.get("/healthz", answer("healthz"));
   router.all("/git{/*path}", answer("git"));
   return { dispatch: router.routes(), reached, operationIds };
@@ -353,7 +358,12 @@ describe("scope enforcement across surfaces", () => {
 
   describe("refuses a read-only token a write op, in each surface's dialect", () => {
     it("REST: 403 with the standard error envelope", async () => {
-      const { ctx, reached } = await driveRest(readOnlyToken, enforcing);
+      const { ctx, reached } = await driveRest(
+        readOnlyToken,
+        enforcing,
+        "POST",
+        "/api-gateway/v1/ledgers/alice/main/entries",
+      );
       expect(reached).toEqual([]);
       expect(ctx.status).toBe(403);
       expect(ctx.body).toMatchObject({
@@ -462,8 +472,13 @@ describe("scope enforcement across surfaces", () => {
 
   describe("shadow mode", () => {
     it("REST lets the refused request through", async () => {
-      const { ctx, reached } = await driveRest(readOnlyToken, shadowing);
-      expect(reached).toEqual(["agent"]);
+      const { ctx, reached } = await driveRest(
+        readOnlyToken,
+        shadowing,
+        "POST",
+        "/api-gateway/v1/ledgers/alice/main/entries",
+      );
+      expect(reached).toEqual(["entries"]);
       expect(ctx.status).toBe(204);
     });
 

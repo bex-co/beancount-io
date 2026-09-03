@@ -54,15 +54,13 @@ describe("unlink dry_run changes nothing", () => {
       delete: jest.fn(),
     };
     const plaidAccount = {
-      getByItemId: jest
-        .fn()
-        .mockResolvedValue([
-          {
-            id: "pacc_1",
-            accountName: "Checking",
-            ledgerAccount: "Assets:Bank",
-          },
-        ]),
+      getByItemId: jest.fn().mockResolvedValue([
+        {
+          id: "pacc_1",
+          accountName: "Checking",
+          ledgerAccount: "Assets:Bank",
+        },
+      ]),
     };
     const plaidClient = { removeItem: jest.fn() };
     const service = new PlaidItemService(
@@ -71,6 +69,9 @@ describe("unlink dry_run changes nothing", () => {
       { plaidItem, plaidAccount } as never,
       {} as never,
       {} as never,
+      {
+        authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+      } as never,
     );
     return { service, plaidItem, plaidClient };
   }

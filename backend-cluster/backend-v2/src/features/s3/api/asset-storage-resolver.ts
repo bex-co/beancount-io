@@ -22,8 +22,7 @@ export class AssetStorageResolver {
   ): Promise<TempAssetUploadUrlResponse> {
     // The uploader is bound into the object key; the session supplies it, so a
     // key can never be minted under another user's scope.
-    return this.assetStorage.generateUploadUrl({
-      ownerId: ctx.getCurrentUserId(),
+    return this.assetStorage.generateUploadUrl(ctx.getCurrentIdentity(), {
       filename,
       mimeType,
     });
@@ -32,7 +31,7 @@ export class AssetStorageResolver {
   @Authenticated()
   @Query(() => TempAssetDownloadUrlResponse, {
     description:
-      "Generate a presigned download URL for a previously uploaded temporary asset. Use this to obtain a short-lived GET URL for an objectKey returned by generateTempAssetUploadUrl.",
+      "Generate a presigned download URL for a temporary asset uploaded by the current user. Foreign, malformed, and permanent keys are not exposed.",
   })
   async generateTempAssetDownloadUrl(
     @Arg("objectKey", () => String, {
@@ -44,8 +43,8 @@ export class AssetStorageResolver {
     // Ownership is enforced in the service: only tmp/ keys uploaded by the
     // caller can be presigned, never another tenant's or a permanent asset.
     return this.assetStorage.generateTempDownloadUrl(
+      ctx.getCurrentIdentity(),
       objectKey,
-      ctx.getCurrentUserId(),
     );
   }
 }

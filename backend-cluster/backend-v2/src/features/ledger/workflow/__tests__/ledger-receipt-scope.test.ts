@@ -57,6 +57,23 @@ describe("LedgerReceiptWorkflow authorizes as the caller", () => {
       } as never,
       { addBulkEntries } as never,
       { dashboard: { url: "https://dash.example" } } as never,
+      {
+        authorize: jest.fn(),
+        authorizeOrThrow: jest.fn(async ({ principal, resource }) => {
+          const ledger = (Array.isArray(resource) ? resource : [resource]).find(
+            (item) => item.startsWith("ledger:"),
+          );
+          if (
+            !principal.capabilityExempt &&
+            (!principal.scopes.has("ledger.write") ||
+              (principal.ledgerScope &&
+                ledger !== `ledger:${principal.ledgerScope}`))
+          ) {
+            throw new ForbiddenError("Forbidden");
+          }
+          return { allowed: true };
+        }),
+      } as never,
     );
   }
 

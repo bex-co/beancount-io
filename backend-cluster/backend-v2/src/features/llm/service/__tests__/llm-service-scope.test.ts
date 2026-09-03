@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { LLMService } from "../llm-service";
 import type { Identity } from "@/server/api/identity";
 import { ForbiddenError } from "@/shared/errors";
+import { AuthorizationService } from "@/server/api/authorization";
 
 /**
  * The LLM verbs take a caller-supplied `ledgerId` and have no `authorizeLedger`
@@ -30,7 +31,7 @@ describe("LLMService authorizes as the caller", () => {
   const unpinned: Identity = {
     userId: "usr_1",
     method: "apikey",
-    scopes: new Set(["ledger.read"]),
+    scopes: new Set(["ledger.read", "ledger.write"]),
     tokenId: "key_1",
   };
 
@@ -45,6 +46,7 @@ describe("LLMService authorizes as the caller", () => {
       { blockeden: { accessKey: "test-key" } } as never,
       {} as never,
       {} as never,
+      new AuthorizationService({ check: async () => true }),
     );
   }
 
@@ -56,14 +58,14 @@ describe("LLMService authorizes as the caller", () => {
   it("refuses suggestCategories on a ledger the grant is not pinned to", async () => {
     await expect(
       makeService().suggestCategories(pinnedToA, "alice/b", []),
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toMatchObject({ category: "FORBIDDEN" });
     expect(usageCheck).not.toHaveBeenCalled();
   });
 
   it("refuses parseReceipt on a ledger the grant is not pinned to", async () => {
     await expect(
       makeService().parseReceipt(pinnedToA, "tmp/r.pdf", "alice/b"),
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toMatchObject({ category: "FORBIDDEN" });
     expect(usageCheck).not.toHaveBeenCalled();
     expect(getObjectMetadata).not.toHaveBeenCalled();
   });

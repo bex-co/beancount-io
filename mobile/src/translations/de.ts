@@ -470,6 +470,9 @@ export const de: typeof en = {
   agentWelcome:
     "Frag mich alles über dein Hauptbuch – Salden, Ausgaben oder wie eine Zahl zustande kam.",
   agentPlaceholder: "Frag zu deinem Hauptbuch",
+  agentReadOnlyTitle: "Agent mit Lesezugriff",
+  agentReadOnlyBody:
+    "Du kannst Fragen stellen und Dateien analysieren. Änderungen benötigen Schreibzugriff, aber ich kann sie für dich entwerfen.",
   agentThinking: "Denkt nach …",
   agentWorking: "Dein Hauptbuch wird durchsucht …",
   agentSend: "Senden",

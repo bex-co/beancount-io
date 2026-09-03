@@ -10,9 +10,17 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { extname } from "path";
 import { nanoid } from "nanoid";
 import type { AssetS3Config } from "@/config/config";
-import { BadUserInputError, ForbiddenError } from "@/shared/errors";
+import { BadUserInputError } from "@/shared/errors";
+import { S3_PREFIX_TMP } from "@/features/s3/temp-asset-key";
+import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  tempAssetResource,
+  type IAuthorizationService,
+  userResource,
+} from "@/server/api/authorization";
 
-export const S3_PREFIX_TMP = "tmp";
+export { S3_PREFIX_TMP } from "@/features/s3/temp-asset-key";
 export const S3_PREFIX_ASSETS = "assets";
 
 // Uploaders are addressed by one path segment: user ids are ObjectId hex or
@@ -48,8 +56,6 @@ export type CopyTempToPermanentOutput = {
 };
 
 export type GenerateUploadUrlInput = {
-  /** Uploader binding: embedded in the key and enforced at every read. */
-  ownerId: string;
   filename?: string;
   mimeType?: string;
 };
@@ -62,6 +68,7 @@ export type GenerateUploadUrlOutput = {
 
 export interface IAssetStorageService {
   generateUploadUrl(
+    identity: Identity,
     params: GenerateUploadUrlInput,
   ): Promise<GenerateUploadUrlOutput>;
   /**
@@ -84,8 +91,8 @@ export interface IAssetStorageService {
    * ledger-authorization seam in front of it, so ownership is checked here.
    */
   generateTempDownloadUrl(
+    identity: Identity,
     objectKey: string,
-    ownerId: string,
   ): Promise<{
     downloadUrl: string;
     expiresIn: number;
@@ -97,35 +104,13 @@ export interface IAssetStorageService {
   }>;
 }
 
-/**
- * Assert that a caller-supplied object key is a temporary asset uploaded by
- * the named user.
- *
- * Temp keys are capabilities: `tmp/{ownerId}/{filename}` with no separate
- * ownership record. Every boundary that accepts a key from a caller — temp
- * download URL minting, LLM parsing, receipt promotion — must call this before
- * touching S3, or the key alone authorizes reading another tenant's uploads
- * (and, for non-tmp keys, their permanent assets).
- *
- * @throws ForbiddenError when the key is not under `tmp/{ownerId}/`
- */
-export function assertTempAssetOwnership(
-  objectKey: string,
-  ownerId: string,
-): void {
-  const expected = `${S3_PREFIX_TMP}/${ownerId}/`;
-  if (!objectKey.startsWith(expected) || objectKey.length === expected.length) {
-    throw new ForbiddenError(
-      "Temporary asset not owned by the caller",
-      "asset",
-    );
-  }
-}
-
 export class AssetStorageService implements IAssetStorageService {
   private s3Client: S3Client;
 
-  constructor(private config: AssetS3Config) {
+  constructor(
+    private config: AssetS3Config,
+    private readonly authorization: IAuthorizationService,
+  ) {
     this.s3Client = new S3Client({
       region: config.region,
       endpoint: config.endpoint,
@@ -142,13 +127,19 @@ export class AssetStorageService implements IAssetStorageService {
    * Generates a unique objectKey bound to the uploader under the tmp/ prefix:
    * tmp/{ownerId}/{year}-{month}-{day}-{nanoid(8)}{.ext}
    *
-   * @param params - Owner id plus optional filename and mimeType
+   * @param params - Optional filename and mimeType; ownership comes from identity
    * @returns Presigned upload URL, generated objectKey, and expiry
    */
   async generateUploadUrl(
+    identity: Identity,
     params: GenerateUploadUrlInput,
   ): Promise<GenerateUploadUrlOutput> {
-    const { ownerId } = params;
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.TEMP_ASSET_UPLOAD_CREATE,
+      resource: userResource(identity.userId),
+    });
+    const ownerId = identity.userId;
     if (!OWNER_ID_RE.test(ownerId)) {
       throw new BadUserInputError("ownerId must be a single path segment");
     }
@@ -279,13 +270,17 @@ export class AssetStorageService implements IAssetStorageService {
   }
 
   async generateTempDownloadUrl(
+    identity: Identity,
     objectKey: string,
-    ownerId: string,
   ): Promise<{
     downloadUrl: string;
     expiresIn: number;
   }> {
-    assertTempAssetOwnership(objectKey, ownerId);
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.TEMP_ASSET_DOWNLOAD_READ,
+      resource: tempAssetResource(objectKey),
+    });
     return this.generateDownloadUrl(objectKey);
   }
 

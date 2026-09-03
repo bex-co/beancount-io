@@ -462,6 +462,9 @@ export const nl: typeof en = {
   agentWelcome:
     "Vraag me alles over je grootboek — saldi, uitgaven, of hoe een bedrag tot stand kwam.",
   agentPlaceholder: "Vraag over je grootboek",
+  agentReadOnlyTitle: "Alleen-lezen-agent",
+  agentReadOnlyBody:
+    "Je kunt vragen stellen en bestanden analyseren. Voor wijzigingen is schrijftoegang nodig, maar ik kan ze voor je opstellen.",
   agentThinking: "Aan het denken…",
   agentWorking: "Je grootboek doorzoeken…",
   agentSend: "Verstuur",

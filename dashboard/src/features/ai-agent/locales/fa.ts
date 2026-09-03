@@ -12,6 +12,15 @@ const faAiAgent: Record<string, TranslationEntry> = {
     message: "هر سوالی درباره Beancount بپرسید...",
     description: "Input placeholder text",
   },
+  "aiAgent.readOnlyTitle": {
+    message: "دستیار فقط‌خواندنی",
+    description: "Title of the agent permission notice",
+  },
+  "aiAgent.readOnlyDescription": {
+    message:
+      "می‌توانید سؤال بپرسید و فایل‌ها را تحلیل کنید. تغییرات به دسترسی نوشتن نیاز دارند، اما می‌توانم آن‌ها را برایتان آماده کنم.",
+    description: "Explanation shown when the agent cannot change the ledger",
+  },
   "aiAgent.welcome": {
     message:
       "سلام! من دستیار هوش مصنوعی Beancount شما هستم، اینجا برای کمک به حسابداری متنی ساده شما.\n\n" +

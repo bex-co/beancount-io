@@ -12,6 +12,15 @@ const skAiAgent: Record<string, TranslationEntry> = {
     message: "Opýtajte sa ma na čokoľvek o Beancount...",
     description: "Input placeholder text",
   },
+  "aiAgent.readOnlyTitle": {
+    message: "Agent iba na čítanie",
+    description: "Title of the agent permission notice",
+  },
+  "aiAgent.readOnlyDescription": {
+    message:
+      "Môžete klásť otázky a analyzovať súbory. Zmeny vyžadujú právo na zápis, ale môžem ich pre vás pripraviť.",
+    description: "Explanation shown when the agent cannot change the ledger",
+  },
   "aiAgent.welcome": {
     message:
       "Ahoj! Som váš Beancount AI asistent, tu pomáham s vaším účtovníctvom v obyčajnom texte.\n\n" +

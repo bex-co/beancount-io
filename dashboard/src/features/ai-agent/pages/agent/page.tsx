@@ -14,6 +14,8 @@ import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { toast } from "sonner";
 import { AiCfoUpgradePanel } from "@/common/components/ai-cfo-upgrade-panel";
 import { useLedger } from "@/common/hooks/use-ledger";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
+import { useIsAuthenticated } from "@/common/hooks/use-is-authenticated";
 import { track } from "@/common/analytics";
 import { config } from "@/config/config";
 import { AgentChatInput } from "./agent-chat-input";
@@ -25,7 +27,7 @@ import { useTempAssetUpload } from "@/features/importer/hooks/use-temp-asset-upl
 import { useTempAssetDownloadUrl } from "./use-temp-asset-download-url";
 import type { StagedFile } from "./attachment";
 import { useAgentSession } from "../../hooks/use-agent-session";
-import { ChevronDown } from "lucide-react";
+import { ChevronDown, LockKeyhole } from "lucide-react";
 
 export interface AgentPageImplProps {
   /**
@@ -60,6 +62,9 @@ export function AgentPageImpl({
   const { t, i18n } = useTranslations();
   const formatError = useErrorMessage();
   const { ledgerDisplayName } = useLedger();
+  const { canWrite } = useLedgerPermission();
+  const isAuthenticated = useIsAuthenticated();
+  const isReadOnly = isAuthenticated && !canWrite;
   const { sessionId } = useAgentSession("ai-agent-session");
 
   const [input, setInput] = useState("");
@@ -89,7 +94,7 @@ export function AgentPageImpl({
         },
         fetch: async (url, options) => {
           const response = await fetch(url as string, options as RequestInit);
-          if (response.status === 401 || response.status === 403) {
+          if (response.status === 401) {
             const currentPath = `/ledger/${ledgerOwner}/${ledgerName}/${routeSuffix}`;
             window.location.href = `/auth/login?next=${encodeURIComponent(currentPath)}`;
           }
@@ -326,6 +331,25 @@ export function AgentPageImpl({
               className="gap-1.5 space-y-0 pb-1 [&_h1]:text-xl [&_h1]:font-semibold [&_h1]:tracking-tight [&_h1]:text-foreground [&_p]:leading-5"
             />
             <AiCfoUpgradePanel className="mb-0" />
+            {isReadOnly ? (
+              <div
+                role="status"
+                className="flex gap-3 rounded-lg border border-border/70 bg-muted/50 px-4 py-3 text-sm"
+              >
+                <LockKeyhole
+                  className="mt-0.5 size-4 shrink-0 text-muted-foreground"
+                  aria-hidden="true"
+                />
+                <div>
+                  <p className="font-medium text-foreground">
+                    {t("aiAgent.readOnlyTitle")}
+                  </p>
+                  <p className="text-muted-foreground">
+                    {t("aiAgent.readOnlyDescription")}
+                  </p>
+                </div>
+              </div>
+            ) : null}
             <AgentMessageList
               messages={messages}
               isLoading={isLoading}

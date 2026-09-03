@@ -171,6 +171,95 @@ describe("classifyOp", () => {
       expect(VERB_TABLE.filter((entry) => entry.gql === field)).toHaveLength(1);
     }
   });
+
+  it.each([
+    [
+      "GQL Query.suggestTransactionCategories",
+      AUTHORIZATION_ACTIONS.ASSISTED_CATEGORIES_SUGGEST,
+      "read",
+    ],
+    [
+      "GQL Query.suggestPlaidTransactionCategories",
+      AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
+      "read",
+    ],
+    [
+      "REST GET /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/suggested-categories",
+      AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
+      "read",
+    ],
+    [
+      "MCP resource:bankSuggestedCategories",
+      AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
+      "read",
+    ],
+    [
+      "GQL Query.suggestPlaidAccountMapping",
+      AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
+      "read",
+    ],
+    [
+      "REST GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/suggested-mapping",
+      AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
+      "read",
+    ],
+    [
+      "MCP resource:bankSuggestedMapping",
+      AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
+      "read",
+    ],
+    [
+      "GQL Mutation.parseFile",
+      AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE,
+      "write",
+    ],
+    [
+      "GQL Mutation.parseReceipt",
+      AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
+      "write",
+    ],
+    [
+      "GQL Mutation.insertReceiptTransaction",
+      AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
+      "write",
+    ],
+    [
+      "GQL Mutation.generateTempAssetUploadUrl",
+      AUTHORIZATION_ACTIONS.TEMP_ASSET_UPLOAD_CREATE,
+      "write",
+    ],
+    [
+      "GQL Query.generateTempAssetDownloadUrl",
+      AUTHORIZATION_ACTIONS.TEMP_ASSET_DOWNLOAD_READ,
+      "read",
+    ],
+    [
+      "REST POST /api-gateway/agent",
+      AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
+      "write",
+    ],
+    [
+      "REST POST /api-gateway/ask-agent",
+      AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
+      "write",
+    ],
+    [
+      "REST POST /api-gateway/ai/openai/chat/completions",
+      AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
+      "write",
+    ],
+    [
+      "REST POST /api-gateway/ai/anthropic/v1/messages",
+      AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
+      "write",
+    ],
+  ] as const)(
+    "maps assisted-ingestion alias %s to %s without changing its %s budget class",
+    (opId, action, opClass) => {
+      expect(authorizationActionForOp(opId)).toBe(action);
+      expect(classifyOp(opId).class).toBe(opClass);
+    },
+  );
 });
 
 describe("evaluateScope", () => {

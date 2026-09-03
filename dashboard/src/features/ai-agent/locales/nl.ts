@@ -12,6 +12,15 @@ const nlAiAgent: Record<string, TranslationEntry> = {
     message: "Vraag me iets over Beancount...",
     description: "Input placeholder text",
   },
+  "aiAgent.readOnlyTitle": {
+    message: "Alleen-lezen-agent",
+    description: "Title of the agent permission notice",
+  },
+  "aiAgent.readOnlyDescription": {
+    message:
+      "Je kunt vragen stellen en bestanden analyseren. Voor wijzigingen is schrijftoegang nodig, maar ik kan ze voor je opstellen.",
+    description: "Explanation shown when the agent cannot change the ledger",
+  },
   "aiAgent.welcome": {
     message:
       "Hallo! Ik ben je Beancount AI-assistent, hier om je te helpen met je platte tekst boekhouden.\n\n" +

@@ -38,6 +38,8 @@ describe("LLMParserResolver", () => {
         targetAccount: "Expenses:Food",
       }),
       suggestCategories: jest.fn(),
+      invokeOpenAI: jest.fn(),
+      invokeAnthropic: jest.fn(),
     };
 
     mockContext = {

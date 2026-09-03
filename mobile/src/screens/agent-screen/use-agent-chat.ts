@@ -8,6 +8,7 @@ import { getEndpoint } from "@/common/request";
 import { sessionVar, ledgerVar, localeVar } from "@/common/vars";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { oauthTokenManager } from "@/common/oauth/oauth-token-manager";
+import { useGetLedgerQuery } from "@/generated-graphql/graphql";
 
 /**
  * The chat client for `POST /api-gateway/agent` — the same route and the same
@@ -39,6 +40,14 @@ export function useAgentChat() {
   const session = useReactiveVar(sessionVar);
   const ledgerId = useReactiveVar(ledgerVar);
   const locale = useReactiveVar(localeVar);
+  const { data: ledgerData } = useGetLedgerQuery({
+    variables: { ledgerId: ledgerId ?? "" },
+    skip: !ledgerId,
+  });
+  const permissions = ledgerData?.getLedger.permissions;
+  const isReadOnly =
+    Boolean(ledgerData?.getLedger) &&
+    !(permissions?.push === true || permissions?.admin === true);
 
   const [sessionId, setSessionId] = useState(generateSessionId);
 
@@ -110,5 +119,6 @@ export function useAgentChat() {
     sessionId,
     ledgerId,
     isSignedIn: Boolean(session),
+    isReadOnly,
   };
 }

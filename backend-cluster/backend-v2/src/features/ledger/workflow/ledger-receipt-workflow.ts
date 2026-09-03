@@ -6,11 +6,15 @@ import { InternalServerError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
-import { assertTempAssetOwnership } from "@/features/s3/service/asset-storage-service";
 import type { ILedgerEntryService } from "@/features/ledger/service/ledger-entry-service";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "@/server/api/identity";
-import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
+import {
+  AUTHORIZATION_ACTIONS,
+  ledgerResource,
+  tempAssetResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 
 const moduleLogger = logger.child({ module: "ledger-receipt-workflow" });
 
@@ -76,6 +80,7 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     private readonly assetStorage: IAssetStorageService,
     private readonly ledgerEntry: ILedgerEntryService,
     private readonly config: Pick<AppConfig, "dashboard">,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   async insertReceiptTransaction(params: {
@@ -85,15 +90,15 @@ export class LedgerReceiptWorkflow implements ILedgerReceiptWorkflow {
     identity: Identity;
   }): Promise<{ success: boolean }> {
     const { ledgerId, receiptObjectKey, input, identity } = params;
-    // Before any Fava call: the options read, the repository file commit, and
-    // the S3 promotion all run ahead of `addBulkEntries`, which is where the
-    // full seam lives.
-    assertLedgerAuthorization(identity, ledgerId, "write");
+    // One composite decision precedes the options read, S3 promotion, file
+    // commit, and ledger mutation. LedgerEntry's later authorization remains an
+    // intentional atomic defense-in-depth read until the ledger-domain cutover.
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
+      resource: [tempAssetResource(receiptObjectKey), ledgerResource(ledgerId)],
+    });
     const { userId } = identity;
-    // The receipt key is the only handle on the upload — verify the caller
-    // owns it before either strategy reads it or promotes it into the
-    // ledger's permanent asset scope.
-    assertTempAssetOwnership(receiptObjectKey, userId);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,

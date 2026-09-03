@@ -252,6 +252,24 @@ describe("write tools are refused, not approximated", () => {
   });
 });
 
+describe("read-only agent mode", () => {
+  const screenSource = read("agent-screen.tsx");
+  const hookSource = read("use-agent-chat.ts");
+
+  it("derives write access from the selected ledger permissions", () => {
+    expect(hookSource.includes("useGetLedgerQuery")).toBeTruthy();
+    expect(/permissions\?\.push === true/.test(hookSource)).toBeTruthy();
+    expect(/permissions\?\.admin === true/.test(hookSource)).toBeTruthy();
+  });
+
+  it("keeps the chat available while showing a read-only notice", () => {
+    expect(screenSource.includes("agent-read-only-notice")).toBeTruthy();
+    expect(screenSource.includes("agentReadOnlyTitle")).toBeTruthy();
+    expect(screenSource.includes("agentReadOnlyBody")).toBeTruthy();
+    expect(screenSource.includes('testID="agent-input"')).toBeTruthy();
+  });
+});
+
 describe("a turn that answers nothing still says something", () => {
   const source = read("agent-screen.tsx");
 

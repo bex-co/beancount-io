@@ -1,6 +1,6 @@
 import { LLMService } from "../llm-service";
 import type { Identity } from "@/server/api/identity";
-import { ForbiddenError } from "@/shared/errors";
+import { AuthorizationService } from "@/server/api/authorization";
 
 /**
  * The parse verbs turn a caller-supplied S3 key into object metadata plus a
@@ -22,6 +22,17 @@ describe("LLMService temp-asset ownership", () => {
   const usageCheck = jest.fn();
 
   function makeService() {
+    const authorization = new AuthorizationService({
+      check: async ({ user, object }) => {
+        if (object.startsWith("user:")) return user === object;
+        const key = object.slice("temp_asset:".length);
+        return (
+          object.startsWith("temp_asset:") &&
+          key.startsWith(`tmp/${user.slice("user:".length)}/`) &&
+          key.length > `tmp/${user.slice("user:".length)}/`.length
+        );
+      },
+    });
     return new LLMService(
       { getApiContext: jest.fn() } as never,
       { getObjectMetadata, generateDownloadUrl } as never,
@@ -29,6 +40,7 @@ describe("LLMService temp-asset ownership", () => {
       { blockeden: { accessKey: "test-key" } } as never,
       {} as never,
       {} as never,
+      authorization,
     );
   }
 
@@ -40,7 +52,7 @@ describe("LLMService temp-asset ownership", () => {
   it("parseFile refuses another tenant's key before touching S3", async () => {
     await expect(
       makeService().parseFile(sessionUser, "tmp/other/statement.csv", "csv"),
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toMatchObject({ category: "NOT_FOUND" });
 
     expect(getObjectMetadata).not.toHaveBeenCalled();
     expect(generateDownloadUrl).not.toHaveBeenCalled();
@@ -53,7 +65,7 @@ describe("LLMService temp-asset ownership", () => {
         "tmp/2026-01-01-statement.csv",
         "csv",
       ),
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toMatchObject({ category: "NOT_FOUND" });
 
     expect(getObjectMetadata).not.toHaveBeenCalled();
   });
@@ -65,7 +77,7 @@ describe("LLMService temp-asset ownership", () => {
         "tmp/other/receipt.jpg",
         "alice/a",
       ),
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toMatchObject({ category: "NOT_FOUND" });
 
     expect(getObjectMetadata).not.toHaveBeenCalled();
     expect(generateDownloadUrl).not.toHaveBeenCalled();
@@ -78,7 +90,7 @@ describe("LLMService temp-asset ownership", () => {
         "assets/repo_42/receipt.jpg",
         "alice/a",
       ),
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toMatchObject({ category: "NOT_FOUND" });
 
     expect(getObjectMetadata).not.toHaveBeenCalled();
   });

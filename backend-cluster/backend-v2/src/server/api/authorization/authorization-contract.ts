@@ -1,7 +1,7 @@
 import type { Identity } from "@/server/api/identity";
 
 /**
- * Transport-neutral user-domain actions understood by the centralized PDP.
+ * Transport-neutral domain actions understood by the centralized PDP.
  * GraphQL fields, REST routes, and MCP tools are aliases of these actions.
  */
 export const AUTHORIZATION_ACTIONS = {
@@ -39,12 +39,25 @@ export const AUTHORIZATION_ACTIONS = {
   LEDGER_READ: "ledger.read",
   LEDGER_WRITE: "ledger.write",
   LEDGER_ADMIN: "ledger.admin",
+  ASSISTED_FILE_PARSE: "assisted.file.parse",
+  ASSISTED_RECEIPT_PARSE: "assisted.receipt.parse",
+  ASSISTED_CATEGORIES_SUGGEST: "assisted.categories.suggest",
+  ASSISTED_BANK_CATEGORIES_SUGGEST: "assisted.bank_categories.suggest",
+  ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST:
+    "assisted.bank_account_mapping.suggest",
+  ASSISTED_RECEIPT_INSERT: "assisted.receipt.insert",
+  TEMP_ASSET_UPLOAD_CREATE: "temp_asset.upload.create",
+  TEMP_ASSET_DOWNLOAD_READ: "temp_asset.download.read",
+  AI_MODEL_INVOKE: "ai.model.invoke",
+  AI_LEDGER_ASK: "ai.ledger.ask",
+  AI_LEDGER_AGENT: "ai.ledger.agent",
 } as const;
 
 export type AuthorizationAction =
   (typeof AUTHORIZATION_ACTIONS)[keyof typeof AUTHORIZATION_ACTIONS];
 
 export const USER_RELATIONSHIPS = {
+  OWNER: "owner",
   READ_PROFILE: "can_read_profile",
   WRITE_PROFILE: "can_write_profile",
   READ_CREDENTIALS: "can_read_credentials",
@@ -59,7 +72,7 @@ export const USER_RELATIONSHIPS = {
   WRITE_PUBLIC_KEYS: "can_write_public_keys",
 } as const;
 
-export type UserRelationship =
+type UserRelationship =
   (typeof USER_RELATIONSHIPS)[keyof typeof USER_RELATIONSHIPS];
 
 export const LEDGER_RELATIONSHIPS = {
@@ -72,20 +85,44 @@ export const LEDGER_RELATIONSHIPS = {
   READ: "reader",
   WRITE: "writer",
   ADMIN: "administrator",
+  WRITE_CONTENTS: "can_write_contents",
+  READ_ASSETS: "can_read_assets",
+  WRITE_ASSETS: "can_write_assets",
+  READ_BANK_CONNECTIONS: "can_read_bank_connections",
+  WRITE_AI: "can_write_ai",
 } as const;
 
 export type LedgerRelationship =
   (typeof LEDGER_RELATIONSHIPS)[keyof typeof LEDGER_RELATIONSHIPS];
-export type AuthorizationRelationship = UserRelationship | LedgerRelationship;
+export const TEMP_ASSET_RELATIONSHIPS = {
+  OWNER: "owner",
+} as const;
+
+type TempAssetRelationship =
+  (typeof TEMP_ASSET_RELATIONSHIPS)[keyof typeof TEMP_ASSET_RELATIONSHIPS];
+
+export type AuthorizationRelationship =
+  | UserRelationship
+  | LedgerRelationship
+  | TempAssetRelationship;
 
 export type UserResource = `user:${string}`;
 export type ApiKeyResource = `api_key:${string}`;
 export type LedgerResource = `ledger:${string}`;
+export type TempAssetResource = `temp_asset:${string}`;
 export type AuthorizationResource =
   | UserResource
   | ApiKeyResource
-  | LedgerResource;
-export type AuthorizationResourceType = "user" | "api_key" | "ledger";
+  | LedgerResource
+  | TempAssetResource;
+export type AuthorizationResourceType =
+  | "user"
+  | "api_key"
+  | "ledger"
+  | "temp_asset";
+export type AuthorizationTarget =
+  | AuthorizationResource
+  | readonly AuthorizationResource[];
 
 export function userResource(userId: string): UserResource {
   return `user:${userId}`;
@@ -101,6 +138,10 @@ export function ledgerResource(ledgerId: string): LedgerResource {
   return `ledger:${ledgerId}`;
 }
 
+/** Runtime locator backed by the trusted tmp/{userId}/... key invariant. */
+export function tempAssetResource(objectKey: string): TempAssetResource {
+  return `temp_asset:${objectKey}`;
+}
 export function parseAuthorizationResource(
   resource: string,
 ): { type: AuthorizationResourceType; id: string } | undefined {
@@ -109,12 +150,15 @@ export function parseAuthorizationResource(
   const type = resource.slice(0, separator);
   const id = resource.slice(separator + 1);
   if (
-    (type !== "user" && type !== "api_key" && type !== "ledger") ||
+    (type !== "user" &&
+      type !== "api_key" &&
+      type !== "ledger" &&
+      type !== "temp_asset") ||
     !id.trim()
   ) {
     return undefined;
   }
-  return { type, id };
+  return { type: type as AuthorizationResourceType, id };
 }
 
 export type AuthorizationDenyReason =
@@ -127,13 +171,14 @@ export type AuthorizationDecision =
   | {
       allowed: true;
       action: AuthorizationAction;
-      resource: AuthorizationResource;
+      resource: AuthorizationTarget;
     }
   | {
       allowed: false;
       action: string;
-      resource: string;
+      resource: AuthorizationTarget | string;
       reason: AuthorizationDenyReason;
+      failedResourceType?: AuthorizationResourceType;
       /** Safe, actionable text for GraphQL, REST, and MCP clients. */
       message: string;
     };
@@ -141,7 +186,7 @@ export type AuthorizationDecision =
 export interface AuthorizeInput {
   principal: Identity;
   action: AuthorizationAction;
-  resource: AuthorizationResource;
+  resource: AuthorizationTarget;
   /** Trusted request attributes that do not belong in the relationship graph. */
   context?: Readonly<Record<string, unknown>>;
 }

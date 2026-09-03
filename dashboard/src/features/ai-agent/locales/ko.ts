@@ -9,6 +9,15 @@ const koAiAgent: Record<string, TranslationEntry> = {
     message: "Beancount에 대해 무엇이든 물어보세요...",
     description: "Input placeholder text",
   },
+  "aiAgent.readOnlyTitle": {
+    message: "읽기 전용 에이전트",
+    description: "Title of the agent permission notice",
+  },
+  "aiAgent.readOnlyDescription": {
+    message:
+      "질문하고 파일을 분석할 수 있습니다. 변경하려면 쓰기 권한이 필요하지만 변경안을 작성해 드릴 수 있습니다.",
+    description: "Explanation shown when the agent cannot change the ledger",
+  },
   "aiAgent.welcome": {
     message:
       "안녕하세요! 저는 Beancount AI 어시스턴트입니다. 일반 텍스트 회계를 도와드립니다.\n\n" +

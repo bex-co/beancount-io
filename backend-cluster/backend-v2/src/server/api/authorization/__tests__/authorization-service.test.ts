@@ -8,11 +8,13 @@ import {
   authorizationActionAcceptsDelegatedCredential,
   AuthorizationDeniedError,
   AuthorizationService,
+  ledgerResource,
+  LEDGER_RELATIONSHIPS,
+  TEMP_ASSET_RELATIONSHIPS,
+  tempAssetResource,
   type AuthorizationAction,
   type AuthorizationResource,
   type IRelationshipEvaluator,
-  ledgerResource,
-  LEDGER_RELATIONSHIPS,
   userResource,
   USER_RELATIONSHIPS,
 } from "..";
@@ -106,6 +108,109 @@ const USER_CONTROL_PLANE_ACTIONS = [
   ],
 ] as const;
 
+const ASSISTED_ACTION_CASES = [
+  {
+    action: AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE,
+    scope: "ledger.read",
+    resource: [
+      userResource("usr_alice"),
+      tempAssetResource("tmp/usr_alice/file.csv"),
+    ],
+    checks: [
+      ["user", USER_RELATIONSHIPS.OWNER],
+      ["temp_asset", TEMP_ASSET_RELATIONSHIPS.OWNER],
+    ],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
+    scope: "ledger.read",
+    resource: [
+      tempAssetResource("tmp/usr_alice/receipt.pdf"),
+      ledgerResource("alice/main"),
+    ],
+    checks: [
+      ["temp_asset", TEMP_ASSET_RELATIONSHIPS.OWNER],
+      ["ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS],
+      ["ledger", LEDGER_RELATIONSHIPS.READ_ASSETS],
+    ],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.ASSISTED_CATEGORIES_SUGGEST,
+    scope: "ledger.read",
+    resource: ledgerResource("alice/main"),
+    checks: [
+      ["ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS],
+      ["ledger", LEDGER_RELATIONSHIPS.WRITE_AI],
+    ],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
+    scope: "ledger.read",
+    resource: ledgerResource("alice/main"),
+    checks: [
+      ["ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS],
+      ["ledger", LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS],
+      ["ledger", LEDGER_RELATIONSHIPS.WRITE_AI],
+    ],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
+    scope: "ledger.read",
+    resource: ledgerResource("alice/main"),
+    checks: [
+      ["ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS],
+      ["ledger", LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS],
+      ["ledger", LEDGER_RELATIONSHIPS.WRITE_AI],
+    ],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
+    scope: "ledger.write",
+    resource: [
+      tempAssetResource("tmp/usr_alice/receipt.pdf"),
+      ledgerResource("alice/main"),
+    ],
+    checks: [
+      ["temp_asset", TEMP_ASSET_RELATIONSHIPS.OWNER],
+      ["ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS],
+      ["ledger", LEDGER_RELATIONSHIPS.WRITE_ASSETS],
+    ],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.TEMP_ASSET_UPLOAD_CREATE,
+    scope: "ledger.read",
+    resource: userResource("usr_alice"),
+    checks: [["user", USER_RELATIONSHIPS.OWNER]],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.TEMP_ASSET_DOWNLOAD_READ,
+    scope: "ledger.read",
+    resource: tempAssetResource("tmp/usr_alice/receipt.pdf"),
+    checks: [["temp_asset", TEMP_ASSET_RELATIONSHIPS.OWNER]],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
+    scope: "ledger.write",
+    resource: userResource("usr_alice"),
+    checks: [["user", USER_RELATIONSHIPS.OWNER]],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
+    scope: "ledger.read",
+    resource: ledgerResource("alice/main"),
+    checks: [["ledger", LEDGER_RELATIONSHIPS.READ_CONTENTS]],
+  },
+  {
+    action: AUTHORIZATION_ACTIONS.AI_LEDGER_AGENT,
+    scope: "ledger.write",
+    resource: ledgerResource("alice/main"),
+    checks: [
+      ["ledger", LEDGER_RELATIONSHIPS.WRITE_CONTENTS],
+      ["ledger", LEDGER_RELATIONSHIPS.WRITE_AI],
+    ],
+  },
+] as const;
+
 describe("AuthorizationService", () => {
   afterEach(() => setAuditSink(undefined));
 
@@ -127,6 +232,90 @@ describe("AuthorizationService", () => {
       });
     },
   );
+
+  it.each(ASSISTED_ACTION_CASES)(
+    "declares the complete relationship composition for $action",
+    async ({ action, scope, resource, checks }) => {
+      const relationships: IRelationshipEvaluator = {
+        check: jest.fn(async () => true),
+      };
+      const principal = {
+        ...identity("oauth", "usr_alice", [scope]),
+        ...(checks.some(([type]) => type === "ledger") && {
+          ledgerScope: "alice/main",
+        }),
+      };
+      const service = new AuthorizationService(relationships);
+
+      await expect(
+        service.authorizeOrThrow({ principal, action, resource }),
+      ).resolves.toMatchObject({ allowed: true, action });
+      expect(relationships.check).toHaveBeenCalledTimes(checks.length);
+      expect(
+        (relationships.check as jest.Mock).mock.calls.map(([check]) => [
+          check.object.split(":", 1)[0],
+          check.relation,
+        ]),
+      ).toEqual(checks);
+    },
+  );
+
+  it.each(
+    ASSISTED_ACTION_CASES.flatMap((testCase) =>
+      testCase.checks.map((deniedCheck) => ({ testCase, deniedCheck })),
+    ),
+  )(
+    "denies $testCase.action when $deniedCheck is missing",
+    async ({ testCase, deniedCheck }) => {
+      const service = new AuthorizationService({
+        check: async ({ relation, object }) =>
+          !(
+            object.startsWith(`${deniedCheck[0]}:`) &&
+            relation === deniedCheck[1]
+          ),
+      });
+      const principal = {
+        ...identity("oauth", "usr_alice", [testCase.scope]),
+        ledgerScope: "alice/main",
+      };
+      await expect(
+        service.authorize({
+          principal,
+          action: testCase.action,
+          resource: testCase.resource,
+        }),
+      ).resolves.toMatchObject({
+        allowed: false,
+        reason: "relationship_denied",
+        failedResourceType: deniedCheck[0],
+      });
+    },
+  );
+
+  it("denies a ledger-pinned credential before any relationship source read", async () => {
+    const relationships: IRelationshipEvaluator = {
+      check: jest.fn(async () => true),
+    };
+    const service = new AuthorizationService(relationships);
+    await expect(
+      service.authorize({
+        principal: {
+          ...identity("oauth", "usr_alice", ["ledger.write"]),
+          ledgerScope: "alice/other",
+        },
+        action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
+        resource: [
+          tempAssetResource("tmp/usr_alice/receipt.pdf"),
+          ledgerResource("alice/main"),
+        ],
+      }),
+    ).resolves.toMatchObject({
+      allowed: false,
+      reason: "credential_not_permitted",
+      failedResourceType: "ledger",
+    });
+    expect(relationships.check).not.toHaveBeenCalled();
+  });
 
   it("does not grant account lifecycle authority to API keys", async () => {
     const service = selfService();
@@ -676,6 +865,81 @@ describe("AuthorizationService", () => {
 
     await Promise.all([service.authorize(input), service.authorize(input)]);
     expect(relationships.check).toHaveBeenCalledTimes(2);
+  });
+
+  it("rechecks and audits every relationship in two identical composite calls", async () => {
+    const relationships: IRelationshipEvaluator = {
+      check: jest.fn(async () => true),
+    };
+    const audit = jest.fn();
+    const service = new AuthorizationService(relationships, audit);
+    const principal = {
+      ...identity("oauth", "usr_alice", ["ledger.write"]),
+      ledgerScope: "alice/main",
+    };
+    const input = {
+      principal,
+      action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
+      resource: [
+        tempAssetResource("tmp/usr_alice/receipt.pdf"),
+        ledgerResource("alice/main"),
+      ],
+    } as const;
+
+    await service.authorizeOrThrow(input);
+    await service.authorizeOrThrow(input);
+
+    expect(relationships.check).toHaveBeenCalledTimes(6);
+    expect(audit).toHaveBeenCalledTimes(2);
+    expect(audit).toHaveBeenCalledWith(
+      principal,
+      {
+        action: input.action,
+        outcome: "allowed",
+        ledgerId: "alice/main",
+      },
+      "read",
+    );
+  });
+
+  it("persists the validated target ledger for every ledger outcome", async () => {
+    const events: AuditEvent[] = [];
+    setAuditSink(async (event) => {
+      events.push(event);
+    });
+    const principal = identity("session");
+
+    for (const outcome of ["allowed", "denied", "error"] as const) {
+      const service = new AuthorizationService({
+        check: async () => {
+          if (outcome === "error") throw new Error("source unavailable");
+          return outcome === "allowed";
+        },
+      });
+      const decision = service.authorize({
+        principal,
+        action: AUTHORIZATION_ACTIONS.AI_LEDGER_AGENT,
+        resource: ledgerResource("alice/main"),
+      });
+      if (outcome === "error") {
+        await expect(decision).rejects.toMatchObject({
+          category: ErrorCategory.SERVICE_UNAVAILABLE,
+        });
+      } else {
+        await decision;
+      }
+      await new Promise((resolve) => setImmediate(resolve));
+    }
+
+    expect(events).toEqual(
+      ["allowed", "denied", "error"].map((outcome) =>
+        expect.objectContaining({
+          op: AUTHORIZATION_ACTIONS.AI_LEDGER_AGENT,
+          ledgerId: "alice/main",
+          outcome,
+        }),
+      ),
+    );
   });
 
   it("emits one audit result for every write authorization call", async () => {

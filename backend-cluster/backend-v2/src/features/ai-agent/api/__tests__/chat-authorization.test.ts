@@ -2,6 +2,7 @@ import { ForbiddenError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import { evaluateScope } from "@/server/api/op-class";
 import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization";
 
 const LEDGER_ID = "alice/main";
 const CHAT_OPS = [
@@ -11,8 +12,9 @@ const CHAT_OPS = [
   "REST POST /api-gateway/ai/anthropic/v1/messages",
 ] as const;
 
-function credential(scope: "ledger.read" | "ledger.write" | "ledger.admin"):
-  Identity {
+function credential(
+  scope: "ledger.read" | "ledger.write" | "ledger.admin",
+): Identity {
   return {
     userId: "usr_1",
     method: "oauth",
@@ -22,14 +24,21 @@ function credential(scope: "ledger.read" | "ledger.write" | "ledger.admin"):
 }
 
 describe("chat authorization contract", () => {
-  it.each(CHAT_OPS)("keeps the write-capable route %s classified as write", (op) => {
-    const decision = evaluateScope(credential("ledger.read"), op);
-    expect(decision).toMatchObject({
-      opClass: "write",
-      requiredScope: "ledger.write",
-      allowed: false,
-    });
-  });
+  it.each(CHAT_OPS)(
+    "keeps %s write-budgeted while deferring to the PDP",
+    (op) => {
+      const decision = evaluateScope(credential("ledger.read"), op);
+      expect(decision).toMatchObject({
+        opClass: "write",
+        requiredScope: "ledger.write",
+        allowed: true,
+        authorizationAction: expect.any(String),
+      });
+      expect(Object.values(AUTHORIZATION_ACTIONS)).toContain(
+        decision.authorizationAction,
+      );
+    },
+  );
 
   it.each(["ledger.write", "ledger.admin"] as const)(
     "lets a %s chat credential read before it writes",

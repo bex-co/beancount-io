@@ -11,6 +11,7 @@ const description =
   "Parse a receipt or invoice file that has been uploaded to S3. " +
   "Extracts structured transaction data (date, payee, description, amount) and recommends " +
   "the most likely expense and payment accounts from the user's ledger. " +
+  "The caller must own the temporary upload and have read access to the ledger contents and assets. " +
   "Only call this tool when the file is clearly a receipt, invoice, or purchase document. " +
   "Use the S3 object key from the [Uploaded file references] section of the message.";
 
