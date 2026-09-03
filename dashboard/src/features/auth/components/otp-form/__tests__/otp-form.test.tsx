@@ -1,7 +1,14 @@
 import { fireEvent, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
-import { describe, expect, it, vi } from "vitest";
+import { afterAll, describe, expect, it, vi } from "vitest";
 import { OtpForm } from "../index";
+
+afterAll(async () => {
+  // input-otp queues 0/10/50 ms selection-sync callbacks without exposing
+  // cleanup handles. Let those callbacks drain before Vitest tears down jsdom;
+  // otherwise the final React update can run after `window` is gone.
+  await new Promise((resolve) => setTimeout(resolve, 60));
+});
 
 describe("OtpForm signup contract", () => {
   it("accepts and submits exactly four digits", async () => {
