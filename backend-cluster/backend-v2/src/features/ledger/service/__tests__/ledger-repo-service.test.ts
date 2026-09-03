@@ -47,7 +47,6 @@ describe("LedgerRepoService", () => {
     service = new LedgerRepoService(
       mockFavaClientFactory as any,
       {} as any,
-      {} as any,
     );
   });
 
@@ -164,7 +163,7 @@ describe("LedgerRepoService", () => {
       expect(authorizeLedger).toHaveBeenCalledWith(
         IDENTITY,
         LEDGER_ID,
-        "read",
+        "ledger.files.read",
         expect.anything(),
       );
     });
@@ -213,7 +212,7 @@ describe("LedgerRepoService", () => {
       expect(authorizeLedger).toHaveBeenCalledWith(
         undefined,
         LEDGER_ID,
-        "read",
+        "ledger.files.read",
         expect.anything(),
       );
       expect(mockFavaClientFactory.getPublicApiClient).toHaveBeenCalledWith(
@@ -248,7 +247,7 @@ describe("LedgerRepoService", () => {
       expect(authorizeLedger).toHaveBeenCalledWith(
         IDENTITY,
         LEDGER_ID,
-        "read",
+        "ledger.files.read",
         expect.anything(),
       );
       expect(result).toEqual([
@@ -300,7 +299,7 @@ describe("LedgerRepoService", () => {
       expect(authorizeLedger).toHaveBeenCalledWith(
         IDENTITY,
         LEDGER_ID,
-        "write",
+        "ledger.files.write",
         expect.anything(),
       );
     });

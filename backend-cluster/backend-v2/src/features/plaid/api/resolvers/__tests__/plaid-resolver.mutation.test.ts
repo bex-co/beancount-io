@@ -12,7 +12,7 @@ jest.mock("@/shared/logger", () => ({
 }));
 
 import { PlaidMutationResolver } from "../plaid-resolver.mutation";
-import { ConflictError, ForbiddenError } from "@/shared/errors";
+import { ConflictError } from "@/shared/errors";
 import type { IContext } from "@/server/graphql/context";
 import type { IPlaidItemService } from "@/features/plaid/service/plaid-item-service";
 import type { IPlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
@@ -54,6 +54,7 @@ function buildMockPlaidItemService(): jest.Mocked<IPlaidItemService> {
 function buildMockPlaidSyncService(): jest.Mocked<IPlaidSyncService> {
   return {
     syncItemTransactions: jest.fn(),
+    syncItemTransactionsInBackground: jest.fn(),
     getUnsyncedTransactionsForCategorization: jest.fn(),
     submitTransactionsToLedger: jest.fn(),
     deleteTransactions: jest.fn(),
@@ -505,32 +506,18 @@ describe("PlaidMutationResolver", () => {
           resolver.deletePlaidTransactions(OTHER, ["tx_1"], scopedCtx(PINNED)),
       ],
     ])(
-      "%s rejects a ledgerId outside the grant's pinned ledger",
+      "%s delegates the scoped identity to the protected service",
       async (_name, call) => {
-        await expect(call()).rejects.toThrow(ForbiddenError);
-        expect(mockPlaidItemService.createLinkToken).not.toHaveBeenCalled();
-        expect(
-          mockPlaidItemService.createUpdateModeLinkToken,
-        ).not.toHaveBeenCalled();
-        expect(
-          mockPlaidItemService.reconcileItemAccounts,
-        ).not.toHaveBeenCalled();
-        expect(mockPlaidItemService.exchangePublicToken).not.toHaveBeenCalled();
-        expect(
-          mockPlaidItemService.updateAccountMapping,
-        ).not.toHaveBeenCalled();
-        expect(
-          mockPlaidItemService.updateAccountCurrency,
-        ).not.toHaveBeenCalled();
-        expect(mockPlaidItemService.refreshItemStatus).not.toHaveBeenCalled();
-        expect(mockPlaidItemService.unlinkItem).not.toHaveBeenCalled();
-        expect(
-          mockPlaidSyncService.syncItemTransactions,
-        ).not.toHaveBeenCalled();
-        expect(
-          mockPlaidSyncService.submitTransactionsToLedger,
-        ).not.toHaveBeenCalled();
-        expect(mockPlaidSyncService.deleteTransactions).not.toHaveBeenCalled();
+        await call();
+        const protectedCalls = [
+          ...Object.values(mockPlaidItemService),
+          ...Object.values(mockPlaidSyncService),
+        ].flatMap((method) => method.mock.calls);
+        expect(protectedCalls).toHaveLength(1);
+        expect(protectedCalls[0]![0]).toMatchObject({
+          method: "oauth",
+          ledgerScope: PINNED,
+        });
       },
     );
 

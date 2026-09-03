@@ -26,6 +26,12 @@ function layers() {
         },
       },
     },
+    clients: { favaClientFactory: {} },
+    services: {
+      authorization: {
+        authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+      },
+    },
   } as any;
 }
 
@@ -51,7 +57,6 @@ describe("streamLedgerArchive", () => {
       {
         ledgerId: "alice/public-ledger",
         archive: "gitea-main.zip",
-        userId: null,
       },
     );
 
@@ -79,10 +84,32 @@ describe("streamLedgerArchive", () => {
         {
           ledgerId: "alice/public-ledger",
           archive: "../../private-ledger",
-          userId: null,
         },
       ),
     ).rejects.toBeInstanceOf(BadUserInputError);
     expect(fetchMock).not.toHaveBeenCalled();
+  });
+
+  it("denies before user lookup, upstream fetch, or response headers", async () => {
+    const appLayers = layers();
+    appLayers.services.authorization.authorizeOrThrow.mockRejectedValueOnce(
+      new Error("denied"),
+    );
+    const ctx = context();
+
+    await expect(
+      streamLedgerArchive(
+        ctx,
+        appLayers,
+        { favaApi: { baseUrl: "http://ledger.internal" } } as any,
+        {
+          ledgerId: "alice/private",
+          archive: "gitea-main.zip",
+        },
+      ),
+    ).rejects.toThrow("denied");
+    expect(appLayers.database.models.user.getById).not.toHaveBeenCalled();
+    expect(fetchMock).not.toHaveBeenCalled();
+    expect(ctx.set).not.toHaveBeenCalled();
   });
 });

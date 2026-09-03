@@ -26,6 +26,11 @@ describe("CommitsResolver", () => {
 
     mockContext = {
       userId: "user123",
+      identity: {
+        userId: "user123",
+        method: "session",
+        scopes: new Set(),
+      },
       getCurrentUser: jest.fn(),
     } as any;
   });
@@ -58,7 +63,7 @@ describe("CommitsResolver", () => {
 
       expect(result).toEqual(mockCommits);
       expect(mockService.listCommits).toHaveBeenCalledWith({
-        userId: "user123",
+        identity: mockContext.identity,
         ledgerId,
         branch,
         page,
@@ -69,6 +74,7 @@ describe("CommitsResolver", () => {
     it("should list commits for anonymous user", async () => {
       const mockCommits = [{ sha: "abc123", message: "Test commit" }];
       mockContext.userId = undefined as any;
+      mockContext.identity = undefined;
       mockService.listCommits.mockResolvedValue(mockCommits as any);
 
       const result = await resolver.listCommits(
@@ -81,7 +87,7 @@ describe("CommitsResolver", () => {
 
       expect(result).toEqual(mockCommits);
       expect(mockService.listCommits).toHaveBeenCalledWith({
-        userId: undefined,
+        identity: undefined,
         ledgerId,
         branch,
         page,
@@ -114,7 +120,7 @@ describe("CommitsResolver", () => {
 
       expect(result).toEqual(mockDetails);
       expect(mockService.getCommitDetails).toHaveBeenCalledWith({
-        userId: "user123",
+        identity: mockContext.identity,
         ledgerId,
         sha,
       });
@@ -123,6 +129,7 @@ describe("CommitsResolver", () => {
     it("should get commit details for anonymous user", async () => {
       const mockDetails = { sha: "abc123", message: "Test commit", files: [] };
       mockContext.userId = undefined as any;
+      mockContext.identity = undefined;
       mockService.getCommitDetails.mockResolvedValue(mockDetails as any);
 
       const result = await resolver.getCommitDetails(
@@ -133,7 +140,7 @@ describe("CommitsResolver", () => {
 
       expect(result).toEqual(mockDetails);
       expect(mockService.getCommitDetails).toHaveBeenCalledWith({
-        userId: undefined,
+        identity: undefined,
         ledgerId,
         sha,
       });

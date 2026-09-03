@@ -126,8 +126,8 @@ describe("PlaidItemPostgresModel", () => {
     });
   });
 
-  describe("getByLedgerRepoId", () => {
-    it("should query by ledgerRepoId and map results", async () => {
+  describe("getByLedgerRepoIdAndUserId", () => {
+    it("should query by the complete ledger and user binding", async () => {
       const mockRow = {
         id: "pitm_3ZqE8yK9mXpN12345678",
         userId: "test-user-id",
@@ -146,7 +146,11 @@ describe("PlaidItemPostgresModel", () => {
 
       mockDb.where.mockResolvedValue([mockRow]);
 
-      const result = await model.getByLedgerRepoId(mockDb, 42);
+      const result = await model.getByLedgerRepoIdAndUserId(
+        mockDb,
+        42,
+        "test-user-id",
+      );
 
       expect(mockDb.select).toHaveBeenCalled();
       expect(result).toEqual([expect.objectContaining({ ledgerRepoId: 42 })]);
@@ -155,7 +159,11 @@ describe("PlaidItemPostgresModel", () => {
     it("should return an empty array when no items match", async () => {
       mockDb.where.mockResolvedValue([]);
 
-      const result = await model.getByLedgerRepoId(mockDb, 999);
+      const result = await model.getByLedgerRepoIdAndUserId(
+        mockDb,
+        999,
+        "test-user-id",
+      );
 
       expect(result).toEqual([]);
     });

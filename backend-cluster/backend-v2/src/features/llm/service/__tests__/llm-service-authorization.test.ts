@@ -24,8 +24,6 @@ function makeService(authorization: IAuthorizationService) {
     { getObjectMetadata, generateDownloadUrl } as never,
     { check, assertQuotaAvailable, addTokenUsage } as never,
     { blockeden: { accessKey: "test-key" } } as never,
-    {} as never,
-    {} as never,
     authorization,
   );
   return {

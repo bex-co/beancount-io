@@ -68,16 +68,26 @@ export interface IPlaidTransactionModel {
     db: DbExecutor,
     input: CreatePlaidTransactionInput,
   ): Promise<PlaidTransaction>;
-  update(
+  updateForAccount(
     db: DbExecutor,
     id: string,
+    plaidAccountId: string,
     input: UpdatePlaidTransactionInput,
-  ): Promise<void>;
-  markAsSynced(
+  ): Promise<boolean>;
+  deleteForAccount(
+    db: DbExecutor,
+    id: string,
+    plaidAccountId: string,
+  ): Promise<boolean>;
+  markAsSyncedForAccounts(
     db: DbExecutor,
     ids: string[],
+    plaidAccountIds: string[],
     ledgerEntryHash: string,
-  ): Promise<void>;
-  delete(db: DbExecutor, id: string): Promise<void>;
-  deleteMany(db: DbExecutor, ids: string[]): Promise<void>;
+  ): Promise<number>;
+  deleteManyForAccounts(
+    db: DbExecutor,
+    ids: string[],
+    plaidAccountIds: string[],
+  ): Promise<number>;
 }

@@ -46,10 +46,9 @@ describe("LedgerAssetService", () => {
     });
     service = new LedgerAssetService(
       mockFavaClientFactory as any,
-      {} as any,
-      {} as any,
       mockAssetStorage as any,
       mockConfig as any,
+      {} as any,
     );
   });
 
@@ -68,7 +67,7 @@ describe("LedgerAssetService", () => {
       expect(authorizeLedger).toHaveBeenCalledWith(
         IDENTITY,
         "alice/personal",
-        "read",
+        "ledger.files.read",
         expect.anything(),
       );
       expect(url).toBe("https://s3.example/signed");
@@ -111,7 +110,7 @@ describe("LedgerAssetService", () => {
       expect(authorizeLedger).toHaveBeenCalledWith(
         IDENTITY,
         "alice/personal",
-        "read",
+        "ledger.archive.read",
         expect.anything(),
       );
       expect(url).toBe(

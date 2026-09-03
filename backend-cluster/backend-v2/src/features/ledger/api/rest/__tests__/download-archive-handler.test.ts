@@ -11,6 +11,7 @@ import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { registerDownloadArchiveRoute } from "../download-archive-handler";
+import { NotFoundError, UnauthenticatedError } from "@/shared/errors";
 
 /**
  * The legacy archive download over HTTP.
@@ -30,6 +31,18 @@ const layers = {
   clients: {
     favaClientFactory: {
       getAdminClient: () => ({ ledgers: { getLedger: mockGetLedger } }),
+    },
+  },
+  services: {
+    authorization: {
+      authorizeOrThrow: jest.fn(async () => {
+        const response = await mockGetLedger();
+        if (!response.data.success) throw new NotFoundError("Ledger");
+        if (response.data.data.private) {
+          throw new UnauthenticatedError("Authentication required");
+        }
+        return { allowed: true };
+      }),
     },
   },
 } as unknown as AppLayers;

@@ -24,6 +24,22 @@ export const AUTHORIZATION_ACTIONS = {
   LEDGER_SOCIAL_STAR_STATUS_READ: "ledger.social.star.status.read",
   LEDGER_SOCIAL_STAR_CREATE: "ledger.social.star.create",
   LEDGER_SOCIAL_STAR_DELETE: "ledger.social.star.delete",
+  LEDGER_CATALOG_READ: "ledger.catalog.read",
+  LEDGER_METADATA_READ: "ledger.metadata.read",
+  LEDGER_REPORTS_READ: "ledger.reports.read",
+  LEDGER_JOURNAL_READ: "ledger.journal.read",
+  LEDGER_ACCOUNTS_READ: "ledger.accounts.read",
+  LEDGER_FILES_READ: "ledger.files.read",
+  LEDGER_FILES_WRITE: "ledger.files.write",
+  LEDGER_REPOSITORY_READ: "ledger.repository.read",
+  LEDGER_SHELL_READ: "ledger.shell.read",
+  LEDGER_ARCHIVE_READ: "ledger.archive.read",
+  LEDGER_ENTRIES_WRITE: "ledger.entries.write",
+  LEDGER_RECEIPTS_WRITE: "ledger.receipts.write",
+  LEDGER_PULL_REQUEST_READ: "ledger.pull_request.read",
+  LEDGER_PULL_REQUEST_CREATE: "ledger.pull_request.create",
+  LEDGER_PULL_REQUEST_APPROVE: "ledger.pull_request.approve",
+  LEDGER_PULL_REQUEST_REJECT: "ledger.pull_request.reject",
   LEDGER_CREATE: "ledger.create",
   LEDGER_ADMINISTRATION_UPDATE: "ledger.administration.update",
   LEDGER_ADMINISTRATION_DELETE: "ledger.administration.delete",
@@ -51,6 +67,24 @@ export const AUTHORIZATION_ACTIONS = {
   AI_MODEL_INVOKE: "ai.model.invoke",
   AI_LEDGER_ASK: "ai.ledger.ask",
   AI_LEDGER_AGENT: "ai.ledger.agent",
+  BANK_CONNECTIONS_LIST: "bank.connections.list",
+  BANK_CONNECTION_READ: "bank.connection.read",
+  BANK_ACCOUNTS_READ: "bank.accounts.read",
+  BANK_LINK_CREATE: "bank.link.create",
+  BANK_LINK_UPDATE: "bank.link.update",
+  BANK_LINK_EXCHANGE: "bank.link.exchange",
+  BANK_CONNECTION_UNLINK: "bank.connection.unlink",
+  BANK_ACCOUNTS_RECONCILE: "bank.accounts.reconcile",
+  BANK_ACCOUNT_MAPPING_UPDATE: "bank.account.mapping.update",
+  BANK_ACCOUNT_CURRENCY_UPDATE: "bank.account.currency.update",
+  BANK_CONNECTION_STATUS_REFRESH: "bank.connection.status.refresh",
+  BANK_TRANSACTIONS_READ: "bank.transactions.read",
+  BANK_TRANSACTION_CATEGORIES_SUGGEST: "bank.transaction.categories.suggest",
+  BANK_ACCOUNT_MAPPING_SUGGEST: "bank.account.mapping.suggest",
+  BANK_TRANSACTIONS_SYNC: "bank.transactions.sync",
+  BANK_TRANSACTIONS_SUBMIT: "bank.transactions.submit",
+  BANK_TRANSACTIONS_DELETE: "bank.transactions.delete",
+  BANK_WEBHOOK_ITEM_APPLY: "bank.webhook.item.apply",
 } as const;
 
 export type AuthorizationAction =
@@ -68,6 +102,7 @@ export const USER_RELATIONSHIPS = {
   READ_SOCIAL: "can_read_social",
   WRITE_SOCIAL: "can_write_social",
   WRITE_LEDGERS: "can_write_ledgers",
+  READ_LEDGERS: "can_read_ledgers",
   READ_PUBLIC_KEYS: "can_read_public_keys",
   WRITE_PUBLIC_KEYS: "can_write_public_keys",
 } as const;
@@ -77,6 +112,9 @@ type UserRelationship =
 
 export const LEDGER_RELATIONSHIPS = {
   READ_CONTENTS: "can_read_contents",
+  WRITE_CONTENTS: "can_write_contents",
+  READ_ASSETS: "can_read_assets",
+  WRITE_ASSETS: "can_write_assets",
   READ_ADMINISTRATION: "can_read_administration",
   WRITE_ADMINISTRATION: "can_write_administration",
   READ_COLLABORATORS: "can_read_collaborators",
@@ -85,14 +123,12 @@ export const LEDGER_RELATIONSHIPS = {
   READ: "reader",
   WRITE: "writer",
   ADMIN: "administrator",
-  WRITE_CONTENTS: "can_write_contents",
-  READ_ASSETS: "can_read_assets",
-  WRITE_ASSETS: "can_write_assets",
-  READ_BANK_CONNECTIONS: "can_read_bank_connections",
   WRITE_AI: "can_write_ai",
+  READ_BANK_CONNECTIONS: "can_read_bank_connections",
+  WRITE_BANK_CONNECTIONS: "can_write_bank_connections",
 } as const;
 
-export type LedgerRelationship =
+type LedgerRelationship =
   (typeof LEDGER_RELATIONSHIPS)[keyof typeof LEDGER_RELATIONSHIPS];
 export const TEMP_ASSET_RELATIONSHIPS = {
   OWNER: "owner",
@@ -110,16 +146,19 @@ export type UserResource = `user:${string}`;
 export type ApiKeyResource = `api_key:${string}`;
 export type LedgerResource = `ledger:${string}`;
 export type TempAssetResource = `temp_asset:${string}`;
+export type BankConnectionResource = `bank_connection:${string}`;
 export type AuthorizationResource =
   | UserResource
   | ApiKeyResource
   | LedgerResource
-  | TempAssetResource;
+  | TempAssetResource
+  | BankConnectionResource;
 export type AuthorizationResourceType =
   | "user"
   | "api_key"
   | "ledger"
-  | "temp_asset";
+  | "temp_asset"
+  | "bank_connection";
 export type AuthorizationTarget =
   | AuthorizationResource
   | readonly AuthorizationResource[];
@@ -142,6 +181,48 @@ export function ledgerResource(ledgerId: string): LedgerResource {
 export function tempAssetResource(objectKey: string): TempAssetResource {
   return `temp_asset:${objectKey}`;
 }
+
+/**
+ * A runtime authorization locator, not an OpenFGA object or persisted tuple.
+ * Item ids are internal row ids only; access tokens and Plaid item ids never
+ * enter this value. Multiple ids let a batch submit/delete get one complete
+ * composite decision.
+ */
+export function bankConnectionResource(
+  ledgerId: string,
+  plaidItemIds: string | readonly string[] = [],
+): BankConnectionResource {
+  const itemIds = Array.isArray(plaidItemIds)
+    ? [...new Set(plaidItemIds)].sort()
+    : [plaidItemIds];
+  const items = itemIds.filter(Boolean).map(encodeURIComponent).join(",");
+  return `bank_connection:${encodeURIComponent(ledgerId)}${
+    items ? `?items=${items}` : ""
+  }`;
+}
+
+export function parseBankConnectionResource(resource: string):
+  | {
+      ledgerId: string;
+      plaidItemIds: readonly string[];
+    }
+  | undefined {
+  const parsed = parseAuthorizationResource(resource);
+  if (parsed?.type !== "bank_connection") return undefined;
+  const [encodedLedgerId, encodedItems] = parsed.id.split("?items=", 2);
+  try {
+    const ledgerId = decodeURIComponent(encodedLedgerId);
+    const plaidItemIds = encodedItems
+      ? encodedItems.split(",").map(decodeURIComponent)
+      : [];
+    if (!ledgerId.trim() || plaidItemIds.some((id) => !id.trim())) {
+      return undefined;
+    }
+    return { ledgerId, plaidItemIds };
+  } catch {
+    return undefined;
+  }
+}
 export function parseAuthorizationResource(
   resource: string,
 ): { type: AuthorizationResourceType; id: string } | undefined {
@@ -153,7 +234,8 @@ export function parseAuthorizationResource(
     (type !== "user" &&
       type !== "api_key" &&
       type !== "ledger" &&
-      type !== "temp_asset") ||
+      type !== "temp_asset" &&
+      type !== "bank_connection") ||
     !id.trim()
   ) {
     return undefined;
@@ -184,9 +266,79 @@ export type AuthorizationDecision =
     };
 
 export interface AuthorizeInput {
-  principal: Identity;
+  principal: AuthorizationPrincipal;
   action: AuthorizationAction;
   resource: AuthorizationTarget;
   /** Trusted request attributes that do not belong in the relationship graph. */
   context?: Readonly<Record<string, unknown>>;
 }
+
+export type PlaidBackgroundProvenance = "plaid_webhook" | "plaid_scheduler";
+
+export interface AnonymousPrincipal {
+  readonly kind: "anonymous";
+  readonly userId: "anonymous";
+}
+
+const issuedAnonymousPrincipals = new WeakSet<object>();
+
+/** Trusted subject used only for public-ledger reads. */
+export function anonymousPrincipal(): AnonymousPrincipal {
+  const principal: AnonymousPrincipal = Object.freeze({
+    kind: "anonymous",
+    userId: "anonymous",
+  });
+  issuedAnonymousPrincipals.add(principal);
+  return principal;
+}
+
+export function isTrustedAnonymousPrincipal(
+  principal: AuthorizationPrincipal,
+): principal is AnonymousPrincipal {
+  return (
+    "kind" in principal &&
+    principal.kind === "anonymous" &&
+    issuedAnonymousPrincipals.has(principal)
+  );
+}
+
+/**
+ * An internal invocation has no request credential and is deliberately not an
+ * Identity. Instances are registered in this module so a caller-controlled
+ * object with the same fields cannot claim background provenance.
+ */
+export interface PlaidBackgroundPrincipal {
+  readonly kind: "plaid_background";
+  readonly userId: string;
+  readonly provenance: PlaidBackgroundProvenance;
+}
+
+const issuedPlaidBackgroundPrincipals = new WeakSet<object>();
+
+export function plaidBackgroundPrincipal(
+  userId: string,
+  provenance: PlaidBackgroundProvenance,
+): PlaidBackgroundPrincipal {
+  const principal: PlaidBackgroundPrincipal = Object.freeze({
+    kind: "plaid_background",
+    userId,
+    provenance,
+  });
+  issuedPlaidBackgroundPrincipals.add(principal);
+  return principal;
+}
+
+export function isTrustedPlaidBackgroundPrincipal(
+  principal: AuthorizationPrincipal,
+): principal is PlaidBackgroundPrincipal {
+  return (
+    "kind" in principal &&
+    principal.kind === "plaid_background" &&
+    issuedPlaidBackgroundPrincipals.has(principal)
+  );
+}
+
+export type AuthorizationPrincipal =
+  | Identity
+  | AnonymousPrincipal
+  | PlaidBackgroundPrincipal;

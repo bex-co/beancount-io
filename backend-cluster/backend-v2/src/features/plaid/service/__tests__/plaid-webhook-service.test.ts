@@ -1,5 +1,6 @@
 import { PlaidWebhookService } from "../plaid-webhook-service";
 import type { IPlaidSyncService } from "../plaid-sync-service";
+import { ForbiddenError } from "@/shared/errors";
 
 jest.mock("@/shared/logger", () => ({
   logger: {
@@ -16,11 +17,23 @@ const mockPlaidItemModel = {
   getByItemId: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
+  updateForBinding: jest.fn(async (db, id, _binding, input) => {
+    await mockPlaidItemModel.update(db, id, input);
+    return true;
+  }),
+  deleteForBinding: jest.fn(async (db, id) => {
+    await mockPlaidItemModel.delete(db, id);
+    return true;
+  }),
 };
 
 const mockPlaidAccountModel = {
   getByAccountId: jest.fn(),
   delete: jest.fn(),
+  deleteForItem: jest.fn(async (db, id) => {
+    await mockPlaidAccountModel.delete(db, id);
+    return true;
+  }),
 };
 
 const mockModels = {
@@ -28,10 +41,14 @@ const mockModels = {
   plaidAccount: mockPlaidAccountModel,
 } as any;
 const mockDb = {} as any;
+const mockAuthorization = {
+  authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+};
 
 function buildMockSyncService(): jest.Mocked<IPlaidSyncService> {
   return {
     syncItemTransactions: jest.fn(),
+    syncItemTransactionsInBackground: jest.fn(),
     getUnsyncedTransactionsForCategorization: jest.fn(),
     submitTransactionsToLedger: jest.fn(),
     deleteTransactions: jest.fn(),
@@ -45,7 +62,7 @@ describe("PlaidWebhookService", () => {
   beforeEach(() => {
     jest.clearAllMocks();
     mockSyncService = buildMockSyncService();
-    mockSyncService.syncItemTransactions.mockResolvedValue({
+    mockSyncService.syncItemTransactionsInBackground.mockResolvedValue({
       success: true,
       transactionsFetched: 0,
       transactionsAdded: 0,
@@ -56,11 +73,24 @@ describe("PlaidWebhookService", () => {
       mockModels,
       mockDb,
       mockSyncService,
+      {
+        getAdminClient: () => ({
+          admin: {
+            getLedgerByRepoId: jest.fn().mockResolvedValue({
+              data: {
+                success: true,
+                data: { id: 42, full_name: "owner/ledger" },
+              },
+            }),
+          },
+        }),
+      } as never,
+      mockAuthorization as never,
     );
   });
 
   describe("handleEvent - TRANSACTIONS webhooks", () => {
-    const mockItem = { id: "pitm_1", userId: "user_1" };
+    const mockItem = { id: "pitm_1", userId: "user_1", ledgerRepoId: 42 };
 
     beforeEach(() => {
       mockPlaidItemModel.getByItemId.mockResolvedValue(mockItem);
@@ -79,10 +109,11 @@ describe("PlaidWebhookService", () => {
       );
       // syncItemTransactions is fire-and-forget; flush all pending microtasks
       await new Promise((resolve) => setImmediate(resolve));
-      expect(mockSyncService.syncItemTransactions).toHaveBeenCalledWith(
+      expect(
+        mockSyncService.syncItemTransactionsInBackground,
+      ).toHaveBeenCalledWith(
         expect.objectContaining({ userId: "user_1" }),
         "pitm_1",
-        "webhook",
       );
     });
 
@@ -94,7 +125,9 @@ describe("PlaidWebhookService", () => {
       });
 
       await new Promise((resolve) => setImmediate(resolve));
-      expect(mockSyncService.syncItemTransactions).toHaveBeenCalled();
+      expect(
+        mockSyncService.syncItemTransactionsInBackground,
+      ).toHaveBeenCalled();
     });
 
     it("should trigger sync for TRANSACTIONS_REMOVED", async () => {
@@ -105,7 +138,9 @@ describe("PlaidWebhookService", () => {
       });
 
       await new Promise((resolve) => setImmediate(resolve));
-      expect(mockSyncService.syncItemTransactions).toHaveBeenCalled();
+      expect(
+        mockSyncService.syncItemTransactionsInBackground,
+      ).toHaveBeenCalled();
     });
 
     it("should log warning for unknown TRANSACTIONS code", async () => {
@@ -115,7 +150,9 @@ describe("PlaidWebhookService", () => {
         item_id: "plaid-item-ext-id",
       });
 
-      expect(mockSyncService.syncItemTransactions).not.toHaveBeenCalled();
+      expect(
+        mockSyncService.syncItemTransactionsInBackground,
+      ).not.toHaveBeenCalled();
     });
   });
 
@@ -149,6 +186,24 @@ describe("PlaidWebhookService", () => {
           errorCode: "ITEM_LOGIN_REQUIRED",
         }),
       );
+    });
+
+    it("performs no item mutation when background authorization denies", async () => {
+      mockAuthorization.authorizeOrThrow.mockRejectedValueOnce(
+        new ForbiddenError("Forbidden"),
+      );
+
+      await expect(
+        webhookService.handleEvent({
+          webhook_type: "ITEM",
+          webhook_code: "USER_PERMISSION_REVOKED",
+          item_id: "plaid-item-ext-id",
+        }),
+      ).rejects.toBeInstanceOf(ForbiddenError);
+
+      expect(mockPlaidItemModel.updateForBinding).not.toHaveBeenCalled();
+      expect(mockPlaidItemModel.deleteForBinding).not.toHaveBeenCalled();
+      expect(mockPlaidAccountModel.deleteForItem).not.toHaveBeenCalled();
     });
 
     it("should update item to requires_reauth for PENDING_EXPIRATION", async () => {
@@ -311,7 +366,9 @@ describe("PlaidWebhookService", () => {
       });
 
       await new Promise((resolve) => setImmediate(resolve));
-      expect(mockSyncService.syncItemTransactions).not.toHaveBeenCalled();
+      expect(
+        mockSyncService.syncItemTransactionsInBackground,
+      ).not.toHaveBeenCalled();
     });
   });
 });

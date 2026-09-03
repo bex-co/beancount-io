@@ -1,7 +1,34 @@
 import {
+  CommitsService,
   stripCommitMetadata,
   parseFileStatsFromDiff,
 } from "../commits-service";
+
+describe("CommitsService authorization", () => {
+  it("denies before provisioning a Gitea client", async () => {
+    const getUserApiClient = jest.fn();
+    const getAnonymousApiClient = jest.fn();
+    const service = new CommitsService(
+      { getUserApiClient, getAnonymousApiClient } as never,
+      {
+        authorizeOrThrow: jest.fn().mockRejectedValue(new Error("denied")),
+      } as never,
+    );
+
+    await expect(
+      service.listCommits({
+        identity: {
+          userId: "usr_1",
+          method: "session",
+          scopes: new Set(),
+        },
+        ledgerId: "alice/main",
+      }),
+    ).rejects.toThrow("denied");
+    expect(getUserApiClient).not.toHaveBeenCalled();
+    expect(getAnonymousApiClient).not.toHaveBeenCalled();
+  });
+});
 
 describe("stripCommitMetadata", () => {
   it("should extract clean diff from full git patch", () => {

@@ -5,6 +5,13 @@ import type {
   CommitDetails,
 } from "../api/commits-resolver.types";
 import { logger } from "@/shared/logger";
+import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  anonymousPrincipal,
+  ledgerResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
 
 /**
  * Strips commit metadata from a git patch to extract only the unified diff.
@@ -87,7 +94,7 @@ export function parseFileStatsFromDiff(
 }
 
 export interface ListCommitsInput {
-  userId?: string;
+  identity?: Identity;
   ledgerId: string;
   branch?: string;
   page?: number;
@@ -95,7 +102,7 @@ export interface ListCommitsInput {
 }
 
 export interface GetCommitDetailsInput {
-  userId?: string;
+  identity?: Identity;
   ledgerId: string;
   sha: string;
 }
@@ -106,21 +113,29 @@ export interface ICommitsService {
 }
 
 export class CommitsService implements ICommitsService {
-  constructor(private readonly giteaClientFactory: IGiteaClientFactory) {}
+  constructor(
+    private readonly giteaClientFactory: IGiteaClientFactory,
+    private readonly authorization: IAuthorizationService,
+  ) {}
 
   async listCommits({
-    userId,
+    identity,
     ledgerId,
     branch = "main",
     page = 1,
     limit = 30,
   }: ListCommitsInput): Promise<CommitListItem[]> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity ?? anonymousPrincipal(),
+      action: AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity?.userId;
     const { ledgerOwner: owner, ledgerName: repo } = parseLedgerId(ledgerId);
     try {
-      const client = await this.giteaClientFactory.getPublicApiClient(
-        ledgerId,
-        userId,
-      );
+      const client = userId
+        ? await this.giteaClientFactory.getUserApiClient(userId)
+        : this.giteaClientFactory.getAnonymousApiClient();
 
       const response = await client.repos.repoGetAllCommits(
         owner,
@@ -173,16 +188,21 @@ export class CommitsService implements ICommitsService {
   }
 
   async getCommitDetails({
-    userId,
+    identity,
     ledgerId,
     sha,
   }: GetCommitDetailsInput): Promise<CommitDetails> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity ?? anonymousPrincipal(),
+      action: AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity?.userId;
     const { ledgerOwner: owner, ledgerName: repo } = parseLedgerId(ledgerId);
     try {
-      const client = await this.giteaClientFactory.getPublicApiClient(
-        ledgerId,
-        userId,
-      );
+      const client = userId
+        ? await this.giteaClientFactory.getUserApiClient(userId)
+        : this.giteaClientFactory.getAnonymousApiClient();
 
       // Get commit metadata with files
       const commitResponse = await client.repos.repoGetAllCommits(

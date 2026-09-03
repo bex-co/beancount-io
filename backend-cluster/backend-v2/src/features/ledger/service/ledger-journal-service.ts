@@ -9,9 +9,12 @@ import type {
 import type { Identity } from "@/server/api/identity";
 import {
   authorizeLedger,
-  type LedgerRel,
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
+import {
+  AUTHORIZATION_ACTIONS,
+  type AuthorizationAction,
+} from "@/server/api/authorization/authorization-contract";
 
 export type JournalResult = {
   total: number;
@@ -122,14 +125,17 @@ export interface ILedgerJournalService {
   }): Promise<UpdateSliceResult>;
 }
 
-export class LedgerJournalService extends AuthorizedLedgerService implements ILedgerJournalService {
+export class LedgerJournalService
+  extends AuthorizedLedgerService
+  implements ILedgerJournalService
+{
   /** Shared by all seven verbs: authorize, then hand back a ready Fava client. */
   private async getClient(
     ledgerId: string,
     identity: Identity | undefined,
-    rel: LedgerRel,
+    action: AuthorizationAction,
   ) {
-    await authorizeLedger(identity, ledgerId, rel, this.authDeps);
+    await authorizeLedger(identity, ledgerId, action, this.authDeps);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -147,7 +153,7 @@ export class LedgerJournalService extends AuthorizedLedgerService implements ILe
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
-      "read",
+      AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
     );
 
     const response = await favaApiClient.journal.getJournal(
@@ -187,7 +193,7 @@ export class LedgerJournalService extends AuthorizedLedgerService implements ILe
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
-      "read",
+      AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
     );
 
     const response = await favaApiClient.journal.getContext(
@@ -219,7 +225,7 @@ export class LedgerJournalService extends AuthorizedLedgerService implements ILe
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
-      "read",
+      AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
     );
 
     const response = await favaApiClient.journal.plaintextJournal(
@@ -248,7 +254,7 @@ export class LedgerJournalService extends AuthorizedLedgerService implements ILe
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
-      "read",
+      AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
     );
 
     const response = await favaApiClient.journal.getAccountJournal(
@@ -293,7 +299,7 @@ export class LedgerJournalService extends AuthorizedLedgerService implements ILe
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
-      "write",
+      AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
 
     const response = await favaApiClient.journal.deleteSourceSlice(
@@ -319,7 +325,7 @@ export class LedgerJournalService extends AuthorizedLedgerService implements ILe
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
-      "write",
+      AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
 
     const response = await favaApiClient.journal.deleteMultiSourceSlices(
@@ -352,7 +358,7 @@ export class LedgerJournalService extends AuthorizedLedgerService implements ILe
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
-      "write",
+      AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
 
     const response = await favaApiClient.journal.updateSourceSlice(

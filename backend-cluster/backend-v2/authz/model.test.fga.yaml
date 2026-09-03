@@ -55,6 +55,7 @@ tests:
           can_read_social: true
           can_write_social: true
           can_write_ledgers: true
+          can_read_ledgers: true
           can_read_public_keys: true
           can_write_public_keys: true
 
@@ -88,6 +89,7 @@ tests:
           can_read_social: false
           can_write_social: false
           can_write_ledgers: false
+          can_read_ledgers: false
           can_read_public_keys: false
           can_write_public_keys: false
       - user: user:usr_dave
@@ -97,6 +99,7 @@ tests:
           can_write_profile: false
           can_write_lifecycle: false
           can_write_ledgers: false
+          can_read_ledgers: false
           can_read_public_keys: false
           can_write_public_keys: false
 

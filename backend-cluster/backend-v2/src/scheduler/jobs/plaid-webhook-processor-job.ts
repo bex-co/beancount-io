@@ -30,11 +30,14 @@ export const createPlaidWebhookProcessorJob: JobFactory = (layers) => {
         favaClientFactory,
         models,
         postgresDb,
+        layers.services.authorization,
       );
       const webhookService = new PlaidWebhookService(
         models,
         postgresDb,
         plaidSyncService,
+        favaClientFactory,
+        layers.services.authorization,
       );
 
       // Fetch pending events ready for processing

@@ -11,7 +11,6 @@ import {
 } from "./plaid-resolver.types";
 import { CategorySuggestion } from "@/features/llm/api/ai-categorization-resolver.types";
 import type { IPlaidItemService } from "@/features/plaid/service/plaid-item-service";
-import { assertLedgerAuthorization } from "@/features/ledger/utils/authorize-ledger";
 
 @Resolver(() => PlaidItemType)
 export class PlaidQueryResolver {
@@ -26,7 +25,6 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidItemType[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.getItems(identity, ledgerId);
   }
 
@@ -67,7 +65,6 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidAccountType[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.getAccounts(identity, itemId, ledgerId);
   }
 
@@ -81,7 +78,6 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidAccountWithInstitutionType[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.getAccountsForLedger(identity, ledgerId);
   }
 
@@ -97,7 +93,6 @@ export class PlaidQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<PlaidTransactionType[]> {
     const identity = ctx.getCurrentIdentity();
-    assertLedgerAuthorization(identity, ledgerId, "read");
     return this.plaidItemService.getUnsyncedTransactions(
       identity,
       accountId,

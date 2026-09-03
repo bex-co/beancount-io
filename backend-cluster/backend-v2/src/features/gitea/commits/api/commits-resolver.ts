@@ -18,7 +18,7 @@ export class CommitsResolver {
     @Ctx() ctx: IContext,
   ): Promise<CommitListItem[]> {
     return this.commitsService.listCommits({
-      userId: ctx.userId,
+      identity: ctx.identity,
       ledgerId,
       branch,
       page,
@@ -34,7 +34,7 @@ export class CommitsResolver {
     @Ctx() ctx: IContext,
   ): Promise<CommitDetails> {
     return this.commitsService.getCommitDetails({
-      userId: ctx.userId,
+      identity: ctx.identity,
       ledgerId,
       sha,
     });

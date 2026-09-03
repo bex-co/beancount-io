@@ -53,7 +53,6 @@ describe("LedgerJournalService", () => {
     service = new LedgerJournalService(
       mockFavaClientFactory as any,
       {} as any,
-      {} as any,
     );
   });
 

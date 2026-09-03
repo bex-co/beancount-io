@@ -9,13 +9,12 @@ jest.mock("@ai-sdk/harness-acp", () => ({
 }));
 
 import Router, { type RouterContext } from "@koa/router";
-import { GraphQLError, type GraphQLResolveInfo } from "graphql";
+import type { GraphQLResolveInfo } from "graphql";
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js";
 import type { CallToolResult } from "@modelcontextprotocol/sdk/types.js";
 import { config as realConfig, type AppConfig } from "@/config/config";
 import { ForbiddenError } from "@/shared/errors";
 import { asyncContext, getOperationId } from "@/shared/async-context";
-import { formatError } from "@/server/graphql/format-error";
 import type { IContext } from "@/server/graphql/context";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { buildGraphqlSchema } from "@/server/graphql/api-gateway";
@@ -356,54 +355,41 @@ describe("scope enforcement across surfaces", () => {
     });
   });
 
-  describe("refuses a read-only token a write op, in each surface's dialect", () => {
-    it("REST: 403 with the standard error envelope", async () => {
+  describe("routes migrated writes to the PDP while retaining grouped-dispatcher scope checks", () => {
+    it("REST: defers a migrated ledger write to its protected service", async () => {
       const { ctx, reached } = await driveRest(
         readOnlyToken,
         enforcing,
         "POST",
         "/api-gateway/v1/ledgers/alice/main/entries",
       );
-      expect(reached).toEqual([]);
-      expect(ctx.status).toBe(403);
-      expect(ctx.body).toMatchObject({
-        ok: false,
-        error: { code: "FORBIDDEN" },
-      });
+      expect(reached).toEqual(["entries"]);
+      expect(ctx.status).toBe(204);
       expect(
-        (ctx.body as { error: { message: string } }).error.message,
-      ).toContain("ledger.write");
+        authorizationActionForOp(
+          "REST POST /api-gateway/v1/ledgers/{owner}/{name}/entries",
+        ),
+      ).toBeDefined();
     });
 
-    it("GraphQL: an error carrying extensions.code FORBIDDEN", async () => {
+    it("GraphQL: defers a migrated assisted write to the PDP", async () => {
       const { error, reached } = await driveGraphql(
         readOnlyToken,
-        makeGraphqlInfo("Mutation", "createLedgerFile"),
+        makeGraphqlInfo("Mutation", "parseFile"),
         enforcing,
       );
-      expect(reached).toBe(false);
-      expect(error).toBeInstanceOf(ForbiddenError);
-      // The pair Apollo hands `formatError`, so the assertion is on the wire
-      // shape a client actually receives rather than on the throw.
-      const wire = formatError(
-        {
-          message: (error as Error).message,
-          extensions: { code: "INTERNAL_SERVER_ERROR" },
-        },
-        new GraphQLError((error as Error).message, {
-          originalError: error as Error,
-          path: ["createLedgerFile"],
-        }),
-      );
-      expect(wire.extensions).toMatchObject({ code: "FORBIDDEN" });
-      expect(wire.message).toContain("ledger.write");
+      expect(reached).toBe(true);
+      expect(error).toBeUndefined();
+      expect(
+        authorizationActionForOp("GQL Mutation.parseFile"),
+      ).toBeDefined();
     });
 
     it("MCP: an isError tool result rather than a dead connection", async () => {
       // An agent is mid-conversation; a thrown transport error would end the
       // session instead of telling it what it lacked.
       const handlers = captureMcpHandlers(readOnlyToken, enforcing);
-      const result = await handlers.get("editLedgerFiles")!({});
+      const result = await handlers.get("manageBankImport")!({});
       expect(result.isError).toBe(true);
       expect(JSON.stringify(result.content)).toContain("ledger.write");
     });
@@ -536,7 +522,7 @@ describe("scope enforcement across surfaces", () => {
  * hand-built `info` object.
  *
  * This is what stands in for the dashboard smoke: session traffic driving the
- * real schema, including admin-class mutations, and never meeting a scope
+ * real schema, including session-only mutations, and never meeting a scope
  * refusal — while the same documents on a read-only token do. A hand-made
  * middleware call cannot show that the middleware is actually wired into the
  * schema; this can.
@@ -544,10 +530,9 @@ describe("scope enforcement across surfaces", () => {
 describe("scope enforcement through the real schema", () => {
   const DOCUMENTS: Record<string, string> = {
     publicQuery: "query { health }",
-    readQuery:
-      'query { queryShellText(ledgerId: "alice/main", query: "SELECT 1") { __typename } }',
-    adminMutation:
-      'mutation { createPlaidLinkToken(ledgerId: "alice/main") { __typename } }',
+    readQuery: "query { aiCfoUsage { __typename } }",
+    sessionOnlyMutation:
+      'mutation { signIn(email: "test@example.com", password: "test") { __typename } }',
   };
 
   const contextFor = (identity: Identity): IContext =>
@@ -590,12 +575,12 @@ describe("scope enforcement through the real schema", () => {
     return refused;
   };
 
-  it("never refuses a browser session, admin-class mutations included", async () => {
+  it("never refuses a browser session, session-only mutations included", async () => {
     expect(await forbiddenOps(sessionIdentity)).toEqual([]);
   });
 
   it("refuses a read-only token everything above its class", async () => {
-    expect(await forbiddenOps(readOnlyToken)).toEqual(["adminMutation"]);
+    expect(await forbiddenOps(readOnlyToken)).toEqual(["sessionOnlyMutation"]);
   });
 
   it("refuses a scopeless token everything but the public op", async () => {
@@ -604,7 +589,7 @@ describe("scope enforcement through the real schema", () => {
     const scopeless: Identity = { ...readOnlyToken, scopes: new Set() };
     expect(await forbiddenOps(scopeless)).toEqual([
       "readQuery",
-      "adminMutation",
+      "sessionOnlyMutation",
     ]);
   });
 });
@@ -668,15 +653,20 @@ describe("configured enforcement and the shadow-mode compatibility path", () => 
     const middleware = restScopeMiddleware(shadowing, gates);
     const scopeless: Identity = { ...readOnlyToken, scopes: new Set() };
 
-    const enforced = restMounts.filter(
+    const legacyEnforced = restMounts.filter(
       (mount) =>
         mount.gate === "enforced" && !authorizationActionForOp(mount.opId),
     );
-    // If this is ever empty the test above silently becomes the only one, and
-    // v1 could lose its enforcement without anything failing.
-    expect(enforced.length).toBeGreaterThan(0);
+    const migratedEnforced = restMounts.filter(
+      (mount) =>
+        mount.gate === "enforced" && authorizationActionForOp(mount.opId),
+    );
+    // Every currently enforced v1 mount has migrated. The transport gate must
+    // therefore defer instead of independently intersecting the PDP.
+    expect(legacyEnforced).toEqual([]);
+    expect(migratedEnforced.length).toBeGreaterThan(0);
 
-    for (const mount of enforced) {
+    for (const mount of legacyEnforced) {
       const ctx = {
         method: mount.method === "ALL" ? "POST" : mount.method,
         path: mount.path,

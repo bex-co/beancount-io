@@ -17,6 +17,7 @@ import type { LedgerPublic } from "@/foundation/fava/Api";
 import { config } from "@/config/config";
 import { logger } from "@/shared/logger";
 import { systemIdentity } from "@/server/api/identity";
+import { AuthorizationService } from "@/server/api/authorization";
 
 /**
  * ONE-TIME offline script (h2-plan.md item 3 — free-tier transaction limit).
@@ -491,8 +492,7 @@ async function main(): Promise<void> {
   const favaClientFactory = new FavaClientFactory(models, db, config);
   const ledgerDataService = new LedgerDataService(
     favaClientFactory,
-    models,
-    db,
+    new AuthorizationService({ check: async () => true }),
   );
 
   const runId = new Date().toISOString().replace(/[:.]/g, "-");

@@ -172,61 +172,83 @@ export class PlaidTransactionPostgresModel implements IPlaidTransactionModel {
     return this.toPlainObject(result[0]);
   }
 
-  public async update(
+  public async updateForAccount(
     db: DbExecutor,
     id: string,
+    plaidAccountId: string,
     input: UpdatePlaidTransactionInput,
-  ): Promise<void> {
-    const now = new Date();
-
-    const updateData: any = {
-      ...input,
-      updatedAt: now,
-    };
-
-    // Convert Date to string if present
-    if (input.date) {
-      updateData.date = input.date.toISOString().split("T")[0];
-    }
-
-    await db
+  ): Promise<boolean> {
+    const updateData: any = { ...input, updatedAt: new Date() };
+    if (input.date) updateData.date = input.date.toISOString().split("T")[0];
+    const rows = await db
       .update(plaidTransactions)
       .set(updateData)
-      .where(eq(plaidTransactions.id, id));
+      .where(
+        and(
+          eq(plaidTransactions.id, id),
+          eq(plaidTransactions.plaidAccountId, plaidAccountId),
+        ),
+      )
+      .returning({ id: plaidTransactions.id });
+    return rows.length === 1;
   }
 
-  public async markAsSynced(
+  public async deleteForAccount(
+    db: DbExecutor,
+    id: string,
+    plaidAccountId: string,
+  ): Promise<boolean> {
+    const rows = await db
+      .delete(plaidTransactions)
+      .where(
+        and(
+          eq(plaidTransactions.id, id),
+          eq(plaidTransactions.plaidAccountId, plaidAccountId),
+        ),
+      )
+      .returning({ id: plaidTransactions.id });
+    return rows.length === 1;
+  }
+
+  public async markAsSyncedForAccounts(
     db: DbExecutor,
     ids: string[],
+    plaidAccountIds: string[],
     ledgerEntryHash: string,
-  ): Promise<void> {
-    if (ids.length === 0) {
-      return;
-    }
-
-    const now = new Date();
-
-    await db
+  ): Promise<number> {
+    if (ids.length === 0 || plaidAccountIds.length === 0) return 0;
+    const rows = await db
       .update(plaidTransactions)
       .set({
         syncedToLedger: true,
         ledgerEntryHash,
-        updatedAt: now,
+        updatedAt: new Date(),
       })
-      .where(inArray(plaidTransactions.id, ids));
+      .where(
+        and(
+          inArray(plaidTransactions.id, ids),
+          inArray(plaidTransactions.plaidAccountId, plaidAccountIds),
+        ),
+      )
+      .returning({ id: plaidTransactions.id });
+    return rows.length;
   }
 
-  public async delete(db: DbExecutor, id: string): Promise<void> {
-    await db.delete(plaidTransactions).where(eq(plaidTransactions.id, id));
-  }
-
-  public async deleteMany(db: DbExecutor, ids: string[]): Promise<void> {
-    if (ids.length === 0) {
-      return;
-    }
-
-    await db
+  public async deleteManyForAccounts(
+    db: DbExecutor,
+    ids: string[],
+    plaidAccountIds: string[],
+  ): Promise<number> {
+    if (ids.length === 0 || plaidAccountIds.length === 0) return 0;
+    const rows = await db
       .delete(plaidTransactions)
-      .where(inArray(plaidTransactions.id, ids));
+      .where(
+        and(
+          inArray(plaidTransactions.id, ids),
+          inArray(plaidTransactions.plaidAccountId, plaidAccountIds),
+        ),
+      )
+      .returning({ id: plaidTransactions.id });
+    return rows.length;
   }
 }

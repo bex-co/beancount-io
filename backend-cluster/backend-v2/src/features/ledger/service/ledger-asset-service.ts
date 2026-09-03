@@ -6,11 +6,12 @@ import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factor
 import type { IAssetStorageService } from "@/features/s3/service/asset-storage-service";
 import type { AppConfig } from "@/config/config";
 import type { Identity } from "@/server/api/identity";
+import type { IAuthorizationService } from "@/server/api/authorization";
 import {
   authorizeLedger,
-  type AuthorizeLedgerDeps,
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 
 export interface ILedgerAssetService {
   getAssetDownloadUrl(
@@ -30,12 +31,11 @@ export class LedgerAssetService
 {
   constructor(
     favaClientFactory: IFavaClientFactory,
-    models: AuthorizeLedgerDeps["models"],
-    db: AuthorizeLedgerDeps["db"],
     private readonly assetStorage: IAssetStorageService,
     private readonly config: Pick<AppConfig, "server">,
+    authorization: IAuthorizationService,
   ) {
-    super(favaClientFactory, models, db);
+    super(favaClientFactory, authorization);
   }
 
   /**
@@ -58,7 +58,12 @@ export class LedgerAssetService
       () => new NotFoundError("Ledger", String(ledgerRepoId)),
     );
 
-    await authorizeLedger(identity, ledger.full_name, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledger.full_name,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+      this.authDeps,
+    );
 
     const objectKey = buildLedgerRepoAssetKey(ledgerRepoId, filename);
     const { downloadUrl } =
@@ -91,7 +96,12 @@ export class LedgerAssetService
       () => new NotFoundError("Ledger", ledgerId),
     );
 
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
+      this.authDeps,
+    );
 
     const baseUrl = this.config.server.url.replace(/\/$/, "");
 

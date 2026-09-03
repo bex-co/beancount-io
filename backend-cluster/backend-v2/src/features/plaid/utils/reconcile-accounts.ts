@@ -165,7 +165,7 @@ export async function reconcileAccounts(
       }
     }
     for (const account of toDelete) {
-      await models.plaidAccount.delete(tx, account.id);
+      await models.plaidAccount.deleteForItem(tx, account.id, itemId);
     }
   });
 

@@ -38,8 +38,6 @@ describe("LLMService temp-asset ownership", () => {
       { getObjectMetadata, generateDownloadUrl } as never,
       { check: usageCheck, addTokenUsage: jest.fn() } as never,
       { blockeden: { accessKey: "test-key" } } as never,
-      {} as never,
-      {} as never,
       authorization,
     );
   }

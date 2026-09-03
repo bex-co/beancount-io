@@ -16,7 +16,7 @@ import {
   type V1TestServer,
 } from "@/server/rest/__tests__/v1-test-server";
 
-const listDirContent = jest.fn(async () => []);
+const authorizeOrThrow = jest.fn(async () => ({ allowed: true }));
 
 const layers = {
   database: {
@@ -30,9 +30,9 @@ const layers = {
       },
     },
   },
-  clients: {},
+  clients: { favaClientFactory: {} },
   services: {
-    ledgerRepo: { listDirContent },
+    authorization: { authorizeOrThrow },
   },
   workflows: {},
 } as unknown as AppLayers;
@@ -65,7 +65,7 @@ afterAll(async () => {
 beforeEach(() => {
   jest.clearAllMocks();
   server.setIdentity(readOnlyToken);
-  listDirContent.mockResolvedValue([]);
+  authorizeOrThrow.mockResolvedValue({ allowed: true });
   fetchMock.mockResolvedValue({
     ok: true,
     status: 200,
@@ -94,10 +94,13 @@ describe("v1 archive download", () => {
 
     expect(response.status).toBe(200);
     expect(await response.text()).toBe("ZIPBYTES");
-    expect(listDirContent).toHaveBeenCalledWith({
-      ledgerId: "alice/main",
-      identity,
-    });
+    expect(authorizeOrThrow).toHaveBeenCalledWith(
+      expect.objectContaining({
+        principal: identity,
+        action: "ledger.archive.read",
+        resource: "ledger:alice/main",
+      }),
+    );
     expect(fetchMock).toHaveBeenCalledWith(
       "http://ledger.invalid/ledgers/alice/main/archive/gitea-main.zip",
       expect.objectContaining({ method: "GET" }),
@@ -118,15 +121,16 @@ describe("v1 archive download", () => {
 
   it("refuses a token without read scope", async () => {
     server.setIdentity(scopelessToken);
+    authorizeOrThrow.mockRejectedValueOnce(new ForbiddenError("requires read"));
     const response = await fetch(`${server.url}${ARCHIVE}`);
 
     expect(response.status).toBe(403);
-    expect(listDirContent).not.toHaveBeenCalled();
+    expect(authorizeOrThrow).toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
   it("refuses a caller without ledger read access", async () => {
-    listDirContent.mockRejectedValueOnce(new ForbiddenError("no access"));
+    authorizeOrThrow.mockRejectedValueOnce(new ForbiddenError("no access"));
     const response = await fetch(`${server.url}${ARCHIVE}`);
 
     expect(response.status).toBe(403);
@@ -139,7 +143,7 @@ describe("v1 archive download", () => {
     );
 
     expect(response.status).toBe(400);
-    expect(listDirContent).not.toHaveBeenCalled();
+    expect(authorizeOrThrow).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 
@@ -170,7 +174,7 @@ describe("v1 archive download", () => {
     });
 
     expect(response.status).toBe(404);
-    expect(listDirContent).not.toHaveBeenCalled();
+    expect(authorizeOrThrow).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();
   });
 });

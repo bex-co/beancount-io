@@ -5,6 +5,10 @@ const mockPlaidAccountModel = {
   getByItemId: jest.fn(),
   create: jest.fn(),
   delete: jest.fn(),
+  deleteForItem: jest.fn(async (db, id) => {
+    await mockPlaidAccountModel.delete(db, id);
+    return true;
+  }),
 };
 
 const mockDb: any = {

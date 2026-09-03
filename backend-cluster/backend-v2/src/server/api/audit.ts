@@ -1,4 +1,5 @@
 import type { AuthMethod, Identity } from "./identity";
+import type { PlaidBackgroundProvenance } from "./authorization/authorization-contract";
 import { logger } from "@/shared/logger";
 
 const auditLogger = logger.child({ module: "audit" });
@@ -28,7 +29,7 @@ export interface AuditEvent {
    */
   readonly op: string;
   readonly userId?: string;
-  readonly method?: AuthMethod;
+  readonly method?: AuthMethod | PlaidBackgroundProvenance;
   /** The credential's id. Never its secret. */
   readonly tokenId?: string;
   /** `owner/name`, when the op names a ledger. */

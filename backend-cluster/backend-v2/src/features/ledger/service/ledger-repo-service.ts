@@ -7,6 +7,7 @@ import {
   authorizeLedger,
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 
 type CommitUser = {
@@ -75,7 +76,12 @@ export class LedgerRepoService
     branchName?: string;
   }): Promise<LatestCommitResult> {
     const { ledgerId, identity, branchName = "main" } = params;
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,
+      this.authDeps,
+    );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -123,7 +129,12 @@ export class LedgerRepoService
     dirPath?: string;
   }): Promise<LedgerFileEntry[]> {
     const { ledgerId, identity, dirPath } = params;
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+      this.authDeps,
+    );
     if (dirPath !== undefined) {
       assertSafeRepoPath(dirPath, "dirPath");
     }
@@ -154,7 +165,12 @@ export class LedgerRepoService
     paths: string[];
   }): Promise<LedgerFileWithContent[]> {
     const { ledgerId, identity, paths } = params;
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+      this.authDeps,
+    );
     paths.forEach((path, index) => assertSafeRepoPath(path, `paths[${index}]`));
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
@@ -183,7 +199,12 @@ export class LedgerRepoService
     message: string;
   }): Promise<void> {
     const { ledgerId, identity, operations, message } = params;
-    await authorizeLedger(identity, ledgerId, "write", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      this.authDeps,
+    );
     operations.forEach((operation, index) => {
       assertSafeRepoPath(operation.path, `operations[${index}].path`);
       if (operation.from_path !== null && operation.from_path !== undefined) {

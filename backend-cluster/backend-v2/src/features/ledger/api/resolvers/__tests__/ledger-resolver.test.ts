@@ -3,7 +3,6 @@ import { LedgerQueryResolver } from "../ledger-resolver.query";
 import { LedgerMutationResolver } from "../ledger-resolver.mutation";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { IContext } from "@/server/graphql/context";
-import { ForbiddenError } from "@/shared/errors";
 
 /**
  * The resolvers are thin transport adapters: they resolve `userId` from context
@@ -94,7 +93,7 @@ describe("Ledger resolvers (delegation)", () => {
       const input = { path: "a.bean", content: "x" };
       await mutationResolver.createLedgerFile("o/l", input as never, ctx);
       expect(workflow.createLedgerFile).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId: "o/l",
         input,
         platform: "web",
@@ -105,7 +104,7 @@ describe("Ledger resolvers (delegation)", () => {
       const input = { path: "a.bean", content: "x", sha: "s" };
       await mutationResolver.updateLedgerFile("o/l", input as never, ctx);
       expect(workflow.updateLedgerFile).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId: "o/l",
         input,
         platform: "web",
@@ -116,7 +115,7 @@ describe("Ledger resolvers (delegation)", () => {
       const input = { path: "a.bean", sha: "s" };
       await mutationResolver.deleteLedgerFile("o/l", input as never, ctx);
       expect(workflow.deleteLedgerFile).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId: "o/l",
         input,
       });
@@ -126,7 +125,7 @@ describe("Ledger resolvers (delegation)", () => {
       const input = { oldPath: "a", newPath: "b" };
       await mutationResolver.renameLedgerFile("o/l", input as never, ctx);
       expect(workflow.renameLedgerFile).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId: "o/l",
         input,
       });
@@ -147,33 +146,33 @@ describe("Ledger resolvers (delegation)", () => {
   });
 
   describe("LedgerQueryResolver", () => {
-    it("listLedgers / listUserOwnedLedgers / searchLedgers delegate with userId + args", async () => {
+    it("listLedgers / listUserOwnedLedgers / searchLedgers delegate with identity + args", async () => {
       const args = { page: 1, limit: 10 };
       await queryResolver.listLedgers(args, ctx);
       expect(workflow.listLedgers).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         args,
       });
 
       await queryResolver.listUserOwnedLedgers(args, ctx);
       expect(workflow.listUserOwnedLedgers).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         args,
       });
 
       const searchArgs = { q: "x" };
       await queryResolver.searchLedgers(searchArgs, ctx);
       expect(workflow.searchLedgers).toHaveBeenCalledWith({
-        userId: USER_ID,
+        identity: IDENTITY,
         args: searchArgs,
       });
     });
 
-    it("getLedger uses optional ctx.userId (no auth required)", async () => {
+    it("getLedger passes the optional resolved identity", async () => {
       await queryResolver.getLedger("o/l", ctx);
       expect(workflow.getLedger).toHaveBeenCalledWith({
         ledgerId: "o/l",
-        userId: USER_ID,
+        identity: IDENTITY,
       });
     });
 
@@ -182,7 +181,7 @@ describe("Ledger resolvers (delegation)", () => {
       await queryResolver.getLedgerFile("o/l", fileArgs, ctx);
       expect(workflow.getLedgerFile).toHaveBeenCalledWith({
         ledgerId: "o/l",
-        userId: USER_ID,
+        identity: IDENTITY,
         args: fileArgs,
       });
 
@@ -190,35 +189,35 @@ describe("Ledger resolvers (delegation)", () => {
       await queryResolver.getLedgerDirContent("o/l", dirArgs, ctx);
       expect(workflow.getLedgerDirContent).toHaveBeenCalledWith({
         ledgerId: "o/l",
-        userId: USER_ID,
+        identity: IDENTITY,
         args: dirArgs,
       });
     });
 
-    it("field resolvers delegate using ledger.id + ctx.userId", async () => {
+    it("field resolvers delegate using ledger.id + resolved identity", async () => {
       const ledger = { id: "o/l" } as never;
       await queryResolver.attributes(ledger, ctx);
       expect(workflow.getLedgerAttributes).toHaveBeenCalledWith({
         ledgerId: "o/l",
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       await queryResolver.options(ledger, ctx);
       expect(workflow.getLedgerOptions).toHaveBeenCalledWith({
         ledgerId: "o/l",
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       await queryResolver.favaOptions(ledger, ctx);
       expect(workflow.getLedgerFavaOptions).toHaveBeenCalledWith({
         ledgerId: "o/l",
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       await queryResolver.bcioOptions(ledger, ctx);
       expect(workflow.getLedgerBcioOptions).toHaveBeenCalledWith({
         ledgerId: "o/l",
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       await queryResolver.isStarred(ledger, ctx);
@@ -228,13 +227,7 @@ describe("Ledger resolvers (delegation)", () => {
       });
     });
 
-    /**
-     * These four take their ledger from the parent object, so the argument-keyed
-     * pin middleware never sees it — and `listLedgers` hands back every ledger
-     * the user can reach. Without a check here a credential confined to one book
-     * reads the contents of all of them, one field resolution at a time.
-     */
-    describe("field resolvers enforce the credential's ledger pin", () => {
+    describe("field resolvers delegate ledger pins to the workflow PDP", () => {
       const pinnedCtx = {
         ...ctx,
         identity: {
@@ -252,15 +245,13 @@ describe("Ledger resolvers (delegation)", () => {
         ["bcioOptions", "getLedgerBcioOptions"],
       ] as const;
 
-      it.each(fieldResolvers)(
-        "%s refuses a ledger the credential is not pinned to",
-        async (field, delegate) => {
-          await expect(
-            queryResolver[field]({ id: "o/other" } as never, pinnedCtx),
-          ).rejects.toThrow(ForbiddenError);
-          expect(workflow[delegate]).not.toHaveBeenCalled();
-        },
-      );
+      it.each(fieldResolvers)("%s passes the exact pinned identity", async (field, delegate) => {
+        await queryResolver[field]({ id: "o/other" } as never, pinnedCtx);
+        expect(workflow[delegate]).toHaveBeenCalledWith({
+          ledgerId: "o/other",
+          identity: pinnedCtx.identity,
+        });
+      });
 
       it.each(fieldResolvers)("%s allows the pinned ledger", async (field) => {
         await expect(

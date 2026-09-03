@@ -6,6 +6,7 @@ import {
   authorizeLedger,
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 
 export type ShellQueryResult = {
   resultType: "table" | "text";
@@ -36,14 +37,22 @@ export interface ILedgerShellService {
   }): Promise<ShellTextResult>;
 }
 
-export class LedgerShellService extends AuthorizedLedgerService implements ILedgerShellService {
+export class LedgerShellService
+  extends AuthorizedLedgerService
+  implements ILedgerShellService
+{
   async queryShell(params: {
     ledgerId: string;
     identity: Identity | undefined;
     query: string;
   }): Promise<ShellQueryResult> {
     const { ledgerId, identity, query } = params;
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_SHELL_READ,
+      this.authDeps,
+    );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -84,7 +93,12 @@ export class LedgerShellService extends AuthorizedLedgerService implements ILedg
     query: string;
   }): Promise<ShellTextResult> {
     const { ledgerId, identity, query } = params;
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_SHELL_READ,
+      this.authDeps,
+    );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,

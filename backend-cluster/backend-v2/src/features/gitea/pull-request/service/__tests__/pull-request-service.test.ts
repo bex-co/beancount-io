@@ -6,6 +6,12 @@ jest.mock("axios");
 jest.mock("@/shared/logger", () => ({
   logger: {
     error: jest.fn(),
+    child: jest.fn().mockReturnValue({
+      error: jest.fn(),
+      warn: jest.fn(),
+      info: jest.fn(),
+      debug: jest.fn(),
+    }),
   },
 }));
 
@@ -28,6 +34,14 @@ describe("PullRequestService", () => {
   let mockGiteaClientFactory: { getUserApiClient: jest.Mock };
   let mockModels: { user: { getById: jest.Mock } };
   const userId = "user-id";
+  const identity = {
+    userId,
+    method: "session",
+    scopes: new Set<string>(),
+  } as const;
+  const authorization = {
+    authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+  };
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -62,6 +76,7 @@ describe("PullRequestService", () => {
       mockGiteaClientFactory as never,
       mockModels as never,
       {} as never,
+      authorization as never,
     );
   });
 
@@ -94,7 +109,7 @@ describe("PullRequestService", () => {
       });
 
       const result = await service.createPRFromPatch(
-        userId,
+        identity,
         owner,
         repo,
         title,
@@ -112,7 +127,7 @@ describe("PullRequestService", () => {
 
       await expect(
         service.createPRFromPatch(
-          userId,
+          identity,
           owner,
           repo,
           title,
@@ -145,7 +160,12 @@ describe("PullRequestService", () => {
         .mockResolvedValueOnce({ data: [] })
         .mockResolvedValueOnce({ data: "" });
 
-      const result = await service.getPRDetails(userId, owner, repo, prNumber);
+      const result = await service.getPRDetails(
+        identity,
+        owner,
+        repo,
+        prNumber,
+      );
 
       expect(result.number).toBe(42);
       expect(result.title).toBe("Test PR");
@@ -155,7 +175,7 @@ describe("PullRequestService", () => {
       (axios.get as jest.Mock).mockResolvedValueOnce({ data: null });
 
       await expect(
-        service.getPRDetails(userId, owner, repo, prNumber),
+        service.getPRDetails(identity, owner, repo, prNumber),
       ).rejects.toThrow("Pull request #42 not found");
     });
   });
@@ -170,7 +190,7 @@ describe("PullRequestService", () => {
         data: { merged: true },
       });
 
-      const result = await service.mergePR(userId, owner, repo, prNumber);
+      const result = await service.mergePR(identity, owner, repo, prNumber);
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("PR merged successfully");
@@ -187,7 +207,7 @@ describe("PullRequestService", () => {
         data: { state: "closed" },
       });
 
-      const result = await service.closePR(userId, owner, repo, prNumber);
+      const result = await service.closePR(identity, owner, repo, prNumber);
 
       expect(result.success).toBe(true);
       expect(result.message).toBe("PR closed successfully");

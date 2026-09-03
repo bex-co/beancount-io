@@ -12,7 +12,10 @@ import { AiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage
 import { LLMService } from "@/features/llm/service/llm-service";
 import { LedgerAccountService } from "@/features/ledger/service/ledger-account-service";
 import { LedgerAssetService } from "@/features/ledger/service/ledger-asset-service";
-import { LedgerEntryService } from "@/features/ledger/service/ledger-entry-service";
+import {
+  createLedgerEntryWriter,
+  LedgerEntryService,
+} from "@/features/ledger/service/ledger-entry-service";
 import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
 import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { LedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
@@ -91,6 +94,9 @@ export function buildServiceLayer(input: {
     input.database.models,
     input.database.db,
   );
+  const ledgerEntryWriter = createLedgerEntryWriter(
+    input.clients.favaClientFactory,
+  );
   return {
     authorization,
     stripe,
@@ -104,46 +110,35 @@ export function buildServiceLayer(input: {
       assetStorage,
       aiCfoUsage,
       input.config,
-      input.database.models,
-      input.database.db,
       authorization,
     ),
     ledgerAccount: new LedgerAccountService(
       input.clients.favaClientFactory,
-      input.database.models,
-      input.database.db,
+      authorization,
     ),
     ledgerAsset: new LedgerAssetService(
       input.clients.favaClientFactory,
-      input.database.models,
-      input.database.db,
       assetStorage,
       input.config,
+      authorization,
     ),
-    ledgerEntry: new LedgerEntryService(
-      input.clients.favaClientFactory,
-      input.database.models,
-      input.database.db,
-    ),
+    ledgerEntry: new LedgerEntryService(ledgerEntryWriter, authorization),
+    ledgerEntryWriter,
     ledgerFinance: new LedgerFinanceService(
       input.clients.favaClientFactory,
-      input.database.models,
-      input.database.db,
+      authorization,
     ),
     ledgerData: new LedgerDataService(
       input.clients.favaClientFactory,
-      input.database.models,
-      input.database.db,
+      authorization,
     ),
     ledgerJournal: new LedgerJournalService(
       input.clients.favaClientFactory,
-      input.database.models,
-      input.database.db,
+      authorization,
     ),
     ledgerShell: new LedgerShellService(
       input.clients.favaClientFactory,
-      input.database.models,
-      input.database.db,
+      authorization,
     ),
     ledgerPublicKey: new LedgerPublicKeyService(
       input.clients.favaClientFactory,
@@ -151,8 +146,7 @@ export function buildServiceLayer(input: {
     ),
     ledgerRepo: new LedgerRepoService(
       input.clients.favaClientFactory,
-      input.database.models,
-      input.database.db,
+      authorization,
     ),
     plaidItem: new PlaidItemService(
       input.clients.plaidClient,
@@ -167,6 +161,7 @@ export function buildServiceLayer(input: {
       input.clients.favaClientFactory,
       input.database.models,
       input.database.db,
+      authorization,
     ),
     account: new AccountService(
       input.database.models,
@@ -195,6 +190,7 @@ export function buildServiceLayer(input: {
       input.clients.giteaClientFactory,
       input.database.models,
       input.database.db,
+      authorization,
     ),
     feed: new FeedService(
       input.clients.cacheHelper,
@@ -204,7 +200,10 @@ export function buildServiceLayer(input: {
       input.database.db,
       authorization,
     ),
-    commits: new CommitsService(input.clients.giteaClientFactory),
+    commits: new CommitsService(
+      input.clients.giteaClientFactory,
+      authorization,
+    ),
   };
 }
 
@@ -236,7 +235,7 @@ export function buildWorkflowLayer(input: {
   const ledgerReceipt = new LedgerReceiptWorkflow(
     input.clients.favaClientFactory,
     input.services.assetStorage,
-    input.services.ledgerEntry,
+    input.services.ledgerEntryWriter,
     input.config,
     input.services.authorization,
   );

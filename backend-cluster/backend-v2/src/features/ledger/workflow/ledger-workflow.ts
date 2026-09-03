@@ -63,6 +63,7 @@ import { logger } from "@/shared/logger";
 import { systemIdentity, type Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
+  anonymousPrincipal,
   ledgerResource,
   type IAuthorizationService,
   userResource,
@@ -99,24 +100,24 @@ export interface ILedgerWorkflow {
     ledgerId: string;
   }): Promise<DeleteLedgerResult>;
   createLedgerFile(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: CreateLedgerFileCommand;
     platform: "web" | "mobile";
   }): Promise<LedgerFileData>;
   updateLedgerFile(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: UpdateLedgerFileCommand;
     platform: "web" | "mobile";
   }): Promise<LedgerFileData>;
   deleteLedgerFile(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: DeleteLedgerFileCommand;
   }): Promise<DeleteLedgerFileResult>;
   renameLedgerFile(params: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: RenameLedgerFileCommand;
   }): Promise<RenameLedgerFileResult>;
@@ -130,11 +131,11 @@ export interface ILedgerWorkflow {
   }): Promise<StarLedgerResult>;
 
   listLedgers(params: {
-    userId: string;
+    identity: Identity;
     args: ListLedgersParams;
   }): Promise<LedgerData[]>;
   listUserOwnedLedgers(params: {
-    userId: string;
+    identity: Identity;
     args: ListLedgersParams;
   }): Promise<LedgerData[]>;
   /**
@@ -148,35 +149,38 @@ export interface ILedgerWorkflow {
     userId: string;
   }): Promise<LedgerWithDirectiveCountData[]>;
   searchLedgers(params: {
-    userId: string;
+    identity: Identity;
     args: SearchLedgersParams;
   }): Promise<LedgerData[]>;
-  getLedger(params: { ledgerId: string; userId?: string }): Promise<LedgerData>;
+  getLedger(params: {
+    ledgerId: string;
+    identity?: Identity;
+  }): Promise<LedgerData>;
   getLedgerFile(params: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
     args: GetLedgerFileParams;
   }): Promise<LedgerFileData | null>;
   getLedgerDirContent(params: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
     args: GetLedgerDirContentParams;
   }): Promise<LedgerFileData[]>;
   getLedgerAttributes(params: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<LedgerAttributesData>;
   getLedgerOptions(params: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<LedgerOptionsData>;
   getLedgerFavaOptions(params: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<FavaOptionsData>;
   getLedgerBcioOptions(params: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<BcioOptionsData>;
   isLedgerStarred(params: {
     ledgerId: string;
@@ -199,6 +203,21 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     private readonly config: Pick<AppConfig, "gitea">,
     private readonly authorization: IAuthorizationService,
   ) {}
+
+  private async authorizeContent(
+    identity: Identity | undefined,
+    ledgerId: string,
+    action:
+      | typeof AUTHORIZATION_ACTIONS.LEDGER_METADATA_READ
+      | typeof AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ
+      | typeof AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+  ): Promise<void> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity ?? anonymousPrincipal(),
+      action,
+      resource: ledgerResource(ledgerId),
+    });
+  }
 
   // --- Mutations ---------------------------------------------------------
 
@@ -375,16 +394,22 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async createLedgerFile({
-    userId,
+    identity,
     ledgerId,
     input,
     platform,
   }: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: CreateLedgerFileCommand;
     platform: "web" | "mobile";
   }): Promise<LedgerFileData> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     assertSafeRepoPath(input.path);
     const fileOptions: LedgerCreateFileOptions = {
       path: input.path,
@@ -411,16 +436,22 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async updateLedgerFile({
-    userId,
+    identity,
     ledgerId,
     input,
     platform,
   }: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: UpdateLedgerFileCommand;
     platform: "web" | "mobile";
   }): Promise<LedgerFileData> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     assertSafeRepoPath(input.path);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const fileOptions: LedgerUpdateFileOptions = {
@@ -448,14 +479,20 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async deleteLedgerFile({
-    userId,
+    identity,
     ledgerId,
     input,
   }: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: DeleteLedgerFileCommand;
   }): Promise<DeleteLedgerFileResult> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     assertSafeRepoPath(input.path);
     if (input.path === "main.bean") {
@@ -485,14 +522,20 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async renameLedgerFile({
-    userId,
+    identity,
     ledgerId,
     input,
   }: {
-    userId: string;
+    identity: Identity;
     ledgerId: string;
     input: RenameLedgerFileCommand;
   }): Promise<RenameLedgerFileResult> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      resource: ledgerResource(ledgerId),
+    });
+    const userId = identity.userId;
     assertSafeRepoPath(input.oldPath, "oldPath");
     assertSafeRepoPath(input.newPath, "newPath");
     const changeOptions: LedgerChangeFilesOptions = {
@@ -622,12 +665,18 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   // --- Queries -----------------------------------------------------------
 
   async listLedgers({
-    userId,
+    identity,
     args,
   }: {
-    userId: string;
+    identity: Identity;
     args: ListLedgersParams;
   }): Promise<LedgerData[]> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
+      resource: userResource(identity.userId),
+    });
+    const userId = identity.userId;
     const { favaApiClient } =
       await this.favaClientFactory.getApiContext(userId);
     const data = await unwrapFavaResponse(
@@ -641,16 +690,34 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async listUserOwnedLedgers({
-    userId,
+    identity,
     args,
   }: {
-    userId: string;
+    identity: Identity;
     args: ListLedgersParams;
   }): Promise<LedgerData[]> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
+      resource: userResource(identity.userId),
+    });
+    const userId = identity.userId;
     const { favaApiClient, favaUser } =
       await this.favaClientFactory.getApiContext(userId);
+    return this.listUserOwnedLedgersPage(
+      favaApiClient,
+      favaUser.username,
+      args,
+    );
+  }
+
+  private async listUserOwnedLedgersPage(
+    favaApiClient: FavaApiClient,
+    username: string,
+    args: ListLedgersParams,
+  ): Promise<LedgerData[]> {
     const data = await unwrapFavaResponse(
-      favaApiClient.ledgers.listUserLedgers(favaUser.username, {
+      favaApiClient.ledgers.listUserLedgers(username, {
         page: args.page,
         limit: args.limit,
       }),
@@ -667,13 +734,22 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }: {
     userId: string;
   }): Promise<LedgerWithDirectiveCountData[]> {
+    const identity = systemIdentity(userId);
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
+      resource: userResource(userId),
+    });
+    const { favaApiClient, favaUser } =
+      await this.favaClientFactory.getApiContext(userId);
     const ledgers: LedgerData[] = [];
     let page = 1;
     for (;;) {
-      const pageResult = await this.listUserOwnedLedgers({
-        userId,
-        args: { page, limit: OWNED_LEDGERS_PAGE_SIZE },
-      });
+      const pageResult = await this.listUserOwnedLedgersPage(
+        favaApiClient,
+        favaUser.username,
+        { page, limit: OWNED_LEDGERS_PAGE_SIZE },
+      );
       ledgers.push(...pageResult);
       if (pageResult.length < OWNED_LEDGERS_PAGE_SIZE) break;
       page += 1;
@@ -688,7 +764,7 @@ export class LedgerWorkflow implements ILedgerWorkflow {
         // subject by email. Exempt under a name that greps (w3/m9).
         const counts = await this.ledgerDataService.getEntriesCountPerType({
           ledgerId: ledger.id,
-          identity: systemIdentity(userId),
+          identity,
         });
         return {
           ledgerId: ledger.id,
@@ -719,12 +795,18 @@ export class LedgerWorkflow implements ILedgerWorkflow {
   }
 
   async searchLedgers({
-    userId,
+    identity,
     args,
   }: {
-    userId: string;
+    identity: Identity;
     args: SearchLedgersParams;
   }): Promise<LedgerData[]> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
+      resource: userResource(identity.userId),
+    });
+    const userId = identity.userId;
     const query = filterNullish({
       q: args.q,
       topic: args.topic,
@@ -763,11 +845,17 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
   async getLedger({
     ledgerId,
-    userId,
+    identity,
   }: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<LedgerData> {
+    await this.authorizeContent(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_METADATA_READ,
+    );
+    const userId = identity?.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -789,13 +877,19 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
   async getLedgerFile({
     ledgerId,
-    userId,
+    identity,
     args,
   }: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
     args: GetLedgerFileParams;
   }): Promise<LedgerFileData | null> {
+    await this.authorizeContent(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+    );
+    const userId = identity?.userId;
     assertSafeRepoPath(args.path);
     try {
       const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
@@ -826,13 +920,19 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
   async getLedgerDirContent({
     ledgerId,
-    userId,
+    identity,
     args,
   }: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
     args: GetLedgerDirContentParams;
   }): Promise<LedgerFileData[]> {
+    await this.authorizeContent(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+    );
+    const userId = identity?.userId;
     if (args.dirPath !== null && args.dirPath !== undefined) {
       assertSafeRepoPath(args.dirPath, "dirPath");
     }
@@ -856,11 +956,17 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
   async getLedgerAttributes({
     ledgerId,
-    userId,
+    identity,
   }: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<LedgerAttributesData> {
+    await this.authorizeContent(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+    );
+    const userId = identity?.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -883,11 +989,17 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
   async getLedgerOptions({
     ledgerId,
-    userId,
+    identity,
   }: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<LedgerOptionsData> {
+    await this.authorizeContent(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+    );
+    const userId = identity?.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -914,11 +1026,17 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
   async getLedgerFavaOptions({
     ledgerId,
-    userId,
+    identity,
   }: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<FavaOptionsData> {
+    await this.authorizeContent(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+    );
+    const userId = identity?.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -959,11 +1077,17 @@ export class LedgerWorkflow implements ILedgerWorkflow {
 
   async getLedgerBcioOptions({
     ledgerId,
-    userId,
+    identity,
   }: {
     ledgerId: string;
-    userId?: string;
+    identity?: Identity;
   }): Promise<BcioOptionsData> {
+    await this.authorizeContent(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+    );
+    const userId = identity?.userId;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,

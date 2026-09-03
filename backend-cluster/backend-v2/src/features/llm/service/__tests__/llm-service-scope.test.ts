@@ -44,8 +44,6 @@ describe("LLMService authorizes as the caller", () => {
       { getObjectMetadata, generateDownloadUrl: jest.fn() } as never,
       { check: usageCheck, addTokenUsage: jest.fn() } as never,
       { blockeden: { accessKey: "test-key" } } as never,
-      {} as never,
-      {} as never,
       new AuthorizationService({ check: async () => true }),
     );
   }

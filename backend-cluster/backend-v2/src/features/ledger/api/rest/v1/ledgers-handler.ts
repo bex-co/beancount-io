@@ -24,12 +24,12 @@ export const LEDGER_ROUTES = [
         return [
           await layers.workflows.ledger.getLedger({
             ledgerId: identity.ledgerScope,
-            userId: identity.userId,
+            identity,
           }),
         ];
       }
       return layers.workflows.ledger.listLedgers({
-        userId: identity.userId,
+        identity,
         args: { page: query.page, limit: query.limit },
       });
     },
@@ -48,7 +48,7 @@ export const LEDGER_ROUTES = [
     handler: async ({ layers }, { identity, params }) =>
       layers.workflows.ledger.getLedger({
         ledgerId: ledgerIdOf(params),
-        userId: identity.userId,
+        identity,
       }),
   }),
 ] as const;

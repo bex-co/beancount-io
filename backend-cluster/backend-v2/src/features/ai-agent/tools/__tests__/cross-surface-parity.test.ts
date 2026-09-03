@@ -30,12 +30,12 @@ describe("cross-surface parity: MCP runBqlQuery vs GraphQL queryShellText", () =
         shell: { queryShellText: mockQueryShellText },
       }),
     };
-    const models = {
-      user: {
-        getUserByUsername: jest.fn().mockResolvedValue({ id: "alice" }),
-      },
-    };
-    return new LedgerShellService(favaClientFactory as any, models as any, {} as any);
+    return new LedgerShellService(
+      favaClientFactory as any,
+      {
+        authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+      } as any,
+    );
   }
 
   const IDENTITY: Identity = {
@@ -48,7 +48,11 @@ describe("cross-surface parity: MCP runBqlQuery vs GraphQL queryShellText", () =
     const ledgerShell = buildService();
 
     const mcpResult = await executeBqlQuery(
-      { services: { ledgerShell } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerShell } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       { query: QUERY },
     );
 

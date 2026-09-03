@@ -20,6 +20,15 @@ export interface JobDefinition {
 }
 ```
 
+Plaid jobs are also authorization callers. They create a runtime-issued
+`PlaidBackgroundPrincipal` with `plaid_scheduler` provenance and invoke the
+protected Plaid service boundary. They must not fabricate a session `Identity`,
+pass an operation ID into domain methods, or cache item/user/ledger authority.
+The service re-resolves the current item binding and ledger relationship before
+acquiring its sync lock or performing any mutation. Queued, signature-verified
+Plaid events use `plaid_webhook` provenance instead; scheduler provenance cannot
+apply item-webhook mutations.
+
 **Parameters:**
 
 - `service` - Models and services: `models`, `sendgrid`, `stripe`, `tierService`

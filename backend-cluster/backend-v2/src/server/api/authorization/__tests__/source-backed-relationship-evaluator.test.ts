@@ -2,6 +2,7 @@ import {
   apiKeyResource,
   AUTHORIZATION_ACTIONS,
   AuthorizationService,
+  bankConnectionResource,
   ledgerResource,
   LEDGER_RELATIONSHIPS,
   SourceBackedRelationshipEvaluator,
@@ -24,10 +25,15 @@ function makeEvaluator(ownerId: string | null = "usr_alice") {
   const repoGet = jest.fn(async () => ({
     data: { id: 42, permissions: { admin: true, push: true, pull: true } },
   }));
+  const getPlaidItemById = jest.fn(async () => ({
+    id: "pitm_1",
+    userId: "usr_alice",
+    ledgerRepoId: 42,
+  }));
   const getUserApiClient = jest.fn(async () => ({ repos: { repoGet } }));
   const repoCheckCollaborator = jest.fn(async () => ({ data: {} }));
   const getAdminApiClient = jest.fn(() => ({
-    repos: { repoCheckCollaborator },
+    repos: { repoCheckCollaborator, repoGet },
   }));
   const getById = jest.fn(async () => ({ ledger_username: "alice" }));
   const getUserByUsername = jest.fn(async () => ({ id: "usr_alice" }));
@@ -51,11 +57,13 @@ function makeEvaluator(ownerId: string | null = "usr_alice") {
     repoCheckCollaborator,
     getById,
     getLedger,
+    getPlaidItemById,
     evaluator: new SourceBackedRelationshipEvaluator(
       {} as never,
       {
         apiKey: { findById } as never,
         user: { getById, getUserByUsername } as never,
+        plaidItem: { getById: getPlaidItemById } as never,
       },
       { getUserApiClient, getAdminApiClient } as never,
       { getAdminClient, getApiContext } as never,
@@ -156,6 +164,61 @@ describe("SourceBackedRelationshipEvaluator", () => {
     expect(getLedger).toHaveBeenCalledTimes(2);
     expect(getLedger).toHaveBeenCalledWith("alice", "main");
     expect(getUserApiClient).not.toHaveBeenCalled();
+  });
+
+  it("evaluates a composite ledger action from one fresh repository snapshot", async () => {
+    const { evaluator, getLedger, getUserApiClient, repoGet } = makeEvaluator();
+    await expect(
+      evaluator.checkAll([
+        {
+          user: userResource("usr_alice"),
+          relation: LEDGER_RELATIONSHIPS.WRITE_CONTENTS,
+          object: ledgerResource("alice/main"),
+        },
+        {
+          user: userResource("usr_alice"),
+          relation: LEDGER_RELATIONSHIPS.WRITE_ASSETS,
+          object: ledgerResource("alice/main"),
+        },
+      ]),
+    ).resolves.toBe(true);
+    expect(getLedger).toHaveBeenCalledTimes(1);
+    expect(getUserApiClient).not.toHaveBeenCalled();
+    expect(repoGet).not.toHaveBeenCalled();
+  });
+
+  it("allows anonymous reads only for a currently public ledger", async () => {
+    const { evaluator, repoGet, getAdminApiClient } = makeEvaluator();
+    repoGet.mockResolvedValueOnce({
+      data: {
+        id: 42,
+        private: false,
+        permissions: { admin: true, push: true, pull: true },
+      },
+    } as never);
+    await expect(
+      evaluator.check({
+        user: userResource("anonymous"),
+        relation: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+        object: ledgerResource("alice/public"),
+      }),
+    ).resolves.toBe(true);
+    expect(getAdminApiClient).toHaveBeenCalledTimes(1);
+
+    repoGet.mockResolvedValueOnce({
+      data: {
+        id: 42,
+        private: true,
+        permissions: { admin: true, push: true, pull: true },
+      },
+    } as never);
+    await expect(
+      evaluator.check({
+        user: userResource("anonymous"),
+        relation: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+        object: ledgerResource("alice/private"),
+      }),
+    ).resolves.toBe(false);
   });
 
   it.each([
@@ -273,6 +336,84 @@ describe("SourceBackedRelationshipEvaluator", () => {
     ).rejects.toThrow("ledger source offline");
   });
 
+  it("resolves every bank item/user/ledger binding from current source rows", async () => {
+    const { evaluator, repoGet, getPlaidItemById } = makeEvaluator();
+    const check = {
+      user: userResource("usr_alice"),
+      relation: LEDGER_RELATIONSHIPS.WRITE_BANK_CONNECTIONS,
+      object: bankConnectionResource("alice/main", "pitm_1"),
+    };
+    await expect(evaluator.check(check)).resolves.toBe(true);
+    await expect(evaluator.check(check)).resolves.toBe(true);
+    expect(repoGet).toHaveBeenCalledTimes(2);
+    expect(getPlaidItemById).toHaveBeenCalledTimes(2);
+  });
+
+  it.each([
+    ["usr_bob", 42],
+    ["usr_alice", 99],
+  ])(
+    "denies a bank binding with source user=%s repo=%s",
+    async (userId, ledgerRepoId) => {
+      const { evaluator, getPlaidItemById } = makeEvaluator();
+      getPlaidItemById.mockResolvedValueOnce({
+        id: "pitm_1",
+        userId,
+        ledgerRepoId,
+      });
+      await expect(
+        evaluator.check({
+          user: userResource("usr_alice"),
+          relation: LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS,
+          object: bankConnectionResource("alice/main", "pitm_1"),
+        }),
+      ).resolves.toBe(false);
+    },
+  );
+
+  it("keeps bank authority at the ledger-admin relationship", async () => {
+    const { evaluator, repoGet } = makeEvaluator();
+    repoGet.mockResolvedValueOnce({
+      data: { id: 42, permissions: { pull: true, push: true, admin: false } },
+    });
+    await expect(
+      evaluator.check({
+        user: userResource("usr_alice"),
+        relation: LEDGER_RELATIONSHIPS.READ_BANK_CONNECTIONS,
+        object: bankConnectionResource("alice/main"),
+      }),
+    ).resolves.toBe(false);
+  });
+
+  it("surfaces and audits a Gitea source outage as an authorization error", async () => {
+    const { evaluator, repoGet } = makeEvaluator();
+    repoGet.mockRejectedValueOnce({ status: 503 });
+    const audit = jest.fn();
+    const service = new AuthorizationService(evaluator, audit);
+    const principal = {
+      userId: "usr_alice",
+      method: "session" as const,
+      scopes: new Set<string>(),
+    };
+
+    await expect(
+      service.authorizeOrThrow({
+        principal,
+        action: AUTHORIZATION_ACTIONS.BANK_CONNECTIONS_LIST,
+        resource: bankConnectionResource("alice/main"),
+      }),
+    ).rejects.toMatchObject({ category: ErrorCategory.SERVICE_UNAVAILABLE });
+    expect(audit).toHaveBeenCalledWith(
+      principal,
+      {
+        action: AUTHORIZATION_ACTIONS.BANK_CONNECTIONS_LIST,
+        outcome: "error",
+        ledgerId: "alice/main",
+      },
+      "admin",
+    );
+  });
+
   it("surfaces and audits a ledger source outage as an authorization error", async () => {
     const { evaluator, getLedger } = makeEvaluator();
     getLedger.mockRejectedValueOnce(new Error("ledger source offline"));
@@ -338,6 +479,7 @@ describe("SourceBackedRelationshipEvaluator", () => {
         {} as never,
         {
           apiKey: {} as never,
+          plaidItem: {} as never,
           user: {
             getUserByUsername: jest.fn().mockResolvedValue({ id: "usr_owner" }),
             getById: jest.fn().mockResolvedValue({ ledger_username: userId }),
@@ -383,6 +525,7 @@ describe("SourceBackedRelationshipEvaluator", () => {
       {} as never,
       {
         apiKey: {} as never,
+        plaidItem: {} as never,
         user: {
           getUserByUsername: jest.fn().mockResolvedValue({ id: "usr_owner" }),
           getById: jest
@@ -422,6 +565,7 @@ describe("SourceBackedRelationshipEvaluator", () => {
       {} as never,
       {
         apiKey: {} as never,
+        plaidItem: {} as never,
         user: {
           getUserByUsername: jest.fn().mockResolvedValue({ id: "usr_owner" }),
           getById: jest

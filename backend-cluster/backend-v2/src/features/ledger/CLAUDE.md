@@ -17,13 +17,13 @@ Core ledger GraphQL and REST behavior: repository lifecycle, entries, journal, r
 ## Authorization and identity
 
 - Resolve the authenticated caller and requested ledger separately; never assume the ledger owner is the caller.
-- Use `utils/authorize-ledger.ts`, `ledger-caller-resolver.ts`, and `ledger-access-check.ts` rather than duplicating owner/collaborator/public checks.
+- Every protected data-plane service/workflow method accepts the resolved `Identity` (or explicitly supports anonymous reads) and selects one canonical `ledger.*` action before Fava, Gitea, S3, or ledger work. `utils/authorize-ledger.ts` is a thin PEP over the shared PDP; `ledger-access-check.ts` is legacy/defense-in-depth code, not a final authority for migrated methods.
 - Preserve the three-party cases covered by the access tests: owner, collaborator, and anonymous/public access.
-- Pass `userId`/ledger ID as method input. Resolvers do not access models or provision clients themselves.
+- Pass `Identity`/ledger ID as protected method input. Resolvers do not interpret scopes, pins, relationships, or provision clients themselves.
 
 ## Writes and files
 
-- `LedgerEntryService` owns entry construction and file routing. Respect explicit `filename` values and the existing bcio-option fallback behavior.
+- `LedgerEntryService` owns protected entry writes; its internal writer seam exists only so the receipt workflow can make one composite content-plus-asset decision before orchestration. Respect explicit `filename` values and the existing bcio-option fallback behavior.
 - A target file supplied by a caller must already exist in the ledger unless the operation explicitly creates a complete ledger template. Never write to an un-included file silently.
 - Receipt writes belong in `LedgerReceiptWorkflow` because they coordinate temporary assets, permanent storage, and ledger entries.
 - Preserve directive-limit bypass/cache invalidation behavior when changing entry or repository writes.

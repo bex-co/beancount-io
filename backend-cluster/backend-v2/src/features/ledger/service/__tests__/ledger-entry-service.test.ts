@@ -1,4 +1,7 @@
-import { LedgerEntryService } from "../ledger-entry-service";
+import {
+  createLedgerEntryWriter,
+  LedgerEntryService,
+} from "../ledger-entry-service";
 import { OperationNotAllowedError } from "@/shared/errors";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
@@ -76,8 +79,7 @@ describe("LedgerEntryService", () => {
     });
 
     service = new LedgerEntryService(
-      mockFavaClientFactory as any,
-      {} as any,
+      createLedgerEntryWriter(mockFavaClientFactory as any),
       {} as any,
     );
   });

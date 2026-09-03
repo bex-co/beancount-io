@@ -1,7 +1,7 @@
 import type { MiddlewareFn } from "type-graphql";
 import type { IContext } from "./context";
-import { gqlOpId } from "@/server/api/op-class";
 import { enforceRateLimit } from "@/server/api/rate-limit";
+import { graphqlOperationId } from "./graphql-operation-id";
 
 /**
  * The GraphQL half of the rate limiter.
@@ -29,11 +29,11 @@ function clientIp(context: IContext): string {
 export function graphqlRateLimitMiddleware(): MiddlewareFn<IContext> {
   return async ({ context, info }, next) => {
     if (info.path.prev !== undefined) return next();
-    const parent = info.parentType.name;
-    if (parent !== "Query" && parent !== "Mutation") return next();
+    const opId = graphqlOperationId(info);
+    if (!opId) return next();
 
     await enforceRateLimit({
-      opId: gqlOpId(`${parent}.${info.fieldName}`),
+      opId,
       identity: context.identity,
       ip: clientIp(context),
     });

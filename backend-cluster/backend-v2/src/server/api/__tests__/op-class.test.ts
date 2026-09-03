@@ -32,8 +32,8 @@ const session: Identity = {
 };
 
 const READ_OP = "GQL Query.queryShellText";
-const WRITE_OP = "GQL Mutation.createLedgerFile";
-const ADMIN_OP = "GQL Mutation.createPlaidLinkToken";
+const WRITE_OP = "GQL Mutation.unclassifiedWriteFallback";
+const ADMIN_OP = "MCP manageBankConnection";
 const SESSION_ONLY_OP = "GQL Mutation.signIn";
 const PUBLIC_OP = "GQL Query.health";
 const UNKNOWN_OP = "GQL Query.somethingNobodyClassified";
@@ -49,6 +49,7 @@ describe("classifyOp", () => {
       class: "read",
       found: true,
       verb: "ledger.queryShellText",
+      authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_SHELL_READ,
     });
   });
 
@@ -180,32 +181,32 @@ describe("classifyOp", () => {
     ],
     [
       "GQL Query.suggestPlaidTransactionCategories",
-      AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTION_CATEGORIES_SUGGEST,
       "read",
     ],
     [
       "REST GET /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/suggested-categories",
-      AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTION_CATEGORIES_SUGGEST,
       "read",
     ],
     [
       "MCP resource:bankSuggestedCategories",
-      AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTION_CATEGORIES_SUGGEST,
       "read",
     ],
     [
       "GQL Query.suggestPlaidAccountMapping",
-      AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
+      AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_SUGGEST,
       "read",
     ],
     [
       "REST GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/suggested-mapping",
-      AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
+      AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_SUGGEST,
       "read",
     ],
     [
       "MCP resource:bankSuggestedMapping",
-      AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
+      AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_SUGGEST,
       "read",
     ],
     [
@@ -220,7 +221,7 @@ describe("classifyOp", () => {
     ],
     [
       "GQL Mutation.insertReceiptTransaction",
-      AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_INSERT,
+      AUTHORIZATION_ACTIONS.LEDGER_RECEIPTS_WRITE,
       "write",
     ],
     [
@@ -260,6 +261,121 @@ describe("classifyOp", () => {
       expect(classifyOp(opId).class).toBe(opClass);
     },
   );
+
+  it("maps every ledger data-plane alias to its row's canonical action", () => {
+    const actions = new Set<string>([
+      AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_METADATA_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_ACCOUNTS_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_SHELL_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+      AUTHORIZATION_ACTIONS.LEDGER_RECEIPTS_WRITE,
+      AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_READ,
+      AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE,
+      AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE,
+      AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_REJECT,
+    ]);
+    const rows = VERB_TABLE.filter(
+      (entry) =>
+        entry.authorizationAction && actions.has(entry.authorizationAction),
+    );
+
+    expect(new Set(rows.map((entry) => entry.authorizationAction))).toEqual(
+      actions,
+    );
+    for (const entry of rows) {
+      for (const alias of [
+        entry.gql && gqlOpId(entry.gql),
+        entry.rest && `REST ${entry.rest}`,
+        entry.mcp && `MCP ${entry.mcp}`,
+        entry.mcpResource && `MCP resource:${entry.mcpResource}`,
+      ].filter((alias): alias is string => Boolean(alias))) {
+        expect(authorizationActionForOp(alias)).toBe(entry.authorizationAction);
+      }
+    }
+  });
+
+  it("leaves grouped bank MCP dispatchers to authorize the selected service verb", () => {
+    expect(
+      authorizationActionForOp("MCP manageBankConnection"),
+    ).toBeUndefined();
+    expect(authorizationActionForOp("MCP manageBankImport")).toBeUndefined();
+
+    expect(authorizationActionForOp("GQL Mutation.unlinkPlaidItem")).toBe(
+      AUTHORIZATION_ACTIONS.BANK_CONNECTION_UNLINK,
+    );
+    expect(authorizationActionForOp("GQL Mutation.syncPlaidTransactions")).toBe(
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SYNC,
+    );
+  });
+
+  it.each([
+    ["Query.getPlaidItems", AUTHORIZATION_ACTIONS.BANK_CONNECTIONS_LIST],
+    ["Query.getPlaidItem", AUTHORIZATION_ACTIONS.BANK_CONNECTION_READ],
+    ["Query.getPlaidAccounts", AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_READ],
+    [
+      "Query.getPlaidAccountsForLedger",
+      AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_READ,
+    ],
+    ["Mutation.createPlaidLinkToken", AUTHORIZATION_ACTIONS.BANK_LINK_CREATE],
+    [
+      "Mutation.createPlaidUpdateModeLinkToken",
+      AUTHORIZATION_ACTIONS.BANK_LINK_UPDATE,
+    ],
+    [
+      "Mutation.exchangePlaidPublicToken",
+      AUTHORIZATION_ACTIONS.BANK_LINK_EXCHANGE,
+    ],
+    ["Mutation.unlinkPlaidItem", AUTHORIZATION_ACTIONS.BANK_CONNECTION_UNLINK],
+    [
+      "Mutation.reconcilePlaidAccounts",
+      AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_RECONCILE,
+    ],
+    [
+      "Mutation.updatePlaidAccountMapping",
+      AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_UPDATE,
+    ],
+    [
+      "Mutation.updatePlaidAccountCurrency",
+      AUTHORIZATION_ACTIONS.BANK_ACCOUNT_CURRENCY_UPDATE,
+    ],
+    [
+      "Mutation.refreshPlaidItemStatus",
+      AUTHORIZATION_ACTIONS.BANK_CONNECTION_STATUS_REFRESH,
+    ],
+    [
+      "Query.getUnsyncedPlaidTransactions",
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_READ,
+    ],
+    [
+      "Query.suggestPlaidTransactionCategories",
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTION_CATEGORIES_SUGGEST,
+    ],
+    [
+      "Query.suggestPlaidAccountMapping",
+      AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_SUGGEST,
+    ],
+    [
+      "Mutation.syncPlaidTransactions",
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SYNC,
+    ],
+    [
+      "Mutation.submitPlaidTransactionsToLedger",
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SUBMIT,
+    ],
+    [
+      "Mutation.deletePlaidTransactions",
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_DELETE,
+    ],
+  ])("maps GQL %s to the exact bank action", (verb, action) => {
+    expect(authorizationActionForOp(`GQL ${verb}`)).toBe(action);
+  });
 });
 
 describe("evaluateScope", () => {

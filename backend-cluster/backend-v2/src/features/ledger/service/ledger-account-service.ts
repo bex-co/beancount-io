@@ -11,6 +11,7 @@ import {
   getAccountEntryCounts,
 } from "@/features/ledger/utils/account-entries";
 import { logger } from "@/shared/logger";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 
 export type LedgerAccountDetail = {
   account: string;
@@ -83,7 +84,12 @@ export class LedgerAccountService
     identity?: Identity,
   ): Promise<LedgerAccountDetail[]> {
     const ledgerId = createLedgerId(ledgerOwner, ledgerName);
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_ACCOUNTS_READ,
+      this.authDeps,
+    );
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       identity?.userId,
@@ -110,7 +116,12 @@ export class LedgerAccountService
     identity?: Identity,
   ): Promise<LedgerAccountDirectiveItem[]> {
     const ledgerId = createLedgerId(ledgerOwner, ledgerName);
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_ACCOUNTS_READ,
+      this.authDeps,
+    );
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       identity?.userId,

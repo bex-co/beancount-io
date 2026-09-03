@@ -1,8 +1,8 @@
 import { Resolver, Query, Mutation, Arg, Ctx, Int } from "type-graphql";
 import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
-import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
 import type { IPullRequestService } from "../service/pull-request-service";
+import { DomainError } from "@/shared/errors";
 import {
   CreatePRFromPatchInput,
   PullRequestResult,
@@ -19,13 +19,6 @@ export class PullRequestResolver {
     @Arg("input") input: CreatePRFromPatchInput,
     @Ctx() ctx: IContext,
   ): Promise<PullRequestResult> {
-    // The ledger is named inside the input object, so the pin middleware —
-    // which reads top-level arguments — never saw it. Outside the try on
-    // purpose: the catch below turns anything thrown into a `success: false`
-    // payload, and an authorization refusal reported as a failed merge is a
-    // refusal nobody can tell from a git error.
-    assertLedgerScope(ctx.identity, `${input.ledgerOwner}/${input.ledgerName}`);
-
     try {
       const user = await ctx.getCurrentUser();
 
@@ -37,7 +30,7 @@ export class PullRequestResolver {
       }
 
       const result = await this.pullRequestService.createPRFromPatch(
-        user.id,
+        ctx.getCurrentIdentity(),
         input.ledgerOwner,
         input.ledgerName,
         input.title,
@@ -53,6 +46,7 @@ export class PullRequestResolver {
         message: "Pull request created successfully",
       };
     } catch (error) {
+      if (error instanceof DomainError) throw error;
       const errorMessage =
         error instanceof Error ? error.message : "Unknown error";
       return {
@@ -77,7 +71,7 @@ export class PullRequestResolver {
     }
 
     return await this.pullRequestService.getPRDetails(
-      user.id,
+      ctx.getCurrentIdentity(),
       ledgerOwner,
       ledgerName,
       prNumber,
@@ -102,7 +96,7 @@ export class PullRequestResolver {
     }
 
     const result = await this.pullRequestService.mergePR(
-      user.id,
+      ctx.getCurrentIdentity(),
       ledgerOwner,
       ledgerName,
       prNumber,
@@ -132,7 +126,7 @@ export class PullRequestResolver {
     }
 
     const result = await this.pullRequestService.closePR(
-      user.id,
+      ctx.getCurrentIdentity(),
       ledgerOwner,
       ledgerName,
       prNumber,

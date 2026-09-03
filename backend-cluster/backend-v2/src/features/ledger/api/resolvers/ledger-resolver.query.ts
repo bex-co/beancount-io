@@ -10,7 +10,6 @@ import {
 import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
-import { assertLedgerScope } from "@/features/ledger/utils/authorize-ledger";
 import {
   BcioOptions,
   FavaOptions,
@@ -38,7 +37,10 @@ export class LedgerQueryResolver {
     @Args() args: ListLedgersArgs,
     @Ctx() ctx: IContext,
   ): Promise<Ledger[]> {
-    return this.workflow.listLedgers({ userId: ctx.getCurrentUserId(), args });
+    return this.workflow.listLedgers({
+      identity: ctx.getCurrentIdentity(),
+      args,
+    });
   }
 
   @Authenticated()
@@ -50,7 +52,7 @@ export class LedgerQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<Ledger[]> {
     return this.workflow.listUserOwnedLedgers({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       args,
     });
   }
@@ -64,7 +66,7 @@ export class LedgerQueryResolver {
     @Ctx() ctx: IContext,
   ): Promise<Ledger[]> {
     return this.workflow.searchLedgers({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       args,
     });
   }
@@ -77,7 +79,7 @@ export class LedgerQueryResolver {
     @Arg("ledgerId", () => String) ledgerId: string,
     @Ctx() ctx: IContext,
   ): Promise<Ledger> {
-    return this.workflow.getLedger({ ledgerId, userId: ctx.userId });
+    return this.workflow.getLedger({ ledgerId, identity: ctx.identity });
   }
 
   @AllowAnonymous()
@@ -90,7 +92,11 @@ export class LedgerQueryResolver {
     @Args() args: GetLedgerFileArgs,
     @Ctx() ctx: IContext,
   ): Promise<LedgerFileContent | null> {
-    return this.workflow.getLedgerFile({ ledgerId, userId: ctx.userId, args });
+    return this.workflow.getLedgerFile({
+      ledgerId,
+      identity: ctx.identity,
+      args,
+    });
   }
 
   @AllowAnonymous()
@@ -104,7 +110,7 @@ export class LedgerQueryResolver {
   ): Promise<LedgerFileContent[]> {
     return this.workflow.getLedgerDirContent({
       ledgerId,
-      userId: ctx.userId,
+      identity: ctx.identity,
       args,
     });
   }
@@ -116,14 +122,9 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<LedgerAttributes> {
-    // The ledger comes from the parent object, not an argument, so the pin
-    // middleware never saw it. `listLedgers` hands back every ledger the user
-    // can reach, which would otherwise let a credential confined to one book
-    // read the contents of all of them one field resolution at a time.
-    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.getLedgerAttributes({
       ledgerId: ledger.id,
-      userId: ctx.userId,
+      identity: ctx.identity,
     });
   }
 
@@ -134,10 +135,9 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<LedgerOptions> {
-    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.getLedgerOptions({
       ledgerId: ledger.id,
-      userId: ctx.userId,
+      identity: ctx.identity,
     });
   }
 
@@ -148,10 +148,9 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<FavaOptions> {
-    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.getLedgerFavaOptions({
       ledgerId: ledger.id,
-      userId: ctx.userId,
+      identity: ctx.identity,
     });
   }
 
@@ -162,10 +161,9 @@ export class LedgerQueryResolver {
     @Root() ledger: Ledger,
     @Ctx() ctx: IContext,
   ): Promise<BcioOptions> {
-    assertLedgerScope(ctx.identity, ledger.id);
     return this.workflow.getLedgerBcioOptions({
       ledgerId: ledger.id,
-      userId: ctx.userId,
+      identity: ctx.identity,
     });
   }
 

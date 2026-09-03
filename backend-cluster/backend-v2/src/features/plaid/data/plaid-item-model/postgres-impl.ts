@@ -1,10 +1,11 @@
-import { eq } from "drizzle-orm";
+import { and, eq } from "drizzle-orm";
 import { type DbExecutor } from "@/drizzle/drizzle";
 import {
   PlaidItem,
   CreatePlaidItemInput,
   UpdatePlaidItemInput,
   IPlaidItemModel,
+  PlaidItemBinding,
 } from "./types";
 import { plaidItems } from "./schema";
 import { prefixedNanoidBase58 } from "@/shared/nanoid-base58";
@@ -63,6 +64,24 @@ export class PlaidItemPostgresModel implements IPlaidItemModel {
     return result.map((row) => this.toPlainObject(row));
   }
 
+  public async getByLedgerRepoIdAndUserId(
+    db: DbExecutor,
+    ledgerRepoId: number,
+    userId: string,
+  ): Promise<PlaidItem[]> {
+    const result = await db
+      .select()
+      .from(plaidItems)
+      .where(
+        and(
+          eq(plaidItems.ledgerRepoId, ledgerRepoId),
+          eq(plaidItems.userId, userId),
+        ),
+      );
+
+    return result.map((row) => this.toPlainObject(row));
+  }
+
   public async getByLedgerRepoId(
     db: DbExecutor,
     ledgerRepoId: number,
@@ -115,24 +134,42 @@ export class PlaidItemPostgresModel implements IPlaidItemModel {
     return this.toPlainObject(result[0]);
   }
 
-  public async update(
+  public async updateForBinding(
     db: DbExecutor,
     id: string,
+    binding: PlaidItemBinding,
     input: UpdatePlaidItemInput,
-  ): Promise<void> {
-    const now = new Date();
-
-    await db
+  ): Promise<boolean> {
+    const rows = await db
       .update(plaidItems)
-      .set({
-        ...input,
-        updatedAt: now,
-      })
-      .where(eq(plaidItems.id, id));
+      .set({ ...input, updatedAt: new Date() })
+      .where(
+        and(
+          eq(plaidItems.id, id),
+          eq(plaidItems.userId, binding.userId),
+          eq(plaidItems.ledgerRepoId, binding.ledgerRepoId),
+        ),
+      )
+      .returning({ id: plaidItems.id });
+    return rows.length === 1;
   }
 
-  public async delete(db: DbExecutor, id: string): Promise<void> {
-    await db.delete(plaidItems).where(eq(plaidItems.id, id));
+  public async deleteForBinding(
+    db: DbExecutor,
+    id: string,
+    binding: PlaidItemBinding,
+  ): Promise<boolean> {
+    const rows = await db
+      .delete(plaidItems)
+      .where(
+        and(
+          eq(plaidItems.id, id),
+          eq(plaidItems.userId, binding.userId),
+          eq(plaidItems.ledgerRepoId, binding.ledgerRepoId),
+        ),
+      )
+      .returning({ id: plaidItems.id });
+    return rows.length === 1;
   }
 
   public async deleteByUserId(db: DbExecutor, userId: string): Promise<void> {

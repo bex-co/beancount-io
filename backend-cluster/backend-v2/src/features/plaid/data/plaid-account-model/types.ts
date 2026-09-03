@@ -41,15 +41,21 @@ export interface IPlaidAccountModel {
     db: DbExecutor,
     plaidItemId: string,
   ): Promise<PlaidAccount[]>;
-  getEnabledByLedgerRepoId(
+  getEnabledByLedgerRepoIdAndUserId(
     db: DbExecutor,
     ledgerRepoId: number,
+    userId: string,
   ): Promise<Array<PlaidAccount & { institutionName: string }>>;
   create(db: DbExecutor, input: CreatePlaidAccountInput): Promise<PlaidAccount>;
-  update(
+  updateForItem(
     db: DbExecutor,
     id: string,
+    plaidItemId: string,
     input: UpdatePlaidAccountInput,
-  ): Promise<void>;
-  delete(db: DbExecutor, id: string): Promise<void>;
+  ): Promise<boolean>;
+  deleteForItem(
+    db: DbExecutor,
+    id: string,
+    plaidItemId: string,
+  ): Promise<boolean>;
 }

@@ -38,11 +38,10 @@ export const ARCHIVE_DOWNLOAD_ROUTES = [
     },
     handler: async ({ layers, config }, { identity, params, ctx }) => {
       const ledgerId = ledgerIdOf(params);
-      await layers.services.ledgerRepo.listDirContent({ ledgerId, identity });
       await streamLedgerArchive(ctx, layers, config, {
         ledgerId,
         archive: params.archive,
-        userId: identity.userId,
+        identity,
       });
       return undefined;
     },

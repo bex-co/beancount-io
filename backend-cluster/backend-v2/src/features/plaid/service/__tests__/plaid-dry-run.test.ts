@@ -10,9 +10,6 @@ jest.mock("@/shared/logger", () => ({
     }),
   },
 }));
-jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
-  authorizeLedger: jest.fn().mockResolvedValue({ ledgerRepoId: 42 }),
-}));
 jest.mock("../../utils/encryption", () => ({
   decryptToken: () => "access-token",
   encryptToken: (t: string) => t,
@@ -20,6 +17,7 @@ jest.mock("../../utils/encryption", () => ({
 
 import { PlaidItemService } from "../plaid-item-service";
 import type { Identity } from "@/server/api/identity";
+import { ForbiddenError } from "@/shared/errors";
 
 const identity: Identity = {
   userId: "usr_1",
@@ -52,6 +50,10 @@ describe("unlink dry_run changes nothing", () => {
     const plaidItem = {
       getById: jest.fn().mockResolvedValue(item),
       delete: jest.fn(),
+      deleteForBinding: jest.fn(async (db, id) => {
+        await plaidItem.delete(db, id);
+        return true;
+      }),
     };
     const plaidAccount = {
       getByItemId: jest.fn().mockResolvedValue([
@@ -61,19 +63,29 @@ describe("unlink dry_run changes nothing", () => {
           ledgerAccount: "Assets:Bank",
         },
       ]),
+      updateForItem: jest.fn().mockResolvedValue(true),
     };
     const plaidClient = { removeItem: jest.fn() };
+    const authorization = {
+      authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+    };
     const service = new PlaidItemService(
       plaidClient as never,
-      {} as never,
+      {
+        getAdminClient: () => ({
+          ledgers: {
+            getLedger: jest.fn().mockResolvedValue({
+              data: { success: true, data: { id: 42 } },
+            }),
+          },
+        }),
+      } as never,
       { plaidItem, plaidAccount } as never,
       {} as never,
       {} as never,
-      {
-        authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
-      } as never,
+      authorization as never,
     );
-    return { service, plaidItem, plaidClient };
+    return { service, plaidItem, plaidClient, authorization };
   }
 
   it("neither deletes the item nor tells the bank to remove it", async () => {
@@ -114,6 +126,21 @@ describe("unlink dry_run changes nothing", () => {
 
     expect(plaidItem.delete).toHaveBeenCalledWith(expect.anything(), "pitm_1");
     expect(plaidClient.removeItem).toHaveBeenCalled();
+  });
+
+  it("does no Plaid or database work when centralized authorization denies", async () => {
+    const { service, plaidItem, plaidClient, authorization } = build();
+    authorization.authorizeOrThrow.mockRejectedValueOnce(
+      new ForbiddenError("Forbidden"),
+    );
+
+    await expect(
+      service.unlinkItem(identity, "pitm_1", "alice/main"),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+
+    expect(plaidItem.getById).not.toHaveBeenCalled();
+    expect(plaidItem.deleteForBinding).not.toHaveBeenCalled();
+    expect(plaidClient.removeItem).not.toHaveBeenCalled();
   });
 
   /**

@@ -119,11 +119,15 @@ describe("coverage through the enforcement seam", () => {
 
   it("records a denied write without anybody calling an emitter", async () => {
     const events = await collect(() =>
-      requireScopeClass(readOnly, "GQL Mutation.bulkEntries", "enforce"),
+      requireScopeClass(
+        readOnly,
+        "GQL Mutation.unclassifiedWriteFallback",
+        "enforce",
+      ),
     );
     expect(events).toEqual([
       expect.objectContaining({
-        op: "GQL Mutation.bulkEntries",
+        op: "GQL Mutation.unclassifiedWriteFallback",
         userId: "usr_1",
         tokenId: "tok_1",
         outcome: "denied",
@@ -133,7 +137,11 @@ describe("coverage through the enforcement seam", () => {
 
   it("records a shadow-mode refusal as such, distinctly from a real one", async () => {
     const events = await collect(() =>
-      requireScopeClass(readOnly, "GQL Mutation.bulkEntries", "shadow"),
+      requireScopeClass(
+        readOnly,
+        "GQL Mutation.unclassifiedWriteFallback",
+        "shadow",
+      ),
     );
     expect(events[0]).toMatchObject({ outcome: "shadow-denied" });
   });
@@ -152,7 +160,7 @@ describe("coverage through the enforcement seam", () => {
     const events = await collect(() =>
       requireScopeClass(
         readOnly,
-        "REST PUT /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
+        "REST POST /api-gateway/unclassified/{value}",
         "enforce",
       ),
     );

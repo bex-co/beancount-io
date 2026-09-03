@@ -1,9 +1,18 @@
 import { logger } from "@/shared/logger";
-import { systemIdentity } from "@/server/api/identity";
 import type { DbExecutor } from "@/drizzle/drizzle";
 import type { IModels } from "@/foundation/models";
 import type { PlaidWebhookRequest } from "../api/rest/plaid-webhook-schemas";
 import type { IPlaidSyncService } from "./plaid-sync-service";
+import {
+  AUTHORIZATION_ACTIONS,
+  bankConnectionResource,
+  plaidBackgroundPrincipal,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
+import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
+import { unwrapFavaResponse } from "@/foundation/fava";
+import { ServiceUnavailableError } from "@/shared/errors";
+import type { PlaidItem } from "../data/plaid-item-model/types";
 
 const webhookLogger = logger.child({ module: "plaid-webhook-service" });
 
@@ -41,7 +50,35 @@ export class PlaidWebhookService implements IPlaidWebhookService {
     private readonly models: Pick<IModels, "plaidItem" | "plaidAccount">,
     private readonly db: DbExecutor,
     private readonly plaidSyncService: IPlaidSyncService,
+    private readonly favaClientFactory: IFavaClientFactory,
+    private readonly authorization: IAuthorizationService,
   ) {}
+
+  private async authorizeItemWebhook(item: PlaidItem): Promise<void> {
+    let ledgerId: string;
+    try {
+      const ledger = await unwrapFavaResponse(
+        this.favaClientFactory
+          .getAdminClient()
+          .admin.getLedgerByRepoId(item.ledgerRepoId),
+        "resolve webhook bank ledger",
+      );
+      ledgerId = ledger.full_name;
+    } catch (error) {
+      webhookLogger.error("Webhook bank ledger source unavailable", {
+        itemId: item.id,
+        ledgerRepoId: item.ledgerRepoId,
+        error,
+      });
+      throw new ServiceUnavailableError("Bank ledger source");
+    }
+
+    await this.authorization.authorizeOrThrow({
+      principal: plaidBackgroundPrincipal(item.userId, "plaid_webhook"),
+      action: AUTHORIZATION_ACTIONS.BANK_WEBHOOK_ITEM_APPLY,
+      resource: bankConnectionResource(ledgerId, item.id),
+    });
+  }
 
   async handleEvent(event: PlaidWebhookRequest): Promise<void> {
     const { webhook_type, webhook_code, item_id } = event;
@@ -93,7 +130,10 @@ export class PlaidWebhookService implements IPlaidWebhookService {
         });
 
         this.plaidSyncService
-          .syncItemTransactions(systemIdentity(userId), itemDbId, "webhook")
+          .syncItemTransactionsInBackground(
+            plaidBackgroundPrincipal(userId, "plaid_webhook"),
+            itemDbId,
+          )
           .then(() => {
             webhookLogger.info("Webhook-triggered sync completed", { item_id });
           })
@@ -111,7 +151,10 @@ export class PlaidWebhookService implements IPlaidWebhookService {
           item_id,
         });
         this.plaidSyncService
-          .syncItemTransactions(systemIdentity(userId), itemDbId, "webhook")
+          .syncItemTransactionsInBackground(
+            plaidBackgroundPrincipal(userId, "plaid_webhook"),
+            itemDbId,
+          )
           .catch((err) => {
             webhookLogger.error("Sync failed after transactions removed", {
               item_id,
@@ -138,6 +181,7 @@ export class PlaidWebhookService implements IPlaidWebhookService {
       return;
     }
 
+    await this.authorizeItemWebhook(item);
     const itemDbId = item.id;
 
     switch (webhook_code) {
@@ -149,11 +193,16 @@ export class PlaidWebhookService implements IPlaidWebhookService {
 
         if (error) {
           webhookLogger.warn("Item error reported", { item_id, error });
-          await this.models.plaidItem.update(this.db, itemDbId, {
-            status: "requires_reauth",
-            errorCode: error.error_code,
-            errorMessage: error.error_message,
-          });
+          await this.models.plaidItem.updateForBinding(
+            this.db,
+            itemDbId,
+            { userId: item.userId, ledgerRepoId: item.ledgerRepoId },
+            {
+              status: "requires_reauth",
+              errorCode: error.error_code,
+              errorMessage: error.error_message,
+            },
+          );
         }
         break;
       }
@@ -162,19 +211,23 @@ export class PlaidWebhookService implements IPlaidWebhookService {
       case "PENDING_DISCONNECT":
       case "PENDING_EXPIRATION": {
         webhookLogger.warn("Item pending expiration", { item_id });
-        await this.models.plaidItem.update(this.db, itemDbId, {
-          status: "requires_reauth",
-        });
+        await this.models.plaidItem.updateForBinding(
+          this.db,
+          itemDbId,
+          { userId: item.userId, ledgerRepoId: item.ledgerRepoId },
+          { status: "requires_reauth" },
+        );
         break;
       }
 
       case "LOGIN_REPAIRED": {
         webhookLogger.info("Item login repaired", { item_id });
-        await this.models.plaidItem.update(this.db, itemDbId, {
-          status: "active",
-          errorCode: null,
-          errorMessage: null,
-        });
+        await this.models.plaidItem.updateForBinding(
+          this.db,
+          itemDbId,
+          { userId: item.userId, ledgerRepoId: item.ledgerRepoId },
+          { status: "active", errorCode: null, errorMessage: null },
+        );
         break;
       }
 
@@ -183,7 +236,10 @@ export class PlaidWebhookService implements IPlaidWebhookService {
       // that one is account-scoped and carries its own account_id.
       case "USER_PERMISSION_REVOKED":
         webhookLogger.warn("User permission revoked for Item", { item_id });
-        await this.models.plaidItem.delete(this.db, itemDbId);
+        await this.models.plaidItem.deleteForBinding(this.db, itemDbId, {
+          userId: item.userId,
+          ledgerRepoId: item.ledgerRepoId,
+        });
         break;
 
       // Account-level: the user revoked one account at their bank's portal.
@@ -232,7 +288,11 @@ export class PlaidWebhookService implements IPlaidWebhookService {
           mask: account.mask,
           ledgerAccount: account.ledgerAccount,
         });
-        await this.models.plaidAccount.delete(this.db, account.id);
+        await this.models.plaidAccount.deleteForItem(
+          this.db,
+          account.id,
+          itemDbId,
+        );
         break;
       }
 

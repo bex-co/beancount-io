@@ -11,10 +11,17 @@ import type {
   PullRequestDetails,
   PRFileChange,
 } from "../api/pull-request-resolver.types";
+import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  ledgerResource,
+  type IAuthorizationService,
+} from "@/server/api/authorization";
+import { createLedgerId } from "@/shared/str";
 
 export interface IPullRequestService {
   createPRFromPatch(
-    userId: string,
+    identity: Identity,
     owner: string,
     repo: string,
     title: string,
@@ -23,19 +30,19 @@ export interface IPullRequestService {
     changes: Array<{ path: string; content: string }>,
   ): Promise<{ prNumber: number; prUrl: string }>;
   getPRDetails(
-    userId: string,
+    identity: Identity,
     owner: string,
     repo: string,
     prNumber: number,
   ): Promise<PullRequestDetails>;
   mergePR(
-    userId: string,
+    identity: Identity,
     owner: string,
     repo: string,
     prNumber: number,
   ): Promise<{ success: boolean; message: string }>;
   closePR(
-    userId: string,
+    identity: Identity,
     owner: string,
     repo: string,
     prNumber: number,
@@ -47,10 +54,11 @@ export class PullRequestService implements IPullRequestService {
     private readonly giteaClientFactory: IGiteaClientFactory,
     private readonly models: Pick<IModels, "user">,
     private readonly db: DbExecutor,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
   async createPRFromPatch(
-    userId: string,
+    identity: Identity,
     owner: string,
     repo: string,
     title: string,
@@ -58,6 +66,12 @@ export class PullRequestService implements IPullRequestService {
     baseBranch: string,
     changes: Array<{ path: string; content: string }>,
   ): Promise<{ prNumber: number; prUrl: string }> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE,
+      resource: ledgerResource(createLedgerId(owner, repo)),
+    });
+    const userId = identity.userId;
     const client = await this.giteaClientFactory.getUserApiClient(userId);
 
     // 1. Create unique branch name
@@ -156,11 +170,17 @@ export class PullRequestService implements IPullRequestService {
   }
 
   async getPRDetails(
-    userId: string,
+    identity: Identity,
     owner: string,
     repo: string,
     prNumber: number,
   ): Promise<PullRequestDetails> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_READ,
+      resource: ledgerResource(createLedgerId(owner, repo)),
+    });
+    const userId = identity.userId;
     const user = await this.models.user.getById(this.db, userId);
     if (!user) {
       throw new Error("User not found");
@@ -170,12 +190,17 @@ export class PullRequestService implements IPullRequestService {
 
     try {
       // Get PR metadata
-      const prResponse = await axios.get(
-        `${baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}`,
-        {
+      const [prResponse, filesResponse, diffResponse] = await Promise.all([
+        axios.get(`${baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}`, {
           headers: { Authorization: authHeader },
-        },
-      );
+        }),
+        axios.get(`${baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}/files`, {
+          headers: { Authorization: authHeader },
+        }),
+        axios.get(`${baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}.diff`, {
+          headers: { Authorization: authHeader },
+        }),
+      ]);
 
       const pr = prResponse.data;
 
@@ -184,22 +209,6 @@ export class PullRequestService implements IPullRequestService {
           `Pull request #${prNumber} not found in ${owner}/${repo}`,
         );
       }
-
-      // Get changed files
-      const filesResponse = await axios.get(
-        `${baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}/files`,
-        {
-          headers: { Authorization: authHeader },
-        },
-      );
-
-      // Get diff content
-      const diffResponse = await axios.get(
-        `${baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}.diff`,
-        {
-          headers: { Authorization: authHeader },
-        },
-      );
 
       // Process files data
       const filesData = filesResponse.data;
@@ -234,11 +243,17 @@ export class PullRequestService implements IPullRequestService {
   }
 
   async mergePR(
-    userId: string,
+    identity: Identity,
     owner: string,
     repo: string,
     prNumber: number,
   ): Promise<{ success: boolean; message: string }> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE,
+      resource: ledgerResource(createLedgerId(owner, repo)),
+    });
+    const userId = identity.userId;
     const client = await this.giteaClientFactory.getUserApiClient(userId);
 
     try {
@@ -255,11 +270,17 @@ export class PullRequestService implements IPullRequestService {
   }
 
   async closePR(
-    userId: string,
+    identity: Identity,
     owner: string,
     repo: string,
     prNumber: number,
   ): Promise<{ success: boolean; message: string }> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_REJECT,
+      resource: ledgerResource(createLedgerId(owner, repo)),
+    });
+    const userId = identity.userId;
     const client = await this.giteaClientFactory.getUserApiClient(userId);
 
     try {

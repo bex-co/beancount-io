@@ -67,7 +67,7 @@ function makeWorkflow({
       .fn()
       .mockResolvedValue({ downloadUrl: "https://s3.example/file" }),
   };
-  const mockLedgerEntry = { addBulkEntries };
+  const mockLedgerEntry = { writeBulkEntries: addBulkEntries };
   const mockConfig = { dashboard: { url: "https://dash.example" } };
 
   return new LedgerReceiptWorkflow(

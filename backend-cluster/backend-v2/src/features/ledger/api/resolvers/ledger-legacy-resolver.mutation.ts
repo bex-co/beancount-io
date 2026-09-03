@@ -15,6 +15,7 @@ import { GraphQLJSONObject } from "graphql-scalars";
 import { parseLedgerId } from "@/shared/str";
 import { BaseLedgerResolver } from "./ledger-legacy-resolver.base";
 import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
+import type { IAuthorizationService } from "@/server/api/authorization";
 import type {
   ILedgerEntryService,
   LedgerEntryInput,
@@ -100,8 +101,9 @@ export class LedgerLegacyMutationResolver extends BaseLedgerResolver {
   constructor(
     favaClientFactory: IFavaClientFactory,
     private readonly ledgerEntry: ILedgerEntryService,
+    authorization: IAuthorizationService,
   ) {
-    super(favaClientFactory);
+    super(favaClientFactory, authorization);
   }
 
   @Authenticated()
@@ -110,10 +112,9 @@ export class LedgerLegacyMutationResolver extends BaseLedgerResolver {
     @Args() entriesInput: EntriesInput,
     @Ctx() ctx: IContext,
   ): Promise<AddEntryResponse> {
-    const userId = ctx.getCurrentUserId();
+    const identity = ctx.getCurrentIdentity();
     const defaultLedgerId = await this.resolveLedgerId(
-      ctx.identity,
-      userId,
+      identity,
       entriesInput.ledgerId,
     );
     const { ledgerOwner, ledgerName } = parseLedgerId(defaultLedgerId);
@@ -140,7 +141,7 @@ export class LedgerLegacyMutationResolver extends BaseLedgerResolver {
     );
 
     await this.ledgerEntry.addBulkEntries(
-      ctx.getCurrentIdentity(),
+      identity,
       ledgerOwner,
       ledgerName,
       inputs,

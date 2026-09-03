@@ -7,13 +7,21 @@ import {
   InternalServerError,
   BadUserInputError,
   DomainError,
+  ServiceUnavailableError,
 } from "@/shared/errors";
 import { lock, LOCK_KEYS } from "@/shared/lock";
 import { unwrapFavaResponse } from "@/foundation/fava";
-import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
+import {
+  AUTHORIZATION_ACTIONS,
+  bankConnectionResource,
+  type AuthorizationAction,
+  type AuthorizationPrincipal,
+  type IAuthorizationService,
+  type PlaidBackgroundPrincipal,
+} from "@/server/api/authorization";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
-import { createLedgerId } from "@/shared/str";
+import { createLedgerId, parseLedgerId } from "@/shared/str";
 import type { IPlaidClient } from "./plaid-client";
 import { decryptToken } from "../utils/encryption";
 import type { TransactionToCategorize } from "@/features/llm/types";
@@ -22,6 +30,8 @@ import {
   buildBeancountTransaction,
 } from "../utils/plaid-mapper";
 import { reconcileAccounts } from "../utils/reconcile-accounts";
+import type { PlaidAccount } from "../data/plaid-account-model";
+import type { PlaidTransaction } from "../data/plaid-transaction-model";
 
 const syncLogger = logger.child({ module: "plaid-sync-service" });
 
@@ -64,9 +74,13 @@ export interface IPlaidSyncService {
   syncItemTransactions(
     identity: Identity,
     itemId: string,
-    syncType: "manual" | "webhook" | "scheduled",
+    syncType: "manual",
     ledgerId?: string,
     dryRun?: boolean,
+  ): Promise<PlaidSyncResult>;
+  syncItemTransactionsInBackground(
+    principal: PlaidBackgroundPrincipal,
+    itemId: string,
   ): Promise<PlaidSyncResult>;
   getUnsyncedTransactionsForCategorization(
     identity: Identity,
@@ -105,28 +119,135 @@ export class PlaidSyncService implements IPlaidSyncService {
       | "user"
     >,
     private readonly db: DbExecutor,
+    private readonly authorization: IAuthorizationService,
   ) {}
 
-  /** Item-management mutations require at least write tier — a read-only collaborator may not. */
-  /**
-   * Authorize as the caller. Previously `trustedIdentity(userId)`, which is
-   * a fabricated full-authority identity and skipped the scope check — see m9.
-   */
-  private assertLedgerWriteAccess(ledgerId: string, identity: Identity) {
-    return authorizeLedger(identity, ledgerId, "write", {
-      models: this.models,
-      db: this.db,
-      favaClientFactory: this.favaClientFactory,
+  private async authorizeBankAction(
+    principal: AuthorizationPrincipal,
+    action: AuthorizationAction,
+    ledgerId: string,
+    plaidItemIds: string | readonly string[] = [],
+  ): Promise<{ ledgerRepoId: number }> {
+    await this.authorization.authorizeOrThrow({
+      principal,
+      action,
+      resource: bankConnectionResource(ledgerId, plaidItemIds),
     });
+    try {
+      const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+      const ledger = await unwrapFavaResponse(
+        this.favaClientFactory
+          .getAdminClient()
+          .ledgers.getLedger(ledgerOwner, ledgerName),
+        "resolve authorized bank ledger",
+      );
+      return { ledgerRepoId: ledger.id };
+    } catch (error) {
+      syncLogger.error("Authorized bank ledger source unavailable", {
+        action,
+        ledgerId,
+        error,
+      });
+      throw new ServiceUnavailableError("Bank ledger source");
+    }
+  }
+
+  private async resolveLedgerId(ledgerRepoId: number): Promise<string> {
+    try {
+      const ledger = await unwrapFavaResponse(
+        this.favaClientFactory
+          .getAdminClient()
+          .admin.getLedgerByRepoId(ledgerRepoId),
+        "resolve bank ledger",
+      );
+      return ledger.full_name;
+    } catch (error) {
+      syncLogger.error("Bank ledger binding source unavailable", {
+        ledgerRepoId,
+        error,
+      });
+      throw new ServiceUnavailableError("Bank ledger source");
+    }
+  }
+
+  private async loadAuthorizedTransactionBatch(
+    identity: Identity,
+    action:
+      | typeof AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SUBMIT
+      | typeof AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_DELETE,
+    ledgerId: string,
+    transactionIds: string[],
+  ): Promise<{
+    transactions: PlaidTransaction[];
+    accounts: ReadonlyMap<string, PlaidAccount>;
+  }> {
+    const transactions = await this.models.plaidTransaction.getByTransactionIds(
+      this.db,
+      transactionIds,
+    );
+    if (transactions.length !== transactionIds.length) {
+      throw new BadUserInputError("Some transactions not found in database");
+    }
+
+    const accounts = new Map<string, PlaidAccount>();
+    for (const accountId of new Set(
+      transactions.map((transaction) => transaction.plaidAccountId),
+    )) {
+      const account = await this.models.plaidAccount.getById(
+        this.db,
+        accountId,
+      );
+      if (!account) {
+        throw new BadUserInputError("Transaction account not found");
+      }
+      accounts.set(account.id, account);
+    }
+
+    const itemIds = [
+      ...new Set([...accounts.values()].map((a) => a.plaidItemId)),
+    ];
+    const { ledgerRepoId } = await this.authorizeBankAction(
+      identity,
+      action,
+      ledgerId,
+      itemIds,
+    );
+    for (const itemId of itemIds) {
+      const item = await this.models.plaidItem.getById(this.db, itemId);
+      if (
+        !item ||
+        item.userId !== identity.userId ||
+        item.ledgerRepoId !== ledgerRepoId
+      ) {
+        throw new BadUserInputError("Unauthorized access to transaction");
+      }
+    }
+
+    return { transactions, accounts };
   }
 
   async syncItemTransactions(
     identity: Identity,
     itemId: string,
-    syncType: "manual" | "webhook" | "scheduled",
+    syncType: "manual",
     ledgerId?: string,
     dryRun = false,
   ): Promise<PlaidSyncResult> {
+    let authorizedLedgerId = ledgerId;
+    if (!authorizedLedgerId) {
+      const item = await this.models.plaidItem.getById(this.db, itemId);
+      if (!item) throw new BadUserInputError("Plaid Item not found");
+      if (item.userId !== identity.userId) {
+        throw new BadUserInputError("Unauthorized access to Plaid Item");
+      }
+      authorizedLedgerId = await this.resolveLedgerId(item.ledgerRepoId);
+    }
+    const { ledgerRepoId } = await this.authorizeBankAction(
+      identity,
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SYNC,
+      authorizedLedgerId,
+      itemId,
+    );
     const lockKey = LOCK_KEYS.PLAID.syncTransactions(itemId);
 
     return lock.acquire(lockKey, async () => {
@@ -134,22 +255,51 @@ export class PlaidSyncService implements IPlaidSyncService {
         itemId,
         identity,
         syncType,
-        ledgerId,
+        ledgerRepoId,
         dryRun,
       );
     });
   }
 
+  async syncItemTransactionsInBackground(
+    principal: PlaidBackgroundPrincipal,
+    itemId: string,
+  ): Promise<PlaidSyncResult> {
+    const locatedItem = await this.models.plaidItem.getById(this.db, itemId);
+    if (!locatedItem || locatedItem.userId !== principal.userId) {
+      throw new BadUserInputError("Plaid Item not found");
+    }
+    const ledgerId = await this.resolveLedgerId(locatedItem.ledgerRepoId);
+    const { ledgerRepoId } = await this.authorizeBankAction(
+      principal,
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SYNC,
+      ledgerId,
+      itemId,
+    );
+    const syncType =
+      principal.provenance === "plaid_webhook" ? "webhook" : "scheduled";
+    const lockKey = LOCK_KEYS.PLAID.syncTransactions(itemId);
+    return lock.acquire(lockKey, () =>
+      this.syncItemTransactionsImpl(
+        itemId,
+        principal,
+        syncType,
+        ledgerRepoId,
+        false,
+      ),
+    );
+  }
+
   private async syncItemTransactionsImpl(
     itemId: string,
-    identity: Identity,
+    principal: AuthorizationPrincipal,
     syncType: "manual" | "webhook" | "scheduled",
-    ledgerId?: string,
+    ledgerRepoId: number,
     dryRun = false,
   ): Promise<PlaidSyncResult> {
     // The identity is what authorizes; `userId` is the id the models key on.
     // Derived rather than passed separately so the two can never disagree.
-    const { userId } = identity;
+    const { userId } = principal;
     const startedAt = new Date();
 
     try {
@@ -157,15 +307,7 @@ export class PlaidSyncService implements IPlaidSyncService {
       if (!item) {
         throw new BadUserInputError("Plaid Item not found");
       }
-      if (ledgerId) {
-        const { ledgerRepoId } = await this.assertLedgerWriteAccess(
-          ledgerId,
-          identity,
-        );
-        if (item.ledgerRepoId !== ledgerRepoId) {
-          throw new BadUserInputError("Unauthorized access to Plaid Item");
-        }
-      } else if (item.userId !== userId) {
+      if (item.userId !== userId || item.ledgerRepoId !== ledgerRepoId) {
         throw new BadUserInputError("Unauthorized access to Plaid Item");
       }
       if (item.status !== "active") {
@@ -202,6 +344,9 @@ export class PlaidSyncService implements IPlaidSyncService {
       );
       const enabledAccountIds = new Set(
         enabledAccounts.map((acc) => acc.accountId),
+      );
+      const enabledAccountRowIds = new Set(
+        enabledAccounts.map((acc) => acc.id),
       );
 
       syncLogger.debug("Starting transaction sync", {
@@ -303,6 +448,10 @@ export class PlaidSyncService implements IPlaidSyncService {
         }
 
         for (const tx of modifiedForEnabled) {
+          const accountRecord = enabledAccounts.find(
+            (account) => account.accountId === tx.accountId,
+          );
+          if (!accountRecord) continue;
           const existing =
             await this.models.plaidTransaction.getByTransactionId(
               this.db,
@@ -315,16 +464,21 @@ export class PlaidSyncService implements IPlaidSyncService {
             continue;
           }
 
-          await this.models.plaidTransaction.update(this.db, existing.id, {
-            date: new Date(tx.date),
-            amount: tx.amount.toString(),
-            merchantName: tx.merchantName ?? null,
-            name: tx.name,
-            category: tx.category ? JSON.stringify(tx.category) : null,
-            isPending: tx.isPending,
-          });
+          const updated = await this.models.plaidTransaction.updateForAccount(
+            this.db,
+            existing.id,
+            accountRecord.id,
+            {
+              date: new Date(tx.date),
+              amount: tx.amount.toString(),
+              merchantName: tx.merchantName ?? null,
+              name: tx.name,
+              category: tx.category ? JSON.stringify(tx.category) : null,
+              isPending: tx.isPending,
+            },
+          );
 
-          totalModified += 1;
+          if (updated) totalModified += 1;
         }
 
         for (const tx of syncResult.removed) {
@@ -333,8 +487,13 @@ export class PlaidSyncService implements IPlaidSyncService {
               this.db,
               tx.transactionId,
             );
-          if (existing) {
-            await this.models.plaidTransaction.delete(this.db, existing.id);
+          if (existing && enabledAccountRowIds.has(existing.plaidAccountId)) {
+            const deleted = await this.models.plaidTransaction.deleteForAccount(
+              this.db,
+              existing.id,
+              existing.plaidAccountId,
+            );
+            if (!deleted) continue;
             totalRemoved += 1;
           }
         }
@@ -343,12 +502,20 @@ export class PlaidSyncService implements IPlaidSyncService {
         hasMore = syncResult.hasMore;
       }
 
-      await this.models.plaidItem.update(this.db, itemId, {
-        transactionsCursor: cursor ?? null,
-        status: "active",
-        errorCode: null,
-        errorMessage: null,
-      });
+      const itemUpdated = await this.models.plaidItem.updateForBinding(
+        this.db,
+        itemId,
+        { userId, ledgerRepoId },
+        {
+          transactionsCursor: cursor ?? null,
+          status: "active",
+          errorCode: null,
+          errorMessage: null,
+        },
+      );
+      if (!itemUpdated) {
+        throw new BadUserInputError("Unauthorized access to Plaid Item");
+      }
 
       const hasChanges =
         totalAdded > 0 || totalModified > 0 || totalRemoved > 0;
@@ -410,11 +577,16 @@ export class PlaidSyncService implements IPlaidSyncService {
         error instanceof Error &&
         error.message.includes("ITEM_LOGIN_REQUIRED")
       ) {
-        await this.models.plaidItem.update(this.db, itemId, {
-          status: "requires_reauth",
-          errorCode: "ITEM_LOGIN_REQUIRED",
-          errorMessage: "Bank credentials need to be updated",
-        });
+        await this.models.plaidItem.updateForBinding(
+          this.db,
+          itemId,
+          { userId, ledgerRepoId },
+          {
+            status: "requires_reauth",
+            errorCode: "ITEM_LOGIN_REQUIRED",
+            errorMessage: "Bank credentials need to be updated",
+          },
+        );
       }
 
       // Preserve validation/authorization errors (BadUserInputError,
@@ -447,6 +619,13 @@ export class PlaidSyncService implements IPlaidSyncService {
     if (!item || item.userId !== userId) {
       throw new BadUserInputError("Unauthorized access to PlaidAccount");
     }
+    const ledgerId = await this.resolveLedgerId(item.ledgerRepoId);
+    await this.authorizeBankAction(
+      identity,
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTION_CATEGORIES_SUGGEST,
+      ledgerId,
+      item.id,
+    );
 
     const transactions =
       await this.models.plaidTransaction.getUnsyncedByAccountId(
@@ -483,40 +662,15 @@ export class PlaidSyncService implements IPlaidSyncService {
       (input) => input.transactionId,
     );
 
-    const transactions = await this.models.plaidTransaction.getByTransactionIds(
-      this.db,
-      transactionIds,
-    );
-
-    if (transactions.length !== transactionIds.length) {
-      throw new BadUserInputError("Some transactions not found in database");
-    }
-
-    const { ledgerRepoId } = await this.assertLedgerWriteAccess(
-      createLedgerId(ledgerOwner, ledgerName),
-      identity,
-    );
-
+    const ledgerId = createLedgerId(ledgerOwner, ledgerName);
+    const { transactions, accounts } =
+      await this.loadAuthorizedTransactionBatch(
+        identity,
+        AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SUBMIT,
+        ledgerId,
+        transactionIds,
+      );
     for (const tx of transactions) {
-      const account = await this.models.plaidAccount.getById(
-        this.db,
-        tx.plaidAccountId,
-      );
-      if (!account) {
-        throw new BadUserInputError("Transaction account not found");
-      }
-
-      const item = await this.models.plaidItem.getById(
-        this.db,
-        account.plaidItemId,
-      );
-      if (!item) {
-        throw new BadUserInputError("Unauthorized access to transaction");
-      }
-      if (item.ledgerRepoId !== ledgerRepoId) {
-        throw new BadUserInputError("Unauthorized access to transaction");
-      }
-
       if (tx.syncedToLedger) {
         throw new BadUserInputError(
           `Transaction ${tx.transactionId} already synced to ledger`,
@@ -535,10 +689,7 @@ export class PlaidSyncService implements IPlaidSyncService {
         );
       }
 
-      const account = await this.models.plaidAccount.getById(
-        this.db,
-        tx.plaidAccountId,
-      );
+      const account = accounts.get(tx.plaidAccountId);
       const sourceAccount = input.sourceAccount || account?.ledgerAccount;
       if (!sourceAccount) {
         throw new BadUserInputError(
@@ -569,7 +720,6 @@ export class PlaidSyncService implements IPlaidSyncService {
       };
     }
 
-    const ledgerId = `${ledgerOwner}/${ledgerName}`;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -609,11 +759,17 @@ export class PlaidSyncService implements IPlaidSyncService {
       .update(JSON.stringify(beancountTransactions))
       .digest("hex");
     const internalIds = transactions.map((tx) => tx.id);
-    await this.models.plaidTransaction.markAsSynced(
+    const marked = await this.models.plaidTransaction.markAsSyncedForAccounts(
       this.db,
       internalIds,
+      [...accounts.keys()],
       ledgerEntryHash,
     );
+    if (marked !== internalIds.length) {
+      throw new InternalServerError(
+        "Transactions were written but their authorized sync state changed",
+      );
+    }
 
     syncLogger.info("Transactions submitted to ledger", {
       count: beancountTransactions.length,
@@ -639,37 +795,14 @@ export class PlaidSyncService implements IPlaidSyncService {
       throw new BadUserInputError("No transactions provided");
     }
 
-    const transactions = await this.models.plaidTransaction.getByTransactionIds(
-      this.db,
-      transactionIds,
-    );
-
-    if (transactions.length !== transactionIds.length) {
-      throw new BadUserInputError("Some transactions not found in database");
-    }
-
-    const { ledgerRepoId } = await this.assertLedgerWriteAccess(
-      ledgerId,
-      identity,
-    );
-
+    const { transactions, accounts } =
+      await this.loadAuthorizedTransactionBatch(
+        identity,
+        AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_DELETE,
+        ledgerId,
+        transactionIds,
+      );
     for (const tx of transactions) {
-      const account = await this.models.plaidAccount.getById(
-        this.db,
-        tx.plaidAccountId,
-      );
-      if (!account) {
-        throw new BadUserInputError("Transaction account not found");
-      }
-
-      const item = await this.models.plaidItem.getById(
-        this.db,
-        account.plaidItemId,
-      );
-      if (!item || item.ledgerRepoId !== ledgerRepoId) {
-        throw new BadUserInputError("Unauthorized access to transaction");
-      }
-
       if (tx.syncedToLedger) {
         throw new BadUserInputError(
           `Transaction ${tx.transactionId} already synced to ledger and cannot be deleted`,
@@ -694,7 +827,14 @@ export class PlaidSyncService implements IPlaidSyncService {
     }
 
     const internalIds = transactions.map((tx) => tx.id);
-    await this.models.plaidTransaction.deleteMany(this.db, internalIds);
+    const deleted = await this.models.plaidTransaction.deleteManyForAccounts(
+      this.db,
+      internalIds,
+      [...accounts.keys()],
+    );
+    if (deleted !== internalIds.length) {
+      throw new BadUserInputError("Unauthorized access to transaction");
+    }
 
     syncLogger.info("Transactions deleted", {
       count: internalIds.length,

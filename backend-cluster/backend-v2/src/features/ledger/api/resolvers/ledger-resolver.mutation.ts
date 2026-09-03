@@ -75,7 +75,7 @@ export class LedgerMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<LedgerFileContent> {
     return this.workflow.createLedgerFile({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
       input,
       platform: ctx.platform,
@@ -92,7 +92,7 @@ export class LedgerMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<LedgerFileContent> {
     return this.workflow.updateLedgerFile({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
       input,
       platform: ctx.platform,
@@ -109,7 +109,7 @@ export class LedgerMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<DeleteLedgerFileResponse> {
     return this.workflow.deleteLedgerFile({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
       input,
     });
@@ -125,7 +125,7 @@ export class LedgerMutationResolver {
     @Ctx() ctx: IContext,
   ): Promise<RenameLedgerFileResponse> {
     return this.workflow.renameLedgerFile({
-      userId: ctx.getCurrentUserId(),
+      identity: ctx.getCurrentIdentity(),
       ledgerId,
       input,
     });

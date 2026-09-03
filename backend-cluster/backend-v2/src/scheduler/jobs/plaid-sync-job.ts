@@ -1,5 +1,5 @@
 import { logger } from "@/shared/logger";
-import { systemIdentity } from "@/server/api/identity";
+import { plaidBackgroundPrincipal } from "@/server/api/authorization";
 import type { JobFactory } from "../types";
 import { PlaidItemPostgresModel } from "@/features/plaid/data/plaid-item-model";
 import { PlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
@@ -22,6 +22,7 @@ export const createPlaidSyncJob: JobFactory = (layers) => {
         favaClientFactory,
         layers.database.models,
         postgresDb,
+        layers.services.authorization,
       );
 
       let offset = 0;
@@ -57,12 +58,9 @@ export const createPlaidSyncJob: JobFactory = (layers) => {
         // Sync each Item independently - catch errors per item to continue processing
         for (const item of activeItems) {
           try {
-            await plaidSyncService.syncItemTransactions(
-              // No caller: a scheduled run acts on the user's behalf with no
-              // request behind it. Named rather than defaulted (w3/m9).
-              systemIdentity(item.userId),
+            await plaidSyncService.syncItemTransactionsInBackground(
+              plaidBackgroundPrincipal(item.userId, "plaid_scheduler"),
               item.id,
-              "scheduled",
             );
             successCount += 1;
           } catch (error) {

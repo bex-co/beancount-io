@@ -29,6 +29,7 @@ describe("setAskAgentRoute", () => {
   let workflow: { streamAnswer: jest.Mock };
   let assertQuota: jest.Mock;
   let addTokenUsage: jest.Mock;
+  const authorization = { authorizeOrThrow: jest.fn() };
 
   const makeCtx = (body: unknown) => {
     const res = new PassThrough() as unknown as {
@@ -66,6 +67,7 @@ describe("setAskAgentRoute", () => {
       database: { db: {}, models: {} },
       clients: { favaClientFactory: {} },
       services: {
+        authorization,
         aiCfoUsage: {
           assertQuotaAvailable: assertQuota,
           addTokenUsage,

@@ -180,13 +180,17 @@ export function buildResolverContainer(
     // Legacy resolvers (migration deferred)
     [
       LedgerLegacyQueryResolver,
-      new LedgerLegacyQueryResolver(clients.favaClientFactory),
+      new LedgerLegacyQueryResolver(
+        clients.favaClientFactory,
+        services.authorization,
+      ),
     ],
     [
       LedgerLegacyMutationResolver,
       new LedgerLegacyMutationResolver(
         clients.favaClientFactory,
         services.ledgerEntry,
+        services.authorization,
       ),
     ],
     [

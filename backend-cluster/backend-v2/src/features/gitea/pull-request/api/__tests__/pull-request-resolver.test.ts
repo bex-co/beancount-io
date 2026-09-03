@@ -20,8 +20,15 @@ describe("PullRequestResolver", () => {
       ledger_password: "testpass",
     } as User;
 
+    const identity = {
+      userId: mockUser.id,
+      method: "session",
+      scopes: new Set<string>(),
+    } as const;
     mockContext = {
+      identity,
       getCurrentUser: jest.fn().mockResolvedValue(mockUser),
+      getCurrentIdentity: jest.fn().mockReturnValue(identity),
     } as unknown as IContext;
 
     mockService = {
@@ -60,7 +67,7 @@ describe("PullRequestResolver", () => {
       expect(result.prUrl).toBe("https://git.example.com/pr/123");
       expect(result.message).toBe("Pull request created successfully");
       expect(mockService.createPRFromPatch).toHaveBeenCalledWith(
-        "user-id",
+        mockContext.identity,
         "testowner",
         "test-ledger",
         "Test PR",
@@ -139,7 +146,7 @@ describe("PullRequestResolver", () => {
       );
 
       expect(mockService.createPRFromPatch).toHaveBeenCalledWith(
-        "user-id",
+        mockContext.identity,
         "testowner",
         "test-ledger",
         "Test PR",
@@ -175,7 +182,7 @@ describe("PullRequestResolver", () => {
 
       expect(result).toEqual(mockPRDetails);
       expect(mockService.getPRDetails).toHaveBeenCalledWith(
-        "user-id",
+        mockContext.identity,
         "testowner",
         "test-ledger",
         123,
@@ -227,7 +234,7 @@ describe("PullRequestResolver", () => {
       expect(result.success).toBe(true);
       expect(result.message).toBe("PR merged successfully");
       expect(mockService.mergePR).toHaveBeenCalledWith(
-        "user-id",
+        mockContext.identity,
         "testowner",
         "test-ledger",
         123,
@@ -283,7 +290,7 @@ describe("PullRequestResolver", () => {
       expect(result.success).toBe(true);
       expect(result.message).toBe("PR closed successfully");
       expect(mockService.closePR).toHaveBeenCalledWith(
-        "user-id",
+        mockContext.identity,
         "testowner",
         "test-ledger",
         123,

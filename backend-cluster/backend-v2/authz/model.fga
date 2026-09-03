@@ -10,10 +10,10 @@
 #
 # No OpenFGA runtime is deployed. The centralized TypeScript module executes
 # protected User domain with exact-self/current-row checks and resolves social,
-# control-plane, assisted-ingestion, AI, and authenticated single-ledger
-# relationships from current Gitea/Fava facts. Temporary-object ownership is a
-# trusted runtime key invariant; no credential, request, or temporary-object
-# tuple enters this model. The model remains CI-evaluated only.
+# control-plane, ledger data-plane, assisted-ingestion, AI, and bank-connection
+# relationships from current Gitea/Fava and Plaid-binding facts. Temporary-object
+# ownership is a trusted runtime key invariant; no credential, request, bank,
+# or temporary-object tuple enters this model. The model remains CI-evaluated only.
 
 model
   schema 1.1
@@ -39,6 +39,7 @@ type user
     define can_read_social: owner
     define can_write_social: owner
     define can_write_ledgers: owner
+    define can_read_ledgers: owner
     define can_read_public_keys: owner
     define can_write_public_keys: owner
 

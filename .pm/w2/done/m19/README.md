@@ -1,19 +1,19 @@
 # w2 · m19 — Centralized authz for bank connections and transaction sync
 
-**Worker:** worker2 **Goal:** centralize Plaid Link, item/account mapping, status, reconciliation, sync, submit, and delete authority at customer/background application boundaries using current item/user/ledger bindings **Status:** todo
+**Worker:** worker2 **Goal:** centralize Plaid Link, item/account mapping, status, reconciliation, sync, submit, and delete authority at customer/background application boundaries using current item/user/ledger bindings **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                             | est | depends_on |
 | ---- | ------------------------------------------------- | --- | ---------- |
-| t001 | Catalog bank actions, bindings, and operational risk | 55m | —          |
-| t002 | Migrate Link, item, status, and account boundaries   | 65m | t001       |
-| t003 | Migrate transaction sync and ledger submission       | 65m | t002       |
-| t004 | Ratify background invocation without session masquerade | 55m | t003       |
-| t005 | Adoption surface                                  | 20m | t004       |
-| t006 | Simplify                                          | 20m | t005       |
-| t007 | Test coverage                                     | 65m | t005       |
-| t008 | Closeout                                          | 15m | t006, t007 |
+| t001 | Catalog bank actions, bindings, and operational risk — **DONE** | 55m | —          |
+| t002 | Migrate Link, item, status, and account boundaries — **DONE** | 65m | t001       |
+| t003 | Migrate transaction sync and ledger submission — **DONE** | 65m | t002       |
+| t004 | Ratify background invocation without session masquerade — **DONE** | 55m | t003       |
+| t005 | Adoption surface — **DONE**                       | 20m | t004       |
+| t006 | Simplify — **DONE**                               | 20m | t005       |
+| t007 | Test coverage — **DONE**                          | 65m | t005       |
+| t008 | Closeout — **DONE**                               | 15m | t006, t007 |
 
 ## Definition of done
 

@@ -26,7 +26,7 @@ jest.mock("@/features/plaid/data/plaid-item-model", () => ({
 const mockSyncItemTransactions = jest.fn();
 jest.mock("@/features/plaid/service/plaid-sync-service", () => ({
   PlaidSyncService: jest.fn().mockImplementation(() => ({
-    syncItemTransactions: mockSyncItemTransactions,
+    syncItemTransactionsInBackground: mockSyncItemTransactions,
   })),
 }));
 
@@ -101,21 +101,12 @@ describe("createPlaidSyncJob", () => {
     await job.task();
 
     expect(mockSyncItemTransactions).toHaveBeenCalledWith(
-      // A scheduled run has no caller, so it claims a system identity on the
-      // user's behalf — named at the call site rather than defaulted inside
-      // the service (w3/m9).
       expect.objectContaining({
         userId: item.userId,
-        method: "system",
-        principal: {
-          type: "service",
-          id: "backend-v2",
-          onBehalfOfUserId: item.userId,
-        },
-        assurance: { type: "workload" },
+        kind: "plaid_background",
+        provenance: "plaid_scheduler",
       }),
       item.id,
-      "scheduled",
     );
   });
 

@@ -32,7 +32,11 @@ export interface UpdatePlaidItemInput {
   errorMessage?: string | null;
   transactionsCursor?: string | null;
   accessToken?: string; // Already encrypted
-  ledgerRepoId?: number;
+}
+
+export interface PlaidItemBinding {
+  userId: string;
+  ledgerRepoId: number;
 }
 
 export interface IPlaidItemModel {
@@ -40,18 +44,28 @@ export interface IPlaidItemModel {
   getByItemId(db: DbExecutor, itemId: string): Promise<PlaidItem | null>;
   getByUserId(db: DbExecutor, userId: string): Promise<PlaidItem[]>;
   getByLedgerRepoId(db: DbExecutor, ledgerRepoId: number): Promise<PlaidItem[]>;
+  getByLedgerRepoIdAndUserId(
+    db: DbExecutor,
+    ledgerRepoId: number,
+    userId: string,
+  ): Promise<PlaidItem[]>;
   getActiveItems(
     db: DbExecutor,
     limit: number,
     offset: number,
   ): Promise<PlaidItem[]>;
   create(db: DbExecutor, input: CreatePlaidItemInput): Promise<PlaidItem>;
-  update(
+  updateForBinding(
     db: DbExecutor,
     id: string,
+    binding: PlaidItemBinding,
     input: UpdatePlaidItemInput,
-  ): Promise<void>;
-  delete(db: DbExecutor, id: string): Promise<void>;
+  ): Promise<boolean>;
+  deleteForBinding(
+    db: DbExecutor,
+    id: string,
+    binding: PlaidItemBinding,
+  ): Promise<boolean>;
   /**
    * Deletes all Plaid items owned by a user (account-deletion cleanup, #1619
    * follow-up). Callers are responsible for best-effort removing each item

@@ -10,18 +10,11 @@ jest.mock("@/shared/logger", () => ({
     }),
   },
 }));
-jest.mock("@/features/ledger/utils/authorize-ledger", () => ({
-  authorizeLedger: jest.fn(),
-}));
-
 import { PlaidItemService } from "../plaid-item-service";
-import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import { systemIdentity } from "@/server/api/identity";
 import type { Identity } from "@/server/api/identity";
 
-const authorize = authorizeLedger as jest.MockedFunction<
-  typeof authorizeLedger
->;
+const authorizeOrThrow = jest.fn().mockResolvedValue({ allowed: true });
 
 /**
  * w3/m9 — a Plaid service authorizes as its caller.
@@ -48,21 +41,27 @@ describe("Plaid services authorize as the caller, not as a session", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
-    authorize.mockResolvedValue({
-      permission: "write",
-      ledgerOwnerId: "usr_1",
-      ledgerRepoId: 42,
-    } as never);
+    authorizeOrThrow.mockResolvedValue({ allowed: true });
     service = new PlaidItemService(
       {} as never,
-      {} as never,
       {
-        plaidItem: { getByLedgerRepoId: jest.fn().mockResolvedValue([]) },
+        getAdminClient: () => ({
+          ledgers: {
+            getLedger: jest.fn().mockResolvedValue({
+              data: { success: true, data: { id: 42 } },
+            }),
+          },
+        }),
+      } as never,
+      {
+        plaidItem: {
+          getByLedgerRepoIdAndUserId: jest.fn().mockResolvedValue([]),
+        },
       } as never,
       {} as never,
       {} as never,
       {
-        authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+        authorizeOrThrow,
       } as never,
     );
   });
@@ -70,8 +69,8 @@ describe("Plaid services authorize as the caller, not as a session", () => {
   it("hands the caller's own identity down, still narrowed", async () => {
     await service.getItems(narrowed, "alice/main");
 
-    expect(authorize).toHaveBeenCalledTimes(1);
-    const identity = authorize.mock.calls[0]![0]!;
+    expect(authorizeOrThrow).toHaveBeenCalledTimes(1);
+    const identity = authorizeOrThrow.mock.calls[0]![0]!.principal;
     expect(identity).toBe(narrowed);
     expect([...identity.scopes]).toEqual(["ledger.read"]);
   });
@@ -79,7 +78,7 @@ describe("Plaid services authorize as the caller, not as a session", () => {
   it("does not widen a scoped credential into a full-capability one", async () => {
     await service.getItems(narrowed, "alice/main");
 
-    const identity = authorize.mock.calls[0]![0]!;
+    const identity = authorizeOrThrow.mock.calls[0]![0]!.principal;
     // The pre-m9 shape: same user, entirely different authority. If this ever
     // holds again, the scope check downstream cannot tell a scoped agent from
     // a browser session.
@@ -91,7 +90,7 @@ describe("Plaid services authorize as the caller, not as a session", () => {
 
     await service.getItems(system, "alice/main");
 
-    const identity = authorize.mock.calls[0]![0]!;
+    const identity = authorizeOrThrow.mock.calls[0]![0]!.principal;
     expect(identity.method).toBe("system");
     expect(identity.principal).toEqual({
       type: "service",

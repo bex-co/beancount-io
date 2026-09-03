@@ -1,20 +1,20 @@
 # w2 · m17 — Centralized authz for ledger contents and reporting
 
-**Worker:** worker2 **Goal:** route the large ledger data plane through protected application-service/workflow boundaries, the one shared PDP catalog, and the source-backed ledger evaluator without changing surface contracts **Status:** todo
+**Worker:** worker2 **Goal:** route the large ledger data plane through protected application-service/workflow boundaries, the one shared PDP catalog, and the source-backed ledger evaluator without changing surface contracts **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                            | est | depends_on |
 | ---- | ------------------------------------------------ | --- | ---------- |
-| t001 | Complete the ledger-content action catalog and alias matrix | 60m | —          |
-| t002 | Migrate reporting, journal, and account reads    | 60m | t001       |
-| t003 | Migrate files, repository, shell, and archives   | 60m | t001       |
-| t004 | Migrate entries, receipts, and pull requests     | 60m | t002, t003 |
-| t005 | Remove competing gates and verify budgets/audit/failures | 50m | t004       |
-| t006 | Adoption surface                                 | 25m | t005       |
-| t007 | Simplify                                         | 25m | t006       |
-| t008 | Test coverage                                    | 75m | t006       |
-| t009 | Closeout                                         | 15m | t007, t008 |
+| t001 | Complete the ledger-content action catalog and alias matrix — **DONE** | 60m | —          |
+| t002 | Migrate reporting, journal, and account reads — **DONE** | 60m | t001       |
+| t003 | Migrate files, repository, shell, and archives — **DONE** | 60m | t001       |
+| t004 | Migrate entries, receipts, and pull requests — **DONE** | 60m | t002, t003 |
+| t005 | Remove competing gates and verify budgets/audit/failures — **DONE** | 50m | t004       |
+| t006 | Adoption surface — **DONE**                      | 25m | t005       |
+| t007 | Simplify — **DONE**                              | 25m | t006       |
+| t008 | Test coverage — **DONE**                         | 75m | t006       |
+| t009 | Closeout — **DONE**                              | 15m | t007, t008 |
 
 ## Definition of done
 

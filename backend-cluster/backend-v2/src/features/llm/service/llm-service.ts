@@ -3,7 +3,6 @@ import type { IAssetStorageService } from "@/features/s3/service/asset-storage-s
 import type { IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import type { AppConfig } from "@/config/config";
 import { LedgerAccountService } from "@/features/ledger/service/ledger-account-service";
-import type { AuthorizeLedgerDeps } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
@@ -109,15 +108,12 @@ export class LLMService implements ILLMService {
     private readonly assetStorage: IAssetStorageService,
     private readonly aiCfoUsageService: IAiCfoUsageService,
     private readonly config: Pick<AppConfig, "blockeden">,
-    models: AuthorizeLedgerDeps["models"],
-    db: AuthorizeLedgerDeps["db"],
     private readonly authorization: IAuthorizationService,
   ) {
     this.llmClient = new LLMClient(config.blockeden.accessKey);
     this.ledgerAccountService = new LedgerAccountService(
       favaClientFactory,
-      models,
-      db,
+      authorization,
     );
   }
 

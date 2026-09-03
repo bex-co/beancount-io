@@ -1,7 +1,8 @@
 import { executeBqlQuery } from "../../tools/bql-query-tool";
 import { LedgerShellService } from "@/features/ledger/service/ledger-shell-service";
 import type { Identity } from "@/server/api/identity";
-import { ForbiddenError } from "@/shared/errors";
+import { ErrorCategory } from "@/shared/errors";
+import { AuthorizationService } from "@/server/api/authorization";
 
 /**
  * ADR 0006 D4/D9: MCP used to authorize once, at connect, for the whole
@@ -35,17 +36,17 @@ describe("MCP per-call authorization: mid-session revocation", () => {
   }
 
   function buildService(isCollaborator: () => boolean) {
-    const mockGetLedger = jest
+    const mockGetLedger = jest.fn().mockResolvedValue({
+      data: { success: true, data: { id: 1, private: true } },
+    });
+    const mockGetLedgerCollaboratorPermission = jest
       .fn()
-      .mockResolvedValue({ data: { success: true, data: { id: 1, private: true } } });
-    const mockGetLedgerCollaboratorPermission = jest.fn().mockImplementation(
-      async () => ({
+      .mockImplementation(async () => ({
         data: {
           success: true,
           data: { permission: isCollaborator() ? "read" : null },
         },
-      }),
-    );
+      }));
     const mockQueryShellText = jest
       .fn()
       .mockResolvedValue({ data: { success: true, data: { text: "ok" } } });
@@ -55,7 +56,8 @@ describe("MCP per-call authorization: mid-session revocation", () => {
       getApiContext: async () => ({
         favaApiClient: {
           collaborators: {
-            getLedgerCollaboratorPermission: mockGetLedgerCollaboratorPermission,
+            getLedgerCollaboratorPermission:
+              mockGetLedgerCollaboratorPermission,
           },
         },
       }),
@@ -64,16 +66,10 @@ describe("MCP per-call authorization: mid-session revocation", () => {
       }),
     };
 
-    const models = {
-      user: {
-        getUserByUsername: jest.fn().mockResolvedValue({ id: "alice" }),
-        getById: jest
-          .fn()
-          .mockResolvedValue({ id: COLLABORATOR_ID, ledger_username: "bob" }),
-      },
-    };
-
-    return new LedgerShellService(favaClientFactory as any, models as any, {} as any);
+    return new LedgerShellService(
+      favaClientFactory as any,
+      new AuthorizationService({ check: async () => isCollaborator() }),
+    );
   }
 
   it("the next tool call is denied as soon as the collaborator is removed — no reconnect needed", async () => {
@@ -84,7 +80,11 @@ describe("MCP per-call authorization: mid-session revocation", () => {
     // (as the first MCP request would produce).
     await expect(
       executeBqlQuery(
-        { services: { ledgerShell } as any, identity: identity(), ledgerId: LEDGER_ID },
+        {
+          services: { ledgerShell } as any,
+          identity: identity(),
+          ledgerId: LEDGER_ID,
+        },
         { query: "BALANCES" },
       ),
     ).resolves.toEqual({ ok: true, result: "ok" });
@@ -96,7 +96,11 @@ describe("MCP per-call authorization: mid-session revocation", () => {
     // Call 2: a second, independent MCP request (fresh Identity object, same
     // conversation). Must fail now, not at the next session.
     const secondCall = await executeBqlQuery(
-      { services: { ledgerShell } as any, identity: identity(), ledgerId: LEDGER_ID },
+      {
+        services: { ledgerShell } as any,
+        identity: identity(),
+        ledgerId: LEDGER_ID,
+      },
       { query: "BALANCES" },
     );
     expect(secondCall.ok).toBe(false);
@@ -107,20 +111,28 @@ describe("MCP per-call authorization: mid-session revocation", () => {
 
     await expect(
       executeBqlQuery(
-        { services: { ledgerShell } as any, identity: identity(), ledgerId: LEDGER_ID },
+        {
+          services: { ledgerShell } as any,
+          identity: identity(),
+          ledgerId: LEDGER_ID,
+        },
         { query: "BALANCES" },
       ),
     ).resolves.toEqual({ ok: true, result: "ok" });
 
     await expect(
       executeBqlQuery(
-        { services: { ledgerShell } as any, identity: identity(), ledgerId: LEDGER_ID },
+        {
+          services: { ledgerShell } as any,
+          identity: identity(),
+          ledgerId: LEDGER_ID,
+        },
         { query: "BALANCES" },
       ),
     ).resolves.toEqual({ ok: true, result: "ok" });
   });
 
-  it("authorizeLedger itself throws ForbiddenError once revoked (the mechanism the tool's ok:false wraps)", async () => {
+  it("authorizeLedger itself throws an actionable forbidden error once revoked", async () => {
     const ledgerShell = buildService(() => false);
     await expect(
       ledgerShell.queryShellText({
@@ -128,6 +140,6 @@ describe("MCP per-call authorization: mid-session revocation", () => {
         identity: identity(),
         query: "BALANCES",
       }),
-    ).rejects.toThrow(ForbiddenError);
+    ).rejects.toMatchObject({ category: ErrorCategory.FORBIDDEN });
   });
 });

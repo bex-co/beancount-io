@@ -18,6 +18,7 @@ import type {
   AccountReportPublic,
   DateAndBalanceWithAccountBalancePublic,
 } from "@/foundation/fava";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 
 type BaseParams = { ledgerId: string; identity: Identity | undefined };
 type FilterParams = { account?: string; filter?: string; time?: string };
@@ -79,12 +80,20 @@ export interface ILedgerDataService {
   ): Promise<DateAndBalanceWithAccountBalancePublic[]>;
 }
 
-export class LedgerDataService extends AuthorizedLedgerService implements ILedgerDataService {
+export class LedgerDataService
+  extends AuthorizedLedgerService
+  implements ILedgerDataService
+{
   private async getClient(ledgerId: string, identity: Identity | undefined) {
     // Every verb on this service is a read, so "read" is the only rel it ever
     // needs — the seam still runs on every call (ADR 0006 D4), it just never
     // has to ask for more.
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+      this.authDeps,
+    );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,

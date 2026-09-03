@@ -6,6 +6,7 @@ import {
   authorizeLedger,
   AuthorizedLedgerService,
 } from "@/features/ledger/utils/authorize-ledger";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 import type {
   OverviewPublic,
   IncomeStatementDataPublic,
@@ -38,9 +39,17 @@ export interface ILedgerFinanceService {
   ): Promise<TrialBalanceDataPublic>;
 }
 
-export class LedgerFinanceService extends AuthorizedLedgerService implements ILedgerFinanceService {
+export class LedgerFinanceService
+  extends AuthorizedLedgerService
+  implements ILedgerFinanceService
+{
   private async getClient(ledgerId: string, identity: Identity | undefined) {
-    await authorizeLedger(identity, ledgerId, "read", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+      this.authDeps,
+    );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,

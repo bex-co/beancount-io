@@ -2,10 +2,10 @@ import type { MiddlewareFn } from "type-graphql";
 import type { IContext } from "./context";
 import {
   requireScopeClass,
-  gqlOpId,
   type ScopeEnforcementMode,
 } from "@/server/api/op-class";
 import { runWithOperationId } from "@/shared/async-context";
+import { graphqlOperationId } from "./graphql-operation-id";
 
 /**
  * The GraphQL half of the op-class gate (ADR 0006 D3).
@@ -28,11 +28,8 @@ export function graphqlScopeMiddleware(
     if (info.path.prev !== undefined) {
       return next();
     }
-    const parent = info.parentType.name;
-    if (parent !== "Query" && parent !== "Mutation") {
-      return next();
-    }
-    const opId = gqlOpId(`${parent}.${info.fieldName}`);
+    const opId = graphqlOperationId(info);
+    if (!opId) return next();
     requireScopeClass(context.identity, opId, mode);
     return runWithOperationId(opId, next);
   };

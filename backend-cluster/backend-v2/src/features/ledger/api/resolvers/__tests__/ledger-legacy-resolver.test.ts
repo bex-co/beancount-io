@@ -6,8 +6,9 @@ import {
 import { LedgerLegacyMutationResolver } from "../ledger-legacy-resolver.mutation";
 import { IContext } from "@/server/graphql/context";
 import type { Identity } from "@/server/api/identity";
+import { AuthorizationService } from "@/server/api/authorization";
 import {
-  ForbiddenError,
+  ErrorCategory,
   InternalServerError,
   OperationNotAllowedError,
 } from "@/shared/errors";
@@ -35,7 +36,7 @@ interface EntriesInput {
 const IDENTITY: Identity = {
   userId: "user-123",
   method: "oauth",
-  scopes: new Set(),
+  scopes: new Set(["ledger.read", "ledger.write"]),
 };
 
 describe("LedgerLegacyResolver", () => {
@@ -118,6 +119,7 @@ describe("LedgerLegacyResolver", () => {
 
     mockContext = {
       userId: "user-123",
+      identity: IDENTITY,
       getCurrentUserId: jest.fn().mockReturnValue("user-123"),
       getCurrentIdentity: jest.fn().mockReturnValue(IDENTITY),
       platform: "web",
@@ -127,10 +129,18 @@ describe("LedgerLegacyResolver", () => {
       addBulkEntries: jest.fn().mockResolvedValue({ success: true }),
     };
 
-    queryResolver = new LedgerLegacyQueryResolver(mockFavaClientFactory);
+    const authorization = new AuthorizationService(
+      { check: jest.fn().mockResolvedValue(true) },
+      jest.fn(),
+    );
+    queryResolver = new LedgerLegacyQueryResolver(
+      mockFavaClientFactory,
+      authorization,
+    );
     mutationResolver = new LedgerLegacyMutationResolver(
       mockFavaClientFactory,
       mockLedgerEntryService as any,
+      authorization,
     );
   });
 
@@ -1313,16 +1323,19 @@ describe("LedgerLegacyResolver", () => {
    * account lists first — a ledger no argument named.
    */
   describe("ledger pin", () => {
-    const pinnedContext = () =>
-      ({
+    const pinnedContext = () => {
+      const identity: Identity = {
+        userId: "user-123",
+        method: "apikey",
+        scopes: new Set(["ledger.read", "ledger.write"]),
+        ledgerScope: "testuser/pinned",
+      };
+      return {
         ...mockContext,
-        identity: {
-          userId: "user-123",
-          method: "apikey",
-          scopes: new Set(["ledger.read", "ledger.write"]),
-          ledgerScope: "testuser/pinned",
-        },
-      }) as unknown as IContext;
+        identity,
+        getCurrentIdentity: jest.fn().mockReturnValue(identity),
+      } as unknown as IContext;
+    };
 
     beforeEach(() => {
       for (const report of [
@@ -1358,7 +1371,7 @@ describe("LedgerLegacyResolver", () => {
           { userId: "user-123", ledgerId: "testuser/other" },
           pinnedContext(),
         ),
-      ).rejects.toThrow(ForbiddenError);
+      ).rejects.toMatchObject({ category: ErrorCategory.FORBIDDEN });
     });
 
     it("journalEntries reads the pinned ledger, not the account's first", async () => {
@@ -1376,17 +1389,22 @@ describe("LedgerLegacyResolver", () => {
       expect(mockFavaApiClient.ledgers.listLedgers).not.toHaveBeenCalled();
     });
 
-    it("addEntries refuses a pinned credential naming another ledger", async () => {
-      await expect(
-        mutationResolver.addEntries(
-          {
-            ...createEntryInput(),
-            ledgerId: "testuser/other",
-          } as never,
-          pinnedContext(),
-        ),
-      ).rejects.toThrow(ForbiddenError);
-      expect(mockLedgerEntryService.addBulkEntries).not.toHaveBeenCalled();
+    it("delegates an explicitly named ledger to the entry service PDP", async () => {
+      await mutationResolver.addEntries(
+        {
+          ...createEntryInput(),
+          ledgerId: "testuser/other",
+        } as never,
+        pinnedContext(),
+      );
+
+      expect(mockLedgerEntryService.addBulkEntries).toHaveBeenCalledWith(
+        expect.objectContaining({ ledgerScope: "testuser/pinned" }),
+        "testuser",
+        "other",
+        expect.any(Array),
+        "web",
+      );
     });
 
     it("leaves an unpinned caller on the original default", async () => {

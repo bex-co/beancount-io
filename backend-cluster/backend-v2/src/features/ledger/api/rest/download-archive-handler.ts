@@ -3,9 +3,7 @@ import { z } from "@/shared/zod-openapi-setup";
 import { registerRoute } from "@/server/rest/openapi-registry";
 import { type AppLayers } from "@/foundation/composition";
 import { AppConfig } from "@/config/config";
-import { resolveLedgerCaller } from "../../utils/ledger-caller-resolver";
 import { resolveIdentity } from "@/server/api/identity";
-import { authorizeLedger } from "../../utils/authorize-ledger";
 import { streamLedgerArchive } from "./archive-proxy";
 import { parseLedgerId } from "@/shared/str";
 import {
@@ -62,24 +60,10 @@ export function registerDownloadArchiveRoute(
     assertSafeArchiveName(archive);
 
     const identity = await resolveIdentity(ctx, layers.database, config);
-    let userId: string | null;
-    if (identity) {
-      await authorizeLedger(identity, ledgerId, "read", {
-        favaClientFactory: layers.clients.favaClientFactory,
-        models: layers.database.models,
-        db: layers.database.db,
-      });
-      userId = identity.userId;
-    } else {
-      userId = await resolveLedgerCaller(ledgerId, {
-        favaClientFactory: layers.clients.favaClientFactory,
-      });
-    }
-
     await streamLedgerArchive(ctx, layers, config, {
       ledgerId,
       archive,
-      userId,
+      identity,
     });
   });
 

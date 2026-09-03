@@ -11,7 +11,10 @@ import { type IAssetStorageService } from "@/features/s3/service/asset-storage-s
 import { type ILLMService } from "@/features/llm/service/llm-service";
 import { type ILedgerAccountService } from "@/features/ledger/service/ledger-account-service";
 import { type ILedgerAssetService } from "@/features/ledger/service/ledger-asset-service";
-import { type ILedgerEntryService } from "@/features/ledger/service/ledger-entry-service";
+import {
+  type ILedgerEntryService,
+  type ILedgerEntryWriter,
+} from "@/features/ledger/service/ledger-entry-service";
 import { type ILedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
 import { type ILedgerDataService } from "@/features/ledger/service/ledger-data-service";
 import { type ILedgerJournalService } from "@/features/ledger/service/ledger-journal-service";
@@ -78,6 +81,8 @@ export interface ServiceLayer {
   ledgerAccount: ILedgerAccountService;
   ledgerAsset: ILedgerAssetService;
   ledgerEntry: ILedgerEntryService;
+  /** Internal mutation primitive for composite workflows only. */
+  ledgerEntryWriter: ILedgerEntryWriter;
   ledgerFinance: ILedgerFinanceService;
   ledgerData: ILedgerDataService;
   ledgerJournal: ILedgerJournalService;

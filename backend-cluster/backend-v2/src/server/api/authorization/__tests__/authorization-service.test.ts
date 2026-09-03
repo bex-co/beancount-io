@@ -1,10 +1,12 @@
 import { systemIdentity, type Identity } from "@/server/api/identity";
 import { setAuditSink, type AuditEvent } from "@/server/api/audit";
-import { ErrorCategory } from "@/shared/errors";
+import { ErrorCategory, UnauthenticatedError } from "@/shared/errors";
 import { asyncContext, runWithOperationId } from "@/shared/async-context";
 import {
   apiKeyResource,
+  anonymousPrincipal,
   AUTHORIZATION_ACTIONS,
+  bankConnectionResource,
   authorizationActionAcceptsDelegatedCredential,
   AuthorizationDeniedError,
   AuthorizationService,
@@ -15,6 +17,7 @@ import {
   type AuthorizationAction,
   type AuthorizationResource,
   type IRelationshipEvaluator,
+  plaidBackgroundPrincipal,
   userResource,
   USER_RELATIONSHIPS,
 } from "..";
@@ -86,6 +89,26 @@ const LEDGER_ADMIN_ACTIONS = [
     AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
     LEDGER_RELATIONSHIPS.LEAVE,
   ],
+] as const;
+
+const LEDGER_CONTENT_READ_ACTIONS = [
+  AUTHORIZATION_ACTIONS.LEDGER_METADATA_READ,
+  AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
+  AUTHORIZATION_ACTIONS.LEDGER_ACCOUNTS_READ,
+  AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+  AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,
+  AUTHORIZATION_ACTIONS.LEDGER_SHELL_READ,
+  AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
+  AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_READ,
+] as const;
+
+const LEDGER_CONTENT_WRITE_ACTIONS = [
+  AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+  AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+  AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE,
+  AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE,
+  AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_REJECT,
 ] as const;
 
 const USER_CONTROL_PLANE_ACTIONS = [
@@ -213,6 +236,112 @@ const ASSISTED_ACTION_CASES = [
 
 describe("AuthorizationService", () => {
   afterEach(() => setAuditSink(undefined));
+
+  it.each(LEDGER_CONTENT_READ_ACTIONS)(
+    "requires current content readability for %s",
+    async (action) => {
+      const relationships = { check: jest.fn(async () => true) };
+      const principal = identity("oauth", "usr_alice", ["ledger.read"]);
+      const resource = ledgerResource("alice/main");
+      await expect(
+        new AuthorizationService(relationships).authorize({
+          principal,
+          action,
+          resource,
+        }),
+      ).resolves.toMatchObject({ allowed: true, action, resource });
+      expect(relationships.check).toHaveBeenCalledWith({
+        user: userResource(principal.userId),
+        relation: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+        object: resource,
+      });
+    },
+  );
+
+  it.each(LEDGER_CONTENT_WRITE_ACTIONS)(
+    "requires current content writability for %s",
+    async (action) => {
+      const relationships = { check: jest.fn(async () => true) };
+      const principal = identity("apikey", "usr_alice", ["ledger.write"]);
+      const resource = ledgerResource("alice/main");
+      await expect(
+        new AuthorizationService(relationships).authorize({
+          principal,
+          action,
+          resource,
+        }),
+      ).resolves.toMatchObject({ allowed: true, action, resource });
+      expect(relationships.check).toHaveBeenCalledWith({
+        user: userResource(principal.userId),
+        relation: LEDGER_RELATIONSHIPS.WRITE_CONTENTS,
+        object: resource,
+      });
+    },
+  );
+
+  it("allows anonymous public-read evaluation but denies anonymous writes before source work", async () => {
+    const relationships = { check: jest.fn(async (_input: unknown) => true) };
+    const service = new AuthorizationService(relationships);
+    const principal = anonymousPrincipal();
+    const resource = ledgerResource("alice/public");
+    await expect(
+      service.authorize({
+        principal,
+        action: AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+        resource,
+      }),
+    ).resolves.toMatchObject({ allowed: true });
+    expect(relationships.check).toHaveBeenLastCalledWith({
+      user: userResource("anonymous"),
+      relation: LEDGER_RELATIONSHIPS.READ_CONTENTS,
+      object: resource,
+    });
+
+    relationships.check.mockClear();
+    await expect(
+      service.authorize({
+        principal,
+        action: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+        resource,
+      }),
+    ).resolves.toMatchObject({
+      allowed: false,
+      reason: "credential_not_permitted",
+    });
+    expect(relationships.check).not.toHaveBeenCalled();
+  });
+
+  it("preserves a 401 when an anonymous caller cannot read the ledger", async () => {
+    const service = new AuthorizationService({ check: async () => false });
+    await expect(
+      service.authorizeOrThrow({
+        principal: anonymousPrincipal(),
+        action: AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+        resource: ledgerResource("alice/private"),
+      }),
+    ).rejects.toBeInstanceOf(UnauthenticatedError);
+  });
+
+  it("requires both content and asset writes before a receipt workflow", async () => {
+    const relationships = { check: jest.fn(async (_input: unknown) => true) };
+    const principal = identity("oauth", "usr_alice", ["ledger.write"]);
+    const resource = ledgerResource("alice/main");
+    await expect(
+      new AuthorizationService(relationships).authorize({
+        principal,
+        action: AUTHORIZATION_ACTIONS.LEDGER_RECEIPTS_WRITE,
+        resource,
+      }),
+    ).resolves.toMatchObject({ allowed: true });
+    expect(
+      relationships.check.mock.calls.map(
+        ([call]) => (call as { relation: string }).relation,
+      ),
+    ).toEqual([
+      LEDGER_RELATIONSHIPS.WRITE_CONTENTS,
+      LEDGER_RELATIONSHIPS.WRITE_ASSETS,
+    ]);
+  });
 
   it.each(["session", "oauth"] as const)(
     "allows an authenticated %s user to delete itself",
@@ -1213,5 +1342,139 @@ describe("AuthorizationService", () => {
       category: ErrorCategory.FORBIDDEN,
       message: 'This operation requires the "ledger.admin" scope',
     });
+  });
+
+  it("requires both bank-control and ledger-content relationships for transaction writes", async () => {
+    const relationships = { check: jest.fn(async () => true) };
+    const service = new AuthorizationService(relationships);
+    const principal = identity("oauth", "usr_alice", ["ledger.write"]);
+    const resource = bankConnectionResource("alice/main", "pitm_1");
+
+    await expect(
+      service.authorizeOrThrow({
+        principal,
+        action: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SUBMIT,
+        resource,
+      }),
+    ).resolves.toMatchObject({ allowed: true });
+    expect(
+      (relationships.check as jest.Mock).mock.calls.map(
+        ([check]) => check.relation,
+      ),
+    ).toEqual(["can_write_bank_connections", "can_write_contents"]);
+  });
+
+  it("denies a composite bank action when either relationship is missing", async () => {
+    const relationships = {
+      check: jest.fn().mockResolvedValueOnce(true).mockResolvedValueOnce(false),
+    };
+    const decision = await new AuthorizationService(relationships).authorize({
+      principal: identity("apikey", "usr_alice", ["ledger.write"]),
+      action: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_DELETE,
+      resource: bankConnectionResource("alice/main", ["pitm_1", "pitm_2"]),
+    });
+    expect(decision).toMatchObject({
+      allowed: false,
+      reason: "relationship_denied",
+    });
+    expect(relationships.check).toHaveBeenCalledTimes(2);
+  });
+
+  it("keeps Plaid Link interactive and rejects API keys before source work", async () => {
+    const relationships = { check: jest.fn(async () => true) };
+    const service = new AuthorizationService(relationships);
+    await expect(
+      service.authorizeOrThrow({
+        principal: identity("apikey", "usr_alice", ["ledger.admin"]),
+        action: AUTHORIZATION_ACTIONS.BANK_LINK_CREATE,
+        resource: bankConnectionResource("alice/main"),
+      }),
+    ).rejects.toThrow("Plaid Link requires an interactive signed-in client");
+    expect(relationships.check).not.toHaveBeenCalled();
+  });
+
+  it("accepts only runtime-issued background provenance for allowed bank actions", async () => {
+    const relationships = { check: jest.fn(async () => true) };
+    const service = new AuthorizationService(relationships);
+    const principal = plaidBackgroundPrincipal("usr_alice", "plaid_scheduler");
+    await expect(
+      service.authorizeOrThrow({
+        principal,
+        action: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SYNC,
+        resource: bankConnectionResource("alice/main", "pitm_1"),
+      }),
+    ).resolves.toMatchObject({ allowed: true });
+
+    const forged = { ...principal };
+    await expect(
+      service.authorize({
+        principal: forged as never,
+        action: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SYNC,
+        resource: bankConnectionResource("alice/main", "pitm_1"),
+      }),
+    ).resolves.toMatchObject({
+      allowed: false,
+      reason: "credential_not_permitted",
+    });
+  });
+
+  it("persists background provenance and the bound ledger in authorization audit", async () => {
+    const events: AuditEvent[] = [];
+    setAuditSink(async (event) => {
+      events.push(event);
+    });
+    const principal = plaidBackgroundPrincipal("usr_alice", "plaid_webhook");
+    const service = new AuthorizationService({ check: async () => true });
+
+    await service.authorizeOrThrow({
+      principal,
+      action: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SYNC,
+      resource: bankConnectionResource("alice/main", "pitm_1"),
+    });
+    await new Promise((resolve) => setImmediate(resolve));
+
+    expect(events).toEqual([
+      expect.objectContaining({
+        op: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SYNC,
+        userId: "usr_alice",
+        method: "plaid_webhook",
+        ledgerId: "alice/main",
+        outcome: "allowed",
+      }),
+    ]);
+  });
+
+  it("does not let scheduler provenance apply webhook item mutations", async () => {
+    const relationships = { check: jest.fn(async () => true) };
+    const service = new AuthorizationService(relationships);
+    await expect(
+      service.authorize({
+        principal: plaidBackgroundPrincipal("usr_alice", "plaid_scheduler"),
+        action: AUTHORIZATION_ACTIONS.BANK_WEBHOOK_ITEM_APPLY,
+        resource: bankConnectionResource("alice/main", "pitm_1"),
+      }),
+    ).resolves.toMatchObject({
+      allowed: false,
+      reason: "credential_not_permitted",
+    });
+    expect(relationships.check).not.toHaveBeenCalled();
+  });
+
+  it("enforces a delegated credential ledger pin on encoded bank resources", async () => {
+    const relationships = { check: jest.fn(async () => true) };
+    const principal = {
+      ...identity("oauth", "usr_alice", ["ledger.admin"]),
+      ledgerScope: "alice/allowed",
+    };
+    const decision = await new AuthorizationService(relationships).authorize({
+      principal,
+      action: AUTHORIZATION_ACTIONS.BANK_CONNECTIONS_LIST,
+      resource: bankConnectionResource("alice/other"),
+    });
+    expect(decision).toMatchObject({
+      allowed: false,
+      reason: "credential_not_permitted",
+    });
+    expect(relationships.check).not.toHaveBeenCalled();
   });
 });

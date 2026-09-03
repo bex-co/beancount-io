@@ -157,6 +157,24 @@ ledger existence; relationship-source outages return service unavailable and
 run no Fava/Gitea mutation, Plaid cleanup, or database side effect. Existing
 dashboard and mobile GraphQL contracts are unchanged.
 
+### Ledger data-plane authorization
+
+Ledger metadata, reports, journals, accounts, files, repository history, BQL,
+archives, entries, receipts, and pull requests use transport-neutral
+`ledger.*` actions in the same PDP. GraphQL, REST, MCP tools, and MCP resources
+remain aliases: operational classes keep their existing rate budgets, while
+the protected service/workflow selects the canonical action and evaluates the
+credential scope, ledger pin, and current Gitea owner/collaborator/public fact
+before data access or mutation.
+
+Anonymous reads continue to work for currently public ledgers. Private
+anonymous reads return authentication-required; signed relationship denials
+remain actionable forbidden errors. Relationship-source failures return
+service unavailable and are audited as errors. File path validation, archive
+name validation, commit construction, receipt ownership/cleanup, and atomic
+entry behavior remain domain invariants after authorization. No authorization
+decision is cached, so revocation or visibility changes affect the next call.
+
 ### User-domain authorization
 
 Protected user profile, lifecycle, API-key-management, and billing operations map to

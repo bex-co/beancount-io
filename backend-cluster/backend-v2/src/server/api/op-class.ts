@@ -327,6 +327,15 @@ export function isReachableOn(
  * absence that is merely unbuilt can never hide inside it.
  */
 function isInParityScope(entry: VerbEntry): boolean {
+  // A canonical PDP action does not make a browser ceremony transportable.
+  // Link still requires the hosted Plaid widget even though its service call
+  // now has centralized authorization.
+  if (
+    LINK_CEREMONY_VERBS.has(entry.verb) ||
+    SCREEN_PROJECTION_VERBS.has(entry.verb)
+  ) {
+    return false;
+  }
   if (entry.authorizationAction) {
     // Operational risk and credential reachability are deliberately separate.
     // Parity follows the PDP catalog, while `class` continues to select the
@@ -335,11 +344,7 @@ function isInParityScope(entry: VerbEntry): boolean {
       entry.authorizationAction,
     );
   }
-  return (
-    entry.class !== "session-only" &&
-    !LINK_CEREMONY_VERBS.has(entry.verb) &&
-    !SCREEN_PROJECTION_VERBS.has(entry.verb)
-  );
+  return entry.class !== "session-only";
 }
 
 /** A verb on GraphQL and REST, but not MCP. */
@@ -634,281 +639,373 @@ const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
   ),
 ];
 
-const LEDGER_READ_VERBS: readonly VerbEntry[] = [
-  gqlAndRest(
-    "Query.listLedgers",
-    "read",
-    "GET /api-gateway/v1/ledgers",
-    M.singleLedgerPin,
-  ),
-  gqlOnly(
-    "Query.listUserOwnedLedgers",
-    "read",
-    R.coveredByV1List,
-    M.notAgentShaped,
-  ),
-  gqlOnly("Query.searchLedgers", "read", R.coveredByV1List, M.notAgentShaped),
-  gqlAndRest(
-    "Query.getLedger",
-    "read",
-    "GET /api-gateway/v1/ledgers/{owner}/{name}",
-    M.notAgentShaped,
-  ),
-  gqlOnly("Query.getLedgerOverview", "read", R.dashboardShaped, M.coveredByBql),
-  gqlAndRest(
-    "Query.getLedgerIncomeStatement",
-    "read",
-    "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
-    M.coveredByBql,
-  ),
-  gqlAndRest(
-    "Query.getLedgerBalanceSheet",
-    "read",
-    "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
-    M.coveredByBql,
-  ),
-  {
-    verb: "Query.getLedgerTrialBalance",
-    class: "read",
-    gql: "Query.getLedgerTrialBalance",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/trial-balance",
-    mcpResource: "ledgerTrialBalance",
-    mcpExempt:
-      "Reachable as the `ledgerTrialBalance` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerAttributes",
-    class: "read",
-    gql: "Query.getLedgerAttributes",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/attributes",
-    mcpResource: "ledgerAttributes",
-    mcpExempt:
-      "Reachable as the `ledgerAttributes` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerCommodities",
-    class: "read",
-    gql: "Query.getLedgerCommodities",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/commodities",
-    mcpResource: "ledgerCommodities",
-    mcpExempt:
-      "Reachable as the `ledgerCommodities` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerEvents",
-    class: "read",
-    gql: "Query.getLedgerEvents",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/events",
-    mcpResource: "ledgerEvents",
-    mcpExempt:
-      "Reachable as the `ledgerEvents` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  gqlOnly(
-    "Query.getLedgerDocuments",
-    "read",
-    R.dashboardShaped,
-    M.coveredByBql,
-  ),
-  {
-    verb: "Query.getLedgerPayeeTransactions",
-    class: "read",
-    gql: "Query.getLedgerPayeeTransactions",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payee-transactions",
-    mcpResource: "ledgerPayeeTransactions",
-    mcpExempt:
-      "Reachable as the `ledgerPayeeTransactions` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerNarrationTransactions",
-    class: "read",
-    gql: "Query.getLedgerNarrationTransactions",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/narration-transactions",
-    mcpResource: "ledgerNarrationTransactions",
-    mcpExempt:
-      "Reachable as the `ledgerNarrationTransactions` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerPayeeAccounts",
-    class: "read",
-    gql: "Query.getLedgerPayeeAccounts",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payee-accounts",
-    mcpResource: "ledgerPayeeAccounts",
-    mcpExempt:
-      "Reachable as the `ledgerPayeeAccounts` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerErrors",
-    class: "read",
-    gql: "Query.getLedgerErrors",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/errors",
-    mcpResource: "ledgerErrors",
-    mcpExempt:
-      "Reachable as the `ledgerErrors` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerCurrencies",
-    class: "read",
-    gql: "Query.getLedgerCurrencies",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/currencies",
-    mcpResource: "ledgerCurrencies",
-    mcpExempt:
-      "Reachable as the `ledgerCurrencies` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  gqlOnly(
-    "Query.getLedgerSourceFiles",
-    "read",
-    R.coveredByV1Files,
-    M.notAgentShaped,
-  ),
-  {
-    verb: "Query.getLedgerTags",
-    class: "read",
-    gql: "Query.getLedgerTags",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/tags",
-    mcpResource: "ledgerTags",
-    mcpExempt:
-      "Reachable as the `ledgerTags` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerYears",
-    class: "read",
-    gql: "Query.getLedgerYears",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/years",
-    mcpResource: "ledgerYears",
-    mcpExempt:
-      "Reachable as the `ledgerYears` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerLinks",
-    class: "read",
-    gql: "Query.getLedgerLinks",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/links",
-    mcpResource: "ledgerLinks",
-    mcpExempt:
-      "Reachable as the `ledgerLinks` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerNarrations",
-    class: "read",
-    gql: "Query.getLedgerNarrations",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/narrations",
-    mcpResource: "ledgerNarrations",
-    mcpExempt:
-      "Reachable as the `ledgerNarrations` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerPayees",
-    class: "read",
-    gql: "Query.getLedgerPayees",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payees",
-    mcpResource: "ledgerPayees",
-    mcpExempt:
-      "Reachable as the `ledgerPayees` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerAccountLastEntries",
-    class: "read",
-    gql: "Query.getLedgerAccountLastEntries",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-last-entries",
-    mcpResource: "ledgerAccountLastEntries",
-    mcpExempt:
-      "Reachable as the `ledgerAccountLastEntries` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerEntriesCountPerType",
-    class: "read",
-    gql: "Query.getLedgerEntriesCountPerType",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/entries-count",
-    mcpResource: "ledgerEntriesCount",
-    mcpExempt:
-      "Reachable as the `ledgerEntriesCount` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerAccountReport",
-    class: "read",
-    gql: "Query.getLedgerAccountReport",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-report",
-    mcpResource: "ledgerAccountReport",
-    mcpExempt:
-      "Reachable as the `ledgerAccountReport` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  {
-    verb: "Query.getLedgerIntervalTotals",
-    class: "read",
-    gql: "Query.getLedgerIntervalTotals",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/interval-totals",
-    mcpResource: "ledgerIntervalTotals",
-    mcpExempt:
-      "Reachable as the `ledgerIntervalTotals` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  gqlAndRest(
-    "Query.getLedgerJournal",
-    "read",
-    "GET /api-gateway/v1/ledgers/{owner}/{name}/journal",
-    M.coveredByBql,
-  ),
-  {
-    verb: "Query.getLedgerEntryContext",
-    class: "read",
-    gql: "Query.getLedgerEntryContext",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/entry-context",
-    mcpResource: "ledgerEntryContext",
-    mcpExempt:
-      "Reachable as the `ledgerEntryContext` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  gqlOnly(
-    "Query.getLedgerPlaintextJournal",
-    "read",
-    R.coveredByV1Journal,
-    M.coveredByBql,
-  ),
-  gqlOnly(
-    "Query.getLedgerAccountJournal",
-    "read",
-    R.coveredByV1Journal,
-    M.coveredByBql,
-  ),
-  gqlAndRest(
-    "Query.getLedgerAccounts",
-    "read",
-    "GET /api-gateway/v1/ledgers/{owner}/{name}/accounts",
-    M.coveredByBql,
-  ),
-  {
-    verb: "Query.getLedgerAccountDirectives",
-    class: "read",
-    gql: "Query.getLedgerAccountDirectives",
-    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-directives",
-    mcpResource: "ledgerAccountDirectives",
-    mcpExempt:
-      "Reachable as the `ledgerAccountDirectives` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
-  },
-  gqlOnly(
-    "Query.getLedgerAssetDownloadUrl",
-    "read",
-    R.assetStorage,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Query.getLedgerArchiveDownloadUrl",
-    "read",
-    R.archiveDownload,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Query.getLatestLedgerCommit",
-    "read",
-    R.notInV1Table,
-    M.notAgentShaped,
-  ),
-  gqlOnly("Query.listCommits", "read", R.notInV1Table, M.notAgentShaped),
-  gqlOnly("Query.getCommitDetails", "read", R.notInV1Table, M.notAgentShaped),
-  // Legacy resolvers, kept for older mobile builds.
-  gqlOnly("Query.ledgerMeta", "read", R.legacy, M.notAgentShaped),
-  gqlOnly("Query.accountHierarchy", "read", R.legacy, M.dashboardShaped),
-  gqlOnly("Query.homeCharts", "read", R.legacy, M.dashboardShaped),
-  gqlOnly("Query.journalEntries", "read", R.legacy, M.coveredByBql),
-];
+const LEDGER_READ_ACTION_BY_VERB = {
+  "Query.listLedgers": AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
+  "Query.listUserOwnedLedgers": AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
+  "Query.searchLedgers": AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
+  "Query.getLedger": AUTHORIZATION_ACTIONS.LEDGER_METADATA_READ,
+  "Query.ledgerMeta": AUTHORIZATION_ACTIONS.LEDGER_METADATA_READ,
+  "Query.getLedgerJournal": AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
+  "Query.getLedgerEntryContext": AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
+  "Query.getLedgerPlaintextJournal": AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
+  "Query.getLedgerAccountJournal": AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
+  "Query.journalEntries": AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
+  "Query.getLedgerAccounts": AUTHORIZATION_ACTIONS.LEDGER_ACCOUNTS_READ,
+  "Query.getLedgerAccountDirectives":
+    AUTHORIZATION_ACTIONS.LEDGER_ACCOUNTS_READ,
+  "Query.accountHierarchy": AUTHORIZATION_ACTIONS.LEDGER_ACCOUNTS_READ,
+  "Query.getLedgerSourceFiles": AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+  "Query.getLedgerAssetDownloadUrl": AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
+  "Query.getLedgerArchiveDownloadUrl":
+    AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
+  "Query.getLatestLedgerCommit": AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,
+  "Query.listCommits": AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,
+  "Query.getCommitDetails": AUTHORIZATION_ACTIONS.LEDGER_REPOSITORY_READ,
+  "Query.getLedgerOverview": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerIncomeStatement": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerBalanceSheet": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerTrialBalance": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerAttributes": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerCommodities": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerEvents": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerDocuments": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerPayeeTransactions": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerPayeeAccounts": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerNarrationTransactions":
+    AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerErrors": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerCurrencies": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerTags": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerYears": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerLinks": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerNarrations": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerPayees": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerEntriesCountPerType":
+    AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerAccountLastEntries":
+    AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerAccountReport": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerIntervalTotals": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.homeCharts": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+} as const satisfies Readonly<Record<string, AuthorizationAction>>;
+
+const ledgerReadActionForVerb = (verb: string): AuthorizationAction => {
+  const action = (
+    LEDGER_READ_ACTION_BY_VERB as Record<string, AuthorizationAction>
+  )[verb];
+  if (!action) throw new Error(`Unmapped ledger read verb: ${verb}`);
+  return action;
+};
+
+const LEDGER_READ_VERBS: readonly VerbEntry[] = (
+  [
+    gqlAndRest(
+      "Query.listLedgers",
+      "read",
+      "GET /api-gateway/v1/ledgers",
+      M.singleLedgerPin,
+    ),
+    gqlOnly(
+      "Query.listUserOwnedLedgers",
+      "read",
+      R.coveredByV1List,
+      M.notAgentShaped,
+    ),
+    gqlOnly("Query.searchLedgers", "read", R.coveredByV1List, M.notAgentShaped),
+    gqlAndRest(
+      "Query.getLedger",
+      "read",
+      "GET /api-gateway/v1/ledgers/{owner}/{name}",
+      M.notAgentShaped,
+    ),
+    gqlOnly(
+      "Query.getLedgerOverview",
+      "read",
+      R.dashboardShaped,
+      M.coveredByBql,
+    ),
+    gqlAndRest(
+      "Query.getLedgerIncomeStatement",
+      "read",
+      "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
+      M.coveredByBql,
+    ),
+    gqlAndRest(
+      "Query.getLedgerBalanceSheet",
+      "read",
+      "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
+      M.coveredByBql,
+    ),
+    {
+      verb: "Query.getLedgerTrialBalance",
+      class: "read",
+      gql: "Query.getLedgerTrialBalance",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/trial-balance",
+      mcpResource: "ledgerTrialBalance",
+      mcpExempt:
+        "Reachable as the `ledgerTrialBalance` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerAttributes",
+      class: "read",
+      gql: "Query.getLedgerAttributes",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/attributes",
+      mcpResource: "ledgerAttributes",
+      mcpExempt:
+        "Reachable as the `ledgerAttributes` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerCommodities",
+      class: "read",
+      gql: "Query.getLedgerCommodities",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/commodities",
+      mcpResource: "ledgerCommodities",
+      mcpExempt:
+        "Reachable as the `ledgerCommodities` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerEvents",
+      class: "read",
+      gql: "Query.getLedgerEvents",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/events",
+      mcpResource: "ledgerEvents",
+      mcpExempt:
+        "Reachable as the `ledgerEvents` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    gqlOnly(
+      "Query.getLedgerDocuments",
+      "read",
+      R.dashboardShaped,
+      M.coveredByBql,
+    ),
+    {
+      verb: "Query.getLedgerPayeeTransactions",
+      class: "read",
+      gql: "Query.getLedgerPayeeTransactions",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payee-transactions",
+      mcpResource: "ledgerPayeeTransactions",
+      mcpExempt:
+        "Reachable as the `ledgerPayeeTransactions` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerNarrationTransactions",
+      class: "read",
+      gql: "Query.getLedgerNarrationTransactions",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/narration-transactions",
+      mcpResource: "ledgerNarrationTransactions",
+      mcpExempt:
+        "Reachable as the `ledgerNarrationTransactions` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerPayeeAccounts",
+      class: "read",
+      gql: "Query.getLedgerPayeeAccounts",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payee-accounts",
+      mcpResource: "ledgerPayeeAccounts",
+      mcpExempt:
+        "Reachable as the `ledgerPayeeAccounts` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerErrors",
+      class: "read",
+      gql: "Query.getLedgerErrors",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/errors",
+      mcpResource: "ledgerErrors",
+      mcpExempt:
+        "Reachable as the `ledgerErrors` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerCurrencies",
+      class: "read",
+      gql: "Query.getLedgerCurrencies",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/currencies",
+      mcpResource: "ledgerCurrencies",
+      mcpExempt:
+        "Reachable as the `ledgerCurrencies` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    gqlOnly(
+      "Query.getLedgerSourceFiles",
+      "read",
+      R.coveredByV1Files,
+      M.notAgentShaped,
+    ),
+    {
+      verb: "Query.getLedgerTags",
+      class: "read",
+      gql: "Query.getLedgerTags",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/tags",
+      mcpResource: "ledgerTags",
+      mcpExempt:
+        "Reachable as the `ledgerTags` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerYears",
+      class: "read",
+      gql: "Query.getLedgerYears",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/years",
+      mcpResource: "ledgerYears",
+      mcpExempt:
+        "Reachable as the `ledgerYears` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerLinks",
+      class: "read",
+      gql: "Query.getLedgerLinks",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/links",
+      mcpResource: "ledgerLinks",
+      mcpExempt:
+        "Reachable as the `ledgerLinks` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerNarrations",
+      class: "read",
+      gql: "Query.getLedgerNarrations",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/narrations",
+      mcpResource: "ledgerNarrations",
+      mcpExempt:
+        "Reachable as the `ledgerNarrations` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerPayees",
+      class: "read",
+      gql: "Query.getLedgerPayees",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payees",
+      mcpResource: "ledgerPayees",
+      mcpExempt:
+        "Reachable as the `ledgerPayees` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerAccountLastEntries",
+      class: "read",
+      gql: "Query.getLedgerAccountLastEntries",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-last-entries",
+      mcpResource: "ledgerAccountLastEntries",
+      mcpExempt:
+        "Reachable as the `ledgerAccountLastEntries` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerEntriesCountPerType",
+      class: "read",
+      gql: "Query.getLedgerEntriesCountPerType",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/entries-count",
+      mcpResource: "ledgerEntriesCount",
+      mcpExempt:
+        "Reachable as the `ledgerEntriesCount` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerAccountReport",
+      class: "read",
+      gql: "Query.getLedgerAccountReport",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-report",
+      mcpResource: "ledgerAccountReport",
+      mcpExempt:
+        "Reachable as the `ledgerAccountReport` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerIntervalTotals",
+      class: "read",
+      gql: "Query.getLedgerIntervalTotals",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/interval-totals",
+      mcpResource: "ledgerIntervalTotals",
+      mcpExempt:
+        "Reachable as the `ledgerIntervalTotals` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    gqlAndRest(
+      "Query.getLedgerJournal",
+      "read",
+      "GET /api-gateway/v1/ledgers/{owner}/{name}/journal",
+      M.coveredByBql,
+    ),
+    {
+      verb: "Query.getLedgerEntryContext",
+      class: "read",
+      gql: "Query.getLedgerEntryContext",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/entry-context",
+      mcpResource: "ledgerEntryContext",
+      mcpExempt:
+        "Reachable as the `ledgerEntryContext` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    gqlOnly(
+      "Query.getLedgerPlaintextJournal",
+      "read",
+      R.coveredByV1Journal,
+      M.coveredByBql,
+    ),
+    gqlOnly(
+      "Query.getLedgerAccountJournal",
+      "read",
+      R.coveredByV1Journal,
+      M.coveredByBql,
+    ),
+    gqlAndRest(
+      "Query.getLedgerAccounts",
+      "read",
+      "GET /api-gateway/v1/ledgers/{owner}/{name}/accounts",
+      M.coveredByBql,
+    ),
+    {
+      verb: "Query.getLedgerAccountDirectives",
+      class: "read",
+      gql: "Query.getLedgerAccountDirectives",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-directives",
+      mcpResource: "ledgerAccountDirectives",
+      mcpExempt:
+        "Reachable as the `ledgerAccountDirectives` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    gqlOnly(
+      "Query.getLedgerAssetDownloadUrl",
+      "read",
+      R.assetStorage,
+      M.notAgentShaped,
+    ),
+    gqlOnly(
+      "Query.getLedgerArchiveDownloadUrl",
+      "read",
+      R.archiveDownload,
+      M.notAgentShaped,
+    ),
+    gqlOnly(
+      "Query.getLatestLedgerCommit",
+      "read",
+      R.notInV1Table,
+      M.notAgentShaped,
+    ),
+    gqlOnly("Query.listCommits", "read", R.notInV1Table, M.notAgentShaped),
+    gqlOnly("Query.getCommitDetails", "read", R.notInV1Table, M.notAgentShaped),
+    // Legacy resolvers, kept for older mobile builds.
+    gqlOnly("Query.ledgerMeta", "read", R.legacy, M.notAgentShaped),
+    gqlOnly("Query.accountHierarchy", "read", R.legacy, M.dashboardShaped),
+    gqlOnly("Query.homeCharts", "read", R.legacy, M.dashboardShaped),
+    gqlOnly("Query.journalEntries", "read", R.legacy, M.coveredByBql),
+  ] satisfies readonly VerbEntry[]
+).map((entry) => ({
+  ...entry,
+  authorizationAction: ledgerReadActionForVerb(entry.verb),
+}));
+
+const LEDGER_WRITE_ACTION_BY_VERB = {
+  "Mutation.starLedger": AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
+  "Mutation.unstarLedger": AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,
+  "Mutation.bulkEntries": AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+  "Mutation.insertReceiptTransaction":
+    AUTHORIZATION_ACTIONS.LEDGER_RECEIPTS_WRITE,
+  "Mutation.deleteLedgerEntrySourceSlice":
+    AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+  "Mutation.deleteMultipleLedgerEntrySourceSlices":
+    AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+  "Mutation.updateLedgerEntrySourceSlice":
+    AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+  "Mutation.addEntries": AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+  "Mutation.renameLedgerFile": AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+} as const satisfies Readonly<Record<string, AuthorizationAction>>;
+
+const ledgerWriteActionForVerb = (verb: string): AuthorizationAction => {
+  const action = (
+    LEDGER_WRITE_ACTION_BY_VERB as Record<string, AuthorizationAction>
+  )[verb];
+  if (!action) throw new Error(`Unmapped ledger write verb: ${verb}`);
+  return action;
+};
 
 const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
   {
@@ -964,7 +1061,10 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     R.coveredByV1Files,
     M.notAgentShaped,
   ),
-];
+].map((entry) => ({
+  ...entry,
+  authorizationAction: ledgerWriteActionForVerb(entry.verb),
+}));
 
 /**
  * The verbs that reach more than one surface.
@@ -973,23 +1073,10 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
  * method (`LedgerShellService.queryShellText`) with two adapters, so the
  * GraphQL field and the MCP tool cannot disagree about authorization or data.
  *
- * The file verbs are NOT there yet, and this table should not be read as
- * claiming they are. w1/m19 moved the MCP tools onto `LedgerRepoService`
- * (which authorizes through `authorizeLedger`), but the GraphQL twins still go
- * through `LedgerWorkflow`, which reaches Fava via the client factory on its
- * own. Two implementations of one verb is exactly problem 1 in ADR 0006 — the
- * rows below are honest about the verb being reachable from both surfaces, and
- * this comment is the honest part about it being reachable two different ways.
- * Converging them belongs with the service-layer work, not with classification.
- *
- * What that divergence is no longer allowed to mean is a difference in
- * AUTHORIZATION. It did once: `LedgerWorkflow` never consulted
- * `Identity.ledgerScope`, so a credential pinned to one ledger reached every
- * ledger its user could through the GraphQL twin while the MCP tool refused.
- * `graphql/ledger-pin-middleware.ts` and the v1 route adapter now enforce the
- * pin for their whole surfaces from the ledger argument/path, whichever
- * implementation sits behind them. Convergence is still owed; the hole it
- * left is closed.
+ * File aliases use different domain implementations (`LedgerRepoService` for
+ * MCP and `LedgerWorkflow` for GraphQL/REST), but both protected boundaries
+ * select the same canonical action before touching Fava. The rows below make
+ * that transport-to-action equivalence executable.
  */
 /**
  * API-key management, on all three surfaces (ADR 0006 D6, w1/m22).
@@ -1029,6 +1116,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ledger.queryShellText",
     class: "read",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_SHELL_READ,
     gql: "Query.queryShellText",
     mcp: "runBqlQuery",
     // Read-classed despite being a POST. The class comes from this table, not
@@ -1041,6 +1129,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ledger.queryShell",
     class: "read",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_SHELL_READ,
     gql: "Query.queryShell",
     // Same endpoint as `queryShellText`, chosen by `Accept`: JSON returns the
     // typed table, `text/plain` the shell's own rendering. One route, one
@@ -1051,6 +1140,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ledger.listDirContent",
     class: "read",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
     gql: "Query.getLedgerDirContent",
     mcp: "listLedgerFiles",
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/files",
@@ -1058,6 +1148,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ledger.readFiles",
     class: "read",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
     gql: "Query.getLedgerFile",
     mcp: "readLedgerFiles",
     mcpResource: "ledgerFile",
@@ -1070,6 +1161,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ledger.editFiles.create",
     class: "write",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
     gql: "Mutation.createLedgerFile",
     mcp: "editLedgerFiles",
     rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
@@ -1077,6 +1169,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ledger.editFiles.update",
     class: "write",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
     gql: "Mutation.updateLedgerFile",
     mcp: "editLedgerFiles",
     rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
@@ -1084,6 +1177,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ledger.editFiles.delete",
     class: "write",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
     gql: "Mutation.deleteLedgerFile",
     mcp: "editLedgerFiles",
     rest: "DELETE /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
@@ -1091,6 +1185,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
   {
     verb: "ledger.downloadArchive",
     class: "read",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
     gqlExempt: G.bytesNotFields,
     mcpExempt: M.notAgentShaped,
@@ -1101,6 +1196,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     // route the coverage test has to be told to ignore, which is worse.
     verb: "ledger.downloadArchive.legacy",
     class: "read",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
     rest: "GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
     gqlExempt: G.bytesNotFields,
     mcpExempt: M.notAgentShaped,
@@ -1152,7 +1248,33 @@ const GITEA_SOCIAL_VERBS: readonly VerbEntry[] = [
     R.pullRequest,
     M.notAgentShaped,
   ),
-];
+].map((entry) => {
+  if (entry.verb === "Query.getPullRequestDetails") {
+    return {
+      ...entry,
+      authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_READ,
+    };
+  }
+  if (entry.verb === "Mutation.createPullRequestFromPatch") {
+    return {
+      ...entry,
+      authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE,
+    };
+  }
+  if (entry.verb === "Mutation.approvePullRequest") {
+    return {
+      ...entry,
+      authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE,
+    };
+  }
+  if (entry.verb === "Mutation.rejectPullRequest") {
+    return {
+      ...entry,
+      authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_REJECT,
+    };
+  }
+  return entry;
+});
 
 const LLM_VERBS: readonly VerbEntry[] = [
   {
@@ -1214,6 +1336,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     mcpResource: "bankList",
     mcpExempt:
       "Reachable as the `bankList` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_CONNECTIONS_LIST,
   },
   {
     verb: "Query.getPlaidItem",
@@ -1223,6 +1346,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     mcpResource: "bank",
     mcpExempt:
       "Reachable as the `bank` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_CONNECTION_READ,
   },
   {
     verb: "Query.getPlaidAccounts",
@@ -1232,6 +1356,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     mcpResource: "bankAccountsForItem",
     mcpExempt:
       "Reachable as the `bankAccountsForItem` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_READ,
   },
   {
     verb: "Query.getPlaidAccountsForLedger",
@@ -1241,31 +1366,42 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     mcpResource: "bankAccounts",
     mcpExempt:
       "Reachable as the `bankAccounts` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_READ,
   },
-  gqlOnly(
-    "Mutation.createPlaidLinkToken",
-    "admin",
-    R.plaidBinding,
-    M.plaidBinding,
-  ),
-  gqlOnly(
-    "Mutation.createPlaidUpdateModeLinkToken",
-    "admin",
-    R.plaidBinding,
-    M.plaidBinding,
-  ),
-  gqlOnly(
-    "Mutation.exchangePlaidPublicToken",
-    "admin",
-    R.plaidBinding,
-    M.plaidBinding,
-  ),
+  {
+    ...gqlOnly(
+      "Mutation.createPlaidLinkToken",
+      "admin",
+      R.plaidBinding,
+      M.plaidBinding,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_LINK_CREATE,
+  },
+  {
+    ...gqlOnly(
+      "Mutation.createPlaidUpdateModeLinkToken",
+      "admin",
+      R.plaidBinding,
+      M.plaidBinding,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_LINK_UPDATE,
+  },
+  {
+    ...gqlOnly(
+      "Mutation.exchangePlaidPublicToken",
+      "admin",
+      R.plaidBinding,
+      M.plaidBinding,
+    ),
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_LINK_EXCHANGE,
+  },
   {
     verb: "Mutation.unlinkPlaidItem",
     class: "admin",
     gql: "Mutation.unlinkPlaidItem",
     rest: "DELETE /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}",
     mcp: "manageBankConnection",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_CONNECTION_UNLINK,
   },
   {
     verb: "Mutation.reconcilePlaidAccounts",
@@ -1273,6 +1409,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.reconcilePlaidAccounts",
     rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/reconcile",
     mcp: "manageBankConnection",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_ACCOUNTS_RECONCILE,
   },
   {
     verb: "Mutation.updatePlaidAccountMapping",
@@ -1280,6 +1417,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.updatePlaidAccountMapping",
     rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/bank-accounts/{accountId}/mapping",
     mcp: "manageBankConnection",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_UPDATE,
   },
   {
     verb: "Mutation.updatePlaidAccountCurrency",
@@ -1287,6 +1425,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.updatePlaidAccountCurrency",
     rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/bank-accounts/{accountId}/currency",
     mcp: "manageBankConnection",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_ACCOUNT_CURRENCY_UPDATE,
   },
   {
     verb: "Mutation.refreshPlaidItemStatus",
@@ -1294,6 +1433,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.refreshPlaidItemStatus",
     rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/refresh",
     mcp: "manageBankConnection",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_CONNECTION_STATUS_REFRESH,
   },
   {
     verb: "Query.getUnsyncedPlaidTransactions",
@@ -1303,27 +1443,28 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     mcpResource: "bankUnsyncedTransactions",
     mcpExempt:
       "Reachable as the `bankUnsyncedTransactions` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_READ,
   },
   {
     verb: "Query.suggestPlaidTransactionCategories",
     class: "read",
-    authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_BANK_CATEGORIES_SUGGEST,
     gql: "Query.suggestPlaidTransactionCategories",
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/suggested-categories",
     mcpResource: "bankSuggestedCategories",
     mcpExempt:
       "Reachable as the `bankSuggestedCategories` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    authorizationAction:
+      AUTHORIZATION_ACTIONS.BANK_TRANSACTION_CATEGORIES_SUGGEST,
   },
   {
     verb: "Query.suggestPlaidAccountMapping",
     class: "read",
-    authorizationAction:
-      AUTHORIZATION_ACTIONS.ASSISTED_BANK_ACCOUNT_MAPPING_SUGGEST,
     gql: "Query.suggestPlaidAccountMapping",
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/suggested-mapping",
     mcpResource: "bankSuggestedMapping",
     mcpExempt:
       "Reachable as the `bankSuggestedMapping` resource rather than a tool: a bank read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_ACCOUNT_MAPPING_SUGGEST,
   },
   {
     verb: "Mutation.syncPlaidTransactions",
@@ -1331,6 +1472,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.syncPlaidTransactions",
     rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/sync",
     mcp: "manageBankImport",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SYNC,
   },
   {
     verb: "Mutation.submitPlaidTransactionsToLedger",
@@ -1338,6 +1480,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.submitPlaidTransactionsToLedger",
     rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/submit",
     mcp: "manageBankImport",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_SUBMIT,
   },
   {
     verb: "Mutation.deletePlaidTransactions",
@@ -1345,6 +1488,7 @@ const PLAID_VERBS: readonly VerbEntry[] = [
     gql: "Mutation.deletePlaidTransactions",
     rest: "DELETE /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions",
     mcp: "manageBankImport",
+    authorizationAction: AUTHORIZATION_ACTIONS.BANK_TRANSACTIONS_DELETE,
   },
 ];
 
@@ -1412,26 +1556,36 @@ export const VERB_TABLE: readonly VerbEntry[] = [
 
 function buildOpIndex(): ReadonlyMap<string, VerbEntry> {
   const index = new Map<string, VerbEntry>();
-  const claim = (opId: string, entry: VerbEntry) => {
+  const claim = (opId: string, entry: VerbEntry, groupedDispatcher = false) => {
     const existing = index.get(opId);
-    // One op id, one class and one canonical action. `editLedgerFiles`
-    // legitimately appears on three rows; disagreement would make enforcement
-    // depend on table order, so it is a startup error rather than a coin toss.
-    if (
-      existing &&
-      (existing.class !== entry.class ||
-        existing.authorizationAction !== entry.authorizationAction)
-    ) {
+    // One transport id must always have one operational class. A grouped MCP
+    // dispatcher can, however, select several domain verbs of that same class
+    // from its validated `operation` input. In that case there is deliberately
+    // no transport-level canonical action: the selected application-service
+    // method performs the exact PDP call before domain work.
+    if (existing && existing.class !== entry.class) {
       throw new Error(
         `op-class: ${opId} has conflicting entries (${existing.verb}, ${entry.verb})`,
       );
+    }
+    if (
+      existing &&
+      existing.authorizationAction !== entry.authorizationAction
+    ) {
+      if (!groupedDispatcher) {
+        throw new Error(
+          `op-class: ${opId} has conflicting entries (${existing.verb}, ${entry.verb})`,
+        );
+      }
+      index.set(opId, { ...existing, authorizationAction: undefined });
+      return;
     }
     index.set(opId, entry);
   };
   for (const entry of VERB_TABLE) {
     if (entry.gql) claim(gqlOpId(entry.gql), entry);
     if (entry.rest) claim(restOpId(...splitRest(entry.rest)), entry);
-    if (entry.mcp) claim(mcpOpId(entry.mcp), entry);
+    if (entry.mcp) claim(mcpOpId(entry.mcp), entry, true);
     if (entry.mcpResource) claim(mcpResourceOpId(entry.mcpResource), entry);
   }
   return index;

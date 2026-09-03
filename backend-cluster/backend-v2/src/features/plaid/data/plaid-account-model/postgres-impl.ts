@@ -85,9 +85,10 @@ export class PlaidAccountPostgresModel implements IPlaidAccountModel {
     return result.map((row) => this.toPlainObject(row));
   }
 
-  public async getEnabledByLedgerRepoId(
+  public async getEnabledByLedgerRepoIdAndUserId(
     db: DbExecutor,
     ledgerRepoId: number,
+    userId: string,
   ): Promise<Array<PlaidAccount & { institutionName: string }>> {
     const result = await db
       .select({
@@ -110,6 +111,7 @@ export class PlaidAccountPostgresModel implements IPlaidAccountModel {
       .where(
         and(
           eq(plaidItems.ledgerRepoId, ledgerRepoId),
+          eq(plaidItems.userId, userId),
           eq(plaidAccounts.enabled, true),
         ),
       )
@@ -157,23 +159,39 @@ export class PlaidAccountPostgresModel implements IPlaidAccountModel {
     return this.toPlainObject(result[0]);
   }
 
-  public async update(
+  public async updateForItem(
     db: DbExecutor,
     id: string,
+    plaidItemId: string,
     input: UpdatePlaidAccountInput,
-  ): Promise<void> {
-    const now = new Date();
-
-    await db
+  ): Promise<boolean> {
+    const rows = await db
       .update(plaidAccounts)
-      .set({
-        ...input,
-        updatedAt: now,
-      })
-      .where(eq(plaidAccounts.id, id));
+      .set({ ...input, updatedAt: new Date() })
+      .where(
+        and(
+          eq(plaidAccounts.id, id),
+          eq(plaidAccounts.plaidItemId, plaidItemId),
+        ),
+      )
+      .returning({ id: plaidAccounts.id });
+    return rows.length === 1;
   }
 
-  public async delete(db: DbExecutor, id: string): Promise<void> {
-    await db.delete(plaidAccounts).where(eq(plaidAccounts.id, id));
+  public async deleteForItem(
+    db: DbExecutor,
+    id: string,
+    plaidItemId: string,
+  ): Promise<boolean> {
+    const rows = await db
+      .delete(plaidAccounts)
+      .where(
+        and(
+          eq(plaidAccounts.id, id),
+          eq(plaidAccounts.plaidItemId, plaidItemId),
+        ),
+      )
+      .returning({ id: plaidAccounts.id });
+    return rows.length === 1;
   }
 }

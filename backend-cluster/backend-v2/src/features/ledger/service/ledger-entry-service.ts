@@ -14,15 +14,13 @@ import {
 import { logger } from "@/shared/logger";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
 import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
-import {
-  directiveLimitExemptParams,
-} from "@/features/ledger/operations/directive-limit-bypass";
+import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import type { FavaApiClient } from "@/foundation/fava";
+import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
 import type { Identity } from "@/server/api/identity";
-import {
-  authorizeLedger,
-  AuthorizedLedgerService,
-} from "@/features/ledger/utils/authorize-ledger";
+import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
+import type { IAuthorizationService } from "@/server/api/authorization";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-contract";
 
 type AmountInput = { number: string; currency: string };
 
@@ -133,13 +131,23 @@ export interface ILedgerEntryService {
   ): Promise<AddBulkEntriesResult>;
 }
 
-export class LedgerEntryService extends AuthorizedLedgerService implements ILedgerEntryService {
-  private readonly logger = logger.child({ module: "ledger-entry-service" });
-  /**
-   * Build every entry into its Fava directive, route each to its target file,
-   * ensure those files exist, then commit them atomically via the single
-   * canonical bulk endpoint. All-or-nothing: throws on any failure.
-   */
+/** Internal mutation primitive for workflows that authorize a composite action. */
+export interface ILedgerEntryWriter {
+  writeBulkEntries(
+    userId: string,
+    ledgerOwner: string,
+    ledgerName: string,
+    inputs: LedgerEntryInput[],
+    platform: "web" | "mobile",
+  ): Promise<AddBulkEntriesResult>;
+}
+
+export class LedgerEntryService implements ILedgerEntryService {
+  constructor(
+    private readonly writer: ILedgerEntryWriter,
+    private readonly authorization: IAuthorizationService,
+  ) {}
+
   async addBulkEntries(
     identity: Identity,
     ledgerOwner: string,
@@ -148,10 +156,43 @@ export class LedgerEntryService extends AuthorizedLedgerService implements ILedg
     platform: "web" | "mobile",
   ): Promise<AddBulkEntriesResult> {
     const ledgerId = `${ledgerOwner}/${ledgerName}`;
-    await authorizeLedger(identity, ledgerId, "write", this.authDeps);
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
+      { authorization: this.authorization },
+    );
+    return this.writer.writeBulkEntries(
+      identity.userId,
+      ledgerOwner,
+      ledgerName,
+      inputs,
+      platform,
+    );
+  }
+}
+
+class FavaLedgerEntryWriter implements ILedgerEntryWriter {
+  private readonly logger = logger.child({ module: "ledger-entry-service" });
+
+  constructor(private readonly favaClientFactory: IFavaClientFactory) {}
+
+  /**
+   * Build every entry into its Fava directive, route each to its target file,
+   * ensure those files exist, then commit them atomically via the single
+   * canonical bulk endpoint. All-or-nothing: throws on any failure.
+   */
+  async writeBulkEntries(
+    userId: string,
+    ledgerOwner: string,
+    ledgerName: string,
+    inputs: LedgerEntryInput[],
+    platform: "web" | "mobile",
+  ): Promise<AddBulkEntriesResult> {
+    const ledgerId = `${ledgerOwner}/${ledgerName}`;
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
-      identity.userId,
+      userId,
     );
 
     // Fetch routing options once for the whole batch.
@@ -398,4 +439,11 @@ export class LedgerEntryService extends AuthorizedLedgerService implements ILedg
       (cause) => operationNotAllowedFromCause("add entries", cause),
     );
   }
+}
+
+/** Composition-only writer used after a protected boundary has authorized. */
+export function createLedgerEntryWriter(
+  favaClientFactory: IFavaClientFactory,
+): ILedgerEntryWriter {
+  return new FavaLedgerEntryWriter(favaClientFactory);
 }

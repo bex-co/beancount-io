@@ -575,7 +575,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.listLedgers({
-        userId: USER_ID,
+        identity: IDENTITY,
         args: { page: 1, limit: 10 },
       });
 
@@ -594,7 +594,7 @@ describe("LedgerWorkflow", () => {
       });
 
       await expect(
-        workflow.listLedgers({ userId: USER_ID, args: {} }),
+        workflow.listLedgers({ identity: IDENTITY, args: {} }),
       ).rejects.toThrow(InternalServerError);
     });
   });
@@ -621,7 +621,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.listUserOwnedLedgers({
-        userId: USER_ID,
+        identity: IDENTITY,
         args: { page: 1, limit: 10 },
       });
 
@@ -639,7 +639,7 @@ describe("LedgerWorkflow", () => {
       });
 
       await expect(
-        workflow.listUserOwnedLedgers({ userId: USER_ID, args: {} }),
+        workflow.listUserOwnedLedgers({ identity: IDENTITY, args: {} }),
       ).rejects.toThrow(InternalServerError);
     });
   });
@@ -751,7 +751,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.searchLedgers({
-        userId: USER_ID,
+        identity: IDENTITY,
         args: { q: "matching", page: 1, limit: 10 },
       });
 
@@ -770,7 +770,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.searchLedgers({
-        userId: USER_ID,
+        identity: IDENTITY,
         args: { q: "nomatch" },
       });
 
@@ -783,13 +783,22 @@ describe("LedgerWorkflow", () => {
       });
 
       await expect(
-        workflow.searchLedgers({ userId: USER_ID, args: { q: "test" } }),
+        workflow.searchLedgers({ identity: IDENTITY, args: { q: "test" } }),
       ).rejects.toThrow(InternalServerError);
     });
   });
 
   describe("getLedger", () => {
     const ledgerId = "testuser/test-ledger";
+
+    it("denies before provisioning a content client", async () => {
+      authorization.authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(
+        workflow.getLedger({ ledgerId, identity: IDENTITY }),
+      ).rejects.toThrow("denied");
+      expect(favaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+      expect(mockFavaApiClient.ledgers.getLedger).not.toHaveBeenCalled();
+    });
 
     it("should return a single ledger", async () => {
       mockFavaApiClient.ledgers.getLedger.mockResolvedValue({
@@ -809,7 +818,10 @@ describe("LedgerWorkflow", () => {
         },
       });
 
-      const result = await workflow.getLedger({ ledgerId, userId: USER_ID });
+      const result = await workflow.getLedger({
+        ledgerId,
+        identity: IDENTITY,
+      });
 
       expect(mockFavaApiClient.ledgers.getLedger).toHaveBeenCalledWith(
         "testuser",
@@ -825,7 +837,7 @@ describe("LedgerWorkflow", () => {
       });
 
       await expect(
-        workflow.getLedger({ ledgerId, userId: USER_ID }),
+        workflow.getLedger({ ledgerId, identity: IDENTITY }),
       ).rejects.toThrow(InternalServerError);
     });
 
@@ -857,6 +869,20 @@ describe("LedgerWorkflow", () => {
   describe("createLedgerFile", () => {
     const ledgerId = "testuser/test-ledger";
 
+    it("denies before path validation or Fava work", async () => {
+      authorization.authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+      await expect(
+        workflow.createLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: { path: "../../unsafe", content: "secret" },
+          platform: "web",
+        }),
+      ).rejects.toThrow("denied");
+      expect(favaClientFactory.getPublicApiClient).not.toHaveBeenCalled();
+      expect(mockFavaApiClient.ledgers.createLedgerFile).not.toHaveBeenCalled();
+    });
+
     it("should create a new ledger file", async () => {
       mockFavaApiClient.ledgers.createLedgerFile.mockResolvedValue({
         data: {
@@ -871,7 +897,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.createLedgerFile({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId,
         input: {
           path: "accounts.bean",
@@ -903,7 +929,7 @@ describe("LedgerWorkflow", () => {
 
       await expect(
         workflow.createLedgerFile({
-          userId: USER_ID,
+          identity: IDENTITY,
           ledgerId,
           input: { path: "test.bean", content: "test" },
           platform: "web",
@@ -929,7 +955,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.updateLedgerFile({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId,
         input: {
           path: "accounts.bean",
@@ -962,7 +988,7 @@ describe("LedgerWorkflow", () => {
 
       await expect(
         workflow.updateLedgerFile({
-          userId: USER_ID,
+          identity: IDENTITY,
           ledgerId,
           input: { path: "test.bean", content: "test", sha: "abc123" },
           platform: "web",
@@ -980,7 +1006,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.deleteLedgerFile({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId,
         input: {
           path: "accounts.bean",
@@ -1000,7 +1026,7 @@ describe("LedgerWorkflow", () => {
     it("should throw error when path is empty", async () => {
       await expect(
         workflow.deleteLedgerFile({
-          userId: USER_ID,
+          identity: IDENTITY,
           ledgerId,
           input: { path: "", sha: "abc123" },
         }),
@@ -1010,7 +1036,7 @@ describe("LedgerWorkflow", () => {
     it("should throw error when trying to delete main.bean", async () => {
       await expect(
         workflow.deleteLedgerFile({
-          userId: USER_ID,
+          identity: IDENTITY,
           ledgerId,
           input: { path: "main.bean", sha: "abc123" },
         }),
@@ -1024,7 +1050,7 @@ describe("LedgerWorkflow", () => {
 
       await expect(
         workflow.deleteLedgerFile({
-          userId: USER_ID,
+          identity: IDENTITY,
           ledgerId,
           input: { path: "test.bean", sha: "abc123" },
         }),
@@ -1050,7 +1076,7 @@ describe("LedgerWorkflow", () => {
 
       const result = await workflow.getLedgerFile({
         ledgerId,
-        userId: USER_ID,
+        identity: IDENTITY,
         args: { path: "main.bean" },
       });
 
@@ -1071,7 +1097,7 @@ describe("LedgerWorkflow", () => {
       await expect(
         workflow.getLedgerFile({
           ledgerId,
-          userId: USER_ID,
+          identity: IDENTITY,
           args: { path: "test.bean" },
         }),
       ).rejects.toThrow(InternalServerError);
@@ -1081,7 +1107,7 @@ describe("LedgerWorkflow", () => {
       await expect(
         workflow.getLedgerFile({
           ledgerId,
-          userId: USER_ID,
+          identity: IDENTITY,
           args: { path: "../../private/main.bean" },
         }),
       ).rejects.toThrow(BadUserInputError);
@@ -1110,7 +1136,7 @@ describe("LedgerWorkflow", () => {
 
       const result = await workflow.getLedgerDirContent({
         ledgerId,
-        userId: USER_ID,
+        identity: IDENTITY,
         args: { dirPath: "reports" },
       });
 
@@ -1130,7 +1156,11 @@ describe("LedgerWorkflow", () => {
       });
 
       await expect(
-        workflow.getLedgerDirContent({ ledgerId, userId: USER_ID, args: {} }),
+        workflow.getLedgerDirContent({
+          ledgerId,
+          identity: IDENTITY,
+          args: {},
+        }),
       ).rejects.toThrow(InternalServerError);
     });
 
@@ -1138,7 +1168,7 @@ describe("LedgerWorkflow", () => {
       await expect(
         workflow.getLedgerDirContent({
           ledgerId,
-          userId: USER_ID,
+          identity: IDENTITY,
           args: { dirPath: "../private" },
         }),
       ).rejects.toThrow(BadUserInputError);
@@ -1155,7 +1185,7 @@ describe("LedgerWorkflow", () => {
       });
 
       const result = await workflow.renameLedgerFile({
-        userId: USER_ID,
+        identity: IDENTITY,
         ledgerId,
         input: {
           oldPath: "old.bean",
@@ -1185,7 +1215,7 @@ describe("LedgerWorkflow", () => {
 
       await expect(
         workflow.renameLedgerFile({
-          userId: USER_ID,
+          identity: IDENTITY,
           ledgerId,
           input: { oldPath: "old.bean", newPath: "new.bean" },
         }),
@@ -1213,7 +1243,7 @@ describe("LedgerWorkflow", () => {
 
       const result = await workflow.getLedgerAttributes({
         ledgerId,
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       expect(
@@ -1230,7 +1260,7 @@ describe("LedgerWorkflow", () => {
       });
 
       await expect(
-        workflow.getLedgerAttributes({ ledgerId, userId: USER_ID }),
+        workflow.getLedgerAttributes({ ledgerId, identity: IDENTITY }),
       ).rejects.toThrow(InternalServerError);
     });
   });
@@ -1259,7 +1289,7 @@ describe("LedgerWorkflow", () => {
 
       const result = await workflow.getLedgerOptions({
         ledgerId,
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       expect(mockFavaApiClient.reports.getLedgerOptions).toHaveBeenCalledWith(
@@ -1278,7 +1308,7 @@ describe("LedgerWorkflow", () => {
       });
 
       await expect(
-        workflow.getLedgerOptions({ ledgerId, userId: USER_ID }),
+        workflow.getLedgerOptions({ ledgerId, identity: IDENTITY }),
       ).rejects.toThrow(InternalServerError);
     });
   });
@@ -1316,7 +1346,7 @@ describe("LedgerWorkflow", () => {
 
       const result = await workflow.getLedgerFavaOptions({
         ledgerId,
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       expect(
@@ -1359,7 +1389,7 @@ describe("LedgerWorkflow", () => {
 
       const result = await workflow.getLedgerFavaOptions({
         ledgerId,
-        userId: USER_ID,
+        identity: IDENTITY,
       });
 
       expect(result.language).toBeNull();
@@ -1372,7 +1402,7 @@ describe("LedgerWorkflow", () => {
       });
 
       await expect(
-        workflow.getLedgerFavaOptions({ ledgerId, userId: USER_ID }),
+        workflow.getLedgerFavaOptions({ ledgerId, identity: IDENTITY }),
       ).rejects.toThrow(InternalServerError);
     });
   });

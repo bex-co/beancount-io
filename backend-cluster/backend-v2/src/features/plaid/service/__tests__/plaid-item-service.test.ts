@@ -27,24 +27,41 @@ import { PlaidItemService } from "../plaid-item-service";
 import { assertLedgerAccess } from "@/features/ledger/utils/ledger-access-check";
 import { BadUserInputError, ForbiddenError } from "@/shared/errors";
 import { suggestAccountMapping as mockSuggestAccountMappingLLM } from "@/features/llm/utils/suggest-account-mapping";
+import { parseBankConnectionResource } from "@/server/api/authorization";
 
 const mockAssertLedgerAccess = assertLedgerAccess as jest.Mock;
 
 const mockPlaidItemModel = {
   getById: jest.fn(),
   getByUserId: jest.fn(),
-  getByLedgerRepoId: jest.fn(),
+  getByLedgerRepoIdAndUserId: jest.fn(),
   update: jest.fn(),
   delete: jest.fn(),
   create: jest.fn(),
+  updateForBinding: jest.fn(async (db, id, _binding, input) => {
+    await mockPlaidItemModel.update(db, id, input);
+    return true;
+  }),
+  deleteForBinding: jest.fn(async (db, id) => {
+    await mockPlaidItemModel.delete(db, id);
+    return true;
+  }),
 };
 const mockPlaidAccountModel = {
   getById: jest.fn(),
   getByItemId: jest.fn(),
-  getEnabledByLedgerRepoId: jest.fn(),
+  getEnabledByLedgerRepoIdAndUserId: jest.fn(),
   update: jest.fn(),
   create: jest.fn(),
   delete: jest.fn(),
+  updateForItem: jest.fn(async (db, id, _itemId, input) => {
+    await mockPlaidAccountModel.update(db, id, input);
+    return true;
+  }),
+  deleteForItem: jest.fn(async (db, id) => {
+    await mockPlaidAccountModel.delete(db, id);
+    return true;
+  }),
 };
 const mockPlaidTransactionModel = {
   getUnsyncedByAccountId: jest.fn(),
@@ -68,7 +85,14 @@ const mockPlaidClient = {
   getInstitution: jest.fn(),
   getAccounts: jest.fn(),
 } as any;
-const mockFavaClientFactory = {} as any;
+const mockGetLedger = jest.fn();
+const mockGetLedgerByRepoId = jest.fn();
+const mockFavaClientFactory = {
+  getAdminClient: () => ({
+    ledgers: { getLedger: mockGetLedger },
+    admin: { getLedgerByRepoId: mockGetLedgerByRepoId },
+  }),
+} as any;
 // Runs the callback against the same executor, so assertions can just look at
 // the model mocks without caring whether a write went through `db` or `tx`.
 const mockDb: any = {
@@ -77,8 +101,27 @@ const mockDb: any = {
   ),
 };
 const mockConfig = { blockeden: { accessKey: "key" } } as any;
+let authorizedLedgerRepoId = 42;
 const mockAuthorization = {
-  authorizeOrThrow: jest.fn().mockResolvedValue({ allowed: true }),
+  authorize: jest.fn(),
+  authorizeOrThrow: jest.fn(async ({ principal, resource }) => {
+    const binding = parseBankConnectionResource(resource);
+    if (!binding) {
+      return { allowed: true, action: "test", resource };
+    }
+    const access = await mockAssertLedgerAccess(
+      binding.ledgerId,
+      principal.userId,
+      {
+        db: mockDb,
+        models: mockModels,
+        favaClientFactory: mockFavaClientFactory,
+      },
+    );
+    if (access.permission === "read") throw new ForbiddenError("Forbidden");
+    authorizedLedgerRepoId = access.ledgerRepoId;
+    return { allowed: true, action: "test", resource };
+  }),
 } as any;
 
 function makeItem(overrides: Record<string, unknown> = {}) {
@@ -103,6 +146,7 @@ describe("PlaidItemService", () => {
 
   beforeEach(() => {
     jest.clearAllMocks();
+    authorizedLedgerRepoId = 42;
     mockDb.transaction.mockImplementation(
       async (cb: (tx: unknown) => Promise<unknown>) => cb(mockDb),
     );
@@ -110,6 +154,15 @@ describe("PlaidItemService", () => {
       permission: "write",
       ledgerOwnerId: "user_owner",
       ledgerRepoId: 42,
+    });
+    mockGetLedger.mockImplementation(async () => ({
+      data: {
+        success: true,
+        data: { id: authorizedLedgerRepoId, full_name: "owner/ledger" },
+      },
+    }));
+    mockGetLedgerByRepoId.mockResolvedValue({
+      data: { success: true, data: { id: 42, full_name: "owner/ledger" } },
     });
     service = new PlaidItemService(
       mockPlaidClient,
@@ -123,7 +176,9 @@ describe("PlaidItemService", () => {
 
   describe("getItems", () => {
     it("scopes to the ledger via assertLedgerAccess", async () => {
-      mockPlaidItemModel.getByLedgerRepoId.mockResolvedValue([makeItem()]);
+      mockPlaidItemModel.getByLedgerRepoIdAndUserId.mockResolvedValue([
+        makeItem(),
+      ]);
 
       const result = await service.getItems(
         systemIdentity("user_owner"),
@@ -135,10 +190,9 @@ describe("PlaidItemService", () => {
         "user_owner",
         expect.objectContaining({ db: mockDb, models: mockModels }),
       );
-      expect(mockPlaidItemModel.getByLedgerRepoId).toHaveBeenCalledWith(
-        mockDb,
-        42,
-      );
+      expect(
+        mockPlaidItemModel.getByLedgerRepoIdAndUserId,
+      ).toHaveBeenCalledWith(mockDb, 42, "user_owner");
       expect(result).toHaveLength(1);
     });
 
@@ -159,14 +213,14 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.getByItemId.mockResolvedValue([]);
 
       await service.getAccounts(
-        systemIdentity("user_other"),
+        systemIdentity("user_owner"),
         "pitm_1",
         "owner/ledger",
       );
 
       expect(mockAssertLedgerAccess).toHaveBeenCalledWith(
         "owner/ledger",
-        "user_other",
+        "user_owner",
         expect.any(Object),
       );
       expect(mockPlaidAccountModel.getByItemId).toHaveBeenCalledWith(
@@ -180,7 +234,7 @@ describe("PlaidItemService", () => {
         makeItem({ userId: "user_owner", ledgerRepoId: 42 }),
       );
       mockAssertLedgerAccess.mockResolvedValue({
-        permission: "read",
+        permission: "write",
         ledgerOwnerId: "user_other",
         ledgerRepoId: 99,
       });
@@ -199,23 +253,25 @@ describe("PlaidItemService", () => {
   describe("getAccountsForLedger", () => {
     it("scopes to the resolved ledgerRepoId and carries the institution name", async () => {
       const now = new Date();
-      mockPlaidAccountModel.getEnabledByLedgerRepoId.mockResolvedValue([
-        {
-          id: "pacc_1",
-          plaidItemId: "pitm_1",
-          accountId: "ext-acc-1",
-          accountName: "Checking",
-          accountType: "depository",
-          accountSubtype: "checking",
-          mask: "0000",
-          ledgerAccount: "Assets:Chase:Checking",
-          currency: "USD",
-          enabled: true,
-          createdAt: now,
-          updatedAt: now,
-          institutionName: "Chase",
-        },
-      ]);
+      mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId.mockResolvedValue(
+        [
+          {
+            id: "pacc_1",
+            plaidItemId: "pitm_1",
+            accountId: "ext-acc-1",
+            accountName: "Checking",
+            accountType: "depository",
+            accountSubtype: "checking",
+            mask: "0000",
+            ledgerAccount: "Assets:Chase:Checking",
+            currency: "USD",
+            enabled: true,
+            createdAt: now,
+            updatedAt: now,
+            institutionName: "Chase",
+          },
+        ],
+      );
 
       const result = await service.getAccountsForLedger(
         systemIdentity("user_owner"),
@@ -223,8 +279,8 @@ describe("PlaidItemService", () => {
       );
 
       expect(
-        mockPlaidAccountModel.getEnabledByLedgerRepoId,
-      ).toHaveBeenCalledWith(mockDb, 42);
+        mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId,
+      ).toHaveBeenCalledWith(mockDb, 42, "user_owner");
       expect(result).toEqual([
         expect.objectContaining({
           id: "pacc_1",
@@ -236,20 +292,22 @@ describe("PlaidItemService", () => {
       ]);
     });
 
-    it("is readable by a read-only collaborator", async () => {
+    it("denies a read-only collaborator without bank-admin authority", async () => {
       mockAssertLedgerAccess.mockResolvedValue({
         permission: "read",
         ledgerOwnerId: "user_owner",
         ledgerRepoId: 42,
       });
-      mockPlaidAccountModel.getEnabledByLedgerRepoId.mockResolvedValue([]);
+      mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId.mockResolvedValue(
+        [],
+      );
 
       await expect(
         service.getAccountsForLedger(
           systemIdentity("user_reader"),
           "owner/ledger",
         ),
-      ).resolves.toEqual([]);
+      ).rejects.toThrow(ForbiddenError);
     });
 
     it("propagates the error thrown by assertLedgerAccess", async () => {
@@ -262,7 +320,7 @@ describe("PlaidItemService", () => {
         ),
       ).rejects.toThrow("Forbidden");
       expect(
-        mockPlaidAccountModel.getEnabledByLedgerRepoId,
+        mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId,
       ).not.toHaveBeenCalled();
     });
   });
@@ -281,7 +339,7 @@ describe("PlaidItemService", () => {
       mockPlaidTransactionModel.getUnsyncedByAccountId.mockResolvedValue([]);
 
       await service.getUnsyncedTransactions(
-        systemIdentity("user_other"),
+        systemIdentity("user_owner"),
         "pacc_1",
         "owner/ledger",
       );
@@ -294,7 +352,7 @@ describe("PlaidItemService", () => {
     it("rejects when the item belongs to a different ledger than the one resolved", async () => {
       mockAccountAndItem({ userId: "user_owner", ledgerRepoId: 42 });
       mockAssertLedgerAccess.mockResolvedValue({
-        permission: "read",
+        permission: "write",
         ledgerOwnerId: "user_other",
         ledgerRepoId: 99,
       });
@@ -312,20 +370,22 @@ describe("PlaidItemService", () => {
     });
 
     it("aggregates across every enabled account in the ledger when accountId is omitted", async () => {
-      mockPlaidAccountModel.getEnabledByLedgerRepoId.mockResolvedValue([
-        {
-          id: "pacc_1",
-          accountName: "USD account",
-          institutionName: "Wise (US)",
-          ledgerAccount: "Assets:Wise:USD",
-        },
-        {
-          id: "pacc_2",
-          accountName: "GBP account",
-          institutionName: "Wise (US)",
-          ledgerAccount: "Assets:Wise:GBP",
-        },
-      ]);
+      mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId.mockResolvedValue(
+        [
+          {
+            id: "pacc_1",
+            accountName: "USD account",
+            institutionName: "Wise (US)",
+            ledgerAccount: "Assets:Wise:USD",
+          },
+          {
+            id: "pacc_2",
+            accountName: "GBP account",
+            institutionName: "Wise (US)",
+            ledgerAccount: "Assets:Wise:GBP",
+          },
+        ],
+      );
       mockPlaidTransactionModel.getUnsyncedByAccountIds.mockResolvedValue([
         {
           id: "ptxn_1",
@@ -347,8 +407,8 @@ describe("PlaidItemService", () => {
       );
 
       expect(
-        mockPlaidAccountModel.getEnabledByLedgerRepoId,
-      ).toHaveBeenCalledWith(mockDb, 42);
+        mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId,
+      ).toHaveBeenCalledWith(mockDb, 42, "user_owner");
       expect(
         mockPlaidTransactionModel.getUnsyncedByAccountIds,
       ).toHaveBeenCalledWith(mockDb, ["pacc_1", "pacc_2"]);
@@ -363,14 +423,16 @@ describe("PlaidItemService", () => {
     });
 
     it("includes transactions from an unmapped (ledgerAccount unset) enabled account when accountId is omitted", async () => {
-      mockPlaidAccountModel.getEnabledByLedgerRepoId.mockResolvedValue([
-        {
-          id: "pacc_1",
-          accountName: "Unmapped account",
-          institutionName: "New Bank",
-          ledgerAccount: undefined,
-        },
-      ]);
+      mockPlaidAccountModel.getEnabledByLedgerRepoIdAndUserId.mockResolvedValue(
+        [
+          {
+            id: "pacc_1",
+            accountName: "Unmapped account",
+            institutionName: "New Bank",
+            ledgerAccount: undefined,
+          },
+        ],
+      );
       mockPlaidTransactionModel.getUnsyncedByAccountIds.mockResolvedValue([
         {
           id: "ptxn_1",
@@ -420,7 +482,7 @@ describe("PlaidItemService", () => {
       mockPlaidClient.createLinkToken.mockResolvedValue("link-token-abc");
 
       const result = await service.createLinkToken(
-        systemIdentity("user_other"),
+        systemIdentity("user_owner"),
         "owner/ledger",
       );
 
@@ -695,7 +757,7 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.update.mockResolvedValue(undefined);
 
       const result = await service.updateAccountMapping(
-        systemIdentity("user_other"),
+        systemIdentity("user_owner"),
         "pacc_1",
         "Assets:Checking",
         "owner/ledger",
@@ -757,7 +819,7 @@ describe("PlaidItemService", () => {
       mockPlaidAccountModel.update.mockResolvedValue(undefined);
 
       const result = await service.updateAccountCurrency(
-        systemIdentity("user_other"),
+        systemIdentity("user_owner"),
         "pacc_1",
         "EUR",
         "owner/ledger",
@@ -824,14 +886,14 @@ describe("PlaidItemService", () => {
       mockAccountAndItem({ userId: "user_owner", ledgerRepoId: 42 });
 
       const result = await service.suggestCategories(
-        systemIdentity("user_other"),
+        systemIdentity("user_owner"),
         "owner/ledger",
         "pacc_1",
       );
 
       expect(result).toEqual([]);
       expect(mockAuthorization.authorizeOrThrow).toHaveBeenCalledWith({
-        principal: expect.objectContaining({ userId: "user_other" }),
+        principal: expect.objectContaining({ userId: "user_owner" }),
         action: "assisted.bank_categories.suggest",
         resource: "ledger:owner/ledger",
       });
@@ -858,7 +920,7 @@ describe("PlaidItemService", () => {
     it("rejects when the item belongs to a different ledger than the one resolved", async () => {
       mockAccountAndItem({ userId: "user_owner", ledgerRepoId: 99 });
       mockAssertLedgerAccess.mockResolvedValue({
-        permission: "read",
+        permission: "write",
         ledgerOwnerId: "user_other",
         ledgerRepoId: 42,
       });

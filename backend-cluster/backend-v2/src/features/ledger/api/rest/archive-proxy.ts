@@ -3,8 +3,11 @@ import fetch from "node-fetch";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { NotFoundError, UnauthenticatedError } from "@/shared/errors";
+import type { Identity } from "@/server/api/identity";
 import { parseLedgerId } from "@/shared/str";
 import { assertSafeArchiveName } from "./safe-archive-name";
+import { authorizeLedger } from "../../utils/authorize-ledger";
+import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization";
 
 /**
  * Streaming a ledger archive from the ledger service.
@@ -20,21 +23,24 @@ export async function streamLedgerArchive(
   args: {
     ledgerId: string;
     archive: string;
-    /**
-     * Whose ledger credentials to use. `null`/`undefined` means an anonymous
-     * read that ledger-v2 forwards to Gitea without a credential.
-     */
-    userId?: string | null;
+    /** Omitted for a public-ledger read without a credential. */
+    identity?: Identity;
   },
 ): Promise<void> {
   assertSafeArchiveName(args.archive);
   const { ledgerOwner, ledgerName } = parseLedgerId(args.ledgerId);
+  await authorizeLedger(
+    args.identity,
+    args.ledgerId,
+    AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
+    { authorization: layers.services.authorization },
+  );
 
   let authorization = "Anonymous";
-  if (args.userId) {
+  if (args.identity) {
     const user = await layers.database.models.user.getById(
       layers.database.db,
-      args.userId,
+      args.identity.userId,
     );
     if (!user) {
       throw new UnauthenticatedError("User not found");

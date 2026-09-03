@@ -47,11 +47,22 @@ const session: Identity = {
 async function drive(
   identity: Identity | undefined,
   args: Record<string, unknown>,
+  operation: { parent: "Query" | "Mutation"; field: string } = {
+    parent: "Mutation",
+    field: "legacyLedgerOperation",
+  },
 ): Promise<{ error?: unknown; reached: boolean }> {
   let reached = false;
   try {
     await graphqlLedgerPinMiddleware()(
-      { context: { identity } as IContext, args } as never,
+      {
+        context: { identity } as IContext,
+        args,
+        info: {
+          parentType: { name: operation.parent },
+          fieldName: operation.field,
+        },
+      } as never,
       async () => {
         reached = true;
         return undefined;
@@ -125,6 +136,16 @@ describe("graphqlLedgerPinMiddleware", () => {
     // lookup turns that into a ledger id, so its pin lives in
     // LedgerAssetService. Nothing here should invent a ledger id from a number.
     expect(await drive(pinned, { ledgerId: 42 })).toEqual({ reached: true });
+  });
+
+  it("defers migrated ledger operations to the shared PDP", async () => {
+    expect(
+      await drive(
+        pinned,
+        { ledgerId: "alice/secret" },
+        { parent: "Query", field: "getLedger" },
+      ),
+    ).toEqual({ reached: true });
   });
 });
 

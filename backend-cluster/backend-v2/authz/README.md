@@ -16,13 +16,13 @@ This boundary follows OpenFGA's guidance to
 The no-engine-yet decision and adoption triggers remain documented in
 [ADR 0010](../../../docs/adrs/ADR010-backend-v2-authz-model.md). No OpenFGA
 server or SDK is deployed. Backend-v2 executes protected user/profile/lifecycle,
-API-key-management, billing, social, ledger-control-plane, assisted-ingestion,
-temporary-asset, and AI actions through a small TypeScript PDP. Its source-backed
-evaluator mirrors exact-self User permissions, resolves API-key ownership from
-the current `api_keys` row, reads current Gitea/Fava ledger facts, and verifies
-temporary-asset ownership from the trusted `tmp/{userId}/...` key invariant.
-Authenticated single-ledger calls enter that same PDP contract through
-`authorizeLedger`; the FGA file remains an executable specification in CI.
+API-key-management, billing, social, ledger control/data-plane, assisted-ingestion,
+temporary-asset, AI, and bank actions through a small TypeScript PDP. Its
+source-backed evaluator mirrors exact-self User permissions, resolves API-key
+ownership from the current `api_keys` row, reads current Gitea/Fava ledger facts,
+verifies temporary-asset ownership from the trusted `tmp/{userId}/...` key
+invariant, and checks current PostgreSQL Plaid item/user/ledger bindings. The FGA
+file remains an executable specification in CI.
 
 ## Centralized authorization in a microservice system
 
@@ -32,13 +32,12 @@ representing every request credential as an OpenFGA object. The runtime topology
 for this domain is:
 
 ```text
-GraphQL / REST / MCP alias
-  → resolveIdentity()
+GraphQL / REST / MCP alias → resolveIdentity()
+signed Plaid webhook / scheduler → runtime-issued background provenance
   → protected application service/workflow boundary
-      or authorizeLedger compatibility seam
   → authorize(principal, canonicalAction, trustedResource(s), context)
       → credential ceiling
-      → exact-self, current api_keys.owner, ledger-rank, and temp-key facts
+      → exact-self, current api_keys.owner, ledger-rank, temp-key, and Plaid-binding facts
       → every modeled relationship required by the action (AND composition)
       → one fail-closed allow / deny; source failure is an explicit error
       → one audit event per authorization call
@@ -48,11 +47,12 @@ GraphQL / REST / MCP alias
 The PDP lives in `src/server/api/authorization/`. Application services derive
 User targets from the authenticated identity; API-key revoke supplies only the
 stable key ID, which the evaluator resolves through the database before any
-side effect. The caller provides only:
+side effect. Plaid background work supplies a runtime-issued, provenance-tagged
+principal rather than a fabricated session. The caller provides only:
 
 - the canonical action;
 - the typed domain resource ID or explicit composite resource set;
-- the already-resolved authenticated principal;
+- the already-resolved authenticated identity or trusted Plaid background principal;
 - trusted request context, when an action needs it.
 
 Transport adapters do not interpret policy or manufacture relationship tuples.
@@ -85,7 +85,8 @@ action instead. Every authorization call re-evaluates the current relationship,
 even when a GraphQL document invokes the same field more than once. PostgreSQL
 remains the one copy of API-key ownership, the Gitea-backed ledger source remains
 the ledger authority, the object key remains the temporary-asset ownership
-binding, and exact-self remains an identity fact.
+binding, PostgreSQL remains the one copy of Plaid item bindings, and exact-self
+remains an identity fact.
 
 ## One permission vocabulary
 
@@ -134,6 +135,7 @@ user.billing:write
 user.lifecycle:write
 user.social:read
 user.social:write
+user.ledgers:read
 user.ledgers:write
 user.public_keys:read
 user.public_keys:write
@@ -195,6 +197,22 @@ beside `AuthorizationService`:
 | `ledger.social.star.status.read`       | authenticated `Ledger.isStarred`               | session, or OAuth/API key with `ledger.read`         | current `ledger#can_read_contents`               |
 | `ledger.social.star.create`            | `GQL Mutation.starLedger`                      | session, or OAuth/API key with `ledger.write`        | current `ledger#can_read_contents`               |
 | `ledger.social.star.delete`            | `GQL Mutation.unstarLedger`                    | session, or OAuth/API key with `ledger.write`        | current `ledger#can_read_contents`               |
+| `ledger.catalog.read`                  | ledger list/search GraphQL + REST              | session, or OAuth/API key with `ledger.read`         | exact-self `user#can_read_ledgers`               |
+| `ledger.metadata.read`                 | ledger metadata GraphQL + REST                 | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
+| `ledger.reports.read`                  | reports/vocabulary/analysis GraphQL/REST/MCP   | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
+| `ledger.journal.read`                  | journal/context GraphQL + REST/MCP             | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
+| `ledger.accounts.read`                 | account GraphQL + REST/MCP                     | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
+| `ledger.files.read`                    | file GraphQL + REST/MCP resource/tool          | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
+| `ledger.files.write`                   | file GraphQL + REST/MCP edit                   | session, or OAuth/API key with `ledger.write`        | current `ledger#can_write_contents`              |
+| `ledger.repository.read`               | commit GraphQL                                 | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
+| `ledger.shell.read`                    | BQL GraphQL + REST/MCP                         | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
+| `ledger.archive.read`                  | archive REST and signed-URL GraphQL            | anonymous only when public; otherwise read scope     | current `ledger#can_read_contents`               |
+| `ledger.entries.write`                 | entry GraphQL + REST/MCP edit                  | session, or OAuth/API key with `ledger.write`        | current `ledger#can_write_contents`              |
+| `ledger.receipts.write`                | receipt promotion GraphQL/MCP workflow         | session, or OAuth/API key with `ledger.write`        | current content write + asset write              |
+| `ledger.pull_request.read`             | pull-request details GraphQL                   | session, or OAuth/API key with `ledger.read`         | current `ledger#can_read_contents`               |
+| `ledger.pull_request.create`           | pull-request creation GraphQL                  | session, or OAuth/API key with `ledger.write`        | current `ledger#can_write_contents`              |
+| `ledger.pull_request.approve`          | pull-request approval GraphQL                  | session, or OAuth/API key with `ledger.write`        | current `ledger#can_write_contents`              |
+| `ledger.pull_request.reject`           | pull-request rejection GraphQL                 | session, or OAuth/API key with `ledger.write`        | current `ledger#can_write_contents`              |
 | `ledger.create`                        | `GQL Mutation.createLedger`                    | session, or OAuth/API key with `ledger.admin`        | exact-self `user#can_write_ledgers`              |
 | `ledger.administration.update`         | `GQL Mutation.updateLedger`                    | session, or OAuth/API key with `ledger.admin`        | current `ledger#can_write_administration`        |
 | `ledger.administration.delete`         | `GQL Mutation.deleteLedger`                    | session, or OAuth/API key with `ledger.admin`        | current `ledger#can_write_administration`        |
@@ -210,6 +228,52 @@ beside `AuthorizationService`:
 | `ledger.read`                          | authenticated `authorizeLedger(..., read)`     | session/system or OAuth/API key with `ledger.read`   | current `ledger#reader`                          |
 | `ledger.write`                         | authenticated `authorizeLedger(..., write)`    | session/system or OAuth/API key with `ledger.write`  | current `ledger#writer`                          |
 | `ledger.admin`                         | authenticated `authorizeLedger(..., admin)`    | session/system or OAuth/API key with `ledger.admin`  | current `ledger#administrator`                   |
+
+These actions are permissions; the `read`/`write` operational class in
+`op-class.ts` is only the stable rate-budget and legacy audit category. Every
+alias in a row reaches the protected method and the same action before data
+access. A signed caller who lacks the relationship receives the existing
+actionable forbidden error; an anonymous caller to a private ledger receives
+authentication-required. A Gitea/database relationship-source outage is logged
+and audited as `error` and surfaces as service unavailable, never as forbidden,
+not-found, or empty data. Composite receipt authorization reads one fresh source
+snapshot for all required relationships and emits one decision; a later call
+re-reads the source and audits independently.
+
+Plaid uses a runtime-only `bank_connection` locator that contains the canonical
+ledger ID and, when targeted, internal item row IDs. The locator is never a
+tuple. Each targeted evaluator call re-reads the item and requires its current
+user and immutable ledger binding to match the current Gitea repository.
+
+| Canonical action                      | Customer/background entry point | Preserved credential/provenance ceiling                         | Current relationship requirement                                |
+| ------------------------------------- | ------------------------------- | --------------------------------------------------------------- | --------------------------------------------------------------- |
+| `bank.connections.list`               | list connections                | session, or OAuth/API key with `ledger.admin`                   | bank-connection read                                            |
+| `bank.connection.read`                | read one connection             | session, or OAuth/API key with `ledger.admin`                   | bound item + bank-connection read                               |
+| `bank.accounts.read`                  | read item/ledger accounts       | session, or OAuth/API key with `ledger.admin`                   | current user/ledger query; bound item when targeted + bank read |
+| `bank.link.create`                    | create Link token               | interactive session/OAuth with `ledger.admin`; never API key    | bank-connection write                                           |
+| `bank.link.update`                    | create update-mode Link token   | interactive session/OAuth with `ledger.admin`; never API key    | bound item + bank-connection write                              |
+| `bank.link.exchange`                  | exchange Link public token      | interactive session/OAuth with `ledger.admin`; never API key    | bank-connection write                                           |
+| `bank.connection.unlink`              | unlink item                     | session, or OAuth/API key with `ledger.admin`                   | bound item + bank-connection write                              |
+| `bank.accounts.reconcile`             | reconcile shared accounts       | session, or OAuth/API key with `ledger.admin`                   | bound item + bank-connection write                              |
+| `bank.account.mapping.update`         | update account mapping          | session, or OAuth/API key with `ledger.admin`                   | bound item + bank-connection write                              |
+| `bank.account.currency.update`        | update account currency         | session, or OAuth/API key with `ledger.admin`                   | bound item + bank-connection write                              |
+| `bank.connection.status.refresh`      | refresh item status             | session, or OAuth/API key with `ledger.admin`                   | bound item + bank-connection write                              |
+| `bank.transactions.read`              | list staged transactions        | session, or OAuth/API key with `ledger.read`                    | bank read + ledger-content read                                 |
+| `bank.transaction.categories.suggest` | suggest categories              | session, or OAuth/API key with `ledger.read`                    | bank read + ledger-content read                                 |
+| `bank.account.mapping.suggest`        | suggest account mappings        | session, or OAuth/API key with `ledger.read`                    | bound item + bank read + ledger-content read                    |
+| `bank.transactions.sync`              | manual/webhook/scheduled sync   | session/OAuth/API key with `ledger.write`; webhook or scheduler | bound item + bank write + ledger-content write                  |
+| `bank.transactions.submit`            | submit staged transactions      | session, or OAuth/API key with `ledger.write`                   | all bound items + bank write + ledger-content write             |
+| `bank.transactions.delete`            | delete staged transactions      | session, or OAuth/API key with `ledger.write`                   | all bound items + bank write + ledger-content write             |
+| `bank.webhook.item.apply`             | apply verified item webhook     | runtime-issued `plaid_webhook` only                             | bound item + bank-connection write                              |
+
+Here, bank read/write means `ledger#can_read_bank_connections` or
+`ledger#can_write_bank_connections`; ledger-content read/write means the
+matching `ledger#can_*_contents` relationship. The two MCP bank tools group
+operations of one operational class. Their tool ID therefore has no single
+transport-level action; the selected service method performs the exact action
+above before doing work. GraphQL and REST aliases map directly to the same
+actions. Operation IDs remain AsyncLocalStorage audit metadata and are never
+service parameters, relationship facts, or tuples.
 
 The public social exclusions live executably in `SOCIAL_PUBLIC_EXCLUSIONS`
 beside the operation table: `getUserProfile`, `getUserFollowers`,
@@ -267,9 +331,37 @@ tighten or loosen abuse controls.
 
 A relationship-source outage is not a policy denial. It is logged and audited
 as an authorization `error`, surfaces to clients as service unavailable, and
-prevents all Stripe or local billing work. Audit persistence itself remains
-fail-open so an observability outage cannot suppress an otherwise-authorized
-billing operation.
+prevents all protected domain work. Audit persistence itself remains fail-open
+so an observability outage cannot suppress an otherwise-authorized operation.
+
+## Bank connections and background sync
+
+Gitea remains the source for ledger identity and permissions; PostgreSQL remains
+the source for Plaid item ownership and the numeric ledger binding. The bank
+evaluator obtains a current user-scoped Gitea client on every relationship
+check. Gitea 403/404 is a relationship denial; dependency/authentication/5xx
+failures are audited errors and surface as service unavailable. Targeted actions
+also load every named `pitm_` row on each relationship check and require both
+`item.userId === principal.userId` and `item.ledgerRepoId === repo.id`.
+
+Ledger-wide reads use data-model queries containing both the authorized numeric
+repository ID and caller user ID. Mutations repeat the trusted association in
+their SQL predicate: item/user/ledger, account/item, or transaction/account. The
+item's `userId` and `ledgerRepoId` are immutable through the update model.
+
+Customer service methods receive `Identity`. Webhooks and jobs receive only a
+runtime-issued `PlaidBackgroundPrincipal`, whose provenance is separately
+cataloged as `plaid_webhook` or `plaid_scheduler`; it has no session method or
+scopes. Webhooks may sync and apply verified item events. Schedulers may sync
+but cannot apply item events. Both paths derive user and ledger from the current
+item row and then authorize the same canonical sync action used by customers.
+
+Authorization occurs before locks and mutation paths. Denials therefore make no
+Plaid, database, ledger, or transaction mutation and do not create a failed sync
+log. A relationship-source failure follows the same no-side-effect rule. Each
+decision emits its result with request method or background provenance, ledger,
+and transport operation/canonical fallback; item IDs and financial arguments
+are excluded from audit events.
 
 The ledger control plane follows the same split. `ledger.admin` is the
 backward-compatible credential ceiling, while current Gitea ownership or an

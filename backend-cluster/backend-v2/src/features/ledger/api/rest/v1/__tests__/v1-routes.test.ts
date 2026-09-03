@@ -1,5 +1,6 @@
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
+import { ForbiddenError } from "@/shared/errors";
 import {
   readOnlyToken,
   pinnedReadToken,
@@ -124,16 +125,25 @@ describe("v1 authentication and scope", () => {
     });
   });
 
-  it("refuses a token with no scopes with 403, before the handler runs", async () => {
+  it("translates a catalog denial from the protected workflow", async () => {
     server.setIdentity(scopelessToken);
+    workflows.ledger.listLedgers.mockRejectedValueOnce(
+      new ForbiddenError("requires ledger.read"),
+    );
     const { status, body } = await call("GET", "/api-gateway/v1/ledgers");
     expect(status).toBe(403);
     expect(body).toMatchObject({ ok: false, error: { code: "FORBIDDEN" } });
-    expect(workflows.ledger.listLedgers).not.toHaveBeenCalled();
+    expect(workflows.ledger.listLedgers).toHaveBeenCalledWith({
+      identity: scopelessToken,
+      args: {},
+    });
   });
 
   it("refuses a read-only token on a write op", async () => {
     server.setIdentity(readOnlyToken);
+    services.ledgerEntry.addBulkEntries.mockRejectedValueOnce(
+      new ForbiddenError("requires ledger.write"),
+    );
     const { status } = await call("POST", `${LEDGER}/entries`, {
       entries: [
         {
@@ -147,7 +157,7 @@ describe("v1 authentication and scope", () => {
       ],
     });
     expect(status).toBe(403);
-    expect(services.ledgerEntry.addBulkEntries).not.toHaveBeenCalled();
+    expect(services.ledgerEntry.addBulkEntries).toHaveBeenCalled();
   });
 
   it("admits a write token on a write op", async () => {
@@ -191,7 +201,7 @@ describe("v1 authentication and scope", () => {
     expect(body).toEqual([{ id: "alice/main" }]);
     expect(workflows.ledger.getLedger).toHaveBeenCalledWith({
       ledgerId: "alice/main",
-      userId: pinnedReadToken.userId,
+      identity: pinnedReadToken,
     });
     expect(workflows.ledger.listLedgers).not.toHaveBeenCalled();
   });
@@ -240,7 +250,7 @@ describe("v1 reads", () => {
     expect(status).toBe(200);
     expect(body).toEqual([{ id: "alice/main" }]);
     expect(workflows.ledger.listLedgers).toHaveBeenCalledWith({
-      userId: "usr_session",
+      identity: sessionIdentity,
       args: { page: 1, limit: 20 },
     });
   });
@@ -250,7 +260,7 @@ describe("v1 reads", () => {
     expect(status).toBe(200);
     expect(workflows.ledger.getLedger).toHaveBeenCalledWith({
       ledgerId: "alice/main",
-      userId: "usr_session",
+      identity: sessionIdentity,
     });
   });
 
@@ -360,10 +370,13 @@ describe("v1 files", () => {
 
   it("refuses a file write from a read-only token", async () => {
     server.setIdentity(readOnlyToken);
+    services.ledgerRepo.changeFiles.mockRejectedValueOnce(
+      new ForbiddenError("requires ledger.write"),
+    );
     const { status } = await call("PUT", `${LEDGER}/files/a.bean`, {
       content: "x",
     });
     expect(status).toBe(403);
-    expect(services.ledgerRepo.changeFiles).not.toHaveBeenCalled();
+    expect(services.ledgerRepo.changeFiles).toHaveBeenCalled();
   });
 });

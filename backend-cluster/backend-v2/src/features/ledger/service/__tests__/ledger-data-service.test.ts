@@ -61,7 +61,6 @@ describe("LedgerDataService", () => {
     service = new LedgerDataService(
       mockFavaClientFactory as any,
       {} as any,
-      {} as any,
     );
   });
 
