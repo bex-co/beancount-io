@@ -1,4 +1,4 @@
-import { getFormatDate } from "../format-util";
+import { getFormatDate, parseFormatDate } from "../format-util";
 
 describe("getFormatDate", () => {
   it("formats a date with zero-padded month and day", () => {
@@ -47,5 +47,19 @@ describe("getFormatDate", () => {
   it("handles far future dates", () => {
     const formatted = getFormatDate(new Date(2100, 11, 31));
     expect(formatted).toBe("2100-12-31");
+  });
+});
+
+describe("parseFormatDate", () => {
+  it("keeps the local calendar day named by the YYYY-MM-DD string", () => {
+    const date = parseFormatDate("2024-06-15");
+    expect(date.getFullYear()).toBe(2024);
+    expect(date.getMonth()).toBe(5);
+    expect(date.getDate()).toBe(15);
+  });
+
+  it("round-trips with getFormatDate", () => {
+    expect(getFormatDate(parseFormatDate("2024-06-15"))).toBe("2024-06-15");
+    expect(getFormatDate(parseFormatDate("2024-02-29"))).toBe("2024-02-29");
   });
 });

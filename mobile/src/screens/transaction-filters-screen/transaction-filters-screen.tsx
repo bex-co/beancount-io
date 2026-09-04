@@ -10,7 +10,7 @@ import {
 import { SafeAreaView } from "react-native-safe-area-context";
 import { Stack, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
-import { getFormatDate } from "@/common/format-util";
+import { getFormatDate, parseFormatDate } from "@/common/format-util";
 import { pushAccountPicker } from "@/screens/account-picker-screen/push-account-picker";
 import { useThemeStyle } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -205,7 +205,7 @@ export const TransactionFiltersScreen = (): JSX.Element => {
 
   const pickerDate = (() => {
     const value = pickerTarget === "end" ? draft.endDate : draft.startDate;
-    return value ? new Date(`${value}T00:00:00`) : new Date();
+    return value ? parseFormatDate(value) : new Date();
   })();
 
   const confirmDate = (date: Date) => {

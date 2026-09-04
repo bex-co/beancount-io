@@ -8,7 +8,7 @@ import {
 } from "@/common/theme";
 import { AmountText } from "@/components/amount-text";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { getFormatDate } from "@/common/format-util";
+import { getFormatDate, parseFormatDate } from "@/common/format-util";
 import { useAddEntriesToRemote } from "@/screens/multi-postings-transaction/hooks/use-add-entries-to-remote";
 import { useLedgerMeta } from "@/common/hooks/use-ledger-meta";
 import { useSession } from "@/common/hooks/use-session";
@@ -348,7 +348,7 @@ const AddTransactionNextScreenComponent = () => {
         <DatePickerModal
           isVisible={isDatePickerVisible}
           mode="date"
-          date={new Date(date)}
+          date={parseFormatDate(date)}
           onConfirm={handleConfirm}
           onCancel={hideDatePicker}
         />

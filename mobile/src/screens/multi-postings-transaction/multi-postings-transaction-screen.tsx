@@ -24,7 +24,7 @@ import {
 import { AmountText } from "@/components/amount-text";
 import { useThemeStyle, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { getFormatDate } from "@/common/format-util";
+import { getFormatDate, parseFormatDate } from "@/common/format-util";
 import {
   formatMoneyWithCurrency,
   formatSignedMoneyWithCurrency,
@@ -565,7 +565,7 @@ const MultiPostingsTransactionScreenComponent = () => {
       <DatePickerModal
         isVisible={isDatePickerVisible}
         mode="date"
-        date={new Date(date)}
+        date={parseFormatDate(date)}
         onConfirm={(d) => {
           setDate(getFormatDate(d));
           setDatePickerVisible(false);
