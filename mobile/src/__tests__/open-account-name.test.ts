@@ -5,10 +5,7 @@ import {
   type AccountNameValidationReason,
   validateAccountName,
 } from "../screens/open-account-screen/account-name";
-import {
-  buildOpenAccountEntry,
-  formatOpenAccountDate,
-} from "../screens/open-account-screen/open-account-entry";
+import { buildOpenAccountEntry } from "../screens/open-account-screen/open-account-entry";
 
 describe("open account name", () => {
   it("combines every dropdown prefix with the entered sub-path", () => {
@@ -124,7 +121,6 @@ describe("splitPrefillAccountName", () => {
 describe("open account entry", () => {
   it("builds one OPEN payload with a local ISO date and currency", () => {
     const date = new Date(2026, 6, 27, 23, 30);
-    expect(formatOpenAccountDate(date)).toBe("2026-07-27");
     expect(
       buildOpenAccountEntry({
         account: "Assets:Bank:Checking",

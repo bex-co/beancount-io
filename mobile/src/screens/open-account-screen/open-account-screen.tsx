@@ -42,8 +42,8 @@ import {
   type AccountRootPrefix,
   validateAccountName,
 } from "./account-name";
-import { formatOpenAccountDate } from "./open-account-entry";
 import { useOpenAccount } from "./use-open-account";
+import { getFormatDate } from "@/common/format-util";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 const VALIDATION_KEYS: Record<AccountNameValidationReason, string> = {
@@ -389,7 +389,7 @@ export function OpenAccountScreenComponent(): JSX.Element {
             accessibilityRole="button"
           >
             <Text style={styles.label}>{t("openDate")}</Text>
-            <Text style={styles.value}>{formatOpenAccountDate(date)}</Text>
+            <Text style={styles.value}>{getFormatDate(date)}</Text>
             <Ionicons
               style={styles.chevron}
               name={directionalIcon("chevron-forward")}

@@ -8,6 +8,7 @@ import {
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { fonts } from "@/common/theme";
+import { getFormatDate } from "@/common/format-util";
 import { buildKeyboardShortcutButtons } from "./utils";
 
 export const KEYBOARD_ACCESSORY_BAR_HEIGHT = 44;
@@ -53,14 +54,6 @@ const getStyles = (theme: ColorTheme) =>
     },
   });
 
-function getTodayString(): string {
-  const d = new Date();
-  const yyyy = d.getFullYear();
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  return `${yyyy}-${mm}-${dd}`;
-}
-
 type KeyboardAccessoryBarProps = {
   onInsert: (text: string, cursorOffset?: number) => void;
   operatingCurrencies?: string[];
@@ -71,7 +64,7 @@ export function KeyboardAccessoryBar({
   operatingCurrencies = [],
 }: KeyboardAccessoryBarProps) {
   const styles = useThemeStyle(getStyles);
-  const today = getTodayString();
+  const today = getFormatDate(new Date());
   const buttons = buildKeyboardShortcutButtons(today, operatingCurrencies);
 
   return (
