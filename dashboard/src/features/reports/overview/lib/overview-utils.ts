@@ -165,60 +165,6 @@ export function getComparableAmount(
   );
 }
 
-export function formatBalance(
-  balance: Record<string, unknown> | null | undefined,
-  currency: string,
-  formatNum: (v: number) => string,
-  inverted?: boolean,
-) {
-  if (!balance || Object.keys(balance).length === 0) {
-    return "0";
-  }
-
-  const value = balance[currency] ?? Object.values(balance)[0];
-
-  if (value === null || value === undefined) {
-    return "0";
-  }
-
-  const numericValue =
-    typeof value === "string" ? parseFloat(value) : Number(value);
-
-  if (isNaN(numericValue)) {
-    return "0";
-  }
-
-  const displayCurrency =
-    balance[currency] !== undefined
-      ? currency
-      : (Object.keys(balance)[0] ?? currency);
-
-  const displayValue = inverted ? -numericValue : numericValue;
-  return `${formatNum(displayValue)} ${displayCurrency}`;
-}
-
-export function getLatest(series?: DataSeries) {
-  if (!series || series.length === 0)
-    return {
-      balance: null as Record<string, unknown> | null,
-      amount: null as number | null,
-      trendPct: null as number | null,
-    };
-  const last = series[series.length - 1];
-  const prev = series.length > 1 ? series[series.length - 2] : undefined;
-  const pickAmount = (b?: Record<string, unknown> | null) => {
-    if (!b) return null;
-    return toFiniteNumber(Object.values(b)[0]);
-  };
-  const lastAmt = pickAmount(last.balance);
-  const prevAmt = pickAmount(prev?.balance ?? null);
-  let trendPct: number | null = null;
-  if (lastAmt != null && prevAmt != null && prevAmt !== 0) {
-    trendPct = ((lastAmt - prevAmt) / Math.abs(prevAmt)) * 100;
-  }
-  return { balance: last.balance, amount: lastAmt, trendPct };
-}
-
 export function pickNumericAmount(
   balance?: Record<string, unknown> | null,
   inverse?: boolean,
