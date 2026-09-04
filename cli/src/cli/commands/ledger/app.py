@@ -121,15 +121,7 @@ def ledger_list(
             private = "yes" if lg.private else "no"
             created = lg.created_at[:10] if len(lg.created_at) >= 10 else lg.created_at
             table_rows.append([lg.name, lg.full_name, private, created])
-        widths = [len(h) for h in headers]
-        for row in table_rows:
-            for i, cell in enumerate(row):
-                widths[i] = max(widths[i], len(cell))
-        sep = "  "
-        typer.echo(sep.join(h.ljust(widths[i]) for i, h in enumerate(headers)))
-        typer.echo(sep.join("-" * widths[i] for i in range(len(headers))))
-        for row in table_rows:
-            typer.echo(sep.join(cell.ljust(widths[i]) for i, cell in enumerate(row)))
+        output.table(headers, table_rows)
     except Exception as e:
         output.error(str(e))
 

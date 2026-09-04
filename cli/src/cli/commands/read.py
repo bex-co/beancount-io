@@ -17,18 +17,6 @@ AccountFilterOpt = Annotated[str | None, typer.Option("--account", "-a", help="F
 CurrencyFilterOpt = Annotated[str | None, typer.Option("--currency", "-c", help="Filter by currency")]
 
 
-def _table(headers: list[str], rows: list[list[str]]) -> None:
-    widths = [len(h) for h in headers]
-    for row in rows:
-        for i, cell in enumerate(row):
-            widths[i] = max(widths[i], len(cell))
-    sep = "  "
-    typer.echo(sep.join(h.ljust(widths[i]) for i, h in enumerate(headers)))
-    typer.echo(sep.join("-" * widths[i] for i in range(len(headers))))
-    for row in rows:
-        typer.echo(sep.join(cell.ljust(widths[i]) for i, cell in enumerate(row)))
-
-
 @read_app.command("transaction")
 def read_transaction(
     limit: LimitOpt = 50,
@@ -61,7 +49,7 @@ def read_transaction(
             ]
             for t in items
         ]
-        _table(["DATE", "FLAG", "PAYEE", "NARRATION", "POSTINGS"], rows)
+        output.table(["DATE", "FLAG", "PAYEE", "NARRATION", "POSTINGS"], rows)
     except Exception as e:
         output.error(str(e))
 
@@ -88,7 +76,7 @@ def read_note(
         if not items:
             typer.echo("No notes found.")
             return
-        _table(["DATE", "ACCOUNT", "COMMENT"], [[str(n.date), n.account, n.comment] for n in items])
+        output.table(["DATE", "ACCOUNT", "COMMENT"], [[str(n.date), n.account, n.comment] for n in items])
     except Exception as e:
         output.error(str(e))
 
@@ -116,7 +104,7 @@ def read_price(
             typer.echo("No prices found.")
             return
         rows = [[str(p.date), p.currency, f"{p.amount.number} {p.amount.currency}"] for p in items]
-        _table(["DATE", "CURRENCY", "AMOUNT"], rows)
+        output.table(["DATE", "CURRENCY", "AMOUNT"], rows)
     except Exception as e:
         output.error(str(e))
 
@@ -144,7 +132,7 @@ def read_balance(
             typer.echo("No balance assertions found.")
             return
         rows = [[str(b.date), b.account, f"{b.amount.number} {b.amount.currency}"] for b in items]
-        _table(["DATE", "ACCOUNT", "AMOUNT"], rows)
+        output.table(["DATE", "ACCOUNT", "AMOUNT"], rows)
     except Exception as e:
         output.error(str(e))
 
@@ -172,7 +160,7 @@ def read_open(
             typer.echo("No open directives found.")
             return
         rows = [[str(o.date), o.account, ", ".join(o.currencies)] for o in items]
-        _table(["DATE", "ACCOUNT", "CURRENCIES"], rows)
+        output.table(["DATE", "ACCOUNT", "CURRENCIES"], rows)
     except Exception as e:
         output.error(str(e))
 
@@ -199,7 +187,7 @@ def read_close(
         if not items:
             typer.echo("No close directives found.")
             return
-        _table(["DATE", "ACCOUNT"], [[str(c.date), c.account] for c in items])
+        output.table(["DATE", "ACCOUNT"], [[str(c.date), c.account] for c in items])
     except Exception as e:
         output.error(str(e))
 
@@ -226,7 +214,7 @@ def read_commodity(
         if not items:
             typer.echo("No commodity directives found.")
             return
-        _table(["DATE", "CURRENCY"], [[str(c.date), c.currency] for c in items])
+        output.table(["DATE", "CURRENCY"], [[str(c.date), c.currency] for c in items])
     except Exception as e:
         output.error(str(e))
 
@@ -251,7 +239,7 @@ def read_event(
         if not items:
             typer.echo("No events found.")
             return
-        _table(["DATE", "TYPE", "DESCRIPTION"], [[str(e.date), e.type, e.description] for e in items])
+        output.table(["DATE", "TYPE", "DESCRIPTION"], [[str(e.date), e.type, e.description] for e in items])
     except Exception as e:
         output.error(str(e))
 
@@ -278,7 +266,7 @@ def read_document(
         if not items:
             typer.echo("No documents found.")
             return
-        _table(["DATE", "ACCOUNT", "FILENAME"], [[str(d.date), d.account, d.filename] for d in items])
+        output.table(["DATE", "ACCOUNT", "FILENAME"], [[str(d.date), d.account, d.filename] for d in items])
     except Exception as e:
         output.error(str(e))
 
@@ -317,7 +305,7 @@ def read_custom(
                     parts.append(v.value)
             return " ".join(parts)
 
-        _table(["DATE", "TYPE", "VALUES"], [[str(c.date), c.type, _fmt_values(c)] for c in items])
+        output.table(["DATE", "TYPE", "VALUES"], [[str(c.date), c.type, _fmt_values(c)] for c in items])
     except Exception as e:
         output.error(str(e))
 
@@ -344,6 +332,6 @@ def read_pad(
         if not items:
             typer.echo("No pad directives found.")
             return
-        _table(["DATE", "ACCOUNT", "SOURCE"], [[str(p.date), p.account, p.source_account] for p in items])
+        output.table(["DATE", "ACCOUNT", "SOURCE"], [[str(p.date), p.account, p.source_account] for p in items])
     except Exception as e:
         output.error(str(e))
