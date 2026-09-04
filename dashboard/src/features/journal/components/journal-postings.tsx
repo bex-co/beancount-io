@@ -1,13 +1,6 @@
 import type { JournalTransaction } from "@/common/types/journal";
-import { formatAmount } from "@/common/lib/format/format-amount";
 import { Link } from "@tanstack/react-router";
-
-const formatAmountWithCurrency = (amount: {
-  number: string;
-  currency: string;
-}) => {
-  return `${formatAmount(amount.number)} ${amount.currency}`;
-};
+import { formatAmountWithCurrency } from "./journal-description/utils";
 
 interface JournalPostingsProps {
   directive: JournalTransaction;

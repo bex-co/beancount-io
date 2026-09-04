@@ -6,9 +6,9 @@ import {
   isJournalCustom,
 } from "@/common/types/journal";
 import { formatDateISO } from "@/common/lib/format/format-date-iso";
-import { formatAmount as formatAmountLib } from "@/common/lib/format/format-amount";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { JournalDescription } from "./journal-description";
+import { formatAmountWithCurrency } from "./journal-description/utils";
 import { JournalMetadata } from "./journal-metadata";
 import { JournalPostings } from "./journal-postings";
 import { Button } from "@/common/components/ui/button";
@@ -31,13 +31,6 @@ interface JournalTableProps {
   ledgerOwner?: string;
   ledgerName?: string;
 }
-
-const formatAmountWithCurrency = (amount: {
-  number: string;
-  currency: string;
-}) => {
-  return `${formatAmountLib(amount.number)} ${amount.currency}`;
-};
 
 interface JournalAmountsProps {
   balance?: Record<string, string>;
