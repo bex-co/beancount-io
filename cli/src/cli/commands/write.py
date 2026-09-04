@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import sys
-from datetime import date as Date
 from pathlib import Path
 from typing import Annotated, Any
 
@@ -10,19 +9,13 @@ import typer
 
 from cli import output
 from cli.config import DEFAULT_ENTRY_FILE
+from cli.utils import parse_date
 
 write_app = typer.Typer(
     help="Write beancount directives to local .bean files", no_args_is_help=True, rich_markup_mode=None
 )
 
 DateOpt = Annotated[str, typer.Option("--date", help="Date in YYYY-MM-DD format")]
-
-
-def _parse_date(date_str: str) -> Date:
-    try:
-        return Date.fromisoformat(date_str)
-    except ValueError as err:
-        raise typer.BadParameter(f"Invalid date '{date_str}'. Use YYYY-MM-DD format.") from err
 
 
 def _parse_amount(amount_str: str) -> tuple[str, str]:
@@ -65,7 +58,7 @@ def write_transaction(
         do_write(
             file,
             TransactionDirective(
-                date=_parse_date(date),
+                date=parse_date(date),
                 flag=flag,
                 payee=payee,
                 narration=narration,
@@ -94,7 +87,7 @@ def write_open(
         from cli.directives.writer import write_open as do_write
 
         currencies = list(currency) if currency else []
-        do_write(file, OpenDirective(date=_parse_date(date), account=account, currencies=currencies))
+        do_write(file, OpenDirective(date=parse_date(date), account=account, currencies=currencies))
         output.success(f"Open directive written to {file}")
     except Exception as e:
         output.error(str(e))
@@ -111,7 +104,7 @@ def write_close(
         from cli.directives.models import CloseDirective
         from cli.directives.writer import write_close as do_write
 
-        do_write(file, CloseDirective(date=_parse_date(date), account=account))
+        do_write(file, CloseDirective(date=parse_date(date), account=account))
         output.success(f"Close directive written to {file}")
     except Exception as e:
         output.error(str(e))
@@ -135,7 +128,7 @@ def write_balance(
         do_write(
             file,
             BalanceDirective(
-                date=_parse_date(date),
+                date=parse_date(date),
                 account=account,
                 amount=Amount(number=Decimal(number), currency=currency),
             ),
@@ -157,7 +150,7 @@ def write_pad(
         from cli.directives.models import PadDirective
         from cli.directives.writer import write_pad as do_write
 
-        do_write(file, PadDirective(date=_parse_date(date), account=account, source_account=source))
+        do_write(file, PadDirective(date=parse_date(date), account=account, source_account=source))
         output.success(f"Pad directive written to {file}")
     except Exception as e:
         output.error(str(e))
@@ -175,7 +168,7 @@ def write_note(
         from cli.directives.models import NoteDirective
         from cli.directives.writer import write_note as do_write
 
-        do_write(file, NoteDirective(date=_parse_date(date), account=account, comment=comment))
+        do_write(file, NoteDirective(date=parse_date(date), account=account, comment=comment))
         output.success(f"Note directive written to {file}")
     except Exception as e:
         output.error(str(e))
@@ -193,7 +186,7 @@ def write_event(
         from cli.directives.models import EventDirective
         from cli.directives.writer import write_event as do_write
 
-        do_write(file, EventDirective(date=_parse_date(date), type=type, description=description))
+        do_write(file, EventDirective(date=parse_date(date), type=type, description=description))
         output.success(f"Event directive written to {file}")
     except Exception as e:
         output.error(str(e))
@@ -217,7 +210,7 @@ def write_price(
         do_write(
             file,
             PriceDirective(
-                date=_parse_date(date),
+                date=parse_date(date),
                 currency=currency,
                 amount=Amount(number=Decimal(number), currency=price_currency),
             ),
@@ -238,7 +231,7 @@ def write_commodity(
         from cli.directives.models import CommodityDirective
         from cli.directives.writer import write_commodity as do_write
 
-        do_write(file, CommodityDirective(date=_parse_date(date), currency=currency))
+        do_write(file, CommodityDirective(date=parse_date(date), currency=currency))
         output.success(f"Commodity directive written to {file}")
     except Exception as e:
         output.error(str(e))
@@ -261,7 +254,7 @@ def write_document(
         do_write(
             file,
             DocumentDirective(
-                date=_parse_date(date),
+                date=parse_date(date),
                 account=account,
                 filename=filename,
                 tags=list(tag) if tag else [],
@@ -324,7 +317,7 @@ def write_custom(
             else:
                 raise ValueError(f"Unknown value kind '{kind}'. Use: text, number, amount, account")
 
-        do_write(file, CustomDirective(date=_parse_date(date), type=type, values=parsed_values))
+        do_write(file, CustomDirective(date=parse_date(date), type=type, values=parsed_values))
         output.success(f"Custom directive written to {file}")
     except SystemExit:
         raise

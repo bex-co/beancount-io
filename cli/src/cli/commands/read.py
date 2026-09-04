@@ -1,12 +1,12 @@
 from __future__ import annotations
 
-from datetime import date as Date
 from typing import Annotated, Any
 
 import typer
 
 from cli import output
 from cli.config import DEFAULT_ENTRY_FILE
+from cli.utils import parse_opt_date
 
 read_app = typer.Typer(help="Read directives from local .bean files", no_args_is_help=True, rich_markup_mode=None)
 
@@ -15,19 +15,6 @@ FromDateOpt = Annotated[str | None, typer.Option("--from-date", help="Start date
 ToDateOpt = Annotated[str | None, typer.Option("--to-date", help="End date YYYY-MM-DD")]
 AccountFilterOpt = Annotated[str | None, typer.Option("--account", "-a", help="Filter by account (substring)")]
 CurrencyFilterOpt = Annotated[str | None, typer.Option("--currency", "-c", help="Filter by currency")]
-
-
-def _parse_date(date_str: str) -> Date:
-    try:
-        return Date.fromisoformat(date_str)
-    except ValueError as err:
-        raise typer.BadParameter(f"Invalid date '{date_str}'. Use YYYY-MM-DD format.") from err
-
-
-def _parse_opt_date(date_str: str | None) -> Date | None:
-    if date_str is None:
-        return None
-    return _parse_date(date_str)
 
 
 def _table(headers: list[str], rows: list[list[str]]) -> None:
@@ -56,8 +43,8 @@ def read_transaction(
 
         items = list_transactions(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             account=account,
             limit=limit,
         )
@@ -93,8 +80,8 @@ def read_note(
 
         items = list_notes(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             account=account,
             limit=limit,
         )
@@ -120,8 +107,8 @@ def read_price(
 
         items = list_prices(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             currency=currency,
             limit=limit,
         )
@@ -148,8 +135,8 @@ def read_balance(
 
         items = list_balances(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             account=account,
             limit=limit,
         )
@@ -176,8 +163,8 @@ def read_open(
 
         items = list_opens(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             account=account,
             limit=limit,
         )
@@ -204,8 +191,8 @@ def read_close(
 
         items = list_closes(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             account=account,
             limit=limit,
         )
@@ -231,8 +218,8 @@ def read_commodity(
 
         items = list_commodities(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             currency=currency,
             limit=limit,
         )
@@ -257,8 +244,8 @@ def read_event(
 
         items = list_events(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             limit=limit,
         )
         if not items:
@@ -283,8 +270,8 @@ def read_document(
 
         items = list_documents(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             account=account,
             limit=limit,
         )
@@ -309,8 +296,8 @@ def read_custom(
 
         items = list_customs(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             limit=limit,
         )
         if not items:
@@ -349,8 +336,8 @@ def read_pad(
 
         items = list_pads(
             file,
-            from_date=_parse_opt_date(from_date),
-            to_date=_parse_opt_date(to_date),
+            from_date=parse_opt_date(from_date),
+            to_date=parse_opt_date(to_date),
             account=account,
             limit=limit,
         )
