@@ -4,7 +4,6 @@ import skDangerZoneSection from "../danger-zone-section/locales/sk";
 import skCollaboratorsSection from "../collaborators-section/locales/sk";
 import skBeancountOptionsSection from "../beancount-options-section/locales/sk";
 import skFavaOptionsSection from "../fava-options-section/locales/sk";
-import skBcioOptionsSection from "../bcio-options-section/locales/sk";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -22,7 +21,6 @@ const skAllSettings = {
   ...skCollaboratorsSection,
   ...skBeancountOptionsSection,
   ...skFavaOptionsSection,
-  ...skBcioOptionsSection,
   ...skSettings,
   "page.settings.embedCodeDescription": {
     message:

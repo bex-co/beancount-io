@@ -4,7 +4,6 @@ import jaDangerZoneSection from "../danger-zone-section/locales/ja";
 import jaCollaboratorsSection from "../collaborators-section/locales/ja";
 import jaBeancountOptionsSection from "../beancount-options-section/locales/ja";
 import jaFavaOptionsSection from "../fava-options-section/locales/ja";
-import jaBcioOptionsSection from "../bcio-options-section/locales/ja";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -22,7 +21,6 @@ const jaAllSettings = {
   ...jaCollaboratorsSection,
   ...jaBeancountOptionsSection,
   ...jaFavaOptionsSection,
-  ...jaBcioOptionsSection,
   ...jaSettings,
   "page.settings.embedCodeDescription": {
     message:

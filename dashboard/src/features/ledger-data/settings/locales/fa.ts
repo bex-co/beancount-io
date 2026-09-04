@@ -4,7 +4,6 @@ import faDangerZoneSection from "../danger-zone-section/locales/fa";
 import faCollaboratorsSection from "../collaborators-section/locales/fa";
 import faBeancountOptionsSection from "../beancount-options-section/locales/fa";
 import faFavaOptionsSection from "../fava-options-section/locales/fa";
-import faBcioOptionsSection from "../bcio-options-section/locales/fa";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -22,7 +21,6 @@ const faAllSettings = {
   ...faCollaboratorsSection,
   ...faBeancountOptionsSection,
   ...faFavaOptionsSection,
-  ...faBcioOptionsSection,
   ...faSettings,
   "page.settings.embedCodeDescription": {
     message:

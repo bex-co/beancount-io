@@ -4,7 +4,6 @@ import deDangerZoneSection from "../danger-zone-section/locales/de";
 import deCollaboratorsSection from "../collaborators-section/locales/de";
 import deBeancountOptionsSection from "../beancount-options-section/locales/de";
 import deFavaOptionsSection from "../fava-options-section/locales/de";
-import deBcioOptionsSection from "../bcio-options-section/locales/de";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -23,7 +22,6 @@ const deAllSettings = {
   ...deCollaboratorsSection,
   ...deBeancountOptionsSection,
   ...deFavaOptionsSection,
-  ...deBcioOptionsSection,
   ...deSettings,
   "page.settings.embedCodeDescription": {
     message:

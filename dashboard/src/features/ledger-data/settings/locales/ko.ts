@@ -4,7 +4,6 @@ import koDangerZoneSection from "../danger-zone-section/locales/ko";
 import koCollaboratorsSection from "../collaborators-section/locales/ko";
 import koBeancountOptionsSection from "../beancount-options-section/locales/ko";
 import koFavaOptionsSection from "../fava-options-section/locales/ko";
-import koBcioOptionsSection from "../bcio-options-section/locales/ko";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -22,7 +21,6 @@ const koAllSettings = {
   ...koCollaboratorsSection,
   ...koBeancountOptionsSection,
   ...koFavaOptionsSection,
-  ...koBcioOptionsSection,
   ...koSettings,
   "page.settings.embedCodeDescription": {
     message:

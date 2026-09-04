@@ -4,7 +4,6 @@ import enDangerZoneSection from "../danger-zone-section/locales/en";
 import enCollaboratorsSection from "../collaborators-section/locales/en";
 import enBeancountOptionsSection from "../beancount-options-section/locales/en";
 import enFavaOptionsSection from "../fava-options-section/locales/en";
-import enBcioOptionsSection from "../bcio-options-section/locales/en";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -22,7 +21,6 @@ const enAllSettings = {
   ...enCollaboratorsSection,
   ...enBeancountOptionsSection,
   ...enFavaOptionsSection,
-  ...enBcioOptionsSection,
   ...enSettings,
   "page.settings.embedCodeDescription": {
     message:

@@ -4,7 +4,6 @@ import zhDangerZoneSection from "../danger-zone-section/locales/zh";
 import zhCollaboratorsSection from "../collaborators-section/locales/zh";
 import zhBeancountOptionsSection from "../beancount-options-section/locales/zh";
 import zhFavaOptionsSection from "../fava-options-section/locales/zh";
-import zhBcioOptionsSection from "../bcio-options-section/locales/zh";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -22,7 +21,6 @@ const zhAllSettings = {
   ...zhCollaboratorsSection,
   ...zhBeancountOptionsSection,
   ...zhFavaOptionsSection,
-  ...zhBcioOptionsSection,
   ...zhSettings,
   "page.settings.embedCodeDescription": {
     message:

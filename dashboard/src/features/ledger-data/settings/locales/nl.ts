@@ -4,7 +4,6 @@ import nlDangerZoneSection from "../danger-zone-section/locales/nl";
 import nlCollaboratorsSection from "../collaborators-section/locales/nl";
 import nlBeancountOptionsSection from "../beancount-options-section/locales/nl";
 import nlFavaOptionsSection from "../fava-options-section/locales/nl";
-import nlBcioOptionsSection from "../bcio-options-section/locales/nl";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -22,7 +21,6 @@ const nlAllSettings = {
   ...nlCollaboratorsSection,
   ...nlBeancountOptionsSection,
   ...nlFavaOptionsSection,
-  ...nlBcioOptionsSection,
   ...nlSettings,
   "page.settings.embedCodeDescription": {
     message:

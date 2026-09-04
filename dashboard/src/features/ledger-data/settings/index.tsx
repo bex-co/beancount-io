@@ -17,7 +17,6 @@ import { VisibilitySection } from "./visibility-section";
 import { CollaboratorsSection } from "./collaborators-section";
 import { BeancountOptionsSection } from "./beancount-options-section";
 import { FavaOptionsSection } from "./fava-options-section";
-// import { BcioOptionsSection } from "./bcio-options-section";
 import { DangerZoneSection } from "./danger-zone-section";
 import { LedgerAdminPermission } from "@/common/components/ledger-permission/admin";
 import { Card, CardContent, CardHeader } from "@/common/components/ui/card";
@@ -80,7 +79,6 @@ function LedgerSettingsContent({
       </Authenticated>
       <BeancountOptionsSection ledger={ledger} />
       <FavaOptionsSection ledger={ledger} />
-      {/* <BcioOptionsSection ledger={ledger} /> */}
       <LedgerAdminPermission>
         <DangerZoneSection ledger={ledger} ledgerId={ledgerId} />
       </LedgerAdminPermission>

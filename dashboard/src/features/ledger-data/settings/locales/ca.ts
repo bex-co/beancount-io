@@ -4,7 +4,6 @@ import caDangerZoneSection from "../danger-zone-section/locales/ca";
 import caCollaboratorsSection from "../collaborators-section/locales/ca";
 import caBeancountOptionsSection from "../beancount-options-section/locales/ca";
 import caFavaOptionsSection from "../fava-options-section/locales/ca";
-import caBcioOptionsSection from "../bcio-options-section/locales/ca";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -23,7 +22,6 @@ const caAllSettings = {
   ...caCollaboratorsSection,
   ...caBeancountOptionsSection,
   ...caFavaOptionsSection,
-  ...caBcioOptionsSection,
   ...caSettings,
   "page.settings.embedCodeDescription": {
     message:

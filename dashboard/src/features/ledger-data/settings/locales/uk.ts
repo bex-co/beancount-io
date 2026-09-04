@@ -4,7 +4,6 @@ import ukDangerZoneSection from "../danger-zone-section/locales/uk";
 import ukCollaboratorsSection from "../collaborators-section/locales/uk";
 import ukBeancountOptionsSection from "../beancount-options-section/locales/uk";
 import ukFavaOptionsSection from "../fava-options-section/locales/uk";
-import ukBcioOptionsSection from "../bcio-options-section/locales/uk";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -22,7 +21,6 @@ const ukAllSettings = {
   ...ukCollaboratorsSection,
   ...ukBeancountOptionsSection,
   ...ukFavaOptionsSection,
-  ...ukBcioOptionsSection,
   ...ukSettings,
   "page.settings.embedCodeDescription": {
     message:

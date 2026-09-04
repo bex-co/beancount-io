@@ -4,7 +4,6 @@ import bgDangerZoneSection from "../danger-zone-section/locales/bg";
 import bgCollaboratorsSection from "../collaborators-section/locales/bg";
 import bgBeancountOptionsSection from "../beancount-options-section/locales/bg";
 import bgFavaOptionsSection from "../fava-options-section/locales/bg";
-import bgBcioOptionsSection from "../bcio-options-section/locales/bg";
 
 export type { TranslationEntry } from "../general-settings-section/locales/en";
 
@@ -23,7 +22,6 @@ const bgAllSettings = {
   ...bgCollaboratorsSection,
   ...bgBeancountOptionsSection,
   ...bgFavaOptionsSection,
-  ...bgBcioOptionsSection,
   ...bgSettings,
   "page.settings.embedCodeDescription": {
     message:
