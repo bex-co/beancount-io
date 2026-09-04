@@ -1,6 +1,7 @@
 import { downloadText } from "@/common/lib/export/text";
 import { formatStatementAmount } from "./amount";
 import { buildStatementFilename } from "./csv";
+import { formatStatementDate } from "./date";
 import {
   getCustomStatementUnits,
   getStatementUnits,
@@ -47,13 +48,6 @@ function escapeMarkdown(value: string): string {
 
 export { formatStatementAmount as formatMarkdownAmount } from "./amount";
 
-function formatDate(value: string, locale: string): string {
-  return new Intl.DateTimeFormat(locale, {
-    dateStyle: "long",
-    timeZone: "UTC",
-  }).format(new Date(`${value}T00:00:00.000Z`));
-}
-
 function conversionLabel(
   document: StatementExportDocument,
   t: StatementTranslator,
@@ -74,14 +68,14 @@ function periodSummary(
   const period = document.context.reportingPeriod;
   if (document.kind === "balance_sheet") {
     return period.asOfDate
-      ? `${t("reports.export.asOf")} ${formatDate(period.asOfDate, locale)}`
+      ? `${t("reports.export.asOf")} ${formatStatementDate(period.asOfDate, locale)}`
       : t("reports.export.dateUnavailable");
   }
   if (period.startDate && period.endDate) {
-    return `${t("reports.export.period")} ${formatDate(period.startDate, locale)} – ${formatDate(period.endDate, locale)}`;
+    return `${t("reports.export.period")} ${formatStatementDate(period.startDate, locale)} – ${formatStatementDate(period.endDate, locale)}`;
   }
   return period.endDate
-    ? `${t("reports.export.allActivity")} ${formatDate(period.endDate, locale)}`
+    ? `${t("reports.export.allActivity")} ${formatStatementDate(period.endDate, locale)}`
     : t("reports.export.dateUnavailable");
 }
 
@@ -226,15 +220,15 @@ export function statementToMarkdown(
     document.kind === "balance_sheet"
       ? !period.isExplicit && period.asOfDate
         ? t("reports.export.inferredAsOfDateNotice", {
-            asOfDate: formatDate(period.asOfDate, locale),
+            asOfDate: formatStatementDate(period.asOfDate, locale),
           })
         : !period.asOfDate
           ? t("reports.export.asOfDateUnavailableNotice")
           : null
       : !period.isExplicit && period.startDate && period.endDate
         ? t("reports.export.inferredPeriodNotice", {
-            startDate: formatDate(period.startDate, locale),
-            endDate: formatDate(period.endDate, locale),
+            startDate: formatStatementDate(period.startDate, locale),
+            endDate: formatStatementDate(period.endDate, locale),
           })
         : !period.isExplicit
           ? t("reports.export.periodNotExplicitNotice")

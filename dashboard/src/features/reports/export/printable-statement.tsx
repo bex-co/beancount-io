@@ -1,6 +1,7 @@
 import { useTranslations } from "@/common/hooks/use-translations";
 import { createPortal } from "react-dom";
 import { formatStatementAmount } from "./amount";
+import { formatStatementDate } from "./date";
 import {
   getCustomStatementUnits,
   getStatementUnits,
@@ -40,10 +41,7 @@ export function PrintableStatement({
     timeStyle: "short",
   }).format(new Date(document.context.generatedAt));
   const formatDate = (value: string) =>
-    new Intl.DateTimeFormat(i18n.language, {
-      dateStyle: "long",
-      timeZone: "UTC",
-    }).format(new Date(`${value}T00:00:00.000Z`));
+    formatStatementDate(value, i18n.language);
   const { reportingPeriod } = document.context;
   const periodSummary = (() => {
     if (document.kind === "balance_sheet") {
