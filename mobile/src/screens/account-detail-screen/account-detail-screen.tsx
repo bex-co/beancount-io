@@ -1,4 +1,4 @@
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import {
   ActivityIndicator,
   SectionList,
@@ -124,6 +124,15 @@ const AccountDetailScreenImpl = ({
     [currency, reportData],
   );
 
+  const [lastJournalPage, setLastJournalPage] = useState<{
+    incoming: number;
+    added: number;
+  } | null>(null);
+
+  useEffect(() => {
+    setLastJournalPage(null);
+  }, [account, ledgerId]);
+
   const items = useMemo(
     () => journalData?.getLedgerAccountJournal.items ?? [],
     [journalData],
@@ -148,7 +157,11 @@ const AccountDetailScreenImpl = ({
     return map;
   }, [items]);
 
-  const hasMore = hasMoreAccountJournal(items.length, total);
+  const hasMore = hasMoreAccountJournal(
+    items.length,
+    total,
+    lastJournalPage ?? undefined,
+  );
   const isLoadingMore = networkStatus === NetworkStatus.fetchMore;
   const isInitialLoading = journalLoading && items.length === 0;
 
@@ -171,14 +184,20 @@ const AccountDetailScreenImpl = ({
           if (!fetchMoreResult?.getLedgerAccountJournal) {
             return prev;
           }
+          const incoming = fetchMoreResult.getLedgerAccountJournal.items;
+          const merged = mergeAccountJournalItems(
+            prev.getLedgerAccountJournal.items,
+            incoming,
+          );
+          setLastJournalPage({
+            incoming: incoming.length,
+            added: merged.length - prev.getLedgerAccountJournal.items.length,
+          });
           return {
             ...prev,
             getLedgerAccountJournal: {
               ...fetchMoreResult.getLedgerAccountJournal,
-              items: mergeAccountJournalItems(
-                prev.getLedgerAccountJournal.items,
-                fetchMoreResult.getLedgerAccountJournal.items,
-              ),
+              items: merged,
             },
           };
         },
@@ -199,6 +218,7 @@ const AccountDetailScreenImpl = ({
   const [refreshing, setRefreshing] = useState(false);
   const onRefresh = async () => {
     setRefreshing(true);
+    setLastJournalPage(null);
     try {
       await Promise.all([
         ledgerMetaRefetch(),

@@ -87,9 +87,24 @@ export function mergeAccountJournalItems(
   return merged;
 }
 
-/** Whether more pages remain, given loaded count and the server `total`. */
-export function hasMoreAccountJournal(loaded: number, total: number): boolean {
-  return loaded < total;
+/**
+ * Whether more pages remain. Stops when every unique entry is loaded, when
+ * the server returns an empty page, or when a non-empty page adds nothing
+ * after dedup (full overlap at `offset = loaded` — further fetches cannot
+ * advance and would loop forever).
+ */
+export function hasMoreAccountJournal(
+  loaded: number,
+  total: number,
+  lastPage?: { incoming: number; added: number },
+): boolean {
+  if (loaded >= total) {
+    return false;
+  }
+  if (lastPage && (lastPage.incoming === 0 || lastPage.added === 0)) {
+    return false;
+  }
+  return true;
 }
 
 function entryTitle(entry: AccountJournalItem["entry"]): string {

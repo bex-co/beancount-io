@@ -86,6 +86,27 @@ describe("hasMoreAccountJournal", () => {
     expect(hasMoreAccountJournal(55, 55)).toBe(false);
     expect(hasMoreAccountJournal(60, 55)).toBe(false);
   });
+
+  it("stops after an empty page even when loaded < total", () => {
+    // Stale/wrong totals must not keep fetchMore spinning on empty windows.
+    expect(hasMoreAccountJournal(20, 55, { incoming: 0, added: 0 })).toBe(
+      false,
+    );
+  });
+
+  it("stops after a fully-deduped page so offset=loaded cannot loop", () => {
+    // Merge dropped every row (overlap/race). loaded stays 20, total 40 —
+    // without this guard, the next fetch uses offset 20 forever.
+    expect(hasMoreAccountJournal(20, 40, { incoming: 20, added: 0 })).toBe(
+      false,
+    );
+  });
+
+  it("keeps paging when a page added at least one unique row", () => {
+    expect(hasMoreAccountJournal(35, 55, { incoming: 20, added: 15 })).toBe(
+      true,
+    );
+  });
 });
 
 describe("selectAccountJournalRows", () => {
