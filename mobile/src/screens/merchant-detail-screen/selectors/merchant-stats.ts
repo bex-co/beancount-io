@@ -6,7 +6,13 @@
  */
 
 import { escapeBqlString } from "./escape-bql-string";
-import type { QueryResultTableLike } from "../../merchants-screen/selectors/aggregate-payees";
+import {
+  asCount,
+  asNumber,
+  asString,
+  columnIndex,
+  type QueryResultTableLike,
+} from "../../merchants-screen/selectors/bql-table";
 
 export interface MerchantCurrencyTotal {
   currency: string;
@@ -47,45 +53,6 @@ export function buildMerchantCurrencyTotalsBql(payee: string): string {
     "AND (account ~ '^Expenses' OR account ~ '^Income') " +
     "GROUP BY currency ORDER BY currency"
   );
-}
-
-function columnIndex(
-  types: ReadonlyArray<{ name: string; dtype: string }>,
-  name: string,
-): number {
-  return types.findIndex((column) => column.name === name);
-}
-
-function asString(value: unknown): string | null {
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return String(value);
-  }
-  return null;
-}
-
-function asNumber(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-  return null;
-}
-
-function asCount(value: unknown): number | null {
-  const n = asNumber(value);
-  if (n === null) {
-    return null;
-  }
-  return Math.max(0, Math.trunc(n));
 }
 
 /** Map the meta (count/first/last) table — soft-fail to null. */

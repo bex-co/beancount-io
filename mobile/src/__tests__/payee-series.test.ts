@@ -5,7 +5,7 @@ import {
   shiftLedgerMonths,
   PAYEE_SERIES_WINDOW_MONTHS,
 } from "../screens/merchants-screen/selectors/payee-series";
-import type { QueryResultTableLike } from "../screens/merchants-screen/selectors/aggregate-payees";
+import type { QueryResultTableLike } from "../screens/merchants-screen/selectors/bql-table";
 
 const TYPES = [
   { name: "txn_date", dtype: "date" },

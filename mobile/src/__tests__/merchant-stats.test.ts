@@ -5,7 +5,7 @@ import {
   mapMerchantCurrencyTotals,
   mapMerchantMeta,
 } from "../screens/merchant-detail-screen/selectors/merchant-stats";
-import type { QueryResultTableLike } from "../screens/merchants-screen/selectors/aggregate-payees";
+import type { QueryResultTableLike } from "../screens/merchants-screen/selectors/bql-table";
 
 function table(
   types: { name: string; dtype: string }[],

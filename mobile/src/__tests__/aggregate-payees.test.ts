@@ -4,8 +4,8 @@ import {
   sortMerchants,
   PAYEE_ROLLUP_BQL,
   type MerchantAggregate,
-  type QueryResultTableLike,
 } from "../screens/merchants-screen/selectors/aggregate-payees";
+import type { QueryResultTableLike } from "../screens/merchants-screen/selectors/bql-table";
 
 const TYPES = [
   { name: "payee", dtype: "str" },

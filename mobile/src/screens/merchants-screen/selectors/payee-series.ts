@@ -7,7 +7,12 @@
  */
 
 import type { SeriesPoint } from "./detect-recurrence";
-import type { QueryResultTableLike } from "./aggregate-payees";
+import {
+  asNumber,
+  asString,
+  columnIndex,
+  type QueryResultTableLike,
+} from "./bql-table";
 
 /**
  * How far back the series statement looks. ~37 months fits three yearly events
@@ -42,37 +47,6 @@ export function buildPayeeSeriesBql(cutoffDate: string): string {
     "AND (account ~ '^Expenses' OR account ~ '^Income') " +
     `AND date >= ${cutoffDate}`
   );
-}
-
-function columnIndex(
-  types: ReadonlyArray<{ name: string; dtype: string }>,
-  name: string,
-): number {
-  return types.findIndex((column) => column.name === name);
-}
-
-function asString(value: unknown): string | null {
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return String(value);
-  }
-  return null;
-}
-
-function asAmount(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return value;
-  }
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) {
-      return parsed;
-    }
-  }
-  return null;
 }
 
 /**
@@ -145,7 +119,7 @@ export function mapPayeeSeries(
     const payee = asString(row[payeeIdx]);
     const date = asString(row[dateIdx]);
     const currency = asString(row[currencyIdx]);
-    const amount = asAmount(row[amountIdx]);
+    const amount = asNumber(row[amountIdx]);
     if (!payee || !date || !currency || amount === null) {
       continue;
     }

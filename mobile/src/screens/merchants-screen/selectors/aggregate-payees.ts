@@ -5,6 +5,14 @@
  * Kept free of any `@/` value imports so the jest-lite runner can require it.
  */
 
+import {
+  asCount,
+  asString,
+  columnIndex,
+  type QueryColumnLike,
+  type QueryResultTableLike,
+} from "./bql-table";
+
 /** One payee's rollup from the fixed server-side BQL aggregation. */
 export interface MerchantAggregate {
   payee: string;
@@ -35,47 +43,6 @@ const COL = {
  */
 export const PAYEE_ROLLUP_BQL =
   "SELECT payee, count(*) as transaction_count, min(date) as first_date, max(date) as last_date WHERE payee != '' GROUP BY payee ORDER BY transaction_count DESC";
-
-interface QueryColumnLike {
-  name: string;
-  dtype: string;
-}
-
-export interface QueryResultTableLike {
-  rows: ReadonlyArray<ReadonlyArray<unknown>>;
-  types: ReadonlyArray<QueryColumnLike>;
-}
-
-function columnIndex(
-  types: ReadonlyArray<QueryColumnLike>,
-  name: string,
-): number {
-  return types.findIndex((column) => column.name === name);
-}
-
-function asString(value: unknown): string | null {
-  if (typeof value === "string") {
-    const trimmed = value.trim();
-    return trimmed.length > 0 ? trimmed : null;
-  }
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return String(value);
-  }
-  return null;
-}
-
-function asCount(value: unknown): number | null {
-  if (typeof value === "number" && Number.isFinite(value)) {
-    return Math.max(0, Math.trunc(value));
-  }
-  if (typeof value === "string" && value.trim() !== "") {
-    const parsed = Number(value);
-    if (Number.isFinite(parsed)) {
-      return Math.max(0, Math.trunc(parsed));
-    }
-  }
-  return null;
-}
 
 /**
  * Resolve column indexes by name. Missing any required column → soft failure
