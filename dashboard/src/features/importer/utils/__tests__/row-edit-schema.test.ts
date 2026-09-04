@@ -45,6 +45,14 @@ describe("row-edit-schema", () => {
         });
         expect(result.success).toBe(true);
       });
+
+      it("should reject an impossible calendar day", () => {
+        const result = editableRowSchema.safeParse({
+          ...validRow,
+          date: "2023-02-29",
+        });
+        expect(result.success).toBe(false);
+      });
     });
 
     describe("payee field", () => {

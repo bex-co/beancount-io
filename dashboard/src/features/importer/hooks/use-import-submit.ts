@@ -7,6 +7,7 @@ import type {
   LedgerPostingInput,
 } from "@/graphql/definitions";
 import type { ImportTransaction, ImportResult } from "../types";
+import { formatImportDate } from "../utils/csv-validator";
 
 export type UseImportSubmitReturn = {
   submitImport: (transactions: ImportTransaction[]) => Promise<void>;
@@ -52,7 +53,7 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
             ];
 
             return {
-              date: txn.date.toISOString().slice(0, 10),
+              date: formatImportDate(txn.date),
               flag: "*",
               payee: txn.payee,
               narration: txn.description,

@@ -92,7 +92,10 @@ describe("useImportSubmit", () => {
       });
 
       const { result } = renderHook(() => useImportSubmit(ledgerId));
-      const txn = makeTransaction({ date: new Date("2024-06-15") });
+      // Local calendar Date (what parseDate now builds) — not UTC-midnight
+      // from `new Date("YYYY-MM-DD")`, which toISOString would mishandle east
+      // of Greenwich.
+      const txn = makeTransaction({ date: new Date(2024, 5, 15) });
 
       const submitPromise = result.current.submitImport([txn]);
       await submitPromise;

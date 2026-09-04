@@ -2,6 +2,7 @@ import { describe, it, expect } from "vitest";
 import {
   isValidDateFormat,
   parseDate,
+  formatImportDate,
   parseAmount,
   isValidRowFormat,
   isHeaderRow,
@@ -67,6 +68,42 @@ describe("csv-validator", () => {
     it("should return valid: true for a leap day in a leap year", () => {
       const result = parseDate("2024-02-29");
       expect(result.valid).toBe(true);
+    });
+
+    it("should reject Feb 29 outside a leap year (no silent roll to Mar 1)", () => {
+      const result = parseDate("2023-02-29");
+      expect(result.valid).toBe(false);
+      expect(result.date).toBeUndefined();
+      expect(result.error).toBe("Invalid date value");
+    });
+
+    it("should reject impossible calendar days like Apr 31", () => {
+      const result = parseDate("2024-04-31");
+      expect(result.valid).toBe(false);
+      expect(result.date).toBeUndefined();
+      expect(result.error).toBe("Invalid date value");
+    });
+
+    it("should keep the local calendar day equal to the YYYY-MM-DD string", () => {
+      const result = parseDate("2024-06-15");
+      expect(result.valid).toBe(true);
+      expect(result.date?.getFullYear()).toBe(2024);
+      expect(result.date?.getMonth()).toBe(5);
+      expect(result.date?.getDate()).toBe(15);
+    });
+  });
+
+  describe("formatImportDate", () => {
+    it("formats by local calendar day, not UTC ISO", () => {
+      // Local midnight June 15 — toISOString() is the previous UTC day east
+      // of Greenwich; local getters must still yield 2024-06-15.
+      expect(formatImportDate(new Date(2024, 5, 15))).toBe("2024-06-15");
+    });
+
+    it("round-trips through parseDate", () => {
+      const parsed = parseDate("2024-06-15");
+      expect(parsed.valid).toBe(true);
+      expect(formatImportDate(parsed.date!)).toBe("2024-06-15");
     });
   });
 
