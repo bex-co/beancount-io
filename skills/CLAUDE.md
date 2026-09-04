@@ -30,12 +30,23 @@ skills/
       pm/                     /pm — arrange the public .pm adoption board (the only writer to .pm/)
       pm-brainstorm/          /pm-brainstorm — propose .pm milestones and tasks as text
       loop-worker/            /loop-worker — drain a .pm workstream milestone by milestone
+      routine-shared/         Shared contract for the routine-* maintenance suite (not a skill)
+        contract.md
+      routine-logic-simplifier/        /routine-logic-simplifier — simplify convoluted logic, behavior-preserving
+      routine-logic-bugfixer/          /routine-logic-bugfixer — model tricky logic, fix provable bugs
+      routine-dup-unifier/             /routine-dup-unifier — merge duplicated implementations within a package
+      routine-dead-code-removal/       /routine-dead-code-removal — delete provably unreachable code
+      routine-useless-test-pruner/     /routine-useless-test-pruner — delete tests that cannot fail
+      routine-shipped-feature-inliner/ /routine-shipped-feature-inliner — remove gates for fully shipped features
+      routine-flaky-test-fixer/        /routine-flaky-test-fixer — root-cause flaky CI tests
+      routine-abstraction-improver/    /routine-abstraction-improver — flatten over-engineered indirection
+      routine-abstraction-police/      /routine-abstraction-police — fix stated-boundary import violations
       ship/                   /ship — pull --rebase, commit, push main
         agents/               Codex interface metadata (openai.yaml)
   tmp/                        Scratch space — gitignored, safe for experiments
 ```
 
-Most stateful `beancount-*` skills have `references/` and `evals/`; small skills such as `beancount-init` may be self-contained. Mutating ledger workflows share the applicable trust rails: propose-then-confirm before writes, categorization restricted to existing accounts, `bean-check` as the verification gate, and the `import-id` convention from `.claude/skills/beancount-import/references/dedup.md` for externally sourced entries. Read-only skills do not pretend to have a write/confirmation phase.
+Most stateful `beancount-*` skills have `references/` and `evals/`; small skills such as `beancount-init` may be self-contained. Mutating ledger workflows share the applicable trust rails: propose-then-confirm before writes, categorization restricted to existing accounts, `bean-check` as the verification gate, and the `import-id` convention from `.claude/skills/beancount-import/references/dedup.md` for externally sourced entries. Read-only skills do not pretend to have a write/confirmation phase. Every `routine-*` skill reads `.claude/skills/routine-shared/contract.md` as its first step — the suite's shared preconditions, verify gates, ship protocol, and STOPs live there, not in the individual skills.
 
 ## Skills
 
@@ -54,6 +65,15 @@ Most stateful `beancount-*` skills have `references/` and `evals/`; small skills
 | `pm`                        | `/pm` — arrange the public `.pm` adoption board: status, new workstream, inbox notes, promote, new milestone, add-task, done. The **only** writer to `.pm/` and the canonical home of the board conventions (mission pillars, hierarchy, sizing rule, standing closing tasks, templates).                                                                                                                                                                                                                                             |
 | `pm-brainstorm`             | `/pm-brainstorm <topic>` — think a topic through with the TPM adoption lens and propose milestones / inbox notes as text only; ends with the exact `/pm` invocations to materialize them. Writes nothing.                                                                                                                                                                                                                                                                                                                             |
 | `loop-worker`               | `/loop-worker <wN>` — autonomously drain one `.pm` workstream: pick the lowest pending milestone, implement every task end to end with the package checks green, `/pm done` each task, `/ship` the milestone, repeat until none remain or a milestone blocks.                                                                                                                                                                                                                                                                         |
+| `routine-logic-simplifier`  | `/routine-logic-simplifier [pkg]` — pick one convoluted unit (churn hotspots, deep nesting, boolean spaghetti), pin its behavior with tests, simplify in place with zero behavior change and no new abstractions, `/ship`. A bug found mid-simplify is a separate `routine-logic-bugfixer` finding, never folded into the refactor.                                                                                                                                                                                                    |
+| `routine-logic-bugfixer`    | `/routine-logic-bugfixer [pkg]` — model one tricky unit (state machines, date math, sign conventions, dedup windows) exhaustively, prove each bug with a failing test against documented intent, land the minimal root-cause fix + regression test, `/ship`. Ambiguous intent → report, never ship an opinion. Crashes found while modeling are in scope.                                                                                                                                                                             |
+| `routine-dup-unifier`       | `/routine-dup-unifier [pkg]` — find live duplicated implementations within one package, prove semantic equivalence by reading every copy, keep the best-tested survivor, repoint callers, delete the rest, `/ship`. Cross-package duplication is reported, never merged; skip if unification needs an abstraction worse than the duplication.                                                                                                                                                                                          |
+| `routine-dead-code-removal` | `/routine-dead-code-removal [pkg]` — run the package's own detector (`yarn lint:deadcode` / `make deadcode` / `scripts/lint-deadcode.sh`), verify each hit against dynamic references (expo-router file routes, registries, string lookups), delete or `knip.jsonc`-ignore, `/ship` each removal. Detector hits are candidates, not proof.                                                                                                                                                                                             |
+| `routine-useless-test-pruner` | `/routine-useless-test-pruner [pkg]` — find tests that cannot fail (no assertions, mock tautologies, mocked-away units), prove it mechanically by sabotaging the covered behavior and watching the test stay green, revert the sabotage, delete the test, `/ship`. `git diff` must show only test changes before staging.                                                                                                                                                                                                            |
+| `routine-shipped-feature-inliner` | `/routine-shipped-feature-inliner [pkg]` — find gates for fully shipped features, triage deliberate-vs-forgotten via `DO_NOT_DO.md` / ADRs / git history, inline the path the flag always takes, delete the flag, `/ship`. Hard lines: `config.features.agentChat` is untouchable; the backend `featureFlags` GraphQL field is a cross-package contract — reported, never inlined; never flips a value.                                                                                                                          |
+| `routine-flaky-test-fixer`  | `/routine-flaky-test-fixer [pkg]` — mine `gh run list` history for same-commit red→green reruns, reproduce locally with 20–30 repeated runs, fix the real nondeterminism (timers, teardown, ordering, unawaited promises), verify with 20 consecutive greens, `/ship`. Never retry-wraps or bumps timeouts.                                                                                                                                                                                                                           |
+| `routine-abstraction-improver` | `/routine-abstraction-improver [pkg]` — find indirection with exactly one thing behind it and no stated reason (single-impl interfaces, passthrough wrappers, one-product factories), inline it, rewrite mock-based tests against the concrete unit, `/ship`. Stated conventions (e.g. backend-v2's mandated `I<Name>` interfaces) are never findings.                                                                                                                                                                              |
+| `routine-abstraction-police` | `/routine-abstraction-police [pkg]` — find imports crossing a boundary stated in a `CLAUDE.md`/ADR the wrong way (cross-package imports, dashboard cross-feature reach-through, backend-v2 layer rules, mobile route/screen split), fix by moving code or inverting the dependency, `/ship`. No stated rule → no finding; taste is not a rule.                                                                                                                                                                                        |
 
 ## Conventions
 
@@ -66,7 +86,7 @@ Each skill lives at `.claude/skills/<name>/` with:
 - `evals/` — optional `evals.json` + fixtures for `skill-creator` iteration.
 - `scripts/` / `agents/` — optional executable helpers or platform metadata when the skill needs them.
 
-### Shared suite conventions
+### Shared suite conventions — beancount-*
 
 Shared contracts for the `beancount-*` suite (apply each one only to skills that use that behavior, and point to its canonical definition rather than restating it):
 
@@ -76,6 +96,18 @@ Shared contracts for the `beancount-*` suite (apply each one only to skills that
 - **Categorization fallback**: suggestions come only from accounts already opened; no confident prior → `Expenses:Uncategorized`, visibly flagged. Never invent an account.
 - **Balance-assertion date**: assert the day **after** the period end (beancount checks at start-of-date) — canonical explanation in `.claude/skills/beancount-reconcile/SKILL.md`.
 - **Fuzzy-match tolerance**: ±3 days, symmetric (import's dedup, migrate's transfer pairing, reconcile's date-drift window).
+
+### Shared suite conventions — routine-*
+
+The `routine-*` skills are autonomous maintenance passes over this monorepo (discover → prove → fix → verify → ship). Their shared contract lives canonically at `.claude/skills/routine-shared/contract.md` (not a skill — no `SKILL.md`); every routine reads it first. The invariants it defines:
+
+- **One finding per `/ship`, never batched**; the next finding waits for the shipped SHA.
+- **Never ship red**: the owning package's checks (the same table as `loop-worker`'s step 3) are the only gate — `/ship` has none. A package with no covering automated check (backend-v2, agent-box, deploy) means STOP, not ship.
+- **Proof over suspicion**: a detector hit or grep match is a candidate; each skill defines its proof (failing test, still-green sabotage, empty reference sweep).
+- **Budget**: 3 shipped findings per invocation, then a summary of shipped / skipped / nothing-found.
+- **Universal STOPs**: new dependencies, cross-package API-contract changes, `DO_NOT_DO.md` conflicts, unpinnable behavior changes, unexplained red checks.
+- **Never touch**: lockfiles, codegen output, `.pm/` (routines never write the board), `.env*`, vendored fava, the `AGENTS.md`/skills symlinks.
+- **Scope argument**: `/routine-* [package-or-path]`; empty means survey, pick one target, announce it. The contract's symptom→owner table keeps the nine skills' territories disjoint.
 
 ### Validation
 
