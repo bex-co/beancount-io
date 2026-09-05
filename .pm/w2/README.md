@@ -25,6 +25,10 @@
 - [x] **m19** — Centralized authz for bank connections and transaction sync (8 tasks) ← from user decision 2026-08-28 after m18
 - [x] **m20** — Retire distributed authorization gates after domain cutovers (8 tasks) ← from user decision 2026-08-28 after m19
 
+- [ ] **m21** — Load only the active language (8 tasks) ← from /pm-brainstorm dashboard performance 2026-09-05; user routed to w2
+- [ ] **m22** — Make reports download and initialize less chart code (8 tasks) ← from /pm-brainstorm dashboard performance 2026-09-05; user routed to w2 — depends on m21
+- [ ] **m23** — Show primary ledger content before optional panels finish (8 tasks) ← from /pm-brainstorm dashboard performance 2026-09-05; user routed to w2 — depends on m21
+
 ## Centralized-authz migration contract for m14–m20
 
 The pending domain milestones inherit the implementation boundary proven by m13:
