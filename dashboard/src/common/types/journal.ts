@@ -110,11 +110,6 @@ export interface JournalPrice extends JournalDirective {
   amount: JournalAmount;
 }
 
-export interface JournalTxnPosting {
-  txn: JournalTransaction;
-  posting: JournalPosting;
-}
-
 // Union type for all directive types
 export type JournalDirectiveType =
   | JournalTransaction
@@ -140,12 +135,6 @@ export function isJournalBalance(
   directive: JournalDirectiveType,
 ): directive is JournalBalance {
   return directive.directive_type === DirectiveType.BALANCE;
-}
-
-export function isJournalCommodity(
-  directive: JournalDirectiveType,
-): directive is JournalCommodity {
-  return directive.directive_type === DirectiveType.COMMODITY;
 }
 
 export function isJournalClose(

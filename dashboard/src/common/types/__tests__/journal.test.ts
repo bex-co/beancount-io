@@ -3,7 +3,6 @@ import {
   DirectiveType,
   isJournalTransaction,
   isJournalBalance,
-  isJournalCommodity,
   isJournalClose,
   isJournalCustom,
   isJournalDocument,
@@ -170,20 +169,6 @@ describe("Journal Type Guards", () => {
         .filter((d) => d.directive_type !== DirectiveType.BALANCE)
         .forEach((directive) => {
           expect(isJournalBalance(directive)).toBe(false);
-        });
-    });
-  });
-
-  describe("isJournalCommodity", () => {
-    it("should return true for Commodity directive", () => {
-      expect(isJournalCommodity(mockCommodity)).toBe(true);
-    });
-
-    it("should return false for all other directive types", () => {
-      allDirectives
-        .filter((d) => d.directive_type !== DirectiveType.COMMODITY)
-        .forEach((directive) => {
-          expect(isJournalCommodity(directive)).toBe(false);
         });
     });
   });
