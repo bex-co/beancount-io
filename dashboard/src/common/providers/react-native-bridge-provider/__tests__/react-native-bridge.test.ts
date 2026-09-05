@@ -6,12 +6,15 @@ import {
   RN_EVENTS,
   type ChangeLanguageDetail,
 } from "../react-native-bridge";
-import i18n from "@/i18n/init";
+import { waitFor } from "@testing-library/react";
+import { createLocalization } from "@/i18n/init";
+const localization = createLocalization();
+const { i18n } = localization;
 
 describe("react-native-bridge", () => {
-  beforeEach(() => {
-    // Reset i18n to English before each test
-    i18n.changeLanguage("en");
+  beforeEach(async () => {
+    // Cancel any previous selection before resetting the instance.
+    await localization.changeLanguage("en");
   });
 
   afterEach(() => {
@@ -20,13 +23,13 @@ describe("react-native-bridge", () => {
 
   describe("initReactNativeBridge", () => {
     it("should initialize without errors", () => {
-      expect(() => initReactNativeBridge()).not.toThrow();
+      expect(() => initReactNativeBridge(localization)).not.toThrow();
     });
 
     it("should set up event listeners", () => {
       const addEventListenerSpy = vi.spyOn(window, "addEventListener");
 
-      initReactNativeBridge();
+      initReactNativeBridge(localization);
 
       expect(addEventListenerSpy).toHaveBeenCalledWith(
         RN_EVENTS.CHANGE_LANGUAGE,
@@ -45,7 +48,7 @@ describe("react-native-bridge", () => {
 
   describe("Change Language Event", () => {
     beforeEach(() => {
-      initReactNativeBridge();
+      initReactNativeBridge(localization);
     });
 
     it("should change language when event is dispatched", async () => {
@@ -59,9 +62,7 @@ describe("react-native-bridge", () => {
       window.dispatchEvent(event);
 
       // Wait for async language change
-      await new Promise((resolve) => setTimeout(resolve, 100));
-
-      expect(i18n.language).toBe("zh");
+      await waitFor(() => expect(i18n.language).toBe("zh"));
     });
 
     it("should handle unsupported language gracefully", async () => {
@@ -89,7 +90,7 @@ describe("react-native-bridge", () => {
 
   describe("Get Language Event", () => {
     beforeEach(() => {
-      initReactNativeBridge();
+      initReactNativeBridge(localization);
     });
 
     it("should dispatch response with current language", () => {
@@ -109,7 +110,7 @@ describe("react-native-bridge", () => {
 
   describe("Get Supported Languages Event", () => {
     beforeEach(() => {
-      initReactNativeBridge();
+      initReactNativeBridge(localization);
     });
 
     it("should dispatch response with supported languages", () => {
@@ -199,7 +200,7 @@ describe("react-native-bridge", () => {
       // @ts-expect-error - Mocking ReactNativeWebView
       window.ReactNativeWebView = { postMessage: postMessageMock };
 
-      initReactNativeBridge();
+      initReactNativeBridge(localization);
 
       // Find the bridgeReady message call
       const bridgeReadyCall = postMessageMock.mock.calls.find((call) => {
@@ -229,7 +230,7 @@ describe("react-native-bridge", () => {
       // @ts-expect-error - Cleaning up mock
       delete window.ReactNativeWebView;
 
-      initReactNativeBridge();
+      initReactNativeBridge(localization);
 
       expect(postMessageMock).not.toHaveBeenCalled();
     });

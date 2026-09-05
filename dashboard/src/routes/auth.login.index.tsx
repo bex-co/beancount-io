@@ -13,7 +13,14 @@ export const Route = createFileRoute("/auth/login/")({
   component: LoginPage,
   beforeLoad: loginBeforeLoad,
   validateSearch: (search) => loginSearchSchema.parse(search),
-  head: () =>
-    createHeadMeta(getSEOMetadata("seo.login.title", "seo.login.description")),
+  head: ({ match }) =>
+    createHeadMeta(
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.login.title",
+        "seo.login.description",
+      ),
+    ),
   // ssr: false,
 });

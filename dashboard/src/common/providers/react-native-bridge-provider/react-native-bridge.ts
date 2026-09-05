@@ -1,4 +1,4 @@
-import i18n from "@/i18n/init";
+import type { Localization } from "@/i18n/init";
 import type { Theme } from "@/common/providers/theme-provider/type";
 
 /**
@@ -72,7 +72,11 @@ export interface ThemeFunctions {
  * @param themeFunctions - Optional theme functions from ThemeProvider context.
  *                         If not provided, theme functionality will be disabled.
  */
-export function initReactNativeBridge(themeFunctions?: ThemeFunctions): void {
+export function initReactNativeBridge(
+  localization: Localization,
+  themeFunctions?: ThemeFunctions,
+): void {
+  const { i18n } = localization;
   // Listen for language change requests from React Native
   window.addEventListener(RN_EVENTS.CHANGE_LANGUAGE, async (event: Event) => {
     const customEvent = event as CustomEvent<ChangeLanguageDetail>;
@@ -91,7 +95,7 @@ export function initReactNativeBridge(themeFunctions?: ThemeFunctions): void {
       }
 
       // Change language
-      await i18n.changeLanguage(language);
+      await localization.changeLanguage(language);
     } catch (error) {
       console.error("[ReactNativeBridge] Failed to change language:", error);
     }

@@ -4,9 +4,14 @@ import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
 
 export const Route = createFileRoute("/auth/logout")({
   component: LogoutPage,
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
-      getSEOMetadata("seo.logout.title", "seo.logout.description"),
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.logout.title",
+        "seo.logout.description",
+      ),
       { noIndex: true },
     ),
 });

@@ -6,9 +6,11 @@ import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
 export const Route = createFileRoute("/ledger-gallery")({
   component: GalleryPage,
   beforeLoad: requireAuth("/ledger-gallery"),
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.ledgerGallery.title",
         "seo.ledgerGallery.description",
       ),

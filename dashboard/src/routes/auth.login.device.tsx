@@ -15,9 +15,14 @@ export const Route = createFileRoute("/auth/login/device")({
       });
     }
   },
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
-      getSEOMetadata("seo.deviceAuth.title", "seo.deviceAuth.description"),
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.deviceAuth.title",
+        "seo.deviceAuth.description",
+      ),
       { noIndex: true },
     ),
 });

@@ -6,9 +6,14 @@ import { welcomeLoader } from "@/features/ledger-list/pages/welcome-page/loader"
 export const Route = createFileRoute("/auth/welcome")({
   component: WelcomePage,
   loader: welcomeLoader,
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
-      getSEOMetadata("seo.welcome.title", "seo.welcome.description"),
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.welcome.title",
+        "seo.welcome.description",
+      ),
       { noIndex: true },
     ),
 });

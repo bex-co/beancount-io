@@ -1,5 +1,5 @@
 import { useTranslation } from "react-i18next";
-import { en } from "@/i18n/locales";
+import type en from "@/i18n/locales/en";
 
 /**
  * Custom hook for type-safe translations
@@ -13,8 +13,9 @@ import { en } from "@/i18n/locales";
  *
  * return <div>{t("common.home")}</div>;
  *
- * // Change language
- * i18n.changeLanguage("zh");
+ * // Load resources before changing language; preserve the current UI on failure.
+ * const { changeLanguage } = useChangeLanguage();
+ * void changeLanguage("zh");
  * ```
  */
 export function useTranslations() {
@@ -42,8 +43,7 @@ export function useTranslations() {
       }
 
       // Warn if key doesn't exist (TypeScript should catch this, but just in case)
-      // Check if en is available (might not be in test environment)
-      if (typeof en !== "undefined" && !(key in en)) {
+      if (!i18n.exists(key, { lng: "en" })) {
         console.warn(
           `⚠️  Translation key not found: "${key}"\n` +
             `Add this key to the appropriate locale file.`,

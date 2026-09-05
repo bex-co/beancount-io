@@ -4,9 +4,14 @@ import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
 
 export const Route = createFileRoute("/$")({
   component: NotFoundPage,
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
-      getSEOMetadata("seo.notFound.title", "seo.notFound.description"),
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.notFound.title",
+        "seo.notFound.description",
+      ),
       { noIndex: true },
     ),
 });

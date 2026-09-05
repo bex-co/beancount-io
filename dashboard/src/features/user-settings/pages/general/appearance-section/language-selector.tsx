@@ -1,3 +1,4 @@
+import { useChangeLanguage } from "@/common/hooks/use-change-language";
 import { useState } from "react";
 import { Check, ChevronDown, Languages } from "lucide-react";
 import { Button } from "@/common/components/ui/button.tsx";
@@ -7,11 +8,7 @@ import {
   PopoverTrigger,
 } from "@/common/components/ui/popover.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
-import {
-  LANGUAGE_NAMES,
-  type SupportedLanguage,
-  persistLanguage,
-} from "@/i18n";
+import { LANGUAGE_NAMES, type SupportedLanguage } from "@/i18n";
 import { cn } from "@/common/lib/utils/utils.ts";
 
 /**
@@ -20,11 +17,11 @@ import { cn } from "@/common/lib/utils/utils.ts";
  */
 export function LanguageSelector() {
   const { i18n } = useTranslations();
+  const { changeLanguage, isChangingLanguage } = useChangeLanguage();
   const [open, setOpen] = useState(false);
 
   const handleLanguageChange = (lang: SupportedLanguage) => {
-    void i18n.changeLanguage(lang);
-    persistLanguage(lang);
+    void changeLanguage(lang);
     setOpen(false);
   };
 
@@ -38,6 +35,7 @@ export function LanguageSelector() {
           variant="outline"
           role="combobox"
           aria-expanded={open}
+          aria-busy={isChangingLanguage}
           className="justify-between"
         >
           <span className="flex items-center gap-2">

@@ -1,5 +1,11 @@
+import { createLocalization } from "@/i18n/init";
+import { LocalizationProvider } from "@/i18n/provider";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen, waitFor } from "@testing-library/react";
+import {
+  render as renderComponent,
+  screen,
+  waitFor,
+} from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { UserNav } from "../user-nav";
 import * as apolloClient from "@apollo/client/react";
@@ -201,3 +207,14 @@ describe("UserNav", () => {
     });
   });
 });
+
+function render(ui: React.ReactNode) {
+  const localization = createLocalization();
+  return renderComponent(ui, {
+    wrapper: ({ children }) => (
+      <LocalizationProvider localization={localization}>
+        {children}
+      </LocalizationProvider>
+    ),
+  });
+}

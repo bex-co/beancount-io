@@ -11,9 +11,11 @@ export const Route = createFileRoute(
 )({
   component: LedgerUploadFilesPage,
   validateSearch: (search) => searchSchema.parse(search),
-  head: ({ params }) =>
+  head: ({ params, match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.ledgerFilesUpload.title",
         "seo.ledgerFilesUpload.description",
         { ledgerName: params.ledgerName },

@@ -4,9 +4,11 @@ import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
 
 export const Route = createFileRoute("/auth/reset-password")({
   component: ResetPasswordPage,
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.resetPassword.title",
         "seo.resetPassword.description",
       ),

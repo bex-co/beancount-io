@@ -1,4 +1,4 @@
-import i18n from "@/i18n/init";
+import type { i18n } from "i18next";
 import { getOgLocale } from "./locale-map";
 import { NOINDEX_ROBOTS_CONTENT } from "./indexability";
 
@@ -24,6 +24,7 @@ interface SEOOptions {
  * @returns SEO metadata object with title and description
  */
 export function getSEOMetadata(
+  i18n: i18n,
   titleKey: string,
   descriptionKey: string,
   params?: Record<string, string>,
@@ -50,7 +51,7 @@ export function getSEOMetadata(
 interface HeadMetaOptions {
   /**
    * Explicit language code (e.g. "en", "de") to use for og:locale resolution.
-   * If not provided, falls back to the global i18n singleton.
+   * If not provided, falls back to the provided request-scoped instance.
    * For SSR, pass the request-scoped language from I18nextProvider.
    */
   language?: string;
@@ -68,10 +69,11 @@ interface HeadMetaOptions {
  * @returns Head configuration object for route's head property
  */
 export function createHeadMeta(
+  i18n: i18n,
   metadata: SEOMetadata,
   options?: HeadMetaOptions,
 ) {
-  // Use explicit language if provided, otherwise fall back to global singleton
+  // Use explicit language if provided, otherwise use the provided instance
   const resolvedLanguage = options?.language ?? i18n.language;
   const ogLocale = getOgLocale(resolvedLanguage);
 

@@ -6,9 +6,11 @@ export const Route = createFileRoute(
   "/ledger/$ledgerOwner/$ledgerName/statistics",
 )({
   component: LedgerStatisticsPage,
-  head: ({ params }) =>
+  head: ({ params, match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.ledgerStatistics.title",
         "seo.ledgerStatistics.description",
         { ledgerName: params.ledgerName },

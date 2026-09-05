@@ -8,9 +8,11 @@ export const Route = createFileRoute(
 )({
   component: LedgerBalanceSheetPage,
   loader: balanceSheetLoader,
-  head: ({ params }) =>
+  head: ({ params, match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.ledgerBalanceSheet.title",
         "seo.ledgerBalanceSheet.description",
         { ledgerName: params.ledgerName },

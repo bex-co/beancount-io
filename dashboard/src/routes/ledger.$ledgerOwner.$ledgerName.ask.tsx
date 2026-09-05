@@ -27,9 +27,15 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/ask")({
   validateSearch: searchSchema,
   head: ({ params, match }) =>
     createHeadMeta(
-      getSEOMetadata("seo.ledgerAsk.title", "seo.ledgerAsk.description", {
-        ledgerName: params.ledgerName,
-      }),
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.ledgerAsk.title",
+        "seo.ledgerAsk.description",
+        {
+          ledgerName: params.ledgerName,
+        },
+      ),
       { noIndex: Boolean(match.search.q) },
     ),
 });

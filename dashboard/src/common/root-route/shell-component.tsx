@@ -1,13 +1,14 @@
 import { HeadContent, Scripts } from "@tanstack/react-router";
 import { ThemeScript } from "@/common/components/document/theme-script";
 import { GoogleAnalytics } from "@/common/analytics";
-import i18n from "@/i18n/init";
+import { useTranslation } from "react-i18next";
 
 export function ShellComponent({
   children,
 }: {
   children: React.ReactNode;
 }): React.ReactNode {
+  const { i18n } = useTranslation();
   return (
     <html lang={i18n.language} suppressHydrationWarning>
       <head>

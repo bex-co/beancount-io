@@ -4,9 +4,11 @@ import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
 
 export const Route = createFileRoute("/settings/general")({
   component: GeneralSettingsPage,
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.settingsGeneral.title",
         "seo.settingsGeneral.description",
       ),

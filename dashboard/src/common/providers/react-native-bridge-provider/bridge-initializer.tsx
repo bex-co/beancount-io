@@ -1,3 +1,4 @@
+import { useLocalization } from "@/i18n/context";
 import { useEffect, useRef } from "react";
 import { useTheme } from "@/common/providers/theme-provider";
 import type { Theme } from "@/common/providers/theme-provider/type";
@@ -11,6 +12,7 @@ import { initReactNativeBridge } from "./react-native-bridge";
  */
 export function BridgeInitializer() {
   const { theme, setTheme } = useTheme();
+  const localization = useLocalization();
   const initializedRef = useRef(false);
   const themeRef = useRef<Theme>(theme);
   const setThemeRef = useRef(setTheme);
@@ -28,7 +30,7 @@ export function BridgeInitializer() {
     // Initialize bridge only once with theme functions from context
     // Use refs to ensure functions always access current values
     if (!initializedRef.current) {
-      initReactNativeBridge({
+      initReactNativeBridge(localization, {
         getTheme: () => themeRef.current,
         setTheme: (newTheme: Theme) => {
           setThemeRef.current(newTheme);
@@ -36,7 +38,7 @@ export function BridgeInitializer() {
       });
       initializedRef.current = true;
     }
-  }, []);
+  }, [localization]);
 
   return null;
 }

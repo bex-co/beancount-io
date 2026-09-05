@@ -8,9 +8,11 @@ export const Route = createFileRoute(
 )({
   component: LedgerJournalPage,
   validateSearch: (search) => journalActionSearchSchema.parse(search),
-  head: ({ params }) =>
+  head: ({ params, match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.ledgerJournal.title",
         "seo.ledgerJournal.description",
         { ledgerName: params.ledgerName },

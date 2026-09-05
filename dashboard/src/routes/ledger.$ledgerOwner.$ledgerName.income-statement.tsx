@@ -7,9 +7,11 @@ export const Route = createFileRoute(
   "/ledger/$ledgerOwner/$ledgerName/income-statement",
 )({
   component: LedgerIncomeStatementPage,
-  head: ({ params }) =>
+  head: ({ params, match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.ledgerIncomeStatement.title",
         "seo.ledgerIncomeStatement.description",
         { ledgerName: params.ledgerName },

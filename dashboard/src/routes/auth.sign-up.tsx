@@ -17,8 +17,13 @@ export const Route = createFileRoute("/auth/sign-up")({
   component: RegisterFlow,
   beforeLoad: registerBeforeLoad,
   validateSearch: (search) => signUpSearchSchema.parse(search),
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
-      getSEOMetadata("seo.signUp.title", "seo.signUp.description"),
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.signUp.title",
+        "seo.signUp.description",
+      ),
     ),
 });

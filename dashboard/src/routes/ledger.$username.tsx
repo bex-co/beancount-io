@@ -10,10 +10,16 @@ const userProfileSearchSchema = z.object({
 export const Route = createFileRoute("/ledger/$username")({
   component: UserProfilePage,
   validateSearch: userProfileSearchSchema,
-  head: ({ params }) =>
+  head: ({ params, match }) =>
     createHeadMeta(
-      getSEOMetadata("seo.userProfile.title", "seo.userProfile.description", {
-        username: params.username,
-      }),
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.userProfile.title",
+        "seo.userProfile.description",
+        {
+          username: params.username,
+        },
+      ),
     ),
 });

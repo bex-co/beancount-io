@@ -1,5 +1,7 @@
+import { createLocalization } from "@/i18n/init";
+import { LocalizationProvider } from "@/i18n/provider";
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, act } from "@testing-library/react";
+import { render as renderComponent, act } from "@testing-library/react";
 import { ReactNativeBridgeProvider } from "../react-native-bridge-provider";
 import { useReactNativeContext } from "../react-native-bridge-context";
 import * as reactNativeBridge from "../react-native-bridge";
@@ -203,3 +205,14 @@ describe("ReactNativeBridgeProvider", () => {
     });
   });
 });
+
+function render(ui: React.ReactNode) {
+  const localization = createLocalization();
+  return renderComponent(ui, {
+    wrapper: ({ children }) => (
+      <LocalizationProvider localization={localization}>
+        {children}
+      </LocalizationProvider>
+    ),
+  });
+}

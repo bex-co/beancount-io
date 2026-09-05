@@ -4,15 +4,9 @@ import {
   createHeadMeta,
   createNoIndexHead,
 } from "../seo-helpers";
-import i18n from "@/i18n/init";
-
-// Mock i18n module
-vi.mock("@/i18n/init", () => ({
-  default: {
-    t: vi.fn(),
-    language: "en",
-  },
-}));
+import { createLocalization } from "@/i18n/init";
+const i18n = createLocalization().i18n;
+vi.spyOn(i18n, "t");
 
 // Mock locale-map module
 vi.mock("../locale-map", () => ({
@@ -42,6 +36,7 @@ describe("getSEOMetadata", () => {
     });
 
     const result = getSEOMetadata(
+      i18n,
       "common.seo.login.title",
       "common.seo.login.description",
     );
@@ -54,7 +49,11 @@ describe("getSEOMetadata", () => {
     const mockI18n = vi.mocked(i18n.t);
     mockI18n.mockImplementation(() => "Test");
 
-    getSEOMetadata("common.seo.test.title", "common.seo.test.description");
+    getSEOMetadata(
+      i18n,
+      "common.seo.test.title",
+      "common.seo.test.description",
+    );
 
     expect(mockI18n).toHaveBeenCalledWith("common.seo.test.title");
     expect(mockI18n).toHaveBeenCalledWith("common.seo.test.description");
@@ -66,6 +65,7 @@ describe("getSEOMetadata", () => {
 
     const params = { ledgerName: "My Ledger" };
     getSEOMetadata(
+      i18n,
       "common.seo.ledger.title",
       "common.seo.ledger.description",
       params,
@@ -82,7 +82,11 @@ describe("getSEOMetadata", () => {
     const mockI18n = vi.mocked(i18n.t);
     mockI18n.mockImplementation(() => "Test");
 
-    getSEOMetadata("common.seo.home.title", "common.seo.home.description");
+    getSEOMetadata(
+      i18n,
+      "common.seo.home.title",
+      "common.seo.home.description",
+    );
 
     expect(mockI18n).toHaveBeenCalledWith("common.seo.home.title");
     expect(mockI18n).toHaveBeenCalledWith("common.seo.home.description");
@@ -96,6 +100,7 @@ describe("getSEOMetadata", () => {
     });
 
     const result = getSEOMetadata(
+      i18n,
       "common.seo.dashboard.title",
       "common.seo.dashboard.description",
     );
@@ -109,6 +114,7 @@ describe("getSEOMetadata", () => {
     mockI18n.mockImplementation(() => "");
 
     const result = getSEOMetadata(
+      i18n,
       "common.seo.empty.title",
       "common.seo.empty.description",
     );
@@ -130,6 +136,7 @@ describe("getSEOMetadata", () => {
     );
 
     const result = getSEOMetadata(
+      i18n,
       "seo.ledgerCommit.title",
       "seo.ledgerCommit.description",
       { ledgerName: "amazon", shortSha: "c121e11" },
@@ -152,7 +159,7 @@ describe("createHeadMeta", () => {
       description: "Test description for the page",
     };
 
-    const result = createHeadMeta(metadata);
+    const result = createHeadMeta(i18n, metadata);
 
     expect(result.meta).toHaveLength(3);
     expect(result.meta[0]).toEqual({ title: "Test Title" });
@@ -172,7 +179,7 @@ describe("createHeadMeta", () => {
       description: "Test",
     };
 
-    const result = createHeadMeta(metadata);
+    const result = createHeadMeta(i18n, metadata);
 
     const ogLocaleMeta = result.meta.find(
       (meta) => "property" in meta && meta.property === "og:locale",
@@ -187,7 +194,7 @@ describe("createHeadMeta", () => {
       description: "Description with special <chars> & symbols",
     };
 
-    const result = createHeadMeta(metadata);
+    const result = createHeadMeta(i18n, metadata);
 
     expect(result.meta[0].title).toBe("Special <chars> & symbols");
     expect(result.meta[1].content).toBe(
@@ -201,7 +208,7 @@ describe("createHeadMeta", () => {
       description: "Page description",
     };
 
-    const result = createHeadMeta(metadata);
+    const result = createHeadMeta(i18n, metadata);
 
     expect(result).toHaveProperty("meta");
     expect(Array.isArray(result.meta)).toBe(true);
@@ -213,7 +220,7 @@ describe("createHeadMeta", () => {
       description: "",
     };
 
-    const result = createHeadMeta(metadata);
+    const result = createHeadMeta(i18n, metadata);
 
     expect(result.meta[0].title).toBe("");
     expect(result.meta[1].content).toBe("");
@@ -226,7 +233,7 @@ describe("createHeadMeta", () => {
       description: longDescription,
     };
 
-    const result = createHeadMeta(metadata);
+    const result = createHeadMeta(i18n, metadata);
 
     expect(result.meta[1].content).toBe(longDescription);
     expect(result.meta[1].content).toHaveLength(500);
@@ -238,13 +245,13 @@ describe("createHeadMeta", () => {
       description: "Test description",
     };
 
-    const result = createHeadMeta(metadata);
+    const result = createHeadMeta(i18n, metadata);
 
     expect(result.meta[2]).toHaveProperty("property", "og:locale");
   });
 
   it("should omit robots meta when noIndex is unset", () => {
-    const result = createHeadMeta({
+    const result = createHeadMeta(i18n, {
       title: "Overview",
       description: "Public overview",
     });
@@ -257,6 +264,7 @@ describe("createHeadMeta", () => {
 
   it("should emit robots noindex when noIndex is true", () => {
     const result = createHeadMeta(
+      i18n,
       {
         title: "Account",
         description: "Deep route",

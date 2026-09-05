@@ -5,7 +5,6 @@ import ErrorPage from "@/common/root-route/error-page";
 import { ShellComponent } from "@/common/root-route/shell-component";
 import { RootComponent } from "@/common/root-route/root-component";
 import { fetchUserProfile } from "@/common/server-fn";
-import i18n from "@/i18n/init";
 import { detectLanguage } from "@/i18n/detect-language";
 
 import appCss from "../style.css?inline";
@@ -41,17 +40,15 @@ export const Route = createRootRouteWithContext<RouterContext>()({
   shellComponent: ShellComponent,
   component: RootComponent,
   beforeLoad: async ({ context }) => {
-    // On the server, sync the global i18n singleton to the ?lang= param so that
-    // SSR rendering produces the correct language (same param the client reads).
+    // The router owns this instance. Complete translations before route heads
+    // and SSR render; hydration awaits the same locale before rendering.
+    const userProfile = fetchUserProfile(context.client);
     if (import.meta.env.SSR) {
-      const language = detectLanguage();
-      if (i18n.language !== language) {
-        await i18n.changeLanguage(language);
-      }
+      await context.localization.changeLanguage(detectLanguage());
     }
 
     return {
-      userProfile: await fetchUserProfile(context.client),
+      userProfile: await userProfile,
     };
   },
   loader: ({ context }) => {

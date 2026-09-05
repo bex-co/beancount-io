@@ -11,11 +11,17 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/query")({
   component: LedgerQueryPage,
   validateSearch: searchSchema,
   ssr: false,
-  head: ({ params }) =>
+  head: ({ params, match }) =>
     createHeadMeta(
-      getSEOMetadata("seo.ledgerQuery.title", "seo.ledgerQuery.description", {
-        ledgerName: params.ledgerName,
-      }),
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.ledgerQuery.title",
+        "seo.ledgerQuery.description",
+        {
+          ledgerName: params.ledgerName,
+        },
+      ),
       { noIndex: true },
     ),
 });

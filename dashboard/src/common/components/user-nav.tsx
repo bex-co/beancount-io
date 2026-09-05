@@ -1,3 +1,4 @@
+import { useChangeLanguage } from "@/common/hooks/use-change-language";
 import { useNavigate } from "@tanstack/react-router";
 import {
   LogOut,
@@ -32,7 +33,6 @@ import {
   SUPPORTED_LANGUAGES,
   LANGUAGE_NAMES,
   type SupportedLanguage,
-  persistLanguage,
 } from "@/i18n";
 
 interface UserAvatarButtonProps {
@@ -72,6 +72,7 @@ export function UserNav() {
   const navigate = useNavigate();
   const { theme, setTheme } = useTheme();
   const { t, i18n } = useTranslations();
+  const { changeLanguage } = useChangeLanguage();
   const isMobile = useIsMobile();
 
   const { data, loading: isLoading } = useQuery(GetCurrentUserDocument);
@@ -121,8 +122,7 @@ export function UserNav() {
   };
 
   const handleLanguageChange = (lang: SupportedLanguage) => {
-    void i18n.changeLanguage(lang);
-    persistLanguage(lang);
+    void changeLanguage(lang);
   };
 
   if (isLoading) {

@@ -7,9 +7,11 @@ export const Route = createFileRoute(
   "/ledger/$ledgerOwner/$ledgerName/cash-flow",
 )({
   component: LedgerCashFlowPage,
-  head: ({ params }) =>
+  head: ({ params, match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.ledgerCashFlow.title",
         "seo.ledgerCashFlow.description",
         { ledgerName: params.ledgerName },

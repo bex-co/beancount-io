@@ -1,14 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
-import i18n from "@/i18n/init";
-
-// Mock i18n module
-vi.mock("@/i18n/init", () => ({
-  default: {
-    t: vi.fn(),
-    language: "en",
-  },
-}));
+import { createLocalization } from "@/i18n/init";
+const i18n = createLocalization().i18n;
+vi.spyOn(i18n, "t");
 
 // Mock locale-map module
 vi.mock("@/common/lib/seo/locale-map", () => ({
@@ -33,11 +27,12 @@ describe("User Profile Route SEO Metadata", () => {
     );
 
     const metadata = getSEOMetadata(
+      i18n,
       "seo.userProfile.title",
       "seo.userProfile.description",
       { username: "testuser" },
     );
-    const headMeta = createHeadMeta(metadata);
+    const headMeta = createHeadMeta(i18n, metadata);
 
     expect(metadata.title).toBe("testuser - User Profile");
     expect(metadata.description).toBe(
@@ -64,6 +59,7 @@ describe("User Profile Route SEO Metadata", () => {
 
     const params = { username: "johndoe" };
     getSEOMetadata(
+      i18n,
       "seo.userProfile.title",
       "seo.userProfile.description",
       params,
@@ -89,6 +85,7 @@ describe("User Profile Route SEO Metadata", () => {
     );
 
     const metadata = getSEOMetadata(
+      i18n,
       "seo.userProfile.title",
       "seo.userProfile.description",
       { username: "user-name_123" },

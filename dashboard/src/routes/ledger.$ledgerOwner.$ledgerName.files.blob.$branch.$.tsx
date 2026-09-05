@@ -16,6 +16,7 @@ export const Route = createFileRoute(
   head: ({ params, match }) => {
     const filePath = params._splat || "";
     const metadata = getSEOMetadata(
+      match.context.localization.i18n,
       "seo.ledgerFiles.title",
       "seo.ledgerFiles.description",
       {
@@ -24,6 +25,7 @@ export const Route = createFileRoute(
     );
 
     return createHeadMeta(
+      match.context.localization.i18n,
       {
         ...metadata,
         title: filePath ? `${filePath} · ${metadata.title}` : metadata.title,

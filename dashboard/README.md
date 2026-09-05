@@ -73,6 +73,14 @@ be prefixed with `VITE_`.
 | `yarn format:check`      | Check formatting (Prettier)                                  |
 | `yarn codegen`           | Regenerate GraphQL types from the schema                     |
 
+## Translation performance
+
+The dashboard loads English plus the selected language. Language switches keep
+current content visible while loading and offer **Try Again** if a download fails.
+After a production build, run `yarn perf:locales` to check locale splitting and the
+initial JavaScript budget. See [the measurement guide](./docs/performance-locales.md)
+for baseline results and browser verification steps.
+
 ## Personal access tokens
 
 Signed-in paid-plan users can create scoped API credentials from **Settings →

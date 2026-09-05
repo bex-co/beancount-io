@@ -11,6 +11,7 @@ const mockI18n = {
   language: "en",
   changeLanguage: mockChangeLanguage,
   options: {},
+  exists: () => true,
   on: vi.fn(),
   off: vi.fn(),
 };

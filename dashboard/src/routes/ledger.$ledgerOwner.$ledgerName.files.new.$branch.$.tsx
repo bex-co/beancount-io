@@ -6,9 +6,11 @@ export const Route = createFileRoute(
   "/ledger/$ledgerOwner/$ledgerName/files/new/$branch/$",
 )({
   component: LedgerCreateFilesPage,
-  head: ({ params }) =>
+  head: ({ params, match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.ledgerFilesCreate.title",
         "seo.ledgerFilesCreate.description",
         { ledgerName: params.ledgerName },

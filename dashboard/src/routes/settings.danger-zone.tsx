@@ -4,9 +4,11 @@ import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
 
 export const Route = createFileRoute("/settings/danger-zone")({
   component: DangerZoneSettingsPage,
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
+      match.context.localization.i18n,
       getSEOMetadata(
+        match.context.localization.i18n,
         "seo.settingsDangerZone.title",
         "seo.settingsDangerZone.description",
       ),

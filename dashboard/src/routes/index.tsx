@@ -7,6 +7,13 @@ export const Route = createFileRoute("/")({
       to: context.userProfile ? "/auth/welcome" : "/auth/login",
     });
   },
-  head: () =>
-    createHeadMeta(getSEOMetadata("seo.home.title", "seo.home.description")),
+  head: ({ match }) =>
+    createHeadMeta(
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.home.title",
+        "seo.home.description",
+      ),
+    ),
 });

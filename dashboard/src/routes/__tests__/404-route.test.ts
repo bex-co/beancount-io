@@ -1,14 +1,8 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
-import i18n from "@/i18n/init";
-
-// Mock i18n module
-vi.mock("@/i18n/init", () => ({
-  default: {
-    t: vi.fn(),
-    language: "en",
-  },
-}));
+import { createLocalization } from "@/i18n/init";
+const i18n = createLocalization().i18n;
+vi.spyOn(i18n, "t");
 
 // Mock locale-map module
 vi.mock("@/common/lib/seo/locale-map", () => ({
@@ -30,10 +24,11 @@ describe("404 Route SEO Metadata", () => {
     });
 
     const metadata = getSEOMetadata(
+      i18n,
       "seo.notFound.title",
       "seo.notFound.description",
     );
-    const headMeta = createHeadMeta(metadata);
+    const headMeta = createHeadMeta(i18n, metadata);
 
     expect(metadata.title).toBe("Page Not Found");
     expect(metadata.description).toBe(
@@ -58,7 +53,7 @@ describe("404 Route SEO Metadata", () => {
     const mockI18n = vi.mocked(i18n.t);
     mockI18n.mockImplementation(() => "Test");
 
-    getSEOMetadata("seo.notFound.title", "seo.notFound.description");
+    getSEOMetadata(i18n, "seo.notFound.title", "seo.notFound.description");
 
     expect(mockI18n).toHaveBeenCalledWith("seo.notFound.title");
     expect(mockI18n).toHaveBeenCalledWith("seo.notFound.description");

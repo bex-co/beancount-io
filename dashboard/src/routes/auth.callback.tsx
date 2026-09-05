@@ -11,9 +11,14 @@ const authSearchSchema = z.object({
 export const Route = createFileRoute("/auth/callback")({
   component: AuthPage,
   validateSearch: authSearchSchema,
-  head: () =>
+  head: ({ match }) =>
     createHeadMeta(
-      getSEOMetadata("seo.authCallback.title", "seo.authCallback.description"),
+      match.context.localization.i18n,
+      getSEOMetadata(
+        match.context.localization.i18n,
+        "seo.authCallback.title",
+        "seo.authCallback.description",
+      ),
       { noIndex: true },
     ),
   ssr: false,

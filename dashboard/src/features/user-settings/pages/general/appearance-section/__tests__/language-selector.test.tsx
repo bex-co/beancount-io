@@ -1,90 +1,58 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
-import { render, screen } from "@testing-library/react";
+import { render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LanguageSelector } from "../language-selector";
+import { createLocalization } from "@/i18n/init";
+import { LocalizationProvider } from "@/i18n/provider";
+import { LANGUAGE_NAMES } from "@/i18n/config";
 
-// Mock persistLanguage
-vi.mock("@/i18n", async () => {
-  const actual = await vi.importActual<typeof import("@/i18n")>("@/i18n");
-  return {
-    ...actual,
-    persistLanguage: vi.fn(),
-  };
-});
+vi.unmock("react-i18next");
+vi.unmock("@/common/hooks/use-translations");
+vi.unmock("@/i18n");
 
-// Override the global useTranslations mock to include i18n
-const mockChangeLanguage = vi.fn().mockResolvedValue(undefined);
-let mockLanguage = "en";
-
-vi.mock("@/common/hooks/use-translations", () => ({
-  useTranslations: () => ({
-    t: (key: string) => key,
-    i18n: {
-      language: mockLanguage,
-      changeLanguage: mockChangeLanguage,
-    },
-  }),
-}));
+function setup() {
+  const localization = createLocalization();
+  render(
+    <LocalizationProvider localization={localization}>
+      <LanguageSelector />
+    </LocalizationProvider>,
+  );
+  return localization;
+}
 
 describe("LanguageSelector", () => {
-  beforeEach(() => {
-    vi.clearAllMocks();
-    mockLanguage = "en";
+  beforeEach(() => localStorage.clear());
+
+  it("offers every supported language and starts collapsed in English", async () => {
+    setup();
+    expect(screen.getByRole("combobox")).toHaveTextContent("English");
+    expect(screen.getByRole("combobox")).toHaveAttribute(
+      "aria-expanded",
+      "false",
+    );
+    await userEvent.click(screen.getByRole("combobox"));
+    for (const name of Object.values(LANGUAGE_NAMES)) {
+      expect(
+        screen.getByRole("button", { name, exact: true }),
+      ).toBeInTheDocument();
+    }
   });
 
-  describe("trigger button", () => {
-    it("should display the current language name for 'en'", () => {
-      mockLanguage = "en";
-      render(<LanguageSelector />);
-      expect(screen.getByRole("combobox")).toHaveTextContent("English");
-    });
-
-    it("should display the current language name for 'zh'", () => {
-      mockLanguage = "zh";
-      render(<LanguageSelector />);
-      expect(screen.getByRole("combobox")).toHaveTextContent("中文");
-    });
-
-    it("should fall back to 'English' for an unrecognized language code", () => {
-      mockLanguage = "unknown-lang";
-      render(<LanguageSelector />);
-      expect(screen.getByRole("combobox")).toHaveTextContent("English");
-    });
-
-    it("should have aria-expanded=false when popover is closed", () => {
-      render(<LanguageSelector />);
-      expect(screen.getByRole("combobox")).toHaveAttribute(
-        "aria-expanded",
-        "false",
-      );
-    });
-  });
-
-  describe("language list", () => {
-    it("should show all supported languages after opening", async () => {
-      render(<LanguageSelector />);
-      await userEvent.click(screen.getByRole("combobox"));
-      // All 13 supported languages should appear
-      expect(screen.getAllByText("English").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("中文").length).toBeGreaterThan(0);
-      expect(screen.getAllByText("Español").length).toBeGreaterThan(0);
-    });
-  });
-
-  describe("language selection", () => {
-    it("should call i18n.changeLanguage when a language is selected", async () => {
-      render(<LanguageSelector />);
-      await userEvent.click(screen.getByRole("combobox"));
-      await userEvent.click(screen.getByText("Français"));
-      expect(mockChangeLanguage).toHaveBeenCalledWith("fr");
-    });
-
-    it("should call persistLanguage when a language is selected", async () => {
-      const { persistLanguage } = await import("@/i18n");
-      render(<LanguageSelector />);
-      await userEvent.click(screen.getByRole("combobox"));
-      await userEvent.click(screen.getByText("Deutsch"));
-      expect(persistLanguage).toHaveBeenCalledWith("de");
-    });
+  it("loads a selected locale before updating and persisting the selection", async () => {
+    // Transform the real module before the interaction; the instance still
+    // has only English resources until the selection loads it.
+    await import("@/i18n/locales/fr");
+    const localization = setup();
+    await userEvent.click(screen.getByRole("combobox"));
+    await userEvent.click(
+      screen.getByRole("button", { name: "Français", exact: true }),
+    );
+    await waitFor(() =>
+      expect(screen.getByRole("combobox")).toHaveTextContent("Français"),
+    );
+    expect(localization.i18n.hasResourceBundle("fr", "translation")).toBe(true);
+    expect(localStorage.setItem).toHaveBeenCalledWith("i18nextLng", "fr");
+    expect(document.cookie).toContain("i18nextLng=fr");
+    expect(screen.getByRole("combobox")).toHaveAttribute("aria-busy", "false");
   });
 });
