@@ -24,30 +24,6 @@ export function getBackendBase(): string {
   return backendBaseFromApiUrl(serverConfig.apiUrl);
 }
 
-export async function forwardToBackend(
-  request: Request,
-  path: string,
-): Promise<Response> {
-  const backendBase = getBackendBase();
-  const { host, protocol } = new URL(request.url);
-
-  const upstream = await fetch(`${backendBase}${path}`, {
-    headers: {
-      "x-forwarded-host": host,
-      "x-forwarded-proto": protocol.replace(":", ""),
-    },
-  });
-
-  const body = await upstream.text();
-  return new Response(body, {
-    status: upstream.status,
-    headers: {
-      "content-type":
-        upstream.headers.get("content-type") ?? "application/json",
-    },
-  });
-}
-
 // The consent form is a handful of small fields; capping the proxied body
 // keeps an unauthenticated client from buffering arbitrary memory here.
 const MAX_CONSENT_BODY_BYTES = 64 * 1024;
