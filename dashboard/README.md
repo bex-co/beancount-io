@@ -81,6 +81,12 @@ After a production build, run `yarn perf:locales` to check locale splitting and 
 initial JavaScript budget. See [the measurement guide](./docs/performance-locales.md)
 for baseline results and browser verification steps.
 
+## Chart performance
+
+Reports load a smaller chart runtime through a separate client chunk, reserving
+chart space while it downloads. See [chart measurements and regression checks](./docs/performance-charts.md)
+for the registry inventory, production comparison, and reproduction steps.
+
 ## Personal access tokens
 
 Signed-in paid-plan users can create scoped API credentials from **Settings →

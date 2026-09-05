@@ -1,19 +1,19 @@
 # w2 · m22 — Make reports download and initialize less chart code
 
-**Worker:** worker2 **Goal:** People evaluating the example ledger reach usable reports with less chart code and avoidable initialization work. **Status:** todo
+**Worker:** worker2 **Goal:** People evaluating the example ledger reach usable reports with less chart code and avoidable initialization work. **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Inventory chart registrations and report chunk costs | 30m | w2/m21/t008 |
-| t002 | Register only required ECharts modules | 60m | w2/m22/t001 |
-| t003 | Load chart runtime lazily with stable placeholders | 45m | w2/m22/t002 |
-| t004 | Remove proven redundant chart work | 45m | w2/m22/t003 |
-| t005 | Adoption surface | 20m | w2/m22/t004 |
-| t006 | Simplify | 20m | w2/m22/t005 |
-| t007 | Test coverage | 40m | w2/m22/t005, w2/m22/t006 |
-| t008 | Closeout | 15m | w2/m22/t007 |
+| t001 | Inventory chart registrations and report chunk costs — **DONE** | 30m | w2/m21/t008 |
+| t002 | Register only required ECharts modules — **DONE** | 60m | w2/m22/t001 |
+| t003 | Load chart runtime lazily with stable placeholders — **DONE** | 45m | w2/m22/t002 |
+| t004 | Remove proven redundant chart work — **DONE** | 45m | w2/m22/t003 |
+| t005 | Adoption surface — **DONE** | 20m | w2/m22/t004 |
+| t006 | Simplify — **DONE** | 20m | w2/m22/t005 |
+| t007 | Test coverage — **DONE** | 40m | w2/m22/t005, w2/m22/t006 |
+| t008 | Closeout — **DONE** | 15m | w2/m22/t007 |
 
 ## Definition of done
 
@@ -34,3 +34,11 @@
 
 Implementation stays within dashboard. Use public or synthetic ledgers, never user data or credentials in reports. Capture production-build baselines before changes; static imports identify candidates, not measured timing gains. Ask before adding dependencies; never hand-edit lockfiles. Preserve current access controls, accounting semantics, and supported exports. Journal virtualization and blanket memoization are out of scope; backend cold-start/retry safety is already tracked separately in w3/003.
 
+
+## Validation and outcome
+
+Dashboard format:check, lint (including TypeScript and Knip), test, build, and perf:locales pass. 272 test files: 3,449 passed, one skipped. Production browser checks cover Canvas, hover tooltip, resize, dark theme, all three statement CSV/Markdown/print exports, and chunk-error reload recovery.
+
+Manifest and browser trace confirm a dynamic client chunk; login loads none. Deferred-load tests preserve dimensions and refs. Browser aborted-chunk recovery passes. Income-statement/overview median readiness improves from 3,414/3,823 ms to 3,025/3,374 ms. Selective registry reduces the chart-containing chunk from 371,683 to 213,937 gzip bytes (level 9), with real registry tests for every chart type and zoom/legend actions.
+
+Measured on the public example ledger with fresh Chrome contexts, CPU 4× and a fixed warmed read-only API response cache. Full methodology, measured ranges, registry inventory, and lifecycle evidence: `dashboard/docs/performance-charts.md`. No accounting, access, export-content, or backend changes.

@@ -1,10 +1,6 @@
-import React, {
-  useEffect,
-  useRef,
-  useImperativeHandle,
-  forwardRef,
-} from "react";
-import * as echarts from "echarts";
+import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
+import { init } from "./runtime";
+import type { ECharts } from "echarts/core";
 import { useIsMobile } from "@/common/hooks/use-mobile";
 import type { EChartsProps, EChartsRef } from "./types";
 
@@ -24,10 +20,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
     ref,
   ) => {
     const chartRef = useRef<HTMLDivElement>(null);
-    const chartInstanceRef = useRef<echarts.ECharts | null>(null);
-
-    const optionRef = React.useRef(option);
-    optionRef.current = option;
+    const chartInstanceRef = useRef<ECharts | null>(null);
 
     useEffect(() => {
       if (!chartRef.current) return;
@@ -36,10 +29,8 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
         chartInstanceRef.current.dispose();
       }
 
-      const chart = echarts.init(chartRef.current, theme);
+      const chart = init(chartRef.current, theme);
       chartInstanceRef.current = chart;
-
-      chart.setOption(optionRef.current, { notMerge, lazyUpdate, silent });
 
       return () => {
         if (chartInstanceRef.current) {
@@ -47,7 +38,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
           chartInstanceRef.current = null;
         }
       };
-    }, [theme]); // eslint-disable-line react-hooks/exhaustive-deps
+    }, [theme]);
 
     useEffect(() => {
       if (!chartInstanceRef.current) return;
@@ -56,7 +47,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
         lazyUpdate,
         silent,
       });
-    }, [option, notMerge, lazyUpdate, silent]);
+    }, [option, notMerge, lazyUpdate, silent, theme]);
 
     useEffect(() => {
       if (!chartInstanceRef.current) return;
@@ -65,7 +56,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
       } else {
         chartInstanceRef.current.hideLoading();
       }
-    }, [showLoading, loadingOption]);
+    }, [showLoading, loadingOption, theme]);
 
     useEffect(() => {
       const handleResize = () => {

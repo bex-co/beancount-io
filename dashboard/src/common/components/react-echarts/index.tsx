@@ -1,10 +1,38 @@
+import { forwardRef, lazy, Suspense } from "react";
+import { ErrorBoundary } from "@/common/components/error-boundary";
+import { Button } from "@/common/components/ui/button";
+import { useTranslations } from "@/common/hooks/use-translations";
 import { ClientOnly } from "@tanstack/react-router";
 import type { EChartsOption } from "echarts";
 
 import { ChartEmpty } from "./chart-empty";
-import { ReactEChartsClient } from "./client";
 import { ReactEChartsServer } from "./server";
-import { EChartsProps } from "./types";
+import type { EChartsProps, EChartsRef } from "./types";
+
+const loadClient = () => import("./client");
+const LazyChart = lazy(() =>
+  loadClient().then((module) => ({ default: module.ReactEChartsClient })),
+);
+// Start with the chart-using route's module, not after its first effect. This
+// keeps an explicit split without adding a post-hydration download waterfall.
+if (!import.meta.env.SSR) void loadClient().catch(() => {});
+
+function ChartLoadError({
+  style = { height: "250px" },
+  className,
+}: EChartsProps) {
+  const { t } = useTranslations();
+  return (
+    <div style={style} className={className} role="alert">
+      <div className="flex h-full flex-col items-center justify-center gap-2">
+        <p>{t("common.errorOccurred")}</p>
+        <Button variant="outline" onClick={() => window.location.reload()}>
+          {t("common.tryAgain")}
+        </Button>
+      </div>
+    </div>
+  );
+}
 
 /**
  * Returns true when option.series has no meaningful data to render.
@@ -39,19 +67,27 @@ function isSeriesEmpty(option: EChartsOption): boolean {
  * Automatically renders <ChartEmpty> when all series have no data, or when
  * the `isEmpty` prop is explicitly set to true.
  */
-export const ReactECharts = (props: EChartsProps) => {
-  const empty = props.isEmpty ?? isSeriesEmpty(props.option);
-  if (empty) {
-    const styleHeight = props.style?.height;
-    const height =
-      typeof styleHeight === "number"
-        ? `${styleHeight}px`
-        : (styleHeight ?? "250px");
-    return <ChartEmpty height={height} />;
-  }
-  return (
-    <ClientOnly fallback={<ReactEChartsServer {...props} />}>
-      <ReactEChartsClient {...props} />
-    </ClientOnly>
-  );
-};
+export const ReactECharts = forwardRef<EChartsRef, EChartsProps>(
+  (props, ref) => {
+    const empty = props.isEmpty ?? isSeriesEmpty(props.option);
+    if (empty) {
+      const styleHeight = props.style?.height;
+      const height =
+        typeof styleHeight === "number"
+          ? `${styleHeight}px`
+          : (styleHeight ?? "250px");
+      return <ChartEmpty height={height} />;
+    }
+    return (
+      <ClientOnly fallback={<ReactEChartsServer {...props} />}>
+        <ErrorBoundary fallback={<ChartLoadError {...props} />}>
+          <Suspense fallback={<ReactEChartsServer {...props} />}>
+            <LazyChart {...props} ref={ref} />
+          </Suspense>
+        </ErrorBoundary>
+      </ClientOnly>
+    );
+  },
+);
+
+ReactECharts.displayName = "ReactECharts";

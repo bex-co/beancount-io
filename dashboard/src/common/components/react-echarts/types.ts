@@ -1,4 +1,5 @@
-import type { EChartsOption, ECharts } from "echarts";
+import type { EChartsOption } from "echarts";
+import type { ECharts } from "echarts/core";
 import type React from "react";
 
 export interface EChartsProps {
