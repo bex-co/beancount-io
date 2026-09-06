@@ -1,3 +1,4 @@
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useMemo, useCallback, useState } from "react";
 import { useRouter } from "expo-router";
 import {
@@ -89,6 +90,7 @@ const getStyles = (theme: ColorTheme) =>
 
 const TransactionList = () => {
   const ledgerId = useLedgerGuard();
+  const { canWrite } = useLedgerAccess();
   const router = useRouter();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
@@ -239,13 +241,15 @@ const TransactionList = () => {
       <LedgerDrawerHeader
         title={t("transactions")}
         right={
-          <TouchableOpacity
-            onPress={handleQuickAdd}
-            hitSlop={8}
-            activeOpacity={0.7}
-          >
-            <Ionicons name="add" size={26} color={theme.black90} />
-          </TouchableOpacity>
+          canWrite && (
+            <TouchableOpacity
+              onPress={handleQuickAdd}
+              hitSlop={8}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="add" size={26} color={theme.black90} />
+            </TouchableOpacity>
+          )
         }
       />
       <SectionList

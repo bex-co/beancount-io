@@ -2,6 +2,33 @@ import { en } from "./en";
 
 export const nl: typeof en = {
   ...en,
+  discoveryTitle: "Boeken ontdekken",
+  discoveryTab_yours: "Je boeken",
+  discoveryTab_starred: "Favorieten",
+  discoveryTab_explore: "Ontdekken",
+  discoverySearch: "Boeken zoeken",
+  discoveryClear: "Zoekopdracht wissen",
+  discoveryOpen: "{{name}} openen",
+  discoveryStar: "{{name}} als favoriet opslaan",
+  discoveryUnstar: "{{name}} uit favorieten verwijderen",
+  discoveryPrivate: "Privé",
+  discoveryPublic: "Openbaar",
+  discoveryCurrent: "Huidig",
+  discoveryLoading: "Boeken laden…",
+  discoveryLoadMore: "Meer laden",
+  discoveryRetry: "Opnieuw proberen",
+  discoveryNoMatches: "Geen boeken komen overeen met je zoekopdracht.",
+  discoveryEmpty_yours:
+    "Je boeken verschijnen hier. Ontdek openbare boeken om te beginnen.",
+  discoveryEmpty_starred:
+    "Sla een boek op als favoriet om het hier later terug te vinden.",
+  discoveryEmpty_explore: "Geen openbare boeken gevonden.",
+  discoveryLoadError: "Boeken konden niet worden geladen. Probeer het opnieuw.",
+  discoveryActionError:
+    "De actie kon niet worden voltooid. Controleer je verbinding en toegang tot het boek en probeer het opnieuw.",
+  ledgerReadOnly:
+    "Dit boek is alleen-lezen. Kies een boek dat je kunt bewerken om wijzigingen aan te brengen.",
+
   // bottom tab bar
   home: "Home",
   ledger: "Grootboek",

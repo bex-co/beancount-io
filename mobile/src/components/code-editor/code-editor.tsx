@@ -54,6 +54,7 @@ export type CodeEditorProps = {
   onEdit: (epoch: number, revision: number, isDirty: boolean) => Promise<void>;
   onSave: (value: string, epoch: number, revision: number) => Promise<boolean>;
   isDark: boolean;
+  readOnly?: boolean;
   /** Bottom inset (px) so CM6 scrolls above the keyboard accessory and keyboard */
   keyboardInset: number;
   insertSpec: InsertSpec | null;
@@ -245,8 +246,14 @@ function buildExtensions(
   savedDocumentRef: { current: Text },
   requestSaveRef: { current: () => void },
   themeCompartment: Compartment,
+  readOnly: boolean,
+  accessCompartment: Compartment,
 ): Extension[] {
   return [
+    accessCompartment.of([
+      EditorState.readOnly.of(readOnly),
+      EditorView.editable.of(!readOnly),
+    ]),
     history(),
     lineNumbers(),
     highlightActiveLine(),
@@ -327,6 +334,7 @@ export default function CodeEditor({
   onEdit,
   onSave,
   isDark,
+  readOnly = false,
   keyboardInset,
   insertSpec,
   jumpToLine,
@@ -340,6 +348,8 @@ export default function CodeEditor({
   const savedDocumentRef = useRef(Text.of(documentSpec.value.split("\n")));
   const requestSaveRef = useRef<() => void>(() => undefined);
   const themeCompartmentRef = useRef(new Compartment());
+  const accessCompartmentRef = useRef(new Compartment());
+  const appliedAccessRef = useRef(readOnly);
   const appliedThemeRef = useRef(isDark);
   const prevInsertSeq = useRef<number | null>(null);
   // Tracks the most-recent jump target so the value effect can fire it
@@ -357,7 +367,7 @@ export default function CodeEditor({
 
   requestSaveRef.current = () => {
     const view = viewRef.current;
-    if (!view) return;
+    if (!view || appliedAccessRef.current) return;
     const document = view.state.doc;
     const content = view.state.doc.toString();
     const epoch = documentEpochRef.current;
@@ -413,6 +423,8 @@ export default function CodeEditor({
         savedDocumentRef,
         requestSaveRef,
         themeCompartmentRef.current,
+        appliedAccessRef.current,
+        accessCompartmentRef.current,
       ),
     });
 
@@ -447,6 +459,8 @@ export default function CodeEditor({
             savedDocumentRef,
             requestSaveRef,
             themeCompartmentRef.current,
+            appliedAccessRef.current,
+            accessCompartmentRef.current,
           ),
         }),
       );
@@ -473,10 +487,20 @@ export default function CodeEditor({
     });
   }, [isDark]);
 
+  useEffect(() => {
+    appliedAccessRef.current = readOnly;
+    viewRef.current?.dispatch({
+      effects: accessCompartmentRef.current.reconfigure([
+        EditorState.readOnly.of(readOnly),
+        EditorView.editable.of(!readOnly),
+      ]),
+    });
+  }, [readOnly]);
+
   // Insert text at cursor (from accessory bar)
   useEffect(() => {
     const view = viewRef.current;
-    if (!view || !insertSpec) return;
+    if (!view || !insertSpec || readOnly) return;
     if (insertSpec.seq === prevInsertSeq.current) return;
     prevInsertSeq.current = insertSpec.seq;
     const { from, to } = view.state.selection.main;
@@ -496,7 +520,7 @@ export default function CodeEditor({
       }),
     );
     view.focus();
-  }, [insertSpec]);
+  }, [insertSpec, readOnly]);
 
   // Jump to a specific line.  Guards against a 1-line doc (content not yet
   // loaded via the Expo bridge) — in that case the value effect will retry.

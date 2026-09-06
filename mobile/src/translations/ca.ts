@@ -2,6 +2,33 @@ import { en } from "./en";
 
 export const ca: typeof en = {
   ...en,
+  discoveryTitle: "Descobreix llibres",
+  discoveryTab_yours: "Els teus llibres",
+  discoveryTab_starred: "Preferits",
+  discoveryTab_explore: "Explora",
+  discoverySearch: "Cerca llibres",
+  discoveryClear: "Esborra la cerca",
+  discoveryOpen: "Obre {{name}}",
+  discoveryStar: "Desa {{name}} als preferits",
+  discoveryUnstar: "Treu {{name}} dels preferits",
+  discoveryPrivate: "Privat",
+  discoveryPublic: "Públic",
+  discoveryCurrent: "Actual",
+  discoveryLoading: "S’estan carregant els llibres…",
+  discoveryLoadMore: "Carrega’n més",
+  discoveryRetry: "Torna-ho a provar",
+  discoveryNoMatches: "Cap llibre coincideix amb la cerca.",
+  discoveryEmpty_yours:
+    "Els teus llibres apareixeran aquí. Explora llibres públics per començar.",
+  discoveryEmpty_starred:
+    "Desa un llibre als preferits per trobar-lo aquí la propera vegada.",
+  discoveryEmpty_explore: "No s’han trobat llibres públics.",
+  discoveryLoadError: "No s’han pogut carregar els llibres. Torna-ho a provar.",
+  discoveryActionError:
+    "No s’ha pogut completar l’acció. Comprova la connexió i l’accés al llibre i torna-ho a provar.",
+  ledgerReadOnly:
+    "Aquest llibre és de només lectura. Tria un llibre que puguis editar per fer-hi canvis.",
+
   // bottom tab bar
   home: "Inici",
   ledger: "Llibre",

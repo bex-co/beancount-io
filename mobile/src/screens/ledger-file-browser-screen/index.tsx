@@ -1,3 +1,4 @@
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useMemo, useRef, useState } from "react";
 import { useApolloClient } from "@apollo/client";
 import {
@@ -199,11 +200,13 @@ function FileRow({
   onPress,
   onDelete,
   deleting,
+  canWrite,
 }: {
   entry: DirEntry;
   onPress: () => void;
   onDelete: () => void;
   deleting: boolean;
+  canWrite: boolean;
 }): JSX.Element {
   const { t } = useTranslations();
   const theme = useTheme().colorTheme;
@@ -248,7 +251,8 @@ function FileRow({
         )}
       </TouchableOpacity>
 
-      {!isDir &&
+      {canWrite &&
+        !isDir &&
         (protectedFile ? (
           <TouchableOpacity
             style={styles.rowAction}
@@ -284,6 +288,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const ledgerId = useLedgerGuard();
+  const { canWrite } = useLedgerAccess();
   const toast = useToast();
   const client = useApolloClient();
 
@@ -354,6 +359,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
       if (
         !filename ||
         entries.some((entry) => entry.name === filename) ||
+        !canWrite ||
         createInFlightRef.current
       )
         return;
@@ -396,6 +402,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
     },
     [
       client,
+      canWrite,
       createLedgerFile,
       currentPath,
       entries,
@@ -408,7 +415,12 @@ export function LedgerFileBrowserScreen(): JSX.Element {
 
   const confirmDelete = useCallback(
     async (entry: DirEntry) => {
-      if (!canDeleteLedgerFile(entry.name) || deleteInFlightRef.current) return;
+      if (
+        !canWrite ||
+        !canDeleteLedgerFile(entry.name) ||
+        deleteInFlightRef.current
+      )
+        return;
 
       deleteInFlightRef.current = true;
       setDeletingPath(entry.path);
@@ -441,12 +453,12 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         setDeletingPath(null);
       }
     },
-    [client, deleteLedgerFile, ledgerId, refetch, t, toast],
+    [canWrite, client, deleteLedgerFile, ledgerId, refetch, t, toast],
   );
 
   const handleDelete = useCallback(
     (entry: DirEntry) => {
-      if (!canDeleteLedgerFile(entry.name)) return;
+      if (!canWrite || !canDeleteLedgerFile(entry.name)) return;
       Alert.alert(
         t("ledgerDeleteFileTitle"),
         t("ledgerDeleteFileMessage", { name: entry.name }),
@@ -460,7 +472,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         ],
       );
     },
-    [confirmDelete, t],
+    [canWrite, confirmDelete, t],
   );
 
   const handleEntryPress = (entry: DirEntry) => {
@@ -485,19 +497,21 @@ export function LedgerFileBrowserScreen(): JSX.Element {
       <LedgerDrawerHeader
         title={t("files")}
         right={
-          <TouchableOpacity
-            accessibilityLabel={t("ledgerCreateFile")}
-            activeOpacity={0.7}
-            hitSlop={8}
-            disabled={creating}
-            onPress={() => setCreateModalVisible(true)}
-          >
-            <Ionicons
-              name="add-circle-outline"
-              size={26}
-              color={creating ? theme.black40 : theme.primary}
-            />
-          </TouchableOpacity>
+          canWrite && (
+            <TouchableOpacity
+              accessibilityLabel={t("ledgerCreateFile")}
+              activeOpacity={0.7}
+              hitSlop={8}
+              disabled={creating}
+              onPress={() => setCreateModalVisible(true)}
+            >
+              <Ionicons
+                name="add-circle-outline"
+                size={26}
+                color={creating ? theme.black40 : theme.primary}
+              />
+            </TouchableOpacity>
+          )
         }
       />
 
@@ -534,6 +548,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
               <View>
                 <FileRow
                   entry={item}
+                  canWrite={canWrite}
                   deleting={deletingPath !== null}
                   onPress={() => handleEntryPress(item)}
                   onDelete={() => handleDelete(item)}
@@ -554,7 +569,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
                 <Text style={styles.stateHint}>
                   {error ? t("ledgerRefreshHint") : t("ledgerEmptyHint")}
                 </Text>
-                {!error && (
+                {!error && canWrite && (
                   <TouchableOpacity
                     style={styles.emptyAction}
                     activeOpacity={0.7}

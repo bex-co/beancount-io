@@ -1,3 +1,4 @@
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useMemo, useState } from "react";
 import { StyleSheet, TouchableOpacity, View } from "react-native";
 import { useRouter } from "expo-router";
@@ -53,6 +54,7 @@ const getStyles = (theme: ColorTheme) =>
 const AccountsScreenImpl = (): JSX.Element => {
   const { userId } = useSession();
   const ledgerId = useLedgerGuard();
+  const { canWrite } = useLedgerAccess();
   const { t } = useTranslations();
   const router = useRouter();
   const styles = useThemeStyle(getStyles);
@@ -113,15 +115,17 @@ const AccountsScreenImpl = (): JSX.Element => {
       <LedgerDrawerHeader
         title={t("accounts")}
         right={
-          <TouchableOpacity
-            testID="open-account-button"
-            onPress={handleOpenAccount}
-            hitSlop={8}
-            activeOpacity={0.7}
-            accessibilityLabel={t("openAccount")}
-          >
-            <Ionicons name="add" size={26} color={theme.black} />
-          </TouchableOpacity>
+          canWrite && (
+            <TouchableOpacity
+              testID="open-account-button"
+              onPress={handleOpenAccount}
+              hitSlop={8}
+              activeOpacity={0.7}
+              accessibilityLabel={t("openAccount")}
+            >
+              <Ionicons name="add" size={26} color={theme.black} />
+            </TouchableOpacity>
+          )
         }
       />
       {showStale ? <StaleDataBanner /> : null}

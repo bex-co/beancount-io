@@ -1,4 +1,29 @@
 export const en = {
+  discoveryTitle: "Discover ledgers",
+  discoveryTab_yours: "Your ledgers",
+  discoveryTab_starred: "Starred",
+  discoveryTab_explore: "Explore",
+  discoverySearch: "Search ledgers",
+  discoveryClear: "Clear search",
+  discoveryOpen: "Open {{name}}",
+  discoveryStar: "Star {{name}}",
+  discoveryUnstar: "Unstar {{name}}",
+  discoveryPrivate: "Private",
+  discoveryPublic: "Public",
+  discoveryCurrent: "Current",
+  discoveryLoading: "Loading ledgers…",
+  discoveryLoadMore: "Load more",
+  discoveryRetry: "Try again",
+  discoveryNoMatches: "No ledgers match your search.",
+  discoveryEmpty_yours:
+    "Your ledgers will appear here. Explore public ledgers to get started.",
+  discoveryEmpty_starred: "Star a ledger to save it here for next time.",
+  discoveryEmpty_explore: "No public ledgers found.",
+  discoveryLoadError: "Couldn’t load ledgers. Please try again.",
+  discoveryActionError:
+    "Couldn’t complete that action. Check your connection and ledger access, then try again.",
+  ledgerReadOnly:
+    "This ledger is read-only. Choose a ledger you can edit to make changes.",
   // bottom tab bar
   home: "Home",
   ledger: "Ledger",

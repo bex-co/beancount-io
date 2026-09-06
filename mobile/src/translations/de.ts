@@ -2,6 +2,34 @@ import { en } from "./en";
 
 export const de: typeof en = {
   ...en,
+  discoveryTitle: "Bücher entdecken",
+  discoveryTab_yours: "Deine Bücher",
+  discoveryTab_starred: "Favoriten",
+  discoveryTab_explore: "Entdecken",
+  discoverySearch: "Bücher suchen",
+  discoveryClear: "Suche löschen",
+  discoveryOpen: "{{name}} öffnen",
+  discoveryStar: "{{name}} als Favorit speichern",
+  discoveryUnstar: "{{name}} aus Favoriten entfernen",
+  discoveryPrivate: "Privat",
+  discoveryPublic: "Öffentlich",
+  discoveryCurrent: "Aktuell",
+  discoveryLoading: "Bücher werden geladen…",
+  discoveryLoadMore: "Mehr laden",
+  discoveryRetry: "Erneut versuchen",
+  discoveryNoMatches: "Keine Bücher entsprechen deiner Suche.",
+  discoveryEmpty_yours:
+    "Deine Bücher erscheinen hier. Entdecke öffentliche Bücher für den Einstieg.",
+  discoveryEmpty_starred:
+    "Speichere ein Buch als Favorit, um es hier wiederzufinden.",
+  discoveryEmpty_explore: "Keine öffentlichen Bücher gefunden.",
+  discoveryLoadError:
+    "Bücher konnten nicht geladen werden. Versuche es erneut.",
+  discoveryActionError:
+    "Die Aktion konnte nicht abgeschlossen werden. Prüfe die Verbindung und den Zugriff auf das Buch und versuche es erneut.",
+  ledgerReadOnly:
+    "Dieses Buch ist schreibgeschützt. Wähle ein Buch, das du bearbeiten kannst.",
+
   // bottom tab bar
   home: "Startseite",
   ledger: "Hauptbuch",

@@ -1,3 +1,4 @@
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { StyleSheet, View } from "react-native";
 import { useMemo, useState } from "react";
 import { Ionicons, MaterialCommunityIcons } from "@expo/vector-icons";
@@ -47,6 +48,7 @@ const HomeScreenImpl = (): JSX.Element => {
   const styles = useThemeStyle(getStyles);
   const router = useRouter();
   const ledgerId = useLedgerGuard();
+  const { canWrite } = useLedgerAccess();
   const {
     currencies,
     refetch: ledgerMetaRefetch,
@@ -105,41 +107,43 @@ const HomeScreenImpl = (): JSX.Element => {
       <LedgerDrawerHeader
         title={t("home")}
         right={
-          <MenuButton
-            testID="home-add-menu-button"
-            accessibilityLabel={t("quickAdd")}
-            icon={<Ionicons name="add" size={26} color={theme.black} />}
-            items={[
-              {
-                label: t("enterNewTransaction"),
-                icon: (
-                  <MaterialCommunityIcons
-                    name="gesture-tap"
-                    size={22}
-                    color={theme.black80}
-                  />
-                ),
-                onPress: () => {
-                  AddTransactionCallback.setFn(onRefresh);
-                  router.navigate({ pathname: "/add-transaction" });
+          canWrite && (
+            <MenuButton
+              testID="home-add-menu-button"
+              accessibilityLabel={t("quickAdd")}
+              icon={<Ionicons name="add" size={26} color={theme.black} />}
+              items={[
+                {
+                  label: t("enterNewTransaction"),
+                  icon: (
+                    <MaterialCommunityIcons
+                      name="gesture-tap"
+                      size={22}
+                      color={theme.black80}
+                    />
+                  ),
+                  onPress: () => {
+                    AddTransactionCallback.setFn(onRefresh);
+                    router.navigate({ pathname: "/add-transaction" });
+                  },
                 },
-              },
-              {
-                label: t("scanReceipt"),
-                icon: (
-                  <Ionicons
-                    name="scan-outline"
-                    size={22}
-                    color={theme.black80}
-                  />
-                ),
-                onPress: () => {
-                  AddTransactionCallback.setFn(onRefresh);
-                  router.navigate({ pathname: "/receipt-capture" });
+                {
+                  label: t("scanReceipt"),
+                  icon: (
+                    <Ionicons
+                      name="scan-outline"
+                      size={22}
+                      color={theme.black80}
+                    />
+                  ),
+                  onPress: () => {
+                    AddTransactionCallback.setFn(onRefresh);
+                    router.navigate({ pathname: "/receipt-capture" });
+                  },
                 },
-              },
-            ]}
-          />
+              ]}
+            />
+          )
         }
       />
       {showStale ? <StaleDataBanner /> : null}

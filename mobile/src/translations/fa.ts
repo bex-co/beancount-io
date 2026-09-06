@@ -2,6 +2,33 @@ import { en } from "./en";
 
 export const fa: typeof en = {
   ...en,
+  discoveryTitle: "کشف دفترها",
+  discoveryTab_yours: "دفترهای شما",
+  discoveryTab_starred: "ستاره‌دار",
+  discoveryTab_explore: "کاوش",
+  discoverySearch: "جستجوی دفترها",
+  discoveryClear: "پاک کردن جستجو",
+  discoveryOpen: "باز کردن {{name}}",
+  discoveryStar: "ستاره‌دار کردن {{name}}",
+  discoveryUnstar: "حذف ستارهٔ {{name}}",
+  discoveryPrivate: "خصوصی",
+  discoveryPublic: "عمومی",
+  discoveryCurrent: "فعلی",
+  discoveryLoading: "در حال بارگیری دفترها…",
+  discoveryLoadMore: "بارگیری بیشتر",
+  discoveryRetry: "تلاش دوباره",
+  discoveryNoMatches: "هیچ دفتری با جستجوی شما مطابقت ندارد.",
+  discoveryEmpty_yours:
+    "دفترهای شما اینجا نمایش داده می‌شوند. برای شروع دفترهای عمومی را کاوش کنید.",
+  discoveryEmpty_starred:
+    "یک دفتر را ستاره‌دار کنید تا دفعهٔ بعد آن را اینجا پیدا کنید.",
+  discoveryEmpty_explore: "هیچ دفتر عمومی پیدا نشد.",
+  discoveryLoadError: "بارگیری دفترها ممکن نشد. دوباره تلاش کنید.",
+  discoveryActionError:
+    "عملیات انجام نشد. اتصال و دسترسی به دفتر را بررسی کنید و دوباره تلاش کنید.",
+  ledgerReadOnly:
+    "این دفتر فقط خواندنی است. برای تغییرات دفتری را انتخاب کنید که اجازهٔ ویرایش آن را دارید.",
+
   // bottom tab bar
   home: "خانه",
   ledger: "دفتر کل",

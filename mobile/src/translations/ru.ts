@@ -2,6 +2,33 @@ import { en } from "./en";
 
 export const ru: typeof en = {
   ...en,
+  discoveryTitle: "Найти книги",
+  discoveryTab_yours: "Ваши книги",
+  discoveryTab_starred: "Избранное",
+  discoveryTab_explore: "Обзор",
+  discoverySearch: "Поиск книг",
+  discoveryClear: "Очистить поиск",
+  discoveryOpen: "Открыть {{name}}",
+  discoveryStar: "Добавить {{name}} в избранное",
+  discoveryUnstar: "Убрать {{name}} из избранного",
+  discoveryPrivate: "Частная",
+  discoveryPublic: "Публичная",
+  discoveryCurrent: "Текущая",
+  discoveryLoading: "Загрузка книг…",
+  discoveryLoadMore: "Загрузить ещё",
+  discoveryRetry: "Повторить",
+  discoveryNoMatches: "Нет книг, соответствующих запросу.",
+  discoveryEmpty_yours:
+    "Здесь появятся ваши книги. Начните с просмотра публичных книг.",
+  discoveryEmpty_starred:
+    "Добавьте книгу в избранное, чтобы найти её здесь в следующий раз.",
+  discoveryEmpty_explore: "Публичные книги не найдены.",
+  discoveryLoadError: "Не удалось загрузить книги. Повторите попытку.",
+  discoveryActionError:
+    "Не удалось выполнить действие. Проверьте соединение и доступ к книге, затем повторите попытку.",
+  ledgerReadOnly:
+    "Эта книга доступна только для чтения. Для изменений выберите книгу, которую можете редактировать.",
+
   // bottom tab bar
   home: "Главная",
   ledger: "Книга",

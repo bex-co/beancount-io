@@ -1,3 +1,4 @@
+import { LedgerWriteGuard } from "@/components/ledger-write-guard";
 import { AddTransactionScreen } from "@/screens/add-transaction-screen";
 import { Stack } from "expo-router";
 import { i18n } from "@/translations";
@@ -10,9 +11,11 @@ import { i18n } from "@/translations";
  */
 export default function AddTransactionLegacy() {
   return (
-    <>
-      <Stack.Screen options={{ title: i18n.t("addTransaction") }} />
-      <AddTransactionScreen />
-    </>
+    <LedgerWriteGuard>
+      <>
+        <Stack.Screen options={{ title: i18n.t("addTransaction") }} />
+        <AddTransactionScreen />
+      </>
+    </LedgerWriteGuard>
   );
 }

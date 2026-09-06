@@ -1,3 +1,4 @@
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useMemo } from "react";
 import {
   Alert,
@@ -243,6 +244,7 @@ const TransactionDetailImpl = ({
   originAccount?: string;
 }): JSX.Element => {
   const ledgerId = useLedgerGuard();
+  const { canWrite } = useLedgerAccess();
   const router = useRouter();
   const { t, locale } = useTranslations();
   const styles = useThemeStyle(getStyles);
@@ -267,12 +269,12 @@ const TransactionDetailImpl = ({
   const sha256sum = data?.getLedgerEntryContext?.sha256sum;
 
   const handleEdit = useCallback(() => {
-    if (!sha256sum) return;
+    if (!canWrite || !sha256sum) return;
     openEditTransaction(router, { entryHash, ledgerId });
-  }, [sha256sum, entryHash, ledgerId, router]);
+  }, [canWrite, sha256sum, entryHash, ledgerId, router]);
 
   const handleDelete = useCallback(() => {
-    if (!sha256sum) return;
+    if (!canWrite || !sha256sum) return;
     Alert.alert(t("deleteTransactionTitle"), t("deleteTransactionMessage"), [
       { text: t("cancel"), style: "cancel" },
       {
@@ -297,7 +299,16 @@ const TransactionDetailImpl = ({
         },
       },
     ]);
-  }, [sha256sum, entryHash, ledgerId, deleteMutation, client, t, confirmWrite]);
+  }, [
+    canWrite,
+    sha256sum,
+    entryHash,
+    ledgerId,
+    deleteMutation,
+    client,
+    t,
+    confirmWrite,
+  ]);
 
   const entry: JournalTransaction | null = useMemo(() => {
     if (stashedEntry) {
@@ -361,7 +372,7 @@ const TransactionDetailImpl = ({
     amount: Number.parseFloat(posting.units.number),
   }));
   const hasMetadata = Boolean(entry.tags?.length || entry.links?.length);
-  const entryHasEditableSource = hasEditableSource(entry);
+  const entryHasEditableSource = canWrite && hasEditableSource(entry);
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>

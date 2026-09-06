@@ -2,6 +2,33 @@ import { en } from "./en";
 
 export const fr: typeof en = {
   ...en,
+  discoveryTitle: "Découvrir des livres",
+  discoveryTab_yours: "Vos livres",
+  discoveryTab_starred: "Favoris",
+  discoveryTab_explore: "Explorer",
+  discoverySearch: "Rechercher des livres",
+  discoveryClear: "Effacer la recherche",
+  discoveryOpen: "Ouvrir {{name}}",
+  discoveryStar: "Ajouter {{name}} aux favoris",
+  discoveryUnstar: "Retirer {{name}} des favoris",
+  discoveryPrivate: "Privé",
+  discoveryPublic: "Public",
+  discoveryCurrent: "Actuel",
+  discoveryLoading: "Chargement des livres…",
+  discoveryLoadMore: "Charger la suite",
+  discoveryRetry: "Réessayer",
+  discoveryNoMatches: "Aucun livre ne correspond à votre recherche.",
+  discoveryEmpty_yours:
+    "Vos livres apparaîtront ici. Explorez les livres publics pour commencer.",
+  discoveryEmpty_starred:
+    "Ajoutez un livre aux favoris pour le retrouver ici la prochaine fois.",
+  discoveryEmpty_explore: "Aucun livre public trouvé.",
+  discoveryLoadError: "Impossible de charger les livres. Réessayez.",
+  discoveryActionError:
+    "Impossible de terminer cette action. Vérifiez votre connexion et votre accès au livre, puis réessayez.",
+  ledgerReadOnly:
+    "Ce livre est en lecture seule. Choisissez un livre que vous pouvez modifier.",
+
   // bottom tab bar
   home: "Accueil",
   ledger: "Grand livre",

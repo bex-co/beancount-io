@@ -1,5 +1,10 @@
+import { LedgerWriteGuard } from "@/components/ledger-write-guard";
 import { OpenAccountScreen } from "@/screens/open-account-screen";
 
 export default function OpenAccount() {
-  return <OpenAccountScreen />;
+  return (
+    <LedgerWriteGuard>
+      <OpenAccountScreen />
+    </LedgerWriteGuard>
+  );
 }

@@ -2,6 +2,33 @@ import { en } from "./en";
 
 export const sk: typeof en = {
   ...en,
+  discoveryTitle: "Objaviť knihy",
+  discoveryTab_yours: "Vaše knihy",
+  discoveryTab_starred: "Obľúbené",
+  discoveryTab_explore: "Preskúmať",
+  discoverySearch: "Hľadať knihy",
+  discoveryClear: "Vymazať vyhľadávanie",
+  discoveryOpen: "Otvoriť {{name}}",
+  discoveryStar: "Pridať {{name}} k obľúbeným",
+  discoveryUnstar: "Odstrániť {{name}} z obľúbených",
+  discoveryPrivate: "Súkromná",
+  discoveryPublic: "Verejná",
+  discoveryCurrent: "Aktuálna",
+  discoveryLoading: "Načítavajú sa knihy…",
+  discoveryLoadMore: "Načítať ďalšie",
+  discoveryRetry: "Skúsiť znova",
+  discoveryNoMatches: "Žiadne knihy nezodpovedajú vyhľadávaniu.",
+  discoveryEmpty_yours:
+    "Vaše knihy sa zobrazia tu. Začnite preskúmaním verejných kníh.",
+  discoveryEmpty_starred:
+    "Pridajte knihu k obľúbeným, aby ste ju tu nabudúce našli.",
+  discoveryEmpty_explore: "Nenašli sa žiadne verejné knihy.",
+  discoveryLoadError: "Knihy sa nepodarilo načítať. Skúste to znova.",
+  discoveryActionError:
+    "Akciu sa nepodarilo dokončiť. Skontrolujte pripojenie a prístup ku knihe a skúste to znova.",
+  ledgerReadOnly:
+    "Táto kniha je iba na čítanie. Na vykonanie zmien vyberte knihu, ktorú môžete upravovať.",
+
   // bottom tab bar
   home: "Domov",
   ledger: "Kniha",

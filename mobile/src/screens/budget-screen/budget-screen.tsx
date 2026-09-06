@@ -1,3 +1,4 @@
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useState } from "react";
 import {
   FlatList,
@@ -97,6 +98,7 @@ function BudgetScreenImpl(): JSX.Element {
   const { t } = useTranslations();
   const router = useRouter();
   const ledgerId = useLedgerGuard();
+  const { canWrite } = useLedgerAccess();
   const client = useApolloClient();
 
   const [span, setSpan] = useState<BudgetTimeSpan>(DEFAULT_BUDGET_SPAN);
@@ -145,10 +147,10 @@ function BudgetScreenImpl(): JSX.Element {
         group={item}
         ledgerId={ledgerId}
         time={time}
-        onUpdate={openAdd}
+        onUpdate={canWrite ? openAdd : undefined}
       />
     ),
-    [ledgerId, time, openAdd],
+    [canWrite, ledgerId, time, openAdd],
   );
 
   const isFirstLoad = loading && groups.length === 0;
@@ -159,17 +161,18 @@ function BudgetScreenImpl(): JSX.Element {
       <Stack.Screen
         options={{
           title: t("budget"),
-          headerRight: () => (
-            <TouchableOpacity
-              onPress={() => openAdd()}
-              hitSlop={8}
-              activeOpacity={0.7}
-              accessibilityRole="button"
-              accessibilityLabel={t("budgetAdd")}
-            >
-              <Ionicons name="add" size={26} color={theme.black} />
-            </TouchableOpacity>
-          ),
+          headerRight: () =>
+            canWrite ? (
+              <TouchableOpacity
+                onPress={() => openAdd()}
+                hitSlop={8}
+                activeOpacity={0.7}
+                accessibilityRole="button"
+                accessibilityLabel={t("budgetAdd")}
+              >
+                <Ionicons name="add" size={26} color={theme.black} />
+              </TouchableOpacity>
+            ) : null,
         }}
       />
 
@@ -235,9 +238,11 @@ function BudgetScreenImpl(): JSX.Element {
                   <Text style={styles.emptyBody}>
                     {t("budgetNoBudgetsFoundDescription")}
                   </Text>
-                  <Button style={styles.cta} onPress={() => openAdd()}>
-                    {t("budgetEmptyStateCta")}
-                  </Button>
+                  {canWrite && (
+                    <Button style={styles.cta} onPress={() => openAdd()}>
+                      {t("budgetEmptyStateCta")}
+                    </Button>
+                  )}
                 </View>
               )
             }

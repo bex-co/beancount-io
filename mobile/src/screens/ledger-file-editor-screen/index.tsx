@@ -1,3 +1,4 @@
+import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
@@ -244,6 +245,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
   const ledgerId = useLedgerGuard();
+  const { canWrite } = useLedgerAccess();
   const { userId } = useSession();
   const { currencies: operatingCurrencies } = useLedgerMeta(userId, ledgerId);
 
@@ -343,7 +345,11 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
   const handleSave = useCallback(
     async (content: string, epoch: number, revision: number) => {
-      if (epoch !== documentEpochRef.current || saveInFlightRef.current)
+      if (
+        !canWrite ||
+        epoch !== documentEpochRef.current ||
+        saveInFlightRef.current
+      )
         return false;
 
       const sha = shaRef.current;
@@ -409,7 +415,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
         saveInFlightRef.current = false;
       }
     },
-    [client, handleReload, ledgerId, path, t, updateLedgerFile],
+    [canWrite, client, handleReload, ledgerId, path, t, updateLedgerFile],
   );
 
   // ── Unsaved changes guard ────────────────────────────────────────────────
@@ -538,7 +544,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
       <Stack.Screen
         options={{
           title: fileName,
-          headerRight,
+          headerRight: canWrite ? headerRight : undefined,
           headerTitleStyle: {
             fontFamily: fonts.mono,
             fontSize: 14,
@@ -571,6 +577,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
           <FadeInView fill>
             <CodeEditor
               ref={editorRef}
+              readOnly={!canWrite}
               documentSpec={documentSpec}
               onEdit={handleEdit}
               onSave={handleSave}
@@ -583,7 +590,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
           </FadeInView>
         ) : null}
 
-        {isKeyboardVisible && initialized && (
+        {canWrite && isKeyboardVisible && initialized && (
           <View style={[styles.accessoryWrapper, { bottom: keyboardOverlap }]}>
             <KeyboardAccessoryBar
               onInsert={handleInsert}

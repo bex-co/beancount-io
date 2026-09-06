@@ -2,6 +2,33 @@ import { en } from "./en";
 
 export const bg: typeof en = {
   ...en,
+  discoveryTitle: "Откриване на книги",
+  discoveryTab_yours: "Вашите книги",
+  discoveryTab_starred: "Любими",
+  discoveryTab_explore: "Разглеждане",
+  discoverySearch: "Търсене на книги",
+  discoveryClear: "Изчистване на търсенето",
+  discoveryOpen: "Отваряне на {{name}}",
+  discoveryStar: "Добавяне на {{name}} в любими",
+  discoveryUnstar: "Премахване на {{name}} от любими",
+  discoveryPrivate: "Частна",
+  discoveryPublic: "Публична",
+  discoveryCurrent: "Текуща",
+  discoveryLoading: "Зареждане на книги…",
+  discoveryLoadMore: "Зареждане на още",
+  discoveryRetry: "Повторен опит",
+  discoveryNoMatches: "Няма книги, съответстващи на търсенето.",
+  discoveryEmpty_yours:
+    "Вашите книги ще се покажат тук. Разгледайте публичните книги, за да започнете.",
+  discoveryEmpty_starred:
+    "Добавете книга в любими, за да я намерите тук следващия път.",
+  discoveryEmpty_explore: "Няма намерени публични книги.",
+  discoveryLoadError: "Книгите не могат да бъдат заредени. Опитайте отново.",
+  discoveryActionError:
+    "Действието не е изпълнено. Проверете връзката и достъпа до книгата и опитайте отново.",
+  ledgerReadOnly:
+    "Тази книга е само за четене. Изберете книга, която можете да редактирате.",
+
   // bottom tab bar
   home: "Начало",
   ledger: "Книга",

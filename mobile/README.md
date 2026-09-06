@@ -51,6 +51,7 @@ Beancount Mobile Community Edition turns a Beancount.io ledger into a native wor
 - **Record clean transactions** — enter balanced multi-posting transactions, reuse account suggestions, and scan receipts.
 - **Investigate every entry** — search and filter the journal, inspect postings and balance context, then edit the underlying directive.
 - **Work with the ledger itself** — browse and edit `.bean` files with syntax highlighting and review Git commit diffs.
+- **Discover and save ledgers** — open **Discover ledgers** in the ledger drawer to search your books, browse public examples in **Explore**, and revisit account-synced **Starred** favorites. Public books remain read-only unless you have editing permission.
 - **Stay connected** — switch ledgers, review notifications, invite collaborators, and use light or dark themes.
 - **Use your language** — the app ships with 13 locales and follows the device language when supported.
 
@@ -102,6 +103,24 @@ Expo will guide you to an iOS simulator, Android emulator, or connected device.
 The mobile client defaults to the hosted Beancount.io API. A signed-out user can tap the server icon on the welcome screen to connect the standard app to a compatible self-hosted Beancount.io deployment; enter its base URL (for example `https://ledger.example.com/`) and use **Test connection** for an advisory compatibility check. HTTPS is required in release builds. Development builds may use `http://localhost` for a local stack.
 
 `EXPO_PUBLIC_SERVER_URL` remains the build-time default for development and branded builds. It is not a credential; keep actual credentials and private configuration out of committed `.env` files.
+
+### Ledger discovery
+
+Open the ledger drawer and choose **Discover ledgers**. **Your ledgers** searches
+all books available in your account list; **Starred** searches your saved books;
+**Explore** searches public ledger names and descriptions on the selected server.
+Explore places `open_ledger` examples first among loaded results and offers **Load more**. Account lists load every page before local
+filtering so a search cannot silently miss a book on a later page.
+
+Tap a row to open it, or its star to save/remove it without changing your current
+ledger. Stars are stored on your server account and reload on your next visit.
+A pending or failed star action never appears as confirmed. Pull to refresh to
+pick up changes from another device. If a ledger becomes unavailable, opening it
+shows an error and preserves your current selection.
+
+Public examples can be read without ownership. Add/edit actions require write
+permission, including direct links to transaction, budget, account, and receipt
+forms. The source-file viewer stays available in read-only mode.
 
 ### Mobile OAuth contract
 

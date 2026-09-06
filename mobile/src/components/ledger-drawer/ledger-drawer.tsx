@@ -488,6 +488,18 @@ export function LedgerDrawer({
 
         <View style={styles.menuSection}>
           <TouchableOpacity
+            testID="drawer-discovery-row"
+            style={styles.menuItem}
+            accessibilityRole="button"
+            onPress={() => {
+              onClose();
+              router.push("/(app)/ledger-selection");
+            }}
+          >
+            <Ionicons name="search-outline" size={22} color={theme.black60} />
+            <Text style={styles.menuItemText}>{t("discoveryTitle")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
             testID="drawer-merchants-row"
             style={styles.menuItem}
             onPress={handleMerchantsPress}

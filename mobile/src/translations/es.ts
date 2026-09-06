@@ -2,6 +2,33 @@ import { en } from "./en";
 
 export const es: typeof en = {
   ...en,
+  discoveryTitle: "Descubrir libros",
+  discoveryTab_yours: "Tus libros",
+  discoveryTab_starred: "Favoritos",
+  discoveryTab_explore: "Explorar",
+  discoverySearch: "Buscar libros",
+  discoveryClear: "Borrar búsqueda",
+  discoveryOpen: "Abrir {{name}}",
+  discoveryStar: "Guardar {{name}} en favoritos",
+  discoveryUnstar: "Quitar {{name}} de favoritos",
+  discoveryPrivate: "Privado",
+  discoveryPublic: "Público",
+  discoveryCurrent: "Actual",
+  discoveryLoading: "Cargando libros…",
+  discoveryLoadMore: "Cargar más",
+  discoveryRetry: "Reintentar",
+  discoveryNoMatches: "Ningún libro coincide con tu búsqueda.",
+  discoveryEmpty_yours:
+    "Tus libros aparecerán aquí. Explora libros públicos para empezar.",
+  discoveryEmpty_starred:
+    "Guarda un libro en favoritos para encontrarlo aquí la próxima vez.",
+  discoveryEmpty_explore: "No se encontraron libros públicos.",
+  discoveryLoadError: "No se pudieron cargar los libros. Inténtalo de nuevo.",
+  discoveryActionError:
+    "No se pudo completar la acción. Revisa tu conexión y el acceso al libro e inténtalo de nuevo.",
+  ledgerReadOnly:
+    "Este libro es de solo lectura. Elige un libro que puedas editar para hacer cambios.",
+
   // bottom tab bar
   home: "Inicio",
   ledger: "Libro",

@@ -248,6 +248,55 @@ export type JournalEntriesQueryVariables = Exact<{
 
 export type JournalEntriesQuery = { journalEntries: { success: boolean, data: Array<{ date: string, type: string | null, account: string | null, booking: string | null, currencies: Array<string> | null, flag: string | null, links: Array<string | null> | null, narration: string | null, payee: string | null, tags: Array<string | null> | null, comment: string | null, filename: string | null, entry_hash: string | null, entry_type: string | null, error: string | null, error_message: string | null, netAmount: number | null, primaryAccount: string | null, searchableText: string | null, meta: { filename: string, lineno: number } | null, postings: Array<{ account: string, cost: string | null, flag: string | null, price: string | null, meta: { filename: string, lineno: number } | null, units: { currency: string | null, number: number | null } | null }> | null, amount: { currency: string | null, number: number | null } | null }>, pageInfo: { hasNextPage: boolean, hasPreviousPage: boolean, startCursor: string | null, endCursor: string | null, totalCount: number | null } | null } };
 
+export type DiscoveryLedgerFragment = { id: string, fullName: string, description: string | null, private: boolean, isStarred: boolean | null, permissions: { pull: boolean, push: boolean, admin: boolean } | null };
+
+export type DiscoverLedgersQueryVariables = Exact<{
+  q: string;
+  page: number;
+  limit: number;
+}>;
+
+
+export type DiscoverLedgersQuery = { searchLedgers: Array<{ id: string, fullName: string, description: string | null, private: boolean, isStarred: boolean | null, permissions: { pull: boolean, push: boolean, admin: boolean } | null }> };
+
+export type MyDiscoveryLedgersQueryVariables = Exact<{
+  page: number;
+  limit: number;
+}>;
+
+
+export type MyDiscoveryLedgersQuery = { listLedgers: Array<{ id: string, fullName: string, description: string | null, private: boolean, isStarred: boolean | null, permissions: { pull: boolean, push: boolean, admin: boolean } | null }> };
+
+export type StarredDiscoveryLedgersQueryVariables = Exact<{
+  username: string;
+  page: number;
+  limit: number;
+}>;
+
+
+export type StarredDiscoveryLedgersQuery = { getUserStarredRepos: { total: number, repositories: Array<{ fullName: string, description: string | null, isPrivate: boolean }> } };
+
+export type DiscoveryIdentityQueryVariables = Exact<{
+  userId: string;
+}>;
+
+
+export type DiscoveryIdentityQuery = { userProfile: { username: string | null } | null };
+
+export type StarDiscoveryLedgerMutationVariables = Exact<{
+  ledgerId: string;
+}>;
+
+
+export type StarDiscoveryLedgerMutation = { starLedger: { success: boolean, isStarred: boolean, message: string | null } };
+
+export type UnstarDiscoveryLedgerMutationVariables = Exact<{
+  ledgerId: string;
+}>;
+
+
+export type UnstarDiscoveryLedgerMutation = { unstarLedger: { success: boolean, isStarred: boolean, message: string | null } };
+
 export type LedgerMetaQueryVariables = Exact<{
   userId: string;
   ledgerId?: string | null | undefined;
@@ -343,7 +392,20 @@ export type UserProfileQueryVariables = Exact<{
 
 export type UserProfileQuery = { userProfile: { email: string, emailReportStatus: Types.ReportStatus | null } | null };
 
-
+export const DiscoveryLedgerFragmentDoc = gql`
+    fragment DiscoveryLedger on Ledger {
+  id
+  fullName
+  description
+  private
+  isStarred
+  permissions {
+    pull
+    push
+    admin
+  }
+}
+    `;
 export const AccountJournalDocument = gql`
     query AccountJournal($ledgerId: String!, $query: AccountJournalQueryInput!) {
   getLedgerAccountJournal(ledgerId: $ledgerId, query: $query) {
@@ -1714,6 +1776,264 @@ export type JournalEntriesQueryHookResult = ReturnType<typeof useJournalEntriesQ
 export type JournalEntriesLazyQueryHookResult = ReturnType<typeof useJournalEntriesLazyQuery>;
 export type JournalEntriesSuspenseQueryHookResult = ReturnType<typeof useJournalEntriesSuspenseQuery>;
 export type JournalEntriesQueryResult = Apollo.QueryResult<JournalEntriesQuery, JournalEntriesQueryVariables>;
+export const DiscoverLedgersDocument = gql`
+    query DiscoverLedgers($q: String!, $page: Float!, $limit: Float!) {
+  searchLedgers(
+    q: $q
+    page: $page
+    limit: $limit
+    isPrivate: false
+    includeDesc: true
+  ) {
+    ...DiscoveryLedger
+  }
+}
+    ${DiscoveryLedgerFragmentDoc}`;
+
+/**
+ * __useDiscoverLedgersQuery__
+ *
+ * To run a query within a React component, call `useDiscoverLedgersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDiscoverLedgersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDiscoverLedgersQuery({
+ *   variables: {
+ *      q: // value for 'q'
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useDiscoverLedgersQuery(baseOptions: Apollo.QueryHookOptions<DiscoverLedgersQuery, DiscoverLedgersQueryVariables> & ({ variables: DiscoverLedgersQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DiscoverLedgersQuery, DiscoverLedgersQueryVariables>(DiscoverLedgersDocument, options);
+      }
+export function useDiscoverLedgersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DiscoverLedgersQuery, DiscoverLedgersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DiscoverLedgersQuery, DiscoverLedgersQueryVariables>(DiscoverLedgersDocument, options);
+        }
+// @ts-ignore
+export function useDiscoverLedgersSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<DiscoverLedgersQuery, DiscoverLedgersQueryVariables>): Apollo.UseSuspenseQueryResult<DiscoverLedgersQuery, DiscoverLedgersQueryVariables>;
+export function useDiscoverLedgersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<DiscoverLedgersQuery, DiscoverLedgersQueryVariables>): Apollo.UseSuspenseQueryResult<DiscoverLedgersQuery | undefined, DiscoverLedgersQueryVariables>;
+export function useDiscoverLedgersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<DiscoverLedgersQuery, DiscoverLedgersQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<DiscoverLedgersQuery, DiscoverLedgersQueryVariables>(DiscoverLedgersDocument, options);
+        }
+export type DiscoverLedgersQueryHookResult = ReturnType<typeof useDiscoverLedgersQuery>;
+export type DiscoverLedgersLazyQueryHookResult = ReturnType<typeof useDiscoverLedgersLazyQuery>;
+export type DiscoverLedgersSuspenseQueryHookResult = ReturnType<typeof useDiscoverLedgersSuspenseQuery>;
+export type DiscoverLedgersQueryResult = Apollo.QueryResult<DiscoverLedgersQuery, DiscoverLedgersQueryVariables>;
+export const MyDiscoveryLedgersDocument = gql`
+    query MyDiscoveryLedgers($page: Float!, $limit: Float!) {
+  listLedgers(page: $page, limit: $limit) {
+    ...DiscoveryLedger
+  }
+}
+    ${DiscoveryLedgerFragmentDoc}`;
+
+/**
+ * __useMyDiscoveryLedgersQuery__
+ *
+ * To run a query within a React component, call `useMyDiscoveryLedgersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useMyDiscoveryLedgersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useMyDiscoveryLedgersQuery({
+ *   variables: {
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useMyDiscoveryLedgersQuery(baseOptions: Apollo.QueryHookOptions<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables> & ({ variables: MyDiscoveryLedgersQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables>(MyDiscoveryLedgersDocument, options);
+      }
+export function useMyDiscoveryLedgersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables>(MyDiscoveryLedgersDocument, options);
+        }
+// @ts-ignore
+export function useMyDiscoveryLedgersSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables>): Apollo.UseSuspenseQueryResult<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables>;
+export function useMyDiscoveryLedgersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables>): Apollo.UseSuspenseQueryResult<MyDiscoveryLedgersQuery | undefined, MyDiscoveryLedgersQueryVariables>;
+export function useMyDiscoveryLedgersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables>(MyDiscoveryLedgersDocument, options);
+        }
+export type MyDiscoveryLedgersQueryHookResult = ReturnType<typeof useMyDiscoveryLedgersQuery>;
+export type MyDiscoveryLedgersLazyQueryHookResult = ReturnType<typeof useMyDiscoveryLedgersLazyQuery>;
+export type MyDiscoveryLedgersSuspenseQueryHookResult = ReturnType<typeof useMyDiscoveryLedgersSuspenseQuery>;
+export type MyDiscoveryLedgersQueryResult = Apollo.QueryResult<MyDiscoveryLedgersQuery, MyDiscoveryLedgersQueryVariables>;
+export const StarredDiscoveryLedgersDocument = gql`
+    query StarredDiscoveryLedgers($username: String!, $page: Float!, $limit: Float!) {
+  getUserStarredRepos(username: $username, page: $page, limit: $limit) {
+    total
+    repositories {
+      fullName
+      description
+      isPrivate
+    }
+  }
+}
+    `;
+
+/**
+ * __useStarredDiscoveryLedgersQuery__
+ *
+ * To run a query within a React component, call `useStarredDiscoveryLedgersQuery` and pass it any options that fit your needs.
+ * When your component renders, `useStarredDiscoveryLedgersQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useStarredDiscoveryLedgersQuery({
+ *   variables: {
+ *      username: // value for 'username'
+ *      page: // value for 'page'
+ *      limit: // value for 'limit'
+ *   },
+ * });
+ */
+export function useStarredDiscoveryLedgersQuery(baseOptions: Apollo.QueryHookOptions<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables> & ({ variables: StarredDiscoveryLedgersQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables>(StarredDiscoveryLedgersDocument, options);
+      }
+export function useStarredDiscoveryLedgersLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables>(StarredDiscoveryLedgersDocument, options);
+        }
+// @ts-ignore
+export function useStarredDiscoveryLedgersSuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables>): Apollo.UseSuspenseQueryResult<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables>;
+export function useStarredDiscoveryLedgersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables>): Apollo.UseSuspenseQueryResult<StarredDiscoveryLedgersQuery | undefined, StarredDiscoveryLedgersQueryVariables>;
+export function useStarredDiscoveryLedgersSuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables>(StarredDiscoveryLedgersDocument, options);
+        }
+export type StarredDiscoveryLedgersQueryHookResult = ReturnType<typeof useStarredDiscoveryLedgersQuery>;
+export type StarredDiscoveryLedgersLazyQueryHookResult = ReturnType<typeof useStarredDiscoveryLedgersLazyQuery>;
+export type StarredDiscoveryLedgersSuspenseQueryHookResult = ReturnType<typeof useStarredDiscoveryLedgersSuspenseQuery>;
+export type StarredDiscoveryLedgersQueryResult = Apollo.QueryResult<StarredDiscoveryLedgersQuery, StarredDiscoveryLedgersQueryVariables>;
+export const DiscoveryIdentityDocument = gql`
+    query DiscoveryIdentity($userId: String!) {
+  userProfile(userId: $userId) {
+    username
+  }
+}
+    `;
+
+/**
+ * __useDiscoveryIdentityQuery__
+ *
+ * To run a query within a React component, call `useDiscoveryIdentityQuery` and pass it any options that fit your needs.
+ * When your component renders, `useDiscoveryIdentityQuery` returns an object from Apollo Client that contains loading, error, and data properties
+ * you can use to render your UI.
+ *
+ * @param baseOptions options that will be passed into the query, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options;
+ *
+ * @example
+ * const { data, loading, error } = useDiscoveryIdentityQuery({
+ *   variables: {
+ *      userId: // value for 'userId'
+ *   },
+ * });
+ */
+export function useDiscoveryIdentityQuery(baseOptions: Apollo.QueryHookOptions<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables> & ({ variables: DiscoveryIdentityQueryVariables; skip?: boolean; } | { skip: boolean; }) ) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useQuery<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables>(DiscoveryIdentityDocument, options);
+      }
+export function useDiscoveryIdentityLazyQuery(baseOptions?: Apollo.LazyQueryHookOptions<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables>) {
+          const options = {...defaultOptions, ...baseOptions}
+          return Apollo.useLazyQuery<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables>(DiscoveryIdentityDocument, options);
+        }
+// @ts-ignore
+export function useDiscoveryIdentitySuspenseQuery(baseOptions?: Apollo.SuspenseQueryHookOptions<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables>): Apollo.UseSuspenseQueryResult<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables>;
+export function useDiscoveryIdentitySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables>): Apollo.UseSuspenseQueryResult<DiscoveryIdentityQuery | undefined, DiscoveryIdentityQueryVariables>;
+export function useDiscoveryIdentitySuspenseQuery(baseOptions?: Apollo.SkipToken | Apollo.SuspenseQueryHookOptions<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables>) {
+          const options = baseOptions === Apollo.skipToken ? baseOptions : {...defaultOptions, ...baseOptions}
+          return Apollo.useSuspenseQuery<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables>(DiscoveryIdentityDocument, options);
+        }
+export type DiscoveryIdentityQueryHookResult = ReturnType<typeof useDiscoveryIdentityQuery>;
+export type DiscoveryIdentityLazyQueryHookResult = ReturnType<typeof useDiscoveryIdentityLazyQuery>;
+export type DiscoveryIdentitySuspenseQueryHookResult = ReturnType<typeof useDiscoveryIdentitySuspenseQuery>;
+export type DiscoveryIdentityQueryResult = Apollo.QueryResult<DiscoveryIdentityQuery, DiscoveryIdentityQueryVariables>;
+export const StarDiscoveryLedgerDocument = gql`
+    mutation StarDiscoveryLedger($ledgerId: String!) {
+  starLedger(ledgerId: $ledgerId) {
+    success
+    isStarred
+    message
+  }
+}
+    `;
+export type StarDiscoveryLedgerMutationFn = Apollo.MutationFunction<StarDiscoveryLedgerMutation, StarDiscoveryLedgerMutationVariables>;
+
+/**
+ * __useStarDiscoveryLedgerMutation__
+ *
+ * To run a mutation, you first call `useStarDiscoveryLedgerMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useStarDiscoveryLedgerMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [starDiscoveryLedgerMutation, { data, loading, error }] = useStarDiscoveryLedgerMutation({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useStarDiscoveryLedgerMutation(baseOptions?: Apollo.MutationHookOptions<StarDiscoveryLedgerMutation, StarDiscoveryLedgerMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<StarDiscoveryLedgerMutation, StarDiscoveryLedgerMutationVariables>(StarDiscoveryLedgerDocument, options);
+      }
+export type StarDiscoveryLedgerMutationHookResult = ReturnType<typeof useStarDiscoveryLedgerMutation>;
+export type StarDiscoveryLedgerMutationResult = Apollo.MutationResult<StarDiscoveryLedgerMutation>;
+export type StarDiscoveryLedgerMutationOptions = Apollo.BaseMutationOptions<StarDiscoveryLedgerMutation, StarDiscoveryLedgerMutationVariables>;
+export const UnstarDiscoveryLedgerDocument = gql`
+    mutation UnstarDiscoveryLedger($ledgerId: String!) {
+  unstarLedger(ledgerId: $ledgerId) {
+    success
+    isStarred
+    message
+  }
+}
+    `;
+export type UnstarDiscoveryLedgerMutationFn = Apollo.MutationFunction<UnstarDiscoveryLedgerMutation, UnstarDiscoveryLedgerMutationVariables>;
+
+/**
+ * __useUnstarDiscoveryLedgerMutation__
+ *
+ * To run a mutation, you first call `useUnstarDiscoveryLedgerMutation` within a React component and pass it any options that fit your needs.
+ * When your component renders, `useUnstarDiscoveryLedgerMutation` returns a tuple that includes:
+ * - A mutate function that you can call at any time to execute the mutation
+ * - An object with fields that represent the current status of the mutation's execution
+ *
+ * @param baseOptions options that will be passed into the mutation, supported options are listed on: https://www.apollographql.com/docs/react/api/react-hooks/#options-2;
+ *
+ * @example
+ * const [unstarDiscoveryLedgerMutation, { data, loading, error }] = useUnstarDiscoveryLedgerMutation({
+ *   variables: {
+ *      ledgerId: // value for 'ledgerId'
+ *   },
+ * });
+ */
+export function useUnstarDiscoveryLedgerMutation(baseOptions?: Apollo.MutationHookOptions<UnstarDiscoveryLedgerMutation, UnstarDiscoveryLedgerMutationVariables>) {
+        const options = {...defaultOptions, ...baseOptions}
+        return Apollo.useMutation<UnstarDiscoveryLedgerMutation, UnstarDiscoveryLedgerMutationVariables>(UnstarDiscoveryLedgerDocument, options);
+      }
+export type UnstarDiscoveryLedgerMutationHookResult = ReturnType<typeof useUnstarDiscoveryLedgerMutation>;
+export type UnstarDiscoveryLedgerMutationResult = Apollo.MutationResult<UnstarDiscoveryLedgerMutation>;
+export type UnstarDiscoveryLedgerMutationOptions = Apollo.BaseMutationOptions<UnstarDiscoveryLedgerMutation, UnstarDiscoveryLedgerMutationVariables>;
 export const LedgerMetaDocument = gql`
     query ledgerMeta($userId: String!, $ledgerId: String) {
   ledgerMeta(userId: $userId, ledgerId: $ledgerId) {
