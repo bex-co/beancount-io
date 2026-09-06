@@ -42,6 +42,11 @@ const jaOverview: Record<string, TranslationEntry> = {
     message: "概要データを読み込み中…",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "アカウントの役割を読み込んでいます…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "スター",
     description: "Button label to star a ledger",

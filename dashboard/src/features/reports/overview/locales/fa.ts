@@ -42,6 +42,11 @@ const faOverview: Record<string, TranslationEntry> = {
     message: "در حال بارگذاری داده‌های خلاصه…",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "در حال بارگذاری نقش حساب‌ها…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "ستاره",
     description: "Button label to star a ledger",

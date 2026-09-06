@@ -87,6 +87,15 @@ Reports load a smaller chart runtime through a separate client chunk, reserving
 chart space while it downloads. See [chart measurements and regression checks](./docs/performance-charts.md)
 for the registry inventory, production comparison, and reproduction steps.
 
+## Route loading
+
+Ledger routes wait only for the ledger and the page's primary report. Optional
+panels — the sidebar directive count, the README card, and the account metadata
+behind the cash-flow chart — own their own requests and show pending states, so a
+slow optional request no longer delays primary content. See
+[route loading measurements](./docs/performance-route-loading.md) for the
+delay-injection traces, request accounting, and reproduction steps.
+
 ## Personal access tokens
 
 Signed-in paid-plan users can create scoped API credentials from **Settings →

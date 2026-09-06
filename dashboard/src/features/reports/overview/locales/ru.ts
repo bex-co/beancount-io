@@ -42,6 +42,11 @@ const ruOverview: Record<string, TranslationEntry> = {
     message: "Загрузка обзорных данных…",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "Загрузка ролей счетов…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "Звезда",
     description: "Button label to star a ledger",

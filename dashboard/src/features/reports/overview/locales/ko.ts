@@ -41,6 +41,11 @@ const koOverview: Record<string, TranslationEntry> = {
     message: "개요 데이터 불러오는 중…",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "계정 역할을 불러오는 중…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "즐겨찾기",
     description: "Button label to star a ledger",

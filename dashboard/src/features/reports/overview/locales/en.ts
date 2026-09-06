@@ -42,6 +42,11 @@ const enOverview: Record<string, TranslationEntry> = {
     message: "Money flow from income sources to expenses and investments",
     description: "Description for cash flow sankey diagram",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "Loading account roles…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "Star",
     description: "Button label to star a ledger",

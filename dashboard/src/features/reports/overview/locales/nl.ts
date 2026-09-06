@@ -42,6 +42,11 @@ const nlOverview: Record<string, TranslationEntry> = {
     message: "Overzichtsgegevens laden…",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "Rekeningrollen laden…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "Ster",
     description: "Button label to star a ledger",

@@ -44,6 +44,11 @@ const caOverview: Record<string, TranslationEntry> = {
     message: "Carregant comptes...",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "Carregant els rols dels comptes…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "Estrella",
     description: "Button label to star a ledger",

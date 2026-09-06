@@ -42,6 +42,11 @@ const skOverview: Record<string, TranslationEntry> = {
     message: "Načítavam údaje prehľadu...",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "Načítavajú sa roly účtov…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "Hviezda",
     description: "Button label to star a ledger",

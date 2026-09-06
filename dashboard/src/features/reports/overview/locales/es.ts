@@ -43,6 +43,11 @@ const esOverview: Record<string, TranslationEntry> = {
     message: "Cargando datos generales...",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "Cargando los roles de las cuentas…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "Estrella",
     description: "Button label to star a ledger",

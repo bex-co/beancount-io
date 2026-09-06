@@ -6,7 +6,7 @@ import {
   CardHeader,
   CardTitle,
 } from "@/common/components/ui/card";
-import { useMemo, type ReactNode } from "react";
+import type { ReactNode } from "react";
 import { Button } from "@/common/components/ui/button";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import {
@@ -17,11 +17,7 @@ import {
   SearchCode,
 } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
-import {
-  GetLedgerAccountMetaDocument,
-  GetLedgerOverviewDocument,
-} from "@/graphql/definitions";
-import { toAccountMetaMap } from "@/features/reports/cash-flow/lib/model";
+import { GetLedgerOverviewDocument } from "@/graphql/definitions";
 import { Link, useParams } from "@tanstack/react-router";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { createLedgerId } from "@/common/lib/utils/encode";
@@ -50,6 +46,7 @@ import {
   type DashboardWidgetId,
   useDashboardLayout,
 } from "./hooks/use-dashboard-layout";
+import { useAccountMeta } from "./hooks/use-account-meta";
 import { hasOverviewActivity } from "./lib/overview-utils";
 import { EmptyLedgerSetup } from "./components/empty-ledger-setup";
 
@@ -88,16 +85,7 @@ export default function LedgerOverviewPage() {
     fetchPolicy: "cache-first",
   });
 
-  // Fetched apart from the overview query so a failure (or an older backend)
-  // degrades the Sankey to heuristics instead of failing the page.
-  const { data: metaData } = useQuery(GetLedgerAccountMetaDocument, {
-    variables: { ledgerId },
-    fetchPolicy: "cache-first",
-  });
-  const accountMeta = useMemo(
-    () => toAccountMetaMap(metaData?.getLedgerAccountDirectives ?? []),
-    [metaData],
-  );
+  const { accountMeta, pending: accountMetaPending } = useAccountMeta(ledgerId);
 
   if (isLoading && !data?.getLedgerOverview) {
     return (
@@ -289,6 +277,7 @@ export default function LedgerOverviewPage() {
               assetsHierarchyData={overview?.assetsHierarchyData}
               liabilitiesHierarchyData={overview?.liabilitiesHierarchyData}
               accountMeta={accountMeta}
+              accountMetaPending={accountMetaPending}
             />
           </CardContent>
         </Card>

@@ -78,6 +78,67 @@ describe("CashFlowSankey", () => {
     expect(optionText).toContain("Income:Salary");
   });
 
+  it("reserves the chart space while account metadata is pending instead of showing heuristic output", () => {
+    const assetsData = {
+      account: "Assets",
+      balance: null,
+      children: [
+        {
+          account: "Assets:US:Bank:CD",
+          balance: { USD: 1500 },
+          children: [],
+        },
+      ],
+    };
+
+    render(
+      <CashFlowSankey assetsHierarchyData={assetsData} accountMetaPending />,
+    );
+
+    expect(screen.getByTestId("cash-flow-sankey-pending")).toHaveTextContent(
+      "page.overview.cashFlowRolesPending",
+    );
+    expect(screen.queryByTestId("echarts-mock")).not.toBeInTheDocument();
+    expect(screen.queryByTestId("chart-empty")).not.toBeInTheDocument();
+  });
+
+  it("treats a declared cash-flow-role as authoritative over the name heuristic", () => {
+    const assetsData = {
+      account: "Assets",
+      balance: null,
+      children: [
+        {
+          account: "Assets:US:Bank:CD",
+          balance: { USD: 1500 },
+          children: [],
+        },
+      ],
+    };
+
+    // Heuristic alone: a `Bank` account is cash and never a flow node.
+    const { rerender } = render(
+      <CashFlowSankey assetsHierarchyData={assetsData} />,
+    );
+    expect(screen.getByTestId("chart-empty")).toBeInTheDocument();
+
+    // Declared `investing` pulls it out of the cash set once metadata lands;
+    // at the default depth it surfaces as the `Assets:US` investing node.
+    rerender(
+      <CashFlowSankey
+        assetsHierarchyData={assetsData}
+        accountMeta={
+          new Map([["Assets:US:Bank:CD", { "cash-flow-role": "investing" }]])
+        }
+      />,
+    );
+    const option = JSON.parse(
+      screen.getByTestId("echarts-mock").textContent ?? "{}",
+    ) as { series: Array<{ links: Array<{ target: string; value: number }> }> };
+    expect(option.series[0].links).toEqual([
+      { source: "Cash Flow", target: "Assets:US", value: 1500 },
+    ]);
+  });
+
   it("should use specified depth for account hierarchy", () => {
     const incomeData = {
       account: "Income",

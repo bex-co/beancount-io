@@ -41,6 +41,11 @@ const zhOverview: Record<string, TranslationEntry> = {
     message: "加载概览数据中…",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "正在加载账户角色…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "星标",
     description: "Button label to star a ledger",

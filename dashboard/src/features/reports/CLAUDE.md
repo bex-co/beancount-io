@@ -106,12 +106,22 @@ non-`Income`/`Equity` roots; `Income` stays the source side and `Equity`
 stays excluded). Account `open`-directive metadata is the `meta` field of
 `getLedgerAccountDirectives`: the cash-flow page reads it from its own query,
 while the overview fetches a `{ account meta }` projection separately
-(`GetLedgerAccountMeta`, `Promise.allSettled` in the loader) so a failure
-degrades the Sankey to heuristics instead of failing the page.
+(`GetLedgerAccountMeta` through `overview/hooks/use-account-meta.ts`) so a
+failure degrades the Sankey to heuristics instead of failing the page. While
+that query is pending the hook reports it and the Sankey shows a pending state
+rather than the heuristic layout — declared roles are authoritative and must
+never be pre-empted by provisional output.
 
 ## Route Loaders
 
 Report directories with `loader.ts` use TanStack Router loaders for SSR-safe data fetching. Keep query/filter resolution in those loaders and rendering in report content/components.
+
+Await only the data the page cannot render without. Optional panels (README
+card, account metadata, sidebar counts) own their queries and render honest
+pending states; a loader may start them in the browser with
+`prefetchOptionalQuery` from `common/apollo/prefetch.ts` but must not wait for
+them, and it must not start them during SSR. Measurement method and evidence:
+`docs/performance-route-loading.md`.
 
 ## Locales
 

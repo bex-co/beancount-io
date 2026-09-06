@@ -34,7 +34,8 @@
     "i18n:prepare": "tsx scripts/prepare-translations.ts",
     "i18n:flatten": "tsx scripts/flatten-translation-keys.ts",
     "search-console-report": "node --import tsx scripts/search-console-report.ts",
-    "perf:locales": "node scripts/check-locale-budget.mjs"
+    "perf:locales": "node scripts/check-locale-budget.mjs",
+    "perf:fixture-api": "node scripts/perf-fixture-api.mjs"
   },
   "dependencies": {
     "@ai-sdk/react": "^4.0.73",

@@ -2,10 +2,13 @@ import { useMemo } from "react";
 import { ReactECharts } from "@/common/components/react-echarts";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
+import { useTranslations } from "@/common/hooks/use-translations";
 import { transformToSankeyData } from "../lib/sankey-data-transformer";
 import { getSankeyNodeColor } from "../lib/sankey-colors";
 import type { AccountMetaMap } from "@/features/reports/cash-flow/lib/model";
 import type { SerializableTreeNode } from "@/graphql/definitions";
+
+const SANKEY_HEIGHT = "400px";
 
 interface CashFlowSankeyProps {
   incomeHierarchyData?: SerializableTreeNode;
@@ -15,6 +18,12 @@ interface CashFlowSankeyProps {
   depth?: 1 | 2 | 3;
   /** Open-directive metadata per account (cash-flow-role declarations). */
   accountMeta?: AccountMetaMap;
+  /**
+   * The declarations are still loading. Declared roles are authoritative, so
+   * the chart reserves its space instead of showing the heuristic layout as
+   * if it were final.
+   */
+  accountMetaPending?: boolean;
 }
 
 export default function CashFlowSankey({
@@ -24,9 +33,11 @@ export default function CashFlowSankey({
   liabilitiesHierarchyData,
   depth = 2,
   accountMeta,
+  accountMetaPending = false,
 }: CashFlowSankeyProps) {
   const isDark = useIsDarkTheme();
   const formatNum = useFormatNumber();
+  const { t } = useTranslations();
 
   const sankeyData = useMemo(() => {
     return transformToSankeyData({
@@ -59,6 +70,25 @@ export default function CashFlowSankey({
       },
     }));
   }, [sankeyData.nodes, isDark, accountMeta]);
+
+  if (accountMetaPending) {
+    return (
+      <div
+        role="status"
+        aria-live="polite"
+        data-testid="cash-flow-sankey-pending"
+        className="flex w-full items-center justify-center"
+        style={{ height: SANKEY_HEIGHT }}
+      >
+        <div className="space-y-3 text-center">
+          <div className="mx-auto h-8 w-8 animate-spin rounded-full border-b-2 border-primary" />
+          <p className="text-sm text-muted-foreground">
+            {t("page.overview.cashFlowRolesPending")}
+          </p>
+        </div>
+      </div>
+    );
+  }
 
   const option = {
     tooltip: {
@@ -119,7 +149,7 @@ export default function CashFlowSankey({
     <div className="w-full">
       <ReactECharts
         option={option}
-        style={{ height: "400px", width: "100%" }}
+        style={{ height: SANKEY_HEIGHT, width: "100%" }}
         className="w-full"
       />
     </div>

@@ -9,6 +9,9 @@ export default tseslint.config([
   globalIgnores([
     "dist",
     ".output",
+    // Package scratch space (gitignored); may hold archived production builds
+    // for measurement, see docs/performance-route-loading.md.
+    "tmp",
     "coverage",
     "scripts/**",
     "*.config.ts",

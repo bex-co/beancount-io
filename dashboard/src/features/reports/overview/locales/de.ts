@@ -43,6 +43,11 @@ const deOverview: Record<string, TranslationEntry> = {
     message: "Übersichtsdaten werden geladen…",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "Kontorollen werden geladen…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "Stern",
     description: "Button label to star a ledger",

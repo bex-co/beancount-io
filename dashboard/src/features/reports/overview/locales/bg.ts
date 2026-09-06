@@ -42,6 +42,11 @@ const bgOverview: Record<string, TranslationEntry> = {
     message: "Зареждане на обобщени данни…",
     description: "Loading message for overview data",
   },
+  "page.overview.cashFlowRolesPending": {
+    message: "Зареждане на ролите на сметките…",
+    description:
+      "Pending state shown in the cash flow chart while account metadata (cash-flow-role declarations) is still loading",
+  },
   "page.overview.starButton.star": {
     message: "Звезда",
     description: "Button label to star a ledger",
