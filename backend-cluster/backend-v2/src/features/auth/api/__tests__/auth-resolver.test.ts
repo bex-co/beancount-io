@@ -2,6 +2,7 @@ import "reflect-metadata";
 import { AuthResolver } from "../auth-resolver";
 import { IContext } from "@/server/graphql/context";
 import type { IAuthService } from "@/features/auth/service/auth-service";
+import type { IAuthSessionWorkflow } from "@/features/auth/workflow/auth-session-workflow";
 import { UnauthenticatedError, BadUserInputError } from "@/shared/errors";
 import type { SignupOtpSession } from "@/features/auth/data/signup-otp-session-model";
 
@@ -9,6 +10,7 @@ describe("AuthResolver", () => {
   let resolver: AuthResolver;
   let mockContext: IContext;
   let mockAuthService: jest.Mocked<IAuthService>;
+  let mockAuthSessionWorkflow: jest.Mocked<IAuthSessionWorkflow>;
 
   beforeEach(() => {
     jest.clearAllMocks();
@@ -47,7 +49,13 @@ describe("AuthResolver", () => {
       deleteSignupOtpSession: jest.fn(),
     } as unknown as jest.Mocked<IAuthService>;
 
-    resolver = new AuthResolver(mockAuthService);
+    mockAuthSessionWorkflow = {
+      loginUser: jest.fn(),
+      signInWithMagicLinkToken: jest.fn(),
+      verifySignUpOtp: jest.fn(),
+    };
+
+    resolver = new AuthResolver(mockAuthService, mockAuthSessionWorkflow);
   });
 
   describe("logout", () => {
@@ -95,12 +103,12 @@ describe("AuthResolver", () => {
       const args = { email: "user@example.com", password: "password123" };
       const mockResponse = { token: "auth-token", expireAt: new Date() };
 
-      mockAuthService.loginUser.mockResolvedValue(mockResponse);
+      mockAuthSessionWorkflow.loginUser.mockResolvedValue(mockResponse);
 
       const result = await resolver.signIn(mockContext, args);
 
       expect(result).toEqual(mockResponse);
-      expect(mockAuthService.loginUser).toHaveBeenCalledWith({
+      expect(mockAuthSessionWorkflow.loginUser).toHaveBeenCalledWith({
         email: "user@example.com",
         password: "password123",
       });
@@ -110,11 +118,11 @@ describe("AuthResolver", () => {
       const args = { email: "  USER@EXAMPLE.COM  ", password: "password123" };
       const mockResponse = { token: "auth-token", expireAt: new Date() };
 
-      mockAuthService.loginUser.mockResolvedValue(mockResponse);
+      mockAuthSessionWorkflow.loginUser.mockResolvedValue(mockResponse);
 
       await resolver.signIn(mockContext, args);
 
-      expect(mockAuthService.loginUser).toHaveBeenCalledWith({
+      expect(mockAuthSessionWorkflow.loginUser).toHaveBeenCalledWith({
         email: "user@example.com",
         password: "password123",
       });
@@ -123,7 +131,7 @@ describe("AuthResolver", () => {
     it("should propagate error when loginUser fails", async () => {
       const args = { email: "user@example.com", password: "wrongpassword" };
 
-      mockAuthService.loginUser.mockRejectedValue(
+      mockAuthSessionWorkflow.loginUser.mockRejectedValue(
         new BadUserInputError("Invalid email or password"),
       );
 
@@ -165,12 +173,16 @@ describe("AuthResolver", () => {
       const args = { token: "one-time-token-123" };
       const mockResponse = { token: "auth-token", expireAt: new Date() };
 
-      mockAuthService.signInWithMagicLinkToken.mockResolvedValue(mockResponse);
+      mockAuthSessionWorkflow.signInWithMagicLinkToken.mockResolvedValue(
+        mockResponse,
+      );
 
       const result = await resolver.signInWithOneTimeToken(mockContext, args);
 
       expect(result).toEqual(mockResponse);
-      expect(mockAuthService.signInWithMagicLinkToken).toHaveBeenCalledWith({
+      expect(
+        mockAuthSessionWorkflow.signInWithMagicLinkToken,
+      ).toHaveBeenCalledWith({
         token: "one-time-token-123",
       });
       expect((mockContext.koaCtx as any).cookies.set).toHaveBeenCalledWith(
@@ -448,13 +460,13 @@ describe("AuthResolver", () => {
     it("delegates to the auth service and sets the auth cookie", async () => {
       const args = { sessionId: "session-123", otp: "1234" };
       const mockToken = { token: "jwt-token-123", expireAt: new Date() };
-      mockAuthService.verifySignUpOtp.mockResolvedValue(mockToken);
+      mockAuthSessionWorkflow.verifySignUpOtp.mockResolvedValue(mockToken);
 
       const result = await resolver.verifySignUpOtp(mockContext, args);
 
       expect(result.token).toBe("jwt-token-123");
       expect(result.expireAt).toBe(mockToken.expireAt);
-      expect(mockAuthService.verifySignUpOtp).toHaveBeenCalledWith({
+      expect(mockAuthSessionWorkflow.verifySignUpOtp).toHaveBeenCalledWith({
         sessionId: "session-123",
         otp: "1234",
       });
@@ -466,7 +478,7 @@ describe("AuthResolver", () => {
     });
 
     it("propagates errors from the auth service", async () => {
-      mockAuthService.verifySignUpOtp.mockRejectedValue(
+      mockAuthSessionWorkflow.verifySignUpOtp.mockRejectedValue(
         new BadUserInputError("Invalid OTP code"),
       );
 

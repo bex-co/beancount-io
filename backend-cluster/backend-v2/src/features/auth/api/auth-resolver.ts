@@ -11,6 +11,7 @@ import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 import { Matches, MaxLength } from "class-validator";
 import { IContext } from "@/server/graphql/context";
 import type { IAuthService } from "@/features/auth/service/auth-service";
+import type { IAuthSessionWorkflow } from "@/features/auth/workflow/auth-session-workflow";
 import { UnauthenticatedError } from "@/shared/errors";
 import { setAuthCookie, clearAuthCookie } from "@/shared/cookie-utils";
 import { Context } from "koa";
@@ -149,7 +150,10 @@ class VerifySignUpOtpInput {
 }
 
 export class AuthResolver {
-  constructor(private readonly authService: IAuthService) {}
+  constructor(
+    private readonly authService: IAuthService,
+    private readonly authSessionWorkflow: IAuthSessionWorkflow,
+  ) {}
 
   @Authenticated()
   @Mutation(() => LogoutResponse, {
@@ -169,7 +173,7 @@ export class AuthResolver {
     @Ctx() ctx: IContext,
     @Args() args: SignInInput,
   ): Promise<TokenAuthResponse> {
-    const result = await this.authService.loginUser({
+    const result = await this.authSessionWorkflow.loginUser({
       email: args.email.toLowerCase().trim(),
       password: args.password,
     });
@@ -210,7 +214,7 @@ export class AuthResolver {
     @Ctx() ctx: IContext,
     @Args() args: SignInWithOneTimeTokenInput,
   ): Promise<TokenAuthResponse> {
-    const result = await this.authService.signInWithMagicLinkToken({
+    const result = await this.authSessionWorkflow.signInWithMagicLinkToken({
       token: args.token,
     });
     setAuthCookie(
@@ -317,7 +321,7 @@ export class AuthResolver {
     @Ctx() ctx: IContext,
     @Args() args: VerifySignUpOtpInput,
   ): Promise<TokenAuthResponse> {
-    const result = await this.authService.verifySignUpOtp({
+    const result = await this.authSessionWorkflow.verifySignUpOtp({
       sessionId: args.sessionId,
       otp: args.otp,
     });

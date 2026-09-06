@@ -31,6 +31,7 @@ import { type IFeatureUsageService } from "@/features/feature-usage/service/feat
 import { type IAiCfoUsageService } from "@/features/feature-usage/service/ai-cfo-usage-service";
 import { type IAccountService } from "@/features/auth/service/account-service";
 import { type IAuthService } from "@/features/auth/service/auth-service";
+import { type IAuthSessionWorkflow } from "@/features/auth/workflow/auth-session-workflow";
 import { type ICliAuthService } from "@/features/auth/service/cli-auth-service";
 import { type IUserProfileService } from "@/features/gitea/user-profile/service/user-profile-service";
 import { type IPullRequestService } from "@/features/gitea/pull-request/service/pull-request-service";
@@ -104,6 +105,7 @@ export interface ServiceLayer {
 
 /** Layer 4 — Workflows (cross-service orchestration; own transaction boundaries). */
 export interface WorkflowLayer {
+  authSession: IAuthSessionWorkflow;
   ledger: ILedgerWorkflow;
   ledgerCollaborators: ILedgerCollaboratorsWorkflow;
   ledgerReceipt: ILedgerReceiptWorkflow;

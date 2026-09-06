@@ -123,7 +123,7 @@ export function buildResolverContainer(
     ],
     [AiCfoUsageResolver, new AiCfoUsageResolver(services.aiCfoUsage)],
     [AccountResolver, new AccountResolver(services.account)],
-    [AuthResolver, new AuthResolver(services.auth)],
+    [AuthResolver, new AuthResolver(services.auth, workflows.authSession)],
     [CliAuthResolver, new CliAuthResolver(services.cliAuth)],
     [UserProfileResolver, new UserProfileResolver(services.userProfile)],
     [PullRequestResolver, new PullRequestResolver(services.pullRequest)],

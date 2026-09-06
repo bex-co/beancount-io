@@ -314,6 +314,31 @@ describe("UserProfileService", () => {
     });
   });
 
+  describe("ensureFollowing", () => {
+    it("checks follow permission before reading or updating the social graph", async () => {
+      authorizeOrThrow.mockRejectedValueOnce(new Error("denied"));
+
+      await expect(
+        service.ensureFollowing(
+          "open_ledger",
+          mockContext.getCurrentIdentity(),
+        ),
+      ).rejects.toThrow();
+
+      expect(authorizeOrThrow).toHaveBeenCalledWith({
+        principal: mockContext.getCurrentIdentity(),
+        action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
+        resource: userResource("user-123"),
+      });
+      expect(mockModels.user.getById).not.toHaveBeenCalled();
+      expect(mockGetUserApiClient).not.toHaveBeenCalled();
+      expect(
+        mockGiteaClient.user.userCurrentCheckFollowing,
+      ).not.toHaveBeenCalled();
+      expect(mockGiteaClient.user.userCurrentPutFollow).not.toHaveBeenCalled();
+    });
+  });
+
   describe("unfollowUser", () => {
     it("should unfollow user successfully", async () => {
       mockGiteaClient.user.userCurrentDeleteFollow.mockResolvedValue({} as any);

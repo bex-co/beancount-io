@@ -394,9 +394,11 @@ async function stampLastUsed(
  * The session path: verify the token against our own JWT model, which checks
  * both the signature and that the row still exists (logout deletes it).
  */
-async function resolveSessionIdentity(
+export async function resolveSessionIdentity(
   token: string,
-  database: DatabaseLayer,
+  database: Pick<DatabaseLayer, "db"> & {
+    models: Pick<DatabaseLayer["models"], "jwt">;
+  },
 ): Promise<Identity | undefined> {
   const userId = await database.models.jwt.verify(database.db, token);
   if (!userId) {

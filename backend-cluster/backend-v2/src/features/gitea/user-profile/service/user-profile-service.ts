@@ -14,6 +14,7 @@ import {
   RepositoryListResponse,
 } from "../api/user-profile-resolver.types";
 import { logger } from "@/shared/logger";
+import { ServiceUnavailableError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
@@ -21,12 +22,15 @@ import {
   type IAuthorizationService,
 } from "@/server/api/authorization";
 
+const FOLLOW_TIMEOUT_MS = 2_000;
+
 export interface IUserProfileService {
   getUserProfile(
     username: string,
     userId?: string,
   ): Promise<PublicUserProfileResponse>;
   followUser(username: string, identity: Identity): Promise<FollowUserResponse>;
+  ensureFollowing(username: string, identity: Identity): Promise<void>;
   unfollowUser(
     username: string,
     identity: Identity,
@@ -254,6 +258,39 @@ export class UserProfileService implements IUserProfileService {
         message: `Failed to follow ${username}`,
       };
     }
+  }
+
+  /** Idempotent follow for onboarding; failures are handled by the workflow. */
+  async ensureFollowing(username: string, identity: Identity): Promise<void> {
+    await this.authorization.authorizeOrThrow({
+      principal: identity,
+      action: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
+      resource: userResource(identity.userId),
+    });
+    const currentUser = await this.models.user.getById(
+      this.db,
+      identity.userId,
+    );
+    if (currentUser?.ledger_username.toLowerCase() === username.toLowerCase()) {
+      return;
+    }
+
+    const giteaClient = await this.giteaClientFactory.getUserApiClient(
+      identity.userId,
+    );
+    // Both network requests share a deadline so onboarding cannot hold up auth.
+    const signal = AbortSignal.timeout(FOLLOW_TIMEOUT_MS);
+    try {
+      await giteaClient.user.userCurrentCheckFollowing(username, { signal });
+      return;
+    } catch (error) {
+      // Only a 404 means the follow is missing; outages must not trigger writes.
+      if (!(error instanceof Response && error.status === 404)) {
+        throw new ServiceUnavailableError("Gitea follow status");
+      }
+    }
+
+    await giteaClient.user.userCurrentPutFollow(username, { signal });
   }
 
   /**

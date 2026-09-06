@@ -55,21 +55,21 @@ type CreateSignUpSessionParams = {
   withDefaultLedger?: boolean;
 };
 
-type FinishSignupSessionParams = {
+export type FinishSignupSessionParams = {
   sessionId: string;
   otp: string;
 };
 
-type LoginUserParams = {
+export type LoginUserParams = {
   email: string;
   password: string;
 };
 
-type SignInWithOneTimeTokenParams = {
+export type SignInWithOneTimeTokenParams = {
   token: string;
 };
 
-type AuthResponse = {
+export type AuthResponse = {
   token: string;
   expireAt: Date;
 };

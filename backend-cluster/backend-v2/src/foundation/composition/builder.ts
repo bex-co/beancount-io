@@ -27,6 +27,7 @@ import { LedgerCollaboratorsWorkflow } from "@/features/ledger/workflow/ledger-c
 import { LedgerReceiptWorkflow } from "@/features/ledger/workflow/ledger-receipt-workflow";
 import { AccountService } from "@/features/auth/service/account-service";
 import { AuthService } from "@/features/auth/service/auth-service";
+import { AuthSessionWorkflow } from "@/features/auth/workflow/auth-session-workflow";
 import { CliAuthService } from "@/features/auth/service/cli-auth-service";
 import { UserProfileService } from "@/features/gitea/user-profile/service/user-profile-service";
 import { PullRequestService } from "@/features/gitea/pull-request/service/pull-request-service";
@@ -240,5 +241,11 @@ export function buildWorkflowLayer(input: {
     input.config,
     input.services.authorization,
   );
-  return { ledger, ledgerCollaborators, ledgerReceipt };
+  const authSession = new AuthSessionWorkflow(
+    input.services.auth,
+    input.services.userProfile,
+    input.database.models,
+    input.database.db,
+  );
+  return { ledger, ledgerCollaborators, ledgerReceipt, authSession };
 }
