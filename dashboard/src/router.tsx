@@ -13,6 +13,7 @@ export function getRouter() {
   const router = createTanStackRouter({
     routeTree,
     scrollRestoration: true,
+    scrollToTopSelectors: ['[data-scroll-restoration-id="ledger-content"]'],
     defaultPreload: "intent",
     defaultPreloadStaleTime: 0,
     context: {

@@ -89,6 +89,7 @@ export function LedgerLayout() {
                 <LayoutHeader ledgerId={ledgerId} isCompact={isMobile} />
               )}
               <div
+                data-scroll-restoration-id="ledger-content"
                 className={cn(
                   "relative flex min-h-0 flex-1 flex-col",
                   isCommitWorkspace ? "overflow-hidden" : "overflow-auto",
