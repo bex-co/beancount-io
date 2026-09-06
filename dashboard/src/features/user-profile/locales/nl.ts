@@ -41,7 +41,7 @@ const nlUserProfile: Record<string, TranslationEntry> = {
     description: "Heading for recent activity section",
   },
   "userProfile.repositories": {
-    message: "Repositories",
+    message: "Boekhoudingen",
     description: "Heading for repositories section",
   },
   "userProfile.follow": {
@@ -82,7 +82,7 @@ const nlUserProfile: Record<string, TranslationEntry> = {
     description: "SEO description for user profile page",
   },
   "userProfile.tabs.overview": {
-    message: "Overview",
+    message: "Boekhoudingen",
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
@@ -108,6 +108,115 @@ const nlUserProfile: Record<string, TranslationEntry> = {
   "userProfile.noStarredRepos": {
     message: "No starred repositories",
     description: "Message shown when user has no starred repos",
+  },
+  "userProfile.community": {
+    message: "Community",
+    description: "Public profile: community",
+  },
+  "userProfile.ledgerDescription": {
+    message: "Ontdek rekeningen, transacties en financiële rapporten.",
+    description: "Public profile: ledgerDescription",
+  },
+  "userProfile.browseDescription": {
+    message: "Vind een boekhouding. Volg de cijfers.",
+    description: "Public profile: browseDescription",
+  },
+  "userProfile.searchLedgers": {
+    message: "Boekhoudingen zoeken…",
+    description: "Public profile: searchLedgers",
+  },
+  "userProfile.clearSearch": {
+    message: "Zoekopdracht wissen",
+    description: "Public profile: clearSearch",
+  },
+  "userProfile.sortLedgers": {
+    message: "Boekhoudingen sorteren",
+    description: "Public profile: sortLedgers",
+  },
+  "userProfile.recentlyUpdated": {
+    message: "Recent bijgewerkt",
+    description: "Public profile: recentlyUpdated",
+  },
+  "userProfile.nameAZ": {
+    message: "Naam (A–Z)",
+    description: "Public profile: nameAZ",
+  },
+  "userProfile.noMatches": {
+    message:
+      "Geen boekhoudingen gevonden. Probeer een andere naam of zoekterm.",
+    description: "Public profile: noMatches",
+  },
+  "userProfile.results": {
+    message: "{shown} van {total} boekhoudingen weergegeven",
+    description: "Public profile: results",
+  },
+  "userProfile.showMoreLedgers": {
+    message: "Meer boekhoudingen tonen",
+    description: "Public profile: showMoreLedgers",
+  },
+  "userProfile.newToBeancount": {
+    message: "Nieuw bij Beancount?",
+    description: "Public profile: newToBeancount",
+  },
+  "userProfile.startExample": {
+    message: "Begin met een voorbeeld",
+    description: "Public profile: startExample",
+  },
+  "userProfile.exampleDescription": {
+    message:
+      "Maak kennis met de boeken. Verken een voorbeeldboekhouding met rekeningen, transacties en rapporten.",
+    description: "Public profile: exampleDescription",
+  },
+  "userProfile.openExample": {
+    message: "Voorbeeld verkennen",
+    description: "Public profile: openExample",
+  },
+  "userProfile.showLessActivity": {
+    message: "Minder activiteit tonen",
+    description: "Public profile: showLessActivity",
+  },
+  "userProfile.showAllActivity": {
+    message: "Alle activiteit tonen",
+    description: "Public profile: showAllActivity",
+  },
+  "userProfile.linkCopied": {
+    message: "Profiellink gekopieerd",
+    description: "Public profile: linkCopied",
+  },
+  "userProfile.copyLinkError": {
+    message:
+      "De link kon niet worden gekopieerd. U kunt deze uit de adresbalk kopiëren.",
+    description: "Public profile: copyLinkError",
+  },
+  "userProfile.tryAgain": {
+    message: "Opnieuw proberen",
+    description: "Public profile: tryAgain",
+  },
+  "userProfile.collectionLabel": {
+    message: "Een verzameling open boekhoudingen",
+    description: "Public profile: collectionLabel",
+  },
+  "userProfile.collectionDescription": {
+    message:
+      "Echte financiën, vrij te verkennen. Bekijk bedrijfsboekhoudingen en praktische voorbeelden om Beancount in actie te zien.",
+    description: "Public profile: collectionDescription",
+  },
+  "userProfile.copyLink": {
+    message: "Link kopiëren",
+    description: "Public profile: copyLink",
+  },
+  "userProfile.followDescription": {
+    message: "Voeg dit profiel toe aan uw lijst met gevolgde profielen.",
+    description: "Public profile: followDescription",
+  },
+  "userProfile.footer": {
+    message: "Open boeken. Heldere financiën. Met Beancount.",
+    description: "Public profile: footer",
+  },
+  "userProfile.openLedgerName": {
+    message: "Open Ledger",
+    description:
+      "Proper name of the Open Ledger collection; keep the name unchanged",
   },
 };
 

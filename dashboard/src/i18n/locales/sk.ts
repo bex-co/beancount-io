@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import skCommon from "./common/sk";
 import skSeo from "./seo/sk";
 import skAuth from "@/features/auth/locales/sk";
+import skUserProfile from "@/features/user-profile/locales/sk";
 import skUserSettings from "@/features/user-settings/locales/sk";
 import skLedgerList from "@/features/ledger-list/locales/sk";
 import skSettings from "@/features/ledger-data/settings/locales/sk";
@@ -29,6 +30,7 @@ const sk: Record<string, string> = {
   ...extractMessages(skCommon),
   ...extractMessages(skSeo),
   ...extractMessages(skAuth),
+  ...extractMessages(skUserProfile),
   ...extractMessages(skUserSettings),
   ...extractMessages(skLedgerList),
   ...extractMessages(skSettings),

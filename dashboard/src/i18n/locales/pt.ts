@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import ptCommon from "./common/pt";
 import ptSeo from "./seo/pt";
 import ptAuth from "@/features/auth/locales/pt";
+import ptUserProfile from "@/features/user-profile/locales/pt";
 import ptUserSettings from "@/features/user-settings/locales/pt";
 import ptLedgerList from "@/features/ledger-list/locales/pt";
 import ptSettings from "@/features/ledger-data/settings/locales/pt";
@@ -29,6 +30,7 @@ const pt: Record<string, string> = {
   ...extractMessages(ptCommon),
   ...extractMessages(ptSeo),
   ...extractMessages(ptAuth),
+  ...extractMessages(ptUserProfile),
   ...extractMessages(ptUserSettings),
   ...extractMessages(ptLedgerList),
   ...extractMessages(ptSettings),

@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import caCommon from "./common/ca";
 import caSeo from "./seo/ca";
 import caAuth from "@/features/auth/locales/ca";
+import caUserProfile from "@/features/user-profile/locales/ca";
 import caUserSettings from "@/features/user-settings/locales/ca";
 import caLedgerList from "@/features/ledger-list/locales/ca";
 import caSettings from "@/features/ledger-data/settings/locales/ca";
@@ -29,6 +30,7 @@ const ca: Record<string, string> = {
   ...extractMessages(caCommon),
   ...extractMessages(caSeo),
   ...extractMessages(caAuth),
+  ...extractMessages(caUserProfile),
   ...extractMessages(caUserSettings),
   ...extractMessages(caLedgerList),
   ...extractMessages(caSettings),

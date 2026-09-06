@@ -41,7 +41,7 @@ const faUserProfile: Record<string, TranslationEntry> = {
     description: "Heading for recent activity section",
   },
   "userProfile.repositories": {
-    message: "مخزن‌ها",
+    message: "دفترها",
     description: "Heading for repositories section",
   },
   "userProfile.follow": {
@@ -82,7 +82,7 @@ const faUserProfile: Record<string, TranslationEntry> = {
     description: "SEO description for user profile page",
   },
   "userProfile.tabs.overview": {
-    message: "Overview",
+    message: "دفترها",
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
@@ -108,6 +108,114 @@ const faUserProfile: Record<string, TranslationEntry> = {
   "userProfile.noStarredRepos": {
     message: "No starred repositories",
     description: "Message shown when user has no starred repos",
+  },
+  "userProfile.community": {
+    message: "انجمن",
+    description: "Public profile: community",
+  },
+  "userProfile.ledgerDescription": {
+    message: "حساب‌ها، تراکنش‌ها و گزارش‌های مالی را بررسی کنید.",
+    description: "Public profile: ledgerDescription",
+  },
+  "userProfile.browseDescription": {
+    message: "دفتری پیدا کنید و اعداد را دنبال کنید.",
+    description: "Public profile: browseDescription",
+  },
+  "userProfile.searchLedgers": {
+    message: "جستجوی دفترها…",
+    description: "Public profile: searchLedgers",
+  },
+  "userProfile.clearSearch": {
+    message: "پاک کردن جستجو",
+    description: "Public profile: clearSearch",
+  },
+  "userProfile.sortLedgers": {
+    message: "مرتب‌سازی دفترها",
+    description: "Public profile: sortLedgers",
+  },
+  "userProfile.recentlyUpdated": {
+    message: "به‌تازگی به‌روزشده",
+    description: "Public profile: recentlyUpdated",
+  },
+  "userProfile.nameAZ": {
+    message: "نام (A–Z)",
+    description: "Public profile: nameAZ",
+  },
+  "userProfile.noMatches": {
+    message:
+      "دفتری مطابق جستجوی شما یافت نشد. نام یا کلیدواژه دیگری را امتحان کنید.",
+    description: "Public profile: noMatches",
+  },
+  "userProfile.results": {
+    message: "نمایش {shown} از {total} دفتر",
+    description: "Public profile: results",
+  },
+  "userProfile.showMoreLedgers": {
+    message: "نمایش دفترهای بیشتر",
+    description: "Public profile: showMoreLedgers",
+  },
+  "userProfile.newToBeancount": {
+    message: "تازه با Beancount آشنا شده‌اید؟",
+    description: "Public profile: newToBeancount",
+  },
+  "userProfile.startExample": {
+    message: "با یک نمونه شروع کنید",
+    description: "Public profile: startExample",
+  },
+  "userProfile.exampleDescription": {
+    message:
+      "با ساختار دفترها آشنا شوید. یک دفتر نمونه با حساب‌ها، تراکنش‌ها و گزارش‌ها را بررسی کنید.",
+    description: "Public profile: exampleDescription",
+  },
+  "userProfile.openExample": {
+    message: "بررسی نمونه",
+    description: "Public profile: openExample",
+  },
+  "userProfile.showLessActivity": {
+    message: "نمایش فعالیت کمتر",
+    description: "Public profile: showLessActivity",
+  },
+  "userProfile.showAllActivity": {
+    message: "نمایش همه فعالیت‌ها",
+    description: "Public profile: showAllActivity",
+  },
+  "userProfile.linkCopied": {
+    message: "پیوند نمایه کپی شد",
+    description: "Public profile: linkCopied",
+  },
+  "userProfile.copyLinkError": {
+    message: "کپی پیوند ممکن نشد. می‌توانید آن را از نوار نشانی کپی کنید.",
+    description: "Public profile: copyLinkError",
+  },
+  "userProfile.tryAgain": {
+    message: "تلاش دوباره",
+    description: "Public profile: tryAgain",
+  },
+  "userProfile.collectionLabel": {
+    message: "مجموعه‌ای از دفترهای باز",
+    description: "Public profile: collectionLabel",
+  },
+  "userProfile.collectionDescription": {
+    message:
+      "امور مالی واقعی، آماده بررسی. دفترهای شرکت‌ها و نمونه‌های کاربردی را ببینید تا با Beancount در عمل آشنا شوید.",
+    description: "Public profile: collectionDescription",
+  },
+  "userProfile.copyLink": {
+    message: "کپی پیوند",
+    description: "Public profile: copyLink",
+  },
+  "userProfile.followDescription": {
+    message: "این نمایه را به فهرست دنبال‌شوندگان خود اضافه کنید.",
+    description: "Public profile: followDescription",
+  },
+  "userProfile.footer": {
+    message: "دفترهای باز. امور مالی شفاف‌تر. با Beancount.",
+    description: "Public profile: footer",
+  },
+  "userProfile.openLedgerName": {
+    message: "Open Ledger",
+    description:
+      "Proper name of the Open Ledger collection; keep the name unchanged",
   },
 };
 

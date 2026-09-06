@@ -41,7 +41,7 @@ const bgUserProfile: Record<string, TranslationEntry> = {
     description: "Heading for recent activity section",
   },
   "userProfile.repositories": {
-    message: "Хранилища",
+    message: "Книги",
     description: "Heading for repositories section",
   },
   "userProfile.follow": {
@@ -82,7 +82,7 @@ const bgUserProfile: Record<string, TranslationEntry> = {
     description: "SEO description for user profile page",
   },
   "userProfile.tabs.overview": {
-    message: "Overview",
+    message: "Книги",
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
@@ -108,6 +108,115 @@ const bgUserProfile: Record<string, TranslationEntry> = {
   "userProfile.noStarredRepos": {
     message: "No starred repositories",
     description: "Message shown when user has no starred repos",
+  },
+  "userProfile.community": {
+    message: "Общност",
+    description: "Public profile: community",
+  },
+  "userProfile.ledgerDescription": {
+    message: "Разгледайте сметки, транзакции и финансови отчети.",
+    description: "Public profile: ledgerDescription",
+  },
+  "userProfile.browseDescription": {
+    message: "Намерете книга. Проследете числата.",
+    description: "Public profile: browseDescription",
+  },
+  "userProfile.searchLedgers": {
+    message: "Търсене на книги…",
+    description: "Public profile: searchLedgers",
+  },
+  "userProfile.clearSearch": {
+    message: "Изчистване на търсенето",
+    description: "Public profile: clearSearch",
+  },
+  "userProfile.sortLedgers": {
+    message: "Сортиране на книги",
+    description: "Public profile: sortLedgers",
+  },
+  "userProfile.recentlyUpdated": {
+    message: "Наскоро обновени",
+    description: "Public profile: recentlyUpdated",
+  },
+  "userProfile.nameAZ": {
+    message: "Име (A–Z)",
+    description: "Public profile: nameAZ",
+  },
+  "userProfile.noMatches": {
+    message:
+      "Няма книги, съответстващи на търсенето. Опитайте друго име или ключова дума.",
+    description: "Public profile: noMatches",
+  },
+  "userProfile.results": {
+    message: "Показани са {shown} от {total} книги",
+    description: "Public profile: results",
+  },
+  "userProfile.showMoreLedgers": {
+    message: "Показване на още книги",
+    description: "Public profile: showMoreLedgers",
+  },
+  "userProfile.newToBeancount": {
+    message: "За първи път в Beancount?",
+    description: "Public profile: newToBeancount",
+  },
+  "userProfile.startExample": {
+    message: "Започнете с пример",
+    description: "Public profile: startExample",
+  },
+  "userProfile.exampleDescription": {
+    message:
+      "Запознайте се с книгите. Разгледайте примерна книга със сметки, транзакции и отчети.",
+    description: "Public profile: exampleDescription",
+  },
+  "userProfile.openExample": {
+    message: "Разглеждане на примера",
+    description: "Public profile: openExample",
+  },
+  "userProfile.showLessActivity": {
+    message: "По-малко активност",
+    description: "Public profile: showLessActivity",
+  },
+  "userProfile.showAllActivity": {
+    message: "Показване на цялата активност",
+    description: "Public profile: showAllActivity",
+  },
+  "userProfile.linkCopied": {
+    message: "Връзката към профила е копирана",
+    description: "Public profile: linkCopied",
+  },
+  "userProfile.copyLinkError": {
+    message:
+      "Връзката не може да бъде копирана. Можете да я копирате от адресната лента.",
+    description: "Public profile: copyLinkError",
+  },
+  "userProfile.tryAgain": {
+    message: "Опитайте отново",
+    description: "Public profile: tryAgain",
+  },
+  "userProfile.collectionLabel": {
+    message: "Колекция от отворени книги",
+    description: "Public profile: collectionLabel",
+  },
+  "userProfile.collectionDescription": {
+    message:
+      "Реални финанси, достъпни за разглеждане. Разгледайте фирмени книги и практически примери, за да видите Beancount в действие.",
+    description: "Public profile: collectionDescription",
+  },
+  "userProfile.copyLink": {
+    message: "Копиране на връзката",
+    description: "Public profile: copyLink",
+  },
+  "userProfile.followDescription": {
+    message: "Добавете този профил към списъка си със следвани профили.",
+    description: "Public profile: followDescription",
+  },
+  "userProfile.footer": {
+    message: "Отворени книги. По-ясни финанси. С Beancount.",
+    description: "Public profile: footer",
+  },
+  "userProfile.openLedgerName": {
+    message: "Open Ledger",
+    description:
+      "Proper name of the Open Ledger collection; keep the name unchanged",
   },
 };
 

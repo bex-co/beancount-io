@@ -78,13 +78,13 @@ vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({
     t: (key: string) => {
       const translations: Record<string, string> = {
-        "userProfile.tabs.overview": "Overview",
+        "userProfile.tabs.overview": "Ledgers",
         "userProfile.tabs.followers": "Followers",
         "userProfile.tabs.following": "Following",
         "userProfile.tabs.starred": "Starred",
         "userProfile.recentActivity": "Recent Activity",
         "userProfile.noActivity": "No recent activity",
-        "userProfile.repositories": "Repositories",
+        "userProfile.repositories": "Ledgers",
         "userProfile.noRepositories": "No repositories",
         "userProfile.private": "Private",
         "userProfile.public": "Public",
@@ -150,7 +150,7 @@ describe("UserProfileTabs", () => {
         />,
       );
 
-      expect(screen.getByText("Overview")).toBeInTheDocument();
+      expect(screen.getByRole("tab", { name: "Ledgers" })).toBeInTheDocument();
       expect(screen.getByText(/Followers \(10\)/)).toBeInTheDocument();
       expect(screen.getByText(/Following \(20\)/)).toBeInTheDocument();
       expect(screen.getByText(/Starred \(5\)/)).toBeInTheDocument();
@@ -169,7 +169,9 @@ describe("UserProfileTabs", () => {
       );
 
       expect(screen.getByText("Recent Activity")).toBeInTheDocument();
-      expect(screen.getByText("Repositories")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /^Ledgers/ }),
+      ).toBeInTheDocument();
     });
 
     it("should display counts in tab labels", () => {
@@ -273,8 +275,9 @@ describe("UserProfileTabs", () => {
         />,
       );
 
-      expect(screen.getByText("Created a new ledger")).toBeInTheDocument();
-      expect(screen.getByText("my-ledger")).toBeInTheDocument();
+      expect(
+        screen.getByRole("link", { name: "Created a new ledger" }),
+      ).toHaveAttribute("href", expect.stringContaining("testuser/my-ledger"));
     });
 
     it("should display repositories", () => {
@@ -323,7 +326,8 @@ describe("UserProfileTabs", () => {
       expect(screen.getByText("No repositories")).toBeInTheDocument();
     });
 
-    it("should limit repositories to 10 items", () => {
+    it("should let visitors reveal repositories beyond the first page", async () => {
+      const user = userEvent.setup();
       const manyRepos: UserRepository[] = Array.from(
         { length: 15 },
         (_, i) => ({
@@ -347,10 +351,58 @@ describe("UserProfileTabs", () => {
         />,
       );
 
-      // Should only render 10 repos in overview
-      const repoCards = container.querySelectorAll('a[href*="/ledger/"]');
-      expect(repoCards.length).toBeLessThanOrEqual(10);
+      expect(container.querySelectorAll('a[href*="/ledger/"]')).toHaveLength(
+        12,
+      );
+      await user.click(
+        screen.getByRole("button", { name: "userProfile.showMoreLedgers" }),
+      );
+      expect(container.querySelectorAll('a[href*="/ledger/"]')).toHaveLength(
+        15,
+      );
+      expect(
+        screen.queryByRole("button", { name: "userProfile.showMoreLedgers" }),
+      ).not.toBeInTheDocument();
     });
+  });
+
+  it("keeps activity compact and lets visitors expand and collapse the timeline", async () => {
+    const user = userEvent.setup();
+    const activities = Array.from({ length: 7 }, (_, index) => ({
+      id: String(index),
+      type: "commit_repo",
+      content: `Update ${index}`,
+      repoName: "shared",
+      repoFullName: "another-owner/shared",
+      createdAt: `2026-01-0${index + 1}T00:00:00Z`,
+    }));
+    render(
+      <UserProfileTabs
+        username="testuser"
+        activities={activities}
+        repositories={[]}
+        followersCount={0}
+        followingCount={0}
+        starredReposCount={0}
+      />,
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
+    expect(screen.queryByText("Update 0")).not.toBeInTheDocument();
+    expect(screen.getByRole("link", { name: "Update 6" })).toHaveAttribute(
+      "href",
+      expect.stringContaining("another-owner/shared"),
+    );
+    await user.click(
+      screen.getByRole("button", { name: "userProfile.showAllActivity" }),
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(7);
+    expect(
+      screen.getByRole("button", { name: "userProfile.showLessActivity" }),
+    ).toHaveAttribute("aria-expanded", "true");
+    await user.click(
+      screen.getByRole("button", { name: "userProfile.showLessActivity" }),
+    );
+    expect(screen.getAllByRole("listitem")).toHaveLength(5);
   });
 
   describe("Followers Tab", () => {
@@ -611,7 +663,7 @@ describe("UserProfileTabs", () => {
       );
 
       const overviewGrid = container.querySelector(
-        ".grid.grid-cols-1.lg\\:grid-cols-3",
+        ".grid.grid-cols-1.items-start",
       );
       expect(overviewGrid).toBeInTheDocument();
     });
@@ -751,7 +803,9 @@ describe("UserProfileTabs", () => {
 
       // Should show overview tab content
       expect(screen.getByText("Recent Activity")).toBeInTheDocument();
-      expect(screen.getByText("Repositories")).toBeInTheDocument();
+      expect(
+        screen.getByRole("heading", { name: /^Ledgers/ }),
+      ).toBeInTheDocument();
     });
 
     it("should call navigate with correct params when clicking starred tab", async () => {
@@ -847,7 +901,7 @@ describe("UserProfileTabs", () => {
         />,
       );
 
-      const overviewTab = screen.getByText("Overview");
+      const overviewTab = screen.getByRole("tab", { name: "Ledgers" });
       await user.click(overviewTab);
 
       await waitFor(() => {

@@ -22,6 +22,8 @@ vi.mock("@/common/hooks/use-translations", () => ({
         "userProfile.private": "Private",
         "userProfile.public": "Public",
         "userProfile.updated": "Updated",
+        "userProfile.ledgerDescription":
+          "Explore accounts, transactions, and financial reports.",
       };
       return translations[key] || key;
     },
@@ -59,8 +61,8 @@ describe("RepositoryListItem", () => {
       expect(screen.getByText("Personal finance tracking")).toBeInTheDocument();
     });
 
-    it("should not render description section when description is null", () => {
-      const { container } = render(
+    it("should provide context when description is null", () => {
+      render(
         <RepositoryListItem
           name="my-ledger"
           fullName="johndoe/my-ledger"
@@ -71,11 +73,12 @@ describe("RepositoryListItem", () => {
         />,
       );
 
-      // CardContent should not be rendered when description is null
-      const cardContent = container.querySelector(
-        ".text-sm.text-muted-foreground.mb-2",
-      );
-      expect(cardContent).not.toBeInTheDocument();
+      expect(
+        screen.getByText(
+          "Explore accounts, transactions, and financial reports.",
+        ),
+      ).toBeInTheDocument();
+      expect(screen.getByText("Public")).toBeInTheDocument();
     });
   });
 
@@ -159,12 +162,7 @@ describe("RepositoryListItem", () => {
         />,
       );
 
-      // No stars icon should be present
-      const container = screen
-        .getByText("Repository without stars data")
-        .closest(".cursor-pointer");
-      const svgElements = container?.querySelectorAll("svg");
-      expect(svgElements?.length).toBe(0);
+      expect(screen.getByRole("link").querySelector(".lucide-star")).toBeNull();
     });
 
     it("should display large stars count correctly", () => {
@@ -198,7 +196,10 @@ describe("RepositoryListItem", () => {
       );
 
       // Check for the "Updated" label in timestamp span
-      expect(screen.getByText(/Updated.*ago/i)).toBeInTheDocument();
+      expect(screen.getByRole("link").querySelector("time")).toHaveAttribute(
+        "dateTime",
+        "2024-01-15T10:00:00.000Z",
+      );
     });
 
     it("should format timestamp with date-fns", () => {
@@ -238,7 +239,7 @@ describe("RepositoryListItem", () => {
       expect(link).toBeInTheDocument();
     });
 
-    it("should have hover effect classes", () => {
+    it("should provide a keyboard focus indicator", () => {
       const { container } = render(
         <RepositoryListItem
           name="test-repo"
@@ -250,9 +251,8 @@ describe("RepositoryListItem", () => {
         />,
       );
 
-      const card = container.querySelector(".cursor-pointer");
-      expect(card).toBeInTheDocument();
-      expect(card).toHaveClass("hover:border-foreground/20");
+      const card = container.querySelector("a");
+      expect(card).toHaveClass("focus-visible:outline-2");
     });
   });
 
@@ -269,8 +269,11 @@ describe("RepositoryListItem", () => {
       );
 
       expect(screen.getByText("minimal-repo")).toBeInTheDocument();
-      // Should not render CardContent without description
-      expect(screen.queryByText("Public")).not.toBeInTheDocument();
+      expect(screen.getByText("Public")).toBeInTheDocument();
+      expect(screen.getByRole("link").querySelector("time")).toHaveAttribute(
+        "dateTime",
+        "2024-01-15T10:00:00.000Z",
+      );
     });
 
     it("should handle long repository name", () => {
@@ -303,9 +306,7 @@ describe("RepositoryListItem", () => {
       );
 
       // Check that the description element exists (may be truncated by CSS)
-      const descElement = container.querySelector(
-        ".text-sm.text-muted-foreground.mb-2",
-      );
+      const descElement = container.querySelector("p.line-clamp-2");
       expect(descElement).toBeInTheDocument();
       expect(descElement?.textContent).toContain("Lorem ipsum");
     });
@@ -324,6 +325,22 @@ describe("RepositoryListItem", () => {
 
       expect(screen.getByText("test-repo_123")).toBeInTheDocument();
     });
+  });
+
+  it("opens a starred ledger under its actual owner", () => {
+    render(
+      <RepositoryListItem
+        name="shared-ledger"
+        fullName="original-owner/shared-ledger"
+        isPrivate={false}
+        updatedAt="2024-01-15T10:00:00Z"
+        ownerUsername="profile-viewer"
+      />,
+    );
+    expect(screen.getByRole("link")).toHaveAttribute(
+      "href",
+      expect.stringContaining("original-owner/shared-ledger"),
+    );
   });
 
   describe("Complete Repository Data", () => {

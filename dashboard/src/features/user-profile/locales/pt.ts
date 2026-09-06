@@ -41,7 +41,7 @@ const ptUserProfile: Record<string, TranslationEntry> = {
     description: "Heading for recent activity section",
   },
   "userProfile.repositories": {
-    message: "Repositórios",
+    message: "Livros",
     description: "Heading for repositories section",
   },
   "userProfile.follow": {
@@ -82,7 +82,7 @@ const ptUserProfile: Record<string, TranslationEntry> = {
     description: "SEO description for user profile page",
   },
   "userProfile.tabs.overview": {
-    message: "Overview",
+    message: "Livros",
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
@@ -108,6 +108,115 @@ const ptUserProfile: Record<string, TranslationEntry> = {
   "userProfile.noStarredRepos": {
     message: "No starred repositories",
     description: "Message shown when user has no starred repos",
+  },
+  "userProfile.community": {
+    message: "Comunidade",
+    description: "Public profile: community",
+  },
+  "userProfile.ledgerDescription": {
+    message: "Explore contas, transações e relatórios financeiros.",
+    description: "Public profile: ledgerDescription",
+  },
+  "userProfile.browseDescription": {
+    message: "Encontre um livro. Acompanhe os números.",
+    description: "Public profile: browseDescription",
+  },
+  "userProfile.searchLedgers": {
+    message: "Pesquisar livros…",
+    description: "Public profile: searchLedgers",
+  },
+  "userProfile.clearSearch": {
+    message: "Limpar pesquisa",
+    description: "Public profile: clearSearch",
+  },
+  "userProfile.sortLedgers": {
+    message: "Ordenar livros",
+    description: "Public profile: sortLedgers",
+  },
+  "userProfile.recentlyUpdated": {
+    message: "Atualizados recentemente",
+    description: "Public profile: recentlyUpdated",
+  },
+  "userProfile.nameAZ": {
+    message: "Nome (A–Z)",
+    description: "Public profile: nameAZ",
+  },
+  "userProfile.noMatches": {
+    message:
+      "Nenhum livro corresponde à pesquisa. Tente outro nome ou palavra-chave.",
+    description: "Public profile: noMatches",
+  },
+  "userProfile.results": {
+    message: "Mostrando {shown} de {total} livros",
+    description: "Public profile: results",
+  },
+  "userProfile.showMoreLedgers": {
+    message: "Mostrar mais livros",
+    description: "Public profile: showMoreLedgers",
+  },
+  "userProfile.newToBeancount": {
+    message: "Novo no Beancount?",
+    description: "Public profile: newToBeancount",
+  },
+  "userProfile.startExample": {
+    message: "Comece com um exemplo",
+    description: "Public profile: startExample",
+  },
+  "userProfile.exampleDescription": {
+    message:
+      "Conheça os livros. Explore um livro de exemplo com contas, transações e relatórios.",
+    description: "Public profile: exampleDescription",
+  },
+  "userProfile.openExample": {
+    message: "Explorar o exemplo",
+    description: "Public profile: openExample",
+  },
+  "userProfile.showLessActivity": {
+    message: "Mostrar menos atividade",
+    description: "Public profile: showLessActivity",
+  },
+  "userProfile.showAllActivity": {
+    message: "Mostrar toda a atividade",
+    description: "Public profile: showAllActivity",
+  },
+  "userProfile.linkCopied": {
+    message: "Link do perfil copiado",
+    description: "Public profile: linkCopied",
+  },
+  "userProfile.copyLinkError": {
+    message:
+      "Não foi possível copiar o link. Pode copiá-lo da barra de endereços.",
+    description: "Public profile: copyLinkError",
+  },
+  "userProfile.tryAgain": {
+    message: "Tentar novamente",
+    description: "Public profile: tryAgain",
+  },
+  "userProfile.collectionLabel": {
+    message: "Uma coleção de livros abertos",
+    description: "Public profile: collectionLabel",
+  },
+  "userProfile.collectionDescription": {
+    message:
+      "Finanças reais, abertas à exploração. Consulte livros de empresas e exemplos práticos para ver o Beancount em ação.",
+    description: "Public profile: collectionDescription",
+  },
+  "userProfile.copyLink": {
+    message: "Copiar link",
+    description: "Public profile: copyLink",
+  },
+  "userProfile.followDescription": {
+    message: "Adicione este perfil à sua lista de perfis seguidos.",
+    description: "Public profile: followDescription",
+  },
+  "userProfile.footer": {
+    message: "Livros abertos. Finanças mais claras. Com Beancount.",
+    description: "Public profile: footer",
+  },
+  "userProfile.openLedgerName": {
+    message: "Open Ledger",
+    description:
+      "Proper name of the Open Ledger collection; keep the name unchanged",
   },
 };
 

@@ -11,7 +11,9 @@ import { useUserFollowing } from "../hooks/use-user-following";
 import { useUserStarredRepos } from "../hooks/use-user-starred-repos";
 import { UserListItem } from "./user-list-item";
 import { RepositoryListItem } from "./repository-list-item";
-import { Loader2 } from "lucide-react";
+import { BookOpen, Loader2, Star, Users } from "lucide-react";
+import { LedgerCollection } from "./ledger-collection";
+import { ProfileActivity } from "./profile-activity";
 import type {
   UserActivityFeedItem,
   UserRepository,
@@ -19,15 +21,7 @@ import type {
   GetUserFollowingQuery,
   GetUserStarredReposQuery,
 } from "@/graphql/definitions";
-import { Link, useNavigate } from "@tanstack/react-router";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardContent,
-} from "@/common/components/ui/card";
-import { Badge } from "@/common/components/ui/badge";
-import { formatDistanceToNow } from "date-fns";
+import { useNavigate } from "@tanstack/react-router";
 
 interface UserProfileTabsProps {
   username: string;
@@ -84,153 +78,66 @@ export function UserProfileTabs({
   );
 
   return (
-    <Tabs value={activeTab} onValueChange={handleTabChange} className="w-full">
+    <Tabs
+      value={activeTab}
+      onValueChange={handleTabChange}
+      className="w-full gap-0"
+    >
       <div className="overflow-x-auto -mx-4 sm:mx-0 px-4 sm:px-0">
         <TabsList
           variant="underline"
           className="w-full justify-start min-w-max sm:min-w-0"
         >
-          <TabsTrigger value="overview" className="whitespace-nowrap">
+          <TabsTrigger
+            value="overview"
+            className="gap-2 whitespace-nowrap px-3 py-4 text-sm sm:px-4"
+          >
+            <BookOpen aria-hidden="true" className="size-4" />
             {t("userProfile.tabs.overview")}
           </TabsTrigger>
-          <TabsTrigger value="starred" className="whitespace-nowrap">
+          <TabsTrigger
+            value="starred"
+            className="gap-2 whitespace-nowrap px-3 py-4 text-sm sm:px-4"
+          >
+            <Star aria-hidden="true" className="size-4" />
             {t("userProfile.tabs.starred")} ({starredReposCount})
           </TabsTrigger>
-          <TabsTrigger value="following" className="whitespace-nowrap">
+          <TabsTrigger
+            value="following"
+            className="gap-2 whitespace-nowrap px-3 py-4 text-sm sm:px-4"
+          >
             {t("userProfile.tabs.following")} ({followingCount})
           </TabsTrigger>
 
-          <TabsTrigger value="followers" className="whitespace-nowrap">
+          <TabsTrigger
+            value="followers"
+            className="gap-2 whitespace-nowrap px-3 py-4 text-sm sm:px-4"
+          >
+            <Users aria-hidden="true" className="size-4" />
             {t("userProfile.tabs.followers")} ({followersCount})
           </TabsTrigger>
         </TabsList>
       </div>
 
-      {/* Overview Tab */}
-      <TabsContent value="overview" className="pt-4 sm:pt-6">
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
-          {/* Left: Activity Feed */}
-          <div className="lg:col-span-2 space-y-3 sm:space-y-4">
-            <h2 className="text-base sm:text-lg lg:text-xl font-semibold">
-              {t("userProfile.recentActivity")}
-            </h2>
-            {activities.length === 0 ? (
-              <p className="text-muted-foreground">
-                {t("userProfile.noActivity")}
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {activities.map((activity) =>
-                  activity.repoName ? (
-                    <Link
-                      key={activity.id}
-                      to="/ledger/$ledgerOwner/$ledgerName"
-                      params={{
-                        ledgerOwner: username,
-                        ledgerName: activity.repoName,
-                      }}
-                      className="block"
-                    >
-                      <Card className="cursor-pointer hover:border-foreground/20 transition-colors">
-                        <CardHeader className="">
-                          <CardTitle className="text-sm font-medium">
-                            {activity.content}
-                          </CardTitle>
-                        </CardHeader>
-                        <CardContent className="">
-                          <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                            <Badge variant="secondary">
-                              {activity.repoName}
-                            </Badge>
-                            <span>
-                              {formatDistanceToNow(
-                                new Date(activity.createdAt),
-                                {
-                                  addSuffix: true,
-                                },
-                              )}
-                            </span>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    </Link>
-                  ) : (
-                    <Card key={activity.id}>
-                      <CardHeader className="pb-2">
-                        <CardTitle className="text-sm font-medium">
-                          {activity.content}
-                        </CardTitle>
-                      </CardHeader>
-                      <CardContent className="pt-2">
-                        <div className="flex items-center gap-2 text-xs text-muted-foreground">
-                          <span>
-                            {formatDistanceToNow(new Date(activity.createdAt), {
-                              addSuffix: true,
-                            })}
-                          </span>
-                        </div>
-                      </CardContent>
-                    </Card>
-                  ),
-                )}
-              </div>
-            )}
-          </div>
-
-          {/* Right: Repositories */}
-          <div className="space-y-3 sm:space-y-4">
-            <h2 className="text-base sm:text-lg lg:text-xl font-semibold">
-              {t("userProfile.repositories")}
-            </h2>
-            {repositories.length === 0 ? (
-              <p className="text-muted-foreground">
-                {t("userProfile.noRepositories")}
-              </p>
-            ) : (
-              <div className="space-y-3">
-                {repositories.slice(0, 10).map((repo) => (
-                  <Link
-                    key={repo.fullName}
-                    to="/ledger/$ledgerOwner/$ledgerName"
-                    params={{ ledgerOwner: username, ledgerName: repo.name }}
-                    className="block"
-                  >
-                    <Card className="cursor-pointer hover:border-foreground/20 transition-colors">
-                      <CardHeader className="pb-3">
-                        <CardTitle className="text-sm font-medium">
-                          {repo.name}
-                        </CardTitle>
-                      </CardHeader>
-                      {repo.description && (
-                        <CardContent className="pt-0">
-                          <p className="text-sm text-muted-foreground">
-                            {repo.description}
-                          </p>
-                          <div className="mt-2 flex items-center gap-2">
-                            <Badge
-                              variant={
-                                repo.isPrivate ? "destructive" : "secondary"
-                              }
-                            >
-                              {repo.isPrivate
-                                ? t("userProfile.private")
-                                : t("userProfile.public")}
-                            </Badge>
-                            <span className="text-xs text-muted-foreground">
-                              {t("userProfile.updated")}{" "}
-                              {formatDistanceToNow(new Date(repo.updatedAt), {
-                                addSuffix: true,
-                              })}
-                            </span>
-                          </div>
-                        </CardContent>
-                      )}
-                    </Card>
-                  </Link>
-                ))}
-              </div>
-            )}
-          </div>
+      <TabsContent value="overview" className="pt-6 sm:pt-8">
+        <div className="grid grid-cols-1 items-start gap-8 lg:grid-cols-[minmax(0,1fr)_288px] lg:gap-10">
+          <LedgerCollection
+            key={`collection-${username}`}
+            username={username}
+            repositories={repositories}
+          />
+          <ProfileActivity
+            key={`activity-${username}`}
+            username={username}
+            activities={activities}
+            example={
+              username === "open_ledger"
+                ? repositories.find(
+                    (repo) => repo.name === "example" && !repo.isPrivate,
+                  )
+                : undefined
+            }
+          />
         </div>
       </TabsContent>
 

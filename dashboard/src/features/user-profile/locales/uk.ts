@@ -41,7 +41,7 @@ const ukUserProfile: Record<string, TranslationEntry> = {
     description: "Heading for recent activity section",
   },
   "userProfile.repositories": {
-    message: "Репозиторії",
+    message: "Книги",
     description: "Heading for repositories section",
   },
   "userProfile.follow": {
@@ -82,7 +82,7 @@ const ukUserProfile: Record<string, TranslationEntry> = {
     description: "SEO description for user profile page",
   },
   "userProfile.tabs.overview": {
-    message: "Overview",
+    message: "Книги",
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
@@ -108,6 +108,115 @@ const ukUserProfile: Record<string, TranslationEntry> = {
   "userProfile.noStarredRepos": {
     message: "No starred repositories",
     description: "Message shown when user has no starred repos",
+  },
+  "userProfile.community": {
+    message: "Спільнота",
+    description: "Public profile: community",
+  },
+  "userProfile.ledgerDescription": {
+    message: "Досліджуйте рахунки, транзакції та фінансові звіти.",
+    description: "Public profile: ledgerDescription",
+  },
+  "userProfile.browseDescription": {
+    message: "Знайдіть книгу. Простежте за цифрами.",
+    description: "Public profile: browseDescription",
+  },
+  "userProfile.searchLedgers": {
+    message: "Пошук книг…",
+    description: "Public profile: searchLedgers",
+  },
+  "userProfile.clearSearch": {
+    message: "Очистити пошук",
+    description: "Public profile: clearSearch",
+  },
+  "userProfile.sortLedgers": {
+    message: "Сортування книг",
+    description: "Public profile: sortLedgers",
+  },
+  "userProfile.recentlyUpdated": {
+    message: "Нещодавно оновлені",
+    description: "Public profile: recentlyUpdated",
+  },
+  "userProfile.nameAZ": {
+    message: "Назва (A–Z)",
+    description: "Public profile: nameAZ",
+  },
+  "userProfile.noMatches": {
+    message:
+      "Немає книг, що відповідають запиту. Спробуйте іншу назву або ключове слово.",
+    description: "Public profile: noMatches",
+  },
+  "userProfile.results": {
+    message: "Показано {shown} із {total} книг",
+    description: "Public profile: results",
+  },
+  "userProfile.showMoreLedgers": {
+    message: "Показати більше книг",
+    description: "Public profile: showMoreLedgers",
+  },
+  "userProfile.newToBeancount": {
+    message: "Уперше в Beancount?",
+    description: "Public profile: newToBeancount",
+  },
+  "userProfile.startExample": {
+    message: "Почніть із прикладу",
+    description: "Public profile: startExample",
+  },
+  "userProfile.exampleDescription": {
+    message:
+      "Ознайомтеся з будовою книг. Дослідіть приклад із рахунками, транзакціями та звітами.",
+    description: "Public profile: exampleDescription",
+  },
+  "userProfile.openExample": {
+    message: "Переглянути приклад",
+    description: "Public profile: openExample",
+  },
+  "userProfile.showLessActivity": {
+    message: "Згорнути активність",
+    description: "Public profile: showLessActivity",
+  },
+  "userProfile.showAllActivity": {
+    message: "Показати всю активність",
+    description: "Public profile: showAllActivity",
+  },
+  "userProfile.linkCopied": {
+    message: "Посилання на профіль скопійовано",
+    description: "Public profile: linkCopied",
+  },
+  "userProfile.copyLinkError": {
+    message:
+      "Не вдалося скопіювати посилання. Ви можете скопіювати його з адресного рядка.",
+    description: "Public profile: copyLinkError",
+  },
+  "userProfile.tryAgain": {
+    message: "Спробувати ще раз",
+    description: "Public profile: tryAgain",
+  },
+  "userProfile.collectionLabel": {
+    message: "Колекція відкритих книг",
+    description: "Public profile: collectionLabel",
+  },
+  "userProfile.collectionDescription": {
+    message:
+      "Реальні фінанси, відкриті для дослідження. Переглядайте книги компаній і практичні приклади, щоб побачити Beancount у дії.",
+    description: "Public profile: collectionDescription",
+  },
+  "userProfile.copyLink": {
+    message: "Копіювати посилання",
+    description: "Public profile: copyLink",
+  },
+  "userProfile.followDescription": {
+    message: "Додайте цей профіль до списку підписок.",
+    description: "Public profile: followDescription",
+  },
+  "userProfile.footer": {
+    message: "Відкриті книги. Зрозумілі фінанси. На основі Beancount.",
+    description: "Public profile: footer",
+  },
+  "userProfile.openLedgerName": {
+    message: "Open Ledger",
+    description:
+      "Proper name of the Open Ledger collection; keep the name unchanged",
   },
 };
 

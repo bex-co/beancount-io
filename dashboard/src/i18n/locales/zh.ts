@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import zhCommon from "./common/zh";
 import zhSeo from "./seo/zh";
 import zhAuth from "@/features/auth/locales/zh";
+import zhUserProfile from "@/features/user-profile/locales/zh";
 import zhUserSettings from "@/features/user-settings/locales/zh";
 import zhLedgerList from "@/features/ledger-list/locales/zh";
 import zhSettings from "@/features/ledger-data/settings/locales/zh";
@@ -29,6 +30,7 @@ const zh: Record<string, string> = {
   ...extractMessages(zhCommon),
   ...extractMessages(zhSeo),
   ...extractMessages(zhAuth),
+  ...extractMessages(zhUserProfile),
   ...extractMessages(zhUserSettings),
   ...extractMessages(zhLedgerList),
   ...extractMessages(zhSettings),

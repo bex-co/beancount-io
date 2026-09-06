@@ -18,7 +18,7 @@ const jaUserProfile: Record<string, TranslationEntry> = {
     description: "Message shown when user has no recent activity",
   },
   "userProfile.repositories": {
-    message: "リポジトリ",
+    message: "帳簿",
     description: "Heading for repositories section",
   },
   "userProfile.noRepositories": {
@@ -79,7 +79,7 @@ const jaUserProfile: Record<string, TranslationEntry> = {
     description: "SEO description for user profile page",
   },
   "userProfile.tabs.overview": {
-    message: "概要",
+    message: "帳簿",
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
@@ -105,6 +105,114 @@ const jaUserProfile: Record<string, TranslationEntry> = {
   "userProfile.noStarredRepos": {
     message: "スターリポジトリがありません",
     description: "Message shown when user has no starred repos",
+  },
+  "userProfile.community": {
+    message: "コミュニティ",
+    description: "Public profile: community",
+  },
+  "userProfile.ledgerDescription": {
+    message: "勘定科目、取引、財務レポートを探索できます。",
+    description: "Public profile: ledgerDescription",
+  },
+  "userProfile.browseDescription": {
+    message: "帳簿を見つけて、数字を読み解きましょう。",
+    description: "Public profile: browseDescription",
+  },
+  "userProfile.searchLedgers": {
+    message: "帳簿を検索…",
+    description: "Public profile: searchLedgers",
+  },
+  "userProfile.clearSearch": {
+    message: "検索をクリア",
+    description: "Public profile: clearSearch",
+  },
+  "userProfile.sortLedgers": {
+    message: "帳簿の並び順",
+    description: "Public profile: sortLedgers",
+  },
+  "userProfile.recentlyUpdated": {
+    message: "更新が新しい順",
+    description: "Public profile: recentlyUpdated",
+  },
+  "userProfile.nameAZ": {
+    message: "名前（A–Z）",
+    description: "Public profile: nameAZ",
+  },
+  "userProfile.noMatches": {
+    message: "一致する帳簿がありません。別の名前やキーワードをお試しください。",
+    description: "Public profile: noMatches",
+  },
+  "userProfile.results": {
+    message: "{total} 件中 {shown} 件の帳簿を表示",
+    description: "Public profile: results",
+  },
+  "userProfile.showMoreLedgers": {
+    message: "帳簿をもっと見る",
+    description: "Public profile: showMoreLedgers",
+  },
+  "userProfile.newToBeancount": {
+    message: "Beancount は初めてですか？",
+    description: "Public profile: newToBeancount",
+  },
+  "userProfile.startExample": {
+    message: "サンプルから始める",
+    description: "Public profile: startExample",
+  },
+  "userProfile.exampleDescription": {
+    message:
+      "帳簿の仕組みを体験しましょう。勘定科目、取引、レポートを含むサンプル帳簿を探索できます。",
+    description: "Public profile: exampleDescription",
+  },
+  "userProfile.openExample": {
+    message: "サンプルを見る",
+    description: "Public profile: openExample",
+  },
+  "userProfile.showLessActivity": {
+    message: "アクティビティを折りたたむ",
+    description: "Public profile: showLessActivity",
+  },
+  "userProfile.showAllActivity": {
+    message: "すべてのアクティビティを見る",
+    description: "Public profile: showAllActivity",
+  },
+  "userProfile.linkCopied": {
+    message: "プロフィールのリンクをコピーしました",
+    description: "Public profile: linkCopied",
+  },
+  "userProfile.copyLinkError": {
+    message:
+      "リンクをコピーできませんでした。アドレスバーからコピーしてください。",
+    description: "Public profile: copyLinkError",
+  },
+  "userProfile.tryAgain": {
+    message: "再試行",
+    description: "Public profile: tryAgain",
+  },
+  "userProfile.collectionLabel": {
+    message: "公開帳簿コレクション",
+    description: "Public profile: collectionLabel",
+  },
+  "userProfile.collectionDescription": {
+    message:
+      "実際の財務データを自由に探索。企業の帳簿や実用的なサンプルで Beancount の使い方を体験しましょう。",
+    description: "Public profile: collectionDescription",
+  },
+  "userProfile.copyLink": {
+    message: "リンクをコピー",
+    description: "Public profile: copyLink",
+  },
+  "userProfile.followDescription": {
+    message: "このプロフィールをフォローリストに追加します。",
+    description: "Public profile: followDescription",
+  },
+  "userProfile.footer": {
+    message: "開かれた帳簿で、明確な財務へ。Beancount による。",
+    description: "Public profile: footer",
+  },
+  "userProfile.openLedgerName": {
+    message: "Open Ledger",
+    description:
+      "Proper name of the Open Ledger collection; keep the name unchanged",
   },
 };
 

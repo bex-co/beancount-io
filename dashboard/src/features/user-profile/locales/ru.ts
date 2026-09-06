@@ -41,7 +41,7 @@ const ruUserProfile: Record<string, TranslationEntry> = {
     description: "Heading for recent activity section",
   },
   "userProfile.repositories": {
-    message: "Репозитории",
+    message: "Книги",
     description: "Heading for repositories section",
   },
   "userProfile.follow": {
@@ -82,7 +82,7 @@ const ruUserProfile: Record<string, TranslationEntry> = {
     description: "SEO description for user profile page",
   },
   "userProfile.tabs.overview": {
-    message: "Overview",
+    message: "Книги",
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
@@ -108,6 +108,115 @@ const ruUserProfile: Record<string, TranslationEntry> = {
   "userProfile.noStarredRepos": {
     message: "No starred repositories",
     description: "Message shown when user has no starred repos",
+  },
+  "userProfile.community": {
+    message: "Сообщество",
+    description: "Public profile: community",
+  },
+  "userProfile.ledgerDescription": {
+    message: "Изучайте счета, транзакции и финансовые отчёты.",
+    description: "Public profile: ledgerDescription",
+  },
+  "userProfile.browseDescription": {
+    message: "Найдите книгу. Проследите за цифрами.",
+    description: "Public profile: browseDescription",
+  },
+  "userProfile.searchLedgers": {
+    message: "Поиск книг…",
+    description: "Public profile: searchLedgers",
+  },
+  "userProfile.clearSearch": {
+    message: "Очистить поиск",
+    description: "Public profile: clearSearch",
+  },
+  "userProfile.sortLedgers": {
+    message: "Сортировка книг",
+    description: "Public profile: sortLedgers",
+  },
+  "userProfile.recentlyUpdated": {
+    message: "Недавно обновлённые",
+    description: "Public profile: recentlyUpdated",
+  },
+  "userProfile.nameAZ": {
+    message: "Название (A–Z)",
+    description: "Public profile: nameAZ",
+  },
+  "userProfile.noMatches": {
+    message:
+      "Нет книг, соответствующих запросу. Попробуйте другое название или ключевое слово.",
+    description: "Public profile: noMatches",
+  },
+  "userProfile.results": {
+    message: "Показано {shown} из {total} книг",
+    description: "Public profile: results",
+  },
+  "userProfile.showMoreLedgers": {
+    message: "Показать больше книг",
+    description: "Public profile: showMoreLedgers",
+  },
+  "userProfile.newToBeancount": {
+    message: "Впервые в Beancount?",
+    description: "Public profile: newToBeancount",
+  },
+  "userProfile.startExample": {
+    message: "Начните с примера",
+    description: "Public profile: startExample",
+  },
+  "userProfile.exampleDescription": {
+    message:
+      "Познакомьтесь с устройством книг. Изучите пример со счетами, транзакциями и отчётами.",
+    description: "Public profile: exampleDescription",
+  },
+  "userProfile.openExample": {
+    message: "Посмотреть пример",
+    description: "Public profile: openExample",
+  },
+  "userProfile.showLessActivity": {
+    message: "Свернуть активность",
+    description: "Public profile: showLessActivity",
+  },
+  "userProfile.showAllActivity": {
+    message: "Показать всю активность",
+    description: "Public profile: showAllActivity",
+  },
+  "userProfile.linkCopied": {
+    message: "Ссылка на профиль скопирована",
+    description: "Public profile: linkCopied",
+  },
+  "userProfile.copyLinkError": {
+    message:
+      "Не удалось скопировать ссылку. Вы можете скопировать её из адресной строки.",
+    description: "Public profile: copyLinkError",
+  },
+  "userProfile.tryAgain": {
+    message: "Повторить",
+    description: "Public profile: tryAgain",
+  },
+  "userProfile.collectionLabel": {
+    message: "Коллекция открытых книг",
+    description: "Public profile: collectionLabel",
+  },
+  "userProfile.collectionDescription": {
+    message:
+      "Реальные финансы, открытые для изучения. Просматривайте книги компаний и практические примеры, чтобы увидеть Beancount в действии.",
+    description: "Public profile: collectionDescription",
+  },
+  "userProfile.copyLink": {
+    message: "Копировать ссылку",
+    description: "Public profile: copyLink",
+  },
+  "userProfile.followDescription": {
+    message: "Добавьте этот профиль в список подписок.",
+    description: "Public profile: followDescription",
+  },
+  "userProfile.footer": {
+    message: "Открытые книги. Понятные финансы. На базе Beancount.",
+    description: "Public profile: footer",
+  },
+  "userProfile.openLedgerName": {
+    message: "Open Ledger",
+    description:
+      "Proper name of the Open Ledger collection; keep the name unchanged",
   },
 };
 

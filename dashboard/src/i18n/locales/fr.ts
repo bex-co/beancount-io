@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import frCommon from "./common/fr";
 import frSeo from "./seo/fr";
 import frAuth from "@/features/auth/locales/fr";
+import frUserProfile from "@/features/user-profile/locales/fr";
 import frUserSettings from "@/features/user-settings/locales/fr";
 import frLedgerList from "@/features/ledger-list/locales/fr";
 import frSettings from "@/features/ledger-data/settings/locales/fr";
@@ -29,6 +30,7 @@ const fr: Record<string, string> = {
   ...extractMessages(frCommon),
   ...extractMessages(frSeo),
   ...extractMessages(frAuth),
+  ...extractMessages(frUserProfile),
   ...extractMessages(frUserSettings),
   ...extractMessages(frLedgerList),
   ...extractMessages(frSettings),

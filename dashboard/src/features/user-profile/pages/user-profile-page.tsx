@@ -1,5 +1,4 @@
-import { useParams, useSearch } from "@tanstack/react-router";
-import { useQuery } from "@apollo/client/react";
+import { Link, useParams, useSearch } from "@tanstack/react-router";
 import { useUserProfile } from "../hooks/use-user-profile";
 import { FollowButton } from "../components/follow-button";
 import { UserProfileHeader } from "../components/user-profile-header";
@@ -9,16 +8,26 @@ import {
   AvatarImage,
   AvatarFallback,
 } from "@/common/components/ui/avatar";
-import { Loader2, MapPin, Link as LinkIcon, Calendar } from "lucide-react";
+import { Button } from "@/common/components/ui/button";
+import { UserProfileSkeleton } from "../components/user-profile-skeleton";
+import {
+  BookOpen,
+  MapPin,
+  Link as LinkIcon,
+  Calendar,
+  Globe2,
+  Users,
+  ArrowLeft,
+} from "lucide-react";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useRootContext } from "@/common/hooks/use-root-context";
 import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
-import { GetCurrentUserDocument } from "@/graphql/definitions";
+import { toast } from "sonner";
 
 export default function UserProfilePage() {
   const { username } = useParams({ from: "/ledger/$username" });
   const search = useSearch({ from: "/ledger/$username" });
-  const initialTab = search.tab || "overview";
   const {
     profile,
     isFollowing,
@@ -26,151 +35,235 @@ export default function UserProfilePage() {
     repositories,
     isInitialLoading,
     error,
+    refetch,
   } = useUserProfile(username);
-  const { t } = useTranslations();
+  const { t, i18n } = useTranslations();
+  const { userProfile: currentUser } = useRootContext();
+  const isOwnProfile = currentUser?.username === username;
+  const isOpenLedger = username === "open_ledger";
+  const example = isOpenLedger
+    ? repositories.find((repo) => repo.name === "example" && !repo.isPrivate)
+    : undefined;
+  const joined = profile?.created ? new Date(profile.created) : null;
 
-  // Get current logged-in user
-  const { data: currentUserData } = useQuery(GetCurrentUserDocument);
-  const currentUsername = currentUserData?.userProfile?.username;
-
-  // Check if viewing own profile
-  const isOwnProfile = currentUsername === username;
-
-  // Only show full-page loader on initial load, not on refetch
-  if (isInitialLoading) {
-    return (
-      <div className="flex items-center justify-center h-screen">
-        <Loader2 className="size-8 animate-spin" />
-      </div>
-    );
-  }
-
-  if (error || !profile) {
-    // Check if it's a user not found error (404) or other error
-    const isUserNotFound =
-      (CombinedGraphQLErrors.is(error) &&
-        error.errors.some(
-          (gqlError) => gqlError.extensions?.code === "NOT_FOUND",
-        )) ||
-      error?.message?.includes("not found") ||
-      !profile;
-
-    return (
-      <div className="p-6 text-center">
-        <h1 className="text-2xl font-bold">
-          {isUserNotFound
-            ? t("userProfile.userNotFound")
-            : t("userProfile.errorLoadingProfile")}
-        </h1>
-        <p className="text-muted-foreground mt-2">
-          {isUserNotFound
-            ? t("userProfile.userNotFoundMessage", { username })
-            : t(getErrorMessageKey(error))}
-        </p>
-      </div>
-    );
-  }
+  const copyProfileLink = async () => {
+    try {
+      await navigator.clipboard.writeText(
+        `${window.location.origin}/ledger/${encodeURIComponent(username)}`,
+      );
+      toast.success(t("userProfile.linkCopied"));
+    } catch {
+      toast.error(t("userProfile.copyLinkError"));
+    }
+  };
 
   return (
     <div className="min-h-screen bg-background flex flex-col">
-      {/* Header */}
       <UserProfileHeader />
-
-      {/* Profile Content - Main container with max-width and responsive padding */}
-      <main className="flex-1 flex flex-col max-w-7xl mx-auto w-full px-4 sm:px-6 lg:px-8 mt-4 sm:mt-6 lg:mt-8">
-        {/* Profile Header */}
-        <div className="border border-border rounded-lg sm:rounded-xl overflow-hidden shadow-sm">
-          <div className="bg-card">
-            <div className="p-4 sm:p-6 lg:p-8">
-              <div className="flex flex-col sm:flex-row items-start gap-4 sm:gap-6">
-                {/* Avatar */}
-                <Avatar className="size-16 sm:size-20 lg:size-24 shrink-0">
-                  <AvatarImage
-                    src={profile.avatarUrl || undefined}
-                    alt={profile.username}
-                  />
-                  <AvatarFallback className="text-3xl sm:text-4xl lg:text-5xl">
-                    {profile.username[0].toUpperCase()}
-                  </AvatarFallback>
-                </Avatar>
-
-                {/* Info */}
-                <div className="flex-1 w-full min-w-0">
-                  <div className="flex flex-col sm:flex-row items-start sm:items-center sm:justify-between gap-3 sm:gap-4">
-                    <div className="min-w-0 w-full sm:w-auto">
-                      <h1 className="text-lg sm:text-xl lg:text-2xl font-bold truncate">
-                        {profile.fullName || profile.username}
-                      </h1>
-                      <p className="text-xs sm:text-sm lg:text-base text-muted-foreground truncate">
-                        @{profile.username}
-                      </p>
-                    </div>
-                    {!isOwnProfile && (
-                      <FollowButton
-                        username={profile.username}
-                        isFollowing={isFollowing}
-                        className="w-full sm:w-auto shrink-0"
-                      />
-                    )}
-                  </div>
-
-                  {/* Bio */}
-                  {profile.bio && (
-                    <p className="mt-3 sm:mt-4 text-sm sm:text-base leading-relaxed">
-                      {profile.bio}
-                    </p>
-                  )}
-
-                  {/* Meta info */}
-                  <div className="mt-3 sm:mt-4 flex flex-wrap gap-x-3 gap-y-2 sm:gap-x-4 text-xs sm:text-sm text-muted-foreground">
-                    {profile.location && (
-                      <div className="flex items-center gap-1 min-w-0">
-                        <MapPin className="size-3 sm:size-4 shrink-0" />
-                        <span className="truncate">{profile.location}</span>
+      <main className="flex-1">
+        {isInitialLoading && !profile ? (
+          <UserProfileSkeleton
+            username={username}
+            isOwnProfile={isOwnProfile}
+            tab={search.tab || "overview"}
+          />
+        ) : error || !profile ? (
+          <div className="mx-auto max-w-xl px-5 py-24 text-center">
+            <BookOpen
+              aria-hidden="true"
+              className="mx-auto mb-6 size-10 text-muted-foreground"
+            />
+            <h1 className="text-2xl font-semibold">
+              {t(
+                !error ||
+                  (CombinedGraphQLErrors.is(error) &&
+                    error.errors.some(
+                      (item) => item.extensions?.code === "NOT_FOUND",
+                    )) ||
+                  error.message.includes("not found")
+                  ? "userProfile.userNotFound"
+                  : "userProfile.errorLoadingProfile",
+              )}
+            </h1>
+            <p className="mt-3 text-muted-foreground">
+              {error
+                ? t(getErrorMessageKey(error))
+                : t("userProfile.userNotFoundMessage", { username })}
+            </p>
+            <div className="mt-6 flex justify-center gap-3">
+              <Button variant="outline" asChild>
+                <Link to="/ledger">
+                  <ArrowLeft aria-hidden="true" className="size-4" />
+                  {t("page.dashboard.goToDashboard")}
+                </Link>
+              </Button>
+              {error && (
+                <Button onClick={() => void refetch().catch(() => {})}>
+                  {t("userProfile.tryAgain")}
+                </Button>
+              )}
+            </div>
+          </div>
+        ) : (
+          <>
+            <section
+              aria-labelledby="profile-name"
+              className="border-b bg-muted/35"
+            >
+              <div className="mx-auto max-w-7xl px-5 py-7 sm:px-8 sm:py-10 lg:px-12">
+                {isOpenLedger && (
+                  <p className="mb-5 flex items-center gap-2 text-xs font-medium tracking-widest text-primary uppercase">
+                    <Globe2 aria-hidden="true" className="size-3.5" />
+                    {t("userProfile.collectionLabel")}
+                  </p>
+                )}
+                <div className="flex flex-col justify-between gap-6 md:flex-row md:items-center">
+                  <div className="min-w-0 max-w-2xl">
+                    <div className="flex items-center gap-5">
+                      <Avatar className="size-16 shrink-0 rounded-2xl border border-primary/15 sm:size-22">
+                        <AvatarImage
+                          src={profile.avatarUrl || undefined}
+                          alt={profile.username}
+                          className="rounded-2xl object-cover"
+                        />
+                        <AvatarFallback className="rounded-2xl bg-primary/8 text-3xl text-primary">
+                          {isOpenLedger ? (
+                            <BookOpen
+                              aria-hidden="true"
+                              className="size-9 stroke-[1.5]"
+                            />
+                          ) : (
+                            profile.username[0]?.toUpperCase()
+                          )}
+                        </AvatarFallback>
+                      </Avatar>
+                      <div className="min-w-0">
+                        <h1
+                          id="profile-name"
+                          className="break-words font-serif text-4xl tracking-tight sm:text-5xl"
+                        >
+                          {profile.fullName ||
+                            (isOpenLedger
+                              ? t("userProfile.openLedgerName")
+                              : profile.username)}
+                        </h1>
+                        <p className="mt-2 break-all text-sm text-muted-foreground">
+                          @{profile.username}
+                        </p>
                       </div>
+                    </div>
+                    {(profile.bio || isOpenLedger) && (
+                      <p className="mt-5 max-w-xl text-sm leading-6 sm:text-base sm:leading-7 text-muted-foreground">
+                        {profile.bio || t("userProfile.collectionDescription")}
+                      </p>
                     )}
-                    {profile.website && (
-                      <div className="flex items-center gap-1 min-w-0">
-                        <LinkIcon className="size-3 sm:size-4 shrink-0" />
+                    <div className="mt-5 flex flex-wrap gap-x-5 gap-y-3 text-xs text-muted-foreground">
+                      {profile.location && (
+                        <span className="flex items-center gap-1.5">
+                          <MapPin
+                            aria-hidden="true"
+                            className="size-3.5 shrink-0"
+                          />
+                          {profile.location}
+                        </span>
+                      )}
+                      {profile.website && (
                         <a
                           href={profile.website}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="hover:underline truncate"
+                          className="flex min-w-0 items-center gap-1.5 rounded-sm hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
                         >
-                          {profile.website}
+                          <LinkIcon
+                            aria-hidden="true"
+                            className="size-3.5 shrink-0"
+                          />
+                          <span className="truncate">{profile.website}</span>
                         </a>
-                      </div>
-                    )}
-                    {profile.created && (
-                      <div className="flex items-center gap-1 shrink-0">
-                        <Calendar className="size-3 sm:size-4 shrink-0" />
-                        <span>
+                      )}
+                      {joined && !Number.isNaN(joined.getTime()) && (
+                        <span className="flex items-center gap-1.5">
+                          <Calendar aria-hidden="true" className="size-3.5" />
                           {t("userProfile.joined")}{" "}
-                          {new Date(profile.created).toLocaleDateString()}
+                          <time dateTime={joined.toISOString()}>
+                            {joined.toLocaleDateString(i18n.language, {
+                              month: "long",
+                              year: "numeric",
+                            })}
+                          </time>
                         </span>
-                      </div>
+                      )}
+                      <Link
+                        to="/ledger/$username"
+                        params={{ username }}
+                        search={{ tab: "followers" }}
+                        className="flex items-center gap-1.5 rounded-sm hover:text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring"
+                      >
+                        <Users aria-hidden="true" className="size-3.5" />
+                        <span className="font-medium text-foreground">
+                          {profile.followersCount}
+                        </span>
+                        {t("userProfile.tabs.followers")}
+                      </Link>
+                    </div>
+                  </div>
+                  <div className="flex shrink-0 flex-col gap-3 md:items-end">
+                    <div className="flex gap-3">
+                      {!isOwnProfile && (
+                        <FollowButton
+                          username={profile.username}
+                          isFollowing={isFollowing}
+                          className="h-11 flex-1 px-5 md:flex-none"
+                        />
+                      )}
+                      <Button
+                        variant="outline"
+                        onClick={() => void copyProfileLink()}
+                        className="h-11 flex-1 px-4 md:flex-none"
+                      >
+                        <LinkIcon aria-hidden="true" className="size-4" />
+                        {t("userProfile.copyLink")}
+                      </Button>
+                    </div>
+                    {example && (
+                      <Link
+                        to="/ledger/$ledgerOwner/$ledgerName"
+                        params={{
+                          ledgerOwner: username,
+                          ledgerName: example.name,
+                        }}
+                        className="flex min-h-8 items-center gap-2 rounded-sm text-sm font-medium text-primary hover:underline focus-visible:outline-2 focus-visible:outline-ring lg:hidden"
+                      >
+                        <BookOpen aria-hidden="true" className="size-4" />
+                        {t("userProfile.openExample")}
+                      </Link>
+                    )}
+                    {!isOwnProfile && (
+                      <p className="hidden text-xs text-muted-foreground md:block">
+                        {t("userProfile.followDescription")}
+                      </p>
                     )}
                   </div>
                 </div>
               </div>
+            </section>
+            <div className="mx-auto w-full max-w-7xl px-5 pt-3 pb-14 sm:px-8 lg:px-12">
+              <UserProfileTabs
+                username={username}
+                activities={activities}
+                repositories={repositories}
+                followersCount={profile.followersCount}
+                followingCount={profile.followingCount}
+                starredReposCount={profile.starredReposCount}
+                initialTab={search.tab || "overview"}
+              />
             </div>
-          </div>
-        </div>
-
-        {/* Content */}
-        <div className="mt-4 sm:mt-6 lg:mt-8 pb-6 sm:pb-8">
-          <UserProfileTabs
-            username={username}
-            activities={activities}
-            repositories={repositories}
-            followersCount={profile.followersCount}
-            followingCount={profile.followingCount}
-            starredReposCount={profile.starredReposCount}
-            initialTab={initialTab}
-          />
-        </div>
+          </>
+        )}
       </main>
+      <footer className="border-t px-5 py-6 text-center text-xs text-muted-foreground">
+        {t("userProfile.footer")}
+      </footer>
     </div>
   );
 }

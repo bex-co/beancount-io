@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import jaCommon from "./common/ja";
 import jaSeo from "./seo/ja";
 import jaAuth from "@/features/auth/locales/ja";
+import jaUserProfile from "@/features/user-profile/locales/ja";
 import jaUserSettings from "@/features/user-settings/locales/ja";
 import jaLedgerList from "@/features/ledger-list/locales/ja";
 import jaSettings from "@/features/ledger-data/settings/locales/ja";
@@ -29,6 +30,7 @@ const ja: Record<string, string> = {
   ...extractMessages(jaCommon),
   ...extractMessages(jaSeo),
   ...extractMessages(jaAuth),
+  ...extractMessages(jaUserProfile),
   ...extractMessages(jaUserSettings),
   ...extractMessages(jaLedgerList),
   ...extractMessages(jaSettings),

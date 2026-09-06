@@ -41,7 +41,7 @@ const caUserProfile: Record<string, TranslationEntry> = {
     description: "Heading for recent activity section",
   },
   "userProfile.repositories": {
-    message: "Repositoris",
+    message: "Llibres",
     description: "Heading for repositories section",
   },
   "userProfile.follow": {
@@ -82,7 +82,7 @@ const caUserProfile: Record<string, TranslationEntry> = {
     description: "SEO description for user profile page",
   },
   "userProfile.tabs.overview": {
-    message: "Overview",
+    message: "Llibres",
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
@@ -108,6 +108,115 @@ const caUserProfile: Record<string, TranslationEntry> = {
   "userProfile.noStarredRepos": {
     message: "No starred repositories",
     description: "Message shown when user has no starred repos",
+  },
+  "userProfile.community": {
+    message: "Comunitat",
+    description: "Public profile: community",
+  },
+  "userProfile.ledgerDescription": {
+    message: "Explora comptes, transaccions i informes financers.",
+    description: "Public profile: ledgerDescription",
+  },
+  "userProfile.browseDescription": {
+    message: "Troba un llibre. Segueix els números.",
+    description: "Public profile: browseDescription",
+  },
+  "userProfile.searchLedgers": {
+    message: "Cerca llibres…",
+    description: "Public profile: searchLedgers",
+  },
+  "userProfile.clearSearch": {
+    message: "Esborra la cerca",
+    description: "Public profile: clearSearch",
+  },
+  "userProfile.sortLedgers": {
+    message: "Ordena els llibres",
+    description: "Public profile: sortLedgers",
+  },
+  "userProfile.recentlyUpdated": {
+    message: "Actualitzats recentment",
+    description: "Public profile: recentlyUpdated",
+  },
+  "userProfile.nameAZ": {
+    message: "Nom (A–Z)",
+    description: "Public profile: nameAZ",
+  },
+  "userProfile.noMatches": {
+    message:
+      "Cap llibre coincideix amb la cerca. Prova un altre nom o paraula clau.",
+    description: "Public profile: noMatches",
+  },
+  "userProfile.results": {
+    message: "Es mostren {shown} de {total} llibres",
+    description: "Public profile: results",
+  },
+  "userProfile.showMoreLedgers": {
+    message: "Mostra més llibres",
+    description: "Public profile: showMoreLedgers",
+  },
+  "userProfile.newToBeancount": {
+    message: "És el teu primer cop a Beancount?",
+    description: "Public profile: newToBeancount",
+  },
+  "userProfile.startExample": {
+    message: "Comença amb un exemple",
+    description: "Public profile: startExample",
+  },
+  "userProfile.exampleDescription": {
+    message:
+      "Descobreix com funcionen els llibres. Explora un llibre d’exemple amb comptes, transaccions i informes.",
+    description: "Public profile: exampleDescription",
+  },
+  "userProfile.openExample": {
+    message: "Explora l’exemple",
+    description: "Public profile: openExample",
+  },
+  "userProfile.showLessActivity": {
+    message: "Mostra menys activitat",
+    description: "Public profile: showLessActivity",
+  },
+  "userProfile.showAllActivity": {
+    message: "Mostra tota l’activitat",
+    description: "Public profile: showAllActivity",
+  },
+  "userProfile.linkCopied": {
+    message: "S’ha copiat l’enllaç del perfil",
+    description: "Public profile: linkCopied",
+  },
+  "userProfile.copyLinkError": {
+    message:
+      "No s’ha pogut copiar l’enllaç. El pots copiar de la barra d’adreces.",
+    description: "Public profile: copyLinkError",
+  },
+  "userProfile.tryAgain": {
+    message: "Torna-ho a provar",
+    description: "Public profile: tryAgain",
+  },
+  "userProfile.collectionLabel": {
+    message: "Una col·lecció de llibres oberts",
+    description: "Public profile: collectionLabel",
+  },
+  "userProfile.collectionDescription": {
+    message:
+      "Finances reals, obertes a l’exploració. Consulta llibres d’empreses i exemples pràctics per veure Beancount en acció.",
+    description: "Public profile: collectionDescription",
+  },
+  "userProfile.copyLink": {
+    message: "Copia l’enllaç",
+    description: "Public profile: copyLink",
+  },
+  "userProfile.followDescription": {
+    message: "Afegeix aquest perfil a la llista de perfils que segueixes.",
+    description: "Public profile: followDescription",
+  },
+  "userProfile.footer": {
+    message: "Llibres oberts. Finances més clares. Amb Beancount.",
+    description: "Public profile: footer",
+  },
+  "userProfile.openLedgerName": {
+    message: "Open Ledger",
+    description:
+      "Proper name of the Open Ledger collection; keep the name unchanged",
   },
 };
 

@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import nlCommon from "./common/nl";
 import nlSeo from "./seo/nl";
 import nlAuth from "@/features/auth/locales/nl";
+import nlUserProfile from "@/features/user-profile/locales/nl";
 import nlUserSettings from "@/features/user-settings/locales/nl";
 import nlLedgerList from "@/features/ledger-list/locales/nl";
 import nlSettings from "@/features/ledger-data/settings/locales/nl";
@@ -29,6 +30,7 @@ const nl: Record<string, string> = {
   ...extractMessages(nlCommon),
   ...extractMessages(nlSeo),
   ...extractMessages(nlAuth),
+  ...extractMessages(nlUserProfile),
   ...extractMessages(nlUserSettings),
   ...extractMessages(nlLedgerList),
   ...extractMessages(nlSettings),

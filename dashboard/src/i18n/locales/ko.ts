@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import koCommon from "./common/ko";
 import koSeo from "./seo/ko";
 import koAuth from "@/features/auth/locales/ko";
+import koUserProfile from "@/features/user-profile/locales/ko";
 import koUserSettings from "@/features/user-settings/locales/ko";
 import koLedgerList from "@/features/ledger-list/locales/ko";
 import koSettings from "@/features/ledger-data/settings/locales/ko";
@@ -29,6 +30,7 @@ const ko: Record<string, string> = {
   ...extractMessages(koCommon),
   ...extractMessages(koSeo),
   ...extractMessages(koAuth),
+  ...extractMessages(koUserProfile),
   ...extractMessages(koUserSettings),
   ...extractMessages(koLedgerList),
   ...extractMessages(koSettings),

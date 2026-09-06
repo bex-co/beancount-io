@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import ukCommon from "./common/uk";
 import ukSeo from "./seo/uk";
 import ukAuth from "@/features/auth/locales/uk";
+import ukUserProfile from "@/features/user-profile/locales/uk";
 import ukUserSettings from "@/features/user-settings/locales/uk";
 import ukLedgerList from "@/features/ledger-list/locales/uk";
 import ukSettings from "@/features/ledger-data/settings/locales/uk";
@@ -29,6 +30,7 @@ const uk: Record<string, string> = {
   ...extractMessages(ukCommon),
   ...extractMessages(ukSeo),
   ...extractMessages(ukAuth),
+  ...extractMessages(ukUserProfile),
   ...extractMessages(ukUserSettings),
   ...extractMessages(ukLedgerList),
   ...extractMessages(ukSettings),

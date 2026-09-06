@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import deCommon from "./common/de";
 import deSeo from "./seo/de";
 import deAuth from "@/features/auth/locales/de";
+import deUserProfile from "@/features/user-profile/locales/de";
 import deUserSettings from "@/features/user-settings/locales/de";
 import deLedgerList from "@/features/ledger-list/locales/de";
 import deSettings from "@/features/ledger-data/settings/locales/de";
@@ -29,6 +30,7 @@ const de: Record<string, string> = {
   ...extractMessages(deCommon),
   ...extractMessages(deSeo),
   ...extractMessages(deAuth),
+  ...extractMessages(deUserProfile),
   ...extractMessages(deUserSettings),
   ...extractMessages(deLedgerList),
   ...extractMessages(deSettings),

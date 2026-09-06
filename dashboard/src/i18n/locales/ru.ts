@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import ruCommon from "./common/ru";
 import ruSeo from "./seo/ru";
 import ruAuth from "@/features/auth/locales/ru";
+import ruUserProfile from "@/features/user-profile/locales/ru";
 import ruUserSettings from "@/features/user-settings/locales/ru";
 import ruLedgerList from "@/features/ledger-list/locales/ru";
 import ruSettings from "@/features/ledger-data/settings/locales/ru";
@@ -29,6 +30,7 @@ const ru: Record<string, string> = {
   ...extractMessages(ruCommon),
   ...extractMessages(ruSeo),
   ...extractMessages(ruAuth),
+  ...extractMessages(ruUserProfile),
   ...extractMessages(ruUserSettings),
   ...extractMessages(ruLedgerList),
   ...extractMessages(ruSettings),

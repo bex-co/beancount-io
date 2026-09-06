@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import faCommon from "./common/fa";
 import faSeo from "./seo/fa";
 import faAuth from "@/features/auth/locales/fa";
+import faUserProfile from "@/features/user-profile/locales/fa";
 import faUserSettings from "@/features/user-settings/locales/fa";
 import faLedgerList from "@/features/ledger-list/locales/fa";
 import faSettings from "@/features/ledger-data/settings/locales/fa";
@@ -29,6 +30,7 @@ const fa: Record<string, string> = {
   ...extractMessages(faCommon),
   ...extractMessages(faSeo),
   ...extractMessages(faAuth),
+  ...extractMessages(faUserProfile),
   ...extractMessages(faUserSettings),
   ...extractMessages(faLedgerList),
   ...extractMessages(faSettings),

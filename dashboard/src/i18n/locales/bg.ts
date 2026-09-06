@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import bgCommon from "./common/bg";
 import bgSeo from "./seo/bg";
 import bgAuth from "@/features/auth/locales/bg";
+import bgUserProfile from "@/features/user-profile/locales/bg";
 import bgUserSettings from "@/features/user-settings/locales/bg";
 import bgLedgerList from "@/features/ledger-list/locales/bg";
 import bgSettings from "@/features/ledger-data/settings/locales/bg";
@@ -29,6 +30,7 @@ const bg: Record<string, string> = {
   ...extractMessages(bgCommon),
   ...extractMessages(bgSeo),
   ...extractMessages(bgAuth),
+  ...extractMessages(bgUserProfile),
   ...extractMessages(bgUserSettings),
   ...extractMessages(bgLedgerList),
   ...extractMessages(bgSettings),

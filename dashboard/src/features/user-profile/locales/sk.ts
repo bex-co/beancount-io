@@ -41,7 +41,7 @@ const skUserProfile: Record<string, TranslationEntry> = {
     description: "Heading for recent activity section",
   },
   "userProfile.repositories": {
-    message: "Repozitáre",
+    message: "Knihy",
     description: "Heading for repositories section",
   },
   "userProfile.follow": {
@@ -82,7 +82,7 @@ const skUserProfile: Record<string, TranslationEntry> = {
     description: "SEO description for user profile page",
   },
   "userProfile.tabs.overview": {
-    message: "Overview",
+    message: "Knihy",
     description: "Tab label for overview section",
   },
   "userProfile.tabs.followers": {
@@ -108,6 +108,115 @@ const skUserProfile: Record<string, TranslationEntry> = {
   "userProfile.noStarredRepos": {
     message: "No starred repositories",
     description: "Message shown when user has no starred repos",
+  },
+  "userProfile.community": {
+    message: "Komunita",
+    description: "Public profile: community",
+  },
+  "userProfile.ledgerDescription": {
+    message: "Preskúmajte účty, transakcie a finančné výkazy.",
+    description: "Public profile: ledgerDescription",
+  },
+  "userProfile.browseDescription": {
+    message: "Nájdite knihu. Sledujte čísla.",
+    description: "Public profile: browseDescription",
+  },
+  "userProfile.searchLedgers": {
+    message: "Hľadať knihy…",
+    description: "Public profile: searchLedgers",
+  },
+  "userProfile.clearSearch": {
+    message: "Vymazať vyhľadávanie",
+    description: "Public profile: clearSearch",
+  },
+  "userProfile.sortLedgers": {
+    message: "Zoradiť knihy",
+    description: "Public profile: sortLedgers",
+  },
+  "userProfile.recentlyUpdated": {
+    message: "Nedávno aktualizované",
+    description: "Public profile: recentlyUpdated",
+  },
+  "userProfile.nameAZ": {
+    message: "Názov (A–Z)",
+    description: "Public profile: nameAZ",
+  },
+  "userProfile.noMatches": {
+    message:
+      "Žiadne knihy nezodpovedajú vyhľadávaniu. Skúste iný názov alebo kľúčové slovo.",
+    description: "Public profile: noMatches",
+  },
+  "userProfile.results": {
+    message: "Zobrazených {shown} z {total} kníh",
+    description: "Public profile: results",
+  },
+  "userProfile.showMoreLedgers": {
+    message: "Zobraziť ďalšie knihy",
+    description: "Public profile: showMoreLedgers",
+  },
+  "userProfile.newToBeancount": {
+    message: "Ste v Beancount noví?",
+    description: "Public profile: newToBeancount",
+  },
+  "userProfile.startExample": {
+    message: "Začnite príkladom",
+    description: "Public profile: startExample",
+  },
+  "userProfile.exampleDescription": {
+    message:
+      "Spoznajte knihy. Preskúmajte vzorovú knihu s účtami, transakciami a výkazmi.",
+    description: "Public profile: exampleDescription",
+  },
+  "userProfile.openExample": {
+    message: "Preskúmať príklad",
+    description: "Public profile: openExample",
+  },
+  "userProfile.showLessActivity": {
+    message: "Zobraziť menej aktivít",
+    description: "Public profile: showLessActivity",
+  },
+  "userProfile.showAllActivity": {
+    message: "Zobraziť všetky aktivity",
+    description: "Public profile: showAllActivity",
+  },
+  "userProfile.linkCopied": {
+    message: "Odkaz na profil bol skopírovaný",
+    description: "Public profile: linkCopied",
+  },
+  "userProfile.copyLinkError": {
+    message:
+      "Odkaz sa nepodarilo skopírovať. Môžete ho skopírovať z panela s adresou.",
+    description: "Public profile: copyLinkError",
+  },
+  "userProfile.tryAgain": {
+    message: "Skúsiť znova",
+    description: "Public profile: tryAgain",
+  },
+  "userProfile.collectionLabel": {
+    message: "Zbierka otvorených kníh",
+    description: "Public profile: collectionLabel",
+  },
+  "userProfile.collectionDescription": {
+    message:
+      "Skutočné financie otvorené na preskúmanie. Prezrite si firemné knihy a praktické príklady a objavte Beancount v praxi.",
+    description: "Public profile: collectionDescription",
+  },
+  "userProfile.copyLink": {
+    message: "Kopírovať odkaz",
+    description: "Public profile: copyLink",
+  },
+  "userProfile.followDescription": {
+    message: "Pridajte tento profil do zoznamu sledovaných.",
+    description: "Public profile: followDescription",
+  },
+  "userProfile.footer": {
+    message: "Otvorené knihy. Prehľadnejšie financie. S Beancount.",
+    description: "Public profile: footer",
+  },
+  "userProfile.openLedgerName": {
+    message: "Open Ledger",
+    description:
+      "Proper name of the Open Ledger collection; keep the name unchanged",
   },
 };
 

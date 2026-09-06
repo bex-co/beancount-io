@@ -2,6 +2,7 @@ import { extractMessages } from "../utils";
 import esCommon from "./common/es";
 import esSeo from "./seo/es";
 import esAuth from "@/features/auth/locales/es";
+import esUserProfile from "@/features/user-profile/locales/es";
 import esUserSettings from "@/features/user-settings/locales/es";
 import esLedgerList from "@/features/ledger-list/locales/es";
 import esSettings from "@/features/ledger-data/settings/locales/es";
@@ -29,6 +30,7 @@ const es: Record<string, string> = {
   ...extractMessages(esCommon),
   ...extractMessages(esSeo),
   ...extractMessages(esAuth),
+  ...extractMessages(esUserProfile),
   ...extractMessages(esUserSettings),
   ...extractMessages(esLedgerList),
   ...extractMessages(esSettings),
