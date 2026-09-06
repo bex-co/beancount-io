@@ -103,7 +103,7 @@ describe("openapi-registry", () => {
 
       expect(doc.servers?.[0].url).toContain("localhost");
       expect(doc.servers?.[0].description).toBe("Development server");
-      expect(doc.servers?.[1].url).toBe("https://api.v3.beancount.io");
+      expect(doc.servers?.[1].url).toBe("https://beancount.io");
       expect(doc.servers?.[1].description).toBe("Production server");
     });
   });
@@ -176,7 +176,7 @@ describe("openapi-registry", () => {
           description: "Development server",
         },
         {
-          url: "https://api.v3.beancount.io",
+          url: "https://beancount.io",
           description: "Production server",
         },
       ]);
@@ -191,7 +191,7 @@ describe("openapi-registry", () => {
           description: "Development server",
         },
         {
-          url: "https://api.v3.beancount.io",
+          url: "https://beancount.io",
           description: "Production server",
         },
       ]);

@@ -67,7 +67,7 @@ function getServerConfig() {
         description: "Development server",
       },
       {
-        url: "https://api.v3.beancount.io",
+        url: "https://beancount.io",
         description: "Production server",
       },
     ],
