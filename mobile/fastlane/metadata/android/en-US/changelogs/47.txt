@@ -1,0 +1,5 @@
+Find your books faster with searchable Your ledgers, Starred, and Explore tabs. Discover public ledgers and keep your stars synced across devices.
+
+Read-only ledgers now hide editing actions, and the drawer includes a link to the Beancount.io website.
+
+Fixed date pickers showing the previous day in some time zones, errors when opening generated transactions, and account history repeatedly loading the same page.
