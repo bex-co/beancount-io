@@ -28,6 +28,8 @@
 - [x] **m21** — Load only the active language (8 tasks) ← from /pm-brainstorm dashboard performance 2026-09-05; user routed to w2
 - [x] **m22** — Make reports download and initialize less chart code (8 tasks) ← from /pm-brainstorm dashboard performance 2026-09-05; user routed to w2 — depends on m21
 - [x] **m23** — Show primary ledger content before optional panels finish (8 tasks) ← from /pm-brainstorm dashboard performance 2026-09-05; user routed to w2 — depends on m21
+- [ ] **m24** — Beancount.io CLI becomes `bea`: package `beancount-io`, `list`/`add`/`ask` command tree, automation contract (12 tasks) ← from TPM discussion 2026-09-06 (CLI naming and automation contract) + `cli/docs/PRFAQ.md`; user routed to w2
+- [ ] **m25** — `bea` distribution: PyPI trusted publishing, Homebrew tap, update notice, `bea upgrade` (9 tasks) ← from TPM discussion 2026-09-06; user routed to w2 — sequenced after m24
 
 ## Centralized-authz migration contract for m14–m20
 

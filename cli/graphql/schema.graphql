@@ -1507,7 +1507,7 @@ type CreateCliAuthSessionResponse {
 }
 
 input CliAuthClientInfoInput {
-  """Client name, e.g. `beancount-cli`."""
+  """Client name, e.g. `bea`."""
   name: String
   version: String
 

@@ -35,11 +35,11 @@ describe("CliAuthResolver", () => {
 
   it("passes the reported client and the forwarded address to the service", async () => {
     await resolver.createCliAuthSession(context, {
-      client: { name: "beancount-cli", version: "0.4.1" },
+      client: { name: "bea", version: "0.4.1" },
     });
 
     expect(service.createSession).toHaveBeenCalledWith(
-      { name: "beancount-cli", version: "0.4.1" },
+      { name: "bea", version: "0.4.1" },
       "203.0.113.7",
     );
   });
@@ -70,7 +70,7 @@ describe("CliAuthResolver", () => {
   it("describes a request for the consent screen under the caller's identity", async () => {
     service.describeRequest.mockResolvedValue({
       status: "pending",
-      client: { name: "beancount-cli", deviceLabel: "tian-mbp" },
+      client: { name: "bea", deviceLabel: "tian-mbp" },
       requestedAt: "2026-01-01T00:00:00.000Z",
       expiresAt: "2026-01-01T00:10:00.000Z",
     });

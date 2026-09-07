@@ -1,4 +1,4 @@
-"""Tests for the chat command and agent."""
+"""Tests for the `bea ask` command, its agent, and skill loading."""
 
 from __future__ import annotations
 
@@ -9,9 +9,10 @@ from pydantic_ai import Agent
 from pydantic_ai.models.test import TestModel
 from typer.testing import CliRunner
 
+from cli.ask.agent import _SYSTEM_PROMPT, BqlDeps, make_agent
+from cli.ask.skills import AgentSkill, _parse_skill, build_skills_index_prompt, load_skills
 from cli.auth.credentials import Credentials
-from cli.chat.agent import _SYSTEM_PROMPT, BqlDeps, make_agent
-from cli.chat.skills import AgentSkill, _parse_skill, build_skills_index_prompt, load_skills
+from cli.errors import AuthError
 from cli.main import app
 
 _FAKE_CREDS = Credentials(token="jwt-test-token", expire_at="2099-01-01T00:00:00+00:00")
@@ -41,51 +42,49 @@ class TestAgent:
         assert agent is not None
 
 
-class TestChatCommand:
+class TestAskCommand:
     runner = CliRunner()
 
-    def test_missing_file_errors(self) -> None:
-        with (
-            patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS),
-            patch("cli.commands.chat.DEFAULT_ENTRY_FILE", Path("nonexistent.bean")),
-        ):
-            result = self.runner.invoke(app, ["chat", "hello", "--print"])
-        assert result.exit_code != 0
+    def test_missing_file_errors(self, tmp_path: Path) -> None:
+        with patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS):
+            result = self.runner.invoke(app, ["--file", str(tmp_path / "nonexistent.bean"), "ask", "hello", "--print"])
+        assert result.exit_code == 2
 
     def test_not_logged_in_errors(self, tmp_bean_file: Path) -> None:
-        with patch("cli.auth.credentials.require_credentials", side_effect=RuntimeError("Not logged in.")):
-            result = self.runner.invoke(app, ["chat", "hello", "--print"])
-        assert result.exit_code != 0
+        with patch("cli.auth.credentials.require_credentials", side_effect=AuthError("Not logged in.")):
+            result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "hello", "--print"])
+        assert result.exit_code == 3
 
     def test_single_question_mode(self, tmp_bean_file: Path) -> None:
         with (
             patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS),
-            patch("cli.commands.chat.DEFAULT_ENTRY_FILE", tmp_bean_file),
-            patch("cli.commands.chat.make_agent", return_value=_test_agent("42 USD")),
+            patch("cli.ask.agent.make_agent", return_value=_test_agent("42 USD")),
         ):
-            result = self.runner.invoke(app, ["chat", "What is my balance?", "--print"])
+            result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "What is my balance?", "--print"])
 
         assert result.exit_code == 0
         assert "42 USD" in result.output
 
-    def test_print_mode_requires_question(self) -> None:
-        with (
-            patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS),
-        ):
-            result = self.runner.invoke(app, ["chat", "--print"])
-        assert result.exit_code != 0
+    def test_print_mode_requires_question(self, tmp_bean_file: Path) -> None:
+        with patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS):
+            result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "--print"])
+        assert result.exit_code == 2
 
     def test_make_agent_called_with_backend_url(self, tmp_bean_file: Path) -> None:
         with (
             patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS),
-            patch("cli.commands.chat.DEFAULT_ENTRY_FILE", tmp_bean_file),
-            patch("cli.commands.chat.make_agent", return_value=_test_agent("ok")) as mock_make,
+            patch("cli.ask.agent.make_agent", return_value=_test_agent("ok")) as mock_make,
         ):
-            self.runner.invoke(app, ["chat", "hi", "--print"])
+            self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "hi", "--print"])
 
         call_kwargs = mock_make.call_args.kwargs
         assert "api-gateway/ai/openai" in call_kwargs["base_url"]
         assert call_kwargs["api_key"] == "jwt-test-token"
+
+    def test_json_mode_is_refused_rather_than_faked(self, tmp_bean_file: Path) -> None:
+        with patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS):
+            result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "--json", "ask", "hi"])
+        assert result.exit_code == 2
 
 
 class TestAgentSkills:
@@ -169,9 +168,8 @@ class TestAgentSkills:
         assert "alpha" in names
         assert "beta" in names
 
-    def test_load_skills_nonexistent_dirs_returns_empty(self, tmp_path: Path) -> None:
-        with patch("cli.chat.skills.Path.home", return_value=tmp_path / "no_home"):
-            skills = load_skills(cwd=tmp_path)
+    def test_load_skills_nonexistent_dirs_returns_empty(self, tmp_path: Path, bea_config_dir: Path) -> None:
+        skills = load_skills(cwd=tmp_path)
         assert skills == []
 
     def test_load_skills_skips_malformed_file(self, tmp_path: Path) -> None:
@@ -197,19 +195,17 @@ class TestAgentSkills:
         skills = load_skills(cwd=tmp_path)
         assert not any(s.name == "empty-skill" for s in skills)
 
-    def test_load_skills_project_takes_precedence(self, tmp_path: Path) -> None:
+    def test_load_skills_project_takes_precedence(self, tmp_path: Path, bea_config_dir: Path) -> None:
         project_root = tmp_path / ".agents" / "skills"
         self._make_skill_dir(project_root, "shared", body="Project version.")
 
-        user_root = tmp_path / "user_home" / ".beancount-cli" / "agent" / "skill"
-        user_skill_dir = user_root / "shared"
+        user_skill_dir = bea_config_dir / "skills" / "shared"
         user_skill_dir.mkdir(parents=True)
         (user_skill_dir / "SKILL.md").write_text(
             "---\nname: shared\ndescription: User version.\n---\n\nUser version.\n"
         )
 
-        with patch("cli.chat.skills.Path.home", return_value=tmp_path / "user_home"):
-            skills = load_skills(cwd=tmp_path)
+        skills = load_skills(cwd=tmp_path)
 
         shared = [s for s in skills if s.name == "shared"]
         assert len(shared) == 1

@@ -1,6 +1,6 @@
 # Agent Skills
 
-Agent Skills let you extend the `chat` command with custom instructions and domain knowledge. Skills are plain Markdown files that are loaded at runtime and injected into the AI agent's system prompt.
+Agent Skills let you extend the `bea ask` command with custom instructions and domain knowledge. Skills are plain Markdown files that are loaded at runtime and injected into the AI agent's system prompt.
 
 ## Skill locations
 
@@ -9,7 +9,7 @@ Skills are discovered from two directories, in priority order:
 | Location | Scope |
 |---|---|
 | `<ledger-dir>/.agents/skills/` | Project-level — applies to one ledger |
-| `~/.beancount-cli/agent/skill/` | User-level — applies to all ledgers |
+| `~/.config/bea/skills/` | User-level — applies to all ledgers |
 
 When the same skill `name` exists in both places, the project-level version wins.
 
@@ -32,7 +32,7 @@ description: One-line summary of what this skill does and when to use it.
 ---
 
 Your instructions here. Write in plain Markdown.
-The AI will follow these instructions during the chat session.
+The AI will follow these instructions during the ask session.
 ```
 
 **Required frontmatter fields:**
@@ -80,7 +80,7 @@ EOF
 **2. Run a quick query**
 
 ```bash
-uv run beancount-cli chat "what accounts do I have?" --print
+uv run bea ask "what accounts do I have?" --print
 ```
 
 If the response starts with `SKILL LOADED`, the skill was picked up and injected into the system prompt correctly.
@@ -89,19 +89,19 @@ If the response starts with `SKILL LOADED`, the skill was picked up and injected
 
 ```bash
 mv .agents/skills/test-skill .agents/skills/test-skill.bak
-uv run beancount-cli chat "what accounts do I have?" --print
+uv run bea ask "what accounts do I have?" --print
 mv .agents/skills/test-skill.bak .agents/skills/test-skill
 ```
 
 The phrase should not appear this time.
 
-For user-level skills, use the same approach but place the skill under `~/.beancount-cli/agent/skill/test-skill/SKILL.md` and verify project-level overrides it if both have the same `name`.
+For user-level skills, use the same approach but place the skill under `~/.config/bea/skills/test-skill/SKILL.md` and verify project-level overrides it if both have the same `name`.
 
 **Debug loading without hitting the API**
 
 ```bash
 uv run python -c "
-from cli.chat.skills import load_skills
+from cli.ask.skills import load_skills
 for s in load_skills():
     print(f'Loaded: {s.name} — {s.description}')
     print(f'Body preview: {s.body[:80]!r}')

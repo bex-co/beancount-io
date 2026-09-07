@@ -1,4 +1,4 @@
-# Beancount CLI - Development Makefile
+# Beancount.io CLI - Development Makefile
 
 .PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all
 
@@ -33,7 +33,7 @@ reinstall-tool:
 	uv tool install --reinstall --editable .
 
 dev:
-	uv run beancount-cli --help
+	uv run bea --help
 
 lint:
 	uv run ruff check src/ tests/

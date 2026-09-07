@@ -1,72 +1,131 @@
 # Usage
 
-## Authentication
-
-All commands that talk to the API require a session. Authentication uses a browser-based device flow — run it once and the token is stored at `~/.beancount-cli/credentials.json`.
-
-`auth login` prints a one-time code and opens the dashboard's device page. Enter the code there, check that the device shown is this machine, and approve; the CLI then collects a credential good for 30 days. The link itself carries no secret, so a device page opened from anywhere else cannot authorize this CLI.
+The Beancount.io CLI installs one command: `bea`.
 
 ```bash
-# Print a one-time code, open the browser, store the token locally
-beancount-cli auth login
-
-# Print current user
-beancount-cli auth whoami
-
-# Revoke token and clear stored credentials
-beancount-cli auth logout
+bea check | format | query "<BQL>"
+bea list <type> | bea add <type>          # eleven directive types; add transactions --from PATH
+bea report balance-sheet | income-statement | trial-balance | overview
+bea ask ["question"]                      # requires beancount-io[ask]
+bea auth login | logout | status
+bea ledger list | create [--clone] | clone | delete [--yes]
 ```
 
-## Ledger management
+## Global options
+
+Global options come before the command.
+
+| Option | Description |
+|---|---|
+| `--file / -f PATH` | Ledger entry file. Overrides `BEA_FILE` and `./main.bean`. |
+| `--json` | Emit the JSON envelope on stdout and JSON errors on stderr. Implies `--no-input`. |
+| `--no-input` | Never prompt. Missing confirmation or input fails with exit 2 instead of waiting. |
+| `--yes / -y` | Answer confirmations with yes. |
+| `--version` | Print the version and exit. Makes no network call. |
+| `-h / --help` | Show help. |
 
 ```bash
-# Create a new ledger, download its initial archive, and set up a local git remote
-beancount-cli ledger create my-books
-
-# Choose a custom local directory
-beancount-cli ledger create my-books --dir ./accounting/my-books
-
-# Create a private ledger
-beancount-cli ledger create my-books --private
-
-# Skip archive download (create remote only)
-beancount-cli ledger create my-books --no-extract
-
-# List all your ledgers
-beancount-cli ledger list
+bea --file ./books/main.bean check
+bea --json list transaction --limit 100
+bea --yes ledger delete alice/old-books
 ```
 
-`ledger create` does the following automatically:
-1. Creates the remote ledger on Beancount.io
-2. Downloads the initial archive (`.zip`) and extracts it to the target directory
-3. Runs `git init` and configures the git remote
-4. Writes `.beancount-ledger.json` with the ledger metadata
+### Choosing the ledger
 
-After creation, push with your Beancount.io email and password:
+Local commands resolve their target in this order:
+
+1. `--file PATH`
+2. `$BEA_FILE`
+3. `./main.bean` in the working directory
+
+If the resolved file does not exist, the command exits **2** and names all three sources. Hosted targeting (`--ledger`) is not implemented yet.
+
+### Non-interactive behavior
+
+`--no-input` is implied whenever stdin is not a terminal, whenever `--json` is set, and when `CI` is truthy. In that mode nothing waits for a human:
 
 ```bash
-cd my-books
-git add -A && git commit -m "initial"
-git push -u origin main
+$ echo | bea ledger delete alice/books
+Error: Permanently delete ledger 'alice/books'? Refusing to ask — pass --yes to confirm without a prompt.
+$ echo $?
+2
 ```
 
-## Writing directives
+## Exit codes
 
-All `write` commands append a formatted beancount directive to a `.bean` file.
+| Code | Category | Meaning |
+|---|---|---|
+| 0 | — | Success |
+| 1 | `validation` | Ledger or validation error (also the catch-all runtime error) |
+| 2 | `usage` | Bad arguments, missing target, missing extra, or input needed under `--no-input` |
+| 3 | `auth` | Authentication or permission failure |
+| 4 | `conflict` | Conflict, or a write whose outcome is unknown |
 
-### Transaction
+In `--json` mode a failure writes nothing to stdout and one object to stderr:
+
+```json
+{
+  "error": {
+    "category": "validation",
+    "message": "Ledger has 3 error(s). Pass --allow-errors to report anyway.",
+    "exit_code": 1,
+    "details": ["main.bean:1: Transaction does not balance: (2.50 USD)"]
+  }
+}
+```
+
+`request_id` is included when the backend supplied one.
+
+## Checking, formatting, querying
 
 ```bash
-beancount-cli write transaction \
-  --file main.bean \
+# Parse, validate and realize the ledger
+bea check
+
+# Format every .bean file under a directory in place (bean-format --in-place)
+bea format .
+bea format . --dry-run
+
+# Run a BQL query and print a table; omit the query for the interactive shell
+bea query "SELECT account, sum(position) GROUP BY account"
+bea query
+```
+
+## Listing directives
+
+`bea list <type>` reads a local `.bean` file. The eleven types are `transaction`, `open`, `close`, `balance`, `pad`, `note`, `event`, `price`, `commodity`, `document`, and `custom`.
+
+| Option | Description |
+|---|---|
+| `--limit / -l` | Maximum results (default 50). The envelope reports `truncated` when more exist. |
+| `--from-date` | Only directives on or after this date (`YYYY-MM-DD`) |
+| `--to-date` | Only directives on or before this date (`YYYY-MM-DD`) |
+| `--account / -a` | Substring account filter (`transaction`, `note`, `balance`, `open`, `close`, `document`, `pad`) |
+| `--currency / -c` | Exact currency filter (`price`, `commodity`) |
+| `--allow-errors` | Return data even though the ledger has loader errors (they still print on stderr) |
+
+```bash
+bea list transaction
+bea list transaction --account Expenses:Food --from-date 2026-01-01 --to-date 2026-03-31
+bea list price --currency BTC
+bea list open
+```
+
+A ledger with loader errors fails with exit 1 rather than silently listing a partial journal; `--allow-errors` opts into the partial view.
+
+## Adding directives
+
+`bea add <type>` appends a formatted directive to the resolved entry file.
+
+```bash
+bea add transaction \
   --date 2026-04-30 \
   --narration "Coffee" \
   --posting "Expenses:Food 12.50 USD" \
   --posting "Assets:Cash -12.50 USD"
 
 # With payee, flag, tags, and links
-beancount-cli write transaction \
-  --file main.bean \
+bea add transaction \
   --date 2026-04-30 \
   --payee "Blue Bottle" \
   --narration "Coffee" \
@@ -75,15 +134,40 @@ beancount-cli write transaction \
   --posting "Assets:Cash -12.50 USD" \
   --tag trip \
   --link "^inv-001"
+
+bea add open  --date 2026-01-01 --account Assets:Cash --currency USD
+bea add close --date 2026-12-31 --account Assets:OldAccount
+bea add balance --date 2026-04-30 --account Assets:Cash --amount "1000 USD"
+bea add pad --date 2026-01-01 --account Assets:Cash --source Equity:Opening-Balances
+bea add note --date 2026-04-30 --account Assets:Cash --comment "ATM withdrawal"
+bea add event --date 2026-04-30 --type location --description "New York"
+bea add price --date 2026-04-30 --currency BTC --amount "62000 USD"
+bea add commodity --date 2026-01-01 --currency VFINX
+bea add document --date 2026-04-30 --account Assets:Cash --filename "receipts/april.pdf"
+```
+
+### Custom directives
+
+Values use a `kind:value` prefix. Supported kinds: `text`, `number`, `amount`, `account`.
+
+```bash
+bea add custom \
+  --date 2026-04-30 \
+  --type budget \
+  --value "text:travel" \
+  --value "number:1000" \
+  --value "amount:500 USD" \
+  --value "account:Assets:Cash"
 ```
 
 ### Bulk transactions from JSON
 
 ```bash
-beancount-cli write transactions --file main.bean --from transactions.json
+bea add transactions --from transactions.json
+bea add transactions --from transactions.json --partial
 ```
 
-`transactions.json` must be an array of transaction objects matching the `TransactionDirective` schema:
+`transactions.json` must be an array of objects matching the `TransactionDirective` schema:
 
 ```json
 [
@@ -101,207 +185,126 @@ beancount-cli write transactions --file main.bean --from transactions.json
 ]
 ```
 
-### Open / Close
+Every row is validated before anything is written. If any row is invalid the ledger is left byte-identical and the command exits **1**, listing the rejected rows. `--partial` appends the valid rows instead — and still exits **1**, so a partial write can never look like a clean one.
+
+## Reports
 
 ```bash
-beancount-cli write open  --file main.bean --date 2026-01-01 --account Assets:Cash --currency USD
-beancount-cli write close --file main.bean --date 2026-12-31 --account Assets:OldAccount
+bea report overview
+bea report income-statement
+bea report balance-sheet
+bea report trial-balance
 ```
 
-### Balance assertion
+All four accept `--conversion / -x` (default `USD`), `--time / -t`, `--account / -a`, and `--allow-errors`. All but `trial-balance` also accept `--interval / -i` (`monthly`, `quarterly`, `yearly`, `weekly`, `daily`; default `monthly`).
 
 ```bash
-beancount-cli write balance \
-  --file main.bean \
-  --date 2026-04-30 \
-  --account Assets:Cash \
-  --amount "1000 USD"
+bea report income-statement --time 2026 --interval quarterly
+bea report balance-sheet --conversion EUR
 ```
 
-### Pad
+## Ask (optional extra)
+
+`bea ask` needs the AI dependencies, which the default install does not carry:
 
 ```bash
-beancount-cli write pad \
-  --file main.bean \
-  --date 2026-01-01 \
-  --account Assets:Cash \
-  --source Equity:Opening-Balances
+uv tool install 'beancount-io[ask]'
 ```
-
-### Note
 
 ```bash
-beancount-cli write note \
-  --file main.bean \
-  --date 2026-04-30 \
-  --account Assets:Cash \
-  --comment "ATM withdrawal"
+# Interactive session over your ledger
+bea ask
+
+# One question, one answer, no REPL
+bea ask "what did I spend on groceries last month?" --print
 ```
 
-### Event
+Without the extra the command exits **2** with the install command. It also needs hosted credentials: the model runs through the Beancount.io AI proxy, so a local ledger still requires `bea auth login`. `bea ask` has no `--json` mode; use `bea query` for machine-readable results.
+
+## Authentication
+
+Hosted commands need a session. `bea auth login` prints a one-time code and opens the dashboard's device page; enter the code there, check that the device shown is this machine, and approve. The link itself carries no secret, so a device page opened from anywhere else cannot authorize this CLI. The credential is stored at `~/.config/bea/credentials.json` (mode 0600, in a 0700 directory).
 
 ```bash
-beancount-cli write event \
-  --file main.bean \
-  --date 2026-04-30 \
-  --type location \
-  --description "New York"
+bea auth login
+bea auth status
+bea auth logout
 ```
 
-### Price
+`bea auth status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `auth status` reports `source: environment`.
+
+## Ledgers
 
 ```bash
-beancount-cli write price \
-  --file main.bean \
-  --date 2026-04-30 \
-  --currency BTC \
-  --amount "62000 USD"
+# Create a hosted ledger — private unless --public is passed
+bea ledger create my-books
+bea ledger create my-books --public --description "Shared books"
+
+# Create and clone in one step
+bea ledger create my-books --clone
+bea ledger create my-books --clone --dir ./accounting/my-books
+
+# List, clone, delete
+bea ledger list
+bea ledger clone alice/my-books
+bea ledger delete alice/my-books          # asks for confirmation
+bea ledger delete alice/my-books --yes    # or run with --yes
 ```
 
-### Commodity
+Cloning uses `git clone` over SSH, so it needs Git and working SSH access. If a clone fails after the ledger was created, the command exits nonzero and prints the manual `git clone` command — the ledger exists either way.
 
-```bash
-beancount-cli write commodity \
-  --file main.bean \
-  --date 2026-01-01 \
-  --currency VFINX
-```
+## JSON output
 
-### Document
+Every read-side command accepts `--json`: `check`, `query`, `list <type>`, all four `report` commands, `auth status`, and `ledger list`. `format` and `add` also emit an envelope so a script can confirm what was written.
 
-```bash
-beancount-cli write document \
-  --file main.bean \
-  --date 2026-04-30 \
-  --account Assets:Cash \
-  --filename "receipts/april.pdf"
-```
-
-### Custom
-
-Values use a `kind:value` prefix. Supported kinds: `text`, `number`, `amount`, `account`.
-
-```bash
-beancount-cli write custom \
-  --file main.bean \
-  --date 2026-04-30 \
-  --type budget \
-  --value "text:travel" \
-  --value "number:1000" \
-  --value "amount:500 USD" \
-  --value "account:Assets:Cash"
-```
-
-## Reading directives
-
-All `read` commands load a `.bean` file and list directives of the given type. The `--file` option defaults to `main.bean` in the current directory.
-
-### Common options
-
-| Option | Description |
-|---|---|
-| `--file / -f` | `.bean` file to read (default: `main.bean`) |
-| `--limit / -l` | Maximum results to return (default: 50) |
-| `--from-date` | Only include directives on or after this date (`YYYY-MM-DD`) |
-| `--to-date` | Only include directives on or before this date (`YYYY-MM-DD`) |
-| `--account / -a` | Filter by account name (substring match; account-based directives only) |
-| `--currency / -c` | Filter by currency symbol (price and commodity only) |
-| `--json` | Output machine-readable JSON |
-
-### Transactions
-
-```bash
-beancount-cli read transaction
-
-# Filter by account and date range
-beancount-cli read transaction --account Expenses:Food --from-date 2026-01-01 --to-date 2026-03-31
-
-# Return up to 100 results as JSON
-beancount-cli read transaction --limit 100 --json
-```
-
-### Notes
-
-```bash
-beancount-cli read note
-beancount-cli read note --account Assets:Checking
-```
-
-### Prices
-
-```bash
-beancount-cli read price
-beancount-cli read price --currency BTC
-```
-
-### Balance assertions
-
-```bash
-beancount-cli read balance
-beancount-cli read balance --account Assets:Cash
-```
-
-### Open / Close
-
-```bash
-beancount-cli read open
-beancount-cli read close
-```
-
-### Commodities
-
-```bash
-beancount-cli read commodity
-beancount-cli read commodity --currency VFINX
-```
-
-### Events
-
-```bash
-beancount-cli read event
-beancount-cli read event --from-date 2026-01-01
-```
-
-### Documents
-
-```bash
-beancount-cli read document
-beancount-cli read document --account Assets:Checking
-```
-
-### Custom directives
-
-```bash
-beancount-cli read custom
-```
-
-### Pad directives
-
-```bash
-beancount-cli read pad
-```
-
-## Machine-readable output
-
-Every command accepts `--json` for structured output suitable for agents and scripts:
-
-```bash
-beancount-cli auth whoami --json
-# {"success": true, "data": {"id": "...", "email": "...", "username": "...", "tier": "free"}}
-
-beancount-cli ledger list --json
-# {"success": true, "data": [...]}
-```
-
-On error, exit code is non-zero and the output is:
+The envelope is always:
 
 ```json
-{"success": false, "error": "Session expired. Run 'beancount-cli auth login' to re-authenticate."}
+{
+  "bea": "0.1.0",
+  "target": {"file": "/home/alice/books/main.bean"},
+  "data": "…",
+  "truncated": false
+}
 ```
+
+`target` is `{"file": "<absolute path>"}` for local commands and `{"server": "<api url>"}` for hosted ones. Bounded lists also carry `limit`. Amounts are objects with decimal **strings** — never floats — and dates are ISO `YYYY-MM-DD`.
+
+```bash
+$ bea --json check
+{"bea": "0.1.0", "target": {"file": "/tmp/books/main.bean"}, "data": {"valid": true, "errors": []}, "truncated": false}
+
+$ bea --json list transaction --limit 2 | jq .data[0].postings[0].units
+{
+  "number": "1000.00",
+  "currency": "USD"
+}
+
+$ bea --json query "SELECT account, sum(position) GROUP BY account" | jq .data.columns
+[
+  {"name": "account", "type": "str"},
+  {"name": "total", "type": "Inventory"}
+]
+
+$ bea --json report income-statement | jq .data.net_profit
+{"USD": "12.50"}
+
+$ bea --json ledger list --limit 10 | jq '.data[0].full_name'
+"alice/my-books"
+
+$ bea --json auth status | jq '{source: .data.source, tier: .data.tier}'
+{"source": "file", "tier": "free"}
+```
+
+Report JSON carries the same tree the text renderer walks — `account`, `balance`, `balance_children`, `has_txns`, `children` — not a rendering of it.
 
 ## Environment variables
 
 | Variable | Default | Description |
 |---|---|---|
-| `BEANCOUNT_API_URL` | `https://api.v3.beancount.io` | GraphQL API base URL |
-| `BEANCOUNT_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL (used for device login flow) |
+| `BEA_FILE` | — | Ledger entry file, when `--file` is not passed |
+| `BEA_TOKEN` | — | Hosted credential for unattended jobs; never written to disk |
+| `BEA_CONFIG_DIR` | `$XDG_CONFIG_HOME/bea`, else `~/.config/bea` | Per-user state: credentials, `ask` history, user skills |
+| `BEA_API_URL` | `https://api.v3.beancount.io` | API base URL |
+| `BEA_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL, used by the device login flow |
+| `CI` | — | Truthy implies `--no-input` |

@@ -24,7 +24,7 @@ function createFakeCache() {
 const input = {
   deviceCodeDigest: "digest-abc",
   userCode: "BCDF-GHJK",
-  client: { name: "beancount-cli", deviceLabel: "tian-mbp" },
+  client: { name: "bea", deviceLabel: "tian-mbp" },
 };
 
 describe("CliAuthSessionRedisModel", () => {

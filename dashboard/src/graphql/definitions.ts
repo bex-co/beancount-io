@@ -187,7 +187,7 @@ export type ChartItemV2 = {
 export type CliAuthClientInfoInput = {
   /** Machine name the client runs on. */
   deviceLabel?: InputMaybe<Scalars['String']['input']>;
-  /** Client name, e.g. `beancount-cli`. */
+  /** Client name, e.g. `bea`. */
   name?: InputMaybe<Scalars['String']['input']>;
   platform?: InputMaybe<Scalars['String']['input']>;
   version?: InputMaybe<Scalars['String']['input']>;

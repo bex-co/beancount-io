@@ -45,9 +45,14 @@ from cli.directives.models import (
 )
 
 
-def _load(file_path: Path) -> list[Any]:
-    entries, _errors, _options = beancount.loader.load_file(str(file_path))
-    return list(entries)
+def load_file(file_path: Path) -> tuple[list[Any], list[Any]]:
+    """Load a ledger and hand back its errors instead of dropping them.
+
+    The caller decides what an unloadable ledger means; a reader that silently
+    discarded errors would let a partial journal look like the whole ledger.
+    """
+    entries, errors, _options = beancount.loader.load_file(str(file_path))
+    return list(entries), list(errors)
 
 
 def _in_date_range(
@@ -99,14 +104,14 @@ def _to_transaction(entry: Any) -> TransactionDirective:
 
 
 def list_transactions(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     account: str | None = None,
     limit: int = 50,
 ) -> list[TransactionDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Transaction):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -120,14 +125,14 @@ def list_transactions(
 
 
 def list_notes(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     account: str | None = None,
     limit: int = 50,
 ) -> list[NoteDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Note):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -141,14 +146,14 @@ def list_notes(
 
 
 def list_prices(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     currency: str | None = None,
     limit: int = 50,
 ) -> list[PriceDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Price):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -162,14 +167,14 @@ def list_prices(
 
 
 def list_balances(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     account: str | None = None,
     limit: int = 50,
 ) -> list[BalanceDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Balance):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -183,14 +188,14 @@ def list_balances(
 
 
 def list_opens(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     account: str | None = None,
     limit: int = 50,
 ) -> list[OpenDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Open):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -205,14 +210,14 @@ def list_opens(
 
 
 def list_closes(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     account: str | None = None,
     limit: int = 50,
 ) -> list[CloseDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Close):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -226,14 +231,14 @@ def list_closes(
 
 
 def list_commodities(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     currency: str | None = None,
     limit: int = 50,
 ) -> list[CommodityDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Commodity):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -247,13 +252,13 @@ def list_commodities(
 
 
 def list_events(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     limit: int = 50,
 ) -> list[EventDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Event):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -265,14 +270,14 @@ def list_events(
 
 
 def list_documents(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     account: str | None = None,
     limit: int = 50,
 ) -> list[DocumentDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Document):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -290,7 +295,7 @@ def list_documents(
 
 
 def list_customs(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     limit: int = 50,
@@ -298,7 +303,7 @@ def list_customs(
     from beancount.core.amount import Amount as BcAmount
 
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Custom):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -326,14 +331,14 @@ def list_customs(
 
 
 def list_pads(
-    file_path: Path,
+    entries: list[Any],
     from_date: datetime.date | None = None,
     to_date: datetime.date | None = None,
     account: str | None = None,
     limit: int = 50,
 ) -> list[PadDirective]:
     results = []
-    for entry in _load(file_path):
+    for entry in entries:
         if not isinstance(entry, Pad):
             continue
         if not _in_date_range(entry.date, from_date, to_date):

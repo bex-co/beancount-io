@@ -32,7 +32,7 @@ registerEnumType(CliAuthStatus, {
 class CliAuthClientInfoInput {
   @Field(() => String, {
     nullable: true,
-    description: "Client name, e.g. `beancount-cli`.",
+    description: "Client name, e.g. `bea`.",
   })
   name?: string;
 

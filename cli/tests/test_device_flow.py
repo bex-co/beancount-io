@@ -7,6 +7,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 from cli.auth.device_flow import run_device_flow
+from cli.errors import AuthError
 
 DEVICE_CODE = "device-code-kept-in-this-process"
 USER_CODE = "BCDF-GHJK"
@@ -84,14 +85,14 @@ class TestRunDeviceFlow:
         run_device_flow(client, "https://beancount.io")
 
         reported = client.create_cli_auth_session.call_args.kwargs["client"]
-        assert reported.name == "beancount-cli"
+        assert reported.name == "bea"
         assert reported.device_label
 
     def test_raises_when_the_person_denies(self) -> None:
-        with pytest.raises(RuntimeError, match="denied"):
+        with pytest.raises(AuthError, match="denied"):
             run_device_flow(_client("DENIED"), "https://beancount.io")
 
     @pytest.mark.parametrize("status", ["EXPIRED", "CONSUMED"])
     def test_raises_when_the_session_is_no_longer_usable(self, status: str) -> None:
-        with pytest.raises(RuntimeError, match="expired or already used"):
+        with pytest.raises(AuthError, match="expired or already used"):
             run_device_flow(_client(status), "https://beancount.io")

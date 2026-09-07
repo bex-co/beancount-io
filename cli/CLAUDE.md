@@ -1,12 +1,12 @@
-# Beancount CLI
+# Beancount.io CLI
 
-Python 3.12 CLI for local and hosted Beancount workflows. It uses Typer, Beancount v3, Beanquery, Pydantic, and uv, and includes the vendored Fava reporting library under `src/fava/`.
+Python 3.12 CLI for local and hosted Beancount workflows. The distribution is `beancount-io` and it installs one command, `bea`. It uses Typer, Beancount v3, Beanquery, Pydantic, and uv, and includes the vendored Fava reporting library under `src/fava/`.
 
 ## Layout
 
 ```
 cli/
-├── src/cli/       # Commands, API client, credentials, directives, reports, chat
+├── src/cli/       # Commands, API client, credentials, directives, reports, ask
 ├── src/fava/      # Vendored Fava reporting subset used by the CLI
 ├── graphql/       # Schema and operations for generated hosted-API client
 ├── tests/         # Pytest suite
@@ -21,7 +21,7 @@ Run from `cli/`:
 
 ```zsh
 uv sync --all-groups
-uv run beancount-cli --help
+uv run bea --help
 make lint
 make deadcode
 make deadcode-fix

@@ -24,8 +24,8 @@ Find the main ledger file (same procedure as the sibling skills: `fd -e beancoun
 Tooling, in order of preference:
 
 1. `bean-query <ledger> "<BQL>"` (from the `beanquery` package; if not on PATH, `pip install beanquery` — in this repo's CLI environment, `uv run --project cli bean-query`).
-2. `beancount-cli query "<BQL>"` — this repo's CLI (wraps beanquery), when the user has it installed.
-3. For polished statements (income statement, balance sheet trees), `beancount-cli report` / Fava beat raw BQL — say so rather than rebuilding them in BQL.
+2. `bea query "<BQL>"` — this repo's CLI (wraps beanquery), when the user has it installed.
+3. For polished statements (income statement, balance sheet trees), `bea report` / Fava beat raw BQL — say so rather than rebuilding them in BQL.
 
 ### 2. Translate the question
 
@@ -51,5 +51,5 @@ Missing period, no such account/payee, ledger doesn't track it (e.g. market valu
 - Don't state any figure that didn't come out of the query you show.
 - Don't modify, format, or "fix" any file — read-only, no exceptions.
 - Don't answer an ambiguous question by picking an interpretation silently.
-- Don't rebuild Fava's statements in BQL when pointing at Fava/`beancount-cli report` serves better.
+- Don't rebuild Fava's statements in BQL when pointing at Fava/`bea report` serves better.
 - Don't extrapolate ("at this rate you'll…") without labeling it as arithmetic on top of queried figures — and keep even that minimal.

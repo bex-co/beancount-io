@@ -51,7 +51,7 @@ class TransactionToCategorizeInput(BaseModel):
 
 class CliAuthClientInfoInput(BaseModel):
     name: Optional[str] = None
-    "Client name, e.g. `beancount-cli`."
+    "Client name, e.g. `bea`."
     version: Optional[str] = None
     device_label: Optional[str] = Field(alias="deviceLabel", default=None)
     "Machine name the client runs on."

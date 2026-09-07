@@ -5,7 +5,7 @@ from typing import Annotated
 
 import typer
 
-from cli import output
+from cli import context, output
 
 
 def format_beans(
@@ -15,14 +15,11 @@ def format_beans(
     ] = False,
 ) -> None:
     """Format all .bean files under a directory (equivalent to bean-format --in-place)."""
+    ctx = context.current()
     try:
         from beancount.scripts.format import align_beancount
 
         bean_files = sorted(directory.rglob("*.bean"))
-        if not bean_files:
-            output.success("No .bean files found.")
-            return
-
         formatted_files: list[str] = []
         for f in bean_files:
             original = f.read_text(encoding="utf-8")
@@ -32,13 +29,21 @@ def format_beans(
                 if not dry_run:
                     f.write_text(aligned, encoding="utf-8")
 
-        for fname in formatted_files:
-            action = "would format" if dry_run else "formatted"
-            typer.echo(f"{action}: {fname}")
+        if ctx.json_output:
+            output.emit(
+                {"scanned": len(bean_files), "formatted": formatted_files, "dry_run": dry_run},
+                target={"directory": str(directory.resolve())},
+            )
+            return
 
-        total = len(bean_files)
-        changed = len(formatted_files)
+        if not bean_files:
+            output.success("No .bean files found.")
+            return
+        for fname in formatted_files:
+            typer.echo(f"{'would format' if dry_run else 'formatted'}: {fname}")
         suffix = " (dry run)" if dry_run else ""
-        output.success(f"{changed}/{total} file(s) formatted{suffix}.")
+        output.success(f"{len(formatted_files)}/{len(bean_files)} file(s) formatted{suffix}.")
+    except typer.Exit:
+        raise
     except Exception as e:
-        output.error(str(e))
+        output.error(e)

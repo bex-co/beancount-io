@@ -74,16 +74,16 @@ def load_skills(cwd: Path | None = None) -> list[AgentSkill]:
     """Discover and load skills from project-level and user-level directories.
 
     Project-level:  <cwd>/.agents/skills/
-    User-level:     ~/.beancount-cli/agent/skill/
+    User-level:     ~/.config/bea/skills/
 
     Project-level skills take precedence when names collide.
     Missing dirs and malformed files are silently skipped.
     """
     base = cwd if cwd is not None else Path.cwd()
     project_skills_dir = base / ".agents" / "skills"
-    from cli.config import DATA_DIR
+    from cli.config import user_skills_dir as config_user_skills_dir
 
-    user_skills_dir = DATA_DIR / "agent" / "skill"
+    user_skills_dir = config_user_skills_dir()
 
     seen: set[str] = set()
     skills: list[AgentSkill] = []

@@ -4,11 +4,12 @@ import platform
 import socket
 import time
 import webbrowser
-from importlib.metadata import PackageNotFoundError, version
 from typing import TYPE_CHECKING
 
 from cli.api.gql_client.input_types import CliAuthClientInfoInput
 from cli.auth.credentials import save_credentials
+from cli.config import package_version
+from cli.errors import AuthError
 
 if TYPE_CHECKING:
     from cli.api.gql_client import Client
@@ -20,17 +21,12 @@ def _client_info() -> CliAuthClientInfoInput:
     """Describe this device so the browser can show who is asking.
 
     Everything here is self-reported, and the consent screen says so. It exists
-    so the person approving sees "beancount-cli on <their machine>" instead of
-    an anonymous request they have no way to tell apart from someone else's.
+    so the person approving sees "bea on <their machine>" instead of an
+    anonymous request they have no way to tell apart from someone else's.
     """
-    try:
-        cli_version = version("beancount-cli")
-    except PackageNotFoundError:
-        cli_version = None
-
     return CliAuthClientInfoInput(
-        name="beancount-cli",
-        version=cli_version,
+        name="bea",
+        version=package_version(),
         deviceLabel=socket.gethostname(),
         platform=f"{platform.system()} {platform.release()}".strip(),
     )
@@ -67,6 +63,6 @@ def run_device_flow(client: Client, dashboard_url: str) -> tuple[str, str]:
             save_credentials(token, expire_at)
             return token, expire_at
         elif status == "DENIED":
-            raise RuntimeError("Authorization was denied.")
+            raise AuthError("Authorization was denied.")
         elif status in ("EXPIRED", "CONSUMED"):
-            raise RuntimeError("Session expired or already used. Run 'beancount auth login' again.")
+            raise AuthError("Session expired or already used. Run 'bea auth login' again.")

@@ -9,7 +9,7 @@ from pydantic_ai import Agent, ModelRetry, RunContext
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
-from cli.chat.skills import AgentSkill, build_skills_index_prompt
+from cli.ask.skills import AgentSkill, build_skills_index_prompt
 
 _SYSTEM_PROMPT = """You are a helpful Beancount accounting assistant.
 Use the run_bql_query tool to retrieve data from the user's ledger, then answer their question.

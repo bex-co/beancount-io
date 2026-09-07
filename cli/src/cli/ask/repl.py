@@ -19,11 +19,9 @@ from rich.text import Text
 if TYPE_CHECKING:
     from pydantic_ai import Agent
 
-    from cli.chat.agent import BqlDeps
+    from cli.ask.agent import BqlDeps
 
-from cli.config import DATA_DIR
-
-_HISTORY_FILE = DATA_DIR / "chat_history"
+from cli.config import history_path
 
 _STYLE = Style.from_dict(
     {
@@ -69,12 +67,13 @@ def _toolbar_tokens() -> FormattedText:
 
 
 def _make_session(hint: str, key_bindings: KeyBindings | None = None) -> PromptSession[str]:
-    _HISTORY_FILE.parent.mkdir(parents=True, exist_ok=True)
+    history_file = history_path()
+    history_file.parent.mkdir(parents=True, exist_ok=True)
     return PromptSession(
         message=_prompt_tokens,
         bottom_toolbar=_toolbar_tokens,
         placeholder=FormattedText([("class:placeholder", f" {hint}")]),
-        history=FileHistory(str(_HISTORY_FILE)),
+        history=FileHistory(str(history_file)),
         style=_STYLE,
         mouse_support=False,
         key_bindings=key_bindings,
@@ -182,12 +181,12 @@ def make_confirm_fn(file: Path, active_status: list[Any]) -> Callable[[str], str
 
 
 def print_welcome() -> None:
-    console.print("\n[bold]Beancount AI[/bold]")
+    console.print("\n[bold]Beancount.io Ask[/bold]")
     console.print("[dim]Multi-turn conversation with your ledger. Type /exit to quit.[/dim]")
 
 
 def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | None = None) -> None:
-    from cli.chat.agent import WritePermission
+    from cli.ask.agent import WritePermission
 
     hint = random.choice(_PLACEHOLDER_HINTS)
     first_turn = [True]
@@ -237,7 +236,7 @@ def run_repl(agent: Agent[BqlDeps, str], deps: BqlDeps, *, default_input: str | 
 def _print_help() -> None:
     console.print(
         "\n[bold]Commands[/bold]\n"
-        "  [cyan]/exit[/cyan]   Exit the chat\n"
+        "  [cyan]/exit[/cyan]   Exit the session\n"
         "  [cyan]?[/cyan]       Show this help\n\n"
         "[bold]Keyboard shortcuts[/bold]\n"
         "  [cyan]↑ ↓[/cyan]     Browse input history\n"

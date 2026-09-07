@@ -1,7 +1,7 @@
 [project]
-name = "beancount-cli"
+name = "beancount-io"
 version = "0.1.0"
-description = "CLI for the Beancount.io platform"
+description = "Beancount.io CLI"
 readme = "README.md"
 license = { text = "MIT" }
 requires-python = ">=3.12"
@@ -15,10 +15,16 @@ dependencies = [
     "ply>=3.11",
     "pyexcel>=0.7.3",
     "python-dateutil>=2.9.0",
-    "openai>=1.0",
-    "pydantic-ai>=0.3",
     "prompt-toolkit>=3.0",
     "python-frontmatter>=1.1",
+]
+
+[project.optional-dependencies]
+# `bea ask` is the only command that needs an LLM client. Keeping these out of
+# the default install means a first `bea check` downloads and imports neither.
+ask = [
+    "openai>=1.0",
+    "pydantic-ai>=0.3",
 ]
 
 [project.urls]
@@ -26,7 +32,7 @@ Homepage = "https://beancount.io"
 Repository = "https://github.com/bex-co/beancount-io"
 
 [project.scripts]
-beancount-cli = "cli.main:app"
+bea = "cli.main:app"
 
 [build-system]
 requires = ["hatchling"]
@@ -37,6 +43,7 @@ packages = ["src/cli", "src/fava"]
 
 [dependency-groups]
 dev = [
+    "beancount-io[ask]",
     "pytest>=8",
     "pytest-httpx>=0.30",
     "pytest-cov>=7.0.0",

@@ -33,7 +33,7 @@ Copyright (c) 2015-2016 Dominik Aumayr <dominik@aumayr.name>
 
 ### beanquery
 
-The BQL query engine behind `beancount-cli query`, the CLI's reports, and `fava`'s statement generation. Consumed as an unmodified PyPI dependency; no beanquery code ships in this repository.
+The BQL query engine behind `bea query`, the CLI's reports, and `fava`'s statement generation. Consumed as an unmodified PyPI dependency; no beanquery code ships in this repository.
 
 ### beangulp
 

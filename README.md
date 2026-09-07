@@ -132,7 +132,7 @@ Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
 ```zsh
 cd cli
 uv sync --all-groups
-uv run beancount-cli --help
+uv run bea --help
 ```
 
 The [CLI reference](./cli/docs/USAGE.md) covers local reads and writes, validation, formatting, queries, reports, authentication, and ledger management.

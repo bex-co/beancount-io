@@ -32,7 +32,7 @@ const session = (overrides: Partial<CliAuthSession> = {}): CliAuthSession => ({
   status: "pending",
   deviceCodeDigest: deviceCodeDigest(DEVICE_CODE),
   userCode: USER_CODE,
-  client: { name: "beancount-cli" },
+  client: { name: "bea" },
   createdAt: "2026-01-01T00:00:00.000Z",
   ...overrides,
 });
@@ -104,7 +104,7 @@ describe("CliAuthService", () => {
     });
 
     it("returns a device code and a separate user code", async () => {
-      const result = await service.createSession({ name: "beancount-cli" });
+      const result = await service.createSession({ name: "bea" });
 
       expect(result.deviceCode).toEqual(expect.any(String));
       expect(result.userCode).toMatch(/^[A-Z0-9]{4}-[A-Z0-9]{4}$/);
@@ -113,7 +113,7 @@ describe("CliAuthService", () => {
     });
 
     it("stores only the digest of the device code, never the code itself", async () => {
-      const result = await service.createSession({ name: "beancount-cli" });
+      const result = await service.createSession({ name: "bea" });
 
       const stored = createdInput();
       expect(stored.deviceCodeDigest).toBe(deviceCodeDigest(result.deviceCode));
@@ -121,8 +121,8 @@ describe("CliAuthService", () => {
     });
 
     it("issues a distinct device code and user code per session", async () => {
-      const first = await service.createSession({ name: "beancount-cli" });
-      const second = await service.createSession({ name: "beancount-cli" });
+      const first = await service.createSession({ name: "bea" });
+      const second = await service.createSession({ name: "bea" });
 
       expect(first.deviceCode).not.toBe(second.deviceCode);
       expect(first.userCode).not.toBe(second.userCode);
@@ -131,7 +131,7 @@ describe("CliAuthService", () => {
     it("records the reported client and the observed address for the consent screen", async () => {
       await service.createSession(
         {
-          name: "beancount-cli",
+          name: "bea",
           version: "0.4.1",
           deviceLabel: "tian-mbp",
           platform: "darwin 25.5.0",
@@ -140,7 +140,7 @@ describe("CliAuthService", () => {
       );
 
       expect(createdInput().client).toEqual({
-        name: "beancount-cli",
+        name: "bea",
         version: "0.4.1",
         deviceLabel: "tian-mbp",
         platform: "darwin 25.5.0",

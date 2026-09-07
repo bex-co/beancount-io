@@ -84,8 +84,9 @@ def delete_ledger(client: Client, full_name: str) -> str:
     return result.delete_ledger.ledger_id
 
 
-def clone_ledger(git_remote_url: str, target_dir: Path) -> None:
-    result = subprocess.run(["git", "clone", git_remote_url, str(target_dir)])
+def clone_ledger(git_remote_url: str, target_dir: Path, *, quiet: bool = False) -> None:
+    """Clone the ledger's repository, keeping git's chatter off stdout when it is a JSON channel."""
+    result = subprocess.run(["git", "clone", git_remote_url, str(target_dir)], capture_output=quiet)
     if result.returncode != 0:
         raise CloneError(git_remote_url)
 
