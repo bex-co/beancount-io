@@ -1,6 +1,6 @@
-# w1 — Home dashboard (worker1)
+# w1 — Worker queue 1 (worker1)
 
-**Worker:** worker1 — front-door track: evolve the home tab from a flat list of numbers into a Monarch-style analytics dashboard, now extended to Monarch-style Accounts and Reports tabs. Sequenced m2 → m3: Reports reuses m2's GraphQL plumbing and account-detail screen.
+**Worker:** worker1 — general-purpose adoption worker; accepts the next highest-impact milestone across packages, topics, and A1/A2/A3 rather than owning a permanent specialty. This board records the queue's mobile work.
 
 ## Milestones
 
@@ -42,6 +42,7 @@
 - [x] **m36** — Merchant view: stats and transaction history (8 tasks) ← same hand-off; sequenced after m35 — navigates from its list, reuses its `queryShell` plumbing
 - [x] **m37** — Recurring merchants: detection and grouping (9 tasks) ← same hand-off; sequenced after m35 + m36 — the directory is its surface, the merchant view hosts its toggle
 - [ ] **m38** — Localize and optimize the App Store product page (15 tasks) ← from `/pm-brainstorm` 2026-08-24; moved from the monorepo root board
+- [ ] **m39** — Beancount highlighting and quick actions in Edit Transaction (8 tasks) ← owner research handoff to `/pm` 2026-09-06; reuses the shipped m9 transaction flow and m15 editor
 
 ## Merchants hand-off — 2026-08-19
 
