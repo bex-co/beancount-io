@@ -8,7 +8,7 @@ Python 3.12 CLI for local and hosted Beancount workflows. The distribution is `b
 cli/
 ├── src/cli/       # Commands, API client, credentials, directives, reports, ask
 ├── src/fava/      # Vendored Fava reporting subset used by the CLI
-├── graphql/       # Schema and operations for generated hosted-API client
+├── openapi/       # Pinned v1 OpenAPI snapshot the REST client is generated from
 ├── tests/         # Pytest suite
 ├── scripts/       # Release plumbing: tag validation and Homebrew formula rendering
 ├── docs/          # User and agent-facing documentation
@@ -31,6 +31,8 @@ make typecheck
 make test
 make check-all
 make codegen
+make spec-check
+make spec-sync
 make release-check
 make release-lock
 ```
@@ -45,7 +47,8 @@ the resulting diff.
 - Keep command registration and top-level UX in `src/cli/`; reusable report behavior that comes from Fava stays in `src/fava/`.
 - Hosted commands live under `bea cloud` (`src/cli/commands/cloud/`) — account commands directly on the app, hosted resources as sub-apps. Task verbs stay top-level; a local verb that gains remote capability grows an option, it does not move into `cloud`.
 - The API gateway client (`cli.api`), the login ceremony (`cli.auth.device_flow`), and server settings (`cli.settings`) may be imported only from `commands/cloud/` modules. Reading a stored credential (`cli.auth.credentials`) is allowed anywhere — that is how a local verb such as `bea ask` authenticates an outbound call. `tests/test_command_boundaries.py` enforces this.
-- Treat `src/cli/api/gql_client/` as generated output. Change `graphql/schema.graphql` or `graphql/operations/`, then run `make codegen`; do not hand-edit generated client files.
+- Treat `src/cli/api/rest_client/` and `src/cli/commands/cloud/generated/` as generated output. The hosted transport is the v1 OpenAPI contract: change the backend's v1 surface (`backend-cluster/backend-v2`), regenerate its snapshot, then run `make spec-sync && make codegen` here; do not hand-edit generated files. `make spec-check` (in `make check-all`) fails when the pin drifts from the canonical spec.
+- To add a mechanical `bea cloud` command: annotate the operation in backend-v2 (summary, description, parameter descriptions — generation fails without them), regenerate the spec, add a registry entry in `scripts/gen_cloud_commands.py`, and run `make codegen`. Multi-step flows (login, clone, create-and-clone) stay hand-written; DELETE operations get the confirmation gate automatically.
 - Use strict typing: mypy is configured with `strict = true`, and Ruff owns import order and formatting.
 - Put tests in `tests/` and use existing fixtures/helpers in `tests/conftest.py`.
 - Keep local-ledger operations local by default. Hosted mutations must use the existing credentials/API abstractions and surface failures without hiding them.

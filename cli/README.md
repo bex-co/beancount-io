@@ -103,7 +103,7 @@ make format-check  # ruff format --check
 make typecheck     # mypy
 make test          # pytest
 make check-all     # lint + deadcode + format-check + typecheck + test
-make codegen       # re-fetch GraphQL schema and regenerate client
+make codegen       # regenerate the REST client from the pinned OpenAPI spec
 ```
 
 ## Releasing (maintainers)

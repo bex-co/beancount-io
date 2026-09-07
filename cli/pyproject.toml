@@ -17,6 +17,7 @@ dependencies = [
     "python-dateutil>=2.9.0",
     "prompt-toolkit>=3.0",
     "python-frontmatter>=1.1",
+    "attrs>=23",
 ]
 
 [project.optional-dependencies]
@@ -52,7 +53,7 @@ include = [
     "src/",
     "tests/",
     "docs/",
-    "graphql/",
+    "openapi/",
     "scripts/",
     "Makefile",
     "NOTICE.fava",
@@ -71,22 +72,15 @@ dev = [
     "pytest-cov>=7.0.0",
     "ruff>=0.12.12",
     "mypy>=1.17.1",
-    "ariadne-codegen>=0.14",
     "types-python-dateutil>=2.9.0.20251008",
     "vulture>=2.14",
+    "openapi-python-client>=0.29.1",
 ]
-
-[tool.ariadne-codegen]
-schema_path = "graphql/schema.graphql"
-queries_path = "graphql/operations/"
-target_package_name = "gql_client"
-target_package_path = "src/cli/api"
-async_client = false
 
 [tool.ruff]
 target-version = "py312"
 line-length = 120
-exclude = ["src/cli/api/gql_client/"]
+exclude = ["src/cli/api/rest_client/", "src/cli/commands/cloud/generated/"]
 
 [tool.ruff.lint]
 select = ["E", "W", "F", "I", "B", "UP"]

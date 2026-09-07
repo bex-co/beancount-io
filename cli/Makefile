@@ -1,6 +1,6 @@
 # Beancount.io CLI - Development Makefile
 
-.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock
+.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock spec-check spec-sync
 
 # Default target
 help:
@@ -17,10 +17,12 @@ help:
 	@echo "  make format-check     - Check formatting without modifying files"
 	@echo "  make typecheck        - Run mypy type checks"
 	@echo "  make test             - Run tests with pytest"
-	@echo "  make codegen          - Fetch GraphQL schema and regenerate types"
+	@echo "  make codegen          - Regenerate the REST client and cloud command stubs from openapi/v1.json"
+	@echo "  make spec-check       - Fail if openapi/v1.json drifted from backend-cluster/idl's canonical spec"
+	@echo "  make spec-sync        - Refresh openapi/v1.json from the canonical spec"
 	@echo "  make release-check    - Validate the release tag against pyproject.toml"
 	@echo "  make release-lock     - Export the hash-pinned requirements.lock for a release"
-	@echo "  make check-all        - Run lint + format-check + typecheck + test"
+	@echo "  make check-all        - Run lint + format-check + typecheck + test + spec-check"
 
 install:
 	uv sync
@@ -41,7 +43,7 @@ lint:
 	uv run ruff check src/ tests/
 
 deadcode:
-	uv run vulture src/cli src/fava --min-confidence 100 --exclude src/cli/api/gql_client/ --ignore-names repo
+	uv run vulture src/cli src/fava --min-confidence 100 --exclude src/cli/api/rest_client/,src/cli/commands/cloud/generated/ --ignore-names repo
 
 deadcode-fix:
 	uv run ruff check src/ tests/ --fix --select F401,F841
@@ -81,9 +83,21 @@ release-check:
 release-lock:
 	uv export --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o requirements.lock
 
-codegen:
-	@echo "Fetching schema from https://beancount.io/api-gateway/schema.graphql ..."
-	curl -sf https://beancount.io/api-gateway/schema.graphql > graphql/schema.graphql
-	uv run ariadne-codegen
+# The canonical spec lives in the backend package; the CLI builds only from its
+# own pinned copy so a `cli/` checkout is self-sufficient and reproducible.
+CANONICAL_SPEC = ../backend-cluster/backend-v2/docs/openapi/v1.json
 
-check-all: lint deadcode format-check typecheck test
+spec-check:
+	@diff -q $(CANONICAL_SPEC) openapi/v1.json >/dev/null \
+		|| { echo "openapi/v1.json drifted from $(CANONICAL_SPEC) — run 'make spec-sync && make codegen' and commit the diff."; exit 1; }
+
+spec-sync:
+	cp $(CANONICAL_SPEC) openapi/v1.json
+
+codegen:
+	uv run openapi-python-client generate --path openapi/v1.json \
+		--output-path src/cli/api/rest_client --meta none --overwrite
+	uv run python scripts/gen_cloud_commands.py
+	uv run ruff format src/cli/api/rest_client src/cli/commands/cloud/generated
+
+check-all: lint deadcode format-check typecheck test spec-check

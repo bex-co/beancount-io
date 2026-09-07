@@ -4,7 +4,18 @@ import subprocess
 from dataclasses import dataclass
 from pathlib import Path
 
-from cli.api.gql_client import Client
+from cli.api.client import unwrap
+from cli.api.rest_client.api.ledger_v_1 import (
+    create_ledger as create_ledger_op,
+)
+from cli.api.rest_client.api.ledger_v_1 import (
+    get_ledger as get_ledger_op,
+)
+from cli.api.rest_client.client import AuthenticatedClient
+from cli.api.rest_client.models.create_ledger_body import CreateLedgerBody
+from cli.api.rest_client.models.create_ledger_response_200 import CreateLedgerResponse200
+from cli.api.rest_client.models.get_ledger_response_200 import GetLedgerResponse200
+from cli.utils import owner_and_name
 
 
 @dataclass
@@ -20,68 +31,33 @@ class LedgerInfo:
     updated_at: str
 
 
+def _to_info(lg: CreateLedgerResponse200 | GetLedgerResponse200) -> LedgerInfo:
+    return LedgerInfo(
+        id=lg.id,
+        name=lg.name,
+        full_name=lg.full_name,
+        http_url=lg.http_url,
+        ssh_url=lg.ssh_url,
+        private=lg.private,
+        empty=lg.empty,
+        created_at=lg.created_at,
+        updated_at=lg.updated_at,
+    )
+
+
 def create_ledger(
-    client: Client,
+    client: AuthenticatedClient,
     name: str,
     description: str | None = None,
     private: bool = False,
 ) -> LedgerInfo:
-    result = client.create_ledger(name=name, description=description, private=private)
-    lg = result.create_ledger
-    return LedgerInfo(
-        id=lg.id,
-        name=lg.name,
-        full_name=lg.full_name,
-        http_url=lg.http_url,
-        ssh_url=lg.ssh_url,
-        private=lg.private,
-        empty=lg.empty,
-        created_at=lg.created_at,
-        updated_at=lg.updated_at,
-    )
+    body = CreateLedgerBody(name=name, description=description, private=private)
+    return _to_info(unwrap(create_ledger_op.sync_detailed(client=client, body=body)))
 
 
-def list_ledgers(client: Client, limit: int = 50, page: int = 1) -> list[LedgerInfo]:
-    result = client.list_ledgers(limit=float(limit), page=float(page))
-    return [
-        LedgerInfo(
-            id=lg.id,
-            name=lg.name,
-            full_name=lg.full_name,
-            http_url=lg.http_url,
-            ssh_url=lg.ssh_url,
-            private=lg.private,
-            empty=lg.empty,
-            created_at=lg.created_at,
-            updated_at=lg.updated_at,
-        )
-        for lg in result.list_ledgers
-    ]
-
-
-def get_ledger(client: Client, full_name: str) -> LedgerInfo:
-    from cli.utils import full_name_to_ledger_id
-
-    result = client.get_ledger(ledger_id=full_name_to_ledger_id(full_name))
-    lg = result.get_ledger
-    return LedgerInfo(
-        id=lg.id,
-        name=lg.name,
-        full_name=lg.full_name,
-        http_url=lg.http_url,
-        ssh_url=lg.ssh_url,
-        private=lg.private,
-        empty=lg.empty,
-        created_at=lg.created_at,
-        updated_at=lg.updated_at,
-    )
-
-
-def delete_ledger(client: Client, full_name: str) -> str:
-    from cli.utils import full_name_to_ledger_id
-
-    result = client.delete_ledger(ledger_id=full_name_to_ledger_id(full_name))
-    return result.delete_ledger.ledger_id
+def get_ledger(client: AuthenticatedClient, full_name: str) -> LedgerInfo:
+    owner, name = owner_and_name(full_name)
+    return _to_info(unwrap(get_ledger_op.sync_detailed(owner, name, client=client)))
 
 
 def clone_ledger(git_remote_url: str, target_dir: Path, *, quiet: bool = False) -> None:

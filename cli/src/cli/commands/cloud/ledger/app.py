@@ -7,9 +7,14 @@ from typing import Annotated
 import typer
 
 from cli import context, output
+from cli.commands.cloud.generated.ledger import register_ledger_commands
 from cli.errors import LedgerError, unknown_write_outcome
 
 ledger_app = typer.Typer(help="Manage hosted ledgers on beancount.io", no_args_is_help=True, rich_markup_mode=None)
+
+# Mechanical operations (list, show, delete) are generated from the spec's
+# annotations; only multi-step flows (create-and-clone, clone) stay curated.
+register_ledger_commands(ledger_app)
 
 DirOpt = Annotated[Path | None, typer.Option("--dir", help="Local directory for the git clone")]
 
@@ -62,61 +67,6 @@ def ledger_create(
     typer.echo(f"private:  {'yes' if ledger.private else 'no'}")
     typer.echo(f"httpUrl:  {ledger.http_url}")
     typer.echo(f"sshUrl:   {ledger.ssh_url}")
-
-
-@ledger_app.command("delete")
-def ledger_delete(
-    full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],
-) -> None:
-    """Delete a ledger by its full name (asks first; use --yes to skip the prompt)."""
-    import httpx
-
-    from cli.api.client import authenticated_client
-
-    from . import manager
-
-    if not context.current().confirm(f"Permanently delete ledger '{full_name}'?"):
-        output.success("Cancelled.")
-        return
-
-    client = authenticated_client()
-    try:
-        manager.delete_ledger(client, full_name)
-    except (httpx.TimeoutException, httpx.TransportError) as e:
-        raise unknown_write_outcome(f"Deleting ledger '{full_name}'", e) from e
-
-    if context.current().json_output:
-        output.emit({"deleted": full_name}, target=output.server_target())
-    else:
-        output.success(f"Ledger '{full_name}' deleted.")
-
-
-@ledger_app.command("list")
-def ledger_list(
-    limit: Annotated[int, typer.Option("--limit", "-l", help="Max results")] = 50,
-) -> None:
-    """List all accessible ledgers."""
-    ctx = context.current()
-    from cli.api.client import authenticated_client
-
-    from . import manager
-
-    ledgers = manager.list_ledgers(authenticated_client(), limit=limit)
-
-    if ctx.json_output:
-        output.emit(
-            [asdict(lg) for lg in ledgers],
-            target=output.server_target(),
-            truncated=len(ledgers) >= limit,
-            limit=limit,
-        )
-        return
-
-    if not ledgers:
-        typer.echo("No ledgers found.")
-        return
-    rows = [[lg.name, lg.full_name, "yes" if lg.private else "no", lg.created_at[:10]] for lg in ledgers]
-    output.table(["NAME", "FULLNAME", "PRIVATE", "CREATED"], rows)
 
 
 @ledger_app.command("clone")

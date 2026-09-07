@@ -16,7 +16,3 @@ class Settings(BaseSettings):
     dashboard_url: str = "https://beancount.io"
 
     model_config = SettingsConfigDict(env_prefix="BEA_", extra="ignore")
-
-    @property
-    def graphql_endpoint(self) -> str:
-        return f"{self.api_url.rstrip('/')}/api-gateway/"

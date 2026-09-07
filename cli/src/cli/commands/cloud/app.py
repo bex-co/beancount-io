@@ -41,7 +41,8 @@ def cloud_login() -> None:
 @cloud_app.command("logout")
 def cloud_logout() -> None:
     """Revoke the token and clear stored credentials."""
-    from cli.api.client import make_client
+    from cli.api.client import bearer_client, unwrap
+    from cli.api.rest_client.api.ledger_v_1 import logout
     from cli.auth.credentials import clear_credentials, load_credentials
 
     creds = load_credentials()
@@ -49,7 +50,7 @@ def cloud_logout() -> None:
         output.success("Already logged out.")
         return
     try:
-        make_client(creds.token).logout()
+        unwrap(logout.sync_detailed(client=bearer_client(creds.token)))
     except Exception:
         # The local credential goes either way: a server that cannot be
         # reached must not leave a token sitting on this disk.
@@ -62,15 +63,18 @@ def cloud_logout() -> None:
 def cloud_status() -> None:
     """Show who is logged in, where the credential came from, and when it expires."""
     ctx = context.current()
-    from cli.api.client import make_client
+    from cli.api.client import bearer_client, unwrap_or_none
+    from cli.api.rest_client.api.ledger_v_1 import get_user_profile
     from cli.auth.credentials import require_credentials
     from cli.errors import AuthError
 
     creds = require_credentials()
-    result = make_client(creds.token).get_current_user()
-    if result.user_profile is None:
+    user = unwrap_or_none(get_user_profile.sync_detailed(client=bearer_client(creds.token)))
+    if user is None:
         raise AuthError("Not authenticated. Run 'bea cloud login'.")
-    user = result.user_profile
+    # The generated model marks optional fields with `Unset`, which is neither
+    # printable nor JSON-serializable; normalize once here.
+    username = user.username if isinstance(user.username, str) else None
 
     if ctx.json_output:
         output.emit(
@@ -79,7 +83,7 @@ def cloud_status() -> None:
                 "source": creds.source,
                 "expires_at": creds.expire_at,
                 "email": user.email,
-                "username": user.username,
+                "username": username,
                 "tier": user.tier,
             },
             target=output.server_target(),
@@ -89,5 +93,5 @@ def cloud_status() -> None:
     typer.echo(f"Source:    {creds.source}")
     typer.echo(f"Expires:   {creds.expire_at or '(unknown — supplied by BEA_TOKEN)'}")
     typer.echo(f"Email:     {user.email}")
-    typer.echo(f"Username:  {user.username if user.username else '(not set)'}")
+    typer.echo(f"Username:  {username if username else '(not set)'}")
     typer.echo(f"Tier:      {user.tier}")

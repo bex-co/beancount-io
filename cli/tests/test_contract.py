@@ -10,22 +10,43 @@ import json
 import subprocess
 import sys
 from pathlib import Path
-from types import SimpleNamespace
 from typing import Any
-from unittest.mock import MagicMock, patch
+from unittest.mock import patch
 
 import httpx
 import pytest
+from pytest_httpx import HTTPXMock
 from typer.testing import CliRunner
 
-from cli.api.gql_client.exceptions import GraphQLClientHttpError
 from cli.main import app
 
 FIXTURES = Path(__file__).parent / "fixtures"
 VALID = FIXTURES / "valid.bean"
 INVALID = FIXTURES / "invalid.bean"
 
+V1 = "https://api.v3.beancount.io/api-gateway/v1"
+
 runner = CliRunner()
+
+
+def v1_error(code: str, message: str) -> dict[str, Any]:
+    return {"ok": False, "error": {"code": code, "message": message}}
+
+
+def ledger_item(full_name: str = "alice/books") -> dict[str, Any]:
+    owner_less = full_name.split("/", 1)[1]
+    return {
+        "id": "1",
+        "name": owner_less,
+        "fullName": full_name,
+        "httpUrl": f"https://example.test/{full_name}",
+        "sshUrl": f"git@example.test:{full_name}.git",
+        "private": True,
+        "empty": False,
+        "createdAt": "2024-01-01T00:00:00Z",
+        "updatedAt": "2024-01-01T00:00:00Z",
+        "size": 0,
+    }
 
 
 def envelope(result: Any) -> dict[str, Any]:
@@ -116,12 +137,10 @@ class TestExitCodes:
 
         assert result.exit_code == 2
 
-    def test_3_when_the_server_rejects_the_credential(self, logged_in: None) -> None:
-        unauthorized = GraphQLClientHttpError(401, httpx.Response(401))
-        client = MagicMock(list_ledgers=MagicMock(side_effect=unauthorized))
+    def test_3_when_the_server_rejects_the_credential(self, logged_in: None, httpx_mock: HTTPXMock) -> None:
+        httpx_mock.add_response(status_code=401, json=v1_error("UNAUTHENTICATED", "Bad token"))
 
-        with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["cloud", "ledger", "list"])
+        result = runner.invoke(app, ["cloud", "ledger", "list"])
 
         assert result.exit_code == 3
 
@@ -131,21 +150,37 @@ class TestExitCodes:
         assert result.exit_code == 3
         assert "bea cloud login" in result.stderr
 
-    def test_4_when_a_write_times_out_with_an_unknown_outcome(self, logged_in: None) -> None:
-        client = MagicMock(delete_ledger=MagicMock(side_effect=httpx.ConnectTimeout("timed out")))
+    def test_4_when_a_write_times_out_with_an_unknown_outcome(self, logged_in: None, httpx_mock: HTTPXMock) -> None:
+        httpx_mock.add_exception(httpx.ConnectTimeout("timed out"))
 
-        with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["--yes", "cloud", "ledger", "delete", "alice/books"])
+        result = runner.invoke(app, ["--yes", "cloud", "ledger", "delete", "alice/books"])
 
         assert result.exit_code == 4
         assert "outcome is unknown" in result.stderr
 
-    def test_the_backend_request_id_survives_into_the_error(self, logged_in: None) -> None:
-        response = httpx.Response(401, headers={"x-request-id": "req-abc123"})
-        client = MagicMock(list_ledgers=MagicMock(side_effect=GraphQLClientHttpError(401, response)))
+    @pytest.mark.parametrize(
+        ("status", "exit_code"),
+        [(400, 2), (402, 1), (404, 1), (409, 4), (429, 1), (500, 1)],
+        ids=["validation", "payment-required", "not-found", "conflict", "rate-limited", "server-error"],
+    )
+    def test_every_http_status_maps_onto_the_documented_exit_table(
+        self, logged_in: None, httpx_mock: HTTPXMock, status: int, exit_code: int
+    ) -> None:
+        httpx_mock.add_response(status_code=status, json=v1_error("SOME_CODE", "the server's own words"))
 
-        with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["--json", "cloud", "ledger", "list"])
+        result = runner.invoke(app, ["cloud", "ledger", "list"])
+
+        assert result.exit_code == exit_code
+        assert "the server's own words" in result.stderr
+
+    def test_the_backend_request_id_survives_into_the_error(self, logged_in: None, httpx_mock: HTTPXMock) -> None:
+        httpx_mock.add_response(
+            status_code=401,
+            json=v1_error("UNAUTHENTICATED", "Bad token"),
+            headers={"x-request-id": "req-abc123"},
+        )
+
+        result = runner.invoke(app, ["--json", "cloud", "ledger", "list"])
 
         assert error_object(result)["request_id"] == "req-abc123"
 
@@ -269,34 +304,31 @@ class TestJsonOutput:
             "message": "",
         }
 
-    def test_cloud_status_reports_where_the_credential_came_from(self, logged_in: None) -> None:
-        profile = SimpleNamespace(email="a@example.com", username="alice", tier="free")
-        client = MagicMock(get_current_user=MagicMock(return_value=SimpleNamespace(user_profile=profile)))
+    def test_cloud_status_reports_where_the_credential_came_from(self, logged_in: None, httpx_mock: HTTPXMock) -> None:
+        httpx_mock.add_response(
+            url=f"{V1}/user-profile",
+            json={
+                "id": "u1",
+                "email": "a@example.com",
+                "locale": "en",
+                "username": "alice",
+                "tier": "free",
+                "limits": {"ledgersUsed": 0, "ledgersMax": 1, "collaboratorsPerLedgerMax": 1, "maxDirectives": 100},
+                "hasEverSubscribed": False,
+            },
+        )
 
-        with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["--json", "cloud", "status"])
+        result = runner.invoke(app, ["--json", "cloud", "status"])
 
         assert result.exit_code == 0, result.stderr
         data = envelope(result)["data"]
         assert data["source"] == "environment"
         assert data["email"] == "a@example.com"
 
-    def test_ledger_list_emits_the_envelope(self, logged_in: None) -> None:
-        ledger = SimpleNamespace(
-            id="1",
-            name="books",
-            full_name="alice/books",
-            http_url="https://example.test/alice/books",
-            ssh_url="git@example.test:alice/books.git",
-            private=True,
-            empty=False,
-            created_at="2024-01-01T00:00:00Z",
-            updated_at="2024-01-01T00:00:00Z",
-        )
-        client = MagicMock(list_ledgers=MagicMock(return_value=SimpleNamespace(list_ledgers=[ledger])))
+    def test_ledger_list_emits_the_envelope(self, logged_in: None, httpx_mock: HTTPXMock) -> None:
+        httpx_mock.add_response(url=f"{V1}/ledgers?page=1&limit=50", json=[ledger_item()])
 
-        with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["--json", "cloud", "ledger", "list"])
+        result = runner.invoke(app, ["--json", "cloud", "ledger", "list"])
 
         assert result.exit_code == 0, result.stderr
         assert envelope(result)["data"][0]["full_name"] == "alice/books"
@@ -316,14 +348,10 @@ class TestNoInput:
         confirm.assert_not_called()
         assert result.exit_code == 2
 
-    def test_yes_confirms_without_asking(self, logged_in: None) -> None:
-        client = MagicMock(
-            delete_ledger=MagicMock(
-                return_value=SimpleNamespace(delete_ledger=SimpleNamespace(ledger_id="alice/books"))
-            )
-        )
+    def test_yes_confirms_without_asking(self, logged_in: None, httpx_mock: HTTPXMock) -> None:
+        httpx_mock.add_response(method="DELETE", url=f"{V1}/ledgers/alice/books", json={"ledgerId": "alice/books"})
 
-        with patch("cli.api.client.make_client", return_value=client), patch("typer.confirm") as confirm:
+        with patch("typer.confirm") as confirm:
             result = runner.invoke(app, ["--yes", "cloud", "ledger", "delete", "alice/books"])
 
         confirm.assert_not_called()

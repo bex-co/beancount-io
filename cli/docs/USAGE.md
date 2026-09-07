@@ -11,7 +11,7 @@ bea ask ["question"]                      # requires beancount-io[ask] and hoste
 
 # Cloud — the beancount.io hosted service
 bea cloud login | logout | status
-bea cloud ledger list | create [--clone] | clone | delete [--yes]
+bea cloud ledger list | create [--clone] | show | clone | delete [--yes]
 
 # CLI maintenance
 bea upgrade [--check]
@@ -83,6 +83,8 @@ In `--json` mode a failure writes nothing to stdout and one object to stderr:
 ```
 
 `request_id` is included when the backend supplied one.
+
+Cloud commands map the server's HTTP status onto the same table, keeping the server's own message: `401`/`403` exit **3**, `400` exits **2**, `409` exits **4**, and everything else — including `404`, rate limiting, and server errors — exits **1**. A write whose outcome the CLI cannot know (a timeout mid-delete) exits **4** and says so rather than guessing.
 
 ## Checking, formatting, querying
 
@@ -260,8 +262,9 @@ bea cloud ledger create my-books --public --description "Shared books"
 bea cloud ledger create my-books --clone
 bea cloud ledger create my-books --clone --dir ./accounting/my-books
 
-# List, clone, delete
+# List, inspect, clone, delete
 bea cloud ledger list
+bea cloud ledger show alice/my-books
 bea cloud ledger clone alice/my-books
 bea cloud ledger delete alice/my-books          # asks for confirmation
 bea cloud ledger delete alice/my-books --yes    # or run with --yes

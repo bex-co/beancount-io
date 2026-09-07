@@ -36,3 +36,15 @@ paths = [
   '''.*__tests__/.*''',
   '''.*\.html$''',
 ]
+
+# The generated REST client copies the OpenAPI spec's documentation examples
+# (`akey_…` / `bcio_…` sample identifiers — the spec itself carries the same
+# strings without tripping the JSON-shaped scan) into Python docstrings.
+# Scoped to those exact example values AND the generated-client path — a real
+# key in a generated file is still caught.
+[[allowlists]]
+description = "Spec documentation examples in the generated REST client"
+targetRules = ["generic-api-key"]
+condition = "AND"
+paths = ['''cli/src/cli/api/rest_client/.*\.py$''']
+regexes = ['''(akey|bcio)_7wXzK9mN''']

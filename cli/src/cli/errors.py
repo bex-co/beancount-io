@@ -77,9 +77,8 @@ class ConflictError(BeaError):
     exit_code = EXIT_CONFLICT
 
 
-def _request_id(response: Any) -> str | None:
-    """Pull the backend's request id out of a response so support can trace the call."""
-    headers = getattr(response, "headers", None)
+def request_id_from(headers: Any) -> str | None:
+    """Pull the backend's request id out of response headers so support can trace the call."""
     if headers is None:
         return None
     for name in ("x-request-id", "x-amzn-requestid", "cf-ray"):
@@ -87,6 +86,26 @@ def _request_id(response: Any) -> str | None:
         if value:
             return str(value)
     return None
+
+
+def error_from_status(status: int, message: str | None, *, request_id: str | None = None) -> BeaError:
+    """Map a v1 HTTP status to the documented category, keeping the server's words.
+
+    One deterministic table, so a script can branch on the exit code and a
+    person reads the server's own message rather than a paraphrase.
+    """
+    detail = message or f"HTTP {status}"
+    if status in (401, 403):
+        return AuthError(f"Not authorized ({detail}). Run 'bea cloud login'.", request_id=request_id)
+    if status == 409:
+        return ConflictError(detail, request_id=request_id)
+    if status == 400:
+        return UsageError(detail, request_id=request_id)
+    if status == 429:
+        return BeaError(f"Rate limited ({detail}). Wait a moment and retry.", request_id=request_id)
+    if status >= 500:
+        return BeaError(f"Server error ({detail}).", request_id=request_id)
+    return BeaError(detail, request_id=request_id)
 
 
 def to_bea_error(exc: BaseException | str) -> BeaError:
@@ -104,49 +123,6 @@ def to_bea_error(exc: BaseException | str) -> BeaError:
         return UsageError(exc.format_message())
 
     import httpx
-
-    from cli.api.gql_client.exceptions import (
-        GraphQLClientGraphQLError,
-        GraphQLClientGraphQLMultiError,
-        GraphQLClientHttpError,
-    )
-
-    if isinstance(exc, GraphQLClientHttpError):
-        request_id = _request_id(exc.response)
-        if exc.status_code in (401, 403):
-            return AuthError(
-                f"Not authorized (HTTP {exc.status_code}). Run 'bea cloud login'.",
-                request_id=request_id,
-            )
-        if exc.status_code == 409:
-            return ConflictError(f"Conflict (HTTP {exc.status_code}).", request_id=request_id)
-        return BeaError(str(exc), request_id=request_id)
-
-    if isinstance(exc, GraphQLClientGraphQLMultiError | GraphQLClientGraphQLError):
-        errors = exc.errors if isinstance(exc, GraphQLClientGraphQLMultiError) else [exc]
-        request_id = None
-        for err in errors:
-            extensions = err.extensions or {}
-            candidate = extensions.get("requestId") or extensions.get("request_id")
-            if candidate:
-                request_id = str(candidate)
-                break
-        codes = {str((err.extensions or {}).get("code", "")).upper() for err in errors}
-        message = "; ".join(err.message for err in errors) or str(exc)
-        if codes & {"UNAUTHENTICATED", "FORBIDDEN", "UNAUTHORIZED"}:
-            return AuthError(message, request_id=request_id)
-        if "CONFLICT" in codes:
-            return ConflictError(message, request_id=request_id)
-        return BeaError(message, request_id=request_id)
-
-    if isinstance(exc, httpx.HTTPStatusError):
-        status = exc.response.status_code
-        request_id = _request_id(exc.response)
-        if status in (401, 403):
-            return AuthError(f"Not authorized (HTTP {status}). Run 'bea cloud login'.", request_id=request_id)
-        if status == 409:
-            return ConflictError(f"Conflict (HTTP {status}).", request_id=request_id)
-        return BeaError(str(exc), request_id=request_id)
 
     if isinstance(exc, httpx.TransportError):
         # httpx transport errors frequently stringify to nothing at all, which
