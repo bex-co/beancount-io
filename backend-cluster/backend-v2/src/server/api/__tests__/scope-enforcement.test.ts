@@ -659,14 +659,20 @@ describe("configured enforcement and the shadow-mode compatibility path", () => 
       (mount) =>
         mount.gate === "enforced" && authorizationActionForOp(mount.opId),
     );
-    // Every enforced mount is either PDP-routed or a deliberately public
+    // Every enforced mount is either PDP-routed, a deliberately public
     // classified read (anonymousV1Route: tier quotas, feature flags, social
-    // discovery). Anything else is an unprotected business route.
+    // discovery), or a session-only authentication ceremony (cli-sessions,
+    // logout) — for those the scope gate itself is the protection: it refuses
+    // delegated credentials, and the ceremony service owns the remaining
+    // checks. Anything else is an unprotected business route.
     const unaccounted = restMounts.filter((mount) => {
       if (mount.gate !== "enforced") return false;
       if (authorizationActionForOp(mount.opId)) return false;
       const classified = classifyOp(mount.opId);
-      return !(classified.found && classified.class === "public");
+      return !(
+        classified.found &&
+        (classified.class === "public" || classified.class === "session-only")
+      );
     });
     expect(unaccounted).toEqual([]);
     expect(protectedEnforced.length).toBeGreaterThan(0);

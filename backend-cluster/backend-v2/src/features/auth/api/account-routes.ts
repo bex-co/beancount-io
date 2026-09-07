@@ -51,6 +51,7 @@ export const ACCOUNT_V1_ROUTES = [
   anonymousV1Route({
     method: "get",
     path: "/api-gateway/v1/user-profile",
+    operationId: "getUserProfile",
     summary: "Read the current user's profile",
     description:
       "Returns null without an authenticated identity or when the user no longer exists. A supplied userId must identify the caller; the shared account service enforces scope and exact-self authority.",

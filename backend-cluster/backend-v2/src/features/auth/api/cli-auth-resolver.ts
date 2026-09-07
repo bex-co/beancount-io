@@ -14,6 +14,10 @@ import { AllowAnonymous, Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
 import type { ICliAuthService } from "@/features/auth/service/cli-auth-service";
 import type { CliAuthSessionStatus } from "@/features/auth/data/cli-auth-session-model/types";
+import {
+  firstForwardedIp,
+  toCliAuthWireStatus,
+} from "@/features/auth/api/cli-auth-wire";
 
 enum CliAuthStatus {
   PENDING = "PENDING",
@@ -156,13 +160,10 @@ class CreateCliAuthSessionInput {
   client?: CliAuthClientInfoInput;
 }
 
-/** Map the persisted session status to the GraphQL enum. */
-const STATUS_TO_GRAPHQL: Record<CliAuthSessionStatus, CliAuthStatus> = {
-  pending: CliAuthStatus.PENDING,
-  denied: CliAuthStatus.DENIED,
-  authorized: CliAuthStatus.AUTHORIZED,
-  consumed: CliAuthStatus.CONSUMED,
-};
+/** The GraphQL enum's values are the shared wire vocabulary, verbatim. */
+function toGraphQLStatus(status: CliAuthSessionStatus | null): CliAuthStatus {
+  return CliAuthStatus[toCliAuthWireStatus(status)];
+}
 
 /**
  * Transport for the device-authorization ceremony. Two audiences, two
@@ -203,7 +204,7 @@ export class CliAuthResolver {
     );
 
     return {
-      status: STATUS_TO_GRAPHQL[request.status],
+      status: toGraphQLStatus(request.status),
       client: request.client,
       requestedAt: request.requestedAt,
       expiresAt: request.expiresAt,
@@ -252,10 +253,7 @@ export class CliAuthResolver {
   ): Promise<GetCliAuthSessionResponse> {
     const status = await this.cliAuthService.getSessionStatus(args.deviceCode);
 
-    // A missing session and an unrecognized device code are the same answer.
-    return {
-      status: status ? STATUS_TO_GRAPHQL[status] : CliAuthStatus.EXPIRED,
-    };
+    return { status: toGraphQLStatus(status) };
   }
 
   @AllowAnonymous()
@@ -270,13 +268,7 @@ export class CliAuthResolver {
   }
 }
 
-/**
- * Best-effort address of the requesting device, for display on the consent
- * screen. Client-controlled (2026 security review, finding 7), so it is shown
- * as a hint and never used to decide anything.
- */
+/** Display-only requester address; the trust caveats live in `cli-auth-wire.ts`. */
 function forwardedIp(ctx: IContext): string | undefined {
-  return (
-    ctx.reqHeaders?.["x-forwarded-for"]?.split(",")[0]?.trim() || undefined
-  );
+  return firstForwardedIp(ctx.reqHeaders?.["x-forwarded-for"]);
 }

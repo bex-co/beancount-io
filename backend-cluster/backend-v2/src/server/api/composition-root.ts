@@ -7,6 +7,10 @@ import {
   setAccountRoutes,
 } from "@/features/auth/api/account-routes";
 import {
+  CLI_AUTH_V1_ROUTES,
+  setCliAuthRoutes,
+} from "@/features/auth/api/cli-auth-routes";
+import {
   CONFIGURATION_V1_ROUTES,
   setConfigurationRoutes,
 } from "@/features/healthz/api/configuration-routes";
@@ -222,6 +226,15 @@ const REST_FRAGMENTS: readonly RestFragment[] = [
     register: (router, deps) => setAccountRoutes(router, deps),
   },
   {
+    // The CLI's side of the device-authorization ceremony plus logout. The
+    // three ceremony routes are anonymous (the terminal has no credential
+    // yet); the op-class table keeps all four session-only, so a delegated
+    // credential still cannot drive them.
+    feature: "cli-auth-v1",
+    gate: "enforced",
+    register: (router, deps) => setCliAuthRoutes(router, deps),
+  },
+  {
     feature: "social-v1",
     gate: "enforced",
     register: (router, deps) => setSocialRoutes(router, deps),
@@ -285,6 +298,7 @@ const REST_FRAGMENTS: readonly RestFragment[] = [
 export const V1_DECLARED_ROUTES = [
   ...SOCIAL_V1_ROUTES,
   ...ACCOUNT_V1_ROUTES,
+  ...CLI_AUTH_V1_ROUTES,
   ...CONFIGURATION_V1_ROUTES,
   ...LEDGER_V1_ROUTES,
   ...API_KEY_V1_ROUTES,

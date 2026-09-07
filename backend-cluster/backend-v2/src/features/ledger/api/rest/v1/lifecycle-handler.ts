@@ -41,6 +41,7 @@ export const LEDGER_LIFECYCLE_ROUTES = [
   v1Route({
     method: "post",
     path: "/api-gateway/v1/ledgers",
+    operationId: "createLedger",
     summary: "Create a ledger",
     description:
       "Create a ledger for the authenticated user under existing administrative account authority and tier limits. STARTER is the default template. This is an account operation even for a ledger-pinned credential.",
@@ -52,6 +53,7 @@ export const LEDGER_LIFECYCLE_ROUTES = [
   v1Route({
     method: "put",
     path: "/api-gateway/v1/ledgers/{owner}/{name}",
+    operationId: "updateLedger",
     summary: "Update a ledger",
     description:
       "Update ledger name, description, or visibility. Requires current administrative authority over the addressed ledger and respects the credential pin.",
@@ -68,6 +70,7 @@ export const LEDGER_LIFECYCLE_ROUTES = [
   v1Route({
     method: "delete",
     path: "/api-gateway/v1/ledgers/{owner}/{name}",
+    operationId: "deleteLedger",
     summary: "Delete a ledger",
     description:
       "Delete the repository and perform the existing linked-bank cleanup. Requires current administrative authority and respects the credential pin. Applies immediately; no preview.",

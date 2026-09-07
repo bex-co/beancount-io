@@ -421,19 +421,23 @@ const ACCOUNT_VERBS: readonly VerbEntry[] = [
   },
 ];
 
-const AUTH_VERBS: readonly VerbEntry[] = [
+const AUTH_VERB_ENTRIES: readonly VerbEntry[] = [
   gqlOnly(
     "Query.validateEmailToken",
     "session-only",
     R.sessionCeremony,
     M.sessionCeremony,
   ),
-  gqlOnly(
-    "Mutation.logout",
-    "session-only",
-    R.sessionCeremony,
-    M.sessionCeremony,
-  ),
+  {
+    // Also on REST so the CLI can revoke its 30-day token without GraphQL.
+    // Session-only holds on both transports: a delegated credential does not
+    // own the session it rides on.
+    verb: "Mutation.logout",
+    class: "session-only",
+    gql: "Mutation.logout",
+    rest: "POST /api-gateway/v1/logout",
+    mcpExempt: M.sessionCeremony,
+  },
   gqlOnly(
     "Mutation.signIn",
     "session-only",
@@ -485,24 +489,29 @@ const AUTH_VERBS: readonly VerbEntry[] = [
   // The CLI auth ceremony mints session credentials. It is the one flow whose
   // whole purpose is to hand a token to a non-browser client, which is exactly
   // why a non-browser client must not be able to drive it (ADR 0006 D6).
-  gqlOnly(
-    "Query.getCliAuthSession",
-    "session-only",
-    R.credentialMinting,
-    M.credentialMinting,
-  ),
+  {
+    // The CLI's poll. On REST because the caller is the terminal that has no
+    // credential yet — R.credentialMinting's "would exist only to be refused"
+    // argument covers token-authenticated twins, not the anonymous ceremony.
+    verb: "Query.getCliAuthSession",
+    class: "session-only",
+    gql: "Query.getCliAuthSession",
+    rest: "GET /api-gateway/v1/cli-sessions/{deviceCode}",
+    mcpExempt: M.credentialMinting,
+  },
   gqlOnly(
     "Query.getCliAuthRequest",
     "session-only",
     R.credentialMinting,
     M.credentialMinting,
   ),
-  gqlOnly(
-    "Mutation.createCliAuthSession",
-    "session-only",
-    R.credentialMinting,
-    M.credentialMinting,
-  ),
+  {
+    verb: "Mutation.createCliAuthSession",
+    class: "session-only",
+    gql: "Mutation.createCliAuthSession",
+    rest: "POST /api-gateway/v1/cli-sessions",
+    mcpExempt: M.credentialMinting,
+  },
   gqlOnly(
     "Mutation.confirmCliAuthSession",
     "session-only",
@@ -515,13 +524,16 @@ const AUTH_VERBS: readonly VerbEntry[] = [
     R.credentialMinting,
     M.credentialMinting,
   ),
-  gqlOnly(
-    "Mutation.consumeCliAuthSession",
-    "session-only",
-    R.credentialMinting,
-    M.credentialMinting,
-  ),
-].map((entry) => ({
+  {
+    verb: "Mutation.consumeCliAuthSession",
+    class: "session-only",
+    gql: "Mutation.consumeCliAuthSession",
+    rest: "POST /api-gateway/v1/cli-sessions/{deviceCode}/consume",
+    mcpExempt: M.credentialMinting,
+  },
+];
+
+const AUTH_VERBS: readonly VerbEntry[] = AUTH_VERB_ENTRIES.map((entry) => ({
   ...entry,
   nonPdpReason: NON_PDP.authenticationCeremony,
 }));

@@ -25,6 +25,7 @@ import { config } from "@/config/config";
 import { setLedgerV1Routes } from "@/features/ledger/api/rest/v1";
 import { setConfigurationRoutes } from "@/features/healthz/api/configuration-routes";
 import { setAccountRoutes } from "@/features/auth/api/account-routes";
+import { setCliAuthRoutes } from "@/features/auth/api/cli-auth-routes";
 import { setSocialRoutes } from "@/features/gitea/user-profile/api/social-read-routes";
 import { setApiKeyRoutes } from "@/features/apikeys/api/api-key-rest";
 import { generateV1OpenAPIDocument } from "@/server/rest/openapi-registry";
@@ -52,6 +53,7 @@ const router = new Router();
 setLedgerV1Routes(router, stub, config);
 setConfigurationRoutes(router, { layers: stub, config });
 setAccountRoutes(router, { layers: stub, config });
+setCliAuthRoutes(router, { layers: stub, config });
 setSocialRoutes(router, { layers: stub, config });
 setApiKeyRoutes(router, stub, config);
 

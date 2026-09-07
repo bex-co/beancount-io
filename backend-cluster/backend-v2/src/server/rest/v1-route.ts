@@ -57,6 +57,11 @@ export interface V1Route<P = unknown, Q = unknown, B = unknown> {
   readonly method: V1Method;
   /** Declared path including the `/api-gateway/v1` prefix, in `{param}` form. */
   readonly path: V1Path;
+  /**
+   * Stable client-facing name for generated SDK methods. Optional: set it on
+   * routes a generated client consumes; path-derived names serve the rest.
+   */
+  readonly operationId?: string;
   readonly summary: string;
   readonly description: string;
   readonly params?: ZodType<P>;
@@ -100,7 +105,9 @@ export function toOpenApiPath(path: string): string {
 /**
  * The error responses every v1 route can produce, documented once. Handlers
  * throw `DomainError`s and `restErrorMiddleware` renders them; repeating the
- * shapes per route would be four copies of one fact.
+ * shapes per route would be four copies of one fact. This set mirrors
+ * `CATEGORY_HTTP_STATUS` — a status the middleware can produce but the spec
+ * does not document is a response generated clients cannot parse.
  */
 const SHARED_ERROR_RESPONSES: RouteConfig["responses"] = {
   400: json(
@@ -111,12 +118,19 @@ const SHARED_ERROR_RESPONSES: RouteConfig["responses"] = {
     "No credential, or a credential that no longer resolves",
     errorSchema,
   ),
+  402: json("The action needs a paid plan", errorSchema),
   403: json(
     "The credential lacks the permission this business action requires",
     errorSchema,
   ),
   404: json("No such ledger, or no access to it", errorSchema),
+  409: json(
+    "The change conflicts with the resource's current state",
+    errorSchema,
+  ),
   429: json("Rate limited", errorSchema),
+  500: json("The server failed; the request may be retried", errorSchema),
+  503: json("A dependency is unavailable; retry later", errorSchema),
 };
 
 function requireIdentity(ctx: RouterContext): Identity {
@@ -169,6 +183,7 @@ function registerV1Route<P, Q, B>(
   registerRoute({
     method: route.method,
     path: toOpenApiPath(route.path),
+    ...(route.operationId ? { operationId: route.operationId } : {}),
     summary: route.summary,
     description: route.description,
     tags: [V1_TAG],
