@@ -357,6 +357,48 @@ class TestAskExtra:
         assert "beancount-io[ask]" in result.stderr
 
 
+class TestTagsAndLinks:
+    """Beancount's printer writes the sigil, so a value carrying one used to be doubled."""
+
+    @pytest.mark.parametrize(
+        ("tag", "link"),
+        [("trip", "inv-001"), ("#trip", "^inv-001")],
+        ids=["bare", "with-sigils"],
+    )
+    def test_either_spelling_produces_a_ledger_that_loads(self, tmp_path: Path, tag: str, link: str) -> None:
+        ledger = tmp_path / "main.bean"
+        ledger.write_text("2024-01-01 open Assets:Cash USD\n2024-01-01 open Expenses:Food USD\n")
+
+        written = runner.invoke(
+            app,
+            # fmt: off
+            [
+                "--file",
+                str(ledger),
+                "add",
+                "transaction",
+                "--date",
+                "2024-03-01",
+                "--narration",
+                "Coffee",
+                "--posting",
+                "Expenses:Food 12.50 USD",
+                "--posting",
+                "Assets:Cash -12.50 USD",
+                "--tag",
+                tag,
+                "--link",
+                link,
+            ],
+            # fmt: on
+        )
+        checked = runner.invoke(app, ["--file", str(ledger), "check"])
+
+        assert written.exit_code == 0, written.stderr
+        assert "#trip ^inv-001" in ledger.read_text()
+        assert checked.exit_code == 0, checked.stderr
+
+
 class TestVersion:
     def test_version_prints_the_version(self) -> None:
         result = runner.invoke(app, ["--version"])

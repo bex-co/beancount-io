@@ -3,10 +3,29 @@
 from __future__ import annotations
 
 import datetime
+from collections.abc import Callable
 from decimal import Decimal
-from typing import Annotated, Literal
+from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, BeforeValidator, Field
+
+
+def _strip_sigil(sigil: str) -> Callable[[Any], Any]:
+    """Accept a tag or link with or without its sigil.
+
+    Beancount's printer writes the `#` or `^` itself, so a value that arrives
+    carrying one would be emitted doubled (`^^inv-001`) and fail to parse. Both
+    spellings are natural to type, so both are accepted and stored bare.
+    """
+
+    def strip(value: Any) -> Any:
+        return value[1:] if isinstance(value, str) and value.startswith(sigil) else value
+
+    return strip
+
+
+Tag = Annotated[str, BeforeValidator(_strip_sigil("#"))]
+Link = Annotated[str, BeforeValidator(_strip_sigil("^"))]
 
 
 class Amount(BaseModel):
@@ -35,8 +54,8 @@ class TransactionDirective(BaseModel):
     payee: str | None = None
     narration: str | None = None
     postings: list[Posting]
-    tags: list[str] = Field(default_factory=list)
-    links: list[str] = Field(default_factory=list)
+    tags: list[Tag] = Field(default_factory=list)
+    links: list[Link] = Field(default_factory=list)
 
 
 class OpenDirective(BaseModel):
@@ -89,8 +108,8 @@ class DocumentDirective(BaseModel):
     date: datetime.date
     account: str
     filename: str
-    tags: list[str] = Field(default_factory=list)
-    links: list[str] = Field(default_factory=list)
+    tags: list[Tag] = Field(default_factory=list)
+    links: list[Link] = Field(default_factory=list)
 
 
 class CustomDirectiveValueText(BaseModel):
