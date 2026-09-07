@@ -111,6 +111,36 @@ structured operation without proving its input, result and effect contract.
 Protocol envelopes and documented field-name aliases may differ. An input
 supported by one eligible adapter cannot simply be discarded by another.
 
+## Development-deployment verification (2026-09-07)
+
+Verified against the `deploy/docker-mac` stack (real Gitea, PostgreSQL ×2,
+Redis, ledger service; disposable user and ledger; no production data, paid
+provider calls, or committed secrets):
+
+- Full signup ceremony over GraphQL (OTP from dev logs), session sign-in,
+  paid-plan-gated API-key minting over REST — one unpinned admin key, one
+  pinned read-only key.
+- Writes and readback across surfaces on one real repository: REST entry
+  batch → typed BQL rows → journal; an MCP `addLedgerEntries` note read back
+  through a pinned credential's journal resource; rename there-and-back;
+  stale source-slice refusal without mutation.
+- Reads with live data: statements, accounts, trial balance, commits, file
+  contents, archive ZIP bytes, legacy metadata (compat `userId` does not
+  select the caller), anonymous tier quotas.
+- Denials with no side effects: read-only star 403, read-only collaborator
+  read 403, MCP read-only write `isError`, pin-widening refusal.
+- MCP client contract: `yarn mcp:conformance` 7/7 against the deployment
+  (RFC 9728 pointer, discovery, method refusal, 24 tools with output
+  schemas, refusal dialect, error masking, advertised path), plus a real
+  Streamable HTTP SDK client discovering 66 resource templates and running
+  the workflows above.
+
+Not covered live: S3-backed asset flows and Plaid bank flows (no external
+credentials in routine verification — their contracts are held by the
+in-process adapter suites with controlled fixtures), live LLM provider
+quality, and driving the Codex binary itself; both coding agents consume the
+same MCP contract the conformance checklist and SDK client exercised.
+
 ## Completion
 
 Completion requires zero deferred eligible bindings, complete contract evidence,

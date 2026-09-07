@@ -13,4 +13,4 @@
 - [ ] **m7** — First-party sign-in without a consent screen (8 tasks) ← from `/pm-brainstorm` 2026-08-27 — sequenced after m6 (both edit the dashboard mobile interaction page)
 - [x] **m8** — Awesome Plain Text Accounting decision tool (8 tasks) ← from `w1/004` product review (2026-08-29)
 - [x] **m9** — Email templates match the dashboard theme and visual language (8 tasks) ← from `/pm` request to polish email styling (2026-08-29)
-- [ ] **m10** — [Complete REST, MCP, and GraphQL operation and behavior parity](./m10/README.md) (34 tasks) ← explicit user request after MCP/parity audit (2026-09-06)
+- [x] **m10** — [Complete REST, MCP, and GraphQL operation and behavior parity](./done/m10/README.md) (34 tasks) ← explicit user request after MCP/parity audit (2026-09-06)
