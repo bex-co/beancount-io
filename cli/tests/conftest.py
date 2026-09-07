@@ -59,11 +59,17 @@ class _IndexHandler(BaseHTTPRequestHandler):
             self.send_error(500)
             return
         body = json.dumps({"info": {"version": index.version}}).encode()
-        self.send_response(200)
-        self.send_header("Content-Type", "application/json")
-        self.send_header("Content-Length", str(len(body)))
-        self.end_headers()
-        self.wfile.write(body)
+        try:
+            self.send_response(200)
+            self.send_header("Content-Type", "application/json")
+            self.send_header("Content-Length", str(len(body)))
+            self.end_headers()
+            self.wfile.write(body)
+        except (BrokenPipeError, ConnectionResetError):
+            # The timeout test hangs up mid-answer on purpose. That is the
+            # behavior under test, not a failure, and the default handler would
+            # print a socketserver traceback into the suite's output for it.
+            pass
 
     def log_message(self, *args: object) -> None:
         """Silence the default stderr access log, which would land in test output."""
