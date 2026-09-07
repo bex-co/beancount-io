@@ -112,61 +112,56 @@ def overview(
 ) -> None:
     """Financial snapshot: assets, liabilities, income, expenses, and net worth totals."""
     ctx = context.current()
-    try:
-        from fava.modules.financial_statements import FinancialStatementsModule
+    from fava.modules.financial_statements import FinancialStatementsModule
 
-        filtered, file = _load(account, time, allow_errors)
-        data = FinancialStatementsModule().overview(filtered, _interval(interval), conversion)
+    filtered, file = _load(account, time, allow_errors)
+    data = FinancialStatementsModule().overview(filtered, _interval(interval), conversion)
 
-        # Totals from latest period
-        def _total(series: list[DateAndBalance]) -> SimpleCounterInventory:
-            from fava.core.inventory import SimpleCounterInventory
+    # Totals from latest period
+    def _total(series: list[DateAndBalance]) -> SimpleCounterInventory:
+        from fava.core.inventory import SimpleCounterInventory
 
-            return series[-1].balance if series else SimpleCounterInventory()
+        return series[-1].balance if series else SimpleCounterInventory()
 
-        assets_bal = _total(data.assets_data)
-        liabilities_bal = _total(data.liabilities_data)
-        income_bal = _total(data.income_data)
-        expenses_bal = _total(data.expenses_data)
+    assets_bal = _total(data.assets_data)
+    liabilities_bal = _total(data.liabilities_data)
+    income_bal = _total(data.income_data)
+    expenses_bal = _total(data.expenses_data)
 
-        def _usd(inv: SimpleCounterInventory) -> Decimal:
-            return inv.get(conversion, Decimal(0))
+    def _usd(inv: SimpleCounterInventory) -> Decimal:
+        return inv.get(conversion, Decimal(0))
 
-        net_worth = _usd(assets_bal) + _usd(liabilities_bal)
+    net_worth = _usd(assets_bal) + _usd(liabilities_bal)
 
-        if ctx.json_output:
-            output.emit(
-                {
-                    "conversion": conversion,
-                    "interval": interval,
-                    "totals": {
-                        "assets": output.jsonable(assets_bal),
-                        "liabilities": output.jsonable(liabilities_bal),
-                        "income": output.jsonable(income_bal),
-                        "expenses": output.jsonable(expenses_bal),
-                        "net_worth": {conversion: str(net_worth)},
-                    },
-                    "series": {
-                        "assets": _series_json(data.assets_data),
-                        "liabilities": _series_json(data.liabilities_data),
-                        "income": _series_json(data.income_data),
-                        "expenses": _series_json(data.expenses_data),
-                    },
+    if ctx.json_output:
+        output.emit(
+            {
+                "conversion": conversion,
+                "interval": interval,
+                "totals": {
+                    "assets": output.jsonable(assets_bal),
+                    "liabilities": output.jsonable(liabilities_bal),
+                    "income": output.jsonable(income_bal),
+                    "expenses": output.jsonable(expenses_bal),
+                    "net_worth": {conversion: str(net_worth)},
                 },
-                target=output.file_target(file),
-            )
-            return
+                "series": {
+                    "assets": _series_json(data.assets_data),
+                    "liabilities": _series_json(data.liabilities_data),
+                    "income": _series_json(data.income_data),
+                    "expenses": _series_json(data.expenses_data),
+                },
+            },
+            target=output.file_target(file),
+        )
+        return
 
-        typer.echo("Financial Overview")
-        typer.echo(f"  {'Assets:':<16} {_usd(assets_bal):>14,.2f} {conversion}")
-        typer.echo(f"  {'Liabilities:':<16} {_usd(liabilities_bal):>14,.2f} {conversion}")
-        typer.echo(f"  {'Income:':<16} {_usd(income_bal):>14,.2f} {conversion}")
-        typer.echo(f"  {'Expenses:':<16} {_usd(expenses_bal):>14,.2f} {conversion}")
-        typer.echo(f"  {'Net Worth:':<16} {net_worth:>14,.2f} {conversion}")
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    typer.echo("Financial Overview")
+    typer.echo(f"  {'Assets:':<16} {_usd(assets_bal):>14,.2f} {conversion}")
+    typer.echo(f"  {'Liabilities:':<16} {_usd(liabilities_bal):>14,.2f} {conversion}")
+    typer.echo(f"  {'Income:':<16} {_usd(income_bal):>14,.2f} {conversion}")
+    typer.echo(f"  {'Expenses:':<16} {_usd(expenses_bal):>14,.2f} {conversion}")
+    typer.echo(f"  {'Net Worth:':<16} {net_worth:>14,.2f} {conversion}")
 
 
 @report_app.command("income-statement")
@@ -179,41 +174,36 @@ def income_statement(
 ) -> None:
     """P&L report: income and expenses breakdown with net profit."""
     ctx = context.current()
-    try:
-        from fava.modules.financial_statements import FinancialStatementsModule
+    from fava.modules.financial_statements import FinancialStatementsModule
 
-        filtered, file = _load(account, time, allow_errors)
-        data = FinancialStatementsModule().income_statement(filtered, _interval(interval), conversion)
+    filtered, file = _load(account, time, allow_errors)
+    data = FinancialStatementsModule().income_statement(filtered, _interval(interval), conversion)
 
-        def _usd(node: SerialisedTreeNode) -> Decimal:
-            return node.balance_children.get(conversion, Decimal(0))
+    def _usd(node: SerialisedTreeNode) -> Decimal:
+        return node.balance_children.get(conversion, Decimal(0))
 
-        net = _usd(data.income_hierarchy) + _usd(data.expenses_hierarchy)
+    net = _usd(data.income_hierarchy) + _usd(data.expenses_hierarchy)
 
-        if ctx.json_output:
-            output.emit(
-                {
-                    "conversion": conversion,
-                    "interval": interval,
-                    "income": _tree_json(data.income_hierarchy),
-                    "expenses": _tree_json(data.expenses_hierarchy),
-                    "net_profit": {conversion: str(net)},
-                },
-                target=output.file_target(file),
-            )
-            return
+    if ctx.json_output:
+        output.emit(
+            {
+                "conversion": conversion,
+                "interval": interval,
+                "income": _tree_json(data.income_hierarchy),
+                "expenses": _tree_json(data.expenses_hierarchy),
+                "net_profit": {conversion: str(net)},
+            },
+            target=output.file_target(file),
+        )
+        return
 
-        _section("Income", conversion)
-        _print_tree(data.income_hierarchy, conversion)
+    _section("Income", conversion)
+    _print_tree(data.income_hierarchy, conversion)
 
-        _section("Expenses", conversion)
-        _print_tree(data.expenses_hierarchy, conversion)
+    _section("Expenses", conversion)
+    _print_tree(data.expenses_hierarchy, conversion)
 
-        typer.echo(f"\nNet Profit: {net:,.2f} {conversion}")
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    typer.echo(f"\nNet Profit: {net:,.2f} {conversion}")
 
 
 @report_app.command("balance-sheet")
@@ -226,43 +216,38 @@ def balance_sheet(
 ) -> None:
     """Position report: assets, liabilities, and equity with net worth."""
     ctx = context.current()
-    try:
-        from fava.modules.financial_statements import FinancialStatementsModule
+    from fava.modules.financial_statements import FinancialStatementsModule
 
-        filtered, file = _load(account, time, allow_errors)
-        data = FinancialStatementsModule().balance_sheet(filtered, _interval(interval), conversion)
+    filtered, file = _load(account, time, allow_errors)
+    data = FinancialStatementsModule().balance_sheet(filtered, _interval(interval), conversion)
 
-        net_worth = data.net_worth_data[-1].balance.get(conversion, Decimal(0)) if data.net_worth_data else Decimal(0)
+    net_worth = data.net_worth_data[-1].balance.get(conversion, Decimal(0)) if data.net_worth_data else Decimal(0)
 
-        if ctx.json_output:
-            output.emit(
-                {
-                    "conversion": conversion,
-                    "interval": interval,
-                    "assets": _tree_json(data.assets_hierarchy),
-                    "liabilities": _tree_json(data.liabilities_hierarchy),
-                    "equity": _tree_json(data.equity_hierarchy),
-                    "net_worth": {conversion: str(net_worth)},
-                    "net_worth_series": _series_json(data.net_worth_data),
-                },
-                target=output.file_target(file),
-            )
-            return
+    if ctx.json_output:
+        output.emit(
+            {
+                "conversion": conversion,
+                "interval": interval,
+                "assets": _tree_json(data.assets_hierarchy),
+                "liabilities": _tree_json(data.liabilities_hierarchy),
+                "equity": _tree_json(data.equity_hierarchy),
+                "net_worth": {conversion: str(net_worth)},
+                "net_worth_series": _series_json(data.net_worth_data),
+            },
+            target=output.file_target(file),
+        )
+        return
 
-        _section("Assets", conversion)
-        _print_tree(data.assets_hierarchy, conversion)
+    _section("Assets", conversion)
+    _print_tree(data.assets_hierarchy, conversion)
 
-        _section("Liabilities", conversion)
-        _print_tree(data.liabilities_hierarchy, conversion)
+    _section("Liabilities", conversion)
+    _print_tree(data.liabilities_hierarchy, conversion)
 
-        _section("Equity", conversion)
-        _print_tree(data.equity_hierarchy, conversion)
+    _section("Equity", conversion)
+    _print_tree(data.equity_hierarchy, conversion)
 
-        typer.echo(f"\nNet Worth: {net_worth:,.2f} {conversion}")
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    typer.echo(f"\nNet Worth: {net_worth:,.2f} {conversion}")
 
 
 @report_app.command("trial-balance")
@@ -274,34 +259,29 @@ def trial_balance(
 ) -> None:
     """Comprehensive view of all accounts across all 5 account types."""
     ctx = context.current()
-    try:
-        from fava.modules.financial_statements import FinancialStatementsModule
+    from fava.modules.financial_statements import FinancialStatementsModule
 
-        filtered, file = _load(account, time, allow_errors)
-        data = FinancialStatementsModule().trial_balance(filtered, conversion)
+    filtered, file = _load(account, time, allow_errors)
+    data = FinancialStatementsModule().trial_balance(filtered, conversion)
 
-        sections = [
-            ("Assets", data.assets_hierarchy),
-            ("Liabilities", data.liabilities_hierarchy),
-            ("Equity", data.equity_hierarchy),
-            ("Income", data.income_hierarchy),
-            ("Expenses", data.expenses_hierarchy),
-        ]
+    sections = [
+        ("Assets", data.assets_hierarchy),
+        ("Liabilities", data.liabilities_hierarchy),
+        ("Equity", data.equity_hierarchy),
+        ("Income", data.income_hierarchy),
+        ("Expenses", data.expenses_hierarchy),
+    ]
 
-        if ctx.json_output:
-            output.emit(
-                {
-                    "conversion": conversion,
-                    **{title.lower(): _tree_json(tree) for title, tree in sections},
-                },
-                target=output.file_target(file),
-            )
-            return
+    if ctx.json_output:
+        output.emit(
+            {
+                "conversion": conversion,
+                **{title.lower(): _tree_json(tree) for title, tree in sections},
+            },
+            target=output.file_target(file),
+        )
+        return
 
-        for title, tree in sections:
-            _section(title, conversion)
-            _print_tree(tree, conversion)
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    for title, tree in sections:
+        _section(title, conversion)
+        _print_tree(tree, conversion)

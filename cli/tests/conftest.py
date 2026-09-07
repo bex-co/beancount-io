@@ -32,6 +32,12 @@ def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
 
 
 @pytest.fixture
+def logged_in(monkeypatch: pytest.MonkeyPatch) -> None:
+    """Authenticate the way an unattended job does, through the real credential path."""
+    monkeypatch.setenv("BEA_TOKEN", "test-token")
+
+
+@pytest.fixture
 def tmp_bean_file(tmp_path: Path) -> Path:
     f = tmp_path / "main.bean"
     f.write_text("")

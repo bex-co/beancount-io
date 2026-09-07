@@ -56,7 +56,7 @@ $ echo $?
 | Code | Category | Meaning |
 |---|---|---|
 | 0 | — | Success |
-| 1 | `validation` | Ledger or validation error (also the catch-all runtime error) |
+| 1 | `validation` | Ledger or validation error, and the catch-all for any other runtime failure |
 | 2 | `usage` | Bad arguments, missing target, missing extra, or input needed under `--no-input` |
 | 3 | `auth` | Authentication or permission failure |
 | 4 | `conflict` | Conflict, or a write whose outcome is unknown |
@@ -91,6 +91,12 @@ bea query "SELECT account, sum(position) GROUP BY account"
 bea query
 ```
 
+`check`, `query`, `list`, and `report` all refuse to answer from a ledger that
+does not load: a total computed over a broken ledger reads as authoritative and
+is not. `query`, `list`, and `report` take `--allow-errors` to opt into the
+partial answer, which still prints the errors on stderr; `bea check` has no such
+flag, because reporting the errors is its whole job.
+
 ## Listing directives
 
 `bea list <type>` reads a local `.bean` file. The eleven types are `transaction`, `open`, `close`, `balance`, `pad`, `note`, `event`, `price`, `commodity`, `document`, and `custom`.
@@ -111,7 +117,6 @@ bea list price --currency BTC
 bea list open
 ```
 
-A ledger with loader errors fails with exit 1 rather than silently listing a partial journal; `--allow-errors` opts into the partial view.
 
 ## Adding directives
 

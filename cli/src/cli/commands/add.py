@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
 from typing import Annotated, Any
@@ -47,30 +48,28 @@ def _parse_posting(posting_str: str) -> Any:
     return Posting(account=parts[0], units=Amount(number=_parse_number(parts[1]), currency=parts[2]))
 
 
-def _append(writer_name: str, build: Any, label: str) -> None:
+def _append(build: Callable[[], Any]) -> None:
     """Resolve the target, build the directive, append it, and report — the same way for every type.
 
-    `build` runs after the target is known so a bad argument fails as a usage
-    error before anything touches the ledger file.
+    `build` runs after the target is known so that a bad argument fails as a
+    usage error before anything touches the ledger file. Which writer to call
+    and what to call the directive both follow from its type, so no call site
+    repeats either as a string that could drift from `cli.directives.writer`.
     """
     ctx = context.current()
-    try:
-        file = ctx.entry_file()
-        from cli.directives import writer
+    file = ctx.entry_file()
+    from cli.directives import writer
 
-        directive = build()
-        getattr(writer, writer_name)(file, directive)
-        if ctx.json_output:
-            output.emit(
-                {"written": 1, "directive": directive.model_dump(mode="json")},
-                target=output.file_target(file),
-            )
-        else:
-            output.success(f"{label} written to {file}")
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    directive = build()
+    name = type(directive).__name__.removesuffix("Directive")
+    getattr(writer, f"write_{name.lower()}")(file, directive)
+    if ctx.json_output:
+        output.emit(
+            {"written": 1, "directive": directive.model_dump(mode="json")},
+            target=output.file_target(file),
+        )
+    else:
+        output.success(f"{name} directive written to {file}")
 
 
 @add_app.command("transaction")
@@ -98,7 +97,7 @@ def add_transaction(
             links=list(link) if link else [],
         )
 
-    _append("write_transaction", build, "Transaction")
+    _append(build)
 
 
 @add_app.command("open")
@@ -114,7 +113,7 @@ def add_open(
 
         return OpenDirective(date=parse_date(date), account=account, currencies=list(currency) if currency else [])
 
-    _append("write_open", build, "Open directive")
+    _append(build)
 
 
 @add_app.command("close")
@@ -129,7 +128,7 @@ def add_close(
 
         return CloseDirective(date=parse_date(date), account=account)
 
-    _append("write_close", build, "Close directive")
+    _append(build)
 
 
 @add_app.command("balance")
@@ -150,7 +149,7 @@ def add_balance(
             amount=Amount(number=number, currency=currency),
         )
 
-    _append("write_balance", build, "Balance directive")
+    _append(build)
 
 
 @add_app.command("pad")
@@ -166,7 +165,7 @@ def add_pad(
 
         return PadDirective(date=parse_date(date), account=account, source_account=source)
 
-    _append("write_pad", build, "Pad directive")
+    _append(build)
 
 
 @add_app.command("note")
@@ -182,7 +181,7 @@ def add_note(
 
         return NoteDirective(date=parse_date(date), account=account, comment=comment)
 
-    _append("write_note", build, "Note directive")
+    _append(build)
 
 
 @add_app.command("event")
@@ -198,7 +197,7 @@ def add_event(
 
         return EventDirective(date=parse_date(date), type=type, description=description)
 
-    _append("write_event", build, "Event directive")
+    _append(build)
 
 
 @add_app.command("price")
@@ -219,7 +218,7 @@ def add_price(
             amount=Amount(number=number, currency=price_currency),
         )
 
-    _append("write_price", build, "Price directive")
+    _append(build)
 
 
 @add_app.command("commodity")
@@ -234,7 +233,7 @@ def add_commodity(
 
         return CommodityDirective(date=parse_date(date), currency=currency)
 
-    _append("write_commodity", build, "Commodity directive")
+    _append(build)
 
 
 @add_app.command("document")
@@ -258,7 +257,7 @@ def add_document(
             links=list(link) if link else [],
         )
 
-    _append("write_document", build, "Document directive")
+    _append(build)
 
 
 @add_app.command("custom")
@@ -288,7 +287,7 @@ def add_custom(
 
         return CustomDirective(date=parse_date(date), type=type, values=[_parse_custom_value(v) for v in value or []])
 
-    _append("write_custom", build, "Custom directive")
+    _append(build)
 
 
 def _parse_custom_value(raw: str) -> Any:
@@ -328,44 +327,38 @@ def add_transactions(
     The exit status is nonzero whenever any row was rejected, `--partial` or not.
     """
     ctx = context.current()
-    try:
-        file = ctx.entry_file()
-        from cli.directives.models import TransactionDirective
-        from cli.directives.writer import write_transaction
+    file = ctx.entry_file()
+    from cli.directives.models import TransactionDirective
+    from cli.directives.writer import write_transactions
 
-        raw = json.loads(from_file.read_text())
-        if not isinstance(raw, list):
-            raise LedgerError("JSON file must contain an array of transactions.")
+    raw = json.loads(from_file.read_text())
+    if not isinstance(raw, list):
+        raise LedgerError("JSON file must contain an array of transactions.")
 
-        valid: list[TransactionDirective] = []
-        rejected: list[str] = []
-        for index, item in enumerate(raw):
-            try:
-                valid.append(TransactionDirective.model_validate(item))
-            except Exception as e:
-                rejected.append(f"row {index}: {e}")
+    valid: list[TransactionDirective] = []
+    rejected: list[str] = []
+    for index, item in enumerate(raw):
+        try:
+            valid.append(TransactionDirective.model_validate(item))
+        except Exception as e:
+            rejected.append(f"row {index}: {e}")
 
-        if rejected and not partial:
-            raise LedgerError(
-                f"{len(rejected)} of {len(raw)} row(s) are invalid; nothing was written. "
-                f"Fix them, or pass --partial to append the {len(valid)} valid row(s).",
-                details=rejected,
-            )
+    if rejected and not partial:
+        raise LedgerError(
+            f"{len(rejected)} of {len(raw)} row(s) are invalid; nothing was written. "
+            f"Fix them, or pass --partial to append the {len(valid)} valid row(s).",
+            details=rejected,
+        )
 
-        for directive in valid:
-            write_transaction(file, directive)
+    write_transactions(file, valid)
 
-        if rejected:
-            raise LedgerError(
-                f"Appended {len(valid)} of {len(raw)} transaction(s); {len(rejected)} row(s) were rejected.",
-                details=rejected,
-            )
+    if rejected:
+        raise LedgerError(
+            f"Appended {len(valid)} of {len(raw)} transaction(s); {len(rejected)} row(s) were rejected.",
+            details=rejected,
+        )
 
-        if ctx.json_output:
-            output.emit({"written": len(valid), "rejected": []}, target=output.file_target(file))
-        else:
-            output.success(f"Written {len(valid)} transaction(s) to {file}")
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    if ctx.json_output:
+        output.emit({"written": len(valid), "rejected": []}, target=output.file_target(file))
+    else:
+        output.success(f"Written {len(valid)} transaction(s) to {file}")

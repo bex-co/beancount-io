@@ -11,39 +11,40 @@ from cli.errors import UsageError
 
 def query(
     query_string: Annotated[str | None, typer.Argument(help="BQL query (omit for interactive mode)")] = None,
+    allow_errors: Annotated[
+        bool, typer.Option("--allow-errors", help="Answer the query even if the ledger has errors")
+    ] = False,
 ) -> None:
     """Run BQL queries against a local .bean file (print or interactive mode)."""
     ctx = context.current()
-    try:
-        file = ctx.entry_file()
-        source = "beancount:" + str(file.resolve())
+    file = ctx.entry_file()
+    source = "beancount:" + str(file.resolve())
 
-        if not query_string:
-            if ctx.no_input:
-                raise UsageError("A query is required without a terminal. Pass it as an argument.")
-            from beanquery.shell import BQLShell
+    if not query_string:
+        if ctx.no_input:
+            raise UsageError("A query is required without a terminal. Pass it as an argument.")
+        from beanquery.shell import BQLShell
 
-            BQLShell(source, sys.stdout, interactive=True, runinit=True).cmdloop()
-            return
+        BQLShell(source, sys.stdout, interactive=True, runinit=True).cmdloop()
+        return
 
-        from beanquery import connect
-        from beanquery.render.text import render as render_text
+    from beanquery import connect
+    from beanquery.render.text import render as render_text
 
-        conn = connect(source)
-        cursor = conn.execute(query_string)
-        rows = cursor.fetchall()
+    conn = connect(source)
+    # A query answers with totals, which read as authoritative whether or not
+    # the ledger loaded — so it is gated exactly like `list` and `report`.
+    output.render_ledger_errors(list(conn.errors), allow=allow_errors)
+    cursor = conn.execute(query_string)
+    rows = cursor.fetchall()
 
-        if ctx.json_output:
-            output.emit(
-                {"columns": _columns(cursor.description), "rows": rows},
-                target=output.file_target(file),
-            )
-        else:
-            render_text(cursor.description, rows, sys.stdout, dcontext=conn.options.get("dcontext"))
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    if ctx.json_output:
+        output.emit(
+            {"columns": _columns(cursor.description), "rows": rows},
+            target=output.file_target(file),
+        )
+    else:
+        render_text(cursor.description, rows, sys.stdout, dcontext=conn.options.get("dcontext"))
 
 
 def _columns(description: Any) -> list[dict[str, str]]:

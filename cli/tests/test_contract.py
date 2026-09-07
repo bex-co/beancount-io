@@ -7,6 +7,8 @@ they are tested through the real command tree rather than against the helpers.
 from __future__ import annotations
 
 import json
+import subprocess
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -33,19 +35,6 @@ def envelope(result: Any) -> dict[str, Any]:
 
 def error_object(result: Any) -> dict[str, Any]:
     return json.loads(result.stderr)["error"]  # type: ignore[no-any-return]
-
-
-def hosted_client(**methods: Any) -> Any:
-    """A stand-in GraphQL client, with credentials supplied by the environment."""
-    client = MagicMock()
-    for name, behavior in methods.items():
-        setattr(client, name, behavior)
-    return client
-
-
-@pytest.fixture
-def logged_in(monkeypatch: pytest.MonkeyPatch) -> None:
-    monkeypatch.setenv("BEA_TOKEN", "test-token")
 
 
 class TestTargetResolution:
@@ -129,7 +118,7 @@ class TestExitCodes:
 
     def test_3_when_the_server_rejects_the_credential(self, logged_in: None) -> None:
         unauthorized = GraphQLClientHttpError(401, httpx.Response(401))
-        client = hosted_client(list_ledgers=MagicMock(side_effect=unauthorized))
+        client = MagicMock(list_ledgers=MagicMock(side_effect=unauthorized))
 
         with patch("cli.api.client.make_client", return_value=client):
             result = runner.invoke(app, ["ledger", "list"])
@@ -143,7 +132,7 @@ class TestExitCodes:
         assert "bea auth login" in result.stderr
 
     def test_4_when_a_write_times_out_with_an_unknown_outcome(self, logged_in: None) -> None:
-        client = hosted_client(delete_ledger=MagicMock(side_effect=httpx.ConnectTimeout("timed out")))
+        client = MagicMock(delete_ledger=MagicMock(side_effect=httpx.ConnectTimeout("timed out")))
 
         with patch("cli.api.client.make_client", return_value=client):
             result = runner.invoke(app, ["--yes", "ledger", "delete", "alice/books"])
@@ -153,7 +142,7 @@ class TestExitCodes:
 
     def test_the_backend_request_id_survives_into_the_error(self, logged_in: None) -> None:
         response = httpx.Response(401, headers={"x-request-id": "req-abc123"})
-        client = hosted_client(list_ledgers=MagicMock(side_effect=GraphQLClientHttpError(401, response)))
+        client = MagicMock(list_ledgers=MagicMock(side_effect=GraphQLClientHttpError(401, response)))
 
         with patch("cli.api.client.make_client", return_value=client):
             result = runner.invoke(app, ["--json", "ledger", "list"])
@@ -282,7 +271,7 @@ class TestJsonOutput:
 
     def test_auth_status_reports_where_the_credential_came_from(self, logged_in: None) -> None:
         profile = SimpleNamespace(email="a@example.com", username="alice", tier="free")
-        client = hosted_client(get_current_user=MagicMock(return_value=SimpleNamespace(user_profile=profile)))
+        client = MagicMock(get_current_user=MagicMock(return_value=SimpleNamespace(user_profile=profile)))
 
         with patch("cli.api.client.make_client", return_value=client):
             result = runner.invoke(app, ["--json", "auth", "status"])
@@ -304,7 +293,7 @@ class TestJsonOutput:
             created_at="2024-01-01T00:00:00Z",
             updated_at="2024-01-01T00:00:00Z",
         )
-        client = hosted_client(list_ledgers=MagicMock(return_value=SimpleNamespace(list_ledgers=[ledger])))
+        client = MagicMock(list_ledgers=MagicMock(return_value=SimpleNamespace(list_ledgers=[ledger])))
 
         with patch("cli.api.client.make_client", return_value=client):
             result = runner.invoke(app, ["--json", "ledger", "list"])
@@ -328,7 +317,7 @@ class TestNoInput:
         assert result.exit_code == 2
 
     def test_yes_confirms_without_asking(self, logged_in: None) -> None:
-        client = hosted_client(
+        client = MagicMock(
             delete_ledger=MagicMock(
                 return_value=SimpleNamespace(delete_ledger=SimpleNamespace(ledger_id="alice/books"))
             )
@@ -369,8 +358,32 @@ class TestAskExtra:
 
 
 class TestVersion:
-    def test_version_prints_and_loads_no_accounting_code(self) -> None:
+    def test_version_prints_the_version(self) -> None:
         result = runner.invoke(app, ["--version"])
 
         assert result.exit_code == 0
         assert result.stdout.startswith("bea ")
+
+    def test_startup_loads_no_accounting_ai_or_network_code(self) -> None:
+        """`bea --help` must stay cheap, in a subprocess so nothing else has pre-imported these.
+
+        `pydantic_settings` is on the list because declaring a BaseSettings runs
+        pydantic's plugin loader, which drags in logfire, OpenTelemetry, protobuf
+        and requests — the AI stack's baggage, on every invocation, for anyone who
+        installed the ask extra.
+        """
+        forbidden = [
+            "beancount",
+            "beanquery",
+            "fava",
+            "openai",
+            "pydantic_ai",
+            "pydantic_settings",
+            "logfire",
+            "opentelemetry",
+            "httpx",
+        ]
+        probe = f"import sys, cli.main;loaded=[m for m in {forbidden!r} if m in sys.modules];print(','.join(loaded))"
+        result = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, check=True)
+
+        assert result.stdout.strip() == "", f"startup imported: {result.stdout.strip()}"

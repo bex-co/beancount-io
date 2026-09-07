@@ -11,7 +11,7 @@ from typing import Annotated
 
 import typer
 
-from cli import context, output
+from cli import context
 from cli.errors import UsageError
 
 _MISSING_EXTRA = (
@@ -29,51 +29,45 @@ def ask(
     """Ask questions about your ledger in natural language (requires beancount-io[ask])."""
     ctx = context.current()
     model = "gpt-4o"
+    file = ctx.entry_file()
+    if ctx.json_output:
+        raise UsageError("bea ask has no JSON output. Use 'bea query' for machine-readable results.")
+
+    # The missing extra is checked before the credential: without it the
+    # command cannot run at all, and "log in first" would be misleading advice.
     try:
-        file = ctx.entry_file()
-        if ctx.json_output:
-            raise UsageError("bea ask has no JSON output. Use 'bea query' for machine-readable results.")
+        from cli.ask.agent import BqlDeps, make_agent
+    except ImportError as exc:
+        raise UsageError(_MISSING_EXTRA) from exc
 
-        # The missing extra is checked before the credential: without it the
-        # command cannot run at all, and "log in first" would be misleading advice.
-        try:
-            from cli.ask.agent import BqlDeps, make_agent
-        except ImportError as exc:
-            raise UsageError(_MISSING_EXTRA) from exc
+    from cli.auth.credentials import require_credentials
 
-        from cli.auth.credentials import require_credentials
+    creds = require_credentials()
 
-        creds = require_credentials()
+    from cli.ask.skills import load_skills
+    from cli.config import settings
 
-        from cli.ask.skills import load_skills
-        from cli.config import settings
+    skills = load_skills()
+    agent = make_agent(
+        model_name=model,
+        base_url=f"{settings().api_url}/api-gateway/ai/openai/",
+        api_key=creds.token,
+        skills=skills,
+    )
+    deps = BqlDeps(file=file, skills={s.name: s for s in skills})
 
-        skills = load_skills()
-        agent = make_agent(
-            model_name=model,
-            base_url=f"{settings.api_url}/api-gateway/ai/openai/",
-            api_key=creds.token,
-            skills=skills,
-        )
-        deps = BqlDeps(file=file, skills={s.name: s for s in skills})
+    if print_mode or ctx.no_input:
+        if not question:
+            raise UsageError("A question is required without a terminal (or with --print).")
+        from rich.console import Console
+        from rich.markdown import Markdown
 
-        if print_mode or ctx.no_input:
-            if not question:
-                raise UsageError("A question is required without a terminal (or with --print).")
-            from rich.console import Console
-            from rich.markdown import Markdown
+        console = Console()
+        with console.status("[dim]Thinking…[/dim]", spinner="dots"):
+            result = agent.run_sync(question, deps=deps)
+        console.print(Markdown(result.output))
+    else:
+        from cli.ask.repl import print_welcome, run_repl
 
-            console = Console()
-            with console.status("[dim]Thinking…[/dim]", spinner="dots"):
-                result = agent.run_sync(question, deps=deps)
-            console.print(Markdown(result.output))
-        else:
-            from cli.ask.repl import print_welcome, run_repl
-
-            print_welcome()
-            run_repl(agent, deps, default_input=question)
-
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+        print_welcome()
+        run_repl(agent, deps, default_input=question)

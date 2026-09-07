@@ -2,26 +2,16 @@ from __future__ import annotations
 
 from dataclasses import asdict
 from pathlib import Path
-from typing import TYPE_CHECKING, Annotated
+from typing import Annotated
 
 import typer
 
 from cli import context, output
 from cli.errors import LedgerError, unknown_write_outcome
 
-if TYPE_CHECKING:
-    from cli.api.gql_client import Client
-
 ledger_app = typer.Typer(help="Ledger management commands", no_args_is_help=True, rich_markup_mode=None)
 
 DirOpt = Annotated[Path | None, typer.Option("--dir", help="Local directory for the git clone")]
-
-
-def _client() -> Client:
-    from cli.api.client import make_client
-    from cli.auth.credentials import require_credentials
-
-    return make_client(require_credentials().token)
 
 
 @ledger_app.command("create")
@@ -38,43 +28,40 @@ def ledger_create(
     flag cannot put someone's finances on the open internet.
     """
     ctx = context.current()
+    import httpx
+
+    from cli.api.client import authenticated_client
+
+    from . import manager
+
+    client = authenticated_client()
     try:
-        import httpx
+        ledger = manager.create_ledger(client, name, description=description, private=private)
+    except (httpx.TimeoutException, httpx.TransportError) as e:
+        raise unknown_write_outcome(f"Creating ledger '{name}'", e) from e
 
-        from . import manager
-
-        client = _client()
+    if clone:
+        target = directory or Path.cwd() / ledger.name
+        output.note(f"Cloning repository to '{target}'...")
         try:
-            ledger = manager.create_ledger(client, name, description=description, private=private)
-        except (httpx.TimeoutException, httpx.TransportError) as e:
-            raise unknown_write_outcome(f"Creating ledger '{name}'", e) from e
+            manager.clone_ledger(ledger.ssh_url, target, quiet=ctx.json_output)
+        except manager.CloneError as e:
+            # The ledger exists on the server. Saying "created" and exiting 0
+            # here would hide a half-finished setup from a script.
+            raise LedgerError(
+                f"Ledger '{ledger.full_name}' was created but could not be cloned. "
+                f"Clone it manually with: git clone {e.git_remote_url}"
+            ) from e
 
-        if clone:
-            target = directory or Path.cwd() / ledger.name
-            output.note(f"Cloning repository to '{target}'...")
-            try:
-                manager.clone_ledger(ledger.ssh_url, target, quiet=ctx.json_output)
-            except manager.CloneError as e:
-                # The ledger exists on the server. Saying "created" and exiting 0
-                # here would hide a half-finished setup from a script.
-                raise LedgerError(
-                    f"Ledger '{ledger.full_name}' was created but could not be cloned. "
-                    f"Clone it manually with: git clone {e.git_remote_url}"
-                ) from e
+    if ctx.json_output:
+        output.emit(asdict(ledger), target=output.server_target())
+        return
 
-        if ctx.json_output:
-            output.emit(asdict(ledger), target=output.server_target())
-            return
-
-        typer.echo(f"name:     {ledger.name}")
-        typer.echo(f"fullName: {ledger.full_name}")
-        typer.echo(f"private:  {'yes' if ledger.private else 'no'}")
-        typer.echo(f"httpUrl:  {ledger.http_url}")
-        typer.echo(f"sshUrl:   {ledger.ssh_url}")
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    typer.echo(f"name:     {ledger.name}")
+    typer.echo(f"fullName: {ledger.full_name}")
+    typer.echo(f"private:  {'yes' if ledger.private else 'no'}")
+    typer.echo(f"httpUrl:  {ledger.http_url}")
+    typer.echo(f"sshUrl:   {ledger.ssh_url}")
 
 
 @ledger_app.command("delete")
@@ -82,29 +69,26 @@ def ledger_delete(
     full_name: Annotated[str, typer.Argument(help="Ledger full name (e.g. username/my-ledger)")],
 ) -> None:
     """Delete a ledger by its full name (asks first; use --yes to skip the prompt)."""
+    import httpx
+
+    from cli.api.client import authenticated_client
+
+    from . import manager
+
+    if not context.current().confirm(f"Permanently delete ledger '{full_name}'?"):
+        output.success("Cancelled.")
+        return
+
+    client = authenticated_client()
     try:
-        import httpx
+        manager.delete_ledger(client, full_name)
+    except (httpx.TimeoutException, httpx.TransportError) as e:
+        raise unknown_write_outcome(f"Deleting ledger '{full_name}'", e) from e
 
-        from . import manager
-
-        if not context.current().confirm(f"Permanently delete ledger '{full_name}'?"):
-            output.success("Cancelled.")
-            return
-
-        client = _client()
-        try:
-            manager.delete_ledger(client, full_name)
-        except (httpx.TimeoutException, httpx.TransportError) as e:
-            raise unknown_write_outcome(f"Deleting ledger '{full_name}'", e) from e
-
-        if context.current().json_output:
-            output.emit({"deleted": full_name}, target=output.server_target())
-        else:
-            output.success(f"Ledger '{full_name}' deleted.")
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    if context.current().json_output:
+        output.emit({"deleted": full_name}, target=output.server_target())
+    else:
+        output.success(f"Ledger '{full_name}' deleted.")
 
 
 @ledger_app.command("list")
@@ -113,29 +97,26 @@ def ledger_list(
 ) -> None:
     """List all accessible ledgers."""
     ctx = context.current()
-    try:
-        from . import manager
+    from cli.api.client import authenticated_client
 
-        ledgers = manager.list_ledgers(_client(), limit=limit)
+    from . import manager
 
-        if ctx.json_output:
-            output.emit(
-                [asdict(lg) for lg in ledgers],
-                target=output.server_target(),
-                truncated=len(ledgers) >= limit,
-                limit=limit,
-            )
-            return
+    ledgers = manager.list_ledgers(authenticated_client(), limit=limit)
 
-        if not ledgers:
-            typer.echo("No ledgers found.")
-            return
-        rows = [[lg.name, lg.full_name, "yes" if lg.private else "no", lg.created_at[:10]] for lg in ledgers]
-        output.table(["NAME", "FULLNAME", "PRIVATE", "CREATED"], rows)
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    if ctx.json_output:
+        output.emit(
+            [asdict(lg) for lg in ledgers],
+            target=output.server_target(),
+            truncated=len(ledgers) >= limit,
+            limit=limit,
+        )
+        return
+
+    if not ledgers:
+        typer.echo("No ledgers found.")
+        return
+    rows = [[lg.name, lg.full_name, "yes" if lg.private else "no", lg.created_at[:10]] for lg in ledgers]
+    output.table(["NAME", "FULLNAME", "PRIVATE", "CREATED"], rows)
 
 
 @ledger_app.command("clone")
@@ -144,18 +125,15 @@ def ledger_clone(
     directory: DirOpt = None,
 ) -> None:
     """Clone an existing ledger to disk."""
-    try:
-        from . import manager
+    from cli.api.client import authenticated_client
 
-        ledger = manager.get_ledger(_client(), full_name)
-        target = directory or Path.cwd() / ledger.name
-        output.note(f"Cloning '{ledger.full_name}' to '{target}'...")
-        try:
-            manager.clone_ledger(ledger.ssh_url, target, quiet=context.current().json_output)
-        except manager.CloneError as e:
-            raise LedgerError(f"Clone failed for {e.git_remote_url}. Ensure you have SSH access.") from e
-        output.success(f"Ledger '{ledger.full_name}' cloned to '{target}'.")
-    except typer.Exit:
-        raise
-    except Exception as e:
-        output.error(e)
+    from . import manager
+
+    ledger = manager.get_ledger(authenticated_client(), full_name)
+    target = directory or Path.cwd() / ledger.name
+    output.note(f"Cloning '{ledger.full_name}' to '{target}'...")
+    try:
+        manager.clone_ledger(ledger.ssh_url, target, quiet=context.current().json_output)
+    except manager.CloneError as e:
+        raise LedgerError(f"Clone failed for {e.git_remote_url}. Ensure you have SSH access.") from e
+    output.success(f"Ledger '{ledger.full_name}' cloned to '{target}'.")

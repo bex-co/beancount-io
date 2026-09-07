@@ -49,12 +49,13 @@ class _ValueType(NamedTuple):
     dtype: type
 
 
-def _append(file_path: Path, text: str) -> None:
+def _append(file_path: Path, *texts: str) -> None:
+    """Append formatted entries, opening the file once however many there are."""
     with file_path.open("a", encoding="utf-8") as f:
-        f.write("\n" + text.rstrip() + "\n")
+        f.write("".join("\n" + text.rstrip() + "\n" for text in texts))
 
 
-def write_transaction(file_path: Path, directive: TransactionDirective) -> None:
+def _format_transaction(directive: TransactionDirective) -> str:
     postings = [
         Posting(
             account=p.account,
@@ -76,7 +77,17 @@ def write_transaction(file_path: Path, directive: TransactionDirective) -> None:
         links=frozenset(directive.links),
         postings=postings,
     )
-    _append(file_path, format_entry(entry))
+    return str(format_entry(entry))
+
+
+def write_transaction(file_path: Path, directive: TransactionDirective) -> None:
+    _append(file_path, _format_transaction(directive))
+
+
+def write_transactions(file_path: Path, directives: list[TransactionDirective]) -> None:
+    """Append a batch in one open/write. Byte-identical to writing them one at a time."""
+    if directives:
+        _append(file_path, *(_format_transaction(d) for d in directives))
 
 
 def write_open(file_path: Path, directive: OpenDirective) -> None:

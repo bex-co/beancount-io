@@ -10,13 +10,15 @@ without parsing messages:
 | 2    | `usage`      | bad arguments, missing target, missing extra, input needed    |
 | 3    | `auth`       | authentication or permission                                  |
 | 4    | `conflict`   | conflict, or a write whose outcome is unknown                 |
+
+There is no sixth category: every exit code in that table maps to exactly one
+category name, so a caller can branch on either and get the same answer.
 """
 
 from __future__ import annotations
 
 from typing import Any
 
-EXIT_SUCCESS = 0
 EXIT_VALIDATION = 1
 EXIT_USAGE = 2
 EXIT_AUTH = 3
@@ -24,9 +26,15 @@ EXIT_CONFLICT = 4
 
 
 class BeaError(Exception):
-    """An error with a documented category and exit code."""
+    """An error with a documented category and exit code.
 
-    category = "error"
+    The base class is the catch-all, and it answers `validation`/1 rather than
+    inventing a category the table above does not list — an undocumented value
+    in this field is worse than a coarse one, because a script branching on it
+    has nothing to match.
+    """
+
+    category = "validation"
     exit_code = EXIT_VALIDATION
 
     def __init__(
@@ -140,10 +148,15 @@ def to_bea_error(exc: BaseException | str) -> BeaError:
             return ConflictError(f"Conflict (HTTP {status}).", request_id=request_id)
         return BeaError(str(exc), request_id=request_id)
 
+    if isinstance(exc, httpx.TransportError):
+        # httpx transport errors frequently stringify to nothing at all, which
+        # would leave the caller an empty message and no clue the network failed.
+        return BeaError(f"Could not reach the server ({type(exc).__name__}: {str(exc) or 'no detail'}).")
+
     if isinstance(exc, FileNotFoundError):
         return UsageError(str(exc))
 
-    return BeaError(str(exc))
+    return BeaError(str(exc) or f"{type(exc).__name__} (no detail).")
 
 
 def unknown_write_outcome(operation: str, exc: BaseException) -> ConflictError:

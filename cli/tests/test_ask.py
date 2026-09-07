@@ -11,11 +11,7 @@ from typer.testing import CliRunner
 
 from cli.ask.agent import _SYSTEM_PROMPT, BqlDeps, make_agent
 from cli.ask.skills import AgentSkill, _parse_skill, build_skills_index_prompt, load_skills
-from cli.auth.credentials import Credentials
-from cli.errors import AuthError
 from cli.main import app
-
-_FAKE_CREDS = Credentials(token="jwt-test-token", expire_at="2099-01-01T00:00:00+00:00")
 
 
 def _test_agent(text: str) -> Agent[BqlDeps, str]:
@@ -45,45 +41,35 @@ class TestAgent:
 class TestAskCommand:
     runner = CliRunner()
 
-    def test_missing_file_errors(self, tmp_path: Path) -> None:
-        with patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS):
-            result = self.runner.invoke(app, ["--file", str(tmp_path / "nonexistent.bean"), "ask", "hello", "--print"])
+    def test_missing_file_errors(self, tmp_path: Path, logged_in: None) -> None:
+        result = self.runner.invoke(app, ["--file", str(tmp_path / "nonexistent.bean"), "ask", "hello", "--print"])
         assert result.exit_code == 2
 
     def test_not_logged_in_errors(self, tmp_bean_file: Path) -> None:
-        with patch("cli.auth.credentials.require_credentials", side_effect=AuthError("Not logged in.")):
-            result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "hello", "--print"])
+        result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "hello", "--print"])
         assert result.exit_code == 3
 
-    def test_single_question_mode(self, tmp_bean_file: Path) -> None:
-        with (
-            patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS),
-            patch("cli.ask.agent.make_agent", return_value=_test_agent("42 USD")),
-        ):
+    def test_single_question_mode(self, tmp_bean_file: Path, logged_in: None) -> None:
+        with patch("cli.ask.agent.make_agent", return_value=_test_agent("42 USD")):
             result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "What is my balance?", "--print"])
 
         assert result.exit_code == 0
         assert "42 USD" in result.output
 
-    def test_print_mode_requires_question(self, tmp_bean_file: Path) -> None:
-        with patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS):
-            result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "--print"])
+    def test_print_mode_requires_question(self, tmp_bean_file: Path, logged_in: None) -> None:
+        result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "--print"])
         assert result.exit_code == 2
 
-    def test_make_agent_called_with_backend_url(self, tmp_bean_file: Path) -> None:
-        with (
-            patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS),
-            patch("cli.ask.agent.make_agent", return_value=_test_agent("ok")) as mock_make,
-        ):
+    def test_make_agent_called_with_backend_url(self, tmp_bean_file: Path, logged_in: None) -> None:
+        with patch("cli.ask.agent.make_agent", return_value=_test_agent("ok")) as mock_make:
             self.runner.invoke(app, ["--file", str(tmp_bean_file), "ask", "hi", "--print"])
 
         call_kwargs = mock_make.call_args.kwargs
         assert "api-gateway/ai/openai" in call_kwargs["base_url"]
-        assert call_kwargs["api_key"] == "jwt-test-token"
+        assert call_kwargs["api_key"] == "test-token"
 
-    def test_json_mode_is_refused_rather_than_faked(self, tmp_bean_file: Path) -> None:
-        with patch("cli.auth.credentials.require_credentials", return_value=_FAKE_CREDS):
-            result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "--json", "ask", "hi"])
+    def test_json_mode_is_refused_rather_than_faked(self, tmp_bean_file: Path, logged_in: None) -> None:
+        result = self.runner.invoke(app, ["--file", str(tmp_bean_file), "--json", "ask", "hi"])
         assert result.exit_code == 2
 
 

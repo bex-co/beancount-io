@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 from pathlib import Path
-from typing import Annotated
+from typing import Annotated, Any
 
 import typer
+from typer.core import TyperGroup
 
-from cli import context
+from cli import context, output
 from cli.commands.add import add_app
 from cli.commands.ask import ask
 from cli.commands.auth import auth_app
@@ -18,8 +19,32 @@ from cli.commands.list import list_app
 from cli.commands.query import query
 from cli.commands.report import report_app
 
+
+class _GuardedGroup(TyperGroup):
+    """Turn anything a command raises into the documented category and exit code.
+
+    The failure contract belongs at the one point every command passes through.
+    Pasted into each command body it would be optional, and a command whose
+    author forgot it would exit with a traceback on stdout — off-contract in
+    both shape and status, which is exactly what `--json` callers cannot parse.
+    Click nests subcommand dispatch inside the root group's `invoke`, so this
+    covers the mounted sub-apps too.
+    """
+
+    # `ctx` is typer's vendored click Context; typed loosely to avoid importing
+    # a private module just to restate the supertype's annotation.
+    def invoke(self, ctx: Any) -> Any:
+        try:
+            return super().invoke(ctx)
+        except (typer.Exit, typer.Abort):  # click's own control flow, not a failure
+            raise
+        except Exception as e:
+            output.error(e)
+
+
 app = typer.Typer(
     name="bea",
+    cls=_GuardedGroup,
     help="Beancount.io CLI — check, query, and edit beancount ledgers",
     no_args_is_help=True,
     rich_markup_mode=None,

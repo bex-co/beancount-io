@@ -2,8 +2,10 @@ from __future__ import annotations
 
 import os
 from pathlib import Path
+from typing import TYPE_CHECKING
 
-from pydantic_settings import BaseSettings, SettingsConfigDict
+if TYPE_CHECKING:
+    from cli.settings import Settings
 
 DEFAULT_ENTRY_FILE = Path("main.bean")
 
@@ -35,18 +37,18 @@ def user_skills_dir() -> Path:
     return config_dir() / "skills"
 
 
-class Settings(BaseSettings):
-    api_url: str = "https://api.v3.beancount.io"
-    dashboard_url: str = "https://beancount.io"
+def settings() -> Settings:
+    """Server endpoints, read from `BEA_*` at the moment a server is needed.
 
-    model_config = SettingsConfigDict(env_prefix="BEA_", extra="ignore")
+    Imported inside the function on purpose: declaring a `BaseSettings`
+    subclass runs pydantic's plugin loader, which drags in logfire,
+    OpenTelemetry, protobuf and requests — roughly 150 ms and 650 modules that
+    `bea --help` and `bea --version` must never pay for, and that arrive on
+    every machine where the optional `ask` extra is installed.
+    """
+    from cli.settings import Settings
 
-    @property
-    def graphql_endpoint(self) -> str:
-        return f"{self.api_url.rstrip('/')}/api-gateway/"
-
-
-settings = Settings()
+    return Settings()
 
 
 def package_version() -> str:

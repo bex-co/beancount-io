@@ -9,4 +9,11 @@ def make_client(token: str | None = None) -> Client:
     headers: dict[str, str] = {}
     if token:
         headers["Authorization"] = f"Bearer {token}"
-    return Client(url=settings.graphql_endpoint, headers=headers)
+    return Client(url=settings().graphql_endpoint, headers=headers)
+
+
+def authenticated_client() -> Client:
+    """The client every hosted command needs: the stored or environment credential, attached."""
+    from cli.auth.credentials import require_credentials
+
+    return make_client(require_credentials().token)
