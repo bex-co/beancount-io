@@ -15,6 +15,11 @@ import {
 
 /** One payee's rollup from the fixed server-side BQL aggregation. */
 export interface MerchantAggregate {
+  /**
+   * Display name for the row. Case variants of the same payee ("Burger king"
+   * / "Burger King") fold into one row showing the variant with the most
+   * transactions — display-only grouping; the ledger source is untouched.
+   */
   payee: string;
   transactionCount: number;
   firstDate: string;
@@ -69,8 +74,13 @@ function resolveColumns(types: ReadonlyArray<QueryColumnLike>): {
  *
  * - Columns are resolved by name, not position.
  * - Rows with a missing payee or unparseable count are skipped.
- * - Duplicate payee rows (shouldn't happen with GROUP BY, but defensive) merge:
- *   counts sum, firstDate is the earlier, lastDate the later.
+ * - Payee rows that differ only by case ("Burger king" / "Burger King") fold
+ *   into one directory row: counts sum, firstDate is the earlier, lastDate the
+ *   later, and the display name is the variant with the most transactions
+ *   (ties: the more recently used, then the lexicographically smaller). This is
+ *   Monarch-style merge at the display layer only — tapping through opens the
+ *   shown variant, and a real rename stays a ledger-source rewrite (see
+ *   `.pm` note `w1/032`). Exact-duplicate rows merge the same way.
  * - Default order matches the BQL: count desc, alphabetical tiebreak.
  */
 export function aggregatePayees(
@@ -84,7 +94,11 @@ export function aggregatePayees(
     return [];
   }
 
-  const byPayee = new Map<string, MerchantAggregate>();
+  /** Keyed by lowercased payee; tracks the best display variant seen so far. */
+  const byPayee = new Map<
+    string,
+    MerchantAggregate & { variantCount: number; variantLastDate: string }
+  >();
 
   for (const row of table.rows) {
     if (!Array.isArray(row)) {
@@ -98,9 +112,16 @@ export function aggregatePayees(
     const firstDate = asString(row[columns.firstDate]) ?? "";
     const lastDate = asString(row[columns.lastDate]) ?? "";
 
-    const existing = byPayee.get(payee);
+    const existing = byPayee.get(payee.toLowerCase());
     if (!existing) {
-      byPayee.set(payee, { payee, transactionCount, firstDate, lastDate });
+      byPayee.set(payee.toLowerCase(), {
+        payee,
+        transactionCount,
+        firstDate,
+        lastDate,
+        variantCount: transactionCount,
+        variantLastDate: lastDate,
+      });
       continue;
     }
     existing.transactionCount += transactionCount;
@@ -110,9 +131,29 @@ export function aggregatePayees(
     if (lastDate && (!existing.lastDate || lastDate > existing.lastDate)) {
       existing.lastDate = lastDate;
     }
+    if (
+      transactionCount > existing.variantCount ||
+      (transactionCount === existing.variantCount &&
+        (lastDate > existing.variantLastDate ||
+          (lastDate === existing.variantLastDate && payee < existing.payee)))
+    ) {
+      existing.payee = payee;
+      existing.variantCount = transactionCount;
+      existing.variantLastDate = lastDate;
+    }
   }
 
-  return sortMerchants([...byPayee.values()], "count");
+  return sortMerchants(
+    [...byPayee.values()].map(
+      ({ payee, transactionCount, firstDate, lastDate }) => ({
+        payee,
+        transactionCount,
+        firstDate,
+        lastDate,
+      }),
+    ),
+    "count",
+  );
 }
 
 /** Case-insensitive substring match on the payee name. */

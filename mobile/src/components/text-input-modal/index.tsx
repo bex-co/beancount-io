@@ -13,7 +13,8 @@ import Animated, {
   useAnimatedStyle,
   withTiming,
 } from "react-native-reanimated";
-import { useTheme } from "@/common/theme";
+import { durations, useTheme } from "@/common/theme";
+import { easeStandard } from "@/common/theme/motion-easing";
 import { ColorTheme } from "@/types/theme-props";
 
 const getStyles = (theme: ColorTheme) =>
@@ -131,11 +132,23 @@ export const TextInputModal: React.FC<TextInputModalProps> = ({
   useEffect(() => {
     if (visible) {
       setInputText("");
-      opacity.value = withTiming(1, { duration: 200 });
-      scale.value = withTiming(1, { duration: 200 });
+      opacity.value = withTiming(1, {
+        duration: durations.fast,
+        easing: easeStandard,
+      });
+      scale.value = withTiming(1, {
+        duration: durations.fast,
+        easing: easeStandard,
+      });
     } else {
-      opacity.value = withTiming(0, { duration: 150 });
-      scale.value = withTiming(0.9, { duration: 150 });
+      opacity.value = withTiming(0, {
+        duration: durations.fast,
+        easing: easeStandard,
+      });
+      scale.value = withTiming(0.9, {
+        duration: durations.fast,
+        easing: easeStandard,
+      });
     }
   }, [visible]);
 

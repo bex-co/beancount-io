@@ -17,7 +17,8 @@ import Animated, {
   useAnimatedScrollHandler,
   useAnimatedRef,
 } from "react-native-reanimated";
-import { headerActionStyle, useTheme } from "@/common/theme";
+import { durations, headerActionStyle, useTheme } from "@/common/theme";
+import { easeStandard } from "@/common/theme/motion-easing";
 import { ColorTheme } from "@/types/theme-props";
 
 const { height: screenHeight } = Dimensions.get("window");
@@ -166,15 +167,28 @@ export const Picker: React.FC<PickerProps> = ({
   const initialScrollY = selectedIndex * ITEM_HEIGHT;
 
   const showModal = useCallback(() => {
-    overlayOpacity.value = withTiming(1, { duration: 300 });
-    translateY.value = withTiming(0, { duration: 300 });
+    overlayOpacity.value = withTiming(1, {
+      duration: durations.base,
+      easing: easeStandard,
+    });
+    translateY.value = withTiming(0, {
+      duration: durations.base,
+      easing: easeStandard,
+    });
   }, [translateY, overlayOpacity]);
 
   const hideModal = useCallback(() => {
-    overlayOpacity.value = withTiming(0, { duration: 300 });
-    translateY.value = withTiming(screenHeight, { duration: 300 }, () => {
-      runOnJS(onCancel)();
+    overlayOpacity.value = withTiming(0, {
+      duration: durations.base,
+      easing: easeStandard,
     });
+    translateY.value = withTiming(
+      screenHeight,
+      { duration: durations.base, easing: easeStandard },
+      () => {
+        runOnJS(onCancel)();
+      },
+    );
   }, [translateY, overlayOpacity, onCancel]);
 
   useEffect(() => {

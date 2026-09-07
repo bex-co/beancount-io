@@ -1,35 +1,27 @@
-import { useRef } from "react";
-import { ScrollView, View } from "react-native";
-import { GestureDetector } from "react-native-gesture-handler";
-import Svg, { Circle, G, Line, Path, Text as SvgText } from "react-native-svg";
+import { Circle, G, Path, Text as SvgText } from "react-native-svg";
 import { scaleBand, scaleLinear } from "d3-scale";
 import { curveMonotoneX, line as d3Line } from "d3-shape";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { useTheme } from "@/common/theme";
-import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { shortNumber } from "@/common/number-utils";
 import { AnimatedBar } from "./animated-bar";
 import { useEntranceProgress } from "./use-entrance-progress";
-
-/** Default plot height, exported so callers can size a skeleton from it. */
-export const DEFAULT_CHART_HEIGHT = 220;
-
-export { LEGEND_HEIGHT } from "./chart-chrome";
-import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { restingBarRect } from "./bar-geometry";
-import { ChartErrorBoundary } from "./chart-chrome";
+import { ScrollableAxisChart } from "./scrollable-axis-chart";
 import {
-  AXIS_FONT_SIZE,
   BOTTOM_PADDING,
-  ChartLegend,
+  ChartErrorBoundary,
   ChartPlaceholder,
   LABEL_FONT_SIZE,
   LEFT_PADDING,
   LegendItem,
   TOP_PADDING,
-  getChromeStyles,
 } from "./chart-chrome";
+
+/** Default plot height, exported so callers can size a skeleton from it. */
+export const DEFAULT_CHART_HEIGHT = 220;
+
+export { LEGEND_HEIGHT } from "./chart-chrome";
 
 type IncomeExpenseBarChartProps = {
   /**
@@ -71,10 +63,7 @@ function IncomeExpenseBarChart({
   height = DEFAULT_CHART_HEIGHT,
 }: IncomeExpenseBarChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
-  const styles = useThemeStyle(getChromeStyles);
   const { t } = useTranslations();
-  const swipeOwner = useHorizontalSwipeOwnerGesture();
-  const scrollRef = useRef<ScrollView>(null);
 
   const chartHeight = height;
   // Width available to the scrolling plot (everything but the fixed y-axis).
@@ -112,7 +101,6 @@ function IncomeExpenseBarChart({
     .range([chartHeight - BOTTOM_PADDING, TOP_PADDING])
     .nice();
   const zeroY = yScale(0);
-  const yTicks = yScale.ticks(5);
 
   const groupX = (i: number) => i * groupWidth;
   const centerX = (i: number) => groupX(i) + groupWidth / 2;
@@ -158,132 +146,71 @@ function IncomeExpenseBarChart({
     : "";
 
   return (
-    // Own horizontal swipes so scrubbing the months doesn't also open the ledger
-    // drawer (gesture-handler blocks its edge swipe for the life of any touch
-    // that lands in here). Same pattern as InteractiveLineChartD3; on the outer
-    // View so it also covers touches starting on the y-axis gutter or legend.
-    <GestureDetector gesture={swipeOwner}>
-      <View>
-        <View style={styles.row}>
-          {/* Fixed y-axis: tick labels stay visible while the plot scrolls. */}
-          <Svg width={LEFT_PADDING} height={chartHeight}>
-            {yTicks.map((tick: number, i: number) => (
-              <SvgText
-                key={`y-${i}`}
-                x={LEFT_PADDING - 4}
-                y={yScale(tick) + 5}
-                fontSize={AXIS_FONT_SIZE}
-                fill={theme.text01}
-                textAnchor="end"
-              >
-                {`${currencySymbol}${shortNumber(tick)}`}
-              </SvgText>
-            ))}
-          </Svg>
-
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            // Open long spans on the most recent months. Fires once content is
-            // measured (avoids the first-mount layout race) and again only when the
-            // plot width changes (a new range/data), so it never yanks the user
-            // back mid-scroll on unrelated re-renders. A no-op when it all fits.
-            onContentSizeChange={() =>
-              scrollRef.current?.scrollToEnd({ animated: false })
-            }
-          >
-            <Svg width={plotWidth} height={chartHeight}>
-              {/* Y grid lines (span the whole plot) */}
-              {yTicks.map((tick: number, i: number) => (
-                <Line
-                  key={`grid-${i}`}
-                  x1={0}
-                  x2={plotWidth}
-                  y1={yScale(tick)}
-                  y2={yScale(tick)}
-                  stroke={theme.black40}
-                  strokeDasharray="4,2"
-                  strokeWidth={1}
-                />
-              ))}
-
-              {/* Solid zero baseline — the net line references it. */}
-              <Line
-                x1={0}
-                x2={plotWidth}
-                y1={zeroY}
-                y2={zeroY}
-                stroke={theme.black40}
-                strokeWidth={1}
-              />
-
-              {/* Grouped income / expense bars */}
-              {months.map((month, i) => {
-                const x0 = groupX(i);
-                return (
-                  <G key={`group-${month}`}>
-                    {barRect(
-                      income[i],
-                      x0 + (subScale("income") ?? 0),
-                      `inc-${month}`,
-                      theme.success,
-                      i,
-                    )}
-                    {barRect(
-                      expense[i],
-                      x0 + (subScale("expense") ?? 0),
-                      `exp-${month}`,
-                      theme.error,
-                      i,
-                    )}
-                  </G>
-                );
-              })}
-
-              {/* Net profit line + per-point dots (dots keep a single month visible) */}
-              {hasLine && (
-                <Path
-                  d={netPath}
-                  fill="none"
-                  stroke={netColor}
-                  strokeWidth={2.5}
-                />
-              )}
-              {net.map((value, i) => (
-                <Circle
-                  key={`net-${months[i]}`}
-                  cx={centerX(i)}
-                  cy={yScale(value)}
-                  r={3}
-                  fill={netColor}
-                />
-              ))}
-
-              {/* X axis labels — month abbreviation per column */}
-              {months.map((month, i) => (
-                <SvgText
-                  key={`x-${month}`}
-                  x={centerX(i)}
-                  y={chartHeight - 8}
-                  fontSize={LABEL_FONT_SIZE}
-                  fill={theme.text01}
-                  textAnchor="middle"
-                >
-                  {t(month.slice(5, 7))}
-                </SvgText>
-              ))}
-            </Svg>
-          </ScrollView>
-        </View>
-
-        <ChartLegend>
+    <ScrollableAxisChart
+      chartHeight={chartHeight}
+      plotWidth={plotWidth}
+      yTicks={yScale.ticks(5)}
+      yScale={yScale}
+      currencySymbol={currencySymbol}
+      legend={
+        <>
           <LegendItem color={theme.success} label={t("income")} />
           <LegendItem color={theme.error} label={t("expenses")} />
           <LegendItem mark="line" color={netColor} label={t("netProfit")} />
-        </ChartLegend>
-      </View>
-    </GestureDetector>
+        </>
+      }
+    >
+      {/* Grouped income / expense bars */}
+      {months.map((month, i) => {
+        const x0 = groupX(i);
+        return (
+          <G key={`group-${month}`}>
+            {barRect(
+              income[i],
+              x0 + (subScale("income") ?? 0),
+              `inc-${month}`,
+              theme.success,
+              i,
+            )}
+            {barRect(
+              expense[i],
+              x0 + (subScale("expense") ?? 0),
+              `exp-${month}`,
+              theme.error,
+              i,
+            )}
+          </G>
+        );
+      })}
+
+      {/* Net profit line + per-point dots (dots keep a single month visible) */}
+      {hasLine && (
+        <Path d={netPath} fill="none" stroke={netColor} strokeWidth={2.5} />
+      )}
+      {net.map((value, i) => (
+        <Circle
+          key={`net-${months[i]}`}
+          cx={centerX(i)}
+          cy={yScale(value)}
+          r={3}
+          fill={netColor}
+        />
+      ))}
+
+      {/* X axis labels — month abbreviation per column */}
+      {months.map((month, i) => (
+        <SvgText
+          key={`x-${month}`}
+          x={centerX(i)}
+          y={chartHeight - 8}
+          fontSize={LABEL_FONT_SIZE}
+          fill={theme.text01}
+          textAnchor="middle"
+        >
+          {t(month.slice(5, 7))}
+        </SvgText>
+      ))}
+    </ScrollableAxisChart>
   );
 }
 

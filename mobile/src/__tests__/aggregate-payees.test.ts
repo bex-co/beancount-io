@@ -145,6 +145,58 @@ describe("aggregatePayees", () => {
     ]);
   });
 
+  it("folds case variants into one row shown under the most frequent casing", () => {
+    const result = aggregatePayees(
+      table([
+        ["Burger King", 9, "2023-02-01", "2025-06-01"],
+        ["Burger king", 2, "2022-11-01", "2025-07-01"],
+      ]),
+    );
+    expect(result).toEqual([
+      {
+        payee: "Burger King",
+        transactionCount: 11,
+        firstDate: "2022-11-01",
+        lastDate: "2025-07-01",
+      },
+    ]);
+  });
+
+  it("keeps the winning casing regardless of variant row order", () => {
+    const result = aggregatePayees(
+      table([
+        ["burger king", 2, "2022-11-01", "2024-01-01"],
+        ["Burger King", 9, "2023-02-01", "2025-06-01"],
+      ]),
+    );
+    expect(result[0]?.payee).toBe("Burger King");
+    expect(result[0]?.transactionCount).toBe(11);
+  });
+
+  it("breaks a variant-count tie by the more recently used casing", () => {
+    const result = aggregatePayees(
+      table([
+        ["NETFLIX", 3, "2024-01-01", "2024-06-01"],
+        ["Netflix", 3, "2024-02-01", "2025-05-01"],
+      ]),
+    );
+    expect(result[0]?.payee).toBe("Netflix");
+    expect(result[0]?.transactionCount).toBe(6);
+  });
+
+  it("does not fold payees that differ beyond case", () => {
+    const result = aggregatePayees(
+      table([
+        ["Burger King", 9, "2023-02-01", "2025-06-01"],
+        ["Burger Kings", 2, "2022-11-01", "2025-07-01"],
+      ]),
+    );
+    expect(result.map((row) => row.payee)).toEqual([
+      "Burger King",
+      "Burger Kings",
+    ]);
+  });
+
   it("parses string counts and skips non-numeric dtype surprises", () => {
     const result = aggregatePayees(
       table([

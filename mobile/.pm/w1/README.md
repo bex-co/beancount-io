@@ -44,6 +44,49 @@
 - [ ] **m38** — Localize and optimize the App Store product page (15 tasks) ← from `/pm-brainstorm` 2026-08-24; moved from the monorepo root board
 - [ ] **m39** — Beancount highlighting and quick actions in Edit Transaction (8 tasks) ← owner research handoff to `/pm` 2026-09-06; reuses the shipped m9 transaction flow and m15 editor
 
+## Board triage — 2026-09-07
+
+Every root-level inbox note was triaged to zero: implemented, decided, or
+closed with its risk written down. The open tree now holds only m38 and m39.
+
+**Implemented (code in the tree, `yarn test` green — 1492 unit tests):**
+
+- `028` → **done** — the scrollable-axis shell the m20/t009 simplify pass
+  deliberately left behind now exists as
+  `src/common/d3/scrollable-axis-chart.tsx`; both bar charts sit on it and were
+  re-verified light and dark in the simulator with fixture data (auto-scroll to
+  the latest period included). The merge stops at the shell, as the note
+  required.
+- `029` → **done** — the last two motion-token stragglers migrated: picker
+  `300 → durations.base`, text-input-modal `200/150 → durations.fast`, all with
+  `easeStandard`. Both sheets looked at in both themes; Reanimated literal
+  durations in `src/` are now zero.
+- `032` → **done** — its one unblocked item (display-only case-insensitive
+  payee grouping in the Merchants directory) shipped in `aggregatePayees`,
+  unit-tested; the three still-blocked follow-ons stay recorded in the note in
+  `done/`, each re-raisable via `/pm-brainstorm` when its blocker clears.
+
+**Decided:**
+
+- `031` → **done** — the Persian calendar stays Gregorian
+  (`fa-u-ca-gregory`): the ledger file is the truth and a ۱۴۰۴ header over a
+  2025 file misleads; Jalali-done-right is milestone-sized and has no user
+  signal yet. Full rationale in the note.
+
+**Closed owner-gated, risk accepted (the m20/t008 treatment):**
+
+- `030` → **done** — the create→save production-write walk. The signed-in dev
+  session it assumed no longer exists (fresh dev-client install this session),
+  the risky callback seam is one-shot by design (m25/t006) and unit-tested
+  (m25/t007), and only the server-write success path remains unexercised. The
+  four walk steps stay in the note as a two-minute script for any future
+  signed-in build; a failure there reopens as a bug.
+
+One caution for future sessions: **no simulator carries a signed-in dev build
+anymore.** Anything that needs an authenticated ledger — chart data, the
+merchants directory, any write walk — first needs the owner to sign in once on
+the freshly built dev client.
+
 ## Merchants hand-off — 2026-08-19
 
 Owner request: "learn from monarch mobile and introduce a feature 'Merchants'

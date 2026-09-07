@@ -1,28 +1,20 @@
-import { useRef } from "react";
-import { ScrollView, View } from "react-native";
-import { GestureDetector } from "react-native-gesture-handler";
-import Svg, { Line, Path, Text as SvgText } from "react-native-svg";
+import { Path, Text as SvgText } from "react-native-svg";
 import { scaleLinear } from "d3-scale";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
 import { useTheme } from "@/common/theme";
-import { useThemeStyle } from "@/common/hooks/use-theme-style";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { shortNumber } from "@/common/number-utils";
-import { useHorizontalSwipeOwnerGesture } from "@/common/horizontal-swipe-owner";
 import { AnimatedBar } from "./animated-bar";
 import { useEntranceProgress } from "./use-entrance-progress";
 import { restingBarRect } from "./bar-geometry";
-import { ChartErrorBoundary } from "./chart-chrome";
+import { ScrollableAxisChart } from "./scrollable-axis-chart";
 import {
-  AXIS_FONT_SIZE,
   BOTTOM_PADDING,
-  ChartLegend,
+  ChartErrorBoundary,
   ChartPlaceholder,
   LABEL_FONT_SIZE,
   LEFT_PADDING,
   LegendItem,
   TOP_PADDING,
-  getChromeStyles,
 } from "./chart-chrome";
 
 export { LEGEND_HEIGHT } from "./chart-chrome";
@@ -65,10 +57,7 @@ function BudgetBarChart({
   height = 200,
 }: BudgetBarChartProps): JSX.Element {
   const theme = useTheme().colorTheme;
-  const styles = useThemeStyle(getChromeStyles);
   const { t } = useTranslations();
-  const swipeOwner = useHorizontalSwipeOwnerGesture();
-  const scrollRef = useRef<ScrollView>(null);
 
   const chartHeight = height;
   const availableWidth = ScreenWidth - contentPadding * 2 - LEFT_PADDING;
@@ -94,7 +83,6 @@ function BudgetBarChart({
     .range([chartHeight - BOTTOM_PADDING, TOP_PADDING])
     .nice();
   const zeroY = yScale(0);
-  const yTicks = yScale.ticks(5);
 
   const columnX = (i: number) => i * columnWidth;
   const centerX = (i: number) => columnX(i) + columnWidth / 2;
@@ -113,112 +101,64 @@ function BudgetBarChart({
     .join(" ");
 
   return (
-    // Owner marker: horizontal drags belong to the plot's scroller (and to the
-    // header and legend around it), never to the ledger drawer's edge swipe.
-    <GestureDetector gesture={swipeOwner}>
-      <View>
-        <View style={styles.row}>
-          {/* Fixed y-axis so tick labels stay put while the plot scrolls. */}
-          <Svg width={LEFT_PADDING} height={chartHeight}>
-            {yTicks.map((tick: number, i: number) => (
-              <SvgText
-                key={`y-${i}`}
-                x={LEFT_PADDING - 4}
-                y={yScale(tick) + 5}
-                fontSize={AXIS_FONT_SIZE}
-                fill={theme.text01}
-                textAnchor="end"
-              >
-                {`${currencySymbol}${shortNumber(tick)}`}
-              </SvgText>
-            ))}
-          </Svg>
-
-          <ScrollView
-            ref={scrollRef}
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            onContentSizeChange={() =>
-              scrollRef.current?.scrollToEnd({ animated: false })
-            }
-          >
-            <Svg width={plotWidth} height={chartHeight}>
-              {yTicks.map((tick: number, i: number) => (
-                <Line
-                  key={`grid-${i}`}
-                  x1={0}
-                  x2={plotWidth}
-                  y1={yScale(tick)}
-                  y2={yScale(tick)}
-                  stroke={theme.black40}
-                  strokeDasharray="4,2"
-                  strokeWidth={1}
-                />
-              ))}
-
-              <Line
-                x1={0}
-                x2={plotWidth}
-                y1={zeroY}
-                y2={zeroY}
-                stroke={theme.black40}
-                strokeWidth={1}
-              />
-
-              {actuals.map((value, i) => {
-                const { y: barY, height: barHeight } = restingBarRect(
-                  value,
-                  yScale(value),
-                  zeroY,
-                );
-                return (
-                  <AnimatedBar
-                    key={`bar-${labels[i]}-${i}`}
-                    x={columnX(i) + columnWidth * BAR_INSET}
-                    y={barY}
-                    width={barWidth}
-                    height={barHeight}
-                    baselineY={zeroY}
-                    fill={favorables[i] === false ? theme.error : theme.primary}
-                    rx={2}
-                    progress={entrance}
-                    index={i}
-                    count={actuals.length}
-                  />
-                );
-              })}
-
-              {/* Budget reference: dashed, stepped, drawn over the bars. */}
-              <Path
-                d={budgetPath}
-                fill="none"
-                stroke={theme.secondary}
-                strokeWidth={2}
-                strokeDasharray="5,3"
-              />
-
-              {labels.map((label, i) => (
-                <SvgText
-                  key={`x-${label}-${i}`}
-                  x={centerX(i)}
-                  y={chartHeight - 8}
-                  fontSize={LABEL_FONT_SIZE}
-                  fill={theme.text01}
-                  textAnchor="middle"
-                >
-                  {label}
-                </SvgText>
-              ))}
-            </Svg>
-          </ScrollView>
-        </View>
-
-        <ChartLegend>
+    <ScrollableAxisChart
+      chartHeight={chartHeight}
+      plotWidth={plotWidth}
+      yTicks={yScale.ticks(5)}
+      yScale={yScale}
+      currencySymbol={currencySymbol}
+      legend={
+        <>
           <LegendItem color={theme.primary} label={t("budgetActual")} />
           <LegendItem mark="line" color={theme.secondary} label={t("budget")} />
-        </ChartLegend>
-      </View>
-    </GestureDetector>
+        </>
+      }
+    >
+      {actuals.map((value, i) => {
+        const { y: barY, height: barHeight } = restingBarRect(
+          value,
+          yScale(value),
+          zeroY,
+        );
+        return (
+          <AnimatedBar
+            key={`bar-${labels[i]}-${i}`}
+            x={columnX(i) + columnWidth * BAR_INSET}
+            y={barY}
+            width={barWidth}
+            height={barHeight}
+            baselineY={zeroY}
+            fill={favorables[i] === false ? theme.error : theme.primary}
+            rx={2}
+            progress={entrance}
+            index={i}
+            count={actuals.length}
+          />
+        );
+      })}
+
+      {/* Budget reference: dashed, stepped, drawn over the bars. */}
+      <Path
+        d={budgetPath}
+        fill="none"
+        stroke={theme.secondary}
+        strokeWidth={2}
+        strokeDasharray="5,3"
+      />
+
+      {labels.map((label, i) => (
+        <SvgText
+          key={`x-${label}-${i}`}
+          x={centerX(i)}
+          y={chartHeight - 8}
+          fontSize={LABEL_FONT_SIZE}
+          fill={theme.text01}
+          textAnchor="middle"
+        >
+          {label}
+        </SvgText>
+      ))}
+    </ScrollableAxisChart>
   );
 }
 
