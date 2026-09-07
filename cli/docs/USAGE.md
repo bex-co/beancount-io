@@ -271,7 +271,7 @@ The envelope is always:
 }
 ```
 
-`target` is `{"file": "<absolute path>"}` for local commands and `{"server": "<api url>"}` for hosted ones. Bounded lists also carry `limit`. Amounts are objects with decimal **strings** — never floats — and dates are ISO `YYYY-MM-DD`.
+`target` is `{"file": "<absolute path>"}` for commands that resolve a ledger, `{"directory": "<absolute path>"}` for `format`, and `{"server": "<api url>"}` for hosted commands. Bounded lists also carry `limit`. Amounts are objects with decimal **strings** — never floats — and dates are ISO `YYYY-MM-DD`.
 
 ```bash
 $ bea --json check
