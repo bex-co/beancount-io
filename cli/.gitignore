@@ -1,1 +1,6 @@
 __pycache__
+
+# Build artifacts. `requirements.lock` is generated per release by
+# `make release-lock` and travels inside the sdist, never in git.
+dist/
+requirements.lock

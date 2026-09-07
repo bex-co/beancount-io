@@ -1,6 +1,6 @@
 # Beancount.io CLI - Development Makefile
 
-.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all
+.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock
 
 # Default target
 help:
@@ -18,6 +18,8 @@ help:
 	@echo "  make typecheck        - Run mypy type checks"
 	@echo "  make test             - Run tests with pytest"
 	@echo "  make codegen          - Fetch GraphQL schema and regenerate types"
+	@echo "  make release-check    - Validate the release tag against pyproject.toml"
+	@echo "  make release-lock     - Export the hash-pinned requirements.lock for a release"
 	@echo "  make check-all        - Run lint + format-check + typecheck + test"
 
 install:
@@ -70,6 +72,14 @@ clean:
 	find . -type d -name ".pytest_cache" -exec rm -rf {} +
 	find . -type d -name ".mypy_cache" -exec rm -rf {} +
 	find . -type d -name ".ruff_cache" -exec rm -rf {} +
+
+# Release plumbing. `.github/workflows/release-cli.yml` runs exactly these, so
+# a tag that would fail in CI fails here first.
+release-check:
+	bash scripts/release-check.sh
+
+release-lock:
+	uv export --format requirements-txt --no-dev --no-emit-project --no-editable --hashes -o requirements.lock
 
 codegen:
 	@echo "Fetching schema from https://beancount.io/api-gateway/schema.graphql ..."

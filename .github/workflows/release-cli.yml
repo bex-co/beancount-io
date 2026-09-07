@@ -1,0 +1,190 @@
+name: Release (cli)
+
+# Tag-anchored release automation for the `bea` command:
+# - A `cli-vX.Y.Z` tag is the only thing that publishes. The tag must match
+#   cli/pyproject.toml's version and point at a commit reviewed on main, so a
+#   release can never ship code that did not go through CI on main.
+# - PyPI is the single release source. The wheel and sdist published here are
+#   the exact artifacts `uv tool install beancount-io` and the Homebrew formula
+#   both consume; the formula is rendered from the sha256 PyPI reports for that
+#   same sdist.
+# - The GitHub Release and the tap push happen after a successful upload, so a
+#   half-published release is fixed by re-running the job rather than by
+#   deleting a tag.
+# - workflow_dispatch is the rehearsal: with `test` set it runs every check and
+#   uploads to TestPyPI, and it never creates a release or touches the tap.
+
+on:
+  push:
+    tags: ["cli-v*"]
+  workflow_dispatch:
+    inputs:
+      test:
+        description: "Rehearsal: run every check and upload to TestPyPI"
+        type: boolean
+        default: true
+
+permissions: {}
+
+# One release at a time; never cancel an upload mid-flight.
+concurrency:
+  group: cli-release
+  cancel-in-progress: false
+
+jobs:
+  release:
+    name: release
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write # create the GitHub Release
+      id-token: write # PyPI trusted publishing (OIDC), no long-lived token
+    defaults:
+      run:
+        working-directory: cli
+    env:
+      IS_TAG_RELEASE: ${{ github.event_name == 'push' }}
+      IS_TEST_UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.test }}
+      # secrets.* is not allowed in a step-level `if`, so the presence check is
+      # hoisted here and the tap steps gate on env.HAS_TAP_KEY.
+      HAS_TAP_KEY: ${{ secrets.BEA_TAP_PUSH_KEY != '' }}
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0 # tag ancestry check needs main's history
+          persist-credentials: false
+
+      - name: Validate the release tag
+        id: release
+        env:
+          TAG: ${{ github.ref_name }}
+        run: |
+          # On a dispatch, github.ref_name is a branch: let release-check.sh
+          # derive the tag this version would need instead.
+          if [ "$IS_TAG_RELEASE" != "true" ]; then TAG=""; fi
+          VERSION="$(bash scripts/release-check.sh ${TAG:+"$TAG"})"
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+          echo "tag=cli-v$VERSION" >> "$GITHUB_OUTPUT"
+
+      - name: Require a commit reviewed on main
+        if: ${{ env.IS_TAG_RELEASE == 'true' }}
+        run: |
+          git fetch --no-tags origin refs/heads/main:refs/remotes/origin/main
+          git merge-base --is-ancestor "$GITHUB_SHA" refs/remotes/origin/main || {
+            echo "::error::the release tag does not point at a commit on main"
+            exit 1
+          }
+
+      - uses: astral-sh/setup-uv@v5
+        with:
+          enable-cache: true
+          cache-dependency-glob: cli/uv.lock
+
+      - name: Install dependencies
+        run: uv sync --all-groups
+
+      - name: Run all checks
+        run: make check-all
+
+      - name: Export the hash-pinned dependency lock
+        run: make release-lock
+
+      - name: Build the sdist and wheel
+        run: uv build --out-dir dist
+
+      - name: Verify the sdist carries the lock
+        # The Homebrew formula installs from this file; an sdist without it
+        # would publish fine and then fail every brew install.
+        env:
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          tar -tzf "dist/beancount_io-$VERSION.tar.gz" \
+            | grep -qx "beancount_io-$VERSION/requirements.lock" || {
+            echo "::error::requirements.lock is missing from the sdist"
+            exit 1
+          }
+
+      - name: Publish to PyPI
+        if: ${{ env.IS_TAG_RELEASE == 'true' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: cli/dist
+
+      - name: Publish to TestPyPI
+        if: ${{ env.IS_TEST_UPLOAD == 'true' }}
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: cli/dist
+          repository-url: https://test.pypi.org/legacy/
+
+      - name: Publish the GitHub release
+        if: ${{ env.IS_TAG_RELEASE == 'true' }}
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TAG: ${{ steps.release.outputs.tag }}
+          VERSION: ${{ steps.release.outputs.version }}
+        # Idempotent, so a failure in the tap step below is fixed by re-running
+        # the job instead of leaving the release half-published.
+        run: |
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            gh release upload "$TAG" dist/* requirements.lock --clobber
+          else
+            gh release create "$TAG" dist/* requirements.lock \
+              --title "bea $VERSION" --generate-notes
+          fi
+
+      - name: Publish the Homebrew formula
+        # BEA_TAP_PUSH_KEY is the write deploy key of bex-co/homebrew-tap —
+        # repo-scoped and non-personal. The step skips cleanly while it is
+        # unset, so the PyPI channel ships without waiting on the tap.
+        if: ${{ env.IS_TAG_RELEASE == 'true' && env.HAS_TAP_KEY == 'true' }}
+        env:
+          TAP_KEY: ${{ secrets.BEA_TAP_PUSH_KEY }}
+          VERSION: ${{ steps.release.outputs.version }}
+        run: |
+          LOCAL_SHA="$(sha256sum "dist/beancount_io-$VERSION.tar.gz" | cut -d' ' -f1)"
+
+          # PyPI takes a moment to serve a just-published file, and the formula
+          # must carry the sha256 of the artifact users will actually download
+          # — so wait for PyPI to report one, then require it to be ours.
+          for attempt in 1 2 3 4 5 6 7 8 9 10; do
+            PYPI_SHA="$(curl -fsSL "https://pypi.org/pypi/beancount-io/$VERSION/json" \
+              | python3 -c 'import json,sys; print(next((u["digests"]["sha256"] for u in json.load(sys.stdin)["urls"] if u["packagetype"] == "sdist"), ""))' \
+              || true)"
+            if [ -n "$PYPI_SHA" ]; then break; fi
+            echo "PyPI has not served beancount-io $VERSION yet (attempt $attempt); waiting"
+            sleep 15
+          done
+          if [ "$PYPI_SHA" != "$LOCAL_SHA" ]; then
+            echo "::error::PyPI sdist sha256 '$PYPI_SHA' does not match the built artifact '$LOCAL_SHA'"
+            exit 1
+          fi
+
+          # The tap key stages under $RUNNER_TEMP and is scrubbed below: it can
+          # push an arbitrary Formula/bea.rb to the channel `brew install` reads.
+          bash scripts/render-formula.sh "$VERSION" "$PYPI_SHA" > "$RUNNER_TEMP/bea.rb"
+          umask 077
+          printf '%s\n' "$TAP_KEY" > "$RUNNER_TEMP/tap-key"
+          # GitHub's published ed25519 host key (docs.github.com → SSH key
+          # fingerprints). If GitHub rotates it, this step fails with "Host key
+          # verification failed" — update the pin here.
+          printf '%s\n' "github.com ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIOMqqnkVzrm0SdG6UOoqKLsabgH5C9okWi0dh2l9GKJl" \
+            > "$RUNNER_TEMP/tap-known-hosts"
+          export GIT_SSH_COMMAND="ssh -i $RUNNER_TEMP/tap-key -o UserKnownHostsFile=$RUNNER_TEMP/tap-known-hosts -o IdentitiesOnly=yes"
+          git clone --depth 1 git@github.com:bex-co/homebrew-tap.git "$RUNNER_TEMP/tap"
+          mkdir -p "$RUNNER_TEMP/tap/Formula"
+          cp "$RUNNER_TEMP/bea.rb" "$RUNNER_TEMP/tap/Formula/bea.rb"
+          cd "$RUNNER_TEMP/tap"
+          git config user.name "beancount-io-release-bot"
+          git config user.email "noreply@beancount.io"
+          git add Formula/bea.rb
+          git diff --cached --quiet || git commit -m "bea $VERSION"
+          git push origin main || { git pull --rebase origin main && git push origin main; }
+
+      - name: Scrub tap credentials
+        # Runs even when the push failed, so the write key never outlives the job.
+        if: ${{ always() && env.HAS_TAP_KEY == 'true' }}
+        run: |
+          rm -f -- "$RUNNER_TEMP/tap-key" "$RUNNER_TEMP/tap-known-hosts" "$RUNNER_TEMP/bea.rb"
+          rm -rf -- "$RUNNER_TEMP/tap"

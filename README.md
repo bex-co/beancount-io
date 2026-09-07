@@ -127,11 +127,15 @@ Expo will guide you to iOS, Android, or a connected device. See the [mobile deve
 
 ### CLI and Python tooling
 
-The `beancount-io` package installs one command, `bea`. Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
+The `beancount-io` package installs one command, `bea`. Install it from the
+Homebrew tap or from PyPI:
 
 ```zsh
-uv tool install 'git+https://github.com/bex-co/beancount-io#subdirectory=cli'
-bea check                   # in a directory containing main.bean
+brew install bex-co/tap/bea      # macOS and Linuxbrew
+uv tool install beancount-io     # anywhere with uv and Python 3.12+
+
+bea check                        # in a directory containing main.bean
+bea upgrade                      # update through whichever manager installed it
 ```
 
 Or from this checkout:

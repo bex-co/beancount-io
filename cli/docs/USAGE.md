@@ -9,6 +9,7 @@ bea report balance-sheet | income-statement | trial-balance | overview
 bea ask ["question"]                      # requires beancount-io[ask]
 bea auth login | logout | status
 bea ledger list | create [--clone] | clone | delete [--yes]
+bea upgrade [--check]
 ```
 
 ## Global options
@@ -213,7 +214,7 @@ bea report balance-sheet --conversion EUR
 `bea ask` needs the AI dependencies, which the default install does not carry:
 
 ```bash
-uv tool install 'beancount-io[ask] @ git+https://github.com/bex-co/beancount-io#subdirectory=cli'
+uv tool install 'beancount-io[ask]'
 
 # or, from a local clone of this repo
 uv tool install './cli[ask]'
@@ -260,6 +261,49 @@ bea ledger delete alice/my-books --yes    # or run with --yes
 ```
 
 Cloning uses `git clone` over SSH, so it needs Git and working SSH access. If a clone fails after the ledger was created, the command exits nonzero and prints the manual `git clone` command — the ledger exists either way.
+
+## Updating
+
+`bea upgrade` hands the update to whichever package manager installed this copy
+— Homebrew, uv, or pipx — and never rewrites its own installed files.
+
+```bash
+# Report the installed and latest versions and the command that would run
+$ bea upgrade --check
+bea 1.2.3 (installed by: homebrew)
+Latest release: 1.3.0
+Would run: brew upgrade bea
+
+# Run it
+$ bea upgrade
+```
+
+| Install channel | What `bea upgrade` runs |
+|---|---|
+| Homebrew (`brew install bex-co/tap/bea`) | `brew upgrade bea` |
+| uv tool (`uv tool install beancount-io`) | `uv tool upgrade beancount-io` |
+| pipx | `pipx upgrade beancount-io` |
+| A checkout (editable install) | Nothing; prints `git pull` and `uv sync --all-groups`, exits 0 |
+| Anything else | Nothing; exits **2** naming both install channels |
+
+If the manager itself fails, the command exits **1** and says so; nothing about
+the installation is changed. `--check` reports and runs nothing.
+
+### The update notice
+
+In a terminal, `bea` asks PyPI at most once a day whether a newer release
+exists, and prints one line on stderr after the command's own output:
+
+```
+bea 1.3.0 is available (you have 1.2.3) — run 'bea upgrade' to update.
+```
+
+It never runs at all under `--json`, `--no-input`, `CI`, or
+`BEA_NO_UPDATE_NOTIFIER=1`, without a terminal on stderr, or from a development
+install. Every outcome — including a failure — is cached for 24 hours in
+`~/.config/bea/update-check.json`, so an offline machine waits at most once a
+day and prints nothing. `bea --version` adds the same line from that cache
+only, and makes no network call.
 
 ## JSON output
 
@@ -315,4 +359,5 @@ Report JSON carries the same tree the text renderer walks — `account`, `balanc
 | `BEA_CONFIG_DIR` | `$XDG_CONFIG_HOME/bea`, else `~/.config/bea` | Per-user state: credentials, `ask` history, user skills |
 | `BEA_API_URL` | `https://api.v3.beancount.io` | API base URL |
 | `BEA_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL, used by the device login flow |
-| `CI` | — | Truthy implies `--no-input` |
+| `BEA_NO_UPDATE_NOTIFIER` | — | Truthy disables the update notice entirely |
+| `CI` | — | Truthy implies `--no-input`, and disables the update notice |

@@ -18,7 +18,8 @@ from cli.errors import UsageError
 _TRUE = {"1", "true", "yes", "on"}
 
 
-def _env_flag(name: str) -> bool:
+def env_flag(name: str) -> bool:
+    """Whether an environment switch is on. Shared so `CI` means the same thing everywhere."""
     return os.environ.get(name, "").strip().lower() in _TRUE
 
 
@@ -47,7 +48,7 @@ class RunContext:
         non-terminal stdin, and by `CI=true` — an agent that forgot the flag
         still never hangs on a prompt.
         """
-        return self._no_input or self.json_output or not _stdin_is_a_terminal() or _env_flag("CI")
+        return self._no_input or self.json_output or not _stdin_is_a_terminal() or env_flag("CI")
 
     def entry_file(self) -> Path:
         """Resolve the local ledger: `--file`, then `$BEA_FILE`, then `./main.bean`."""
