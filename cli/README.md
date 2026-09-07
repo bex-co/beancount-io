@@ -83,7 +83,7 @@ For scripts and agents, every read-side command speaks JSON and every failure ha
 bea --json --no-input list transaction --limit 100 | jq '.data[0]'
 ```
 
-See [docs/USAGE.md](docs/USAGE.md) for the full command reference, the exit-code table, and the JSON envelope.
+See [docs/USAGE.md](https://github.com/bex-co/beancount-io/blob/main/cli/docs/USAGE.md) for the full command reference, the exit-code table, and the JSON envelope.
 
 ## Development
 
@@ -141,4 +141,4 @@ Two things live outside the repository and are set up once:
 
 ## License
 
-[MIT](../LICENSE) © Beancount.io
+[MIT](https://github.com/bex-co/beancount-io/blob/main/LICENSE) © Beancount.io

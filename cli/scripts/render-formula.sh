@@ -34,18 +34,35 @@ class Bea < Formula
   license "MIT"
 
   depends_on "python@3.12"
-  depends_on "uv" => :build
+  # Not \`=> :build\`: post_install needs uv too, and a build-only dependency is
+  # what \`brew autoremove\` would take away first.
+  depends_on "uv"
 
   def install
-    python = Formula["python@3.12"].opt_bin/"python3.12"
-    system "uv", "venv", "--python", python, libexec
-    # --require-hashes: every dependency is pinned to the exact artifact CI
-    # tested, so no version resolution and no source build happen on a user's
-    # machine (pydantic-core in particular must arrive as a wheel).
-    system "uv", "pip", "install", "--python", libexec/"bin/python",
-           "--require-hashes", "--requirement", "requirements.lock"
-    system "uv", "pip", "install", "--python", libexec/"bin/python", "--no-deps", "."
-    bin.install_symlink libexec/"bin/bea"
+    project = libexec/"project"
+    project.install "pyproject.toml", "README.md", "requirements.lock", "src"
+
+    uv = Formula["uv"].opt_bin/"uv"
+    system uv, "venv", "--python", Formula["python@3.12"].opt_bin/"python3.12", libexec/"venv"
+    # bea itself is pure Python, so it is safe to install before Homebrew's
+    # relocation pass — and installing it here is what makes bin/bea a real
+    # file at the moment the keg is linked.
+    system uv, "pip", "install", "--python", libexec/"venv/bin/python", "--no-deps", project
+    bin.install_symlink libexec/"venv/bin/bea"
+  end
+
+  # The dependency tree lands after Homebrew has rewritten the dylib IDs of
+  # every Mach-O file in the keg. That pass cannot lengthen the install name
+  # inside a prebuilt wheel — there is no header padding for the longer path —
+  # and pydantic-core's extension module fails it, which is fatal to
+  # \`brew install\`. Wheels are the entire point of this formula (no Rust
+  # toolchain, no source builds on a user's machine), so they arrive here,
+  # after that pass has already run. --require-hashes pins every one of them to
+  # the exact artifact the release tested.
+  def post_install
+    system Formula["uv"].opt_bin/"uv", "pip", "install",
+           "--python", libexec/"venv/bin/python",
+           "--require-hashes", "--requirement", libexec/"project/requirements.lock"
   end
 
   test do

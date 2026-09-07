@@ -91,7 +91,13 @@ jobs:
         run: make release-lock
 
       - name: Build the sdist and wheel
-        run: uv build --out-dir dist
+        run: |
+          uv build --out-dir dist
+          # uv drops a `.gitignore` in the output directory. Nothing downstream
+          # should have to reason about whether a glob picks up a dotfile when
+          # the thing being globbed is "everything we are about to publish".
+          rm -f dist/.gitignore
+          ls -l dist
 
       - name: Verify the sdist carries the lock
         # The Homebrew formula installs from this file; an sdist without it

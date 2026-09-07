@@ -53,6 +53,23 @@ expect_contains "the formula defines class Bea" 'class Bea < Formula'
 expect_contains "the url names the released sdist" 'beancount_io-1.2.3.tar.gz'
 expect_contains "the install step uses the hashed lock" 'requirements.lock'
 expect_contains "the install step requires hashes" '--require-hashes'
+expect_contains "the dependency install has its own post_install hook" 'def post_install'
+
+# Homebrew rewrites the dylib ID of every Mach-O file in the keg *before* it
+# runs post_install, and it cannot lengthen the install name inside a prebuilt
+# wheel — pydantic-core's extension fails that rewrite, and the failure is fatal
+# to `brew install` (exit 1, after the beer emoji). Moving the wheels behind
+# post_install is the whole reason `brew install bex-co/tap/bea` succeeds, and
+# nothing else in the formula makes that ordering obvious.
+# Comments are skipped: the reason for this ordering is itself written above
+# post_install, and it mentions the flag.
+post_install_at="$(awk '/def post_install/ { print NR; exit }' "$formula")"
+hashed_install_at="$(awk '!/^[[:space:]]*#/ && /--require-hashes/ { print NR; exit }' "$formula")"
+if [ -n "$post_install_at" ] && [ -n "$hashed_install_at" ] && [ "$hashed_install_at" -gt "$post_install_at" ]; then
+  pass "the wheels are installed after Homebrew's relocation pass, not before"
+else
+  fail "the wheels must be installed inside post_install (line $hashed_install_at vs post_install at $post_install_at)"
+fi
 
 occurrences="$(grep -c "$SHA" "$formula")"
 if [ "$occurrences" = "1" ]; then

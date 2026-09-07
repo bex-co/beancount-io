@@ -1,6 +1,6 @@
 # w2 · m25 — `bea` distribution: PyPI, Homebrew tap, update notice, `bea upgrade`
 
-**Worker:** worker2 **Goal:** a newcomer installs `bea` with one command on either channel (`brew install bex-co/tap/bea` or `uv tool install beancount-io`), learns about new releases without scripts ever being interrupted, and updates with `bea upgrade` **Status:** in progress — every repo-side task is done (t001–t005, t007, t008); t006 and t009 wait on the first real release
+**Worker:** worker2 **Goal:** a newcomer installs `bea` with one command on either channel (`brew install bex-co/tap/bea` or `uv tool install beancount-io`), learns about new releases without scripts ever being interrupted, and updates with `bea upgrade` **Status:** in progress — every task except closeout is done; t009 waits on the first real release
 
 ## Tasks (in order)
 
@@ -11,7 +11,7 @@
 | t003 | Passive update notice and `bea --version` hint — **DONE** | 45m | —          |
 | t004 | `bea upgrade` dispatches to the owning package manager — **DONE** | 45m | t003       |
 | t005 | Install and update docs for both channels — **DONE** | 30m | t002, t004 |
-| t006 | Adoption surface — install channels discoverable and working as written                | 30m | t005       |
+| t006 | Adoption surface — install channels discoverable and working as written — **DONE** | 30m | t005       |
 | t007 | Simplify — **DONE** | 20m | t006       |
 | t008 | Test coverage — notifier rules, channel detection, formula rendering, tag validation — **DONE** | 45m | t006       |
 | t009 | Closeout                                                                               | 15m | t008       |
@@ -35,14 +35,43 @@ can take, and the verification they unlock:
    PyPI channel ships on its own.
 3. Rehearse with `workflow_dispatch` (`test`), then push `cli-v0.1.0`.
 
-Then t006 (clean-machine `brew install bex-co/tap/bea` and
-`uv tool install beancount-io`, PyPI page rendering) and t009 (closeout) can run.
+Then t009 (closeout) can run, once the two published commands have been run
+once as written.
 
-Verified locally in the meantime, against the real built sdist: the staged
-tarball installs exactly as the formula's `install` block does — `uv venv`, then
-`uv pip install --require-hashes -r requirements.lock`, then
-`uv pip install --no-deps .` — and the resulting `bea --version` and `bea check`
-work. The notice and `bea upgrade` rules were exercised on a real pty.
+### What was verified without them
+
+Both channels were exercised end to end against the real release artifacts, on
+machines that had never seen this package. The only thing not covered is the
+`url` line of the formula and the `beancount-io` name on PyPI, because neither
+exists until the first release; every other line ran.
+
+| Check | Result |
+| --- | --- |
+| `uv tool install <sdist>` on a clean Linux container | `bea --version`, `bea check`, `bea --json list transaction` all work |
+| `brew install` through a real tap on macOS 26 / arm64 | exits 0, `brew test bea` passes, `brew linkage` clean |
+| The same on Linuxbrew (container) | exits 0, `brew test bea` passes, `bea check` and `bea --json report` work |
+| Channel detection on those real installs | `uv-tool` → `uv tool upgrade beancount-io`; `homebrew` → `brew upgrade bea`, on both macOS and Linuxbrew |
+| PyPI page | `twine check` passes on both artifacts; metadata carries Homepage + Repository |
+| PyPI unreachable / project absent | `bea upgrade --check` reports `Latest release: unknown` and exits 0 |
+| `CI=true bea --version` | no hint |
+| Notice rules on a real pty | appears once, reuses the cache, silent piped and under `CI` / `BEA_NO_UPDATE_NOTIFIER` |
+
+Two defects were found and fixed this way, neither of which any unit test would
+have caught:
+
+1. **`brew install` exited 1.** Homebrew rewrites the dylib ID of every Mach-O
+   file in the keg before `post_install` runs. pydantic-core ships a prebuilt
+   wheel whose extension module is a Mach-O *dylib* (maturin builds one; the
+   other three native extensions here are bundles, which Homebrew skips), and
+   its header has no padding for a path as long as the keg's. The rewrite fails,
+   `ofail` marks the run failed, and `brew install` returns 1 *after* printing
+   the success line. The formula now installs the dependency tree in
+   `post_install`, which Homebrew runs after that pass
+   (`formula_installer.rb:1016` vs `:1034`). `render-formula.test.sh` asserts the
+   ordering, since nothing else in the formula makes it look load-bearing.
+2. **The PyPI landing page had two dead links.** `cli/README.md` is the PyPI
+   project page, and its `docs/USAGE.md` and `../LICENSE` links were
+   repo-relative — both 404 there. They are absolute now.
 
 ## Source + Goal linkage
 
