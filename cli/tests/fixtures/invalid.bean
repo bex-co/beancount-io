@@ -1,0 +1,4 @@
+;; A ledger that does not load: unknown accounts and an unbalanced transaction.
+2024-01-15 * "Blue Bottle" "Coffee"
+  Expenses:Food   12.50 USD
+  Assets:Cash    -10.00 USD

@@ -22,6 +22,14 @@ def _env_flag(name: str) -> bool:
     return os.environ.get(name, "").strip().lower() in _TRUE
 
 
+def _stdin_is_a_terminal() -> bool:
+    """Whether a person could answer a prompt. A closed or replaced stdin counts as nobody."""
+    try:
+        return sys.stdin.isatty()
+    except (AttributeError, ValueError):
+        return False
+
+
 @dataclass
 class RunContext:
     """Global options, resolved once by the root callback."""
@@ -39,7 +47,7 @@ class RunContext:
         non-terminal stdin, and by `CI=true` — an agent that forgot the flag
         still never hangs on a prompt.
         """
-        return self._no_input or self.json_output or not sys.stdin.isatty() or _env_flag("CI")
+        return self._no_input or self.json_output or not _stdin_is_a_terminal() or _env_flag("CI")
 
     def entry_file(self) -> Path:
         """Resolve the local ledger: `--file`, then `$BEA_FILE`, then `./main.bean`."""

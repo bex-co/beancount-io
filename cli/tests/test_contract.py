@@ -1,0 +1,376 @@
+"""The automation contract: target resolution, exit codes, JSON output, and no-input behavior.
+
+These are the promises `docs/USAGE.md` makes to a script or a coding agent, so
+they are tested through the real command tree rather than against the helpers.
+"""
+
+from __future__ import annotations
+
+import json
+from pathlib import Path
+from types import SimpleNamespace
+from typing import Any
+from unittest.mock import MagicMock, patch
+
+import httpx
+import pytest
+from typer.testing import CliRunner
+
+from cli.api.gql_client.exceptions import GraphQLClientHttpError
+from cli.main import app
+
+FIXTURES = Path(__file__).parent / "fixtures"
+VALID = FIXTURES / "valid.bean"
+INVALID = FIXTURES / "invalid.bean"
+
+runner = CliRunner()
+
+
+def envelope(result: Any) -> dict[str, Any]:
+    """Parse stdout as the documented envelope, failing loudly if anything else was printed."""
+    return json.loads(result.stdout)  # type: ignore[no-any-return]
+
+
+def error_object(result: Any) -> dict[str, Any]:
+    return json.loads(result.stderr)["error"]  # type: ignore[no-any-return]
+
+
+def hosted_client(**methods: Any) -> Any:
+    """A stand-in GraphQL client, with credentials supplied by the environment."""
+    client = MagicMock()
+    for name, behavior in methods.items():
+        setattr(client, name, behavior)
+    return client
+
+
+@pytest.fixture
+def logged_in(monkeypatch: pytest.MonkeyPatch) -> None:
+    monkeypatch.setenv("BEA_TOKEN", "test-token")
+
+
+class TestTargetResolution:
+    def test_file_flag_beats_the_environment(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setenv("BEA_FILE", str(INVALID))
+
+        result = runner.invoke(app, ["--file", str(VALID), "--json", "check"])
+
+        assert result.exit_code == 0
+        assert envelope(result)["target"]["file"] == str(VALID.resolve())
+
+    def test_environment_beats_the_working_directory(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        (tmp_path / "main.bean").write_text(INVALID.read_text())
+        monkeypatch.chdir(tmp_path)
+        monkeypatch.setenv("BEA_FILE", str(VALID))
+
+        result = runner.invoke(app, ["--json", "check"])
+
+        assert result.exit_code == 0
+        assert envelope(result)["target"]["file"] == str(VALID.resolve())
+
+    def test_working_directory_is_the_last_resort(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        (tmp_path / "main.bean").write_text(VALID.read_text())
+        monkeypatch.chdir(tmp_path)
+
+        result = runner.invoke(app, ["--json", "check"])
+
+        assert result.exit_code == 0
+        assert envelope(result)["target"]["file"] == str((tmp_path / "main.bean").resolve())
+
+    def test_missing_file_exits_2_naming_every_source(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.chdir(tmp_path)
+
+        result = runner.invoke(app, ["check"])
+
+        assert result.exit_code == 2
+        assert "--file" in result.stderr
+        assert "BEA_FILE" in result.stderr
+        assert "main.bean" in result.stderr
+
+    def test_relative_target_is_resolved_before_loading(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        # The beancount loader asserts on a relative entry path; resolving late
+        # used to surface as an empty "Error:" with no message.
+        (tmp_path / "books.bean").write_text(VALID.read_text())
+        monkeypatch.chdir(tmp_path)
+
+        result = runner.invoke(app, ["--file", "books.bean", "check"])
+
+        assert result.exit_code == 0, result.stderr
+
+
+class TestExitCodes:
+    def test_0_on_success(self) -> None:
+        assert runner.invoke(app, ["--file", str(VALID), "check"]).exit_code == 0
+
+    def test_1_on_a_ledger_error(self) -> None:
+        result = runner.invoke(app, ["--file", str(INVALID), "check"])
+
+        assert result.exit_code == 1
+        assert "does not balance" in result.stderr
+
+    def test_1_when_a_report_would_total_an_unloadable_ledger(self) -> None:
+        result = runner.invoke(app, ["--file", str(INVALID), "report", "balance-sheet"])
+
+        assert result.exit_code == 1
+        assert result.stdout == ""
+
+    def test_allow_errors_returns_data_and_still_reports_the_errors(self) -> None:
+        result = runner.invoke(app, ["--file", str(INVALID), "list", "transaction", "--allow-errors"])
+
+        assert result.exit_code == 0
+        assert "Blue Bottle" in result.stdout
+        assert "does not balance" in result.stderr
+
+    def test_2_on_a_usage_error(self) -> None:
+        result = runner.invoke(
+            app, ["--file", str(VALID), "add", "balance", "--date", "not-a-date", "--account", "A", "--amount", "1 USD"]
+        )
+
+        assert result.exit_code == 2
+
+    def test_3_when_the_server_rejects_the_credential(self, logged_in: None) -> None:
+        unauthorized = GraphQLClientHttpError(401, httpx.Response(401))
+        client = hosted_client(list_ledgers=MagicMock(side_effect=unauthorized))
+
+        with patch("cli.api.client.make_client", return_value=client):
+            result = runner.invoke(app, ["ledger", "list"])
+
+        assert result.exit_code == 3
+
+    def test_3_when_there_is_no_credential_at_all(self) -> None:
+        result = runner.invoke(app, ["ledger", "list"])
+
+        assert result.exit_code == 3
+        assert "bea auth login" in result.stderr
+
+    def test_4_when_a_write_times_out_with_an_unknown_outcome(self, logged_in: None) -> None:
+        client = hosted_client(delete_ledger=MagicMock(side_effect=httpx.ConnectTimeout("timed out")))
+
+        with patch("cli.api.client.make_client", return_value=client):
+            result = runner.invoke(app, ["--yes", "ledger", "delete", "alice/books"])
+
+        assert result.exit_code == 4
+        assert "outcome is unknown" in result.stderr
+
+    def test_the_backend_request_id_survives_into_the_error(self, logged_in: None) -> None:
+        response = httpx.Response(401, headers={"x-request-id": "req-abc123"})
+        client = hosted_client(list_ledgers=MagicMock(side_effect=GraphQLClientHttpError(401, response)))
+
+        with patch("cli.api.client.make_client", return_value=client):
+            result = runner.invoke(app, ["--json", "ledger", "list"])
+
+        assert error_object(result)["request_id"] == "req-abc123"
+
+
+class TestBulkAdd:
+    ONE_GOOD_ONE_BAD = [
+        {
+            "date": "2024-03-01",
+            "narration": "Good row",
+            "postings": [
+                {"account": "Expenses:Food", "units": {"number": "5.00", "currency": "USD"}},
+                {"account": "Assets:Cash", "units": {"number": "-5.00", "currency": "USD"}},
+            ],
+        },
+        {"date": "not-a-date", "narration": "Bad row", "postings": []},
+    ]
+
+    def _ledger_and_rows(self, tmp_path: Path, rows: list[dict[str, Any]]) -> tuple[Path, Path]:
+        ledger = tmp_path / "main.bean"
+        ledger.write_text(VALID.read_text())
+        rows_file = tmp_path / "rows.json"
+        rows_file.write_text(json.dumps(rows))
+        return ledger, rows_file
+
+    def test_an_invalid_row_leaves_the_ledger_byte_identical(self, tmp_path: Path) -> None:
+        ledger, rows = self._ledger_and_rows(tmp_path, self.ONE_GOOD_ONE_BAD)
+        before = ledger.read_bytes()
+
+        result = runner.invoke(app, ["--file", str(ledger), "add", "transactions", "--from", str(rows)])
+
+        assert result.exit_code == 1
+        assert ledger.read_bytes() == before
+        assert "row 1" in result.stderr
+
+    def test_partial_appends_the_valid_rows_and_still_fails(self, tmp_path: Path) -> None:
+        ledger, rows = self._ledger_and_rows(tmp_path, self.ONE_GOOD_ONE_BAD)
+
+        result = runner.invoke(app, ["--file", str(ledger), "add", "transactions", "--from", str(rows), "--partial"])
+
+        assert result.exit_code == 1
+        assert "Good row" in ledger.read_text()
+        assert "Bad row" not in ledger.read_text()
+
+    def test_a_clean_file_writes_every_row_and_succeeds(self, tmp_path: Path) -> None:
+        ledger, rows = self._ledger_and_rows(tmp_path, self.ONE_GOOD_ONE_BAD[:1])
+
+        result = runner.invoke(app, ["--file", str(ledger), "--json", "add", "transactions", "--from", str(rows)])
+
+        assert result.exit_code == 0
+        assert envelope(result)["data"] == {"written": 1, "rejected": []}
+        assert "Good row" in ledger.read_text()
+
+
+READ_SIDE_COMMANDS = [
+    ["check"],
+    ["query", "SELECT account, sum(position) GROUP BY account"],
+    ["list", "transaction"],
+    ["list", "note"],
+    ["list", "price"],
+    ["list", "event"],
+    ["report", "overview"],
+    ["report", "income-statement"],
+    ["report", "balance-sheet"],
+    ["report", "trial-balance"],
+]
+
+
+class TestJsonOutput:
+    @pytest.mark.parametrize("command", READ_SIDE_COMMANDS, ids=lambda c: " ".join(c[:2]))
+    def test_stdout_is_nothing_but_the_envelope(self, command: list[str]) -> None:
+        result = runner.invoke(app, ["--file", str(VALID), "--json", *command])
+
+        assert result.exit_code == 0, result.stderr
+        parsed = envelope(result)
+        assert set(parsed) >= {"bea", "target", "data", "truncated"}
+        assert parsed["target"] == {"file": str(VALID.resolve())}
+
+    def test_amounts_are_decimal_strings_not_floats(self) -> None:
+        result = runner.invoke(app, ["--file", str(VALID), "--json", "list", "transaction"])
+
+        units = envelope(result)["data"][0]["postings"][0]["units"]
+        assert units == {"number": "1000.00", "currency": "USD"}
+
+    def test_query_reports_column_names_and_types(self) -> None:
+        result = runner.invoke(
+            app, ["--file", str(VALID), "--json", "query", "SELECT account, sum(position) as total GROUP BY account"]
+        )
+
+        assert envelope(result)["data"]["columns"] == [
+            {"name": "account", "type": "str"},
+            {"name": "total", "type": "Inventory"},
+        ]
+
+    def test_a_bounded_list_says_when_it_truncated(self) -> None:
+        truncated = runner.invoke(app, ["--file", str(VALID), "--json", "list", "transaction", "--limit", "1"])
+        complete = runner.invoke(app, ["--file", str(VALID), "--json", "list", "transaction", "--limit", "50"])
+
+        assert envelope(truncated)["truncated"] is True
+        assert envelope(truncated)["limit"] == 1
+        assert len(envelope(truncated)["data"]) == 1
+        assert envelope(complete)["truncated"] is False
+
+    def test_a_failure_writes_an_error_object_to_stderr_and_nothing_to_stdout(self) -> None:
+        result = runner.invoke(app, ["--file", str(INVALID), "--json", "check"])
+
+        assert result.exit_code == 1
+        assert result.stdout == ""
+        error = error_object(result)
+        assert error["category"] == "validation"
+        assert error["exit_code"] == 1
+        assert any("does not balance" in detail for detail in error["details"])
+
+    def test_a_usage_failure_is_categorised_as_usage(self, monkeypatch: pytest.MonkeyPatch, tmp_path: Path) -> None:
+        monkeypatch.chdir(tmp_path)
+
+        result = runner.invoke(app, ["--json", "check"])
+
+        assert error_object(result) | {"message": ""} == {
+            "category": "usage",
+            "exit_code": 2,
+            "message": "",
+        }
+
+    def test_auth_status_reports_where_the_credential_came_from(self, logged_in: None) -> None:
+        profile = SimpleNamespace(email="a@example.com", username="alice", tier="free")
+        client = hosted_client(get_current_user=MagicMock(return_value=SimpleNamespace(user_profile=profile)))
+
+        with patch("cli.api.client.make_client", return_value=client):
+            result = runner.invoke(app, ["--json", "auth", "status"])
+
+        assert result.exit_code == 0, result.stderr
+        data = envelope(result)["data"]
+        assert data["source"] == "environment"
+        assert data["email"] == "a@example.com"
+
+    def test_ledger_list_emits_the_envelope(self, logged_in: None) -> None:
+        ledger = SimpleNamespace(
+            id="1",
+            name="books",
+            full_name="alice/books",
+            http_url="https://example.test/alice/books",
+            ssh_url="git@example.test:alice/books.git",
+            private=True,
+            empty=False,
+            created_at="2024-01-01T00:00:00Z",
+            updated_at="2024-01-01T00:00:00Z",
+        )
+        client = hosted_client(list_ledgers=MagicMock(return_value=SimpleNamespace(list_ledgers=[ledger])))
+
+        with patch("cli.api.client.make_client", return_value=client):
+            result = runner.invoke(app, ["--json", "ledger", "list"])
+
+        assert result.exit_code == 0, result.stderr
+        assert envelope(result)["data"][0]["full_name"] == "alice/books"
+
+
+class TestNoInput:
+    def test_a_destructive_command_refuses_to_run_unconfirmed(self, logged_in: None) -> None:
+        result = runner.invoke(app, ["ledger", "delete", "alice/books"])
+
+        assert result.exit_code == 2
+        assert "--yes" in result.stderr
+
+    def test_json_mode_never_prompts(self, logged_in: None) -> None:
+        with patch("typer.confirm") as confirm:
+            result = runner.invoke(app, ["--json", "ledger", "delete", "alice/books"])
+
+        confirm.assert_not_called()
+        assert result.exit_code == 2
+
+    def test_yes_confirms_without_asking(self, logged_in: None) -> None:
+        client = hosted_client(
+            delete_ledger=MagicMock(
+                return_value=SimpleNamespace(delete_ledger=SimpleNamespace(ledger_id="alice/books"))
+            )
+        )
+
+        with patch("cli.api.client.make_client", return_value=client), patch("typer.confirm") as confirm:
+            result = runner.invoke(app, ["--yes", "ledger", "delete", "alice/books"])
+
+        confirm.assert_not_called()
+        assert result.exit_code == 0
+
+    def test_a_terminal_is_still_asked(self, logged_in: None, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("cli.context._stdin_is_a_terminal", lambda: True)
+
+        with patch("typer.confirm", return_value=False) as confirm:
+            result = runner.invoke(app, ["ledger", "delete", "alice/books"])
+
+        confirm.assert_called_once()
+        assert result.exit_code == 0
+        assert "Cancelled" in result.stdout
+
+    def test_an_interactive_query_shell_is_refused_without_a_terminal(self) -> None:
+        result = runner.invoke(app, ["--file", str(VALID), "query"])
+
+        assert result.exit_code == 2
+
+
+class TestAskExtra:
+    def test_a_missing_extra_names_the_install_command(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        # Poisoning the module entry is how the absent extra looks from here:
+        # `from cli.ask.agent import ...` raises ImportError.
+        monkeypatch.setitem(__import__("sys").modules, "cli.ask.agent", None)
+
+        result = runner.invoke(app, ["--file", str(VALID), "ask", "anything", "--print"])
+
+        assert result.exit_code == 2
+        assert "beancount-io[ask]" in result.stderr
+
+
+class TestVersion:
+    def test_version_prints_and_loads_no_accounting_code(self) -> None:
+        result = runner.invoke(app, ["--version"])
+
+        assert result.exit_code == 0
+        assert result.stdout.startswith("bea ")

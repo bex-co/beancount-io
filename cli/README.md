@@ -59,7 +59,7 @@ bea --file ~/other-books/main.bean check
 Ask questions in natural language with the optional `ask` extra (needs a Beancount.io account):
 
 ```bash
-uv tool install 'beancount-io[ask]'
+uv tool install 'beancount-io[ask] @ git+https://github.com/bex-co/beancount-io#subdirectory=cli'
 bea auth login
 bea ask "what did I spend on groceries last month?"
 ```

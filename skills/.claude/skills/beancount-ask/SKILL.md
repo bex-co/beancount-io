@@ -24,8 +24,8 @@ Find the main ledger file (same procedure as the sibling skills: `fd -e beancoun
 Tooling, in order of preference:
 
 1. `bean-query <ledger> "<BQL>"` (from the `beanquery` package; if not on PATH, `pip install beanquery` — in this repo's CLI environment, `uv run --project cli bean-query`).
-2. `bea query "<BQL>"` — this repo's CLI (wraps beanquery), when the user has it installed.
-3. For polished statements (income statement, balance sheet trees), `bea report` / Fava beat raw BQL — say so rather than rebuilding them in BQL.
+2. `bea --file <ledger> query "<BQL>"` — this repo's CLI (wraps beanquery), when the user has it installed. Add `--json` when you want to parse the result rather than read it.
+3. For polished statements (income statement, balance sheet trees), `bea --file <ledger> report income-statement` / Fava beat raw BQL — say so rather than rebuilding them in BQL.
 
 ### 2. Translate the question
 

@@ -208,7 +208,10 @@ bea report balance-sheet --conversion EUR
 `bea ask` needs the AI dependencies, which the default install does not carry:
 
 ```bash
-uv tool install 'beancount-io[ask]'
+uv tool install 'beancount-io[ask] @ git+https://github.com/bex-co/beancount-io#subdirectory=cli'
+
+# or, from a local clone of this repo
+uv tool install './cli[ask]'
 ```
 
 ```bash

@@ -14,7 +14,10 @@ import typer
 from cli import context, output
 from cli.errors import UsageError
 
-_MISSING_EXTRA = "bea ask needs the ask extra: uv tool install 'beancount-io[ask]'"
+_MISSING_EXTRA = (
+    "bea ask needs the ask extra: "
+    "uv tool install 'beancount-io[ask] @ git+https://github.com/bex-co/beancount-io#subdirectory=cli'"
+)
 
 
 def ask(

@@ -127,7 +127,14 @@ Expo will guide you to iOS, Android, or a connected device. See the [mobile deve
 
 ### CLI and Python tooling
 
-Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
+The `beancount-io` package installs one command, `bea`. Requires Python 3.12 and [uv](https://docs.astral.sh/uv/).
+
+```zsh
+uv tool install 'git+https://github.com/bex-co/beancount-io#subdirectory=cli'
+bea check                   # in a directory containing main.bean
+```
+
+Or from this checkout:
 
 ```zsh
 cd cli
@@ -135,7 +142,7 @@ uv sync --all-groups
 uv run bea --help
 ```
 
-The [CLI reference](./cli/docs/USAGE.md) covers local reads and writes, validation, formatting, queries, reports, authentication, and ledger management.
+The [CLI reference](./cli/docs/USAGE.md) covers the command tree, the `--file`/`--json`/`--no-input` automation contract, exit codes, validation, formatting, queries, reports, authentication, and ledger management.
 
 ### Coding agent (MCP)
 

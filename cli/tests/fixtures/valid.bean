@@ -1,0 +1,19 @@
+;; A small, valid ledger used by the command-contract tests.
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Expenses:Food USD
+2024-01-01 open Equity:Opening-Balances USD
+
+2024-01-01 * "Opening" "Seed the cash account"
+  Assets:Cash               1000.00 USD
+  Equity:Opening-Balances  -1000.00 USD
+
+2024-01-15 * "Blue Bottle" "Coffee"
+  Expenses:Food   12.50 USD
+  Assets:Cash    -12.50 USD
+
+2024-02-01 * "Grocer" "Groceries"
+  Expenses:Food   45.00 USD
+  Assets:Cash    -45.00 USD
+
+2024-02-02 note Assets:Cash "ATM withdrawal"
+2024-02-03 price BTC 62000.00 USD
