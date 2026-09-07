@@ -14,3 +14,5 @@
 - [x] **m8** — Awesome Plain Text Accounting decision tool (8 tasks) ← from `w1/004` product review (2026-08-29)
 - [x] **m9** — Email templates match the dashboard theme and visual language (8 tasks) ← from `/pm` request to polish email styling (2026-08-29)
 - [x] **m10** — [Complete REST, MCP, and GraphQL operation and behavior parity](./done/m10/README.md) (34 tasks) ← explicit user request after MCP/parity audit (2026-09-06)
+- [x] **m11** — Split the CLI into top-level local verbs + a `bea cloud` namespace (8 tasks) ← from `/pm` invocation capturing the CLI command-tree design discussion (2026-09-07)
+- [ ] **m12** — Migrate `bea cloud` from GraphQL to REST driven by the v1 OpenAPI spec (11 tasks) ← from `/pm` invocation capturing the CLI transport decision (2026-09-07) — sequenced after m11 (the cloud namespace is the generation target)
