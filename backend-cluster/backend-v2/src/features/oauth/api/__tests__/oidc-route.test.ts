@@ -367,6 +367,16 @@ describe("oidc-route: unified MCP + identity provider", () => {
     const consentUrl = new URL(authRes.headers.get("location")!);
     const uid = consentUrl.searchParams.get("uid")!;
     expect(uid).toBeTruthy();
+    if (opts.clientId !== DISCOURSE_CLIENT_ID) {
+      expect(consentUrl.searchParams.get("scope")).toBe(
+        opts.prompt === "consent"
+          ? opts.scope
+          : opts.scope
+              .split(" ")
+              .filter((scope) => scope !== "offline_access")
+              .join(" "),
+      );
+    }
 
     const loginRes = await fetch(
       `${ISSUER}/api-gateway/oauth/interaction/${uid}/login`,
@@ -1361,11 +1371,7 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(claims.preferred_username).toBeUndefined();
   });
 
-  // ADR 0006 D5: pinning a grant to one ledger is the least-privilege shape,
-  // but it cannot be mandatory — a token confined to one ledger makes
-  // cross-ledger operations (listing the caller's ledgers) inexpressible. An
-  // omitted ledgerId now mints an unpinned grant rather than a 400.
-  it("mints an unpinned grant when no ledgerId is supplied", async () => {
+  it("mints an unpinned grant only with explicit account-wide consent", async () => {
     const { clientId, redirectUri } = await registerMcpClient();
 
     const { code, verifier } = await driveAuthorizationCode({
@@ -1373,6 +1379,10 @@ describe("oidc-route: unified MCP + identity provider", () => {
       clientAuth: "",
       scope: "openid offline_access ledger.read ledger.write ledger.admin",
       redirectUri,
+      loginBody: {
+        accountWide: "true",
+        scope: "openid offline_access ledger.read ledger.write ledger.admin",
+      },
       prompt: "consent",
     });
 
@@ -1391,6 +1401,44 @@ describe("oidc-route: unified MCP + identity provider", () => {
     // No ":ledgerId" suffix — the accountId is the bare user, which is what
     // leaves the token unconfined.
     expect(claims.sub).toBe(TEST_USER.id);
+    const resource = `${ISSUER}/api-gateway/mcp`;
+    const refresh = await fetch(`${ISSUER}/api-gateway/oauth/token`, {
+      method: "POST",
+      headers: { "content-type": "application/x-www-form-urlencoded" },
+      body: new URLSearchParams({
+        grant_type: "refresh_token",
+        refresh_token: tokenBody.refresh_token as string,
+        client_id: clientId,
+        resource,
+      }),
+    });
+    expect(refresh.status).toBe(200);
+    const refreshed = (await refresh.json()) as { access_token: string };
+    expect(decodeJwt(refreshed.access_token).aud).toBe(resource);
+    expect(decodeJwt(refreshed.access_token).ledger_id).toBeUndefined();
+  });
+
+  it.each<Record<string, string>>([
+    {},
+    { accountWide: "false" },
+    { accountWide: "true" },
+    { accountWide: "true", scope: "openid ledger.write" },
+    {
+      accountWide: "true",
+      scope: "openid ledger.read",
+      ledgerId: "ada/personal",
+    },
+  ])("rejects ambiguous or mismatched MCP consent: %j", async (loginBody) => {
+    const { clientId, redirectUri } = await registerMcpClient();
+    await expect(
+      driveAuthorizationCode({
+        clientId,
+        clientAuth: "",
+        scope: "openid ledger.read",
+        redirectUri,
+        loginBody,
+      }),
+    ).rejects.toMatchObject({ status: 400 });
   });
 
   it("uses the MCP resource for authorization, refresh, and discovery", async () => {
@@ -1428,6 +1476,9 @@ describe("oidc-route: unified MCP + identity provider", () => {
     expect(refresh.status).toBe(200);
     const refreshed = (await refresh.json()) as Record<string, unknown>;
     expect(decodeJwt(refreshed.access_token as string).aud).toBe(resource);
+    expect(decodeJwt(refreshed.access_token as string).ledger_id).toBe(
+      "ada/personal",
+    );
 
     const metadata = (await (
       await fetch(`${ISSUER}/.well-known/oauth-protected-resource`)

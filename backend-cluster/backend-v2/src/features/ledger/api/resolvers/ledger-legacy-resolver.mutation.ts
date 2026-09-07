@@ -10,16 +10,8 @@ import {
 } from "type-graphql";
 import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
-import { BadUserInputError } from "@/shared/errors";
 import { GraphQLJSONObject } from "graphql-scalars";
-import { parseLedgerId } from "@/shared/str";
-import { BaseLedgerResolver } from "./ledger-legacy-resolver.base";
-import type { IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
-import type { IAuthorizationService } from "@/server/api/authorization";
-import type {
-  ILedgerEntryService,
-  LedgerEntryInput,
-} from "@/features/ledger/service/ledger-entry-service";
+import type { ILegacyEntryWorkflow } from "@/features/ledger/workflow/legacy-entry-workflow";
 
 interface IEntryMeta {
   __tolerances__: Record<string, number>;
@@ -78,33 +70,9 @@ class AddEntryResponse {
   success: boolean;
 }
 
-/** Parse a legacy amount string like "11.11 EUR" into a { number, currency } pair. */
-function parsePostingAmount(amount: string): {
-  number: string;
-  currency: string;
-} {
-  const amountMatch = amount.match(/^(-?[\d,.]+)\s+([A-Z]{3})$/);
-  if (amountMatch) {
-    const [, numberStr, currencyStr] = amountMatch;
-    return { number: numberStr.replace(/,/g, ""), currency: currencyStr };
-  }
-  // Fallback: no currency suffix found — treat the whole string as the number.
-  const stripped = amount.replace(/,/g, "");
-  return {
-    number: Number.isNaN(parseFloat(stripped)) ? "0" : stripped,
-    currency: "USD",
-  };
-}
-
 @Resolver()
-export class LedgerLegacyMutationResolver extends BaseLedgerResolver {
-  constructor(
-    favaClientFactory: IFavaClientFactory,
-    private readonly ledgerEntry: ILedgerEntryService,
-    authorization: IAuthorizationService,
-  ) {
-    super(favaClientFactory, authorization);
-  }
+export class LedgerLegacyMutationResolver {
+  constructor(private readonly workflow: ILegacyEntryWorkflow) {}
 
   @Authenticated()
   @Mutation(() => AddEntryResponse)
@@ -112,45 +80,14 @@ export class LedgerLegacyMutationResolver extends BaseLedgerResolver {
     @Args() entriesInput: EntriesInput,
     @Ctx() ctx: IContext,
   ): Promise<AddEntryResponse> {
-    const identity = ctx.getCurrentIdentity();
-    const defaultLedgerId = await this.resolveLedgerId(
-      identity,
-      entriesInput.ledgerId,
-    );
-    const { ledgerOwner, ledgerName } = parseLedgerId(defaultLedgerId);
-
-    const inputs: LedgerEntryInput[] = entriesInput.entriesInput.map(
-      (entry) => {
-        if (entry.type !== "Transaction") {
-          throw new BadUserInputError("Invalid entry type");
-        }
-        return {
-          type: "transaction",
-          entry: {
-            date: entry.date,
-            flag: entry.flag,
-            payee: entry.payee,
-            narration: entry.narration,
-            postings: entry.postings.map((posting) => ({
-              account: posting.account,
-              units: parsePostingAmount(posting.amount),
-            })),
-          },
-        };
-      },
-    );
-
-    await this.ledgerEntry.addBulkEntries(
-      identity,
-      ledgerOwner,
-      ledgerName,
-      inputs,
-      ctx.platform,
-    );
-
-    return {
-      data: "",
-      success: true,
-    };
+    return this.workflow.addEntries({
+      identity: ctx.getCurrentIdentity(),
+      ledgerId: entriesInput.ledgerId,
+      entriesInput: entriesInput.entriesInput.map((entry) => ({
+        ...entry,
+        meta: { ...entry.meta },
+      })),
+      platform: ctx.platform,
+    });
   }
 }

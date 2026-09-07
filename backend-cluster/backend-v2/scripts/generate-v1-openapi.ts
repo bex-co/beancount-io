@@ -23,6 +23,9 @@ import path from "path";
 
 import { config } from "@/config/config";
 import { setLedgerV1Routes } from "@/features/ledger/api/rest/v1";
+import { setConfigurationRoutes } from "@/features/healthz/api/configuration-routes";
+import { setAccountRoutes } from "@/features/auth/api/account-routes";
+import { setSocialRoutes } from "@/features/gitea/user-profile/api/social-read-routes";
 import { setApiKeyRoutes } from "@/features/apikeys/api/api-key-rest";
 import { generateV1OpenAPIDocument } from "@/server/rest/openapi-registry";
 
@@ -47,6 +50,9 @@ const stub = new Proxy(function stub() {} as never, {
 // cannot pass CI merely because this generator forgot it.
 const router = new Router();
 setLedgerV1Routes(router, stub, config);
+setConfigurationRoutes(router, { layers: stub, config });
+setAccountRoutes(router, { layers: stub, config });
+setSocialRoutes(router, { layers: stub, config });
 setApiKeyRoutes(router, stub, config);
 
 const outputPath = path.resolve(__dirname, "../docs/openapi/v1.json");

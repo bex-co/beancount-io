@@ -17,6 +17,12 @@ export const paginationSchema = z.object({
   }),
 });
 
+/** A boolean carried as a query-string literal, decoded the same everywhere. */
+export const booleanQuery = z
+  .enum(["true", "false"])
+  .transform((value) => value === "true")
+  .optional();
+
 /** The error body every refusal shares, as `restErrorMiddleware` renders it. */
 export const errorSchema = z
   .object({

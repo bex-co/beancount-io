@@ -391,6 +391,15 @@ const zhAuth: Record<string, TranslationEntry> = {
     message: "An app wants to access your Beancount ledger.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthAllLedgers": {
+    message: "所有可访问的账本",
+    description: "MCP account-wide consent option",
+  },
+  "auth.oauthAllLedgersDescription": {
+    message:
+      "允许在你现在或将来可访问的账本中执行所请求的操作，以及这些权限允许的账户操作。",
+    description: "MCP account-wide consent explanation",
+  },
   "auth.oauthChooseLedger": {
     message: "Choose a ledger",
     description: "OAuth consent page ledger step title",
@@ -404,7 +413,7 @@ const zhAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
-    message: "No ledgers found. Please create one first.",
+    message: "未找到账本。",
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {

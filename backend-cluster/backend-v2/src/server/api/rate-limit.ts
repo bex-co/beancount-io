@@ -1,7 +1,7 @@
 import { incrementInWindow } from "@/foundation/redis/redis-counter";
 import { RateLimitedError } from "@/shared/errors";
 import { logger } from "@/shared/logger";
-import { classifyOp, type OpClass } from "./op-class";
+import { classifyOp, type OpClass, type OpClassification } from "./op-class";
 import type { Identity } from "./identity";
 
 const limitLogger = logger.child({ module: "rate-limit" });
@@ -30,9 +30,15 @@ export interface Budget {
 const MINUTE = 60_000;
 
 const ARCHIVE_DOWNLOAD_BUDGET: Budget = { windowMs: MINUTE, max: 30 };
-const ARCHIVE_DOWNLOAD_OP_IDS = new Set([
-  "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
-  "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
+/**
+ * The canonical and compatibility archive verbs share one bucket across all
+ * their spellings. Keyed on the classified verb, not hand-enumerated op ids,
+ * so a new alias of either verb joins the shared budget by classification
+ * rather than falling out of it unnoticed.
+ */
+const ARCHIVE_VERBS = new Set([
+  "ledger.downloadArchive",
+  "ledger.downloadArchive.legacy",
 ]);
 const ARCHIVE_DOWNLOAD_BUCKET = "REST archive-download";
 
@@ -145,15 +151,62 @@ function subjectKey(identity: Identity | undefined, ip: string): string {
     : `usr:${identity.userId}`;
 }
 
-export function budgetFor(opId: string, opClass: OpClass): Budget {
-  return OP_BUDGETS[opId] ?? CLASS_BUDGETS[opClass];
+/**
+ * Per-op overrides, resolved to the verb they classify so the override follows
+ * the operation to every surface. Without this, an override spelled for one
+ * alias would share a counter with siblings holding a different max — the same
+ * count refused at 5 on one surface and allowed to 60 on another.
+ *
+ * Built eagerly so two aliases of one verb declaring different budgets fail at
+ * module load, in CI, rather than disagreeing quietly in production.
+ */
+const VERB_BUDGETS: ReadonlyMap<string, Budget> = (() => {
+  const map = new Map<string, Budget>();
+  for (const [opId, budget] of Object.entries(OP_BUDGETS)) {
+    const { found, verb } = classifyOp(opId);
+    if (!found || !verb) continue;
+    const existing = map.get(verb);
+    if (
+      existing &&
+      (existing.max !== budget.max || existing.windowMs !== budget.windowMs)
+    ) {
+      throw new Error(
+        `rate-limit: aliases of ${verb} declare conflicting budgets`,
+      );
+    }
+    map.set(verb, budget);
+  }
+  return map;
+})();
+
+export function budgetFor(
+  opId: string,
+  classification: OpClassification,
+): Budget {
+  const explicit = OP_BUDGETS[opId];
+  if (explicit) return explicit;
+  const { found, verb } = classification;
+  // Archive aliases inherit the 30/minute budget here too: the two REST
+  // spellings sit in OP_BUDGETS, so VERB_BUDGETS carries both archive verbs.
+  const inherited = found && verb ? VERB_BUDGETS.get(verb) : undefined;
+  return inherited ?? CLASS_BUDGETS[classification.class];
 }
 
-/** Compatibility spellings of one operation must spend the same budget. */
-function operationBucket(opId: string): string {
-  return ARCHIVE_DOWNLOAD_OP_IDS.has(opId)
-    ? ARCHIVE_DOWNLOAD_BUCKET
-    : opId;
+/**
+ * Every spelling of one operation must spend the same budget. A verb reachable
+ * over GraphQL, REST, and MCP is still one operation, so its aliases share the
+ * classified verb's counter rather than earning one budget per surface. The
+ * archive family goes further: two verbs — canonical and compatibility — share
+ * one deliberately expensive bucket. An unclassified op falls back to its own
+ * id; the coverage test already makes that state a bug.
+ */
+function operationBucket(
+  opId: string,
+  classification: OpClassification,
+): string {
+  const { found, verb } = classification;
+  if (verb && ARCHIVE_VERBS.has(verb)) return ARCHIVE_DOWNLOAD_BUCKET;
+  return found && verb ? `verb:${verb}` : opId;
 }
 
 export interface RateLimitDecision {
@@ -173,9 +226,10 @@ export async function consume(args: {
   identity?: Identity;
   ip: string;
 }): Promise<RateLimitDecision> {
-  const { class: opClass } = classifyOp(args.opId);
-  const budget = budgetFor(args.opId, opClass);
-  const key = `ratelimit:${subjectKey(args.identity, args.ip)}:${operationBucket(args.opId)}`;
+  // One classification per request; budget and bucket both derive from it.
+  const classification = classifyOp(args.opId);
+  const budget = budgetFor(args.opId, classification);
+  const key = `ratelimit:${subjectKey(args.identity, args.ip)}:${operationBucket(args.opId, classification)}`;
 
   const result = await incrementInWindow(key, budget.windowMs);
   if (!result) {

@@ -1,0 +1,1809 @@
+{
+  "recordedOn": "2026-09-06",
+  "operations": [
+    {
+      "verb": "apikeys.list",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "user.credentials.list",
+      "bindings": {
+        "gql": "Query.apiKeys",
+        "rest": "GET /api-gateway/v1/api-keys",
+        "mcp": "listApiKeys"
+      }
+    },
+    {
+      "verb": "apikeys.create",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "user.credentials.create",
+      "bindings": {
+        "gql": "Mutation.createApiKey",
+        "rest": "POST /api-gateway/v1/api-keys",
+        "mcp": "createApiKey"
+      }
+    },
+    {
+      "verb": "apikeys.revoke",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "user.credentials.revoke",
+      "bindings": {
+        "gql": "Mutation.revokeApiKey",
+        "rest": "DELETE /api-gateway/v1/api-keys/{id}",
+        "mcp": "revokeApiKey"
+      }
+    },
+    {
+      "verb": "Query.userProfile",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "user.profile.read",
+      "bindings": {
+        "gql": "Query.userProfile"
+      }
+    },
+    {
+      "verb": "Query.getUserByExactMatch",
+      "eligible": [],
+      "class": "read",
+      "authorizationAction": "user.profile.search",
+      "bindings": {
+        "gql": "Query.getUserByExactMatch"
+      }
+    },
+    {
+      "verb": "Mutation.deleteAccount",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "user.delete",
+      "bindings": {
+        "gql": "Mutation.deleteAccount"
+      }
+    },
+    {
+      "verb": "Mutation.updateUsername",
+      "eligible": [],
+      "class": "write",
+      "authorizationAction": "user.profile.update",
+      "bindings": {
+        "gql": "Mutation.updateUsername"
+      }
+    },
+    {
+      "verb": "Mutation.updateProfile",
+      "eligible": [],
+      "class": "write",
+      "authorizationAction": "user.profile.update",
+      "bindings": {
+        "gql": "Mutation.updateProfile"
+      }
+    },
+    {
+      "verb": "Query.validateEmailToken",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Query.validateEmailToken"
+      }
+    },
+    {
+      "verb": "Mutation.logout",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.logout"
+      }
+    },
+    {
+      "verb": "Mutation.signIn",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.signIn"
+      }
+    },
+    {
+      "verb": "Mutation.refreshToken",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.refreshToken"
+      }
+    },
+    {
+      "verb": "Mutation.signInWithOneTimeToken",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.signInWithOneTimeToken"
+      }
+    },
+    {
+      "verb": "Mutation.createOneTimeToken",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.createOneTimeToken"
+      }
+    },
+    {
+      "verb": "Mutation.sendForgotPasswordLink",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.sendForgotPasswordLink"
+      }
+    },
+    {
+      "verb": "Mutation.resetPassword",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.resetPassword"
+      }
+    },
+    {
+      "verb": "Mutation.signUp",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.signUp"
+      }
+    },
+    {
+      "verb": "Mutation.verifySignUpOtp",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.verifySignUpOtp"
+      }
+    },
+    {
+      "verb": "Query.getCliAuthSession",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Query.getCliAuthSession"
+      }
+    },
+    {
+      "verb": "Query.getCliAuthRequest",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Query.getCliAuthRequest"
+      }
+    },
+    {
+      "verb": "Mutation.createCliAuthSession",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.createCliAuthSession"
+      }
+    },
+    {
+      "verb": "Mutation.confirmCliAuthSession",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.confirmCliAuthSession"
+      }
+    },
+    {
+      "verb": "Mutation.denyCliAuthSession",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.denyCliAuthSession"
+      }
+    },
+    {
+      "verb": "Mutation.consumeCliAuthSession",
+      "eligible": [],
+      "class": "session-only",
+      "bindings": {
+        "gql": "Mutation.consumeCliAuthSession"
+      }
+    },
+    {
+      "verb": "Query.allTierQuotas",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "public",
+      "bindings": {
+        "gql": "Query.allTierQuotas"
+      }
+    },
+    {
+      "verb": "Query.subscriptionStatus",
+      "eligible": [],
+      "class": "read",
+      "authorizationAction": "user.billing.status.read",
+      "bindings": {
+        "gql": "Query.subscriptionStatus"
+      }
+    },
+    {
+      "verb": "Mutation.createSubscriptionSession",
+      "eligible": [],
+      "class": "write",
+      "authorizationAction": "user.billing.checkout.create",
+      "bindings": {
+        "gql": "Mutation.createSubscriptionSession"
+      }
+    },
+    {
+      "verb": "Mutation.createStripePortalSession",
+      "eligible": [],
+      "class": "write",
+      "authorizationAction": "user.billing.portal.create",
+      "bindings": {
+        "gql": "Mutation.createStripePortalSession"
+      }
+    },
+    {
+      "verb": "Mutation.cancelSubscription",
+      "eligible": [],
+      "class": "write",
+      "authorizationAction": "user.billing.subscription.cancel",
+      "bindings": {
+        "gql": "Mutation.cancelSubscription"
+      }
+    },
+    {
+      "verb": "Mutation.resumeSubscription",
+      "eligible": [],
+      "class": "write",
+      "authorizationAction": "user.billing.subscription.resume",
+      "bindings": {
+        "gql": "Mutation.resumeSubscription"
+      }
+    },
+    {
+      "verb": "Mutation.upgradeSubscription",
+      "eligible": [],
+      "class": "write",
+      "authorizationAction": "user.billing.subscription.upgrade",
+      "bindings": {
+        "gql": "Mutation.upgradeSubscription"
+      }
+    },
+    {
+      "verb": "Query.health",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "public",
+      "bindings": {
+        "gql": "Query.health"
+      }
+    },
+    {
+      "verb": "Query.featureFlags",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "public",
+      "bindings": {
+        "gql": "Query.featureFlags"
+      }
+    },
+    {
+      "verb": "Mutation.createLedger",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "ledger.create",
+      "bindings": {
+        "gql": "Mutation.createLedger"
+      }
+    },
+    {
+      "verb": "Mutation.updateLedger",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "ledger.administration.update",
+      "bindings": {
+        "gql": "Mutation.updateLedger"
+      }
+    },
+    {
+      "verb": "Mutation.deleteLedger",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "ledger.administration.delete",
+      "bindings": {
+        "gql": "Mutation.deleteLedger"
+      }
+    },
+    {
+      "verb": "Query.listPublicKeys",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "user.public_keys.list",
+      "bindings": {
+        "gql": "Query.listPublicKeys"
+      }
+    },
+    {
+      "verb": "Query.getPublicKey",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "user.public_keys.read",
+      "bindings": {
+        "gql": "Query.getPublicKey"
+      }
+    },
+    {
+      "verb": "Mutation.createPublicKey",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "user.public_keys.create",
+      "bindings": {
+        "gql": "Mutation.createPublicKey"
+      }
+    },
+    {
+      "verb": "Mutation.deletePublicKey",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "user.public_keys.delete",
+      "bindings": {
+        "gql": "Mutation.deletePublicKey"
+      }
+    },
+    {
+      "verb": "Query.listLedgerCollaborators",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "ledger.collaborators.list",
+      "bindings": {
+        "gql": "Query.listLedgerCollaborators"
+      }
+    },
+    {
+      "verb": "Query.getLedgerCollaboratorPermission",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "ledger.collaborators.permission.read",
+      "bindings": {
+        "gql": "Query.getLedgerCollaboratorPermission"
+      }
+    },
+    {
+      "verb": "Mutation.addOrUpdateLedgerCollaborator",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "ledger.collaborators.update",
+      "bindings": {
+        "gql": "Mutation.addOrUpdateLedgerCollaborator"
+      }
+    },
+    {
+      "verb": "Mutation.deleteLedgerCollaborator",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "ledger.collaborators.delete",
+      "bindings": {
+        "gql": "Mutation.deleteLedgerCollaborator"
+      }
+    },
+    {
+      "verb": "Mutation.leaveLedger",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "ledger.collaborators.leave",
+      "bindings": {
+        "gql": "Mutation.leaveLedger"
+      }
+    },
+    {
+      "verb": "Query.listLedgers",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.catalog.read",
+      "bindings": {
+        "gql": "Query.listLedgers",
+        "rest": "GET /api-gateway/v1/ledgers"
+      }
+    },
+    {
+      "verb": "Query.listUserOwnedLedgers",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.catalog.read",
+      "bindings": {
+        "gql": "Query.listUserOwnedLedgers"
+      }
+    },
+    {
+      "verb": "Query.searchLedgers",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.catalog.read",
+      "bindings": {
+        "gql": "Query.searchLedgers"
+      }
+    },
+    {
+      "verb": "Query.getLedger",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.metadata.read",
+      "bindings": {
+        "gql": "Query.getLedger",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}"
+      }
+    },
+    {
+      "verb": "Query.getLedgerOverview",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerOverview"
+      }
+    },
+    {
+      "verb": "Query.getLedgerIncomeStatement",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerIncomeStatement",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}"
+      }
+    },
+    {
+      "verb": "Query.getLedgerBalanceSheet",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerBalanceSheet",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}"
+      }
+    },
+    {
+      "verb": "Query.getLedgerTrialBalance",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerTrialBalance",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/trial-balance",
+        "mcpResource": "ledgerTrialBalance"
+      }
+    },
+    {
+      "verb": "Query.getLedgerAttributes",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerAttributes",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/attributes",
+        "mcpResource": "ledgerAttributes"
+      }
+    },
+    {
+      "verb": "Query.getLedgerCommodities",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerCommodities",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/commodities",
+        "mcpResource": "ledgerCommodities"
+      }
+    },
+    {
+      "verb": "Query.getLedgerEvents",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerEvents",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/events",
+        "mcpResource": "ledgerEvents"
+      }
+    },
+    {
+      "verb": "Query.getLedgerDocuments",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerDocuments"
+      }
+    },
+    {
+      "verb": "Query.getLedgerPayeeTransactions",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerPayeeTransactions",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/payee-transactions",
+        "mcpResource": "ledgerPayeeTransactions"
+      }
+    },
+    {
+      "verb": "Query.getLedgerNarrationTransactions",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerNarrationTransactions",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/narration-transactions",
+        "mcpResource": "ledgerNarrationTransactions"
+      }
+    },
+    {
+      "verb": "Query.getLedgerPayeeAccounts",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerPayeeAccounts",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/payee-accounts",
+        "mcpResource": "ledgerPayeeAccounts"
+      }
+    },
+    {
+      "verb": "Query.getLedgerErrors",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerErrors",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/errors",
+        "mcpResource": "ledgerErrors"
+      }
+    },
+    {
+      "verb": "Query.getLedgerCurrencies",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerCurrencies",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/currencies",
+        "mcpResource": "ledgerCurrencies"
+      }
+    },
+    {
+      "verb": "Query.getLedgerSourceFiles",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.files.read",
+      "bindings": {
+        "gql": "Query.getLedgerSourceFiles"
+      }
+    },
+    {
+      "verb": "Query.getLedgerTags",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerTags",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/tags",
+        "mcpResource": "ledgerTags"
+      }
+    },
+    {
+      "verb": "Query.getLedgerYears",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerYears",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/years",
+        "mcpResource": "ledgerYears"
+      }
+    },
+    {
+      "verb": "Query.getLedgerLinks",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerLinks",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/links",
+        "mcpResource": "ledgerLinks"
+      }
+    },
+    {
+      "verb": "Query.getLedgerNarrations",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerNarrations",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/narrations",
+        "mcpResource": "ledgerNarrations"
+      }
+    },
+    {
+      "verb": "Query.getLedgerPayees",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerPayees",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/payees",
+        "mcpResource": "ledgerPayees"
+      }
+    },
+    {
+      "verb": "Query.getLedgerAccountLastEntries",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerAccountLastEntries",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/account-last-entries",
+        "mcpResource": "ledgerAccountLastEntries"
+      }
+    },
+    {
+      "verb": "Query.getLedgerEntriesCountPerType",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerEntriesCountPerType",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/entries-count",
+        "mcpResource": "ledgerEntriesCount"
+      }
+    },
+    {
+      "verb": "Query.getLedgerAccountReport",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerAccountReport",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/account-report",
+        "mcpResource": "ledgerAccountReport"
+      }
+    },
+    {
+      "verb": "Query.getLedgerIntervalTotals",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.getLedgerIntervalTotals",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/interval-totals",
+        "mcpResource": "ledgerIntervalTotals"
+      }
+    },
+    {
+      "verb": "Query.getLedgerJournal",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.journal.read",
+      "bindings": {
+        "gql": "Query.getLedgerJournal",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/journal"
+      }
+    },
+    {
+      "verb": "Query.getLedgerEntryContext",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.journal.read",
+      "bindings": {
+        "gql": "Query.getLedgerEntryContext",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/entry-context",
+        "mcpResource": "ledgerEntryContext"
+      }
+    },
+    {
+      "verb": "Query.getLedgerPlaintextJournal",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.journal.read",
+      "bindings": {
+        "gql": "Query.getLedgerPlaintextJournal"
+      }
+    },
+    {
+      "verb": "Query.getLedgerAccountJournal",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.journal.read",
+      "bindings": {
+        "gql": "Query.getLedgerAccountJournal"
+      }
+    },
+    {
+      "verb": "Query.getLedgerAccounts",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.accounts.read",
+      "bindings": {
+        "gql": "Query.getLedgerAccounts",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/accounts"
+      }
+    },
+    {
+      "verb": "Query.getLedgerAccountDirectives",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.accounts.read",
+      "bindings": {
+        "gql": "Query.getLedgerAccountDirectives",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/account-directives",
+        "mcpResource": "ledgerAccountDirectives"
+      }
+    },
+    {
+      "verb": "Query.getLedgerAssetDownloadUrl",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.files.read",
+      "bindings": {
+        "gql": "Query.getLedgerAssetDownloadUrl"
+      }
+    },
+    {
+      "verb": "Query.getLedgerArchiveDownloadUrl",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.archive.read",
+      "bindings": {
+        "gql": "Query.getLedgerArchiveDownloadUrl"
+      }
+    },
+    {
+      "verb": "Query.getLatestLedgerCommit",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.repository.read",
+      "bindings": {
+        "gql": "Query.getLatestLedgerCommit"
+      }
+    },
+    {
+      "verb": "Query.listCommits",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.repository.read",
+      "bindings": {
+        "gql": "Query.listCommits"
+      }
+    },
+    {
+      "verb": "Query.getCommitDetails",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.repository.read",
+      "bindings": {
+        "gql": "Query.getCommitDetails"
+      }
+    },
+    {
+      "verb": "Query.ledgerMeta",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.metadata.read",
+      "bindings": {
+        "gql": "Query.ledgerMeta"
+      }
+    },
+    {
+      "verb": "Query.accountHierarchy",
+      "eligible": [],
+      "class": "read",
+      "authorizationAction": "ledger.accounts.read",
+      "bindings": {
+        "gql": "Query.accountHierarchy"
+      }
+    },
+    {
+      "verb": "Query.homeCharts",
+      "eligible": [],
+      "class": "read",
+      "authorizationAction": "ledger.reports.read",
+      "bindings": {
+        "gql": "Query.homeCharts"
+      }
+    },
+    {
+      "verb": "Query.journalEntries",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.journal.read",
+      "bindings": {
+        "gql": "Query.journalEntries"
+      }
+    },
+    {
+      "verb": "Mutation.starLedger",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.social.star.create",
+      "bindings": {
+        "gql": "Mutation.starLedger"
+      }
+    },
+    {
+      "verb": "Mutation.unstarLedger",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.social.star.delete",
+      "bindings": {
+        "gql": "Mutation.unstarLedger"
+      }
+    },
+    {
+      "verb": "Mutation.bulkEntries",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.entries.write",
+      "bindings": {
+        "gql": "Mutation.bulkEntries",
+        "rest": "POST /api-gateway/v1/ledgers/{owner}/{name}/entries"
+      }
+    },
+    {
+      "verb": "Mutation.insertReceiptTransaction",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "assisted.receipt.insert",
+      "bindings": {
+        "gql": "Mutation.insertReceiptTransaction"
+      }
+    },
+    {
+      "verb": "Mutation.deleteLedgerEntrySourceSlice",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.entries.write",
+      "bindings": {
+        "gql": "Mutation.deleteLedgerEntrySourceSlice"
+      }
+    },
+    {
+      "verb": "Mutation.deleteMultipleLedgerEntrySourceSlices",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.entries.write",
+      "bindings": {
+        "gql": "Mutation.deleteMultipleLedgerEntrySourceSlices"
+      }
+    },
+    {
+      "verb": "Mutation.updateLedgerEntrySourceSlice",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.entries.write",
+      "bindings": {
+        "gql": "Mutation.updateLedgerEntrySourceSlice"
+      }
+    },
+    {
+      "verb": "Mutation.addEntries",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.entries.write",
+      "bindings": {
+        "gql": "Mutation.addEntries"
+      }
+    },
+    {
+      "verb": "Mutation.renameLedgerFile",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.files.write",
+      "bindings": {
+        "gql": "Mutation.renameLedgerFile"
+      }
+    },
+    {
+      "verb": "ledger.queryShellText",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.shell.read",
+      "bindings": {
+        "gql": "Query.queryShellText",
+        "rest": "POST /api-gateway/v1/ledgers/{owner}/{name}/query",
+        "mcp": "runBqlQuery"
+      }
+    },
+    {
+      "verb": "ledger.queryShell",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.shell.read",
+      "bindings": {
+        "gql": "Query.queryShell",
+        "rest": "POST /api-gateway/v1/ledgers/{owner}/{name}/query"
+      }
+    },
+    {
+      "verb": "ledger.listDirContent",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.files.read",
+      "bindings": {
+        "gql": "Query.getLedgerDirContent",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/files",
+        "mcp": "listLedgerFiles"
+      }
+    },
+    {
+      "verb": "ledger.readFiles",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.files.read",
+      "bindings": {
+        "gql": "Query.getLedgerFile",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
+        "mcp": "readLedgerFiles",
+        "mcpResource": "ledgerFile"
+      }
+    },
+    {
+      "verb": "ledger.editFiles.create",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.files.write",
+      "bindings": {
+        "gql": "Mutation.createLedgerFile",
+        "rest": "PUT /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
+        "mcp": "editLedgerFiles"
+      }
+    },
+    {
+      "verb": "ledger.editFiles.update",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.files.write",
+      "bindings": {
+        "gql": "Mutation.updateLedgerFile",
+        "rest": "PUT /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
+        "mcp": "editLedgerFiles"
+      }
+    },
+    {
+      "verb": "ledger.editFiles.delete",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.files.write",
+      "bindings": {
+        "gql": "Mutation.deleteLedgerFile",
+        "rest": "DELETE /api-gateway/v1/ledgers/{owner}/{name}/files/{*path}",
+        "mcp": "editLedgerFiles"
+      }
+    },
+    {
+      "verb": "ledger.downloadArchive",
+      "eligible": [
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.archive.read",
+      "bindings": {
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}"
+      }
+    },
+    {
+      "verb": "ledger.downloadArchive.legacy",
+      "eligible": [
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.archive.read",
+      "bindings": {
+        "rest": "GET /api-gateway/ledgers/{ledgerId}/archive/{archive}"
+      }
+    },
+    {
+      "verb": "Query.getFeed",
+      "eligible": [],
+      "class": "read",
+      "authorizationAction": "user.social.feed.read",
+      "bindings": {
+        "gql": "Query.getFeed"
+      }
+    },
+    {
+      "verb": "Query.getUserProfile",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "public",
+      "bindings": {
+        "gql": "Query.getUserProfile"
+      }
+    },
+    {
+      "verb": "Query.getUserFollowers",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "public",
+      "bindings": {
+        "gql": "Query.getUserFollowers"
+      }
+    },
+    {
+      "verb": "Query.getUserFollowing",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "public",
+      "bindings": {
+        "gql": "Query.getUserFollowing"
+      }
+    },
+    {
+      "verb": "Query.getUserStarredRepos",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "public",
+      "bindings": {
+        "gql": "Query.getUserStarredRepos"
+      }
+    },
+    {
+      "verb": "Mutation.followUser",
+      "eligible": [],
+      "class": "write",
+      "authorizationAction": "user.social.follow.create",
+      "bindings": {
+        "gql": "Mutation.followUser"
+      }
+    },
+    {
+      "verb": "Mutation.unfollowUser",
+      "eligible": [],
+      "class": "write",
+      "authorizationAction": "user.social.follow.delete",
+      "bindings": {
+        "gql": "Mutation.unfollowUser"
+      }
+    },
+    {
+      "verb": "Query.getPullRequestDetails",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "ledger.pull_request.read",
+      "bindings": {
+        "gql": "Query.getPullRequestDetails"
+      }
+    },
+    {
+      "verb": "Mutation.createPullRequestFromPatch",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.pull_request.create",
+      "bindings": {
+        "gql": "Mutation.createPullRequestFromPatch"
+      }
+    },
+    {
+      "verb": "Mutation.approvePullRequest",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.pull_request.approve",
+      "bindings": {
+        "gql": "Mutation.approvePullRequest"
+      }
+    },
+    {
+      "verb": "Mutation.rejectPullRequest",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "ledger.pull_request.reject",
+      "bindings": {
+        "gql": "Mutation.rejectPullRequest"
+      }
+    },
+    {
+      "verb": "Query.suggestTransactionCategories",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "assisted.categories.suggest",
+      "bindings": {
+        "gql": "Query.suggestTransactionCategories"
+      }
+    },
+    {
+      "verb": "Mutation.parseFile",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "assisted.file.parse",
+      "bindings": {
+        "gql": "Mutation.parseFile"
+      }
+    },
+    {
+      "verb": "Mutation.parseReceipt",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "assisted.receipt.parse",
+      "bindings": {
+        "gql": "Mutation.parseReceipt"
+      }
+    },
+    {
+      "verb": "Query.aiCfoUsage",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "user.ai_usage.read",
+      "bindings": {
+        "gql": "Query.aiCfoUsage"
+      }
+    },
+    {
+      "verb": "Query.generateTempAssetDownloadUrl",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "temp_asset.download.read",
+      "bindings": {
+        "gql": "Query.generateTempAssetDownloadUrl"
+      }
+    },
+    {
+      "verb": "Mutation.generateTempAssetUploadUrl",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "temp_asset.upload.create",
+      "bindings": {
+        "gql": "Mutation.generateTempAssetUploadUrl"
+      }
+    },
+    {
+      "verb": "Query.getPlaidItems",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "bank.connections.list",
+      "bindings": {
+        "gql": "Query.getPlaidItems",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/banks",
+        "mcpResource": "bankList"
+      }
+    },
+    {
+      "verb": "Query.getPlaidItem",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "bank.connection.read",
+      "bindings": {
+        "gql": "Query.getPlaidItem",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}",
+        "mcpResource": "bank"
+      }
+    },
+    {
+      "verb": "Query.getPlaidAccounts",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "bank.accounts.read",
+      "bindings": {
+        "gql": "Query.getPlaidAccounts",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/accounts",
+        "mcpResource": "bankAccountsForItem"
+      }
+    },
+    {
+      "verb": "Query.getPlaidAccountsForLedger",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "bank.accounts.read",
+      "bindings": {
+        "gql": "Query.getPlaidAccountsForLedger",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-accounts",
+        "mcpResource": "bankAccounts"
+      }
+    },
+    {
+      "verb": "Mutation.createPlaidLinkToken",
+      "eligible": [],
+      "class": "admin",
+      "authorizationAction": "bank.link.create",
+      "bindings": {
+        "gql": "Mutation.createPlaidLinkToken"
+      }
+    },
+    {
+      "verb": "Mutation.createPlaidUpdateModeLinkToken",
+      "eligible": [],
+      "class": "admin",
+      "authorizationAction": "bank.link.update",
+      "bindings": {
+        "gql": "Mutation.createPlaidUpdateModeLinkToken"
+      }
+    },
+    {
+      "verb": "Mutation.exchangePlaidPublicToken",
+      "eligible": [],
+      "class": "admin",
+      "authorizationAction": "bank.link.exchange",
+      "bindings": {
+        "gql": "Mutation.exchangePlaidPublicToken"
+      }
+    },
+    {
+      "verb": "Mutation.unlinkPlaidItem",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "bank.connection.unlink",
+      "bindings": {
+        "gql": "Mutation.unlinkPlaidItem",
+        "rest": "DELETE /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}",
+        "mcp": "manageBankConnection"
+      }
+    },
+    {
+      "verb": "Mutation.reconcilePlaidAccounts",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "bank.accounts.reconcile",
+      "bindings": {
+        "gql": "Mutation.reconcilePlaidAccounts",
+        "rest": "POST /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/reconcile",
+        "mcp": "manageBankConnection"
+      }
+    },
+    {
+      "verb": "Mutation.updatePlaidAccountMapping",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "bank.account.mapping.update",
+      "bindings": {
+        "gql": "Mutation.updatePlaidAccountMapping",
+        "rest": "PUT /api-gateway/v1/ledgers/{owner}/{name}/bank-accounts/{accountId}/mapping",
+        "mcp": "manageBankConnection"
+      }
+    },
+    {
+      "verb": "Mutation.updatePlaidAccountCurrency",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "bank.account.currency.update",
+      "bindings": {
+        "gql": "Mutation.updatePlaidAccountCurrency",
+        "rest": "PUT /api-gateway/v1/ledgers/{owner}/{name}/bank-accounts/{accountId}/currency",
+        "mcp": "manageBankConnection"
+      }
+    },
+    {
+      "verb": "Mutation.refreshPlaidItemStatus",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "admin",
+      "authorizationAction": "bank.connection.status.refresh",
+      "bindings": {
+        "gql": "Mutation.refreshPlaidItemStatus",
+        "rest": "POST /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/refresh",
+        "mcp": "manageBankConnection"
+      }
+    },
+    {
+      "verb": "Query.getUnsyncedPlaidTransactions",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "bank.transactions.read",
+      "bindings": {
+        "gql": "Query.getUnsyncedPlaidTransactions",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/unsynced",
+        "mcpResource": "bankUnsyncedTransactions"
+      }
+    },
+    {
+      "verb": "Query.suggestPlaidTransactionCategories",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "bank.transaction.categories.suggest",
+      "bindings": {
+        "gql": "Query.suggestPlaidTransactionCategories",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/suggested-categories",
+        "mcpResource": "bankSuggestedCategories"
+      }
+    },
+    {
+      "verb": "Query.suggestPlaidAccountMapping",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "read",
+      "authorizationAction": "bank.account.mapping.suggest",
+      "bindings": {
+        "gql": "Query.suggestPlaidAccountMapping",
+        "rest": "GET /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/suggested-mapping",
+        "mcpResource": "bankSuggestedMapping"
+      }
+    },
+    {
+      "verb": "Mutation.syncPlaidTransactions",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "bank.transactions.sync",
+      "bindings": {
+        "gql": "Mutation.syncPlaidTransactions",
+        "rest": "POST /api-gateway/v1/ledgers/{owner}/{name}/banks/{itemId}/sync",
+        "mcp": "manageBankImport"
+      }
+    },
+    {
+      "verb": "Mutation.submitPlaidTransactionsToLedger",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "bank.transactions.submit",
+      "bindings": {
+        "gql": "Mutation.submitPlaidTransactionsToLedger",
+        "rest": "POST /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions/submit",
+        "mcp": "manageBankImport"
+      }
+    },
+    {
+      "verb": "Mutation.deletePlaidTransactions",
+      "eligible": [
+        "gql",
+        "rest",
+        "mcp"
+      ],
+      "class": "write",
+      "authorizationAction": "bank.transactions.delete",
+      "bindings": {
+        "gql": "Mutation.deletePlaidTransactions",
+        "rest": "DELETE /api-gateway/v1/ledgers/{owner}/{name}/bank-transactions",
+        "mcp": "manageBankImport"
+      }
+    },
+    {
+      "verb": "ai.agent",
+      "eligible": [
+        "rest"
+      ],
+      "class": "write",
+      "authorizationAction": "ai.ledger.ask",
+      "bindings": {
+        "rest": "POST /api-gateway/agent"
+      }
+    },
+    {
+      "verb": "ai.askAgent",
+      "eligible": [
+        "rest"
+      ],
+      "class": "write",
+      "authorizationAction": "ai.ledger.ask",
+      "bindings": {
+        "rest": "POST /api-gateway/ask-agent"
+      }
+    },
+    {
+      "verb": "ai.openaiChatCompletions",
+      "eligible": [
+        "rest"
+      ],
+      "class": "write",
+      "authorizationAction": "ai.model.invoke",
+      "bindings": {
+        "rest": "POST /api-gateway/ai/openai/chat/completions"
+      }
+    },
+    {
+      "verb": "ai.anthropicMessages",
+      "eligible": [
+        "rest"
+      ],
+      "class": "write",
+      "authorizationAction": "ai.model.invoke",
+      "bindings": {
+        "rest": "POST /api-gateway/ai/anthropic/v1/messages"
+      }
+    }
+  ]
+}

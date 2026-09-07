@@ -272,12 +272,12 @@ describe("executeEditLedgerFiles", () => {
     expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
   });
 
-  it("dry_run: validates and previews without committing", async () => {
+  it("dry_run: authorizes through the service and previews without committing", async () => {
     const ledgerRepo = {
       getFilesContent: jest
         .fn()
         .mockResolvedValue([{ path: "main.bean", content: "abc", sha: "sha1" }]),
-      changeFiles: jest.fn(),
+      changeFiles: jest.fn().mockResolvedValue(undefined),
     };
     const result = await executeEditLedgerFiles(
       { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
@@ -289,7 +289,12 @@ describe("executeEditLedgerFiles", () => {
         dry_run: true,
       },
     );
-    expect(ledgerRepo.changeFiles).not.toHaveBeenCalled();
+    // One service call, in preview mode: the same write authorization and path
+    // validation run, and nothing commits.
+    expect(ledgerRepo.changeFiles).toHaveBeenCalledTimes(1);
+    expect(ledgerRepo.changeFiles).toHaveBeenCalledWith(
+      expect.objectContaining({ dryRun: true }),
+    );
     expect(result).toEqual({
       ok: true,
       result: {
@@ -298,6 +303,28 @@ describe("executeEditLedgerFiles", () => {
         operations: [{ operation: "update", path: "main.bean" }],
       },
     });
+  });
+
+  it("dry_run: a write-authorization refusal fails the preview too", async () => {
+    // Before the preview ran through the service, a create-only dry run never
+    // authorized at all — a read-only caller previewed happily and failed only
+    // on the real call.
+    const ledgerRepo = {
+      getFilesContent: jest.fn(),
+      changeFiles: jest.fn().mockRejectedValue(new Error("forbidden")),
+    };
+    const result = await executeEditLedgerFiles(
+      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        description: "add file",
+        files: [{ operation: "create", path: "new.bean", content: "x" }],
+        dry_run: true,
+      },
+    );
+    expect(result.ok).toBe(false);
+    expect(ledgerRepo.changeFiles).toHaveBeenCalledWith(
+      expect.objectContaining({ dryRun: true }),
+    );
   });
 
   it("delete: requires the file's current sha, fetched first", async () => {

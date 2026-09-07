@@ -200,7 +200,12 @@ describe("op-class coverage", () => {
     // The count is asserted because tool count is the dominant cost in an
     // agent's tool selection: growing it should be a decision, not a drift.
     const tools = mcpOps.filter((op) => !op.startsWith("MCP resource:"));
-    expect(tools).toHaveLength(9);
+    // Typed BQL is a separate program-execution tool to preserve the existing
+    // text tool contract while exposing queryShell without a URI query program.
+    // insertReceiptTransaction closed w1/m10's last write-verb gap: a receipt
+    // write cannot ride editLedgerFiles because promotion into receipt storage
+    // and the entry write are one composite decision.
+    expect(tools).toHaveLength(24);
 
     // Resources are counted apart on purpose. They do not compete for tool
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can
@@ -210,7 +215,7 @@ describe("op-class coverage", () => {
     // reads (w3/m8), and the file template m5 proved the shape with. This number is expected to climb as
     // the read surface ports; the tool count above is not.
     const resources = mcpOps.filter((op) => op.startsWith("MCP resource:"));
-    expect(resources).toHaveLength(28);
+    expect(resources).toHaveLength(66);
   });
 });
 

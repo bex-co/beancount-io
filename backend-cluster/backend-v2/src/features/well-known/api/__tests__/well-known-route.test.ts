@@ -1,6 +1,8 @@
 import http from "node:http";
 import Koa from "koa";
 import Router from "@koa/router";
+import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
+import { API_SCOPES } from "@/server/api/identity";
 import { setWellKnownRoutes } from "../well-known-route";
 
 const config = {
@@ -49,7 +51,7 @@ describe("well-known routes", () => {
     const body = (await response.json()) as {
       endpoint: string;
       tools: Array<{ name: string }>;
-      auth: { authorizationUrl: string; tokenUrl: string };
+      auth: { authorizationUrl: string; tokenUrl: string; scopes: string[] };
     };
 
     expect(response.status).toBe(200);
@@ -61,17 +63,10 @@ describe("well-known routes", () => {
     expect(body.auth.tokenUrl).toBe(
       "https://beancount.io/api-gateway/oauth/token",
     );
-    expect(body.tools.map(({ name }) => name)).toEqual([
-      "runBqlQuery",
-      "listLedgerFiles",
-      "readLedgerFiles",
-      "editLedgerFiles",
-      "listApiKeys",
-      "createApiKey",
-      "manageBankImport",
-      "manageBankConnection",
-      "revokeApiKey",
-    ]);
+    expect(body.auth.scopes).toEqual(API_SCOPES);
+    expect(body.tools.map(({ name }) => name)).toEqual(
+      MCP_TOOLS.map(({ name }) => name),
+    );
   });
 
   it("declares the resource surface too, not only tools", async () => {
@@ -89,5 +84,31 @@ describe("well-known routes", () => {
       name: expect.any(String),
       uriTemplate: expect.stringContaining("beancount://"),
     });
+  });
+
+  it("advertises query parameters and structured tool results", async () => {
+    const response = await fetch(`${origin}/.well-known/mcp.json`);
+    const body = (await response.json()) as {
+      resources: Array<{ name: string; uriTemplate: string }>;
+      tools: Array<{ name: string; inputSchema: object; outputSchema: object }>;
+    };
+    const archive = body.resources.find(({ name }) => name === "ledgerArchive");
+    expect(archive?.uriTemplate).toBe(
+      "beancount://{owner}/{name}/archive/{archive}",
+    );
+    const asset = body.resources.find(
+      ({ name }) => name === "ledgerAssetDownloadUrl",
+    );
+    expect(asset?.uriTemplate).toBe(
+      "beancount://assets/download-url{?ledgerRepoId,filename}",
+    );
+    const structuredBql = body.tools.find(
+      ({ name }) => name === "runBqlQueryStructured",
+    );
+    expect(structuredBql?.inputSchema).toMatchObject({
+      type: "object",
+      properties: { ledger: { type: "string" }, query: { type: "string" } },
+    });
+    expect(structuredBql?.outputSchema).toHaveProperty("properties");
   });
 });

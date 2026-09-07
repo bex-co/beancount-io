@@ -56,8 +56,8 @@ describe("budgets", () => {
 
   it("prefers a per-op override to the class budget", () => {
     const opId = "GQL Mutation.generateTempAssetUploadUrl";
-    expect(budgetFor(opId, "write")).toEqual(OP_BUDGETS[opId]);
-    expect(budgetFor("GQL Mutation.somethingElse", "write")).toEqual(
+    expect(budgetFor(opId, classifyOp(opId))).toEqual(OP_BUDGETS[opId]);
+    expect(budgetFor("GQL Mutation.somethingElse", classifyOp("GQL Mutation.somethingElse"))).toEqual(
       CLASS_BUDGETS.write,
     );
   });
@@ -74,7 +74,7 @@ describe("budgets", () => {
     for (const opId of operations) {
       const classification = classifyOp(opId);
       expect(classification.class).toBe("admin");
-      expect(budgetFor(opId, classification.class)).toEqual(
+      expect(budgetFor(opId, classification)).toEqual(
         CLASS_BUDGETS.admin,
       );
     }
@@ -97,7 +97,7 @@ describe("budgets", () => {
     ]) {
       const classification = classifyOp(opId);
       expect(classification.class).toBe("admin");
-      expect(budgetFor(opId, classification.class)).toEqual(
+      expect(budgetFor(opId, classification)).toEqual(
         CLASS_BUDGETS.admin,
       );
     }
@@ -109,7 +109,7 @@ describe("budgets", () => {
       "REST POST /api-gateway/v1/api-keys",
       "MCP createApiKey",
     ]) {
-      expect(budgetFor(opId, classifyOp(opId).class)).toEqual({
+      expect(budgetFor(opId, classifyOp(opId))).toEqual({
         windowMs: 60_000,
         max: 5,
       });
@@ -126,7 +126,7 @@ describe("budgets", () => {
       "GQL Mutation.resumeSubscription",
       "GQL Mutation.upgradeSubscription",
     ]) {
-      expect(budgetFor(opId, classifyOp(opId).class)).toEqual({
+      expect(budgetFor(opId, classifyOp(opId))).toEqual({
         windowMs: 60_000,
         max: 300,
       });
@@ -143,7 +143,7 @@ describe("budgets", () => {
       "GQL Mutation.followUser",
       "GQL Mutation.unfollowUser",
     ]) {
-      expect(budgetFor(opId, classifyOp(opId).class)).toEqual({
+      expect(budgetFor(opId, classifyOp(opId))).toEqual({
         windowMs: 60_000,
         max: 300,
       });
@@ -152,23 +152,25 @@ describe("budgets", () => {
       "GQL Mutation.starLedger",
       "GQL Mutation.unstarLedger",
     ]) {
-      expect(budgetFor(opId, classifyOp(opId).class)).toEqual(
+      expect(budgetFor(opId, classifyOp(opId))).toEqual(
         CLASS_BUDGETS.write,
       );
     }
   });
 
-  it("limits both archive download routes to 30 per minute", () => {
+  it("limits REST and MCP archive downloads to 30 per minute", () => {
     for (const opId of [
       "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
       "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
+      "MCP resource:ledgerArchive",
+      "MCP resource:legacyLedgerArchive",
     ]) {
-      expect(budgetFor(opId, classifyOp(opId).class)).toEqual({
+      expect(budgetFor(opId, classifyOp(opId))).toEqual({
         windowMs: 60_000,
         max: 30,
       });
     }
-    expect(budgetFor("GQL Query.listLedgers", "read")).toEqual(
+    expect(budgetFor("GQL Query.listLedgers", classifyOp("GQL Query.listLedgers"))).toEqual(
       CLASS_BUDGETS.read,
     );
   });
@@ -180,14 +182,10 @@ describe("budgets", () => {
     );
     expect(anonymousFamily("/api-gateway/stripe/webhook")).toBe("webhook");
     expect(
-      anonymousFamily(
-        "/api-gateway/v1/ledgers/alice/main/archive/main.zip",
-      ),
+      anonymousFamily("/api-gateway/v1/ledgers/alice/main/archive/main.zip"),
     ).toBe("archive");
     expect(
-      anonymousFamily(
-        "/api-gateway/ledgers/alice%2Fmain/archive/main.tar.gz",
-      ),
+      anonymousFamily("/api-gateway/ledgers/alice%2Fmain/archive/main.tar.gz"),
     ).toBe("archive");
     expect(anonymousFamily("/api-gateway/v1/ledgers")).toBe("default");
     // A flood against one must not be able to exhaust another.
@@ -233,12 +231,49 @@ describe("charging", () => {
     expect(first).not.toEqual(second);
   });
 
+  it("charges every surface's spelling of one verb to one counter", async () => {
+    // Three aliases, one 5/minute operation — otherwise rotating surfaces
+    // would turn the deliberate createApiKey override into 15/minute.
+    respond(1);
+    respond(2);
+    respond(3);
+    await consume({
+      opId: "GQL Mutation.createApiKey",
+      identity: token,
+      ip: "ip",
+    });
+    await consume({
+      opId: "REST POST /api-gateway/v1/api-keys",
+      identity: token,
+      ip: "ip",
+    });
+    await consume({ opId: "MCP createApiKey", identity: token, ip: "ip" });
+    const keys = new Set(counter.mock.calls.map(([key]) => key));
+    expect(keys.size).toBe(1);
+  });
+
+  it("follows a per-op override to aliases that never spelled it", async () => {
+    // The 10/minute temp-upload budget is declared once, on the GraphQL alias.
+    // The REST route and MCP tool share its counter, so they must share its
+    // max as well — a shared count judged against different maxes would refuse
+    // on one surface what it allows on another.
+    for (const opId of [
+      "GQL Mutation.generateTempAssetUploadUrl",
+      "REST POST /api-gateway/v1/temp-assets/upload-url",
+      "MCP generateTempAssetUploadUrl",
+    ]) {
+      expect(budgetFor(opId, classifyOp(opId))).toEqual({
+        windowMs: 60_000,
+        max: 10,
+      });
+    }
+  });
+
   it("shares one counter between canonical and compatibility archive routes", async () => {
     respond(1);
     respond(2);
     await consume({
-      opId:
-        "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
+      opId: "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
       identity: token,
       ip: "ip",
     });
@@ -335,4 +370,29 @@ describe("store outage", () => {
       consumeAnonymous({ path: "/api-gateway/v1/ledgers", ip: "ip" }),
     ).resolves.toMatchObject({ allowed: true });
   });
+});
+
+it("alternating REST and MCP archive aliases cannot reset the shared budget", async () => {
+  const counts = new Map<string, number>();
+  counter.mockImplementation(async (key: string) => {
+    const count = (counts.get(key) ?? 0) + 1;
+    counts.set(key, count);
+    return { count, resetInMs: 60000 };
+  });
+  const aliases = [
+    "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
+    "MCP resource:ledgerArchive",
+    "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
+    "MCP resource:legacyLedgerArchive",
+  ];
+  for (let i = 0; i < 30; i++)
+    expect(
+      (await consume({ opId: aliases[i % 4], identity: token, ip: "fixture" }))
+        .allowed,
+    ).toBe(true);
+  for (const opId of aliases)
+    expect(
+      (await consume({ opId, identity: token, ip: "fixture" })).allowed,
+    ).toBe(false);
+  expect(counts.size).toBe(1);
 });

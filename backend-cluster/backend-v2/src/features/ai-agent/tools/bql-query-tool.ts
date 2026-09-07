@@ -43,6 +43,49 @@ export async function executeBqlQuery(
   });
 }
 
+/** Preserve the typed shell representation used by REST and GraphQL. */
+export const structuredBqlOutputSchema = toolOutputSchema(
+  z.object({
+    resultType: z.enum(["table", "text"]),
+    table: z
+      .object({
+        types: z.array(z.object({ name: z.string(), dtype: z.string() })),
+        rows: z.array(
+          z.array(
+            z.union([
+              z.string(),
+              z.number(),
+              z.boolean(),
+              z.null(),
+              z.record(z.string(), z.unknown()),
+            ]),
+          ),
+        ),
+        t: z.string().optional(),
+      })
+      .optional(),
+    text: z
+      .object({ contents: z.string(), t: z.string().optional() })
+      .optional(),
+  }),
+);
+
+export async function executeStructuredBqlQuery(
+  ctx: Pick<ToolContext, "services" | "identity" | "ledgerId">,
+  input: { query: string },
+): Promise<z.infer<typeof structuredBqlOutputSchema>> {
+  return runToolSafely({
+    logger: toolLogger,
+    message: "Structured BQL query failed",
+    execute: () =>
+      ctx.services.ledgerShell.queryShell({
+        identity: ctx.identity,
+        ledgerId: ctx.ledgerId,
+        query: input.query,
+      }),
+  });
+}
+
 export function createBqlQueryTool(ctx: ToolContext) {
   return tool({
     description,
@@ -50,7 +93,11 @@ export function createBqlQueryTool(ctx: ToolContext) {
     outputSchema: bqlQueryOutputSchema,
     execute: (input) =>
       executeBqlQuery(
-        { services: ctx.services, identity: ctx.identity, ledgerId: ctx.ledgerId },
+        {
+          services: ctx.services,
+          identity: ctx.identity,
+          ledgerId: ctx.ledgerId,
+        },
         input,
       ),
   });

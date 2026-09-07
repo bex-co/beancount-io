@@ -397,6 +397,15 @@ const faAuth: Record<string, TranslationEntry> = {
     message: "An app wants to access your Beancount ledger.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthAllLedgers": {
+    message: "همه دفترهای قابل دسترسی",
+    description: "MCP account-wide consent option",
+  },
+  "auth.oauthAllLedgersDescription": {
+    message:
+      "اقدامات درخواستی را در دفترهایی که اکنون یا در آینده به آنها دسترسی دارید، و عملیات حساب مجاز با این دسترسی‌ها، اجازه دهید.",
+    description: "MCP account-wide consent explanation",
+  },
   "auth.oauthChooseLedger": {
     message: "Choose a ledger",
     description: "OAuth consent page ledger step title",
@@ -410,7 +419,7 @@ const faAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
-    message: "No ledgers found. Please create one first.",
+    message: "هیچ دفتری یافت نشد.",
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {

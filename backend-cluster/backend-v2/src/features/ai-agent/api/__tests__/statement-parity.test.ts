@@ -1,0 +1,340 @@
+import "reflect-metadata";
+jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
+jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { buildSchema } from "type-graphql";
+import { graphql } from "graphql";
+import { LedgerFinanceQueryResolver } from "@/features/ledger/api/resolvers/ledger-finance-resolver.query";
+import { LedgerAccountQueryResolver } from "@/features/ledger/api/resolvers/ledger-account-resolver.query";
+import { LedgerDataQueryResolver } from "@/features/ledger/api/resolvers/ledger-data-resolver.query";
+import { LedgerFinanceService } from "@/features/ledger/service/ledger-finance-service";
+import { LedgerAccountService } from "@/features/ledger/service/ledger-account-service";
+import { LedgerDataService } from "@/features/ledger/service/ledger-data-service";
+import { AuthorizationService } from "@/server/api/authorization";
+import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
+import { assembleMcpRegistry } from "@/server/api/composition-root";
+import {
+  startV1TestServer,
+  pinnedReadToken,
+} from "@/server/rest/__tests__/v1-test-server";
+import type { AppConfig } from "@/config/config";
+import type { AppLayers } from "@/foundation/composition";
+import type { McpRequestContext } from "../mcp-context";
+
+const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
+const balance = { USD: "9007199254740993.12", EUR: "-45.60" };
+const series = [{ date: "2026-01-01", balance }];
+const intervals = [
+  { date: "2026-01-01", balance, account_balances: { "Assets:Bank": balance } },
+];
+const tree = {
+  account: "Assets",
+  balance,
+  balance_children: balance,
+  children: [],
+  has_txns: true,
+  cost: balance,
+  cost_children: balance,
+};
+const fixtures = [
+  {
+    path: "statements/balance-sheet",
+    field: "getLedgerBalanceSheet",
+    payload: {
+      net_worth_data: series,
+      assets_data: series,
+      liabilities_data: series,
+      equity_data: series,
+      assets_hierarchy_data: tree,
+      liabilities_hierarchy_data: tree,
+      equity_hierarchy_data: tree,
+    },
+    intervalFields: [] as string[],
+  },
+  {
+    path: "statements/income-statement",
+    field: "getLedgerIncomeStatement",
+    payload: {
+      net_profit_data: series,
+      income_data: intervals,
+      expenses_data: intervals,
+      income_hierarchy_data: tree,
+      expenses_hierarchy_data: tree,
+    },
+    intervalFields: ["income_data", "expenses_data"],
+  },
+  {
+    path: "overview",
+    field: "getLedgerOverview",
+    payload: {
+      net_worth_data: series,
+      assets_data: series,
+      liabilities_data: series,
+      income_data: series,
+      expenses_data: series,
+      income_interval_data: intervals,
+      expenses_interval_data: intervals,
+      assets_hierarchy_data: tree,
+      liabilities_hierarchy_data: tree,
+      income_hierarchy_data: tree,
+      expenses_hierarchy_data: tree,
+    },
+    intervalFields: ["income_interval_data", "expenses_interval_data"],
+  },
+];
+const camel = (key: string) =>
+  key.replace(/_([a-z])/g, (_, letter: string) => letter.toUpperCase());
+// Only transport field names are mapped; currency and account dictionary keys remain intact.
+const normalizeTree = (node: typeof tree) => ({
+  account: node.account,
+  balance: node.balance,
+  balanceChildren: node.balance_children,
+  children: [],
+  hasTxns: node.has_txns,
+  cost: node.cost,
+  costChildren: node.cost_children,
+});
+const params = {
+  account: "Expenses:Café",
+  filter: "#travel + #work",
+  time: "2026",
+  conversion: "EUR",
+  interval: "quarterly",
+};
+const envelope = (data: unknown) => ({ data: { success: true, data } });
+let resolvers: Map<unknown, object>;
+let schemaPromise: ReturnType<typeof buildSchema> | undefined;
+
+async function fixture() {
+  const check = jest.fn().mockResolvedValue(true);
+  const auth = new AuthorizationService({ check }, jest.fn());
+  const reports = Object.fromEntries(
+    fixtures.map((entry) => [
+      entry.field,
+      jest.fn().mockResolvedValue(envelope(entry.payload)),
+    ]),
+  );
+  reports.getLedgerAccounts = jest.fn().mockResolvedValue(
+    envelope({
+      "Assets:Open": { close_date: null },
+      "Assets:Closed": { close_date: "2026-01-01" },
+    }),
+  );
+  const document = {
+    date: "2026-01-01",
+    account: "Assets:Open",
+    filename: "receipts/café.pdf",
+    tags: ["travel"],
+    links: ["receipt-1"],
+    meta: { reviewed: true },
+  };
+  reports.getLedgerDocuments = jest
+    .fn()
+    .mockResolvedValue(envelope([document]));
+  const factory = {
+    getPublicApiClient: jest.fn().mockResolvedValue({ reports }),
+  };
+  const services = {
+    ledgerFinance: new LedgerFinanceService(factory as never, auth),
+    ledgerAccount: new LedgerAccountService(factory as never, auth),
+    ledgerData: new LedgerDataService(factory as never, auth),
+  };
+  resolvers = new Map<unknown, object>([
+    [
+      LedgerFinanceQueryResolver,
+      new LedgerFinanceQueryResolver(services.ledgerFinance),
+    ],
+    [
+      LedgerAccountQueryResolver,
+      new LedgerAccountQueryResolver(services.ledgerAccount),
+    ],
+    [LedgerDataQueryResolver, new LedgerDataQueryResolver(services.ledgerData)],
+  ]);
+  schemaPromise ??= buildSchema({
+    resolvers: [
+      LedgerFinanceQueryResolver,
+      LedgerAccountQueryResolver,
+      LedgerDataQueryResolver,
+    ],
+    container: { get: (ctor) => resolvers.get(ctor) },
+    globalMiddlewares: [graphqlScopeMiddleware("enforce")],
+    validate: true,
+  });
+  const schema = await schemaPromise;
+  const rest = await startV1TestServer(
+    { services } as unknown as AppLayers,
+    config,
+    { apiKeys: false },
+  );
+  rest.setIdentity(pinnedReadToken);
+  const server = assembleMcpRegistry(
+    { identity: pinnedReadToken, services } as unknown as McpRequestContext,
+    config,
+  );
+  const client = new Client({ name: "statement-parity", version: "1" });
+  const [a, b] = InMemoryTransport.createLinkedPair();
+  await Promise.all([client.connect(a), server.connect(b)]);
+  return {
+    reports,
+    check,
+    document,
+    rest: (path: string) =>
+      fetch(`${rest.url}/api-gateway/v1/ledgers/alice/main/${path}`),
+    mcp: async (path: string) => {
+      const result = await client.readResource({
+        uri: `beancount://alice/main/${path}`,
+      });
+      const content = result.contents[0];
+      if (!("text" in content)) throw new Error("Expected JSON");
+      return JSON.parse(content.text);
+    },
+    gql: (query: string) =>
+      graphql({
+        schema,
+        source: `{ ${query} }`,
+        contextValue: { identity: pinnedReadToken },
+      }),
+    close: async () => {
+      await client.close();
+      await server.close();
+      await rest.close();
+    },
+  };
+}
+
+describe("statement adapter contracts", () => {
+  it.each(
+    fixtures.flatMap((entry) =>
+      [false, true].map((filtered) => ({ ...entry, filtered })),
+    ),
+  )("preserves $field with filters=$filtered", async (entry) => {
+    const f = await fixture();
+    try {
+      const query = entry.filtered ? params : {};
+      const uri = `${entry.path}?${new URLSearchParams(query)}`;
+      const response = await f.rest(uri);
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual(entry.payload);
+      expect(await f.mcp(uri)).toEqual(entry.payload);
+      const selection = Object.keys(entry.payload)
+        .map(
+          (key) =>
+            `${camel(key)} { ${key.includes("hierarchy") ? "account balance balanceChildren children hasTxns cost costChildren" : `date balance ${entry.intervalFields.includes(key) ? "accountBalances" : ""}`} }`,
+        )
+        .join(" ");
+      const args = Object.entries(query)
+        .map(([key, value]) => `, ${key}: ${JSON.stringify(value)}`)
+        .join("");
+      const result = await f.gql(
+        `${entry.field}(ledgerId: "alice/main"${args}) { ${selection} }`,
+      );
+      expect(result.errors).toBeUndefined();
+      const normalized = Object.fromEntries(
+        Object.entries(entry.payload).map(([key, value]) => [
+          camel(key),
+          key.includes("hierarchy")
+            ? normalizeTree(value as typeof tree)
+            : (value as typeof intervals).map((point) => ({
+                date: point.date,
+                balance: point.balance,
+                ...(entry.intervalFields.includes(key)
+                  ? { accountBalances: point.account_balances }
+                  : {}),
+              })),
+        ]),
+      );
+      expect(result.data?.[entry.field]).toEqual(normalized);
+      const expectedParams = entry.filtered
+        ? params
+        : { conversion: "USD", interval: "monthly" };
+      expect(f.reports[entry.field]).toHaveBeenCalledTimes(3);
+      for (const call of f.reports[entry.field].mock.calls)
+        expect(call).toEqual(["alice", "main", expectedParams]);
+    } finally {
+      await f.close();
+    }
+  });
+
+  it.each([undefined, "open", "closed", "all"])(
+    "preserves account status %s",
+    async (status) => {
+      const f = await fixture();
+      try {
+        const path = `accounts${status ? `?status=${status}` : ""}`;
+        const expected =
+          status === "open"
+            ? ["Assets:Open"]
+            : status === "closed"
+              ? ["Assets:Closed"]
+              : ["Assets:Open", "Assets:Closed"];
+        expect(await (await f.rest(path)).json()).toEqual(expected);
+        expect(await f.mcp(path)).toEqual(expected);
+        const gql = await f.gql(
+          `getLedgerAccounts(ledgerId: "alice/main"${status ? `, status: "${status}"` : ""})`,
+        );
+        expect(gql.errors).toBeUndefined();
+        expect(gql.data?.getLedgerAccounts).toEqual(expected);
+      } finally {
+        await f.close();
+      }
+    },
+  );
+
+  it("preserves document fields and all filters", async () => {
+    const f = await fixture();
+    try {
+      const query = {
+        account: params.account,
+        filter: params.filter,
+        time: params.time,
+      };
+      const path = `documents?${new URLSearchParams(query)}`;
+      expect(await (await f.rest(path)).json()).toEqual([f.document]);
+      expect(await f.mcp(path)).toEqual([f.document]);
+      const args = Object.entries(query)
+        .map(([key, value]) => `, ${key}: ${JSON.stringify(value)}`)
+        .join("");
+      const gql = await f.gql(
+        `getLedgerDocuments(ledgerId: "alice/main"${args}) { date account filename tags links meta }`,
+      );
+      expect(gql.errors).toBeUndefined();
+      expect(gql.data?.getLedgerDocuments).toEqual([f.document]);
+      for (const call of f.reports.getLedgerDocuments.mock.calls)
+        expect(call).toEqual(["alice", "main", query]);
+    } finally {
+      await f.close();
+    }
+  });
+});
+
+describe("report refusals", () => {
+  it.each([
+    [
+      "statements/income-statement",
+      'getLedgerIncomeStatement(ledgerId: "alice/main") { netProfitData { date balance } }',
+    ],
+    [
+      "statements/balance-sheet",
+      'getLedgerBalanceSheet(ledgerId: "alice/main") { assetsData { date balance } }',
+    ],
+    [
+      "overview",
+      'getLedgerOverview(ledgerId: "alice/main") { assetsData { date balance } }',
+    ],
+    ["documents", 'getLedgerDocuments(ledgerId: "alice/main") { filename }'],
+    ["accounts", 'getLedgerAccounts(ledgerId: "alice/main")'],
+  ])("refuses revoked access to %s before reading", async (path, query) => {
+    const f = await fixture();
+    f.check.mockResolvedValue(false);
+    try {
+      expect((await f.rest(path)).status).toBe(403);
+      await expect(f.mcp(path)).rejects.toThrow();
+      expect((await f.gql(query)).errors).toHaveLength(1);
+      for (const call of Object.values(f.reports))
+        expect(call).not.toHaveBeenCalled();
+    } finally {
+      await f.close();
+    }
+  });
+});

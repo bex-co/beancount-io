@@ -1,16 +1,11 @@
+import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 import { logger } from "@/shared/logger";
-import type { DbExecutor } from "@/drizzle/drizzle";
-import type { IModels } from "@/foundation/models";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import type {
   ContentsResponse,
   ChangedFile,
 } from "@/features/gitea/client/gitea-api";
-import axios from "axios";
-import type {
-  PullRequestDetails,
-  PRFileChange,
-} from "../api/pull-request-resolver.types";
+import type { PullRequestDetails, PRFileChange } from "./pull-request.types";
 import type { Identity } from "@/server/api/identity";
 import {
   AUTHORIZATION_ACTIONS,
@@ -52,8 +47,6 @@ export interface IPullRequestService {
 export class PullRequestService implements IPullRequestService {
   constructor(
     private readonly giteaClientFactory: IGiteaClientFactory,
-    private readonly models: Pick<IModels, "user">,
-    private readonly db: DbExecutor,
     private readonly authorization: IAuthorizationService,
   ) {}
 
@@ -71,6 +64,7 @@ export class PullRequestService implements IPullRequestService {
       action: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE,
       resource: ledgerResource(createLedgerId(owner, repo)),
     });
+    for (const change of changes) assertSafeRepoPath(change.path);
     const userId = identity.userId;
     const client = await this.giteaClientFactory.getUserApiClient(userId);
 
@@ -181,25 +175,25 @@ export class PullRequestService implements IPullRequestService {
       resource: ledgerResource(createLedgerId(owner, repo)),
     });
     const userId = identity.userId;
-    const user = await this.models.user.getById(this.db, userId);
-    if (!user) {
-      throw new Error("User not found");
-    }
-    const baseUrl = "http://gitea:3000/api/v1";
-    const authHeader = `Basic ${Buffer.from(`${user.ledger_username}:${user.ledger_password}`).toString("base64")}`;
+    const client = await this.giteaClientFactory.getUserApiClient(userId);
 
     try {
       // Get PR metadata
       const [prResponse, filesResponse, diffResponse] = await Promise.all([
-        axios.get(`${baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}`, {
-          headers: { Authorization: authHeader },
+        client.repos.repoGetPullRequest(owner, repo, prNumber, {
+          format: "json",
         }),
-        axios.get(`${baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}/files`, {
-          headers: { Authorization: authHeader },
+        client.repos.repoGetPullRequestFiles(owner, repo, prNumber, undefined, {
+          format: "json",
         }),
-        axios.get(`${baseUrl}/repos/${owner}/${repo}/pulls/${prNumber}.diff`, {
-          headers: { Authorization: authHeader },
-        }),
+        client.repos.repoDownloadPullDiffOrPatch(
+          owner,
+          repo,
+          prNumber,
+          "diff",
+          undefined,
+          { format: "text" },
+        ),
       ]);
 
       const pr = prResponse.data;

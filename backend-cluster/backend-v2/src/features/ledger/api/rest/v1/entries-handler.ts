@@ -3,24 +3,28 @@ import { ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
 
-const amountSchema = z.object({
+/**
+ * REST/MCP null tolerance: an explicit null on an optional field means the
+ * same as omitting it, normalized once here so every field spells it alike.
+ */
+const nullToUndefined = <Schema extends z.ZodTypeAny>(schema: Schema) =>
+  schema.nullish().transform((value) => value ?? undefined);
+
+const amountSchema = z.strictObject({
   number: z
     .string()
     .openapi({ description: "Decimal amount", example: "42.50" }),
   currency: z.string().openapi({ example: "USD" }),
 });
 
-const postingSchema = z.object({
+const postingSchema = z.strictObject({
   account: z.string().openapi({ example: "Assets:Bank:Checking" }),
   units: amountSchema,
-  price: amountSchema.optional(),
-  flag: z.string().optional(),
+  price: nullToUndefined(amountSchema),
+  flag: nullToUndefined(z.string()),
 });
 
-const dateSchema = z
-  .string()
-  .regex(/^\d{4}-\d{2}-\d{2}$/, "Expected an ISO date, YYYY-MM-DD")
-  .openapi({ example: "2026-08-23" });
+const dateSchema = z.string().openapi({ example: "2026-08-23" });
 
 /**
  * The directive shapes, one per Beancount directive v1 can insert. Mirrors the
@@ -29,65 +33,84 @@ const dateSchema = z
  * same file whichever surface asked.
  */
 const entrySchema = z.discriminatedUnion("type", [
-  z.object({
+  z.strictObject({
     type: z.literal("transaction"),
-    entry: z.object({
+    entry: z.strictObject({
       date: dateSchema,
       flag: z.string().openapi({
         description: "`*` for cleared, `!` for pending",
         example: "*",
       }),
-      payee: z.string().optional(),
-      narration: z.string().optional(),
-      postings: z.array(postingSchema).min(1),
-      tags: z.array(z.string()).optional(),
-      links: z.array(z.string()).optional(),
-      meta: z.record(z.string(), z.string()).optional(),
+      payee: nullToUndefined(z.string()),
+      narration: nullToUndefined(z.string()),
+      postings: z.array(postingSchema),
+      tags: nullToUndefined(z.array(z.string())),
+      links: nullToUndefined(z.array(z.string())),
+      meta: nullToUndefined(z.record(z.string(), z.string())),
     }),
   }),
-  z.object({
+  z.strictObject({
     type: z.literal("open"),
-    entry: z.object({
+    entry: z.strictObject({
       date: dateSchema,
       account: z.string(),
       currencies: z.array(z.string()),
     }),
   }),
-  z.object({
+  z.strictObject({
     type: z.literal("close"),
-    entry: z.object({ date: dateSchema, account: z.string() }),
+    entry: z.strictObject({ date: dateSchema, account: z.string() }),
   }),
-  z.object({
+  z.strictObject({
     type: z.literal("balance"),
-    entry: z.object({
+    entry: z.strictObject({
       date: dateSchema,
       account: z.string(),
       amount: amountSchema,
     }),
   }),
-  z.object({
+  z.strictObject({
     type: z.literal("price"),
-    entry: z.object({
+    entry: z.strictObject({
       date: dateSchema,
       currency: z.string(),
       amount: amountSchema,
     }),
   }),
-  z.object({
+  z.strictObject({
     type: z.literal("commodity"),
-    entry: z.object({ date: dateSchema, currency: z.string() }),
+    entry: z.strictObject({ date: dateSchema, currency: z.string() }),
   }),
-  z.object({
+  z.strictObject({
     type: z.literal("note"),
-    entry: z.object({
+    entry: z.strictObject({
       date: dateSchema,
       account: z.string(),
       content: z.string(),
     }),
   }),
-  z.object({
+  z.strictObject({
+    type: z.literal("budget"),
+    entry: z.strictObject({
+      date: dateSchema,
+      account: z.string(),
+      interval: z.enum(["daily", "weekly", "monthly", "quarterly", "yearly"]),
+      amount: amountSchema,
+    }),
+  }),
+  z.strictObject({
+    type: z.literal("document"),
+    entry: z.strictObject({
+      date: dateSchema,
+      account: z.string(),
+      filename: z.string(),
+      tags: nullToUndefined(z.array(z.string())),
+      links: nullToUndefined(z.array(z.string())),
+    }),
+  }),
+  z.strictObject({
     type: z.literal("event"),
-    entry: z.object({
+    entry: z.strictObject({
       date: dateSchema,
       type: z.string(),
       description: z.string(),
@@ -95,9 +118,9 @@ const entrySchema = z.discriminatedUnion("type", [
   }),
 ]);
 
-const entriesBodySchema = z
-  .object({
-    entries: z.array(entrySchema).min(1).max(100).openapi({
+export const entriesBodySchema = z
+  .strictObject({
+    entries: z.array(entrySchema).openapi({
       description: "Directives to append, committed all-or-nothing",
     }),
   })
@@ -127,7 +150,10 @@ export const ENTRY_ROUTES = [
     responses: {
       200: json(
         "The directives were committed",
-        z.object({ success: z.boolean(), message: z.string().optional() }),
+        z.strictObject({
+          success: z.boolean(),
+          message: nullToUndefined(z.string()),
+        }),
       ),
     },
     handler: async ({ layers }, { identity, params, body }) =>

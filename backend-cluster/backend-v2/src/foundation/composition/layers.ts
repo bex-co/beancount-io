@@ -1,3 +1,6 @@
+import type { ILegacyEntryWorkflow } from "@/features/ledger/workflow/legacy-entry-workflow";
+import type { ILedgerArchiveService } from "@/features/ledger/service/ledger-archive-service";
+import type { IPullRequestWorkflow } from "@/features/gitea/pull-request/workflow/pull-request-workflow";
 import { type DbExecutor } from "@/drizzle/drizzle";
 import { type IModels } from "@/foundation/models";
 import { type ISendGrid } from "@/foundation/sendgrid";
@@ -81,6 +84,7 @@ export interface ServiceLayer {
   llm: ILLMService;
   ledgerAccount: ILedgerAccountService;
   ledgerAsset: ILedgerAssetService;
+  ledgerArchive: ILedgerArchiveService;
   ledgerEntry: ILedgerEntryService;
   /** Internal mutation primitive for composite workflows only. */
   ledgerEntryWriter: ILedgerEntryWriter;
@@ -105,6 +109,8 @@ export interface ServiceLayer {
 
 /** Layer 4 — Workflows (cross-service orchestration; own transaction boundaries). */
 export interface WorkflowLayer {
+  legacyEntry: ILegacyEntryWorkflow;
+  pullRequest: IPullRequestWorkflow;
   authSession: IAuthSessionWorkflow;
   ledger: ILedgerWorkflow;
   ledgerCollaborators: ILedgerCollaboratorsWorkflow;

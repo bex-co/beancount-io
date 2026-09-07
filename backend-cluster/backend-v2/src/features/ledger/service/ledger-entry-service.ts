@@ -255,8 +255,8 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
         const item: Transaction = {
           date: entry.date,
           flag: entry.flag,
-          payee: entry.payee,
-          narration: entry.narration,
+          payee: entry.payee ?? undefined,
+          narration: entry.narration ?? undefined,
           postings: entry.postings.map((posting) => ({
             units: {
               number: posting.units.number,
@@ -269,11 +269,11 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
                   currency: posting.price.currency,
                 }
               : null,
-            flag: posting.flag,
+            flag: posting.flag ?? undefined,
           })),
-          tags: entry.tags,
-          links: entry.links,
-          meta: entry.meta,
+          tags: entry.tags ?? undefined,
+          links: entry.links ?? undefined,
+          meta: entry.meta ?? undefined,
         };
         return { type: "transaction", item, filename };
       }
@@ -355,8 +355,8 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
             date: entry.date,
             account: entry.account,
             filename: entry.filename,
-            tags: entry.tags,
-            links: entry.links,
+            tags: entry.tags ?? undefined,
+            links: entry.links ?? undefined,
           },
           filename,
         };

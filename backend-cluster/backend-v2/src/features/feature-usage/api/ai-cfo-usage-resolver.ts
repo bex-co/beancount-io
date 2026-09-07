@@ -1,3 +1,4 @@
+import { readAiCfoUsage } from "./ai-cfo-usage-route";
 import { Ctx, Field, ObjectType, Query, Resolver } from "type-graphql";
 import { Authenticated } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
@@ -21,12 +22,6 @@ export class AiCfoUsageResolver {
     description: "Get AI CFO usage for the current billing month",
   })
   async aiCfoUsage(@Ctx() ctx: IContext): Promise<AiCfoUsageResponse> {
-    const usage = await this.aiCfoUsageService.getUsage(
-      ctx.getCurrentIdentity(),
-    );
-    return {
-      aiCfoTokensUsed: usage.currentCount,
-      aiCfoTokensMax: usage.maxAllowed,
-    };
+    return readAiCfoUsage(this.aiCfoUsageService, ctx.getCurrentIdentity());
   }
 }

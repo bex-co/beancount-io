@@ -289,14 +289,29 @@ describe("classifyOp", () => {
     expect(new Set(rows.map((entry) => entry.authorizationAction))).toEqual(
       actions,
     );
+    // A grouped MCP dispatcher (one tool spanning verbs with different
+    // canonical actions, e.g. managePullRequests) deliberately has no
+    // transport-level action: the selected service verb authorizes itself.
+    const actionsByTool = new Map<string, Set<string | undefined>>();
+    for (const entry of VERB_TABLE) {
+      if (!entry.mcp) continue;
+      const seen = actionsByTool.get(entry.mcp) ?? new Set();
+      seen.add(entry.authorizationAction);
+      actionsByTool.set(entry.mcp, seen);
+    }
     for (const entry of rows) {
       for (const alias of [
         entry.gql && gqlOpId(entry.gql),
         entry.rest && `REST ${entry.rest}`,
-        entry.mcp && `MCP ${entry.mcp}`,
         entry.mcpResource && `MCP resource:${entry.mcpResource}`,
       ].filter((alias): alias is string => Boolean(alias))) {
         expect(authorizationActionForOp(alias)).toBe(entry.authorizationAction);
+      }
+      if (entry.mcp) {
+        const grouped = (actionsByTool.get(entry.mcp)?.size ?? 0) > 1;
+        expect(authorizationActionForOp(`MCP ${entry.mcp}`)).toBe(
+          grouped ? undefined : entry.authorizationAction,
+        );
       }
     }
   });

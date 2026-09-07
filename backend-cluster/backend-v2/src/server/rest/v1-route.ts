@@ -53,6 +53,7 @@ interface V1Input<P, Q, B> {
 }
 
 export interface V1Route<P = unknown, Q = unknown, B = unknown> {
+  readonly authentication?: "required";
   readonly method: V1Method;
   /** Declared path including the `/api-gateway/v1` prefix, in `{param}` form. */
   readonly path: V1Path;
@@ -69,6 +70,22 @@ export interface V1Route<P = unknown, Q = unknown, B = unknown> {
    */
   handler(deps: V1Deps, input: V1Input<P, Q, B>): Promise<unknown>;
 }
+
+/** Public or nullable identity probes explicitly opt in to anonymous callers. */
+interface AnonymousV1Route<P, Q, B> extends Omit<
+  V1Route<P, Q, B>,
+  "authentication" | "handler"
+> {
+  readonly authentication: "optional";
+  handler(
+    deps: V1Deps,
+    input: Omit<V1Input<P, Q, B>, "identity"> & {
+      identity: Identity | undefined;
+    },
+  ): Promise<unknown>;
+}
+
+type RouteDeclaration<P, Q, B> = V1Route<P, Q, B> | AnonymousV1Route<P, Q, B>;
 
 /** `{param}` → `:param`; `{*param}` passes through as path-to-regexp's wildcard. */
 export function toKoaPath(path: string): string {
@@ -116,7 +133,7 @@ function requireIdentity(ctx: RouterContext): Identity {
 function registerV1Route<P, Q, B>(
   router: Router,
   deps: V1Deps,
-  route: V1Route<P, Q, B>,
+  route: RouteDeclaration<P, Q, B>,
 ): void {
   const middlewares: Router.Middleware[] = [];
   if (route.body) middlewares.push(bodyParser());
@@ -130,14 +147,22 @@ function registerV1Route<P, Q, B>(
 
   router[route.method](toKoaPath(route.path), ...middlewares, async (ctx) => {
     const validated = validatedFromState(ctx);
-    const identity = requireIdentity(ctx);
-    const result = await route.handler(deps, {
+    const input = {
       params: validated.params as P,
       query: validated.query as Q,
       body: validated.body as B,
-      identity,
       ctx,
-    });
+    };
+    const result =
+      route.authentication === "optional"
+        ? await route.handler(deps, {
+            ...input,
+            identity: identityFromState(ctx),
+          })
+        : await route.handler(deps, {
+            ...input,
+            identity: requireIdentity(ctx),
+          });
     if (result !== undefined) ctx.body = result;
   });
 
@@ -147,7 +172,10 @@ function registerV1Route<P, Q, B>(
     summary: route.summary,
     description: route.description,
     tags: [V1_TAG],
-    security: [{ bearerAuth: [] }, { apiKey: [] }],
+    security:
+      route.authentication === "optional"
+        ? [{}, { bearerAuth: [] }, { apiKey: [] }]
+        : [{ bearerAuth: [] }, { apiKey: [] }],
     request: {
       ...(route.params ? { params: route.params } : {}),
       ...(route.query ? { query: route.query } : {}),
@@ -163,7 +191,7 @@ function registerV1Route<P, Q, B>(
 export function registerV1Routes(
   router: Router,
   deps: V1Deps,
-  routes: readonly V1Route<never, never, never>[],
+  routes: readonly RouteDeclaration<never, never, never>[],
 ): void {
   for (const route of routes) {
     registerV1Route(router, deps, route);
@@ -179,4 +207,14 @@ export function v1Route<P, Q, B>(
   route: V1Route<P, Q, B>,
 ): V1Route<never, never, never> {
   return route as unknown as V1Route<never, never, never>;
+}
+
+/** Declare anonymous access explicitly while keeping identity optional in the handler. */
+export function anonymousV1Route<P, Q, B>(
+  route: Omit<AnonymousV1Route<P, Q, B>, "authentication">,
+): AnonymousV1Route<never, never, never> {
+  return {
+    ...route,
+    authentication: "optional",
+  } as unknown as AnonymousV1Route<never, never, never>;
 }

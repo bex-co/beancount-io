@@ -1,3 +1,6 @@
+import { setSocialRoutes } from "@/features/gitea/user-profile/api/social-read-routes";
+import { setAccountRoutes } from "@/features/auth/api/account-routes";
+import { setConfigurationRoutes } from "@/features/healthz/api/configuration-routes";
 import http from "node:http";
 import Koa from "koa";
 import Router, { RouterContext } from "@koa/router";
@@ -35,6 +38,9 @@ import { setApiKeyRoutes } from "@/features/apikeys/api/api-key-rest";
 export interface V1TestFragments {
   ledger?: boolean;
   apiKeys?: boolean;
+  configuration?: boolean;
+  accountReads?: boolean;
+  social?: boolean;
 }
 
 export interface V1TestServer {
@@ -61,6 +67,11 @@ export async function startV1TestServer(
   router.use(restScopeMiddleware(config, gates));
 
   const before = router.stack.length;
+  if (fragments.social !== false) setSocialRoutes(router, { layers, config });
+  if (fragments.accountReads !== false)
+    setAccountRoutes(router, { layers, config });
+  if (fragments.configuration !== false)
+    setConfigurationRoutes(router, { layers, config });
   if (fragments.ledger !== false) setLedgerV1Routes(router, layers, config);
   if (fragments.apiKeys !== false) setApiKeyRoutes(router, layers, config);
   // The gate index the composition root builds at assembly time, rebuilt here

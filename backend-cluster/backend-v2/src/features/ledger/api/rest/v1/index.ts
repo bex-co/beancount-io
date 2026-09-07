@@ -1,3 +1,20 @@
+import { legacyEntryRoute } from "./legacy-entry-handler";
+import { SOURCE_SLICE_ROUTES } from "./source-slice-handler";
+import { renameFileRoute } from "./rename-handler";
+import { receiptInsertRoute } from "./receipt-insert-handler";
+import { receiptParseRoute } from "@/features/llm/api/receipt-parse-route";
+import { fileParseRoute } from "@/features/llm/api/file-parse-route";
+import { suggestCategoriesRoute } from "@/features/llm/api/suggest-categories-route";
+import { TEMP_ASSET_ROUTES } from "@/features/s3/api/temp-asset-routes";
+import { STAR_ROUTES } from "./star-handler";
+import { ASSET_URL_ROUTES } from "./asset-url-handler";
+import { PULL_REQUEST_ROUTES } from "@/features/gitea/pull-request/api/pull-request-routes";
+import { LEDGER_LIFECYCLE_ROUTES } from "./lifecycle-handler";
+import { PUBLIC_KEY_ROUTES } from "./public-keys-handler";
+import { COLLABORATOR_ROUTES } from "./collaborators-handler";
+import { COMMIT_ROUTES } from "@/features/gitea/commits/api/commit-reads";
+import { LEGACY_JOURNAL_ROUTES } from "./legacy-journal-handler";
+import { LEGACY_METADATA_ROUTES } from "./legacy-metadata-handler";
 import Router from "@koa/router";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
@@ -11,7 +28,7 @@ import { VOCABULARY_ROUTES } from "./vocabulary-handler";
 import { ANALYSIS_ROUTES } from "./analysis-handler";
 import { BANK_ROUTES } from "./banks-handler";
 import { ARCHIVE_DOWNLOAD_ROUTES } from "./archive-handler";
-import { registerV1Routes, type V1Route } from "@/server/rest/v1-route";
+import { registerV1Routes } from "@/server/rest/v1-route";
 
 /**
  * The v1 REST surface (ADR 0006 D7) — deliberately small.
@@ -24,12 +41,29 @@ import { registerV1Routes, type V1Route } from "@/server/rest/v1-route";
  *
  * Every route uses the shared v1 identity and scope gate.
  */
-const V1_SCOPED_ROUTES: readonly V1Route<never, never, never>[] = [
+const V1_SCOPED_ROUTES: Parameters<typeof registerV1Routes>[2] = [
   ...LEDGER_ROUTES,
+  ...ASSET_URL_ROUTES,
+  ...TEMP_ASSET_ROUTES,
+  fileParseRoute,
+  receiptParseRoute,
+  suggestCategoriesRoute,
+  receiptInsertRoute,
+  ...PULL_REQUEST_ROUTES,
+  ...STAR_ROUTES,
+  ...LEDGER_LIFECYCLE_ROUTES,
+  ...COMMIT_ROUTES,
+  ...COLLABORATOR_ROUTES,
+  ...PUBLIC_KEY_ROUTES,
+  ...LEGACY_METADATA_ROUTES,
+  ...LEGACY_JOURNAL_ROUTES,
   ...QUERY_ROUTES,
   ...REPORT_ROUTES,
   ...FILE_ROUTES,
+  renameFileRoute,
   ...ENTRY_ROUTES,
+  legacyEntryRoute,
+  ...SOURCE_SLICE_ROUTES,
   ...VOCABULARY_ROUTES,
   ...ANALYSIS_ROUTES,
   ...BANK_ROUTES,

@@ -1,6 +1,7 @@
+import { CATALOG_READS } from "./catalog-reads";
 import { z } from "@/shared/zod-openapi-setup";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
-import { json, paginationSchema } from "@/server/rest/v1-schemas";
+import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
 
 /**
@@ -9,31 +10,18 @@ import { v1Route } from "@/server/rest/v1-route";
  * list what you can reach, then address one by owner and name.
  */
 export const LEDGER_ROUTES = [
-  v1Route({
-    method: "get",
-    path: "/api-gateway/v1/ledgers",
-    summary: "List the caller's ledgers",
-    description:
-      "Every ledger the caller can reach — owned, shared, and starred — newest first. Backed by the same source as the GraphQL `listLedgers` query.",
-    query: paginationSchema,
-    responses: {
-      200: json("The caller's ledgers", z.array(z.unknown())),
-    },
-    handler: async ({ layers }, { identity, query }) => {
-      if (identity.ledgerScope) {
-        return [
-          await layers.workflows.ledger.getLedger({
-            ledgerId: identity.ledgerScope,
-            identity,
-          }),
-        ];
-      }
-      return layers.workflows.ledger.listLedgers({
-        identity,
-        args: { page: query.page, limit: query.limit },
-      });
-    },
-  }),
+  ...CATALOG_READS.map((read) =>
+    v1Route({
+      method: "get",
+      path: `/api-gateway/v1/ledgers${read.segment ? `/${read.segment}` : ""}`,
+      summary: read.summary,
+      description: read.summary,
+      query: read.query,
+      responses: { 200: json(read.summary, z.array(z.unknown())) },
+      handler: async ({ layers }, { identity, query }) =>
+        read.fetch(layers.workflows.ledger, identity, query),
+    }),
+  ),
 
   v1Route({
     method: "get",

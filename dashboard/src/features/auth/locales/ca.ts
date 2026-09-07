@@ -402,6 +402,15 @@ const caAuth: Record<string, TranslationEntry> = {
     message: "An app wants to access your Beancount ledger.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthAllLedgers": {
+    message: "Tots els llibres accessibles",
+    description: "MCP account-wide consent option",
+  },
+  "auth.oauthAllLedgersDescription": {
+    message:
+      "Permet les accions sol·licitades als llibres accessibles ara o en el futur, i les operacions del compte permeses per aquests permisos.",
+    description: "MCP account-wide consent explanation",
+  },
   "auth.oauthChooseLedger": {
     message: "Choose a ledger",
     description: "OAuth consent page ledger step title",
@@ -415,7 +424,7 @@ const caAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
-    message: "No ledgers found. Please create one first.",
+    message: "No s’han trobat llibres.",
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {

@@ -26,7 +26,7 @@ export interface ToolContext {
   services: ToolServices;
   /**
    * The caller driving this tool call. Always present: MCP requires a
-   * ledger-scoped credential (mcp-route.ts refuses anything else), and the
+   * bearer credential with a ledger selected for ledger tools, and the
    * chat/agent routes authenticate the request before building this context.
    * Every tool passes it straight to `authorizeLedger` via the service call —
    * per-call, not once per session, so a mid-session revocation takes effect

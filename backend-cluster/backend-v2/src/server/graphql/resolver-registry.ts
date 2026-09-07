@@ -126,7 +126,7 @@ export function buildResolverContainer(
     [AuthResolver, new AuthResolver(services.auth, workflows.authSession)],
     [CliAuthResolver, new CliAuthResolver(services.cliAuth)],
     [UserProfileResolver, new UserProfileResolver(services.userProfile)],
-    [PullRequestResolver, new PullRequestResolver(services.pullRequest)],
+    [PullRequestResolver, new PullRequestResolver(workflows.pullRequest)],
     [FeedResolver, new FeedResolver(services.feed)],
     [CommitsResolver, new CommitsResolver(services.commits)],
     [LedgerMutationResolver, new LedgerMutationResolver(workflows.ledger)],
@@ -183,15 +183,12 @@ export function buildResolverContainer(
       new LedgerLegacyQueryResolver(
         clients.favaClientFactory,
         services.authorization,
+        workflows.ledger,
       ),
     ],
     [
       LedgerLegacyMutationResolver,
-      new LedgerLegacyMutationResolver(
-        clients.favaClientFactory,
-        services.ledgerEntry,
-        services.authorization,
-      ),
+      new LedgerLegacyMutationResolver(workflows.legacyEntry),
     ],
     [
       LedgerCollaboratorsMutationResolver,

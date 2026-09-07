@@ -127,13 +127,14 @@ describe("MCP route: methods other than POST", () => {
     expect(JSON.parse(body)).toEqual({ error: "unauthorized" });
   });
 
-  it("refuses a GET from an unpinned credential as FORBIDDEN, not 405", async () => {
+  it("returns 405 for an authenticated unpinned GET", async () => {
     resolveIdentityMock.mockResolvedValue({
       ...ledgerScoped,
       ledgerScope: undefined,
     });
     const { res } = await requestWithin("GET");
 
-    expect(res.status).toBe(403);
+    expect(res.status).toBe(405);
+    expect(res.headers.get("allow")).toBe("POST");
   });
 });

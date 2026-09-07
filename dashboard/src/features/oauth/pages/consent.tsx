@@ -14,6 +14,8 @@ import { AuthPageLayout } from "@/features/auth/components/auth-page-layout";
 import { RegisterForm } from "@/features/auth/components/register-form";
 import { OtpForm } from "@/features/auth/components/otp-form";
 
+import { describeMobileScopes } from "@/features/oauth/funcs/mobile-scope-copy";
+
 const routeApi = getRouteApi("/oauth/consent");
 
 // "otp" variant requires sessionId + email; "register"/"login"/"ledger" are simple
@@ -132,9 +134,10 @@ function OtpStep({
   );
 }
 
-function LedgerStep({ uid }: { uid: string }) {
+function LedgerStep({ uid, scope }: { uid: string; scope?: string }) {
   const { t } = useTranslations();
   const [selected, setSelected] = useState<string | null>(null);
+  const [accountWide, setAccountWide] = useState(false);
   const [error, setError] = useState("");
   const { data, loading } = useQuery(ListLedgersDocument);
 
@@ -159,7 +162,10 @@ function LedgerStep({ uid }: { uid: string }) {
               {t("auth.oauthNoLedgersMessage")}
             </AlertDescription>
           </Alert>
-          <Link to="/auth/welcome">
+          <Link
+            to="/auth/welcome"
+            search={{ oauthUid: uid, oauthScope: scope }}
+          >
             <Button variant="outline" className="w-full">
               {t("page.dashboard.createLedger")}
             </Button>
@@ -181,7 +187,10 @@ function LedgerStep({ uid }: { uid: string }) {
                 name="ledger"
                 value={ledger.fullName}
                 checked={selected === ledger.fullName}
-                onChange={() => setSelected(ledger.fullName)}
+                onChange={() => {
+                  setSelected(ledger.fullName);
+                  setAccountWide(false);
+                }}
                 className="sr-only"
               />
               <div className="flex-1 min-w-0">
@@ -194,34 +203,85 @@ function LedgerStep({ uid }: { uid: string }) {
           ))}
         </div>
       )}
+      {scope && (
+        <>
+          <ul className="list-disc space-y-1 pl-5 text-sm text-muted-foreground">
+            {describeMobileScopes(scope, t).map((permission) => (
+              <li key={permission}>{permission}</li>
+            ))}
+          </ul>
+          <label className="flex items-start gap-3 rounded-md border p-3 cursor-pointer">
+            <input
+              type="radio"
+              name="ledger"
+              checked={accountWide}
+              onChange={() => {
+                setAccountWide(true);
+                setSelected(null);
+              }}
+            />
+            <span>
+              <span className="block font-medium text-sm">
+                {t("auth.oauthAllLedgers")}
+              </span>
+              <span className="block text-xs text-muted-foreground">
+                {t("auth.oauthAllLedgersDescription")}
+              </span>
+            </span>
+          </label>
+        </>
+      )}
       {error && (
         <Alert variant="destructive">
           <AlertDescription>{error}</AlertDescription>
         </Alert>
       )}
-      {!loading && ledgers.length > 0 && (
+      {!loading && (ledgers.length > 0 || scope) && (
         <form
           method="POST"
-          action={`/oauth/consent?uid=${uid}`}
+          action={`/oauth/consent?${new URLSearchParams({ uid })}`}
           onSubmit={(e) => {
-            if (!selected) {
+            if (!selected && !accountWide) {
               e.preventDefault();
               setError(t("auth.oauthLedgerRequired"));
             }
           }}
         >
-          <input type="hidden" name="ledgerId" value={selected ?? ""} />
-          <Button type="submit" disabled={!selected} className="w-full">
+          {accountWide ? (
+            <input type="hidden" name="accountWide" value="true" />
+          ) : (
+            <input type="hidden" name="ledgerId" value={selected ?? ""} />
+          )}
+          {scope && <input type="hidden" name="scope" value={scope} />}
+          <Button
+            type="submit"
+            disabled={!selected && !accountWide}
+            className="w-full"
+          >
             {t("auth.oauthApproveAccess")}
           </Button>
         </form>
       )}
+      <form
+        method="POST"
+        action={`/oauth/consent?${new URLSearchParams({ uid })}`}
+      >
+        <Button
+          type="submit"
+          name="decision"
+          value="cancel"
+          variant="outline"
+          className="w-full"
+        >
+          {t("common.cancel")}
+        </Button>
+      </form>
     </div>
   );
 }
 
 export default function OAuthConsentPage() {
-  const { uid } = routeApi.useSearch();
+  const { uid, scope } = routeApi.useSearch();
   const { initialStep } = routeApi.useLoaderData();
   const [state, setState] = useState<OAuthState>({ step: initialStep });
 
@@ -230,7 +290,7 @@ export default function OAuthConsentPage() {
       <div className="min-h-screen flex items-center justify-center bg-background p-4">
         <div className="w-full max-w-sm space-y-6 rounded-xl border bg-card p-6 shadow-sm">
           <div className="text-xl font-bold">Beancount</div>
-          <LedgerStep uid={uid} />
+          <LedgerStep uid={uid} scope={scope} />
         </div>
       </div>
     );

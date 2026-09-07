@@ -1,3 +1,4 @@
+import { LedgerArchiveService } from "@/features/ledger/service/ledger-archive-service";
 const fetchMock = jest.fn();
 jest.mock("node-fetch", () => ({
   __esModule: true,
@@ -55,6 +56,12 @@ const LEDGER = "/api-gateway/v1/ledgers/alice/main";
 const ARCHIVE = `${LEDGER}/archive/gitea-main.zip`;
 
 beforeAll(async () => {
+  layers.services.ledgerArchive = new LedgerArchiveService(
+    layers.database.models,
+    layers.database.db,
+    config,
+    layers.services.authorization,
+  );
   server = await startV1TestServer(layers, config);
 });
 

@@ -391,6 +391,15 @@ const koAuth: Record<string, TranslationEntry> = {
     message: "An app wants to access your Beancount ledger.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthAllLedgers": {
+    message: "접근 가능한 모든 장부",
+    description: "MCP account-wide consent option",
+  },
+  "auth.oauthAllLedgersDescription": {
+    message:
+      "현재 또는 향후 접근할 수 있는 장부에 대한 요청된 작업과 이 권한으로 허용되는 계정 작업을 허용합니다.",
+    description: "MCP account-wide consent explanation",
+  },
   "auth.oauthChooseLedger": {
     message: "Choose a ledger",
     description: "OAuth consent page ledger step title",
@@ -404,7 +413,7 @@ const koAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
-    message: "No ledgers found. Please create one first.",
+    message: "장부를 찾을 수 없습니다.",
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {

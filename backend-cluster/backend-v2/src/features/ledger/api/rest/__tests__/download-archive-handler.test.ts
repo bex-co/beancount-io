@@ -1,3 +1,4 @@
+import { LedgerArchiveService } from "@/features/ledger/service/ledger-archive-service";
 const fetchMock = jest.fn();
 jest.mock("node-fetch", () => ({
   __esModule: true,
@@ -55,6 +56,12 @@ let baseUrl: string;
 let server: http.Server;
 
 beforeAll(async () => {
+  layers.services.ledgerArchive = new LedgerArchiveService(
+    layers.database.models,
+    layers.database.db,
+    config,
+    layers.services.authorization,
+  );
   const router = new Router();
   router.use(restErrorMiddleware());
   registerDownloadArchiveRoute(router, layers, config);

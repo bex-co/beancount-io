@@ -1,3 +1,4 @@
+import { statementQuerySchema } from "./reports-handler";
 import { z } from "@/shared/zod-openapi-setup";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { v1Route } from "@/server/rest/v1-route";
@@ -87,13 +88,8 @@ export interface AnalysisRead {
    * The MCP template's path suffix, for reads whose parameter is required —
    * e.g. `/{payee}`. Empty when the read takes only optional filters.
    *
-   * Path and not RFC 6570 query expansion (`{?account,filter}`), which would be
-   * the natural spelling: the MCP SDK's `UriTemplate.match` does not implement
-   * form-style expansion, so a `{?…}` template matches no URI at all — verified
-   * against @modelcontextprotocol/sdk 1.30.0. A bare template also stops
-   * matching as soon as a caller appends a query string, so optional filters
-   * cannot be offered on MCP by any spelling the matcher supports. They stay a
-   * REST capability; see `mcpFilterExempt` below.
+   * Optional parameters are advertised as RFC 6570 query expansions by MCP's
+   * resource adapter; required parameters retain these existing path bindings.
    */
   readonly uriPath: string;
   readonly fetch: (
@@ -103,6 +99,26 @@ export interface AnalysisRead {
 }
 
 export const ANALYSIS_READS: readonly AnalysisRead[] = [
+  {
+    segment: "overview",
+    summary: "Get the ledger overview",
+    description:
+      "Net worth, account hierarchies, and income/expense series with the full reporting filters.",
+    query: statementQuerySchema,
+    uriPath: "",
+    fetch: (s, { ledgerId, identity, query }) =>
+      s.ledgerFinance.getOverview({ ledgerId, identity, ...query }),
+  },
+  {
+    segment: "documents",
+    summary: "List ledger documents",
+    description:
+      "Document directives with account, time, and Fava-expression filters.",
+    query: filterQuery,
+    uriPath: "",
+    fetch: (s, { ledgerId, identity, query }) =>
+      s.ledgerData.getDocuments({ ledgerId, identity, ...query }),
+  },
   {
     segment: "trial-balance",
     summary: "Get the trial balance",

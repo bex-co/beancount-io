@@ -6,9 +6,8 @@ import { logger } from "@/shared/logger";
 import { type AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
 import { OAUTH_CONFIG } from "@/features/oauth/data/config";
-import type { ToolContext } from "../tools/types";
-import { type Identity, resolveIdentity } from "@/server/api/identity";
-import { ForbiddenError } from "@/shared/errors";
+import type { McpRequestContext } from "./mcp-context";
+import { resolveIdentity } from "@/server/api/identity";
 
 const mcpLogger = logger.child({ module: "mcp-handler" });
 
@@ -19,28 +18,7 @@ const mcpLogger = logger.child({ module: "mcp-handler" });
  * handler, and a feature that reached back into the root to get it would put a
  * cycle where the whole point is that there is none (ADR 0006 D1/参考实现 2).
  */
-export type McpServerFactory = (toolCtx: ToolContext) => McpServer;
-
-/**
- * The one ledger this MCP session may touch. MCP requires a ledger-pinned
- * credential — an unpinned token is a legitimate thing to hold (it reaches
- * GraphQL and REST fine) but MCP has no per-call ledger argument to fall back
- * on, so it is refused here rather than guessed at.
- *
- * This no longer checks the user exists or can reach the ledger: every tool
- * call authorizes itself, per call, through its service's own
- * `authorizeLedger` seam (ADR 0006 D4/D5) — that is what makes a mid-session
- * revocation take effect on the very next tool call rather than at the next
- * session, which a once-at-connect check here could not do.
- */
-function resolveMcpLedgerId(identity: Identity): string {
-  if (!identity.ledgerScope) {
-    throw new ForbiddenError(
-      "This credential is not bound to a ledger; MCP requires a ledger-scoped grant",
-    );
-  }
-  return identity.ledgerScope;
-}
+export type McpServerFactory = (toolCtx: McpRequestContext) => McpServer;
 
 /**
  * Refuse the request the way the MCP authorization spec expects: 401 carrying
@@ -80,9 +58,6 @@ async function handleMcpRequest(
     return;
   }
 
-  // Throws ForbiddenError for an unpinned credential — handled by restErrorMiddleware
-  const ledgerId = resolveMcpLedgerId(identity);
-
   // GET and DELETE are refused here, before any transport exists.
   //
   // This endpoint is stateless (`sessionIdGenerator: undefined`, below): the
@@ -115,7 +90,7 @@ async function handleMcpRequest(
     return;
   }
 
-  const toolCtx: ToolContext = {
+  const toolCtx: McpRequestContext = {
     services: {
       ledgerShell: layers.services.ledgerShell,
       ledgerRepo: layers.services.ledgerRepo,
@@ -127,10 +102,24 @@ async function handleMcpRequest(
       plaidSync: layers.services.plaidSync,
     },
     identity,
-    ledgerId,
+    ledgerId: identity.ledgerScope,
     llmService: layers.services.llm,
     apiKeyService: layers.services.apiKey,
+    socialService: layers.services.userProfile,
+    accountService: layers.services.account,
+    assetStorage: layers.services.assetStorage,
+    ledgerEntryService: layers.services.ledgerEntry,
+    aiCfoUsage: layers.services.aiCfoUsage,
+    subscriptionService: layers.services.subscriptions,
     ledgerReceiptWorkflow: layers.workflows.ledgerReceipt,
+    legacyEntryWorkflow: layers.workflows.legacyEntry,
+    ledgerWorkflow: layers.workflows.ledger,
+    ledgerAssetService: layers.services.ledgerAsset,
+    ledgerArchiveService: layers.services.ledgerArchive,
+    pullRequestWorkflow: layers.workflows.pullRequest,
+    commitsService: layers.services.commits,
+    publicKeyService: layers.services.ledgerPublicKey,
+    collaboratorsWorkflow: layers.workflows.ledgerCollaborators,
   };
 
   const transport = new StreamableHTTPServerTransport({

@@ -1,3 +1,15 @@
+import {
+  SOCIAL_V1_ROUTES,
+  setSocialRoutes,
+} from "@/features/gitea/user-profile/api/social-read-routes";
+import {
+  ACCOUNT_V1_ROUTES,
+  setAccountRoutes,
+} from "@/features/auth/api/account-routes";
+import {
+  CONFIGURATION_V1_ROUTES,
+  setConfigurationRoutes,
+} from "@/features/healthz/api/configuration-routes";
 import Router from "@koa/router";
 import type http from "http";
 import type { GraphQLSchema } from "graphql";
@@ -51,7 +63,7 @@ import {
   MCP_RESOURCES,
   resourceTemplateFor,
 } from "@/features/ai-agent/api/mcp-resources";
-import type { ToolContext } from "@/features/ai-agent/tools/types";
+import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 
 import {
   gqlOpId,
@@ -200,6 +212,21 @@ const REST_FRAGMENTS: readonly RestFragment[] = [
       setLedgerV1Routes(router, layers, config),
   },
   {
+    feature: "configuration-v1",
+    gate: "enforced",
+    register: (router, deps) => setConfigurationRoutes(router, deps),
+  },
+  {
+    feature: "account-v1",
+    gate: "enforced",
+    register: (router, deps) => setAccountRoutes(router, deps),
+  },
+  {
+    feature: "social-v1",
+    gate: "enforced",
+    register: (router, deps) => setSocialRoutes(router, deps),
+  },
+  {
     // API-key management. The transport gate admits authenticated calls to the
     // shared API-key workflow; its centralized PDP decision (including no key
     // self-replication) holds on all three surfaces.
@@ -256,6 +283,9 @@ const REST_FRAGMENTS: readonly RestFragment[] = [
  * so adding a v1 fragment without adding it here is visible in the same diff.
  */
 export const V1_DECLARED_ROUTES = [
+  ...SOCIAL_V1_ROUTES,
+  ...ACCOUNT_V1_ROUTES,
+  ...CONFIGURATION_V1_ROUTES,
   ...LEDGER_V1_ROUTES,
   ...API_KEY_V1_ROUTES,
 ] as const;
@@ -363,7 +393,7 @@ function listMcpOps(): string[] {
  * the same reasoning that moved `authorizeLedger` into every tool in w1/m19.
  */
 export function assembleMcpRegistry(
-  toolCtx: ToolContext,
+  toolCtx: McpRequestContext,
   config: AppConfig,
 ): McpServer {
   const server = new McpServer({ name: "beancount-mcp", version: "1.0.0" });
@@ -414,7 +444,7 @@ export function assembleMcpRegistry(
  */
 async function gateMcpCall(
   opId: string,
-  toolCtx: ToolContext,
+  toolCtx: McpRequestContext,
   config: AppConfig,
 ): Promise<void> {
   await enforceRateLimit({ opId, identity: toolCtx.identity, ip: "mcp" });
@@ -431,7 +461,7 @@ async function gateMcpCall(
  * `authorizeLedger`. A grant revoked between two fetches bites on the second.
  */
 function makeMcpResourceHandler(
-  toolCtx: ToolContext,
+  toolCtx: McpRequestContext,
   descriptor: (typeof MCP_RESOURCES)[number],
   config: AppConfig,
 ) {
@@ -447,16 +477,20 @@ function makeMcpResourceHandler(
         userId: toolCtx.identity.userId,
       });
       await gateMcpCall(opId, toolCtx, config);
-      const text = await descriptor.read(toolCtx, variables);
+      const result = await descriptor.read(toolCtx, variables);
       return {
-        contents: [{ uri: uri.href, mimeType: descriptor.mimeType, text }],
+        contents: [
+          typeof result === "string"
+            ? { uri: uri.href, mimeType: descriptor.mimeType, text: result }
+            : { uri: uri.href, ...result },
+        ],
       };
     });
   };
 }
 
 function makeMcpToolHandler(
-  toolCtx: ToolContext,
+  toolCtx: McpRequestContext,
   descriptor: (typeof MCP_TOOLS)[number],
   config: AppConfig,
 ) {

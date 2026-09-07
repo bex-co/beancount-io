@@ -153,14 +153,18 @@ Point an MCP client at a deployment to query and edit a ledger from an agent:
 }
 ```
 
-Nine tools — BQL queries, file listing, reads, edits, API-key management, and bank import —
-plus twenty-eight URI-addressed **resources** an agent fetches without spending
-a tool call — the ledger's vocabulary (payees, currencies, tags, …), its analysis
-reads (trial balance, account reports, …), its linked banks, and file contents.
-Bank imports are drivable end to end after a one-time browser link, with
-`dry_run` on everything that writes. Each resource has a REST twin over the same service call.
+Twenty-four tools — BQL queries, file listing, reads, edits, entry and receipt
+insertion, statement parsing, pull requests, collaborators, API-key management,
+and bank import — plus sixty-six URI-addressed **resources** an agent fetches
+without spending a tool call: the ledger's vocabulary (payees, currencies,
+tags, …), its journals and analysis reads (trial balance, account reports, …),
+its linked banks, category suggestions, and file contents. Every eligible
+GraphQL operation now has a REST and MCP twin over the same protected service
+call — the parity gap is held at zero by CI. Bank imports are drivable end to
+end after a one-time browser link, with `dry_run` on everything that writes.
 Every call re-authorizes, so access revoked mid-session is refused on the next
-one. The credential must be scoped to a single ledger. `yarn mcp:conformance <base-url>`
+one. A credential can be pinned to one ledger or select `ledger: "owner/name"`
+per call. `yarn mcp:conformance <base-url>`
 tells you whether a deployment is connectable. See
 [connecting an MCP client](./backend-cluster/backend-v2/README.md#connecting-an-mcp-client)
 for the walkthrough and

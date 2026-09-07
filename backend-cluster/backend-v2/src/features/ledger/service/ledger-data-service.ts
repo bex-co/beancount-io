@@ -84,16 +84,17 @@ export class LedgerDataService
   extends AuthorizedLedgerService
   implements ILedgerDataService
 {
-  private async getClient(ledgerId: string, identity: Identity | undefined) {
+  private async getClient(
+    ledgerId: string,
+    identity: Identity | undefined,
+    action:
+      | typeof AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ
+      | typeof AUTHORIZATION_ACTIONS.LEDGER_FILES_READ = AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  ) {
     // Every verb on this service is a read, so "read" is the only rel it ever
     // needs — the seam still runs on every call (ADR 0006 D4), it just never
     // has to ask for more.
-    await authorizeLedger(
-      identity,
-      ledgerId,
-      AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
-      this.authDeps,
-    );
+    await authorizeLedger(identity, ledgerId, action, this.authDeps);
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
@@ -239,6 +240,7 @@ export class LedgerDataService
     const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
       ledgerId,
       identity,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_READ,
     );
     return unwrapFavaResponse(
       favaApiClient.reports.getLedgerSourceFiles(ledgerOwner, ledgerName),

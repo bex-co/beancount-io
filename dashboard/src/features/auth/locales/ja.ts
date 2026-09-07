@@ -395,6 +395,15 @@ const jaAuth: Record<string, TranslationEntry> = {
     message: "An app wants to access your Beancount ledger.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthAllLedgers": {
+    message: "アクセス可能なすべての帳簿",
+    description: "MCP account-wide consent option",
+  },
+  "auth.oauthAllLedgersDescription": {
+    message:
+      "現在または今後アクセスできる帳簿での要求された操作と、これらの権限で許可されるアカウント操作を許可します。",
+    description: "MCP account-wide consent explanation",
+  },
   "auth.oauthChooseLedger": {
     message: "Choose a ledger",
     description: "OAuth consent page ledger step title",
@@ -408,7 +417,7 @@ const jaAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
-    message: "No ledgers found. Please create one first.",
+    message: "帳簿が見つかりません。",
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {

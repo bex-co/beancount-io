@@ -398,6 +398,15 @@ const nlAuth: Record<string, TranslationEntry> = {
     message: "An app wants to access your Beancount ledger.",
     description: "OAuth consent page login step description",
   },
+  "auth.oauthAllLedgers": {
+    message: "Alle toegankelijke boeken",
+    description: "MCP account-wide consent option",
+  },
+  "auth.oauthAllLedgersDescription": {
+    message:
+      "Sta de gevraagde acties toe voor boeken waartoe u nu of later toegang hebt, plus accountacties die deze rechten toestaan.",
+    description: "MCP account-wide consent explanation",
+  },
   "auth.oauthChooseLedger": {
     message: "Choose a ledger",
     description: "OAuth consent page ledger step title",
@@ -411,7 +420,7 @@ const nlAuth: Record<string, TranslationEntry> = {
     description: "OAuth consent page approve button",
   },
   "auth.oauthNoLedgersMessage": {
-    message: "No ledgers found. Please create one first.",
+    message: "Geen boeken gevonden.",
     description: "OAuth consent page empty ledger state message",
   },
   "auth.oauthRegisterToContinue": {

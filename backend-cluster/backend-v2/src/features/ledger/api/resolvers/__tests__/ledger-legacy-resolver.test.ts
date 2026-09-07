@@ -1,3 +1,5 @@
+import { LegacyEntryWorkflow } from "@/features/ledger/workflow/legacy-entry-workflow";
+import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import "reflect-metadata";
 import {
   LedgerLegacyQueryResolver,
@@ -136,11 +138,24 @@ describe("LedgerLegacyResolver", () => {
     queryResolver = new LedgerLegacyQueryResolver(
       mockFavaClientFactory,
       authorization,
+      new LedgerWorkflow(
+        mockFavaClientFactory,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        {} as never,
+        authorization,
+      ),
     );
     mutationResolver = new LedgerLegacyMutationResolver(
-      mockFavaClientFactory,
-      mockLedgerEntryService as any,
-      authorization,
+      new LegacyEntryWorkflow(
+        mockFavaClientFactory,
+        mockLedgerEntryService as any,
+        authorization,
+      ),
     );
   });
 

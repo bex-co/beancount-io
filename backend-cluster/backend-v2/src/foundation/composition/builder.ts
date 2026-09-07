@@ -1,3 +1,6 @@
+import { LegacyEntryWorkflow } from "@/features/ledger/workflow/legacy-entry-workflow";
+import { LedgerArchiveService } from "@/features/ledger/service/ledger-archive-service";
+import { PullRequestWorkflow } from "@/features/gitea/pull-request/workflow/pull-request-workflow";
 import { type AppConfig } from "@/config/config";
 import { PlaidItemService } from "@/features/plaid/service/plaid-item-service";
 import { PlaidSyncService } from "@/features/plaid/service/plaid-sync-service";
@@ -118,6 +121,12 @@ export function buildServiceLayer(input: {
       input.clients.favaClientFactory,
       authorization,
     ),
+    ledgerArchive: new LedgerArchiveService(
+      input.database.models,
+      input.database.db,
+      input.config,
+      authorization,
+    ),
     ledgerAsset: new LedgerAssetService(
       input.clients.favaClientFactory,
       assetStorage,
@@ -190,8 +199,6 @@ export function buildServiceLayer(input: {
     ),
     pullRequest: new PullRequestService(
       input.clients.giteaClientFactory,
-      input.database.models,
-      input.database.db,
       authorization,
     ),
     feed: new FeedService(
@@ -247,5 +254,20 @@ export function buildWorkflowLayer(input: {
     input.database.models,
     input.database.db,
   );
-  return { ledger, ledgerCollaborators, ledgerReceipt, authSession };
+  return {
+    ledger,
+    ledgerCollaborators,
+    ledgerReceipt,
+    legacyEntry: new LegacyEntryWorkflow(
+      input.clients.favaClientFactory,
+      input.services.ledgerEntry,
+      input.services.authorization,
+    ),
+    authSession,
+    pullRequest: new PullRequestWorkflow(
+      input.services.pullRequest,
+      input.database.models,
+      input.database.db,
+    ),
+  };
 }

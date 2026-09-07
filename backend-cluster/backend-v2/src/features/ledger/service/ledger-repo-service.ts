@@ -57,12 +57,18 @@ export interface ILedgerRepoService {
     paths: string[];
   }): Promise<LedgerFileWithContent[]>;
 
-  /** Commit a batch of file create/update/delete operations atomically. */
+  /**
+   * Commit a batch of file create/update/delete operations atomically.
+   * `dryRun` runs the same authorization and path validation, then stops
+   * before the repository commit — so a preview refuses exactly what the
+   * write would.
+   */
   changeFiles(params: {
     ledgerId: string;
     identity: Identity;
     operations: LedgerChangeFileOperation[];
     message: string;
+    dryRun?: boolean;
   }): Promise<void>;
 }
 
@@ -197,8 +203,9 @@ export class LedgerRepoService
     identity: Identity;
     operations: LedgerChangeFileOperation[];
     message: string;
+    dryRun?: boolean;
   }): Promise<void> {
-    const { ledgerId, identity, operations, message } = params;
+    const { ledgerId, identity, operations, message, dryRun = false } = params;
     await authorizeLedger(
       identity,
       ledgerId,
@@ -214,6 +221,7 @@ export class LedgerRepoService
         );
       }
     });
+    if (dryRun) return;
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,

@@ -9,7 +9,7 @@ import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { RESOURCE_SCHEME } from "../mcp-resources";
 import { MCP_TOOLS } from "../mcp-tools";
 import type { AppConfig } from "@/config/config";
-import type { ToolContext } from "../../tools/types";
+import type { McpRequestContext } from "../mcp-context";
 
 const config = { api: { scopeEnforcement: "shadow" } } as AppConfig;
 const LEDGER = "alice/main";
@@ -43,7 +43,7 @@ const fakeServices = () => ({
   },
 });
 
-function ctx(services: ReturnType<typeof fakeServices>): ToolContext {
+function ctx(services: ReturnType<typeof fakeServices>): McpRequestContext {
   return {
     services,
     identity: {
@@ -56,10 +56,10 @@ function ctx(services: ReturnType<typeof fakeServices>): ToolContext {
     ledgerId: LEDGER,
     llmService: {},
     ledgerReceiptWorkflow: {},
-  } as unknown as ToolContext;
+  } as unknown as McpRequestContext;
 }
 
-async function connect(toolCtx: ToolContext) {
+async function connect(toolCtx: McpRequestContext) {
   const server = assembleMcpRegistry(toolCtx, config);
   const [a, b] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test", version: "1.0.0" });
@@ -122,14 +122,80 @@ describe("bank import on MCP", () => {
       "banks/{itemId}",
       "banks/{itemId}/accounts",
       "bank-accounts",
-      "bank-transactions/unsynced",
-      "bank-transactions/suggested-categories",
+      "bank-transactions/unsynced{?accountId}",
+      "bank-transactions/suggested-categories{?accountId}",
       "banks/{itemId}/suggested-mapping",
     ]) {
       expect(uris).toContain(`${RESOURCE_SCHEME}://{owner}/{name}/${path}`);
     }
     await close();
   });
+
+  describe.each(["unsynced", "suggested-categories"])(
+    "bank read %s",
+    (path) => {
+      it.each([undefined, "pacc_1", "pacc_/a+b%20"])(
+        "preserves the account filter %s through the SDK",
+        async (accountId) => {
+          const services = fakeServices();
+          const read = jest.fn(async (...args: unknown[]) => {
+            const selected = args[path === "unsynced" ? 1 : 2];
+            return ["pacc_1", "pacc_/a+b%20"]
+              .filter((id) => selected === undefined || id === selected)
+              .map((id) => ({ accountId: id }));
+          });
+          if (path === "unsynced")
+            services.plaidItem.getUnsyncedTransactions = read;
+          else services.plaidItem.suggestCategories = read;
+          const { client, close } = await connect(ctx(services));
+          try {
+            const query =
+              accountId === undefined
+                ? ""
+                : `?accountId=${encodeURIComponent(accountId)}`;
+            const result = await client.readResource({
+              uri: `${RESOURCE_SCHEME}://alice/main/bank-transactions/${path}${query}`,
+            });
+            const content = result.contents[0];
+            if (!content || !("text" in content))
+              throw new Error("Expected text resource");
+            expect(JSON.parse(content.text)).toEqual(
+              (accountId === undefined
+                ? ["pacc_1", "pacc_/a+b%20"]
+                : [accountId]
+              ).map((id) => ({ accountId: id })),
+            );
+            expect(read.mock.calls[0]?.[path === "unsynced" ? 2 : 1]).toBe(
+              LEDGER,
+            );
+          } finally {
+            await close();
+          }
+        },
+      );
+
+      it.each(["accountId=a&accountId=b", "unknown=a"])(
+        "rejects ambiguous or unsupported query %s",
+        async (query) => {
+          const services = fakeServices();
+          const { client, close } = await connect(ctx(services));
+          try {
+            await expect(
+              client.readResource({
+                uri: `${RESOURCE_SCHEME}://alice/main/bank-transactions/${path}?${query}`,
+              }),
+            ).rejects.toThrow();
+            expect(
+              services.plaidItem.getUnsyncedTransactions,
+            ).not.toHaveBeenCalled();
+            expect(services.plaidItem.suggestCategories).not.toHaveBeenCalled();
+          } finally {
+            await close();
+          }
+        },
+      );
+    },
+  );
 
   /**
    * The `dry_run` promise is "nothing changes". A flag that is accepted and
@@ -180,6 +246,49 @@ describe("bank import on MCP", () => {
 
       expect(services.plaidItem.unlinkItem.mock.calls[0]!.at(-1)).toBe(false);
     });
+  });
+
+  describe.each([
+    { operation: "refresh", item_id: "pitm_1" },
+    {
+      operation: "map_account",
+      account_id: "pacc_1",
+      ledger_account: "Assets:Checking",
+    },
+    { operation: "set_currency", account_id: "pacc_1", currency: "USD" },
+  ])("$operation without a preview contract", (args) => {
+    it("refuses a requested preview before invoking any bank operation", async () => {
+      const services = fakeServices();
+      const result = await call(services, "manageBankConnection", {
+        ...args,
+        dry_run: true,
+      });
+      expect(result.isError).toBe(true);
+      expect(JSON.stringify(result.content)).toContain("dry_run");
+      for (const operation of Object.values(services.plaidItem)) {
+        expect(operation).not.toHaveBeenCalled();
+      }
+    });
+
+    it.each([undefined, false])(
+      "applies the operation with dry_run=%s",
+      async (dryRun) => {
+        const services = fakeServices();
+        const result = await call(services, "manageBankConnection", {
+          ...args,
+          ...(dryRun === undefined ? {} : { dry_run: dryRun }),
+        });
+        expect(result.isError).not.toBe(true);
+        const writes = [
+          services.plaidItem.refreshItemStatus,
+          services.plaidItem.updateAccountMapping,
+          services.plaidItem.updateAccountCurrency,
+        ];
+        expect(
+          writes.reduce((count, write) => count + write.mock.calls.length, 0),
+        ).toBe(1);
+      },
+    );
   });
 
   it("names a missing argument instead of letting the service guess", async () => {

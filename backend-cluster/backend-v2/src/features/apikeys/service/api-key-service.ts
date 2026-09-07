@@ -175,10 +175,10 @@ export class ApiKeyService implements IApiKeyService {
     }
 
     const name = input.name.trim();
-    if (!name) {
+    if (!name || name.length > 200) {
       throw new ValidationError(
         "name",
-        "A key needs a name you will recognize",
+        "A key needs a name between 1 and 200 characters",
       );
     }
 
@@ -210,7 +210,11 @@ export class ApiKeyService implements IApiKeyService {
     }
     const ledgerScope = requestedLedgerScope ?? identity.ledgerScope;
 
-    if (input.expiresAt && input.expiresAt.getTime() <= Date.now()) {
+    if (
+      input.expiresAt &&
+      (!Number.isFinite(input.expiresAt.getTime()) ||
+        input.expiresAt.getTime() <= Date.now())
+    ) {
       throw new ValidationError("expiresAt", "Expiry must be in the future");
     }
 

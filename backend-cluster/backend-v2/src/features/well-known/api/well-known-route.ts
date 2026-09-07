@@ -2,7 +2,11 @@ import Router from "@koa/router";
 import { toJSONSchema } from "zod";
 import type { AppConfig } from "@/config/config";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
-import { MCP_RESOURCES } from "@/features/ai-agent/api/mcp-resources";
+import {
+  MCP_RESOURCES,
+  resourceTemplateFor,
+} from "@/features/ai-agent/api/mcp-resources";
+import { API_SCOPES } from "@/server/api/identity";
 
 const SECURITY_TXT = `Contact: mailto:hello@beancount.io
 Contact: https://beancount.io/security#report-a-vulnerability
@@ -31,19 +35,20 @@ function mcpManifest(config: AppConfig) {
     tools: MCP_TOOLS.map((tool) => ({
       name: tool.name,
       description: tool.description,
-      inputSchema: toJSONSchema(tool.inputSchema),
+      inputSchema: toJSONSchema(tool.inputSchema, { io: "input" }),
+      outputSchema: toJSONSchema(tool.outputSchema),
     })),
     resources: MCP_RESOURCES.map((resource) => ({
       name: resource.name,
       description: resource.description,
-      uriTemplate: resource.uriTemplate,
+      uriTemplate: resourceTemplateFor(resource).uriTemplate.toString(),
       mimeType: resource.mimeType,
     })),
     auth: {
       type: "oauth2",
       authorizationUrl: `${config.oauth.issuer}/api-gateway/oauth/auth`,
       tokenUrl: `${config.oauth.issuer}/api-gateway/oauth/token`,
-      scopes: ["read", "write"],
+      scopes: API_SCOPES,
     },
     openapi: `${publicOrigin}/api-gateway/v1/openapi.json`,
   };
@@ -56,10 +61,15 @@ export function setWellKnownRoutes(router: Router, config: AppConfig): void {
     ctx.body = SECURITY_TXT;
   });
 
+  // Everything in the manifest is static per process — tool schemas, resource
+  // templates, and config never change after startup — so serialize the ~50
+  // JSON-schema exports once instead of on every anonymous GET.
+  let manifest: ReturnType<typeof mcpManifest> | undefined;
   router.get("/.well-known/mcp.json", (ctx) => {
     ctx.type = "application/json";
     ctx.set("Cache-Control", "public, max-age=3600");
     ctx.set("Access-Control-Allow-Origin", "*");
-    ctx.body = mcpManifest(config);
+    manifest ??= mcpManifest(config);
+    ctx.body = manifest;
   });
 }

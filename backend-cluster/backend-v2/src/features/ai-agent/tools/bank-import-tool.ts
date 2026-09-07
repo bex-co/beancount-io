@@ -75,7 +75,7 @@ export const bankImportOutputSchema = toolOutputSchema(z.unknown());
 export const connectionDescription =
   "Manage a linked bank connection. `reconcile` re-reads which accounts it shares; `map_account` points one at a ledger account; `set_currency` sets its currency; `refresh` re-reads connection health; `unlink` severs it. " +
   "Linking a NEW bank is not here — that happens in a browser through the bank's own widget. " +
-  "`reconcile` and `unlink` accept dry_run; the others change one field or read a status, so there is nothing to preview.";
+  "`reconcile` and `unlink` accept dry_run. `map_account`, `set_currency`, and `refresh` apply changes immediately and reject dry_run=true.";
 
 export const bankConnectionInputSchema = z.object({
   operation: z
@@ -172,6 +172,13 @@ export async function executeBankConnection(
     message: "Bank connection operation failed",
     context: { operation: input.operation },
     execute: async () => {
+      if (
+        dryRun &&
+        input.operation !== "reconcile" &&
+        input.operation !== "unlink"
+      ) {
+        throw new Error(`dry_run is not supported for ${input.operation}`);
+      }
       switch (input.operation) {
         case "reconcile":
           return services.plaidItem.reconcileItemAccounts(

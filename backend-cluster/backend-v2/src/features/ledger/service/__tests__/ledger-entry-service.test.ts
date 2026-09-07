@@ -621,6 +621,46 @@ describe("LedgerEntryService", () => {
 
       expect(mockCreateLedgerFile).not.toHaveBeenCalled();
     });
+
+    /**
+     * w1/m10/t016 — the documented partial-failure boundary, pinned.
+     *
+     * The routed-file creation is its own commit, made before the bulk write
+     * so the canonical endpoint can target the file. A bulk write that then
+     * fails leaves that empty-file commit in place: the write path attempts no
+     * compensating deletion (a cleanup that can itself fail converts one clear
+     * failure into two ambiguous ones). The creation is empty, additive, and
+     * derived from bcio routing — never a caller-chosen path — and a retry
+     * finds the file present and does not commit it again.
+     */
+    it("keeps the created routing file when the bulk write then fails, and does not recreate it on retry", async () => {
+      mockGetLedgerFile.mockResolvedValueOnce({ data: { success: false } });
+      mockAddBulkEntries.mockResolvedValueOnce(failResponse);
+
+      const entries = [
+        {
+          type: "commodity" as const,
+          entry: { date: "2024-01-01", currency: "USD" },
+        },
+      ];
+      await expect(
+        service.addBulkEntries(IDENTITY, "testuser", "test-ledger", entries, "web"),
+      ).rejects.toThrow();
+
+      expect(mockCreateLedgerFile).toHaveBeenCalledTimes(1);
+
+      // Retry: the file now exists, so nothing is created twice and the
+      // write succeeds against the file the failed attempt left behind.
+      const retried = await service.addBulkEntries(
+        IDENTITY,
+        "testuser",
+        "test-ledger",
+        entries,
+        "web",
+      );
+      expect(retried.success).toBe(true);
+      expect(mockCreateLedgerFile).toHaveBeenCalledTimes(1);
+    });
   });
 
   describe("directive-limit bypass", () => {

@@ -173,13 +173,10 @@ describe("surface parity", () => {
    */
   const DEFERRED: Record<"gql" | "rest" | "mcp", number> = {
     gql: 0,
-    // `Query.userProfile`, centralized account deletion, the public tier-quota
-    // catalog, four deliberately public social-discovery queries, and
-    // browser-only archive URL discovery are reachable work whose absent twins
-    // carry explicit reasons. m15 preserves current clients rather than adding
-    // new REST/MCP surfaces.
-    rest: 53,
-    mcp: 63,
+    // w1/m10 closed the last eligible adapters. The frozen baseline separately
+    // prevents dropping verbs or narrowing eligibility to reduce debt.
+    rest: 0,
+    mcp: 0,
   };
 
   it("tracks the in-scope gap exactly, so it cannot drift either way", () => {

@@ -1,4 +1,13 @@
 import "reflect-metadata";
+jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
+jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
+import { Client } from "@modelcontextprotocol/sdk/client/index.js";
+import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
+import { buildSchema } from "type-graphql";
+import { graphql } from "graphql";
+import { assembleMcpRegistry } from "@/server/api/composition-root";
+import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
+import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { ApiKeyResolver } from "@/features/apikeys/api/api-key-resolver";
@@ -117,8 +126,15 @@ const restCall = async (
 
 describe("API-key authorization parity", () => {
   let server: V1TestServer;
+  let schema: Awaited<ReturnType<typeof buildSchema>>;
 
   beforeAll(async () => {
+    schema = await buildSchema({
+      resolvers: [ApiKeyResolver],
+      container: { get: () => resolver },
+      globalMiddlewares: [graphqlScopeMiddleware("enforce")],
+      validate: true,
+    });
     server = await startV1TestServer(layers, config, {
       apiKeys: true,
       ledger: false,
@@ -260,5 +276,139 @@ describe("API-key authorization parity", () => {
       executeListApiKeys({ apiKeyService: service, identity: adminOAuth }),
     ).resolves.toMatchObject({ ok: true });
     expect(model.listByUserId).toHaveBeenCalledTimes(3);
+  });
+
+  async function callMcp(
+    name: string,
+    input: Record<string, unknown>,
+    identity = adminOAuth,
+  ) {
+    const mcp = assembleMcpRegistry(
+      { identity, apiKeyService: service } as unknown as McpRequestContext,
+      config,
+    );
+    const client = new Client({ name: "api-key-parity", version: "1" });
+    const [a, b] = InMemoryTransport.createLinkedPair();
+    await Promise.all([client.connect(a), mcp.connect(b)]);
+    try {
+      return await client.callTool({ name, arguments: input });
+    } finally {
+      await client.close();
+      await mcp.close();
+    }
+  }
+
+  it.each([undefined, "", "ada/personal"])(
+    "preserves expiry and inherited restrictions through actual adapters: %s",
+    async (ledgerScope) => {
+      const caller = { ...adminOAuth, ledgerScope: "ada/personal" };
+      const expiresAt = new Date(Date.now() + 86_400_000).toISOString();
+      const input = {
+        name: "Automation",
+        scopes: ["ledger.read"],
+        ledgerScope,
+        expiresAt,
+      };
+      server.setIdentity(caller);
+      const response = await fetch(`${server.url}/api-gateway/v1/api-keys`, {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(input),
+      });
+      expect(response.status).toBe(200);
+      const rest = (await response.json()) as {
+        key: { expiresAt: string; ledgerScope: string };
+        plaintext: string;
+      };
+      const gql = await graphql({
+        schema,
+        source: `mutation($input: CreateApiKeyInputType!){createApiKey(input:$input){key{expiresAt ledgerScope} plaintext}}`,
+        variableValues: { input },
+        contextValue: gqlContext(caller),
+      });
+      expect(gql.errors).toBeUndefined();
+      const mcp = await callMcp("createApiKey", input, caller);
+      expect(mcp.isError).not.toBe(true);
+      expect(mcp.structuredContent).toMatchObject({
+        ok: true,
+        result: {
+          key: { expires_at: expiresAt, ledger_scope: "ada/personal" },
+          plaintext: expect.stringMatching(/^bcio_/),
+        },
+      });
+      const snake = await callMcp(
+        "createApiKey",
+        {
+          name: input.name,
+          scopes: input.scopes,
+          ledger_scope: ledgerScope,
+          expires_at: expiresAt,
+        },
+        caller,
+      );
+      expect(snake.isError).not.toBe(true);
+      expect(rest.key).toMatchObject({
+        expiresAt,
+        ledgerScope: "ada/personal",
+      });
+      expect(gql.data?.createApiKey).toMatchObject({
+        key: { expiresAt, ledgerScope: "ada/personal" },
+        plaintext: expect.stringMatching(/^bcio_/),
+      });
+      expect(model.create).toHaveBeenCalledTimes(4);
+      for (const [, written] of model.create.mock.calls) {
+        expect(written).toMatchObject({
+          expiresAt: new Date(expiresAt),
+          ledgerScope: "ada/personal",
+          scopes: ["ledger.read"],
+        });
+        expect(written.keyDigest).not.toContain("bcio_");
+      }
+    },
+  );
+
+  it.each([
+    { ledger_scope: "ada/personal", ledgerScope: "ada/other" },
+    { expires_at: "2030-01-01T00:00:00Z", expiresAt: "2031-01-01T00:00:00Z" },
+    { expires_at: "not-a-date" },
+    { expires_at: "2000-01-01T00:00:00Z" },
+  ])(
+    "rejects invalid or conflicting MCP arguments before persistence: %j",
+    async (extra) => {
+      const response = await callMcp("createApiKey", {
+        name: "Automation",
+        scopes: ["ledger.read"],
+        ...extra,
+      });
+      expect(response.isError).toBe(true);
+      expect(model.create).not.toHaveBeenCalled();
+    },
+  );
+
+  it("includes usage and revocation dates in MCP list results without a secret", async () => {
+    model.listByUserId.mockResolvedValueOnce([
+      {
+        ...storedKey,
+        lastUsedAt: new Date("2026-01-02"),
+        revokedAt: new Date("2026-01-03"),
+      },
+    ]);
+    const response = await callMcp("listApiKeys", {});
+    expect(response.isError).not.toBe(true);
+    expect(response.structuredContent).toMatchObject({
+      result: [
+        {
+          last_used_at: "2026-01-02T00:00:00.000Z",
+          revoked_at: "2026-01-03T00:00:00.000Z",
+          revoked: true,
+        },
+      ],
+    });
+    expect(JSON.stringify(response.structuredContent)).not.toContain(
+      "keyDigest",
+    );
+    expect(JSON.stringify(response.structuredContent)).not.toContain(
+      "plaintext",
+    );
   });
 });

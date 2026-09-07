@@ -1,5 +1,6 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
+import { booleanQuery } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
 import { UnauthenticatedError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
@@ -27,12 +28,22 @@ const itemPath = ledgerPathSchema.extend({
 const accountPath = ledgerPathSchema.extend({
   accountId: z.string().openapi({ description: "The bank account's id" }),
 });
+export const bankAccountQuery = z.object({
+  accountId: z
+    .string()
+    .optional()
+    .openapi({ description: "Restrict to one bank account" }),
+});
+
 const dryRunQuery = z.object({
-  dry_run: z.coerce.boolean().optional().openapi({
+  dry_run: booleanQuery.openapi({
     description:
       "Validate and report what would change, without changing anything.",
   }),
 });
+const noPreviewQuery = z
+  .object({ dry_run: z.literal("false").optional() })
+  .strict();
 const json = (description: string) => ({
   description,
   content: { "application/json": { schema: z.unknown() } },
@@ -119,11 +130,7 @@ export const BANK_ROUTES = [
     description:
       "Transactions pulled from the bank that have not been written into the ledger.",
     params: ledgerPathSchema,
-    query: z.object({
-      accountId: z.string().optional().openapi({
-        description: "Restrict to one bank account",
-      }),
-    }),
+    query: bankAccountQuery,
     responses: { 200: json("Unsynced transactions") },
     handler: async ({ layers }, { identity, params, query }) =>
       layers.services.plaidItem.getUnsyncedTransactions(
@@ -139,7 +146,7 @@ export const BANK_ROUTES = [
     description:
       "Category suggestions drawn from the ledger's own history — what an importer should propose before asking.",
     params: ledgerPathSchema,
-    query: z.object({ accountId: z.string().optional() }),
+    query: bankAccountQuery,
     responses: { 200: json("Category suggestions") },
     handler: async ({ layers }, { identity, params, query }) =>
       layers.services.plaidItem.suggestCategories(
@@ -282,8 +289,10 @@ export const BANK_ROUTES = [
     path: `${V1}/banks/{itemId}/refresh`,
     summary: "Refresh a bank's connection status",
     description:
-      "Re-reads the connection's health from the bank. No `dry_run`: there is nothing to preview — it reports status rather than changing your data.",
+      "Refreshes and stores the connection status from the bank. Preview is unsupported; dry_run=true is rejected.",
     params: itemPath,
+    query: noPreviewQuery,
+    body: z.object({}).strict().default({}),
     responses: { 200: json("The refreshed connection") },
     handler: async ({ layers }, { identity, params }) =>
       layers.services.plaidItem.refreshItemStatus(
@@ -299,7 +308,11 @@ export const BANK_ROUTES = [
     description:
       "Sets which ledger account this bank account's transactions book against. No `dry_run`: the preview would only echo the value you sent.",
     params: accountPath,
-    body: z.object({ ledgerAccount: z.string() }).openapi("BankAccountMapping"),
+    query: noPreviewQuery,
+    body: z
+      .object({ ledgerAccount: z.string() })
+      .strict()
+      .openapi("BankAccountMapping"),
     responses: { 200: json("Whether the mapping changed") },
     handler: async ({ layers }, { identity, params, body }) =>
       layers.services.plaidItem.updateAccountMapping(
@@ -316,7 +329,11 @@ export const BANK_ROUTES = [
     description:
       "Sets the currency its transactions are booked in. No `dry_run`, for the same reason as the mapping above.",
     params: accountPath,
-    body: z.object({ currency: z.string() }).openapi("BankAccountCurrency"),
+    query: noPreviewQuery,
+    body: z
+      .object({ currency: z.string() })
+      .strict()
+      .openapi("BankAccountCurrency"),
     responses: { 200: json("Whether the currency changed") },
     handler: async ({ layers }, { identity, params, body }) =>
       layers.services.plaidItem.updateAccountCurrency(

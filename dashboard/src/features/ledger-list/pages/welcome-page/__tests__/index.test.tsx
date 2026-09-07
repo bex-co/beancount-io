@@ -21,6 +21,7 @@ vi.mock("@apollo/client/react", () => ({
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => vi.fn(),
+  getRouteApi: () => ({ useSearch: () => ({}) }),
 }));
 
 vi.mock("@/common/components/seo/page-seo", () => ({

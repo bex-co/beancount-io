@@ -19,7 +19,6 @@ import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { Identity } from "@/server/api/identity";
-import type { ToolContext } from "@/features/ai-agent/tools/types";
 import { CHECKS } from "../mcp-conformance";
 
 const [
@@ -77,7 +76,7 @@ beforeAll(async () => {
   const router = new Router();
   app.use(restErrorMiddleware());
   app.use(bodyParser());
-  setMcpRoute(router, layers, config, (ctx: ToolContext) =>
+  setMcpRoute(router, layers, config, (ctx) =>
     assembleMcpRegistry(ctx, config),
   );
   app.use(router.routes()).use(router.allowedMethods());
@@ -128,11 +127,11 @@ describe("MCP conformance checks", () => {
     expect(result.detail).toMatch(/\d+ tools, all publishing an outputSchema/);
   });
 
-  it("check 4 names the ledger-scope requirement when the credential is unpinned", async () => {
+  it("check 4 initializes and discovers tools with an unpinned credential", async () => {
     acceptTokens({ unpinned: { ...ledgerScoped, ledgerScope: undefined } });
     const result = await checkToolsList({ baseUrl, token: "unpinned" });
-    expect(result.outcome).toBe("fail");
-    expect(result.detail).toContain("not bound to a ledger");
+    expect(result.outcome).toBe("pass");
+    expect(result.detail).toMatch(/\d+ tools, all publishing an outputSchema/);
   });
 
   it("check 5 passes when a read-only credential is refused a write", async () => {

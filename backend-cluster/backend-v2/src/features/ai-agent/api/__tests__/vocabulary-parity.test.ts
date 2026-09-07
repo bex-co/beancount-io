@@ -11,7 +11,7 @@ import { MCP_TOOLS } from "../mcp-tools";
 import { RESOURCE_SCHEME } from "../mcp-resources";
 import { ForbiddenError } from "@/shared/errors";
 import type { AppConfig } from "@/config/config";
-import type { ToolContext } from "../../tools/types";
+import type { McpRequestContext } from "../mcp-context";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const LEDGER = "alice/main";
@@ -32,7 +32,7 @@ const fakeLedgerData = () => ({
   getAttributes: jest.fn().mockResolvedValue({ accounts: ["Assets:Cash"] }),
 });
 
-function ctx(ledgerData: ReturnType<typeof fakeLedgerData>): ToolContext {
+function ctx(ledgerData: ReturnType<typeof fakeLedgerData>): McpRequestContext {
   return {
     services: { ledgerShell: {}, ledgerRepo: {}, apiKey: {}, ledgerData },
     identity: {
@@ -45,10 +45,10 @@ function ctx(ledgerData: ReturnType<typeof fakeLedgerData>): ToolContext {
     ledgerId: LEDGER,
     llmService: {},
     ledgerReceiptWorkflow: {},
-  } as unknown as ToolContext;
+  } as unknown as McpRequestContext;
 }
 
-async function connect(toolCtx: ToolContext) {
+async function connect(toolCtx: McpRequestContext) {
   const server = assembleMcpRegistry(toolCtx, config);
   const [a, b] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test", version: "1.0.0" });

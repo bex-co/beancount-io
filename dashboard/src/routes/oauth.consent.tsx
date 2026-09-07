@@ -5,7 +5,10 @@ import { handleConsentPost } from "@/features/oauth/funcs/handle-consent-post";
 import { oauthConsentLoader } from "@/features/oauth/funcs/loader";
 import { createNoIndexHead } from "@/common/lib/seo/seo-helpers";
 
-const searchSchema = z.object({ uid: z.string() });
+const searchSchema = z.object({
+  uid: z.string(),
+  scope: z.string().optional(),
+});
 
 export const Route = createFileRoute("/oauth/consent")({
   validateSearch: searchSchema,

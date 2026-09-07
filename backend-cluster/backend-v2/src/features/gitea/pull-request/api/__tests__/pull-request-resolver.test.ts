@@ -1,3 +1,4 @@
+import { PullRequestWorkflow } from "../../workflow/pull-request-workflow";
 import "reflect-metadata";
 import { PullRequestResolver } from "../pull-request-resolver";
 import type { IPullRequestService } from "../../service/pull-request-service";
@@ -38,7 +39,13 @@ describe("PullRequestResolver", () => {
       closePR: jest.fn(),
     } as unknown as jest.Mocked<IPullRequestService>;
 
-    resolver = new PullRequestResolver(mockService);
+    resolver = new PullRequestResolver(
+      new PullRequestWorkflow(
+        mockService,
+        { user: { getById: async () => mockUser } } as never,
+        {} as never,
+      ),
+    );
   });
 
   describe("createPullRequestFromPatch", () => {

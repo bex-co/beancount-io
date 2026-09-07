@@ -144,7 +144,8 @@ OAuth capabilities use one closed operation matrix on GraphQL, REST, and MCP:
 reads require `ledger.read`, ordinary mutations require
 `ledger.write`, and ledger control-plane operations such as deleting a ledger,
 managing collaborators, or managing public keys require `ledger.admin`. The
-scopes are independent within that ledger vocabulary. User-account lifecycle is
+scopes are cumulative: `ledger.write` includes read capability, and
+`ledger.admin` includes write and read capability. User-account lifecycle is
 outside it: no ledger scope, OAuth client id, or ledger relationship authorizes
 `user.delete`.
 
@@ -360,55 +361,11 @@ The backend exposes GraphQL APIs through Apollo Server. You can explore the API 
 
 ## Connecting an MCP client
 
-The backend serves a Model Context Protocol endpoint, so a coding agent can
-query and edit a ledger directly. Its contract — address, method set, refusal
-dialect, deployment preconditions — is
-[ADR 0007](../../docs/adrs/ADR007-backend-v2-mcp-surface.md).
-
-### The endpoint
-
-```
-POST {your-deployment}/api-gateway/mcp
-```
-
-Two things about the address are worth stating plainly, because getting either
-wrong produces an unhelpful error:
-
-- **The full path is `/api-gateway/mcp`.** A shorter `/mcp` is not an alias
-  unless your edge routes it; without that it reaches whatever serves your web
-  front end, which typically answers a JSON-RPC POST with an HTML-shaped error
-  that mentions nothing about MCP.
-- **`POST` only.** `GET` and `DELETE` return `405` with `Allow: POST`. The
-  transport is stateless — one server per request — so there is no session for a
-  server-initiated stream to belong to.
-
-### The credential must be pinned to one ledger
-
-This is the requirement most first-time integrations miss. Both an OAuth grant
-and a durable `bcio_` API key reach the endpoint, but **either must be scoped to
-a single ledger**. MCP has no per-call ledger argument, so an unpinned
-credential — perfectly usable on GraphQL and `/api-gateway/v1` — is refused here
-rather than guessed at:
-
-```
-403 {"ok":false,"error":{"code":"FORBIDDEN","message":
-  "This credential is not bound to a ledger; MCP requires a ledger-scoped grant"}}
-```
-
-Mint an API key with `ledgerScope: "owner/name"` for an agent client.
-
-An anonymous request gets a `401` carrying an RFC 9728 pointer:
-
-```
-WWW-Authenticate: Bearer resource_metadata="{issuer}/.well-known/oauth-protected-resource"
-```
-
-That URL is how a client discovers the authorization server, so a deployment
-whose OAuth signing key is unconfigured cannot be connected to at all — the
-`401` is correct but points at a `503`. See the OAuth deployment contract above
-for `OAUTH_JWKS`.
-
-### Client configuration
+The backend serves a stateless Streamable HTTP endpoint at
+`/api-gateway/mcp`. Connect with an OAuth grant for that resource or a `bcio_`
+API key. Ledger tools accept `ledger: "owner/name"`; a ledger-pinned credential
+defaults to its pin and cannot select a different ledger. Unpinned credentials
+must select a ledger per call; account tools need no ledger.
 
 ```json
 {
@@ -422,112 +379,13 @@ for `OAUTH_JWKS`.
 }
 ```
 
-### The tools
+The [Beancount.io MCP guide](./docs/mcp.md) explains setup, OAuth and API-key
+permissions, how requests reach the ledger, all 24 tools and 66 resource
+templates, file-edit previews, bank imports, protocol examples, and deployment
+diagnostics. It also documents the limits of the conformance check and current
+client-facing differences from REST.
 
-Seven, all scoped to the credential's ledger and re-authorized on every call, so
-revoking access takes effect on the next tool call rather than the next session:
-
-| Tool              | What it does                                              |
-| ----------------- | --------------------------------------------------------- |
-| `runBqlQuery`     | Run a BQL query against the ledger                        |
-| `listLedgerFiles` | List files and directories                                |
-| `readLedgerFiles` | Read file contents, optionally by line range              |
-| `editLedgerFiles` | Create / update / replace / delete, with a `dry_run` mode |
-| `listApiKeys`     | List the caller's API keys                                |
-| `createApiKey`    | Mint a key (an API key may not mint another)              |
-| `revokeApiKey`    | Revoke a key                                              |
-
-Each returns `{ ok: true, result }` or `{ ok: false, error }` and publishes that
-shape as its `outputSchema`, so a client can validate what it receives. A
-failure — invalid query, missing file, revoked access, insufficient scope — also
-carries `isError: true`, which is the flag an agent should branch on.
-
-### Resources
-
-Beyond tools, the server publishes **resources**: ledger data addressed by URI
-that a client fetches directly, without spending a tool call. Today that is one
-template, with the read surface porting onto it
-([ADR 0008](../../docs/adrs/ADR008-backend-v2-surface-parity.md)):
-
-```
-beancount://{owner}/{name}/files/{path}
-```
-
-The scheme is deliberately not `https://` — reaching one needs your credential
-and this server in the path, so a client must not try to fetch it from the web
-itself. Resources authorize per read, exactly like tools: access revoked between
-two fetches is refused on the second.
-
-Twenty-eight templates today — the ledger's vocabulary, its analysis reads, and
-file contents:
-
-```
-beancount://{owner}/{name}/payees        …/narrations   …/currencies
-beancount://{owner}/{name}/tags          …/links        …/years
-beancount://{owner}/{name}/commodities   …/events       …/errors
-beancount://{owner}/{name}/attributes
-beancount://{owner}/{name}/files/{path}
-
-beancount://{owner}/{name}/trial-balance        …/interval-totals
-beancount://{owner}/{name}/account-last-entries …/entries-count
-beancount://{owner}/{name}/account-directives
-beancount://{owner}/{name}/account-report/{accountName}
-beancount://{owner}/{name}/payee-transactions/{payee}
-beancount://{owner}/{name}/narration-transactions/{narration}
-beancount://{owner}/{name}/payee-accounts/{payee}
-beancount://{owner}/{name}/entry-context/{entryHash}
-```
-
-### Bank import
-
-Everything a customer does with a bank that is **already linked** is on both
-surfaces — list connections and accounts, pull transactions, write them into the
-ledger, discard them, reconcile, map an account, unlink:
-
-```
-beancount://{owner}/{name}/banks                    …/banks/{itemId}
-beancount://{owner}/{name}/banks/{itemId}/accounts  …/bank-accounts
-beancount://{owner}/{name}/bank-transactions/unsynced
-```
-
-with `manageBankImport` (sync / submit / discard) and `manageBankConnection`
-(reconcile / map / currency / refresh / unlink) as the two write tools. They are
-two rather than one deliberately: a credential that may import transactions must
-not thereby be able to sever the bank connection.
-
-**Linking a new bank is not here.** That happens in a browser through the bank's
-own widget — there is no API to expose for it. Link once, then everything after
-is scriptable.
-
-**`dry_run=true`** on sync, submit, discard, reconcile and unlink runs every
-check and reports exactly what would change, writing nothing. It is deliberately
-absent from the account-config updates and the status refresh: a preview that
-only echoed your input back would teach you to trust a check that never ran.
-
-**One asymmetry to know about.** The REST twins take optional narrowing —
-`?account=…&filter=…&time=…&interval=…` — and the MCP resources do not. The MCP
-SDK's URI-template matcher has no form-style query expansion, so an optional
-parameter cannot be expressed in a template it will match. Required parameters
-ride the path, as above; for a filtered read, use the REST route.
-
-The vocabulary reads are what a client needs _before_ writing a correct entry:
-which payees already exist, which currencies the book uses, which tags are in
-play. Each has a REST twin under the same name — `GET
-/api-gateway/v1/ledgers/{owner}/{name}/payees` — resolving through the same
-service call, so the two surfaces cannot disagree.
-
-Discover them with `resources/templates/list`; read one with `resources/read`.
-Hosts differ in whether they surface resources to the model automatically, so a
-client that shows you none is a host limitation rather than a server one.
-
-### Diagnosing a deployment that will not connect
-
-```zsh
-yarn mcp:conformance https://your-deployment
-yarn mcp:conformance https://your-deployment --token bcio_… --read-only-token bcio_…
-```
-
-This runs ADR 0007's seven-point checklist and names the check that failed
-rather than leaving you to infer it from a curl transcript. Checks needing a
-credential are skipped, not failed, when none is supplied. It exits non-zero if
-any check fails, and only observes — it changes nothing.
+For the design decisions, see
+[ADR 0007](../../docs/adrs/ADR007-backend-v2-mcp-surface.md) (transport contract)
+and [ADR 0008](../../docs/adrs/ADR008-backend-v2-surface-parity.md) (tools,
+resources, and surface parity).

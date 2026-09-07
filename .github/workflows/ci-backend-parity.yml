@@ -1,0 +1,43 @@
+name: CI (backend parity)
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - "backend-cluster/backend-v2/**"
+      - ".github/workflows/ci-backend-parity.yml"
+  pull_request:
+    branches: [main]
+    paths:
+      - "backend-cluster/backend-v2/**"
+      - ".github/workflows/ci-backend-parity.yml"
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
+  cancel-in-progress: ${{ github.ref != 'refs/heads/main' }}
+
+jobs:
+  backend-parity:
+    name: backend-v2 parity and contracts
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: backend-cluster/backend-v2
+    env:
+      # Placeholder so composition-time LLM client construction succeeds in a
+      # clean environment; the unit suites never call a provider.
+      BLOCKEDEN_ACCESS_KEY: ci-placeholder
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # backend-v2 uses Yarn Classic and has no tracked lockfile yet.
+      - run: yarn install
+      - run: yarn typecheck
+      # The whole unit suite: surface-parity's exact zero-debt gate, op-class
+      # coverage, and the cross-surface behavioral contract tests.
+      - run: yarn test
+      # The published v1 contract must match the committed snapshot.
+      - run: yarn generate-v1-openapi
+      - run: git diff --exit-code docs/openapi/v1.json

@@ -24,6 +24,8 @@ describe("Ledger resolvers (delegation)", () => {
 
   beforeEach(() => {
     workflow = {
+      getLegacyMetadata: jest.fn(),
+      getLegacyJournal: jest.fn(),
       createLedger: jest.fn(),
       updateLedger: jest.fn(),
       deleteLedger: jest.fn(),

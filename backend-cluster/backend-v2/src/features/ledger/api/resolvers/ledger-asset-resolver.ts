@@ -14,7 +14,6 @@ import {
 } from "type-graphql";
 import { AllowAnonymous } from "@/server/graphql/authenticated";
 import { IContext } from "@/server/graphql/context";
-import { BadUserInputError } from "@/shared/errors";
 import type { ILedgerAssetService } from "@/features/ledger/service/ledger-asset-service";
 
 @ObjectType()
@@ -37,10 +36,6 @@ export class LedgerAssetQueryResolver {
     @Arg("filename", () => String) filename: string,
     @Ctx() ctx: IContext,
   ): Promise<LedgerAssetDownloadUrlResult> {
-    if (!Number.isInteger(ledgerRepoId) || ledgerRepoId <= 0) {
-      throw new BadUserInputError("Invalid ledgerRepoId");
-    }
-
     const downloadUrl = await this.assetService.getAssetDownloadUrl(
       ledgerRepoId,
       filename,

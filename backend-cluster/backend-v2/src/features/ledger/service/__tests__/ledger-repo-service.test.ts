@@ -317,6 +317,38 @@ describe("LedgerRepoService", () => {
       expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
     });
 
+    it("runs a dry run through the same authorization and stops before the commit", async () => {
+      await service.changeFiles({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        operations: [{ operation: "create", path: "new.bean", content: "Zm9v" }],
+        message: "add file",
+        dryRun: true,
+      });
+      expect(authorizeLedger).toHaveBeenCalledWith(
+        IDENTITY,
+        LEDGER_ID,
+        "ledger.files.write",
+        expect.anything(),
+      );
+      expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+
+    it("refuses an unsafe path on a dry run exactly like the commit", async () => {
+      await expect(
+        service.changeFiles({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          operations: [
+            { operation: "create", path: "../escape.bean", content: "Zm9v" },
+          ],
+          message: "add file",
+          dryRun: true,
+        }),
+      ).rejects.toThrow();
+      expect(mockChangeLedgerFiles).not.toHaveBeenCalled();
+    });
+
     it("forwards operations and message to the fava call verbatim", async () => {
       mockChangeLedgerFiles.mockResolvedValue({ data: { success: true } });
       const operations = [

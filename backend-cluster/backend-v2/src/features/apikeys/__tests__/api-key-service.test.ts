@@ -213,6 +213,21 @@ describe("minting", () => {
     ).rejects.toBeInstanceOf(ValidationError);
   });
 
+  it.each([new Date("invalid"), new Date(0)])(
+    "rejects invalid or expired dates before persistence: %s",
+    async (expiresAt) => {
+      const { service, created } = makeService();
+      await expect(
+        service.mint(session, {
+          name: "CI",
+          scopes: ["ledger.read"],
+          expiresAt,
+        }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(created).toHaveLength(0);
+    },
+  );
+
   it("inherits the minter's ledger confinement when none is asked for", async () => {
     const { service, created } = makeService();
     await service.mint(
@@ -291,6 +306,19 @@ describe("minting", () => {
           scopes: ["ledger.read"],
           ledgerScope: malformed,
         }),
+      ).rejects.toBeInstanceOf(ValidationError);
+      expect(model.create).not.toHaveBeenCalled();
+    },
+  );
+
+  it.each(["", "   ", "x".repeat(201)])(
+    "rejects a name outside the 1–200 boundary on every surface (%j)",
+    async (name) => {
+      // The trim-then-bound rule lives here, not per transport, so a
+      // whitespace-only name fails identically from GraphQL, REST, and MCP.
+      const { service, model } = makeService();
+      await expect(
+        service.mint(session, { name, scopes: ["ledger.read"] }),
       ).rejects.toBeInstanceOf(ValidationError);
       expect(model.create).not.toHaveBeenCalled();
     },

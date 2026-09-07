@@ -1116,4 +1116,158 @@ describe("PlaidSyncService", () => {
       ).rejects.toThrow(ForbiddenError);
     });
   });
+
+  /**
+   * w1/m10/t027 — `dry_run` promises no state change *anywhere* on the path,
+   * including the pre-sync account refresh, and a preview must refuse exactly
+   * what the real call would refuse.
+   */
+  describe("sync and submit previews", () => {
+    const userId = "user_test";
+    const itemId = "pitm_test123";
+    const mockItem = {
+      id: itemId,
+      userId,
+      itemId: "plaid-item-ext-id",
+      accessToken: "salt:iv:tag:ciphertext",
+      status: "active",
+      transactionsCursor: null,
+      institutionId: "ins_123",
+      institutionName: "Test Bank",
+      errorCode: null,
+      errorMessage: null,
+      ledgerRepoId: 42,
+    };
+    const enabledAccount = {
+      id: "pacc_1",
+      accountId: "account-ext-1",
+      plaidItemId: itemId,
+      ledgerAccount: "Assets:Checking",
+      enabled: true,
+    };
+
+    it("sync preview writes nothing, even when the bank shares a new account", async () => {
+      mockPlaidItemModel.getById.mockResolvedValue(mockItem);
+      mockPlaidAccountModel.getByItemId.mockResolvedValue([enabledAccount]);
+      mockPlaidAccountModel.getEnabledByItemId.mockResolvedValue([
+        enabledAccount,
+      ]);
+      mockPlaidClient.getAccounts.mockResolvedValue([
+        { accountId: "account-ext-1", name: "Checking", type: "depository" },
+        { accountId: "account-ext-new", name: "New Savings", type: "depository" },
+      ]);
+      mockPlaidClient.transactionsSync.mockResolvedValue({
+        added: [
+          { accountId: "account-ext-1" },
+          { accountId: "account-ext-new" },
+          { accountId: "account-ext-disabled" },
+        ],
+        modified: [{ accountId: "account-ext-new" }],
+        removed: [{ transactionId: "tx_gone" }],
+        hasMore: false,
+        nextCursor: "cursor-next",
+      });
+
+      const result = await service.syncItemTransactions(
+        systemIdentity(userId),
+        itemId,
+        "manual",
+        "owner/ledger",
+        true,
+      );
+
+      // The would-be-created account counts toward the preview, because the
+      // real sync creates it enabled before filtering.
+      expect(result).toMatchObject({
+        dryRun: true,
+        wouldAdd: 2,
+        wouldModify: 1,
+        wouldRemove: 1,
+      });
+      expect(mockPlaidAccountModel.create).not.toHaveBeenCalled();
+      expect(mockPlaidAccountModel.delete).not.toHaveBeenCalled();
+      expect(mockPlaidTransactionModel.create).not.toHaveBeenCalled();
+      expect(mockPlaidItemModel.update).not.toHaveBeenCalled();
+      expect(mockPlaidSyncLogModel.create).not.toHaveBeenCalled();
+      expect(mockDb.transaction).not.toHaveBeenCalled();
+    });
+
+    it("submit preview refuses a missing target file without writing", async () => {
+      mockPlaidTransactionModel.getByTransactionIds.mockResolvedValue([
+        {
+          id: "ptxn_1",
+          transactionId: "tx_1",
+          plaidAccountId: "pacc_1",
+          syncedToLedger: false,
+          date: new Date("2024-01-15"),
+          amount: "12.50",
+          name: "Coffee Shop",
+        },
+      ]);
+      mockPlaidAccountModel.getById.mockResolvedValue(enabledAccount);
+      mockPlaidItemModel.getById.mockResolvedValue({
+        id: "pacc_1",
+        userId,
+        ledgerRepoId: 42,
+      });
+      mockFavaApiClient.ledgers.getLedgerFile.mockResolvedValue({
+        data: { success: false },
+      });
+
+      await expect(
+        service.submitTransactionsToLedger(
+          systemIdentity(userId),
+          "testuser",
+          "personal",
+          [{ transactionId: "tx_1", targetAccount: "Expenses:Food" }],
+          "missing.bean",
+          true,
+        ),
+      ).rejects.toThrow('Target file "missing.bean" not found in ledger');
+
+      expect(mockFavaApiClient.entries.addBulkEntries).not.toHaveBeenCalled();
+      expect(mockPlaidTransactionModel.markAsSynced).not.toHaveBeenCalled();
+    });
+
+    it("submit preview accepts an existing target file and still writes nothing", async () => {
+      mockPlaidTransactionModel.getByTransactionIds.mockResolvedValue([
+        {
+          id: "ptxn_1",
+          transactionId: "tx_1",
+          plaidAccountId: "pacc_1",
+          syncedToLedger: false,
+          date: new Date("2024-01-15"),
+          amount: "12.50",
+          name: "Coffee Shop",
+        },
+      ]);
+      mockPlaidAccountModel.getById.mockResolvedValue(enabledAccount);
+      mockPlaidItemModel.getById.mockResolvedValue({
+        id: "pacc_1",
+        userId,
+        ledgerRepoId: 42,
+      });
+      mockFavaApiClient.ledgers.getLedgerFile.mockResolvedValue({
+        data: { success: true, data: { path: "books.bean" } },
+      });
+
+      const result = await service.submitTransactionsToLedger(
+        systemIdentity(userId),
+        "testuser",
+        "personal",
+        [{ transactionId: "tx_1", targetAccount: "Expenses:Food" }],
+        "books.bean",
+        true,
+      );
+
+      expect(result).toMatchObject({ dryRun: true, wouldAddCount: 1 });
+      expect(mockFavaApiClient.ledgers.getLedgerFile).toHaveBeenCalledWith(
+        "testuser",
+        "personal",
+        { path: "books.bean" },
+      );
+      expect(mockFavaApiClient.entries.addBulkEntries).not.toHaveBeenCalled();
+      expect(mockPlaidTransactionModel.markAsSynced).not.toHaveBeenCalled();
+    });
+  });
 });

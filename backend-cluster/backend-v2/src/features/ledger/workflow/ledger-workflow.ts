@@ -1,3 +1,10 @@
+import { enhanceLegacyJournal } from "@/features/ledger/utils/legacy-journal";
+import type {
+  LegacyJournalQuery,
+  LegacyJournalResult,
+} from "./ledger-workflow.types";
+import { resolveLegacyLedgerId } from "@/features/ledger/utils/resolve-legacy-ledger";
+import type { BeancountOptionsPublic } from "@/foundation/fava";
 import { type AppConfig } from "@/config/config";
 import { type DbExecutor } from "@/drizzle/drizzle";
 import { type IModels } from "@/foundation/models";
@@ -85,7 +92,33 @@ const DIRECTIVE_COUNT_CONCURRENCY = 3;
  * Dependencies are narrow injected interfaces (no `IService`); request data
  * (`userId`) is passed per method. See backend-v2/CLAUDE.md "Workflow layer".
  */
+export interface LegacyLedgerMetadata {
+  success: boolean;
+  data: {
+    accounts: string[];
+    currencies: string[];
+    errors: number;
+    options: Pick<
+      BeancountOptionsPublic,
+      | "name_assets"
+      | "name_equity"
+      | "name_expenses"
+      | "name_income"
+      | "name_liabilities"
+      | "operating_currency"
+    >;
+  };
+}
+
 export interface ILedgerWorkflow {
+  getLegacyJournal(params: {
+    identity: Identity;
+    args: LegacyJournalQuery;
+  }): Promise<LegacyJournalResult>;
+  getLegacyMetadata(params: {
+    identity: Identity;
+    ledgerId?: string | null;
+  }): Promise<LegacyLedgerMetadata>;
   createLedger(params: {
     identity: Identity;
     input: CreateLedgerCommand;
@@ -188,6 +221,15 @@ export interface ILedgerWorkflow {
   }): Promise<boolean | undefined>;
 }
 
+/** The credential-pin disclosure ceiling: a pinned credential sees only its ledger. */
+const restrictToPin = <L extends { fullName: string }>(
+  identity: Identity,
+  ledgers: L[],
+): L[] =>
+  identity.ledgerScope
+    ? ledgers.filter((ledger) => ledger.fullName === identity.ledgerScope)
+    : ledgers;
+
 export class LedgerWorkflow implements ILedgerWorkflow {
   constructor(
     private readonly favaClientFactory: IFavaClientFactory,
@@ -217,6 +259,106 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       action,
       resource: ledgerResource(ledgerId),
     });
+  }
+
+  async getLegacyMetadata({
+    identity,
+    ledgerId,
+  }: {
+    identity: Identity;
+    ledgerId?: string | null;
+  }): Promise<LegacyLedgerMetadata> {
+    const target = await resolveLegacyLedgerId(
+      this.favaClientFactory,
+      this.authorization,
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_METADATA_READ,
+    );
+    const client = await this.favaClientFactory.getPublicApiClient(
+      target,
+      identity.userId,
+    );
+    const { ledgerOwner, ledgerName } = parseLedgerId(target);
+    const [options, attributes, errors] = await Promise.all([
+      unwrapFavaResponse(
+        client.reports.getLedgerOptions(ledgerOwner, ledgerName),
+        "get the ledger data",
+      ),
+      unwrapFavaResponse(
+        client.reports.getLedgerAttributes(ledgerOwner, ledgerName),
+        "get the ledger data",
+      ),
+      unwrapFavaResponse(
+        client.reports.getLedgerErrors(ledgerOwner, ledgerName),
+        "get the ledger data",
+      ),
+    ]);
+    return {
+      success: true,
+      data: {
+        accounts: attributes.accounts,
+        currencies: attributes.currencies,
+        errors: errors.length,
+        options: {
+          name_assets: options.name_assets,
+          name_equity: options.name_equity,
+          name_expenses: options.name_expenses,
+          name_income: options.name_income,
+          name_liabilities: options.name_liabilities,
+          operating_currency: options.operating_currency,
+        },
+      },
+    };
+  }
+
+  async getLegacyJournal({
+    identity,
+    args,
+  }: {
+    identity: Identity;
+    args: LegacyJournalQuery;
+  }): Promise<LegacyJournalResult> {
+    const userId = identity.userId;
+    const ledgerId = await resolveLegacyLedgerId(
+      this.favaClientFactory,
+      this.authorization,
+      identity,
+      undefined,
+      AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
+    );
+    const { ledgerOwner, ledgerName: repoName } = parseLedgerId(ledgerId);
+    const favaApiClient = await this.favaClientFactory.getPublicApiClient(
+      ledgerId,
+      userId,
+    );
+    const query = {
+      first: args.first,
+      after: args.after,
+      last: args.last,
+      before: args.before,
+      detailed: args.detailed,
+      search_query: args.searchQuery,
+      account_filter: args.accountFilter,
+      amount_min: args.amountMin,
+      amount_max: args.amountMax,
+      entry_types: args.entryTypes?.join(","),
+      sort_by: args.sortBy,
+      sort_order: args.sortOrder,
+      group_by: args.groupBy,
+    };
+
+    const resp = await favaApiClient.legacy.getLegacyJournal(
+      ledgerOwner,
+      repoName,
+      query,
+    );
+
+    await unwrapFavaResponse(resp, "get the legacy journal");
+    const result = resp.data as {
+      data: Parameters<typeof enhanceLegacyJournal>[0];
+    };
+    return enhanceLegacyJournal(result.data, args);
   }
 
   // --- Mutations ---------------------------------------------------------
@@ -676,6 +818,16 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       action: AUTHORIZATION_ACTIONS.LEDGER_CATALOG_READ,
       resource: userResource(identity.userId),
     });
+    // A pin remains a disclosure ceiling during discovery, on every adapter.
+    // Resolve the target through the protected metadata path so revoked access
+    // is checked here too. The one-item catalog has no later pages.
+    if (identity.ledgerScope) {
+      const ledger = await this.getLedger({
+        identity,
+        ledgerId: identity.ledgerScope,
+      });
+      return (args.page ?? 1) > 1 ? [] : [ledger];
+    }
     const userId = identity.userId;
     const { favaApiClient } =
       await this.favaClientFactory.getApiContext(userId);
@@ -704,11 +856,12 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const userId = identity.userId;
     const { favaApiClient, favaUser } =
       await this.favaClientFactory.getApiContext(userId);
-    return this.listUserOwnedLedgersPage(
+    const ledgers = await this.listUserOwnedLedgersPage(
       favaApiClient,
       favaUser.username,
       args,
     );
+    return restrictToPin(identity, ledgers);
   }
 
   private async listUserOwnedLedgersPage(
@@ -838,9 +991,10 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       return [];
     }
 
-    return results.data.map((ledger) =>
+    const ledgers = results.data.map((ledger) =>
       mapToLedger(ledger as FavaLedgerPublic, this.config.gitea),
     );
+    return restrictToPin(identity, ledgers);
   }
 
   async getLedger({

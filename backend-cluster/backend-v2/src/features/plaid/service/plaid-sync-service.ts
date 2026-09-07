@@ -326,10 +326,17 @@ export class PlaidSyncService implements IPlaidSyncService {
       //
       // Additive only: removing accounts destroys their stored transactions, so
       // that stays gated behind an explicit, user-confirmed reconcile.
+      let previewedNewAccountIds: string[] = [];
       try {
-        await reconcileAccounts(
+        const refresh = await reconcileAccounts(
           { plaidClient: this.plaidClient, models: this.models, db: this.db },
-          { itemId, accessToken, allowDeletes: false },
+          // A preview must not write, so its account refresh is also a
+          // preview. The would-be accounts still count toward the numbers
+          // below, because a real sync creates them enabled before filtering.
+          { itemId, accessToken, allowDeletes: false, dryRun },
+        );
+        previewedNewAccountIds = (refresh.wouldAdd ?? []).map(
+          (account) => account.accountId,
         );
       } catch (err) {
         syncLogger.warn("Failed to refresh accounts before sync; continuing", {
@@ -342,9 +349,10 @@ export class PlaidSyncService implements IPlaidSyncService {
         this.db,
         itemId,
       );
-      const enabledAccountIds = new Set(
-        enabledAccounts.map((acc) => acc.accountId),
-      );
+      const enabledAccountIds = new Set([
+        ...enabledAccounts.map((acc) => acc.accountId),
+        ...previewedNewAccountIds,
+      ]);
       const enabledAccountRowIds = new Set(
         enabledAccounts.map((acc) => acc.id),
       );
@@ -707,26 +715,14 @@ export class PlaidSyncService implements IPlaidSyncService {
       );
     }
 
-    // Everything above is validation and construction — ownership, ledger
-    // access, already-synced checks, account mapping — so a preview here is the
-    // exact set the write would append, not an estimate of it.
-    if (dryRun) {
-      return {
-        success: true,
-        addedCount: 0,
-        dryRun: true,
-        wouldAddCount: beancountTransactions.length,
-        preview: beancountTransactions,
-      };
-    }
-
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
     );
 
     // The target file must already exist — we never create one, because a file
-    // nothing `include`s would swallow the entries silently.
+    // nothing `include`s would swallow the entries silently. Checked before
+    // the preview return so a dry run refuses exactly what the write would.
     if (filename) {
       const existsResponse = await favaApiClient.ledgers.getLedgerFile(
         ledgerOwner,
@@ -738,6 +734,19 @@ export class PlaidSyncService implements IPlaidSyncService {
           `Target file "${filename}" not found in ledger`,
         );
       }
+    }
+
+    // Everything above is validation and construction — ownership, ledger
+    // access, already-synced checks, account mapping, and the target file — so
+    // a preview here is the exact set the write would append, not an estimate.
+    if (dryRun) {
+      return {
+        success: true,
+        addedCount: 0,
+        dryRun: true,
+        wouldAddCount: beancountTransactions.length,
+        preview: beancountTransactions,
+      };
     }
 
     await unwrapFavaResponse(

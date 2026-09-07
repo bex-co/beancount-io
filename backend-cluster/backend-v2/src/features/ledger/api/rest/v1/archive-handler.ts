@@ -2,7 +2,7 @@ import { z } from "@/shared/zod-openapi-setup";
 import { streamLedgerArchive } from "../archive-proxy";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { v1Route } from "@/server/rest/v1-route";
-import { SAFE_ARCHIVE_NAME_PATTERN } from "../safe-archive-name";
+import { SAFE_ARCHIVE_NAME_PATTERN } from "../../../utils/safe-archive-name";
 
 const archiveParamsSchema = ledgerPathSchema.extend({
   archive: z.string().regex(SAFE_ARCHIVE_NAME_PATTERN).openapi({
@@ -36,9 +36,9 @@ export const ARCHIVE_DOWNLOAD_ROUTES = [
         },
       },
     },
-    handler: async ({ layers, config }, { identity, params, ctx }) => {
+    handler: async ({ layers }, { identity, params, ctx }) => {
       const ledgerId = ledgerIdOf(params);
-      await streamLedgerArchive(ctx, layers, config, {
+      await streamLedgerArchive(ctx, layers, {
         ledgerId,
         archive: params.archive,
         identity,

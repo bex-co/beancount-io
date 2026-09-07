@@ -183,6 +183,17 @@ export async function executeEditLedgerFiles(
       }));
 
       if (dry_run) {
+        // The preview must refuse exactly what the commit would: the service
+        // runs the same write authorization and path validation, then stops
+        // before the repository call. Without this, a create-only preview
+        // never authorized at all, and read-only callers previewed happily.
+        await services.ledgerRepo.changeFiles({
+          ledgerId,
+          identity,
+          operations,
+          message: `AI edit: ${description}`,
+          dryRun: true,
+        });
         return {
           dry_run: true,
           count: operations.length,

@@ -1,28 +1,13 @@
+import { JOURNAL_READS } from "./journal-reads";
 import { z } from "@/shared/zod-openapi-setup";
 import { ledgerIdOf, ledgerPathSchema } from "./schemas";
 import { json } from "@/server/rest/v1-schemas";
 import { v1Route } from "@/server/rest/v1-route";
 
-const journalQuerySchema = z.object({
-  account: z.string().optional().openapi({
-    description: "Restrict to one account and its children",
-    example: "Assets:Bank:Checking",
-  }),
-  filter: z.string().optional().openapi({
-    description: "Fava filter expression",
-    example: "#travel",
-  }),
-  time: z.string().optional().openapi({
-    description: "Fava time expression",
-    example: "2026",
-  }),
-  limit: z.coerce.number().int().min(1).max(1000).optional(),
-  offset: z.coerce.number().int().min(0).optional(),
-});
-
-const accountsQuerySchema = z.object({
-  status: z.enum(["open", "closed"]).optional().openapi({
-    description: "Only accounts that are currently open, or only closed ones",
+export const accountsQuerySchema = z.object({
+  status: z.string().optional().openapi({
+    description:
+      "Use open or closed to filter; other values return all accounts, matching GraphQL",
   }),
 });
 
@@ -33,17 +18,18 @@ const statementParamsSchema = ledgerPathSchema.extend({
   }),
 });
 
-const statementQuerySchema = z.object({
+export const statementQuerySchema = z.object({
+  account: z.string().optional(),
   filter: z.string().optional(),
   time: z.string().optional().openapi({
     description: "Reporting period as a Fava time expression",
     example: "2026-01-01 - 2026-12-31",
   }),
-  conversion: z.string().optional().openapi({
+  conversion: z.string().default("USD").openapi({
     description: "Convert amounts to this currency",
     example: "USD",
   }),
-  interval: z.string().optional().openapi({
+  interval: z.string().default("monthly").openapi({
     description: "Bucket the period: day, week, month, quarter, year",
     example: "month",
   }),
@@ -63,24 +49,23 @@ const statementQuerySchema = z.object({
  * as silence.
  */
 export const REPORT_ROUTES = [
-  v1Route({
-    method: "get",
-    path: "/api-gateway/v1/ledgers/{owner}/{name}/journal",
-    summary: "List journal entries",
-    description:
-      "The ledger's journal, optionally narrowed by account, Fava filter, or time expression, and paged with `limit`/`offset`.",
-    params: ledgerPathSchema,
-    query: journalQuerySchema,
-    responses: {
-      200: json("Journal entries"),
-    },
-    handler: async ({ layers }, { identity, params, query }) =>
-      layers.services.ledgerJournal.getJournal({
-        ledgerId: ledgerIdOf(params),
-        identity,
-        query,
-      }),
-  }),
+  ...JOURNAL_READS.map((read) =>
+    v1Route({
+      method: "get",
+      path: `/api-gateway/v1/ledgers/{owner}/{name}/${read.segment}`,
+      summary: read.summary,
+      description: read.summary,
+      params: ledgerPathSchema,
+      query: read.query,
+      responses: { 200: json(read.summary) },
+      handler: async ({ layers }, { identity, params, query }) =>
+        read.fetch(layers.services, {
+          identity,
+          ledgerId: ledgerIdOf(params),
+          query,
+        }),
+    }),
+  ),
 
   v1Route({
     method: "get",

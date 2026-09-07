@@ -11,11 +11,11 @@ import { MCP_TOOLS } from "../mcp-tools";
 import { mcpOutputSchema, toolOutputSchema } from "../../tools/types";
 import { ForbiddenError } from "@/shared/errors";
 import type { AppConfig } from "@/config/config";
-import type { ToolContext } from "../../tools/types";
+import type { McpRequestContext } from "../mcp-context";
 
 const config = { api: { scopeEnforcement: "shadow" } } as AppConfig;
 
-function toolCtx(ledgerShell: unknown): ToolContext {
+function toolCtx(ledgerShell: unknown): McpRequestContext {
   return {
     services: { ledgerShell, ledgerRepo: {}, apiKey: {} },
     identity: {
@@ -33,10 +33,10 @@ function toolCtx(ledgerShell: unknown): ToolContext {
     ledgerId: "alice/main",
     llmService: {},
     ledgerReceiptWorkflow: {},
-  } as unknown as ToolContext;
+  } as unknown as McpRequestContext;
 }
 
-async function connectClient(ctx: ToolContext) {
+async function connectClient(ctx: McpRequestContext) {
   const server = assembleMcpRegistry(ctx, config);
   const [clientTransport, serverTransport] =
     InMemoryTransport.createLinkedPair();

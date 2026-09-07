@@ -1,4 +1,4 @@
-import { useNavigate } from "@tanstack/react-router";
+import { getRouteApi, useNavigate } from "@tanstack/react-router";
 import { useMutation } from "@apollo/client/react";
 import {
   Card,
@@ -28,6 +28,7 @@ function WelcomeContent() {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
   const navigate = useNavigate();
+  const { oauthUid, oauthScope } = getRouteApi("/auth/welcome").useSearch();
 
   const [createLedgerMutation, { loading: createLoading }] = useMutation(
     CreateLedgerDocument,
@@ -43,6 +44,13 @@ function WelcomeContent() {
 
       // Navigate to the newly created ledger
       if (result.data?.createLedger) {
+        if (oauthUid) {
+          await navigate({
+            to: "/oauth/consent",
+            search: { uid: oauthUid, scope: oauthScope },
+          });
+          return;
+        }
         const { ledgerOwner, ledgerName } = decodeLedgerId(
           result.data.createLedger.id,
         );

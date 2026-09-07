@@ -127,17 +127,20 @@ describe("POST /api-gateway/v1/api-keys", () => {
     expect(status).toBe(400);
   });
 
-  it("rejects an empty ledger scope before reaching the service", async () => {
-    // The service normalizes a blank too; the boundary rejects it so a client
-    // sending `""` learns it sent nothing rather than silently inheriting.
-    const { status, body } = await call("POST", "/api-gateway/v1/api-keys", {
+  it("passes a blank ledger scope through to the service's inherit rule", async () => {
+    // A blank scope means "inherit" on every surface. The one normalization
+    // lives in ApiKeyService, which never stores `""`; a second boundary rule
+    // here would be a chance for the surfaces to disagree.
+    const { status } = await call("POST", "/api-gateway/v1/api-keys", {
       name: "CI",
       scopes: ["ledger.read"],
       ledgerScope: "",
     });
-    expect(status).toBe(400);
-    expect(body).toMatchObject({ error: { code: "VALIDATION_FAILED" } });
-    expect(apiKeyService.mint).not.toHaveBeenCalled();
+    expect(status).toBe(200);
+    expect(apiKeyService.mint).toHaveBeenCalledWith(
+      expect.anything(),
+      expect.objectContaining({ ledgerScope: "" }),
+    );
   });
 
   it("surfaces the paid-plan refusal as 402", async () => {

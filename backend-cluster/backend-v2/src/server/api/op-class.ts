@@ -355,20 +355,6 @@ function isInParityScope(entry: VerbEntry): boolean {
   return entry.class !== "session-only";
 }
 
-/** A verb on GraphQL and REST, but not MCP. */
-const gqlAndRest = (
-  gql: string,
-  opClass: OpClass,
-  rest: string,
-  mcpExempt: string,
-): VerbEntry => ({
-  verb: gql,
-  class: opClass,
-  gql,
-  rest,
-  mcpExempt,
-});
-
 /** A verb that lives only on GraphQL. */
 const gqlOnly = (
   gql: string,
@@ -389,7 +375,13 @@ const ACCOUNT_VERBS: readonly VerbEntry[] = [
   // ceiling while composing it with exact-self, instead of letting the ledger
   // scope gate make the final User-domain decision.
   {
-    ...gqlOnly("Query.userProfile", "read", R.accountProfile, M.notAgentShaped),
+    verb: "Query.userProfile",
+    gql: "Query.userProfile",
+    class: "read",
+    rest: "GET /api-gateway/v1/user-profile",
+    mcpResource: "userProfile",
+    mcpExempt:
+      "Exposed as an MCP resource; profile inspection needs no action tool.",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_PROFILE_READ,
   },
   {
@@ -402,12 +394,11 @@ const ACCOUNT_VERBS: readonly VerbEntry[] = [
     authorizationAction: AUTHORIZATION_ACTIONS.USER_PROFILE_SEARCH,
   },
   {
-    ...gqlOnly(
-      "Mutation.deleteAccount",
-      "admin",
-      R.sessionCeremony,
-      M.sessionCeremony,
-    ),
+    verb: "Mutation.deleteAccount",
+    gql: "Mutation.deleteAccount",
+    class: "admin",
+    rest: "DELETE /api-gateway/v1/account",
+    mcp: "deleteAccount",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_DELETE,
   },
   {
@@ -539,12 +530,13 @@ const BILLING_VERBS: readonly VerbEntry[] = [
   // Static product configuration, not user billing state. Keep it public so a
   // pricing surface can render before sign-in; protected billing starts below.
   {
-    ...gqlOnly(
-      "Query.allTierQuotas",
-      "public",
-      R.publicPricingCatalog,
-      M.publicPricingCatalog,
-    ),
+    verb: "Query.allTierQuotas",
+    gql: "Query.allTierQuotas",
+    class: "public",
+    rest: "GET /api-gateway/v1/tier-quotas",
+    mcpResource: "allTierQuotas",
+    mcpExempt:
+      "Exposed as an MCP resource; the public quota catalog needs no action tool.",
     nonPdpReason: NON_PDP.publicProductConfiguration,
   },
   {
@@ -585,8 +577,24 @@ const BILLING_VERBS: readonly VerbEntry[] = [
 ];
 
 const PROBE_VERBS: readonly VerbEntry[] = [
-  gqlOnly("Query.health", "public", R.internalProbe, M.notAgentShaped),
-  gqlOnly("Query.featureFlags", "public", R.internalProbe, M.notAgentShaped),
+  {
+    verb: "Query.health",
+    gql: "Query.health",
+    class: "public" as const,
+    rest: "GET /api-gateway/v1/health",
+    mcpResource: "health",
+    mcpExempt:
+      "Exposed as an MCP resource; a public configuration read needs no action tool.",
+  },
+  {
+    verb: "Query.featureFlags",
+    gql: "Query.featureFlags",
+    class: "public" as const,
+    rest: "GET /api-gateway/v1/feature-flags",
+    mcpResource: "featureFlags",
+    mcpExempt:
+      "Exposed as an MCP resource; a public configuration read needs no action tool.",
+  },
 ].map((entry) => ({ ...entry, nonPdpReason: NON_PDP.publicProbe }));
 
 /**
@@ -595,68 +603,112 @@ const PROBE_VERBS: readonly VerbEntry[] = [
  * content, and a grant that says "read my books" should not also enumerate who
  * else can reach them.
  */
-const ledgerAdminGqlOnly = (
-  gql: string,
-  action: AuthorizationAction,
-  restExempt: string = R.ledgerControlPlane,
-): VerbEntry => ({
-  ...gqlOnly(gql, "admin", restExempt, M.notAgentShaped),
-  authorizationAction: action,
-});
-
 const LEDGER_ADMIN_VERBS: readonly VerbEntry[] = [
-  ledgerAdminGqlOnly(
-    "Mutation.createLedger",
-    AUTHORIZATION_ACTIONS.LEDGER_CREATE,
-  ),
-  ledgerAdminGqlOnly(
-    "Mutation.updateLedger",
-    AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE,
-  ),
-  ledgerAdminGqlOnly(
-    "Mutation.deleteLedger",
-    AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
-  ),
-  ledgerAdminGqlOnly(
-    "Query.listPublicKeys",
-    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST,
-    R.userPublicKeys,
-  ),
-  ledgerAdminGqlOnly(
-    "Query.getPublicKey",
-    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ,
-    R.userPublicKeys,
-  ),
-  ledgerAdminGqlOnly(
-    "Mutation.createPublicKey",
-    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_CREATE,
-    R.userPublicKeys,
-  ),
-  ledgerAdminGqlOnly(
-    "Mutation.deletePublicKey",
-    AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE,
-    R.userPublicKeys,
-  ),
-  ledgerAdminGqlOnly(
-    "Query.listLedgerCollaborators",
-    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LIST,
-  ),
-  ledgerAdminGqlOnly(
-    "Query.getLedgerCollaboratorPermission",
-    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ,
-  ),
-  ledgerAdminGqlOnly(
-    "Mutation.addOrUpdateLedgerCollaborator",
-    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE,
-  ),
-  ledgerAdminGqlOnly(
-    "Mutation.deleteLedgerCollaborator",
-    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE,
-  ),
-  ledgerAdminGqlOnly(
-    "Mutation.leaveLedger",
-    AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
-  ),
+  {
+    verb: "Mutation.createLedger",
+    gql: "Mutation.createLedger",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_CREATE,
+    rest: "POST /api-gateway/v1/ledgers",
+    mcp: "manageLedgers",
+  },
+  {
+    verb: "Mutation.updateLedger",
+    gql: "Mutation.updateLedger",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_UPDATE,
+    rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}",
+    mcp: "manageLedgers",
+  },
+  {
+    verb: "Mutation.deleteLedger",
+    gql: "Mutation.deleteLedger",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_ADMINISTRATION_DELETE,
+    rest: "DELETE /api-gateway/v1/ledgers/{owner}/{name}",
+    mcp: "manageLedgers",
+  },
+  {
+    verb: "Query.listPublicKeys",
+    gql: "Query.listPublicKeys",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_LIST,
+    rest: "GET /api-gateway/v1/public-keys",
+    mcpResource: "publicKeys",
+    mcpExempt:
+      "Exposed through an administrative MCP resource for the authenticated user. Public-key inspection does not need a model-selected action tool.",
+  },
+  {
+    verb: "Query.getPublicKey",
+    gql: "Query.getPublicKey",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_READ,
+    rest: "GET /api-gateway/v1/public-keys/{keyId}",
+    mcpResource: "publicKey",
+    mcpExempt:
+      "Exposed through an administrative MCP resource for the authenticated user. Public-key inspection does not need a model-selected action tool.",
+  },
+  {
+    verb: "Mutation.createPublicKey",
+    gql: "Mutation.createPublicKey",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_CREATE,
+    rest: "POST /api-gateway/v1/public-keys",
+    mcp: "managePublicKeys",
+  },
+  {
+    verb: "Mutation.deletePublicKey",
+    gql: "Mutation.deletePublicKey",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_PUBLIC_KEYS_DELETE,
+    rest: "DELETE /api-gateway/v1/public-keys/{keyId}",
+    mcp: "managePublicKeys",
+  },
+  {
+    verb: "Query.listLedgerCollaborators",
+    gql: "Query.listLedgerCollaborators",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LIST,
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/collaborators",
+    mcpResource: "ledgerCollaborators",
+    mcpExempt:
+      "Exposed as an MCP resource because collaborator inspection is a read. The resource preserves the administrative credential and relationship requirements.",
+  },
+  {
+    verb: "Query.getLedgerCollaboratorPermission",
+    gql: "Query.getLedgerCollaboratorPermission",
+    class: "admin",
+    authorizationAction:
+      AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_PERMISSION_READ,
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/collaborators/permission",
+    mcpResource: "ledgerCollaboratorPermission",
+    mcpExempt:
+      "Exposed as an MCP resource because collaborator inspection is a read. The resource preserves the administrative credential and relationship requirements.",
+  },
+  {
+    verb: "Mutation.addOrUpdateLedgerCollaborator",
+    gql: "Mutation.addOrUpdateLedgerCollaborator",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_UPDATE,
+    rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/collaborators/{collaborator}",
+    mcp: "manageLedgerCollaborators",
+  },
+  {
+    verb: "Mutation.deleteLedgerCollaborator",
+    gql: "Mutation.deleteLedgerCollaborator",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_DELETE,
+    rest: "DELETE /api-gateway/v1/ledgers/{owner}/{name}/collaborators/{collaborator}",
+    mcp: "manageLedgerCollaborators",
+  },
+  {
+    verb: "Mutation.leaveLedger",
+    gql: "Mutation.leaveLedger",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_COLLABORATORS_LEAVE,
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/leave",
+    mcp: "manageLedgerCollaborators",
+  },
 ];
 
 const LEDGER_READ_ACTION_BY_VERB = {
@@ -719,43 +771,69 @@ const ledgerReadActionForVerb = (verb: string): AuthorizationAction => {
 
 const LEDGER_READ_VERBS: readonly VerbEntry[] = (
   [
-    gqlAndRest(
-      "Query.listLedgers",
-      "read",
-      "GET /api-gateway/v1/ledgers",
-      M.singleLedgerPin,
-    ),
-    gqlOnly(
-      "Query.listUserOwnedLedgers",
-      "read",
-      R.coveredByV1List,
-      M.notAgentShaped,
-    ),
-    gqlOnly("Query.searchLedgers", "read", R.coveredByV1List, M.notAgentShaped),
-    gqlAndRest(
-      "Query.getLedger",
-      "read",
-      "GET /api-gateway/v1/ledgers/{owner}/{name}",
-      M.notAgentShaped,
-    ),
-    gqlOnly(
-      "Query.getLedgerOverview",
-      "read",
-      R.dashboardShaped,
-      M.coveredByBql,
-    ),
-    gqlAndRest(
-      "Query.getLedgerIncomeStatement",
-      "read",
-      "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
-      M.coveredByBql,
-    ),
-    gqlAndRest(
-      "Query.getLedgerBalanceSheet",
-      "read",
-      "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
-      M.coveredByBql,
-    ),
+    {
+      verb: "Query.listLedgers",
+      class: "read",
+      gql: "Query.listLedgers",
+      rest: "GET /api-gateway/v1/ledgers",
+      mcpResource: "accessibleLedgers",
+      mcpExempt:
+        "Reachable through the accessibleLedgers account resource, with pin restrictions enforced by the shared workflow (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.listUserOwnedLedgers",
+      class: "read",
+      gql: "Query.listUserOwnedLedgers",
+      rest: "GET /api-gateway/v1/ledgers/owned",
+      mcpResource: "ownedLedgers",
+      mcpExempt:
+        "Reachable as the ownedLedgers account resource without a ledger target (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.searchLedgers",
+      class: "read",
+      gql: "Query.searchLedgers",
+      rest: "GET /api-gateway/v1/ledgers/search",
+      mcpResource: "searchLedgers",
+      mcpExempt:
+        "Reachable as the searchLedgers account resource with the complete search parameters (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedger",
+      class: "read",
+      gql: "Query.getLedger",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}",
+      mcpResource: "ledgerMetadata",
+      mcpExempt:
+        "Reachable as the ledgerMetadata resource, preserving the getLedger contract without adding a read tool (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerOverview",
+      class: "read",
+      gql: "Query.getLedgerOverview",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/overview",
+      mcpResource: "ledgerOverview",
+      mcpExempt:
+        "Reachable through the ledgerOverview resource with the full supported read parameters (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerIncomeStatement",
+      class: "read",
+      gql: "Query.getLedgerIncomeStatement",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
+      mcpResource: "ledgerIncomeStatement",
+      mcpExempt:
+        "Reachable through the ledgerIncomeStatement resource with the full supported read parameters (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerBalanceSheet",
+      class: "read",
+      gql: "Query.getLedgerBalanceSheet",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/statements/{statement}",
+      mcpResource: "ledgerBalanceSheet",
+      mcpExempt:
+        "Reachable through the ledgerBalanceSheet resource with the full supported read parameters (ADR 0008 D2).",
+    },
     {
       verb: "Query.getLedgerTrialBalance",
       class: "read",
@@ -792,12 +870,15 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       mcpExempt:
         "Reachable as the `ledgerEvents` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
-    gqlOnly(
-      "Query.getLedgerDocuments",
-      "read",
-      R.dashboardShaped,
-      M.coveredByBql,
-    ),
+    {
+      verb: "Query.getLedgerDocuments",
+      class: "read",
+      gql: "Query.getLedgerDocuments",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/documents",
+      mcpResource: "ledgerDocuments",
+      mcpExempt:
+        "Reachable through the ledgerDocuments resource with the full supported read parameters (ADR 0008 D2).",
+    },
     {
       verb: "Query.getLedgerPayeeTransactions",
       class: "read",
@@ -843,12 +924,15 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       mcpExempt:
         "Reachable as the `ledgerCurrencies` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
-    gqlOnly(
-      "Query.getLedgerSourceFiles",
-      "read",
-      R.coveredByV1Files,
-      M.notAgentShaped,
-    ),
+    {
+      verb: "Query.getLedgerSourceFiles",
+      class: "read",
+      gql: "Query.getLedgerSourceFiles",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/source-files",
+      mcpResource: "ledgerSourceFiles",
+      mcpExempt:
+        "Reachable as the ledgerSourceFiles resource with the corresponding journal/source contract (ADR 0008 D2).",
+    },
     {
       verb: "Query.getLedgerTags",
       class: "read",
@@ -930,12 +1014,15 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       mcpExempt:
         "Reachable as the `ledgerIntervalTotals` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
-    gqlAndRest(
-      "Query.getLedgerJournal",
-      "read",
-      "GET /api-gateway/v1/ledgers/{owner}/{name}/journal",
-      M.coveredByBql,
-    ),
+    {
+      verb: "Query.getLedgerJournal",
+      class: "read",
+      gql: "Query.getLedgerJournal",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/journal",
+      mcpResource: "ledgerJournal",
+      mcpExempt:
+        "Reachable as the ledgerJournal resource with the corresponding journal/source contract (ADR 0008 D2).",
+    },
     {
       verb: "Query.getLedgerEntryContext",
       class: "read",
@@ -945,24 +1032,33 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       mcpExempt:
         "Reachable as the `ledgerEntryContext` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
-    gqlOnly(
-      "Query.getLedgerPlaintextJournal",
-      "read",
-      R.coveredByV1Journal,
-      M.coveredByBql,
-    ),
-    gqlOnly(
-      "Query.getLedgerAccountJournal",
-      "read",
-      R.coveredByV1Journal,
-      M.coveredByBql,
-    ),
-    gqlAndRest(
-      "Query.getLedgerAccounts",
-      "read",
-      "GET /api-gateway/v1/ledgers/{owner}/{name}/accounts",
-      M.coveredByBql,
-    ),
+    {
+      verb: "Query.getLedgerPlaintextJournal",
+      class: "read",
+      gql: "Query.getLedgerPlaintextJournal",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/plaintext-journal",
+      mcpResource: "ledgerPlaintextJournal",
+      mcpExempt:
+        "Reachable as the ledgerPlaintextJournal resource with the corresponding journal/source contract (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerAccountJournal",
+      class: "read",
+      gql: "Query.getLedgerAccountJournal",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/account-journal",
+      mcpResource: "ledgerAccountJournal",
+      mcpExempt:
+        "Reachable as the ledgerAccountJournal resource with the corresponding journal/source contract (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerAccounts",
+      class: "read",
+      gql: "Query.getLedgerAccounts",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/accounts",
+      mcpResource: "ledgerAccounts",
+      mcpExempt:
+        "Reachable through the ledgerAccounts resource with the full supported read parameters (ADR 0008 D2).",
+    },
     {
       verb: "Query.getLedgerAccountDirectives",
       class: "read",
@@ -972,31 +1068,72 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       mcpExempt:
         "Reachable as the `ledgerAccountDirectives` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
-    gqlOnly(
-      "Query.getLedgerAssetDownloadUrl",
-      "read",
-      R.assetStorage,
-      M.notAgentShaped,
-    ),
-    gqlOnly(
-      "Query.getLedgerArchiveDownloadUrl",
-      "read",
-      R.archiveDownload,
-      M.notAgentShaped,
-    ),
-    gqlOnly(
-      "Query.getLatestLedgerCommit",
-      "read",
-      R.notInV1Table,
-      M.notAgentShaped,
-    ),
-    gqlOnly("Query.listCommits", "read", R.notInV1Table, M.notAgentShaped),
-    gqlOnly("Query.getCommitDetails", "read", R.notInV1Table, M.notAgentShaped),
+    {
+      verb: "Query.getLedgerAssetDownloadUrl",
+      class: "read",
+      gql: "Query.getLedgerAssetDownloadUrl",
+      rest: "GET /api-gateway/v1/asset-download-url",
+      mcpResource: "ledgerAssetDownloadUrl",
+      mcpExempt:
+        "Asset URL discovery is available through an MCP resource with the same protected ledger lookup and presigning service.",
+    },
+    {
+      verb: "Query.getLedgerArchiveDownloadUrl",
+      class: "read",
+      gql: "Query.getLedgerArchiveDownloadUrl",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/archive-download-url",
+      mcpResource: "ledgerArchiveDownloadUrl",
+      mcpExempt:
+        "Archive URL discovery is available through an MCP resource. The URL still requires an authorized HTTP fetch and does not replace MCP archive-byte delivery.",
+    },
+    {
+      verb: "Query.getLatestLedgerCommit",
+      class: "read",
+      gql: "Query.getLatestLedgerCommit",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/latest-commit",
+      mcpResource: "latestLedgerCommit",
+      mcpExempt:
+        "Reachable through the latestLedgerCommit resource with the original commit contract (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.listCommits",
+      class: "read",
+      gql: "Query.listCommits",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/commits",
+      mcpResource: "ledgerCommits",
+      mcpExempt:
+        "Reachable through the ledgerCommits resource with the original commit contract (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getCommitDetails",
+      class: "read",
+      gql: "Query.getCommitDetails",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/commit-details",
+      mcpResource: "ledgerCommitDetails",
+      mcpExempt:
+        "Reachable through the ledgerCommitDetails resource with the original commit contract (ADR 0008 D2).",
+    },
     // Legacy resolvers, kept for older mobile builds.
-    gqlOnly("Query.ledgerMeta", "read", R.legacy, M.notAgentShaped),
+    {
+      verb: "Query.ledgerMeta",
+      class: "read",
+      gql: "Query.ledgerMeta",
+      rest: "GET /api-gateway/v1/legacy/ledger-meta",
+      mcpResource: "legacyLedgerMetadata",
+      mcpExempt:
+        "Reachable as legacyLedgerMetadata, preserving the legacy response and default-ledger semantics as a resource (ADR 0008 D2).",
+    },
     gqlOnly("Query.accountHierarchy", "read", R.legacy, M.dashboardShaped),
     gqlOnly("Query.homeCharts", "read", R.legacy, M.dashboardShaped),
-    gqlOnly("Query.journalEntries", "read", R.legacy, M.coveredByBql),
+    {
+      verb: "Query.journalEntries",
+      class: "read",
+      gql: "Query.journalEntries",
+      rest: "GET /api-gateway/v1/legacy/journal-entries",
+      mcpResource: "legacyJournalEntries",
+      mcpExempt:
+        "Reachable as legacyJournalEntries, preserving the enhanced journal contract and its historical ledger selection (ADR 0008 D2).",
+    },
   ] satisfies readonly VerbEntry[]
 ).map((entry) => ({
   ...entry,
@@ -1029,55 +1166,70 @@ const ledgerWriteActionForVerb = (verb: string): AuthorizationAction => {
 
 const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
   {
-    ...gqlOnly("Mutation.starLedger", "write", R.giteaSocial, M.notAgentShaped),
+    verb: "Mutation.starLedger",
+    gql: "Mutation.starLedger",
+    class: "write" as const,
+    rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/star",
+    mcp: "setLedgerStar",
     authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_CREATE,
   },
   {
-    ...gqlOnly(
-      "Mutation.unstarLedger",
-      "write",
-      R.giteaSocial,
-      M.notAgentShaped,
-    ),
+    verb: "Mutation.unstarLedger",
+    gql: "Mutation.unstarLedger",
+    class: "write" as const,
+    rest: "DELETE /api-gateway/v1/ledgers/{owner}/{name}/star",
+    mcp: "setLedgerStar",
     authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_SOCIAL_STAR_DELETE,
   },
-  gqlAndRest(
-    "Mutation.bulkEntries",
-    "write",
-    "POST /api-gateway/v1/ledgers/{owner}/{name}/entries",
-    M.coveredByEditFiles,
-  ),
-  gqlOnly(
-    "Mutation.insertReceiptTransaction",
-    "write",
-    R.notInV1Table,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.deleteLedgerEntrySourceSlice",
-    "write",
-    R.notInV1Table,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.deleteMultipleLedgerEntrySourceSlices",
-    "write",
-    R.notInV1Table,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.updateLedgerEntrySourceSlice",
-    "write",
-    R.notInV1Table,
-    M.notAgentShaped,
-  ),
-  gqlOnly("Mutation.addEntries", "write", R.legacy, M.notAgentShaped),
-  gqlOnly(
-    "Mutation.renameLedgerFile",
-    "write",
-    R.coveredByV1Files,
-    M.notAgentShaped,
-  ),
+  {
+    verb: "Mutation.bulkEntries",
+    class: "write" as const,
+    gql: "Mutation.bulkEntries",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/entries",
+    mcp: "addLedgerEntries",
+  },
+  {
+    verb: "Mutation.insertReceiptTransaction",
+    class: "write" as const,
+    gql: "Mutation.insertReceiptTransaction",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/import/insert-receipt",
+    mcp: "insertReceiptTransaction",
+  },
+  {
+    verb: "Mutation.deleteLedgerEntrySourceSlice",
+    class: "write" as const,
+    gql: "Mutation.deleteLedgerEntrySourceSlice",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/entry-source/delete",
+    mcp: "editEntrySource",
+  },
+  {
+    verb: "Mutation.deleteMultipleLedgerEntrySourceSlices",
+    class: "write" as const,
+    gql: "Mutation.deleteMultipleLedgerEntrySourceSlices",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/entry-source/delete-many",
+    mcp: "editEntrySource",
+  },
+  {
+    verb: "Mutation.updateLedgerEntrySourceSlice",
+    class: "write" as const,
+    gql: "Mutation.updateLedgerEntrySourceSlice",
+    rest: "PUT /api-gateway/v1/ledgers/{owner}/{name}/entry-source",
+    mcp: "editEntrySource",
+  },
+  {
+    verb: "Mutation.addEntries",
+    class: "write" as const,
+    gql: "Mutation.addEntries",
+    rest: "POST /api-gateway/v1/legacy/entries",
+    mcp: "addLegacyEntries",
+  },
+  {
+    verb: "Mutation.renameLedgerFile",
+    class: "write" as const,
+    gql: "Mutation.renameLedgerFile",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/rename-file",
+    mcp: "renameLedgerFile",
+  },
 ].map((entry) => ({
   ...entry,
   authorizationAction: ledgerWriteActionForVerb(entry.verb),
@@ -1152,7 +1304,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     // typed table, `text/plain` the shell's own rendering. One route, one
     // service call, two representations — so both verbs point at it.
     rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/query",
-    mcpExempt: M.coveredByBql,
+    mcp: "runBqlQueryStructured",
   },
   {
     verb: "ledger.listDirContent",
@@ -1205,7 +1357,9 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
     rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
     gqlExempt: G.bytesNotFields,
-    mcpExempt: M.notAgentShaped,
+    mcpResource: "ledgerArchive",
+    mcpExempt:
+      "Archive bytes are delivered by the MCP resource as a base64 blob with per-call authorization, archive selection, and the shared download budget.",
   },
   {
     // The pre-v1 spelling, superseded and marked deprecated in the spec. Kept
@@ -1216,19 +1370,56 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
     rest: "GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
     gqlExempt: G.bytesNotFields,
-    mcpExempt: M.notAgentShaped,
+    mcpResource: "legacyLedgerArchive",
+    mcpExempt:
+      "Archive bytes are delivered by the MCP resource as a base64 blob with per-call authorization, archive selection, and the shared download budget.",
   },
 ];
+
+const SOCIAL_DISCOVERY_BINDINGS: Record<
+  string,
+  { rest: string; mcpResource: string }
+> = {
+  "Query.getUserProfile": {
+    rest: "GET /api-gateway/v1/social/profile",
+    mcpResource: "publicUserProfile",
+  },
+  "Query.getUserFollowers": {
+    rest: "GET /api-gateway/v1/social/followers",
+    mcpResource: "userFollowers",
+  },
+  "Query.getUserFollowing": {
+    rest: "GET /api-gateway/v1/social/following",
+    mcpResource: "userFollowing",
+  },
+  "Query.getUserStarredRepos": {
+    rest: "GET /api-gateway/v1/social/starred-repositories",
+    mcpResource: "userStarredRepos",
+  },
+};
 
 const GITEA_SOCIAL_VERBS: readonly VerbEntry[] = [
   {
     ...gqlOnly("Query.getFeed", "read", R.giteaSocial, M.notAgentShaped),
     authorizationAction: AUTHORIZATION_ACTIONS.USER_SOCIAL_FEED_READ,
   },
-  ...Object.entries(SOCIAL_PUBLIC_EXCLUSIONS).map(([gql, reason]) => ({
-    ...gqlOnly(gql, "public", R.giteaSocial, M.notAgentShaped),
-    nonPdpReason: reason,
-  })),
+  ...Object.entries(SOCIAL_PUBLIC_EXCLUSIONS).map(([gql, reason]) => {
+    const binding = SOCIAL_DISCOVERY_BINDINGS[gql];
+    if (!binding) {
+      // A new public exclusion must decide its REST/MCP surface explicitly
+      // rather than inheriting a blanket excuse from a silent fallback.
+      throw new Error(`op-class: ${gql} has no social discovery binding`);
+    }
+    return {
+      verb: gql,
+      gql,
+      class: "public" as const,
+      ...binding,
+      mcpExempt:
+        "Exposed as a public MCP resource; social discovery needs no action tool.",
+      nonPdpReason: reason,
+    };
+  }),
   {
     ...gqlOnly("Mutation.followUser", "write", R.giteaSocial, M.notAgentShaped),
     authorizationAction: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_CREATE,
@@ -1242,102 +1433,99 @@ const GITEA_SOCIAL_VERBS: readonly VerbEntry[] = [
     ),
     authorizationAction: AUTHORIZATION_ACTIONS.USER_SOCIAL_FOLLOW_DELETE,
   },
-  gqlOnly(
-    "Query.getPullRequestDetails",
-    "read",
-    R.pullRequest,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.createPullRequestFromPatch",
-    "write",
-    R.pullRequest,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.approvePullRequest",
-    "write",
-    R.pullRequest,
-    M.notAgentShaped,
-  ),
-  gqlOnly(
-    "Mutation.rejectPullRequest",
-    "write",
-    R.pullRequest,
-    M.notAgentShaped,
-  ),
-].map((entry) => {
-  if (entry.verb === "Query.getPullRequestDetails") {
-    return {
-      ...entry,
-      authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_READ,
-    };
-  }
-  if (entry.verb === "Mutation.createPullRequestFromPatch") {
-    return {
-      ...entry,
-      authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE,
-    };
-  }
-  if (entry.verb === "Mutation.approvePullRequest") {
-    return {
-      ...entry,
-      authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE,
-    };
-  }
-  if (entry.verb === "Mutation.rejectPullRequest") {
-    return {
-      ...entry,
-      authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_REJECT,
-    };
-  }
-  return entry;
-});
+  {
+    verb: "Query.getPullRequestDetails",
+    gql: "Query.getPullRequestDetails",
+    class: "read" as const,
+    rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/pull-requests/{prNumber}",
+    mcpResource: "pullRequestDetails",
+    mcpExempt:
+      "Pull request inspection is exposed through an MCP resource with the same protected workflow.",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_READ,
+  },
+  {
+    verb: "Mutation.createPullRequestFromPatch",
+    gql: "Mutation.createPullRequestFromPatch",
+    class: "write" as const,
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/pull-requests",
+    mcp: "managePullRequests",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE,
+  },
+  {
+    verb: "Mutation.approvePullRequest",
+    gql: "Mutation.approvePullRequest",
+    class: "write" as const,
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/pull-requests/{prNumber}/approve",
+    mcp: "managePullRequests",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_APPROVE,
+  },
+  {
+    verb: "Mutation.rejectPullRequest",
+    gql: "Mutation.rejectPullRequest",
+    class: "write" as const,
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/pull-requests/{prNumber}/reject",
+    mcp: "managePullRequests",
+    authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_REJECT,
+  },
+];
 
 const LLM_VERBS: readonly VerbEntry[] = [
   {
-    ...gqlOnly(
-      "Query.suggestTransactionCategories",
-      "read",
-      R.llm,
-      M.notAgentShaped,
-    ),
+    verb: "Query.suggestTransactionCategories",
+    class: "read",
+    gql: "Query.suggestTransactionCategories",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/import/suggest-categories",
+    mcpResource: "transactionCategorySuggestions",
+    mcpExempt:
+      "Read exposed as an MCP resource instead of a tool (ADR 0008 D2); the structured transaction list arrives as one JSON-encoded query parameter.",
     authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_CATEGORIES_SUGGEST,
   },
-  // Mutations by TypeGraphQL, and left at `write` deliberately: they spend the
-  // account's LLM budget, which a read-scoped credential has no business doing
-  // even though no ledger bytes change.
+  // Parsing mutations retain write-class transport budgets. Their canonical
+  // PDP actions permit read capability and enforce ownership/quota independently;
+  // the operation class is not a credential ceiling.
   {
-    ...gqlOnly("Mutation.parseFile", "write", R.llm, M.notAgentShaped),
+    verb: "Mutation.parseFile",
+    class: "write",
+    gql: "Mutation.parseFile",
+    rest: "POST /api-gateway/v1/import/parse-file",
+    mcp: "parseFile",
     authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE,
   },
   {
-    ...gqlOnly("Mutation.parseReceipt", "write", R.llm, M.notAgentShaped),
+    verb: "Mutation.parseReceipt",
+    class: "write",
+    gql: "Mutation.parseReceipt",
+    rest: "POST /api-gateway/v1/ledgers/{owner}/{name}/import/parse-receipt",
+    mcp: "parseReceipt",
     authorizationAction: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
   },
   {
-    ...gqlOnly("Query.aiCfoUsage", "read", R.llm, M.notAgentShaped),
+    verb: "Query.aiCfoUsage",
+    class: "read",
+    gql: "Query.aiCfoUsage",
+    rest: "GET /api-gateway/v1/account/ai-cfo-usage",
+    mcpResource: "aiCfoUsage",
+    mcpExempt: "Account usage is exposed as an MCP resource instead of a tool.",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_AI_USAGE_READ,
   },
 ];
 
 const ASSET_VERBS: readonly VerbEntry[] = [
   {
-    ...gqlOnly(
-      "Query.generateTempAssetDownloadUrl",
-      "read",
-      R.assetStorage,
-      M.notAgentShaped,
-    ),
+    verb: "Query.generateTempAssetDownloadUrl",
+    class: "read",
+    gql: "Query.generateTempAssetDownloadUrl",
+    rest: "GET /api-gateway/v1/temp-assets/download-url",
+    mcpResource: "tempAssetDownloadUrl",
+    mcpExempt: "Read exposed as an MCP resource instead of a tool.",
     authorizationAction: AUTHORIZATION_ACTIONS.TEMP_ASSET_DOWNLOAD_READ,
   },
   {
-    ...gqlOnly(
-      "Mutation.generateTempAssetUploadUrl",
-      "write",
-      R.assetStorage,
-      M.notAgentShaped,
-    ),
+    verb: "Mutation.generateTempAssetUploadUrl",
+    class: "write",
+    gql: "Mutation.generateTempAssetUploadUrl",
+    rest: "POST /api-gateway/v1/temp-assets/upload-url",
+    mcp: "generateTempAssetUploadUrl",
     authorizationAction: AUTHORIZATION_ACTIONS.TEMP_ASSET_UPLOAD_CREATE,
   },
 ];

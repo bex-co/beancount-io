@@ -197,16 +197,16 @@ describe("v1 authentication and scope", () => {
     });
   });
 
-  it("limits ledger listing to the credential's pinned ledger", async () => {
+  it("passes the ledger pin to the shared listing workflow", async () => {
     server.setIdentity(pinnedReadToken);
     const { status, body } = await call("GET", "/api-gateway/v1/ledgers");
     expect(status).toBe(200);
     expect(body).toEqual([{ id: "alice/main" }]);
-    expect(workflows.ledger.getLedger).toHaveBeenCalledWith({
-      ledgerId: "alice/main",
+    expect(workflows.ledger.listLedgers).toHaveBeenCalledWith({
       identity: pinnedReadToken,
+      args: { page: undefined, limit: undefined },
     });
-    expect(workflows.ledger.listLedgers).not.toHaveBeenCalled();
+    expect(workflows.ledger.getLedger).not.toHaveBeenCalled();
   });
 });
 

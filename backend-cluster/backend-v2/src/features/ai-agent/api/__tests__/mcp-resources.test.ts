@@ -11,6 +11,7 @@ import { RESOURCE_SCHEME } from "../mcp-resources";
 import { ForbiddenError } from "@/shared/errors";
 import type { AppConfig } from "@/config/config";
 import type { ToolContext } from "../../tools/types";
+import type { McpRequestContext } from "../mcp-context";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 
@@ -33,10 +34,10 @@ function ctx(
     ledgerId: LEDGER,
     llmService: {},
     ledgerReceiptWorkflow: {},
-  } as unknown as ToolContext;
+  } as unknown as McpRequestContext;
 }
 
-async function connect(toolCtx: ToolContext) {
+async function connect(toolCtx: McpRequestContext) {
   const server = assembleMcpRegistry(toolCtx, config);
   const [a, b] = InMemoryTransport.createLinkedPair();
   const client = new Client({ name: "test", version: "1.0.0" });
@@ -145,7 +146,7 @@ describe("MCP resources", () => {
       client.readResource({
         uri: `${RESOURCE_SCHEME}://bob/secret/files/main.beancount`,
       }),
-    ).rejects.toThrow(/bound to alice\/main/);
+    ).rejects.toThrow(/ledger restriction/);
 
     expect(getFilesContent).not.toHaveBeenCalled();
     await close();
@@ -160,5 +161,153 @@ describe("MCP resources", () => {
 
     expect(tools).toHaveLength(MCP_TOOLS.length);
     await close();
+  });
+});
+
+describe("MCP per-call ledger selection", () => {
+  it.each([
+    [LEDGER, undefined, LEDGER],
+    [LEDGER, LEDGER, LEDGER],
+    [undefined, "bob/books", "bob/books"],
+  ])(
+    "selects target for pin %s and argument %s",
+    async (pin, ledger, expected) => {
+      const queryShellText = jest
+        .fn()
+        .mockResolvedValue({ text: "Assets:Cash 42 USD" });
+      const context: McpRequestContext = {
+        ...ctx(contentOf("main.beancount", "")),
+        ledgerId: undefined,
+      };
+      context.identity = { ...context.identity, ledgerScope: pin };
+      context.services = {
+        ...context.services,
+        ledgerShell: {
+          queryShellText,
+        } as unknown as ToolContext["services"]["ledgerShell"],
+      };
+      const { client, close } = await connect(context);
+      try {
+        const result = await client.callTool({
+          name: "runBqlQuery",
+          arguments: { query: "BALANCES", ...(ledger ? { ledger } : {}) },
+        });
+        expect(result.isError).not.toBe(true);
+        expect(result.structuredContent).toMatchObject({
+          ok: true,
+          result: "Assets:Cash 42 USD",
+        });
+        expect(queryShellText).toHaveBeenCalledWith({
+          identity: context.identity,
+          ledgerId: expected,
+          query: "BALANCES",
+        });
+        expect(context.identity.ledgerScope).toBe(pin);
+      } finally {
+        await close();
+      }
+    },
+  );
+
+  it.each([
+    [LEDGER, "bob/books"],
+    [undefined, undefined],
+    [undefined, "alice/main/extra"],
+    [undefined, "alice/%2Fmain"],
+    [undefined, ""],
+  ])(
+    "refuses invalid selection before domain work (%s, %s)",
+    async (pin, ledger) => {
+      const queryShellText = jest.fn();
+      const context: McpRequestContext = {
+        ...ctx(contentOf("main.beancount", "")),
+        ledgerId: undefined,
+      };
+      context.identity = { ...context.identity, ledgerScope: pin };
+      context.services = {
+        ...context.services,
+        ledgerShell: {
+          queryShellText,
+        } as unknown as ToolContext["services"]["ledgerShell"],
+      };
+      const { client, close } = await connect(context);
+      try {
+        const result = await client.callTool({
+          name: "runBqlQuery",
+          arguments: {
+            query: "BALANCES",
+            ...(ledger === undefined ? {} : { ledger }),
+          },
+        });
+        expect(result.isError).toBe(true);
+        expect(queryShellText).not.toHaveBeenCalled();
+      } finally {
+        await close();
+      }
+    },
+  );
+
+  it("allows account tools and URI-selected reads without a ledger default", async () => {
+    const getFilesContent = contentOf(
+      "main.beancount",
+      "2026-01-01 open Assets:Cash",
+    );
+    const list = jest.fn().mockResolvedValue([]);
+    const context: McpRequestContext = {
+      ...ctx(getFilesContent),
+      ledgerId: undefined,
+    };
+    context.identity = { ...context.identity, ledgerScope: undefined };
+    context.apiKeyService = { list } as unknown as ToolContext["apiKeyService"];
+    const { client, close } = await connect(context);
+    try {
+      const keys = await client.callTool({
+        name: "listApiKeys",
+        arguments: {},
+      });
+      expect(keys.isError).not.toBe(true);
+      expect(list).toHaveBeenCalledWith(context.identity);
+      const file = await client.readResource({ uri: FILE_URI });
+      expect(file.contents[0]).toMatchObject({
+        text: "2026-01-01 open Assets:Cash",
+      });
+      expect(getFilesContent).toHaveBeenCalledWith(
+        expect.objectContaining({ ledgerId: LEDGER }),
+      );
+    } finally {
+      await close();
+    }
+  });
+});
+
+describe("resource path encoding", () => {
+  it("decodes a nested file path exactly once", async () => {
+    const path = "receipts/café 100%25.bean";
+    const getFilesContent = contentOf(path, "ledger contents");
+    const { client, close } = await connect(ctx(getFilesContent));
+    try {
+      const result = await client.readResource({
+        uri: `beancount://alice/main/files/${path.split("/").map(encodeURIComponent).join("/")}`,
+      });
+      expect(result.contents[0]).toMatchObject({ text: "ledger contents" });
+      expect(getFilesContent).toHaveBeenCalledWith(
+        expect.objectContaining({ paths: [path] }),
+      );
+    } finally {
+      await close();
+    }
+  });
+
+  it("refuses malformed percent encoding before reading", async () => {
+    const getFilesContent = contentOf("main.beancount", "");
+    const { client, close } = await connect(ctx(getFilesContent));
+    try {
+      await expect(
+        client.readResource({ uri: "beancount://alice/main/files/%ZZ" }),
+      ).rejects.toThrow(/encoding/);
+      expect(getFilesContent).not.toHaveBeenCalled();
+    } finally {
+      await close();
+    }
   });
 });

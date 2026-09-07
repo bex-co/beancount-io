@@ -20,9 +20,10 @@ import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
 import { buildGraphqlSchema } from "@/server/graphql/api-gateway";
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
 import { restScopeMiddleware } from "@/server/rest/scope-middleware";
-import type { ToolContext } from "@/features/ai-agent/tools/types";
+import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 import type { Identity } from "../identity";
-import { authorizationActionForOp } from "../op-class";
+import { authorizationActionForOp, classifyOp } from "../op-class";
+import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import { assembleMcpRegistry, type ApiGate } from "../composition-root";
 import { assembleTestApi } from "./api-surface";
 
@@ -194,7 +195,7 @@ function captureMcpHandlers(
         apiKeyService: services?.apiKeyService ?? {},
         identity,
         ledgerId: "alice/main",
-      } as unknown as ToolContext,
+      } as unknown as McpRequestContext,
       config,
     );
   } finally {
@@ -423,7 +424,10 @@ describe("scope enforcement across surfaces", () => {
         },
       );
 
-      const result = await handlers.get("runBqlQuery")!({ query: "BALANCES" });
+      const result = await handlers.get("runBqlQuery")!({
+        query: "BALANCES",
+        ledger: "alice/main",
+      });
       expect(result.isError).toBe(true);
       expect(JSON.stringify(result.content)).toContain("no longer have access");
     });
@@ -449,8 +453,10 @@ describe("scope enforcement across surfaces", () => {
     it("MCP is not a session surface at all, but the gate agrees anyway", () => {
       // `mcp-route` refuses a session before this point; the matrix would too
       // only by exemption, so this documents that the two do not disagree.
+      // Every tool registers regardless of identity; op-class-coverage owns
+      // the deliberate tool-budget count.
       const handlers = captureMcpHandlers(sessionIdentity, enforcing);
-      expect([...handlers.keys()]).toHaveLength(9);
+      expect([...handlers.keys()]).toHaveLength(MCP_TOOLS.length);
     });
   });
 
@@ -653,9 +659,16 @@ describe("configured enforcement and the shadow-mode compatibility path", () => 
       (mount) =>
         mount.gate === "enforced" && authorizationActionForOp(mount.opId),
     );
-    expect(restMounts.filter((mount) => mount.gate === "enforced")).toEqual(
-      protectedEnforced,
-    );
+    // Every enforced mount is either PDP-routed or a deliberately public
+    // classified read (anonymousV1Route: tier quotas, feature flags, social
+    // discovery). Anything else is an unprotected business route.
+    const unaccounted = restMounts.filter((mount) => {
+      if (mount.gate !== "enforced") return false;
+      if (authorizationActionForOp(mount.opId)) return false;
+      const classified = classifyOp(mount.opId);
+      return !(classified.found && classified.class === "public");
+    });
+    expect(unaccounted).toEqual([]);
     expect(protectedEnforced.length).toBeGreaterThan(0);
 
     for (const mount of protectedEnforced) {

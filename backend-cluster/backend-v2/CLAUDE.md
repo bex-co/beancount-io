@@ -151,7 +151,7 @@ Prompt and agent-routing evals live entirely under `evals/`. Use the focused `ya
 - **Paths address a ledger as `{owner}/{name}`,** two segments, never one `{ledgerId}`. A single segment needs `%2F` to survive Cloudflare and Caddy unchanged.
 - **Classify the new op** in `op-class.ts` — the coverage test fails otherwise — and remember the class comes from the table, not the HTTP method: `POST .../query` is `read`.
 - **Regenerate the snapshot** with `yarn generate-v1-openapi`; `openapi-completeness.test.ts` fails when `docs/openapi/v1.json` and the live document disagree, so a contract change shows up as a reviewable diff.
-- The v1 fragment is gated `enforced`, so unknown or non-PDP operations fail closed regardless of `config.api.scopeEnforcement`. Every protected v1 business verb maps to a canonical PDP action; its service/workflow makes the final credential, ledger-pin, and relationship decision. Every v1 resource route, including archive downloads, uses the shared identity gate; browsers present their session cookie and non-browser clients use OAuth bearer tokens or personal API keys.
+- The v1 fragment is gated `enforced`, so unknown or non-PDP operations fail closed regardless of `config.api.scopeEnforcement`. Every protected v1 business verb maps to a canonical PDP action; its service/workflow makes the final credential, ledger-pin, and relationship decision. Every protected v1 resource route, including archive downloads, uses the shared identity gate; browsers present their session cookie and non-browser clients use OAuth bearer tokens or personal API keys. Public configuration reads explicitly use `anonymousV1Route`, which makes identity optional in the handler and documents anonymous access in OpenAPI; operation classification and rate limits still apply.
 
 ### Identity and op classes
 
@@ -176,7 +176,7 @@ Every surface authenticates through one gate and classifies every operation:
 
 Only a sha256 digest is stored, plus a display prefix. The plaintext is returned by the mint response and is unrecoverable afterwards.
 
-A key reaches GraphQL and `/api-gateway/v1` unconditionally. **MCP additionally requires the key to be ledger-scoped**, because `mcp-route.ts` refuses any credential not bound to one ledger — mint with `ledgerScope: "owner/name"` for an agent client.
+A key reaches GraphQL, `/api-gateway/v1`, and MCP. MCP ledger tools accept an optional `ledger: "owner/name"` target: pinned credentials default to their pin and cannot widen it; unpinned credentials must select a target. Resource URIs select their ledger under the same pin ceiling. Account tools need no ledger. Protected services still authorize every call.
 
 ## Environment and deployment
 

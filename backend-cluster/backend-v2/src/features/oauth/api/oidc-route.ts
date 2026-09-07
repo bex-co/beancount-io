@@ -200,11 +200,13 @@ export function setOidcRoutes(
           `${config.oauth.interactionUrl}/`,
         );
         consentUrl.searchParams.set("uid", interaction.uid);
-        if (isMobileOAuthClient(interaction.params.client_id)) {
+        if (!isIdentityOAuthClient(interaction.params.client_id)) {
           consentUrl.searchParams.set(
             "scope",
             (interaction.params.scope as string | undefined) ?? "openid",
           );
+        }
+        if (isMobileOAuthClient(interaction.params.client_id)) {
           // Only the native client's interaction page knows what to do with
           // the hint; MCP and identity clients never see it, and a value this
           // server does not recognise is simply not forwarded.
@@ -398,6 +400,7 @@ export function setOidcRoutes(
       const interactionBody = ctx.request.body as {
         decision?: string;
         ledgerId?: string;
+        accountWide?: boolean | string;
         scope?: string;
       };
       if (interactionBody.decision === "cancel") {
@@ -471,11 +474,25 @@ export function setOidcRoutes(
           );
         }
 
-        // A ledger is optional now. Pinning the grant to one ledger is the
-        // least-privilege shape (an agent that should only see one book), but
-        // an unpinned grant is what makes cross-ledger operations like listing
-        // the caller's ledgers expressible at all (ADR 0006 D5). MCP still
-        // requires the pinned form — it refuses an unpinned token itself.
+        // Third-party clients must explicitly distinguish a restricted grant
+        // from access across the user's ledgers. Missing form fields cannot
+        // silently remove the ledger restriction.
+        if (!isMobileOAuthClient(params.client_id)) {
+          const accountWide =
+            interactionBody.accountWide === true ||
+            interactionBody.accountWide === "true";
+          if ((!ledgerId && !accountWide) || (ledgerId && accountWide)) {
+            throw new errors.InvalidRequest(
+              "select either one ledger or explicit account-wide access",
+            );
+          }
+          if (accountWide && interactionBody.scope !== params.scope) {
+            throw new errors.InvalidRequest(
+              "the displayed account-wide scopes do not match the interaction",
+            );
+          }
+        }
+
         if (ledgerId) {
           await assertLedgerAccess(ledgerId, user.id, {
             models: layers.database.models,

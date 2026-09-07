@@ -16,15 +16,15 @@ export enum LedgerTemplate {
 
 export interface CreateLedgerCommand {
   name: string;
-  description?: string;
-  private?: boolean;
-  template?: LedgerTemplate;
+  description?: string | null;
+  private?: boolean | null;
+  template?: LedgerTemplate | null;
 }
 
 export interface UpdateLedgerCommand {
-  name?: string;
-  description?: string;
-  private?: boolean;
+  name?: string | null;
+  description?: string | null;
+  private?: boolean | null;
 }
 
 export interface CreateLedgerFileCommand {
@@ -203,4 +203,32 @@ export interface BcioOptionsData {
   receiptBaseFolder: string | null;
   receiptStorage: string | null;
   documentFile: string | null;
+}
+
+export interface LegacyJournalQuery {
+  first?: number;
+  after?: string;
+  last?: number;
+  before?: string;
+  detailed?: boolean;
+  searchQuery?: string;
+  accountFilter?: string;
+  amountMin?: number;
+  amountMax?: number;
+  entryTypes?: string[];
+  sortBy?: string;
+  sortOrder?: string;
+  groupBy?: string;
+}
+
+export interface LegacyJournalResult {
+  data: Array<Record<string, unknown> & { date: string }>;
+  success: boolean;
+  pageInfo: {
+    hasNextPage: boolean;
+    hasPreviousPage: boolean;
+    startCursor: string;
+    endCursor: string;
+    totalCount: number;
+  };
 }

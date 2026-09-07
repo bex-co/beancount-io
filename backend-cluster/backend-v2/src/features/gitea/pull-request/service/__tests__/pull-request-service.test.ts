@@ -1,8 +1,6 @@
 import { PullRequestService } from "../pull-request-service";
-import axios from "axios";
 
 // Mock dependencies
-jest.mock("axios");
 jest.mock("@/shared/logger", () => ({
   logger: {
     error: jest.fn(),
@@ -17,6 +15,9 @@ jest.mock("@/shared/logger", () => ({
 
 type MockGiteaClient = {
   repos: {
+    repoGetPullRequest: jest.Mock;
+    repoGetPullRequestFiles: jest.Mock;
+    repoDownloadPullDiffOrPatch: jest.Mock;
     repoGetBranch: jest.Mock;
     repoCreateBranch: jest.Mock;
     repoGetContents: jest.Mock;
@@ -32,7 +33,6 @@ describe("PullRequestService", () => {
   let service: PullRequestService;
   let mockClient: MockGiteaClient;
   let mockGiteaClientFactory: { getUserApiClient: jest.Mock };
-  let mockModels: { user: { getById: jest.Mock } };
   const userId = "user-id";
   const identity = {
     userId,
@@ -49,6 +49,9 @@ describe("PullRequestService", () => {
     // Setup mock client
     mockClient = {
       repos: {
+        repoGetPullRequest: jest.fn().mockResolvedValue({ data: null }),
+        repoGetPullRequestFiles: jest.fn().mockResolvedValue({ data: [] }),
+        repoDownloadPullDiffOrPatch: jest.fn().mockResolvedValue({ data: "" }),
         repoGetBranch: jest.fn(),
         repoCreateBranch: jest.fn(),
         repoGetContents: jest.fn(),
@@ -63,19 +66,8 @@ describe("PullRequestService", () => {
     mockGiteaClientFactory = {
       getUserApiClient: jest.fn().mockResolvedValue(mockClient),
     };
-    mockModels = {
-      user: {
-        getById: jest.fn().mockResolvedValue({
-          ledger_username: "testuser",
-          ledger_password: "testpass",
-        }),
-      },
-    };
-
     service = new PullRequestService(
       mockGiteaClientFactory as never,
-      mockModels as never,
-      {} as never,
       authorization as never,
     );
   });
@@ -155,10 +147,9 @@ describe("PullRequestService", () => {
         base: { ref: "main" },
       };
 
-      (axios.get as jest.Mock)
-        .mockResolvedValueOnce({ data: mockPRData })
-        .mockResolvedValueOnce({ data: [] })
-        .mockResolvedValueOnce({ data: "" });
+      mockClient.repos.repoGetPullRequest.mockResolvedValue({
+        data: mockPRData,
+      });
 
       const result = await service.getPRDetails(
         identity,
@@ -172,7 +163,7 @@ describe("PullRequestService", () => {
     });
 
     it("should handle PR not found", async () => {
-      (axios.get as jest.Mock).mockResolvedValueOnce({ data: null });
+      mockClient.repos.repoGetPullRequest.mockResolvedValue({ data: null });
 
       await expect(
         service.getPRDetails(identity, owner, repo, prNumber),

@@ -1,6 +1,6 @@
 import { BadUserInputError } from "@/shared/errors";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
-import { assertSafeArchiveName } from "@/features/ledger/api/rest/safe-archive-name";
+import { assertSafeArchiveName } from "@/features/ledger/utils/safe-archive-name";
 
 describe("repository path validation", () => {
   it.each(["main.bean", "accounts/2026.bean", "Q1 #draft.bean"])(

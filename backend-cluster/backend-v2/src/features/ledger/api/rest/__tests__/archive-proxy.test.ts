@@ -1,3 +1,4 @@
+import { LedgerArchiveService } from "@/features/ledger/service/ledger-archive-service";
 const fetchMock = jest.fn();
 jest.mock("node-fetch", () => ({
   __esModule: true,
@@ -16,7 +17,7 @@ function context() {
 }
 
 function layers() {
-  return {
+  const result = {
     database: {
       db: {},
       models: {
@@ -33,6 +34,13 @@ function layers() {
       },
     },
   } as any;
+  result.services.ledgerArchive = new LedgerArchiveService(
+    result.database.models,
+    result.database.db,
+    { favaApi: { baseUrl: "http://ledger.internal" } } as never,
+    result.services.authorization,
+  );
+  return result;
 }
 
 describe("streamLedgerArchive", () => {
@@ -50,15 +58,10 @@ describe("streamLedgerArchive", () => {
     const appLayers = layers();
     const ctx = context();
 
-    await streamLedgerArchive(
-      ctx,
-      appLayers,
-      { favaApi: { baseUrl: "http://ledger.internal/" } } as any,
-      {
-        ledgerId: "alice/public-ledger",
-        archive: "gitea-main.zip",
-      },
-    );
+    await streamLedgerArchive(ctx, appLayers, {
+      ledgerId: "alice/public-ledger",
+      archive: "gitea-main.zip",
+    });
 
     expect(fetchMock).toHaveBeenCalledWith(
       "http://ledger.internal/ledgers/alice/public-ledger/archive/gitea-main.zip",
@@ -77,15 +80,10 @@ describe("streamLedgerArchive", () => {
 
   it("rejects traversal before making an upstream request", async () => {
     await expect(
-      streamLedgerArchive(
-        context(),
-        layers(),
-        { favaApi: { baseUrl: "http://ledger.internal" } } as any,
-        {
-          ledgerId: "alice/public-ledger",
-          archive: "../../private-ledger",
-        },
-      ),
+      streamLedgerArchive(context(), layers(), {
+        ledgerId: "alice/public-ledger",
+        archive: "../../private-ledger",
+      }),
     ).rejects.toBeInstanceOf(BadUserInputError);
     expect(fetchMock).not.toHaveBeenCalled();
   });
@@ -98,15 +96,10 @@ describe("streamLedgerArchive", () => {
     const ctx = context();
 
     await expect(
-      streamLedgerArchive(
-        ctx,
-        appLayers,
-        { favaApi: { baseUrl: "http://ledger.internal" } } as any,
-        {
-          ledgerId: "alice/private",
-          archive: "gitea-main.zip",
-        },
-      ),
+      streamLedgerArchive(ctx, appLayers, {
+        ledgerId: "alice/private",
+        archive: "gitea-main.zip",
+      }),
     ).rejects.toThrow("denied");
     expect(appLayers.database.models.user.getById).not.toHaveBeenCalled();
     expect(fetchMock).not.toHaveBeenCalled();

@@ -1,4 +1,5 @@
-import { NotFoundError } from "@/shared/errors";
+import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
+import { NotFoundError, BadUserInputError } from "@/shared/errors";
 import { buildLedgerRepoAssetKey } from "@/features/s3/service/asset-storage-service";
 import { parseLedgerId } from "@/shared/str";
 import { unwrapFavaResponse } from "@/foundation/fava";
@@ -51,6 +52,10 @@ export class LedgerAssetService
     filename: string,
     identity?: Identity,
   ): Promise<string> {
+    if (!Number.isInteger(ledgerRepoId) || ledgerRepoId <= 0) {
+      throw new BadUserInputError("Invalid ledgerRepoId");
+    }
+    assertSafeRepoPath(filename, "filename");
     const adminClient = this.favaClientFactory.getAdminClient();
     const ledger = await unwrapFavaResponse(
       adminClient.admin.getLedgerByRepoId(ledgerRepoId),

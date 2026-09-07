@@ -9,7 +9,7 @@ import { parseLedgerId } from "@/shared/str";
 import {
   assertSafeArchiveName,
   SAFE_ARCHIVE_NAME_PATTERN,
-} from "./safe-archive-name";
+} from "../../utils/safe-archive-name";
 
 /**
  * The pre-v1 archive download. Superseded, kept for existing clients.
@@ -60,7 +60,7 @@ export function registerDownloadArchiveRoute(
     assertSafeArchiveName(archive);
 
     const identity = await resolveIdentity(ctx, layers.database, config);
-    await streamLedgerArchive(ctx, layers, config, {
+    await streamLedgerArchive(ctx, layers, {
       ledgerId,
       archive,
       identity,

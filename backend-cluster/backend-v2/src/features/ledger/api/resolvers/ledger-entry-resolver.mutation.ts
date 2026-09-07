@@ -1,3 +1,4 @@
+import { GraphQLJSONObject } from "graphql-scalars";
 import {
   Arg,
   Ctx,
@@ -103,6 +104,9 @@ class LedgerTransactionInput {
 
   @Field(() => [String], { nullable: true })
   links?: string[];
+
+  @Field(() => GraphQLJSONObject, { nullable: true })
+  meta?: Record<string, string>;
 }
 
 @InputType()
@@ -260,11 +264,18 @@ class AddEntryInput {
 /** Map a GraphQL entry input onto the service's discriminated union. */
 function toServiceEntry(input: AddEntryInput): LedgerEntryInput {
   switch (input.type) {
-    case LedgerEntryType.TRANSACTION:
-      return {
-        type: "transaction",
-        entry: requirePayload(input, input.transaction),
-      };
+    case LedgerEntryType.TRANSACTION: {
+      const entry = requirePayload(input, input.transaction);
+      if (
+        entry.meta != null &&
+        Object.values(entry.meta).some((value) => typeof value !== "string")
+      ) {
+        throw new BadUserInputError(
+          "Transaction metadata values must be strings",
+        );
+      }
+      return { type: "transaction", entry };
+    }
     case LedgerEntryType.COMMODITY:
       return {
         type: "commodity",

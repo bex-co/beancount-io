@@ -29,6 +29,8 @@ const publicKeyShape = z.object({
   ledger_scope: z.string().optional(),
   revoked: z.boolean(),
   expires_at: z.string().optional(),
+  last_used_at: z.string().optional(),
+  revoked_at: z.string().optional(),
   created_at: z.string(),
 });
 
@@ -40,6 +42,8 @@ const present = (key: ReturnType<typeof toPublicApiKey>) => ({
   ledger_scope: key.ledgerScope,
   revoked: Boolean(key.revokedAt),
   expires_at: key.expiresAt?.toISOString(),
+  last_used_at: key.lastUsedAt?.toISOString(),
+  revoked_at: key.revokedAt?.toISOString(),
   created_at: key.createdAt.toISOString(),
 });
 
@@ -72,21 +76,50 @@ export async function executeListApiKeys(
 export const createApiKeyDescription =
   "Mint an API key for scripted access. Requires a paid plan, and cannot be called with an API key. The plaintext is returned once, here, and is not recoverable afterwards.";
 
-export const createApiKeyInputSchema = z.object({
-  name: z.string().describe("What this key is for; shown in the key list."),
-  scopes: z
-    .array(z.enum(API_SCOPES))
-    .describe(
-      "What the key may do. Cannot exceed what the caller already holds.",
+const expirySchema = z.iso.datetime({ offset: true }).optional();
+
+export const createApiKeyInputSchema = z
+  .object({
+    name: z
+      .string()
+      .min(1)
+      .max(200)
+      .describe("What this key is for; shown in the key list."),
+    scopes: z
+      .array(z.enum(API_SCOPES))
+      .min(1)
+      .describe(
+        "What the key may do. Cannot exceed what the caller already holds.",
+      ),
+    ledger_scope: z
+      .string()
+      .optional()
+      .describe(
+        "Confine the key to one ledger, as `owner/name`. Omit to inherit the caller's own confinement; a credential pinned to one ledger cannot name a different one.",
+      ),
+    ledgerScope: z.string().optional().describe("Alias for ledger_scope."),
+    expires_at: expirySchema.describe(
+      "When the key stops working (ISO 8601). Omit for no expiry.",
     ),
-  ledger_scope: z
-    .string()
-    .min(1)
-    .optional()
-    .describe(
-      "Confine the key to one ledger, as `owner/name`. Omit to inherit the caller's own confinement; a credential pinned to one ledger cannot name a different one.",
-    ),
-});
+    expiresAt: expirySchema.describe("Alias for expires_at."),
+  })
+  .refine(
+    (input) =>
+      input.ledger_scope === undefined ||
+      input.ledgerScope === undefined ||
+      input.ledger_scope === input.ledgerScope,
+    {
+      message: "ledger_scope and ledgerScope must agree",
+      path: ["ledgerScope"],
+    },
+  )
+  .refine(
+    (input) =>
+      input.expires_at === undefined ||
+      input.expiresAt === undefined ||
+      Date.parse(input.expires_at) === Date.parse(input.expiresAt),
+    { message: "expires_at and expiresAt must agree", path: ["expiresAt"] },
+  );
 
 export const createApiKeyOutputSchema = toolOutputSchema(
   z.object({ key: publicKeyShape, plaintext: z.string() }),
@@ -94,7 +127,14 @@ export const createApiKeyOutputSchema = toolOutputSchema(
 
 export async function executeCreateApiKey(
   ctx: Pick<ToolContext, "apiKeyService" | "identity">,
-  input: { name: string; scopes: string[]; ledger_scope?: string },
+  input: {
+    name: string;
+    scopes: string[];
+    ledger_scope?: string;
+    ledgerScope?: string;
+    expires_at?: string;
+    expiresAt?: string;
+  },
 ): Promise<z.infer<typeof createApiKeyOutputSchema>> {
   return runToolSafely({
     logger: toolLogger,
@@ -103,10 +143,13 @@ export async function executeCreateApiKey(
     // logs its arguments is one schema change away from logging a secret.
     context: { scopes: input.scopes },
     execute: async () => {
+      const parsed = createApiKeyInputSchema.parse(input);
+      const expiry = parsed.expires_at ?? parsed.expiresAt;
       const minted = await ctx.apiKeyService.mint(ctx.identity, {
         name: input.name,
         scopes: input.scopes,
-        ledgerScope: input.ledger_scope,
+        ledgerScope: parsed.ledger_scope ?? parsed.ledgerScope,
+        expiresAt: expiry === undefined ? undefined : new Date(expiry),
       });
       return {
         key: present(toPublicApiKey(minted.key)),
