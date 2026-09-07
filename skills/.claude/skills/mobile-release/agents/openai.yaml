@@ -1,0 +1,4 @@
+interface:
+  display_name: "Mobile Release"
+  short_description: "Prepare and release mobile to both app stores"
+  default_prompt: "Use $mobile-release to summarize changes since the last release, bump the mobile version, and release to the Apple App Store and Google Play."

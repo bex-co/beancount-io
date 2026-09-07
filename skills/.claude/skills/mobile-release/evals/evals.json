@@ -1,0 +1,41 @@
+{
+  "skill_name": "mobile-release",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Use $mobile-release to release the latest mobile changes to both stores. The current version is tagged, both stores are live, and all credentials are available.",
+      "expected_output": "Inspects the mobile tag range and diff, runs bump once, fills localized and Android notes, verifies checks and ASC parity before push, uses one CI kickoff, submits the processed iOS build for review and verifies Android production. Does not ask for authorization already provided.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Use $mobile-release. The current version has a tag and a green GitHub release run, but its Android submission failed; iOS is already in review.",
+      "expected_output": "Resumes the failed Android submission using the exact build ID after inspecting the failure. Does not bump, delete the tag, duplicate iOS builds, edit the in-review Apple version, or equate green CI with live stores.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Use $mobile-release to prepare notes and a version bump only. Do not publish anything yet.",
+      "expected_output": "Completes local notes, bump and applicable validation. Does not create remote store resources, approve or apply plans, push, build, or submit.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Use $mobile-release to release both stores. EAS has only an iOS submit profile and no Google Play credentials are available.",
+      "expected_output": "Inspects effective Android settings and names the missing credential/setup without exposing secrets. Completes independent authorized preparation and iOS work; reports Android blocked rather than claiming both stores released.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Add a $mobile-release skill that summarizes changes, bumps the app version, and releases to both stores.",
+      "expected_output": "Creates or edits the skill without invoking its release workflow or bumping the application.",
+      "files": []
+    },
+    {
+      "id": 6,
+      "prompt": "Use $mobile-release. The current version is untagged and has an existing metadata receipt, but the localized release notes changed after verification.",
+      "expected_output": "Recognizes a release to resume; does not bump again or hand-edit the receipt. Replans and reapplies affected metadata and verifies remote parity before pushing.",
+      "files": []
+    }
+  ]
+}
