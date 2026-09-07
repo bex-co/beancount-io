@@ -121,21 +121,21 @@ class TestExitCodes:
         client = MagicMock(list_ledgers=MagicMock(side_effect=unauthorized))
 
         with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["ledger", "list"])
+            result = runner.invoke(app, ["cloud", "ledger", "list"])
 
         assert result.exit_code == 3
 
     def test_3_when_there_is_no_credential_at_all(self) -> None:
-        result = runner.invoke(app, ["ledger", "list"])
+        result = runner.invoke(app, ["cloud", "ledger", "list"])
 
         assert result.exit_code == 3
-        assert "bea auth login" in result.stderr
+        assert "bea cloud login" in result.stderr
 
     def test_4_when_a_write_times_out_with_an_unknown_outcome(self, logged_in: None) -> None:
         client = MagicMock(delete_ledger=MagicMock(side_effect=httpx.ConnectTimeout("timed out")))
 
         with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["--yes", "ledger", "delete", "alice/books"])
+            result = runner.invoke(app, ["--yes", "cloud", "ledger", "delete", "alice/books"])
 
         assert result.exit_code == 4
         assert "outcome is unknown" in result.stderr
@@ -145,7 +145,7 @@ class TestExitCodes:
         client = MagicMock(list_ledgers=MagicMock(side_effect=GraphQLClientHttpError(401, response)))
 
         with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["--json", "ledger", "list"])
+            result = runner.invoke(app, ["--json", "cloud", "ledger", "list"])
 
         assert error_object(result)["request_id"] == "req-abc123"
 
@@ -269,12 +269,12 @@ class TestJsonOutput:
             "message": "",
         }
 
-    def test_auth_status_reports_where_the_credential_came_from(self, logged_in: None) -> None:
+    def test_cloud_status_reports_where_the_credential_came_from(self, logged_in: None) -> None:
         profile = SimpleNamespace(email="a@example.com", username="alice", tier="free")
         client = MagicMock(get_current_user=MagicMock(return_value=SimpleNamespace(user_profile=profile)))
 
         with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["--json", "auth", "status"])
+            result = runner.invoke(app, ["--json", "cloud", "status"])
 
         assert result.exit_code == 0, result.stderr
         data = envelope(result)["data"]
@@ -296,7 +296,7 @@ class TestJsonOutput:
         client = MagicMock(list_ledgers=MagicMock(return_value=SimpleNamespace(list_ledgers=[ledger])))
 
         with patch("cli.api.client.make_client", return_value=client):
-            result = runner.invoke(app, ["--json", "ledger", "list"])
+            result = runner.invoke(app, ["--json", "cloud", "ledger", "list"])
 
         assert result.exit_code == 0, result.stderr
         assert envelope(result)["data"][0]["full_name"] == "alice/books"
@@ -304,14 +304,14 @@ class TestJsonOutput:
 
 class TestNoInput:
     def test_a_destructive_command_refuses_to_run_unconfirmed(self, logged_in: None) -> None:
-        result = runner.invoke(app, ["ledger", "delete", "alice/books"])
+        result = runner.invoke(app, ["cloud", "ledger", "delete", "alice/books"])
 
         assert result.exit_code == 2
         assert "--yes" in result.stderr
 
     def test_json_mode_never_prompts(self, logged_in: None) -> None:
         with patch("typer.confirm") as confirm:
-            result = runner.invoke(app, ["--json", "ledger", "delete", "alice/books"])
+            result = runner.invoke(app, ["--json", "cloud", "ledger", "delete", "alice/books"])
 
         confirm.assert_not_called()
         assert result.exit_code == 2
@@ -324,7 +324,7 @@ class TestNoInput:
         )
 
         with patch("cli.api.client.make_client", return_value=client), patch("typer.confirm") as confirm:
-            result = runner.invoke(app, ["--yes", "ledger", "delete", "alice/books"])
+            result = runner.invoke(app, ["--yes", "cloud", "ledger", "delete", "alice/books"])
 
         confirm.assert_not_called()
         assert result.exit_code == 0
@@ -333,7 +333,7 @@ class TestNoInput:
         monkeypatch.setattr("cli.context._stdin_is_a_terminal", lambda: True)
 
         with patch("typer.confirm", return_value=False) as confirm:
-            result = runner.invoke(app, ["ledger", "delete", "alice/books"])
+            result = runner.invoke(app, ["cloud", "ledger", "delete", "alice/books"])
 
         confirm.assert_called_once()
         assert result.exit_code == 0

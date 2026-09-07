@@ -12,10 +12,9 @@ from typer.core import TyperGroup
 from cli import context, output, update
 from cli.commands.add import add_app
 from cli.commands.ask import ask
-from cli.commands.auth import auth_app
 from cli.commands.check import check
+from cli.commands.cloud.app import cloud_app
 from cli.commands.format import format_beans
-from cli.commands.ledger import ledger_app
 from cli.commands.list import list_app
 from cli.commands.query import query
 from cli.commands.report import report_app
@@ -46,6 +45,30 @@ class _GuardedGroup(TyperGroup):
         # courtesy line has no business interleaving with an error report.
         update.print_notice()
         return result
+
+    def format_commands(self, ctx: Any, formatter: Any) -> None:
+        """Render the command list grouped by `rich_help_panel`.
+
+        The panel metadata carries the local/cloud boundary, but with
+        `rich_markup_mode=None` typer renders help through plain click, which
+        ignores it — so the grouping has to happen here for `--help` to show
+        which commands stay on disk and which talk to the hosted service.
+        """
+        commands = [
+            (name, cmd)
+            for name in self.list_commands(ctx)
+            if (cmd := self.get_command(ctx, name)) is not None and not cmd.hidden
+        ]
+        if not commands:
+            return
+        limit = formatter.width - 6 - max(len(name) for name, _ in commands)
+        panels: dict[str, list[tuple[str, str]]] = {}
+        for name, cmd in commands:
+            panel = getattr(cmd, "rich_help_panel", None) or "Commands"
+            panels.setdefault(panel, []).append((name, cmd.get_short_help_str(limit)))
+        for title, rows in panels.items():
+            with formatter.section(title):
+                formatter.write_dl(rows)
 
 
 app = typer.Typer(
@@ -92,17 +115,25 @@ def main(
     update.start(json_output=ctx.json_output, no_input=ctx.no_input)
 
 
-app.command("check")(check)
-app.command("format")(format_beans)
-app.command("query")(query)
-app.command("ask")(ask)
-app.command("upgrade")(upgrade)
+# `ask` is local despite its hosted model calls — the task-verb rule in
+# cli/CLAUDE.md keeps every verb over .bean files out of `cloud`. `upgrade`
+# is about the tool itself (PyPI/Homebrew), so it is neither local nor cloud.
+_LOCAL_PANEL = "Local ledger commands (work on .bean files)"
+_CLOUD_PANEL = "Cloud commands (beancount.io — need 'bea cloud login' or BEA_TOKEN)"
+_SELF_PANEL = "CLI maintenance"
 
-app.add_typer(auth_app, name="auth")
-app.add_typer(ledger_app, name="ledger")
-app.add_typer(add_app, name="add")
-app.add_typer(list_app, name="list")
-app.add_typer(report_app, name="report")
+app.command("check", rich_help_panel=_LOCAL_PANEL)(check)
+app.command("format", rich_help_panel=_LOCAL_PANEL)(format_beans)
+app.command("query", rich_help_panel=_LOCAL_PANEL)(query)
+app.command("ask", rich_help_panel=_LOCAL_PANEL)(ask)
+
+app.add_typer(add_app, name="add", rich_help_panel=_LOCAL_PANEL)
+app.add_typer(list_app, name="list", rich_help_panel=_LOCAL_PANEL)
+app.add_typer(report_app, name="report", rich_help_panel=_LOCAL_PANEL)
+
+app.add_typer(cloud_app, name="cloud", rich_help_panel=_CLOUD_PANEL)
+
+app.command("upgrade", rich_help_panel=_SELF_PANEL)(upgrade)
 
 if __name__ == "__main__":
     app()

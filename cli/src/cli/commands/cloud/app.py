@@ -1,14 +1,28 @@
+"""The `bea cloud` namespace: every command that talks to the hosted service.
+
+Account commands (login/logout/status) sit directly on the app — the cloud
+surface is too small for an `auth` sub-level — and hosted resources mount as
+sub-apps (`cloud ledger`). Task verbs never live here: a local verb that gains
+remote capability grows a target option, it does not move.
+"""
+
 from __future__ import annotations
 
 import typer
 
 from cli import context, output
+from cli.commands.cloud.ledger.app import ledger_app
 
-auth_app = typer.Typer(help="Authentication commands", no_args_is_help=True, rich_markup_mode=None)
+cloud_app = typer.Typer(
+    help="Beancount.io hosted service — needs 'bea cloud login' (or BEA_TOKEN) and network access",
+    no_args_is_help=True,
+    rich_markup_mode=None,
+)
+cloud_app.add_typer(ledger_app, name="ledger")
 
 
-@auth_app.command("login")
-def auth_login() -> None:
+@cloud_app.command("login")
+def cloud_login() -> None:
     """Log in via the browser device flow (stores a session in ~/.config/bea/credentials.json)."""
     ctx = context.current()
     if ctx.no_input:
@@ -24,8 +38,8 @@ def auth_login() -> None:
     output.success("Logged in successfully.")
 
 
-@auth_app.command("logout")
-def auth_logout() -> None:
+@cloud_app.command("logout")
+def cloud_logout() -> None:
     """Revoke the token and clear stored credentials."""
     from cli.api.client import make_client
     from cli.auth.credentials import clear_credentials, load_credentials
@@ -44,8 +58,8 @@ def auth_logout() -> None:
     output.success("Logged out.")
 
 
-@auth_app.command("status")
-def auth_status() -> None:
+@cloud_app.command("status")
+def cloud_status() -> None:
     """Show who is logged in, where the credential came from, and when it expires."""
     ctx = context.current()
     from cli.api.client import make_client
@@ -55,7 +69,7 @@ def auth_status() -> None:
     creds = require_credentials()
     result = make_client(creds.token).get_current_user()
     if result.user_profile is None:
-        raise AuthError("Not authenticated. Run 'bea auth login'.")
+        raise AuthError("Not authenticated. Run 'bea cloud login'.")
     user = result.user_profile
 
     if ctx.json_output:

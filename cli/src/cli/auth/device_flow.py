@@ -65,4 +65,4 @@ def run_device_flow(client: Client, dashboard_url: str) -> tuple[str, str]:
         elif status == "DENIED":
             raise AuthError("Authorization was denied.")
         elif status in ("EXPIRED", "CONSUMED"):
-            raise AuthError("Session expired or already used. Run 'bea auth login' again.")
+            raise AuthError("Session expired or already used. Run 'bea cloud login' again.")

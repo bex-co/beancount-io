@@ -9,7 +9,7 @@ import typer
 from cli import context, output
 from cli.errors import LedgerError, unknown_write_outcome
 
-ledger_app = typer.Typer(help="Ledger management commands", no_args_is_help=True, rich_markup_mode=None)
+ledger_app = typer.Typer(help="Manage hosted ledgers on beancount.io", no_args_is_help=True, rich_markup_mode=None)
 
 DirOpt = Annotated[Path | None, typer.Option("--dir", help="Local directory for the git clone")]
 

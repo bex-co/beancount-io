@@ -115,7 +115,7 @@ def to_bea_error(exc: BaseException | str) -> BeaError:
         request_id = _request_id(exc.response)
         if exc.status_code in (401, 403):
             return AuthError(
-                f"Not authorized (HTTP {exc.status_code}). Run 'bea auth login'.",
+                f"Not authorized (HTTP {exc.status_code}). Run 'bea cloud login'.",
                 request_id=request_id,
             )
         if exc.status_code == 409:
@@ -143,7 +143,7 @@ def to_bea_error(exc: BaseException | str) -> BeaError:
         status = exc.response.status_code
         request_id = _request_id(exc.response)
         if status in (401, 403):
-            return AuthError(f"Not authorized (HTTP {status}). Run 'bea auth login'.", request_id=request_id)
+            return AuthError(f"Not authorized (HTTP {status}). Run 'bea cloud login'.", request_id=request_id)
         if status == 409:
             return ConflictError(f"Conflict (HTTP {status}).", request_id=request_id)
         return BeaError(str(exc), request_id=request_id)

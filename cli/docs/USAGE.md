@@ -3,14 +3,21 @@
 The Beancount.io CLI installs one command: `bea`.
 
 ```bash
+# Local — works on .bean files
 bea check | format | query "<BQL>"
 bea list <type> | bea add <type>          # eleven directive types; add transactions --from PATH
 bea report balance-sheet | income-statement | trial-balance | overview
-bea ask ["question"]                      # requires beancount-io[ask]
-bea auth login | logout | status
-bea ledger list | create [--clone] | clone | delete [--yes]
+bea ask ["question"]                      # requires beancount-io[ask] and hosted credentials
+
+# Cloud — the beancount.io hosted service
+bea cloud login | logout | status
+bea cloud ledger list | create [--clone] | clone | delete [--yes]
+
+# CLI maintenance
 bea upgrade [--check]
 ```
+
+Everything outside `bea cloud` works on local files (`ask` is the one exception: its model calls run through the hosted AI proxy). Everything under `bea cloud` needs a session from `bea cloud login` or `BEA_TOKEN`.
 
 ## Global options
 
@@ -28,7 +35,7 @@ Global options come before the command.
 ```bash
 bea --file ./books/main.bean check
 bea --json list transaction --limit 100
-bea --yes ledger delete alice/old-books
+bea --yes cloud ledger delete alice/old-books
 ```
 
 ### Choosing the ledger
@@ -46,7 +53,7 @@ If the resolved file does not exist, the command exits **2** and names all three
 `--no-input` is implied whenever stdin is not a terminal, whenever `--json` is set, and when `CI` is truthy. In that mode nothing waits for a human:
 
 ```bash
-$ echo | bea ledger delete alice/books
+$ echo | bea cloud ledger delete alice/books
 Error: Permanently delete ledger 'alice/books'? Refusing to ask — pass --yes to confirm without a prompt.
 $ echo $?
 2
@@ -228,36 +235,36 @@ bea ask
 bea ask "what did I spend on groceries last month?" --print
 ```
 
-Without the extra the command exits **2** with the install command. It also needs hosted credentials: the model runs through the Beancount.io AI proxy, so a local ledger still requires `bea auth login`. `bea ask` has no `--json` mode; use `bea query` for machine-readable results.
+Without the extra the command exits **2** with the install command. It also needs hosted credentials: the model runs through the Beancount.io AI proxy, so a local ledger still requires `bea cloud login`. `bea ask` has no `--json` mode; use `bea query` for machine-readable results.
 
-## Authentication
+## Cloud: authentication
 
-Hosted commands need a session. `bea auth login` prints a one-time code and opens the dashboard's device page; enter the code there, check that the device shown is this machine, and approve. The link itself carries no secret, so a device page opened from anywhere else cannot authorize this CLI. The credential is stored at `~/.config/bea/credentials.json` (mode 0600, in a 0700 directory).
+Hosted commands need a session. `bea cloud login` prints a one-time code and opens the dashboard's device page; enter the code there, check that the device shown is this machine, and approve. The link itself carries no secret, so a device page opened from anywhere else cannot authorize this CLI. The credential is stored at `~/.config/bea/credentials.json` (mode 0600, in a 0700 directory).
 
 ```bash
-bea auth login
-bea auth status
-bea auth logout
+bea cloud login
+bea cloud status
+bea cloud logout
 ```
 
-`bea auth status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `auth status` reports `source: environment`.
+`bea cloud status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `cloud status` reports `source: environment`.
 
-## Ledgers
+## Cloud: hosted ledgers
 
 ```bash
 # Create a hosted ledger — private unless --public is passed
-bea ledger create my-books
-bea ledger create my-books --public --description "Shared books"
+bea cloud ledger create my-books
+bea cloud ledger create my-books --public --description "Shared books"
 
 # Create and clone in one step
-bea ledger create my-books --clone
-bea ledger create my-books --clone --dir ./accounting/my-books
+bea cloud ledger create my-books --clone
+bea cloud ledger create my-books --clone --dir ./accounting/my-books
 
 # List, clone, delete
-bea ledger list
-bea ledger clone alice/my-books
-bea ledger delete alice/my-books          # asks for confirmation
-bea ledger delete alice/my-books --yes    # or run with --yes
+bea cloud ledger list
+bea cloud ledger clone alice/my-books
+bea cloud ledger delete alice/my-books          # asks for confirmation
+bea cloud ledger delete alice/my-books --yes    # or run with --yes
 ```
 
 Cloning uses `git clone` over SSH, so it needs Git and working SSH access. If a clone fails after the ledger was created, the command exits nonzero and prints the manual `git clone` command — the ledger exists either way.
@@ -307,7 +314,7 @@ only, and makes no network call.
 
 ## JSON output
 
-Every read-side command accepts `--json`: `check`, `query`, `list <type>`, all four `report` commands, `auth status`, and `ledger list`. `format` and `add` also emit an envelope so a script can confirm what was written.
+Every read-side command accepts `--json`: `check`, `query`, `list <type>`, all four `report` commands, `cloud status`, and `cloud ledger list`. `format` and `add` also emit an envelope so a script can confirm what was written.
 
 The envelope is always:
 
@@ -344,7 +351,7 @@ $ bea --json report income-statement | jq .data.net_profit
 $ bea --json ledger list --limit 10 | jq '.data[0].full_name'
 "alice/my-books"
 
-$ bea --json auth status | jq '{source: .data.source, tier: .data.tier}'
+$ bea --json cloud status | jq '{source: .data.source, tier: .data.tier}'
 {"source": "file", "tier": "free"}
 ```
 

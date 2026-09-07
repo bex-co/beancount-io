@@ -43,6 +43,8 @@ the resulting diff.
 ## Conventions
 
 - Keep command registration and top-level UX in `src/cli/`; reusable report behavior that comes from Fava stays in `src/fava/`.
+- Hosted commands live under `bea cloud` (`src/cli/commands/cloud/`) — account commands directly on the app, hosted resources as sub-apps. Task verbs stay top-level; a local verb that gains remote capability grows an option, it does not move into `cloud`.
+- The API gateway client (`cli.api`), the login ceremony (`cli.auth.device_flow`), and server settings (`cli.settings`) may be imported only from `commands/cloud/` modules. Reading a stored credential (`cli.auth.credentials`) is allowed anywhere — that is how a local verb such as `bea ask` authenticates an outbound call. `tests/test_command_boundaries.py` enforces this.
 - Treat `src/cli/api/gql_client/` as generated output. Change `graphql/schema.graphql` or `graphql/operations/`, then run `make codegen`; do not hand-edit generated client files.
 - Use strict typing: mypy is configured with `strict = true`, and Ruff owns import order and formatting.
 - Put tests in `tests/` and use existing fixtures/helpers in `tests/conftest.py`.

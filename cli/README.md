@@ -73,7 +73,7 @@ Ask questions in natural language with the optional `ask` extra (needs a Beancou
 
 ```bash
 uv tool install 'beancount-io[ask]'
-bea auth login
+bea cloud login
 bea ask "what did I spend on groceries last month?"
 ```
 

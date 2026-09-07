@@ -67,7 +67,7 @@ The foundations are stronger than the current end-to-end experience.
 | Local writes append directly; bulk transaction writes can append successful rows, report failures, and still exit successfully. Readers/reports can omit loader errors from their output. | An apparently successful automation run can leave incomplete or invalid books. Correctness and exit status are first-release work. [Writer](../src/cli/directives/writer.py), [bulk command](../src/cli/commands/write.py), [reader](../src/cli/directives/reader.py), [reports](../src/cli/commands/report.py) |
 | The public v1 contract contains 50 operations, covering substantial bookkeeping and bank functionality. | Remote usefulness is achievable without waiting for complete API parity. [Published snapshot](../../backend-cluster/backend-v2/docs/openapi/v1.json) |
 | The REST structured entry endpoint accepts eight directive variants, at most 100 per request, and omits cost basis and other Beancount details. Local directive models also omit transaction/posting metadata. | Neither model is a lossless representation of arbitrary Beancount source. [REST entry contract](../../backend-cluster/backend-v2/src/features/ledger/api/rest/v1/entries-handler.ts), [local models](../src/cli/directives/models.py) |
-| Device login and protected credential storage already exist. API-key environment overrides and multiple CLI profiles do not. Hosted ledger creation currently defaults to public. | Preserve the login foundation; add automation auth, target visibility, and private creation defaults. [Device flow](../src/cli/auth/device_flow.py), [credentials](../src/cli/auth/credentials.py), [ledger commands](../src/cli/commands/ledger/app.py) |
+| Device login and protected credential storage already exist. API-key environment overrides and multiple CLI profiles do not. Hosted ledger creation currently defaults to public. | Preserve the login foundation; add automation auth, target visibility, and private creation defaults. [Device flow](../src/cli/auth/device_flow.py), [credentials](../src/cli/auth/credentials.py), [ledger commands](../src/cli/commands/cloud/ledger/app.py) |
 
 Source declarations and the checked-in contract establish implemented intent, not whether every operation works in a deployed environment. Live conformance remains a release gate.
 
@@ -81,8 +81,8 @@ bea --file ./books/main.bean check
 bea --file ./books/main.bean query "SELECT account, sum(position) GROUP BY account"
 
 # Work directly with hosted books.
-bea auth login
-bea ledger list
+bea cloud login
+bea cloud ledger list
 
 # Obtain the same documented interface from a script or coding agent.
 bea --json --no-input list transaction --limit 100
@@ -206,7 +206,7 @@ It means providing a clear bridge; a new synchronization engine is a separate un
 
 Ship direct remote commands and archive export first. Improve clone/setup using Git's existing mechanisms. Later, provide explicit status, diff, pull, and push workflows with conflict recovery; preserve the user's working tree and avoid overwriting remote changes.
 
-Do not promise that REST login automatically authenticates Git. The current CLI clones over SSH, and the backend's Git HTTP proxy has a separate Basic-auth path. A seamless experience needs explicit SSH setup, credential-helper work, or server credential integration. [CLI clone](../src/cli/commands/ledger/app.py), [Git authentication](../../backend-cluster/backend-v2/src/features/gitea/api/git-proxy-handler.ts).
+Do not promise that REST login automatically authenticates Git. The current CLI clones over SSH, and the backend's Git HTTP proxy has a separate Basic-auth path. A seamless experience needs explicit SSH setup, credential-helper work, or server credential integration. [CLI clone](../src/cli/commands/cloud/ledger/app.py), [Git authentication](../../backend-cluster/backend-v2/src/features/gitea/api/git-proxy-handler.ts).
 
 An archive is a snapshot, not a synchronized checkout. Offline cloud edits need an explicit base revision and conflict policy before they can be applied. Defer automatic background sync until evidence shows it is more valuable than dependable explicit Git workflows.
 
@@ -298,7 +298,7 @@ The executable registers **39 leaf commands**: four standalone commands, three a
 
 The eleven directive names shared by `read` and individual `write` commands are `transaction`, `open`, `close`, `balance`, `pad`, `note`, `event`, `price`, `commodity`, `document`, and `custom`.
 
-Top-level options are `-h/--help`, `--install-completion`, and `--show-completion`. There is no implemented global `--version`, `--file`, `--ledger`, `--json`, `--output`, `--no-input`, or profile selector. `format --dry-run` is a specific existing option, not a general write-preview facility. Sources: [local commands](../src/cli/commands), [ledger commands](../src/cli/commands/ledger/app.py), [report options](../src/cli/commands/report.py).
+Top-level options are `-h/--help`, `--install-completion`, and `--show-completion`. There is no implemented global `--version`, `--file`, `--ledger`, `--json`, `--output`, `--no-input`, or profile selector. `format --dry-run` is a specific existing option, not a general write-preview facility. Sources: [local commands](../src/cli/commands), [ledger commands](../src/cli/commands/cloud/ledger/app.py), [report options](../src/cli/commands/report.py).
 
 **How are files, servers, and credentials selected?**
 
@@ -306,7 +306,7 @@ Local check/query/read/write/report/chat commands use `Path("main.bean")` relati
 
 `BEANCOUNT_API_URL` defaults to `https://api.v3.beancount.io`; `BEANCOUNT_DASHBOARD_URL` defaults to `https://beancount.io`. Hosted account/ledger calls use the API base plus `/api-gateway/` through the generated GraphQL client. The current CLI does not call public v1 REST for those operations. Environment overrides exist, but named profiles, project configuration discovery, and automatic `.env` loading are not configured. [Settings](../src/cli/config.py), [API client](../src/cli/api/client.py).
 
-Login prints a public user code, opens the dashboard's `/auth/login/device` page, and polls with a private device code. The backend allows a ten-minute authorization ceremony and issues a 30-day CLI session credential; the client stores and checks the returned expiry. Credentials live in one `~/.beancount-cli/credentials.json` containing `token` and `expireAt`, written by atomic replacement with directory mode 0700 and file mode 0600. There is no automatic refresh, token environment override, key-management command, or separate credential slot per server. Logout attempts remote revocation but suppresses revocation errors before clearing the local file and reporting success. [Device flow](../src/cli/auth/device_flow.py), [credential storage](../src/cli/auth/credentials.py), [auth commands](../src/cli/commands/auth.py), [server lifetimes](../../backend-cluster/backend-v2/src/features/auth/service/cli-auth-service.ts).
+Login prints a public user code, opens the dashboard's `/auth/login/device` page, and polls with a private device code. The backend allows a ten-minute authorization ceremony and issues a 30-day CLI session credential; the client stores and checks the returned expiry. Credentials live in one `~/.beancount-cli/credentials.json` containing `token` and `expireAt`, written by atomic replacement with directory mode 0700 and file mode 0600. There is no automatic refresh, token environment override, key-management command, or separate credential slot per server. Logout attempts remote revocation but suppresses revocation errors before clearing the local file and reporting success. [Device flow](../src/cli/auth/device_flow.py), [credential storage](../src/cli/auth/credentials.py), [auth commands](../src/cli/commands/cloud/app.py), [server lifetimes](../../backend-cluster/backend-v2/src/features/auth/service/cli-auth-service.ts).
 
 **What is the current transaction and write contract?**
 
@@ -326,7 +326,7 @@ Skills are discovered from immediate subdirectories of CWD's `.agents/skills/`, 
 
 **What can automation and tests rely on today?**
 
-Ordinary output is text/tables on stdout; the shared error helper prints `Error: ...` on stderr and exits 1. Argument parsing can exit 2. There is no versioned JSON schema or documented error-category mapping. Besides bulk row failures, `ledger init` can report overall success after creation even when cloning fails, and logout success does not prove remote revocation. Interactive BQL, browser login, and chat have no shared no-input mode. [Output helper](../src/cli/output.py), [ledger implementation](../src/cli/commands/ledger/app.py).
+Ordinary output is text/tables on stdout; the shared error helper prints `Error: ...` on stderr and exits 1. Argument parsing can exit 2. There is no versioned JSON schema or documented error-category mapping. Besides bulk row failures, `ledger init` can report overall success after creation even when cloning fails, and logout success does not prove remote revocation. Interactive BQL, browser login, and chat have no shared no-input mode. [Output helper](../src/cli/output.py), [ledger implementation](../src/cli/commands/cloud/ledger/app.py).
 
 The package's verification gate is `make check-all`: Ruff lint, Vulture dead-code detection, Ruff format check, strict mypy over `src/cli`, and pytest. Existing test files cover credentials/device flow, writer serialization, output/utilities, chat/skills, Fava imports, and forecast logic. That inventory does not establish complete command coverage or production API conformance. Client code generation reads the GraphQL schema/operations and regenerates `src/cli/api/gql_client`; it is not OpenAPI generation. [Makefile](../Makefile), [tests](../tests), [codegen configuration](../pyproject.toml).
 

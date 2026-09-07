@@ -77,7 +77,7 @@ def clear_credentials() -> None:
 def require_credentials() -> Credentials:
     creds = load_credentials()
     if creds is None:
-        raise AuthError("Not logged in. Run 'bea auth login', or set BEA_TOKEN.")
+        raise AuthError("Not logged in. Run 'bea cloud login', or set BEA_TOKEN.")
     if creds.is_expired():
-        raise AuthError("Session expired. Run 'bea auth login' to re-authenticate.")
+        raise AuthError("Session expired. Run 'bea cloud login' to re-authenticate.")
     return creds
