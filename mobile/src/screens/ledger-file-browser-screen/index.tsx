@@ -37,10 +37,10 @@ import { TextInputModal } from "@/components/text-input-modal";
 import { invalidateLedgerData } from "@/common/apollo/invalidate-ledger";
 import { haptics } from "@/common/haptics";
 import { encodeLedgerFileContent } from "@/common/ledger-file-content";
+import { isEditableTextFile } from "@/common/ledger-file-types";
 import {
   buildLedgerFilePath,
   canDeleteLedgerFile,
-  isEditable,
   normalizeLedgerFileName,
   popPathStack,
   pushPathStack,
@@ -212,7 +212,7 @@ function FileRow({
   const theme = useTheme().colorTheme;
   const styles = useThemeStyle(getStyles);
   const isDir = entry.type === "dir";
-  const editable = !isDir && isEditable(entry.name);
+  const editable = !isDir && isEditableTextFile(entry.name);
   const tappable = isDir || editable;
   const protectedFile = !isDir && !canDeleteLedgerFile(entry.name);
 
@@ -478,7 +478,7 @@ export function LedgerFileBrowserScreen(): JSX.Element {
   const handleEntryPress = (entry: DirEntry) => {
     if (entry.type === "dir") {
       setPathStack((prev) => pushPathStack(prev, entry.path));
-    } else if (isEditable(entry.name)) {
+    } else if (isEditableTextFile(entry.name)) {
       router.push({
         pathname: "/(app)/ledger-file-editor",
         params: { path: entry.path },

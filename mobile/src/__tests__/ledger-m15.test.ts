@@ -1,5 +1,4 @@
 import {
-  isEditable,
   normalizeLedgerFileName,
   buildLedgerFilePath,
   canDeleteLedgerFile,
@@ -17,6 +16,7 @@ import {
   decodeLedgerFileContent,
   encodeLedgerFileContent,
 } from "../common/ledger-file-content";
+import { isEditableTextFile } from "../common/ledger-file-types";
 
 // ── decodeLedgerFileContent ─────────────────────────────────────────────────
 
@@ -50,28 +50,64 @@ test("ledger file content: UTF-8 encode/decode round trip", () => {
   }
 });
 
-// ── isEditable ────────────────────────────────────────────────────────────────
+// ── isEditableTextFile ────────────────────────────────────────────────────────
 
-test("isEditable: .bean files are editable", () => {
-  if (!isEditable("main.bean")) throw new Error("main.bean should be editable");
+test("isEditableTextFile: .bean files are editable", () => {
+  if (!isEditableTextFile("main.bean"))
+    throw new Error("main.bean should be editable");
 });
 
-test("isEditable: .beancount files are editable", () => {
-  if (!isEditable("expenses.beancount"))
+test("isEditableTextFile: .beancount files are editable", () => {
+  if (!isEditableTextFile("expenses.beancount"))
     throw new Error("expenses.beancount should be editable");
 });
 
-test("isEditable: .py files are not editable", () => {
-  if (isEditable("script.py")) throw new Error(".py should not be editable");
+test("isEditableTextFile: opens notes, data, configuration, and source files", () => {
+  for (const filename of [
+    "notes.txt",
+    "README.md",
+    "statements/transactions.CSV",
+    "settings.json",
+    "import.yaml",
+    "import.yml",
+    "pyproject.toml",
+    "config.ini",
+    "statement.xml",
+    "importer.py",
+    "script.js",
+    "script.ts",
+    "sync.sh",
+    "MAIN.BEAN",
+    "archive.BEANCOUNT",
+    "README",
+    "LICENSE",
+    "Makefile",
+    ".gitignore",
+    ".env.example",
+  ]) {
+    if (!isEditableTextFile(filename))
+      throw new Error(`${filename} should be editable`);
+  }
 });
 
-test("isEditable: .txt files are not editable", () => {
-  if (isEditable("notes.txt")) throw new Error(".txt should not be editable");
-});
-
-test("isEditable: directories are not editable", () => {
-  if (isEditable("2024"))
-    throw new Error("bare dir name should not be editable");
+test("isEditableTextFile: excludes binary, unknown, and directory paths", () => {
+  for (const filename of [
+    "receipt.pdf",
+    "receipt.png",
+    "photo.jpg",
+    "archive.zip",
+    "data.sqlite",
+    "spreadsheet.xlsx",
+    "notes.txt.zip",
+    "file.unknown",
+    "2024",
+    "txt",
+    "notes.txt/",
+    "",
+  ]) {
+    if (isEditableTextFile(filename))
+      throw new Error(`${filename} should not be editable`);
+  }
 });
 
 test("normalizeLedgerFileName: appends .bean when omitted", () => {

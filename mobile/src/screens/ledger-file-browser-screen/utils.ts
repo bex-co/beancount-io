@@ -1,6 +1,4 @@
-export function isEditable(filename: string): boolean {
-  return filename.endsWith(".bean") || filename.endsWith(".beancount");
-}
+import { isBeancountFile } from "../../common/ledger-file-types";
 
 export function normalizeLedgerFileName(input: string): string | null {
   const trimmed = input.trim();
@@ -16,8 +14,8 @@ export function normalizeLedgerFileName(input: string): string | null {
   }
 
   const filename = trimmed.includes(".") ? trimmed : `${trimmed}.bean`;
-  if (filename === ".bean" || filename === ".beancount") return null;
-  return isEditable(filename) ? filename : null;
+  if (/^\.(bean|beancount)$/i.test(filename)) return null;
+  return isBeancountFile(filename) ? filename : null;
 }
 
 export function buildLedgerFilePath(

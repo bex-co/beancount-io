@@ -42,6 +42,7 @@ import {
   decodeLedgerFileContent,
   encodeLedgerFileContent,
 } from "@/common/ledger-file-content";
+import { isBeancountFile } from "@/common/ledger-file-types";
 import {
   useGetLedgerFileQuery,
   useUpdateLedgerFileMutation,
@@ -253,6 +254,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
     path: string;
     initialLine?: string;
   }>();
+  const beancount = isBeancountFile(path);
 
   // ── File load ─────────────────────────────────────────────────────────────
 
@@ -460,9 +462,11 @@ export function LedgerFileEditorScreen(): JSX.Element {
   }, []);
 
   const isKeyboardVisible = keyboardHeight > 0;
+  const showAccessory =
+    canWrite && beancount && isKeyboardVisible && initialized;
   const keyboardOverlap = getKeyboardOverlap(keyboardHeight, insets.bottom);
   const editorKeyboardInset = isKeyboardVisible
-    ? keyboardOverlap + KEYBOARD_ACCESSORY_BAR_HEIGHT
+    ? keyboardOverlap + (showAccessory ? KEYBOARD_ACCESSORY_BAR_HEIGHT : 0)
     : 0;
 
   // ── Accessory bar insert ─────────────────────────────────────────────────
@@ -582,6 +586,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
               onEdit={handleEdit}
               onSave={handleSave}
               isDark={isDark}
+              beancount={beancount}
               keyboardInset={editorKeyboardInset}
               insertSpec={insertSpec}
               jumpToLine={jumpToLine}
@@ -590,7 +595,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
           </FadeInView>
         ) : null}
 
-        {canWrite && isKeyboardVisible && initialized && (
+        {showAccessory && (
           <View style={[styles.accessoryWrapper, { bottom: keyboardOverlap }]}>
             <KeyboardAccessoryBar
               onInsert={handleInsert}

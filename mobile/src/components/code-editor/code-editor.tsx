@@ -54,6 +54,7 @@ export type CodeEditorProps = {
   onEdit: (epoch: number, revision: number, isDirty: boolean) => Promise<void>;
   onSave: (value: string, epoch: number, revision: number) => Promise<boolean>;
   isDark: boolean;
+  beancount: boolean;
   readOnly?: boolean;
   /** Bottom inset (px) so CM6 scrolls above the keyboard accessory and keyboard */
   keyboardInset: number;
@@ -248,6 +249,8 @@ function buildExtensions(
   themeCompartment: Compartment,
   readOnly: boolean,
   accessCompartment: Compartment,
+  beancount: boolean,
+  languageCompartment: Compartment,
 ): Extension[] {
   return [
     accessCompartment.of([
@@ -260,7 +263,9 @@ function buildExtensions(
     highlightActiveLineGutter(),
     drawSelection(),
     indentUnit.of("  "),
-    beancountStreamLanguage,
+    languageCompartment.of(
+      beancount ? beancountStreamLanguage : EditorView.lineWrapping,
+    ),
     themeCompartment.of(buildThemeExtensions(isDark)),
     // Disable autocorrect / autocapitalize on the contenteditable
     EditorView.contentAttributes.of({
@@ -334,6 +339,7 @@ export default function CodeEditor({
   onEdit,
   onSave,
   isDark,
+  beancount,
   readOnly = false,
   keyboardInset,
   insertSpec,
@@ -349,8 +355,10 @@ export default function CodeEditor({
   const requestSaveRef = useRef<() => void>(() => undefined);
   const themeCompartmentRef = useRef(new Compartment());
   const accessCompartmentRef = useRef(new Compartment());
+  const languageCompartmentRef = useRef(new Compartment());
   const appliedAccessRef = useRef(readOnly);
   const appliedThemeRef = useRef(isDark);
+  const appliedLanguageRef = useRef(beancount);
   const prevInsertSeq = useRef<number | null>(null);
   // Tracks the most-recent jump target so the value effect can fire it
   // after the full content is loaded (the Expo DOM bridge may deliver
@@ -425,6 +433,8 @@ export default function CodeEditor({
         themeCompartmentRef.current,
         appliedAccessRef.current,
         accessCompartmentRef.current,
+        beancount,
+        languageCompartmentRef.current,
       ),
     });
 
@@ -461,6 +471,8 @@ export default function CodeEditor({
             themeCompartmentRef.current,
             appliedAccessRef.current,
             accessCompartmentRef.current,
+            appliedLanguageRef.current,
+            languageCompartmentRef.current,
           ),
         }),
       );
@@ -473,6 +485,15 @@ export default function CodeEditor({
     }
     return undefined;
   }, [documentSpec.epoch, documentSpec.value]);
+
+  useEffect(() => {
+    appliedLanguageRef.current = beancount;
+    viewRef.current?.dispatch({
+      effects: languageCompartmentRef.current.reconfigure(
+        beancount ? beancountStreamLanguage : EditorView.lineWrapping,
+      ),
+    });
+  }, [beancount]);
 
   // Reconfigure only theme extensions, preserving document, selection, and undo.
   useEffect(() => {
