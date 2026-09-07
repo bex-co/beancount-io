@@ -1,23 +1,23 @@
 # w2 · m24 — Beancount.io CLI becomes `bea`: package, command tree, automation contract
 
-**Worker:** worker2 **Goal:** a developer or a coding agent installs `beancount-io` and drives a local ledger through one short command, `bea`, with a stable automation contract — explicit `--file`, `--json`, `--no-input`, documented exit codes — and no AI dependencies in the default install **Status:** todo
+**Worker:** worker2 **Goal:** a developer or a coding agent installs `beancount-io` and drives a local ledger through one short command, `bea`, with a stable automation contract — explicit `--file`, `--json`, `--no-input`, documented exit codes — and no AI dependencies in the default install **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                                   | est | depends_on       |
 | ---- | --------------------------------------------------------------------------------------- | --- | ---------------- |
-| t001 | Rename package and entry point: `beancount-io` / `bea`                                  | 30m | —                |
-| t002 | Command tree: `list`/`add`, `ledger create --clone`, safe hosted defaults               | 45m | t001             |
-| t003 | `ask` replaces `chat` as the optional `[ask]` extra with lazy imports                   | 45m | t001             |
-| t004 | Global target and mode options: `--file`, `--json`, `--no-input`, `--yes`, `--version`  | 1h  | t002             |
-| t005 | Exit codes, structured errors, and no-input behavior                                    | 1h  | t004             |
-| t006 | JSON output for the read-side commands                                                  | 1h  | t005             |
-| t007 | Config directory `~/.config/bea/` and `BEA_*` environment                               | 30m | t001             |
-| t008 | Docs converge: USAGE.md, README, PRFAQ, skills, backend client name                     | 45m | t003, t006, t007 |
-| t009 | Adoption surface — `bea` discoverable and usable on every surface                       | 30m | t008             |
-| t010 | Simplify                                                                                | 20m | t009             |
-| t011 | Test coverage — contract tests for target resolution, exit codes, JSON, and no-input    | 1h  | t009             |
-| t012 | Closeout                                                                                | 15m | t011             |
+| t001 | Rename package and entry point: `beancount-io` / `bea` — **DONE** | 30m | —                |
+| t002 | Command tree: `list`/`add`, `ledger create --clone`, safe hosted defaults — **DONE** | 45m | t001             |
+| t003 | `ask` replaces `chat` as the optional `[ask]` extra with lazy imports — **DONE** | 45m | t001             |
+| t004 | Global target and mode options: `--file`, `--json`, `--no-input`, `--yes`, `--version` — **DONE** | 1h  | t002             |
+| t005 | Exit codes, structured errors, and no-input behavior — **DONE** | 1h  | t004             |
+| t006 | JSON output for the read-side commands — **DONE** | 1h  | t005             |
+| t007 | Config directory `~/.config/bea/` and `BEA_*` environment — **DONE** | 30m | t001             |
+| t008 | Docs converge: USAGE.md, README, PRFAQ, skills, backend client name — **DONE** | 45m | t003, t006, t007 |
+| t009 | Adoption surface — `bea` discoverable and usable on every surface — **DONE** | 30m | t008             |
+| t010 | Simplify — **DONE** | 20m | t009             |
+| t011 | Test coverage — contract tests for target resolution, exit codes, JSON, and no-input — **DONE** | 1h  | t009             |
+| t012 | Closeout — **DONE** | 15m | t011             |
 
 ## Command tree after this milestone
 
