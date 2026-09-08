@@ -16,8 +16,15 @@
 - [x] **m10** — Dashboard personal access tokens: create, verify, and document the API-key path (7 tasks) ← direct user request, 2026-08-29
 - [ ] **m11** — Reliable entry context for public-ledger readers (7 tasks) ← dashboard QA, 2026-09-07
 - [ ] **m12** — Execute and restore the BQL query shown in the editor (6 tasks) ← dashboard QA, 2026-09-07
+- [ ] **m13** — Make account journal filters affect the returned entries (8 tasks) ← repeated dashboard QA, 2026-09-07
 
 ## Inbox
 
 - [003](./003.md) — A timed-out budget write still lands, so the retry duplicates it
 - [004](./004.md) — Cash Flow hides the filters that determine its reporting period
+- [005](./005.md) — Income Statement links Net Profit to a nonexistent account
+- [006](./006.md) — Journal pagination cannot be reached by keyboard
+- [007](./007.md) — Holdings by Cost Currency combines different units into one book value
+- [008](./008.md) — Files directory rows cannot be opened with the keyboard
+- [009](./009.md) — Files Version History button loses its accessible name at narrow width
+- [010](./010.md) — Clearing gallery search leaves the old result selectable
