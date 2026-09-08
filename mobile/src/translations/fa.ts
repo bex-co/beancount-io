@@ -359,6 +359,7 @@ export const fa: typeof en = {
   deleteFailed: "حذف تراکنش ناموفق بود",
   editSuccess: "تراکنش ذخیره شد",
   editFailed: "ذخیرهٔ تراکنش ناموفق بود",
+  editTransactionLoadFailed: "بارگیری تراکنش ناموفق بود",
   editTransactionSource:
     "متن اصلی beancount را در زیر ویرایش کنید. جمع کنترلی منسوخ یا beancount نامعتبر با خطا رد می‌شود.",
   editConflict:
@@ -436,6 +437,7 @@ export const fa: typeof en = {
     "این فایل روی سرور تغییر کرده است. تغییرات محلی کنار گذاشته و فایل دوباره بارگذاری شود؟",
   ledgerEditorReload: "بارگذاری دوباره",
   ledgerEditorKeepEditing: "ادامهٔ ویرایش",
+  keyboardAccessoryInsert: "درج {{symbol}}",
   ledgerEditorErrorCount: {
     one: "{{count}} خطا",
     other: "{{count}} خطا",

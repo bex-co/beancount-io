@@ -365,6 +365,7 @@ export const ca: typeof en = {
   deleteFailed: "No s'ha pogut eliminar la transacció",
   editSuccess: "Transacció desada",
   editFailed: "No s'ha pogut desar la transacció",
+  editTransactionLoadFailed: "No s'ha pogut carregar la transacció",
   editTransactionSource:
     "Edita a sota el codi beancount original. Una suma de verificació obsoleta o un beancount no vàlid es rebutjarà amb un error.",
   editConflict:
@@ -443,6 +444,7 @@ export const ca: typeof en = {
     "Aquest fitxer ha canviat al servidor. Vols descartar els canvis locals i tornar a carregar?",
   ledgerEditorReload: "Torna a carregar",
   ledgerEditorKeepEditing: "Continua editant",
+  keyboardAccessoryInsert: "Insereix {{symbol}}",
   ledgerEditorErrorCount: {
     one: "{{count}} error",
     other: "{{count}} errors",

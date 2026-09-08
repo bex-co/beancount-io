@@ -21,6 +21,20 @@ describe("openEditTransaction", () => {
     expect(call.pathname).toBe("/edit-transaction");
     expect(call.params.entryHash).toBe(PARAMS.entryHash);
     expect(call.params.ledgerId).toBe(PARAMS.ledgerId);
+    expect("originAccount" in call.params).toBe(false);
+  });
+
+  it("carries the origin account through when the detail was opened from one", () => {
+    const pushArgs: unknown[] = [];
+    const router = { push: (arg: unknown) => pushArgs.push(arg) };
+
+    openEditTransaction(router as never, {
+      ...PARAMS,
+      originAccount: "Assets:Cash",
+    });
+
+    const call = pushArgs[0] as { params: EditTransactionParams };
+    expect(call.params.originAccount).toBe("Assets:Cash");
   });
 
   it("passes entryHash and ledgerId exactly as provided", () => {

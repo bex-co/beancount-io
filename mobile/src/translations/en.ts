@@ -355,6 +355,7 @@ export const en = {
   deleteFailed: "Failed to delete transaction",
   editSuccess: "Transaction saved",
   editFailed: "Failed to save transaction",
+  editTransactionLoadFailed: "Failed to load transaction",
   editTransactionSource:
     "Edit raw beancount source below. A stale checksum or invalid beancount will be rejected with an error.",
   editConflict: "Transaction was modified elsewhere. Reload and try again.",
@@ -430,6 +431,7 @@ export const en = {
     "This file was changed remotely. Discard local changes and reload?",
   ledgerEditorReload: "Reload",
   ledgerEditorKeepEditing: "Keep Editing",
+  keyboardAccessoryInsert: "Insert {{symbol}}",
   ledgerEditorErrorCount: {
     one: "{{count}} error",
     other: "{{count}} errors",

@@ -362,6 +362,7 @@ export const sk: typeof en = {
   deleteFailed: "Transakciu sa nepodarilo odstrániť",
   editSuccess: "Transakcia uložená",
   editFailed: "Transakciu sa nepodarilo uložiť",
+  editTransactionLoadFailed: "Transakciu sa nepodarilo načítať",
   editTransactionSource:
     "Nižšie upravte zdrojový text beancount. Neplatný beancount alebo zastaraný kontrolný súčet bude odmietnutý s chybou.",
   editConflict:
@@ -440,6 +441,7 @@ export const sk: typeof en = {
     "Tento súbor bol zmenený na serveri. Zahodiť miestne zmeny a načítať znova?",
   ledgerEditorReload: "Načítať znova",
   ledgerEditorKeepEditing: "Pokračovať v úpravách",
+  keyboardAccessoryInsert: "Vložiť {{symbol}}",
   ledgerEditorErrorCount: {
     one: "Chyba: {{count}}",
     other: "Chýb: {{count}}",

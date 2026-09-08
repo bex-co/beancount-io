@@ -38,6 +38,7 @@ import {
   parseFavaOptions,
   parseLedgerFiles,
   replaceSliceInFile,
+  resolveEntryIdAtSource,
   serializeDirective,
   sliceSha256,
   splitIntoBlocks,
@@ -45,6 +46,7 @@ import {
   AdvancedFilterParseError,
   type EntrySlice,
   type JournalItem,
+  type ReplacedSourceRange,
   type ReportAccounts,
 } from "@/foundation/rustledger";
 import {
@@ -57,6 +59,9 @@ import {
   type LedgerFileTransform,
 } from "@/features/ledger/operations/commit-ledger-files";
 import type { CacheHelper } from "@/shared/cache";
+import { logger } from "@/shared/logger";
+
+const log = logger.child({ module: "ledger-journal-service" });
 
 /** Public transformed entry ID -> original source-backed entry ID. */
 function sourceEntryIds(directives: DirectiveJson[]): Map<string, string> {
@@ -172,24 +177,36 @@ function makeDeleteTransform(
   };
 }
 
+/** The file content a replace transform produced, and where the block landed. */
+interface AppliedReplace {
+  content: string;
+  /** 0-based start line of the replaced block in `content`. */
+  startLine: number;
+}
+
 /**
  * A {@link LedgerFileTransform} that replaces one entry's block with
- * `newContent`, re-locating it in the fresh content.
+ * `newContent`, re-locating it in the fresh content. `onApplied` receives the
+ * result of every application (the commit helper re-runs the transform on a
+ * CAS retry, so the last call is the one that landed).
  */
 function makeReplaceTransform(
   file: string,
   target: SliceTarget,
   newContent: string,
+  onApplied?: (applied: AppliedReplace) => void,
 ): LedgerFileTransform {
   return async (current) => {
     if (current === null) throw new NotFoundError("Entry", target.base);
     const slice = await relocateSlice(file, current, target);
-    return replaceSliceInFile(
+    const content = replaceSliceInFile(
       current,
       slice.startLine,
       slice.endLine,
       newContent,
     );
+    onApplied?.({ content, startLine: slice.startLine });
+    return content;
   };
 }
 
@@ -857,6 +874,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       sourceEntryHash,
       sha256sum,
     );
+    const applied: { current?: AppliedReplace } = {};
     await this.commitTransforms(
       ledgerId,
       userId,
@@ -872,15 +890,63 @@ export class LedgerJournalService implements ILedgerJournalService {
               startLine: found.startLine,
             },
             newContent,
+            (result) => {
+              applied.current = result;
+            },
           ),
         ],
       ]),
       "Update entry",
     );
+    // The entry's identity is content-derived, so the edit almost always
+    // changed it. Resolve the NEW hash from the committed content so a client
+    // can keep the edited entry on screen; fall back to echoing the request
+    // (the historical contract) when the new content holds nothing dated.
+    const updatedEntryHash =
+      applied.current === undefined
+        ? undefined
+        : await this.resolveUpdatedEntryHash(
+            { ...files, [found.file]: applied.current.content },
+            entryPoint,
+            repoPaths,
+            {
+              file: found.file,
+              startLine: applied.current.startLine,
+              lineCount: newContent.split("\n").length,
+            },
+          );
     return {
       message: "Entry updated successfully",
-      entryHash,
+      entryHash: updatedEntryHash ?? entryHash,
       newSha256sum: sliceSha256(newContent),
     };
+  }
+
+  /**
+   * Public entry ID of the block a source-slice write just produced, from one
+   * full, correctly booked parse of the post-commit files. Best-effort: the
+   * write has already landed, so a parse failure here must not fail the
+   * request — it only costs the client the fresh identity.
+   */
+  private async resolveUpdatedEntryHash(
+    files: FileMap,
+    entryPoint: string,
+    repoPaths: string[],
+    range: ReplacedSourceRange,
+  ): Promise<string | undefined> {
+    try {
+      const snapshot = await parseLedgerFiles(files, entryPoint, {
+        repoPaths,
+        includeSourceDetails: true,
+      });
+      return resolveEntryIdAtSource(snapshot, range);
+    } catch (error) {
+      log.warn("could not resolve the updated entry hash after a save", {
+        file: range.file,
+        startLine: range.startLine,
+        error: error instanceof Error ? error.message : String(error),
+      });
+      return undefined;
+    }
   }
 }

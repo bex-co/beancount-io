@@ -342,6 +342,7 @@ export const zh: typeof en = {
   deleteFailed: "删除交易失败",
   editSuccess: "交易已保存",
   editFailed: "保存交易失败",
+  editTransactionLoadFailed: "加载交易失败",
   editTransactionSource:
     "在下方编辑 beancount 原文。校验值过期或语法有误的内容将被拒绝并提示错误。",
   editConflict: "这笔交易已在别处被修改，请重新加载后再试。",
@@ -414,6 +415,7 @@ export const zh: typeof en = {
     "该文件在远端已被修改。是否放弃本地修改并重新加载？",
   ledgerEditorReload: "重新加载",
   ledgerEditorKeepEditing: "继续编辑",
+  keyboardAccessoryInsert: "插入 {{symbol}}",
   ledgerEditorErrorCount: {
     one: "{{count}} 个错误",
     other: "{{count}} 个错误",

@@ -5,6 +5,18 @@ export type KeyboardShortcutButton = {
   isDate?: boolean;
 };
 
+/**
+ * Keyboard events report height from the bottom of the window, while the
+ * editor is laid out above its bottom safe-area inset. Convert the event
+ * height into the portion that actually overlaps the editor.
+ */
+export function getKeyboardOverlap(
+  keyboardHeight: number,
+  bottomInset: number,
+): number {
+  return Math.max(0, keyboardHeight - bottomInset);
+}
+
 export function buildKeyboardShortcutButtons(
   today: string,
   operatingCurrencies: string[],

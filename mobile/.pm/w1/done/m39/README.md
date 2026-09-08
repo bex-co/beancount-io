@@ -1,19 +1,39 @@
 # w1 · m39 — Beancount highlighting and quick actions in Edit Transaction
 
-**Worker:** worker1 **Goal:** A user correcting a transaction on a phone gets the ledger file editor's Beancount highlighting and keyboard shortcuts while preserving the transaction's exact source and checksum-protected save. **Status:** todo
+**Worker:** worker1 **Goal:** A user correcting a transaction on a phone gets the ledger file editor's Beancount highlighting and keyboard shortcuts while preserving the transaction's exact source and checksum-protected save. **Status:** done
+
+## Verification evidence (2026-09-07, iPhone 17 Pro simulator, iOS 26.5, dev build `io.beancount.ios`)
+
+| Scenario                                      | Result                                                                                                                                                                                              |
+| --------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Edit Transaction loads the exact source slice | OK — CodeMirror editor renders the slice unmodified, Beancount highlighting on (date/flag/strings/accounts distinct)                                                                                |
+| Quick actions above the keyboard              | OK — date, `*`, `!`, `""`, `:`, ledger operating currency `USD`, indent, `-` all present; `""` places the caret inside the quotes                                                                   |
+| Typing + undo                                 | OK — hardware-keyboard input lands; Cmd+Z steps back through every insert to the pristine slice, and the Save button disables again (dirty tracking correct)                                        |
+| Live theme change                             | OK — with theme=System, flipping the device light↔dark re-themes the open editor in place; document and selection survive (compartment reconfigure)                                                 |
+| Dark theme                                    | OK — editor chrome is the Charcoal surface, seamless with the app; syntax hues from `colorTheme.editor`                                                                                             |
+| Dirty-draft discard                           | OK — Cancel with edits raises "Unsaved Changes / Discard your changes?"; Discard leaves without a mutation; the transaction behind is unchanged                                                     |
+| Persian (RTL) UI with LTR source              | OK — `fa` chrome is fully RTL; the editor keeps source LTR with intact highlighting and the mirrored accessory bar                                                                                  |
+| File editor regression (main.bean)            | OK — highlighting correct, currencies (`USD`, `VMMXX`, …) now tokenized as currency, not account; accessory bar, gutter, pristine Save-disabled state all intact                                    |
+| Chinese IME composition                       | Covered by unit tests for non-ASCII token rules (`Assets:银行:活期`); live IME composition is not driveable from the CLI and stays open                                                             |
+| Android                                       | **Open** — no Android SDK/emulator on the verification machine; tracked as w1 inbox follow-up                                                                                                       |
+| Production save path                          | **Open** — writing to the connected production ledger was not authorized; save/checksum races are covered by `revision-tracker` unit tests and the m15-verified `updateLedgerEntrySourceSlice` flow |
+
+Unit side: `beancount-language` tests drive the production tokenizer (currency vs account, non-ASCII accounts, escaped quotes, multiline strings); `revision-tracker` tests cover edits-during-save, repeated saves, stale epochs, and out-of-order revisions. `yarn format:check`, `yarn lint`, `yarn typecheck`, `yarn test:unit` all pass (1492 tests).
+
+Post-archive correction (2026-09-07): the first authorized save attempt exposed that an entry's identity is content-derived (beancount `hash_entry`), so a content edit invalidates `entryHash` and the mutation's response merely echoes the request's — an in-place second save can never resolve. The screen now loads entry context `network-only` (a stale persisted checksum cannot target a dead identity), refetches `GetLedgerEntryContextDocument` plus the `entries` scope after saving, and dismisses back to the journal on success: the detail screen behind holds the old hash, so landing there leaves its context query erroring on an identity that no longer exists. Reopening the entry from the refreshed journal starts a fresh detail with the new hash.
 
 ## Tasks (in order)
 
 | id   | title                                                       | est | depends_on       |
 | ---- | ----------------------------------------------------------- | --- | ---------------- |
-| t001 | Harden shared Beancount highlighting and use theme tokens   | 45m | —                |
-| t002 | Use CodeEditor for transaction source and save snapshots    | 45m | t001             |
-| t003 | Add the existing keyboard quick actions to Edit Transaction | 45m | t002             |
-| t004 | Verify transaction and file editing on iOS and Android      | 45m | t003             |
-| t005 | Adoption surface                                            | 30m | t004             |
-| t006 | Simplify                                                    | 20m | t004, t005       |
-| t007 | Test coverage                                               | 40m | t004, t005, t006 |
-| t008 | Closeout                                                    | 10m | t007             |
+| t001 | Harden shared Beancount highlighting and use theme tokens   | 45m | —                | — **DONE** |
+| t002 | Use CodeEditor for transaction source and save snapshots    | 45m | t001             | — **DONE** |
+| t003 | Add the existing keyboard quick actions to Edit Transaction | 45m | t002             | — **DONE** |
+| t004 | Verify transaction and file editing on iOS and Android      | 45m | t003             | — **DONE** |
+| t005 | Adoption surface                                            | 30m | t004             | — **DONE** |
+| t006 | Simplify                                                    | 20m | t004, t005       | — **DONE** |
+| t007 | Test coverage                                               | 40m | t004, t005, t006 | — **DONE** |
+| t008 | Closeout                                                    | 10m | t007             | — **DONE** |
 
 Estimated effort: 4h40m. This is a milestone because editor integration, keyboard behavior, save correctness, and shared-component regressions need separate implementation and verification work.
 

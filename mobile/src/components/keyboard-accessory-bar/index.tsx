@@ -7,6 +7,7 @@ import {
 } from "react-native";
 import { ColorTheme } from "@/types/theme-props";
 import { useThemeStyle } from "@/common/hooks/use-theme-style";
+import { useTranslations } from "@/common/hooks/use-translations";
 import { fonts } from "@/common/theme";
 import { getFormatDate } from "@/common/format-util";
 import { buildKeyboardShortcutButtons } from "./utils";
@@ -64,6 +65,7 @@ export function KeyboardAccessoryBar({
   operatingCurrencies = [],
 }: KeyboardAccessoryBarProps) {
   const styles = useThemeStyle(getStyles);
+  const { t } = useTranslations();
   const today = getFormatDate(new Date());
   const buttons = buildKeyboardShortcutButtons(today, operatingCurrencies);
 
@@ -82,6 +84,10 @@ export function KeyboardAccessoryBar({
             style={styles.btn}
             onPress={() => onInsert(btn.insert, btn.cursorOffset)}
             activeOpacity={0.6}
+            accessibilityRole="button"
+            accessibilityLabel={t("keyboardAccessoryInsert", {
+              symbol: btn.label,
+            })}
           >
             <Text style={btn.isDate ? styles.dateText : styles.btnText}>
               {btn.label}

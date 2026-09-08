@@ -369,6 +369,7 @@ export const de: typeof en = {
   deleteFailed: "Transaktion konnte nicht gelöscht werden",
   editSuccess: "Transaktion gespeichert",
   editFailed: "Transaktion konnte nicht gespeichert werden",
+  editTransactionLoadFailed: "Transaktion konnte nicht geladen werden",
   editTransactionSource:
     "Bearbeiten Sie unten den beancount-Quelltext. Eine veraltete Prüfsumme oder ungültiges beancount wird mit einem Fehler abgelehnt.",
   editConflict:
@@ -449,6 +450,7 @@ export const de: typeof en = {
     "Diese Datei wurde entfernt geändert. Lokale Änderungen verwerfen und neu laden?",
   ledgerEditorReload: "Neu laden",
   ledgerEditorKeepEditing: "Weiter bearbeiten",
+  keyboardAccessoryInsert: "{{symbol}} einfügen",
   ledgerEditorErrorCount: {
     one: "{{count}} Fehler",
     other: "{{count}} Fehler",

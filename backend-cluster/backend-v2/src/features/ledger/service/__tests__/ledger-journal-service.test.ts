@@ -1,5 +1,10 @@
 import { LedgerJournalService } from "../ledger-journal-service";
-import { InternalServerError } from "@/shared/errors";
+import {
+  ConflictError,
+  InternalServerError,
+  NotFoundError,
+} from "@/shared/errors";
+import { FavaApiError } from "@/foundation/fava";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
 
@@ -112,6 +117,20 @@ describe("LedgerJournalService", () => {
   });
 
   describe("getContext", () => {
+    it("maps a ledger 404 for a dead entry hash to NotFoundError", async () => {
+      mockGetContext.mockRejectedValue(
+        new FavaApiError("Entry not found", 404, { error: "Entry not found" }),
+      );
+
+      await expect(
+        service.getContext({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entryHash: "dead",
+        }),
+      ).rejects.toThrow(NotFoundError);
+    });
+
     it("returns mapped entry context on success", async () => {
       mockGetContext.mockResolvedValue({
         data: {
@@ -334,6 +353,42 @@ describe("LedgerJournalService", () => {
           newContent: "x",
         }),
       ).rejects.toThrow(InternalServerError);
+    });
+
+    // A stale entry hash (the entry was edited, so its content-derived
+    // identity moved) is a client-visible condition, not a server fault.
+    it("maps a ledger 404 for a stale entry hash to NotFoundError", async () => {
+      mockUpdateSourceSlice.mockRejectedValue(
+        new FavaApiError("Entry not found", 404, { error: "Entry not found" }),
+      );
+
+      await expect(
+        service.updateSourceSlice({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entryHash: "stale",
+          sha256sum: "s",
+          newContent: "x",
+        }),
+      ).rejects.toThrow(NotFoundError);
+    });
+
+    it("maps a ledger 409 for a changed slice to ConflictError", async () => {
+      mockUpdateSourceSlice.mockRejectedValue(
+        new FavaApiError("Entry conflict", 409, {
+          error: "Entry conflict: it has changed since it was loaded",
+        }),
+      );
+
+      await expect(
+        service.updateSourceSlice({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          entryHash: "h",
+          sha256sum: "old",
+          newContent: "x",
+        }),
+      ).rejects.toThrow(ConflictError);
     });
   });
 });

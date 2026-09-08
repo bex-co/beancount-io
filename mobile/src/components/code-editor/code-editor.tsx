@@ -29,6 +29,14 @@ import {
   indentUnit,
 } from "@codemirror/language";
 import { tags } from "@lezer/highlight";
+import type { EditorTheme } from "@/types/theme-props";
+import { isSameEditorTheme } from "./editor-theme";
+import {
+  copyBeancountState,
+  startBeancountState,
+  tokenizeBeancount,
+  type BeancountState,
+} from "./beancount-language";
 
 // ─── Types (imported on the native side as well) ─────────────────────────────
 
@@ -53,7 +61,8 @@ export type CodeEditorProps = {
   documentSpec: EditorDocumentSpec;
   onEdit: (epoch: number, revision: number, isDirty: boolean) => Promise<void>;
   onSave: (value: string, epoch: number, revision: number) => Promise<boolean>;
-  isDark: boolean;
+  /** Serializable theme tokens from `colorTheme.editor` (palette.ts). */
+  editorTheme: EditorTheme;
   beancount: boolean;
   readOnly?: boolean;
   /** Bottom inset (px) so CM6 scrolls above the keyboard accessory and keyboard */
@@ -64,132 +73,16 @@ export type CodeEditorProps = {
 
 // ─── Beancount StreamLanguage ─────────────────────────────────────────────────
 
-type BeanState = { inStr: boolean };
-
-const beancountStreamLanguage = StreamLanguage.define<BeanState>({
-  startState: () => ({ inStr: false }),
-
-  token(stream, state) {
-    // Continue an open string across lines
-    if (state.inStr) {
-      while (!stream.eol()) {
-        const ch = stream.next();
-        if (ch === "\\") {
-          stream.next();
-          continue;
-        }
-        if (ch === '"') {
-          state.inStr = false;
-          break;
-        }
-      }
-      return "string";
-    }
-
-    if (stream.eatSpace()) return null;
-
-    // Line comment
-    if (stream.match(/^;.*/)) return "comment";
-
-    // String literal
-    if (stream.peek() === '"') {
-      stream.next(); // opening quote
-      while (!stream.eol()) {
-        const ch = stream.next();
-        if (ch === "\\") {
-          stream.next();
-          continue;
-        }
-        if (ch === '"') break;
-        if (ch === undefined) {
-          state.inStr = true;
-          break;
-        }
-      }
-      return "string";
-    }
-
-    // Date  YYYY-MM-DD
-    if (stream.match(/^\d{4}-\d{2}-\d{2}(?!\d)/)) return "number";
-
-    // Directives (must come before account/currency to avoid partial match)
-    if (
-      stream.match(
-        /^(txn|balance|open|close|pad|note|price|document|custom|option|include|plugin|pushmeta|popmeta|event|query|commodity)\b/,
-      )
-    )
-      return "keyword";
-
-    // Transaction flags  * !
-    if (stream.match(/^[*!]/)) return "atom";
-
-    // Account names  Assets:Checking:Main
-    if (stream.match(/^[A-Z][a-zA-Z0-9-]*(?::[A-Z][a-zA-Z0-9-]*)*/))
-      return "variableName";
-
-    // Tags  #tag
-    if (stream.match(/^#[A-Za-z0-9_/-]+/)) return "tagName";
-
-    // Links  ^link
-    if (stream.match(/^\^[A-Za-z0-9_/-]+/)) return "labelName";
-
-    // Currency codes  USD EUR BTC
-    if (stream.match(/^[A-Z][A-Z0-9.']{1,23}(?![a-z])/)) return "typeName";
-
-    // Numbers / amounts
-    if (stream.match(/^-?[0-9,]+(?:\.[0-9]+)?/)) return "number";
-
-    stream.next();
-    return null;
-  },
-
-  copyState: (s) => ({ ...s }),
+const beancountStreamLanguage = StreamLanguage.define<BeancountState>({
+  startState: startBeancountState,
+  token: tokenizeBeancount,
+  copyState: copyBeancountState,
 });
 
-// ─── Color palettes ───────────────────────────────────────────────────────────
+// ─── Theme extensions ─────────────────────────────────────────────────────────
 
-const light = {
-  background: "#FFFFFF",
-  surface: "#F6F8FA",
-  foreground: "#24292E",
-  selection: "#C8E6C9",
-  cursor: "#24292E",
-  lineHighlight: "rgba(0,0,0,0.04)",
-  gutterBg: "#F6F8FA",
-  gutterFg: "#6A737D",
-  gutterBorder: "#E1E4E8",
-  comment: "#6A737D",
-  keyword: "#D73A49",
-  string: "#28A745",
-  number: "#005CC5",
-  variable: "#6F42C1",
-  tag: "#0366D6",
-  type: "#E36209",
-};
-
-const dark = {
-  background: "#1E1E1E",
-  surface: "#252526",
-  foreground: "#D4D4D4",
-  selection: "#264F78",
-  cursor: "#AEAFAD",
-  lineHighlight: "rgba(255,255,255,0.05)",
-  gutterBg: "#252526",
-  gutterFg: "#858585",
-  gutterBorder: "#3E3E42",
-  comment: "#6A9955",
-  keyword: "#C586C0",
-  string: "#CE9178",
-  number: "#B5CEA8",
-  variable: "#9CDCFE",
-  tag: "#4FC1FF",
-  type: "#DCDCAA",
-};
-
-function buildThemeExtensions(isDark: boolean): Extension[] {
-  const c = isDark ? dark : light;
-
-  const editorTheme = EditorView.theme(
+function buildThemeExtensions(c: EditorTheme): Extension[] {
+  const editorThemeExt = EditorView.theme(
     {
       "&": {
         color: c.foreground,
@@ -207,15 +100,15 @@ function buildThemeExtensions(isDark: boolean): Extension[] {
       ".cm-selectionBackground, ::selection": { backgroundColor: c.selection },
       ".cm-activeLine": { backgroundColor: c.lineHighlight },
       ".cm-gutters": {
-        backgroundColor: c.gutterBg,
-        color: c.gutterFg,
+        backgroundColor: c.gutterBackground,
+        color: c.gutterForeground,
         borderRight: `1px solid ${c.gutterBorder}`,
       },
       ".cm-activeLineGutter": { color: c.foreground },
       ".cm-scroller": { overflow: "auto" },
       ".cm-editor": { height: "100%" },
     },
-    { dark: isDark },
+    { dark: c.dark },
   );
 
   const highlightStyle = HighlightStyle.define([
@@ -223,18 +116,18 @@ function buildThemeExtensions(isDark: boolean): Extension[] {
     { tag: tags.keyword, color: c.keyword, fontWeight: "bold" },
     { tag: tags.string, color: c.string },
     { tag: tags.number, color: c.number },
-    { tag: tags.variableName, color: c.variable },
+    { tag: tags.variableName, color: c.account },
     { tag: tags.tagName, color: c.tag },
     { tag: tags.labelName, color: c.tag },
-    { tag: tags.typeName, color: c.type },
+    { tag: tags.typeName, color: c.currency },
     { tag: tags.atom, color: c.keyword },
   ]);
 
-  return [editorTheme, syntaxHighlighting(highlightStyle)];
+  return [editorThemeExt, syntaxHighlighting(highlightStyle)];
 }
 
 function buildExtensions(
-  isDark: boolean,
+  editorTheme: EditorTheme,
   onEditRef: {
     current: (
       epoch: number,
@@ -266,7 +159,7 @@ function buildExtensions(
     languageCompartment.of(
       beancount ? beancountStreamLanguage : EditorView.lineWrapping,
     ),
-    themeCompartment.of(buildThemeExtensions(isDark)),
+    themeCompartment.of(buildThemeExtensions(editorTheme)),
     // Disable autocorrect / autocapitalize on the contenteditable
     EditorView.contentAttributes.of({
       autocorrect: "off",
@@ -338,7 +231,7 @@ export default function CodeEditor({
   documentSpec,
   onEdit,
   onSave,
-  isDark,
+  editorTheme,
   beancount,
   readOnly = false,
   keyboardInset,
@@ -357,7 +250,7 @@ export default function CodeEditor({
   const accessCompartmentRef = useRef(new Compartment());
   const languageCompartmentRef = useRef(new Compartment());
   const appliedAccessRef = useRef(readOnly);
-  const appliedThemeRef = useRef(isDark);
+  const appliedThemeRef = useRef(editorTheme);
   const appliedLanguageRef = useRef(beancount);
   const prevInsertSeq = useRef<number | null>(null);
   // Tracks the most-recent jump target so the value effect can fire it
@@ -424,7 +317,7 @@ export default function CodeEditor({
     const state = EditorState.create({
       doc: documentSpec.value,
       extensions: buildExtensions(
-        isDark,
+        editorTheme,
         onEditRef,
         documentEpochRef,
         editRevisionRef,
@@ -496,17 +389,21 @@ export default function CodeEditor({
   }, [beancount]);
 
   // Reconfigure only theme extensions, preserving document, selection, and undo.
+  // Compare by value: the DOM bridge re-serializes props on every native
+  // render, so `editorTheme` is a new object each time even when nothing
+  // changed, and reconfiguring on reference change alone would leak style
+  // modules and re-highlight the document on every keyboard/dirty-flag tick.
   useEffect(() => {
-    if (appliedThemeRef.current === isDark) return;
-    appliedThemeRef.current = isDark;
+    if (isSameEditorTheme(appliedThemeRef.current, editorTheme)) return;
+    appliedThemeRef.current = editorTheme;
     const view = viewRef.current;
     if (!view) return;
     view.dispatch({
       effects: themeCompartmentRef.current.reconfigure(
-        buildThemeExtensions(isDark),
+        buildThemeExtensions(editorTheme),
       ),
     });
-  }, [isDark]);
+  }, [editorTheme]);
 
   useEffect(() => {
     appliedAccessRef.current = readOnly;
@@ -567,7 +464,7 @@ export default function CodeEditor({
         position: "fixed",
         inset: 0,
         overflow: "hidden",
-        backgroundColor: isDark ? dark.background : light.background,
+        backgroundColor: editorTheme.background,
       }}
     />
   );

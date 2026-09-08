@@ -1,10 +1,10 @@
 import { parseLedgerId } from "@/shared/str";
-import { InternalServerError } from "@/shared/errors";
-import type {
-  DirectiveType,
-  TransactionSubtype,
-  DocumentSubtype,
-  CustomSubtype,
+import {
+  unwrapFavaResponse,
+  type DirectiveType,
+  type TransactionSubtype,
+  type DocumentSubtype,
+  type CustomSubtype,
 } from "@/foundation/fava";
 import type { Identity } from "@/server/api/identity";
 import {
@@ -156,10 +156,8 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
     );
 
-    const response = await favaApiClient.journal.getJournal(
-      ledgerOwner,
-      ledgerName,
-      {
+    const data = await unwrapFavaResponse(
+      favaApiClient.journal.getJournal(ledgerOwner, ledgerName, {
         account: query?.account || undefined,
         filter: query?.filter || undefined,
         time: query?.time || undefined,
@@ -169,14 +167,9 @@ export class LedgerJournalService
         transaction_subtypes: query?.transactionSubtypes || undefined,
         document_subtypes: query?.documentSubtypes || undefined,
         custom_subtypes: query?.customSubtypes || undefined,
-      },
+      }),
+      "get ledger journal entries",
     );
-
-    if (!response.data?.success) {
-      throw new InternalServerError("Failed to get ledger journal entries");
-    }
-
-    const data = response.data.data;
     return {
       total: data.total,
       data: data.items as unknown as Record<string, unknown>[],
@@ -196,17 +189,13 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
     );
 
-    const response = await favaApiClient.journal.getContext(
-      ledgerOwner,
-      ledgerName,
-      entryHash,
+    // Entry hashes are content-derived, so a stale hash is a NORMAL outcome
+    // after an edit: the ledger service answers 404/409, which unwrapFavaResponse
+    // maps to NotFound/Conflict instead of an opaque 500.
+    const ctx = await unwrapFavaResponse(
+      favaApiClient.journal.getContext(ledgerOwner, ledgerName, entryHash),
+      "get entry context",
     );
-
-    if (!response.data?.success) {
-      throw new InternalServerError("Failed to get entry context");
-    }
-
-    const ctx = response.data.data;
     return {
       entry: ctx.entry as unknown as Record<string, unknown>,
       balances_before: ctx.balances_before,
@@ -228,21 +217,15 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
     );
 
-    const response = await favaApiClient.journal.plaintextJournal(
-      ledgerOwner,
-      ledgerName,
-      {
+    const data = await unwrapFavaResponse(
+      favaApiClient.journal.plaintextJournal(ledgerOwner, ledgerName, {
         account: query?.account || undefined,
         filter: query?.filter || undefined,
         time: query?.time || undefined,
-      },
+      }),
+      "get plaintext journal",
     );
-
-    if (!response.data?.success) {
-      throw new InternalServerError("Failed to get plaintext journal");
-    }
-
-    return { content: response.data.data.content };
+    return { content: data.content };
   }
 
   async getAccountJournal(params: {
@@ -257,10 +240,8 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_JOURNAL_READ,
     );
 
-    const response = await favaApiClient.journal.getAccountJournal(
-      ledgerOwner,
-      ledgerName,
-      {
+    const data = await unwrapFavaResponse(
+      favaApiClient.journal.getAccountJournal(ledgerOwner, ledgerName, {
         account: query.account,
         filter: query.filter || undefined,
         time: query.time || undefined,
@@ -269,14 +250,9 @@ export class LedgerJournalService
         with_children:
           query.with_children !== undefined ? query.with_children : true,
         conversion: query.conversion || "at_cost",
-      },
+      }),
+      "get account journal entries",
     );
-
-    if (!response.data?.success) {
-      throw new InternalServerError("Failed to get account journal entries");
-    }
-
-    const data = response.data.data;
     return {
       items: data.items.map((item) => ({
         entry: item.entry as unknown as Record<string, unknown>,
@@ -302,17 +278,13 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
 
-    const response = await favaApiClient.journal.deleteSourceSlice(
-      ledgerOwner,
-      ledgerName,
-      { entry_hash: entryHash, sha256sum },
+    const data = await unwrapFavaResponse(
+      favaApiClient.journal.deleteSourceSlice(ledgerOwner, ledgerName, {
+        entry_hash: entryHash,
+        sha256sum,
+      }),
+      "delete source slice",
     );
-
-    if (!response.data?.success) {
-      throw new InternalServerError("Failed to delete source slice");
-    }
-
-    const data = response.data.data;
     return { message: data.message, entryHash: data.entry_hash };
   }
 
@@ -328,22 +300,15 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
 
-    const response = await favaApiClient.journal.deleteMultiSourceSlices(
-      ledgerOwner,
-      ledgerName,
-      {
+    const data = await unwrapFavaResponse(
+      favaApiClient.journal.deleteMultiSourceSlices(ledgerOwner, ledgerName, {
         entries: entries.map((e) => ({
           entry_hash: e.entryHash,
           sha256sum: e.sha256sum,
         })),
-      },
+      }),
+      "delete source slices",
     );
-
-    if (!response.data?.success) {
-      throw new InternalServerError("Failed to delete source slices");
-    }
-
-    const data = response.data.data;
     return { message: data.message, deletedHashes: data.deleted_hashes };
   }
 
@@ -361,19 +326,18 @@ export class LedgerJournalService
       AUTHORIZATION_ACTIONS.LEDGER_ENTRIES_WRITE,
     );
 
-    const response = await favaApiClient.journal.updateSourceSlice(
-      ledgerOwner,
-      ledgerName,
-      { entry_hash: entryHash, sha256sum, new_content: newContent },
+    const data = await unwrapFavaResponse(
+      favaApiClient.journal.updateSourceSlice(ledgerOwner, ledgerName, {
+        entry_hash: entryHash,
+        sha256sum,
+        new_content: newContent,
+      }),
+      "update source slice",
     );
-
-    if (!response.data?.success) {
-      throw new InternalServerError("Failed to update source slice");
-    }
-
-    const data = response.data.data;
     return {
       message: data.message,
+      // The entry's NEW content-derived hash (the ledger service resolves it
+      // from the committed content), not an echo of the request.
       entryHash: data.entry_hash,
       newSha256sum: data.new_sha256sum,
     };

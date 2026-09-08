@@ -3117,7 +3117,7 @@ export interface UpdateSourceSliceResponse {
   message: string;
   /**
    * Entry Hash
-   * Hash of the updated entry
+   * Entry hash of the updated entry after the edit. Hashes are content-derived, so this usually differs from the request's entry_hash; use it for any follow-up context/edit/delete call.
    */
   entry_hash: string;
   /**

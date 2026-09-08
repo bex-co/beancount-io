@@ -3,6 +3,30 @@ export interface ThemeProps {
   colorTheme: ColorTheme;
 }
 
+/**
+ * Serializable chrome + syntax colors for the CodeMirror editor surfaces
+ * (ledger file editor, transaction editor). Passed over Expo's DOM bridge,
+ * so every value must be a plain string/boolean.
+ */
+export interface EditorTheme {
+  dark: boolean;
+  background: string;
+  foreground: string;
+  selection: string;
+  cursor: string;
+  lineHighlight: string;
+  gutterBackground: string;
+  gutterForeground: string;
+  gutterBorder: string;
+  comment: string;
+  keyword: string;
+  string: string;
+  number: string;
+  account: string;
+  tag: string;
+  currency: string;
+}
+
 export interface ColorTheme {
   overlay: string;
   primary: string;
@@ -44,4 +68,6 @@ export interface ColorTheme {
   inactiveBackgroundColor: string;
   navBg: string;
   navText: string;
+  /** Code editor chrome + syntax colors; see palette.ts for the per-theme set. */
+  editor: EditorTheme;
 }

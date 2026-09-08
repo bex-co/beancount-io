@@ -99,7 +99,8 @@ export function setJournalHandler(router: Router): void {
     );
   });
 
-  // operationId: updateSourceSlice — wire {message, entry_hash, new_sha256sum}
+  // operationId: updateSourceSlice — wire {message, entry_hash, new_sha256sum};
+  // entry_hash is the entry's NEW content-derived identity after the edit.
   router.put(`${base}/source-slice`, authMiddleware, async (ctx) => {
     const { journal } = servicesForRequest(ctx);
     const body = (ctx.request.body ?? {}) as {

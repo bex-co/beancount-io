@@ -363,6 +363,7 @@ export const uk: typeof en = {
   deleteFailed: "Не вдалося видалити транзакцію",
   editSuccess: "Транзакцію збережено",
   editFailed: "Не вдалося зберегти транзакцію",
+  editTransactionLoadFailed: "Не вдалося завантажити транзакцію",
   editTransactionSource:
     "Змініть вихідний текст beancount нижче. Застаріла контрольна сума або хибний beancount будуть відхилені з помилкою.",
   editConflict:
@@ -439,6 +440,7 @@ export const uk: typeof en = {
     "Цей файл змінено на сервері. Скасувати локальні зміни та перезавантажити?",
   ledgerEditorReload: "Перезавантажити",
   ledgerEditorKeepEditing: "Продовжити редагування",
+  keyboardAccessoryInsert: "Вставити {{symbol}}",
   ledgerEditorErrorCount: {
     one: "Помилка: {{count}}",
     other: "Помилок: {{count}}",

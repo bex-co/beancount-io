@@ -9,9 +9,8 @@ import {
 import {
   isConflictError,
   filterFileErrors,
-  classifyBeancountChunk,
-  getKeyboardOverlap,
 } from "../screens/ledger-file-editor-screen/utils";
+import { getKeyboardOverlap } from "../components/keyboard-accessory-bar/utils";
 import {
   decodeLedgerFileContent,
   encodeLedgerFileContent,
@@ -348,86 +347,4 @@ test("getKeyboardOverlap: never returns a negative overlap", () => {
   if (overlap !== 0) {
     throw new Error(`expected zero overlap, got ${overlap}`);
   }
-});
-
-// ── classifyBeancountChunk (tokenizer patterns) ───────────────────────────────
-
-test("classifyBeancountChunk: comments start with semicolon", () => {
-  const t = classifyBeancountChunk("; this is a comment");
-  if (t !== "comment") throw new Error(`expected 'comment', got '${t}'`);
-});
-
-test("classifyBeancountChunk: dates YYYY-MM-DD", () => {
-  const t = classifyBeancountChunk("2024-01-15 txn");
-  if (t !== "date") throw new Error(`expected 'date', got '${t}'`);
-});
-
-test("classifyBeancountChunk: partial date is not a date", () => {
-  const t = classifyBeancountChunk("2024-01 balance");
-  if (t === "date") throw new Error("partial date should not match");
-});
-
-test("classifyBeancountChunk: 'txn' keyword", () => {
-  const t = classifyBeancountChunk("txn");
-  if (t !== "keyword") throw new Error(`expected 'keyword', got '${t}'`);
-});
-
-test("classifyBeancountChunk: 'open' keyword", () => {
-  const t = classifyBeancountChunk("open Assets:Checking");
-  if (t !== "keyword") throw new Error(`expected 'keyword', got '${t}'`);
-});
-
-test("classifyBeancountChunk: 'balance' keyword", () => {
-  const t = classifyBeancountChunk("balance Assets:Savings 1000 USD");
-  if (t !== "keyword") throw new Error(`expected 'keyword', got '${t}'`);
-});
-
-test("classifyBeancountChunk: account name (multi-segment)", () => {
-  const t = classifyBeancountChunk("Assets:Checking:Main");
-  if (t !== "account") throw new Error(`expected 'account', got '${t}'`);
-});
-
-test("classifyBeancountChunk: tag starts with #", () => {
-  const t = classifyBeancountChunk("#vacation-2024");
-  if (t !== "tag") throw new Error(`expected 'tag', got '${t}'`);
-});
-
-test("classifyBeancountChunk: link starts with ^", () => {
-  const t = classifyBeancountChunk("^trip-ref");
-  if (t !== "link") throw new Error(`expected 'link', got '${t}'`);
-});
-
-test("classifyBeancountChunk: currency is uppercase code", () => {
-  const t = classifyBeancountChunk("USD");
-  if (t !== "currency") throw new Error(`expected 'currency', got '${t}'`);
-});
-
-test("classifyBeancountChunk: amount is a number", () => {
-  const t = classifyBeancountChunk("1,234.56");
-  if (t !== "number") throw new Error(`expected 'number', got '${t}'`);
-});
-
-test("classifyBeancountChunk: negative amount", () => {
-  const t = classifyBeancountChunk("-100.00");
-  if (t !== "number") throw new Error(`expected 'number', got '${t}'`);
-});
-
-test("classifyBeancountChunk: transaction flag *", () => {
-  const t = classifyBeancountChunk("* txn");
-  if (t !== "flag") throw new Error(`expected 'flag', got '${t}'`);
-});
-
-test("classifyBeancountChunk: transaction flag !", () => {
-  const t = classifyBeancountChunk("! pending");
-  if (t !== "flag") throw new Error(`expected 'flag', got '${t}'`);
-});
-
-test("classifyBeancountChunk: string opening quote", () => {
-  const t = classifyBeancountChunk('"Grocery Store"');
-  if (t !== "string") throw new Error(`expected 'string', got '${t}'`);
-});
-
-test("classifyBeancountChunk: plain text returns null", () => {
-  const t = classifyBeancountChunk("   ");
-  if (t !== null) throw new Error(`expected null for whitespace, got '${t}'`);
 });

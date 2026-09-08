@@ -8,7 +8,7 @@
  * plus the platform-resolved extras (`fonts`, `colorMode`) keeps importing
  * `@/common/theme`, which re-exports everything here.
  */
-import type { ColorTheme, ThemeProps } from "@/types/theme-props";
+import type { ColorTheme, EditorTheme, ThemeProps } from "@/types/theme-props";
 
 /** A resolved theme — never `"system"`, which is a *setting*, not a theme. */
 export type ThemeName = "light" | "dark";
@@ -115,6 +115,52 @@ const CHARCOAL = "#171a14"; // Charcoal — warm near-black — dark base + top 
  */
 const CONTROL_BORDER_LIGHT = "#858777"; // warm khaki, between black60 and Stone
 
+/**
+ * Code editor chrome + syntax colors, one set per theme. Chrome values reuse
+ * the neutral ramp so the editor sits seamlessly on the app surface; syntax
+ * hues are the palette the editor shipped with, chosen for token-to-token
+ * contrast (accounts purple vs currencies orange) rather than sampled from
+ * the ramp. Selection stays green-tinted so it reads as a highlight, not a
+ * token color.
+ */
+const lightEditorTheme: EditorTheme = {
+  dark: false,
+  background: "#ffffff",
+  foreground: "#40433a", // = light text01
+  selection: "#c8e6c9",
+  cursor: "#40433a",
+  lineHighlight: "rgba(0, 0, 0, 0.04)",
+  gutterBackground: "#f6f4ec", // = light black10
+  gutterForeground: STONE,
+  gutterBorder: "#e0dfd3", // = light black40
+  comment: STONE,
+  keyword: "#d73a49",
+  string: "#28a745",
+  number: "#005cc5",
+  account: "#6f42c1",
+  tag: "#0366d6",
+  currency: "#e36209",
+};
+
+const darkEditorTheme: EditorTheme = {
+  dark: true,
+  background: CHARCOAL,
+  foreground: BONE,
+  selection: "#264f78",
+  cursor: BONE,
+  lineHighlight: "rgba(255, 255, 255, 0.05)",
+  gutterBackground: "#282a21", // = dark black10
+  gutterForeground: "#a7a99a", // = dark black80
+  gutterBorder: "#585a4c", // = dark black20
+  comment: "#6a9955",
+  keyword: "#c586c0",
+  string: "#ce9178",
+  number: "#b5cea8",
+  account: "#9cdcfe",
+  tag: "#4fc1ff",
+  currency: "#dcdcaa",
+};
+
 const lightTheme: ColorTheme = {
   overlay: "rgba(0, 0, 0, 0.5)", // modal scrim
 
@@ -160,6 +206,8 @@ const lightTheme: ColorTheme = {
   inactiveBackgroundColor: "#ffffff",
   navBg: "#ffffff",
   navText: "#1b1e16",
+
+  editor: lightEditorTheme,
 };
 
 const darkTheme: ColorTheme = {
@@ -207,6 +255,8 @@ const darkTheme: ColorTheme = {
   inactiveBackgroundColor: CHARCOAL,
   navBg: CHARCOAL,
   navText: BONE,
+
+  editor: darkEditorTheme,
 };
 
 export const themes: Record<ThemeName, ThemeProps> = {

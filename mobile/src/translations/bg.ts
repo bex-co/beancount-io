@@ -365,6 +365,7 @@ export const bg: typeof en = {
   deleteFailed: "Транзакцията не беше изтрита",
   editSuccess: "Транзакцията е запазена",
   editFailed: "Транзакцията не беше запазена",
+  editTransactionLoadFailed: "Неуспешно зареждане на транзакцията",
   editTransactionSource:
     "Редактирайте изходния текст на beancount по-долу. Остаряла контролна сума или невалиден beancount ще бъдат отхвърлени с грешка.",
   editConflict:
@@ -443,6 +444,7 @@ export const bg: typeof en = {
     "Този файл е променен отдалечено. Да се отхвърлят ли местните промени и файлът да се презареди?",
   ledgerEditorReload: "Презареди",
   ledgerEditorKeepEditing: "Продължи редактирането",
+  keyboardAccessoryInsert: "Вмъкване на {{symbol}}",
   ledgerEditorErrorCount: {
     one: "Грешка: {{count}}",
     other: "Грешки: {{count}}",

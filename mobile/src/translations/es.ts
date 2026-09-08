@@ -366,6 +366,7 @@ export const es: typeof en = {
   deleteFailed: "Error al eliminar la transacción",
   editSuccess: "Transacción guardada",
   editFailed: "Error al guardar la transacción",
+  editTransactionLoadFailed: "No se pudo cargar la transacción",
   editTransactionSource:
     "Edita el código beancount original abajo. Una suma de comprobación caducada o un beancount no válido se rechazará con un error.",
   editConflict:
@@ -443,6 +444,7 @@ export const es: typeof en = {
     "Este archivo cambió en el servidor. ¿Descartar los cambios locales y volver a cargar?",
   ledgerEditorReload: "Recargar",
   ledgerEditorKeepEditing: "Seguir editando",
+  keyboardAccessoryInsert: "Insertar {{symbol}}",
   ledgerEditorErrorCount: {
     one: "{{count}} error",
     other: "{{count}} errores",

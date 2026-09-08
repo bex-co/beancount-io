@@ -365,6 +365,7 @@ export const fr: typeof en = {
   deleteFailed: "Échec de la suppression de la transaction",
   editSuccess: "Transaction enregistrée",
   editFailed: "Échec de l'enregistrement de la transaction",
+  editTransactionLoadFailed: "Échec du chargement de la transaction",
   editTransactionSource:
     "Modifiez le source beancount ci-dessous. Une somme de contrôle obsolète ou un beancount invalide sera refusé avec une erreur.",
   editConflict:
@@ -444,6 +445,7 @@ export const fr: typeof en = {
     "Ce fichier a été modifié à distance. Abandonner les modifications locales et recharger ?",
   ledgerEditorReload: "Recharger",
   ledgerEditorKeepEditing: "Continuer",
+  keyboardAccessoryInsert: "Insérer {{symbol}}",
   ledgerEditorErrorCount: {
     one: "{{count}} erreur",
     other: "{{count}} erreurs",

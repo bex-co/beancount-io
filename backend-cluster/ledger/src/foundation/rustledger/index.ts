@@ -19,6 +19,7 @@ export * from "./journal-running-balance";
 export * from "./source-slice";
 export * from "./source-slice-worker";
 export * from "./source-slice-resolver";
+export * from "./updated-entry-id";
 export * from "./booked-block-parser";
 export * from "./entry-build";
 export * from "./bcio-options";

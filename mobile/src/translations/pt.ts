@@ -367,6 +367,7 @@ export const pt: typeof en = {
   deleteFailed: "Falha ao excluir a transação",
   editSuccess: "Transação salva",
   editFailed: "Falha ao salvar a transação",
+  editTransactionLoadFailed: "Falha ao carregar a transação",
   editTransactionSource:
     "Edite o código beancount abaixo. Uma soma de verificação desatualizada ou beancount inválido será recusado com erro.",
   editConflict:
@@ -444,6 +445,7 @@ export const pt: typeof en = {
     "Este arquivo foi alterado remotamente. Descartar as alterações locais e recarregar?",
   ledgerEditorReload: "Recarregar",
   ledgerEditorKeepEditing: "Continuar editando",
+  keyboardAccessoryInsert: "Inserir {{symbol}}",
   ledgerEditorErrorCount: {
     one: "{{count}} erro",
     other: "{{count}} erros",

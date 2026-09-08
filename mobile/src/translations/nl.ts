@@ -362,6 +362,7 @@ export const nl: typeof en = {
   deleteFailed: "Verwijderen van transactie mislukt",
   editSuccess: "Transactie opgeslagen",
   editFailed: "Opslaan van transactie mislukt",
+  editTransactionLoadFailed: "Transactie laden mislukt",
   editTransactionSource:
     "Bewerk hieronder de beancount-brontekst. Een verouderde controlesom of ongeldige beancount wordt met een foutmelding geweigerd.",
   editConflict:
@@ -440,6 +441,7 @@ export const nl: typeof en = {
     "Dit bestand is op afstand gewijzigd. Lokale wijzigingen verwerpen en herladen?",
   ledgerEditorReload: "Herladen",
   ledgerEditorKeepEditing: "Doorgaan met bewerken",
+  keyboardAccessoryInsert: "{{symbol}} invoegen",
   ledgerEditorErrorCount: {
     one: "{{count}} fout",
     other: "{{count}} fouten",

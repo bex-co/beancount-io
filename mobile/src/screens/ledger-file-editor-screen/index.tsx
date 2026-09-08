@@ -2,8 +2,6 @@ import { useLedgerAccess } from "@/common/hooks/use-ledger-access";
 import { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
-  Keyboard,
-  Platform,
   ScrollView,
   StyleSheet,
   Text,
@@ -38,6 +36,8 @@ import {
   KeyboardAccessoryBar,
   KEYBOARD_ACCESSORY_BAR_HEIGHT,
 } from "@/components/keyboard-accessory-bar";
+import { useKeyboardHeight } from "@/components/keyboard-accessory-bar/use-keyboard-height";
+import { getKeyboardOverlap } from "@/components/keyboard-accessory-bar/utils";
 import {
   decodeLedgerFileContent,
   encodeLedgerFileContent,
@@ -52,7 +52,13 @@ import CodeEditor, {
   type EditorDocumentSpec,
   type InsertSpec,
 } from "@/components/code-editor/code-editor";
-import { isConflictError, filterFileErrors, getKeyboardOverlap } from "./utils";
+import {
+  applyEditorEdit,
+  createRevisionTracker,
+  markRevisionsSaved,
+  resetRevisionTracker,
+} from "@/components/code-editor/revision-tracker";
+import { isConflictError, filterFileErrors } from "./utils";
 import { LEADING_TEXT_ALIGN, directionalIcon } from "@/common/rtl";
 
 // ─── Styles ──────────────────────────────────────────────────────────────────
@@ -278,8 +284,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const shaRef = useRef("");
   const documentEpochRef = useRef(0);
-  const latestEditRevisionRef = useRef(0);
-  const savedEditRevisionRef = useRef(0);
+  const revisionTrackerRef = useRef(createRevisionTracker());
 
   useEffect(() => {
     if (!fileData?.getLedgerFile || initialized) return;
@@ -289,8 +294,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
     const fs = fileData.getLedgerFile.sha;
     const epoch = documentEpochRef.current + 1;
     documentEpochRef.current = epoch;
-    latestEditRevisionRef.current = 0;
-    savedEditRevisionRef.current = 0;
+    resetRevisionTracker(revisionTrackerRef.current);
     shaRef.current = fs;
     setDocumentSpec({ value: fc, epoch });
     setHasUnsavedChanges(false);
@@ -325,8 +329,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
     const fs = result.data?.getLedgerFile?.sha ?? "";
     const epoch = documentEpochRef.current + 1;
     documentEpochRef.current = epoch;
-    latestEditRevisionRef.current = 0;
-    savedEditRevisionRef.current = 0;
+    resetRevisionTracker(revisionTrackerRef.current);
     shaRef.current = fs;
     setDocumentSpec({ value: fc, epoch });
     setHasUnsavedChanges(false);
@@ -334,13 +337,15 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
   const handleEdit = useCallback(
     async (epoch: number, revision: number, isDirty: boolean) => {
-      if (
-        epoch !== documentEpochRef.current ||
-        revision < latestEditRevisionRef.current
-      )
-        return;
-      latestEditRevisionRef.current = revision;
-      setHasUnsavedChanges(isDirty);
+      const dirty = applyEditorEdit(
+        revisionTrackerRef.current,
+        documentEpochRef.current,
+        epoch,
+        revision,
+        isDirty,
+      );
+      if (dirty === null) return;
+      setHasUnsavedChanges(dirty);
     },
     [],
   );
@@ -376,12 +381,8 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
         shaRef.current = newSha;
         if (epoch === documentEpochRef.current) {
-          savedEditRevisionRef.current = Math.max(
-            savedEditRevisionRef.current,
-            revision,
-          );
           setHasUnsavedChanges(
-            latestEditRevisionRef.current > savedEditRevisionRef.current,
+            markRevisionsSaved(revisionTrackerRef.current, revision),
           );
         }
         // This save stays on the screen and shows no toast, so the haptic is
@@ -444,22 +445,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
 
   // ── Keyboard height ──────────────────────────────────────────────────────
 
-  const [keyboardHeight, setKeyboardHeight] = useState(0);
-
-  useEffect(() => {
-    const show = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillShow" : "keyboardDidShow",
-      (e) => setKeyboardHeight(e.endCoordinates.height),
-    );
-    const hide = Keyboard.addListener(
-      Platform.OS === "ios" ? "keyboardWillHide" : "keyboardDidHide",
-      () => setKeyboardHeight(0),
-    );
-    return () => {
-      show.remove();
-      hide.remove();
-    };
-  }, []);
+  const keyboardHeight = useKeyboardHeight();
 
   const isKeyboardVisible = keyboardHeight > 0;
   const showAccessory =
@@ -513,10 +499,6 @@ export function LedgerFileEditorScreen(): JSX.Element {
   const fileErrors: FileError[] = filterFileErrors(allErrors, path).map(
     (e) => ({ message: e.message, lineno: e.lineno }),
   );
-
-  // ── isDark ───────────────────────────────────────────────────────────────
-
-  const isDark = useTheme().name === "dark";
 
   // ── Header right ────────────────────────────────────────────────────────
 
@@ -585,7 +567,7 @@ export function LedgerFileEditorScreen(): JSX.Element {
               documentSpec={documentSpec}
               onEdit={handleEdit}
               onSave={handleSave}
-              isDark={isDark}
+              editorTheme={theme.editor}
               beancount={beancount}
               keyboardInset={editorKeyboardInset}
               insertSpec={insertSpec}

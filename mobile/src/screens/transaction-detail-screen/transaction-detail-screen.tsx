@@ -270,8 +270,8 @@ const TransactionDetailImpl = ({
 
   const handleEdit = useCallback(() => {
     if (!canWrite || !sha256sum) return;
-    openEditTransaction(router, { entryHash, ledgerId });
-  }, [canWrite, sha256sum, entryHash, ledgerId, router]);
+    openEditTransaction(router, { entryHash, ledgerId, originAccount });
+  }, [canWrite, sha256sum, entryHash, ledgerId, originAccount, router]);
 
   const handleDelete = useCallback(() => {
     if (!canWrite || !sha256sum) return;

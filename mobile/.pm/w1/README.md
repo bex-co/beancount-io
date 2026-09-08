@@ -42,7 +42,7 @@
 - [x] **m36** — Merchant view: stats and transaction history (8 tasks) ← same hand-off; sequenced after m35 — navigates from its list, reuses its `queryShell` plumbing
 - [x] **m37** — Recurring merchants: detection and grouping (9 tasks) ← same hand-off; sequenced after m35 + m36 — the directory is its surface, the merchant view hosts its toggle
 - [ ] **m38** — Localize and optimize the App Store product page (15 tasks) ← from `/pm-brainstorm` 2026-08-24; moved from the monorepo root board
-- [ ] **m39** — Beancount highlighting and quick actions in Edit Transaction (8 tasks) ← owner research handoff to `/pm` 2026-09-06; reuses the shipped m9 transaction flow and m15 editor
+- [x] **m39** — Beancount highlighting and quick actions in Edit Transaction (8 tasks) ← owner research handoff to `/pm` 2026-09-06; reuses the shipped m9 transaction flow and m15 editor
 
 ## Board triage — 2026-09-07
 

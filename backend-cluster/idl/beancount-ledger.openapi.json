@@ -13464,7 +13464,7 @@
           "entry_hash": {
             "type": "string",
             "title": "Entry Hash",
-            "description": "Hash of the updated entry"
+            "description": "Entry hash of the updated entry after the edit. Hashes are content-derived, so this usually differs from the request's entry_hash; use it for any follow-up context/edit/delete call."
           },
           "new_sha256sum": {
             "type": "string",
