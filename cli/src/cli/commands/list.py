@@ -24,8 +24,10 @@ list_app = typer.Typer(help="List directives from a local .bean file", no_args_i
 LimitOpt = Annotated[int, typer.Option("--limit", "-l", min=1, help="Max results (positive)")]
 FromDateOpt = Annotated[str | None, typer.Option("--from-date", help="Start date YYYY-MM-DD")]
 ToDateOpt = Annotated[str | None, typer.Option("--to-date", help="End date YYYY-MM-DD")]
-AccountFilterOpt = Annotated[str | None, typer.Option("--account", "-a", help="Filter by account (substring)")]
-CurrencyFilterOpt = Annotated[str | None, typer.Option("--currency", "-c", help="Filter by currency")]
+AccountFilterOpt = Annotated[
+    str | None, typer.Option("--account", "-a", help="Filter by account (case-insensitive substring)")
+]
+CurrencyFilterOpt = Annotated[str | None, typer.Option("--currency", "-c", help="Exact currency (case-insensitive)")]
 AllowErrorsOpt = Annotated[bool, typer.Option("--allow-errors", help="Report data even if the ledger has errors")]
 
 
@@ -160,10 +162,30 @@ def _run(spec: _Spec, limit: int, allow_errors: bool, *, details: bool = False, 
     if details:
         from cli.directives.writer import format_transaction
 
+        output.note("Transactions rendered in Beancount syntax: all postings, with source locations.")
         for item in items:
             if item.source:
                 typer.echo(f"{item.source.filename}:{item.source.lineno}")
             typer.echo(format_transaction(item))
+    elif spec.reader == "list_transactions":
+        account = (filters.get("account") or "").casefold()
+        output.table(
+            ["DATE", "FLAG", "PAYEE", "NARRATION", "MATCHING POSTING AMOUNTS" if account else "POSTING AMOUNTS"],
+            [
+                [
+                    str(item.date),
+                    item.flag,
+                    item.payee or "",
+                    item.narration or "(no narration)",
+                    "; ".join(
+                        f"{p.account}: {p.units.number} {p.units.currency}"
+                        for p in item.postings
+                        if p.units and (not account or account in p.account.casefold())
+                    ),
+                ]
+                for item in items
+            ],
+        )
     else:
         output.table(spec.headers, [spec.row(item) for item in items])
     if truncated:
@@ -249,15 +271,21 @@ def transactions(
     from_date: FromDateOpt = None,
     to_date: ToDateOpt = None,
     account: AccountFilterOpt = None,
+    flag: Annotated[str | None, typer.Option("--flag", help="Transaction flag, e.g. '!' for entries to review")] = None,
     allow_errors: AllowErrorsOpt = False,
     details: Annotated[
-        bool, typer.Option("--details", help="Show every posting, amount, metadata, and source location")
+        bool,
+        typer.Option("--details", help="Render Beancount syntax with every posting, metadata, and source location"),
     ] = False,
     sort: Annotated[
         TransactionSort, typer.Option("--sort", help="Transaction date order, applied before the limit")
-    ] = TransactionSort.oldest,
+    ] = TransactionSort.newest,
 ) -> None:
-    """List transactions; use --details --sort newest to review recent entries."""
+    """List recent transactions and their amounts; --details adds metadata and source."""
+    if flag is not None and len(flag) != 1:
+        from cli.errors import UsageError
+
+        raise UsageError("--flag must be one character, such as '!' or '*'.")
     _run(
         SPECS["transaction"],
         limit,
@@ -266,5 +294,6 @@ def transactions(
         from_date=parse_opt_date(from_date),
         to_date=parse_opt_date(to_date),
         account=account,
+        flag=flag,
         newest=sort == TransactionSort.newest,
     )

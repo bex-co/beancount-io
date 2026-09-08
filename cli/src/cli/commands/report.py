@@ -37,7 +37,9 @@ ConversionOpt = Annotated[
     str | None,
     typer.Option("--conversion", "-x", help="Currency; defaults to the single operating currency, otherwise units"),
 ]
-TimeOpt = Annotated[str | None, typer.Option("--time", "-t", help='Time filter, e.g. "2026-08" or "2026-01 - 2026-06"')]
+TimeOpt = Annotated[
+    str | None, typer.Option("--time", "-t", help='Time filter: year, month, 2026, 2026-08, or "2026-01 - 2026-06"')
+]
 AccountOpt = Annotated[str | None, typer.Option("--account", "-a", help="Account filter (substring)")]
 IntervalOpt = Annotated[ReportInterval, typer.Option("--interval", "-i", help="Reporting interval")]
 AllowErrorsOpt = Annotated[
@@ -45,16 +47,13 @@ AllowErrorsOpt = Annotated[
 ]
 
 
-def _amounts(balance: Mapping[str, Decimal | None]) -> str:
-    return (
-        "  ".join(
-            f"{number:,.{max(2, -int(number.as_tuple().exponent))}f} {currency}"
-            if number is not None
-            else f"Unavailable {currency}"
-            for currency, number in sorted(balance.items())
-        )
-        or "0"
-    )
+def _amounts(balance: Mapping[str, Decimal | None], conversion: str | None = None) -> str:
+    return "  ".join(
+        f"{number:,.{max(2, -int(number.as_tuple().exponent))}f} {currency}"
+        if number is not None
+        else f"Unavailable {currency}"
+        for currency, number in sorted(balance.items())
+    ) or (f"0.00 {conversion}" if conversion and conversion not in {"units", "at_cost", "at_value"} else "—")
 
 
 def _tree_json(node: SerialisedTreeNode) -> dict[str, Any]:
@@ -67,11 +66,11 @@ def _tree_json(node: SerialisedTreeNode) -> dict[str, Any]:
     }
 
 
-def _print_tree(node: SerialisedTreeNode, depth: int = 0) -> None:
+def _print_tree(node: SerialisedTreeNode, depth: int = 0, *, conversion: str | None = None) -> None:
     label = node.account.rsplit(":", 1)[-1] if depth else node.account
-    typer.echo(f"  {'  ' * depth + label:<46}  {_amounts(node.balance_children)}")
+    typer.echo(f"  {'  ' * depth + label:<46}  {_amounts(node.balance_children, conversion)}")
     for child in node.children:
-        _print_tree(child, depth + 1)
+        _print_tree(child, depth + 1, conversion=conversion)
 
 
 def _tree_balances(node: SerialisedTreeNode) -> Iterable[Mapping[str, Decimal]]:
@@ -114,7 +113,10 @@ def _load(
     try:
         filtered = ledger.get_filtered(account=account, time=time)
     except (ValueError, OverflowError, FilterError) as exc:
-        raise UsageError(f"Invalid time filter {time!r}. Use a year, YYYY-MM, or a date range. {exc}") from exc
+        raise UsageError(
+            f"Invalid time filter {time!r}. Use month, year, YYYY, YYYY-MM, "
+            f"or a date range such as '2026-01 - 2026-06'. {exc}"
+        ) from exc
     currencies = options["operating_currency"]
     return filtered, file, conversion or (currencies[0] if len(currencies) == 1 else "units")
 
@@ -150,36 +152,47 @@ def _metadata(filtered: FilteredLedger, conversion: str, interval: ReportInterva
     return data
 
 
-def _valuation(conversion: str, balances: Iterable[Mapping[str, Decimal]], allow_errors: bool) -> dict[str, Any]:
-    missing = (
-        sorted(
-            {
-                currency
-                for balance in balances
-                for currency, amount in balance.items()
-                if amount and currency != conversion
-            }
-        )
-        if conversion not in {"units", "at_cost", "at_value"}
-        else []
-    )
+def _missing_price_message(item: dict[str, Any]) -> str:
+    when = f"on or before {item['date']}" if item["date"] else "at any date"
+    return f"No {item['from']} → {item['to']} price {when}."
+
+
+def _valuation(
+    conversion: str, balances: Iterable[tuple[date | None, Mapping[str, Decimal]]], allow_errors: bool
+) -> dict[str, Any]:
+    missing_dates = {
+        (currency, when)
+        for when, balance in balances
+        for currency, amount in balance.items()
+        if amount and currency != conversion and conversion not in {"units", "at_cost", "at_value"}
+    }
+    missing = sorted({currency for currency, _ in missing_dates})
     pairs = [{"from": currency, "to": conversion} for currency in missing]
+    dated = [
+        {"from": currency, "to": conversion, "date": when}
+        for currency, when in sorted(missing_dates, key=lambda item: (item[1] or date.min, item[0]))
+    ]
     if pairs and not allow_errors:
         raise LedgerError(
             f"Missing prices for {', '.join(missing)} → {conversion}. "
-            "Add price directives or pass --allow-errors for partial balances.",
-            details=[f"Cannot value {currency} in {conversion} at the report date." for currency in missing],
+            "Each report row uses its own valuation date. Add prices covering the dates below "
+            "or pass --allow-errors for partial balances.",
+            details=[_missing_price_message(item) for item in dated],
+            result={"missing_prices": pairs, "missing_price_dates": dated},
         )
-    return {"valuation": "partial" if pairs else "complete", "missing_prices": pairs}
+    return {"valuation": "partial" if pairs else "complete", "missing_prices": pairs, "missing_price_dates": dated}
 
 
 def _heading(title: str, metadata: dict[str, Any]) -> None:
     period = metadata["period"]
-    typer.echo(f"{title} — {period['start'] or 'empty'} through {metadata['as_of'] or 'empty'}")
+    dates = f"{period['start']} through {metadata['as_of']}" if period["start"] else "no dated activity"
+    typer.echo(f"{title} — {dates}")
     typer.echo(f"Valuation: {metadata['conversion']}; account: {metadata['account_filter'] or 'all'}")
     typer.echo("Account balances use Beancount signs (credits negative); profit is positive for a gain.")
     if metadata["missing_prices"]:
         typer.echo("Partial valuation: some prices are missing; combined totals are unavailable.")
+        for item in metadata["missing_price_dates"]:
+            output.note(_missing_price_message(item))
 
 
 @report_app.command("overview")
@@ -196,9 +209,9 @@ def overview(
     filtered, file, conversion = _load(account, time, conversion, allow_errors)
     data = FinancialStatementsModule().overview(filtered, _interval(interval), conversion)
     trees = (data.assets_hierarchy, data.liabilities_hierarchy, data.income_hierarchy, data.expenses_hierarchy)
-    balances = [balance for tree in trees for balance in _tree_balances(tree)]
+    balances = [(filtered.end_date, balance) for tree in trees for balance in _tree_balances(tree)]
     for series in (data.assets_data, data.liabilities_data, data.income_interval_data, data.expenses_interval_data):
-        balances.extend(point.balance for point in series)
+        balances.extend((point.date, point.balance) for point in series)
     valuation = _valuation(conversion, balances, allow_errors)
     metadata = _metadata(filtered, conversion, interval) | valuation
     assets, liabilities, income, expenses = (tree.balance_children for tree in trees)
@@ -227,12 +240,18 @@ def overview(
         return
     _heading("Financial Overview", metadata)
     for title, balance in totals.items():
-        typer.echo(f"  {title.replace('_', ' ').title() + ':':<16} {_amounts(balance)}")
+        typer.echo(f"  {title.replace('_', ' ').title() + ':':<16} {_amounts(balance, conversion)}")
     typer.echo(f"\n{interval.value.title()} breakdown")
     output.table(
         ["DATE", "ASSETS", "LIABILITIES", "INCOME (CREDIT)", "EXPENSES"],
         [
-            [str(a.date), _amounts(a.balance), _amounts(liability.balance), _amounts(i.balance), _amounts(e.balance)]
+            [
+                str(a.date),
+                _amounts(a.balance, conversion),
+                _amounts(liability.balance, conversion),
+                _amounts(i.balance, conversion),
+                _amounts(e.balance, conversion),
+            ]
             for a, liability, i, e in zip(
                 data.assets_data,
                 data.liabilities_data,
@@ -258,9 +277,9 @@ def income_statement(
     filtered, file, conversion = _load(account, time, conversion, allow_errors)
     data = FinancialStatementsModule().income_statement(filtered, _interval(interval), conversion)
     trees = (data.income_hierarchy, data.expenses_hierarchy)
-    balances = [balance for tree in trees for balance in _tree_balances(tree)]
+    balances = [(filtered.end_date, balance) for tree in trees for balance in _tree_balances(tree)]
     for series in (data.income_data, data.expenses_data):
-        balances.extend(point.balance for point in series)
+        balances.extend((point.date, point.balance) for point in series)
     valuation = _valuation(conversion, balances, allow_errors)
     metadata = _metadata(filtered, conversion, interval) | valuation
     net = _summary(
@@ -269,12 +288,16 @@ def income_statement(
     periods: list[dict[str, Any]] = [
         {
             "date": profit.date,
-            "income": -income.balance,
+            "income": income.balance,
             "expenses": expenses.balance,
             "net_profit": _summary(
                 -profit.balance,
                 conversion,
-                incomplete=bool(_valuation(conversion, [income.balance, expenses.balance], True)["missing_prices"]),
+                incomplete=bool(
+                    _valuation(conversion, [(income.date, income.balance), (expenses.date, expenses.balance)], True)[
+                        "missing_prices"
+                    ]
+                ),
             ),
         }
         for income, expenses, profit in zip(data.income_data, data.expenses_data, data.net_profit_data, strict=True)
@@ -282,6 +305,7 @@ def income_statement(
     if context.current().json_output:
         output.emit(
             metadata
+            | {"net_profit_signs": "positive_for_gain"}
             | {"income": _tree_json(trees[0]), "expenses": _tree_json(trees[1]), "net_profit": net, "periods": periods},
             target=output.file_target(file),
         )
@@ -289,17 +313,17 @@ def income_statement(
     _heading("Income Statement", metadata)
     for tree in trees:
         typer.echo("")
-        _print_tree(tree)
-    typer.echo(f"\nNet Profit: {_amounts(net)}")
+        _print_tree(tree, conversion=conversion)
+    typer.echo(f"\nNet Profit: {_amounts(net, conversion)}")
     typer.echo(f"\n{interval.value.title()} breakdown")
     output.table(
         ["PERIOD END", "INCOME", "EXPENSES", "NET PROFIT"],
         [
             [
                 str(period["date"]),
-                _amounts(period["income"]),
-                _amounts(period["expenses"]),
-                _amounts(period["net_profit"]),
+                _amounts(period["income"], conversion),
+                _amounts(period["expenses"], conversion),
+                _amounts(period["net_profit"], conversion),
             ]
             for period in periods
         ],
@@ -320,9 +344,9 @@ def balance_sheet(
     filtered, file, conversion = _load(account, time, conversion, allow_errors)
     data = FinancialStatementsModule().balance_sheet(filtered, _interval(interval), conversion)
     trees = (data.assets_hierarchy, data.liabilities_hierarchy, data.equity_hierarchy)
-    balances = [balance for tree in trees for balance in _tree_balances(tree)]
-    balances.append(data.current_earnings)
-    balances.extend(point.balance for point in data.net_worth_data)
+    balances = [(filtered.end_date, balance) for tree in trees for balance in _tree_balances(tree)]
+    balances.append((filtered.end_date, data.current_earnings))
+    balances.extend((point.date, point.balance) for point in data.net_worth_data)
     valuation = _valuation(conversion, balances, allow_errors)
     metadata = _metadata(filtered, conversion, interval) | valuation
     incomplete = bool(valuation["missing_prices"])
@@ -348,14 +372,18 @@ def balance_sheet(
     _heading("Balance Sheet", metadata)
     for tree in trees:
         typer.echo("")
-        _print_tree(tree)
-    typer.echo(f"  {'Current-period earnings (credit):':<46}  {_amounts(data.current_earnings)}")
+        _print_tree(tree, conversion=conversion)
+    typer.echo(f"  {'Current-period earnings (credit):':<46}  {_amounts(data.current_earnings, conversion)}")
     if reconciled:
-        typer.echo(f"  {'Valuation/translation adjustment (credit):':<46}  {_amounts(data.valuation_adjustment)}")
-        typer.echo(f"  {'Total equity (credit):':<46}  {_amounts(data.equity_total)}")
-    typer.echo(f"\nNet Worth: {_amounts(worth)}")
+        typer.echo(
+            f"  {'Valuation/translation adjustment (credit):':<46}  {_amounts(data.valuation_adjustment, conversion)}"
+        )
+        typer.echo(f"  {'Total equity (credit):':<46}  {_amounts(data.equity_total, conversion)}")
+    typer.echo(f"\nNet Worth: {_amounts(worth, conversion)}")
     typer.echo(f"\n{interval.value.title()} net worth")
-    output.table(["DATE", "NET WORTH"], [[str(point.date), _amounts(point.balance)] for point in data.net_worth_data])
+    output.table(
+        ["DATE", "NET WORTH"], [[str(point.date), _amounts(point.balance, conversion)] for point in data.net_worth_data]
+    )
 
 
 @report_app.command("trial-balance")
@@ -374,7 +402,9 @@ def trial_balance(
         name: getattr(data, f"{name}_hierarchy") for name in ("assets", "liabilities", "equity", "income", "expenses")
     }
     metadata = _metadata(filtered, conversion) | _valuation(
-        conversion, (balance for tree in sections.values() for balance in _tree_balances(tree)), allow_errors
+        conversion,
+        ((filtered.end_date, balance) for tree in sections.values() for balance in _tree_balances(tree)),
+        allow_errors,
     )
     if context.current().json_output:
         output.emit(
@@ -384,4 +414,4 @@ def trial_balance(
     _heading("Trial Balance", metadata)
     for tree in sections.values():
         typer.echo("")
-        _print_tree(tree)
+        _print_tree(tree, conversion=conversion)

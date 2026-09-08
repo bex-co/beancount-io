@@ -7,6 +7,7 @@ first `bea check` must not load an LLM client it will never use.
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Annotated
 
 import typer
@@ -14,7 +15,12 @@ import typer
 from cli import context
 from cli.errors import UsageError
 
-_MISSING_EXTRA = "bea ask needs the ask extra: uv tool install 'beancount-io[ask]'"
+_MISSING_EXTRA = (
+    "bea ask needs the optional AI dependencies and a Beancount.io login. "
+    "For uv: uv tool install 'beancount-io[ask]'. For Homebrew, keep brew for the base CLI "
+    "and run: uvx --from 'beancount-io[ask]' bea ask --help. "
+    "Then run bea cloud login. Model calls use the hosted Beancount.io AI service."
+)
 
 
 def ask(
@@ -22,8 +28,16 @@ def ask(
     print_mode: Annotated[
         bool, typer.Option("--print", "-p", help="Print mode: answer once and exit (non-interactive)")
     ] = False,
+    into: Annotated[
+        Path | None, typer.Option("--into", help="Write to an included file, relative to the root ledger")
+    ] = None,
 ) -> None:
-    """Ask questions about your ledger in natural language (requires beancount-io[ask])."""
+    """Ask about a local ledger using the hosted Beancount.io AI service.
+
+    Requires both beancount-io[ask] and credentials from bea cloud login.
+    With Homebrew, use uvx --from 'beancount-io[ask]' bea ask QUESTION --print.
+    Interactive edits are confirmed, validated, and written atomically.
+    """
     ctx = context.current()
     model = "gpt-4o"
     file = ctx.entry_file()
@@ -51,7 +65,7 @@ def ask(
         api_key=creds.token,
         skills=skills,
     )
-    deps = BqlDeps(file=file, skills={s.name: s for s in skills})
+    deps = BqlDeps(file=file, skills={s.name: s for s in skills}, into=into)
 
     if print_mode or ctx.no_input:
         if not question:

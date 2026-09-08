@@ -29,6 +29,12 @@ def credentials_path() -> Path:
     return config_dir() / "credentials.json"
 
 
+def cache_dir() -> Path:
+    """Local caches and locks, separate from ledger files and user settings."""
+    base = Path(os.environ.get("XDG_CACHE_HOME") or Path.home() / ".cache").expanduser()
+    return base / "bea"
+
+
 def history_path() -> Path:
     return config_dir() / "ask_history"
 

@@ -20,6 +20,7 @@ import typer
 from cli import context
 from cli.config import package_version
 from cli.errors import LedgerError, to_bea_error
+from cli.utils import single_line
 
 
 def _json_mode() -> bool:
@@ -42,6 +43,11 @@ def error(exc: BaseException | str) -> NoReturn:
     """Fail with a documented category and exit code, rendered for the active mode."""
     err = to_bea_error(exc)
     exit_code = err.exit_code
+    trace = None
+    if context.current().debug and isinstance(exc, BaseException):
+        import traceback
+
+        trace = "".join(traceback.format_exception(exc))
 
     if _json_mode():
         payload: dict[str, Any] = {
@@ -55,11 +61,15 @@ def error(exc: BaseException | str) -> NoReturn:
             payload["details"] = err.details
         if err.result is not None:
             payload["result"] = jsonable(err.result)
+        if trace:
+            payload["traceback"] = trace
         print(json.dumps({"error": payload}), file=sys.stderr)
     else:
         print(f"Error: {err}", file=sys.stderr)
         for detail in err.details:
             print(f"  {detail}", file=sys.stderr)
+        if trace:
+            print(trace, file=sys.stderr, end="")
 
     raise typer.Exit(exit_code)
 
@@ -68,6 +78,8 @@ def table(headers: list[str], rows: list[list[str]]) -> None:
     """Render a table for a person. Silent in JSON mode, where stdout is the envelope alone."""
     if _json_mode():
         return
+    headers = [single_line(header) for header in headers]
+    rows = [[single_line(cell) for cell in row] for row in rows]
     widths = [len(h) for h in headers]
     for row in rows:
         for i, cell in enumerate(row):
@@ -131,6 +143,8 @@ def jsonable(value: Any) -> Any:
         return value.isoformat()
     if isinstance(value, Path):
         return str(value)
+    if isinstance(value, type) and value.__module__ == "beancount.core.number" and value.__name__ == "MISSING":
+        return None
     # Named shapes before structural ones: beancount's Amount and Position are
     # tuples, and rendering them as bare arrays would drop the field names a
     # consumer needs.

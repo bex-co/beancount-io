@@ -21,6 +21,8 @@ from cli.commands.list import list_app
 from cli.commands.query import query
 from cli.commands.report import report_app
 from cli.commands.upgrade import current_channel, upgrade
+from cli.completion import install as install_completion_callback
+from cli.completion import show as show_completion_callback
 
 
 class _GuardedGroup(TyperGroup):
@@ -33,6 +35,13 @@ class _GuardedGroup(TyperGroup):
     Click nests subcommand dispatch inside the root group's `invoke`, so this
     covers the mounted sub-apps too.
     """
+
+    def __init__(self, *args: Any, **kwargs: Any) -> None:
+        from typer.completion import get_completion_inspect_parameters
+
+        # Custom completion flags still need Typer's shell protocol handlers.
+        get_completion_inspect_parameters()
+        super().__init__(*args, **kwargs)
 
     # `ctx` is typer's vendored click Context; typed loosely to avoid importing
     # a private module just to restate the supertype's annotation.
@@ -50,7 +59,9 @@ class _GuardedGroup(TyperGroup):
             json_output=bool(opts.get("json_output")),
             no_input=bool(opts.get("no_input")),
             yes=bool(opts.get("yes")),
+            debug=bool(opts.get("debug")),
         )
+        ctx.meta["completion_shell"] = opts.get("shell")
         try:
             return super().parse_args(ctx, list(args))
         except (typer.Exit, typer.Abort):
@@ -103,6 +114,7 @@ app = typer.Typer(
     help="Beancount.io CLI — check, query, and edit beancount ledgers",
     no_args_is_help=True,
     rich_markup_mode=None,
+    add_completion=False,
     context_settings={"help_option_names": ["-h", "--help"]},
 )
 
@@ -129,13 +141,36 @@ def main(
     json_output: Annotated[bool, typer.Option("--json", help="Emit JSON on stdout and JSON errors on stderr")] = False,
     no_input: Annotated[bool, typer.Option("--no-input", help="Never prompt; fail instead of waiting")] = False,
     yes: Annotated[bool, typer.Option("--yes", "-y", help="Answer confirmations with yes")] = False,
+    debug: Annotated[bool, typer.Option("--debug", help="Include exception tracebacks in errors")] = False,
+    shell: Annotated[
+        str | None, typer.Option("--shell", help="Completion shell: bash, zsh, fish, powershell or pwsh")
+    ] = None,
+    show_completion: Annotated[
+        bool,
+        typer.Option(
+            "--show-completion",
+            callback=show_completion_callback,
+            is_eager=True,
+            help="Print completion script; detects the shell unless --shell is supplied",
+        ),
+    ] = False,
+    install_completion: Annotated[
+        bool,
+        typer.Option(
+            "--install-completion",
+            callback=install_completion_callback,
+            is_eager=True,
+            help="Install shell completion; optionally select --shell",
+        ),
+    ] = False,
     version: Annotated[
         bool,
         typer.Option("--version", callback=_version_callback, is_eager=True, help="Show the version and exit"),
     ] = False,
 ) -> None:
     """Global options, resolved once for whichever command runs."""
-    ctx = context.configure(file=file, json_output=json_output, no_input=no_input, yes=yes)
+    del shell, show_completion, install_completion  # Handled by the completion callbacks.
+    ctx = context.configure(file=file, json_output=json_output, no_input=no_input, yes=yes, debug=debug)
     # Started here, where the machine-mode options are already resolved, so the
     # check overlaps the command instead of delaying it.
     update.start(json_output=ctx.json_output, no_input=ctx.no_input, channel=current_channel().name)

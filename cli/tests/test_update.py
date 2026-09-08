@@ -8,6 +8,7 @@ asked, not only on what got printed.
 from __future__ import annotations
 
 import json
+import threading
 from collections.abc import Iterator
 from pathlib import Path
 from typing import Any
@@ -173,6 +174,40 @@ class TestDailyCache:
 
 
 class TestTheNotice:
+    def test_failed_command_keeps_background_cache_in_its_original_directory(
+        self,
+        bea_config_dir: Path,
+        in_a_terminal: None,
+        monkeypatch: pytest.MonkeyPatch,
+        tmp_path: Path,
+    ) -> None:
+        fetching, finish = threading.Event(), threading.Event()
+
+        def fetch(channel: str) -> str:
+            fetching.set()
+            assert finish.wait(5)
+            return "9.9.9"
+
+        monkeypatch.delenv(update.DISABLE_ENV, raising=False)
+        monkeypatch.setattr(update, "package_version", lambda: "0.1.0")
+        monkeypatch.setattr(update, "_fetch_latest", fetch)
+        result = runner.invoke(app, ["--file", str(FIXTURES / "invalid.bean"), "check"])
+        pending = update._pending
+        assert pending is not None
+        try:
+            assert result.exit_code == 1
+            assert fetching.wait(5)
+            # A failing command does not wait for the notice. Simulate test
+            # teardown restoring the user's environment before it finishes.
+            restored = tmp_path / "restored-config"
+            monkeypatch.setenv("BEA_CONFIG_DIR", str(restored))
+        finally:
+            finish.set()
+            pending[1].join(5)
+        assert not pending[1].is_alive()
+        assert not restored.exists()
+        assert json.loads((bea_config_dir / "update-check.json").read_text())["version"] == "9.9.9"
+
     def test_it_appears_after_the_command(
         self, fake_index: FakeIndex, in_a_terminal: None, monkeypatch: pytest.MonkeyPatch
     ) -> None:

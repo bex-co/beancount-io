@@ -127,7 +127,18 @@ def to_bea_error(exc: BaseException | str) -> BeaError:
     # Typer's vendored Click, without a dependency on either private module.
     click_usage_error = typer.BadParameter.__bases__[0]
     if isinstance(exc, click_usage_error):
-        return UsageError(str(exc))
+        option = getattr(exc, "option_name", None)
+        examples = {
+            "-f": "bea -f main.bean check",
+            "--file": "bea --file main.bean check",
+            "--json": "bea --json list transaction",
+            "--debug": "bea --debug import statement.csv",
+            "--no-input": "bea --no-input check",
+            "--yes": "bea --yes COMMAND",
+            "-y": "bea -y COMMAND",
+        }
+        hint = f" Place {option} before the command, for example: {examples[option]}." if option in examples else ""
+        return UsageError(str(exc) + hint)
 
     import httpx
 

@@ -2,6 +2,8 @@
 
 import datetime
 import json
+import subprocess
+import sys
 from decimal import Decimal
 from pathlib import Path
 
@@ -70,6 +72,9 @@ def test_distinct_bank_ids_preserve_identical_real_purchases(book: Path) -> None
     source = book.parent / "bank.csv"
     source.write_text(HEADER + ROW + ROW.replace("bank-001", "bank-002"))
     result = run(book, source, "--apply")
+    assert result.exit_code == 4, result.output
+    assert json.loads(result.stderr)["error"]["result"]["possible_duplicates"] == 1
+    result = run(book, source, "--apply", "--duplicates", "include")
     assert result.exit_code == 0, result.output
     assert json.loads(result.stdout)["data"]["written"] == 2
 
@@ -90,6 +95,99 @@ def test_possible_duplicates_require_a_decision(book: Path) -> None:
     result = run(book, source, "--apply", "--duplicates", "include")
     assert result.exit_code == 0
     assert json.loads(result.stdout)["data"]["written"] == 1
+
+
+def test_unattended_human_import_refusal_has_a_nonzero_process_status(book: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text(HEADER + ROW)
+    assert run(book, source, "--apply").exit_code == 0
+    source.write_text(HEADER + ROW.replace("bank-001", "bank-002"))
+    before = book.read_bytes()
+    result = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "cli.main",
+            "--no-input",
+            "-f",
+            str(book),
+            "import",
+            str(source),
+            "--config",
+            str(CONFIG),
+            "--apply",
+        ],
+        text=True,
+        capture_output=True,
+        timeout=10,
+    )
+    assert result.returncode == 4, (result.stdout, result.stderr)
+    assert "Import needs review; nothing was written" in result.stderr
+    assert "Row 1 (possible_duplicate)" in result.stderr
+    assert result.stdout == ""
+    assert book.read_bytes() == before
+
+
+def test_rotated_bank_id_and_changed_narration_still_require_review(book: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text(HEADER + ROW)
+    assert run(book, source, "--apply").exit_code == 0
+    before = book.read_bytes()
+    source.write_text(HEADER + ROW.replace("bank-001", "replacement-id").replace("Coffee", "Posted purchase"))
+    preview = run(book, source)
+    row = json.loads(preview.stdout)["data"]["rows"][0]
+    assert row["status"] == "possible_duplicate"
+    assert row["date"] == "2026-08-02"
+    assert row["payee"] == "Cafe" and row["amount"] == "-5.25 USD"
+    assert "Coffee" in row["match"]["entry"]
+    assert run(book, source, "--apply").exit_code == 4
+    assert book.read_bytes() == before
+
+
+def test_import_into_an_included_file_validates_and_deduplicates_against_root(book: Path) -> None:
+    accounts = book.parent / "accounts.bean"
+    accounts.write_bytes(book.read_bytes())
+    target = book.parent / "2026.bean"
+    target.write_text("")
+    book.write_text('include "accounts.bean"\ninclude "2026.bean"\n')
+    before = book.read_bytes()
+    source = book.parent / "bank.csv"
+    source.write_text(HEADER + ROW)
+    result = run(book, source, "--apply", "--into", "2026.bean")
+    assert result.exit_code == 0, result.output
+    assert book.read_bytes() == before
+    assert "bank-001" in target.read_text()
+    saved = target.read_bytes()
+    repeated = run(book, source, "--apply", "--into", "2026.bean")
+    assert json.loads(repeated.stdout)["data"]["written"] == 0
+    assert target.read_bytes() == saved
+    assert not loader.load_file(book)[1]
+
+
+def test_config_is_remembered_per_root_and_conventional_file_is_ledger_relative(
+    book: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text(HEADER + ROW)
+    explicit = run(book, source)
+    assert explicit.exit_code == 0, explicit.output
+    assert json.loads(explicit.stdout)["data"]["config_source"] == "--config"
+    monkeypatch.chdir(book.parent.parent)
+    result = runner.invoke(app, ["--json", "-f", str(book), "import", str(source)])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["config"] == str(CONFIG)
+    assert json.loads(result.stdout)["data"]["config_source"] == "remembered"
+
+    second = book.parent / "second.bean"
+    second.write_bytes(book.read_bytes())
+    result = runner.invoke(app, ["--json", "-f", str(second), "import", str(source)])
+    assert result.exit_code == 2 and "--config" in result.stderr
+    conventional = second.parent / "importers.py"
+    conventional.write_bytes(CONFIG.read_bytes())
+    result = runner.invoke(app, ["--json", "-f", str(second), "import", str(source)])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["config"] == str(conventional)
+    assert json.loads(result.stdout)["data"]["config_source"] == "default beside root ledger"
 
 
 def test_uncategorized_or_unbalanced_import_never_changes_the_ledger(book: Path) -> None:

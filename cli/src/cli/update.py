@@ -95,19 +95,19 @@ def muted(*, json_output: bool, no_input: bool) -> bool:
     return json_output or no_input or env_flag(DISABLE_ENV) or env_flag("CI") or not _stderr_is_a_terminal()
 
 
-def read_cache(channel: str = "pypi") -> tuple[float, str] | None:
+def read_cache(channel: str = "pypi", *, cache_file: Path | None = None) -> tuple[float, str] | None:
     """The last check: when it happened, and what it found (`""` for nothing)."""
     try:
-        entry = json.loads(cache_path(channel).read_text())
+        entry = json.loads((cache_file or cache_path(channel)).read_text())
         return float(entry["checked_at"]), str(entry["version"])
     except (OSError, ValueError, KeyError, TypeError):
         return None
 
 
-def write_cache(checked_at: float, version: str, channel: str = "pypi") -> None:
+def write_cache(checked_at: float, version: str, channel: str = "pypi", *, cache_file: Path | None = None) -> None:
     """Remember the outcome. Best effort: a read-only home must not break a command."""
     try:
-        path = cache_path(channel)
+        path = cache_file or cache_path(channel)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"checked_at": checked_at, "version": version}))
     except OSError:
@@ -139,7 +139,9 @@ def _fetch_latest(channel: str) -> str:
     return str(payload["info"]["version"])
 
 
-def latest_version(*, use_cache: bool = True, now: float | None = None, channel: str = "pypi") -> str | None:
+def latest_version(
+    *, use_cache: bool = True, now: float | None = None, channel: str = "pypi", cache_file: Path | None = None
+) -> str | None:
     """The newest published release, or `None` when there is nothing to report.
 
     Every outcome — a version, an empty answer, a failed fetch — is cached for a
@@ -147,9 +149,10 @@ def latest_version(*, use_cache: bool = True, now: float | None = None, channel:
     command. `use_cache=False` is for the paths where the user explicitly asked
     (`bea upgrade --check`) and deserves a fresh answer.
     """
+    cache_file = cache_file or cache_path(channel).absolute()
     checked_at = time.time() if now is None else now
     if use_cache:
-        cached = read_cache(channel)
+        cached = read_cache(channel, cache_file=cache_file)
         if cached is not None and 0 <= checked_at - cached[0] < CACHE_MAX_AGE_SECONDS:
             return cached[1] or None
 
@@ -159,7 +162,7 @@ def latest_version(*, use_cache: bool = True, now: float | None = None, channel:
         # A courtesy check has no failure mode worth showing anyone: a bad
         # network, a rate limit, a changed payload all mean "say nothing".
         version = ""
-    write_cache(checked_at, version, channel)
+    write_cache(checked_at, version, channel, cache_file=cache_file)
     return version or None
 
 
@@ -177,11 +180,14 @@ def start(*, json_output: bool, no_input: bool, channel: str = "pypi") -> None:
         return
 
     found: list[str | None] = [None]
+    # Resolve before starting the worker: a command can finish (or fail)
+    # before the fetch does, and an embedding process may restore its env.
+    cache_file = cache_path(channel).absolute()
 
     def check() -> None:
-        found[0] = latest_version(channel=channel)
+        found[0] = latest_version(channel=channel, cache_file=cache_file)
 
-    thread = threading.Thread(target=check, daemon=True)
+    thread = threading.Thread(target=check, name="bea-update-check", daemon=True)
     thread.start()
     _pending = (version, thread, found)
 

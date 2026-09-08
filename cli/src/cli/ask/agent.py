@@ -9,7 +9,9 @@ from pydantic_ai import Agent, ModelRetry, RunContext
 from pydantic_ai.models.openai import OpenAIChatModel
 from pydantic_ai.providers.openai import OpenAIProvider
 
+from cli import ledger_write, output
 from cli.ask.skills import AgentSkill, build_skills_index_prompt
+from cli.errors import BeaError
 
 _SYSTEM_PROMPT = """You are a helpful Beancount accounting assistant.
 Use the run_bql_query tool to retrieve data from the user's ledger, then answer their question.
@@ -65,6 +67,7 @@ class BqlDeps:
     file: Path
     write_permission: WritePermission = field(default_factory=WritePermission)
     skills: dict[str, AgentSkill] = field(default_factory=dict)
+    into: Path | None = None
 
 
 def make_agent(
@@ -86,10 +89,13 @@ def make_agent(
     def run_bql_query(ctx: RunContext[BqlDeps], query: str) -> str:
         """Run a BQL (Beancount Query Language) query against the user's Beancount ledger."""
         from beanquery import connect
-        from beanquery.render.text import render as render_text
+
+        from cli.query_render import render_query
 
         source = "beancount:" + str(ctx.deps.file.resolve())
         conn = connect(source)
+        if conn.errors:
+            raise ModelRetry("Ledger is invalid: " + "; ".join(output.format_ledger_error(e) for e in conn.errors))
         try:
             cursor = conn.execute(query)
         except Exception as e:
@@ -100,15 +106,36 @@ def make_agent(
         if not rows:
             return "(empty result set)"
         buf = io.StringIO()
-        render_text(cursor.description, rows, buf, dcontext=conn.options.get("dcontext"))
+        render_query(cursor.description, rows, buf)
         return buf.getvalue()
 
     @agent.tool()
     def write_directive(ctx: RunContext[BqlDeps], directive: str) -> str:
         """Append a beancount directive to the ledger file. Use valid beancount syntax."""
+        from beancount.parser import lexer, parser
+
         perm = ctx.deps.write_permission
         if perm.deny_all:
             return "Write denied (you denied all writes this session)."
+        # This tool adds dated directives, not executable plugins or includes.
+        if any(
+            kind in {"INCLUDE", "PLUGIN", "OPTION", "PUSHTAG", "POPTAG", "PUSHMETA", "POPMETA"}
+            for kind, *_ in lexer.lex_iter_string(directive)  # type: ignore[no-untyped-call]
+        ):
+            return (
+                "Write rejected: provide dated ledger directives only; "
+                "configure options, plugins and includes separately."
+            )
+        entries, errors, _ = parser.parse_string(directive)
+        if errors or not entries:
+            return "Write rejected: " + (
+                "; ".join(output.format_ledger_error(e) for e in errors) or "No dated directives were supplied."
+            )
+        try:
+            snapshot = ledger_write.LedgerSnapshot.capture(ctx.deps.file)
+            ledger_write.validate_append(ctx.deps.file, [directive], into=ctx.deps.into, snapshot=snapshot)
+        except BeaError as exc:
+            return "Write rejected; nothing was written: " + str(exc) + " " + "; ".join(exc.details)
         if not perm.approve_all:
             if perm.confirm_fn is None:
                 return "Write skipped (non-interactive mode does not support writes)."
@@ -120,9 +147,11 @@ def make_agent(
                 return "Write denied."
             elif answer == "n":
                 return "Write cancelled by user."
-        with ctx.deps.file.open("a", encoding="utf-8") as f:
-            f.write("\n" + directive.rstrip() + "\n")
-        return f"Directive written to {ctx.deps.file}."
+        try:
+            ledger_write.append(ctx.deps.file, [directive], into=ctx.deps.into, snapshot=snapshot)
+        except BeaError as exc:
+            return "Write rejected; nothing was written: " + str(exc) + " " + "; ".join(exc.details)
+        return f"Added {len(entries)} directive(s) to {ledger_write.destination(ctx.deps.file, ctx.deps.into)}."
 
     @agent.tool()
     def get_skill_body(ctx: RunContext[BqlDeps], name: str) -> str:

@@ -6,6 +6,8 @@ import copy
 import difflib
 import hashlib
 import io
+import json
+import os
 import runpy
 import sys
 from contextlib import redirect_stderr, redirect_stdout
@@ -17,7 +19,8 @@ from typing import Annotated, Any
 import typer
 
 from cli import context, ledger_write, output
-from cli.errors import ConflictError, LedgerError, UsageError
+from cli.config import config_dir
+from cli.errors import BeaError, ConflictError, LedgerError, UsageError
 
 
 class Duplicates(StrEnum):
@@ -26,22 +29,57 @@ class Duplicates(StrEnum):
     include = "include"
 
 
+def _config_record(file: Path) -> Path:
+    key = hashlib.sha256(str(file.resolve()).encode()).hexdigest()
+    return config_dir() / "importers" / f"{key}.json"
+
+
+def _config_path(file: Path, supplied: Path | None) -> tuple[Path, str]:
+    if supplied is not None:
+        return supplied.expanduser().resolve(), "--config"
+    record = _config_record(file)
+    if record.is_file():
+        try:
+            return Path(json.loads(record.read_text())["config"]), "remembered"
+        except (ValueError, KeyError, TypeError) as exc:
+            raise UsageError("Cannot read the saved importer path; select one with --config FILE.") from exc
+    conventional = file.parent / "importers.py"
+    if conventional.is_file():
+        return conventional, "default beside root ledger"
+    raise UsageError(
+        "Choose a Python importer with --config FILE, or place importers.py beside the root ledger. "
+        "The selected path is remembered for this ledger."
+    )
+
+
+def _remember_config(file: Path, config: Path) -> None:
+    record = _config_record(file)
+    try:
+        record.parent.mkdir(parents=True, exist_ok=True)
+        with ledger_write.candidate_file(record, json.dumps({"config": str(config)})) as candidate:
+            os.replace(candidate, record)
+    except OSError as exc:
+        output.note(f"Could not remember the importer path: {exc}. Pass --config on the next import.")
+
+
 def _importer(config: Path, source: Path, name: str | None) -> Any:
     if not config.is_file():
         raise UsageError(f"Importer configuration not found: {config}")
-    # A config is ordinary local Python, including its sibling modules. Nothing
-    # is discovered or executed until the user names it with --config.
+    # A config is ordinary local Python, including its sibling modules. Only
+    # an explicit import command executes the selected or remembered config.
     namespace = runpy.run_path(str(config))
     configured = namespace.get("CONFIG")
     if not isinstance(configured, list | tuple):
         raise UsageError("Importer configuration must export CONFIG = [importer, ...]. See docs/IMPORTING.md.")
-    matches = [
-        importer
-        for importer in configured
-        if (name is None or _name(importer) == name) and importer.identify(str(source))
-    ]
+    if name is not None:
+        available = [_name(importer) for importer in configured]
+        if name not in available:
+            raise UsageError(f"No importer named {name!r}; available: {', '.join(available) or '(none)'}.")
+        configured = [importer for importer in configured if _name(importer) == name]
+    matches = [importer for importer in configured if importer.identify(str(source))]
     if not matches:
-        raise UsageError(f"No configured importer recognizes {source.name}. Check --config and the export format.")
+        selected = f"Importer {name!r} does not recognize" if name else "No configured importer recognizes"
+        raise UsageError(f"{selected} {source.name}. Check --config and the export format.")
     if len(matches) > 1:
         raise UsageError("Multiple importers match; choose one with --importer.", details=[_name(i) for i in matches])
     return matches[0]
@@ -82,9 +120,21 @@ def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, st
     return identities
 
 
+def _candidate_key(entry: Any, account: str) -> tuple[Any, ...]:
+    date, payee, _narration, amounts = _fingerprint(entry, account)
+    return date, payee, amounts
+
+
+def _source_amounts(entry: Any, account: str) -> str:
+    return ", ".join(f"{p.units.number} {p.units.currency}" for p in entry.postings if p.account == account and p.units)
+
+
 def import_entries(
     source: Annotated[Path, typer.Argument(help="Bank/card export handled by a configured importer")],
-    config: Annotated[Path, typer.Option("--config", help="Local Python file exporting CONFIG = [importer, ...]")],
+    config: Annotated[
+        Path | None,
+        typer.Option("--config", help="Python CONFIG file; defaults to the saved path or root-ledger/importers.py"),
+    ] = None,
     importer_name: Annotated[str | None, typer.Option("--importer", help="Importer name when multiple match")] = None,
     apply: Annotated[bool, typer.Option("--apply", help="Validate and write the previewed entries")] = False,
     duplicates: Annotated[
@@ -93,6 +143,9 @@ def import_entries(
     id_key: Annotated[
         list[str] | None,
         typer.Option("--id-key", help="Stable bank ID metadata key; repeat as needed (default: common bank ID keys)"),
+    ] = None,
+    into: Annotated[
+        Path | None, typer.Option("--into", help="Write to an included file, relative to the root ledger")
     ] = None,
 ) -> None:
     """Preview categorized entries and a ledger diff; write only with --apply.
@@ -104,17 +157,21 @@ def import_entries(
     from beancount import loader
     from beancount.core.data import Transaction
 
-    from cli.directives.writer import format_entry
+    from cli.directives.writer import format_entry, normalize_entry_strings
 
     file = context.current().entry_file()
-    source, config = source.expanduser().resolve(), config.expanduser().resolve()
+    source = source.expanduser().resolve()
+    config, config_source = _config_path(file, config)
+    output.note(f"Using importers from {config} ({config_source})")
     if not source.is_file():
         raise UsageError(f"Export file not found: {source}")
     source_bytes = source.read_bytes()
-    original = file.read_bytes()
-    existing, errors, options = loader.load_file(file)
+    snapshot = ledger_write.LedgerSnapshot.capture(file)
+    target = ledger_write.destination(file, into)
+    snapshot.require_target(target)
+    original = target.read_bytes()
+    existing, errors, _ = loader.load_file(file)
     output.render_ledger_errors(errors, allow=False)
-    dependencies = {Path(path): Path(path).read_bytes() for path in options["include"] if Path(path) != file}
     logs = io.StringIO()
     # Importer chatter is retained in the preview instead of corrupting JSON.
     sys.path.insert(0, str(config.parent))
@@ -123,10 +180,16 @@ def import_entries(
             importer = _importer(config, source, importer_name)
             account = str(importer.account(str(source)))
             entries = copy.deepcopy(list(importer.extract(str(source), existing)))
+    except BeaError:
+        raise
     except ImportError as exc:
         raise UsageError(
             f"Importer dependency is unavailable: {exc}. Run bea in an environment containing your importer's "
-            "dependencies; see docs/IMPORTING.md."
+            "dependencies; see docs/IMPORTING.md. Pass --debug before the command for a traceback."
+        ) from exc
+    except Exception as exc:
+        raise LedgerError(
+            f"Importer failed ({type(exc).__name__}): {exc}. Pass --debug before the command for a traceback."
         ) from exc
     finally:
         sys.path.pop(0)
@@ -134,10 +197,11 @@ def import_entries(
     identities: dict[tuple[str, str, str], Any] = {}
     fingerprints: dict[tuple[Any, ...], Any] = {}
     for entry in existing:
+        entry = normalize_entry_strings(entry)
         if isinstance(entry, Transaction) and any(p.account == account for p in entry.postings):
             for identity in _identities(entry, account, keys):
                 identities[identity] = entry
-            fingerprints[_fingerprint(entry, account)] = entry
+            fingerprints[_candidate_key(entry, account)] = entry
     if source.read_bytes() != source_bytes:
         raise ConflictError("The export changed during extraction; nothing was written. Retry.")
     source_hash = hashlib.sha256(source_bytes).hexdigest()
@@ -146,7 +210,7 @@ def import_entries(
     texts: list[str] = []
     conflicts = False
     for index, entry in enumerate(entries):
-        entry = entry._replace(meta=dict(entry.meta or {}))
+        entry = normalize_entry_strings(entry)
         status, reason, match = "new", None, None
         if isinstance(entry, Transaction):
             if not any(p.account == account for p in entry.postings):
@@ -165,19 +229,16 @@ def import_entries(
                     )
                 else:
                     status, reason = "duplicate", "Stable bank ID or previously imported source row matches."
-            elif fingerprint in fingerprints and not (
-                any(key[1] == "bank" for key in ids)
-                and any(key[1] == "bank" for key in _identities(fingerprints[fingerprint], account, keys))
-            ):
+            elif _candidate_key(entry, account) in fingerprints:
                 status, reason, match = (
                     "possible_duplicate",
-                    "Date, payee, narration and source amount match.",
-                    fingerprints[fingerprint],
+                    "Date, payee and source amount match; different bank IDs or narration do not rule out a duplicate.",
+                    fingerprints[_candidate_key(entry, account)],
                 )
             if status == "new" or (status == "possible_duplicate" and duplicates == Duplicates.include):
                 for identity in ids:
                     identities[identity] = entry
-                fingerprints[fingerprint] = entry
+                fingerprints[_candidate_key(entry, account)] = entry
         text = format_entry(entry)
         if not isinstance(entry, Transaction):
             if text in other_entries:
@@ -194,7 +255,15 @@ def import_entries(
                 "include": include,
                 "entry": text,
                 "accounts": [p.account for p in entry.postings] if isinstance(entry, Transaction) else [],
-                "match": {"filename": match.meta.get("filename"), "lineno": match.meta.get("lineno")}
+                "date": entry.date.isoformat(),
+                "payee": entry.payee if isinstance(entry, Transaction) else None,
+                "narration": entry.narration if isinstance(entry, Transaction) else None,
+                "amount": _source_amounts(entry, account) if isinstance(entry, Transaction) else "",
+                "match": {
+                    "filename": match.meta.get("filename"),
+                    "lineno": match.meta.get("lineno"),
+                    "entry": format_entry(match),
+                }
                 if match
                 else None,
             }
@@ -202,11 +271,14 @@ def import_entries(
     proposed = ledger_write.appended_content(original, texts)
     validation_errors: list[str] = []
     try:
-        ledger_write.validate_append(file, texts)
+        ledger_write.validate_append(file, texts, into=into, snapshot=snapshot)
     except LedgerError as exc:
         validation_errors = exc.details or [str(exc)]
     preview = {
         "source": str(source),
+        "config": str(config),
+        "config_source": config_source,
+        "into": str(target),
         "importer": _name(importer),
         "account": account,
         "rows": rows,
@@ -220,25 +292,32 @@ def import_entries(
             difflib.unified_diff(
                 original.decode("utf-8").splitlines(True),
                 proposed.splitlines(True),
-                fromfile=str(file),
-                tofile=str(file),
+                fromfile=str(target),
+                tofile=str(target),
             )
         ),
     }
     if apply:
         if conflicts or (preview["possible_duplicates"] and duplicates == Duplicates.review):
+            review = [
+                f"Row {row['row']} ({row['status']}): {row['reason']}"
+                for row in rows
+                if row["status"] == "conflict"
+                or (row["status"] == "possible_duplicate" and duplicates == Duplicates.review)
+            ]
             raise ConflictError(
                 "Import needs review; nothing was written. Resolve ID conflicts or choose --duplicates skip/include.",
+                details=review,
                 result=preview,
             )
         if validation_errors:
             raise LedgerError(
                 "Import would leave the ledger invalid; nothing was written.", details=validation_errors, result=preview
             )
-        if any(path.read_bytes() != content for path, content in dependencies.items()):
-            raise ConflictError("An included ledger changed during import; nothing was written. Retry.")
-        ledger_write.append(file, texts, expected=original)
+        snapshot.verify()
+        ledger_write.append(file, texts, expected=original, into=into, snapshot=snapshot)
         preview["written"] = len(texts)
+    _remember_config(file, config)
     if context.current().json_output:
         output.emit(preview, target=output.file_target(file))
     else:
@@ -247,15 +326,31 @@ def import_entries(
             f"{preview['duplicates']} exact duplicates, {preview['possible_duplicates']} possible duplicates"
         )
         output.table(
-            ["ROW", "STATUS", "ACCOUNTS"],
-            [[str(row["row"]), row["status"], ", ".join(row["accounts"])] for row in rows],
+            ["ROW", "STATUS", "DATE", "PAYEE / NARRATION", "SOURCE AMOUNT"],
+            [
+                [
+                    str(row["row"]),
+                    row["status"],
+                    row["date"],
+                    " / ".join(v for v in (row["payee"], row["narration"]) if v),
+                    row["amount"],
+                ]
+                for row in rows
+            ],
         )
+        for row in rows:
+            if row["match"]:
+                match = row["match"]
+                typer.echo(
+                    f"\nRow {row['row']}: {row['reason']}\nExisting entry at {match['filename']}:{match['lineno']}:"
+                )
+                typer.echo(match["entry"])
         typer.echo(preview["diff"])
         for error in validation_errors:
             output.note(error)
         if logs.getvalue():
             output.note(logs.getvalue())
         if apply:
-            output.success(f"Wrote {len(texts)} entries to {file}.")
+            output.success(f"Wrote {len(texts)} entries to {target}.")
         else:
             typer.echo("Preview only. Review the entries, then repeat with --apply to write.")

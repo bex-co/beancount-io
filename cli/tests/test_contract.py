@@ -213,7 +213,7 @@ class TestBulkAdd:
 
         assert result.exit_code == 1
         assert ledger.read_bytes() == before
-        assert "row 1" in result.stderr
+        assert "Row 2, date" in result.stderr
 
     def test_partial_appends_the_valid_rows_and_still_fails(self, tmp_path: Path) -> None:
         ledger, rows = self._ledger_and_rows(tmp_path, self.ONE_GOOD_ONE_BAD)
@@ -259,7 +259,7 @@ class TestJsonOutput:
         assert parsed["target"] == {"file": str(VALID.resolve())}
 
     def test_amounts_are_decimal_strings_not_floats(self) -> None:
-        result = runner.invoke(app, ["--file", str(VALID), "--json", "list", "transaction"])
+        result = runner.invoke(app, ["--file", str(VALID), "--json", "list", "transaction", "--sort", "oldest"])
 
         units = envelope(result)["data"][0]["postings"][0]["units"]
         assert units == {"number": "1000.00", "currency": "USD"}

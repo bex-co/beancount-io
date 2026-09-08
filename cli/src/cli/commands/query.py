@@ -28,12 +28,12 @@ def query(
     output.render_ledger_errors(list(conn.errors), allow=allow_errors)
 
     if not query_string:
-        from beanquery.shell import BQLShell
+        from cli.query_render import query_shell
 
-        BQLShell(source, sys.stdout, interactive=True, runinit=True).cmdloop()
+        query_shell(source, sys.stdout).cmdloop()
         return
 
-    from beanquery.render.text import render as render_text
+    from cli.query_render import render_query
 
     # A query answers with totals, which read as authoritative whether or not
     # the ledger loaded — so it is gated exactly like `list` and `report`.
@@ -46,7 +46,9 @@ def query(
             target=output.file_target(file),
         )
     else:
-        render_text(cursor.description, rows, sys.stdout, dcontext=conn.options.get("dcontext"))
+        if not rows:
+            output.note("(no rows)")
+        render_query(cursor.description, rows, sys.stdout)
 
 
 def _columns(description: Any) -> list[dict[str, str]]:

@@ -5,7 +5,7 @@ The Beancount.io CLI installs one command: `bea`.
 ```text
 # Local — works on .bean files
 bea init [DIRECTORY] --currency USD
-bea import EXPORT --config importers.py [--apply]
+bea import EXPORT [--config importers.py] [--into FILE] [--apply]
 bea check | format | query "<BQL>"
 bea list <type> | bea add <type>          # eleven directive types; add transactions --from PATH
 bea report balance-sheet | income-statement | trial-balance | overview
@@ -31,6 +31,9 @@ Global options come before the command.
 | `--json` | Emit the JSON envelope on stdout and JSON errors on stderr. Implies `--no-input`. |
 | `--no-input` | Never prompt. Missing confirmation or input fails with exit 2 instead of waiting. |
 | `--yes / -y` | Answer confirmations with yes. |
+| `--debug` | Include exception tracebacks; JSON errors gain a `traceback` string. |
+| `--show-completion` / `--install-completion` | Print or install shell completion. |
+| `--shell NAME` | Select bash, zsh, fish, powershell or pwsh when generating completion. |
 | `--version` | Print the version and exit. Makes no network call. |
 | `-h / --help` | Show help. |
 
@@ -38,6 +41,7 @@ Global options come before the command.
 bea --file ./books/main.bean check
 bea --json list transaction --limit 100
 bea --yes cloud ledger delete alice/old-books
+bea --shell zsh --show-completion
 ```
 
 ### Choosing the ledger
@@ -49,6 +53,7 @@ Local commands resolve their target in this order:
 3. `./main.bean` in the working directory
 
 If the resolved file does not exist, the command exits **2** and names all three sources. Hosted targeting (`--ledger`) is not implemented yet.
+Passing a directory also exits **2** with a hint to select its root ledger file.
 
 ### Non-interactive behavior
 
@@ -91,7 +96,7 @@ Cloud commands map the server's HTTP status onto the same table, keeping the ser
 ## Creating a ledger
 
 ```bash
-bea init books                         # interactive currency and opening balance
+bea init books                         # interactive currency, history start date, and opening balance
 bea --no-input init books --currency EUR --date 2026-08-01 \
   --opening-balance "Assets:Checking 1000" \
   --opening-balance "Liabilities:CreditCard -50"
@@ -99,14 +104,30 @@ bea --no-input init books --currency EUR --date 2026-08-01 \
 
 These are alternative ways to create a new ledger. `init` never overwrites an
 existing file. Pass a directory (creates `main.bean`) or a `.bean`/`.beancount`
-path; the global `--file` can also name the new file. `BEA_FILE` does not redirect
-`init`. Without a terminal, `--currency` is required. Dates default to today.
+path; the global `--file` can also name the new file. New ledger files are
+private by default (`0600` on POSIX: readable and writable only by their owner).
+For group-readable books, explicitly run `chmod 640 books/main.bean` after
+creation. Subsequent add/import/format writes preserve the file's permissions.
+`BEA_FILE` does not redirect
+`init`. Without a terminal, `--currency` is required and the date defaults to
+today. Interactively, choose the earliest date you intend to record. Use
+`--date` when importing older history; opening balances must be as of that date.
+An inactive-account error shows the account's opening/closing date and file
+location so you can correct the date without creating another open directive.
+Invalid answers re-prompt the current question while keeping earlier answers.
+Invalid command-line options still fail with exit **2**.
 
 The personal template opens checking, savings, cash, credit card, salary,
 interest, groceries, dining, rent, transport, utilities, fees, and opening
 equity accounts. Opening balances use that currency and balance against
 `Equity:OpeningBalances`; credit card debt is negative. Add other accounts with
 `bea add open` before posting to them.
+
+Currency symbols follow Beancount syntax, including custom and crypto symbols;
+the CLI does not check an ISO currency registry. `init --currency US` is valid
+syntax, but emits a typo warning because the symbol is not three uppercase
+letters. The warning appears on stderr, or in `data.warnings` in JSON mode.
+Lowercase input such as `usd` is normalized to `USD`.
 
 ## Checking, formatting, querying
 
@@ -118,11 +139,19 @@ bea check
 bea format main.beancount
 bea format .
 bea format . --dry-run
+bea format . --check     # CI/pre-commit: exit 1 if any files need formatting
 
 # Run a BQL query and print a table; omit the query for the interactive shell
 bea query "SELECT account, sum(position) GROUP BY account"
 bea query
 ```
+
+Query tables preserve the precision of result values, including calculated
+amounts and commodity quantities. Interactive queries and the `ask` BQL tool
+use the same precision policy; cents are never discarded because most entries
+in the ledger happen to use whole amounts.
+An empty result prints `(no rows)` on stderr. JSON mode keeps the usual
+envelope with an empty `rows` array and no human notice.
 
 `check`, `query`, `list`, and `report` all refuse to answer from a ledger that
 does not load: a total computed over a broken ledger reads as authoritative and
@@ -130,7 +159,17 @@ is not. `query`, `list`, and `report` take `--allow-errors` to opt into the
 partial answer, which still prints the errors on stderr; `bea check` has no such
 flag, because reporting the errors is its whole job.
 The same validation gate runs before the interactive BQL shell opens. Missing
-format targets are usage errors; `--dry-run` leaves files untouched.
+format targets are usage errors. `format --dry-run` previews changes without
+writing and exits **0** even when formatting is needed. Use `format --check`
+for CI or a pre-commit hook: it leaves files untouched and exits **1** when
+formatting is needed, **0** when all scanned files are formatted.
+
+Every formatting mode reports syntax errors with each file's path and line,
+skips that file, and exits **1**. A recursive run continues through the other
+files; normal mode still formats valid files. Included files can be formatted
+independently of their root ledger's account opens and options. In JSON mode,
+failures return the scan result in `error.result`, including `formatted` and
+`skipped` paths, `scanned`, `dry_run`, and `check`.
 
 ## Listing directives
 
@@ -139,12 +178,13 @@ format targets are usage errors; `--dry-run` leaves files untouched.
 | Option | Description |
 |---|---|
 | `--limit / -l` | Positive maximum results (default 50). The envelope reports `truncated` when more exist. |
-| `--sort oldest/newest` | Transaction order, applied before the limit; default `oldest` |
-| `--details` | Transactions: print every posting, cost/price, metadata, and source location |
+| `--sort oldest/newest` | Transaction order, applied before the limit; default `newest`. Specify `oldest` in scripts that depend on ascending order. |
+| `--details` | Transactions: render Beancount syntax with every posting, cost/price, metadata, and source location |
+| `--flag` | Transactions: select a flag, such as `!` for entries needing review; applied before the limit. |
 | `--from-date` | Only directives on or after this date (`YYYY-MM-DD`) |
 | `--to-date` | Only directives on or before this date (`YYYY-MM-DD`) |
-| `--account / -a` | Substring account filter (`transaction`, `note`, `balance`, `open`, `close`, `document`, `pad`) |
-| `--currency / -c` | Exact currency filter (`price`, `commodity`) |
+| `--account / -a` | Case-insensitive substring account filter (`transaction`, `note`, `balance`, `open`, `close`, `document`, `pad`) |
+| `--currency / -c` | Exact symbol, case-insensitive (`price`, `commodity`); `eur` matches `EUR` |
 | `--allow-errors` | Return data even though the ledger has loader errors (they still print on stderr) |
 
 ```bash
@@ -153,7 +193,14 @@ bea list transaction --sort newest --details --limit 10
 bea list transaction --account Expenses:Food --from-date 2026-01-01 --to-date 2026-03-31
 bea list price --currency BTC
 bea list open
+bea list transaction --flag '!' --details
 ```
+
+The transaction table shows signed amounts by account and currency. With
+`--account`, the amounts column is labeled `MATCHING POSTING AMOUNTS` and shows
+only those postings. `--details` labels its output as transactions rendered in
+Beancount syntax and shows every posting and its metadata, including inferred
+amounts. Amounts on opposite sides are not combined into a zero total.
 
 
 ## Adding directives
@@ -163,13 +210,61 @@ candidate ledger passes Beancount parsing, booking, and validation. Relative
 includes and document paths keep their original meaning. Unknown or closed
 accounts, invalid currencies, unavailable cost lots, and unbalanced transactions
 leave the original bytes unchanged. Account typos include suggested matches.
+Account syntax follows Beancount: colon-separated segments with an uppercase
+root; each subaccount starts with an uppercase letter or digit. Unicode
+letters and configured root names are supported. Amounts use decimal notation
+(e.g. `1000`, not `1e3`); native posting arithmetic such as `84/2 EUR` works.
+
+For split ledgers, keep `--file` pointed at the root and choose the included
+destination with `--into`. The destination must already exist and be included
+by the root. Its path is relative to the root ledger's directory:
+
+```bash
+bea --file books/main.bean add transaction --into 2026.bean \
+  --date 2026-08-02 -p "Expenses:Groceries 30" -p "Assets:Checking"
+```
+
+All add commands and `import` support this separation. Validation includes the
+entire root ledger; the root and other included files are preserved. Changes
+to an included file or to files matched by an include glob abort the write.
+Successful additions align the destination with the same formatter used by
+`bea format`; this can adjust existing columns when a new posting is wider.
+Writes respect the destination file's permissions: a read-only file produces
+exit **3**, even when its directory permits replacement. This also applies to
+import and format. A read-only root can still validate a writable `--into` file.
+
+Payees, narrations, and string metadata are written on one line: runs of CR/LF
+line breaks become spaces in single adds, bulk JSON, and imports. Quotes and
+backslashes retain their contents. Human tables also flatten line breaks from
+existing entries without modifying the ledger.
 
 Examples below assume their accounts were opened and their dates, balances,
 and document paths are valid for your ledger. Every add command accepts
-`--allow-errors` for an intentional semantic error (such as staging an unused
-pad before its balance assertion). Syntax errors are always rejected.
-Concurrent CLI writers use a persistent hidden `.FILENAME.bea.lock` sidecar;
-an external edit detected before replacement produces exit **4** and is preserved.
+`--allow-errors` for an intentional semantic error. Syntax errors and pad
+references to unknown or inactive accounts are always rejected. For an opening
+adjustment, prefer an explicit atomic pad and balance:
+
+```bash
+bea add balance --date 2026-01-02 --account Assets:Checking \
+  --amount "1000 USD" --pad-from Equity:OpeningBalances
+```
+
+The pad defaults to the preceding day; `--pad-date` can select another date
+before the assertion. Both accounts must be open by the pad date. Ordinary
+`add balance` remains a strict assertion: review missing transactions before
+choosing to create an adjustment. Advanced users can stage `add pad --allow-errors`,
+add the later balance, then run `bea check`. The staged pad reports `Unused Pad`
+until a matching balance consumes it; complete that pair before other writes.
+Balance amounts accept native tolerance syntax, for example
+`--amount '1538 ~ 1 EUR'`. The assertion succeeds only within the supplied
+nonnegative tolerance. This also works with `--pad-from`.
+Concurrent CLI writers use persistent locks under `$XDG_CACHE_HOME/bea/locks`
+(default `~/.cache/bea/locks`), keyed by each file's resolved absolute path.
+No lock files are created in ledger directories. Locks remain in the cache
+after release so waiting writers always coordinate through the same file.
+Stop any older CLI writers before deleting their leftover `.FILENAME.bea.lock`
+sidecars. An external edit detected before replacement produces exit **4**
+and is preserved.
 
 ```bash
 bea add transaction \
@@ -192,13 +287,56 @@ bea add transaction \
 bea add open  --date 2026-01-01 --account Assets:Cash --currency USD
 bea add close --date 2026-12-31 --account Assets:OldAccount
 bea add balance --date 2026-04-30 --account Assets:Cash --amount "1000 USD"
-bea add pad --date 2026-01-01 --account Assets:Cash --source Equity:Opening-Balances --allow-errors
+# Advanced two-step pad: complete the pair before adding anything else
+bea add pad --date 2026-01-01 --account Assets:Cash --source Equity:OpeningBalances --allow-errors
+bea add balance --date 2026-01-02 --account Assets:Cash --amount "1000 USD"
 bea add note --date 2026-04-30 --account Assets:Cash --comment "ATM withdrawal"
 bea add event --date 2026-04-30 --type location --description "New York"
 bea add price --date 2026-04-30 --currency BTC --amount "62000 USD"
 bea add commodity --date 2026-01-01 --currency VFINX
 bea add document --date 2026-04-30 --account Assets:Cash --filename "receipts/april.pdf"
 ```
+
+`add transaction` defaults to today's date. One posting may omit its amount;
+Beancount infers the balancing amount. When a numbered posting omits its
+currency, the CLI uses the account's sole allowed currency, otherwise the
+ledger's sole operating currency. Ambiguous currencies require an explicit
+symbol. Other directive types keep their explicit dates.
+
+Narration is optional. Omitting `--narration` records empty text, displayed as
+`(no narration)` in the table; `--payee` can still identify the other party.
+Supply `--narration "Coffee"` when the purpose would otherwise be unclear.
+
+Currency exchanges need a price annotation, for example
+`-p 'Assets:Euro 100 EUR @ 1.08 USD' -p 'Assets:Checking -108 USD'`. Use the
+actual rate for that transaction. A multi-currency imbalance includes this
+hint; the CLI never inserts a rate to force the postings to balance.
+
+Document paths resolve relative to the file containing the directive. With
+`--into years/2026.bean`, `--filename receipt.pdf` means `years/receipt.pdf`
+beside that included file. Missing-document errors name this directory.
+
+Use repeated `--meta` options for native Beancount transaction metadata:
+
+```bash
+bea add transaction -p 'Expenses:Groceries 30 USD' -p 'Assets:Checking' \
+  --meta 'receipt:R-42' --meta 'reviewed:TRUE' \
+  --meta 'rate: 1.125' --meta 'received: 2026-09-01'
+```
+
+Each argument contains one `key:value` pair. Bare text such as `note:hello`
+or `receipt:IMG_1234.jpg` becomes a string. Valid native numbers, booleans,
+dates and amounts retain their types, including when single-add JSON is reused
+for bulk entry. Inner quotes force a string, e.g. `--meta 'code:"1234"'`;
+`--meta 'note:""'` writes an empty string. Repeat `--meta` for different keys.
+
+`add price` skips an exact date/commodity/amount match anywhere in the root
+ledger's includes. It reports the existing location and exits **0** with
+`written: 0` and `duplicate: true` in JSON. A different price or date remains
+an explicit addition.
+
+Aliases: `price` and `commodity` accept `--commodity`; `document` accepts
+`--path`; `note` accepts `--message`. Existing option names remain supported.
 
 ### Custom directives
 
@@ -243,6 +381,11 @@ bea add transactions --from transactions.json --partial
 
 Every row is validated before anything is written. If any row is invalid the ledger is left byte-identical and the command exits **1**, listing the rejected rows. `--partial` appends the valid rows instead — and still exits **1**, so a partial write can never look like a clean one.
 
+A posting can also use `{"account":"Assets:Cash","amount":"-45 USD"}`.
+Omit `units`/`amount` for a balancing posting. Supplying both forms or unknown
+posting fields is rejected. Schema errors show a human row number, field path,
+and example; `bea add transactions --help` contains a complete minimal batch.
+
 Validation includes accounting errors, not just JSON shape. The whole batch is
 tried first so a sale can use a purchase appearing later in the input. Partial
 recovery tries rows in input order and validates each accepted subset. When
@@ -254,9 +397,16 @@ This command appends supplied transactions and does not deduplicate them. Use
 
 ### Investment postings and metadata
 
-Single `--posting` arguments take exactly `ACCOUNT NUMBER CURRENCY`. Use JSON
-for costs and prices. Open `Assets:Brokerage` in AAPL and `Assets:Cash` in USD
-before applying this purchase:
+Single `--posting` arguments accept native Beancount cost and price syntax:
+
+```bash
+bea add transaction --date 2026-08-02 --narration "Buy AAPL" \
+  -p "Assets:Brokerage 10 AAPL {100 USD}" -p "Assets:Cash -1000 USD"
+```
+
+Per-unit and total prices (`@`, `@@`) and total costs (`{{...}}`) are supported.
+JSON remains useful for batches and metadata. Open `Assets:Brokerage` in AAPL
+and `Assets:Cash` in USD before applying this purchase:
 
 ```json
 [
@@ -314,7 +464,10 @@ transactions involving matching accounts and retain all their postings.
 Account trees retain Beancount signs: income, liabilities, and equity are
 normally negative. `net_profit` is `-(income + expenses)`, so a gain is positive
 and a loss negative. The income statement includes actual period rows with
-positive revenue, expenses, and profit. Overview JSON income/expense series
+the same signed income and expenses as the account trees. Net profit remains
+positive for a gain; JSON labels this with `net_profit_signs: "positive_for_gain"`.
+Older versions returned positive revenue in the period rows; consumers should
+now use `-(income + expenses)` consistently. Overview JSON income/expense series
 are interval flows; asset/liability series are balances as of each date.
 
 Balance sheets include signed `current_earnings`, a derived
@@ -327,7 +480,12 @@ whether the derived reconciliation is available. Reports run with loader
 errors also carry `ledger_valid: false` and `ledger_errors` in JSON.
 
 Explicit currency conversion requires prices for every nonzero commodity in
-the report and its intervals. A missing price exits **1**. With `--allow-errors`,
+the report and its intervals. A missing price exits **1** and identifies the
+actual valuation dates, for example `No EUR → USD price on or before 2026-01-31`.
+A later quote cannot value an earlier interval. Errors and partial reports
+include `missing_price_dates` (`from`, `to`, `date`) alongside `missing_prices`;
+a null date means the unfiltered summary could not find a quote at any date.
+With `--allow-errors`,
 JSON marks `valuation: "partial"`, lists `missing_prices`, retains amounts in
 their source currencies, and sets combined net profit/net worth to `null` in
 the requested currency. It also withholds the derived equity adjustment and
@@ -346,6 +504,11 @@ uv tool install 'beancount-io[ask]'
 uv tool install './cli[ask]'
 ```
 
+With Homebrew, keep the managed base CLI and run the optional AI environment
+with `uvx --from 'beancount-io[ask]' bea ask "QUESTION" --print`. Both installations
+use the same `bea cloud login` credentials. Model calls use the hosted
+Beancount.io AI service even though the ledger is local.
+
 ```bash
 # Interactive session over your ledger
 bea ask
@@ -355,6 +518,12 @@ bea ask "what did I spend on groceries last month?" --print
 ```
 
 Without the extra the command exits **2** with the install command. It also needs hosted credentials: the model runs through the Beancount.io AI proxy, so a local ledger still requires `bea cloud login`. `bea ask` has no `--json` mode; use `bea query` for machine-readable results.
+
+Interactive write requests are validated before confirmation, then appended
+atomically only if the root ledger and included files still match the preview.
+Use `ask --into FILE` for an included destination. The write tool accepts dated
+directives; configure plugins, options and includes separately. Noninteractive
+sessions do not write ledger entries.
 
 ## Cloud: authentication
 

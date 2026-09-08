@@ -74,7 +74,7 @@ def _to_amount(bc_amount: Any) -> Amount:
     return Amount(number=Decimal(str(bc_amount.number)), currency=bc_amount.currency)
 
 
-def _metadata(meta: dict[str, Any] | None) -> dict[str, Any]:
+def metadata_to_json(meta: dict[str, Any] | None) -> dict[str, Any]:
     from beancount.core.amount import Amount as BcAmount
 
     result = {}
@@ -110,7 +110,7 @@ def _to_transaction(entry: Any) -> TransactionDirective:
                 cost=cost,
                 price=price,
                 flag=p.flag,
-                meta=_metadata(p.meta),
+                meta=metadata_to_json(p.meta),
             )
         )
     return TransactionDirective(
@@ -121,7 +121,7 @@ def _to_transaction(entry: Any) -> TransactionDirective:
         postings=postings,
         tags=sorted(entry.tags),
         links=sorted(entry.links),
-        meta=_metadata(entry.meta),
+        meta=metadata_to_json(entry.meta),
         source=SourceLocation(filename=entry.meta["filename"], lineno=entry.meta["lineno"]),
     )
 
@@ -133,14 +133,17 @@ def list_transactions(
     account: str | None = None,
     limit: int = 50,
     newest: bool = False,
+    flag: str | None = None,
 ) -> list[TransactionDirective]:
     results = []
     for entry in reversed(entries) if newest else entries:
         if not isinstance(entry, Transaction):
             continue
+        if flag is not None and entry.flag != flag:
+            continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and not any(account in p.account for p in entry.postings):
+        if account and not any(account.casefold() in p.account.casefold() for p in entry.postings):
             continue
         results.append(_to_transaction(entry))
         if len(results) >= limit:
@@ -161,7 +164,7 @@ def list_notes(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account not in entry.account:
+        if account and account.casefold() not in entry.account.casefold():
             continue
         results.append(NoteDirective(date=entry.date, account=entry.account, comment=entry.comment))
         if len(results) >= limit:
@@ -182,7 +185,7 @@ def list_prices(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if currency and entry.currency != currency:
+        if currency and entry.currency.casefold() != currency.casefold():
             continue
         results.append(PriceDirective(date=entry.date, currency=entry.currency, amount=_to_amount(entry.amount)))
         if len(results) >= limit:
@@ -203,9 +206,13 @@ def list_balances(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account not in entry.account:
+        if account and account.casefold() not in entry.account.casefold():
             continue
-        results.append(BalanceDirective(date=entry.date, account=entry.account, amount=_to_amount(entry.amount)))
+        results.append(
+            BalanceDirective(
+                date=entry.date, account=entry.account, amount=_to_amount(entry.amount), tolerance=entry.tolerance
+            )
+        )
         if len(results) >= limit:
             break
     return results
@@ -224,7 +231,7 @@ def list_opens(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account not in entry.account:
+        if account and account.casefold() not in entry.account.casefold():
             continue
         currencies = list(entry.currencies) if entry.currencies else []
         results.append(OpenDirective(date=entry.date, account=entry.account, currencies=currencies))
@@ -246,7 +253,7 @@ def list_closes(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account not in entry.account:
+        if account and account.casefold() not in entry.account.casefold():
             continue
         results.append(CloseDirective(date=entry.date, account=entry.account))
         if len(results) >= limit:
@@ -267,7 +274,7 @@ def list_commodities(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if currency and entry.currency != currency:
+        if currency and entry.currency.casefold() != currency.casefold():
             continue
         results.append(CommodityDirective(date=entry.date, currency=entry.currency))
         if len(results) >= limit:
@@ -306,7 +313,7 @@ def list_documents(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account not in entry.account:
+        if account and account.casefold() not in entry.account.casefold():
             continue
         tags = sorted(entry.tags) if entry.tags else []
         links = sorted(entry.links) if entry.links else []
@@ -371,7 +378,7 @@ def list_pads(
             continue
         if not _in_date_range(entry.date, from_date, to_date):
             continue
-        if account and account not in entry.account:
+        if account and account.casefold() not in entry.account.casefold():
             continue
         results.append(PadDirective(date=entry.date, account=entry.account, source_account=entry.source_account))
         if len(results) >= limit:

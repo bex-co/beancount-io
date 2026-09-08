@@ -22,7 +22,7 @@ def event_loop() -> Iterator[None]:
 
 
 @pytest.fixture(autouse=True)
-def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Iterator[Path]:
     """Give every test its own `~/.config/bea` and a clean `BEA_*` environment.
 
     Autouse, because a test that read the developer's real credentials or wrote
@@ -30,6 +30,8 @@ def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     """
     directory = tmp_path / "bea-config"
     monkeypatch.setenv("BEA_CONFIG_DIR", str(directory))
+    monkeypatch.setenv("XDG_CONFIG_HOME", str(tmp_path / "xdg-config"))
+    monkeypatch.setenv("XDG_CACHE_HOME", str(tmp_path / "xdg-cache"))
     for name in ("BEA_FILE", "BEA_TOKEN", "CI"):
         monkeypatch.delenv(name, raising=False)
     # No test may reach the real index. The notifier is off by default and its
@@ -39,7 +41,13 @@ def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setenv("BEA_UPDATE_API_URL", "http://127.0.0.1:9")
     monkeypatch.setenv("BEA_TAP_FORMULA_URL", "http://127.0.0.1:9/bea.rb")
     context.configure()
-    return directory
+    yield directory
+    # Error paths and timeouts can leave the notifier running after the CLI
+    # returns. Finish it before monkeypatch restores cache paths and endpoints.
+    for worker in threading.enumerate():
+        if worker.name == "bea-update-check":
+            worker.join(timeout=5)
+            assert not worker.is_alive(), "Update check outlived its isolated test environment"
 
 
 @dataclass

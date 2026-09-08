@@ -62,7 +62,7 @@ def test_allow_errors_is_explicit_and_never_permits_bad_syntax(book: Path) -> No
     assert json.loads(allowed.stdout)["data"]["warnings"]
     before = book.read_bytes()
     result = invoke(book, "add", "open", "--date", "2026-08-01", "--account", "INVALID", "--allow-errors")
-    assert result.exit_code == 1
+    assert result.exit_code == 2
     assert book.read_bytes() == before
 
 
@@ -84,7 +84,7 @@ def test_all_quoted_directives_round_trip(book: Path, text: str) -> None:
     assert (event.type, event.description) == (text, text)
     custom = next(e for e in entries if isinstance(e, Custom))
     assert [v.value for v in custom.values] == [text, True, datetime.date(2026, 8, 1)]
-    assert next(e for e in entries if isinstance(e, Transaction)).narration == text
+    assert next(e for e in entries if isinstance(e, Transaction)).narration == text.replace("\n", " ")
 
 
 def test_document_path_round_trips_relative_to_ledger(book: Path) -> None:
@@ -221,6 +221,8 @@ def test_cost_lot_booking_is_validated_before_writing(book: Path) -> None:
 
 
 def test_concurrent_cli_writers_do_not_lose_transactions(book: Path) -> None:
+    alias = book.parent / "alias.bean"
+    alias.symlink_to(book)
     commands = [
         [
             sys.executable,
@@ -228,7 +230,7 @@ def test_concurrent_cli_writers_do_not_lose_transactions(book: Path) -> None:
             "cli.main",
             "--no-input",
             "--file",
-            str(book),
+            str(alias if i % 2 else book),
             "add",
             "transaction",
             "--date",
@@ -254,3 +256,4 @@ def test_concurrent_cli_writers_do_not_lose_transactions(book: Path) -> None:
     transactions = [e for e in entries if isinstance(e, Transaction)]
     assert {e.narration for e in transactions} == {f"write {i}" for i in range(6)}
     assert sum(p.units.number for e in transactions for p in e.postings if p.account == "Expenses:Food") == Decimal(6)
+    assert not list(book.parent.glob("*.bea.lock"))

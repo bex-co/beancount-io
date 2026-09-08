@@ -9,6 +9,24 @@ import typer
 from cli.errors import UsageError
 
 
+def single_line(text: str) -> str:
+    """Keep text readable as one ledger field or table cell, preserving other whitespace."""
+    return re.sub(r"[\r\n]+", " ", text)
+
+
+def parse_account(name: str) -> str:
+    from beancount.core.account import is_valid
+
+    if not is_valid(name):
+        raise UsageError(
+            f"Invalid account {name!r}. Account names use colon-separated segments, such as Assets:Checking. "
+            "The root starts with an uppercase letter; each subaccount starts with an uppercase letter or digit. "
+            "Use letters, digits and hyphens within segments. Standard roots are "
+            "Assets, Liabilities, Equity, Income and Expenses; configured root names are also supported."
+        )
+    return name
+
+
 def owner_and_name(full_name: str) -> tuple[str, str]:
     """REST addresses a ledger as `{owner}/{name}` — two segments, exactly."""
     owner, _, name = full_name.partition("/")

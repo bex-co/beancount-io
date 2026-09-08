@@ -8,6 +8,7 @@ once and behave identically for a person, a script, and a coding agent.
 from __future__ import annotations
 
 import os
+import shlex
 import sys
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -38,6 +39,7 @@ class RunContext:
     file: Path | None = None
     json_output: bool = False
     yes: bool = False
+    debug: bool = False
     _no_input: bool = field(default=False, repr=False)
 
     @property
@@ -65,8 +67,15 @@ class RunContext:
             raise UsageError(
                 f"No ledger file at '{candidate}' (from {source}). "
                 f"Name one with --file PATH, set BEA_FILE, or run from a directory containing "
-                f"{DEFAULT_ENTRY_FILE}."
+                f"{DEFAULT_ENTRY_FILE}. To start new books, run bea init books --currency USD."
             )
+        if candidate.is_dir():
+            raise UsageError(
+                f"Ledger path '{candidate}' (from {source}) is a directory; expected a ledger file. "
+                f"Point --file to its root ledger, for example --file {shlex.quote(str(candidate / 'main.bean'))}."
+            )
+        if not candidate.is_file():
+            raise UsageError(f"Ledger path '{candidate}' (from {source}) is not a regular file.")
         # Absolute from here on: the beancount loader asserts on a relative
         # entry path, and every include is resolved against this one.
         return candidate.resolve()
@@ -91,9 +100,10 @@ def configure(
     json_output: bool = False,
     no_input: bool = False,
     yes: bool = False,
+    debug: bool = False,
 ) -> RunContext:
     global _context
-    _context = RunContext(file=file, json_output=json_output, yes=yes, _no_input=no_input)
+    _context = RunContext(file=file, json_output=json_output, yes=yes, _no_input=no_input, debug=debug)
     return _context
 
 

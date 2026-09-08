@@ -7,7 +7,7 @@ from collections.abc import Callable
 from decimal import Decimal
 from typing import Annotated, Any, Literal
 
-from pydantic import BaseModel, BeforeValidator, Field
+from pydantic import BaseModel, BeforeValidator, ConfigDict, Field, model_validator
 
 
 def _strip_sigil(sigil: str) -> Callable[[Any], Any]:
@@ -41,12 +41,28 @@ class Cost(BaseModel):
 
 
 class Posting(BaseModel):
+    model_config = ConfigDict(extra="forbid")
     account: str
-    units: Amount
+    units: Amount | None = None
     cost: Cost | None = None
     price: Amount | None = None
     flag: str | None = None
     meta: dict[str, Any] = Field(default_factory=dict)
+
+    @model_validator(mode="before")
+    @classmethod
+    def amount_shorthand(cls, value: Any) -> Any:
+        if not isinstance(value, dict) or "amount" not in value:
+            return value
+        if "units" in value:
+            raise ValueError("Use either amount or units for a posting, not both.")
+        value = dict(value)
+        amount = value.pop("amount")
+        if not isinstance(amount, str) or len(amount.split()) != 2:
+            raise ValueError("amount must be a string such as '-30 USD'.")
+        number, currency = amount.split()
+        value["units"] = {"number": number, "currency": currency}
+        return value
 
 
 class SourceLocation(BaseModel):
@@ -81,6 +97,7 @@ class BalanceDirective(BaseModel):
     date: datetime.date
     account: str
     amount: Amount
+    tolerance: Decimal | None = None
 
 
 class PadDirective(BaseModel):
