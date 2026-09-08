@@ -30,6 +30,10 @@
 - [x] **m23** — Show primary ledger content before optional panels finish (8 tasks) ← from /pm-brainstorm dashboard performance 2026-09-05; user routed to w2 — depends on m21
 - [x] **m24** — Beancount.io CLI becomes `bea`: package `beancount-io`, `list`/`add`/`ask` command tree, automation contract (12 tasks) ← from TPM discussion 2026-09-06 (CLI naming and automation contract) + `cli/docs/PRFAQ.md`; user routed to w2
 - [ ] **m25** — `bea` distribution: PyPI trusted publishing, Homebrew tap, update notice, `bea upgrade` (9 tasks) ← from TPM discussion 2026-09-06; user routed to w2 — sequenced after m24
+- [ ] **m26** — MCP write path that cannot lose or silently break a ledger (10 tasks) ← from MCP field audit 2026-09-08 (rename data loss, silent unbalanced writes, empty dry run, broken PR path); user routed to w2
+- [ ] **m27** — MCP discoverability: the server explains itself to agents (9 tasks) ← from MCP field audit 2026-09-08 (three Claude Code sessions found no ledgers/errors/resources); user routed to w2 — sequenced after m26
+- [ ] **m28** — MCP results and failures an agent can act on (9 tasks) ← from MCP field audit 2026-09-08 (JSON-wrapped tables, four error dialects, 429 mid-session); user routed to w2 — sequenced after m27
+- [ ] **m29** — MCP onboarding in five minutes (8 tasks) ← from MCP field audit 2026-09-08 (key dialog, manifest origins, CLI, guide); user routed to w2 — sequenced after m28
 
 ## Centralized-authz migration contract for m14–m20
 
