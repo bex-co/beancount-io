@@ -204,6 +204,13 @@ export class PlaidItemService implements IPlaidItemService {
     private readonly authorization: IAuthorizationService,
   ) {}
 
+  // Lazy so an unconfigured LLM never blocks service construction; one client
+  // per service so provider wiring changes have a single seam.
+  private llmClient?: LLMClient;
+  private getLLMClient(): LLMClient {
+    return (this.llmClient ??= new LLMClient(this.config.blockeden.accessKey));
+  }
+
   private async authorizeBankAction(
     identity: Identity,
     action: AuthorizationAction,
@@ -552,7 +559,7 @@ export class PlaidItemService implements IPlaidItemService {
     });
 
     const { suggestions } = await categorizeTransactions(
-      new LLMClient(this.config.blockeden.accessKey),
+      this.getLLMClient(),
       {
         transactions: txsForCategorization,
         existingAccounts,
@@ -623,7 +630,7 @@ export class PlaidItemService implements IPlaidItemService {
     });
 
     const { suggestions } = await suggestAccountMappingWithLLM(
-      new LLMClient(this.config.blockeden.accessKey),
+      this.getLLMClient(),
       {
         institutionName: item.institutionName,
         accounts: unmappedAccounts.map((a) => ({
@@ -833,7 +840,7 @@ export class PlaidItemService implements IPlaidItemService {
       });
 
       const { suggestions } = await suggestAccountMappingWithLLM(
-        new LLMClient(this.config.blockeden.accessKey),
+        this.getLLMClient(),
         {
           institutionName,
           accounts: accounts.map((a) => ({

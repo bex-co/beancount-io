@@ -33,7 +33,6 @@ describe("LLMCategorizationQueryResolver", () => {
         },
       ]),
       invokeOpenAI: jest.fn(),
-      invokeAnthropic: jest.fn(),
     };
 
     mockContext = {

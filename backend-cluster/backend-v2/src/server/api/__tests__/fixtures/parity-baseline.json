@@ -1793,17 +1793,6 @@
       "bindings": {
         "rest": "POST /api-gateway/ai/openai/chat/completions"
       }
-    },
-    {
-      "verb": "ai.anthropicMessages",
-      "eligible": [
-        "rest"
-      ],
-      "class": "write",
-      "authorizationAction": "ai.model.invoke",
-      "bindings": {
-        "rest": "POST /api-gateway/ai/anthropic/v1/messages"
-      }
     }
   ]
 }

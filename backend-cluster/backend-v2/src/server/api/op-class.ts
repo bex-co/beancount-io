@@ -303,7 +303,6 @@ const SURFACE_IMPOSSIBLE: Record<
     "ai.agent",
     "ai.askAgent",
     "ai.openaiChatCompletions",
-    "ai.anthropicMessages",
   ]),
   // REST can carry anything in scope; the set is empty rather than absent so
   // that adding to it is a deliberate edit here.
@@ -314,7 +313,6 @@ const SURFACE_IMPOSSIBLE: Record<
     "ai.agent",
     "ai.askAgent",
     "ai.openaiChatCompletions",
-    "ai.anthropicMessages",
   ]),
 };
 
@@ -1740,14 +1738,6 @@ const AI_ROUTE_VERBS: readonly VerbEntry[] = [
     class: "write",
     authorizationAction: AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
     rest: "POST /api-gateway/ai/openai/chat/completions",
-    gqlExempt: G.wireCompat,
-    mcpExempt: M.transportOnly,
-  },
-  {
-    verb: "ai.anthropicMessages",
-    class: "write",
-    authorizationAction: AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
-    rest: "POST /api-gateway/ai/anthropic/v1/messages",
     gqlExempt: G.wireCompat,
     mcpExempt: M.transportOnly,
   },

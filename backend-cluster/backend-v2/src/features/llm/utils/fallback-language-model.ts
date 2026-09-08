@@ -17,37 +17,6 @@ function isNonRetriableError(err: unknown): boolean {
 const ANTHROPIC_MODEL = "claude-sonnet-4-5-20250929";
 
 /**
- * Anthropic model for a direct (non-BlockEden) call.
- *
- * Standard API keys (`sk-ant-api…`) authenticate via the `x-api-key` header,
- * which is what `createAnthropic({ apiKey })` sends by default. OAuth access
- * tokens (`sk-ant-oat…`, e.g. issued for Claude Code / a Claude subscription)
- * are rejected as `x-api-key` — they must be sent as a Bearer token with the
- * OAuth beta header — so route those through a custom fetch that swaps the auth.
- * Note OAuth tokens are subscription-scoped and rate-limited; a real API key is
- * preferable for a server.
- */
-function createDirectAnthropicModel(key: string): LanguageModelV4 {
-  if (!key.startsWith("sk-ant-oat")) {
-    return createAnthropic({ apiKey: key })(ANTHROPIC_MODEL);
-  }
-  return createAnthropic({
-    apiKey: key, // present so the SDK doesn't throw; stripped from the request below
-    fetch: async (input, init) => {
-      const headers = new Headers(init?.headers);
-      headers.delete("x-api-key");
-      headers.set("authorization", `Bearer ${key}`);
-      const beta = headers.get("anthropic-beta");
-      headers.set(
-        "anthropic-beta",
-        beta ? `${beta},oauth-2025-04-20` : "oauth-2025-04-20",
-      );
-      return fetch(input, { ...init, headers });
-    },
-  })(ANTHROPIC_MODEL);
-}
-
-/**
  * Creates an Anthropic → OpenAI fallback LanguageModel.
  *
  * Each provider goes direct to the real API when its key is set —
@@ -65,10 +34,10 @@ export function createFallbackLanguageModel(accessKey: string): LanguageModel {
 
   const providers: LanguageModelV4[] = [];
 
-  // Anthropic (primary): direct when ANTHROPIC_API_KEY is set (API key or OAuth
-  // token), else via BlockEden.
+  // Anthropic (primary): direct when ANTHROPIC_API_KEY is set, else via
+  // BlockEden.
   if (anthropicKey) {
-    providers.push(createDirectAnthropicModel(anthropicKey));
+    providers.push(createAnthropic({ apiKey: anthropicKey })(ANTHROPIC_MODEL));
   } else if (accessKey) {
     providers.push(
       createAnthropic({

@@ -14,7 +14,6 @@ const CHAT_OPS = [
   "REST POST /api-gateway/agent",
   "REST POST /api-gateway/ask-agent",
   "REST POST /api-gateway/ai/openai/chat/completions",
-  "REST POST /api-gateway/ai/anthropic/v1/messages",
 ] as const;
 
 function credential(

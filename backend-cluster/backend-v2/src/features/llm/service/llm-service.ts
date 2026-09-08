@@ -84,10 +84,6 @@ export interface ILLMService {
     identity: Identity,
     request: Readonly<Record<string, unknown>>,
   ): Promise<unknown>;
-  invokeAnthropic(
-    identity: Identity,
-    request: Readonly<Record<string, unknown>>,
-  ): Promise<unknown>;
 }
 
 function getFormatFromContentType(contentType: string): string {
@@ -353,28 +349,6 @@ export class LLMService implements ILLMService {
     );
     const usage = (response as { usage?: { total_tokens?: number } }).usage;
     await this.recordProxyUsage(identity.userId, usage?.total_tokens ?? 0);
-    return response;
-  }
-
-  async invokeAnthropic(
-    identity: Identity,
-    request: Readonly<Record<string, unknown>>,
-  ): Promise<unknown> {
-    const response = await this.invokeModelProxy(
-      identity,
-      `https://api.blockeden.xyz/anthropic/${this.config.blockeden.accessKey}/v1/messages`,
-      request,
-      { "anthropic-version": "2023-06-01" },
-    );
-    const usage = (
-      response as {
-        usage?: { input_tokens?: number; output_tokens?: number };
-      }
-    ).usage;
-    await this.recordProxyUsage(
-      identity.userId,
-      (usage?.input_tokens ?? 0) + (usage?.output_tokens ?? 0),
-    );
     return response;
   }
 

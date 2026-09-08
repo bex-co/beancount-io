@@ -63,12 +63,6 @@ describe("LLMService centralized authorization", () => {
 
   it.each([
     ["invokeOpenAI", "total_tokens", { usage: { total_tokens: 9 } }, 9],
-    [
-      "invokeAnthropic",
-      "input_tokens",
-      { usage: { input_tokens: 4, output_tokens: 6 } },
-      10,
-    ],
   ] as const)(
     "authorizes %s before quota and upstream invocation",
     async (method, _usageField, body, expectedTokens) => {

@@ -249,11 +249,6 @@ describe("classifyOp", () => {
       AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
       "write",
     ],
-    [
-      "REST POST /api-gateway/ai/anthropic/v1/messages",
-      AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
-      "write",
-    ],
   ] as const)(
     "maps assisted-ingestion alias %s to %s without changing its %s budget class",
     (opId, action, opClass) => {

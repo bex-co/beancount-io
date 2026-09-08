@@ -4,7 +4,6 @@ import type { AppConfig } from "@/config/config";
 import { setAgentRoute } from "./agent-route";
 import { setAskAgentRoute } from "./ask-agent-route";
 import { setOpenAIChatCompletionsRoute } from "./openai-chat-completions-route";
-import { setAnthropicMessagesRoute } from "./anthropic-messages-route";
 
 export { setMcpRoute } from "./mcp-route";
 
@@ -25,6 +24,5 @@ export function setupAiAgentRoutes(
   setAgentRoute(aiRouter, layers, config);
   setAskAgentRoute(aiRouter, layers, config);
   setOpenAIChatCompletionsRoute(aiRouter, layers);
-  setAnthropicMessagesRoute(aiRouter, layers);
   router.use(aiRouter.routes(), aiRouter.allowedMethods());
 }
