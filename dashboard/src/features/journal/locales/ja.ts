@@ -143,6 +143,11 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "場所：",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "ソースの場所を利用できません",
+    description:
+      "エントリコンテキストに移動可能なファイル名/行がない場合に表示",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "ジャーナルエントリの読み込みエラー",
     description: "Error message prefix for journal loading failures",

@@ -145,6 +145,11 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "موقعیت:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "مکان منبع در دسترس نیست",
+    description:
+      "وقتی زمینه ورودی فایل/خط قابل پیمایش ندارد نمایش داده می\\u200cشود",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "خطا در بارگذاری ثبت‌های روزنامه",
     description: "Error message prefix for journal loading failures",

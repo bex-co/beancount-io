@@ -146,6 +146,11 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Localização:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "Localização da origem indisponível",
+    description:
+      "Mostrado quando o contexto da entrada não tem ficheiro/linha navegáveis",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Erro ao carregar lançamentos do diário",
     description: "Error message prefix for journal loading failures",

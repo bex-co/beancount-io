@@ -145,6 +145,10 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "位置：",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "无法定位源文件",
+    description: "当分录上下文没有可导航的文件名/行号时显示",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "加载日记账条目时出错",
     description: "Error message prefix for journal loading failures",

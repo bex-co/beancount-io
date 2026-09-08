@@ -145,6 +145,11 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "Speicherort:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "Quellort nicht verfügbar",
+    description:
+      "Anzeige, wenn der Eintragskontext keinen navigierbaren Dateinamen/Zeile hat",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Fehler beim Laden der Journaleinträge",
     description: "Error message prefix for journal loading failures",

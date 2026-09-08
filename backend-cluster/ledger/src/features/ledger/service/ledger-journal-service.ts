@@ -211,6 +211,30 @@ export type EntryContextResult = {
   slice: string;
 };
 
+/**
+ * Attach the source location already resolved by {@link findEntrySliceAsync}
+ * onto a serialized entry-context payload. rustledger's journal serializer
+ * omits `filename`/`lineno`; entry context is the one response that must
+ * surface them so clients can deep-link into the originating file.
+ */
+export function attachResolvedSourceMeta(
+  entry: Record<string, unknown>,
+  location: Pick<EntrySlice, "file" | "startLine">,
+): Record<string, unknown> {
+  const existingMeta =
+    entry.meta && typeof entry.meta === "object" && !Array.isArray(entry.meta)
+      ? (entry.meta as Record<string, unknown>)
+      : {};
+  return {
+    ...entry,
+    meta: {
+      ...existingMeta,
+      filename: location.file,
+      lineno: location.startLine + 1,
+    },
+  };
+}
+
 export type PlaintextJournalResult = { content: string };
 
 export type AccountJournalResult = {
@@ -574,11 +598,12 @@ export class LedgerJournalService implements ILedgerJournalService {
     if (!found) throw entryNotResolvableError(entryHash, files, entryPoint);
 
     const balances = entryBalances(directives, entryHash);
+    const serialized = (directive
+      ? this.serialize(directive, entryHash)
+      : {}) as unknown as Record<string, unknown>;
 
     return {
-      entry: (directive
-        ? this.serialize(directive, entryHash)
-        : {}) as unknown as Record<string, unknown>,
+      entry: attachResolvedSourceMeta(serialized, found),
       balances_before: balances?.before ?? null,
       balances_after: balances?.after ?? null,
       sha256sum: found.sha256,

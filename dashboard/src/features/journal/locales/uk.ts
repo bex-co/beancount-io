@@ -145,6 +145,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Розташування:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "Розташування джерела недоступне",
+    description:
+      "Показується, коли в контексті запису немає файлу/рядка для переходу",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Помилка завантаження записів журналу",
     description: "Error message prefix for journal loading failures",

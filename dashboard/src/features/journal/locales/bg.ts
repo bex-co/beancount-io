@@ -145,6 +145,11 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Местоположение:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "Местоположението на източника е недостъпно",
+    description:
+      "Показано, когато контекстът на записа няма навигируем файл/ред",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Грешка при зареждане на записите в журнала",
     description: "Error message prefix for journal loading failures",

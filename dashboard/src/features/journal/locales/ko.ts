@@ -142,6 +142,10 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "위치:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "소스 위치를 사용할 수 없음",
+    description: "항목 컨텍스트에 탐색 가능한 파일/행이 없을 때 표시",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "저널 항목 로딩 오류",
     description: "Error message prefix for journal loading failures",

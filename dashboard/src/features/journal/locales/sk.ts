@@ -145,6 +145,11 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Umiestnenie:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "Umiestnenie zdroja nie je dostupné",
+    description:
+      "Zobrazí sa, keď kontext záznamu nemá navigovateľný súbor/riadok",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Chyba pri načítaní záznamov denníka",
     description: "Error message prefix for journal loading failures",

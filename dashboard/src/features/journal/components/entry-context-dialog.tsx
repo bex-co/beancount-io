@@ -40,6 +40,8 @@ import {
 } from "@/common/lib/errors/error-message";
 import { useIsMobile } from "@/common/hooks/use-mobile";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
+import { readEntrySourceLocation } from "@/features/journal/lib/entry-source-location";
 
 interface EntryContextDialogProps {
   open: boolean;
@@ -47,13 +49,6 @@ interface EntryContextDialogProps {
   entry: JournalDirectiveType | null;
   ledgerId: string;
   onSuccess?: () => void;
-}
-
-interface EntryContextEntry {
-  meta: {
-    filename: string;
-    lineno: number;
-  };
 }
 
 /**
@@ -90,6 +85,7 @@ function EntryContextMain({
   onDelete,
   entry,
   onGoToFile,
+  canWrite,
 }: {
   data: GetLedgerEntryContextQuery["getLedgerEntryContext"];
   entry: JournalDirectiveType | null;
@@ -100,6 +96,7 @@ function EntryContextMain({
   ) => Promise<void>;
   onDelete: (entryHash: string, sha256sum: string) => Promise<void>;
   onGoToFile?: (filename: string, lineNumber: number) => void;
+  canWrite: boolean;
 }) {
   const { t } = useTranslations();
   const [sourceText, setSourceText] = useState("");
@@ -110,6 +107,7 @@ function EntryContextMain({
   const [isDeleting, setIsDeleting] = useState(false);
   const isDark = useIsDarkTheme();
   const isMobile = useIsMobile();
+  const location = readEntrySourceLocation(data?.entry);
 
   // Update source text when data changes
   useEffect(() => {
@@ -127,30 +125,30 @@ function EntryContextMain({
   }, [sourceText, originalSource]);
 
   const handleSave = async () => {
-    if (entry?.entry_hash && hasChanges && !isSaving) {
-      setIsSaving(true);
-      try {
-        await onSave(entry.entry_hash, sourceText, data.sha256sum);
-        setHasChanges(false);
-        setOriginalSource(sourceText);
-      } catch {
-        // Error handling is done in the parent handler
-      } finally {
-        setIsSaving(false);
-      }
+    if (!canWrite || !entry?.entry_hash || !hasChanges || isSaving) return;
+    setIsSaving(true);
+    try {
+      await onSave(entry.entry_hash, sourceText, data.sha256sum);
+      setHasChanges(false);
+      setOriginalSource(sourceText);
+    } catch {
+      // Error handling is done in the parent handler
+    } finally {
+      setIsSaving(false);
     }
   };
 
   const handleDelete = async () => {
-    if (entry?.entry_hash && data?.sha256sum && !isDeleting) {
-      setIsDeleting(true);
-      try {
-        await onDelete(entry.entry_hash, data.sha256sum);
-      } catch {
-        // Error handling is done in the parent handler
-      } finally {
-        setIsDeleting(false);
-      }
+    if (!canWrite || !entry?.entry_hash || !data?.sha256sum || isDeleting) {
+      return;
+    }
+    setIsDeleting(true);
+    try {
+      await onDelete(entry.entry_hash, data.sha256sum);
+    } catch {
+      // Error handling is done in the parent handler
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -170,11 +168,6 @@ function EntryContextMain({
     }));
   };
 
-  const entryFilename =
-    (data?.entry as unknown as EntryContextEntry)?.meta?.filename ?? "";
-  const entryLineNumber =
-    (data?.entry as unknown as EntryContextEntry)?.meta?.lineno ?? 0;
-
   return (
     <div className="space-y-4">
       {/* Location Display */}
@@ -182,12 +175,18 @@ function EntryContextMain({
         <span className="text-sm font-medium ">
           {t("journal.entryLocation")}
         </span>
-        <code
-          className="text-sm rounded underline"
-          onClick={() => onGoToFile?.(entryFilename, entryLineNumber)}
-        >
-          {entryFilename}:{entryLineNumber}
-        </code>
+        {location ? (
+          <code
+            className="text-sm rounded underline cursor-pointer"
+            onClick={() => onGoToFile?.(location.filename, location.lineno)}
+          >
+            {location.filename}:{location.lineno}
+          </code>
+        ) : (
+          <span className="text-sm text-muted-foreground">
+            {t("journal.entryLocationUnavailable")}
+          </span>
+        )}
       </div>
       {data?.balances_before && data?.balances_after ? (
         <div className="w-full rounded-md overflow-hidden">
@@ -276,7 +275,10 @@ function EntryContextMain({
               height={isMobile ? "200px" : "100px"}
               language="beancount"
               value={sourceText}
-              onChange={(value) => setSourceText(value || "")}
+              onChange={(value) => {
+                if (!canWrite) return;
+                setSourceText(value || "");
+              }}
               theme={isDark ? "vs-dark" : "light"}
               beforeMount={(monaco) => {
                 registerBeancountLanguage(monaco);
@@ -286,11 +288,11 @@ function EntryContextMain({
                 scrollBeyondLastLine: false,
                 wordWrap: "on",
                 lineNumbers: "on",
-                readOnly: false,
+                readOnly: !canWrite,
               }}
             />
           </div>
-          {hasChanges && (
+          {canWrite && hasChanges && (
             <div className="p-2 text-sm text-amber-600 bg-amber-50 dark:bg-amber-900/20">
               {t("journal.sourceModified")}
             </div>
@@ -299,31 +301,33 @@ function EntryContextMain({
       </Card>
 
       {/* Action Buttons */}
-      <div className="flex gap-2 justify-end">
-        <Button
-          variant="destructive"
-          onClick={handleDelete}
-          disabled={isDeleting || isSaving}
-        >
-          {isDeleting ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Trash2 className="h-4 w-4 mr-2" />
-          )}
-          {t("common.delete")}
-        </Button>
-        <Button
-          onClick={handleSave}
-          disabled={!hasChanges || isSaving || isDeleting}
-        >
-          {isSaving ? (
-            <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-          ) : (
-            <Save className="h-4 w-4 mr-2" />
-          )}
-          {t("common.save")}
-        </Button>
-      </div>
+      {canWrite ? (
+        <div className="flex gap-2 justify-end">
+          <Button
+            variant="destructive"
+            onClick={handleDelete}
+            disabled={isDeleting || isSaving}
+          >
+            {isDeleting ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Trash2 className="h-4 w-4 mr-2" />
+            )}
+            {t("common.delete")}
+          </Button>
+          <Button
+            onClick={handleSave}
+            disabled={!hasChanges || isSaving || isDeleting}
+          >
+            {isSaving ? (
+              <Loader2 className="h-4 w-4 mr-2 animate-spin" />
+            ) : (
+              <Save className="h-4 w-4 mr-2" />
+            )}
+            {t("common.save")}
+          </Button>
+        </div>
+      ) : null}
     </div>
   );
 }
@@ -343,6 +347,7 @@ export function EntryContextDialog({
   const formatError = useErrorMessage();
   const fileNavigate = useFileNavigate();
   const clearCache = useApolloCacheClear();
+  const { canWrite } = useLedgerPermission();
   const { data, loading, error } = useQuery(GetLedgerEntryContextDocument, {
     variables: {
       entryHash: entry?.entry_hash || "",
@@ -368,6 +373,7 @@ export function EntryContextDialog({
     newSource: string,
     sha256sum: string,
   ) => {
+    if (!canWrite) return;
     try {
       await updateEntrySourceSlice({
         variables: {
@@ -391,6 +397,7 @@ export function EntryContextDialog({
   };
 
   const handleDelete = async (entryHash: string, sha256sum: string) => {
+    if (!canWrite) return;
     try {
       await deleteEntrySourceSlice({
         variables: {
@@ -413,7 +420,10 @@ export function EntryContextDialog({
   };
 
   const handleGoToFile = (filename: string, lineNumber: number) => {
-    fileNavigate(ledgerId, "file", filename, { lineNumber, editMode: true });
+    fileNavigate(ledgerId, "file", filename, {
+      lineNumber,
+      editMode: canWrite,
+    });
   };
 
   return (
@@ -434,6 +444,7 @@ export function EntryContextDialog({
               onDelete={handleDelete}
               entry={entry}
               onGoToFile={handleGoToFile}
+              canWrite={canWrite}
             />
           ) : (
             <div className="text-center py-8 text-muted-foreground">

@@ -145,6 +145,11 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Location:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "Расположение источника недоступно",
+    description:
+      "Показывается, когда у контекста записи нет файла/строки для перехода",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Ошибка загрузки записей журнала",
     description: "Error message prefix for journal loading failures",

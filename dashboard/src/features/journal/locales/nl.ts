@@ -145,6 +145,11 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Locatie:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "Bronlocatie niet beschikbaar",
+    description:
+      "Getoond wanneer de entry-context geen navigeerbaar bestand/regel heeft",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Fout bij laden journaalposten",
     description: "Error message prefix for journal loading failures",

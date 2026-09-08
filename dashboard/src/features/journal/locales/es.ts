@@ -146,6 +146,11 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "Ubicación:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "Ubicación de origen no disponible",
+    description:
+      "Se muestra cuando el contexto de la entrada no tiene archivo/línea navegables",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Error al cargar las entradas del diario",
     description: "Error message prefix for journal loading failures",

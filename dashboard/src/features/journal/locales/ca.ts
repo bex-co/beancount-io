@@ -146,6 +146,11 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Ubicació:",
     description: "Label for entry location in file",
   },
+  "journal.entryLocationUnavailable": {
+    message: "Ubicació de l'origen no disponible",
+    description:
+      "Es mostra quan el context de l'entrada no té fitxer/línia navegables",
+  },
   "journal.errorLoadingJournalEntries": {
     message: "Error en carregar les entrades del diari",
     description: "Error message prefix for journal loading failures",

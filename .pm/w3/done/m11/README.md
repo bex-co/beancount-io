@@ -1,18 +1,18 @@
 # w3 · m11 — Reliable entry context for public-ledger readers
 
-**Worker:** worker3 **Goal:** public-ledger readers reach the originating source entry and receive controls appropriate to their permissions **Status:** todo
+**Worker:** worker3 **Goal:** public-ledger readers reach the originating source entry and receive controls appropriate to their permissions **Status:** done
 
 ## Tasks (in order)
 
-| id   | title                                               | est | depends_on |
-| ---- | --------------------------------------------------- | --- | ---------- |
-| t001 | Preserve resolved source metadata in entry context  | 45m | —          |
-| t002 | Handle unavailable entry locations in the dashboard | 25m | t001       |
-| t003 | Gate entry editing by ledger write permission       | 35m | —          |
-| t004 | Adoption surface                                    | 20m | t002, t003 |
-| t005 | Simplify                                            | 20m | t004       |
-| t006 | Test coverage across context callers and transports | 40m | t004, t005 |
-| t007 | Closeout                                            | 15m | t006       |
+| id   | title | est | depends_on |
+| ---- | ----- | --- | ---------- |
+| t001 | Preserve resolved source metadata in entry context — **DONE** | 45m | — |
+| t002 | Handle unavailable entry locations in the dashboard — **DONE** | 25m | t001 |
+| t003 | Gate entry editing by ledger write permission — **DONE** | 35m | — |
+| t004 | Adoption surface — **DONE** | 20m | t002, t003 |
+| t005 | Simplify — **DONE** | 20m | t004 |
+| t006 | Test coverage across context callers and transports — **DONE** | 40m | t004, t005 |
+| t007 | Closeout — **DONE** | 15m | t006 |
 
 ## Reproduced findings
 
