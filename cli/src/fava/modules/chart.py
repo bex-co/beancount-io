@@ -68,7 +68,7 @@ class ChartModule:
         return tree.get(account_name).serialise(
             conversion,
             filtered.ledger.prices,
-            end - ONE_DAY if end is not None else None,
+            end - ONE_DAY if end is not None else filtered.end_date,
         )
 
     @listify

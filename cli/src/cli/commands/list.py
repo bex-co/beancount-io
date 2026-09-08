@@ -10,16 +10,18 @@ from __future__ import annotations
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from enum import StrEnum
 from typing import Annotated, Any
 
 import typer
 
 from cli import context, output
+from cli.errors import UsageError
 from cli.utils import parse_opt_date
 
 list_app = typer.Typer(help="List directives from a local .bean file", no_args_is_help=True, rich_markup_mode=None)
 
-LimitOpt = Annotated[int, typer.Option("--limit", "-l", help="Max results")]
+LimitOpt = Annotated[int, typer.Option("--limit", "-l", min=1, help="Max results (positive)")]
 FromDateOpt = Annotated[str | None, typer.Option("--from-date", help="Start date YYYY-MM-DD")]
 ToDateOpt = Annotated[str | None, typer.Option("--to-date", help="End date YYYY-MM-DD")]
 AccountFilterOpt = Annotated[str | None, typer.Option("--account", "-a", help="Filter by account (substring)")]
@@ -127,9 +129,11 @@ SPECS: dict[str, _Spec] = {
 }
 
 
-def _run(spec: _Spec, limit: int, allow_errors: bool, **filters: Any) -> None:
+def _run(spec: _Spec, limit: int, allow_errors: bool, *, details: bool = False, **filters: Any) -> None:
     """Load the ledger, list one directive type, and render it for the active mode."""
     ctx = context.current()
+    if filters.get("from_date") and filters.get("to_date") and filters["from_date"] > filters["to_date"]:
+        raise UsageError("--from-date must be on or before --to-date.")
     file = ctx.entry_file()
     from cli.directives import reader
 
@@ -153,7 +157,15 @@ def _run(spec: _Spec, limit: int, allow_errors: bool, **filters: Any) -> None:
     if not items:
         typer.echo(spec.empty)
         return
-    output.table(spec.headers, [spec.row(item) for item in items])
+    if details:
+        from cli.directives.writer import format_transaction
+
+        for item in items:
+            if item.source:
+                typer.echo(f"{item.source.filename}:{item.source.lineno}")
+            typer.echo(format_transaction(item))
+    else:
+        output.table(spec.headers, [spec.row(item) for item in items])
     if truncated:
         output.note(f"Showing the first {limit}; pass --limit for more.")
 
@@ -221,4 +233,38 @@ def _plain_command(spec: _Spec) -> Callable[..., None]:
 _COMMANDS = {"account": _account_command, "currency": _currency_command, None: _plain_command}
 
 for _name, _spec in SPECS.items():
+    if _name == "transaction":
+        continue
     list_app.command(_name, help=f"List {_name} directives from a .bean file.")(_COMMANDS[_spec.filter](_spec))
+
+
+class TransactionSort(StrEnum):
+    oldest = "oldest"
+    newest = "newest"
+
+
+@list_app.command("transaction")
+def transactions(
+    limit: LimitOpt = 50,
+    from_date: FromDateOpt = None,
+    to_date: ToDateOpt = None,
+    account: AccountFilterOpt = None,
+    allow_errors: AllowErrorsOpt = False,
+    details: Annotated[
+        bool, typer.Option("--details", help="Show every posting, amount, metadata, and source location")
+    ] = False,
+    sort: Annotated[
+        TransactionSort, typer.Option("--sort", help="Transaction date order, applied before the limit")
+    ] = TransactionSort.oldest,
+) -> None:
+    """List transactions; use --details --sort newest to review recent entries."""
+    _run(
+        SPECS["transaction"],
+        limit,
+        allow_errors,
+        details=details,
+        from_date=parse_opt_date(from_date),
+        to_date=parse_opt_date(to_date),
+        account=account,
+        newest=sort == TransactionSort.newest,
+    )

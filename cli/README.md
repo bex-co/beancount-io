@@ -6,19 +6,20 @@ command it installs is `bea`.
 
 ## Installation
 
-Two channels, both ending in a working `bea`:
+Install with Homebrew on macOS or Linuxbrew:
 
 ```bash
 brew install bex-co/tap/bea          # macOS and Linuxbrew
-uv tool install beancount-io         # anywhere with uv
+bea --version
 ```
 
 Homebrew builds a managed virtualenv from the release's hash-pinned lock, so an
-install resolves nothing and compiles nothing. The uv channel needs
-[uv](https://docs.astral.sh/uv/) and Python 3.12 or newer.
+install uses the dependencies tested for that release. Each release must pass
+an installation and customer workflow test through Homebrew before publishing.
+For other environments, use [uv](https://docs.astral.sh/uv/) with Python 3.12 or newer:
 
 ```bash
-bea --help
+uv tool install beancount-io
 ```
 
 `bea ask` needs the optional AI dependencies, which the default install and the
@@ -56,12 +57,32 @@ uv tool uninstall beancount-io
 No account and no AI dependencies are needed for local work:
 
 ```bash
-cd ~/my-books          # a directory containing main.bean
-bea check              # parse and validate the ledger
-bea list transaction --limit 10
+bea --no-input init ~/my-books --currency USD --date 2026-08-01 \
+  --opening-balance "Assets:Checking 1000"
+cd ~/my-books
+bea add transaction --date 2026-08-02 --narration "Coffee" \
+  --posting "Expenses:Dining 12.50 USD" --posting "Assets:Checking -12.50 USD"
+bea check
+bea list transaction --sort newest --details --limit 10
 bea report balance-sheet
 bea query "SELECT account, sum(position) GROUP BY account"
 ```
+
+`bea init` also works interactively. It creates common accounts, asks for your
+currency and checking balance, and never overwrites an existing ledger. All
+`add` commands validate the complete ledger, including relative includes and
+cost-lot booking, before atomically writing. Invalid changes leave the original
+bytes intact. Use `--allow-errors` explicitly when staging a semantic error.
+
+Preview bank exports with a configured importer, then apply the reviewed result:
+
+```bash
+bea import bank.csv --config importers.py
+bea import bank.csv --config importers.py --apply
+```
+
+See [the import guide](https://github.com/bex-co/beancount-io/blob/main/cli/docs/IMPORTING.md) for Beangulp integration, categorization,
+duplicate decisions, and a runnable CSV example.
 
 Point at any ledger with `--file`, or set `BEA_FILE`:
 
@@ -110,9 +131,22 @@ make codegen       # regenerate the REST client from the pinned OpenAPI spec
 
 A release is a tag. `.github/workflows/release-cli.yml` runs on `cli-v<version>`
 tags: it validates the tag, runs `make check-all`, exports a hash-pinned
-`requirements.lock`, builds the sdist and wheel, publishes to PyPI through
-trusted publishing, creates the GitHub Release, and pushes a rendered
-`Formula/bea.rb` to the tap.
+`requirements.lock`, and builds the sdist and wheel. A clean macOS job installs
+that exact sdist through a temporary Homebrew tap and tests ledger creation,
+check, writes, BQL, reports, error handling, and missing prices. Only then does
+the publish job upload those artifacts to PyPI through trusted publishing,
+create the GitHub Release, and push `Formula/bea.rb` to the tap.
+
+Run the same installation check locally when `bea` is not already installed by Homebrew:
+
+```bash
+make release-lock
+uv build --out-dir tmp/release
+bash scripts/test-homebrew.sh tmp/release/beancount_io-0.1.0.tar.gz
+```
+
+The test installs an unlinked keg and removes that keg and its temporary tap
+on exit. Homebrew may install the formula's Python and uv prerequisites.
 
 ```zsh
 # 1. Bump `version` in pyproject.toml, then confirm the tag it needs:
@@ -136,8 +170,8 @@ Two things live outside the repository and are set up once:
   `beancount-io`, workflow `release-cli.yml`, environment `production`. No API
   token is stored anywhere.
 - **`BEA_TAP_PUSH_KEY`.** A write deploy key for `bex-co/homebrew-tap`, held as
-  a repository secret. The formula step skips cleanly while it is unset, so the
-  PyPI channel ships without waiting for the tap.
+  a repository or production environment secret. A tag release fails before
+  either channel publishes if the key is missing. Rehearsals do not require it.
 
 ## License
 

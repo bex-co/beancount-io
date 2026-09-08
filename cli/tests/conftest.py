@@ -37,6 +37,7 @@ def bea_config_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     # fails instantly instead of asking PyPI about a release.
     monkeypatch.setenv("BEA_NO_UPDATE_NOTIFIER", "1")
     monkeypatch.setenv("BEA_UPDATE_API_URL", "http://127.0.0.1:9")
+    monkeypatch.setenv("BEA_TAP_FORMULA_URL", "http://127.0.0.1:9/bea.rb")
     context.configure()
     return directory
 
@@ -58,7 +59,11 @@ class _IndexHandler(BaseHTTPRequestHandler):
         if index.version is None:
             self.send_error(500)
             return
-        body = json.dumps({"info": {"version": index.version}}).encode()
+        body = (
+            f'version "{index.version}"\n'
+            if self.path == "/bea.rb"
+            else json.dumps({"info": {"version": index.version}})
+        ).encode()
         try:
             self.send_response(200)
             self.send_header("Content-Type", "application/json")
@@ -86,6 +91,7 @@ def fake_index(monkeypatch: pytest.MonkeyPatch) -> Iterator[FakeIndex]:
     threading.Thread(target=server.serve_forever, kwargs={"poll_interval": 0.01}, daemon=True).start()
     monkeypatch.delenv("BEA_NO_UPDATE_NOTIFIER", raising=False)
     monkeypatch.setenv("BEA_UPDATE_API_URL", f"http://127.0.0.1:{server.server_address[1]}")
+    monkeypatch.setenv("BEA_TAP_FORMULA_URL", f"http://127.0.0.1:{server.server_address[1]}/bea.rb")
     try:
         yield index
     finally:

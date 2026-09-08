@@ -10,7 +10,7 @@ from typing import Annotated, Any
 
 import typer
 
-from cli import context, output
+from cli import context, ledger_write, output
 from cli.errors import LedgerError
 from cli.utils import parse_date
 
@@ -21,6 +21,9 @@ add_app = typer.Typer(
 DateOpt = Annotated[str, typer.Option("--date", help="Date in YYYY-MM-DD format")]
 TagOpt = Annotated[list[str] | None, typer.Option("--tag", help="Tag (repeat for multiple)")]
 LinkOpt = Annotated[list[str] | None, typer.Option("--link", help="Link (repeat for multiple)")]
+AllowErrorsOpt = Annotated[
+    bool, typer.Option("--allow-errors", help="Allow semantic ledger errors; syntax must be valid")
+]
 
 
 def _parse_amount(amount_str: str) -> tuple[Decimal, str]:
@@ -48,7 +51,7 @@ def _parse_posting(posting_str: str) -> Any:
     return Posting(account=parts[0], units=Amount(number=_parse_number(parts[1]), currency=parts[2]))
 
 
-def _append(build: Callable[[], Any]) -> None:
+def _append(build: Callable[[], Any], *, allow_errors: bool = False) -> None:
     """Resolve the target, build the directive, append it, and report — the same way for every type.
 
     `build` runs after the target is known so that a bad argument fails as a
@@ -62,13 +65,15 @@ def _append(build: Callable[[], Any]) -> None:
 
     directive = build()
     name = type(directive).__name__.removesuffix("Directive")
-    getattr(writer, f"write_{name.lower()}")(file, directive)
+    warnings = getattr(writer, f"write_{name.lower()}")(file, directive, allow_errors=allow_errors)
     if ctx.json_output:
         output.emit(
-            {"written": 1, "directive": directive.model_dump(mode="json")},
+            {"written": 1, "directive": directive.model_dump(mode="json"), "warnings": warnings},
             target=output.file_target(file),
         )
     else:
+        for warning in warnings:
+            output.note(warning)
         output.success(f"{name} directive written to {file}")
 
 
@@ -81,8 +86,13 @@ def add_transaction(
     narration: Annotated[str | None, typer.Option("--narration", "-n", help="Narration")] = None,
     tag: TagOpt = None,
     link: LinkOpt = None,
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
-    """Append a transaction directive."""
+    """Append a transaction directive.
+
+    Each --posting is 'ACCOUNT NUMBER CURRENCY'. For investment cost lots and
+    prices, use 'bea add transactions --from FILE.json'; see docs/USAGE.md.
+    """
 
     def build() -> Any:
         from cli.directives.models import TransactionDirective
@@ -97,7 +107,7 @@ def add_transaction(
             links=list(link) if link else [],
         )
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("open")
@@ -105,6 +115,7 @@ def add_open(
     date: DateOpt,
     account: Annotated[str, typer.Option("--account", "-a", help="Account name")],
     currency: Annotated[list[str] | None, typer.Option("--currency", "-c", help="Allowed currency (repeat)")] = None,
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append an open directive."""
 
@@ -113,13 +124,14 @@ def add_open(
 
         return OpenDirective(date=parse_date(date), account=account, currencies=list(currency) if currency else [])
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("close")
 def add_close(
     date: DateOpt,
     account: Annotated[str, typer.Option("--account", "-a", help="Account name")],
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append a close directive."""
 
@@ -128,7 +140,7 @@ def add_close(
 
         return CloseDirective(date=parse_date(date), account=account)
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("balance")
@@ -136,6 +148,7 @@ def add_balance(
     date: DateOpt,
     account: Annotated[str, typer.Option("--account", "-a", help="Account name")],
     amount: Annotated[str, typer.Option("--amount", help="'NUMBER CURRENCY'")],
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append a balance assertion directive."""
 
@@ -149,7 +162,7 @@ def add_balance(
             amount=Amount(number=number, currency=currency),
         )
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("pad")
@@ -157,6 +170,7 @@ def add_pad(
     date: DateOpt,
     account: Annotated[str, typer.Option("--account", "-a", help="Account to pad")],
     source: Annotated[str, typer.Option("--source", "-s", help="Source account")],
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append a pad directive."""
 
@@ -165,7 +179,7 @@ def add_pad(
 
         return PadDirective(date=parse_date(date), account=account, source_account=source)
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("note")
@@ -173,6 +187,7 @@ def add_note(
     date: DateOpt,
     account: Annotated[str, typer.Option("--account", "-a", help="Account name")],
     comment: Annotated[str, typer.Option("--comment", "-m", help="Note text")],
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append a note directive."""
 
@@ -181,7 +196,7 @@ def add_note(
 
         return NoteDirective(date=parse_date(date), account=account, comment=comment)
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("event")
@@ -189,6 +204,7 @@ def add_event(
     date: DateOpt,
     type: Annotated[str, typer.Option("--type", "-t", help="Event type")],
     description: Annotated[str, typer.Option("--description", "-d", help="Event description")],
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append an event directive."""
 
@@ -197,7 +213,7 @@ def add_event(
 
         return EventDirective(date=parse_date(date), type=type, description=description)
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("price")
@@ -205,6 +221,7 @@ def add_price(
     date: DateOpt,
     currency: Annotated[str, typer.Option("--currency", "-c", help="Commodity being priced")],
     amount: Annotated[str, typer.Option("--amount", help="'NUMBER CURRENCY'")],
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append a price directive."""
 
@@ -218,13 +235,14 @@ def add_price(
             amount=Amount(number=number, currency=price_currency),
         )
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("commodity")
 def add_commodity(
     date: DateOpt,
     currency: Annotated[str, typer.Option("--currency", "-c", help="Commodity symbol")],
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append a commodity directive."""
 
@@ -233,7 +251,7 @@ def add_commodity(
 
         return CommodityDirective(date=parse_date(date), currency=currency)
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("document")
@@ -243,6 +261,7 @@ def add_document(
     filename: Annotated[str, typer.Option("--filename", help="Document file path")],
     tag: TagOpt = None,
     link: LinkOpt = None,
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append a document directive."""
 
@@ -257,7 +276,7 @@ def add_document(
             links=list(link) if link else [],
         )
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 @add_app.command("custom")
@@ -269,9 +288,10 @@ def add_custom(
         typer.Option(
             "--value",
             "-v",
-            help="'kind:VALUE' where kind is text|number|amount|account. amount format: 'amount:NUMBER CURRENCY'",
+            help="'kind:VALUE': text|number|amount|account|bool|date. Amount: 'amount:NUMBER CURRENCY'",
         ),
     ] = None,
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Append a custom directive.
 
@@ -287,13 +307,15 @@ def add_custom(
 
         return CustomDirective(date=parse_date(date), type=type, values=[_parse_custom_value(v) for v in value or []])
 
-    _append(build)
+    _append(build, allow_errors=allow_errors)
 
 
 def _parse_custom_value(raw: str) -> Any:
     from cli.directives.models import (
         CustomDirectiveValueAccount,
         CustomDirectiveValueAmount,
+        CustomDirectiveValueBoolean,
+        CustomDirectiveValueDate,
         CustomDirectiveValueNumber,
         CustomDirectiveValueText,
     )
@@ -310,7 +332,11 @@ def _parse_custom_value(raw: str) -> Any:
         return CustomDirectiveValueAmount(kind="amount", number=number, currency=currency)
     if kind == "account":
         return CustomDirectiveValueAccount(kind="account", value=rest)
-    raise typer.BadParameter(f"Unknown value kind '{kind}'. Use: text, number, amount, account")
+    if kind == "bool" and rest.lower() in {"true", "false"}:
+        return CustomDirectiveValueBoolean(kind="bool", value=rest.lower() == "true")
+    if kind == "date":
+        return CustomDirectiveValueDate(kind="date", value=parse_date(rest))
+    raise typer.BadParameter(f"Invalid value kind or value {raw!r}. Use: text, number, amount, account, bool, date")
 
 
 @add_app.command("transactions")
@@ -319,6 +345,7 @@ def add_transactions(
     partial: Annotated[
         bool, typer.Option("--partial", help="Append the valid rows even when some rows are rejected")
     ] = False,
+    allow_errors: AllowErrorsOpt = False,
 ) -> None:
     """Bulk-append transactions from a JSON file.
 
@@ -329,36 +356,71 @@ def add_transactions(
     ctx = context.current()
     file = ctx.entry_file()
     from cli.directives.models import TransactionDirective
-    from cli.directives.writer import write_transactions
+    from cli.directives.writer import format_transaction, write_transactions
 
     raw = json.loads(from_file.read_text())
     if not isinstance(raw, list):
         raise LedgerError("JSON file must contain an array of transactions.")
 
-    valid: list[TransactionDirective] = []
+    valid: list[tuple[int, TransactionDirective]] = []
     rejected: list[str] = []
+    rejected_rows: list[int] = []
     for index, item in enumerate(raw):
         try:
-            valid.append(TransactionDirective.model_validate(item))
+            valid.append((index, TransactionDirective.model_validate(item)))
         except Exception as e:
             rejected.append(f"row {index}: {e}")
+            rejected_rows.append(index)
 
     if rejected and not partial:
         raise LedgerError(
             f"{len(rejected)} of {len(raw)} row(s) are invalid; nothing was written. "
             f"Fix them, or pass --partial to append the {len(valid)} valid row(s).",
             details=rejected,
+            result={"written": 0, "written_rows": [], "rejected_rows": rejected_rows},
         )
 
-    write_transactions(file, valid)
+    # Validate the entire batch first: an earlier sale may depend on a buy that
+    # appears later in the input. Only partial recovery needs sequential trials.
+    try:
+        ledger_write.validate_append(file, [format_transaction(d) for _, d in valid], allow_errors=allow_errors)
+    except LedgerError as batch_error:
+        if not partial:
+            batch_error.result = {"written": 0, "written_rows": [], "unwritten_rows": [index for index, _ in valid]}
+            raise
+        accepted: list[tuple[int, TransactionDirective]] = []
+        texts: list[str] = []
+        for index, directive in valid:
+            try:
+                text = format_transaction(directive)
+                ledger_write.validate_append(file, [*texts, text], allow_errors=allow_errors)
+            except LedgerError as err:
+                rejected.append(f"row {index}: {'; '.join(err.details) or str(err)}")
+                rejected_rows.append(index)
+            else:
+                accepted.append((index, directive))
+                texts.append(text)
+        valid = accepted
+
+    warnings = write_transactions(file, [d for _, d in valid], allow_errors=allow_errors)
 
     if rejected:
         raise LedgerError(
             f"Appended {len(valid)} of {len(raw)} transaction(s); {len(rejected)} row(s) were rejected.",
             details=rejected,
+            result={
+                "written": len(valid),
+                "written_rows": [index for index, _ in valid],
+                "rejected_rows": rejected_rows,
+            },
         )
 
     if ctx.json_output:
-        output.emit({"written": len(valid), "rejected": []}, target=output.file_target(file))
+        data: dict[str, Any] = {"written": len(valid), "rejected": []}
+        if warnings:
+            data["warnings"] = warnings
+        output.emit(data, target=output.file_target(file))
     else:
+        for warning in warnings:
+            output.note(warning)
         output.success(f"Written {len(valid)} transaction(s) to {file}")

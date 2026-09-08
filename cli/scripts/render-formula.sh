@@ -30,6 +30,7 @@ class Bea < Formula
   desc "Beancount.io CLI: check, query, report on, and edit beancount ledgers"
   homepage "https://beancount.io"
   url "https://files.pythonhosted.org/packages/source/b/beancount-io/beancount_io-${version}.tar.gz"
+  version "${version}"
   sha256 "${sha256}"
   license "MIT"
 
@@ -49,6 +50,8 @@ class Bea < Formula
     # file at the moment the keg is linked.
     system uv, "pip", "install", "--python", libexec/"venv/bin/python", "--no-deps", project
     bin.install_symlink libexec/"venv/bin/bea"
+    pkgshare.install "scripts/smoke-installed.py"
+    pkgshare.install "docs/examples/csv_importers.py"
   end
 
   # The dependency tree lands after Homebrew has rewritten the dylib IDs of
@@ -62,11 +65,12 @@ class Bea < Formula
   def post_install
     system Formula["uv"].opt_bin/"uv", "pip", "install",
            "--python", libexec/"venv/bin/python",
-           "--require-hashes", "--requirement", libexec/"project/requirements.lock"
+           "--require-hashes", "--only-binary", ":all:", "--requirement", libexec/"project/requirements.lock"
   end
 
   test do
     assert_match "bea #{version}", shell_output("#{bin}/bea --version")
+    system libexec/"venv/bin/python", pkgshare/"smoke-installed.py", bin/"bea"
   end
 end
 EOF

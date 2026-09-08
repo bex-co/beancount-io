@@ -36,7 +36,7 @@ class Amount(BaseModel):
 class Cost(BaseModel):
     number: Decimal
     currency: str
-    date: datetime.date
+    date: datetime.date | None = None
     label: str | None = None
 
 
@@ -46,6 +46,12 @@ class Posting(BaseModel):
     cost: Cost | None = None
     price: Amount | None = None
     flag: str | None = None
+    meta: dict[str, Any] = Field(default_factory=dict)
+
+
+class SourceLocation(BaseModel):
+    filename: str
+    lineno: int
 
 
 class TransactionDirective(BaseModel):
@@ -56,6 +62,8 @@ class TransactionDirective(BaseModel):
     postings: list[Posting]
     tags: list[Tag] = Field(default_factory=list)
     links: list[Link] = Field(default_factory=list)
+    meta: dict[str, Any] = Field(default_factory=dict)
+    source: SourceLocation | None = None
 
 
 class OpenDirective(BaseModel):
@@ -133,8 +141,23 @@ class CustomDirectiveValueAccount(BaseModel):
     value: str
 
 
+class CustomDirectiveValueBoolean(BaseModel):
+    kind: Literal["bool"]
+    value: bool
+
+
+class CustomDirectiveValueDate(BaseModel):
+    kind: Literal["date"]
+    value: datetime.date
+
+
 CustomDirectiveValue = Annotated[
-    CustomDirectiveValueText | CustomDirectiveValueNumber | CustomDirectiveValueAmount | CustomDirectiveValueAccount,
+    CustomDirectiveValueText
+    | CustomDirectiveValueNumber
+    | CustomDirectiveValueAmount
+    | CustomDirectiveValueAccount
+    | CustomDirectiveValueBoolean
+    | CustomDirectiveValueDate,
     Field(discriminator="kind"),
 ]
 

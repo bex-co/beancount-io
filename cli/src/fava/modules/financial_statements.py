@@ -6,6 +6,7 @@ from dataclasses import dataclass
 from typing import TYPE_CHECKING
 
 from .chart import ChartModule, DateAndBalance, DateAndBalanceWithAccountBalance
+from ..core.inventory import SimpleCounterInventory
 
 
 if TYPE_CHECKING:  # pragma: no cover
@@ -48,6 +49,9 @@ class BalanceSheetData:
     assets_hierarchy: SerialisedTreeNode
     liabilities_hierarchy: SerialisedTreeNode
     equity_hierarchy: SerialisedTreeNode
+    current_earnings: SimpleCounterInventory
+    valuation_adjustment: SimpleCounterInventory
+    equity_total: SimpleCounterInventory
 
 
 @dataclass(frozen=True)
@@ -117,14 +121,34 @@ class FinancialStatementsModule:
         """Compute balance sheet data."""
         chart = ChartModule()
         options = filtered.ledger.options
+        assets = chart.hierarchy(filtered, options["name_assets"], conversion)
+        liabilities = chart.hierarchy(filtered, options["name_liabilities"], conversion)
+        equity = chart.hierarchy(filtered, options["name_equity"], conversion)
+        earnings = SimpleCounterInventory()
+        for name in (options["name_income"], options["name_expenses"]):
+            for currency, amount in chart.hierarchy(filtered, name, conversion).balance_children.items():
+                earnings.add(currency, amount)
+        # Valid books balance at their booking weights. The difference after
+        # market conversion is separate from the period's booked P&L.
+        adjustment = SimpleCounterInventory()
+        for balance in (assets.balance_children, liabilities.balance_children, equity.balance_children, earnings):
+            for currency, amount in balance.items():
+                adjustment.add(currency, -amount)
+        equity_total = SimpleCounterInventory(equity.balance_children)
+        for balance in (earnings, adjustment):
+            for currency, amount in balance.items():
+                equity_total.add(currency, amount)
         return BalanceSheetData(
             net_worth_data=chart.net_worth(filtered, interval, conversion),
             assets_data=chart.account_balance(filtered, interval, options["name_assets"], conversion),
             liabilities_data=chart.account_balance(filtered, interval, options["name_liabilities"], conversion),
             equity_data=chart.account_balance(filtered, interval, options["name_equity"], conversion),
-            assets_hierarchy=chart.hierarchy(filtered, options["name_assets"], conversion),
-            liabilities_hierarchy=chart.hierarchy(filtered, options["name_liabilities"], conversion),
-            equity_hierarchy=chart.hierarchy(filtered, options["name_equity"], conversion),
+            assets_hierarchy=assets,
+            liabilities_hierarchy=liabilities,
+            equity_hierarchy=equity,
+            current_earnings=earnings,
+            valuation_adjustment=adjustment,
+            equity_total=equity_total,
         )
 
     def overview(

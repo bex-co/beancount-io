@@ -105,7 +105,7 @@ def upgrade(
     if check:
         # The user asked, so this is the one path that goes past the daily
         # cache: a stale answer is exactly what they are trying to rule out.
-        latest = update.latest_version(use_cache=False)
+        latest = update.latest_version(use_cache=False, channel=channel.name)
         if ctx.json_output:
             output.emit(
                 {

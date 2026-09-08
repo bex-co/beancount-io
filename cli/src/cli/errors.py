@@ -43,10 +43,12 @@ class BeaError(Exception):
         *,
         request_id: str | None = None,
         details: list[str] | None = None,
+        result: dict[str, Any] | None = None,
     ) -> None:
         super().__init__(message)
         self.request_id = request_id
         self.details = details or []
+        self.result = result
 
 
 class LedgerError(BeaError):
@@ -121,6 +123,11 @@ def to_bea_error(exc: BaseException | str) -> BeaError:
 
     if isinstance(exc, typer.BadParameter):
         return UsageError(exc.format_message())
+    # The parent class works with both standalone Click (older Typer) and
+    # Typer's vendored Click, without a dependency on either private module.
+    click_usage_error = typer.BadParameter.__bases__[0]
+    if isinstance(exc, click_usage_error):
+        return UsageError(str(exc))
 
     import httpx
 

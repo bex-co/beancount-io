@@ -117,6 +117,16 @@ class TestSuppression:
 
 
 class TestDailyCache:
+    def test_homebrew_checks_the_tap_and_keeps_its_cache_separate(self, fake_index: FakeIndex) -> None:
+        update.write_cache(1000.0, "20.0.0")
+        assert update.latest_version(channel="homebrew", now=1000.0) == "9.9.9"
+        assert fake_index.requests == ["/bea.rb"]
+        assert update.latest_version(now=1000.0) == "20.0.0"
+        fake_index.version = "10.0.0"
+        assert update.latest_version(channel="homebrew", now=1001.0) == "9.9.9"
+        assert update.latest_version(channel="homebrew", use_cache=False, now=1001.0) == "10.0.0"
+        assert fake_index.requests == ["/bea.rb", "/bea.rb"]
+
     def test_the_answer_is_reused_for_a_day(self, fake_index: FakeIndex) -> None:
         assert update.latest_version(now=1_000.0) == "9.9.9"
         fake_index.version = "10.0.0"
@@ -222,6 +232,20 @@ class TestTheNotice:
 
 
 class TestVersionHint:
+    def test_homebrew_does_not_announce_a_pypi_only_release(
+        self, fake_index: FakeIndex, in_a_terminal: None, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        from cli.commands.upgrade import HOMEBREW
+
+        monkeypatch.setattr("cli.main.current_channel", lambda: HOMEBREW)
+        monkeypatch.setattr("cli.config.package_version", lambda: "0.1.0")
+        update.write_cache(0.0, "9.9.9")
+        update.write_cache(0.0, "0.1.0", "homebrew")
+        result = runner.invoke(app, ["--version"])
+        assert result.stdout.strip() == "bea 0.1.0"
+        assert result.stderr == ""
+        assert fake_index.requests == []
+
     def test_the_hint_comes_from_the_cache_and_asks_nothing(
         self, fake_index: FakeIndex, in_a_terminal: None, monkeypatch: pytest.MonkeyPatch
     ) -> None:

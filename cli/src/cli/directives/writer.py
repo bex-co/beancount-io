@@ -2,17 +2,18 @@
 
 from __future__ import annotations
 
+import datetime
 from decimal import Decimal
 from pathlib import Path
-from typing import NamedTuple
+from collections.abc import Callable
+from typing import Any, NamedTuple
 
 from beancount.core import account as beancount_account
 from beancount.core.amount import Amount as BcAmount
-from beancount.core.data import (  # type: ignore[attr-defined]
+from beancount.core.data import (
     Balance,
     Close,
     Commodity,
-    Cost as BcCost,
     Custom,
     Document,
     Event,
@@ -23,7 +24,11 @@ from beancount.core.data import (  # type: ignore[attr-defined]
     Price,
     Transaction,
 )
-from beancount.parser.printer import format_entry
+from beancount.core.position import CostSpec
+from beancount.parser.printer import format_entry as upstream_format_entry
+from beancount.utils import misc_utils
+
+from cli import ledger_write
 
 from cli.directives.models import (
     BalanceDirective,
@@ -32,6 +37,8 @@ from cli.directives.models import (
     CustomDirective,
     CustomDirectiveValueAccount,
     CustomDirectiveValueAmount,
+    CustomDirectiveValueBoolean,
+    CustomDirectiveValueDate,
     CustomDirectiveValueNumber,
     CustomDirectiveValueText,
     DocumentDirective,
@@ -49,26 +56,44 @@ class _ValueType(NamedTuple):
     dtype: type
 
 
-def _append(file_path: Path, *texts: str) -> None:
-    """Append formatted entries, opening the file once however many there are."""
-    with file_path.open("a", encoding="utf-8") as f:
-        f.write("".join("\n" + text.rstrip() + "\n" for text in texts))
+escape_string: Callable[[str], str] = misc_utils.escape_string
 
 
-def _format_transaction(directive: TransactionDirective) -> str:
+def format_entry(entry: Any) -> str:
+    """Fill upstream printer escaping gaps without changing the input entry."""
+    fields = {
+        Note: ("comment",),
+        Document: ("filename",),
+        Event: ("type", "description"),
+        Custom: ("type",),
+    }.get(type(entry), ())
+    if fields:
+        entry = entry._replace(**{field: escape_string(getattr(entry, field)) for field in fields})
+    if isinstance(entry, Custom):
+        entry = entry._replace(
+            values=[_ValueType(escape_string(v.value) if v.dtype is str else v.value, v.dtype) for v in entry.values]
+        )
+    return str(upstream_format_entry(entry))
+
+
+def _append(file_path: Path, *texts: str, allow_errors: bool = False) -> list[str]:
+    return ledger_write.append(file_path, list(texts), allow_errors=allow_errors)
+
+
+def format_transaction(directive: TransactionDirective) -> str:
     postings = [
         Posting(
             account=p.account,
             units=BcAmount(p.units.number, p.units.currency),
-            cost=BcCost(p.cost.number, p.cost.currency, p.cost.date, p.cost.label) if p.cost else None,
+            cost=CostSpec(p.cost.number, None, p.cost.currency, p.cost.date, p.cost.label, False) if p.cost else None,
             price=BcAmount(p.price.number, p.price.currency) if p.price else None,
             flag=p.flag,
-            meta=None,
+            meta=ledger_write.metadata_for_write(p.meta),
         )
         for p in directive.postings
     ]
     entry = Transaction(
-        meta={},
+        meta=ledger_write.metadata_for_write(directive.meta),
         date=directive.date,
         flag=directive.flag,
         payee=directive.payee,
@@ -80,17 +105,18 @@ def _format_transaction(directive: TransactionDirective) -> str:
     return str(format_entry(entry))
 
 
-def write_transaction(file_path: Path, directive: TransactionDirective) -> None:
-    _append(file_path, _format_transaction(directive))
+def write_transaction(file_path: Path, directive: TransactionDirective, *, allow_errors: bool = False) -> list[str]:
+    return _append(file_path, format_transaction(directive), allow_errors=allow_errors)
 
 
-def write_transactions(file_path: Path, directives: list[TransactionDirective]) -> None:
+def write_transactions(
+    file_path: Path, directives: list[TransactionDirective], *, allow_errors: bool = False
+) -> list[str]:
     """Append a batch in one open/write. Byte-identical to writing them one at a time."""
-    if directives:
-        _append(file_path, *(_format_transaction(d) for d in directives))
+    return _append(file_path, *(format_transaction(d) for d in directives), allow_errors=allow_errors)
 
 
-def write_open(file_path: Path, directive: OpenDirective) -> None:
+def write_open(file_path: Path, directive: OpenDirective, *, allow_errors: bool = False) -> list[str]:
     entry = Open(
         meta={},
         date=directive.date,
@@ -98,15 +124,15 @@ def write_open(file_path: Path, directive: OpenDirective) -> None:
         currencies=directive.currencies if directive.currencies else [],
         booking=None,
     )
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)
 
 
-def write_close(file_path: Path, directive: CloseDirective) -> None:
+def write_close(file_path: Path, directive: CloseDirective, *, allow_errors: bool = False) -> list[str]:
     entry = Close(meta={}, date=directive.date, account=directive.account)
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)
 
 
-def write_balance(file_path: Path, directive: BalanceDirective) -> None:
+def write_balance(file_path: Path, directive: BalanceDirective, *, allow_errors: bool = False) -> list[str]:
     entry = Balance(
         meta={},
         date=directive.date,
@@ -115,42 +141,42 @@ def write_balance(file_path: Path, directive: BalanceDirective) -> None:
         tolerance=None,
         diff_amount=None,
     )
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)
 
 
-def write_pad(file_path: Path, directive: PadDirective) -> None:
+def write_pad(file_path: Path, directive: PadDirective, *, allow_errors: bool = False) -> list[str]:
     entry = Pad(meta={}, date=directive.date, account=directive.account, source_account=directive.source_account)
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)
 
 
-def write_note(file_path: Path, directive: NoteDirective) -> None:
+def write_note(file_path: Path, directive: NoteDirective, *, allow_errors: bool = False) -> list[str]:
     entry = Note(
         meta={}, date=directive.date, account=directive.account, comment=directive.comment, tags=None, links=None
     )
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)
 
 
-def write_event(file_path: Path, directive: EventDirective) -> None:
+def write_event(file_path: Path, directive: EventDirective, *, allow_errors: bool = False) -> list[str]:
     entry = Event(meta={}, date=directive.date, type=directive.type, description=directive.description)
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)
 
 
-def write_price(file_path: Path, directive: PriceDirective) -> None:
+def write_price(file_path: Path, directive: PriceDirective, *, allow_errors: bool = False) -> list[str]:
     entry = Price(
         meta={},
         date=directive.date,
         currency=directive.currency,
         amount=BcAmount(directive.amount.number, directive.amount.currency),
     )
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)
 
 
-def write_commodity(file_path: Path, directive: CommodityDirective) -> None:
+def write_commodity(file_path: Path, directive: CommodityDirective, *, allow_errors: bool = False) -> list[str]:
     entry = Commodity(meta={}, date=directive.date, currency=directive.currency)
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)
 
 
-def write_document(file_path: Path, directive: DocumentDirective) -> None:
+def write_document(file_path: Path, directive: DocumentDirective, *, allow_errors: bool = False) -> list[str]:
     entry = Document(
         meta={},
         date=directive.date,
@@ -159,10 +185,10 @@ def write_document(file_path: Path, directive: DocumentDirective) -> None:
         tags=frozenset(directive.tags) if directive.tags else None,
         links=frozenset(directive.links) if directive.links else None,
     )
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)
 
 
-def write_custom(file_path: Path, directive: CustomDirective) -> None:
+def write_custom(file_path: Path, directive: CustomDirective, *, allow_errors: bool = False) -> list[str]:
     values: list[_ValueType] = []
     for v in directive.values:
         if isinstance(v, CustomDirectiveValueText):
@@ -173,5 +199,9 @@ def write_custom(file_path: Path, directive: CustomDirective) -> None:
             values.append(_ValueType(value=BcAmount(v.number, v.currency), dtype=BcAmount))
         elif isinstance(v, CustomDirectiveValueAccount):
             values.append(_ValueType(value=v.value, dtype=beancount_account.TYPE))  # type: ignore[arg-type]
+        elif isinstance(v, CustomDirectiveValueBoolean):
+            values.append(_ValueType(value=v.value, dtype=bool))
+        elif isinstance(v, CustomDirectiveValueDate):
+            values.append(_ValueType(value=v.value, dtype=datetime.date))
     entry = Custom(meta={}, date=directive.date, type=directive.type, values=values)
-    _append(file_path, format_entry(entry))
+    return _append(file_path, format_entry(entry), allow_errors=allow_errors)

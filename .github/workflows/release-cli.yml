@@ -32,22 +32,21 @@ concurrency:
   cancel-in-progress: false
 
 jobs:
-  release:
-    name: release
+  build:
+    name: build and validate
     runs-on: ubuntu-latest
-    environment: production
     permissions:
-      contents: write # create the GitHub Release
-      id-token: write # PyPI trusted publishing (OIDC), no long-lived token
+      contents: read
     defaults:
       run:
         working-directory: cli
     env:
       IS_TAG_RELEASE: ${{ github.event_name == 'push' }}
       IS_TEST_UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.test }}
-      # secrets.* is not allowed in a step-level `if`, so the presence check is
-      # hoisted here and the tap steps gate on env.HAS_TAP_KEY.
-      HAS_TAP_KEY: ${{ secrets.BEA_TAP_PUSH_KEY != '' }}
+
+    outputs:
+      version: ${{ steps.release.outputs.version }}
+      tag: ${{ steps.release.outputs.tag }}
 
     steps:
       - uses: actions/checkout@v4
@@ -111,25 +110,85 @@ jobs:
             exit 1
           }
 
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-release
+          path: |
+            cli/dist/*
+            cli/requirements.lock
+
+  homebrew:
+    name: clean Homebrew installation
+    needs: build
+    runs-on: macos-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: cli-release
+          path: cli
+      - name: Install the release artifact and test customer workflows
+        working-directory: cli
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: bash scripts/test-homebrew.sh "dist/beancount_io-$VERSION.tar.gz"
+
+  release:
+    name: publish both channels
+    needs: [build, homebrew]
+    runs-on: ubuntu-latest
+    environment: production
+    permissions:
+      contents: write
+      id-token: write
+    defaults:
+      run:
+        working-directory: cli
+    env:
+      IS_TAG_RELEASE: ${{ github.event_name == 'push' }}
+      IS_TEST_UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.test }}
+      HAS_TAP_KEY: ${{ secrets.BEA_TAP_PUSH_KEY != '' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/download-artifact@v4
+        with:
+          name: cli-release
+          path: cli
+      - name: Require the Homebrew publishing credential
+        if: ${{ env.IS_TAG_RELEASE == 'true' }}
+        run: |
+          if [ "$HAS_TAP_KEY" != "true" ]; then
+            echo "::error::BEA_TAP_PUSH_KEY is required before publishing the PyPI and Homebrew release"
+            exit 1
+          fi
+
       - name: Publish to PyPI
         if: ${{ env.IS_TAG_RELEASE == 'true' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: cli/dist
+          skip-existing: true
 
       - name: Publish to TestPyPI
         if: ${{ env.IS_TEST_UPLOAD == 'true' }}
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: cli/dist
+          skip-existing: true
           repository-url: https://test.pypi.org/legacy/
 
       - name: Publish the GitHub release
         if: ${{ env.IS_TAG_RELEASE == 'true' }}
         env:
           GH_TOKEN: ${{ github.token }}
-          TAG: ${{ steps.release.outputs.tag }}
-          VERSION: ${{ steps.release.outputs.version }}
+          TAG: ${{ needs.build.outputs.tag }}
+          VERSION: ${{ needs.build.outputs.version }}
         # Idempotent, so a failure in the tap step below is fixed by re-running
         # the job instead of leaving the release half-published.
         run: |
@@ -141,13 +200,12 @@ jobs:
           fi
 
       - name: Publish the Homebrew formula
-        # BEA_TAP_PUSH_KEY is the write deploy key of bex-co/homebrew-tap —
-        # repo-scoped and non-personal. The step skips cleanly while it is
-        # unset, so the PyPI channel ships without waiting on the tap.
-        if: ${{ env.IS_TAG_RELEASE == 'true' && env.HAS_TAP_KEY == 'true' }}
+        # Required before either channel publishes; no successful release can
+        # silently omit the primary installation channel.
+        if: ${{ env.IS_TAG_RELEASE == 'true' }}
         env:
           TAP_KEY: ${{ secrets.BEA_TAP_PUSH_KEY }}
-          VERSION: ${{ steps.release.outputs.version }}
+          VERSION: ${{ needs.build.outputs.version }}
         run: |
           LOCAL_SHA="$(sha256sum "dist/beancount_io-$VERSION.tar.gz" | cut -d' ' -f1)"
 

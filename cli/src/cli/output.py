@@ -53,6 +53,8 @@ def error(exc: BaseException | str) -> NoReturn:
             payload["request_id"] = err.request_id
         if err.details:
             payload["details"] = err.details
+        if err.result is not None:
+            payload["result"] = jsonable(err.result)
         print(json.dumps({"error": payload}), file=sys.stderr)
     else:
         print(f"Error: {err}", file=sys.stderr)

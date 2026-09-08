@@ -32,6 +32,8 @@ from cli.directives.models import (
     CustomDirectiveValue,
     CustomDirectiveValueAccount,
     CustomDirectiveValueAmount,
+    CustomDirectiveValueBoolean,
+    CustomDirectiveValueDate,
     CustomDirectiveValueNumber,
     CustomDirectiveValueText,
     DocumentDirective,
@@ -41,6 +43,7 @@ from cli.directives.models import (
     PadDirective,
     Posting,
     PriceDirective,
+    SourceLocation,
     TransactionDirective,
 )
 
@@ -71,6 +74,23 @@ def _to_amount(bc_amount: Any) -> Amount:
     return Amount(number=Decimal(str(bc_amount.number)), currency=bc_amount.currency)
 
 
+def _metadata(meta: dict[str, Any] | None) -> dict[str, Any]:
+    from beancount.core.amount import Amount as BcAmount
+
+    result = {}
+    for key, value in (meta or {}).items():
+        if key in {"filename", "lineno"} or key.startswith("__"):
+            continue
+        if isinstance(value, Decimal):
+            value = {"kind": "number", "value": str(value)}
+        elif isinstance(value, datetime.date):
+            value = {"kind": "date", "value": value.isoformat()}
+        elif isinstance(value, BcAmount):
+            value = {"kind": "amount", "number": str(value.number), "currency": value.currency}
+        result[key] = value
+    return result
+
+
 def _to_transaction(entry: Any) -> TransactionDirective:
     postings = []
     for p in entry.postings:
@@ -90,6 +110,7 @@ def _to_transaction(entry: Any) -> TransactionDirective:
                 cost=cost,
                 price=price,
                 flag=p.flag,
+                meta=_metadata(p.meta),
             )
         )
     return TransactionDirective(
@@ -100,6 +121,8 @@ def _to_transaction(entry: Any) -> TransactionDirective:
         postings=postings,
         tags=sorted(entry.tags),
         links=sorted(entry.links),
+        meta=_metadata(entry.meta),
+        source=SourceLocation(filename=entry.meta["filename"], lineno=entry.meta["lineno"]),
     )
 
 
@@ -109,9 +132,10 @@ def list_transactions(
     to_date: datetime.date | None = None,
     account: str | None = None,
     limit: int = 50,
+    newest: bool = False,
 ) -> list[TransactionDirective]:
     results = []
-    for entry in entries:
+    for entry in reversed(entries) if newest else entries:
         if not isinstance(entry, Transaction):
             continue
         if not _in_date_range(entry.date, from_date, to_date):
@@ -322,6 +346,10 @@ def list_customs(
                 )
             elif v.dtype is Decimal or isinstance(v.value, Decimal):
                 values.append(CustomDirectiveValueNumber(kind="number", value=Decimal(str(v.value))))
+            elif v.dtype is bool:
+                values.append(CustomDirectiveValueBoolean(kind="bool", value=v.value))
+            elif v.dtype is datetime.date:
+                values.append(CustomDirectiveValueDate(kind="date", value=v.value))
             else:
                 values.append(CustomDirectiveValueAccount(kind="account", value=str(v.value)))
         results.append(CustomDirective(date=entry.date, type=entry.type, values=values))

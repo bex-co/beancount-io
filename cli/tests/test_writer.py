@@ -4,6 +4,8 @@ import datetime
 from decimal import Decimal
 from pathlib import Path
 
+import pytest
+
 from cli.directives import writer
 from cli.directives.models import (
     Amount,
@@ -28,6 +30,19 @@ from cli.directives.models import (
 
 def _read(file: Path) -> str:
     return file.read_text().strip()
+
+
+@pytest.fixture
+def tmp_bean_file(tmp_path: Path) -> Path:
+    file = tmp_path / "main.bean"
+    file.write_text(
+        "2020-01-01 open Assets:Cash USD\n"
+        "2020-01-01 open Assets:OldAccount USD\n"
+        "2020-01-01 open Expenses:Food USD\n"
+        "2020-01-01 open Equity:Opening USD\n"
+        '2020-01-01 * "Opening"\n  Assets:Cash 1000 USD\n  Equity:Opening -1000 USD\n'
+    )
+    return file
 
 
 class TestWriteTransaction:
@@ -89,6 +104,7 @@ class TestWriteTransaction:
 
 class TestWriteOpen:
     def test_with_currencies(self, tmp_bean_file: Path) -> None:
+        tmp_bean_file.write_text("")
         writer.write_open(
             tmp_bean_file,
             OpenDirective(
@@ -102,6 +118,7 @@ class TestWriteOpen:
         assert "USD" in content
 
     def test_without_currencies(self, tmp_bean_file: Path) -> None:
+        tmp_bean_file.write_text("")
         writer.write_open(
             tmp_bean_file,
             OpenDirective(
@@ -142,6 +159,8 @@ class TestWriteBalance:
 
 class TestWritePad:
     def test_basic(self, tmp_bean_file: Path) -> None:
+        with tmp_bean_file.open("a") as stream:
+            stream.write("2026-01-02 balance Assets:Cash 2000 USD\n")
         writer.write_pad(
             tmp_bean_file,
             PadDirective(
@@ -212,6 +231,8 @@ class TestWriteCommodity:
 
 class TestWriteDocument:
     def test_basic(self, tmp_bean_file: Path) -> None:
+        (tmp_bean_file.parent / "receipts").mkdir()
+        (tmp_bean_file.parent / "receipts/april.pdf").write_bytes(b"receipt")
         writer.write_document(
             tmp_bean_file,
             DocumentDirective(

@@ -70,6 +70,8 @@ if [ -n "$post_install_at" ] && [ -n "$hashed_install_at" ] && [ "$hashed_instal
 else
   fail "the wheels must be installed inside post_install (line $hashed_install_at vs post_install at $post_install_at)"
 fi
+expect_contains "the install step requires wheels" '--only-binary'
+expect_contains "the formula tests customer workflows" 'system libexec/"venv/bin/python", pkgshare/"smoke-installed.py", bin/"bea"'
 
 occurrences="$(grep -c "$SHA" "$formula")"
 if [ "$occurrences" = "1" ]; then

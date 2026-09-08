@@ -20,21 +20,23 @@ def query(
     file = ctx.entry_file()
     source = "beancount:" + str(file.resolve())
 
+    from beanquery import connect
+
+    if not query_string and ctx.no_input:
+        raise UsageError("A query is required without a terminal. Pass it as an argument.")
+    conn = connect(source)
+    output.render_ledger_errors(list(conn.errors), allow=allow_errors)
+
     if not query_string:
-        if ctx.no_input:
-            raise UsageError("A query is required without a terminal. Pass it as an argument.")
         from beanquery.shell import BQLShell
 
         BQLShell(source, sys.stdout, interactive=True, runinit=True).cmdloop()
         return
 
-    from beanquery import connect
     from beanquery.render.text import render as render_text
 
-    conn = connect(source)
     # A query answers with totals, which read as authoritative whether or not
     # the ledger loaded — so it is gated exactly like `list` and `report`.
-    output.render_ledger_errors(list(conn.errors), allow=allow_errors)
     cursor = conn.execute(query_string)
     rows = cursor.fetchall()
 

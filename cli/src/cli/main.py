@@ -15,10 +15,12 @@ from cli.commands.ask import ask
 from cli.commands.check import check
 from cli.commands.cloud.app import cloud_app
 from cli.commands.format import format_beans
+from cli.commands.import_ import import_entries
+from cli.commands.init import init
 from cli.commands.list import list_app
 from cli.commands.query import query
 from cli.commands.report import report_app
-from cli.commands.upgrade import upgrade
+from cli.commands.upgrade import current_channel, upgrade
 
 
 class _GuardedGroup(TyperGroup):
@@ -34,6 +36,30 @@ class _GuardedGroup(TyperGroup):
 
     # `ctx` is typer's vendored click Context; typed loosely to avoid importing
     # a private module just to restate the supertype's annotation.
+    def parse_args(self, ctx: Any, args: list[str]) -> list[str]:
+        # Parse global switches before command resolution can fail. Use Click's
+        # parser so --file=--json and arguments following -- remain values.
+        resilient, ignore_unknown = ctx.resilient_parsing, ctx.ignore_unknown_options
+        try:
+            ctx.resilient_parsing = True
+            ctx.ignore_unknown_options = True
+            opts, _, _ = self.make_parser(ctx).parse_args(list(args))
+        finally:
+            ctx.resilient_parsing, ctx.ignore_unknown_options = resilient, ignore_unknown
+        context.configure(
+            json_output=bool(opts.get("json_output")),
+            no_input=bool(opts.get("no_input")),
+            yes=bool(opts.get("yes")),
+        )
+        try:
+            return super().parse_args(ctx, list(args))
+        except (typer.Exit, typer.Abort):
+            raise
+        except Exception as exc:
+            if not args:  # Keep the normal no-arguments help page.
+                raise
+            output.error(exc)
+
     def invoke(self, ctx: Any) -> Any:
         try:
             result = super().invoke(ctx)
@@ -90,7 +116,7 @@ def _version_callback(value: bool) -> None:
         typer.echo(f"bea {version}")
         # From the day-old cache only: `--version` is what scripts parse and
         # what people run when the network is the thing that is broken.
-        update.print_version_hint(version, sys.argv[1:])
+        update.print_version_hint(version, sys.argv[1:], channel=current_channel().name)
         raise typer.Exit()
 
 
@@ -112,7 +138,7 @@ def main(
     ctx = context.configure(file=file, json_output=json_output, no_input=no_input, yes=yes)
     # Started here, where the machine-mode options are already resolved, so the
     # check overlaps the command instead of delaying it.
-    update.start(json_output=ctx.json_output, no_input=ctx.no_input)
+    update.start(json_output=ctx.json_output, no_input=ctx.no_input, channel=current_channel().name)
 
 
 # `ask` is local despite its hosted model calls — the task-verb rule in
@@ -123,6 +149,8 @@ _CLOUD_PANEL = "Cloud commands (beancount.io — need 'bea cloud login' or BEA_T
 _SELF_PANEL = "CLI maintenance"
 
 app.command("check", rich_help_panel=_LOCAL_PANEL)(check)
+app.command("init", rich_help_panel=_LOCAL_PANEL)(init)
+app.command("import", rich_help_panel=_LOCAL_PANEL)(import_entries)
 app.command("format", rich_help_panel=_LOCAL_PANEL)(format_beans)
 app.command("query", rich_help_panel=_LOCAL_PANEL)(query)
 app.command("ask", rich_help_panel=_LOCAL_PANEL)(ask)

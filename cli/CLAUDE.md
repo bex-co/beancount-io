@@ -57,12 +57,14 @@ the resulting diff.
 ## Releasing
 
 The package ships to PyPI and to `bex-co/homebrew-tap` from a `cli-v<version>`
-tag, driven by `../.github/workflows/release-cli.yml`. That workflow runs only
-`make check-all`, `make release-lock`, `scripts/release-check.sh`, and
-`scripts/render-formula.sh`, so anything a release depends on is runnable and
-testable here; `tests/test_release.py` puts the shell suite inside
-`make check-all`. Never hand-edit `requirements.lock` — it is generated per
-release and gitignored. `cli/README.md` holds the tagging procedure and the
-one-time PyPI and tap credentials setup.
+tag, driven by `../.github/workflows/release-cli.yml`. It runs `make check-all`,
+`make release-lock`, and `scripts/release-check.sh`, builds the artifacts, then
+tests the exact sdist through `scripts/test-homebrew.sh` in a clean macOS job.
+`scripts/render-formula.sh` installs the hash-pinned wheels and runs
+`scripts/smoke-installed.py` against the installed executable. Both channels
+publish only after that passes; a tag release requires the tap credential.
+`tests/test_release.py` puts the shell suite inside `make check-all`. Never
+hand-edit `requirements.lock` — it is generated per release and gitignored.
+`cli/README.md` holds the tagging procedure and one-time credentials setup.
 
 See `README.md` for installation and `docs/USAGE.md` for the command reference.

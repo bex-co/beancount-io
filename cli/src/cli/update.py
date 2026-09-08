@@ -15,6 +15,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import sys
 import threading
 import time
@@ -29,6 +30,8 @@ PROJECT = "beancount-io"
 #: Where releases are announced. `BEA_UPDATE_API_URL` repoints it at a fake in tests.
 DEFAULT_INDEX_URL = "https://pypi.org"
 INDEX_URL_ENV = "BEA_UPDATE_API_URL"
+TAP_URL = "https://raw.githubusercontent.com/bex-co/homebrew-tap/main/Formula/bea.rb"
+TAP_URL_ENV = "BEA_TAP_FORMULA_URL"
 DISABLE_ENV = "BEA_NO_UPDATE_NOTIFIER"
 
 #: One check a day, whatever the outcome was.
@@ -39,8 +42,8 @@ CACHE_MAX_AGE_SECONDS = 24 * 60 * 60
 TIMEOUT_SECONDS = 3.0
 
 
-def cache_path() -> Path:
-    return config_dir() / "update-check.json"
+def cache_path(channel: str = "pypi") -> Path:
+    return config_dir() / ("update-check-homebrew.json" if channel == "homebrew" else "update-check.json")
 
 
 def release_parts(version: str) -> tuple[int, int, int] | None:
@@ -92,42 +95,51 @@ def muted(*, json_output: bool, no_input: bool) -> bool:
     return json_output or no_input or env_flag(DISABLE_ENV) or env_flag("CI") or not _stderr_is_a_terminal()
 
 
-def read_cache() -> tuple[float, str] | None:
+def read_cache(channel: str = "pypi") -> tuple[float, str] | None:
     """The last check: when it happened, and what it found (`""` for nothing)."""
     try:
-        entry = json.loads(cache_path().read_text())
+        entry = json.loads(cache_path(channel).read_text())
         return float(entry["checked_at"]), str(entry["version"])
     except (OSError, ValueError, KeyError, TypeError):
         return None
 
 
-def write_cache(checked_at: float, version: str) -> None:
+def write_cache(checked_at: float, version: str, channel: str = "pypi") -> None:
     """Remember the outcome. Best effort: a read-only home must not break a command."""
     try:
-        path = cache_path()
+        path = cache_path(channel)
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(json.dumps({"checked_at": checked_at, "version": version}))
     except OSError:
         pass
 
 
-def _fetch_latest() -> str:
+def _fetch_latest(channel: str) -> str:
     """Ask the index for the newest published version. Raises on any failure."""
     # Imported here so that `bea --help` never loads urllib, and so nothing in
     # this module pulls in an HTTP client the default install would rather skip.
     import urllib.request
 
     base = os.environ.get(INDEX_URL_ENV) or DEFAULT_INDEX_URL
+    url = (
+        (os.environ.get(TAP_URL_ENV) or TAP_URL) if channel == "homebrew" else f"{base.rstrip('/')}/pypi/{PROJECT}/json"
+    )
     request = urllib.request.Request(
-        f"{base.rstrip('/')}/pypi/{PROJECT}/json",
+        url,
         headers={"Accept": "application/json", "User-Agent": f"bea/{package_version()}"},
     )
     with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+        if channel == "homebrew":
+            formula = response.read().decode("utf-8")
+            match = re.search(r'^\s*version "(\d+\.\d+\.\d+)"\s*$', formula, re.MULTILINE)
+            if not match:
+                match = re.search(r"beancount_io-(\d+\.\d+\.\d+)\.tar\.gz", formula)
+            return match.group(1) if match else ""
         payload = json.load(response)
     return str(payload["info"]["version"])
 
 
-def latest_version(*, use_cache: bool = True, now: float | None = None) -> str | None:
+def latest_version(*, use_cache: bool = True, now: float | None = None, channel: str = "pypi") -> str | None:
     """The newest published release, or `None` when there is nothing to report.
 
     Every outcome — a version, an empty answer, a failed fetch — is cached for a
@@ -137,24 +149,24 @@ def latest_version(*, use_cache: bool = True, now: float | None = None) -> str |
     """
     checked_at = time.time() if now is None else now
     if use_cache:
-        cached = read_cache()
+        cached = read_cache(channel)
         if cached is not None and 0 <= checked_at - cached[0] < CACHE_MAX_AGE_SECONDS:
             return cached[1] or None
 
     try:
-        version = _fetch_latest()
+        version = _fetch_latest(channel)
     except Exception:
         # A courtesy check has no failure mode worth showing anyone: a bad
         # network, a rate limit, a changed payload all mean "say nothing".
         version = ""
-    write_cache(checked_at, version)
+    write_cache(checked_at, version, channel)
     return version or None
 
 
 _pending: tuple[str, threading.Thread, list[str | None]] | None = None
 
 
-def start(*, json_output: bool, no_input: bool) -> None:
+def start(*, json_output: bool, no_input: bool, channel: str = "pypi") -> None:
     """Begin the daily check alongside the command, so a person waits for nothing."""
     global _pending
     _pending = None
@@ -167,7 +179,7 @@ def start(*, json_output: bool, no_input: bool) -> None:
     found: list[str | None] = [None]
 
     def check() -> None:
-        found[0] = latest_version()
+        found[0] = latest_version(channel=channel)
 
     thread = threading.Thread(target=check, daemon=True)
     thread.start()
@@ -204,7 +216,7 @@ def print_notice() -> None:
         print(hint(version, latest), file=sys.stderr)
 
 
-def print_version_hint(version: str, argv: Sequence[str]) -> None:
+def print_version_hint(version: str, argv: Sequence[str], *, channel: str = "pypi") -> None:
     """The hint `bea --version` may add — from the day's cache, never from the network.
 
     `--version` is an eager flag: it answers before the root callback has built
@@ -217,7 +229,7 @@ def print_version_hint(version: str, argv: Sequence[str]) -> None:
     # Whatever the last check found, however old: a stale answer here can only
     # be wrong in the harmless direction, because once the user has upgraded
     # `newer()` stops reporting it.
-    cached = read_cache()
+    cached = read_cache(channel)
     latest = cached[1] if cached is not None else ""
     if latest and newer(version, latest):
         print(hint(version, latest), file=sys.stderr)
