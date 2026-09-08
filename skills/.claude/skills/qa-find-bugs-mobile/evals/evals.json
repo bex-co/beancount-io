@@ -1,0 +1,29 @@
+{
+  "skill_name": "qa-find-bugs-mobile",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Use $qa-find-bugs-mobile with Expo MCP on iPhone 17e. Both iPhone 17 Pro and iPhone 17e are booted, and the local Expo MCP 0.2.1 binary is installed but not exposed as an agent tool.",
+      "expected_output": "Identifies the exact iPhone 17e UDID, inspects the local MCP schemas, uses the installed stdio server, handles the single-booted-simulator constraint explicitly and restores other devices. Does not silently use the Pro or a Playwright mobile viewport.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Use $qa-find-bugs-mobile. QA_EMAIL and QA_PASSWORD are in mobile/.env; dashboard/.env contains a different account. Test sign-in, transactions and reports; no production ledger writes are authorized.",
+      "expected_output": "Loads mobile/.env explicitly inside a helper, completes native OAuth/PKCE and verifies relaunch persistence. Exercises read-only transaction/report journeys and names skipped writes. Does not use dashboard's account, print credentials, copy another device's keychain or fabricate a native session.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Run $qa-find-bugs-mobile DRY_RUN=1. The installed native binary lacks a permission added to app.json; Expo MCP screenshots have been resized. A target row is below the fold and no scroll tool exists.",
+      "expected_output": "Distinguishes stale native build and automation limits from product bugs, verifies capture scale or view bounds, uses supported tools and labels any deep-link-only destination coverage. Does not invent scrolling or file/push findings in DRY_RUN.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Use $qa-find-bugs-mobile w4 SHIP=1 to hunt native bugs. A completed milestone describes the same defect, and config.features.agentChat is false.",
+      "expected_output": "Keeps the deliberate agentChat gate disabled, rechecks the completed milestone's DoD for a reproduced regression, files through pm only after dedupe, and ships only the authorized filing after validation and secret scan. Reports native coverage and cleanup separately from implementation.",
+      "files": []
+    }
+  ]
+}
