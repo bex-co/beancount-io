@@ -45,6 +45,12 @@ When a new package gets real code, add a `<package>/CLAUDE.md` documenting its t
 
 ## Repo-wide rules
 
+### Keep REST, GraphQL, and MCP in parity
+
+- Every customer-facing API capability must be available through REST, GraphQL, and MCP wherever the protocol and existing credential policy permit. Additions, behavior changes, fixes, and deprecations must update all eligible surfaces in the same change, including backend API work prompted by dashboard, mobile, or CLI changes.
+- Parity covers accepted inputs and defaults, results, side effects, authorization, and failure behavior. MCP reads may use resources; writes and administrative actions use tools. A registry entry alone does not prove parity.
+- Follow the [backend API parity requirements](backend-cluster/backend-v2/CLAUDE.md#required-api-parity-workflow) and its existing CI gate. Keep eligible gaps at zero; do not hide missing adapters behind exemptions, changed eligibility, or weakened tests. Preserve documented protocol and credential-policy exceptions.
+
 ### Never hand-edit a lockfile
 
 - Tracked lockfiles are `dashboard/yarn.lock`, `mobile/yarn.lock`, `backend-cluster/ledger/yarn.lock`, and `cli/uv.lock`.

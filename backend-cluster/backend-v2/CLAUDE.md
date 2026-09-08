@@ -45,7 +45,7 @@ The usual feature shape is `api/` for transport adapters, `service/` for single-
 The current dependency direction is:
 
 ```
-Resolver / REST handler
+GraphQL resolver / REST handler / MCP handler
         ↓
 Workflow (multi-service orchestration) or Service (single-domain operation)
         ↓
@@ -54,7 +54,7 @@ Service / Client factory
 Model + database / external API
 ```
 
-- Resolvers and REST handlers are transport adapters. They authenticate, validate, map request/response types, set transport state, and delegate. They do not access models or orchestrate several services.
+- GraphQL resolvers, REST handlers, and MCP tool/resource handlers are transport adapters. They authenticate, validate, map request/response types, set transport state, and delegate. They do not access models or orchestrate several services.
 - Workflows own cross-service coordination, transaction boundaries, locking, and multi-step use cases. Their inputs and outputs are plain domain types; a workflow must not import GraphQL DTOs from `api/`.
 - Services own one reusable domain capability. They may call models and external-client factories through narrow interfaces, but they stay transport-agnostic.
 - Models perform persistence for one aggregate. They contain queries and CRUD, not tier rules, cross-model workflows, or cache policy. Redis-backed token/session models are persistence, not caches.
@@ -143,9 +143,28 @@ Prompt and agent-routing evals live entirely under `evals/`. Use the focused `ya
 - OpenAPI: `GET /api-gateway/v1/openapi.json` is the published v1 contract and is served in every environment. The internal `/api-docs` and `/api-admin-docs` Swagger UI pages stay development-only.
 - New documented REST endpoints use Zod schemas, `zodValidator()`, and central route registration. Import the shared `@/shared/zod-openapi-setup`; never call `extendZodWithOpenApi()` in individual schema files.
 
+### Required API parity workflow
+
+REST, GraphQL, and MCP are equal public contracts. An API change is complete only when every eligible surface exposes the same domain behavior and its contract tests pass. This applies to new operations, changed inputs or outputs, bug fixes, authorization changes, and deprecations.
+
+1. **Identify all counterparts before editing.** Find the operation in `VERB_TABLE` in `src/server/api/op-class.ts`, its mounted REST route, GraphQL field, and MCP tool or resource. Read [the current parity contract](docs/api-parity.md) and its named exceptions; ADR 0008 explains the design. Eligibility follows `isReachableOn` and the current authorization action catalog, not old exemption prose or the operation's rate-limit class.
+2. **Implement the change across all eligible adapters together.** Delegate to the same service/workflow and canonical authorization action. Preserve equivalent inputs, defaults, filters, pagination, output values, side effects, previews, and failure semantics. Protocol envelopes and documented field aliases may differ. Keep credential scopes, ledger pins, relationship checks, rate budgets, and audit behavior consistent while respecting each OAuth resource's audience.
+3. **Register real, discoverable operations.** Update feature fragments, the GraphQL resolver registry/schema, REST declarations and validation, MCP tool/resource schemas, and the corresponding `VERB_TABLE` bindings as needed. MCP reads belong in resources; writes/admin actions belong in tools. A grouped tool must execute each advertised branch through that operation's protected service. An approximate BQL query or raw-file workaround does not substitute for an operation's contract.
+4. **Keep eligible gaps at zero.** `surface-parity.test.ts` must retain `gql: 0`, `rest: 0`, and `mcp: 0`. Do not raise these counts, remove bindings, narrow eligibility, broaden credential permissions, or add exemption text to bypass missing implementation. `src/server/api/__tests__/fixtures/parity-baseline.json` is a frozen historical contract, not a snapshot to regenerate when a test fails. Preserve existing structural exceptions; a new protocol or credential-policy exception must have a concrete reason in the relevant `*Exempt` field and be documented in the parity contract/ADR as a deliberate contract change.
+5. **Prove behavior through the adapters.** Add or update the affected family's contract tests using HTTP REST, GraphQL execution, and an MCP client for each eligible surface. Compare supported inputs/defaults, results, effects, and relevant validation/authorization failures. Exercise the shared domain implementation with controlled external dependencies; mocks that only assert all adapters call a service are insufficient. Preserve existing callers and document any intentional contract change.
+6. **Refresh contracts and run the gate before handoff.** Regenerate `docs/openapi/v1.json` for v1 REST contract changes and affected generated types/clients when their source contracts change. Review the generated diff. From this package, run:
+
+   ```zsh
+   yarn typecheck
+   yarn test
+   yarn generate-v1-openapi
+   ```
+
+   `yarn test` includes the zero-gap `surface-parity`, frozen `parity-baseline`, runtime `op-class-coverage`, `always-public`, OpenAPI completeness, and behavioral contract suites. The existing [CI workflow](../../.github/workflows/ci-backend-parity.yml) runs typechecking and the unit suite, regenerates OpenAPI, and rejects snapshot drift. Keep this gate enabled; a skipped or failed check leaves the API change unverified and must be reported at handoff.
+
 ### The v1 REST surface
 
-`src/features/ledger/api/rest/v1/` is the public API (ADR 0006 D7). It is deliberately small: the bar for an endpoint is that a caller who has never read the GraphQL schema can do the thing with curl in ten minutes. Everything else stays GraphQL-only with a written `restExempt` reason in the op-class table.
+`src/features/ledger/api/rest/v1/` is the public ledger API. Keep endpoints easy to use with curl while covering every eligible capability under the parity workflow above. The early minimal-surface guidance in ADR 0006 D7 does not exempt new operations from REST parity; ADR 0008 and `docs/api-parity.md` define the current contract.
 
 - **Add an endpoint** by declaring a `v1Route({...})` in the relevant `*-handler.ts` and listing it in `v1/index.ts`. `registerV1Route` mounts it, validates it, requires the shared request identity, and registers it with the spec from that one declaration, so the mounted path, enforced schema/authentication, and documented contract cannot disagree.
 - **Paths address a ledger as `{owner}/{name}`,** two segments, never one `{ledgerId}`. A single segment needs `%2F` to survive Cloudflare and Caddy unchanged.
@@ -163,7 +182,7 @@ Every surface authenticates through one gate and classifies every operation:
 - `src/server/api/always-public.ts` is the census of mounts that sit outside the scope gate. Each entry carries a written reason.
 - `src/server/api/rate-limit.ts` is the one rate limiter, shared by all three surfaces. Budgets are keyed on the credential (`tokenId`, else `userId`, else IP), so a client cannot get three budgets by spreading load across GraphQL, REST, and MCP. Writes get a much smaller budget than reads; per-op exceptions live in `OP_BUDGETS`. It fails open when Redis is unreachable — a limiter that refuses everything when its store is down is a worse outage than briefly unmetered traffic.
 - `src/server/api/audit.ts` records write/admin actions and every denial or authorization-source error. `AuthorizationService` emits the only final business-authorization result. Request-bound calls preserve the exact transport op ID through an isolated AsyncLocalStorage child context; direct service calls fall back to the canonical action. Both preserve the credential ledger pin. The event type deliberately has **no field an argument value could occupy**; if you need to record more, widen the interface in a diff a reviewer will see. Every call re-evaluates and audits independently; retention is 90 days, swept by `audit-retention-job`.
-- Three drift guards in `src/server/api/__tests__/` fail CI on divergence: `surface-parity` (a verb appears on every surface or carries an excuse), `op-class-coverage` (runtime ops ↔ matrix, protected-action/non-PDP partition, and canonical-action completeness), and `always-public` (no unexplained outside-gate mount). Adding an operation means classifying it — the coverage test will not let you skip.
+- Drift guards in `src/server/api/__tests__/` fail CI on divergence: `surface-parity` (zero missing eligible bindings and concrete reasons for structural absences), `parity-baseline` (historical operations, authority, eligibility, and bindings remain intact), `op-class-coverage` (runtime ops ↔ matrix, protected-action/non-PDP partition, and canonical-action completeness), and `always-public` (no unexplained outside-gate mount). Adding an operation means classifying it and implementing all eligible counterparts; see the required parity workflow above.
 - `authz/model.fga` models the **durable relationship ceiling** (exact-self users plus ledger owner/collaborator/public relationships) in the OpenFGA language, with behavioral assertions in `authz/model.test.fga.yaml`. Credentials, scopes, Stripe identifiers, temporary-object keys, and request context stay outside FGA and never become contextual tuples. No OpenFGA runtime is deployed. Protected user, billing, social, ledger control-plane/data-plane, temporary-asset, assisted-ingestion, AI, and bank actions execute through the small TypeScript PDP in `src/server/api/authorization/`; protected service/workflow methods call it before domain work, with no resolver-only authority or raw user-ID bypass, and composite actions declare every capability family once in the catalog. Public profile discovery, the static tier-quota catalog, and reads of currently public ledgers are explicit exceptions. Exact-self comes from the stable user ID; API-key and Plaid bindings come from current rows; ledger permissions and visibility come from current Gitea/Fava facts; temporary ownership comes from `tmp/{userId}/...`, all without a tuple copy, decision memo, or cross-request cache. `authorizeLedger` is only a thin ledger-service PEP over this PDP. A semantic relationship change must update the model in the same PR. See `authz/README.md` and **ADR 0010** (`../../docs/adrs/ADR010-backend-v2-authz-model.md`).
 
 ### API keys
