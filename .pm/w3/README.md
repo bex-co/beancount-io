@@ -14,3 +14,10 @@
 - [x] **m8** — Port the bank-import family to REST and MCP (8 tasks) ← from `backend-cluster/backend-v2/docs/ADR0008-surface-parity.md`
 - [x] **m9** — Restore defense in depth on the Plaid services (5 tasks) ← prerequisite of m8, found in w3/m8/t001
 - [x] **m10** — Dashboard personal access tokens: create, verify, and document the API-key path (7 tasks) ← direct user request, 2026-08-29
+- [ ] **m11** — Reliable entry context for public-ledger readers (7 tasks) ← dashboard QA, 2026-09-07
+- [ ] **m12** — Execute and restore the BQL query shown in the editor (6 tasks) ← dashboard QA, 2026-09-07
+
+## Inbox
+
+- [003](./003.md) — A timed-out budget write still lands, so the retry duplicates it
+- [004](./004.md) — Cash Flow hides the filters that determine its reporting period
