@@ -77,9 +77,16 @@ def parse_mapping(spec: str) -> CsvMapping:
             raise UsageError(f"Duplicate --csv field {name!r}.")
         else:
             columns[name] = column
-    for required in ("date", "payee"):
-        if required not in columns:
-            raise UsageError(f"--csv needs {required}=Column; got {spec!r}.")
+    if "date" not in columns:
+        raise UsageError(f"--csv needs date=Column; got {spec!r}.")
+    # Beancount's payee is optional, and most exports carry one free-text
+    # column. Forcing it into payee would put a raw bank memo in the field
+    # payee-based reporting groups by, so either description field will do.
+    if "payee" not in columns and "narration" not in columns:
+        raise UsageError(
+            f"--csv needs payee=Column or narration=Column for the description; got {spec!r}. "
+            "A single bank description column belongs in narration=."
+        )
     has_amount = "amount" in columns
     has_pair = "debit" in columns or "credit" in columns
     if has_amount == has_pair:
@@ -103,6 +110,114 @@ def load_rules(path: Path) -> list[CsvRule]:
     if not isinstance(entries, list) or not entries:
         raise UsageError(f"Rules file {path} must hold a [[rule]] list with match and account each.")
     return [CsvRule.compile(index, entry) for index, entry in enumerate(entries)]
+
+
+# Header names, lowercased, that identify a field beyond doubt. A role is only
+# inferred when exactly one column claims it, so a bank that ships both
+# "Description" and "Original Description" is reported as ambiguous rather than
+# guessed at. "Description"-style columns map to narration, never to payee.
+_HEADER_SYNONYMS: dict[str, tuple[str, ...]] = {
+    "date": ("date", "transaction date", "posting date", "post date", "posted date", "date posted", "booking date"),
+    "amount": ("amount", "transaction amount"),
+    "debit": ("debit", "withdrawal", "withdrawals", "money out", "paid out"),
+    "credit": ("credit", "deposit", "deposits", "money in", "paid in"),
+    "payee": ("payee", "merchant", "merchant name", "name", "counterparty"),
+    "narration": ("description", "memo", "details", "narration", "particulars", "transaction description"),
+    "currency": ("currency", "currency code", "ccy"),
+    "id": ("transaction id", "transaction_id", "reference number", "fitid"),
+    "category": ("category",),
+}
+
+# Ordered so the unambiguous ISO form wins before the day/month forms it could
+# never be confused with.
+_DATE_FORMATS = (
+    "%Y-%m-%d",
+    "%Y/%m/%d",
+    "%m/%d/%Y",
+    "%d/%m/%Y",
+    "%m/%d/%y",
+    "%d/%m/%y",
+    "%m-%d-%Y",
+    "%d-%m-%Y",
+    "%d.%m.%Y",
+    "%d %b %Y",
+    "%b %d, %Y",
+    "%Y%m%d",
+)
+
+
+@dataclass(frozen=True)
+class InferredMapping:
+    """A `--csv` spec read off the header row, with what stayed uncertain."""
+
+    spec: str
+    ambiguities: list[str]
+
+
+def infer_mapping(headers: list[str] | None) -> InferredMapping | None:
+    """A `--csv` spec for a header row bea can read confidently, else None.
+
+    Confidence means one column per role: a role two columns claim is dropped
+    rather than guessed, and a file with no usable date or amount infers
+    nothing at all so the caller falls back to asking.
+    """
+    if not headers:
+        return None
+    columns: dict[str, str] = {}
+    ambiguities: list[str] = []
+    for role, synonyms in _HEADER_SYNONYMS.items():
+        matches = [header for header in headers if header.strip().casefold() in synonyms]
+        if len(matches) == 1:
+            columns[role] = matches[0]
+        elif matches:
+            ambiguities.append(f"{role} ({', '.join(sorted(matches))})")
+    if "amount" in columns:
+        columns.pop("debit", None)
+        columns.pop("credit", None)
+    elif "debit" not in columns or "credit" not in columns:
+        return None
+    if "date" not in columns or ("payee" not in columns and "narration" not in columns):
+        return None
+    order = [role for role in _HEADER_SYNONYMS if role in columns]
+    return InferredMapping(
+        spec=",".join(f"{role}={columns[role]}" for role in order),
+        ambiguities=ambiguities,
+    )
+
+
+def infer_date_format(source: Path, column: str, limit: int = 200) -> tuple[str | None, bool]:
+    """The one date format that parses this column, and whether others also did.
+
+    Day-first and month-first columns are indistinguishable until a row carries
+    a day past the twelfth, so the caller is told when the choice was a guess
+    instead of silently booking half a year into the wrong month.
+    """
+    values: list[str] = []
+    try:
+        with open(source, encoding="utf-8-sig", newline="") as stream:
+            for row in csv.DictReader(stream):
+                if column not in row:
+                    return None, False
+                value = (row[column] or "").strip()
+                if value:
+                    values.append(value)
+                if len(values) >= limit:
+                    break
+    except (OSError, UnicodeDecodeError, csv.Error):
+        return None, False
+    if not values:
+        return None, False
+    working = []
+    for candidate in _DATE_FORMATS:
+        try:
+            for value in values:
+                datetime.strptime(value, candidate)
+        except ValueError:
+            continue
+        working.append(candidate)
+    if not working:
+        return None, False
+    return working[0], len(working) > 1
 
 
 def header_signature(headers: list[str] | None) -> str | None:
@@ -204,7 +319,9 @@ class CsvImporter:
                 currency = self._cell(row, line, "currency") or self._currency
                 if not currency:
                     raise UsageError(f"Row {line}: no currency column and the ledger has no single operating currency.")
-                payee = self._cell(row, line, "payee")
+                # An unmapped or blank payee is absent, not empty: a bare `""`
+                # payee would be printed into every entry the mapping writes.
+                payee = self._cell(row, line, "payee") or None
                 narration = self._cell(row, line, "narration")
                 counter, flag, rule = self._categorize(row, line, payee, narration, category_header)
                 meta = new_metadata(filepath, line)
@@ -223,13 +340,13 @@ class CsvImporter:
         self,
         row: dict[str, str | None],
         line: int,
-        payee: str,
+        payee: str | None,
         narration: str,
         category_header: str | None,
     ) -> tuple[str, str, str]:
         """Counter account, flag, and rule name: rules beat the category column."""
         for rule in self._rules:
-            if rule.expression.search(payee) or rule.expression.search(narration):
+            if rule.expression.search(payee or "") or rule.expression.search(narration):
                 return rule.account, "*", rule.pattern
         if category_header is not None:
             if category_header not in row:

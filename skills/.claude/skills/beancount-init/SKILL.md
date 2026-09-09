@@ -3,7 +3,7 @@ name: beancount-init
 description: >-
   Scaffold a brand-new beancount + fava personal ledger repository in the
   current working directory. Builds main.bean on `bea init` when the bea
-  CLI is installed (same thirteen accounts, same file), otherwise writes
+  CLI is installed (same fourteen accounts, same file), otherwise writes
   that template directly; plus a Makefile whose `make start` boots Fava on
   a randomized unusual port, an initialized uv Python project with beancount
   and fava installed, and a .gitignore tuned for Python/uv/fava. Trigger
@@ -81,7 +81,7 @@ bea --no-input init . --currency CURRENCY --date TODAY \
 template yourself on this path — the produced file equals `bea init`'s output
 byte-for-byte. Skip to Step 6.
 
-When BEA is no, write the same thirteen-account template `bea init` writes,
+When BEA is no, write the same fourteen-account template `bea init` writes,
 substituting `{{TODAY}}`, `{{CURRENCY}}`, and the `{{TAIL}}` block:
 
 ```
@@ -89,6 +89,7 @@ option "title" "Personal ledger"
 option "operating_currency" "{{CURRENCY}}"
 
 ; Add more accounts with bea add open. Amounts on credit accounts are negative.
+; bea import books rows it cannot categorize to Expenses:Uncategorized with flag '!'.
 {{TODAY}} open Assets:Checking {{CURRENCY}}
 {{TODAY}} open Assets:Savings {{CURRENCY}}
 {{TODAY}} open Assets:Cash {{CURRENCY}}
@@ -101,6 +102,7 @@ option "operating_currency" "{{CURRENCY}}"
 {{TODAY}} open Expenses:Transport {{CURRENCY}}
 {{TODAY}} open Expenses:Utilities {{CURRENCY}}
 {{TODAY}} open Expenses:Fees {{CURRENCY}}
+{{TODAY}} open Expenses:Uncategorized {{CURRENCY}}
 {{TODAY}} open Equity:OpeningBalances {{CURRENCY}}
 
 {{TAIL}}

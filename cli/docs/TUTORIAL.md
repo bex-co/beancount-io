@@ -8,15 +8,14 @@ Nothing here asks you to write Python or BQL.
 
 ## Week 1 — set up the books
 
-Create a ledger starting August 2026 with $1,250 in checking, then open the
-two accounts the template lacks for this month: the fuel subaccount and the
-holding account for uncategorized imports.
+Create a ledger starting August 2026 with $1,250 in checking, then open the one
+account the template lacks for this month, the fuel subaccount. `init` already
+opens `Expenses:Uncategorized`, where imports park rows they cannot categorize.
 
 ```bash
 bea --no-input init august --currency USD --date 2026-08-01 \
   --opening-balance "Assets:Checking 1250"
 bea --file august/main.bean add open --date 2026-08-01 --account Expenses:Transport:Fuel -c USD
-bea --file august/main.bean add open --date 2026-08-01 --account Expenses:Uncategorized -c USD
 ```
 
 ## Week 2 — record daily purchases

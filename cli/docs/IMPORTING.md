@@ -1,8 +1,10 @@
 # Importing bank exports
 
-A bank CSV needs no Python importer: name its columns with `--csv`, preview,
-then apply. Bea previews the resulting Beancount directives, checks
-duplicates, validates the candidate ledger, and applies only when requested.
+A bank CSV needs no Python importer. When its header row names columns bea
+recognizes, `bea import statement.csv --account Assets:Checking` is the whole
+command; otherwise name the columns with `--csv`. Either way bea previews the
+resulting Beancount directives, checks duplicates, validates the candidate
+ledger, and applies only when requested.
 
 ```bash
 bea --no-input init books --currency USD --date 2026-08-01
@@ -13,7 +15,6 @@ Date,Payee,Narration,Amount
 2026-08-04,Unknown Shop,mystery,-9.99
 EOF
 bea --file books/main.bean add open --date 2026-08-01 --account Expenses:Transport:Fuel -c USD
-bea --file books/main.bean add open --date 2026-08-01 --account Expenses:Uncategorized -c USD
 cat > rules.toml <<'EOF'
 [[rule]]
 match = "whole foods|trader joe|corner market"
@@ -59,17 +60,35 @@ importer, so preview, duplicate matching, validation, diff, and apply are
 unchanged. The walkthrough above is the whole interface; this section is the
 reference:
 
-`--csv` takes `field=Column` pairs. `date` and `payee` are required;
-`narration`, `id`, and `currency` are optional. Amounts take either
-`amount=Column` or the `debit=A,credit=B` pair (exactly one of the two): with
-the pair, exactly one cell per row must be filled, debits post negative.
-Amounts default to bank sign (outflows negative); add `sign=ledger` when the
-export uses the opposite convention. Dates parse as `%Y-%m-%d` unless
-`--date-format` says otherwise. The currency defaults to the ledger's single
-operating currency. `--account` names the source account and is required. The
-file may start with a BOM; header cells are stripped before matching. Unknown
-fields, missing columns, bad dates, and bad amounts fail with the row number
-and column name. Misuse exits **2**.
+`--csv` takes `field=Column` pairs. `date` is required, as is at least one of
+`payee` and `narration` — a single bank description column belongs in
+`narration`, which keeps the payee field free for the merchant that
+payee-based reporting groups by. `id` and `currency` are optional. Amounts
+take either `amount=Column` or the `debit=A,credit=B` pair (exactly one of the
+two): with the pair, exactly one cell per row must be filled, debits post
+negative. Amounts default to bank sign (outflows negative); add `sign=ledger`
+when the export uses the opposite convention. The currency defaults to the
+ledger's single operating currency. `--account` names the source account and
+is required. The file may start with a BOM; header cells are stripped before
+matching. Unknown fields, missing columns, bad dates, and bad amounts fail
+with the row number and column name. Misuse exits **2**.
+
+### Reading the header row
+
+With no `--csv`, no remembered mapping, and no Python importer configured, bea
+reads the mapping off the header row. `--csv auto` asks for the same reading
+outright and fails naming the file's actual columns when it cannot. A role is
+only filled when exactly one column claims it, so an export carrying both
+`Description` and `Original Description` reports the ambiguity and leaves that
+role unmapped rather than guessing. `Description`-style headers map to
+`narration`; `Payee` and `Merchant` map to `payee`.
+
+`--date-format` is likewise read from the file when unset: bea keeps the one
+`strptime` format that parses every date in the column. A column whose days
+never pass the twelfth cannot distinguish `%m/%d/%Y` from `%d/%m/%Y`, and bea
+says so instead of choosing quietly. Anything read this way is printed as the
+equivalent flags, so a wrong reading is visible in the preview that writes
+nothing. An option you type always wins over one bea read or remembered.
 
 An `id` column becomes `bank_id` metadata, so stable bank IDs deduplicate like
 a Python importer's. Rows without one get the same `csv:sha256:` content hash
@@ -103,8 +122,10 @@ The mapping is remembered per root ledger keyed by the CSV header row, so the
 next import of the same export needs no flags: human output reports
 `Using remembered column mapping for <file>` and JSON reports
 `config_source` `remembered --csv`. An explicit `--csv` run updates the
-remembered mapping. A changed header row matches nothing remembered, and the
-missing-importer guidance names `--csv` again.
+remembered mapping. Only a `--date-format` you passed is remembered with it;
+an inferred one is re-read per file, since two exports can share a header row
+without sharing a date convention. A changed header row matches nothing
+remembered, and bea falls back to reading that header directly.
 
 ## A Python importer (`--config`)
 

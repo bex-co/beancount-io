@@ -241,7 +241,10 @@ def add_transaction(
             if len(choices) != 1 and len(currencies) == 1 and (not choices or currencies[0] in choices):
                 choices = currencies
             if len(choices) != 1:
-                raise UsageError(f"Currency is ambiguous for {posting.account}; specify NUMBER CURRENCY explicitly.")
+                raise UsageError(
+                    f"Currency is ambiguous for {posting.account}; specify NUMBER CURRENCY explicitly.",
+                    details=ledger_write.root_ledger_hints(file),
+                )
             units = units._replace(currency=choices[0])
         normalized.append(posting._replace(units=units, meta={}))
     if elided > 1:

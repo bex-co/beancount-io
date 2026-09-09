@@ -38,11 +38,16 @@ def query(
         query_shell(source, sys.stdout).cmdloop()
         return
 
+    from beanquery import Error as BeanqueryError
+
     from cli.query_render import render_query
 
     # A query answers with totals, which read as authoritative whether or not
     # the ledger loaded — so it is gated exactly like `list` and `report`.
-    cursor = conn.execute(query_string)
+    try:
+        cursor = conn.execute(query_string)
+    except BeanqueryError as exc:
+        raise _query_error(exc, query_string, conn) from exc
     rows = cursor.fetchall()
 
     if ctx.json_output:
@@ -54,6 +59,41 @@ def query(
         if not rows:
             output.note("(no rows)")
         render_query(cursor.description, rows, sys.stdout)
+
+
+def _query_error(exc: Exception, query_string: str, conn: Any) -> UsageError:
+    """Point at the offending token, and name the columns that do exist.
+
+    Beanquery reports 'syntax error' with a byte offset and nothing else, which
+    for a long query says only that one of its characters is wrong.
+    """
+    details = []
+    position = getattr(getattr(exc, "parseinfo", None), "pos", None)
+    if isinstance(position, int) and 0 <= position <= len(query_string):
+        details.append(f"  {query_string}")
+        details.append(f"  {' ' * position}^")
+    details.extend(_column_suggestions(str(exc), conn))
+    details.append("Run bea query with no argument for the interactive shell, where .tables lists what you can query.")
+    return UsageError(f"Cannot run this BQL query: {exc}.", details=details)
+
+
+def _column_suggestions(message: str, conn: Any) -> list[str]:
+    """Close matches for an unknown column, read from the table it was sought in."""
+    import difflib
+    import re
+
+    match = re.search(r'column "([^"]+)" not found in table "([^"]+)"', message)
+    if not match:
+        return []
+    unknown, table_name = match.groups()
+    table = conn.tables.get(table_name)
+    columns = sorted(getattr(table, "columns", None) or ())
+    if not columns:
+        return []
+    close = difflib.get_close_matches(unknown, columns, n=3, cutoff=0.6)
+    if close:
+        return [f"Did you mean {', '.join(close)}?"]
+    return [f"Columns in {table_name}: {', '.join(columns)}."]
 
 
 def _columns(description: Any) -> list[dict[str, str]]:

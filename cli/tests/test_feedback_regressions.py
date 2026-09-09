@@ -305,3 +305,24 @@ def test_ask_writes_are_validated_and_detect_edits_while_confirming(book: Path) 
     assert "changed" in write(ctx, valid)
     assert book.read_bytes() == before + b"; external edit\n"
     assert "rejected" in write(ctx, 'plugin "untrusted_plugin"')
+
+
+def test_a_malformed_query_points_at_the_token_it_choked_on(book: Path) -> None:
+    """Beanquery answers 'syntax error' and an offset; on its own that names no token."""
+    result = runner.invoke(app, ["-f", str(book), "query", "SELECT account, FROM"])
+    assert result.exit_code == 2, result.output
+    assert "SELECT account, FROM" in result.stderr
+    assert "^" in result.stderr
+    assert ".tables" in result.stderr
+
+
+def test_an_unknown_column_suggests_the_ones_the_table_has(book: Path) -> None:
+    result = runner.invoke(app, ["-f", str(book), "query", "SELECT accont FROM #postings"])
+    assert result.exit_code == 2, result.output
+    assert "Did you mean account" in result.stderr
+
+
+def test_a_query_error_is_reported_as_json_when_json_was_asked_for(book: Path) -> None:
+    error = json.loads(run(book, "query", "SELCT foo").stderr)["error"]
+    assert error["category"] == "usage" and error["exit_code"] == 2
+    assert "syntax error" in error["message"]

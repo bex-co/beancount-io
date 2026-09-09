@@ -29,6 +29,9 @@ _ACCOUNTS = (
     "Expenses:Transport",
     "Expenses:Utilities",
     "Expenses:Fees",
+    # `bea import` books every uncategorized row here, so a fresh ledger can
+    # take an export without a second `bea add open` first.
+    "Expenses:Uncategorized",
     "Equity:OpeningBalances",
 )
 
@@ -118,6 +121,7 @@ def init(
 
     content = f'option "title" "Personal ledger"\noption "operating_currency" "{currency}"\n\n'
     content += "; Add more accounts with bea add open. Amounts on credit accounts are negative.\n"
+    content += "; bea import books rows it cannot categorize to Expenses:Uncategorized with flag '!'.\n"
     content += "".join(f"{day} open {account} {currency}\n" for account in _ACCOUNTS)
     nonzero = {account: amount for account, amount in balances.items() if amount}
     if nonzero:

@@ -323,3 +323,55 @@ def test_format_still_realigns_the_whole_file(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "  Assets:Cash  100.00 USD\n" not in book.read_text()
     assert "  Equity:OpeningBalances  -100.00 USD\n" in book.read_text()
+
+
+def test_one_missing_account_reads_as_one_problem_not_one_per_row(book: Path) -> None:
+    """Forty identical paragraphs would bury the hint that says how to fix them."""
+    entries = [f'2020-02-0{day} * "n"\n  Expenses:Nope 1 USD\n  Assets:Cash -1 USD\n' for day in (1, 2, 3)]
+    with pytest.raises(Exception) as caught:
+        ledger_write.validate_append(book, entries)
+    details = getattr(caught.value, "details", [])
+    assert len(details) == 1
+    assert "unknown account 'Expenses:Nope'" in details[0]
+    assert "Same problem on 2 more lines:" in details[0]
+    assert "bea add open --account Expenses:Nope" in details[0]
+
+
+def test_distinct_problems_are_still_reported_separately(book: Path) -> None:
+    entries = ['2020-02-01 * "n"\n  Expenses:Nope 1 USD\n  Assets:Cash -1 USD\n', "2020-02-02 open Assets:Cash USD\n"]
+    with pytest.raises(Exception) as caught:
+        ledger_write.validate_append(book, entries)
+    details = getattr(caught.value, "details", [])
+    assert len(details) == 2
+    assert not any("Same problem on" in detail for detail in details)
+
+
+def test_pointing_the_root_at_an_included_leaf_names_into_as_the_fix(book: Path) -> None:
+    # The leaf holds entries; its accounts and options live in the root's
+    # other include, so on its own the currency cannot be resolved.
+    leaf = book.parent / "2020.bean"
+    leaf.write_text('2020-01-02 * "Prior"\n  Expenses:Food 1 USD\n  Assets:Cash -1 USD\n')
+    book.write_text('include "accounts.beancount"\ninclude "2020.bean"\n')
+    result = runner.invoke(
+        app,
+        [
+            "-f",
+            str(leaf),
+            "add",
+            "transaction",
+            "Tea",
+            "--date",
+            "2020-02-01",
+            "-p",
+            "Expenses:Food 3",
+            "-p",
+            "Assets:Cash",
+        ],
+    )
+    assert result.exit_code == 2, result.output
+    assert f"included by {book}" in result.stderr
+    assert "--into 2020.bean" in result.stderr
+
+
+def test_a_standalone_ledger_gets_no_include_advice(book: Path) -> None:
+    assert ledger_write.root_ledger_hints(book) == []

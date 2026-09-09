@@ -234,6 +234,79 @@ def _balance_recovery_hints(
     return hints
 
 
+@dataclass(frozen=True)
+class _ErrorRecord:
+    """One loader error, kept separable so identical problems can be merged."""
+
+    kind: str
+    message: str
+    lineno: int | None
+    hints: list[str]
+
+
+def _collapse_repeats(records: list[_ErrorRecord]) -> list[str]:
+    """One line per distinct problem, naming the other lines it occurs on.
+
+    A single unopened account referenced by forty imported rows is one thing to
+    fix, and forty identical paragraphs bury the hint that says how.
+    """
+    order: list[tuple[str, tuple[str, ...]]] = []
+    grouped: dict[tuple[str, tuple[str, ...]], list[_ErrorRecord]] = {}
+    for record in records:
+        key = (record.kind, tuple(record.hints))
+        if key not in grouped:
+            grouped[key] = []
+            order.append(key)
+        grouped[key].append(record)
+    messages = []
+    for key in order:
+        occurrences = grouped[key]
+        message = occurrences[0].message
+        others = [str(record.lineno) for record in occurrences[1:] if record.lineno is not None]
+        if len(others) == len(occurrences) - 1 and others:
+            plural = "" if len(others) == 1 else "s"
+            message += f" Same problem on {len(others)} more line{plural}: {', '.join(others)}."
+        messages.append(message)
+        messages.extend(occurrences[0].hints)
+    return messages
+
+
+def including_root(file: Path) -> Path | None:
+    """A nearby ledger that includes `file`, when `file` is not itself a root.
+
+    Pointing `--file` at one leaf of an include tree drops the sibling files
+    that open its accounts and set its options, so the resulting failures name
+    the transaction rather than the target.
+    """
+    target = file.resolve()
+    candidates = []
+    for directory in dict.fromkeys((target.parent, target.parent.parent)):
+        candidates.extend(sorted(directory.glob("*.bean")) + sorted(directory.glob("*.beancount")))
+    for candidate in dict.fromkeys(path.resolve() for path in candidates):
+        if candidate == target:
+            continue
+        try:
+            included = LedgerSnapshot.capture(candidate).contents
+        except (OSError, UsageError, ValueError):
+            continue
+        if any(path.resolve() == target for path in included if path.resolve() != candidate):
+            return candidate
+    return None
+
+
+def root_ledger_hints(file: Path) -> list[str]:
+    """The `--into` recipe when the write target is an included file, else nothing."""
+    root = including_root(file)
+    if root is None:
+        return []
+    relative = os.path.relpath(file.resolve(), root.parent)
+    return [
+        f"{file.name} is included by {root}; on its own it lacks the accounts and options that root provides. "
+        f"Run against the root and pick the destination with --into: "
+        f"bea --file {shlex.quote(str(root))} <command> --into {shlex.quote(relative)}."
+    ]
+
+
 def validate_candidate(
     candidate: Path, file: Path, *, allow_errors: bool = False, snapshot: LedgerSnapshot | None = None
 ) -> list[str]:
@@ -250,7 +323,7 @@ def validate_candidate(
         with snapshot.staged(candidate, file) as (root, filenames):
             entries, errors, options = loader.load_file(root)
     accounts = [entry.account for entry in entries if isinstance(entry, Open)]
-    messages = []
+    records: list[_ErrorRecord] = []
     invalid_pad_accounts = False
     for error in errors:
         hints = []
@@ -263,6 +336,7 @@ def validate_candidate(
             if matches:
                 message += f" Did you mean {', '.join(matches)}?"
             message += f" To create it, use bea add open --account {shlex.quote(account)} --date YYYY-MM-DD."
+            hints.extend(root_ledger_hints(file))
         if "inactive account '" in message:
             account = message.split("inactive account '", 1)[1].split("'", 1)[0]
             for entry in entries:
@@ -307,8 +381,8 @@ def validate_candidate(
                         error.entry, source, snapshot.root if snapshot else file, entries, options, snapshot
                     )
                 )
-        messages.append(message)
-        messages.extend(hints)
+        records.append(_ErrorRecord(getattr(error, "message", str(error)), message, error.source.get("lineno"), hints))
+    messages = _collapse_repeats(records)
     syntax_errors = [err for err in errors if isinstance(err, ParserError | ParserSyntaxError | LexerError)]
     if errors and (not allow_errors or syntax_errors or invalid_pad_accounts):
         raise LedgerError("The change would leave the ledger invalid; nothing was written.", details=messages)

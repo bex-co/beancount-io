@@ -6,10 +6,10 @@
       "id": 1,
       "name": "init-with-bea",
       "prompt": "Set up a new beancount ledger here (USD, no opening balance). `bea` is on PATH.",
-      "expected_output": "The skill runs `bea --no-input init . --currency USD --date <TODAY>` and writes no template itself. main.bean equals `bea init` output byte-for-byte: thirteen opens dated TODAY plus the commented opening-balance example. bean-check passes.",
+      "expected_output": "The skill runs `bea --no-input init . --currency USD --date <TODAY>` and writes no template itself. main.bean equals `bea init` output byte-for-byte: fourteen opens dated TODAY plus the commented opening-balance example. bean-check passes.",
       "expectations": [
         "main.bean is byte-identical to running `bea --no-input init . --currency USD --date <TODAY>` directly",
-        "main.bean opens exactly the thirteen template accounts (Checking, Savings, Cash, CreditCard, Salary, Interest, Groceries, Dining, Rent, Transport, Utilities, Fees, OpeningBalances)",
+        "main.bean opens exactly the fourteen template accounts (Checking, Savings, Cash, CreditCard, Salary, Interest, Groceries, Dining, Rent, Transport, Utilities, Fees, Uncategorized, OpeningBalances)",
         "The equity account is spelled `Equity:OpeningBalances`",
         "bean-check passes with no errors"
       ]
@@ -18,9 +18,9 @@
       "id": 2,
       "name": "init-without-bea",
       "prompt": "Set up a new beancount ledger here (EUR, checking opening balance 100). `bea` is NOT on PATH.",
-      "expected_output": "The skill writes the thirteen-account template itself with TODAY opens, the operating currency, and a live opening-balances transaction for Assets:Checking 100. bean-check passes.",
+      "expected_output": "The skill writes the fourteen-account template itself with TODAY opens, the operating currency, and a live opening-balances transaction for Assets:Checking 100. bean-check passes.",
       "expectations": [
-        "main.bean opens exactly the thirteen template accounts dated TODAY in EUR",
+        "main.bean opens exactly the fourteen template accounts dated TODAY in EUR",
         "The equity account is spelled `Equity:OpeningBalances` with the operating currency",
         "A live `Opening balances` transaction posts Assets:Checking 100 against Equity:OpeningBalances -100 (no commented example alongside it)",
         "bean-check passes with no errors"

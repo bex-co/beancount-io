@@ -39,6 +39,8 @@ make release-check
 make release-lock
 ```
 
+`make test` runs the suite under pytest-xdist (`-n auto`); every test must own
+its state, since worker assignment is not stable.
 `make check-all` is the handoff gate and matches `../.github/workflows/ci-cli.yml`.
 It includes high-confidence Vulture dead-code detection. `make deadcode-fix`
 removes Ruff-fixable unused imports and variables, then reruns Vulture; review

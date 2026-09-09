@@ -283,3 +283,58 @@ def test_importer_name_and_debug_errors_remain_actionable_json(book: Path) -> No
     error = json.loads(debug.stderr)["error"]
     assert str(broken) in error["traceback"]
     assert "RuntimeError: boom at import time" in error["traceback"]
+
+
+@pytest.fixture
+def profitable(tmp_path: Path) -> Path:
+    file = tmp_path / "main.bean"
+    file.write_text("""option "operating_currency" "USD"
+2026-01-01 open Assets:Checking USD
+2026-01-01 open Income:Salary USD
+2026-01-01 open Expenses:Rent USD
+2026-01-05 * "Pay"
+  Assets:Checking 5000 USD
+  Income:Salary -5000 USD
+2026-01-06 * "Rent"
+  Expenses:Rent 2000 USD
+  Assets:Checking -2000 USD
+""")
+    return file
+
+
+def test_the_two_statements_never_disagree_about_the_same_period_profit(profitable: Path) -> None:
+    """The balance sheet's earnings credit is the income statement's profit negated."""
+    sheet = runner.invoke(app, ["-f", str(profitable), "report", "balance-sheet"])
+    statement = runner.invoke(app, ["-f", str(profitable), "report", "income-statement"])
+    assert sheet.exit_code == 0 and statement.exit_code == 0
+    assert "Current-period earnings (credit):" in sheet.stdout
+    assert "-3,000.00 USD" in sheet.stdout
+    assert "the same period's Net Profit is 3,000.00 USD" in sheet.stdout
+    assert "Net Profit: 3,000.00 USD" in statement.stdout
+    # Only the report that prints a profit may promise the sign it uses.
+    assert "profit is positive for a gain" in statement.stdout
+    assert "profit is positive for a gain" not in sheet.stdout
+
+
+def test_the_balance_sheet_json_carries_the_profit_in_both_conventions(profitable: Path) -> None:
+    data = json.loads(runner.invoke(app, ["--json", "-f", str(profitable), "report", "balance-sheet"]).stdout)["data"]
+    assert data["current_earnings"] == {"USD": "-3000"}
+    assert data["net_profit"] == {"USD": "3000"}
+    assert data["current_earnings_signs"] == "negative_for_gain"
+
+
+def test_a_period_end_balance_assertion_is_inside_the_period_it_closes(profitable: Path) -> None:
+    """A close writes its assertion last; a report that stopped short would omit it."""
+    with profitable.open("a") as stream:
+        stream.write("2026-03-31 balance Assets:Checking 3000 USD\n")
+    result = runner.invoke(app, ["--json", "-f", str(profitable), "report", "balance-sheet"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["as_of"] == "2026-03-31"
+
+
+def test_a_placeholder_commodity_date_does_not_stretch_the_period(profitable: Path) -> None:
+    with profitable.open("a") as stream:
+        stream.write('1900-01-01 commodity USD\n  name: "US Dollar"\n')
+    result = runner.invoke(app, ["--json", "-f", str(profitable), "report", "balance-sheet"])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["period"]["start"] == "2026-01-05"

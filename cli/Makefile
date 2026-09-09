@@ -16,7 +16,7 @@ help:
 	@echo "  make format           - Format code with ruff"
 	@echo "  make format-check     - Check formatting without modifying files"
 	@echo "  make typecheck        - Run mypy type checks"
-	@echo "  make test             - Run tests with pytest"
+	@echo "  make test             - Run tests with pytest across all cores"
 	@echo "  make codegen          - Regenerate the REST client and cloud command stubs from openapi/v1.json"
 	@echo "  make spec-check       - Fail if openapi/v1.json drifted from backend-cluster/idl's canonical spec"
 	@echo "  make spec-sync        - Refresh openapi/v1.json from the canonical spec"
@@ -61,7 +61,7 @@ typecheck:
 	uv run mypy src/cli
 
 test:
-	uv run pytest tests/ -v
+	uv run pytest tests/ -n auto
 
 test-cov:
 	uv run pytest tests/ --cov=fava --cov=cli --cov-report=term-missing --cov-report=html --cov-report=json

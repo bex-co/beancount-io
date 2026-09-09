@@ -34,9 +34,8 @@ def _config_record(file: Path) -> Path:
     return config_dir() / "importers" / f"{key}.json"
 
 
-def _config_path(file: Path, supplied: Path | None) -> tuple[Path, str]:
-    if supplied is not None:
-        return supplied.expanduser().resolve(), "--config"
+def _config_available(file: Path) -> tuple[Path, str] | None:
+    """The Python importer this ledger already selects, if it selects one."""
     record = _config_record(file)
     if record.is_file():
         try:
@@ -46,12 +45,48 @@ def _config_path(file: Path, supplied: Path | None) -> tuple[Path, str]:
     conventional = file.parent / "importers.py"
     if conventional.is_file():
         return conventional, "default beside root ledger"
+    return None
+
+
+def _config_path(file: Path, supplied: Path | None) -> tuple[Path, str]:
+    if supplied is not None:
+        return supplied.expanduser().resolve(), "--config"
+    available = _config_available(file)
+    if available is not None:
+        return available
     raise UsageError(
         "Choose a Python importer with --config FILE, or place importers.py beside the root ledger. "
         "The selected path is remembered for this ledger. "
-        "For a CSV export with no importer, map the columns directly with "
-        "--csv date=Date,amount=Amount,payee=Payee --account Assets:Checking."
+        "For a CSV export whose header row bea could not read, map the columns directly with "
+        "--csv date=Date,amount=Amount,narration=Description --account Assets:Checking."
     )
+
+
+def _inferred_mapping(source: Path, *, explicit: bool, notes: list[str]) -> str | None:
+    """A `--csv` spec read off the export's header row.
+
+    `--csv auto` asks for this outright and fails loudly when the header is
+    unreadable; the automatic attempt returns None instead, leaving the caller
+    to raise its own "choose an importer" message.
+    """
+    from cli.csv_mapper import infer_mapping, read_header
+
+    headers = read_header(source)
+    inferred = infer_mapping(headers)
+    if inferred is None:
+        if not explicit:
+            return None
+        columns = ", ".join(headers) if headers else "(none)"
+        raise UsageError(
+            f"Cannot read a column mapping from the header row of {source.name}. Its columns are: {columns}. "
+            "Name them with --csv date=Date,amount=Amount,narration=Description."
+        )
+    if inferred.ambiguities:
+        notes.append(
+            f"Several columns could be {'; '.join(inferred.ambiguities)}; none was chosen. "
+            "Name the one you want with --csv."
+        )
+    return inferred.spec
 
 
 def _remember_config(file: Path, config: Path) -> None:
@@ -261,15 +296,23 @@ def import_entries(
         str | None,
         typer.Option(
             "--csv",
-            help="Column mapping (date=Date,amount=Amount,payee=Payee,...); no Python importer needed",
+            help="Column mapping (date=Date,amount=Amount,narration=Description,...), or 'auto' to read the "
+            "header row; no Python importer needed",
         ),
     ] = None,
     csv_account: Annotated[str | None, typer.Option("--account", help="Source account for --csv rows")] = None,
-    date_format: Annotated[str, typer.Option("--date-format", help="strptime date format for --csv")] = "%Y-%m-%d",
+    date_format: Annotated[
+        str | None,
+        typer.Option("--date-format", help="strptime date format for --csv; inferred from the file if unset"),
+    ] = None,
     rules_file: Annotated[Path | None, typer.Option("--rules", help="TOML categorization rules for --csv rows")] = None,
     default_account: Annotated[
-        str, typer.Option("--default-account", help="Counter account for --csv rows no rule matches")
-    ] = "Expenses:Uncategorized",
+        str | None,
+        typer.Option(
+            "--default-account",
+            help="Counter account for --csv rows no rule matches [default: Expenses:Uncategorized]",
+        ),
+    ] = None,
     config: Annotated[
         Path | None,
         typer.Option("--config", help="Python CONFIG file; defaults to the saved path or root-ledger/importers.py"),
@@ -300,7 +343,7 @@ def import_entries(
     from beancount import loader
     from beancount.core.data import Transaction
 
-    from cli.csv_mapper import CsvImporter, load_rules, parse_mapping
+    from cli.csv_mapper import CsvImporter, infer_date_format, load_rules, parse_mapping
     from cli.directives.writer import format_entry, normalize_entry_strings
 
     file = context.current().entry_file()
@@ -323,24 +366,62 @@ def import_entries(
     csv_run_account: str | None = csv_account
     csv_rules_arg: str | None = str(rules_file.expanduser().resolve()) if rules_file is not None else None
     remembered_run = False
+    inferred_notes: list[str] = []
+    # Only a date format the caller chose is worth remembering. An inferred one
+    # belongs to the file it was read from, and two exports can share a header
+    # row without sharing a date convention.
+    chosen_date_format = date_format
+    if csv_request is not None and csv_request.strip().casefold() == "auto":
+        csv_request = _inferred_mapping(source, explicit=True, notes=inferred_notes)
+        csv_origin = "inferred --csv"
     if csv_request is None and config is None:
         remembered = _recall_csv(file, source)
         if remembered is not None:
             csv_request = remembered["mapping"]
-            csv_run_account = remembered["account"]
+            csv_run_account = csv_account or remembered["account"]
             remembered_run = True
             csv_origin = "remembered --csv"
-            if isinstance(remembered.get("rules"), str):
+            # Memory fills the blanks the caller left; it never overrules an
+            # option they typed on this run.
+            if csv_rules_arg is None and isinstance(remembered.get("rules"), str):
                 csv_rules_arg = remembered["rules"]
-            if isinstance(remembered.get("default_account"), str):
+            if default_account is None and isinstance(remembered.get("default_account"), str):
                 default_account = remembered["default_account"]
-            if isinstance(remembered.get("date_format"), str):
+            if date_format is None and isinstance(remembered.get("date_format"), str):
                 date_format = remembered["date_format"]
+        elif config is None and _config_available(file) is None:
+            # Nothing configured and nothing remembered: read the header row
+            # rather than making a first-time importer spell out columns the
+            # file already names. A preview writes nothing, and the mapping is
+            # printed, so a wrong guess costs one glance rather than an edit.
+            csv_request = _inferred_mapping(source, explicit=False, notes=inferred_notes)
+            if csv_request is not None:
+                csv_origin = "inferred --csv"
     csv_mode = csv_request is not None
     if csv_mode:
         if csv_run_account is None or csv_request is None:
-            raise UsageError("--csv needs --account ACCOUNT for the source account.")
+            if csv_origin == "inferred --csv":
+                raise UsageError(
+                    f"Read a column mapping from the header row of {source.name} (--csv {csv_request}), but not "
+                    "which account the export belongs to. Add --account Assets:Checking, or choose a Python "
+                    "importer with --config FILE.",
+                    details=inferred_notes,
+                )
+            raise UsageError(
+                "--csv needs --account ACCOUNT for the source account, for example --account Assets:Checking.",
+                details=inferred_notes,
+            )
         mapping = parse_mapping(csv_request)
+        default_account = default_account or "Expenses:Uncategorized"
+        if date_format is None:
+            date_format, ambiguous = infer_date_format(source, mapping.columns["date"])
+            if date_format is None:
+                date_format = "%Y-%m-%d"
+            elif ambiguous:
+                inferred_notes.append(
+                    f"Dates parse as {date_format} but the column has no day past the twelfth, so day-first and "
+                    "month-first cannot be told apart. Pass --date-format if that is the wrong reading."
+                )
         operating = options.get("operating_currency") or []
         importer = CsvImporter(
             account=csv_run_account,
@@ -352,9 +433,16 @@ def import_entries(
         )
         preview_config, config_source = csv_request, csv_origin
         if remembered_run:
-            output.note(f"Using remembered column mapping for {source.name}.")
+            output.note(f"Using remembered column mapping for {source.name} (--date-format {date_format}).")
+        elif csv_origin == "inferred --csv":
+            output.note(
+                f"Read the column mapping from the header row: --csv {csv_request} --date-format {date_format}. "
+                "Pass --csv to override."
+            )
         else:
             output.note("Using column mapping (--csv).")
+        for line in inferred_notes:
+            output.note(line)
         try:
             account = str(importer.account(str(source)))
             entries = copy.deepcopy(list(importer.extract(str(source), existing)))
@@ -373,7 +461,7 @@ def import_entries(
                     "account": csv_run_account,
                     "rules": csv_rules_arg,
                     "default_account": default_account,
-                    "date_format": date_format,
+                    "date_format": chosen_date_format,
                 },
             )
     else:

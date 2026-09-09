@@ -209,7 +209,9 @@ def test_config_is_remembered_per_root_and_conventional_file_is_ledger_relative(
     second = book.parent / "second.bean"
     second.write_bytes(book.read_bytes())
     result = runner.invoke(app, ["--json", "-f", str(second), "import", str(source)])
-    assert result.exit_code == 2 and "--config" in result.stderr
+    # A second root inherits nothing: this export's header is readable, so the
+    # only thing still missing is the account, and --config stays on offer.
+    assert result.exit_code == 2 and "--config" in result.stderr and "--account" in result.stderr
     conventional = second.parent / "importers.py"
     conventional.write_bytes(CONFIG.read_bytes())
     result = runner.invoke(app, ["--json", "-f", str(second), "import", str(source)])
@@ -433,26 +435,6 @@ def isolated_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     return cfg
 
 
-def open_uncategorized(book: Path) -> None:
-    result = runner.invoke(
-        app,
-        [
-            "--json",
-            "--file",
-            str(book),
-            "add",
-            "open",
-            "--date",
-            "2026-08-01",
-            "--account",
-            "Expenses:Uncategorized",
-            "-c",
-            "USD",
-        ],
-    )
-    assert result.exit_code == 0, result.output
-
-
 def csv_result(book: Path, body: str, *args: str, mapping: str = CSV_MAPPING, account: str = "Assets:Checking"):
     source = book.parent / "bank.csv"
     source.write_text(body)
@@ -460,7 +442,6 @@ def csv_result(book: Path, body: str, *args: str, mapping: str = CSV_MAPPING, ac
 
 
 def test_csv_signed_amount_posts_source_and_default_flag_queue(book: Path, isolated_config: Path) -> None:
-    open_uncategorized(book)
     result = csv_result(book, CSV_HEADER + CSV_ROW, "--apply")
     assert result.exit_code == 0, result.output
     data = json.loads(result.stdout)["data"]
@@ -650,7 +631,6 @@ def test_csv_rule_naming_an_unopened_account_guides_to_add_open(book: Path, isol
 def test_csv_mapping_is_remembered_per_ledger_and_header(
     book: Path, isolated_config: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    open_uncategorized(book)
     source = book.parent / "bank.csv"
     source.write_text(CSV_HEADER + CSV_ROW)
     explicit = run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking")
@@ -677,7 +657,6 @@ def test_csv_mapping_is_remembered_per_ledger_and_header(
 
 
 def test_csv_config_takes_precedence_over_a_remembered_mapping(book: Path, isolated_config: Path) -> None:
-    open_uncategorized(book)
     source = book.parent / "bank.csv"
     source.write_text(CSV_HEADER + CSV_ROW)
     assert run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking").exit_code == 0
@@ -696,7 +675,6 @@ def test_csv_config_takes_precedence_over_a_remembered_mapping(book: Path, isola
 
 
 def test_csv_reimport_skips_every_row(book: Path, isolated_config: Path) -> None:
-    open_uncategorized(book)
     source = book.parent / "bank.csv"
     source.write_text(CSV_HEADER + CSV_ROW)
     assert run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking", "--apply").exit_code == 0
@@ -710,9 +688,69 @@ def test_csv_reimport_skips_every_row(book: Path, isolated_config: Path) -> None
 
 
 def test_csv_id_column_becomes_a_bank_import_id(book: Path, isolated_config: Path) -> None:
-    open_uncategorized(book)
     source = book.parent / "bank.csv"
     source.write_text("Date,Payee,Narration,Amount,Ref\n2026-08-02,Cafe,Coffee,-5.25,ref-7\n")
     result = run_csv(book, source, "--csv", f"{CSV_MAPPING},id=Ref", "--account", "Assets:Checking", "--apply")
     assert result.exit_code == 0, result.output
     assert _import_ids(book) == ["bank:ref-7"]
+
+
+def test_a_fresh_ledger_takes_an_export_without_opening_another_account(book: Path, isolated_config: Path) -> None:
+    """`bea init` and `bea import` compose: the default counter account exists."""
+    assert "open Expenses:Uncategorized" in book.read_text()
+    result = csv_result(book, CSV_HEADER + CSV_ROW, "--apply", mapping="date=Date,narration=Narration,amount=Amount")
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["written"] == 1
+
+
+def test_a_description_only_export_maps_to_narration_and_writes_no_empty_payee(
+    book: Path, isolated_config: Path
+) -> None:
+    result = csv_result(book, CSV_HEADER + CSV_ROW, "--apply", mapping="date=Date,narration=Narration,amount=Amount")
+    assert result.exit_code == 0, result.output
+    entries, _, _ = loader.load_file(str(book))
+    written = [entry for entry in entries if isinstance(entry, Transaction) and entry.narration == "Coffee"]
+    assert [(entry.payee, entry.narration) for entry in written] == [(None, "Coffee")]
+    assert '""' not in book.read_text()
+
+
+def test_a_mapping_naming_neither_description_field_is_refused(book: Path, isolated_config: Path) -> None:
+    result = csv_result(book, CSV_HEADER + CSV_ROW, mapping="date=Date,amount=Amount")
+    assert result.exit_code == 2
+    assert "payee=Column or narration=Column" in result.stderr
+
+
+def test_a_readable_header_row_supplies_the_mapping_and_the_date_format(book: Path, isolated_config: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text("Transaction Date,Merchant,Description,Amount\n08/03/2026,Cafe,Coffee,-5.25\n")
+    result = run_csv(book, source, "--account", "Assets:Checking", "--apply")
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.stdout)["data"]
+    assert data["config_source"] == "inferred --csv"
+    assert data["config"] == "date=Transaction Date,amount=Amount,payee=Merchant,narration=Description"
+    assert data["rows"][0]["date"] == "2026-08-03"
+
+
+def test_an_unreadable_header_row_still_asks_for_an_importer(book: Path, isolated_config: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text("col1,col2\na,b\n")
+    result = run_csv(book, source, "--account", "Assets:Checking")
+    assert result.exit_code == 2
+    assert "--config" in result.stderr
+
+
+def test_csv_auto_reports_the_columns_it_could_not_read(book: Path, isolated_config: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text("col1,col2\na,b\n")
+    result = run_csv(book, source, "--csv", "auto", "--account", "Assets:Checking")
+    assert result.exit_code == 2
+    assert "col1, col2" in result.stderr
+
+
+def test_an_option_typed_on_this_run_beats_the_remembered_one(book: Path, isolated_config: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text(CSV_HEADER + CSV_ROW)
+    assert run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking").exit_code == 0
+    result = run_csv(book, source, "--account", "Assets:Checking", "--default-account", "Expenses:Fees")
+    assert result.exit_code == 0, result.output
+    assert "Expenses:Fees" in json.loads(result.stdout)["data"]["diff"]

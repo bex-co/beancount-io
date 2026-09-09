@@ -109,6 +109,11 @@ def _print_tree(
         _print_tree(child, depth + 1, conversion=conversion, dcontext=dcontext)
 
 
+def _negated(balance: Mapping[str, Decimal]) -> dict[str, Decimal | None]:
+    """The same balance in the opposite sign convention, for translating a credit."""
+    return {currency: -number for currency, number in balance.items()}
+
+
 def _tree_balances(node: SerialisedTreeNode) -> Iterable[Mapping[str, Decimal]]:
     yield node.balance
     for child in node.children:
@@ -164,14 +169,19 @@ def _interval(value: ReportInterval) -> Interval:
 
 
 def _metadata(filtered: FilteredLedger, conversion: str, interval: ReportInterval | None = None) -> dict[str, Any]:
-    from fava.beans.abc import Price, Transaction
+    from fava.beans.abc import Close, Commodity, Open
 
+    # Every dated fact the report covers sets the period, not transactions
+    # alone: a period-end balance assertion is the last thing a close writes,
+    # and a report that stopped before it would omit its own evidence. Opens,
+    # closes and commodities are declarations — a commodity conventionally
+    # carries a placeholder date decades before any activity.
     start: date | None
     end: date | None
     if filtered.date_range:
         start, end = filtered.date_range.begin, filtered.date_range.end
     else:
-        dates = [entry.date for entry in filtered.entries if isinstance(entry, Transaction | Price)]
+        dates = [entry.date for entry in filtered.entries if not isinstance(entry, Open | Close | Commodity)]
         start = min(dates) if dates else None
         end = max(dates) + timedelta(days=1) if dates else None
     data: dict[str, Any] = {
@@ -247,12 +257,16 @@ def _valuation(
     }
 
 
-def _heading(title: str, metadata: dict[str, Any]) -> None:
+def _heading(title: str, metadata: dict[str, Any], *, profit_line: bool = False) -> None:
     period = metadata["period"]
     dates = f"{period['start']} through {metadata['as_of']}" if period["start"] else "no dated activity"
     typer.echo(f"{title} — {dates}")
     typer.echo(f"Valuation: {metadata['conversion']}; account: {metadata['account_filter'] or 'all'}")
-    typer.echo("Account balances use Beancount signs (credits negative); profit is positive for a gain.")
+    # Only reports that print an explicit profit figure may promise its sign;
+    # the balance sheet's earnings line carries the opposite (credit) sign and
+    # explains itself where it is printed.
+    convention = "Account balances use Beancount signs (credits negative)"
+    typer.echo(f"{convention}; profit is positive for a gain." if profit_line else f"{convention}.")
     if metadata["missing_prices"]:
         typer.echo("Partial valuation: some prices are missing; combined totals are unavailable.")
         for line in metadata["missing_price_summary"]:
@@ -374,7 +388,7 @@ def income_statement(
             target=output.file_target(file),
         )
         return
-    _heading("Income Statement", metadata)
+    _heading("Income Statement", metadata, profit_line=True)
     dcontext = filtered.ledger.options["dcontext"]
     for tree in trees:
         typer.echo("")
@@ -425,6 +439,8 @@ def balance_sheet(
                 "liabilities": _tree_json(trees[1]),
                 "equity": _tree_json(trees[2]),
                 "current_earnings": data.current_earnings,
+                "current_earnings_signs": "negative_for_gain",
+                "net_profit": _negated(data.current_earnings),
                 "valuation_adjustment": data.valuation_adjustment if reconciled else None,
                 "equity_total": data.equity_total if reconciled else None,
                 "equity_reconciled": reconciled,
@@ -444,7 +460,11 @@ def balance_sheet(
         adjustment = _amounts(data.valuation_adjustment, conversion, dcontext)
         typer.echo(f"  {'Valuation/translation adjustment (credit):':<46}  {adjustment}")
         typer.echo(f"  {'Total equity (credit):':<46}  {_amounts(data.equity_total, conversion, dcontext)}")
-    typer.echo(f"\nNet Worth: {_amounts(worth, conversion, dcontext)}")
+    # The credit lines above carry the opposite sign to the income statement's
+    # Net Profit, which is the same quantity. Say so, and say what it equals.
+    profit = _amounts(_negated(data.current_earnings), conversion, dcontext)
+    typer.echo(f"\nCredit lines above are negative for a gain; the same period's Net Profit is {profit}.")
+    typer.echo(f"Net Worth: {_amounts(worth, conversion, dcontext)}")
     typer.echo(f"\n{interval.value.title()} net worth")
     output.table(
         ["DATE", "NET WORTH"],
