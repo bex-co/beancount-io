@@ -11,6 +11,7 @@ import {
   filterDirectiveTypes,
   filterDocumentSubtypes,
   filterTransactionSubtypes,
+  matchesJournalDisplayFilters,
   serializeDirective,
   type JournalItem,
 } from "../journal-serialize";
@@ -346,5 +347,71 @@ describe("filterCustomSubtypes", () => {
       values: [],
     });
     expect(filterCustomSubtypes(other, [CustomSubtype.Budget])).toBe(false);
+  });
+});
+
+describe("matchesJournalDisplayFilters", () => {
+  function txnWithFlag(flag: string): JournalItem {
+    return serializeDirective({
+      type: "transaction",
+      date: "2024-01-01",
+      flag,
+      tags: [],
+      links: [],
+      postings: [],
+    });
+  }
+  const openItem = serializeDirective(
+    rustledger.find((d) => d.type === "open") as DirectiveJson,
+  );
+
+  it("keeps all rows when selectors are omitted or empty", () => {
+    expect(matchesJournalDisplayFilters(txnWithFlag("*"), {})).toBe(true);
+    expect(
+      matchesJournalDisplayFilters(txnWithFlag("*"), {
+        directiveTypes: [],
+        transactionSubtypes: [],
+      }),
+    ).toBe(true);
+  });
+
+  it("filters pending transactions without changing retained row identity", () => {
+    const cleared = {
+      entry: txnWithFlag("*"),
+      change: { USD: "10" },
+      balance: { USD: "100" },
+    };
+    const pending = {
+      entry: txnWithFlag("!"),
+      change: { USD: "5" },
+      balance: { USD: "105" },
+    };
+    const openRow = {
+      entry: openItem,
+      change: {},
+      balance: { USD: "0" },
+    };
+    const rows = [cleared, pending, openRow].filter((row) =>
+      matchesJournalDisplayFilters(row.entry, {
+        directiveTypes: [DirectiveType.Transaction],
+        transactionSubtypes: [TransactionSubtype.Pending],
+      }),
+    );
+    expect(rows).toEqual([pending]);
+    expect(rows[0].change).toEqual({ USD: "5" });
+    expect(rows[0].balance).toEqual({ USD: "105" });
+  });
+
+  it("keeps open-only selections without transactions", () => {
+    const rows = [
+      { entry: txnWithFlag("*"), change: { USD: "10" }, balance: { USD: "10" } },
+      { entry: openItem, change: {}, balance: { USD: "0" } },
+    ].filter((row) =>
+      matchesJournalDisplayFilters(row.entry, {
+        directiveTypes: [DirectiveType.Open],
+      }),
+    );
+    expect(rows).toHaveLength(1);
+    expect(rows[0].entry.directive_type).toBe(DirectiveType.Open);
   });
 });

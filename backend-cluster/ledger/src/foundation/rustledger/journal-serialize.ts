@@ -393,6 +393,49 @@ export function filterCustomSubtypes(
   );
 }
 
+/** Optional display selectors shared by journal and account-journal reads. */
+export type JournalDisplayFilters = {
+  directiveTypes?: DirectiveType[];
+  transactionSubtypes?: TransactionSubtype[];
+  documentSubtypes?: DocumentSubtype[];
+  customSubtypes?: CustomSubtype[];
+};
+
+/**
+ * Apply the main journal's omitted/empty-list semantics: absent or empty
+ * selector lists do not restrict; non-empty lists keep matching rows only.
+ */
+export function matchesJournalDisplayFilters(
+  item: JournalItem,
+  filters: JournalDisplayFilters,
+): boolean {
+  if (
+    filters.directiveTypes?.length &&
+    !filterDirectiveTypes(item, filters.directiveTypes)
+  ) {
+    return false;
+  }
+  if (
+    filters.transactionSubtypes?.length &&
+    !filterTransactionSubtypes(item, filters.transactionSubtypes)
+  ) {
+    return false;
+  }
+  if (
+    filters.documentSubtypes?.length &&
+    !filterDocumentSubtypes(item, filters.documentSubtypes)
+  ) {
+    return false;
+  }
+  if (
+    filters.customSubtypes?.length &&
+    !filterCustomSubtypes(item, filters.customSubtypes)
+  ) {
+    return false;
+  }
+  return true;
+}
+
 // --- directiveToText (plaintext journal) ----------------------------------
 
 const CURRENCY_COLUMN = 61;

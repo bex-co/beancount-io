@@ -1,19 +1,19 @@
 # w3 · m13 — Make account journal filters affect the returned entries
 
-**Worker:** worker3 **Goal:** account journal type and flag selections return matching entries, totals and pages without changing account running balances **Status:** todo
+**Worker:** worker3 **Goal:** account journal type and flag selections return matching entries, totals and pages without changing account running balances **Status:** done
 
 ## Tasks (in order)
 
-| id   | title                                                                      | est | depends_on |
-| ---- | -------------------------------------------------------------------------- | --- | ---------- |
-| t001 | Filter account journal rows before counting and paging                     | 45m | —          |
-| t002 | Publish the account filter contract and regenerate the IDL client          | 30m | t001       |
-| t003 | Carry account filters through gateway GraphQL, REST and MCP                | 45m | t002       |
-| t004 | Connect the account page selectors to the filtered read                    | 40m | t003       |
-| t005 | Adoption surface — verify account filtering is discoverable and documented | 20m | t004       |
-| t006 | Simplify the account filter changes                                        | 20m | t005       |
-| t007 | Test coverage — filter, balance and pagination behavior                    | 45m | t005, t006 |
-| t008 | Closeout — verify the journeys and archive the milestone                   | 15m | t007       |
+| id   | title                                                                               | est | depends_on |
+| ---- | ----------------------------------------------------------------------------------- | --- | ---------- |
+| t001 | Filter account journal rows before counting and paging — **DONE**                 | 45m | —          |
+| t002 | Publish the account filter contract and regenerate the IDL client — **DONE**      | 30m | t001       |
+| t003 | Carry account filters through gateway GraphQL, REST and MCP — **DONE**             | 45m | t002       |
+| t004 | Connect the account page selectors to the filtered read — **DONE**                | 40m | t003       |
+| t005 | Adoption surface — verify account filtering is discoverable and documented — **DONE** | 20m | t004       |
+| t006 | Simplify the account filter changes — **DONE**                                    | 20m | t005       |
+| t007 | Test coverage — filter, balance and pagination behavior — **DONE**                | 45m | t005, t006 |
+| t008 | Closeout — verify the journeys and archive the milestone — **DONE**               | 15m | t007       |
 
 Implementation spans 160 minutes across service, contract and dashboard tasks;
 this exceeds the one-hour milestone threshold without counting closing work.

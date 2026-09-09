@@ -82,6 +82,18 @@ export function setJournalHandler(router: Router): void {
           limit: intQuery(ctx.query.limit),
           with_children: boolQuery(ctx.query.with_children),
           conversion: strQuery(ctx.query.conversion),
+          directiveTypes: listQuery(ctx.query.directive_types) as
+            | DirectiveType[]
+            | undefined,
+          transactionSubtypes: listQuery(ctx.query.transaction_subtypes) as
+            | TransactionSubtype[]
+            | undefined,
+          documentSubtypes: listQuery(ctx.query.document_subtypes) as
+            | DocumentSubtype[]
+            | undefined,
+          customSubtypes: listQuery(ctx.query.custom_subtypes) as
+            | CustomSubtype[]
+            | undefined,
         },
       }),
     );

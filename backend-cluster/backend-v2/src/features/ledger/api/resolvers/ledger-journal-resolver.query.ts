@@ -145,6 +145,18 @@ class AccountJournalQueryInput {
 
   @Field(() => String, { nullable: true, defaultValue: "at_cost" })
   conversion?: string;
+
+  @Field(() => [String], { nullable: true })
+  directiveTypes?: DirectiveType[];
+
+  @Field(() => [String], { nullable: true })
+  transactionSubtypes?: TransactionSubtype[];
+
+  @Field(() => [String], { nullable: true })
+  documentSubtypes?: DocumentSubtype[];
+
+  @Field(() => [String], { nullable: true })
+  customSubtypes?: CustomSubtype[];
 }
 
 @Resolver()

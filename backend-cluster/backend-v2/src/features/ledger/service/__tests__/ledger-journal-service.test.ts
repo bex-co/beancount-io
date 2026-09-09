@@ -5,6 +5,12 @@ import {
   NotFoundError,
 } from "@/shared/errors";
 import { FavaApiError } from "@/foundation/fava";
+import {
+  CustomSubtype,
+  DirectiveType,
+  DocumentSubtype,
+  TransactionSubtype,
+} from "@/foundation/fava";
 import { authorizeLedger } from "@/features/ledger/utils/authorize-ledger";
 import type { Identity } from "@/server/api/identity";
 
@@ -228,7 +234,46 @@ describe("LedgerJournalService", () => {
       expect(mockGetAccountJournal).toHaveBeenCalledWith(
         "testowner",
         "testledger",
-        expect.objectContaining({ with_children: true, conversion: "at_cost" }),
+        expect.objectContaining({
+          with_children: true,
+          conversion: "at_cost",
+          directive_types: undefined,
+          transaction_subtypes: undefined,
+          document_subtypes: undefined,
+          custom_subtypes: undefined,
+        }),
+      );
+    });
+
+    it("forwards optional display selectors to the ledger client", async () => {
+      mockGetAccountJournal.mockResolvedValue({
+        data: {
+          success: true,
+          data: { items: [], total: 0, account: "Assets:Cash", with_children: true },
+        },
+      });
+
+      await service.getAccountJournal({
+        ledgerId: LEDGER_ID,
+        identity: IDENTITY,
+        query: {
+          account: "Assets:Cash",
+          directiveTypes: [DirectiveType.Transaction],
+          transactionSubtypes: [TransactionSubtype.Pending],
+          documentSubtypes: [DocumentSubtype.Linked],
+          customSubtypes: [CustomSubtype.Budget],
+        },
+      });
+
+      expect(mockGetAccountJournal).toHaveBeenCalledWith(
+        "testowner",
+        "testledger",
+        expect.objectContaining({
+          directive_types: [DirectiveType.Transaction],
+          transaction_subtypes: [TransactionSubtype.Pending],
+          document_subtypes: [DocumentSubtype.Linked],
+          custom_subtypes: [CustomSubtype.Budget],
+        }),
       );
     });
 

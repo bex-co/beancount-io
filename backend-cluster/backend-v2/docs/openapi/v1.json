@@ -8156,6 +8156,46 @@
             "required": false,
             "name": "conversion",
             "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "JSON-encoded string array, including [] for an empty filter list"
+            },
+            "required": false,
+            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "name": "directiveTypes",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "JSON-encoded string array, including [] for an empty filter list"
+            },
+            "required": false,
+            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "name": "transactionSubtypes",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "JSON-encoded string array, including [] for an empty filter list"
+            },
+            "required": false,
+            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "name": "documentSubtypes",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "description": "JSON-encoded string array, including [] for an empty filter list"
+            },
+            "required": false,
+            "description": "JSON-encoded string array, including [] for an empty filter list",
+            "name": "customSubtypes",
+            "in": "query"
           }
         ],
         "responses": {

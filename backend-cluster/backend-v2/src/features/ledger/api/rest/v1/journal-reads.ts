@@ -68,6 +68,19 @@ const accountJournalQuery = filters.extend({
   offset: z.coerce.number().int().min(0).optional(),
   with_children: booleanQuery,
   conversion: z.string().optional(),
+  // Same optional display selectors as the main journal read.
+  directiveTypes: jsonStringArrayQuery
+    .transform((values) => values as DirectiveType[])
+    .optional(),
+  transactionSubtypes: jsonStringArrayQuery
+    .transform((values) => values as TransactionSubtype[])
+    .optional(),
+  documentSubtypes: jsonStringArrayQuery
+    .transform((values) => values as DocumentSubtype[])
+    .optional(),
+  customSubtypes: jsonStringArrayQuery
+    .transform((values) => values as CustomSubtype[])
+    .optional(),
 });
 
 type ReadParams = {

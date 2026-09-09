@@ -5675,6 +5675,26 @@ export class Api<
          * @default "at_cost"
          */
         conversion?: string;
+        /**
+         * Directive Types
+         * Filter by directive types (e.g., [DirectiveType.TRANSACTION, DirectiveType.BALANCE], [DirectiveType.COMMODITY], etc.)
+         */
+        directive_types?: DirectiveType[] | null;
+        /**
+         * Transaction Subtypes
+         * Filter transaction subtypes: cleared (*), pending (!), other (x)
+         */
+        transaction_subtypes?: TransactionSubtype[] | null;
+        /**
+         * Document Subtypes
+         * Filter document subtypes: discovered (D), linked (L)
+         */
+        document_subtypes?: DocumentSubtype[] | null;
+        /**
+         * Custom Subtypes
+         * Filter custom subtypes: budget (B)
+         */
+        custom_subtypes?: CustomSubtype[] | null;
       },
       params: RequestParams = {},
     ) =>

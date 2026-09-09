@@ -232,6 +232,20 @@ describe("journal adapter contracts", () => {
       },
       selection: "items { entry change balance } total account with_children",
     },
+    {
+      path: "account-journal",
+      field: "getLedgerAccountJournal",
+      params: {
+        account: "Assets:Bank",
+        directiveTypes: ["Transaction", "Open"],
+        transactionSubtypes: ["pending"],
+        documentSubtypes: ["linked"],
+        customSubtypes: ["budget"],
+        limit: 7,
+        offset: 2,
+      },
+      selection: "items { entry change balance } total account with_children",
+    },
   ])("preserves $field", async (entry) => {
     const f = await fixture();
     try {
@@ -262,7 +276,23 @@ describe("journal adapter contracts", () => {
                 offset: 0,
                 with_children: true,
                 conversion: "at_cost",
-                ...entry.params,
+                directive_types: undefined,
+                transaction_subtypes: undefined,
+                document_subtypes: undefined,
+                custom_subtypes: undefined,
+                ...Object.fromEntries(
+                  Object.entries(entry.params).flatMap(([key, value]) => {
+                    if (key === "directiveTypes")
+                      return [["directive_types", value]];
+                    if (key === "transactionSubtypes")
+                      return [["transaction_subtypes", value]];
+                    if (key === "documentSubtypes")
+                      return [["document_subtypes", value]];
+                    if (key === "customSubtypes")
+                      return [["custom_subtypes", value]];
+                    return [[key, value]];
+                  }),
+                ),
               }
             : entry.params,
         ]);

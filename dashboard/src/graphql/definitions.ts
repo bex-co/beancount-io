@@ -45,10 +45,14 @@ export type AccountJournalEntry = {
 export type AccountJournalQueryInput = {
   account: Scalars['String']['input'];
   conversion?: InputMaybe<Scalars['String']['input']>;
+  customSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  directiveTypes?: InputMaybe<Array<Scalars['String']['input']>>;
+  documentSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   filter?: InputMaybe<Scalars['String']['input']>;
   limit?: InputMaybe<Scalars['Float']['input']>;
   offset?: InputMaybe<Scalars['Float']['input']>;
   time?: InputMaybe<Scalars['String']['input']>;
+  transactionSubtypes?: InputMaybe<Array<Scalars['String']['input']>>;
   with_children?: InputMaybe<Scalars['Boolean']['input']>;
 };
 

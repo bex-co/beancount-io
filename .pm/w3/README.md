@@ -16,7 +16,7 @@
 - [x] **m10** — Dashboard personal access tokens: create, verify, and document the API-key path (7 tasks) ← direct user request, 2026-08-29
 - [x] **m11** — Reliable entry context for public-ledger readers (7 tasks) ← dashboard QA, 2026-09-07
 - [x] **m12** — Execute and restore the BQL query shown in the editor (6 tasks) ← dashboard QA, 2026-09-07
-- [ ] **m13** — Make account journal filters affect the returned entries (8 tasks) ← repeated dashboard QA, 2026-09-07
+- [x] **m13** — Make account journal filters affect the returned entries (8 tasks) ← repeated dashboard QA, 2026-09-07
 - [ ] **m14** — Make Statistics postings counts honor the active filters (8 tasks) ← repeated dashboard QA, 2026-09-08
 - [ ] **m15** — Keep ledger filters consistent with navigation and history (7 tasks) ← repeated dashboard QA, 2026-09-08
 - [ ] **m16** — Preserve parent-account postings in Cash Flow (6 tasks) ← repeated dashboard QA, 2026-09-08

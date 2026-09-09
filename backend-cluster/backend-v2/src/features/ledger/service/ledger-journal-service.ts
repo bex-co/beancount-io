@@ -72,6 +72,10 @@ export type AccountJournalQueryParams = {
   account: string;
   filter?: string;
   time?: string;
+  directiveTypes?: DirectiveType[];
+  transactionSubtypes?: TransactionSubtype[];
+  documentSubtypes?: DocumentSubtype[];
+  customSubtypes?: CustomSubtype[];
   limit?: number;
   offset?: number;
   with_children?: boolean;
@@ -250,6 +254,10 @@ export class LedgerJournalService
         with_children:
           query.with_children !== undefined ? query.with_children : true,
         conversion: query.conversion || "at_cost",
+        directive_types: query.directiveTypes || undefined,
+        transaction_subtypes: query.transactionSubtypes || undefined,
+        document_subtypes: query.documentSubtypes || undefined,
+        custom_subtypes: query.customSubtypes || undefined,
       }),
       "get account journal entries",
     );

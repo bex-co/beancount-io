@@ -56,7 +56,7 @@ import { isAccountReportEmpty } from "./lib/account-report-empty";
  * Account Journal Table component
  * Displays journal entries for a specific account with searchParams and pagination
  */
-function AccountJournalTable({
+export function AccountJournalTable({
   ledgerId,
   ledgerOwner,
   ledgerName,
@@ -120,9 +120,25 @@ function AccountJournalTable({
         with_children: withChildren,
         limit,
         offset,
+        directiveTypes:
+          selectedDirectiveTypes.length > 0
+            ? selectedDirectiveTypes
+            : undefined,
+        transactionSubtypes:
+          selectedTransactionSubtypes.length > 0
+            ? selectedTransactionSubtypes
+            : undefined,
+        documentSubtypes:
+          selectedDocumentSubtypes.length > 0
+            ? selectedDocumentSubtypes
+            : undefined,
+        customSubtypes:
+          selectedCustomSubtypes.length > 0
+            ? selectedCustomSubtypes
+            : undefined,
       },
     },
-    fetchPolicy: "cache-first",
+    fetchPolicy: "cache-and-network",
   });
 
   // Track filter changes to reset pagination

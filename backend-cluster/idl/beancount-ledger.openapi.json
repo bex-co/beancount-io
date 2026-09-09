@@ -5911,6 +5911,90 @@
               "title": "Conversion"
             },
             "description": "Conversion method (at_cost, at_value, units)"
+          },
+          {
+            "name": "directive_types",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DirectiveType"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter by directive types (e.g., [DirectiveType.TRANSACTION, DirectiveType.BALANCE], [DirectiveType.COMMODITY], etc.)",
+              "title": "Directive Types"
+            },
+            "description": "Filter by directive types (e.g., [DirectiveType.TRANSACTION, DirectiveType.BALANCE], [DirectiveType.COMMODITY], etc.)"
+          },
+          {
+            "name": "transaction_subtypes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TransactionSubtype"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter transaction subtypes: cleared (*), pending (!), other (x)",
+              "title": "Transaction Subtypes"
+            },
+            "description": "Filter transaction subtypes: cleared (*), pending (!), other (x)"
+          },
+          {
+            "name": "document_subtypes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/DocumentSubtype"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter document subtypes: discovered (D), linked (L)",
+              "title": "Document Subtypes"
+            },
+            "description": "Filter document subtypes: discovered (D), linked (L)"
+          },
+          {
+            "name": "custom_subtypes",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/CustomSubtype"
+                  }
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Filter custom subtypes: budget (B)",
+              "title": "Custom Subtypes"
+            },
+            "description": "Filter custom subtypes: budget (B)"
           }
         ],
         "responses": {

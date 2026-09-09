@@ -23,11 +23,8 @@ import {
   deriveReportAccounts,
   directiveToText,
   entryBalances,
-  filterCustomSubtypes,
   filterDirectivesAsync,
-  filterDirectiveTypes,
-  filterDocumentSubtypes,
-  filterTransactionSubtypes,
+  matchesJournalDisplayFilters,
   findEntrySliceBySourceSha,
   findEntrySliceAsync,
   formatFiscalYearEnd,
@@ -294,6 +291,10 @@ export type AccountJournalQueryParams = {
   account: string;
   filter?: string;
   time?: string;
+  directiveTypes?: DirectiveType[];
+  transactionSubtypes?: TransactionSubtype[];
+  documentSubtypes?: DocumentSubtype[];
+  customSubtypes?: CustomSubtype[];
   limit?: number;
   offset?: number;
   with_children?: boolean;
@@ -559,22 +560,7 @@ export class LedgerJournalService implements ILedgerJournalService {
       .reverse()
       .map((d) => this.serialize(d, entryIds.get(d) ?? hashEntry(d)));
 
-    if (query?.directiveTypes?.length) {
-      const types = query.directiveTypes;
-      items = items.filter((item) => filterDirectiveTypes(item, types));
-    }
-    if (query?.transactionSubtypes?.length) {
-      const subtypes = query.transactionSubtypes;
-      items = items.filter((item) => filterTransactionSubtypes(item, subtypes));
-    }
-    if (query?.documentSubtypes?.length) {
-      const subtypes = query.documentSubtypes;
-      items = items.filter((item) => filterDocumentSubtypes(item, subtypes));
-    }
-    if (query?.customSubtypes?.length) {
-      const subtypes = query.customSubtypes;
-      items = items.filter((item) => filterCustomSubtypes(item, subtypes));
-    }
+    items = items.filter((item) => matchesJournalDisplayFilters(item, query ?? {}));
 
     const total = items.length;
     const offset = query?.offset ?? 0;
@@ -707,21 +693,31 @@ export class LedgerJournalService implements ILedgerJournalService {
       conversion !== "units" && conversion !== "at_cost"
         ? buildScaledPriceMap(snapshot.directives)
         : undefined;
-    // account_journal returns chronological; the endpoint reverses + paginates.
-    const rows = accountJournalItems(filtered, query.account, {
+    // account_journal returns chronological; reverse for newest-first display.
+    // Serialize and apply display selectors before total/offset/limit so paging
+    // and counts match the selected rows while change/balance retain the
+    // unfiltered running-balance values for each kept row.
+    let items = accountJournalItems(filtered, query.account, {
       withChildren,
       conversion,
       prices,
-    }).reverse();
-    const total = rows.length;
-    const offset = query.offset ?? 0;
-    const limit = query.limit ?? 20;
-    return {
-      items: rows.slice(offset, offset + limit).map((row) => ({
+    })
+      .reverse()
+      .map((row) => ({
         entry: this.serialize(
           row.entry,
           entryIds.get(row.entry) ?? hashEntry(row.entry),
-        ) as unknown as Record<string, unknown>,
+        ),
+        change: row.change,
+        balance: row.balance,
+      }))
+      .filter((row) => matchesJournalDisplayFilters(row.entry, query));
+    const total = items.length;
+    const offset = query.offset ?? 0;
+    const limit = query.limit ?? 20;
+    return {
+      items: items.slice(offset, offset + limit).map((row) => ({
+        entry: row.entry as unknown as Record<string, unknown>,
         change: row.change,
         balance: row.balance,
       })),
