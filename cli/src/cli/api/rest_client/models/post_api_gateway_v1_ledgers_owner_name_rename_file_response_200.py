@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar
+from typing import Any, TypeVar, cast
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -15,10 +15,12 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
     Attributes:
         old_path (str):
         new_path (str):
+        updated_includes (list[str]):
     """
 
     old_path: str
     new_path: str
+    updated_includes: list[str]
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -26,12 +28,15 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
 
         new_path = self.new_path
 
+        updated_includes = self.updated_includes
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "oldPath": old_path,
                 "newPath": new_path,
+                "updatedIncludes": updated_includes,
             }
         )
 
@@ -44,9 +49,12 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileResponse200:
 
         new_path = d.pop("newPath")
 
+        updated_includes = cast(list[str], d.pop("updatedIncludes"))
+
         post_api_gateway_v1_ledgers_owner_name_rename_file_response_200 = cls(
             old_path=old_path,
             new_path=new_path,
+            updated_includes=updated_includes,
         )
 
         post_api_gateway_v1_ledgers_owner_name_rename_file_response_200.additional_properties = d

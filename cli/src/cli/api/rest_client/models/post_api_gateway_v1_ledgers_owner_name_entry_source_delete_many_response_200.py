@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import Any, TypeVar, cast
+from typing import Any, TypeVar
 
 from attrs import define as _attrs_define
 from attrs import field as _attrs_field
@@ -14,24 +14,24 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200:
     """
     Attributes:
         message (str):
-        deleted_hashes (list[str]):
+        deleted_count (int):
     """
 
     message: str
-    deleted_hashes: list[str]
+    deleted_count: int
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         message = self.message
 
-        deleted_hashes = self.deleted_hashes
+        deleted_count = self.deleted_count
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
             {
                 "message": message,
-                "deletedHashes": deleted_hashes,
+                "deletedCount": deleted_count,
             }
         )
 
@@ -42,11 +42,11 @@ class PostApiGatewayV1LedgersOwnerNameEntrySourceDeleteManyResponse200:
         d = dict(src_dict)
         message = d.pop("message")
 
-        deleted_hashes = cast(list[str], d.pop("deletedHashes"))
+        deleted_count = d.pop("deletedCount")
 
         post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_response_200 = cls(
             message=message,
-            deleted_hashes=deleted_hashes,
+            deleted_count=deleted_count,
         )
 
         post_api_gateway_v1_ledgers_owner_name_entry_source_delete_many_response_200.additional_properties = d

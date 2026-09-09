@@ -1,9 +1,11 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any, TypeVar
+from typing import TYPE_CHECKING, Any, TypeVar, cast
 
 from attrs import define as _attrs_define
+
+from ..types import UNSET, Unset
 
 if TYPE_CHECKING:
     from ..models.entries_request_entries_item_type_0 import EntriesRequestEntriesItemType0
@@ -30,6 +32,8 @@ class EntriesRequest:
             EntriesRequestEntriesItemType3 | EntriesRequestEntriesItemType4 | EntriesRequestEntriesItemType5 |
             EntriesRequestEntriesItemType6 | EntriesRequestEntriesItemType7 | EntriesRequestEntriesItemType8 |
             EntriesRequestEntriesItemType9]): Directives to append, committed all-or-nothing
+        allow_invalid (bool | None | Unset): Record unbalanced transactions deliberately instead of refusing them with
+            UNBALANCED
     """
 
     entries: list[
@@ -44,6 +48,7 @@ class EntriesRequest:
         | EntriesRequestEntriesItemType8
         | EntriesRequestEntriesItemType9
     ]
+    allow_invalid: bool | None | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         from ..models.entries_request_entries_item_type_0 import EntriesRequestEntriesItemType0  # noqa: PLC0415
@@ -82,6 +87,12 @@ class EntriesRequest:
 
             entries.append(entries_item)
 
+        allow_invalid: bool | None | Unset
+        if isinstance(self.allow_invalid, Unset):
+            allow_invalid = UNSET
+        else:
+            allow_invalid = self.allow_invalid
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -89,6 +100,8 @@ class EntriesRequest:
                 "entries": entries,
             }
         )
+        if allow_invalid is not UNSET:
+            field_dict["allowInvalid"] = allow_invalid
 
         return field_dict
 
@@ -206,8 +219,18 @@ class EntriesRequest:
 
             entries.append(entries_item)
 
+        def _parse_allow_invalid(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        allow_invalid = _parse_allow_invalid(d.pop("allowInvalid", UNSET))
+
         entries_request = cls(
             entries=entries,
+            allow_invalid=allow_invalid,
         )
 
         return entries_request

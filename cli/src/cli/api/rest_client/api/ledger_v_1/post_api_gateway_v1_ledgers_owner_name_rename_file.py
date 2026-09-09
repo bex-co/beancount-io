@@ -120,9 +120,10 @@ def sync_detailed(
 ) -> Response[PostApiGatewayV1LedgersOwnerNameRenameFileResponse200 | V1Error]:
     """Rename a ledger file
 
-     Move oldPath to newPath using the repository's existing rename operation and optional commit
-    message. Both paths must be safe repository-relative paths. No client SHA or preview argument is
-    supported by this operation.
+     Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath →
+    newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in
+    the same commit. Both paths must be safe repository-relative paths. No client SHA or preview
+    argument is supported by this operation.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -159,9 +160,10 @@ def sync(
 ) -> PostApiGatewayV1LedgersOwnerNameRenameFileResponse200 | V1Error | None:
     """Rename a ledger file
 
-     Move oldPath to newPath using the repository's existing rename operation and optional commit
-    message. Both paths must be safe repository-relative paths. No client SHA or preview argument is
-    supported by this operation.
+     Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath →
+    newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in
+    the same commit. Both paths must be safe repository-relative paths. No client SHA or preview
+    argument is supported by this operation.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -193,9 +195,10 @@ async def asyncio_detailed(
 ) -> Response[PostApiGatewayV1LedgersOwnerNameRenameFileResponse200 | V1Error]:
     """Rename a ledger file
 
-     Move oldPath to newPath using the repository's existing rename operation and optional commit
-    message. Both paths must be safe repository-relative paths. No client SHA or preview argument is
-    supported by this operation.
+     Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath →
+    newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in
+    the same commit. Both paths must be safe repository-relative paths. No client SHA or preview
+    argument is supported by this operation.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -230,9 +233,10 @@ async def asyncio(
 ) -> PostApiGatewayV1LedgersOwnerNameRenameFileResponse200 | V1Error | None:
     """Rename a ledger file
 
-     Move oldPath to newPath using the repository's existing rename operation and optional commit
-    message. Both paths must be safe repository-relative paths. No client SHA or preview argument is
-    supported by this operation.
+     Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath →
+    newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in
+    the same commit. Both paths must be safe repository-relative paths. No client SHA or preview
+    argument is supported by this operation.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

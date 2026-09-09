@@ -16,11 +16,14 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
         message (str):
         entry_hash (str):
         new_sha_256_sum (str):
+        new_entry_hash (str): The entry's public ID after the commit, re-read post-commit — use it for the next edit,
+            not the request's entryHash.
     """
 
     message: str
     entry_hash: str
     new_sha_256_sum: str
+    new_entry_hash: str
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -30,6 +33,8 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
 
         new_sha_256_sum = self.new_sha_256_sum
 
+        new_entry_hash = self.new_entry_hash
+
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
         field_dict.update(
@@ -37,6 +42,7 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
                 "message": message,
                 "entryHash": entry_hash,
                 "newSha256sum": new_sha_256_sum,
+                "newEntryHash": new_entry_hash,
             }
         )
 
@@ -51,10 +57,13 @@ class PutApiGatewayV1LedgersOwnerNameEntrySourceResponse200:
 
         new_sha_256_sum = d.pop("newSha256sum")
 
+        new_entry_hash = d.pop("newEntryHash")
+
         put_api_gateway_v1_ledgers_owner_name_entry_source_response_200 = cls(
             message=message,
             entry_hash=entry_hash,
             new_sha_256_sum=new_sha_256_sum,
+            new_entry_hash=new_entry_hash,
         )
 
         put_api_gateway_v1_ledgers_owner_name_entry_source_response_200.additional_properties = d

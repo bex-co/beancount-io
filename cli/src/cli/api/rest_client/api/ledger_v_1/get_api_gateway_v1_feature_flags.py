@@ -7,12 +7,12 @@ from ... import errors
 from ...client import AuthenticatedClient, Client
 from ...models.get_api_gateway_v1_feature_flags_response_200 import GetApiGatewayV1FeatureFlagsResponse200
 from ...models.v1_error import V1Error
-from ...types import UNSET, Response
+from ...types import UNSET, Response, Unset
 
 
 def _get_kwargs(
     *,
-    user_id: str,
+    user_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -103,7 +103,7 @@ def _build_response(
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    user_id: str,
+    user_id: str | Unset = UNSET,
 ) -> Response[GetApiGatewayV1FeatureFlagsResponse200 | V1Error]:
     """Read public feature flags
 
@@ -111,7 +111,7 @@ def sync_detailed(
     configuration.
 
     Args:
-        user_id (str):
+        user_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -135,7 +135,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    user_id: str,
+    user_id: str | Unset = UNSET,
 ) -> GetApiGatewayV1FeatureFlagsResponse200 | V1Error | None:
     """Read public feature flags
 
@@ -143,7 +143,7 @@ def sync(
     configuration.
 
     Args:
-        user_id (str):
+        user_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -162,7 +162,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    user_id: str,
+    user_id: str | Unset = UNSET,
 ) -> Response[GetApiGatewayV1FeatureFlagsResponse200 | V1Error]:
     """Read public feature flags
 
@@ -170,7 +170,7 @@ async def asyncio_detailed(
     configuration.
 
     Args:
-        user_id (str):
+        user_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -192,7 +192,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    user_id: str,
+    user_id: str | Unset = UNSET,
 ) -> GetApiGatewayV1FeatureFlagsResponse200 | V1Error | None:
     """Read public feature flags
 
@@ -200,7 +200,7 @@ async def asyncio(
     configuration.
 
     Args:
-        user_id (str):
+        user_id (str | Unset):
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.

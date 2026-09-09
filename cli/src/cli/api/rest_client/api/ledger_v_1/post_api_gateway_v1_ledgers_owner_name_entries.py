@@ -119,7 +119,9 @@ def sync_detailed(
     """Add directives to the ledger
 
      Appends one or more Beancount directives, routed to the right file by type and date and committed as
-    a single commit. All-or-nothing: if any directive fails, none are written.
+    a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose
+    residual is outside the ledger's tolerance is refused with UNBALANCED unless allowInvalid records it
+    deliberately; one posting per transaction may omit its amount and is written elided.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -157,7 +159,9 @@ def sync(
     """Add directives to the ledger
 
      Appends one or more Beancount directives, routed to the right file by type and date and committed as
-    a single commit. All-or-nothing: if any directive fails, none are written.
+    a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose
+    residual is outside the ledger's tolerance is refused with UNBALANCED unless allowInvalid records it
+    deliberately; one posting per transaction may omit its amount and is written elided.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -190,7 +194,9 @@ async def asyncio_detailed(
     """Add directives to the ledger
 
      Appends one or more Beancount directives, routed to the right file by type and date and committed as
-    a single commit. All-or-nothing: if any directive fails, none are written.
+    a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose
+    residual is outside the ledger's tolerance is refused with UNBALANCED unless allowInvalid records it
+    deliberately; one posting per transaction may omit its amount and is written elided.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -226,7 +232,9 @@ async def asyncio(
     """Add directives to the ledger
 
      Appends one or more Beancount directives, routed to the right file by type and date and committed as
-    a single commit. All-or-nothing: if any directive fails, none are written.
+    a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose
+    residual is outside the ledger's tolerance is refused with UNBALANCED unless allowInvalid records it
+    deliberately; one posting per transaction may omit its amount and is written elided.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

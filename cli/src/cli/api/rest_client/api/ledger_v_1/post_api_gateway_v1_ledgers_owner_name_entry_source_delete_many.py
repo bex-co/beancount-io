@@ -121,7 +121,8 @@ def sync_detailed(
     """Delete multiple entry source slices
 
      Modify entry source using the current sha256sum from entry context. Ledger content-write authority
-    is checked before delegation. Stale source hashes are refused by the ledger service. No preview.
+    is checked before delegation. Stale source hashes are refused by the ledger service. An update
+    returns the entry's new hash — the request's entryHash is stale after the commit. No preview.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -159,7 +160,8 @@ def sync(
     """Delete multiple entry source slices
 
      Modify entry source using the current sha256sum from entry context. Ledger content-write authority
-    is checked before delegation. Stale source hashes are refused by the ledger service. No preview.
+    is checked before delegation. Stale source hashes are refused by the ledger service. An update
+    returns the entry's new hash — the request's entryHash is stale after the commit. No preview.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -192,7 +194,8 @@ async def asyncio_detailed(
     """Delete multiple entry source slices
 
      Modify entry source using the current sha256sum from entry context. Ledger content-write authority
-    is checked before delegation. Stale source hashes are refused by the ledger service. No preview.
+    is checked before delegation. Stale source hashes are refused by the ledger service. An update
+    returns the entry's new hash — the request's entryHash is stale after the commit. No preview.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -228,7 +231,8 @@ async def asyncio(
     """Delete multiple entry source slices
 
      Modify entry source using the current sha256sum from entry context. Ledger content-write authority
-    is checked before delegation. Stale source hashes are refused by the ledger service. No preview.
+    is checked before delegation. Stale source hashes are refused by the ledger service. An update
+    returns the entry's new hash — the request's entryHash is stale after the commit. No preview.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

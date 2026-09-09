@@ -120,8 +120,10 @@ def sync_detailed(
 ) -> Response[PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200 | V1Error]:
     """Create a pull request from file changes
 
-     Create a branch from baseBranch (default main), apply complete file contents, and open a pull
-    request using the existing workflow.
+     Create a branch from baseBranch (default main — say so when the target is not main), apply complete
+    file contents under clearCommitMessage, verify the branch differs from base unless fastForward skips
+    verification, and open a pull request using the existing workflow. Empty title/description and a
+    missing commit message are refused.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -158,8 +160,10 @@ def sync(
 ) -> PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200 | V1Error | None:
     """Create a pull request from file changes
 
-     Create a branch from baseBranch (default main), apply complete file contents, and open a pull
-    request using the existing workflow.
+     Create a branch from baseBranch (default main — say so when the target is not main), apply complete
+    file contents under clearCommitMessage, verify the branch differs from base unless fastForward skips
+    verification, and open a pull request using the existing workflow. Empty title/description and a
+    missing commit message are refused.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -191,8 +195,10 @@ async def asyncio_detailed(
 ) -> Response[PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200 | V1Error]:
     """Create a pull request from file changes
 
-     Create a branch from baseBranch (default main), apply complete file contents, and open a pull
-    request using the existing workflow.
+     Create a branch from baseBranch (default main — say so when the target is not main), apply complete
+    file contents under clearCommitMessage, verify the branch differs from base unless fastForward skips
+    verification, and open a pull request using the existing workflow. Empty title/description and a
+    missing commit message are refused.
 
     Args:
         owner (str): Ledger owner's username Example: alice.
@@ -227,8 +233,10 @@ async def asyncio(
 ) -> PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200 | V1Error | None:
     """Create a pull request from file changes
 
-     Create a branch from baseBranch (default main), apply complete file contents, and open a pull
-    request using the existing workflow.
+     Create a branch from baseBranch (default main — say so when the target is not main), apply complete
+    file contents under clearCommitMessage, verify the branch differs from base unless fastForward skips
+    verification, and open a pull request using the existing workflow. Empty title/description and a
+    missing commit message are refused.
 
     Args:
         owner (str): Ledger owner's username Example: alice.

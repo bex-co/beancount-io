@@ -17,11 +17,13 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
         old_path (str):
         new_path (str):
         message (None | str | Unset):
+        update_includes (bool | None | Unset):
     """
 
     old_path: str
     new_path: str
     message: None | str | Unset = UNSET
+    update_includes: bool | None | Unset = UNSET
 
     def to_dict(self) -> dict[str, Any]:
         old_path = self.old_path
@@ -34,6 +36,12 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
         else:
             message = self.message
 
+        update_includes: bool | None | Unset
+        if isinstance(self.update_includes, Unset):
+            update_includes = UNSET
+        else:
+            update_includes = self.update_includes
+
         field_dict: dict[str, Any] = {}
 
         field_dict.update(
@@ -44,6 +52,8 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
         )
         if message is not UNSET:
             field_dict["message"] = message
+        if update_includes is not UNSET:
+            field_dict["updateIncludes"] = update_includes
 
         return field_dict
 
@@ -63,10 +73,20 @@ class PostApiGatewayV1LedgersOwnerNameRenameFileBody:
 
         message = _parse_message(d.pop("message", UNSET))
 
+        def _parse_update_includes(data: object) -> bool | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            return cast(bool | None | Unset, data)
+
+        update_includes = _parse_update_includes(d.pop("updateIncludes", UNSET))
+
         post_api_gateway_v1_ledgers_owner_name_rename_file_body = cls(
             old_path=old_path,
             new_path=new_path,
             message=message,
+            update_includes=update_includes,
         )
 
         return post_api_gateway_v1_ledgers_owner_name_rename_file_body

@@ -11,8 +11,8 @@ if TYPE_CHECKING:
     from ..models.entries_request_entries_item_type_0_entry_postings_item_price_type_0 import (
         EntriesRequestEntriesItemType0EntryPostingsItemPriceType0,
     )
-    from ..models.entries_request_entries_item_type_0_entry_postings_item_units import (
-        EntriesRequestEntriesItemType0EntryPostingsItemUnits,
+    from ..models.entries_request_entries_item_type_0_entry_postings_item_units_type_0 import (
+        EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0,
     )
 
 
@@ -24,13 +24,14 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
     """
     Attributes:
         account (str):  Example: Assets:Bank:Checking.
-        units (EntriesRequestEntriesItemType0EntryPostingsItemUnits):
+        units (EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0 | None | Unset): Posting amount; omit on at
+            most one posting per transaction to elide it
         price (EntriesRequestEntriesItemType0EntryPostingsItemPriceType0 | None | Unset):
         flag (None | str | Unset):
     """
 
     account: str
-    units: EntriesRequestEntriesItemType0EntryPostingsItemUnits
+    units: EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0 | None | Unset = UNSET
     price: EntriesRequestEntriesItemType0EntryPostingsItemPriceType0 | None | Unset = UNSET
     flag: None | str | Unset = UNSET
 
@@ -38,10 +39,19 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
         from ..models.entries_request_entries_item_type_0_entry_postings_item_price_type_0 import (
             EntriesRequestEntriesItemType0EntryPostingsItemPriceType0,  # noqa: PLC0415
         )
+        from ..models.entries_request_entries_item_type_0_entry_postings_item_units_type_0 import (
+            EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0,  # noqa: PLC0415
+        )
 
         account = self.account
 
-        units = self.units.to_dict()
+        units: dict[str, Any] | None | Unset
+        if isinstance(self.units, Unset):
+            units = UNSET
+        elif isinstance(self.units, EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0):
+            units = self.units.to_dict()
+        else:
+            units = self.units
 
         price: dict[str, Any] | None | Unset
         if isinstance(self.price, Unset):
@@ -62,9 +72,10 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
         field_dict.update(
             {
                 "account": account,
-                "units": units,
             }
         )
+        if units is not UNSET:
+            field_dict["units"] = units
         if price is not UNSET:
             field_dict["price"] = price
         if flag is not UNSET:
@@ -77,14 +88,29 @@ class EntriesRequestEntriesItemType0EntryPostingsItem:
         from ..models.entries_request_entries_item_type_0_entry_postings_item_price_type_0 import (
             EntriesRequestEntriesItemType0EntryPostingsItemPriceType0,  # noqa: PLC0415
         )
-        from ..models.entries_request_entries_item_type_0_entry_postings_item_units import (
-            EntriesRequestEntriesItemType0EntryPostingsItemUnits,  # noqa: PLC0415
+        from ..models.entries_request_entries_item_type_0_entry_postings_item_units_type_0 import (
+            EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0,  # noqa: PLC0415
         )
 
         d = dict(src_dict)
         account = d.pop("account")
 
-        units = EntriesRequestEntriesItemType0EntryPostingsItemUnits.from_dict(d.pop("units"))
+        def _parse_units(data: object) -> EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0 | None | Unset:
+            if data is None:
+                return data
+            if isinstance(data, Unset):
+                return data
+            try:
+                if not isinstance(data, dict):
+                    raise TypeError()
+                units_type_0 = EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0.from_dict(data)
+
+                return units_type_0
+            except (TypeError, ValueError, AttributeError, KeyError):
+                pass
+            return cast(EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0 | None | Unset, data)
+
+        units = _parse_units(d.pop("units", UNSET))
 
         def _parse_price(data: object) -> EntriesRequestEntriesItemType0EntryPostingsItemPriceType0 | None | Unset:
             if data is None:

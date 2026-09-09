@@ -43,8 +43,8 @@ from .entries_request_entries_item_type_0_entry_postings_item import EntriesRequ
 from .entries_request_entries_item_type_0_entry_postings_item_price_type_0 import (
     EntriesRequestEntriesItemType0EntryPostingsItemPriceType0,
 )
-from .entries_request_entries_item_type_0_entry_postings_item_units import (
-    EntriesRequestEntriesItemType0EntryPostingsItemUnits,
+from .entries_request_entries_item_type_0_entry_postings_item_units_type_0 import (
+    EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0,
 )
 from .entries_request_entries_item_type_0_type import EntriesRequestEntriesItemType0Type
 from .entries_request_entries_item_type_1 import EntriesRequestEntriesItemType1
@@ -323,7 +323,7 @@ __all__ = (
     "EntriesRequestEntriesItemType0EntryMetaType0",
     "EntriesRequestEntriesItemType0EntryPostingsItem",
     "EntriesRequestEntriesItemType0EntryPostingsItemPriceType0",
-    "EntriesRequestEntriesItemType0EntryPostingsItemUnits",
+    "EntriesRequestEntriesItemType0EntryPostingsItemUnitsType0",
     "EntriesRequestEntriesItemType0Type",
     "EntriesRequestEntriesItemType1",
     "EntriesRequestEntriesItemType1Entry",

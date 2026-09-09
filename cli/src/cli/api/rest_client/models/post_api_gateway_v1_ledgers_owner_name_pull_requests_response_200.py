@@ -19,12 +19,16 @@ class PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200:
         message (str | Unset):
         pr_number (int | Unset):
         pr_url (str | Unset):
+        base_branch (str | Unset): The created PR's actual base ref, read back — never a default
+        head_branch (str | Unset): The created PR's actual head ref, read back — never a default
     """
 
     success: bool
     message: str | Unset = UNSET
     pr_number: int | Unset = UNSET
     pr_url: str | Unset = UNSET
+    base_branch: str | Unset = UNSET
+    head_branch: str | Unset = UNSET
     additional_properties: dict[str, Any] = _attrs_field(init=False, factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
@@ -35,6 +39,10 @@ class PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200:
         pr_number = self.pr_number
 
         pr_url = self.pr_url
+
+        base_branch = self.base_branch
+
+        head_branch = self.head_branch
 
         field_dict: dict[str, Any] = {}
         field_dict.update(self.additional_properties)
@@ -49,6 +57,10 @@ class PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200:
             field_dict["prNumber"] = pr_number
         if pr_url is not UNSET:
             field_dict["prUrl"] = pr_url
+        if base_branch is not UNSET:
+            field_dict["baseBranch"] = base_branch
+        if head_branch is not UNSET:
+            field_dict["headBranch"] = head_branch
 
         return field_dict
 
@@ -63,11 +75,17 @@ class PostApiGatewayV1LedgersOwnerNamePullRequestsResponse200:
 
         pr_url = d.pop("prUrl", UNSET)
 
+        base_branch = d.pop("baseBranch", UNSET)
+
+        head_branch = d.pop("headBranch", UNSET)
+
         post_api_gateway_v1_ledgers_owner_name_pull_requests_response_200 = cls(
             success=success,
             message=message,
             pr_number=pr_number,
             pr_url=pr_url,
+            base_branch=base_branch,
+            head_branch=head_branch,
         )
 
         post_api_gateway_v1_ledgers_owner_name_pull_requests_response_200.additional_properties = d

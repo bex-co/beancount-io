@@ -11,7 +11,7 @@ from ...types import UNSET, Response, Unset
 
 def _get_kwargs(
     *,
-    user_id: str,
+    user_id: str | Unset = UNSET,
     ledger_id: str | Unset = UNSET,
 ) -> dict[str, Any]:
 
@@ -100,7 +100,7 @@ def _build_response(*, client: AuthenticatedClient | Client, response: httpx.Res
 def sync_detailed(
     *,
     client: AuthenticatedClient,
-    user_id: str,
+    user_id: str | Unset = UNSET,
     ledger_id: str | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Read legacy ledger metadata
@@ -110,7 +110,7 @@ def sync_detailed(
     user.
 
     Args:
-        user_id (str): Legacy compatibility argument; authentication determines the caller
+        user_id (str | Unset): Legacy compatibility argument; authentication determines the caller
         ledger_id (str | Unset): Defaults to the credential pin or the caller's first ledger,
             matching legacy ledgerMeta
 
@@ -137,7 +137,7 @@ def sync_detailed(
 def sync(
     *,
     client: AuthenticatedClient,
-    user_id: str,
+    user_id: str | Unset = UNSET,
     ledger_id: str | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Read legacy ledger metadata
@@ -147,7 +147,7 @@ def sync(
     user.
 
     Args:
-        user_id (str): Legacy compatibility argument; authentication determines the caller
+        user_id (str | Unset): Legacy compatibility argument; authentication determines the caller
         ledger_id (str | Unset): Defaults to the credential pin or the caller's first ledger,
             matching legacy ledgerMeta
 
@@ -169,7 +169,7 @@ def sync(
 async def asyncio_detailed(
     *,
     client: AuthenticatedClient,
-    user_id: str,
+    user_id: str | Unset = UNSET,
     ledger_id: str | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Read legacy ledger metadata
@@ -179,7 +179,7 @@ async def asyncio_detailed(
     user.
 
     Args:
-        user_id (str): Legacy compatibility argument; authentication determines the caller
+        user_id (str | Unset): Legacy compatibility argument; authentication determines the caller
         ledger_id (str | Unset): Defaults to the credential pin or the caller's first ledger,
             matching legacy ledgerMeta
 
@@ -204,7 +204,7 @@ async def asyncio_detailed(
 async def asyncio(
     *,
     client: AuthenticatedClient,
-    user_id: str,
+    user_id: str | Unset = UNSET,
     ledger_id: str | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Read legacy ledger metadata
@@ -214,7 +214,7 @@ async def asyncio(
     user.
 
     Args:
-        user_id (str): Legacy compatibility argument; authentication determines the caller
+        user_id (str | Unset): Legacy compatibility argument; authentication determines the caller
         ledger_id (str | Unset): Defaults to the credential pin or the caller's first ledger,
             matching legacy ledgerMeta
 
