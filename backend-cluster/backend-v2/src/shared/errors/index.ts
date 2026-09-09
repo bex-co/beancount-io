@@ -42,4 +42,6 @@ export {
   ResourceLimitReachedError,
   OperationNotAllowedError,
   PremiumRequiredError,
+  UnbalancedTransactionError,
+  ConfigurationError,
 } from "./domain-errors";

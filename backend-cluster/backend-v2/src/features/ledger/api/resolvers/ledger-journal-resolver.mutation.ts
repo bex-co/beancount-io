@@ -2,6 +2,7 @@ import {
   Arg,
   Ctx,
   Field,
+  Int,
   ObjectType,
   InputType,
   Mutation,
@@ -49,8 +50,8 @@ class DeleteMultiSourceSlicesResponse {
   @Field(() => String)
   message: string;
 
-  @Field(() => [String])
-  deletedHashes: string[];
+  @Field(() => Int)
+  deletedCount: number;
 }
 
 @InputType()
@@ -75,6 +76,12 @@ class UpdateSourceSliceResponse {
 
   @Field(() => String)
   newSha256sum: string;
+
+  @Field(() => String, {
+    description:
+      "The entry's public ID after the commit — use it for the next edit, not entryHash.",
+  })
+  newEntryHash: string;
 }
 
 @Resolver()

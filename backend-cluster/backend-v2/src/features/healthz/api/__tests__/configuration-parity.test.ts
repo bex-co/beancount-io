@@ -127,16 +127,31 @@ describe("public configuration across real adapters", () => {
     },
   );
 
-  it("keeps required arguments and protected routes enforced", async () => {
+  it("reads feature flags without the ignored userId on every surface", async () => {
     rest.setIdentity(undefined);
-    expect(
-      (await fetch(`${rest.url}/api-gateway/v1/feature-flags`)).status,
-    ).toBe(400);
-    await expect(
-      client.readResource({ uri: "beancount://configuration/feature-flags" }),
-    ).rejects.toThrow();
-    const g = await graphql({ schema, source: "{featureFlags}" });
-    expect(g.errors).toHaveLength(1);
+    const flags = await fetch(`${rest.url}/api-gateway/v1/feature-flags`);
+    expect(flags.status).toBe(200);
+    expect(await flags.json()).toEqual({ spendingReportSubscription: false });
+    const r = await client.readResource({
+      uri: "beancount://configuration/feature-flags",
+    });
+    const content = r.contents[0];
+    expect("text" in content && JSON.parse(content.text)).toEqual({
+      spendingReportSubscription: false,
+    });
+    const g = await graphql({
+      schema,
+      source: "{featureFlags}",
+      contextValue: { identity: undefined },
+    });
+    expect(g.errors).toBeUndefined();
+    expect(g.data).toEqual({
+      featureFlags: { spendingReportSubscription: false },
+    });
+  });
+
+  it("keeps protected routes enforced", async () => {
+    rest.setIdentity(undefined);
     expect((await fetch(`${rest.url}/api-gateway/v1/ledgers`)).status).toBe(
       401,
     );

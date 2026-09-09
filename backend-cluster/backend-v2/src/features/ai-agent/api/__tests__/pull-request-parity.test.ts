@@ -26,7 +26,7 @@ const identity: Identity = {
   scopes: new Set(["ledger.write"]),
   tokenId: "tok_pr",
 };
-const resultFields = "success message prNumber prUrl";
+const resultFields = "success message prNumber prUrl baseBranch headBranch";
 const detailsFields =
   "number title description state author headBranch baseBranch files{filename additions deletions changes} diff";
 let resolver: PullRequestResolver;
@@ -60,6 +60,7 @@ async function fixture(caller = identity) {
       if (!branches.has(branch)) throw new Error("Base branch missing");
       return { data: { name: branch } };
     }),
+    repoCompareDiff: jest.fn(async () => ({ data: { total_commits: 1 } })),
     repoCreateBranch: jest.fn(
       async (
         _o: string,
@@ -290,6 +291,11 @@ const changes = [
   { path: "main.bean", content: "new" },
   { path: "café.bean", content: "Unicode café" },
 ];
+// Create inputs require a description and a commit message on every surface.
+const validCreate = {
+  description: "Patch description",
+  clearCommitMessage: "Patch commit",
+};
 describe("PR creation, inspection, and review through real adapters/workflow/service", () => {
   it.each(surfaces)(
     "creates patches, reads details, and merges via %s",
@@ -298,17 +304,23 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       try {
         const created = await f.call(surface, "create", {
           title: "Café patch",
+          ...validCreate,
           description: "Review",
           baseBranch: "feature/base",
           changes,
         });
         expect(created.failed).toBe(false);
-        expect(created.data).toEqual({
+        // headBranch carries a timestamped random suffix; assert its shape.
+        expect(created.data).toMatchObject({
           success: true,
           prNumber: 1,
           prUrl: "https://example.com/alice/main/pulls/1",
           message: "Pull request created successfully",
+          baseBranch: "feature/base",
         });
+        expect(
+          (created.data as { headBranch?: unknown }).headBranch,
+        ).toMatch(/^pr-patch-/);
         const pr = f.prs.get(1)!;
         expect([...f.branches.get(pr.head.ref)!]).toEqual([
           ["main.bean", "new"],
@@ -355,11 +367,16 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
     async (surface) => {
       const f = await fixture();
       try {
-        expect(
-          (await f.call(surface, "create", { title: "Patch", changes })).data,
-        ).toMatchObject({ success: true });
+        const createData = (
+          await f.call(surface, "create", {
+            title: "Patch",
+            ...validCreate,
+            changes,
+          })
+        ).data;
+        expect(createData).toMatchObject({ success: true });
         expect(f.prs.get(1)?.base.ref).toBe("main");
-        expect(f.prs.get(1)?.body).toBe("");
+        expect(f.prs.get(1)?.body).toBe(validCreate.description);
         expect((await f.call(surface, "reject")).data).toEqual({
           success: true,
           message: "PR closed successfully",
@@ -386,7 +403,9 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
               await f.call(
                 surface,
                 op,
-                op === "create" ? { title: "Patch", changes } : {},
+                op === "create"
+              ? { title: "Patch", ...validCreate, changes }
+              : {},
               )
             ).data,
           ).toEqual({
@@ -407,6 +426,7 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
       try {
         const r = await f.call(surface, "create", {
           title: "Bad patch",
+          ...validCreate,
           changes: [changes[0], { path: "../escape.bean", content: "bad" }],
         });
         expect(r.failed).toBe(true);
@@ -429,7 +449,9 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
               await f.call(
                 surface,
                 op,
-                op === "create" ? { title: "Patch", changes } : {},
+                op === "create"
+              ? { title: "Patch", ...validCreate, changes }
+              : {},
               )
             ).failed,
           ).toBe(true);
@@ -454,7 +476,9 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
               await f.call(
                 surface,
                 op,
-                op === "create" ? { title: "Patch", changes } : {},
+                op === "create"
+              ? { title: "Patch", ...validCreate, changes }
+              : {},
               )
             ).failed,
           ).toBe(true);
@@ -473,7 +497,9 @@ describe("PR creation, inspection, and review through real adapters/workflow/ser
             await f.call(
               surface,
               op,
-              op === "create" ? { title: "Patch", changes } : {},
+              op === "create"
+              ? { title: "Patch", ...validCreate, changes }
+              : {},
             )
           ).failed,
         ).toBe(true);

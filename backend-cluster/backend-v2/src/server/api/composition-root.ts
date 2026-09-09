@@ -28,6 +28,7 @@ import type { ZodTypeAny } from "zod";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import { logger } from "@/shared/logger";
+import { DomainError } from "@/shared/errors";
 import { runWithOperationId } from "@/shared/async-context";
 
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
@@ -503,6 +504,23 @@ function makeMcpResourceHandler(
   };
 }
 
+/**
+ * Render a thrown tool failure as the MCP client's plain-text error (w2/m26).
+ *
+ * A DomainError's metadata hint is the actionable half of the error (env vars
+ * to set, flags to pass); MCP tool failures travel as plain text, so the hint
+ * rides along instead of staying behind in metadata that only REST and
+ * GraphQL merge onto the wire.
+ */
+export function mcpToolErrorText(err: unknown): string {
+  const text = err instanceof Error ? err.message : "Tool execution failed";
+  const hint =
+    err instanceof DomainError && typeof err.metadata?.hint === "string"
+      ? err.metadata.hint
+      : undefined;
+  return hint ? `${text}\nHint: ${hint}` : text;
+}
+
 function makeMcpToolHandler(
   toolCtx: McpRequestContext,
   descriptor: (typeof MCP_TOOLS)[number],
@@ -540,11 +558,10 @@ function makeMcpToolHandler(
           structuredContent: result as Record<string, unknown>,
         };
       } catch (err) {
-        const text =
-          err instanceof Error ? err.message : "Tool execution failed";
+        const text = mcpToolErrorText(err);
         mcpLogger.error("MCP tool execution failed", {
           tool: descriptor.name,
-          error: text,
+          error: err instanceof Error ? err.message : String(err),
         });
         return {
           isError: true,

@@ -144,4 +144,36 @@ describe("LedgerCollaboratorsWorkflow authorization", () => {
       "admin",
     );
   });
+
+  it("translates Gitea's unknown-user error into No such user", async () => {
+    addOrUpdateLedgerCollaborator.mockRejectedValueOnce(
+      new Error("user does not exist [uid: 0, name: ghost]"),
+    );
+    await expect(
+      workflow.addOrUpdateCollaborator({
+        identity,
+        ledgerId,
+        collaborator: "ghost",
+        permission: "read",
+      }),
+    ).rejects.toMatchObject({
+      name: "BadUserInputError",
+      category: "BAD_USER_INPUT",
+      message: "No such user: ghost",
+    });
+  });
+
+  it("rethrows other collaborator-update failures unchanged", async () => {
+    addOrUpdateLedgerCollaborator.mockRejectedValueOnce(
+      new Error("team is full"),
+    );
+    await expect(
+      workflow.addOrUpdateCollaborator({
+        identity,
+        ledgerId,
+        collaborator: "ghost",
+        permission: "read",
+      }),
+    ).rejects.toThrow("team is full");
+  });
 });

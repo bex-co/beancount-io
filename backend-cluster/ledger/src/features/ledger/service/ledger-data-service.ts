@@ -1,5 +1,6 @@
 import { parseLedgerId } from "@/shared/str";
 import { BadUserInputError } from "@/shared/errors";
+import { assertSafeRepoPath } from "@/shared/safe-repo-path";
 import type {
   AttributesPublic,
   CommodityPairWithPricesPublic,
@@ -60,6 +61,16 @@ import {
 } from "./ledger-data-mappers";
 
 type BaseParams = { ledgerId: string; userId: string | undefined };
+
+/** One projected file: base64 UTF-8 text, or `null` to project a deletion. */
+export type ProjectedFileOverlay = {
+  path: string;
+  content: string | null;
+};
+
+/** Bounds for a projected check: parsing is CPU-heavy, dry runs are many. */
+const MAX_PROJECTED_FILES = 50;
+const MAX_PROJECTED_BYTES = 5_000_000;
 type FilterParams = { account?: string; filter?: string; time?: string };
 type ConversionParams = FilterParams & {
   conversion?: string;
@@ -87,6 +98,15 @@ interface ILedgerDataService {
   getPayeeAccounts(params: BaseParams & { payee: string }): Promise<string[]>;
 
   getErrors(params: BaseParams): Promise<BeancountErrorPublic[]>;
+
+  /**
+   * bean-check over projected file contents: the current repo file map with
+   * `overlays` applied (`content: null` deletes), parsed without committing.
+   * Powers dry-run previews (w2/m26).
+   */
+  checkProjectedErrors(
+    params: BaseParams & { overlays: ProjectedFileOverlay[] },
+  ): Promise<BeancountErrorPublic[]>;
 
   getCurrencies(params: BaseParams): Promise<string[]>;
 
@@ -350,6 +370,61 @@ export class LedgerDataService implements ILedgerDataService {
   async getErrors(params: BaseParams): Promise<BeancountErrorPublic[]> {
     const { ledgerId, userId } = params;
     const snapshot = await this.loadSnapshot(ledgerId, userId);
+    return toBeancountErrorsPublic(snapshot.errors);
+  }
+
+  async checkProjectedErrors(
+    params: BaseParams & { overlays: ProjectedFileOverlay[] },
+  ): Promise<BeancountErrorPublic[]> {
+    const { ledgerId, userId, overlays } = params;
+    if (!Array.isArray(overlays) || overlays.length > MAX_PROJECTED_FILES) {
+      throw new BadUserInputError(
+        `at most ${MAX_PROJECTED_FILES} files may be projected at once`,
+      );
+    }
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const client = await this.giteaClientFactory.getPublicApiClient(
+      ledgerId,
+      userId,
+    );
+    const { files, entryPoint, repoPaths } = await loadCachedFileMapForRepo(
+      client as GiteaCommitClient,
+      this.cacheHelper,
+      ledgerOwner,
+      ledgerName,
+    );
+    const projected: Record<string, string> = { ...files };
+    let totalBytes = 0;
+    overlays.forEach((overlay, index) => {
+      if (
+        overlay === null ||
+        typeof overlay !== "object" ||
+        typeof overlay.path !== "string"
+      ) {
+        throw new BadUserInputError(`files[${index}] must name a path`);
+      }
+      assertSafeRepoPath(overlay.path, `files[${index}].path`);
+      if (overlay.content === null || overlay.content === undefined) {
+        delete projected[overlay.path];
+        return;
+      }
+      if (typeof overlay.content !== "string") {
+        throw new BadUserInputError(
+          `files[${index}].content must be base64 text or null`,
+        );
+      }
+      const text = Buffer.from(overlay.content, "base64").toString("utf8");
+      totalBytes += text.length;
+      if (totalBytes > MAX_PROJECTED_BYTES) {
+        throw new BadUserInputError(
+          `projected contents exceed ${MAX_PROJECTED_BYTES} bytes`,
+        );
+      }
+      projected[overlay.path] = text;
+    });
+    const snapshot = await parseLedgerFiles(projected, entryPoint, {
+      repoPaths,
+    });
     return toBeancountErrorsPublic(snapshot.errors);
   }
 

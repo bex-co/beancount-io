@@ -249,6 +249,7 @@
                               },
                               "units": {
                                 "type": "object",
+                                "nullable": true,
                                 "properties": {
                                   "number": {
                                     "type": "string",
@@ -264,7 +265,8 @@
                                   "number",
                                   "currency"
                                 ],
-                                "additionalProperties": false
+                                "additionalProperties": false,
+                                "description": "Posting amount; omit on at most one posting per transaction to elide it"
                               },
                               "price": {
                                 "type": "object",
@@ -292,8 +294,7 @@
                               }
                             },
                             "required": [
-                              "account",
-                              "units"
+                              "account"
                             ],
                             "additionalProperties": false
                           }
@@ -738,6 +739,11 @@
               ]
             },
             "description": "Directives to append, committed all-or-nothing"
+          },
+          "allowInvalid": {
+            "type": "boolean",
+            "nullable": true,
+            "description": "Record unbalanced transactions deliberately instead of refusing them with UNBALANCED"
           }
         },
         "required": [
@@ -4188,7 +4194,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/pull-requests": {
       "post": {
         "summary": "Create a pull request from file changes",
-        "description": "Create a branch from baseBranch (default main), apply complete file contents, and open a pull request using the existing workflow.",
+        "description": "Create a branch from baseBranch (default main — say so when the target is not main), apply complete file contents under clearCommitMessage, verify the branch differs from base unless fastForward skips verification, and open a pull request using the existing workflow. Empty title/description and a missing commit message are refused.",
         "tags": [
           "Ledger v1"
         ],
@@ -4233,15 +4239,25 @@
                 "type": "object",
                 "properties": {
                   "title": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1
                   },
                   "description": {
                     "type": "string",
-                    "nullable": true
+                    "minLength": 1
                   },
                   "baseBranch": {
                     "type": "string",
                     "default": "main"
+                  },
+                  "clearCommitMessage": {
+                    "type": "string",
+                    "minLength": 1
+                  },
+                  "fastForward": {
+                    "type": "boolean",
+                    "nullable": true,
+                    "description": "Skip the diff-less verification and open the pull request even when the branch does not differ from base"
                   },
                   "changes": {
                     "type": "array",
@@ -4265,6 +4281,8 @@
                 },
                 "required": [
                   "title",
+                  "description",
+                  "clearCommitMessage",
                   "changes"
                 ],
                 "additionalProperties": false
@@ -4291,6 +4309,14 @@
                     },
                     "prUrl": {
                       "type": "string"
+                    },
+                    "baseBranch": {
+                      "type": "string",
+                      "description": "The created PR's actual base ref, read back — never a default"
+                    },
+                    "headBranch": {
+                      "type": "string",
+                      "description": "The created PR's actual head ref, read back — never a default"
                     }
                   },
                   "required": [
@@ -4473,6 +4499,14 @@
                     },
                     "prUrl": {
                       "type": "string"
+                    },
+                    "baseBranch": {
+                      "type": "string",
+                      "description": "The created PR's actual base ref, read back — never a default"
+                    },
+                    "headBranch": {
+                      "type": "string",
+                      "description": "The created PR's actual head ref, read back — never a default"
                     }
                   },
                   "required": [
@@ -4655,6 +4689,14 @@
                     },
                     "prUrl": {
                       "type": "string"
+                    },
+                    "baseBranch": {
+                      "type": "string",
+                      "description": "The created PR's actual base ref, read back — never a default"
+                    },
+                    "headBranch": {
+                      "type": "string",
+                      "description": "The created PR's actual head ref, read back — never a default"
                     }
                   },
                   "required": [
@@ -7141,7 +7183,7 @@
               "type": "string",
               "description": "Legacy compatibility argument; authentication determines the caller"
             },
-            "required": true,
+            "required": false,
             "description": "Legacy compatibility argument; authentication determines the caller",
             "name": "userId",
             "in": "query"
@@ -9463,7 +9505,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/rename-file": {
       "post": {
         "summary": "Rename a ledger file",
-        "description": "Move oldPath to newPath using the repository's existing rename operation and optional commit message. Both paths must be safe repository-relative paths. No client SHA or preview argument is supported by this operation.",
+        "description": "Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath → newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in the same commit. Both paths must be safe repository-relative paths. No client SHA or preview argument is supported by this operation.",
         "tags": [
           "Ledger v1"
         ],
@@ -9516,6 +9558,10 @@
                   "message": {
                     "type": "string",
                     "nullable": true
+                  },
+                  "updateIncludes": {
+                    "type": "boolean",
+                    "nullable": true
                   }
                 },
                 "required": [
@@ -9540,11 +9586,18 @@
                     },
                     "newPath": {
                       "type": "string"
+                    },
+                    "updatedIncludes": {
+                      "type": "array",
+                      "items": {
+                        "type": "string"
+                      }
                     }
                   },
                   "required": [
                     "oldPath",
-                    "newPath"
+                    "newPath",
+                    "updatedIncludes"
                   ]
                 }
               }
@@ -9646,7 +9699,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entries": {
       "post": {
         "summary": "Add directives to the ledger",
-        "description": "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written.",
+        "description": "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose residual is outside the ledger's tolerance is refused with UNBALANCED unless allowInvalid records it deliberately; one posting per transaction may omit its amount and is written elided.",
         "tags": [
           "Ledger v1"
         ],
@@ -10021,7 +10074,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source/delete": {
       "post": {
         "summary": "Delete one entry source slice",
-        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. No preview.",
+        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. No preview.",
         "tags": [
           "Ledger v1"
         ],
@@ -10200,7 +10253,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source/delete-many": {
       "post": {
         "summary": "Delete multiple entry source slices",
-        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. No preview.",
+        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. No preview.",
         "tags": [
           "Ledger v1"
         ],
@@ -10283,16 +10336,13 @@
                     "message": {
                       "type": "string"
                     },
-                    "deletedHashes": {
-                      "type": "array",
-                      "items": {
-                        "type": "string"
-                      }
+                    "deletedCount": {
+                      "type": "integer"
                     }
                   },
                   "required": [
                     "message",
-                    "deletedHashes"
+                    "deletedCount"
                   ]
                 }
               }
@@ -10394,7 +10444,7 @@
     "/api-gateway/v1/ledgers/{owner}/{name}/entry-source": {
       "put": {
         "summary": "Update an entry source slice",
-        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. No preview.",
+        "description": "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. No preview.",
         "tags": [
           "Ledger v1"
         ],
@@ -10474,12 +10524,17 @@
                     },
                     "newSha256sum": {
                       "type": "string"
+                    },
+                    "newEntryHash": {
+                      "type": "string",
+                      "description": "The entry's public ID after the commit, re-read post-commit — use it for the next edit, not the request's entryHash."
                     }
                   },
                   "required": [
                     "message",
                     "entryHash",
-                    "newSha256sum"
+                    "newSha256sum",
+                    "newEntryHash"
                   ]
                 }
               }
@@ -17235,7 +17290,7 @@
             "schema": {
               "type": "string"
             },
-            "required": true,
+            "required": false,
             "name": "userId",
             "in": "query"
           }

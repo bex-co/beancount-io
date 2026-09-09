@@ -35,12 +35,14 @@ interface MockFavaApiClient {
     deleteLedgerFile: jest.Mock;
     getLedgerFile: jest.Mock;
     getLedgerDirContent: jest.Mock;
+    getLedgerFilesContent: jest.Mock;
     changeLedgerFiles: jest.Mock;
   };
   reports: {
     getLedgerAttributes: jest.Mock;
     getLedgerOptions: jest.Mock;
     getLedgerFavaOptions: jest.Mock;
+    getLedgerSourceFiles: jest.Mock;
   };
 }
 
@@ -93,12 +95,14 @@ describe("LedgerWorkflow", () => {
         deleteLedgerFile: jest.fn(),
         getLedgerFile: jest.fn(),
         getLedgerDirContent: jest.fn(),
+        getLedgerFilesContent: jest.fn(),
         changeLedgerFiles: jest.fn(),
       },
       reports: {
         getLedgerAttributes: jest.fn(),
         getLedgerOptions: jest.fn(),
         getLedgerFavaOptions: jest.fn(),
+        getLedgerSourceFiles: jest.fn(),
       },
     };
 
@@ -1178,12 +1182,45 @@ describe("LedgerWorkflow", () => {
 
   describe("renameLedgerFile", () => {
     const ledgerId = "testuser/test-ledger";
+    const oldFile = {
+      name: "old.bean",
+      path: "old.bean",
+      type: "file",
+      sha: "sha-old",
+      size: 8,
+      content: "; Café\n",
+      encoding: null,
+    };
 
-    it("should rename a ledger file", async () => {
+    beforeEach(() => {
+      mockFavaApiClient.ledgers.getLedgerFile.mockImplementation(
+        async (_o, _n, query: { path: string }) => ({
+          data: {
+            success: true,
+            data: query.path === "old.bean" ? oldFile : null,
+          },
+        }),
+      );
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              name: "old.bean",
+              path: "old.bean",
+              type: "file",
+              sha: "sha-old",
+              size: 8,
+            },
+          ],
+        },
+      });
       mockFavaApiClient.ledgers.changeLedgerFiles.mockResolvedValue({
         data: { success: true },
       });
+    });
 
+    it("should rename a ledger file preserving content", async () => {
       const result = await workflow.renameLedgerFile({
         identity: IDENTITY,
         ledgerId,
@@ -1199,13 +1236,182 @@ describe("LedgerWorkflow", () => {
         "test-ledger",
         {
           files: [
-            { operation: "create", path: "new.bean", from_path: "old.bean" },
+            {
+              operation: "create",
+              path: "new.bean",
+              content: Buffer.from("; Café\n", "utf-8").toString("base64"),
+            },
+            { operation: "delete", path: "old.bean", sha: "sha-old" },
           ],
           message: "Rename file",
         },
       );
       expect(result.oldPath).toBe("old.bean");
       expect(result.newPath).toBe("new.bean");
+      expect(result.updatedIncludes).toEqual([]);
+    });
+
+    it("should default the commit message to Rename a → b", async () => {
+      await workflow.renameLedgerFile({
+        identity: IDENTITY,
+        ledgerId,
+        input: { oldPath: "old.bean", newPath: "new.bean" },
+      });
+
+      expect(mockFavaApiClient.ledgers.changeLedgerFiles).toHaveBeenCalledWith(
+        "testuser",
+        "test-ledger",
+        expect.objectContaining({ message: "Rename old.bean → new.bean" }),
+      );
+    });
+
+    it("should refuse when the target already exists", async () => {
+      mockFavaApiClient.ledgers.getLedgerFile.mockImplementation(
+        async (_o, _n, query: { path: string }) => ({
+          data: {
+            success: true,
+            data:
+              query.path === "old.bean"
+                ? oldFile
+                : query.path === "new.bean"
+                  ? { ...oldFile, path: "new.bean", sha: "sha-new" }
+                  : null,
+          },
+        }),
+      );
+
+      await expect(
+        workflow.renameLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: { oldPath: "old.bean", newPath: "new.bean" },
+        }),
+      ).rejects.toThrow(BadUserInputError);
+      expect(
+        mockFavaApiClient.ledgers.changeLedgerFiles,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("should refuse when the old path is still included", async () => {
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              name: "main.bean",
+              path: "main.bean",
+              type: "file",
+              sha: "sha-main",
+              size: 18,
+            },
+            {
+              name: "old.bean",
+              path: "old.bean",
+              type: "file",
+              sha: "sha-old",
+              size: 8,
+            },
+          ],
+        },
+      });
+      mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              name: "main.bean",
+              path: "main.bean",
+              type: "file",
+              sha: "sha-main",
+              size: 18,
+              content: 'include "old.bean"\n',
+              encoding: null,
+            },
+          ],
+        },
+      });
+
+      await expect(
+        workflow.renameLedgerFile({
+          identity: IDENTITY,
+          ledgerId,
+          input: { oldPath: "old.bean", newPath: "new.bean" },
+        }),
+      ).rejects.toThrow(/still included by main\.bean/);
+      expect(
+        mockFavaApiClient.ledgers.changeLedgerFiles,
+      ).not.toHaveBeenCalled();
+    });
+
+    it("should rewrite includes with updateIncludes in the same commit", async () => {
+      mockFavaApiClient.ledgers.getLedgerDirContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              name: "main.bean",
+              path: "main.bean",
+              type: "file",
+              sha: "sha-main",
+              size: 18,
+            },
+            {
+              name: "old.bean",
+              path: "old.bean",
+              type: "file",
+              sha: "sha-old",
+              size: 8,
+            },
+          ],
+        },
+      });
+      mockFavaApiClient.ledgers.getLedgerFilesContent.mockResolvedValue({
+        data: {
+          success: true,
+          data: [
+            {
+              name: "main.bean",
+              path: "main.bean",
+              type: "file",
+              sha: "sha-main",
+              size: 18,
+              content: 'include "old.bean"\n',
+              encoding: null,
+            },
+          ],
+        },
+      });
+
+      const result = await workflow.renameLedgerFile({
+        identity: IDENTITY,
+        ledgerId,
+        input: { oldPath: "old.bean", newPath: "new.bean", updateIncludes: true },
+      });
+
+      expect(result.updatedIncludes).toEqual(["main.bean"]);
+      expect(mockFavaApiClient.ledgers.changeLedgerFiles).toHaveBeenCalledWith(
+        "testuser",
+        "test-ledger",
+        {
+          files: [
+            {
+              operation: "create",
+              path: "new.bean",
+              content: Buffer.from("; Café\n", "utf-8").toString("base64"),
+            },
+            { operation: "delete", path: "old.bean", sha: "sha-old" },
+            {
+              operation: "update",
+              path: "main.bean",
+              content: Buffer.from('include "new.bean"\n', "utf-8").toString(
+                "base64",
+              ),
+              sha: "sha-main",
+            },
+          ],
+          message: "Rename old.bean → new.bean",
+        },
+      );
     });
 
     it("should throw error when rename fails", async () => {

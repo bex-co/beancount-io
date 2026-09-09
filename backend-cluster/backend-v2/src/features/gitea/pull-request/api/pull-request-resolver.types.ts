@@ -17,14 +17,31 @@ export class CreatePRFromPatchInput {
   @Field(() => String)
   ledgerName: string;
 
-  @Field(() => String)
+  @Field(() => String, {
+    description: "Must not be empty",
+  })
   title: string;
 
-  @Field(() => String, { nullable: true })
-  description?: string;
+  @Field(() => String, {
+    description: "Must not be empty — describe what the pull request changes and why",
+  })
+  description: string;
 
   @Field(() => String, { defaultValue: "main" })
   baseBranch: string;
+
+  @Field(() => String, {
+    description:
+      "Commit message for the pull request branch's file changes; must not be empty",
+  })
+  clearCommitMessage: string;
+
+  @Field(() => Boolean, {
+    nullable: true,
+    description:
+      "Skip the diff-less verification and open the pull request even when the branch does not differ from base",
+  })
+  fastForward?: boolean;
 
   @Field(() => [FileChangeInput])
   changes: FileChangeInput[];
@@ -43,6 +60,18 @@ export class PullRequestResult {
 
   @Field(() => String, { nullable: true })
   prUrl?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "The created PR's actual base ref, read back — never a default",
+  })
+  baseBranch?: string;
+
+  @Field(() => String, {
+    nullable: true,
+    description: "The created PR's actual head ref, read back — never a default",
+  })
+  headBranch?: string;
 }
 
 @ObjectType()

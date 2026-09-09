@@ -6,7 +6,11 @@
 type AmountInput = { number: string; currency: string };
 
 type PostingInput = {
-  units: AmountInput;
+  /**
+   * Omitted on at most one posting per transaction: the amount is interpolated
+   * for validation and the posting renders elided, as the user wrote it.
+   */
+  units?: AmountInput | null;
   account: string;
   price?: AmountInput;
   flag?: string;

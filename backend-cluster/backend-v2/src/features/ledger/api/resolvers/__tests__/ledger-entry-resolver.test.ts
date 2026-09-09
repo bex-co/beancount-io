@@ -52,6 +52,7 @@ describe("LedgerEntryMutationResolver", () => {
       "my-ledger",
       [{ type: "commodity", entry: { date: "2024-01-01", currency: "USD" } }],
       "web",
+      false,
     );
     expect(result.success).toBe(true);
   });

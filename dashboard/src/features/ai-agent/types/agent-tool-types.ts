@@ -21,6 +21,9 @@ export type AgentToolInputs = {
   listLedgerFiles: {
     dir_path?: string;
   };
+  parseReceipt: {
+    objectKey: string;
+  };
   editLedgerFiles: {
     description: string;
     files: Array<
@@ -46,9 +49,6 @@ export type AgentToolInputs = {
       }
     >;
     dry_run: boolean;
-  };
-  parseReceipt: {
-    objectKey: string;
   };
   insertReceiptTransaction: {
     receiptObjectKey: string;
@@ -105,23 +105,6 @@ export type AgentToolOutputs = {
     ok: false;
     error: string;
   };
-  editLedgerFiles: | {
-    ok: true;
-    result: {
-      dry_run: boolean;
-      count: number;
-      operations: Array<
-        {
-          operation: string;
-          path: string;
-        }
-      >;
-    };
-  }
-  | {
-    ok: false;
-    error: string;
-  };
   parseReceipt: | {
     ok: true;
     result: {
@@ -132,6 +115,47 @@ export type AgentToolOutputs = {
       amount: number;
       sourceAccount?: string;
       targetAccount?: string;
+    };
+  }
+  | {
+    ok: false;
+    error: string;
+  };
+  editLedgerFiles: | {
+    ok: true;
+    result: {
+      summary: string;
+      dry_run: boolean;
+      count: number;
+      operations: Array<
+        {
+          operation: string;
+          path: string;
+        }
+      >;
+      diff: Array<
+        {
+          path: string;
+          diff: string;
+        }
+      >;
+      wrote: Array<
+        {
+          path: string;
+          line?: number;
+        }
+      >;
+      entryHashes: string[];
+      validation: {
+        errorsBefore: number;
+        errorsAfter: number;
+        newErrors: Array<
+          {
+            message: string;
+            source?: string;
+          }
+        >;
+      };
     };
   }
   | {

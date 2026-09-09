@@ -175,6 +175,21 @@ async function fixture(identity: Identity) {
         variableValues: { ledgerId },
         contextValue: { identity, getCurrentIdentity: () => identity },
       }),
+    restNoUser: (ledgerId?: string) =>
+      fetch(
+        `${rest.url}/api-gateway/v1/legacy/ledger-meta${ledgerId ? `?ledgerId=${ledgerId}` : ""}`,
+      ),
+    mcpNoUser: (ledgerId?: string) =>
+      client.readResource({
+        uri: `beancount://legacy/ledger-meta${ledgerId ? `?ledgerId=${ledgerId}` : ""}`,
+      }),
+    gqlNoUser: (ledgerId?: string) =>
+      graphql({
+        schema,
+        source: `query($ledgerId: String) { ledgerMeta(ledgerId: $ledgerId) { success data { accounts currencies errors options { name_assets name_equity name_expenses name_income name_liabilities operating_currency } } } }`,
+        variableValues: ledgerId ? { ledgerId } : {},
+        contextValue: { identity, getCurrentIdentity: () => identity },
+      }),
     close: async () => {
       await client.close();
       await server.close();
@@ -220,6 +235,25 @@ describe("legacy metadata parity", () => {
       }
     },
   );
+
+  it("reads metadata without the ignored userId on all surfaces", async () => {
+    const f = await fixture(pinnedReadToken);
+    try {
+      const response = await f.restNoUser();
+      expect(response.status).toBe(200);
+      expect(await response.json()).toEqual(expected);
+      const gql = await f.gqlNoUser();
+      expect(gql.errors).toBeUndefined();
+      expect(gql.data?.ledgerMeta).toEqual(expected);
+      const resource = await f.mcpNoUser();
+      const content = resource.contents[0];
+      if (!("text" in content))
+        throw new Error("Expected JSON resource text");
+      expect(JSON.parse(content.text)).toEqual(expected);
+    } finally {
+      await f.close();
+    }
+  });
 
   it("refuses an explicit ledger outside the pin on all surfaces", async () => {
     const f = await fixture(pinnedReadToken);

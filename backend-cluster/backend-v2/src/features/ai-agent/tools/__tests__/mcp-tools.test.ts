@@ -199,8 +199,13 @@ describe("executeEditLedgerFiles", () => {
       getFilesContent: jest.fn(),
       changeFiles: jest.fn().mockResolvedValue(undefined),
     };
+    const ledgerData = { getErrors: jest.fn().mockResolvedValue([]) };
     const result = await executeEditLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo, ledgerData } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       {
         description: "add new file",
         files: [{ operation: "create", path: "new.bean", content: "hello" }],
@@ -223,9 +228,67 @@ describe("executeEditLedgerFiles", () => {
     expect(result).toEqual({
       ok: true,
       result: {
+        summary: "Committed 1 change(s) to new.bean. No new bean-check errors.",
         dry_run: false,
         count: 1,
         operations: [{ operation: "create", path: "new.bean" }],
+        diff: [],
+        wrote: [{ path: "new.bean" }],
+        entryHashes: [],
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+      },
+    });
+  });
+
+  it("commit: surfaces bean-check's verdict with new errors named", async () => {
+    const ledgerRepo = {
+      getFilesContent: jest.fn(),
+      changeFiles: jest.fn().mockResolvedValue(undefined),
+    };
+    const ledgerData = {
+      getErrors: jest
+        .fn()
+        .mockResolvedValueOnce([])
+        .mockResolvedValueOnce([
+          {
+            message: "Transaction does not balance",
+            source: { filename: "new.bean", lineno: 1 },
+          },
+        ]),
+    };
+    const result = await executeEditLedgerFiles(
+      {
+        services: { ledgerRepo, ledgerData } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      {
+        description: "add unbalanced file",
+        files: [{ operation: "create", path: "new.bean", content: "hello" }],
+        dry_run: false,
+      },
+    );
+    expect(result).toEqual({
+      ok: true,
+      result: {
+        summary:
+          "Committed 1 change(s) to new.bean. 1 new bean-check error: Transaction does not balance (new.bean:1)",
+        dry_run: false,
+        count: 1,
+        operations: [{ operation: "create", path: "new.bean" }],
+        diff: [],
+        wrote: [{ path: "new.bean" }],
+        entryHashes: [],
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 1,
+          newErrors: [
+            {
+              message: "Transaction does not balance",
+              source: "new.bean:1",
+            },
+          ],
+        },
       },
     });
   });
@@ -278,9 +341,15 @@ describe("executeEditLedgerFiles", () => {
         .fn()
         .mockResolvedValue([{ path: "main.bean", content: "abc", sha: "sha1" }]),
       changeFiles: jest.fn().mockResolvedValue(undefined),
+      checkProjectedFiles: jest.fn().mockResolvedValue([]),
     };
+    const ledgerData = { getErrors: jest.fn().mockResolvedValue([]) };
     const result = await executeEditLedgerFiles(
-      { services: { ledgerRepo } as any, identity: IDENTITY, ledgerId: LEDGER_ID },
+      {
+        services: { ledgerRepo, ledgerData } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
       {
         description: "edit",
         files: [
@@ -295,12 +364,135 @@ describe("executeEditLedgerFiles", () => {
     expect(ledgerRepo.changeFiles).toHaveBeenCalledWith(
       expect.objectContaining({ dryRun: true }),
     );
+    // The projection is checked, not committed: no commit beyond the preview.
+    expect(ledgerRepo.checkProjectedFiles).toHaveBeenCalledWith({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      overlays: [{ path: "main.bean", content: "aBc" }],
+    });
     expect(result).toEqual({
       ok: true,
       result: {
+        diff: [
+          {
+            path: "main.bean",
+            diff: "--- a/main.bean\n+++ b/main.bean\n@@ -1,1 +1,1 @@\n-abc\n+aBc\n",
+          },
+        ],
+        summary:
+          "Dry run: 1 change(s) previewed (main.bean) — not committed. No new bean-check errors.",
         dry_run: true,
         count: 1,
         operations: [{ operation: "update", path: "main.bean" }],
+        wrote: [],
+        entryHashes: [],
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
+      },
+    });
+  });
+
+  it("dry_run: reports the projected bean-check errors, not the current ones", async () => {
+    const ledgerRepo = {
+      getFilesContent: jest
+        .fn()
+        .mockResolvedValue([{ path: "main.bean", content: "abc", sha: "sha1" }]),
+      changeFiles: jest.fn().mockResolvedValue(undefined),
+      checkProjectedFiles: jest.fn().mockResolvedValue([
+        {
+          message: "Transaction does not balance: residual 5 USD",
+          source: { filename: "main.bean", lineno: 1 },
+        },
+      ]),
+    };
+    const ledgerData = { getErrors: jest.fn().mockResolvedValue([]) };
+    const result = await executeEditLedgerFiles(
+      {
+        services: { ledgerRepo, ledgerData } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      {
+        description: "edit",
+        files: [
+          { operation: "update", path: "main.bean", old_string: "b", new_string: "B" },
+        ],
+        dry_run: true,
+      },
+    );
+    expect(result).toEqual({
+      ok: true,
+      result: {
+        diff: [
+          {
+            path: "main.bean",
+            diff: "--- a/main.bean\n+++ b/main.bean\n@@ -1,1 +1,1 @@\n-abc\n+aBc\n",
+          },
+        ],
+        summary:
+          "Dry run: 1 change(s) previewed (main.bean) — not committed. 1 new bean-check error: Transaction does not balance: residual 5 USD (main.bean:1)",
+        dry_run: true,
+        count: 1,
+        operations: [{ operation: "update", path: "main.bean" }],
+        wrote: [],
+        entryHashes: [],
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 1,
+          newErrors: [
+            {
+              message: "Transaction does not balance: residual 5 USD",
+              source: "main.bean:1",
+            },
+          ],
+        },
+      },
+    });
+  });
+
+  it("dry_run: projects a deletion as content null with a removal diff", async () => {
+    const ledgerRepo = {
+      getFilesContent: jest.fn().mockResolvedValue([
+        { path: "main.bean", content: "keep", sha: "sha1" },
+        { path: "gone.bean", content: "bye", sha: "sha2" },
+      ]),
+      changeFiles: jest.fn().mockResolvedValue(undefined),
+      checkProjectedFiles: jest.fn().mockResolvedValue([]),
+    };
+    const ledgerData = { getErrors: jest.fn().mockResolvedValue([]) };
+    const result = await executeEditLedgerFiles(
+      {
+        services: { ledgerRepo, ledgerData } as any,
+        identity: IDENTITY,
+        ledgerId: LEDGER_ID,
+      },
+      {
+        description: "drop",
+        files: [{ operation: "delete", path: "gone.bean" }],
+        dry_run: true,
+      },
+    );
+    expect(ledgerRepo.checkProjectedFiles).toHaveBeenCalledWith({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      overlays: [{ path: "gone.bean", content: null }],
+    });
+    expect(result).toEqual({
+      ok: true,
+      result: {
+        diff: [
+          {
+            path: "gone.bean",
+            diff: "--- a/gone.bean\n+++ b/gone.bean\n@@ -1,1 +0,0 @@\n-bye\n",
+          },
+        ],
+        summary:
+          "Dry run: 1 change(s) previewed (gone.bean) — not committed. No new bean-check errors.",
+        dry_run: true,
+        count: 1,
+        operations: [{ operation: "delete", path: "gone.bean" }],
+        wrote: [],
+        entryHashes: [],
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
       },
     });
   });

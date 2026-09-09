@@ -80,10 +80,16 @@ function toDirective(input: LedgerEntryInput): DirectiveJson {
         links: entry.links ?? [],
         postings: entry.postings.map((posting) => ({
           account: posting.account,
-          units: {
-            number: posting.units.number,
-            currency: posting.units.currency,
-          },
+          // An omitted amount stays omitted: the plaintext printer renders
+          // the posting elided, exactly as the user wrote it (w2/m26).
+          ...(posting.units
+            ? {
+                units: {
+                  number: posting.units.number,
+                  currency: posting.units.currency,
+                },
+              }
+            : {}),
           ...(posting.price
             ? {
                 price: {

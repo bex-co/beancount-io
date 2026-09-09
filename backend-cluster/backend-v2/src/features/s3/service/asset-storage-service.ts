@@ -10,7 +10,7 @@ import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
 import { extname } from "path";
 import { nanoid } from "nanoid";
 import type { AssetS3Config } from "@/config/config";
-import { BadUserInputError } from "@/shared/errors";
+import { BadUserInputError, ConfigurationError } from "@/shared/errors";
 import { S3_PREFIX_TMP } from "@/features/s3/temp-asset-key";
 import type { Identity } from "@/server/api/identity";
 import {
@@ -122,6 +122,26 @@ export class AssetStorageService implements IAssetStorageService {
   }
 
   /**
+   * Refuse before the AWS SDK can fail with its own internals (w2/m26): an
+   * empty bucket reaches the client as "No value provided for input HTTP
+   * label: Bucket.", which no agent or operator can act on. Every public
+   * method calls this first, so uploads, downloads, copies, deletes, and
+   * metadata reads all report the missing deployment configuration instead.
+   */
+  private assertConfigured(): void {
+    if (
+      !this.config.bucket ||
+      !this.config.accessKeyId ||
+      !this.config.secretAccessKey
+    ) {
+      throw new ConfigurationError(
+        "Object storage is not configured on this deployment",
+        "Set TEMP_ASSETS_AWS_S3_BUCKET, TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID, and TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY (see .env.tmpl)",
+      );
+    }
+  }
+
+  /**
    * Generate presigned upload URL
    *
    * Generates a unique objectKey bound to the uploader under the tmp/ prefix:
@@ -134,6 +154,7 @@ export class AssetStorageService implements IAssetStorageService {
     identity: Identity,
     params: GenerateUploadUrlInput,
   ): Promise<GenerateUploadUrlOutput> {
+    this.assertConfigured();
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.TEMP_ASSET_UPLOAD_CREATE,
@@ -184,6 +205,7 @@ export class AssetStorageService implements IAssetStorageService {
   async copyTempToPermanent(
     params: CopyTempToPermanentInput,
   ): Promise<CopyTempToPermanentOutput> {
+    this.assertConfigured();
     const { objectKey, scope } = params;
 
     if (!objectKey.startsWith(`${S3_PREFIX_TMP}/`)) {
@@ -230,6 +252,7 @@ export class AssetStorageService implements IAssetStorageService {
    * @param objectKey - Must start with "tmp/"
    */
   async deleteTempAsset(objectKey: string): Promise<void> {
+    this.assertConfigured();
     if (!objectKey.startsWith(`${S3_PREFIX_TMP}/`)) {
       throw new BadUserInputError(
         `objectKey must start with "${S3_PREFIX_TMP}/"`,
@@ -254,6 +277,7 @@ export class AssetStorageService implements IAssetStorageService {
     downloadUrl: string;
     expiresIn: number;
   }> {
+    this.assertConfigured();
     const command = new GetObjectCommand({
       Bucket: this.config.bucket,
       Key: objectKey,
@@ -295,6 +319,7 @@ export class AssetStorageService implements IAssetStorageService {
     contentLength?: number;
     lastModified?: Date;
   }> {
+    this.assertConfigured();
     const command = new HeadObjectCommand({
       Bucket: this.config.bucket,
       Key: objectKey,

@@ -3,6 +3,7 @@ import {
   legacyEntriesResult,
 } from "@/features/ledger/api/rest/v1/legacy-entry-handler";
 import { entriesBodySchema } from "@/features/ledger/api/rest/v1/entries-handler";
+import { UnbalancedTransactionError } from "@/shared/errors";
 import { parseLedgerId } from "@/shared/str";
 import {
   sourceSliceInput,
@@ -102,7 +103,15 @@ import {
   revokeApiKeyOutputSchema,
 } from "../tools/api-key-tools";
 import type { ToolContext } from "../tools/types";
-import { mcpOutputSchema, toolOutputSchema } from "../tools/types";
+import {
+  mcpOutputSchema,
+  toolOutputSchema,
+  withWriteOutcome,
+} from "../tools/types";
+import {
+  summarizeWrite,
+  withPostWriteValidation,
+} from "../tools/write-validation";
 import {
   bankConnectionInputSchema,
   bankConnectionOutputSchema,
@@ -173,49 +182,132 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     description:
       "GraphQL addEntries compatibility: entriesInput contains Transaction objects with date,flag,meta,narration,payee,postings[{account,amount}]. Amount strings preserve the legacy currency/number parsing. meta is required but ignored. Optional ledgerId selects the ledger; otherwise uses the credential pin or first accessible ledger, matching the legacy contract. Current write authority and normal web quotas apply. No preview.",
     inputSchema: legacyEntriesInput,
-    outputSchema: mcpOutputSchema(toolOutputSchema(legacyEntriesResult)),
-    execute: async (context, input) => ({
-      ok: true,
-      result: await context.legacyEntryWorkflow.addEntries({
-        identity: context.identity,
-        ...legacyEntriesInput.parse(input),
-        platform: "web",
-      }),
-    }),
+    outputSchema: mcpOutputSchema(
+      toolOutputSchema(withWriteOutcome(legacyEntriesResult.shape)),
+    ),
+    execute: async (context, input) => {
+      const args = legacyEntriesInput.parse(input);
+      const ledgerId =
+        args.ledgerId ?? context.identity.ledgerScope ?? "unknown/unknown";
+      const { written, validation } = await withPostWriteValidation(
+        context.services,
+        context.identity,
+        ledgerId,
+        () =>
+          context.legacyEntryWorkflow.addEntries({
+            identity: context.identity,
+            ...args,
+            platform: "web",
+          }),
+      );
+      const count = args.entriesInput.length;
+      return {
+        ok: true,
+        result: {
+          summary: summarizeWrite(
+            `Added ${count} legacy ${count === 1 ? "entry" : "entries"}`,
+            validation,
+          ),
+          ...written,
+          wrote: [],
+          entryHashes: [],
+          validation,
+        },
+      };
+    },
   },
   {
     name: "addLedgerEntries",
     title: "Add Structured Ledger Entries",
     description:
-      "Append entries [{type,entry}] through the ledger's directive writer and file-routing rules. Supports transaction, commodity, price, note, balance, open, close, budget, document, event. Budget interval uses lowercase daily/weekly/monthly/quarterly/yearly. ledger is required unless pinned. Uses normal web directive quotas; no preview.",
+      "Append entries [{type,entry}] through the ledger's directive writer and file-routing rules. Supports transaction, commodity, price, note, balance, open, close, budget, document, event. Budget interval uses lowercase daily/weekly/monthly/quarterly/yearly. One posting per transaction may omit its amount and is written elided. An unbalanced transaction is refused with UNBALANCED unless allowInvalid records it deliberately. ledger is required unless pinned. Uses normal web directive quotas; no preview.",
     inputSchema: addLedgerEntriesInput,
-    outputSchema: mcpOutputSchema(
-      toolOutputSchema(
-        z.object({ success: z.boolean(), message: z.string().optional() }),
-      ),
-    ),
-    execute: async (context, input) => {
-      const { ledger, entries } = addLedgerEntriesInput.parse(input);
-      const { ledgerOwner, ledgerName } = parseLedgerId(
-        resolveMcpLedger(context, ledger),
-      );
-      return {
-        ok: true,
-        result: await context.ledgerEntryService.addBulkEntries(
-          context.identity,
-          ledgerOwner,
-          ledgerName,
-          entries,
-          "web",
+    outputSchema: z.object({
+      ok: z
+        .boolean()
+        .describe(
+          "True when the tool succeeded; false when it refused or failed.",
         ),
-      };
+      result: withWriteOutcome({
+        success: z.boolean(),
+        message: z.string().optional(),
+        files: z.array(z.string()).optional(),
+      })
+        .optional()
+        .describe("The tool's payload. Present when `ok` is true."),
+      error: z
+        .object({
+          code: z.string(),
+          message: z.string(),
+          hint: z.string(),
+        })
+        .optional()
+        .describe(
+          "Why the tool refused or failed. Present when `ok` is false, alongside `isError` on the result.",
+        ),
+    }),
+    execute: async (context, input) => {
+      const { ledger, entries, allowInvalid } =
+        addLedgerEntriesInput.parse(input);
+      const ledgerId = resolveMcpLedger(context, ledger);
+      const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+      let written: Awaited<
+        ReturnType<typeof context.ledgerEntryService.addBulkEntries>
+      >;
+      try {
+        const outcome = await withPostWriteValidation(
+          context.services,
+          context.identity,
+          ledgerId,
+          () =>
+            context.ledgerEntryService.addBulkEntries(
+              context.identity,
+              ledgerOwner,
+              ledgerName,
+              entries,
+              "web",
+              allowInvalid ?? false,
+            ),
+        );
+        written = outcome.written;
+        const files = written.files ?? [];
+        const noun = entries.length === 1 ? "entry" : "entries";
+        return {
+          ok: true,
+          result: {
+            summary: summarizeWrite(
+              `Added ${entries.length} ${noun}${files.length > 0 ? ` to ${files.join(", ")}` : ""}`,
+              outcome.validation,
+            ),
+            ...written,
+            wrote: files.map((path) => ({ path })),
+            entryHashes: [],
+            validation: outcome.validation,
+          },
+        };
+      } catch (error) {
+        if (error instanceof UnbalancedTransactionError) {
+          const metadata = error.metadata as
+            | { residual?: unknown; hint?: unknown }
+            | undefined;
+          const hint =
+            typeof metadata?.hint === "string"
+              ? metadata.hint
+              : "add a posting or pass allowInvalid: true";
+          return {
+            ok: false,
+            error: { code: "UNBALANCED", message: error.message, hint },
+          };
+        }
+        throw error;
+      }
     },
   },
   {
     name: "editEntrySource",
     title: "Update or Delete Entry Source",
     description:
-      "Use operation update or delete with entryHash and sha256sum from entry context; update also requires newContent. delete_many accepts only entries [{entryHash,sha256sum}]. ledger selects owner/name and defaults only for pinned credentials. Requires current content-write access. Returns the service message and affected hashes; update returns newSha256sum. No preview.",
+      "Use operation update or delete with entryHash and sha256sum from entry context; update also requires newContent. delete_many accepts only entries [{entryHash,sha256sum}]. ledger selects owner/name and defaults only for pinned credentials. Requires current content-write access. An update returns the entry's new hash — the request's entryHash is stale after the commit, so use newEntryHash for the next edit; delete_many returns the deleted count. No preview.",
     inputSchema: sourceSliceInput,
     outputSchema: sourceSliceOutput,
     execute: executeSourceSlice,
@@ -224,18 +316,45 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "renameLedgerFile",
     title: "Rename Ledger File",
     description:
-      "Move oldPath to newPath in ledger (owner/name), with an optional commit message. Pinned credentials can omit ledger. Requires current content-write access. The existing rename operation supports no client SHA or preview argument.",
+      "Move oldPath to newPath preserving content in one atomic commit (defaults to `Rename oldPath → newPath`). Refuses when oldPath is still `include`d unless updateIncludes rewrites those lines in the same commit. Pinned credentials can omit ledger. Requires current content-write access. The existing rename operation supports no client SHA or preview argument.",
     inputSchema: renameLedgerFileInput,
-    outputSchema: mcpOutputSchema(toolOutputSchema(renameFileResult)),
+    outputSchema: mcpOutputSchema(
+      toolOutputSchema(withWriteOutcome(renameFileResult.shape)),
+    ),
     execute: async (context, input) => {
       const { ledger, ...args } = renameLedgerFileInput.parse(input);
+      const ledgerId = resolveMcpLedger(context, ledger);
+      const { written, validation } = await withPostWriteValidation(
+        context.services,
+        context.identity,
+        ledgerId,
+        () =>
+          context.ledgerWorkflow.renameLedgerFile({
+            identity: context.identity,
+            ledgerId,
+            input: {
+              ...args,
+              message: args.message ?? undefined,
+              updateIncludes: args.updateIncludes ?? undefined,
+            },
+          }),
+      );
+      const moved =
+        written.updatedIncludes.length > 0
+          ? ` (updated includes: ${written.updatedIncludes.join(", ")})`
+          : "";
       return {
         ok: true,
-        result: await context.ledgerWorkflow.renameLedgerFile({
-          identity: context.identity,
-          ledgerId: resolveMcpLedger(context, ledger),
-          input: { ...args, message: args.message ?? undefined },
-        }),
+        result: {
+          summary: summarizeWrite(
+            `Renamed ${written.oldPath} → ${written.newPath}${moved}`,
+            validation,
+          ),
+          ...written,
+          wrote: [{ path: written.newPath }],
+          entryHashes: [],
+          validation,
+        },
       };
     },
   },
@@ -254,17 +373,36 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     description:
       "Promote the caller-owned temporary receipt named by receiptObjectKey into the ledger's configured receipt storage (S3 or git) and append the confirmed transaction — plus its document directive under git storage. input carries date, payee, description, postings [{account,amountNumber,amountCurrency}], and documentAccount. ledger is required unless pinned. Requires current content and asset write authority. No preview; applies immediately.",
     inputSchema: insertReceiptTransactionInput,
-    outputSchema: mcpOutputSchema(toolOutputSchema(receiptInsertResult)),
+    outputSchema: mcpOutputSchema(
+      toolOutputSchema(withWriteOutcome(receiptInsertResult.shape)),
+    ),
     execute: async (context, input) => {
       const { ledger, ...args } = insertReceiptTransactionInput.parse(input);
+      const ledgerId = resolveMcpLedger(context, ledger);
+      const { written, validation } = await withPostWriteValidation(
+        context.services,
+        context.identity,
+        ledgerId,
+        () =>
+          context.ledgerReceiptWorkflow.insertReceiptTransaction({
+            identity: context.identity,
+            ledgerId,
+            receiptObjectKey: args.receiptObjectKey,
+            input: args.input,
+          }),
+      );
       return {
         ok: true,
-        result: await context.ledgerReceiptWorkflow.insertReceiptTransaction({
-          identity: context.identity,
-          ledgerId: resolveMcpLedger(context, ledger),
-          receiptObjectKey: args.receiptObjectKey,
-          input: args.input,
-        }),
+        result: {
+          summary: summarizeWrite(
+            `Inserted receipt transaction for ${args.input.payee} on ${args.input.date}`,
+            validation,
+          ),
+          ...written,
+          wrote: [],
+          entryHashes: [],
+          validation,
+        },
       };
     },
   },
@@ -330,7 +468,7 @@ export const MCP_TOOLS: readonly McpToolDescriptor[] = [
     name: "managePullRequests",
     title: "Create and Review Pull Requests",
     description:
-      "Create a proposed set of file changes, approve it by merging, or reject it by closing. ledger selects owner/name and defaults only for pinned credentials. create requires title and changes [{path,content}], accepts description and baseBranch (main by default); approve/reject require prNumber only. Current repository write authority is required. No preview; reviews apply immediately.",
+      "Create a proposed set of file changes, approve it by merging, or reject it by closing. ledger selects owner/name and defaults only for pinned credentials. create requires title, description, clearCommitMessage, and changes [{path,content}] — empty title/description and a missing commit message are refused, and a branch that does not differ from base is refused unless fastForward skips verification; an omitted baseBranch targets main, so say so when the target is not main, and the result carries the PR's actual base/head refs. approve/reject require prNumber only. Current repository write authority is required. No preview; reviews apply immediately.",
     inputSchema: pullRequestToolInput,
     outputSchema: pullRequestToolOutput,
     execute: executePullRequestTool,

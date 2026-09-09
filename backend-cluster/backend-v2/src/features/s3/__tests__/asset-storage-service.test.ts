@@ -6,7 +6,7 @@ import {
 } from "../service/asset-storage-service";
 import type { AssetS3Config } from "@/config/config";
 import * as S3Presigner from "@aws-sdk/s3-request-presigner";
-import { BadUserInputError } from "@/shared/errors";
+import { BadUserInputError, ConfigurationError } from "@/shared/errors";
 import type { Identity } from "@/server/api/identity";
 import { AuthorizationService } from "@/server/api/authorization";
 
@@ -255,6 +255,59 @@ describe("AssetStorageService", () => {
           "assets/repo_42/2026-01-01-abc.pdf",
         ),
       ).rejects.toMatchObject({ category: "NOT_FOUND" });
+    });
+  });
+
+  describe("unconfigured object storage", () => {
+    let unconfigured: AssetStorageService;
+
+    beforeEach(() => {
+      unconfigured = new AssetStorageService(
+        { ...mockConfig, bucket: "", accessKeyId: "", secretAccessKey: "" },
+        new AuthorizationService({ check: async () => true }),
+      );
+    });
+
+    it.each([
+      ["generateUploadUrl", () => unconfigured.generateUploadUrl(identity(), {})],
+      [
+        "copyTempToPermanent",
+        () => unconfigured.copyTempToPermanent({ objectKey: "tmp/a/b.pdf" }),
+      ],
+      ["deleteTempAsset", () => unconfigured.deleteTempAsset("tmp/a/b.pdf")],
+      ["generateDownloadUrl", () => unconfigured.generateDownloadUrl("assets/a")],
+      [
+        "generateTempDownloadUrl",
+        () => unconfigured.generateTempDownloadUrl(identity(), "tmp/a/b.pdf"),
+      ],
+      ["getObjectMetadata", () => unconfigured.getObjectMetadata("assets/a")],
+    ])(
+      "%s reports missing configuration instead of an SDK error",
+      async (_name, invoke) => {
+        const presign = jest.spyOn(S3Presigner, "getSignedUrl");
+        const send = jest.spyOn(S3Client.prototype, "send");
+        await expect(invoke()).rejects.toMatchObject({
+          name: "ConfigurationError",
+          category: "CONFIGURATION_ERROR",
+          message: "Object storage is not configured on this deployment",
+          metadata: {
+            hint: expect.stringContaining("TEMP_ASSETS_AWS_S3_BUCKET"),
+          },
+        });
+        expect(presign).not.toHaveBeenCalled();
+        expect(send).not.toHaveBeenCalled();
+      },
+    );
+
+    it("names the .env.tmpl variables that provide the configuration", async () => {
+      const error = await unconfigured
+        .generateDownloadUrl("assets/a")
+        .catch((e: unknown) => e);
+      expect(error).toBeInstanceOf(ConfigurationError);
+      const hint = (error as ConfigurationError).metadata?.hint;
+      expect(hint).toContain("TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID");
+      expect(hint).toContain("TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY");
+      expect(hint).toContain(".env.tmpl");
     });
   });
 });

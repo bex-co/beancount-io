@@ -1,5 +1,6 @@
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
 import { logger } from "@/shared/logger";
+import { BadUserInputError, DomainError } from "@/shared/errors";
 import type { IGiteaClientFactory } from "@/foundation/clients/gitea-client-factory";
 import type {
   ContentsResponse,
@@ -14,16 +15,62 @@ import {
 } from "@/server/api/authorization";
 import { createLedgerId } from "@/shared/str";
 
+export interface CreatePullRequestInput {
+  title: string;
+  description: string;
+  baseBranch: string;
+  /** Commit message for the pull request branch's file changes. */
+  clearCommitMessage: string;
+  /** Skip the diff-less verification below. */
+  fastForward?: boolean;
+  changes: Array<{ path: string; content: string }>;
+}
+
+/**
+ * Render a failure from the generated Gitea client. Non-2xx responses arrive
+ * as the thrown response envelope (not an Error), so reading only `.message`
+ * reports "Unknown error" for every upstream refusal.
+ */
+function describeClientFailure(error: unknown): string {
+  if (error instanceof Error) return error.message;
+  if (typeof error === "object" && error !== null) {
+    const status = (error as { status?: unknown }).status;
+    const body = (error as { error?: unknown }).error as
+      | { message?: unknown }
+      | string
+      | undefined;
+    const detail =
+      typeof body === "string"
+        ? body
+        : typeof body?.message === "string"
+          ? body.message
+          : undefined;
+    if (status !== undefined || detail !== undefined) {
+      return `Gitea ${String(status ?? "?")}${detail ? `: ${detail}` : ""}`;
+    }
+  }
+  try {
+    return typeof error === "string" ? error : JSON.stringify(error);
+  } catch {
+    return "Unknown error";
+  }
+}
+
+export interface CreatedPullRequest {
+  prNumber: number;
+  prUrl: string;
+  /** The PR's actual base/head refs, read back from the created PR. */
+  baseBranch: string;
+  headBranch: string;
+}
+
 export interface IPullRequestService {
   createPRFromPatch(
     identity: Identity,
     owner: string,
     repo: string,
-    title: string,
-    description: string,
-    baseBranch: string,
-    changes: Array<{ path: string; content: string }>,
-  ): Promise<{ prNumber: number; prUrl: string }>;
+    input: CreatePullRequestInput,
+  ): Promise<CreatedPullRequest>;
   getPRDetails(
     identity: Identity,
     owner: string,
@@ -54,17 +101,34 @@ export class PullRequestService implements IPullRequestService {
     identity: Identity,
     owner: string,
     repo: string,
-    title: string,
-    description: string,
-    baseBranch: string,
-    changes: Array<{ path: string; content: string }>,
-  ): Promise<{ prNumber: number; prUrl: string }> {
+    input: CreatePullRequestInput,
+  ): Promise<CreatedPullRequest> {
     await this.authorization.authorizeOrThrow({
       principal: identity,
       action: AUTHORIZATION_ACTIONS.LEDGER_PULL_REQUEST_CREATE,
       resource: ledgerResource(createLedgerId(owner, repo)),
     });
-    for (const change of changes) assertSafeRepoPath(change.path);
+    const title = input.title?.trim() ?? "";
+    const description = input.description?.trim() ?? "";
+    const baseBranch = input.baseBranch?.trim() ?? "";
+    const clearCommitMessage = input.clearCommitMessage?.trim() ?? "";
+    if (!title) {
+      throw new BadUserInputError("title must not be empty");
+    }
+    if (!description) {
+      throw new BadUserInputError(
+        "description must not be empty — describe what the pull request changes and why",
+      );
+    }
+    if (!baseBranch) {
+      throw new BadUserInputError("baseBranch must not be empty");
+    }
+    if (!clearCommitMessage) {
+      throw new BadUserInputError(
+        "clearCommitMessage must not be empty — it becomes the commit message for the pull request branch",
+      );
+    }
+    for (const change of input.changes) assertSafeRepoPath(change.path);
     const userId = identity.userId;
     const client = await this.giteaClientFactory.getUserApiClient(userId);
 
@@ -74,17 +138,21 @@ export class PullRequestService implements IPullRequestService {
     const headBranch = `pr-patch-${timestamp}-${random}`;
 
     try {
-      // 2. Get base branch reference
+      // 2. Get base branch reference (`format` is load-bearing: without it
+      // the generated client resolves `data` to null and every check below
+      // misfires against a live Gitea.)
       const baseBranchRef = await client.repos.repoGetBranch(
         owner,
         repo,
         baseBranch,
+        { format: "json" },
       );
       if (!baseBranchRef.data) {
         throw new Error(
           `Base branch '${baseBranch}' not found in repository ${owner}/${repo}`,
         );
       }
+      const baseSha = baseBranchRef.data.commit?.id ?? "";
 
       // 3. Create new branch from base
       const createBranchResult = await client.repos.repoCreateBranch(
@@ -94,6 +162,7 @@ export class PullRequestService implements IPullRequestService {
           new_branch_name: headBranch,
           old_ref_name: baseBranch,
         },
+        { format: "json" },
       );
 
       if (!createBranchResult.data) {
@@ -101,7 +170,7 @@ export class PullRequestService implements IPullRequestService {
       }
 
       // 4. Apply file changes to new branch
-      for (const change of changes) {
+      for (const change of input.changes) {
         // Check if file exists
         let fileSha: string | undefined;
         try {
@@ -112,6 +181,7 @@ export class PullRequestService implements IPullRequestService {
             {
               ref: headBranch,
             },
+            { format: "json" },
           );
           // Type assertion: repoGetContents returns ContentsResponse
           const contents = fileContents.data as ContentsResponse;
@@ -125,41 +195,86 @@ export class PullRequestService implements IPullRequestService {
         const content = Buffer.from(change.content).toString("base64");
 
         if (fileSha) {
-          await client.repos.repoUpdateFile(owner, repo, change.path, {
-            content,
-            sha: fileSha,
-            branch: headBranch,
-            message: `Update ${change.path}`,
-          });
+          await client.repos.repoUpdateFile(
+            owner,
+            repo,
+            change.path,
+            {
+              content,
+              sha: fileSha,
+              branch: headBranch,
+              message: clearCommitMessage,
+            },
+            { format: "json" },
+          );
         } else {
-          await client.repos.repoCreateFile(owner, repo, change.path, {
-            content,
-            branch: headBranch,
-            message: `Create ${change.path}`,
-          });
+          await client.repos.repoCreateFile(
+            owner,
+            repo,
+            change.path,
+            {
+              content,
+              branch: headBranch,
+              message: clearCommitMessage,
+            },
+            { format: "json" },
+          );
         }
       }
 
-      // 5. Create pull request
-      const prResult = await client.repos.repoCreatePullRequest(owner, repo, {
-        title,
-        body: description,
-        head: headBranch,
-        base: baseBranch,
-      });
+      // 5. Verify the branch actually differs from base, unless the caller
+      // takes responsibility with fastForward. The revisions travel in the
+      // refusal so the agent can re-verify them instead of guessing.
+      if (!input.fastForward) {
+        const headRef = await client.repos.repoGetBranch(
+          owner,
+          repo,
+          headBranch,
+          { format: "json" },
+        );
+        const headSha = headRef.data?.commit?.id ?? "";
+        const comparison = await client.repos.repoCompareDiff(
+          owner,
+          repo,
+          `${baseBranch}...${headBranch}`,
+          { format: "json" },
+        );
+        if ((comparison.data?.total_commits ?? 0) === 0) {
+          throw new BadUserInputError(
+            `No differences between ${baseBranch} (${baseSha || "unknown"}) and ${headBranch} (${headSha || "unknown"}): re-verify the revisions, change the files, or pass fastForward: true to open the pull request anyway`,
+          );
+        }
+      }
+
+      // 6. Create pull request
+      const prResult = await client.repos.repoCreatePullRequest(
+        owner,
+        repo,
+        {
+          title,
+          body: description,
+          head: headBranch,
+          base: baseBranch,
+        },
+        { format: "json" },
+      );
 
       if (!prResult.data) {
         throw new Error("Failed to create pull request");
       }
 
+      // Route the created PR's actual refs through — never a default.
       return {
         prNumber: prResult.data.number || 0,
         prUrl: prResult.data.html_url || "",
+        baseBranch: prResult.data.base?.ref || baseBranch,
+        headBranch: prResult.data.head?.ref || headBranch,
       };
     } catch (error) {
-      const errorMessage =
-        error instanceof Error ? error.message : "Unknown error";
-      throw new Error(`Failed to create PR from patch: ${errorMessage}`);
+      if (error instanceof DomainError) throw error;
+      throw new Error(
+        `Failed to create PR from patch: ${describeClientFailure(error)}`,
+      );
     }
   }
 

@@ -273,6 +273,12 @@ export type UpdateSliceResult = {
   message: string;
   entryHash: string;
   newSha256sum: string;
+  /**
+   * The entry's public ID after the commit, re-read from the fresh
+   * post-commit parse — the input `entryHash` is stale the moment the commit
+   * lands, and following it up would 404 (w2/m26).
+   */
+  newEntryHash: string;
 };
 
 export type JournalQueryParams = {
@@ -898,10 +904,12 @@ export class LedgerJournalService implements ILedgerJournalService {
     // changed it. Resolve the NEW hash from the committed content so a client
     // can keep the edited entry on screen; fall back to echoing the request
     // (the historical contract) when the new content holds nothing dated.
-    const updatedEntryHash =
+    // newEntryHash repeats the new identity explicitly for clients (REST,
+    // MCP) that key follow-up edits off a named field.
+    const newEntryHash =
       applied.current === undefined
-        ? undefined
-        : await this.resolveUpdatedEntryHash(
+        ? entryHash
+        : ((await this.resolveUpdatedEntryHash(
             { ...files, [found.file]: applied.current.content },
             entryPoint,
             repoPaths,
@@ -910,11 +918,12 @@ export class LedgerJournalService implements ILedgerJournalService {
               startLine: applied.current.startLine,
               lineCount: newContent.split("\n").length,
             },
-          );
+          )) ?? entryHash);
     return {
       message: "Entry updated successfully",
-      entryHash: updatedEntryHash ?? entryHash,
+      entryHash: newEntryHash,
       newSha256sum: sliceSha256(newContent),
+      newEntryHash,
     };
   }
 

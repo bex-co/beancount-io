@@ -3331,6 +3331,68 @@
         }
       }
     },
+    "/reports/{owner}/{repo_name}/check": {
+      "post": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Check projected files",
+        "description": "bean-check over projected file contents (base64 text; null deletes), parsed without committing. Powers dry-run previews.",
+        "operationId": "checkProjectedErrors",
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Owner"
+            }
+          },
+          {
+            "name": "repo_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Repo Name"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LedgerCheckProjectedFilesOptions"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_list_BeancountErrorPublic__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/reports/{owner}/{repo_name}/hierarchy": {
       "get": {
         "tags": [
@@ -9335,6 +9397,10 @@
             ],
             "title": "Filename",
             "description": "Default target file for items that omit their own (defaults to main.bean)"
+          },
+          "allowInvalid": {
+            "type": "boolean",
+            "description": "Record unbalanced transactions deliberately instead of refusing them with UNBALANCED."
           }
         },
         "type": "object",
@@ -11718,7 +11784,7 @@
         "properties": {
           "units": {
             "$ref": "#/components/schemas/Amount",
-            "description": "Units of the posting"
+            "description": "Units of the posting. Omitted on at most one posting per transaction: the amount is interpolated for validation and the posting renders elided."
           },
           "cost": {
             "anyOf": [
@@ -11798,7 +11864,6 @@
         },
         "type": "object",
         "required": [
-          "units",
           "account"
         ],
         "title": "Posting",
@@ -13702,13 +13767,19 @@
             "type": "string",
             "title": "New Sha256Sum",
             "description": "SHA256 hash of the updated entry source"
+          },
+          "new_entry_hash": {
+            "type": "string",
+            "title": "New Entry Hash",
+            "description": "The entry's public ID after the commit, re-read from the fresh post-commit parse."
           }
         },
         "type": "object",
         "required": [
           "message",
           "entry_hash",
-          "new_sha256sum"
+          "new_sha256sum",
+          "new_entry_hash"
         ],
         "title": "UpdateSourceSliceResponse",
         "description": "Response schema for updating a source slice."
@@ -14280,6 +14351,48 @@
         ],
         "title": "WebhookType",
         "description": "Supported webhook types"
+      },
+      "LedgerCheckProjectedFilesOptions": {
+        "properties": {
+          "files": {
+            "items": {
+              "$ref": "#/components/schemas/ProjectedFileOverlay"
+            },
+            "type": "array",
+            "title": "Files",
+            "description": "Projected file contents: base64 UTF-8 text, or null to project a deletion. Parsed without committing."
+          }
+        },
+        "type": "object",
+        "required": [
+          "files"
+        ],
+        "title": "LedgerCheckProjectedFilesOptions"
+      },
+      "ProjectedFileOverlay": {
+        "properties": {
+          "path": {
+            "type": "string",
+            "title": "Path"
+          },
+          "content": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Content",
+            "description": "Base64 UTF-8 text, or null to project a deletion."
+          }
+        },
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "title": "ProjectedFileOverlay"
       }
     },
     "securitySchemes": {

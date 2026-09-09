@@ -29,6 +29,7 @@ const [
   checkScopeRefusal,
   checkErrorMasking,
   checkAdvertisedPath,
+  checkOptionalUserId,
 ] = CHECKS;
 
 const ledgerScoped: Identity = {
@@ -149,6 +150,19 @@ describe("MCP conformance checks", () => {
     const result = await checkAdvertisedPath({ baseUrl });
     expect(result.outcome).toBe("pass");
     expect(result.detail).toContain("/api-gateway/mcp: reaches MCP");
+  });
+
+  it("check 8 passes when feature-flags reads without userId", async () => {
+    acceptTokens({ good: ledgerScoped });
+    const result = await checkOptionalUserId({ baseUrl, token: "good" });
+    expect(result.outcome).toBe("pass");
+    expect(result.detail).toContain("without userId");
+  });
+
+  it("check 8 skips with a reason when no credential is supplied", async () => {
+    const result = await checkOptionalUserId({ baseUrl });
+    expect(result.outcome).toBe("skip");
+    expect(result.detail).toMatch(/needs --/);
   });
 
   /**

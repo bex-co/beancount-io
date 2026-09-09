@@ -230,12 +230,14 @@ own ledger:
 
 `dry_run` defaults to `false`. With `true`, the tool reads existing files as
 needed, checks replacement matches, constructs operations, and runs the same
-write authorization and repository-path validation as the commit before
-returning their count and paths — a caller the commit would refuse is refused
-by the preview too. It does **not** produce a text diff, validate Beancount
-syntax, check whether a create target already exists, or exercise the final
-repository commit, so a successful preview still does not guarantee that
-applying the edit will succeed.
+write authorization and repository-path validation as the commit — a caller
+the commit would refuse is refused by the preview too. The preview returns the
+operation `count` and paths plus a unified `diff` per touched file and
+bean-check's verdict over the projected content (`validation` with
+`errorsBefore`, `errorsAfter`, and `newErrors`), so review the diff and the
+new errors before re-issuing the same call with `dry_run: false`. It does
+**not** exercise the final repository commit, so a successful preview still
+does not guarantee that applying the edit will succeed.
 
 Applying the edit calls `LedgerRepoService.changeFiles` and creates an atomic
 commit with message `AI edit: {description}`. Existing-file operations include
@@ -312,9 +314,14 @@ file statistics, and the full diff. This requires repository read authority.
 `managePullRequests` requires repository write authority and a `ledger` target
 (`owner/name`), which may be omitted for a pinned credential:
 
-- `create` requires `title` and `changes: [{ "path": "...", "content": "..." }]`.
-  Each content value is the complete replacement file text. Optional
-  `description` defaults to empty and `baseBranch` defaults to `main`.
+- `create` requires `title`, `description`, `clearCommitMessage`, and
+  `changes: [{ "path": "...", "content": "..." }]`. Each content value is the
+  complete replacement file text; empty title/description and a missing commit
+  message are refused. `baseBranch` defaults to `main` — say so when the
+  target is not `main`. Before opening the PR the service verifies the branch
+  differs from base and refuses a diff-less branch unless `fastForward: true`
+  skips verification. The result carries the PR's actual `baseBranch`/`headBranch`
+  refs — use those to follow up, not the requested names.
 - `approve` requires `prNumber` and merges the PR.
 - `reject` requires `prNumber` and closes it without merging.
 
@@ -470,7 +477,7 @@ returned upstream page. Unpinned credentials use the caller's account catalog.
 
 The legacy `ledgerMeta` shape is available at
 `beancount://legacy/ledger-meta{?userId,ledgerId}` and
-`GET /api-gateway/v1/legacy/ledger-meta`. Its required `userId` is a compatibility
+`GET /api-gateway/v1/legacy/ledger-meta`. Its optional `userId` is a compatibility
 argument; authentication determines the caller. The legacy metadata and journal operations
 preserve the historical default: omitted `ledgerId` uses the credential pin,
 then the caller's first ledger if unpinned. Explicit targets still cannot expand
@@ -513,7 +520,10 @@ catalog and service calls.
 
 Set `BEANCOUNT_MCP_URL` to your full endpoint and `BEANCOUNT_MCP_TOKEN` to a
 ledger-scoped credential in your local environment. The following requests only
-discover capabilities and query balances:
+discover capabilities and query balances. The balance query as written assumes a
+credential pinned to one ledger; with an unpinned credential, add
+`"ledger": "owner/name"` to its `arguments` (the call then refuses with
+`Select a ledger using ledger: owner/name` instead of guessing):
 
 ```bash
 mcp_post() {
@@ -663,7 +673,7 @@ not a check of database or ledger-service readiness.
 
 `beancount://configuration/feature-flags{?userId}` matches GraphQL
 `featureFlags(userId: ...)` and `GET /api-gateway/v1/feature-flags?userId=...`.
-The legacy `userId` argument is required (and may be empty), but currently does
+The legacy `userId` argument is optional, but currently does
 not change the static `{ "spendingReportSubscription": false }` result.
 
 These REST and GraphQL reads allow anonymous callers. MCP still requires its
@@ -829,25 +839,28 @@ with current content and asset write access; unowned temporary keys are
 concealed as not found. The result is `{success}`. No preview; a failed entry
 write keeps the temporary upload for retry.
 
-`renameLedgerFile` accepts `oldPath`, `newPath`, optional `message`, and optional
-`ledger`. Pinned credentials may omit the ledger; unpinned callers must select
-it. The protected workflow validates both repository-relative paths and delegates
-the existing repository rename operation. The result contains `oldPath` and
+`renameLedgerFile` accepts `oldPath`, `newPath`, optional `message`, optional
+`updateIncludes`, and optional `ledger`. Pinned credentials may omit the
+ledger; unpinned callers must select it. The protected workflow validates both
+repository-relative paths and moves the file preserving its content in one
+atomic commit (default message `Rename oldPath → newPath`). When `oldPath`
+is still `include`d, the rename is refused unless `updateIncludes: true`
+rewrites those lines in the same commit. The result contains `oldPath` and
 `newPath`. Write capability and current content-write access are required.
 
 This operation exposes GraphQL's existing contract: it has no caller-supplied
-SHA or preview flag. Repository conflicts remain errors. It does not rewrite
-Beancount include directives that refer to the old filename.
+SHA or preview flag. Repository conflicts remain errors.
 
 ### Update or delete entry source
 
 `editEntrySource` exposes three operations through the existing journal service:
 
 - `update`: `entryHash`, `sha256sum`, and `newContent`; returns `message`,
-  `entryHash`, and `newSha256sum`.
+  `newSha256sum`, and `newEntryHash` — the request's `entryHash` is stale
+  after the commit, so use `newEntryHash` for the next edit.
 - `delete`: `entryHash` and `sha256sum`; returns `message` and `entryHash`.
 - `delete_many`: `entries: [{entryHash, sha256sum}]`; returns `message` and
-  `deletedHashes`.
+  `deletedCount`.
 
 Use the current source checksum returned by entry context. Each branch accepts
 only its own arguments and optional `ledger`; a pinned credential may omit the
@@ -863,11 +876,17 @@ the REST input shapes. GraphQL instead uses an uppercase enum and a payload fiel
 named after the directive; its budget interval enum maps to lowercase here.
 
 The tool uses the real entry writer, including file routing and the normal web
-quota policy, and returns `success` and an optional `message`. It is distinct from
-raw file editing. REST and MCP impose no separate batch-size limit beyond the
-shared ledger contract. Optional null fields are treated as absent. Transaction
-metadata accepts string-valued objects on all three surfaces. Ledger-side date,
-posting, and quota validation still applies.
+quota policy. Every write result carries the write outcome first: a `summary`
+of what was written and how many new bean-check errors it introduced, then
+`wrote` (files touched), `entryHashes`, and `validation` (`errorsBefore`,
+`errorsAfter`, `newErrors`) — learn about a broken ledger from the write
+result itself instead of re-reading the errors resource. A transaction with at
+most one amount omitted is written elided; any other imbalance is refused with
+`UNBALANCED` unless `allowInvalid: true` records it deliberately. It is
+distinct from raw file editing. REST and MCP impose no separate batch-size
+limit beyond the shared ledger contract. Optional null fields are treated as
+absent. Transaction metadata accepts string-valued objects on all three
+surfaces. Ledger-side date, posting, and quota validation still applies.
 There is no preview argument.
 
 ### Legacy transaction insertion

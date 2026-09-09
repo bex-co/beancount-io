@@ -111,8 +111,9 @@ export function setJournalHandler(router: Router): void {
     );
   });
 
-  // operationId: updateSourceSlice — wire {message, entry_hash, new_sha256sum};
-  // entry_hash is the entry's NEW content-derived identity after the edit.
+  // operationId: updateSourceSlice — wire {message, entry_hash, new_entry_hash, new_sha256sum};
+  // entry_hash is the entry's NEW content-derived identity after the edit;
+  // new_entry_hash repeats it explicitly for clients keying off a named field.
   router.put(`${base}/source-slice`, authMiddleware, async (ctx) => {
     const { journal } = servicesForRequest(ctx);
     const body = (ctx.request.body ?? {}) as {
@@ -131,6 +132,7 @@ export function setJournalHandler(router: Router): void {
       // Python fava-slim template: f"Updated entry {entry_hash}"
       message: `Updated entry ${body.entry_hash}`,
       entry_hash: result.entryHash,
+      new_entry_hash: result.newEntryHash,
       new_sha256sum: result.newSha256sum,
     });
   });

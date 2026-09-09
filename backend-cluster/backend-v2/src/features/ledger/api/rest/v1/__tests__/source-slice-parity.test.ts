@@ -60,14 +60,14 @@ const operations = {
     inputType: "DeleteMultiSourceSlicesInput",
     path: "/delete-many",
     method: "POST",
-    fields: "message deletedHashes",
+    fields: "message deletedCount",
   },
   update: {
     field: "updateLedgerEntrySourceSlice",
     inputType: "UpdateSourceSliceInput",
     path: "",
     method: "PUT",
-    fields: "message entryHash newSha256sum",
+    fields: "message entryHash newSha256sum newEntryHash",
   },
 } as const;
 type Operation = keyof typeof operations;
@@ -107,6 +107,7 @@ async function fixture(caller = identity) {
         message: "Updated",
         entry_hash: body.entry_hash,
         new_sha256sum: hash(body.new_content),
+        new_entry_hash: "entry1-updated",
       });
     },
   );
@@ -247,19 +248,60 @@ describe.each(["rest", "gql", "mcp"])("source edits via %s", (surface) => {
         try {
           const result = await f.call(surface, operation, args(operation));
           expect(result.success).toBe(true);
+          const emptyValidation = {
+            errorsBefore: 0,
+            errorsAfter: 0,
+            newErrors: [],
+          };
           if (operation === "update") {
             expect(f.slices.get("entry1")).toBe("; replacement café\n");
-            expect(result.result).toEqual({
+            const updated = {
               message: "Updated",
               entryHash: "entry1",
               newSha256sum: hash("; replacement café\n"),
-            });
+              newEntryHash: "entry1-updated",
+            };
+            expect(result.result).toEqual(
+              surface === "mcp"
+                ? {
+                    ...updated,
+                    summary:
+                      "Updated entry entry1 (new hash entry1-updated). No new bean-check errors.",
+                    wrote: [],
+                    entryHashes: ["entry1-updated"],
+                    validation: emptyValidation,
+                  }
+                : updated,
+            );
+          } else if (operation === "delete_many") {
+            expect(f.slices.has("entry1")).toBe(false);
+            const deleted = { message: "Deleted", deletedCount: 2 };
+            expect(result.result).toEqual(
+              surface === "mcp"
+                ? {
+                    ...deleted,
+                    summary:
+                      "Deleted 2 entries. No new bean-check errors.",
+                    wrote: [],
+                    entryHashes: ["entry1", "entry2"],
+                    validation: emptyValidation,
+                  }
+                : deleted,
+            );
           } else {
             expect(f.slices.has("entry1")).toBe(false);
+            const deleted = { message: "Deleted", entryHash: "entry1" };
             expect(result.result).toEqual(
-              operation === "delete_many"
-                ? { message: "Deleted", deletedHashes: ["entry1", "entry2"] }
-                : { message: "Deleted", entryHash: "entry1" },
+              surface === "mcp"
+                ? {
+                    ...deleted,
+                    summary:
+                      "Deleted entry entry1. No new bean-check errors.",
+                    wrote: [],
+                    entryHashes: ["entry1"],
+                    validation: emptyValidation,
+                  }
+                : deleted,
             );
           }
           expect(f.slices.has("entry2")).toBe(operation !== "delete_many");

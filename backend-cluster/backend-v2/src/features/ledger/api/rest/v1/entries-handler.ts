@@ -19,7 +19,12 @@ const amountSchema = z.strictObject({
 
 const postingSchema = z.strictObject({
   account: z.string().openapi({ example: "Assets:Bank:Checking" }),
-  units: amountSchema,
+  // Omitted on at most one posting per transaction: the amount is interpolated
+  // for validation and the posting renders elided, as written (w2/m26).
+  units: nullToUndefined(amountSchema).optional().openapi({
+    description:
+      "Posting amount; omit on at most one posting per transaction to elide it",
+  }),
   price: nullToUndefined(amountSchema),
   flag: nullToUndefined(z.string()),
 });
@@ -123,6 +128,12 @@ export const entriesBodySchema = z
     entries: z.array(entrySchema).openapi({
       description: "Directives to append, committed all-or-nothing",
     }),
+    allowInvalid: nullToUndefined(z.boolean())
+      .optional()
+      .openapi({
+        description:
+          "Record unbalanced transactions deliberately instead of refusing them with UNBALANCED",
+      }),
   })
   .openapi("EntriesRequest", {
     description: "One or more directives to add to the ledger",
@@ -144,7 +155,7 @@ export const ENTRY_ROUTES = [
     path: "/api-gateway/v1/ledgers/{owner}/{name}/entries",
     summary: "Add directives to the ledger",
     description:
-      "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written.",
+      "Appends one or more Beancount directives, routed to the right file by type and date and committed as a single commit. All-or-nothing: if any directive fails, none are written. A transaction whose residual is outside the ledger's tolerance is refused with UNBALANCED unless allowInvalid records it deliberately; one posting per transaction may omit its amount and is written elided.",
     params: ledgerPathSchema,
     body: entriesBodySchema,
     responses: {
@@ -156,8 +167,8 @@ export const ENTRY_ROUTES = [
         }),
       ),
     },
-    handler: async ({ layers }, { identity, params, body }) =>
-      layers.services.ledgerEntry.addBulkEntries(
+    handler: async ({ layers }, { identity, params, body }) => {
+      const result = await layers.services.ledgerEntry.addBulkEntries(
         identity,
         params.owner,
         params.name,
@@ -169,6 +180,11 @@ export const ENTRY_ROUTES = [
         // re-checked here; a second implementation of the rule is how the two
         // drift apart.
         "web",
-      ),
+        body.allowInvalid ?? false,
+      );
+      // The service also reports which files the batch landed in for MCP's
+      // write outcome; the v1 contract stays `{success, message}`.
+      return { success: result.success, message: result.message };
+    },
   }),
 ] as const;

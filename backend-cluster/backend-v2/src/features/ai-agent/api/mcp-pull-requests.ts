@@ -18,6 +18,8 @@ export const pullRequestToolInput = z
     title: z.string().optional(),
     description: z.string().nullish(),
     baseBranch: z.string().optional(),
+    clearCommitMessage: z.string().optional(),
+    fastForward: z.boolean().optional(),
     changes: pullRequestCreateInput.shape.changes.optional(),
   })
   .strict();

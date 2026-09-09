@@ -188,7 +188,12 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
       expect(g.data!.insertReceiptTransaction).toEqual({ success: true });
       expect(m.isError).not.toBe(true);
       expect((m.structuredContent as { result: unknown }).result).toEqual({
+        summary:
+          "Inserted receipt transaction for Café Fixture on 2026-09-01. No new bean-check errors.",
         success: true,
+        wrote: [],
+        entryHashes: [],
+        validation: { errorsBefore: 0, errorsAfter: 0, newErrors: [] },
       });
       expect(f.copy).toHaveBeenCalledTimes(3);
       expect(f.copy).toHaveBeenCalledWith({

@@ -50,6 +50,7 @@ export interface RenameLedgerFileCommand {
   newPath: string;
   oldPath: string;
   message?: string;
+  updateIncludes?: boolean;
 }
 
 export interface ListLedgersParams {
@@ -139,6 +140,7 @@ export interface DeleteLedgerFileResult {
 export interface RenameLedgerFileResult {
   newPath: string;
   oldPath: string;
+  updatedIncludes: string[];
 }
 
 export interface StarLedgerResult {

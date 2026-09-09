@@ -9,7 +9,7 @@ import {
 } from "@/features/stripe/service/stripe";
 import { getUserTier } from "@/features/stripe/operations/get-user-tier";
 import { parseLedgerId } from "@/shared/str";
-import { InternalServerError } from "@/shared/errors";
+import { BadUserInputError, InternalServerError } from "@/shared/errors";
 import { UserPublic } from "@/foundation/fava";
 import { logger } from "@/shared/logger";
 import type { Identity } from "@/server/api/identity";
@@ -141,13 +141,25 @@ export class LedgerCollaboratorsWorkflow implements ILedgerCollaboratorsWorkflow
       }
     }
 
-    const response =
-      await favaApiClient.collaborators.addOrUpdateLedgerCollaborator(
-        ledgerOwner,
-        ledgerName,
-        collaborator,
-        { permission: permission || null },
-      );
+    let response;
+    try {
+      response =
+        await favaApiClient.collaborators.addOrUpdateLedgerCollaborator(
+          ledgerOwner,
+          ledgerName,
+          collaborator,
+          { permission: permission || null },
+        );
+    } catch (error) {
+      // Gitea reports an unknown username as "user does not exist
+      // [uid: 0, name: …]" — an internal shape no agent can act on. The
+      // collaborator name came from the caller, so this is their input error.
+      const message = error instanceof Error ? error.message : String(error);
+      if (/user does not exist/i.test(message)) {
+        throw new BadUserInputError(`No such user: ${collaborator}`);
+      }
+      throw error;
+    }
 
     if (response.data?.success) {
       return {

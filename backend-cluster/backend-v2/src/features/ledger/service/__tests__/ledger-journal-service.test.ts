@@ -343,7 +343,7 @@ describe("LedgerJournalService", () => {
         ],
       });
 
-      expect(result.deletedHashes).toEqual(["h1", "h2"]);
+      expect(result.deletedCount).toBe(2);
       expect(mockDeleteMultiSourceSlices).toHaveBeenCalledWith(
         "testowner",
         "testledger",
@@ -365,7 +365,12 @@ describe("LedgerJournalService", () => {
       mockUpdateSourceSlice.mockResolvedValue({
         data: {
           success: true,
-          data: { message: "Updated", entry_hash: "hash-new", new_sha256sum: "newsum" },
+          data: {
+            message: "Updated",
+            entry_hash: "hash-new",
+            new_sha256sum: "newsum",
+            new_entry_hash: "hash-new-after-edit",
+          },
         },
       });
 
@@ -379,6 +384,7 @@ describe("LedgerJournalService", () => {
 
       expect(result.newSha256sum).toBe("newsum");
       expect(result.entryHash).toBe("hash-new");
+      expect(result.newEntryHash).toBe("hash-new-after-edit");
       expect(mockUpdateSourceSlice).toHaveBeenCalledWith(
         "testowner",
         "testledger",

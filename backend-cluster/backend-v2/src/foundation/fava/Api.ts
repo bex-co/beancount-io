@@ -1106,6 +1106,8 @@ export interface EntryAddBulkEntriesRequest {
    * Default target file for items that omit their own (defaults to main.bean)
    */
   filename?: string | null;
+  /** Record unbalanced transactions deliberately instead of refusing them with UNBALANCED. */
+  allowInvalid?: boolean;
 }
 
 /**
@@ -2116,8 +2118,8 @@ export interface PlaintextJournalResponse {
  * A Beancount posting.
  */
 export interface Posting {
-  /** Units of the posting */
-  units: Amount;
+  /** Units of the posting. Omitted on at most one posting per transaction: the amount is interpolated for validation and the posting renders elided. */
+  units?: Amount;
   /** Cost of the posting */
   cost?: Cost | null;
   /**
@@ -3147,6 +3149,11 @@ export interface UpdateSourceSliceResponse {
    * SHA256 hash of the updated entry source
    */
   new_sha256sum: string;
+  /**
+   * New Entry Hash
+   * The entry's public ID after the commit, re-read from the fresh post-commit parse.
+   */
+  new_entry_hash: string;
 }
 
 /**
@@ -3381,6 +3388,26 @@ export interface WebhookResponse {
    * Last update timestamp
    */
   updated_at?: string | null;
+}
+
+/** LedgerCheckProjectedFilesOptions */
+export interface LedgerCheckProjectedFilesOptions {
+  /**
+   * Files
+   * Projected file contents: base64 UTF-8 text, or null to project a deletion. Parsed without committing.
+   */
+  files: ProjectedFileOverlay[];
+}
+
+/** ProjectedFileOverlay */
+export interface ProjectedFileOverlay {
+  /** Path */
+  path: string;
+  /**
+   * Content
+   * Base64 UTF-8 text, or null to project a deletion.
+   */
+  content?: string | null;
 }
 
 export type QueryParamsType = Record<string | number, any>;
@@ -4808,6 +4835,29 @@ export class Api<
         path: `/reports/${owner}/${repoName}/errors`,
         method: "GET",
         secure: true,
+        format: "json",
+        ...params,
+      }),
+
+    /**
+     * @description bean-check over projected file contents (base64 text; null deletes), parsed without committing. Powers dry-run previews.
+     *
+     * @tags reports
+     * @name CheckProjectedErrors
+     * @summary Check projected files
+     * @request POST:/reports/{owner}/{repo_name}/check
+     */
+    checkProjectedErrors: (
+      owner: string,
+      repoName: string,
+      data: LedgerCheckProjectedFilesOptions,
+      params: RequestParams = {},
+    ) =>
+      this.request<SuccessResponseListBeancountErrorPublic, ErrorResponse>({
+        path: `/reports/${owner}/${repoName}/check`,
+        method: "POST",
+        body: data,
+        type: ContentType.Json,
         format: "json",
         ...params,
       }),

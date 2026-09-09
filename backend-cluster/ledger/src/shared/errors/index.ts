@@ -34,6 +34,7 @@ export {
   ForbiddenError,
   NotFoundError,
   BadUserInputError,
+  UnbalancedTransactionError,
   ValidationError,
   ConflictError,
   RateLimitedError,

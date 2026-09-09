@@ -287,3 +287,48 @@ export class PremiumRequiredError extends DomainError {
     );
   }
 }
+
+/**
+ * A transaction whose residual is outside the ledger's tolerance (w2/m26).
+ *
+ * Category: UNBALANCED (HTTP 400). The residual names the offending amounts
+ * (`"5 USD"`, `"0.003 EUR, 1 JPY"`) and the hint tells the agent the two ways
+ * forward — fix the postings or record the imbalance deliberately.
+ *
+ * @example
+ * throw new UnbalancedTransactionError("entry 0: Transaction does not balance: residual 5 USD", "5 USD");
+ */
+export class UnbalancedTransactionError extends DomainError {
+  constructor(message: string, residual: string, entry?: number) {
+    super(ErrorCategory.UNBALANCED, message, {
+      residual,
+      ...(entry !== undefined && { entry }),
+      hint: `residual ${residual}; add a posting or pass allowInvalid: true`,
+    });
+  }
+}
+
+/**
+ * The deployment is missing configuration an operation needs (w2/m26) —
+ * object storage for asset uploads, downloads, and receipt parsing when no
+ * bucket or credentials are set.
+ *
+ * Category: CONFIGURATION_ERROR (HTTP 500). The message names the missing
+ * capability; the hint names the env variables that provide it, so an agent
+ * can tell the operator exactly what to set instead of pasting SDK internals.
+ *
+ * @example
+ * throw new ConfigurationError(
+ *   "Object storage is not configured on this deployment",
+ *   "Set TEMP_ASSETS_AWS_S3_BUCKET, TEMP_ASSETS_AWS_S3_ACCESS_KEY_ID, and TEMP_ASSETS_AWS_S3_SECRET_ACCESS_KEY (see .env.tmpl)",
+ * );
+ */
+export class ConfigurationError extends DomainError {
+  constructor(message: string, hint?: string) {
+    super(
+      ErrorCategory.CONFIGURATION_ERROR,
+      message,
+      hint ? { hint } : undefined,
+    );
+  }
+}

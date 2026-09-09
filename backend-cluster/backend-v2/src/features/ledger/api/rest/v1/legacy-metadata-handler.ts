@@ -6,6 +6,7 @@ import { json } from "@/server/rest/v1-schemas";
 export const legacyMetadataQuery = z.object({
   userId: z
     .string()
+    .optional()
     .describe(
       "Legacy compatibility argument; authentication determines the caller",
     ),

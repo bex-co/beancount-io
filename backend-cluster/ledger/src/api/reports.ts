@@ -46,6 +46,23 @@ export function setReportsHandler(router: Router): void {
     );
   });
 
+  // operationId: checkProjectedErrors — POST /reports/{o}/{r}/check
+  // bean-check over projected file contents (base64 text; null deletes),
+  // parsed without committing. Powers dry-run previews (w2/m26).
+  router.post(`${base}/check`, authMiddleware, async (ctx) => {
+    const { data } = servicesForRequest(ctx);
+    const body = (ctx.request.body ?? {}) as {
+      files?: { path: string; content: string | null }[];
+    };
+    ctx.body = successResponse(
+      await data.checkProjectedErrors({
+        ledgerId: ledgerIdOf(ctx),
+        userId: undefined,
+        overlays: body.files ?? [],
+      }),
+    );
+  });
+
   router.get(`${base}/commodities`, authMiddleware, async (ctx) => {
     const { data } = servicesForRequest(ctx);
     ctx.body = successResponse(

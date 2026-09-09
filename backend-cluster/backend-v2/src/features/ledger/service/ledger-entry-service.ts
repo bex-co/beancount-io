@@ -13,6 +13,7 @@ import {
 } from "@/foundation/fava";
 import { logger } from "@/shared/logger";
 import { operationNotAllowedFromCause } from "@/features/ledger/utils/operation-not-allowed-from-cause";
+import { BadUserInputError } from "@/shared/errors";
 import { resolveEntryFile } from "@/features/ledger/utils/entry-file-resolver";
 import { directiveLimitExemptParams } from "@/features/ledger/operations/directive-limit-bypass";
 import type { FavaApiClient } from "@/foundation/fava";
@@ -25,7 +26,8 @@ import { AUTHORIZATION_ACTIONS } from "@/server/api/authorization/authorization-
 type AmountInput = { number: string; currency: string };
 
 type PostingInput = {
-  units: AmountInput;
+  /** Omitted on at most one posting per transaction; written elided. */
+  units?: AmountInput;
   account: string;
   price?: AmountInput;
   flag?: string;
@@ -93,7 +95,13 @@ export type LedgerEntryInput =
   | { type: "event"; entry: EventInput };
 
 // Atomic on the ledger side (all-or-nothing commit) — no partial counts to report.
-export type AddBulkEntriesResult = { success: boolean; message?: string };
+// `files` names the distinct ledger files the batch landed in, so MCP write
+// results can say what they wrote (w2/m26).
+export type AddBulkEntriesResult = {
+  success: boolean;
+  message?: string;
+  files?: string[];
+};
 
 type BulkEntries = EntryAddBulkEntriesRequest["entries"];
 type BulkEntry = BulkEntries[number];
@@ -128,6 +136,7 @@ export interface ILedgerEntryService {
     ledgerName: string,
     inputs: LedgerEntryInput[],
     platform: "web" | "mobile",
+    allowInvalid?: boolean,
   ): Promise<AddBulkEntriesResult>;
 }
 
@@ -139,6 +148,7 @@ export interface ILedgerEntryWriter {
     ledgerName: string,
     inputs: LedgerEntryInput[],
     platform: "web" | "mobile",
+    allowInvalid?: boolean,
   ): Promise<AddBulkEntriesResult>;
 }
 
@@ -154,6 +164,7 @@ export class LedgerEntryService implements ILedgerEntryService {
     ledgerName: string,
     inputs: LedgerEntryInput[],
     platform: "web" | "mobile",
+    allowInvalid = false,
   ): Promise<AddBulkEntriesResult> {
     const ledgerId = `${ledgerOwner}/${ledgerName}`;
     await authorizeLedger(
@@ -168,6 +179,7 @@ export class LedgerEntryService implements ILedgerEntryService {
       ledgerName,
       inputs,
       platform,
+      allowInvalid,
     );
   }
 }
@@ -188,8 +200,23 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     ledgerName: string,
     inputs: LedgerEntryInput[],
     platform: "web" | "mobile",
+    allowInvalid = false,
   ): Promise<AddBulkEntriesResult> {
     const ledgerId = `${ledgerOwner}/${ledgerName}`;
+    // At most one posting per transaction may omit its amount; the ledger
+    // enforces this again at the trust boundary, but refusing here names the
+    // entry before any file is read or committed, on every surface at once.
+    inputs.forEach((input, index) => {
+      if (input.type !== "transaction") return;
+      const elided = input.entry.postings.filter(
+        (posting) => posting.units === undefined || posting.units === null,
+      ).length;
+      if (elided > 1) {
+        throw new BadUserInputError(
+          `entry ${index}: at most one posting may omit its amount, found ${elided}`,
+        );
+      }
+    });
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
@@ -236,12 +263,14 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
       ledgerName,
       entries,
       platform,
+      allowInvalid,
     );
 
     const noun = inputs.length === 1 ? "entry" : "entries";
     return {
       success: true,
       message: `Added ${inputs.length} ${noun} successfully`,
+      files: distinctFiles,
     };
   }
 
@@ -258,10 +287,16 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
           payee: entry.payee ?? undefined,
           narration: entry.narration ?? undefined,
           postings: entry.postings.map((posting) => ({
-            units: {
-              number: posting.units.number,
-              currency: posting.units.currency,
-            },
+            // An omitted amount stays omitted: the ledger interpolates it for
+            // validation and renders the posting elided (w2/m26).
+            ...(posting.units
+              ? {
+                  units: {
+                    number: posting.units.number,
+                    currency: posting.units.currency,
+                  },
+                }
+              : {}),
             account: posting.account,
             price: posting.price
               ? {
@@ -427,12 +462,13 @@ class FavaLedgerEntryWriter implements ILedgerEntryWriter {
     ledgerName: string,
     entries: BulkEntries,
     platform: "web" | "mobile" = "web",
+    allowInvalid = false,
   ): Promise<void> {
     await unwrapFavaResponse(
       favaApiClient.entries.addBulkEntries(
         ledgerOwner,
         ledgerName,
-        { entries },
+        { entries, allowInvalid },
         directiveLimitExemptParams(platform),
       ),
       "add entries",

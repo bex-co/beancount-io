@@ -8,8 +8,10 @@ export interface CreatePullRequestInput {
   ledgerOwner: string;
   ledgerName: string;
   title: string;
-  description?: string | null;
+  description: string;
   baseBranch: string;
+  clearCommitMessage: string;
+  fastForward?: boolean | null;
   changes: Array<{ path: string; content: string }>;
 }
 export interface PullRequestResult {
@@ -17,6 +19,9 @@ export interface PullRequestResult {
   message?: string;
   prNumber?: number;
   prUrl?: string;
+  /** The created PR's actual base/head refs, read back — never a default. */
+  baseBranch?: string;
+  headBranch?: string;
 }
 export interface IPullRequestWorkflow {
   createPullRequestFromPatch(
@@ -75,16 +80,22 @@ export class PullRequestWorkflow implements IPullRequestWorkflow {
         identity,
         input.ledgerOwner,
         input.ledgerName,
-        input.title,
-        input.description || "",
-        input.baseBranch,
-        input.changes,
+        {
+          title: input.title,
+          description: input.description,
+          baseBranch: input.baseBranch,
+          clearCommitMessage: input.clearCommitMessage,
+          fastForward: input.fastForward ?? false,
+          changes: input.changes,
+        },
       );
 
       return {
         success: true,
         prNumber: result.prNumber,
         prUrl: result.prUrl,
+        baseBranch: result.baseBranch,
+        headBranch: result.headBranch,
         message: "Pull request created successfully",
       };
     } catch (error) {

@@ -76,6 +76,7 @@ import {
   userResource,
 } from "@/server/api/authorization";
 import { assertSafeRepoPath } from "@/features/ledger/utils/safe-repo-path";
+import { decodeFileContent } from "@/shared/file-content";
 
 const workflowLogger = logger.child({ module: "ledger-workflow" });
 
@@ -83,6 +84,26 @@ const workflowLogger = logger.child({ module: "ledger-workflow" });
 // load-cached-ledger-file-map.ts), so directive-count fan-out stays deliberately narrow.
 const OWNED_LEDGERS_PAGE_SIZE = 50;
 const DIRECTIVE_COUNT_CONCURRENCY = 3;
+
+function includeTargetOf(line: string): string | null {
+  const match = line.match(/^\s*include\s+(?:"([^"]+)"|'([^']+)'|(\S+))\s*(;.*)?$/);
+  return match?.[1] ?? match?.[2] ?? match?.[3] ?? null;
+}
+
+function matchesIncludeLine(line: string, oldPath: string): boolean {
+  return includeTargetOf(line) === oldPath;
+}
+
+function rewriteIncludeLine(line: string, oldPath: string, newPath: string): string {
+  const match = line.match(
+    /^(\s*include\s+)(?:"([^"]+)"|'([^']+)'|(\S+))(\s*(;.*)?)$/,
+  );
+  if (!match) return line;
+  const target = match[2] ?? match[3] ?? match[4];
+  if (target !== oldPath) return line;
+  const quote = match[2] !== undefined ? '"' : match[3] !== undefined ? "'" : "";
+  return `${match[1]}${quote}${newPath}${quote}${match[5] ?? ""}`;
+}
 
 /**
  * Orchestration for the ledger feature. Owns the cross-service coordination the
@@ -680,21 +701,137 @@ export class LedgerWorkflow implements ILedgerWorkflow {
     const userId = identity.userId;
     assertSafeRepoPath(input.oldPath, "oldPath");
     assertSafeRepoPath(input.newPath, "newPath");
-    const changeOptions: LedgerChangeFilesOptions = {
-      files: [
-        {
-          operation: "create",
-          path: input.newPath,
-          from_path: input.oldPath,
-        } satisfies LedgerChangeFileOperation,
-      ],
-      message: input.message,
-    };
+    if (input.oldPath === input.newPath) {
+      throw new BadUserInputError("oldPath and newPath are the same file");
+    }
     const favaApiClient = await this.favaClientFactory.getPublicApiClient(
       ledgerId,
       userId,
     );
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+
+    const oldFile = await unwrapFavaResponse(
+      favaApiClient.ledgers.getLedgerFile(ledgerOwner, ledgerName, {
+        path: input.oldPath,
+      }),
+      "read ledger file for rename",
+      (cause) => operationNotAllowedFromCause("read ledger file for rename", cause),
+    );
+    if (!oldFile) {
+      throw new BadUserInputError(`${input.oldPath}: file not found`);
+    }
+    const existingTarget = await unwrapFavaResponse(
+      favaApiClient.ledgers.getLedgerFile(ledgerOwner, ledgerName, {
+        path: input.newPath,
+      }),
+      "read ledger file for rename",
+      (cause) => operationNotAllowedFromCause("read ledger file for rename", cause),
+    );
+    if (existingTarget) {
+      throw new BadUserInputError(
+        `${input.newPath}: file already exists; rename refused so ${input.oldPath} keeps its content`,
+      );
+    }
+
+    // Find every `.bean`/`.beancount` file whose `include` line still points
+    // at oldPath, so the rename either refuses or rewrites them in the same
+    // commit instead of leaving a stale reference behind. This walks the whole
+    // tree rather than trusting the entry-point-reachable set: an orphan file
+    // nobody includes today breaks the day someone includes it.
+    const beanFiles: string[] = [];
+    const pendingDirs: (string | undefined)[] = [undefined];
+    while (pendingDirs.length > 0) {
+      const dir = pendingDirs.pop();
+      const entries = await unwrapFavaResponse(
+        favaApiClient.ledgers.getLedgerDirContent(ledgerOwner, ledgerName, {
+          ...(dir === undefined ? {} : { dir_path: dir }),
+        }),
+        "list ledger files for rename",
+        (cause) =>
+          operationNotAllowedFromCause("list ledger files for rename", cause),
+      );
+      for (const entry of entries ?? []) {
+        if (entry.type === "dir") pendingDirs.push(entry.path);
+        else if (
+          entry.type === "file" &&
+          /\.(bean|beancount)$/.test(entry.path)
+        )
+          beanFiles.push(entry.path);
+      }
+    }
+    let includingFiles: { path: string; content: string; sha: string }[] = [];
+    const candidates = beanFiles.filter(
+      (path) => path !== input.oldPath && path !== input.newPath,
+    );
+    if (candidates.length > 0) {
+      const contents = await unwrapFavaResponse(
+        favaApiClient.ledgers.getLedgerFilesContent(ledgerOwner, ledgerName, {
+          files: candidates,
+        }),
+        "read ledger files for rename",
+        (cause) => operationNotAllowedFromCause("read ledger files for rename", cause),
+      );
+      includingFiles = (contents ?? [])
+        .map((file) => ({
+          path: file.path,
+          content: decodeFileContent(file),
+          sha: file.sha,
+        }))
+        .filter(({ content }) =>
+          content
+            .split("\n")
+            .some((line) => matchesIncludeLine(line, input.oldPath)),
+        );
+    }
+    if (includingFiles.length > 0 && !input.updateIncludes) {
+      const names = includingFiles.map((file) => file.path).join(", ");
+      throw new BadUserInputError(
+        `${input.oldPath} is still included by ${names}; pass updateIncludes: true to rewrite ${
+          includingFiles.length === 1 ? "it" : "them"
+        } in the same commit`,
+      );
+    }
+
+    const preservedContent =
+      oldFile.encoding === "base64" && oldFile.content
+        ? oldFile.content.replace(/\s/g, "")
+        : Buffer.from(oldFile.content ?? "", "utf-8").toString("base64");
+    const files: LedgerChangeFileOperation[] = [
+      {
+        operation: "create",
+        path: input.newPath,
+        content: preservedContent,
+      },
+      {
+        operation: "delete",
+        path: input.oldPath,
+        sha: oldFile.sha,
+      },
+    ];
+    const updatedIncludes: string[] = [];
+    for (const including of includingFiles) {
+      const rewritten = including.content
+        .split("\n")
+        .map((line) =>
+          matchesIncludeLine(line, input.oldPath)
+            ? rewriteIncludeLine(line, input.oldPath, input.newPath)
+            : line,
+        )
+        .join("\n");
+      if (rewritten === including.content) continue;
+      files.push({
+        operation: "update",
+        path: including.path,
+        content: Buffer.from(rewritten, "utf-8").toString("base64"),
+        sha: including.sha,
+      });
+      updatedIncludes.push(including.path);
+    }
+
+    const changeOptions: LedgerChangeFilesOptions = {
+      files,
+      message: input.message ?? `Rename ${input.oldPath} → ${input.newPath}`,
+    };
     await unwrapFavaResponse(
       favaApiClient.ledgers.changeLedgerFiles(
         ledgerOwner,
@@ -705,7 +842,11 @@ export class LedgerWorkflow implements ILedgerWorkflow {
       (cause) => operationNotAllowedFromCause("rename ledger file", cause),
     );
 
-    return { newPath: input.newPath, oldPath: input.oldPath };
+    return {
+      newPath: input.newPath,
+      oldPath: input.oldPath,
+      updatedIncludes,
+    };
   }
 
   async starLedger({

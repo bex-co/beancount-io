@@ -1,8 +1,18 @@
 import { z } from "zod";
 import { logger } from "@/shared/logger";
 import type { ToolContext } from "./types";
-import { toolOutputSchema } from "./types";
+import {
+  toolOutputSchema,
+  writeValidationSchema,
+  wroteFileSchema,
+} from "./types";
 import { runToolSafely } from "../utils/run-tool";
+import {
+  readBeanCheckErrors,
+  summarizeWrite,
+  toWriteValidation,
+  withPostWriteValidation,
+} from "./write-validation";
 
 const toolLogger = logger.child({ module: "tool:bank" });
 
@@ -68,7 +78,22 @@ export const bankImportInputSchema = z.object({
   dry_run: dryRunField,
 });
 
-export const bankImportOutputSchema = toolOutputSchema(z.unknown());
+/**
+ * The bank-import payload is service-defined per operation, so the schema
+ * stays open — but `submit` (the one operation that writes ledger entries)
+ * carries the same write outcome as every other write tool (w2/m26), and
+ * those fields are published here so `tools/list` advertises them.
+ */
+export const bankImportOutputSchema = toolOutputSchema(
+  z
+    .object({
+      summary: z.string().optional(),
+      wrote: z.array(wroteFileSchema).optional(),
+      entryHashes: z.array(z.string()).optional(),
+      validation: writeValidationSchema.optional(),
+    })
+    .catchall(z.unknown()),
+);
 
 // --- connection control plane (admin class) ---------------------------------
 
@@ -134,18 +159,52 @@ export async function executeBankImport(ctx: BankCtx, input: ImportInput) {
           );
         case "submit": {
           const [owner, name] = ledgerId.split("/");
-          return services.plaidSync.submitTransactionsToLedger(
-            identity,
-            owner,
-            name,
-            required(input.transactions, "transactions", "submit").map((t) => ({
-              transactionId: t.transaction_id,
-              targetAccount: t.target_account,
-              sourceAccount: t.source_account,
-            })),
-            input.filename,
-            dryRun,
-          );
+          const requested = required(input.transactions, "transactions", "submit");
+          const submit = () =>
+            services.plaidSync.submitTransactionsToLedger(
+              identity,
+              owner,
+              name,
+              requested.map((t) => ({
+                transactionId: t.transaction_id,
+                targetAccount: t.target_account,
+                sourceAccount: t.source_account,
+              })),
+              input.filename,
+              dryRun,
+            );
+          if (dryRun) {
+            const errorsBefore = await readBeanCheckErrors(
+              services,
+              identity,
+              ledgerId,
+            );
+            const submitted = await submit();
+            return {
+              ...submitted,
+              summary: `Dry run: would submit ${requested.length} bank transaction(s) — not committed.`,
+              wrote: [],
+              entryHashes: [],
+              validation: toWriteValidation(errorsBefore, errorsBefore),
+            };
+          }
+          const { written: submitted, validation } =
+            await withPostWriteValidation(
+              services,
+              identity,
+              ledgerId,
+              submit,
+            );
+          return {
+            ...submitted,
+            summary: summarizeWrite(
+              `Submitted ${requested.length} bank transaction(s)${input.filename ? ` to ${input.filename}` : ""}`,
+              validation,
+            ),
+            wrote: input.filename ? [{ path: input.filename }] : [],
+            entryHashes: [],
+            validation,
+          };
         }
         case "discard":
           return services.plaidSync.deleteTransactions(

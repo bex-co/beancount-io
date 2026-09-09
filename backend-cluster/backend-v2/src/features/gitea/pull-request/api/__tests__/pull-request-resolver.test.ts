@@ -55,6 +55,7 @@ describe("PullRequestResolver", () => {
       title: "Test PR",
       description: "Test description",
       baseBranch: "main",
+      clearCommitMessage: "Add test file",
       changes: [{ path: "test.txt", content: "Hello World" }],
     };
 
@@ -62,6 +63,8 @@ describe("PullRequestResolver", () => {
       mockService.createPRFromPatch.mockResolvedValue({
         prNumber: 123,
         prUrl: "https://git.example.com/pr/123",
+        baseBranch: "main",
+        headBranch: "pr-patch-1",
       });
 
       const result = await resolver.createPullRequestFromPatch(
@@ -72,15 +75,21 @@ describe("PullRequestResolver", () => {
       expect(result.success).toBe(true);
       expect(result.prNumber).toBe(123);
       expect(result.prUrl).toBe("https://git.example.com/pr/123");
+      expect(result.baseBranch).toBe("main");
+      expect(result.headBranch).toBe("pr-patch-1");
       expect(result.message).toBe("Pull request created successfully");
       expect(mockService.createPRFromPatch).toHaveBeenCalledWith(
         mockContext.identity,
         "testowner",
         "test-ledger",
-        "Test PR",
-        "Test description",
-        "main",
-        expect.any(Array),
+        {
+          title: "Test PR",
+          description: "Test description",
+          baseBranch: "main",
+          clearCommitMessage: "Add test file",
+          fastForward: false,
+          changes: expect.any(Array),
+        },
       );
     });
 
@@ -136,19 +145,16 @@ describe("PullRequestResolver", () => {
       expect(result.message).toBe("Failed to create PR: Gitea API error");
     });
 
-    it("should use empty string for description if not provided", async () => {
+    it("should pass clearCommitMessage and fastForward through", async () => {
       mockService.createPRFromPatch.mockResolvedValue({
         prNumber: 123,
         prUrl: "https://git.example.com/pr/123",
+        baseBranch: "main",
+        headBranch: "pr-patch-1",
       });
 
-      const inputWithoutDescription = {
-        ...validInput,
-        description: undefined,
-      };
-
       await resolver.createPullRequestFromPatch(
-        inputWithoutDescription,
+        { ...validInput, fastForward: true },
         mockContext,
       );
 
@@ -156,10 +162,14 @@ describe("PullRequestResolver", () => {
         mockContext.identity,
         "testowner",
         "test-ledger",
-        "Test PR",
-        "",
-        "main",
-        expect.any(Array),
+        {
+          title: "Test PR",
+          description: "Test description",
+          baseBranch: "main",
+          clearCommitMessage: "Add test file",
+          fastForward: true,
+          changes: expect.any(Array),
+        },
       );
     });
   });

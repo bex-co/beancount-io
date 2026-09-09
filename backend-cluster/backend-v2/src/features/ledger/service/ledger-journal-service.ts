@@ -47,13 +47,16 @@ export type DeleteSliceResult = { message: string; entryHash: string };
 
 export type DeleteMultiSlicesResult = {
   message: string;
-  deletedHashes: string[];
+  /** How many entries were deleted — hashes are stale the moment they are. */
+  deletedCount: number;
 };
 
 export type UpdateSliceResult = {
   message: string;
   entryHash: string;
   newSha256sum: string;
+  /** The entry's public ID after the commit, re-read post-commit (w2/m26). */
+  newEntryHash: string;
 };
 
 export type JournalQueryParams = {
@@ -317,7 +320,7 @@ export class LedgerJournalService
       }),
       "delete source slices",
     );
-    return { message: data.message, deletedHashes: data.deleted_hashes };
+    return { message: data.message, deletedCount: data.deleted_hashes.length };
   }
 
   async updateSourceSlice(params: {
@@ -348,6 +351,7 @@ export class LedgerJournalService
       // from the committed content), not an echo of the request.
       entryHash: data.entry_hash,
       newSha256sum: data.new_sha256sum,
+      newEntryHash: data.new_entry_hash,
     };
   }
 }

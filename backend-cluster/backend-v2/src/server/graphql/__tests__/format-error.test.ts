@@ -1,7 +1,11 @@
 import "reflect-metadata";
 import { GraphQLError } from "graphql";
 import { ArgumentValidationError } from "type-graphql";
-import { NotFoundError, InternalServerError } from "@/shared/errors";
+import {
+  NotFoundError,
+  InternalServerError,
+  UnbalancedTransactionError,
+} from "@/shared/errors";
 import { AuthorizationDeniedError } from "@/server/api/authorization";
 
 // config.env drives production masking; mock it so we can toggle.
@@ -83,6 +87,26 @@ describe("formatError (GraphQL transport adapter)", () => {
 
     expect(result.extensions?.code).toBe("INTERNAL_SERVER_ERROR");
     expect(result.message).toBe("Internal server error");
+  });
+
+  it("maps an unbalanced transaction to extensions.code UNBALANCED", () => {
+    const { formatted, gqlError } = wrap(
+      new UnbalancedTransactionError(
+        "entry 0: Transaction does not balance: residual 5 USD",
+        "5 USD",
+        0,
+      ),
+    );
+
+    const result = formatError(formatted, gqlError);
+
+    expect(result.extensions?.code).toBe("UNBALANCED");
+    expect(result.extensions).toMatchObject({
+      residual: "5 USD",
+      entry: 0,
+      hint: expect.stringContaining("allowInvalid: true"),
+    });
+    expect(result.message).toContain("residual 5 USD");
   });
 
   it("leaves a plain (non-validation) GraphQLError's message untouched", () => {

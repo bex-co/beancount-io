@@ -187,6 +187,9 @@ export class RenameLedgerFileInput {
 
   @Field(() => String, { nullable: true })
   message?: string;
+
+  @Field(() => Boolean, { nullable: true })
+  updateIncludes?: boolean;
 }
 
 @ArgsType()
@@ -283,6 +286,9 @@ export class RenameLedgerFileResponse {
 
   @Field(() => String)
   oldPath: string;
+
+  @Field(() => [String])
+  updatedIncludes: string[];
 }
 
 @ObjectType()

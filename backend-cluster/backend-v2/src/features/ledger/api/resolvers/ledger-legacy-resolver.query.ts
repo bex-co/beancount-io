@@ -27,8 +27,8 @@ import {
 
 @ArgsType()
 class LedgerMetaRequest {
-  @Field(() => String)
-  userId: string;
+  @Field(() => String, { nullable: true })
+  userId?: string;
 
   @Field(() => String, { nullable: true })
   ledgerId?: string | null;
@@ -395,8 +395,8 @@ export class JournalEntry {
 
 @ArgsType()
 class FeatureFlagRequest {
-  @Field(() => String)
-  userId: string;
+  @Field(() => String, { nullable: true })
+  userId?: string;
 }
 
 @ObjectType()

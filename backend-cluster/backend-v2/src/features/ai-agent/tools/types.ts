@@ -46,6 +46,67 @@ const toolErrorSchema = z.object({
 export type ToolError = z.infer<typeof toolErrorSchema>;
 
 /**
+ * One bean-check error, reduced to what an agent can act on: the message plus
+ * the `file:line` the loader reports, when it reports one.
+ */
+const beanCheckErrorSchema = z.object({
+  message: z.string(),
+  source: z
+    .string()
+    .optional()
+    .describe("`file:line` of the offending directive, when known"),
+});
+export type BeanCheckError = z.infer<typeof beanCheckErrorSchema>;
+
+/**
+ * bean-check's verdict around a write: how many errors existed before and
+ * after, and which ones the write introduced (diffed by message+source).
+ */
+export const writeValidationSchema = z.object({
+  errorsBefore: z.number().int(),
+  errorsAfter: z.number().int(),
+  newErrors: z.array(beanCheckErrorSchema),
+});
+export type WriteValidation = z.infer<typeof writeValidationSchema>;
+
+export const wroteFileSchema = z.object({
+  path: z.string(),
+  line: z
+    .number()
+    .int()
+    .optional()
+    .describe("1-based line the directive landed on, when known"),
+});
+
+/**
+ * The write outcome every MCP write tool carries (w2/m26): what was written,
+ * which entries it touched, and what bean-check says afterwards — so an agent
+ * learns about a broken ledger from the write itself instead of remembering
+ * to read the `errors` resource.
+ *
+ * `summary` is intentionally the first field: MCP serializes the result as
+ * JSON text, so the text content's first line states what was written and how
+ * many new errors, if any, were introduced.
+ */
+export function withWriteOutcome<T extends z.ZodRawShape>(shape: T) {
+  return z.object({
+    summary: z
+      .string()
+      .describe(
+        "What was written and how many new bean-check errors it introduced.",
+      ),
+    ...shape,
+    wrote: z
+      .array(wroteFileSchema)
+      .describe("Files (and lines, when known) the write landed in"),
+    entryHashes: z
+      .array(z.string())
+      .describe("Entry hashes the write created or touched, when known"),
+    validation: writeValidationSchema,
+  });
+}
+
+/**
  * Build a tool output schema with the uniform success shape
  * `{ ok: true, result }`, where `result` carries the tool-specific payload.
  * Pairs with {@link runToolSafely}, which produces exactly this shape.

@@ -21,6 +21,7 @@ const CLIENT_ERRORS = new Set([
   ErrorCategory.CONFLICT,
   ErrorCategory.RATE_LIMITED,
   ErrorCategory.PREMIUM_REQUIRED,
+  ErrorCategory.UNBALANCED,
 ]);
 
 /**

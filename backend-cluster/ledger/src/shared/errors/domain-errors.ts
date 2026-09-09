@@ -106,6 +106,24 @@ export class BadUserInputError extends DomainError {
 }
 
 /**
+ * A transaction whose postings leave a non-zero residual outside the ledger's
+ * tolerance (w2/m26). Carries the machine-readable `UNBALANCED` code plus the
+ * residual detail in the envelope, so API clients can refuse without parsing
+ * prose. Pass `allowInvalid` to record the imbalance deliberately.
+ */
+export class UnbalancedTransactionError extends DomainError {
+  constructor(
+    message: string,
+    details: { residual: string; entry: number },
+  ) {
+    super(ErrorCategory.BAD_USER_INPUT, message, {
+      code: "UNBALANCED",
+      details,
+    });
+  }
+}
+
+/**
  * Thrown when input validation fails based on business rules or schema constraints.
  *
  * Category: VALIDATION_FAILED (HTTP 400)

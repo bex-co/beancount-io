@@ -69,8 +69,12 @@ class LedgerAmountInput {
 
 @InputType()
 class LedgerPostingInput {
-  @Field(() => LedgerAmountInput)
-  units: LedgerAmountInput;
+  @Field(() => LedgerAmountInput, {
+    nullable: true,
+    description:
+      "Posting amount; omit on at most one posting per transaction to elide it",
+  })
+  units?: LedgerAmountInput;
 
   @Field(() => String)
   account: string;
@@ -322,6 +326,12 @@ export class LedgerEntryMutationResolver {
     @Arg("ledgerId", () => String) ledgerId: string,
     @Arg("entries", () => [AddEntryInput]) entries: AddEntryInput[],
     @Ctx() ctx: IContext,
+    @Arg("allowInvalid", () => Boolean, {
+      nullable: true,
+      description:
+        "Record unbalanced transactions deliberately instead of refusing them with UNBALANCED",
+    })
+    allowInvalid?: boolean,
   ): Promise<AddLedgerEntryResponse> {
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     return this.ledgerEntry.addBulkEntries(
@@ -330,6 +340,7 @@ export class LedgerEntryMutationResolver {
       ledgerName,
       entries.map(toServiceEntry),
       ctx.platform,
+      allowInvalid ?? false,
     );
   }
 }

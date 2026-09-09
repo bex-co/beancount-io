@@ -1,7 +1,10 @@
 import { parseLedgerId } from "@/shared/str";
 import { unwrapFavaResponse } from "@/foundation/fava";
 import { decodeFileContent } from "@/shared/file-content";
-import type { LedgerChangeFileOperation } from "@/foundation/fava/Api";
+import type {
+  BeancountErrorPublic,
+  LedgerChangeFileOperation,
+} from "@/foundation/fava/Api";
 import type { Identity } from "@/server/api/identity";
 import {
   authorizeLedger,
@@ -70,6 +73,18 @@ export interface ILedgerRepoService {
     message: string;
     dryRun?: boolean;
   }): Promise<void>;
+
+  /**
+   * bean-check over projected file contents without committing: `content`
+   * holds the full post-change UTF-8 text, or `null` to project a deletion.
+   * Powers edit dry runs (w2/m26). Gated on write authority like the commit
+   * it previews — a preview refuses exactly what the write would.
+   */
+  checkProjectedFiles(params: {
+    ledgerId: string;
+    identity: Identity;
+    overlays: { path: string; content: string | null }[];
+  }): Promise<BeancountErrorPublic[]>;
 }
 
 export class LedgerRepoService
@@ -234,6 +249,41 @@ export class LedgerRepoService
         message,
       }),
       "commit file operations",
+    );
+  }
+
+  async checkProjectedFiles(params: {
+    ledgerId: string;
+    identity: Identity;
+    overlays: { path: string; content: string | null }[];
+  }): Promise<BeancountErrorPublic[]> {
+    const { ledgerId, identity, overlays } = params;
+    await authorizeLedger(
+      identity,
+      ledgerId,
+      AUTHORIZATION_ACTIONS.LEDGER_FILES_WRITE,
+      this.authDeps,
+    );
+    overlays.forEach((overlay, index) =>
+      assertSafeRepoPath(overlay.path, `overlays[${index}].path`),
+    );
+    const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
+    const favaApiClient = await this.favaClientFactory.getPublicApiClient(
+      ledgerId,
+      identity.userId,
+    );
+
+    return unwrapFavaResponse(
+      favaApiClient.reports.checkProjectedErrors(ledgerOwner, ledgerName, {
+        files: overlays.map((overlay) => ({
+          path: overlay.path,
+          content:
+            overlay.content === null
+              ? null
+              : Buffer.from(overlay.content, "utf8").toString("base64"),
+        })),
+      }),
+      "check projected files",
     );
   }
 }

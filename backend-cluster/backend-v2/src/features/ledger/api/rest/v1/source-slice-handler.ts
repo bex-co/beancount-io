@@ -17,13 +17,18 @@ export const deleteSliceResult = z.object({
 });
 export const deleteSlicesResult = z.object({
   message: z.string(),
-  deletedHashes: z.array(z.string()),
+  deletedCount: z.number().int(),
 });
 export const updateSliceResult = deleteSliceResult.extend({
   newSha256sum: z.string(),
+  newEntryHash: z
+    .string()
+    .describe(
+      "The entry's public ID after the commit, re-read post-commit — use it for the next edit, not the request's entryHash.",
+    ),
 });
 const description =
-  "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. No preview.";
+  "Modify entry source using the current sha256sum from entry context. Ledger content-write authority is checked before delegation. Stale source hashes are refused by the ledger service. An update returns the entry's new hash — the request's entryHash is stale after the commit. No preview.";
 export const SOURCE_SLICE_ROUTES = [
   v1Route({
     method: "post",

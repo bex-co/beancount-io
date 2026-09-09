@@ -1,21 +1,21 @@
 # w2 · m26 — MCP write path that cannot lose or silently break a ledger
 
-**Worker:** worker2 **Goal:** an agent that writes through MCP never loses file content, never commits an unbalanced transaction by accident, sees bean-check's verdict in every write result, previews a real diff before committing, and can follow up on an edited entry with a hash that still resolves **Status:** todo
+**Worker:** worker2 **Goal:** an agent that writes through MCP never loses file content, never commits an unbalanced transaction by accident, sees bean-check's verdict in every write result, previews a real diff before committing, and can follow up on an edited entry with a hash that still resolves **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Fix renameLedgerFile data loss, guard includes, name the commit | 60m | — |
-| t002 | Post-write validation in every write tool result | 90m | t001 |
-| t003 | addLedgerEntries: refuse unbalanced transactions, allow one elided amount | 60m | t002 |
-| t004 | editLedgerFiles dry_run returns the diff and projected errors | 60m | t002 |
-| t005 | Fix the pull-request path and the stale editEntrySource hash | 60m | t001 |
-| t006 | Optional userId on legacy resources; mask storage and Gitea internals | 45m | — |
-| t007 | Adoption surface | 30m | t003, t004, t005, t006 |
-| t008 | Simplify | 30m | t007 |
-| t009 | Test coverage | 60m | t007 |
-| t010 | Closeout | 15m | t009 |
+| t001 | Fix renameLedgerFile data loss, guard includes, name the commit | 60m | — | — **DONE**
+| t002 | Post-write validation in every write tool result | 90m | t001 | — **DONE**
+| t003 | addLedgerEntries: refuse unbalanced transactions, allow one elided amount | 60m | t002 | — **DONE**
+| t004 | editLedgerFiles dry_run returns the diff and projected errors | 60m | t002 | — **DONE**
+| t005 | Fix the pull-request path and the stale editEntrySource hash | 60m | t001 | — **DONE**
+| t006 | Optional userId on legacy resources; mask storage and Gitea internals | 45m | — | — **DONE**
+| t007 | Adoption surface | 30m | t003, t004, t005, t006 | — **DONE**
+| t008 | Simplify | 30m | t007 | — **DONE**
+| t009 | Test coverage | 60m | t007 | — **DONE**
+| t010 | Closeout | 15m | t009 | — **DONE**
 
 ## Definition of done
 

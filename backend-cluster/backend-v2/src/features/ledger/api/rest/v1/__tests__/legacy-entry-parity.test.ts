@@ -222,9 +222,27 @@ it.each([
     for (const surface of ["rest", "gql", "mcp"]) {
       const f = await fixture(caller, ledgerId);
       try {
-        expect(await f.call(surface)).toEqual({
+        // REST and GraphQL keep the legacy `{data, success}` contract; MCP
+        // carries the write outcome around the same committed batch.
+        const { success, result } = await f.call(surface);
+        expect({ success, result }).toEqual({
           success: true,
-          result: { data: "", success: true },
+          result:
+            surface === "mcp"
+              ? {
+                  summary:
+                    "Added 1 legacy entry. No new bean-check errors.",
+                  data: "",
+                  success: true,
+                  wrote: [],
+                  entryHashes: [],
+                  validation: {
+                    errorsBefore: 0,
+                    errorsAfter: 0,
+                    newErrors: [],
+                  },
+                }
+              : { data: "", success: true },
         });
         expect(f.committed).toHaveLength(1);
         expect(f.committed[0]).toMatchObject({

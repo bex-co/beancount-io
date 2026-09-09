@@ -23,6 +23,7 @@ import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
+import { FavaApiError } from "@/foundation/fava/api-client";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const identity: Identity = {
@@ -102,12 +103,29 @@ const entries: LedgerEntryInput[] = [
   },
   { type: "event", entry: { date, type: "location", description: "Paris" } },
 ];
-async function fixture(caller = identity) {
+async function fixture(
+  caller = identity,
+  errorBatches: { message: string; source?: { filename: string; lineno: number } }[][] = [
+    [],
+    [],
+  ],
+) {
   const committed: unknown[] = [];
-  const state = { writable: true, failCommit: false };
+  const state = { writable: true, failCommit: false, unbalanced: false };
+  const errorCalls = { count: 0 };
   const envelope = (data: unknown) => ({ data: { success: true, data } });
   const write = jest.fn(async (_owner, _name, body) => {
     if (state.failCommit) throw new Error("Fixture commit refused");
+    if (state.unbalanced)
+      throw new FavaApiError(
+        "entry 0: Transaction does not balance: residual 5 USD",
+        400,
+        {
+          error: "entry 0: Transaction does not balance: residual 5 USD",
+          code: "UNBALANCED",
+          details: { residual: "5 USD", entry: 0 },
+        },
+      );
     committed.push(...body.entries);
     return envelope(null);
   });
@@ -159,10 +177,20 @@ async function fixture(caller = identity) {
     config,
   );
   rest.setIdentity(caller);
+  const ledgerData = {
+    getErrors: jest.fn(async () => {
+      const batch =
+        errorBatches[Math.min(errorCalls.count, errorBatches.length - 1)] ??
+        [];
+      errorCalls.count += 1;
+      return batch;
+    }),
+  };
   const server = assembleMcpRegistry(
     {
       identity: caller,
       ledgerEntryService: service,
+      services: { ledgerData },
     } as unknown as McpRequestContext,
     config,
   );
@@ -174,14 +202,18 @@ async function fixture(caller = identity) {
     state,
     write,
     createFile,
-    call: async (surface: string, batch = entries) => {
+    call: async (
+      surface: string,
+      batch = entries,
+      opts: { allowInvalid?: boolean } = {},
+    ) => {
       if (surface === "rest") {
         const response = await fetch(
           `${rest.url}/api-gateway/v1/ledgers/alice/main/entries`,
           {
             method: "POST",
             headers: { "content-type": "application/json" },
-            body: JSON.stringify({ entries: batch }),
+            body: JSON.stringify({ entries: batch, ...opts }),
           },
         );
         return {
@@ -197,8 +229,8 @@ async function fixture(caller = identity) {
         const response = await graphql({
           schema,
           source:
-            'mutation($entries:[AddEntryInput!]!) { bulkEntries(ledgerId:"alice/main",entries:$entries) { success message } }',
-          variableValues: { entries: input },
+            'mutation($entries:[AddEntryInput!]!,$allowInvalid:Boolean) { bulkEntries(ledgerId:"alice/main",entries:$entries,allowInvalid:$allowInvalid) { success message } }',
+          variableValues: { entries: input, ...opts },
           contextValue: {
             identity: caller,
             getCurrentIdentity: () => caller,
@@ -208,18 +240,21 @@ async function fixture(caller = identity) {
         return {
           success: !response.errors,
           result: response.data?.bulkEntries,
+          errors: response.errors,
         };
       }
       const response = await client.callTool({
         name: "addLedgerEntries",
         arguments: {
           entries: batch,
+          ...opts,
           ...(caller.ledgerScope ? {} : { ledger: "alice/main" }),
         },
       });
       return {
         success: !response.isError,
         result: (response.structuredContent as { result?: unknown })?.result,
+        full: response.structuredContent,
       };
     },
     close: async () => {
@@ -237,9 +272,29 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
     for (const surface of ["rest", "gql", "mcp"]) {
       const f = await fixture(caller);
       try {
-        expect(await f.call(surface)).toEqual({
+        // REST and GraphQL keep the `{success, message}` contract; MCP
+        // carries the write outcome (summary first, then wrote, entryHashes,
+        // validation) around the same committed batch.
+        const { success, result } = await f.call(surface);
+        expect({ success, result }).toEqual({
           success: true,
-          result: { success: true, message: "Added 10 entries successfully" },
+          result:
+            surface === "mcp"
+              ? {
+                  summary:
+                    "Added 10 entries to main.bean. No new bean-check errors.",
+                  success: true,
+                  message: "Added 10 entries successfully",
+                  files: ["main.bean"],
+                  wrote: [{ path: "main.bean" }],
+                  entryHashes: [],
+                  validation: {
+                    errorsBefore: 0,
+                    errorsAfter: 0,
+                    newErrors: [],
+                  },
+                }
+              : { success: true, message: "Added 10 entries successfully" },
         });
         expect(f.write).toHaveBeenCalledTimes(1);
         expect(f.committed).toHaveLength(10);
@@ -268,6 +323,215 @@ it.each([identity, { ...identity, ledgerScope: undefined }])(
     }
     expect(batches[1]).toEqual(batches[0]);
     expect(batches[2]).toEqual(batches[0]);
+  },
+);
+
+it("reports an unbalanced write in the MCP validation envelope", async () => {
+  const f = await fixture(identity, [
+    [],
+    [
+      {
+        message: "Transaction does not balance: residual 5.00 USD",
+        source: { filename: "main.bean", lineno: 73 },
+      },
+    ],
+  ]);
+  try {
+    // The fixture mock bypasses the ledger's balance refusal to prove the
+    // envelope reports the residual when a write does commit one — as happens
+    // with `allowInvalid: true` below.
+    const { success, result } = await f.call("mcp", [entries[0]!]);
+    expect({ success, result }).toEqual({
+      success: true,
+      result: {
+        summary:
+          "Added 1 entry to main.bean. 1 new bean-check error: Transaction does not balance: residual 5.00 USD (main.bean:73)",
+        success: true,
+        message: "Added 1 entry successfully",
+        files: ["main.bean"],
+        wrote: [{ path: "main.bean" }],
+        entryHashes: [],
+        validation: {
+          errorsBefore: 0,
+          errorsAfter: 1,
+          newErrors: [
+            {
+              message: "Transaction does not balance: residual 5.00 USD",
+              source: "main.bean:73",
+            },
+          ],
+        },
+      },
+    });
+  } finally {
+    await f.close();
+  }
+});
+
+const unbalancedBatch = [
+  {
+    type: "transaction",
+    entry: {
+      date,
+      flag: "*",
+      postings: [
+        { account: "Expenses:Food", units: { number: "10", currency: "USD" } },
+        { account: "Assets:Cash", units: { number: "-5", currency: "USD" } },
+      ],
+    },
+  },
+] as unknown as LedgerEntryInput[];
+
+describe.each(["rest", "gql", "mcp"])(
+  "unbalanced entries via %s",
+  (surface) => {
+    it("refuses the residual with UNBALANCED and writes nothing", async () => {
+      const f = await fixture();
+      f.state.unbalanced = true;
+      try {
+        const result = await f.call(surface, unbalancedBatch);
+        expect(result.success).toBe(false);
+        expect(f.committed).toEqual([]);
+        if (surface === "rest") {
+          expect(result.result).toMatchObject({
+            ok: false,
+            error: {
+              code: "UNBALANCED",
+              message: expect.stringContaining("residual 5 USD"),
+            },
+          });
+        } else if (surface === "gql") {
+          // Raw `graphql()` bypasses Apollo's formatError, so no
+          // extensions.code here — the message carries the residual, and the
+          // UNBALANCED code mapping is proven in format-error.test.ts.
+          expect(result.success).toBe(false);
+          expect(
+            (result.errors ?? []).some((error) =>
+              String(error.message).includes("residual 5 USD"),
+            ),
+          ).toBe(true);
+        } else {
+          expect(result.full).toMatchObject({
+            ok: false,
+            error: {
+              code: "UNBALANCED",
+              message: expect.stringContaining("residual 5 USD"),
+              hint: expect.stringContaining("allowInvalid: true"),
+            },
+          });
+        }
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("writes the imbalance with allowInvalid and reports it", async () => {
+      const f = await fixture(identity, [
+        [],
+        [
+          {
+            message: "Transaction does not balance: residual 5 USD",
+            source: { filename: "main.bean", lineno: 73 },
+          },
+        ],
+      ]);
+      try {
+        const result = await f.call(surface, unbalancedBatch, {
+          allowInvalid: true,
+        });
+        expect(result.success).toBe(true);
+        expect(f.committed).toHaveLength(1);
+        expect(f.write).toHaveBeenCalledTimes(1);
+        expect(f.write.mock.calls[0]?.[0]).toBe("alice");
+        expect(f.write.mock.calls[0]?.[1]).toBe("main");
+        expect(f.write.mock.calls[0]?.[2]).toMatchObject({
+          allowInvalid: true,
+        });
+        if (surface === "mcp") {
+          expect(result.result).toMatchObject({
+            summary: expect.stringContaining("Added 1 entry to main.bean"),
+            validation: {
+              errorsBefore: 0,
+              errorsAfter: 1,
+              newErrors: [
+                {
+                  message: "Transaction does not balance: residual 5 USD",
+                  source: "main.bean:73",
+                },
+              ],
+            },
+          });
+        }
+      } finally {
+        await f.close();
+      }
+    });
+  },
+);
+
+describe.each(["rest", "gql", "mcp"])(
+  "elided postings via %s",
+  (surface) => {
+    const elidedBatch = [
+      {
+        type: "transaction",
+        entry: {
+          date,
+          flag: "*",
+          narration: "Food",
+          postings: [
+            {
+              account: "Expenses:Food",
+              units: { number: "10.00", currency: "USD" },
+            },
+            { account: "Assets:Cash" },
+          ],
+        },
+      },
+    ] as unknown as LedgerEntryInput[];
+
+    it("accepts one elided posting and writes it elided", async () => {
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, elidedBatch);
+        expect(result.success).toBe(true);
+        expect(f.committed).toHaveLength(1);
+        const committed = f.committed[0] as {
+          item: { postings: Record<string, unknown>[] };
+        };
+        expect(committed.item.postings[0]).toMatchObject({
+          account: "Expenses:Food",
+        });
+        expect(committed.item.postings[1]).not.toHaveProperty("units");
+      } finally {
+        await f.close();
+      }
+    });
+
+    it("refuses two elided postings before committing", async () => {
+      const batch = [
+        {
+          type: "transaction",
+          entry: {
+            date,
+            flag: "*",
+            postings: [
+              { account: "Expenses:Food" },
+              { account: "Assets:Cash" },
+            ],
+          },
+        },
+      ] as unknown as LedgerEntryInput[];
+      const f = await fixture();
+      try {
+        const result = await f.call(surface, batch);
+        expect(result.success).toBe(false);
+        expect(f.write).not.toHaveBeenCalled();
+        expect(f.committed).toEqual([]);
+      } finally {
+        await f.close();
+      }
+    });
   },
 );
 

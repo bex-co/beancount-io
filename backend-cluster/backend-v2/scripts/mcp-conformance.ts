@@ -4,7 +4,7 @@
  *   yarn mcp:conformance <base-url> [--token <bcio_…>] [--read-only-token <bcio_…>]
  *
  * Answers one question — "is this deployment's MCP endpoint actually
- * connectable?" — and, when it is not, names which of the seven checks failed
+ * connectable?" — and, when it is not, names which of the eight checks failed
  * rather than leaving an operator to infer it from a curl transcript. The
  * checks exist because each has been observed failing in a real deployment
  * while every unit test passed; see `docs/adrs/ADR007-backend-v2-mcp-surface.md`.
@@ -420,6 +420,48 @@ async function checkAdvertisedPath(o: Options): Promise<CheckResult> {
   return canonical === "reaches MCP" ? v.pass(detail) : v.fail(detail);
 }
 
+/**
+ * 8 — the legacy compatibility argument stays optional where it is ignored.
+ * The feature-flags resource documents `{?userId}` as a compatibility
+ * argument; reading it bare must succeed, or every agent that drops the
+ * ignored argument breaks against a clean-looking deployment.
+ */
+async function checkOptionalUserId(o: Options): Promise<CheckResult> {
+  const v = verdict(
+    "8 optional-userid",
+    "The feature-flags resource reads without userId",
+  );
+  if (!o.token) return v.skip("needs --token");
+
+  const res = await probe(`${o.baseUrl}${MCP_PATH}`, {
+    method: "POST",
+    headers: jsonRpcHeaders(o.token),
+    body: rpc(
+      "resources/read",
+      { uri: "beancount://configuration/feature-flags" },
+      8,
+    ),
+  });
+  if (!res.ok) return v.fail(res.error);
+  if (res.status !== 200) {
+    return v.fail(
+      `expected a 200 carrying the flags, got ${res.status}: ${res.body.slice(0, 200)}`,
+    );
+  }
+  const contents = (
+    parseRpc(res.body)?.result as
+      | { contents?: Array<{ text?: string }> }
+      | undefined
+  )?.contents;
+  const text = contents?.map(({ text }) => text ?? "").join(" ") ?? "";
+  if (!text.includes("spendingReportSubscription")) {
+    return v.fail(
+      `the resource read did not return the flags: ${text.slice(0, 200)}`,
+    );
+  }
+  return v.pass("feature-flags read without userId");
+}
+
 // --- runner ---------------------------------------------------------------
 
 function parseArgs(argv: string[]): Options {
@@ -459,6 +501,7 @@ export const CHECKS = [
   checkScopeRefusal,
   checkErrorMasking,
   checkAdvertisedPath,
+  checkOptionalUserId,
 ] as const;
 
 export type { CheckResult, Options, Outcome };
@@ -469,7 +512,7 @@ async function main(): Promise<void> {
 
   const results: CheckResult[] = [];
   // Sequential on purpose: several checks re-probe the endpoint, and a readable
-  // transcript beats saving a few seconds on a seven-request run.
+  // transcript beats saving a few seconds on an eight-request run.
   for (const check of CHECKS) {
     const result = await check(options);
     results.push(result);
@@ -494,7 +537,7 @@ async function main(): Promise<void> {
 }
 
 // Only when invoked as a command — importing this module (from a test, or to
-// reuse one check) must not fire seven HTTP probes and call process.exit.
+// reuse one check) must not fire eight HTTP probes and call process.exit.
 if (require.main === module) {
   void main();
 }

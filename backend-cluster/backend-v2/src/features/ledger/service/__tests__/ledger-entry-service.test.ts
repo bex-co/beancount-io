@@ -150,6 +150,7 @@ describe("LedgerEntryService", () => {
               }),
             },
           ],
+          allowInvalid: false,
         },
         // Web writes carry no exemption header; mobile would pass one here.
         {},

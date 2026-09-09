@@ -3,9 +3,17 @@ import { z } from "zod";
 import { logger } from "@/shared/logger";
 import type { LedgerChangeFileOperation } from "@/foundation/fava/Api";
 import type { ToolContext } from "./types";
-import { toolOutputSchema } from "./types";
+import { toolOutputSchema, withWriteOutcome } from "./types";
 import { runToolSafely } from "../utils/run-tool";
 import { normalizeAgentRepoPath } from "./agent-repo-path";
+import {
+  readBeanCheckErrors,
+  summarizeWrite,
+  toBeanCheckErrors,
+  toWriteValidation,
+  withPostWriteValidation,
+} from "./write-validation";
+import { unifiedDiff } from "./file-diff";
 
 const toolLogger = logger.child({ module: "tool:edit-ledger-files" });
 
@@ -14,7 +22,11 @@ export const description =
   "  create: new text file — provide plain UTF-8 text content (NOT base64).\n" +
   "  update: str_replace on a text file — old_string must appear exactly once.\n" +
   "  replace: overwrite entire text file — provide plain UTF-8 text content (NOT base64).\n" +
-  "  delete: remove a file.";
+  "  delete: remove a file.\n" +
+  "  dry_run previews without committing: same refusal as the commit, plus a " +
+  "unified diff per touched file and bean-check's verdict over the projected " +
+  "contents — approve only what the preview shows, then send the identical " +
+  "files with dry_run false.";
 
 const fileOpSchema = z.discriminatedUnion("operation", [
   z.object({
@@ -66,18 +78,64 @@ export const editLedgerFilesInputSchema = z.object({
 });
 
 export const editLedgerFilesOutputSchema = toolOutputSchema(
-  z.object({
+  withWriteOutcome({
     dry_run: z.boolean(),
     count: z.number().int(),
     operations: z.array(z.object({ operation: z.string(), path: z.string() })),
+    diff: z
+      .array(z.object({ path: z.string(), diff: z.string() }))
+      .describe(
+        "Unified diff per touched file for dry runs; empty on commits.",
+      ),
   }),
 );
 export type EditLedgerFilesOutput = z.infer<typeof editLedgerFilesOutputSchema>;
 type EditLedgerFilesResult = {
+  summary: string;
   dry_run: boolean;
   count: number;
   operations: { operation: string; path: string }[];
+  diff: { path: string; diff: string }[];
+  wrote: { path: string }[];
+  entryHashes: string[];
+  validation: {
+    errorsBefore: number;
+    errorsAfter: number;
+    newErrors: { message: string; source?: string }[];
+  };
 };
+
+/**
+ * The post-change contents for every touched path — the same transformation
+ * the commit applies — so a dry run can diff and check the projection
+ * without committing. `null` projects a deletion. Later ops chain onto
+ * earlier ones for the same path.
+ */
+function projectContents(
+  fileCache: Map<string, { content: string; sha: string }>,
+  files: { operation: string; path: string; content?: string; old_string?: string; new_string?: string }[],
+): Map<string, string | null> {
+  const projected = new Map<string, string | null>();
+  for (const file of files) {
+    if (file.operation === "create" || file.operation === "replace") {
+      projected.set(file.path, file.content ?? "");
+      continue;
+    }
+    if (file.operation === "delete") {
+      projected.set(file.path, null);
+      continue;
+    }
+    const base = projected.has(file.path)
+      ? projected.get(file.path)
+      : fileCache.get(file.path)?.content;
+    if (base === undefined || base === null) continue;
+    projected.set(
+      file.path,
+      base.split(file.old_string ?? "").join(file.new_string ?? ""),
+    );
+  }
+  return projected;
+}
 
 export async function executeEditLedgerFiles(
   ctx: Pick<ToolContext, "services" | "identity" | "ledgerId">,
@@ -194,28 +252,77 @@ export async function executeEditLedgerFiles(
           message: `AI edit: ${description}`,
           dryRun: true,
         });
+        // Build the post-change contents in memory — the same transformation
+        // the commit below applies — and check THAT ledger: no commit, no
+        // branch, just bean-check over the projection.
+        const projected = projectContents(fileCache, normalizedFiles);
+        const diff = [...projected].map(([path, after]) => ({
+          path,
+          diff: unifiedDiff(
+            path,
+            fileCache.get(path)?.content ?? null,
+            after,
+          ),
+        }));
+        const before = await readBeanCheckErrors(services, identity, ledgerId);
+        const projectedErrors = toBeanCheckErrors(
+          await services.ledgerRepo.checkProjectedFiles({
+            ledgerId,
+            identity,
+            overlays: [...projected].map(([path, content]) => ({
+              path,
+              content,
+            })),
+          }),
+        );
+        const validation = toWriteValidation(before, projectedErrors);
+        // `diff` leads the payload so the serialized text content is the
+        // diff followed by the one-line summary.
         return {
+          diff,
+          summary: summarizeWrite(
+            `Dry run: ${operations.length} change(s) previewed (${ops.map((op) => op.path).join(", ")}) — not committed`,
+            validation,
+          ),
           dry_run: true,
           count: operations.length,
           operations: ops,
+          wrote: [],
+          entryHashes: [],
+          validation,
         };
       }
 
-      await services.ledgerRepo.changeFiles({
-        ledgerId,
+      const { validation } = await withPostWriteValidation(
+        services,
         identity,
-        operations,
-        message: `AI edit: ${description}`,
-      });
+        ledgerId,
+        () =>
+          services.ledgerRepo.changeFiles({
+            ledgerId,
+            identity,
+            operations,
+            message: `AI edit: ${description}`,
+          }),
+      );
 
       toolLogger.info("File operations committed", {
         userId: identity.userId,
         fileCount: files.length,
       });
+      const wrote = ops.map((op) => ({ path: op.path }));
       return {
+        summary: summarizeWrite(
+          `Committed ${operations.length} change(s) to ${ops.map((op) => op.path).join(", ")}`,
+          validation,
+        ),
         dry_run: false,
         count: operations.length,
         operations: ops,
+        diff: [],
+        wrote,
+        entryHashes: [],
+        validation,
       };
     },
   });

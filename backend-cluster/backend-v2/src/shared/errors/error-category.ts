@@ -41,6 +41,12 @@ export enum ErrorCategory {
   /** Operation not allowed due to business rules */
   OPERATION_NOT_ALLOWED = "OPERATION_NOT_ALLOWED",
 
+  /** Transaction residual is outside the ledger's tolerance (w2/m26) */
+  UNBALANCED = "UNBALANCED",
+
+  /** Deployment is missing configuration this operation needs (w2/m26) */
+  CONFIGURATION_ERROR = "CONFIGURATION_ERROR",
+
   /** Premium subscription required to access this feature */
   PREMIUM_REQUIRED = "PREMIUM_REQUIRED",
 }
@@ -65,4 +71,6 @@ export const CATEGORY_HTTP_STATUS: Record<ErrorCategory, number> = {
   [ErrorCategory.RESOURCE_LIMIT_REACHED]: 403,
   [ErrorCategory.OPERATION_NOT_ALLOWED]: 403,
   [ErrorCategory.PREMIUM_REQUIRED]: 402,
+  [ErrorCategory.UNBALANCED]: 400,
+  [ErrorCategory.CONFIGURATION_ERROR]: 500,
 };

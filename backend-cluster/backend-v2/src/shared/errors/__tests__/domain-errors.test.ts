@@ -6,6 +6,7 @@ import {
   ForbiddenError,
   NotFoundError,
   BadUserInputError,
+  ConfigurationError,
   ValidationError,
   ConflictError,
   RateLimitedError,
@@ -49,6 +50,10 @@ describe("domain errors", () => {
       ErrorCategory.OPERATION_NOT_ALLOWED,
     ],
     [new PremiumRequiredError(), ErrorCategory.PREMIUM_REQUIRED],
+    [
+      new ConfigurationError("Object storage is not configured", "Set X=1"),
+      ErrorCategory.CONFIGURATION_ERROR,
+    ],
   ])("%s maps to its category", (err, category) => {
     expect((err as DomainError).category).toBe(category);
   });
