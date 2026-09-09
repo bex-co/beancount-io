@@ -4,7 +4,7 @@ export function buildReceiptSystemPrompt(): string {
 ## OUTPUT FORMAT
 
 Return exactly ONE transaction with:
-- date: The purchase date in YYYY-MM-DD format (leave empty if no date is clearly printed on the receipt)
+- date: The purchase date in YYYY-MM-DD format (null if no date is clearly printed on the receipt)
 - payee: The store or merchant name (clean, no special chars)
 - amount: The TOTAL amount paid as a negative number (expense)
 - description: A short category-level summary, max 5 words (e.g. "Groceries", "Coffee and snacks", "Electronics accessories")
@@ -15,7 +15,7 @@ Return exactly ONE transaction with:
 - Sum ALL item prices for the total amount
 - If a grand total or "Total" line is shown, use that value
 - Remove currency symbols from amount: "$23.45" → -23.45
-- If NO date is clearly printed on the receipt, leave the date empty — do NOT guess or infer a date
+- If NO date is clearly printed on the receipt, set date to null — do NOT guess or infer a date
 - Description MUST be under 40 chars — use a category label, never enumerate items
 - No hallucinated data — only extract what is clearly visible`;
 }

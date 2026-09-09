@@ -11,7 +11,7 @@ import {
   buildAccountRecommendationUserPrompt,
 } from "./prompts";
 
-const accountRecommendationSchema = z.object({
+export const accountRecommendationSchema = z.object({
   sourceAccount: z
     .string()
     .nullable()

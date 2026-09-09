@@ -34,6 +34,7 @@
 - [ ] **m27** — MCP discoverability: the server explains itself to agents (9 tasks) ← from MCP field audit 2026-09-08 (three Claude Code sessions found no ledgers/errors/resources); user routed to w2 — sequenced after m26
 - [ ] **m28** — MCP results and failures an agent can act on (9 tasks) ← from MCP field audit 2026-09-08 (JSON-wrapped tables, four error dialects, 429 mid-session); user routed to w2 — sequenced after m27
 - [ ] **m29** — MCP onboarding in five minutes (8 tasks) ← from MCP field audit 2026-09-08 (key dialog, manifest origins, CLI, guide); user routed to w2 — sequenced after m28
+- [ ] **m30** — AI reliability hardening: ADR 0011 follow-ups (10 tasks) ← from the 2026-09-07 receipt-parse outage diagnosis + ADR 0011 tier-3 discussion; user routed to w2 as one milestone 2026-09-09
 
 ## Centralized-authz migration contract for m14–m20
 

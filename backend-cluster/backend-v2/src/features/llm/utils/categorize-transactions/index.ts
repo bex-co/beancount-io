@@ -34,7 +34,7 @@ const categorizationSchema = z.object({
   reasoning: z.string().describe("Brief explanation for the categorization"),
 });
 
-const categorizationsResponseSchema = z.object({
+export const categorizationsResponseSchema = z.object({
   suggestions: z
     .array(categorizationSchema)
     .describe("Array of categorization suggestions"),

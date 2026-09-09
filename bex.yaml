@@ -167,6 +167,12 @@ services:
         sync: false
       - key: OPENAI_API_KEY
         sync: false
+      # Optional model overrides; defaults are claude-sonnet-4-5 / gpt-4o. Not
+      # ANTHROPIC_MODEL — that name belongs to the Ask-AI sandbox path.
+      - key: LLM_MODEL
+        sync: false
+      - key: LLM_FALLBACK_MODEL
+        sync: false
 
       # --- asset storage ----------------------------------------------------
       # A region is required even when unset: the S3 client is built at startup

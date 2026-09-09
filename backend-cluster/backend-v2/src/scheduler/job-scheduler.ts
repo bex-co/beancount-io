@@ -9,6 +9,7 @@ import { createDevTestJob } from "./jobs/dev-test-job";
 import { createPlaidSyncJob } from "./jobs/plaid-sync-job";
 import { createPlaidWebhookProcessorJob } from "./jobs/plaid-webhook-processor-job";
 import { createPlaidWebhookCleanupJob } from "./jobs/plaid-webhook-cleanup-job";
+import { createLlmProbeJob } from "./jobs/llm-probe-job";
 
 const jobLogger = logger.child({ module: "job-scheduler" });
 
@@ -74,6 +75,7 @@ export class JobScheduler {
       this.layers,
       this.config,
     );
+    const llmProbe = createLlmProbeJob(this.layers, this.config);
     const jobs: ScheduledJob[] = [
       {
         name: "dev-test",
@@ -116,6 +118,12 @@ export class JobScheduler {
         schedule: plaidWebhookCleanup.schedule,
         task: plaidWebhookCleanup.task,
         enabled: true, // Clean up old completed webhook events daily at 2 AM
+      },
+      {
+        name: "llm-probe",
+        schedule: llmProbe.schedule,
+        task: llmProbe.task,
+        enabled: true, // Path B liveness — catches a dead provider credential
       },
     ];
 

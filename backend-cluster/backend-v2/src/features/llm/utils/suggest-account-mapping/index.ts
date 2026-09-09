@@ -27,7 +27,7 @@ const accountMappingSchema = z.object({
   reasoning: z.string().describe("Brief explanation for the suggestion"),
 });
 
-const accountMappingResponseSchema = z.object({
+export const accountMappingResponseSchema = z.object({
   suggestions: z
     .array(accountMappingSchema)
     .describe("Array of account mapping suggestions"),

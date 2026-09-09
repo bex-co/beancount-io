@@ -14,24 +14,26 @@ const transactionSchema = z.object({
     ),
 });
 
-const transactionsResponseSchema = z.object({
+export const transactionsResponseSchema = z.object({
   transactions: z
     .array(transactionSchema)
     .describe("Array of extracted transactions"),
 });
 
 // Permissive variant for sources (e.g. receipts) where a date may not be
-// visible. The model is allowed to omit `date` rather than fabricate one.
+// visible. Nullable rather than optional: OpenAI's strict response_format
+// requires every property in `required`, so "absent" must be expressed as
+// null (w2/m30/t002; the optional form broke the fallback leg in production).
 const receiptTransactionSchema = transactionSchema.extend({
   date: z
     .string()
-    .optional()
+    .nullable()
     .describe(
-      "Transaction date in YYYY-MM-DD format — omit if no date is clearly visible",
+      "Transaction date in YYYY-MM-DD format — null if no date is clearly visible",
     ),
 });
 
-const receiptTransactionsResponseSchema = z.object({
+export const receiptTransactionsResponseSchema = z.object({
   transactions: z
     .array(receiptTransactionSchema)
     .describe("Array of extracted transactions"),

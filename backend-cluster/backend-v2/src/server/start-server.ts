@@ -20,6 +20,7 @@ import { assembleApi } from "./api/composition-root";
 import { setAuditSink } from "./api/audit";
 import { prefixedNanoidBase58 } from "@/shared/nanoid-base58";
 import { JobScheduler } from "@/scheduler";
+import { runStartupLlmProbe } from "@/features/llm/utils/llm-probe";
 import { SshProxyServer } from "@/features/gitea/ssh/ssh-proxy-server";
 import { SshAuthenticator } from "@/features/gitea/ssh/ssh-authenticator";
 
@@ -142,6 +143,11 @@ export async function startServer(): Promise<void> {
   // Initialize scheduler at top level (infrastructure concern)
   const scheduler = new JobScheduler(layers, config);
   scheduler.start();
+
+  // Probe Path B once at boot so a dead/missing LLM credential shows up in the
+  // logs immediately, not on the first user's scan-receipt (ADR 0011 D6).
+  // Fire-and-forget: never blocks or fails boot.
+  runStartupLlmProbe();
 
   // One composition root assembles all three surfaces onto this router
   // (ADR 0006 D1); the manifest it returns is what the drift guards in

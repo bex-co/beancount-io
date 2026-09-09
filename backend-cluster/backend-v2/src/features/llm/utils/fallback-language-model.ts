@@ -14,7 +14,22 @@ function isNonRetriableError(err: unknown): boolean {
   return APICallError.isInstance(err) && !err.isRetryable;
 }
 
-const ANTHROPIC_MODEL = "claude-sonnet-4-5-20250929";
+// Model ids are env-configurable so an upgrade is config, not a code change
+// (w2/m30/t003). Deliberately NOT named ANTHROPIC_MODEL — that env var is
+// claimed by the Path A sandbox harness (ask-agent-workflow.ts forwards it
+// into Claude Code); sharing would recouple the two paths ADR 0011 separates.
+// The primary default is the alias, not a dated snapshot, so it tracks the
+// line automatically.
+const DEFAULT_PRIMARY_MODEL = "claude-sonnet-4-5";
+const DEFAULT_FALLBACK_MODEL = "gpt-4o";
+
+function primaryModelId(): string {
+  return process.env.LLM_MODEL || DEFAULT_PRIMARY_MODEL;
+}
+
+function fallbackModelId(): string {
+  return process.env.LLM_FALLBACK_MODEL || DEFAULT_FALLBACK_MODEL;
+}
 
 const NOT_CONFIGURED_MESSAGE =
   "LLM is not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.";
@@ -47,10 +62,10 @@ export function createFallbackLanguageModel(): LanguageModel {
   const providers: LanguageModelV4[] = [];
 
   if (anthropicKey) {
-    providers.push(createAnthropic({ apiKey: anthropicKey })(ANTHROPIC_MODEL));
+    providers.push(createAnthropic({ apiKey: anthropicKey })(primaryModelId()));
   }
   if (openaiKey) {
-    providers.push(createOpenAI({ apiKey: openaiKey })("gpt-4o"));
+    providers.push(createOpenAI({ apiKey: openaiKey })(fallbackModelId()));
   }
 
   if (providers.length === 0) {
@@ -60,7 +75,7 @@ export function createFallbackLanguageModel(): LanguageModel {
     const unconfigured: LanguageModelV4 = {
       specificationVersion: "v4",
       provider: "unconfigured",
-      modelId: ANTHROPIC_MODEL,
+      modelId: primaryModelId(),
       supportedUrls: {},
       doGenerate: async () => fail(),
       doStream: async () => fail(),

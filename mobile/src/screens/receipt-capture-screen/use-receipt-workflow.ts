@@ -4,7 +4,8 @@ import {
   useGenerateTempAssetUploadUrlMutation,
   useParseReceiptMutation,
 } from "@/generated-graphql/graphql";
-import { receiptDate } from "./receipt-utils";
+import { receiptDate, parseErrorCode } from "./receipt-utils";
+import { captureError } from "@/common/sentry/capture";
 
 type ParsedReceipt = {
   date: string;
@@ -76,18 +77,19 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
           throw new Error("upload_failed");
         }
 
-        // 3. Parse receipt with LLM
+        // 3. Parse receipt with LLM. Under Apollo's default errorPolicy a
+        // GraphQL error rejects here rather than populating `result.errors`;
+        // classify the leg from the thrown ApolloError so quota exhaustion and
+        // parse failures show their own messages instead of "Upload failed".
         setPhase({ kind: "parsing" });
-        const parseResult = await parseReceipt({
-          variables: { s3ObjectKey: uploadData.objectKey, ledgerId },
-        });
-
-        if (parseResult.errors?.length) {
-          const msg = parseResult.errors[0].message ?? "";
-          if (msg.includes("quota") || msg.includes("limit")) {
-            throw new Error("quota_exhausted");
-          }
-          throw new Error("parse_failed");
+        let parseResult: Awaited<ReturnType<typeof parseReceipt>>;
+        try {
+          parseResult = await parseReceipt({
+            variables: { s3ObjectKey: uploadData.objectKey, ledgerId },
+          });
+        } catch (parseErr) {
+          captureError(parseErr, { phase: "parse", ledgerId });
+          throw new Error(parseErrorCode(parseErr));
         }
 
         const parsed = parseResult.data?.parseReceipt;
@@ -107,6 +109,12 @@ export const useReceiptWorkflow = (): ReceiptWorkflow => {
         });
       } catch (err: unknown) {
         const msg = err instanceof Error ? err.message : "upload_failed";
+        // Parse-leg errors are already captured with their phase above; capture
+        // anything else (upload-URL mint, S3 PUT, network) here so the real
+        // cause is never swallowed — the screen only shows a generic message.
+        if (msg !== "quota_exhausted" && msg !== "parse_failed") {
+          captureError(err, { phase: "upload", code: msg });
+        }
         setPhase({ kind: "error", message: msg });
       }
     },

@@ -5,6 +5,8 @@
     // These are standalone operational/codegen programs or Promptfoo adapters.
     "scripts/**/*.ts",
     "evals/**/*.ts",
+    // Spawned as a child process by the upstream-survival test, not imported.
+    "src/features/llm/utils/__tests__/helpers/upstream-survival-harness.ts",
   ],
   "ignoreIssues": {
     // Generated clients intentionally expose the upstream service schemas.
