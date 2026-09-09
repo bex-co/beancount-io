@@ -1,17 +1,17 @@
 # w3 · m27 — Preserve explicit amounts when a posting omits currency
 
-**Worker:** worker3 **Goal:** currency inference keeps the amount the user entered and exposes real imbalances **Status:** todo
+**Worker:** worker3 **Goal:** currency inference keeps the amount the user entered and exposes real imbalances **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                       | est | depends_on |
 | ---- | ----------------------------------------------------------- | --- | ---------- |
-| t001 | Pin original partial-currency fixtures and expected amounts | 30m | —          |
-| t002 | Integrate the verified upstream interpolation fix           | 60m | t001       |
-| t003 | Verify ledger and dashboard adoption surfaces               | 20m | t002       |
-| t004 | Simplify the engine integration                             | 20m | t003       |
-| t005 | Verify loaded entries, errors and query amounts             | 45m | t004       |
-| t006 | Close out and archive the interpolation repair              | 15m | t005       |
+| t001 | Pin original partial-currency fixtures and expected amounts — **DONE** | 30m | —          |
+| t002 | Integrate the verified upstream interpolation fix — **DONE** | 60m | t001       |
+| t003 | Verify ledger and dashboard adoption surfaces — **DONE** | 20m | t002       |
+| t004 | Simplify the engine integration — **DONE** | 20m | t003       |
+| t005 | Verify loaded entries, errors and query amounts — **DONE** | 45m | t004       |
+| t006 | Close out and archive the interpolation repair — **DONE** | 15m | t005       |
 
 190 minutes total, including90 minutes for reproducible integration fixtures
 and the dependency/adapter integration. One major finding group. Owner:

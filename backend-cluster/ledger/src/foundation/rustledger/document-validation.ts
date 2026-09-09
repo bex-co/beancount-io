@@ -7,12 +7,14 @@ import type { BeancountError } from "@rustledger/wasm";
  *
  * `@rustledger/wasm` is a `wasm-pack --target web` build with NO filesystem
  * access (it exists precisely for filesystem-less environments — that's why the
- * `fromFiles(FileMap)` API exists). Yet it still runs beancount's
- * filesystem-dependent document checks: `Path::exists()` always returns false,
- * so EVERY `document "..."` directive yields `E8001 Document file not found`
- * and every `option "documents"` yields `[E7006] Document root … does not
+ * `fromFiles(FileMap)` API exists). Older builds still ran beancount's
+ * filesystem-dependent document checks: `Path::exists()` always returned false,
+ * so EVERY `document "..."` directive yielded `E8001 Document file not found`
+ * and every `option "documents"` yielded `[E7006] Document root … does not
  * exist`, flipping `isValid()` to false — even though the files really are
- * committed in git.
+ * committed in git. `@rustledger/wasm` ≥0.24 still emits E8001 for explicit
+ * `document` paths (reconciled below) but no longer emits E7006 for the
+ * documents option root.
  *
  * The engine never needs the document bytes (a `document` directive carries no
  * amount and is not part of any computation; the file itself is served to the
@@ -23,10 +25,12 @@ import type { BeancountError } from "@rustledger/wasm";
  *     original source file/line) only when the referenced file is genuinely
  *     absent from the repo — a real typo; otherwise it is a false positive and
  *     dropped.
- *   - `E7006` (`option "documents"` root): kept only when the configured root
- *     directory genuinely has no files under it in the repo. (The *auto-discovery*
- *     of files under that root is still a no-op — the engine has no filesystem to
- *     enumerate — but a mistyped/nonexistent root is a real config error.)
+ *   - `E7006` (`option "documents"` root): when the engine still emits it
+ *     (wasm <0.24), kept only when the configured root directory genuinely has
+ *     no files under it in the repo. (The *auto-discovery* of files under that
+ *     root is still a no-op — the engine has no filesystem to enumerate — but a
+ *     mistyped/nonexistent root was a real config error.) wasm ≥0.24 does not
+ *     emit this check, so there is nothing to reconcile for the option root.
  *
  * Because we filter (rather than reconstruct) the engine's own errors, the
  * original source location (which file / line, including from `include`d files)

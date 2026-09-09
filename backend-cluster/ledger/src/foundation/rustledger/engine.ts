@@ -749,7 +749,7 @@ export async function formatSource(source: string): Promise<FormatResult> {
   return mod.format(source) as FormatResult;
 }
 
-/** The loaded `@rustledger/wasm` package version (e.g. `"0.21.0"`). */
+/** The loaded `@rustledger/wasm` package version (e.g. `"0.24.0"`). */
 export async function getRustledgerVersion(): Promise<string> {
   const mod = await loadRustledger();
   return mod.version();

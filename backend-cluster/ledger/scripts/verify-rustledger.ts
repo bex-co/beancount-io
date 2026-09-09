@@ -331,6 +331,99 @@ async function main(): Promise<void> {
     "unbalanced transaction reported as E3001",
   );
 
+  // Number-only postings must keep the authored amount (upstream interpolate
+  // fix in @rustledger/wasm >= 0.24). 0.21 replaced -4 with the residual -10.
+  const partialCurrencySnapshot = await parseLedgerFiles(
+    {
+      "partial.beancount": [
+        'option "operating_currency" "MUSD"',
+        "2024-01-01 open Expenses:Cost MUSD",
+        "2024-01-01 open Assets:Cash MUSD",
+        '2024-01-15 * "Partial currency"',
+        "  Expenses:Cost  10 MUSD",
+        "  Assets:Cash    -4",
+      ].join("\n"),
+    },
+    "partial.beancount",
+  );
+  assert(
+    !partialCurrencySnapshot.valid,
+    "number-only cash posting leaves a 6 MUSD imbalance",
+  );
+  const partialTxn = partialCurrencySnapshot.directives.find(
+    (directive) =>
+      directive.type === "transaction" &&
+      directive.narration === "Partial currency",
+  );
+  assert(
+    partialTxn !== undefined && partialTxn.type === "transaction",
+    "partial-currency transaction parsed",
+  );
+  const cashPosting = partialTxn.postings.find(
+    (posting) => posting.account === "Assets:Cash",
+  );
+  assert(cashPosting !== undefined, "Assets:Cash posting present");
+  assert(
+    cashPosting.units !== undefined &&
+      cashPosting.units.number === "-4" &&
+      cashPosting.units.currency === "MUSD",
+    "number-only posting retains authored -4 MUSD",
+  );
+
+  const partialZeroSnapshot = await parseLedgerFiles(
+    {
+      "partial-zero.beancount": [
+        'option "operating_currency" "MUSD"',
+        "2024-01-01 open Expenses:Cost MUSD",
+        "2024-01-01 open Assets:Cash MUSD",
+        '2024-01-15 * "Partial zero"',
+        "  Expenses:Cost  10 MUSD",
+        "  Assets:Cash    0",
+      ].join("\n"),
+    },
+    "partial-zero.beancount",
+  );
+  assert(
+    !partialZeroSnapshot.valid,
+    "explicit zero number-only posting leaves a 10 MUSD imbalance",
+  );
+  const zeroTxn = partialZeroSnapshot.directives.find(
+    (directive) =>
+      directive.type === "transaction" && directive.narration === "Partial zero",
+  );
+  assert(
+    zeroTxn !== undefined && zeroTxn.type === "transaction",
+    "partial-zero transaction parsed",
+  );
+  const zeroCash = zeroTxn.postings.find(
+    (posting) => posting.account === "Assets:Cash",
+  );
+  assert(zeroCash !== undefined, "Assets:Cash zero posting present");
+  assert(
+    zeroCash.units !== undefined &&
+      (zeroCash.units.number === "0" || zeroCash.units.number === "0.0") &&
+      zeroCash.units.currency === "MUSD",
+    "explicit zero number-only posting retains 0 MUSD",
+  );
+
+  const balancedNumberOnly = await parseLedgerFiles(
+    {
+      "balanced-number-only.beancount": [
+        'option "operating_currency" "MUSD"',
+        "2024-01-01 open Expenses:Cost MUSD",
+        "2024-01-01 open Assets:Cash MUSD",
+        '2024-01-15 * "Balanced number only"',
+        "  Expenses:Cost  10 MUSD",
+        "  Assets:Cash    -10",
+      ].join("\n"),
+    },
+    "balanced-number-only.beancount",
+  );
+  assert(
+    balancedNumberOnly.valid,
+    "balanced number-only cash posting remains valid",
+  );
+
   const query = await queryLedgerFiles(
     FILES,
     "main.beancount",
@@ -801,8 +894,10 @@ async function main(): Promise<void> {
     "a ledger referencing a missing document is invalid",
   );
 
-  // `option "documents"` root (E7006) is validated the same way: dropped only if
-  // the directory actually exists in the repo; a missing root keeps the error.
+  // `option "documents"` root (E7006): @rustledger/wasm ≥0.24 no longer emits the
+  // always-failing filesystem check, so reconcileDocumentErrors has nothing to
+  // keep for a missing root. Explicit `document` E8001 reconciliation above is
+  // unchanged. When a root *is* present in the inventory the ledger stays valid.
   const optDocsSource = [
     'option "documents" "docs"',
     "2020-01-01 open Assets:Cash",
@@ -822,8 +917,9 @@ async function main(): Promise<void> {
     { repoPaths: ["main.beancount"] },
   );
   assert(
-    !rootMissing.valid,
-    'option "documents" pointing at a nonexistent directory is invalid',
+    rootMissing.valid &&
+      !rootMissing.errors.some((e) => e.message.includes("[E7006]")),
+    'option "documents" with a missing root stays valid under wasm ≥0.24 (no E7006)',
   );
 
   // #4: beancount reads option/plugin ONLY from the entry point; the WASM applies

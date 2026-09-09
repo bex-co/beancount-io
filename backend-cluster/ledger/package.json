@@ -28,7 +28,7 @@
   "dependencies": {
     "@koa/multer": "^4.0.0",
     "@koa/router": "^14.0.0",
-    "@rustledger/wasm": "0.21.0",
+    "@rustledger/wasm": "0.24.0",
     "async-lock": "^1.4.1",
     "bignumber.js": "9.3.1",
     "cache-manager": "^7.2.8",

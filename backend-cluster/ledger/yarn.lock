@@ -1522,10 +1522,10 @@ __metadata:
   languageName: node
   linkType: hard
 
-"@rustledger/wasm@npm:0.21.0":
-  version: 0.21.0
-  resolution: "@rustledger/wasm@npm:0.21.0"
-  checksum: 10c0/47047fc513bf81fab650029858cbedf49910e6f99bf70ee4b3cdf87e58929a62b882d1edcff5ba583cc3af403fa5823873e2f3df4d86388d96ebaa67f74133d9
+"@rustledger/wasm@npm:0.24.0":
+  version: 0.24.0
+  resolution: "@rustledger/wasm@npm:0.24.0"
+  checksum: 10c0/b3bd4e512e7406f68820685cc64fae2b10e9920befbbfa19a4e9f8adee5caf2b2f9995d541689fa8cc92efe69293897a02e0df0ba669d76b3bfba71a33aaeca9
   languageName: node
   linkType: hard
 
@@ -2553,7 +2553,7 @@ __metadata:
     "@eslint/js": "npm:9.39.2"
     "@koa/multer": "npm:^4.0.0"
     "@koa/router": "npm:^14.0.0"
-    "@rustledger/wasm": "npm:0.21.0"
+    "@rustledger/wasm": "npm:0.24.0"
     "@types/async-lock": "npm:^1"
     "@types/jest": "npm:^30.0.0"
     "@types/koa": "npm:2.11.6"
