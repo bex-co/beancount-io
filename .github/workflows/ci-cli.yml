@@ -5,11 +5,14 @@ on:
     branches: [main]
     paths:
       - "cli/**"
+      # The CLI gate checks its pinned snapshot against this backend contract.
+      - "backend-cluster/backend-v2/docs/openapi/v1.json"
       - ".github/workflows/ci-cli.yml"
   pull_request:
     branches: [main]
     paths:
       - "cli/**"
+      - "backend-cluster/backend-v2/docs/openapi/v1.json"
       - ".github/workflows/ci-cli.yml"
 
 concurrency:

@@ -24,6 +24,10 @@ def _get_kwargs(
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
+    directive_types: str | Unset = UNSET,
+    transaction_subtypes: str | Unset = UNSET,
+    document_subtypes: str | Unset = UNSET,
+    custom_subtypes: str | Unset = UNSET,
 ) -> dict[str, Any]:
 
     params: dict[str, Any] = {}
@@ -50,6 +54,14 @@ def _get_kwargs(
     params["with_children"] = json_with_children
 
     params["conversion"] = conversion
+
+    params["directiveTypes"] = directive_types
+
+    params["transactionSubtypes"] = transaction_subtypes
+
+    params["documentSubtypes"] = document_subtypes
+
+    params["customSubtypes"] = custom_subtypes
 
     params = {k: v for k, v in params.items() if v is not UNSET and v is not None}
 
@@ -142,6 +154,10 @@ def sync_detailed(
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
+    directive_types: str | Unset = UNSET,
+    transaction_subtypes: str | Unset = UNSET,
+    document_subtypes: str | Unset = UNSET,
+    custom_subtypes: str | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Read account entries with changes and running balances
 
@@ -157,6 +173,14 @@ def sync_detailed(
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         conversion (str | Unset):
+        directive_types (str | Unset): JSON-encoded string array, including [] for an empty filter
+            list
+        transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
+            filter list
+        document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
+            filter list
+        custom_subtypes (str | Unset): JSON-encoded string array, including [] for an empty filter
+            list
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -176,6 +200,10 @@ def sync_detailed(
         offset=offset,
         with_children=with_children,
         conversion=conversion,
+        directive_types=directive_types,
+        transaction_subtypes=transaction_subtypes,
+        document_subtypes=document_subtypes,
+        custom_subtypes=custom_subtypes,
     )
 
     response = client.get_httpx_client().request(
@@ -197,6 +225,10 @@ def sync(
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
+    directive_types: str | Unset = UNSET,
+    transaction_subtypes: str | Unset = UNSET,
+    document_subtypes: str | Unset = UNSET,
+    custom_subtypes: str | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Read account entries with changes and running balances
 
@@ -212,6 +244,14 @@ def sync(
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         conversion (str | Unset):
+        directive_types (str | Unset): JSON-encoded string array, including [] for an empty filter
+            list
+        transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
+            filter list
+        document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
+            filter list
+        custom_subtypes (str | Unset): JSON-encoded string array, including [] for an empty filter
+            list
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -232,6 +272,10 @@ def sync(
         offset=offset,
         with_children=with_children,
         conversion=conversion,
+        directive_types=directive_types,
+        transaction_subtypes=transaction_subtypes,
+        document_subtypes=document_subtypes,
+        custom_subtypes=custom_subtypes,
     ).parsed
 
 
@@ -247,6 +291,10 @@ async def asyncio_detailed(
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
+    directive_types: str | Unset = UNSET,
+    transaction_subtypes: str | Unset = UNSET,
+    document_subtypes: str | Unset = UNSET,
+    custom_subtypes: str | Unset = UNSET,
 ) -> Response[Any | V1Error]:
     """Read account entries with changes and running balances
 
@@ -262,6 +310,14 @@ async def asyncio_detailed(
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         conversion (str | Unset):
+        directive_types (str | Unset): JSON-encoded string array, including [] for an empty filter
+            list
+        transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
+            filter list
+        document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
+            filter list
+        custom_subtypes (str | Unset): JSON-encoded string array, including [] for an empty filter
+            list
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -281,6 +337,10 @@ async def asyncio_detailed(
         offset=offset,
         with_children=with_children,
         conversion=conversion,
+        directive_types=directive_types,
+        transaction_subtypes=transaction_subtypes,
+        document_subtypes=document_subtypes,
+        custom_subtypes=custom_subtypes,
     )
 
     response = await client.get_async_httpx_client().request(**kwargs)
@@ -300,6 +360,10 @@ async def asyncio(
     offset: int | None | Unset = UNSET,
     with_children: GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset = UNSET,
     conversion: str | Unset = UNSET,
+    directive_types: str | Unset = UNSET,
+    transaction_subtypes: str | Unset = UNSET,
+    document_subtypes: str | Unset = UNSET,
+    custom_subtypes: str | Unset = UNSET,
 ) -> Any | V1Error | None:
     """Read account entries with changes and running balances
 
@@ -315,6 +379,14 @@ async def asyncio(
         offset (int | None | Unset):
         with_children (GetApiGatewayV1LedgersOwnerNameAccountJournalWithChildren | Unset):
         conversion (str | Unset):
+        directive_types (str | Unset): JSON-encoded string array, including [] for an empty filter
+            list
+        transaction_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
+            filter list
+        document_subtypes (str | Unset): JSON-encoded string array, including [] for an empty
+            filter list
+        custom_subtypes (str | Unset): JSON-encoded string array, including [] for an empty filter
+            list
 
     Raises:
         errors.UnexpectedStatus: If the server returns an undocumented status code and Client.raise_on_unexpected_status is True.
@@ -336,5 +408,9 @@ async def asyncio(
             offset=offset,
             with_children=with_children,
             conversion=conversion,
+            directive_types=directive_types,
+            transaction_subtypes=transaction_subtypes,
+            document_subtypes=document_subtypes,
+            custom_subtypes=custom_subtypes,
         )
     ).parsed
