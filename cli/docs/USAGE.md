@@ -230,8 +230,9 @@ bea --file books/main.bean add transaction --into 2026.bean \
 All add commands and `import` support this separation. Validation includes the
 entire root ledger; the root and other included files are preserved. Changes
 to an included file or to files matched by an include glob abort the write.
-Successful additions align the destination with the same formatter used by
-`bea format`; this can adjust existing columns when a new posting is wider.
+Successful additions never modify existing lines: the appended block matches
+the destination's indentation and amount column, and `bea format` is the only
+command that realigns a file.
 Writes respect the destination file's permissions: a read-only file produces
 exit **3**, even when its directory permits replacement. This also applies to
 import and format. A read-only root can still validate a writable `--into` file.

@@ -81,15 +81,28 @@ configuration; the CLI calls the current interface directly.
 
 ## Duplicate decisions
 
+`bea import` follows the [`import-id` convention](../../../skills/.claude/skills/beancount-import/references/dedup.md),
+so entries written by the CLI and by the `beancount-import` / `beancount-migrate`
+skills deduplicate against each other: the ledger itself is the dedup database.
+
 - A stable transaction ID is strong evidence. By default the CLI checks
   transaction metadata `bank_id`, `fitid`, `transaction_id`, and `imported_id`,
-  scoped to the importer's source account. Use repeated `--id-key KEY` options
-  to replace that list for your importer. IDs must be stable and unique within
-  that account. An exact match is skipped; reused IDs with different dates,
-  payees, narration, or source amounts are conflicts requiring review.
-- Each imported source row gets `bea_import_id` metadata based on the source
-  bytes, source account, and row index. Repeating an identical export skips
-  those rows even without a bank ID. Keep this metadata when editing entries.
+  scoped to the importer's source account, and always checks `import-id` and
+  `import-id-2`. Use repeated `--id-key KEY` options to replace the native-ID
+  list for your importer (a custom key uses its own name as the namespace).
+  IDs must be stable and unique within that account. An exact match is skipped;
+  reused IDs with different dates, payees, narration, or source amounts are
+  conflicts requiring review.
+- A row with a native ID is written with `import-id: "<kind>:<id>"` (`bank_id`
+  becomes `bank:`, `fitid` becomes `ofx:`). A row without one is written with
+  `import-id: "csv:sha256:<16 hex>"` hashed from
+  `date|amount|description|account` per the convention: the ISO date, the
+  source amount with exactly two decimals, the narration (or payee when
+  narration is empty) uppercased with whitespace collapsed, and the source
+  account. Identical rows within one file take an occurrence suffix, so
+  re-importing the same file skips every row. Keep this metadata when editing
+  entries. New writes no longer carry the pre-release `bea_import_id` key, but
+  existing entries with it still match on re-import.
 - Date, normalized payee, and signed source amount/currency identify a *possible*
   duplicate even when bank IDs or narration differ. This does not prove
   duplication: two real purchases can have identical details. `--apply` requires
@@ -97,9 +110,11 @@ configuration; the CLI calls the current interface directly.
   legitimate repeated purchases. Review the rows before choosing;
   the choice applies to all possible matches in that invocation.
 - Identical nontransaction directives are skipped. Import does not change the
-  meaning of existing transactions or delete them; the destination's alignment
-  follows `bea format`. Amount corrections and recategorization of
-  existing entries remain deliberate ledger edits.
+  meaning of existing transactions or delete them, and never modifies existing
+  lines: the appended block matches the destination's indentation and amount
+  column, and `bea format` remains the only command that realigns a file.
+  Amount corrections and recategorization of existing entries remain deliberate
+  ledger edits.
 
 Both existing entries and accepted rows in the same batch participate in
 matching. `bea add transactions --from FILE.json` remains a plain validated

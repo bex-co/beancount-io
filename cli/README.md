@@ -234,8 +234,9 @@ option. A read-only root can validate a writable included destination.
 Concurrent CLI writes coordinate through locks in the cache directory.
 Changes to the root, included files, or include-glob membership during
 preparation abort the write with exit 4 and a retry message. Successful adds
-and imports align the destination with the same formatter as `bea format`;
-a wider new posting can realign existing columns in that file.
+and imports never modify existing lines: the appended block matches the
+destination's indentation and amount column, and `bea format` is the only
+command that realigns a file.
 
 `bea add TYPE --allow-errors` is an explicit way to stage semantic errors.
 Syntax must still parse, and pad accounts must still be active. Prefer the
@@ -458,10 +459,14 @@ errors. Correct the importer or ledger and preview again as needed.
 Duplicate matching considers existing entries and accepted rows in the batch:
 
 - Stable IDs in `bank_id`, `fitid`, `transaction_id`, or `imported_id` are
-  scoped to the source account. Exact matches are skipped; a reused ID with
-  conflicting transaction details requires review.
-- `bea_import_id` identifies a source row using the export bytes, source
-  account, and row index. Retain this metadata to recognize repeat imports.
+  scoped to the source account, and `import-id` / `import-id-2` always match.
+  Exact matches are skipped; a reused ID with conflicting transaction details
+  requires review.
+- Imported rows carry `import-id` metadata (`bank:<id>` for bank IDs,
+  `csv:sha256:<16 hex>` content hashes otherwise) shared with the ledger
+  skills, so CLI and skill imports deduplicate each other. Retain this
+  metadata to recognize repeat imports; pre-release `bea_import_id` entries
+  still match.
 - Matching date, normalized payee, and signed source amount/currency signal
   a **possible duplicate**, even when bank IDs or narrations differ.
 - Identical nontransaction directives are skipped.

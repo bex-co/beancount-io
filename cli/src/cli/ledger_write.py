@@ -6,10 +6,12 @@ import difflib
 import glob
 import hashlib
 import os
+import re
 import shlex
 import stat
 import sys
 import tempfile
+from collections import Counter
 from collections.abc import Callable, Iterator
 from contextlib import ExitStack, contextmanager
 from dataclasses import dataclass, field
@@ -313,13 +315,74 @@ def validate_candidate(
     return messages
 
 
-def appended_content(original: bytes, texts: list[str]) -> str:
-    from beancount.scripts.format import align_beancount
+def _destination_style(content: bytes) -> tuple[str, int | None]:
+    """Posting indentation and amount column observed in the existing entries.
 
+    Falls back to two spaces and the appended block's own width when the
+    destination has no postings yet. `bea format` stays the only command that
+    realigns existing lines; appends only ever add lines.
+    """
+    indents: Counter[str] = Counter()
+    columns: Counter[int] = Counter()
+    for line in content.decode("utf-8").splitlines():
+        match = re.match(r"^(\s+)(\S+)( +).*$", line)
+        if not match:
+            continue
+        lead, head, gap = match.groups()
+        if "\t" in lead:
+            continue
+        indents[lead] += 1
+        if ":" in head and not head.endswith(":") and len(gap) >= 2:
+            columns[len(lead) + len(head) + len(gap)] += 1
+    return (indents.most_common(1)[0][0] if indents else "  ", columns.most_common(1)[0][0] if columns else None)
+
+
+def _align_block(texts: list[str], indent: str, column: int | None) -> list[str]:
+    """Render appended entries in the destination's style without touching it.
+
+    Continuation lines take the destination's indentation; posting amounts
+    align to the destination's amount column when the block fits, otherwise
+    the block aligns within itself.
+    """
+    parsed: list[list[tuple[str, str, str]]] = []
+    widest = 0
+    for text in texts:
+        block: list[tuple[str, str, str]] = []
+        for index, line in enumerate(text.rstrip().splitlines()):
+            match = None if index == 0 else re.match(r"^\s*(\S+)(  +)(\S.*)$", line)
+            if match and ":" in match.group(1) and not match.group(1).endswith(":"):
+                widest = max(widest, len(match.group(1)))
+                block.append(("posting", match.group(1), match.group(3)))
+            elif index == 0 or not line.strip() or not line[0].isspace():
+                # A continuation at column zero is content (a wrapped note
+                # comment), not structure: only re-indent indented lines.
+                block.append(("verbatim", line, ""))
+            else:
+                block.append(("indented", line.strip(), ""))
+        parsed.append(block)
+    target = column
+    if target is None or len(indent) + widest + 2 > target:
+        target = len(indent) + widest + 2
+    rendered = []
+    for block in parsed:
+        lines = []
+        for kind, first, second in block:
+            if kind == "posting":
+                lines.append(f"{indent}{first}{' ' * (target - len(indent) - len(first))}{second}")
+            elif kind == "indented":
+                lines.append(f"{indent}{first}")
+            else:
+                lines.append(first)
+        rendered.append("\n".join(lines))
+    return rendered
+
+
+def appended_content(original: bytes, texts: list[str]) -> str:
     if not texts:
         return original.decode("utf-8")
-    content = original.decode("utf-8") + "".join("\n" + text.rstrip() + "\n" for text in texts)
-    return str(align_beancount(content))  # type: ignore[no-untyped-call]
+    indent, column = _destination_style(original)
+    blocks = _align_block(texts, indent, column)
+    return original.decode("utf-8") + "".join("\n" + block + "\n" for block in blocks)
 
 
 def validate_append(

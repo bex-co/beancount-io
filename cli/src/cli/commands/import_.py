@@ -112,12 +112,74 @@ def _fingerprint(entry: Any, account: str) -> tuple[Any, ...]:
     )
 
 
+# The `import-id` namespace each stable-ID metadata key maps to. `bank_id`,
+# `transaction_id`, and `imported_id` are bank-supplied row IDs; `fitid` is the
+# OFX transaction ID, matching the skill's own `ofx:` example. A custom
+# `--id-key` uses its own name as the namespace. An `import-id` value is
+# already namespaced and passes through verbatim.
+_IDENTITY_KINDS = {
+    "bank_id": "bank",
+    "fitid": "ofx",
+    "transaction_id": "bank",
+    "imported_id": "bank",
+}
+
+_DEFAULT_ID_KEYS = ["bank_id", "fitid", "transaction_id", "imported_id"]
+
+
 def _identities(entry: Any, account: str, keys: list[str]) -> list[tuple[str, str, str]]:
+    """Every stable identity an entry claims, in `import-id` value form.
+
+    `import-id` and `import-id-2` are the interop rail from
+    `skills/.../beancount-import/references/dedup.md` and always match;
+    `bea_import_id` is the pre-release legacy key and still matches.
+    """
     meta = entry.meta or {}
-    identities = [(account, "bank", str(meta[key])) for key in keys if meta.get(key) not in (None, "")]
+    identities = []
+    for key in ["import-id", *keys]:
+        value = meta.get(key)
+        if value in (None, ""):
+            continue
+        if key == "import-id":
+            identities.append((account, "import-id", str(value)))
+        else:
+            identities.append((account, "bank", f"{_IDENTITY_KINDS.get(key, key)}:{value}"))
+    if meta.get("import-id-2") not in (None, ""):
+        identities.append((account, "import-id", str(meta["import-id-2"])))
     if meta.get("bea_import_id"):
         identities.append((account, "file", str(meta["bea_import_id"])))
     return identities
+
+
+def _native_import_id(meta: dict[str, Any], keys: list[str]) -> str | None:
+    """The `import-id` for an importer-supplied native stable ID, if any."""
+    for key in keys:
+        value = meta.get(key)
+        if value not in (None, ""):
+            return f"{_IDENTITY_KINDS.get(key, key)}:{value}"
+    return None
+
+
+def _hash_import_id(entry: Any, account: str, seen: dict[str, int]) -> str:
+    """The `csv:sha256:` identity for a row without a native stable ID.
+
+    Hash input follows `dedup.md`: `date|amount|description|account`, where
+    the description is the entry's narration (or payee when narration is
+    empty), uppercased with whitespace collapsed. Identical inputs within one
+    file take an occurrence suffix (`…|account|2`) so N identical rows map to
+    N distinct entries while re-imports still match 1:1.
+    """
+    source = [p for p in entry.postings if p.account == account and p.units]
+    amounts = sorted((p.units.number, p.units.currency) for p in source)
+    if len(amounts) == 1:
+        normalized_amount = f"{amounts[0][0]:.2f}"
+    else:
+        normalized_amount = "+".join(f"{number} {currency}" for number, currency in amounts)
+    description = " ".join(str(entry.narration or entry.payee or "").upper().split())
+    base = f"{entry.date.isoformat()}|{normalized_amount}|{description}|{account}"
+    seen[base] = seen.get(base, 0) + 1
+    digest_input = base if seen[base] == 1 else f"{base}|{seen[base]}"
+    return "csv:sha256:" + hashlib.sha256(digest_input.encode("utf-8")).hexdigest()[:16]
 
 
 def _candidate_key(entry: Any, account: str) -> tuple[Any, ...]:
@@ -142,7 +204,11 @@ def import_entries(
     ] = Duplicates.review,
     id_key: Annotated[
         list[str] | None,
-        typer.Option("--id-key", help="Stable bank ID metadata key; repeat as needed (default: common bank ID keys)"),
+        typer.Option(
+            "--id-key",
+            help="Stable bank ID metadata key; repeat as needed (default: common bank ID keys). "
+            "import-id and import-id-2 always match regardless.",
+        ),
     ] = None,
     into: Annotated[
         Path | None, typer.Option("--into", help="Write to an included file, relative to the root ledger")
@@ -193,7 +259,9 @@ def import_entries(
         ) from exc
     finally:
         sys.path.pop(0)
-    keys = id_key or ["bank_id", "fitid", "transaction_id", "imported_id"]
+    # `import-id` / `import-id-2` always match: they are the shared rail with
+    # the ledger skills, independent of the importer's native-ID key choice.
+    keys = id_key or _DEFAULT_ID_KEYS
     identities: dict[tuple[str, str, str], Any] = {}
     fingerprints: dict[tuple[Any, ...], Any] = {}
     for entry in existing:
@@ -209,6 +277,7 @@ def import_entries(
     rows: list[dict[str, Any]] = []
     texts: list[str] = []
     conflicts = False
+    seen_inputs: dict[str, int] = {}
     for index, entry in enumerate(entries):
         entry = normalize_entry_strings(entry)
         status, reason, match = "new", None, None
@@ -216,19 +285,26 @@ def import_entries(
             if not any(p.account == account for p in entry.postings):
                 raise LedgerError(f"Importer row {index + 1} has no posting to its source account {account}.")
             fingerprint = _fingerprint(entry, account)
-            entry.meta["bea_import_id"] = hashlib.sha256(f"{account}:{source_hash}:{index}".encode()).hexdigest()
+            if not entry.meta.get("import-id"):
+                native = _native_import_id(entry.meta, keys)
+                entry.meta["import-id"] = native if native is not None else _hash_import_id(entry, account, seen_inputs)
             ids = _identities(entry, account, keys)
-            matches = [identities[key] for key in ids if key in identities]
-            if matches:
-                match = matches[0]
-                if any(_fingerprint(m, account) != fingerprint for m in matches):
+            # Look up, but never write, the pre-release identity so ledgers
+            # written before `import-id` still deduplicate on re-import.
+            ids.append((account, "file", hashlib.sha256(f"{account}:{source_hash}:{index}".encode()).hexdigest()))
+            hits = [(key, identities[key]) for key in ids if key in identities]
+            if hits:
+                (_, kind, matched_value), match = hits[0]
+                if any(_fingerprint(m, account) != fingerprint for _, m in hits):
                     status, reason, conflicts = (
                         "conflict",
                         "Stable ID matches an entry with different transaction data.",
                         True,
                     )
+                elif kind == "file":
+                    status, reason = "duplicate", "Previously imported source row matches."
                 else:
-                    status, reason = "duplicate", "Stable bank ID or previously imported source row matches."
+                    status, reason = "duplicate", f"import-id {matched_value} is already in the ledger."
             elif _candidate_key(entry, account) in fingerprints:
                 status, reason, match = (
                     "possible_duplicate",

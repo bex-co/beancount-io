@@ -257,3 +257,69 @@ def test_concurrent_cli_writers_do_not_lose_transactions(book: Path) -> None:
     assert {e.narration for e in transactions} == {f"write {i}" for i in range(6)}
     assert sum(p.units.number for e in transactions for p in e.postings if p.account == "Expenses:Food") == Decimal(6)
     assert not list(book.parent.glob("*.bea.lock"))
+
+
+def _add_transaction(book: Path, date: str, narration: str, *postings: str):
+    args = ["add", "transaction", "--date", date, "--narration", narration]
+    for posting in postings:
+        args += ["-p", posting]
+    result = invoke(book, *args)
+    assert result.exit_code == 0, result.output
+    return result
+
+
+def test_append_to_a_four_space_file_adds_only_lines(tmp_path: Path) -> None:
+    book = tmp_path / "main.bean"
+    book.write_text(
+        'option "operating_currency" "USD"\n'
+        "2026-08-01 open Assets:Checking USD\n"
+        "2026-08-01 open Expenses:Dining USD\n"
+        "2026-08-01 open Equity:OpeningBalances USD\n"
+        "\n"
+        '2026-08-01 * "Opening" "Seed"\n'
+        "    Assets:Checking             1000.00 USD\n"
+        "    Equity:OpeningBalances      -1000.00 USD\n"
+    )
+    before = book.read_bytes()
+    _add_transaction(book, "2026-08-02", "Coffee", "Expenses:Dining 12.50", "Assets:Checking")
+    after = book.read_text()
+    assert after.startswith(before.decode("utf-8"))
+    added = after[len(before.decode("utf-8")) :]
+    assert "    Expenses:Dining" in added
+    assert "12.50 USD" in added
+
+
+def test_a_wider_account_leaves_existing_lines_byte_identical(tmp_path: Path) -> None:
+    book = tmp_path / "main.bean"
+    book.write_text(
+        'option "operating_currency" "USD"\n'
+        "2026-08-01 open Assets:Cash USD\n"
+        "2026-08-01 open Expenses:Dining:AVeryLongRestaurantName USD\n"
+        "2026-08-01 open Equity:OpeningBalances USD\n"
+        "\n"
+        '2026-08-01 * "Opening" "Seed"\n'
+        "  Assets:Cash  100.00 USD\n"
+        "  Equity:OpeningBalances  -100.00 USD\n"
+    )
+    before = book.read_bytes()
+    _add_transaction(book, "2026-08-02", "Fancy", "Expenses:Dining:AVeryLongRestaurantName 50", "Assets:Cash")
+    after = book.read_bytes()
+    assert after.startswith(before)
+    assert b"Expenses:Dining:AVeryLongRestaurantName  50 USD" in after
+
+
+def test_format_still_realigns_the_whole_file(tmp_path: Path) -> None:
+    book = tmp_path / "main.bean"
+    book.write_text(
+        'option "operating_currency" "USD"\n'
+        "2026-08-01 open Assets:Cash USD\n"
+        "2026-08-01 open Equity:OpeningBalances USD\n"
+        "\n"
+        '2026-08-01 * "Opening" "Seed"\n'
+        "  Assets:Cash  100.00 USD\n"
+        "  Equity:OpeningBalances      -100.00 USD\n"
+    )
+    result = invoke(book, "format", str(book))
+    assert result.exit_code == 0, result.output
+    assert "  Assets:Cash  100.00 USD\n" not in book.read_text()
+    assert "  Equity:OpeningBalances  -100.00 USD\n" in book.read_text()

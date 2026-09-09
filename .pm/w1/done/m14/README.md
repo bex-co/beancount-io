@@ -1,17 +1,17 @@
 # w1 · m14 — Ledger writes stay git-friendly: `import-id` convention and append-only alignment
 
-**Worker:** worker1 **Goal:** an entry `bea` writes looks like one a person would write: a short `import-id` in the shape the ledger skills already use, and a diff that touches only the lines being added **Status:** todo
+**Worker:** worker1 **Goal:** an entry `bea` writes looks like one a person would write: a short `import-id` in the shape the ledger skills already use, and a diff that touches only the lines being added **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                                         | est | depends_on |
 | ---- | --------------------------------------------------------------------------------------------- | --- | ---------- |
-| t001 | `bea import` writes `import-id` in the skills' `<kind>:<id>` / `csv:sha256:<16-hex>` shape    | 60m | —          |
-| t002 | Writes align only the appended block to the destination's existing indentation and column    | 45m | —          |
-| t003 | Adoption surface                                                                              | 20m | t001, t002 |
-| t004 | Simplify                                                                                      | 30m | t003       |
-| t005 | Test coverage                                                                                 | 45m | t003       |
-| t006 | Closeout                                                                                      | 15m | t005       |
+| t001 | `bea import` writes `import-id` in the skills' `<kind>:<id>` / `csv:sha256:<16-hex>` shape — **DONE**    | 60m | —          |
+| t002 | Writes align only the appended block to the destination's existing indentation and column — **DONE**    | 45m | —          |
+| t003 | Adoption surface — **DONE**                                                                              | 20m | t001, t002 |
+| t004 | Simplify — **DONE**                                                                                      | 30m | t003       |
+| t005 | Test coverage — **DONE**                                                                                 | 45m | t003       |
+| t006 | Closeout — **DONE**                                                                                      | 15m | t005       |
 
 ## Definition of done
 
