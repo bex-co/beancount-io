@@ -1,9 +1,17 @@
 # Live QA contract
 
-Read this contract when running either `qa-find-bugs-dashboard` or
-`qa-find-bugs-mobile`. Hunt through the running product, reproduce the failures,
-research fixes in this checkout, and deliver evidence another person can rerun.
+Read this contract when running `qa-find-bugs-dashboard`,
+`qa-find-bugs-mobile`, or `qa-find-bugs-cli`. Hunt through the running product,
+reproduce the failures, research fixes in this checkout, and deliver evidence
+another person can rerun.
 This workflow reports and schedules fixes; implementing them is separate work.
+
+Platform setup comes from the individual skill. CLI QA defaults to isolated
+local ledgers without login; the production URL and browser/native credential
+procedures below apply to those clients. For CLI journeys, use fresh processes,
+stdout/stderr, exit codes and file effects in place of page reloads, screenshots
+and UI state. Compare hosted CLI behavior with REST responses; local operations
+use ledger contents and independent calculations as controls.
 
 ## Scope and preflight
 

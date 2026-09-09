@@ -1,0 +1,35 @@
+{
+  "skill_name": "qa-find-bugs-cli",
+  "evals": [
+    {
+      "id": 1,
+      "prompt": "Use $qa-find-bugs-cli to find bugs. My shell already has BEA_FILE and BEA_TOKEN set, and my checkout has unrelated edits.",
+      "expected_output": "Runs real checkout commands with isolated child config/cache and synthetic ledgers, removes inherited ledger/token overrides for local testing, preserves user files, reproduces and traces candidates, deduplicates, and reports without board writes or pushing.",
+      "files": []
+    },
+    {
+      "id": 2,
+      "prompt": "Run $qa-find-bugs-cli batch/import automation w4 SHIP=1 DRY_RUN=1. A partial batch exits nonzero after writing two valid rows; successful cloud clone prints no JSON.",
+      "expected_output": "Exercises selected journeys against disposable fixtures and compares documented partial-result and JSON exceptions before alleging bugs. DRY_RUN allows fixture writes but prevents board edits, commits and push. Inspects actual state before retrying.",
+      "files": []
+    },
+    {
+      "id": 3,
+      "prompt": "Use $qa-find-bugs-cli on /usr/local/bin/bea for reports. Its version is older than this checkout and one report looks wrong. A matching task exists in .pm/done/.",
+      "expected_output": "Records installed executable/version and reproduces with fixed-date synthetic fixtures and independent inventory/BQL controls. Tests checkout separately, checks full completed-task DoD and targeted history, and distinguishes release lag from a reproduced regression.",
+      "files": []
+    },
+    {
+      "id": 4,
+      "prompt": "Run $qa-find-bugs-cli cloud ask. No CLI QA token is available, but dashboard/.env exists. My personal ledger is selected in my shell.",
+      "expected_output": "Does not borrow dashboard credentials, read the ordinary credential store, or send personal ledger data to Ask. Continues signed-out and local diagnostics, reports live coverage limits, and uses an isolated real device login only with a designated QA account.",
+      "files": []
+    },
+    {
+      "id": 5,
+      "prompt": "Use $qa-find-bugs-cli directives w5. Adding to an included file fails only when its path contains spaces. Find and schedule the fix.",
+      "expected_output": "Runs real add/list/check/query subprocesses with argument arrays, pristine synthetic include fixtures, before/after evidence and a working control. Reproduces, traces file:line and shared callers, deduplicates across queues/history, and files through pm without implementing or shipping.",
+      "files": []
+    }
+  ]
+}
