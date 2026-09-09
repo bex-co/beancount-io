@@ -129,6 +129,10 @@ const theme = useTheme().colorTheme;
 
 Test new screens in light **and** dark, and set background colors on loading states — missing those caused dark-mode flicker on the account picker screen.
 
+### Accessibility — label icon-only controls
+
+Every icon-only `Pressable` / `TouchableOpacity` needs `accessibilityRole="button"` and an `accessibilityLabel` (prefer an existing `t("…")` key). Charts need a summarizing `accessibilityLabel` instead of exposing SVG nodes. The guardrail `src/__tests__/accessibility-labels.test.ts` fails the unit suite when a new unlabeled icon-only control appears; add an allowlist entry only with a written reason.
+
 ### Loading states — skeleton preloaders, not spinners
 
 Content areas that wait on a query render a skeleton built from `LoadingTile`

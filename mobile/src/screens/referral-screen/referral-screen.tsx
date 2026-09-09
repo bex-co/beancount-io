@@ -103,6 +103,8 @@ export const ReferralScreen = () => {
           </Text>
           <TouchableOpacity
             style={styles.copyBtn}
+            accessibilityRole="button"
+            accessibilityLabel={t("copy")}
             onPress={async () => {
               await Clipboard.setStringAsync(shareLink);
               toast.showToast({

@@ -381,6 +381,8 @@ export const EditTransactionScreen = (): JSX.Element => {
               onPress={handleCancel}
               hitSlop={8}
               style={{ paddingHorizontal: 4 }}
+              accessibilityRole="button"
+              accessibilityLabel={t("cancel")}
             >
               <Text style={styles.cancelButton}>{t("cancel")}</Text>
             </Pressable>
@@ -392,6 +394,9 @@ export const EditTransactionScreen = (): JSX.Element => {
                   hitSlop={8}
                   style={{ paddingHorizontal: 4 }}
                   disabled={saveDisabled}
+                  accessibilityRole="button"
+                  accessibilityLabel={t("save")}
+                  accessibilityState={{ disabled: saveDisabled }}
                 >
                   <Text
                     style={

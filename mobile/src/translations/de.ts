@@ -557,4 +557,12 @@ export const de: typeof en = {
   ledgerGuardMessage:
     "Erstellen oder entdecken Sie ein Hauptbuch, um fortzufahren.",
   ledgerGuardSelect: "Hauptbuch wählen",
+  removePosting: "Buchung entfernen",
+  toggleAmountSign: "Vorzeichen des Betrags umschalten",
+  incomeExpenseChartSummary:
+    "Einnahmen und Ausgaben über {{count}} Monate. Einnahmen {{income}}, Ausgaben {{expense}}, Netto {{net}}.",
+  cashFlowChartSummary:
+    "Cashflow von Einnahmen zu Ausgaben. Einnahmen {{income}}, Ausgaben {{expenses}}.",
+  ledgerNavigateUp: "Eine Ebene nach oben",
+  openLedgerDrawer: "Menü öffnen",
 };

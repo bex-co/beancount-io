@@ -235,6 +235,9 @@ function FileRow({
         activeOpacity={0.7}
         disabled={!tappable}
         onPress={onPress}
+        accessibilityRole={tappable ? "button" : undefined}
+        accessibilityLabel={entry.name}
+        accessibilityState={{ disabled: !tappable }}
       >
         <View style={styles.rowIcon}>
           <Ionicons name={iconName} size={20} color={iconColor} />
@@ -256,6 +259,7 @@ function FileRow({
         (protectedFile ? (
           <TouchableOpacity
             style={styles.rowAction}
+            accessibilityRole="button"
             accessibilityLabel={t("ledgerMainFileProtected")}
             activeOpacity={0.6}
             onPress={() => Alert.alert(t("ledgerMainFileProtected"))}
@@ -269,7 +273,9 @@ function FileRow({
         ) : (
           <TouchableOpacity
             style={[styles.rowAction, deleting && styles.rowActionDisabled]}
+            accessibilityRole="button"
             accessibilityLabel={t("ledgerDeleteFile", { name: entry.name })}
+            accessibilityState={{ disabled: deleting }}
             activeOpacity={0.6}
             disabled={deleting}
             onPress={onDelete}
@@ -499,7 +505,9 @@ export function LedgerFileBrowserScreen(): JSX.Element {
         right={
           canWrite && (
             <TouchableOpacity
+              accessibilityRole="button"
               accessibilityLabel={t("ledgerCreateFile")}
+              accessibilityState={{ disabled: creating }}
               activeOpacity={0.7}
               hitSlop={8}
               disabled={creating}
@@ -521,6 +529,8 @@ export function LedgerFileBrowserScreen(): JSX.Element {
             style={styles.breadcrumbBack}
             onPress={handleBack}
             activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={t("ledgerNavigateUp")}
           >
             <Ionicons
               name={directionalIcon("chevron-back")}
@@ -575,6 +585,9 @@ export function LedgerFileBrowserScreen(): JSX.Element {
                     activeOpacity={0.7}
                     disabled={creating}
                     onPress={() => setCreateModalVisible(true)}
+                    accessibilityRole="button"
+                    accessibilityLabel={t("ledgerCreateFile")}
+                    accessibilityState={{ disabled: creating }}
                   >
                     <Ionicons name="add" size={18} color={theme.white} />
                     <Text style={styles.emptyActionText}>

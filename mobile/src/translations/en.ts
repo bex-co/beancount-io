@@ -155,6 +155,8 @@ export const en = {
   multiPostingsInvalidBalance: "Postings must sum to zero",
   multiPostingsMissingAccount: "All postings need an account",
   multiPostingsZeroAmount: "All postings need a non-zero amount",
+  removePosting: "Remove posting",
+  toggleAmountSign: "Toggle amount sign",
   accountPicker: "Account Picker",
   accountPickerSearchPlaceholder: "Search accounts",
   accountPickerRecent: "Recent",
@@ -323,6 +325,10 @@ export const en = {
   cashFlow: "Cash flow",
   moneyFlow: "Money flow",
   cashFlowEmpty: "No cash flow in this range",
+  incomeExpenseChartSummary:
+    "Income and expenses over {{count}} months. Income {{income}}, expenses {{expense}}, net {{net}}.",
+  cashFlowChartSummary:
+    "Cash flow from income to expenses. Income {{income}}, expenses {{expenses}}.",
   savings: "Savings",
   // feed
   latestUpdates: "Latest Updates",
@@ -405,6 +411,8 @@ export const en = {
   ledgerEmpty: "No files",
   ledgerEmptyHint: "Create a ledger file here, or pull down to refresh.",
   ledgerRefreshHint: "Pull down to try loading this folder again.",
+  ledgerNavigateUp: "Go up one folder",
+  openLedgerDrawer: "Open menu",
   ledgerCreateFile: "Create file",
   ledgerCreateFileTitle: "New Ledger File",
   ledgerCreateFileMessage:

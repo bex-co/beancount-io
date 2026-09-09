@@ -121,6 +121,7 @@ const AccountsScreenImpl = (): JSX.Element => {
               onPress={handleOpenAccount}
               hitSlop={8}
               activeOpacity={0.7}
+              accessibilityRole="button"
               accessibilityLabel={t("openAccount")}
             >
               <Ionicons name="add" size={26} color={theme.black} />

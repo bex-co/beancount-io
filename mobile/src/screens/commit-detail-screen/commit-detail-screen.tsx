@@ -194,8 +194,15 @@ function CommitDetailScreenImpl(): JSX.Element {
               <View style={styles.divider} />
 
               {/* Stats */}
-              <View style={styles.section}>
-                <Text style={styles.sectionLabel}>
+              <View
+                style={styles.section}
+                accessibilityLabel={`${t("commitDetailAdditions", {
+                  count: commit.stats.additions,
+                })}, ${t("commitDetailDeletions", {
+                  count: commit.stats.deletions,
+                })}`}
+              >
+                <Text style={styles.sectionLabel} accessibilityRole="header">
                   {t("commitDetailStats")}
                 </Text>
                 <View style={styles.statsRow}>
@@ -213,11 +220,17 @@ function CommitDetailScreenImpl(): JSX.Element {
               {commit.files.length > 0 && (
                 <>
                   <View style={styles.section}>
-                    <Text style={styles.sectionLabel}>
+                    <Text
+                      style={styles.sectionLabel}
+                      accessibilityRole="header"
+                    >
                       {t("commitDetailFiles")}
                     </Text>
                     {commit.files.map((f) => (
-                      <View key={f.filename}>
+                      <View
+                        key={f.filename}
+                        accessibilityLabel={`${f.filename}, +${f.additions} −${f.deletions}`}
+                      >
                         <View style={styles.fileRow}>
                           <Text style={styles.fileName} numberOfLines={1}>
                             {f.filename}
@@ -235,7 +248,9 @@ function CommitDetailScreenImpl(): JSX.Element {
 
               {/* Diff */}
               <View style={styles.section}>
-                <Text style={styles.sectionLabel}>{t("commitDetailDiff")}</Text>
+                <Text style={styles.sectionLabel} accessibilityRole="header">
+                  {t("commitDetailDiff")}
+                </Text>
               </View>
               <ScrollView horizontal showsHorizontalScrollIndicator>
                 <View style={styles.diffContainer}>

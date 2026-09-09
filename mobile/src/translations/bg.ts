@@ -549,4 +549,12 @@ export const bg: typeof en = {
   ledgerGuardTitle: "Няма избрана книга",
   ledgerGuardMessage: "Създайте книга или открийте такава, за да продължите.",
   ledgerGuardSelect: "Избери книга",
+  removePosting: "Премахни запис",
+  toggleAmountSign: "Превключи знака на сумата",
+  incomeExpenseChartSummary:
+    "Приходи и разходи за {{count}} месеца. Приходи {{income}}, разходи {{expense}}, нето {{net}}.",
+  cashFlowChartSummary:
+    "Паричен поток от приходи към разходи. Приходи {{income}}, разходи {{expenses}}.",
+  ledgerNavigateUp: "Нагоре една папка",
+  openLedgerDrawer: "Отвори менюто",
 };

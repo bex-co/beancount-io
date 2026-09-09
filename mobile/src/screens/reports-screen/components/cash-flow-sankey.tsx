@@ -277,9 +277,19 @@ function CashFlowSankeyPlot({
   }
 
   const nodeColor = (node: LayoutNode) => sankeyColorForRole(node.role, theme);
+  const incomeTotal = income.reduce((sum, node) => sum + node.value, 0);
+  const expenseTotal = expenses.reduce((sum, node) => sum + node.value, 0);
 
   return (
-    <View style={styles.plot} onLayout={onLayout}>
+    <View
+      style={styles.plot}
+      onLayout={onLayout}
+      accessible
+      accessibilityLabel={t("cashFlowChartSummary", {
+        income: String(Math.round(incomeTotal)),
+        expenses: String(Math.round(expenseTotal)),
+      })}
+    >
       <Svg width={width} height={SANKEY_HEIGHT}>
         {graph?.links.map((link, index) => {
           if (!isLayoutNode(link.source) || !isLayoutNode(link.target)) {

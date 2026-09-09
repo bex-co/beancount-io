@@ -552,4 +552,12 @@ export const fr: typeof en = {
   ledgerGuardTitle: "Aucun grand livre sélectionné",
   ledgerGuardMessage: "Créez un grand livre ou découvrez-en un pour continuer.",
   ledgerGuardSelect: "Sélectionner un grand livre",
+  removePosting: "Supprimer l'écriture",
+  toggleAmountSign: "Inverser le signe du montant",
+  incomeExpenseChartSummary:
+    "Revenus et dépenses sur {{count}} mois. Revenus {{income}}, dépenses {{expense}}, net {{net}}.",
+  cashFlowChartSummary:
+    "Flux de trésorerie des revenus vers les dépenses. Revenus {{income}}, dépenses {{expenses}}.",
+  ledgerNavigateUp: "Remonter d'un dossier",
+  openLedgerDrawer: "Ouvrir le menu",
 };

@@ -56,6 +56,8 @@ export function InviteSection(): JSX.Element {
       <TouchableOpacity
         style={styles.section}
         activeOpacity={0.9}
+        accessibilityRole="button"
+        accessibilityLabel={t("inviteFriends")}
         onPress={() => {
           router.navigate("/(app)/referral");
         }}

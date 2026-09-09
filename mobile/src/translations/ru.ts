@@ -547,4 +547,12 @@ export const ru: typeof en = {
   ledgerGuardTitle: "Книга не выбрана",
   ledgerGuardMessage: "Создайте книгу или найдите её, чтобы продолжить.",
   ledgerGuardSelect: "Выбрать книгу",
+  removePosting: "Удалить проводку",
+  toggleAmountSign: "Сменить знак суммы",
+  incomeExpenseChartSummary:
+    "Доходы и расходы за {{count}} мес. Доходы {{income}}, расходы {{expense}}, чистыми {{net}}.",
+  cashFlowChartSummary:
+    "Денежный поток от доходов к расходам. Доходы {{income}}, расходы {{expenses}}.",
+  ledgerNavigateUp: "На уровень выше",
+  openLedgerDrawer: "Открыть меню",
 };

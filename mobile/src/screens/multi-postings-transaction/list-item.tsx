@@ -82,6 +82,10 @@ export const ListItem = ({
       style={[styles.container, showDivider && styles.divider]}
       activeOpacity={0.6}
       onPress={onPress}
+      accessibilityRole="button"
+      accessibilityLabel={
+        title ? `${title}${content ? `, ${content}` : ""}` : content
+      }
     >
       <View style={styles.textWrap}>
         {title && <Text style={styles.title}>{title}</Text>}

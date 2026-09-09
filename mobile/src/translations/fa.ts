@@ -540,4 +540,12 @@ export const fa: typeof en = {
   ledgerGuardTitle: "دفترکلی انتخاب نشده",
   ledgerGuardMessage: "برای ادامه یک دفترکل بسازید یا کشف کنید.",
   ledgerGuardSelect: "انتخاب دفترکل",
+  removePosting: "حذف ثبت",
+  toggleAmountSign: "تغییر علامت مبلغ",
+  incomeExpenseChartSummary:
+    "درآمد و هزینه در {{count}} ماه. درآمد {{income}}، هزینه {{expense}}، خالص {{net}}.",
+  cashFlowChartSummary:
+    "جریان نقدی از درآمد به هزینه. درآمد {{income}}، هزینه {{expenses}}.",
+  ledgerNavigateUp: "رفتن به پوشه بالاتر",
+  openLedgerDrawer: "باز کردن منو",
 };

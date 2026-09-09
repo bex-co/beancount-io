@@ -551,4 +551,12 @@ export const pt: typeof en = {
   ledgerGuardTitle: "Nenhum livro selecionado",
   ledgerGuardMessage: "Crie um livro ou descubra um para continuar.",
   ledgerGuardSelect: "Selecionar livro",
+  removePosting: "Remover lançamento",
+  toggleAmountSign: "Alternar sinal do valor",
+  incomeExpenseChartSummary:
+    "Receitas e despesas em {{count}} meses. Receitas {{income}}, despesas {{expense}}, líquido {{net}}.",
+  cashFlowChartSummary:
+    "Fluxo de caixa de receitas para despesas. Receitas {{income}}, despesas {{expenses}}.",
+  ledgerNavigateUp: "Subir uma pasta",
+  openLedgerDrawer: "Abrir menu",
 };

@@ -1,5 +1,6 @@
 import { memo, useEffect, useState } from "react";
 import {
+  AccessibilityInfo,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -249,7 +250,12 @@ const PostingRow = ({
   };
 
   const renderDeleteAction = () => (
-    <TouchableOpacity style={styles.deleteAction} onPress={onRemove}>
+    <TouchableOpacity
+      style={styles.deleteAction}
+      onPress={onRemove}
+      accessibilityRole="button"
+      accessibilityLabel={t("removePosting")}
+    >
       <Ionicons name="trash-outline" size={20} color="white" />
     </TouchableOpacity>
   );
@@ -264,6 +270,8 @@ const PostingRow = ({
           style={styles.postingAccountWrap}
           activeOpacity={0.6}
           onPress={onPickAccount}
+          accessibilityRole="button"
+          accessibilityLabel={posting.account || t("postingAccount")}
         >
           <Text
             style={[
@@ -283,6 +291,9 @@ const PostingRow = ({
               style={[styles.signToggle, { backgroundColor: toggleBg }]}
               onPress={handleToggleSign}
               hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t("toggleAmountSign")}
+              accessibilityState={{ selected: isNegative }}
             >
               <Text style={[styles.signToggleText, { color: amountColor }]}>
                 {isNegative ? "−" : "+"}
@@ -302,7 +313,12 @@ const PostingRow = ({
             selectTextOnFocus
           />
           {isLast && posting.isAuto ? (
-            <TouchableOpacity onPress={onToggleAuto} hitSlop={8}>
+            <TouchableOpacity
+              onPress={onToggleAuto}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={t("autoLabel")}
+            >
               <Text style={styles.postingAutoTag}>{t("autoLabel")}</Text>
             </TouchableOpacity>
           ) : null}
@@ -405,6 +421,7 @@ const MultiPostingsTransactionScreenComponent = () => {
       else if (validationError === "zeroAmount")
         msg = t("multiPostingsZeroAmount");
       toast.showToast({ message: msg, type: "error" });
+      AccessibilityInfo.announceForAccessibility(msg);
       return;
     }
 
@@ -446,7 +463,13 @@ const MultiPostingsTransactionScreenComponent = () => {
         options={{
           headerTitle: t("multiPostingsTitle"),
           headerRight: () => (
-            <Pressable onPress={handleSave} hitSlop={10}>
+            <Pressable
+              onPress={handleSave}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={t("done")}
+              accessibilityState={{ disabled: !canSave }}
+            >
               <Text
                 style={[
                   styles.doneButton,
@@ -537,6 +560,8 @@ const MultiPostingsTransactionScreenComponent = () => {
             style={styles.addPostingRow}
             activeOpacity={0.6}
             onPress={() => setPostings((prev) => addPosting(prev))}
+            accessibilityRole="button"
+            accessibilityLabel={t("addPosting")}
           >
             <Ionicons
               name="add-circle-outline"

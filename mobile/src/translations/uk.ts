@@ -546,4 +546,12 @@ export const uk: typeof en = {
   ledgerGuardTitle: "Книгу не вибрано",
   ledgerGuardMessage: "Створіть книгу або знайдіть її, щоб продовжити.",
   ledgerGuardSelect: "Вибрати книгу",
+  removePosting: "Видалити проведення",
+  toggleAmountSign: "Змінити знак суми",
+  incomeExpenseChartSummary:
+    "Доходи й витрати за {{count}} міс. Доходи {{income}}, витрати {{expense}}, чистими {{net}}.",
+  cashFlowChartSummary:
+    "Грошовий потік від доходів до витрат. Доходи {{income}}, витрати {{expenses}}.",
+  ledgerNavigateUp: "На рівень вище",
+  openLedgerDrawer: "Відкрити меню",
 };

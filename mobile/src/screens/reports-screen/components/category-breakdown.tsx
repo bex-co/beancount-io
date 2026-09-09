@@ -194,6 +194,7 @@ export function CategoryBreakdown({
             style={[styles.childRow, { paddingStart }]}
             onPress={() => toggle(node.account, isExpanded)}
             accessibilityRole="button"
+            accessibilityLabel={node.name}
             accessibilityState={{ expanded: isExpanded }}
           >
             {rowContent}
@@ -258,6 +259,7 @@ export function CategoryBreakdown({
             style={styles.topRow}
             onPress={() => toggle(node.account, isExpanded)}
             accessibilityRole="button"
+            accessibilityLabel={node.name}
             accessibilityState={{ expanded: isExpanded }}
           >
             {line1}

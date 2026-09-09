@@ -84,6 +84,13 @@ export const ListItemHorizontal = ({
     }),
   );
 
+  const label =
+    typeof title === "string"
+      ? typeof content === "string" && content
+        ? `${title}, ${content}`
+        : title
+      : undefined;
+
   return (
     <TouchableOpacity
       style={styles.container}
@@ -91,6 +98,8 @@ export const ListItemHorizontal = ({
       onPress={onPress}
       disabled={!onPress}
       testID={testID}
+      accessibilityRole={onPress ? "button" : undefined}
+      accessibilityLabel={label}
     >
       {icon && <View style={styles.iconContainer}>{icon}</View>}
       <View style={styles.topRow}>
@@ -194,6 +203,8 @@ export const SecondaryButton = ({
         style={styles.button}
         activeOpacity={0.8}
         onPress={onPress}
+        accessibilityRole="button"
+        accessibilityLabel={title}
       >
         {icon}
         <Text style={styles.text}>{title}</Text>

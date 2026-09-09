@@ -515,4 +515,12 @@ export const zh: typeof en = {
   ledgerGuardTitle: "未选择账本",
   ledgerGuardMessage: "请创建账本或发现一个账本以继续。",
   ledgerGuardSelect: "选择账本",
+  removePosting: "删除分录",
+  toggleAmountSign: "切换金额正负",
+  incomeExpenseChartSummary:
+    "过去 {{count}} 个月的收入与支出。收入 {{income}}，支出 {{expense}}，净额 {{net}}。",
+  cashFlowChartSummary:
+    "从收入到支出的现金流。收入 {{income}}，支出 {{expenses}}。",
+  ledgerNavigateUp: "返回上级文件夹",
+  openLedgerDrawer: "打开菜单",
 };

@@ -166,7 +166,16 @@ function ErrorRow({ err }: { err: LedgerError }): JSX.Element {
 
   if (canFix) {
     return (
-      <TouchableOpacity activeOpacity={0.7} onPress={handlePress}>
+      <TouchableOpacity
+        activeOpacity={0.7}
+        onPress={handlePress}
+        accessibilityRole="button"
+        accessibilityLabel={
+          err.filename
+            ? `${err.message}. ${formatErrorLocation(err)}`
+            : err.message
+        }
+      >
         {inner}
       </TouchableOpacity>
     );
@@ -278,6 +287,8 @@ function NotificationsScreenImpl(): JSX.Element {
                     <TouchableOpacity
                       style={styles.changeRow}
                       activeOpacity={0.7}
+                      accessibilityRole="button"
+                      accessibilityLabel={commit.message}
                       onPress={() =>
                         router.push({
                           pathname: "/(app)/commit-detail",

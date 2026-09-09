@@ -55,6 +55,7 @@ Beancount Mobile Community Edition turns a Beancount.io ledger into a native wor
 - **Create a ledger** — **New ledger** in the drawer (or Create when you have none) starts a Starter or Sample book with a name, optional description, and private toggle.
 - **Open and share ledger links** — a `https://beancount.io/ledger/...` link opens the matching screen when the app is installed; **Share link** and **Copy link** in the drawer (and on a transaction) produce the same canonical URL.
 - **Stay connected** — switch ledgers, review notifications, invite collaborators, and use light or dark themes.
+- **Accessible by default** — icon-only controls carry VoiceOver/TalkBack labels; `yarn test:unit` includes a guardrail that fails unlabeled icon-only pressables under `src/screens` and `src/components`.
 - **Use your language** — the app ships with 13 locales and follows the device language when supported.
 
 ## Product tour

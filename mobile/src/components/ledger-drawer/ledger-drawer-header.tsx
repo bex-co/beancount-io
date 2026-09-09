@@ -68,6 +68,7 @@ const getStyles = (theme: ColorTheme) =>
 /** Top-left hamburger that opens the shared ledger drawer. */
 function LedgerDrawerButton({ color }: { color?: string }): JSX.Element {
   const theme = useTheme().colorTheme;
+  const { t } = useTranslations();
   const { openDrawer } = useLedgerDrawer();
 
   const handlePress = () => {
@@ -80,6 +81,8 @@ function LedgerDrawerButton({ color }: { color?: string }): JSX.Element {
       onPress={handlePress}
       hitSlop={8}
       activeOpacity={0.7}
+      accessibilityRole="button"
+      accessibilityLabel={t("openLedgerDrawer")}
     >
       <Ionicons name="menu" size={26} color={color ?? theme.black} />
     </TouchableOpacity>
@@ -98,6 +101,7 @@ function NotificationsBellButton(): JSX.Element {
 
   return (
     <TouchableOpacity
+      accessibilityRole="button"
       accessibilityLabel={t("notificationsBell")}
       onPress={handlePress}
       hitSlop={8}

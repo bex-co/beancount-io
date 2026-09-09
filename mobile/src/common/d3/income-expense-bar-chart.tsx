@@ -2,6 +2,7 @@ import { Circle, G, Path, Text as SvgText } from "react-native-svg";
 import { scaleBand, scaleLinear } from "d3-scale";
 import { curveMonotoneX, line as d3Line } from "d3-shape";
 import { contentPadding, ScreenWidth } from "@/common/screen-util";
+import { shortNumber } from "@/common/number-utils";
 import { useTheme } from "@/common/theme";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { AnimatedBar } from "./animated-bar";
@@ -152,6 +153,18 @@ function IncomeExpenseBarChart({
       yTicks={yScale.ticks(5)}
       yScale={yScale}
       currencySymbol={currencySymbol}
+      accessibilityLabel={t("incomeExpenseChartSummary", {
+        count: months.length,
+        income: `${currencySymbol}${shortNumber(
+          income.reduce((sum, v) => sum + v, 0),
+        )}`,
+        expense: `${currencySymbol}${shortNumber(
+          expense.reduce((sum, v) => sum + v, 0),
+        )}`,
+        net: `${currencySymbol}${shortNumber(
+          net.reduce((sum, v) => sum + v, 0),
+        )}`,
+      })}
       legend={
         <>
           <LegendItem color={theme.success} label={t("income")} />

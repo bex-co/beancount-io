@@ -551,4 +551,12 @@ export const ca: typeof en = {
   ledgerGuardTitle: "Cap llibre seleccionat",
   ledgerGuardMessage: "Creeu un llibre o descubriu-ne un per continuar.",
   ledgerGuardSelect: "Selecciona llibre",
+  removePosting: "Elimina l'assentament",
+  toggleAmountSign: "Canvia el signe de l'import",
+  incomeExpenseChartSummary:
+    "Ingressos i despeses durant {{count}} mesos. Ingressos {{income}}, despeses {{expense}}, net {{net}}.",
+  cashFlowChartSummary:
+    "Flux de caixa d'ingressos a despeses. Ingressos {{income}}, despeses {{expenses}}.",
+  ledgerNavigateUp: "Puja una carpeta",
+  openLedgerDrawer: "Obre el menú",
 };

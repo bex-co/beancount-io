@@ -548,4 +548,12 @@ export const nl: typeof en = {
   ledgerGuardTitle: "Geen grootboek geselecteerd",
   ledgerGuardMessage: "Maak een grootboek of ontdek er een om door te gaan.",
   ledgerGuardSelect: "Grootboek selecteren",
+  removePosting: "Boeking verwijderen",
+  toggleAmountSign: "Teken van bedrag wisselen",
+  incomeExpenseChartSummary:
+    "Inkomsten en uitgaven over {{count}} maanden. Inkomsten {{income}}, uitgaven {{expense}}, netto {{net}}.",
+  cashFlowChartSummary:
+    "Kasstroom van inkomsten naar uitgaven. Inkomsten {{income}}, uitgaven {{expenses}}.",
+  ledgerNavigateUp: "Eén map omhoog",
+  openLedgerDrawer: "Menu openen",
 };

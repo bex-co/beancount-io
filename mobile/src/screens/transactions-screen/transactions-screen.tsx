@@ -246,6 +246,8 @@ const TransactionList = () => {
               onPress={handleQuickAdd}
               hitSlop={8}
               activeOpacity={0.7}
+              accessibilityRole="button"
+              accessibilityLabel={t("quickAdd")}
             >
               <Ionicons name="add" size={26} color={theme.black90} />
             </TouchableOpacity>

@@ -169,7 +169,12 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
         options={{
           headerTitle,
           headerRight: () => (
-            <Pressable onPress={() => commit(value)} hitSlop={10}>
+            <Pressable
+              onPress={() => commit(value)}
+              hitSlop={10}
+              accessibilityRole="button"
+              accessibilityLabel={i18n.t("save")}
+            >
               <Text style={styles.doneButton}>{i18n.t("save")}</Text>
             </Pressable>
           ),
@@ -224,6 +229,8 @@ export const TextInputScreen: React.FC<TextInputScreenProps> = ({
                       pressed && styles.suggestionRowPressed,
                     ]}
                     onPress={() => commit(suggestion)}
+                    accessibilityRole="button"
+                    accessibilityLabel={suggestion}
                   >
                     <Ionicons
                       name="time-outline"

@@ -548,4 +548,12 @@ export const sk: typeof en = {
   ledgerGuardMessage:
     "Vytvorte knihu alebo objavte jednu, aby ste mohli pokračovať.",
   ledgerGuardSelect: "Vybrať knihu",
+  removePosting: "Odstrániť zápis",
+  toggleAmountSign: "Prepnúť znamienko sumy",
+  incomeExpenseChartSummary:
+    "Príjmy a výdavky za {{count}} mesiacov. Príjmy {{income}}, výdavky {{expense}}, čisté {{net}}.",
+  cashFlowChartSummary:
+    "Peňažný tok z príjmov do výdavkov. Príjmy {{income}}, výdavky {{expenses}}.",
+  ledgerNavigateUp: "O úroveň vyššie",
+  openLedgerDrawer: "Otvoriť menu",
 };

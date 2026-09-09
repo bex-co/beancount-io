@@ -23,6 +23,8 @@ type ScrollableAxisChartProps = {
   /** Value → y pixel; the same scale the plot children drew with. */
   yScale: (value: number) => number;
   currencySymbol: string;
+  /** Screen-reader text alternative for the chart series. */
+  accessibilityLabel?: string;
   /** `LegendItem`s for the row under the plot. */
   legend: ReactNode;
   /** The plot-specific SVG: bars, lines, dots, x-axis labels. */
@@ -46,6 +48,7 @@ export function ScrollableAxisChart({
   yTicks,
   yScale,
   currencySymbol,
+  accessibilityLabel,
   legend,
   children,
 }: ScrollableAxisChartProps): JSX.Element {
@@ -59,7 +62,7 @@ export function ScrollableAxisChart({
     // Owner marker: horizontal drags belong to the plot's scroller (and to the
     // header and legend around it), never to the ledger drawer's edge swipe.
     <GestureDetector gesture={swipeOwner}>
-      <View>
+      <View accessible accessibilityLabel={accessibilityLabel}>
         <View style={styles.row}>
           {/* Fixed y-axis so tick labels stay put while the plot scrolls. */}
           <Svg width={LEFT_PADDING} height={chartHeight}>
