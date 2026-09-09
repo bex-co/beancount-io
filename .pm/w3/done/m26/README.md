@@ -1,17 +1,17 @@
 # w3 · m26 — Prepare complete transaction amounts from eligible postings
 
-**Worker:** worker3 **Goal:** transaction auto-balance uses the rows that will be written, rejects amounts it cannot infer and shows the resulting amount accurately **Status:** todo
+**Worker:** worker3 **Goal:** transaction auto-balance uses the rows that will be written, rejects amounts it cannot infer and shows the resulting amount accurately **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                     | est | depends_on |
 | ---- | --------------------------------------------------------- | --- | ---------- |
-| t001 | Use the same posting eligibility for inference and output | 35m | —          |
-| t002 | Reject incomplete amounts and show the exact inference    | 55m | t001       |
-| t003 | Verify transaction-entry adoption surfaces                | 20m | t002       |
-| t004 | Simplify inference and submission validation              | 20m | t003       |
-| t005 | Test inference eligibility, precision and currency groups | 55m | t004       |
-| t006 | Close out and archive the transaction inference repair    | 15m | t005       |
+| t001 | Use the same posting eligibility for inference and output — **DONE** | 35m | —          |
+| t002 | Reject incomplete amounts and show the exact inference — **DONE** | 55m | t001       |
+| t003 | Verify transaction-entry adoption surfaces — **DONE** | 20m | t002       |
+| t004 | Simplify inference and submission validation — **DONE** | 20m | t003       |
+| t005 | Test inference eligibility, precision and currency groups — **DONE** | 55m | t004       |
+| t006 | Close out and archive the transaction inference repair — **DONE** | 15m | t005       |
 
 200 minutes total, including 90 minutes of implementation. One major finding
 group, promoted from [067](../067.md); do not count or implement that historical

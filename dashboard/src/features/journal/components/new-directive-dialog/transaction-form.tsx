@@ -43,6 +43,13 @@ import {
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useLedger } from "@/common/hooks/use-ledger";
+import {
+  applyAutoBalanceToPostings,
+  computeAutoBalance,
+  findUnresolvedEligibleAmount,
+  formatInferredAmount,
+  isEligiblePosting,
+} from "./transaction-auto-balance";
 
 interface TransactionFormProps {
   ledgerId: string;
@@ -170,73 +177,45 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
     }
   }, [watchedPostings, append, primaryCurrency]);
 
-  // Calculate auto-balance amount
+  // Calculate auto-balance amount among postings that will be written
   const autoBalanceInfo = useMemo(() => {
-    if (!watchedPostings) return null;
-
-    // Group postings by currency
-    const currencyGroups = new Map<
-      string,
-      { filled: number[]; emptyIndex: number | null }
-    >();
-
-    watchedPostings.forEach((posting, index) => {
-      const currency = posting.currency || primaryCurrency;
-      const amount = posting.amount;
-
-      if (!currencyGroups.has(currency)) {
-        currencyGroups.set(currency, { filled: [], emptyIndex: null });
-      }
-
-      const group = currencyGroups.get(currency)!;
-
-      if (amount && amount.trim() !== "") {
-        const num = parseFloat(amount);
-        if (!isNaN(num) && isFinite(num)) {
-          group.filled.push(num);
-        }
-      } else if (group.emptyIndex === null) {
-        group.emptyIndex = index;
-      }
-    });
-
-    // Calculate balance for each currency
-    const balances = new Map<number, { amount: number; currency: string }>();
-
-    currencyGroups.forEach((group, currency) => {
-      if (group.emptyIndex !== null && group.filled.length > 0) {
-        const sum = group.filled.reduce((acc, val) => acc + val, 0);
-        const balance = -sum;
-        balances.set(group.emptyIndex, { amount: balance, currency });
-      }
-    });
-
-    return balances;
+    if (!watchedPostings) {
+      return { balances: new Map(), incomplete: false };
+    }
+    return computeAutoBalance(watchedPostings, primaryCurrency);
   }, [watchedPostings, primaryCurrency]);
 
   const onSubmit = async (data: TransactionFormData) => {
     setError(null);
 
     try {
-      // Keep all postings, apply auto-balance where applicable
-      const finalPostings = data.postings.map((posting, index) => {
-        const autoBalance = autoBalanceInfo?.get(index);
-        if (autoBalance && (!posting.amount || posting.amount.trim() === "")) {
-          return {
-            ...posting,
-            amount: autoBalance.amount.toString(),
-          };
-        }
-        return posting;
-      });
+      const { balances, incomplete } = computeAutoBalance(
+        data.postings,
+        primaryCurrency,
+      );
+
+      if (incomplete) {
+        setError(t("journal.amountRequired"));
+        return;
+      }
+
+      const balancedPostings = applyAutoBalanceToPostings(
+        data.postings,
+        balances,
+      );
+
+      if (findUnresolvedEligibleAmount(balancedPostings) !== null) {
+        setError(t("journal.amountRequired"));
+        return;
+      }
 
       // Create postings array - skip empty accounts
-      const ledgerPostings: LedgerPostingInput[] = finalPostings
-        .filter((posting) => posting.account && posting.account.trim() !== "")
+      const ledgerPostings: LedgerPostingInput[] = balancedPostings
+        .filter((posting) => isEligiblePosting(posting))
         .map((posting) => ({
           account: posting.account,
           units: {
-            number: parseFloat(posting.amount).toString(),
+            number: Number.parseFloat(posting.amount).toString(),
             currency: posting.currency,
           },
         }));
@@ -435,7 +414,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
           <ScrollArea className="h-[220px]">
             <div className="space-y-2 pr-4 pt-1 pl-1">
               {fields.map((field, index) => {
-                const autoBalance = autoBalanceInfo?.get(index);
+                const autoBalance = autoBalanceInfo.balances.get(index);
                 const isLastRow = index === fields.length - 1;
 
                 return (
@@ -475,7 +454,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                                 step="0.01"
                                 placeholder={
                                   autoBalance
-                                    ? `${autoBalance.amount.toFixed(2)}`
+                                    ? formatInferredAmount(autoBalance.amount)
                                     : t("journal.amountPlaceholder")
                                 }
                                 className={
