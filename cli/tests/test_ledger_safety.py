@@ -305,7 +305,9 @@ def test_a_wider_account_leaves_existing_lines_byte_identical(tmp_path: Path) ->
     _add_transaction(book, "2026-08-02", "Fancy", "Expenses:Dining:AVeryLongRestaurantName 50", "Assets:Cash")
     after = book.read_bytes()
     assert after.startswith(before)
-    assert b"Expenses:Dining:AVeryLongRestaurantName  50 USD" in after
+    # Right-aligned against the file's widest number, exactly as bean-format leaves it.
+    assert b"  Expenses:Dining:AVeryLongRestaurantName       50 USD" in after
+    _assert_appended_lines_are_formatted(book, before)
 
 
 def test_format_still_realigns_the_whole_file(tmp_path: Path) -> None:
@@ -323,6 +325,59 @@ def test_format_still_realigns_the_whole_file(tmp_path: Path) -> None:
     assert result.exit_code == 0, result.output
     assert "  Assets:Cash  100.00 USD\n" not in book.read_text()
     assert "  Equity:OpeningBalances  -100.00 USD\n" in book.read_text()
+
+
+def _assert_appended_lines_are_formatted(book: Path, before: bytes) -> None:
+    """Every line added after `before` already sits where `bea format` would put it."""
+    from beancount.scripts.format import align_beancount
+
+    text = book.read_text()
+    assert text.startswith(before.decode("utf-8"))
+    kept = len(before.decode("utf-8").splitlines())
+    assert align_beancount(text).splitlines()[kept:] == text.splitlines()[kept:]
+
+
+def _init_with_checking(tmp_path: Path) -> Path:
+    args = ["--currency", "USD", "--date", "2026-01-01", "--opening-balance", "Assets:Checking 1000"]
+    result = runner.invoke(app, ["--json", "init", str(tmp_path), *args])
+    assert result.exit_code == 0, result.output
+    return tmp_path / "main.bean"
+
+
+def test_appended_lines_are_what_format_would_write(tmp_path: Path) -> None:
+    """A formatted file stays formatted after an add, so a format pre-commit hook keeps passing."""
+    book = _init_with_checking(tmp_path)
+    _add_transaction(book, "2026-01-02", "Coffee", "Expenses:Dining 4.50", "Assets:Checking")
+    _add_transaction(book, "2026-01-03", "Lunch", "Expenses:Dining 12.00", "Assets:Checking")
+    check = invoke(book, "format", "--check", str(tmp_path))
+    assert check.exit_code == 0, check.output
+    # A number wider than any before it cannot share the existing column. The
+    # new lines still land where format will put them; only older lines move.
+    before = book.read_bytes()
+    _add_transaction(book, "2026-01-04", "Rent", "Expenses:Rent 1234.56", "Assets:Checking")
+    _assert_appended_lines_are_formatted(book, before)
+    added = book.read_bytes()[len(before) :]
+    formatted = invoke(book, "format", str(tmp_path))
+    assert formatted.exit_code == 0, formatted.output
+    assert book.read_bytes().endswith(added)
+
+
+def test_add_balance_carries_no_printer_padding(tmp_path: Path) -> None:
+    """The upstream printer pads a balance's account to 47 columns; that must not reach the ledger."""
+    book = _init_with_checking(tmp_path)
+    before = book.read_bytes()
+    plain = invoke(book, "add", "balance", "--date", "2026-01-02", "-a", "Assets:Checking", "--amount", "1000.00 USD")
+    assert plain.exit_code == 0, plain.output
+    assert "2026-01-02 balance Assets:Checking  1000.00 USD\n" in book.read_text()
+    _assert_appended_lines_are_formatted(book, before)
+    before = book.read_bytes()
+    amount = "1000 ~ 0.5 USD"
+    tolerant = invoke(book, "add", "balance", "--date", "2026-01-03", "-a", "Assets:Checking", "--amount", amount)
+    assert tolerant.exit_code == 0, tolerant.output
+    line = next(line for line in book.read_text().splitlines() if line.startswith("2026-01-03 balance"))
+    assert "Assets:Checking" + " " * 10 not in line
+    assert line.startswith("2026-01-03 balance Assets:Checking 1000 ~") and line.endswith("0.5 USD")
+    _assert_appended_lines_are_formatted(book, before)
 
 
 def test_one_missing_account_reads_as_one_problem_not_one_per_row(book: Path) -> None:

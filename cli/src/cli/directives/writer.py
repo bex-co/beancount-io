@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import datetime
+import re
 from decimal import Decimal
 from pathlib import Path
 from collections.abc import Callable
@@ -99,12 +100,17 @@ def format_entry(entry: Any) -> str:
             values=[_ValueType(escape_string(v.value) if v.dtype is str else v.value, v.dtype) for v in entry.values]
         )
     rendered = str(upstream_format_entry(entry))
-    if isinstance(entry, Open):
-        # The upstream printer pads opens to 47 columns; bean-format leaves
-        # those spaces untouched. Match init without changing metadata lines.
-        first, separator, rest = rendered.partition("\n")
-        rendered = first.replace(f"{entry.account:47}", entry.account, 1) + separator + rest
-    return rendered
+    first, separator, rest = rendered.partition("\n")
+    if isinstance(entry, Open | Balance):
+        # The upstream printer pads opens and balances to 47 columns. bean-format
+        # leaves an open's spaces untouched and would carry a balance's padding
+        # into every other line's alignment, so both start from a single space.
+        # Metadata lines are unchanged.
+        first = first.replace(f"{entry.account:47}", entry.account, 1)
+    elif isinstance(entry, Price):
+        # Likewise 22 columns each for the commodity and the amount.
+        first = re.sub(r" {2,}", " ", first.replace(f"{entry.currency:<22}", entry.currency, 1))
+    return first + separator + rest
 
 
 def _append(file_path: Path, *texts: str, allow_errors: bool = False, into: Path | None = None) -> list[str]:

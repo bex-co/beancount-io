@@ -602,6 +602,51 @@ def test_csv_category_column_categorizes_and_rules_win(book: Path, isolated_conf
     assert "Expenses:Groceries" in rows[1]["entry"]
 
 
+def test_csv_category_that_is_not_an_account_queues_the_row(book: Path, isolated_config: Path) -> None:
+    """A card export's own labels ("Groceries") are not accounts; verbatim they broke every preview."""
+    source = book.parent / "card.csv"
+    source.write_text(
+        "Date,Description,Category,Amount\n"
+        "2026-08-03,WHOLEFDS,Groceries,-45.67\n"
+        "2026-08-04,MARKET,Expenses:Groceries,-9.99\n"
+    )
+    mapping = "date=Date,amount=Amount,narration=Description"
+    result = run_csv(book, source, "--csv", mapping, "--account", "Assets:Checking")
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.stdout)["data"]
+    assert data["validation_errors"] == []
+    assert [row["rule"] for row in data["rows"]] == ["unmatched", "Expenses:Groceries"]
+    assert data["rows"][0]["entry"].startswith("2026-08-03 !")
+    assert "Expenses:Uncategorized" in data["rows"][0]["entry"]
+    human = runner.invoke(
+        app, ["--file", str(book), "import", str(source), "--csv", mapping, "--account", "Assets:Checking"]
+    )
+    assert human.exit_code == 0, human.output
+    assert "1 row(s) carry a category that is not an account name ('Groceries')" in human.output
+    assert "--rules" in human.output
+
+
+def test_import_allow_errors_previews_and_applies_over_a_failing_assertion(book: Path, isolated_config: Path) -> None:
+    """Books mid-reconciliation carry a failing assertion for days; that must not block every import."""
+    book.write_text(book.read_text() + "\n2026-08-05 balance Assets:Checking 500 USD\n")
+    source = book.parent / "bank.csv"
+    source.write_text(CSV_HEADER + CSV_ROW)
+    refused = run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking")
+    assert refused.exit_code == 1, refused.output
+    assert "Pass --allow-errors" in json.loads(refused.stderr)["error"]["message"]
+    previewed = run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking", "--allow-errors")
+    assert previewed.exit_code == 0, previewed.output
+    data = json.loads(previewed.stdout)["data"]
+    assert data["ready"] == 1 and data["validation_errors"] == []
+    assert any("Balance failed" in warning for warning in data["validation_warnings"])
+    applied = run_csv(book, source, "--apply", "--allow-errors")
+    assert applied.exit_code == 0, applied.output
+    assert json.loads(applied.stdout)["data"]["written"] == 1
+    entries, errors, _ = loader.load_file(book)
+    assert [type(error.entry).__name__ for error in errors] == ["Balance"]
+    assert any(isinstance(e, Transaction) and e.payee == "Cafe" for e in entries)
+
+
 def category_source(book: Path) -> Path:
     source = book.parent / "categorized.csv"
     source.write_text(

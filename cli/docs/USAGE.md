@@ -251,9 +251,10 @@ bea --file main.bean add transaction --into 2026.bean \
 All add commands and `import` support this separation. Validation includes the
 entire root ledger; the root and other included files are preserved. Changes
 to an included file or to files matched by an include glob abort the write.
-Successful additions never modify existing lines: the appended block matches
-the destination's indentation and amount column, and `bea format` is the only
-command that realigns a file.
+Successful additions never modify existing lines. Appended lines are written
+where `bea format` would put them given the file's current contents, so a
+formatted file stays formatted after an add; when a new amount or account is
+wider than any before it, a later `bea format` realigns only the older lines.
 Writes respect the destination file's permissions: a read-only file produces
 exit **3**, even when its directory permits replacement. This also applies to
 import and format. A read-only root can still validate a writable `--into` file.
@@ -264,8 +265,9 @@ backslashes retain their contents. Human tables also flatten line breaks from
 existing entries without modifying the ledger.
 
 Examples below assume their accounts were opened and their dates, balances,
-and document paths are valid for your ledger. Every add command accepts
-`--allow-errors` for an intentional semantic error. Syntax errors and pad
+and document paths are valid for your ledger. Every add command, and `import`,
+accepts `--allow-errors` for a semantic error that is intentional or already in
+the books, such as a balance assertion that still fails. Syntax errors and pad
 references to unknown or inactive accounts are always rejected. For an opening
 adjustment, prefer an explicit atomic pad and balance:
 

@@ -11,6 +11,7 @@ from __future__ import annotations
 import csv
 import hashlib
 import re
+from collections import Counter
 from dataclasses import dataclass, field
 from datetime import datetime
 from decimal import Decimal, InvalidOperation
@@ -259,6 +260,8 @@ class CsvImporter:
         self._rules = rules or []
         self._default_account = default_account
         self._currency = currency
+        # Category values that were not account names, for the caller to report once.
+        self.rejected_categories: Counter[str] = Counter()
 
     def identify(self, filepath: str) -> bool:
         return True
@@ -345,6 +348,8 @@ class CsvImporter:
         category_header: str | None,
     ) -> tuple[str, str, str]:
         """Counter account, flag, and rule name: rules beat the category column."""
+        from beancount.core.account import is_valid
+
         for rule in self._rules:
             if rule.expression.search(payee or "") or rule.expression.search(narration):
                 return rule.account, "*", rule.pattern
@@ -352,6 +357,11 @@ class CsvImporter:
             if category_header not in row:
                 raise UsageError(f"Row {line}: the CSV lacks category column {category_header!r}.")
             category = (row[category_header] or "").strip()
-            if category:
+            if category and is_valid(category):
                 return category, "*", category
+            if category:
+                # A card export's own label ("Groceries", "Food & Drink") is
+                # not an account, and written verbatim it is a syntax error on
+                # every row. The row queues for review instead.
+                self.rejected_categories[category] += 1
         return self._default_account, "!", "unmatched"

@@ -389,74 +389,71 @@ def validate_candidate(
     return messages
 
 
-def _destination_style(content: bytes) -> tuple[str, int | None]:
-    """Posting indentation and amount column observed in the existing entries.
+def _destination_indent(content: str) -> str:
+    """Posting indentation observed in the existing entries; two spaces when there are none.
 
-    Falls back to two spaces and the appended block's own width when the
-    destination has no postings yet. `bea format` stays the only command that
-    realigns existing lines; appends only ever add lines.
+    Amount columns are not measured here: `appended_content` hands the whole
+    draft to bean-format's aligner and keeps its rendering of the new lines.
     """
     indents: Counter[str] = Counter()
-    columns: Counter[int] = Counter()
-    for line in content.decode("utf-8").splitlines():
+    for line in content.splitlines():
         match = re.match(r"^(\s+)(\S+)( +).*$", line)
-        if not match:
+        if not match or "\t" in match.group(1):
             continue
-        lead, head, gap = match.groups()
-        if "\t" in lead:
-            continue
-        indents[lead] += 1
-        if ":" in head and not head.endswith(":") and len(gap) >= 2:
-            columns[len(lead) + len(head) + len(gap)] += 1
-    return (indents.most_common(1)[0][0] if indents else "  ", columns.most_common(1)[0][0] if columns else None)
+        indents[match.group(1)] += 1
+    return indents.most_common(1)[0][0] if indents else "  "
 
 
-def _align_block(texts: list[str], indent: str, column: int | None) -> list[str]:
-    """Render appended entries in the destination's style without touching it.
+def _indent_block(texts: list[str], indent: str) -> list[str]:
+    """Re-indent appended entries to the destination's style without touching it.
 
-    Continuation lines take the destination's indentation; posting amounts
-    align to the destination's amount column when the block fits, otherwise
-    the block aligns within itself.
+    Posting lines keep a two-space gap before their amount; `appended_content`
+    aligns the amounts afterwards with the code `bea format` runs.
     """
-    parsed: list[list[tuple[str, str, str]]] = []
-    widest = 0
+    rendered = []
     for text in texts:
-        block: list[tuple[str, str, str]] = []
+        lines = []
         for index, line in enumerate(text.rstrip().splitlines()):
             match = None if index == 0 else re.match(r"^\s*(\S+)(  +)(\S.*)$", line)
             if match and ":" in match.group(1) and not match.group(1).endswith(":"):
-                widest = max(widest, len(match.group(1)))
-                block.append(("posting", match.group(1), match.group(3)))
+                lines.append(f"{indent}{match.group(1)}  {match.group(3)}")
             elif index == 0 or not line.strip() or not line[0].isspace():
                 # A continuation at column zero is content (a wrapped note
                 # comment), not structure: only re-indent indented lines.
-                block.append(("verbatim", line, ""))
+                lines.append(line)
             else:
-                block.append(("indented", line.strip(), ""))
-        parsed.append(block)
-    target = column
-    if target is None or len(indent) + widest + 2 > target:
-        target = len(indent) + widest + 2
-    rendered = []
-    for block in parsed:
-        lines = []
-        for kind, first, second in block:
-            if kind == "posting":
-                lines.append(f"{indent}{first}{' ' * (target - len(indent) - len(first))}{second}")
-            elif kind == "indented":
-                lines.append(f"{indent}{first}")
-            else:
-                lines.append(first)
+                lines.append(f"{indent}{line.strip()}")
         rendered.append("\n".join(lines))
     return rendered
 
 
 def appended_content(original: bytes, texts: list[str]) -> str:
+    """The destination with `texts` appended, the new lines aligned as `bea format` would leave them.
+
+    Existing bytes stay verbatim. The whole draft goes through bean-format's
+    aligner and only its rendering of the appended lines is kept, so a
+    formatted file is still formatted after an append, and `bea format` can
+    never touch a line written here: when a new line is wider than any before
+    it, the older lines are what a later format realigns.
+    """
     if not texts:
         return original.decode("utf-8")
-    indent, column = _destination_style(original)
-    blocks = _align_block(texts, indent, column)
-    return original.decode("utf-8") + "".join("\n" + block + "\n" for block in blocks)
+    text = original.decode("utf-8")
+    blocks = _indent_block(texts, _destination_indent(text))
+    draft = text + "".join("\n" + block + "\n" for block in blocks)
+    kept = len(text.splitlines())
+    tail = draft.splitlines()[kept:]
+    try:
+        from beancount.scripts.format import align_beancount
+
+        # The aligner emits one line per input line, so the appended lines are
+        # the tail of its output. Line endings are normalised first because its
+        # own whitespace-only safety check cannot account for a carriage return.
+        aligned = align_beancount(draft.replace("\r\n", "\n").replace("\r", "\n"))  # type: ignore[no-untyped-call]
+        tail = aligned.splitlines()[kept:]
+    except AssertionError:
+        pass  # The aligner refused the text; alignment is cosmetic, the append is not.
+    return text + "\n".join(tail) + "\n"
 
 
 def validate_append(
@@ -466,13 +463,15 @@ def validate_append(
     allow_errors: bool = False,
     into: Path | None = None,
     snapshot: LedgerSnapshot | None = None,
-) -> None:
+) -> list[str]:
+    """Validate the append without writing; returns the errors `allow_errors` tolerated."""
     snapshot = snapshot or LedgerSnapshot.capture(file)
     target = destination(file, into)
     snapshot.require_target(target)
     with candidate_file(target, appended_content(target.read_bytes(), texts)) as candidate:
-        validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
+        warnings = validate_candidate(candidate, target, allow_errors=allow_errors, snapshot=snapshot)
     snapshot.verify()
+    return warnings
 
 
 def require_writable(file: Path) -> None:

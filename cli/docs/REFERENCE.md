@@ -76,7 +76,7 @@ Usage: bea import [OPTIONS] {source}
 
 | Argument | Type | Required | Help |
 | --- | --- | --- | --- |
-| `source` | path | yes | Bank/card export handled by a configured importer |
+| `source` | path | yes | Bank/card export: a CSV for --csv, or a file a configured importer recognizes |
 
 | Option | Type | Default | Help |
 | --- | --- | --- | --- |
@@ -91,6 +91,7 @@ Usage: bea import [OPTIONS] {source}
 | `--duplicates` | choice: review \| skip \| include | review | Decision for possible duplicates; exact IDs are always skipped |
 | `--id-key` | str (repeatable) |  | Stable bank ID metadata key; repeat as needed (default: common bank ID keys). import-id and import-id-2 always match regardless. |
 | `--into` | path |  | Write to an included file, relative to the root ledger |
+| `--allow-errors` | flag |  | Preview and apply over semantic ledger errors such as a failing balance assertion; syntax errors still block |
 
 ### `bea format`
 

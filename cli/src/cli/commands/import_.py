@@ -291,7 +291,9 @@ def _source_amounts(entry: Any, account: str) -> str:
 
 
 def import_entries(
-    source: Annotated[Path, typer.Argument(help="Bank/card export handled by a configured importer")],
+    source: Annotated[
+        Path, typer.Argument(help="Bank/card export: a CSV for --csv, or a file a configured importer recognizes")
+    ],
     csv_mapping: Annotated[
         str | None,
         typer.Option(
@@ -333,12 +335,22 @@ def import_entries(
     into: Annotated[
         Path | None, typer.Option("--into", help="Write to an included file, relative to the root ledger")
     ] = None,
+    allow_errors: Annotated[
+        bool,
+        typer.Option(
+            "--allow-errors",
+            help="Preview and apply over semantic ledger errors such as a failing balance assertion; "
+            "syntax errors still block",
+        ),
+    ] = False,
 ) -> None:
     """Preview bank-export entries; write with --apply.
 
-    Uses the modern Beangulp identify/account/extract interface. Categorization
-    belongs to the configured importer. Possible duplicates require an explicit
-    --duplicates skip/include decision before applying.
+    A CSV needs no Python importer: name its columns with --csv, or let bea
+    read the header row, and categorize with --rules. Other formats go through
+    a configured importer's Beangulp identify/account/extract interface.
+    Possible duplicates require an explicit --duplicates skip/include decision
+    before applying.
     """
     from beancount import loader
     from beancount.core.data import Transaction
@@ -358,7 +370,14 @@ def import_entries(
     snapshot.require_target(target)
     original = target.read_bytes()
     existing, errors, options = loader.load_file(file)
-    output.render_ledger_errors(errors, allow=False)
+    if not allow_errors:
+        # A ledger that already fails validation fails it again with rows
+        # appended; the message names the flag that opts past that.
+        output.render_ledger_errors(
+            errors,
+            allow=False,
+            message=f"Ledger has {len(errors)} error(s). Pass --allow-errors to preview and apply anyway.",
+        )
     logs = io.StringIO()
     csv_request: str | None = csv_mapping
     config_to_remember: Path | None = None
@@ -452,6 +471,14 @@ def import_entries(
             raise LedgerError(
                 f"Importer failed ({type(exc).__name__}): {exc}. Pass --debug before the command for a traceback."
             ) from exc
+        if importer.rejected_categories:
+            examples = ", ".join(repr(name) for name in list(importer.rejected_categories)[:3])
+            count = sum(importer.rejected_categories.values())
+            output.note(
+                f"{count} row(s) carry a category that is not an account name ({examples}); they post to "
+                f"{default_account} with flag '!'. Categorize them with --rules, or map a column of full "
+                "account names with --csv category=Column."
+            )
         if not remembered_run:
             _remember_csv(
                 file,
@@ -583,8 +610,11 @@ def import_entries(
         rows.append(row_dict)
     proposed = ledger_write.appended_content(original, texts)
     validation_errors: list[str] = []
+    validation_warnings: list[str] = []
     try:
-        ledger_write.validate_append(file, texts, into=into, snapshot=snapshot)
+        validation_warnings = ledger_write.validate_append(
+            file, texts, allow_errors=allow_errors, into=into, snapshot=snapshot
+        )
     except LedgerError as exc:
         validation_errors = exc.details or [str(exc)]
     preview = {
@@ -600,6 +630,7 @@ def import_entries(
         "duplicates": sum(row["status"] == "duplicate" for row in rows),
         "possible_duplicates": sum(row["status"] == "possible_duplicate" for row in rows),
         "validation_errors": validation_errors,
+        "validation_warnings": validation_warnings,
         "importer_output": logs.getvalue(),
         "diff": "".join(
             difflib.unified_diff(
@@ -628,7 +659,7 @@ def import_entries(
                 "Import would leave the ledger invalid; nothing was written.", details=validation_errors, result=preview
             )
         snapshot.verify()
-        ledger_write.append(file, texts, expected=original, into=into, snapshot=snapshot)
+        ledger_write.append(file, texts, allow_errors=allow_errors, expected=original, into=into, snapshot=snapshot)
         preview["written"] = len(texts)
     if config_to_remember is not None:
         _remember_config(file, config_to_remember)
@@ -669,6 +700,8 @@ def import_entries(
         typer.echo(preview["diff"])
         for error in validation_errors:
             output.note(error)
+        for warning in validation_warnings:
+            output.note(warning)
         if logs.getvalue():
             output.note(logs.getvalue())
         if apply:

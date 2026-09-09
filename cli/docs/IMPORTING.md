@@ -42,6 +42,10 @@ Duplicate candidates show the existing entry and its source location beside
 the explanation. Fix categories or account openings
 in the mapping, rules, or ledger, then rerun the preview. `--apply`
 recomputes the preview from the current files and refuses an invalid result.
+A ledger that already fails validation blocks the import; `--allow-errors`
+previews and applies over semantic errors such as a failing balance assertion,
+never over syntax errors, and lists what it tolerated under
+`validation_warnings` in JSON.
 A concurrent ledger change during preparation causes exit **4**; no entries
 are appended. An `--apply` refused because duplicates need review also exits
 **4**, including under `--no-input`. A successful preview or an explicit
@@ -109,7 +113,10 @@ See the bundled [rules example](examples/rules.toml). Each entry needs
 `match` and `account`; a bad regex or a file without a `[[rule]]` list fails
 naming the rule number. Rules beat a `category` column: an explicit
 `category=Column` mapping, or a `Category` header when unmapped, categorizes
-rows the rules skip. Rows nothing matches post to `--default-account`
+rows the rules skip, but only when the value is a full account name such as
+`Expenses:Groceries`. A bank's own label such as `Groceries` is not an
+account; those rows join the review queue and the preview says so once,
+naming the labels it saw. Rows nothing matches post to `--default-account`
 (`Expenses:Uncategorized`) with flag `!`, while matched rows carry `*`. The
 preview's `RULE` column names the winning pattern (or the category value, or
 `unmatched`), and JSON rows carry the same value in `rule`. List the
@@ -224,8 +231,8 @@ skills deduplicate against each other: the ledger itself is the dedup database.
   the choice applies to all possible matches in that invocation.
 - Identical nontransaction directives are skipped. Import does not change the
   meaning of existing transactions or delete them, and never modifies existing
-  lines: the appended block matches the destination's indentation and amount
-  column, and `bea format` remains the only command that realigns a file.
+  lines: appended entries are written where `bea format` would put them, and
+  `bea format` remains the only command that realigns a file.
   Amount corrections and recategorization of existing entries remain deliberate
   ledger edits.
 
