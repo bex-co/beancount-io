@@ -28,7 +28,12 @@ AccountFilterOpt = Annotated[
     str | None, typer.Option("--account", "-a", help="Filter by account (case-insensitive substring)")
 ]
 CurrencyFilterOpt = Annotated[str | None, typer.Option("--currency", "-c", help="Exact currency (case-insensitive)")]
-AllowErrorsOpt = Annotated[bool, typer.Option("--allow-errors", help="Report data even if the ledger has errors")]
+AllowErrorsOpt = Annotated[
+    bool,
+    typer.Option(
+        "--allow-errors", help="Report partial data with errors on stderr; opts strict reads into partial answers"
+    ),
+]
 
 
 @dataclass(frozen=True)

@@ -23,6 +23,8 @@ from cli.main import app
 FIXTURES = Path(__file__).parent / "fixtures"
 VALID = FIXTURES / "valid.bean"
 INVALID = FIXTURES / "invalid.bean"
+UNPRICED = FIXTURES / "unpriced.bean"
+EUR_PRECISION = FIXTURES / "eur-precision.bean"
 
 V1 = "https://api.v3.beancount.io/api-gateway/v1"
 
@@ -425,6 +427,144 @@ class TestTagsAndLinks:
         assert written.exit_code == 0, written.stderr
         assert "#trip ^inv-001" in ledger.read_text()
         assert checked.exit_code == 0, checked.stderr
+
+
+class TestLenientReads:
+    """A terminal gets data plus a banner; automation keeps the refusal (w1/m13)."""
+
+    def _terminal(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("cli.context._stdout_is_a_terminal", lambda: True)
+
+    def _piped(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("cli.context._stdout_is_a_terminal", lambda: False)
+
+    @pytest.mark.parametrize(
+        "command",
+        [
+            ["list", "transaction"],
+            ["query", "SELECT account, sum(position) GROUP BY account"],
+            ["report", "balance-sheet"],
+        ],
+        ids=["list", "query", "report"],
+    )
+    def test_a_terminal_read_with_errors_exits_0_with_a_banner(
+        self, monkeypatch: pytest.MonkeyPatch, command: list[str]
+    ) -> None:
+        self._terminal(monkeypatch)
+
+        result = runner.invoke(app, ["--file", str(INVALID), *command])
+
+        assert result.exit_code == 0
+        assert "does not balance" in result.stderr
+
+    @pytest.mark.parametrize(
+        "command",
+        [
+            ["list", "transaction"],
+            ["query", "SELECT account, sum(position) GROUP BY account"],
+            ["report", "balance-sheet"],
+        ],
+        ids=["list", "query", "report"],
+    )
+    def test_json_piped_and_strict_reads_exit_1(self, monkeypatch: pytest.MonkeyPatch, command: list[str]) -> None:
+        self._piped(monkeypatch)
+        assert runner.invoke(app, ["--file", str(INVALID), "--json", *command]).exit_code == 1
+        assert runner.invoke(app, ["--file", str(INVALID), *command]).exit_code == 1
+
+        self._terminal(monkeypatch)
+        assert runner.invoke(app, ["--file", str(INVALID), "--strict", *command]).exit_code == 1
+
+    def test_check_always_exits_1_even_in_a_terminal(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._terminal(monkeypatch)
+
+        assert runner.invoke(app, ["--file", str(INVALID), "check"]).exit_code == 1
+
+    def test_allow_errors_in_a_strict_read_returns_data(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._piped(monkeypatch)
+
+        result = runner.invoke(app, ["--file", str(INVALID), "--json", "list", "transaction", "--allow-errors"])
+
+        assert result.exit_code == 0
+        assert envelope(result)["data"][0]["payee"] == "Blue Bottle"
+
+
+class TestPartialValuation:
+    """Reports convert what has a price and keep the rest in units (w1/m13)."""
+
+    def _terminal(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("cli.context._stdout_is_a_terminal", lambda: True)
+
+    @pytest.mark.parametrize(
+        "command", [["report", "overview"], ["report", "balance-sheet"], ["report", "trial-balance"]]
+    )
+    def test_an_unpriced_commodity_renders_in_units_in_a_terminal(
+        self, monkeypatch: pytest.MonkeyPatch, command: list[str]
+    ) -> None:
+        self._terminal(monkeypatch)
+
+        result = runner.invoke(app, ["--file", str(UNPRICED), *command])
+
+        assert result.exit_code == 0, result.stderr
+        assert "VACHR" in result.stdout
+        summary = [line for line in result.stderr.splitlines() if "VACHR" in line]
+        assert len(summary) == 1
+        assert "no USD price at any date" in summary[0]
+
+    def test_a_strict_read_refuses_with_the_summary_and_keeps_dated_triples(
+        self, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setattr("cli.context._stdout_is_a_terminal", lambda: False)
+
+        result = runner.invoke(app, ["--file", str(UNPRICED), "--json", "report", "balance-sheet"])
+
+        assert result.exit_code == 1
+        assert result.stdout == ""
+        error = error_object(result)
+        assert len(error["details"]) == 1
+        assert "VACHR" in error["details"][0]
+        dated = error["result"]["missing_price_dates"]
+        assert dated and all(set(item) >= {"from", "to", "date"} for item in dated)
+
+    def test_a_stale_quote_values_each_interval_at_its_own_date(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._terminal(monkeypatch)
+
+        result = runner.invoke(app, ["--file", str(EUR_PRECISION), "report", "income-statement"])
+
+        assert result.exit_code == 0, result.stderr
+        assert "4.50 EUR" in result.stdout
+        assert "4.91 USD" in result.stdout
+        assert "earlier rows shown in EUR" in result.stderr
+
+
+class TestDisplayPrecision:
+    """Text rounds converted amounts to the ledger's precision; JSON keeps it all (w1/m13)."""
+
+    def _terminal(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.setattr("cli.context._stdout_is_a_terminal", lambda: True)
+
+    def test_text_rounds_half_up_while_json_keeps_full_precision(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._terminal(monkeypatch)
+        text = runner.invoke(app, ["--file", str(EUR_PRECISION), "report", "income-statement"])
+
+        assert text.exit_code == 0, text.stderr
+        assert "4.91 USD" in text.stdout
+        assert "4.9050" not in text.stdout
+
+        monkeypatch.setattr("cli.context._stdout_is_a_terminal", lambda: False)
+        strobed = runner.invoke(
+            app, ["--file", str(EUR_PRECISION), "--json", "report", "income-statement", "--allow-errors"]
+        )
+
+        assert strobed.exit_code == 0, strobed.stderr
+        assert envelope(strobed)["data"]["expenses"]["balance_children"] == {"USD": "4.9050"}
+
+    def test_query_output_ignores_report_precision(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        self._terminal(monkeypatch)
+
+        result = runner.invoke(app, ["--file", str(VALID), "query", "SELECT account, sum(position) GROUP BY account"])
+
+        assert result.exit_code == 0
+        assert "1000.00 USD" in result.stdout
 
 
 class TestVersion:

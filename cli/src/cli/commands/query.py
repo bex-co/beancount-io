@@ -12,7 +12,8 @@ from cli.errors import UsageError
 def query(
     query_string: Annotated[str | None, typer.Argument(help="BQL query (omit for interactive mode)")] = None,
     allow_errors: Annotated[
-        bool, typer.Option("--allow-errors", help="Answer the query even if the ledger has errors")
+        bool,
+        typer.Option("--allow-errors", help="Answer with errors on stderr; opts strict reads into partial answers"),
     ] = False,
 ) -> None:
     """Run BQL queries against a local .bean file (print or interactive mode)."""

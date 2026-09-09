@@ -121,6 +121,7 @@ bea --debug import bank.csv --config importers.py
 | `--file / -f PATH` | Select the local root ledger |
 | `--json` | Use machine-readable output; implies `--no-input`; see [exceptions](#json-and-automation) |
 | `--no-input` | Disable CLI prompts; missing required input or confirmation exits 2 |
+| `--strict` | Refuse partial answers even in a terminal; `--allow-errors` opts into them |
 | `--yes / -y` | Confirm operations such as cloud deletion; does not grant AI write permission |
 | `--debug` | Include exception tracebacks in human errors or `error.traceback` in JSON |
 | `--shell NAME` | Choose `bash`, `zsh`, `fish`, `powershell`, or `pwsh` for completion |
@@ -531,8 +532,10 @@ bea check
 
 `check` loads and validates the root and its includes, returning exit 0 for a
 valid ledger and exit 1 for ledger errors. There are no command-specific
-options. `query`, `list`, and `report` also reject loader errors by default;
-their `--allow-errors` option explicitly requests partial results.
+options. `query`, `list`, and `report` are lenient in a terminal — they print
+the data with the errors as a banner on stderr and exit 0 — and strict under
+`--json`, with piped stdout, under `CI`, or with `--strict`, where they exit 1
+unless `--allow-errors` requests the partial answer.
 
 ### Format
 
@@ -624,19 +627,25 @@ multiple operating currencies, it is `units`, which keeps commodities
 separate. `at_cost` uses acquisition costs; `at_value` uses market values with
 cost fallback where a quote is unavailable.
 
-Currency conversion needs prices **on or before each valuation date**,
-including interval dates. A June quote cannot value a January interval.
-Missing-price errors identify the actual dates, for example
-`No EUR → USD price on or before 2026-01-31`. Record a historically appropriate
-quote with `bea add price --date DATE -c EUR --amount "RATE USD"`, or use
+Reports convert what has a price and keep the rest in units. Each interval
+row is valued at its own date, so a June quote cannot value a January
+interval: earlier rows stay in the source commodity while later rows convert.
+A missing price never fails a terminal report — stderr carries one summary
+line per commodity, for example `VACHR has no USD price at any date; shown in
+units`. Under `--json`, with piped stdout, under `CI`, or with `--strict`, a
+missing price exits 1 unless `--allow-errors` is passed; the error details
+carry the same per-commodity summary. Record a historically appropriate quote
+with `bea add price --date DATE -c EUR --amount "RATE USD"`, or use
 `--conversion units` to inspect unconverted quantities.
 
-With `--allow-errors`, partial conversion keeps source-currency amounts and
-marks combined totals unavailable. JSON has `valuation: "partial"`,
-`missing_prices`, and `missing_price_dates` (`from`, `to`, `date`); affected
-net-profit/net-worth totals are `null` in the requested currency. A null
-missing-price date means no quote was available at any date for an unfiltered
-summary.
+Partial conversion keeps source-currency amounts and marks combined totals
+unavailable. JSON has `valuation: "partial"`, `missing_prices`, and
+`missing_price_dates` (`from`, `to`, `date`); affected net-profit/net-worth
+totals are `null` in the requested currency. A null missing-price date means
+no quote was available at any date for an unfiltered summary.
+
+Text amounts use the ledger's display precision per currency (half up);
+JSON keeps full-precision decimal strings.
 
 Reports retain Beancount signs: income, liabilities, and equity are normally
 negative. **Net profit is `-(income + expenses)`**, positive for a gain.
@@ -812,9 +821,10 @@ exceptions are:
 - `upgrade` can stream package-manager output to stderr, including in JSON
   mode; its external package manager controls any prompts of its own.
 
-Human diagnostics normally use stderr. With `--allow-errors`, human reads show
-loader warnings; report JSON records them in `ledger_errors`. Partial results
-should not be treated as a successful ledger check.
+Human diagnostics normally use stderr. Terminal reads show loader warnings
+and missing-price summaries as a banner; strict reads need `--allow-errors`
+for the partial answer. Report JSON records loader errors in `ledger_errors`.
+Partial results should not be treated as a successful ledger check.
 
 ## Configuration and stored state
 

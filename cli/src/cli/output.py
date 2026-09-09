@@ -176,16 +176,21 @@ def jsonable(value: Any) -> Any:
     return str(value)
 
 
-def render_ledger_errors(errors: list[Any], *, allow: bool, message: str | None = None) -> None:
+def render_ledger_errors(
+    errors: list[Any], *, allow: bool, message: str | None = None, always_strict: bool = False
+) -> None:
     """Report loader errors instead of quietly analysing a ledger that does not load.
 
     A total computed from a ledger with parse errors looks authoritative and
-    is not, so the default is to refuse; `--allow-errors` opts into partial data.
+    is not, so strict reads refuse; `--allow-errors` opts strict mode into
+    partial data. A person at a terminal gets the data with the errors as a
+    banner on stderr instead. `bea check` passes `always_strict` and always
+    refuses, since reporting the errors is its whole job.
     """
     if not errors:
         return
     formatted = [format_ledger_error(err) for err in errors]
-    if not allow:
+    if not allow and (always_strict or context.current().strict_reads()):
         raise LedgerError(
             message or f"Ledger has {len(formatted)} error(s). Pass --allow-errors to report anyway.",
             details=formatted,

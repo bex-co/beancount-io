@@ -31,15 +31,16 @@ def book(tmp_path: Path) -> Path:
 
 
 @pytest.mark.parametrize("report", ["overview", "balance-sheet", "income-statement"])
-def test_missing_price_diagnostics_name_the_actual_interval_dates(book: Path, report: str) -> None:
+def test_missing_price_diagnostics_summarize_one_line_per_commodity(book: Path, report: str) -> None:
     with book.open("a") as stream:
         stream.write('2026-01-15 * "Food"\n  Assets:Checking -10 EUR\n  Expenses:Food 10 EUR\n')
     command = ["--json", "-f", str(book), "report", report, "-x", "USD", "--time", "2026-01 - 2026-06"]
     result = runner.invoke(app, command)
     assert result.exit_code == 1, result.output
     error = json.loads(result.stderr)["error"]
-    assert "No EUR → USD price on or before 2026-01-31." in error["details"]
+    assert error["details"] == ["EUR → USD has no price before 2026-06-01; earlier rows shown in EUR"]
     assert not any("2026-06-30" in detail for detail in error["details"])
+    assert {"from": "EUR", "to": "USD", "date": "2026-01-31"} in error["result"]["missing_price_dates"]
     partial = json.loads(runner.invoke(app, [*command, "--allow-errors"]).stdout)["data"]
     assert {"from": "EUR", "to": "USD", "date": "2026-01-31"} in partial["missing_price_dates"]
     with book.open("a") as stream:

@@ -173,6 +173,8 @@ Expose engine/version and supported capabilities, together with validation warni
 
 Analytical output must disclose invalid-ledger state. Default automation to failure on validation errors; an explicit option may return partial analysis with diagnostics. Silent authoritative-looking totals are unacceptable. Capability discovery and parity testing are proposed work, not existing CLI features.
 
+*Amended 2026-09-08 (w1/m13).* The terminal is the exception to the automation default: `query`, `list`, and `report` print the data with loader errors or missing-price summaries as a banner on stderr and exit 0 when stdout is a terminal, while `--json`, piped stdout, `CI`, or `--strict` keep the refusal unless `--allow-errors` is passed. Converted text amounts render at the ledger's per-currency display precision; JSON keeps full precision.
+
 **10. What should agents and scripts be able to depend on?**
 
 One automation contract across command families:

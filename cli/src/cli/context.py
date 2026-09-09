@@ -32,6 +32,14 @@ def _stdin_is_a_terminal() -> bool:
         return False
 
 
+def _stdout_is_a_terminal() -> bool:
+    """Whether a person is reading the table. Piped stdout means a script is."""
+    try:
+        return sys.stdout.isatty()
+    except (AttributeError, ValueError):
+        return False
+
+
 @dataclass
 class RunContext:
     """Global options, resolved once by the root callback."""
@@ -40,6 +48,7 @@ class RunContext:
     json_output: bool = False
     yes: bool = False
     debug: bool = False
+    strict: bool = False
     _no_input: bool = field(default=False, repr=False)
 
     @property
@@ -51,6 +60,15 @@ class RunContext:
         still never hangs on a prompt.
         """
         return self._no_input or self.json_output or not _stdin_is_a_terminal() or env_flag("CI")
+
+    def strict_reads(self) -> bool:
+        """True when a read must refuse partial answers.
+
+        Strict under `--strict`, under `--json`, when stdout is not a
+        terminal (a pipe is a script), or when `CI` is truthy. A person at
+        a terminal gets data plus a banner instead.
+        """
+        return self.strict or self.json_output or not _stdout_is_a_terminal() or env_flag("CI")
 
     def entry_file(self) -> Path:
         """Resolve the local ledger: `--file`, then `$BEA_FILE`, then `./main.bean`."""
@@ -101,9 +119,10 @@ def configure(
     no_input: bool = False,
     yes: bool = False,
     debug: bool = False,
+    strict: bool = False,
 ) -> RunContext:
     global _context
-    _context = RunContext(file=file, json_output=json_output, yes=yes, _no_input=no_input, debug=debug)
+    _context = RunContext(file=file, json_output=json_output, yes=yes, _no_input=no_input, debug=debug, strict=strict)
     return _context
 
 

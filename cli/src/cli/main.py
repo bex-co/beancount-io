@@ -60,6 +60,7 @@ class _GuardedGroup(TyperGroup):
             no_input=bool(opts.get("no_input")),
             yes=bool(opts.get("yes")),
             debug=bool(opts.get("debug")),
+            strict=bool(opts.get("strict")),
         )
         ctx.meta["completion_shell"] = opts.get("shell")
         try:
@@ -142,6 +143,9 @@ def main(
     no_input: Annotated[bool, typer.Option("--no-input", help="Never prompt; fail instead of waiting")] = False,
     yes: Annotated[bool, typer.Option("--yes", "-y", help="Answer confirmations with yes")] = False,
     debug: Annotated[bool, typer.Option("--debug", help="Include exception tracebacks in errors")] = False,
+    strict: Annotated[
+        bool, typer.Option("--strict", help="Refuse partial answers even in a terminal; --allow-errors opts in")
+    ] = False,
     shell: Annotated[
         str | None, typer.Option("--shell", help="Completion shell: bash, zsh, fish, powershell or pwsh")
     ] = None,
@@ -170,7 +174,7 @@ def main(
 ) -> None:
     """Global options, resolved once for whichever command runs."""
     del shell, show_completion, install_completion  # Handled by the completion callbacks.
-    ctx = context.configure(file=file, json_output=json_output, no_input=no_input, yes=yes, debug=debug)
+    ctx = context.configure(file=file, json_output=json_output, no_input=no_input, yes=yes, debug=debug, strict=strict)
     # Started here, where the machine-mode options are already resolved, so the
     # check overlaps the command instead of delaying it.
     update.start(json_output=ctx.json_output, no_input=ctx.no_input, channel=current_channel().name)

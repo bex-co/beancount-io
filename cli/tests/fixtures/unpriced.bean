@@ -1,0 +1,19 @@
+;; A ledger with a commodity that has no price at any date (vacation hours).
+option "operating_currency" "USD"
+
+2024-01-01 open Assets:Cash USD
+2024-01-01 open Assets:Leave VACHR
+2024-01-01 open Expenses:Food USD
+2024-01-01 open Equity:Opening-Balances USD,VACHR
+
+2024-01-01 * "Opening" "Seed the cash account"
+  Assets:Cash              1000.00 USD
+  Equity:Opening-Balances  -1000.00 USD
+
+2024-01-15 * "Grant" "Vacation hours"
+  Assets:Leave             8 VACHR
+  Equity:Opening-Balances  -8 VACHR
+
+2024-02-01 * "Grocer" "Groceries"
+  Expenses:Food   45.00 USD
+  Assets:Cash    -45.00 USD

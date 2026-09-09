@@ -30,6 +30,7 @@ Global options come before the command.
 | `--file / -f PATH` | Ledger entry file. Overrides `BEA_FILE` and `./main.bean`. |
 | `--json` | Emit the JSON envelope on stdout and JSON errors on stderr. Implies `--no-input`. |
 | `--no-input` | Never prompt. Missing confirmation or input fails with exit 2 instead of waiting. |
+| `--strict` | Refuse partial answers even in a terminal; `--allow-errors` opts into them. |
 | `--yes / -y` | Answer confirmations with yes. |
 | `--debug` | Include exception tracebacks; JSON errors gain a `traceback` string. |
 | `--show-completion` / `--install-completion` | Print or install shell completion. |
@@ -153,11 +154,13 @@ in the ledger happen to use whole amounts.
 An empty result prints `(no rows)` on stderr. JSON mode keeps the usual
 envelope with an empty `rows` array and no human notice.
 
-`check`, `query`, `list`, and `report` all refuse to answer from a ledger that
-does not load: a total computed over a broken ledger reads as authoritative and
-is not. `query`, `list`, and `report` take `--allow-errors` to opt into the
-partial answer, which still prints the errors on stderr; `bea check` has no such
-flag, because reporting the errors is its whole job.
+Reads are lenient in a terminal and strict everywhere else. `query`, `list`,
+and `report` print the data with the loader errors as a banner on stderr and
+exit 0 when stdout is a terminal; under `--json`, when stdout is piped, when
+`CI` is truthy, or with `--strict`, they exit 1 instead unless `--allow-errors`
+opts into the partial answer (the errors still print on stderr). `bea check`
+always exits 1 on errors — reporting them is its whole job, so it has no
+`--allow-errors` flag.
 The same validation gate runs before the interactive BQL shell opens. Missing
 format targets are usage errors. `format --dry-run` previews changes without
 writing and exits **0** even when formatting is needed. Use `format --check`
@@ -479,19 +482,28 @@ valuation adjustment across unlike commodities. `equity_reconciled` states
 whether the derived reconciliation is available. Reports run with loader
 errors also carry `ledger_valid: false` and `ledger_errors` in JSON.
 
-Explicit currency conversion requires prices for every nonzero commodity in
-the report and its intervals. A missing price exits **1** and identifies the
-actual valuation dates, for example `No EUR → USD price on or before 2026-01-31`.
-A later quote cannot value an earlier interval. Errors and partial reports
-include `missing_price_dates` (`from`, `to`, `date`) alongside `missing_prices`;
-a null date means the unfiltered summary could not find a quote at any date.
-With `--allow-errors`,
-JSON marks `valuation: "partial"`, lists `missing_prices`, retains amounts in
-their source currencies, and sets combined net profit/net worth to `null` in
-the requested currency. It also withholds the derived equity adjustment and
-equity total. Text shows the source amounts and says the total is unavailable.
+Reports convert what has a price and keep the rest in units. Each interval
+row is valued at its own date, so a later quote cannot value an earlier
+interval: earlier rows stay in the source commodity while later rows convert.
+A missing price never fails a terminal report — stderr carries one summary
+line per commodity, for example `VACHR has no USD price at any date; shown in
+units` or `EUR → USD has no price before 2026-08-31; earlier rows shown in
+EUR`. Under `--json`, with piped stdout, under `CI`, or with `--strict`, a
+missing price exits **1** unless `--allow-errors` is passed; the error's
+`details` carry the same per-commodity summary, and `error.result` keeps the
+dated triples in `missing_price_dates` (`from`, `to`, `date`) alongside
+`missing_prices` for automation (a null date means no quote at any date).
+Partial JSON marks `valuation: "partial"`, lists `missing_prices`, retains
+amounts in their source currencies, and sets combined net profit/net worth to
+`null` in the requested currency. It also withholds the derived equity
+adjustment and equity total. Text shows the source amounts and says the total
+is unavailable.
 `--conversion units` shows quantities; `at_cost` shows acquisition costs and
 `at_value` uses market values with Fava's cost fallback when no price exists.
+
+Text amounts are rounded to the display precision the ledger uses for each
+currency (half up, so `4.9050 USD` of converted dining reads `4.91 USD`);
+JSON keeps the full-precision decimal string (`"4.9050"`).
 
 ## Ask (optional extra)
 

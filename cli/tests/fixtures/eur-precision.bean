@@ -1,0 +1,12 @@
+;; A ledger whose only quote postdates the activity: 4.50 EUR at 1.09 is 4.9050 USD.
+option "operating_currency" "USD"
+
+2026-01-01 open Assets:Cash EUR
+2026-01-01 open Expenses:Dining EUR
+2026-01-01 open Equity:Opening-Balances EUR
+
+2026-06-01 * "Lunch" "Dining"
+  Expenses:Dining  4.50 EUR
+  Assets:Cash     -4.50 EUR
+
+2026-08-31 price EUR 1.09 USD
