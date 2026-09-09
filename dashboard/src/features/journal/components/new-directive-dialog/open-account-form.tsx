@@ -134,7 +134,7 @@ export function OpenAccountForm({ ledgerId, onSuccess }: OpenAccountFormProps) {
                   <DatePicker
                     id="date"
                     value={field.value}
-                    onChange={(d) => d && field.onChange(d)}
+                    onChange={(d) => field.onChange(d)}
                     required
                   />
                 </FormControl>

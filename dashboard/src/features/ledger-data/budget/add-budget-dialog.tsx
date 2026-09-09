@@ -221,7 +221,7 @@ export function AddBudgetDialog({
                   <FormControl>
                     <DatePicker
                       value={field.value}
-                      onChange={(d) => d && field.onChange(d)}
+                      onChange={(d) => field.onChange(d)}
                       className="[&>div]:w-full"
                     />
                   </FormControl>

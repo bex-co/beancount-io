@@ -150,11 +150,7 @@ export function BalanceForm({ ledgerId, onSuccess }: BalanceFormProps) {
                   <DatePicker
                     id="date"
                     value={field.value}
-                    onChange={(newDate) => {
-                      if (newDate) {
-                        field.onChange(newDate);
-                      }
-                    }}
+                    onChange={(newDate) => field.onChange(newDate)}
                     placeholder={t("journal.selectBalanceDate")}
                     required
                   />

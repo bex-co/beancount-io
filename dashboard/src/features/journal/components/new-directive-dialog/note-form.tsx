@@ -124,11 +124,7 @@ export function NoteForm({ ledgerId, onSuccess }: NoteFormProps) {
                   <DatePicker
                     id="date"
                     value={field.value}
-                    onChange={(newDate) => {
-                      if (newDate) {
-                        field.onChange(newDate);
-                      }
-                    }}
+                    onChange={(newDate) => field.onChange(newDate)}
                     placeholder={t("journal.selectNoteDate")}
                     required
                   />

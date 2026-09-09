@@ -348,11 +348,7 @@ export function TransactionForm({ ledgerId, onSuccess }: TransactionFormProps) {
                   <DatePicker
                     id="date"
                     value={field.value}
-                    onChange={(newDate) => {
-                      if (newDate) {
-                        field.onChange(newDate);
-                      }
-                    }}
+                    onChange={(newDate) => field.onChange(newDate)}
                     placeholder="MM/DD/YYYY"
                     required
                   />

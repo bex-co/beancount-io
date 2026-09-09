@@ -1,17 +1,17 @@
 # w3 · m24 — Keep typed dates consistent with submitted entries
 
-**Worker:** worker3 **Goal:** users can edit a complete calendar date without submitting a previous or silently corrected date **Status:** todo
+**Worker:** worker3 **Goal:** users can edit a complete calendar date without submitting a previous or silently corrected date **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                  | est | depends_on |
 | ---- | ------------------------------------------------------ | --- | ---------- |
-| t001 | Preserve date drafts and parse complete calendar dates | 55m | —          |
-| t002 | Propagate invalid date state through all form callers  | 40m | t001       |
-| t003 | Verify date-entry adoption surfaces                    | 20m | t002       |
-| t004 | Simplify date state and validation wiring              | 20m | t003       |
-| t005 | Test real typing, invalid submission and recovery      | 55m | t004       |
-| t006 | Close out and archive the date-entry repair            | 15m | t005       |
+| t001 | Preserve date drafts and parse complete calendar dates — **DONE** | 55m | —          |
+| t002 | Propagate invalid date state through all form callers — **DONE** | 40m | t001       |
+| t003 | Verify date-entry adoption surfaces — **DONE** | 20m | t002       |
+| t004 | Simplify date state and validation wiring — **DONE** | 20m | t003       |
+| t005 | Test real typing, invalid submission and recovery — **DONE** | 55m | t004       |
+| t006 | Close out and archive the date-entry repair — **DONE** | 15m | t005       |
 
 205 minutes total, including 95 minutes of implementation across the shared
 picker and its form integrations. One major finding group with related

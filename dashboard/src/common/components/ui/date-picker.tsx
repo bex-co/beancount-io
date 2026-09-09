@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
+import { format, isValid, parse } from "date-fns";
 
 import { Button } from "@/common/components/ui/button";
 import { Calendar } from "@/common/components/ui/calendar";
@@ -14,18 +15,16 @@ import {
 } from "@/common/components/ui/popover";
 import { useTranslations } from "@/common/hooks/use-translations";
 
+const DISPLAY_PATTERN = "MM/dd/yyyy";
+const PARSE_PATTERNS = [DISPLAY_PATTERN, "yyyy-MM-dd"] as const;
+
 function formatDate(date: Date | undefined, short = false) {
-  if (!date) {
+  if (!date || !isValid(date)) {
     return "";
   }
 
   if (short) {
-    // Compact format: MM/DD/YYYY
-    return date.toLocaleDateString("en-US", {
-      day: "2-digit",
-      month: "2-digit",
-      year: "numeric",
-    });
+    return format(date, DISPLAY_PATTERN);
   }
 
   return date.toLocaleDateString("en-US", {
@@ -35,11 +34,18 @@ function formatDate(date: Date | undefined, short = false) {
   });
 }
 
-function isValidDate(date: Date | undefined) {
-  if (!date) {
-    return false;
+/** Strict calendar-date parse; rejects partial text and month-length rollover. */
+export function parseStrictCalendarDate(input: string): Date | undefined {
+  const trimmed = input.trim();
+  if (!trimmed) return undefined;
+
+  for (const pattern of PARSE_PATTERNS) {
+    const parsed = parse(trimmed, pattern, new Date());
+    if (isValid(parsed) && format(parsed, pattern) === trimmed) {
+      return parsed;
+    }
   }
-  return !isNaN(date.getTime());
+  return undefined;
 }
 
 interface DatePickerProps {
@@ -70,38 +76,47 @@ export function DatePicker({
   const [open, setOpen] = React.useState(false);
   const [month, setMonth] = React.useState<Date | undefined>(value);
   const [inputValue, setInputValue] = React.useState(formatDate(value, true));
+  // Keep the typed draft while the parent echoes an invalid/empty value.
+  const [isEditing, setIsEditing] = React.useState(false);
 
-  // Update input value when value prop changes
   React.useEffect(() => {
+    if (isEditing) return;
     setInputValue(formatDate(value, true));
-    if (value) {
+    if (value && isValid(value)) {
       setMonth(value);
     }
-  }, [value]);
+  }, [value, isEditing]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const inputVal = e.target.value;
-    setInputValue(inputVal);
+    const next = e.target.value;
+    setIsEditing(true);
+    setInputValue(next);
 
-    // Try to parse the input as a date
-    const date = new Date(inputVal);
-    if (isValidDate(date)) {
-      onChange(date);
+    const parsed = parseStrictCalendarDate(next);
+    onChange(parsed);
+    if (parsed) {
+      setMonth(parsed);
+    }
+  };
+
+  const commitDate = (date: Date | undefined) => {
+    setIsEditing(false);
+    onChange(date);
+    setInputValue(formatDate(date, true));
+    if (date) {
       setMonth(date);
     }
   };
 
   const handleCalendarSelect = (date: Date | undefined) => {
-    onChange(date);
-    setInputValue(formatDate(date, true));
+    commitDate(date);
     setOpen(false);
   };
 
   const handleTodayClick = () => {
     const today = new Date();
-    onChange(today);
-    setInputValue(formatDate(today, true));
-    setMonth(today);
+    today.setHours(0, 0, 0, 0);
+    commitDate(today);
     setOpen(false);
   };
 
@@ -119,6 +134,12 @@ export function DatePicker({
           placeholder={defaultPlaceholder}
           className="bg-background pr-10"
           onChange={handleInputChange}
+          onBlur={() => {
+            setIsEditing(false);
+            if (value && isValid(value)) {
+              setInputValue(formatDate(value, true));
+            }
+          }}
           onKeyDown={(e) => {
             if (e.key === "ArrowDown") {
               e.preventDefault();
@@ -126,6 +147,11 @@ export function DatePicker({
             }
           }}
           required={required}
+          aria-invalid={
+            inputValue.trim().length > 0 && !parseStrictCalendarDate(inputValue)
+              ? true
+              : undefined
+          }
         />
         <Popover open={open} onOpenChange={setOpen}>
           <PopoverTrigger asChild>
