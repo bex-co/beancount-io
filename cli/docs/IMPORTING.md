@@ -125,8 +125,14 @@ re-import only after opening any missing accounts: a rule naming an account
 the ledger does not open fails validation with the `bea add open` command to
 run.
 
-The mapping is remembered per root ledger keyed by the CSV header row, so the
-next import of the same export needs no flags: human output reports
+The mapping is remembered per root ledger, CSV header row, and source account.
+When only one account uses those headers, the next import needs no flags.
+If checking and savings exports share headers, their mappings are kept separately
+and subsequent previews and applies require `--account ACCOUNT`; bea refuses
+to choose between them. Always specify `--account` when importing from a new
+account, since headers alone cannot identify a bank account. For example:
+`bea import checking.csv --account Assets:Checking --apply`.
+For a remembered mapping, human output reports
 `Using remembered column mapping for <file>` and JSON reports
 `config_source` `remembered --csv`. An explicit `--csv` run updates the
 remembered mapping. Only a `--date-format` you passed is remembered with it;

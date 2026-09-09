@@ -693,12 +693,15 @@ def test_csv_mapping_is_remembered_per_ledger_and_header(
     missing = runner.invoke(app, ["--json", "--file", str(book), "import", str(other)])
     assert missing.exit_code == 2
     assert "--csv" in missing.stderr
-    # Explicit flags overwrite the remembered mapping for those headers.
+    # A second account keeps its own mapping and requires account selection.
     source.write_text(CSV_HEADER + CSV_ROW)
     updated = run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Savings")
     assert updated.exit_code == 0, updated.output
     recall = runner.invoke(app, ["--json", "--file", str(book), "import", str(source)])
-    assert json.loads(recall.stdout)["data"]["account"] == "Assets:Savings"
+    assert recall.exit_code == 2
+    assert "multiple source accounts" in recall.stderr
+    selected = run_csv(book, source, "--account", "Assets:Savings")
+    assert json.loads(selected.stdout)["data"]["account"] == "Assets:Savings"
 
 
 def test_csv_config_takes_precedence_over_a_remembered_mapping(book: Path, isolated_config: Path) -> None:
@@ -799,3 +802,34 @@ def test_an_option_typed_on_this_run_beats_the_remembered_one(book: Path, isolat
     result = run_csv(book, source, "--account", "Assets:Checking", "--default-account", "Expenses:Fees")
     assert result.exit_code == 0, result.output
     assert "Expenses:Fees" in json.loads(result.stdout)["data"]["diff"]
+
+
+@pytest.mark.parametrize("explicit_mapping", [False, True])
+def test_shared_csv_headers_require_account_and_preserve_each_mapping(
+    book: Path, isolated_config: Path, explicit_mapping: bool
+) -> None:
+    checking = book.parent / "checking.csv"
+    savings = book.parent / "savings.csv"
+    checking.write_text(CSV_HEADER + CSV_ROW)
+    savings.write_text(CSV_HEADER + CSV_ROW.replace("Cafe", "Savings fee"))
+    assert run_csv(book, checking, "--csv", CSV_MAPPING, "--account", "Assets:Checking").exit_code == 0
+    mapping_args = ["--csv", CSV_MAPPING] if explicit_mapping else []
+    preview = run_csv(book, savings, *mapping_args, "--account", "Assets:Savings", "--default-account", "Expenses:Fees")
+    assert preview.exit_code == 0, preview.output
+    before = book.read_bytes()
+    for args in [[], ["--apply"]]:
+        refused = run_csv(book, checking, *args)
+        assert refused.exit_code == 2, refused.output
+        assert (
+            "--account" in refused.stderr and "Assets:Checking" in refused.stderr and "Assets:Savings" in refused.stderr
+        )
+        assert book.read_bytes() == before
+    for source, account in [(checking, "Assets:Checking"), (savings, "Assets:Savings")]:
+        applied = run_csv(book, source, "--account", account, "--apply")
+        assert applied.exit_code == 0, applied.output
+        assert json.loads(applied.stdout)["data"]["account"] == account
+    entries, errors, _ = loader.load_file(book)
+    assert not errors
+    purchases = {entry.payee: entry for entry in entries if isinstance(entry, Transaction)}
+    assert [p.account for p in purchases["Cafe"].postings] == ["Assets:Checking", "Expenses:Uncategorized"]
+    assert [p.account for p in purchases["Savings fee"].postings] == ["Assets:Savings", "Expenses:Fees"]

@@ -104,7 +104,7 @@ def _csv_record(file: Path) -> Path:
     return config_dir() / "importers" / f"csv-{key}.json"
 
 
-def _recall_csv(file: Path, source: Path) -> dict[str, Any] | None:
+def _recall_csv(file: Path, source: Path, account: str | None = None) -> dict[str, Any] | None:
     """A remembered `--csv` run for this root ledger and CSV header row, if any.
 
     Returns the stored spec only when its mapping and account are usable
@@ -123,6 +123,7 @@ def _recall_csv(file: Path, source: Path) -> dict[str, Any] | None:
     if not headers:
         return None
     wanted = header_signature(headers)
+    matches = []
     for entry in sources:
         if (
             isinstance(entry, dict)
@@ -130,12 +131,19 @@ def _recall_csv(file: Path, source: Path) -> dict[str, Any] | None:
             and isinstance(entry.get("mapping"), str)
             and isinstance(entry.get("account"), str)
         ):
-            return entry
-    return None
+            if account is None or entry["account"] == account:
+                matches.append(entry)
+    if len(matches) > 1:
+        accounts = ", ".join(sorted({entry["account"] for entry in matches}))
+        raise UsageError(
+            f"This CSV header matches multiple source accounts: {accounts}. "
+            "Pass --account ACCOUNT to select the export's account; nothing was written."
+        )
+    return matches[0] if matches else None
 
 
 def _remember_csv(file: Path, source: Path, spec: dict[str, Any]) -> None:
-    """Remember a `--csv` run keyed by root ledger and CSV header row."""
+    """Remember a `--csv` run keyed by root ledger, CSV header row and account."""
     from cli.csv_mapper import header_signature, read_header
 
     headers = read_header(source)
@@ -151,7 +159,11 @@ def _remember_csv(file: Path, source: Path, spec: dict[str, Any]) -> None:
         sources = [
             entry
             for entry in sources
-            if not (isinstance(entry, dict) and header_signature(entry.get("headers")) == wanted)
+            if not (
+                isinstance(entry, dict)
+                and header_signature(entry.get("headers")) == wanted
+                and entry.get("account") == spec["account"]
+            )
         ]
         record.parent.mkdir(parents=True, exist_ok=True)
         payload = json.dumps({"sources": [*sources, {"headers": headers, **spec}]})
@@ -394,7 +406,7 @@ def import_entries(
         csv_request = _inferred_mapping(source, explicit=True, notes=inferred_notes)
         csv_origin = "inferred --csv"
     if csv_request is None and config is None:
-        remembered = _recall_csv(file, source)
+        remembered = _recall_csv(file, source, csv_account)
         if remembered is not None:
             csv_request = remembered["mapping"]
             csv_run_account = csv_account or remembered["account"]

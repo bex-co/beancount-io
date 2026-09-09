@@ -69,18 +69,25 @@ for the debit/credit form, currencies, and Python importers.
 ## Week 4 — reconcile against the statement
 
 The August statement closes checking at **3206.81 USD**. Your books say
-3209.81: the bank charged a 3.00 fee your export missed. Assert the statement
-balance and let `--pad-from` book the difference explicitly:
+3209.81: the bank charged a 3.00 fee your export missed. Record the known fee,
+then assert the statement balance on September 1. Beancount checks assertions
+at the start of the day, so the next day's assertion includes all August 31
+transactions:
 
 ```bash
-bea --file august/main.bean add balance --date 2026-08-31 --account Assets:Checking \
-  --amount "3206.81 USD" --pad-from Expenses:Fees
-bea --file august/main.bean list transaction --flag '!'
+bea --file august/main.bean add transaction "Bank fee" --date 2026-08-31 \
+  --posting "Expenses:Fees 3.00" --posting "Assets:Checking"
+bea --file august/main.bean add balance --date 2026-09-01 --account Assets:Checking \
+  --amount "3206.81 USD"
+bea --file august/main.bean list transaction --flag '!' --details
 ```
 
-The queue holds the Mystery Shop row. Open the ledger in your editor, change
-its `Expenses:Uncategorized` posting to the right account, and keep the
-`import-id` line so the next import of this export still skips it.
+The queue holds the Mystery Shop row. `--details` shows its file and line
+number. Open that location in your editor, change its `Expenses:Uncategorized`
+posting to the right account, and change its flag from `!` to `*` once reviewed.
+Keep the `import-id` line so the next import of this export still skips it.
+Run `bea --file august/main.bean check` and list the `!` queue again to confirm
+that the reviewed transaction is gone.
 
 ## Read the month
 

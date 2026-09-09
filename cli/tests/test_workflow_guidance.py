@@ -191,3 +191,45 @@ def test_init_warns_about_unusual_symbols_without_rejecting_valid_books(
     assert result.stderr == ""
     entries, errors, options = loader.load_file(tmp_path / "main.bean")
     assert entries and not errors and options["operating_currency"] == [currency.upper()]
+
+
+@pytest.mark.parametrize("purchase_date", ["2026-08-30", "2026-08-31"])
+def test_established_balance_error_explains_dates_without_equity_padding(book: Path, purchase_date: str) -> None:
+    added = invoke(
+        book,
+        "add",
+        "transaction",
+        "Coffee",
+        "--date",
+        purchase_date,
+        "-p",
+        "Expenses:Food 12.50 USD",
+        "-p",
+        "Assets:Checking",
+    )
+    assert added.exit_code == 0, added.output
+    before = book.read_bytes()
+    failed = invoke(book, "add", "balance", "--date", "2026-08-31", "-a", "Assets:Checking", "--amount", "-15.50 USD")
+    assert failed.exit_code == 1 and book.read_bytes() == before
+    assert "start of the day" in failed.stderr and "following day's date" in failed.stderr
+    assert "missing or duplicate transactions" in failed.stderr
+    assert "Opening adjustment command:" not in failed.stderr
+    fee = invoke(
+        book,
+        "add",
+        "transaction",
+        "Bank fee",
+        "--date",
+        "2026-08-31",
+        "-p",
+        "Expenses:Food 3.00 USD",
+        "-p",
+        "Assets:Checking",
+    )
+    assert fee.exit_code == 0, fee.output
+    corrected = invoke(
+        book, "add", "balance", "--date", "2026-09-01", "-a", "Assets:Checking", "--amount", "-15.50 USD"
+    )
+    assert corrected.exit_code == 0, corrected.output
+    assert not loader.load_file(book)[1]
+    assert "pad Assets:Checking" not in book.read_text()

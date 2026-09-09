@@ -171,14 +171,27 @@ def _balance_recovery_hints(
 ) -> list[str]:
     import datetime
 
-    from beancount.core.data import Close, Open
+    from beancount.core.data import Close, Open, Transaction
 
+    date_hint = (
+        "Balance assertions run at the start of the day, before that day's transactions. "
+        "For a statement closing balance, use the following day's date. "
+        "Review missing or duplicate transactions and record known fees as transactions before adjusting."
+    )
     original = snapshot.contents.get(source, b"") if snapshot else b""
     if balance.meta.get("lineno", 0) <= len(original.splitlines()):
         return [
+            date_hint,
             f"Review transactions against the existing assertion at {source}:{balance.meta['lineno']}. "
-            "Correct missing transactions or edit that assertion; adding another balance would duplicate it."
+            "Correct missing transactions or edit that assertion; adding another balance would duplicate it.",
         ]
+    if any(
+        isinstance(entry, Transaction)
+        and entry.date <= balance.date
+        and any(posting.account == balance.account for posting in entry.postings)
+        for entry in entries
+    ):
+        return [date_hint]
     if balance.date == datetime.date.min:
         return ["Review the assertion date: an opening adjustment needs an earlier pad date."]
     pad_date = balance.date - datetime.timedelta(days=1)
@@ -223,6 +236,7 @@ def _balance_recovery_hints(
     if source.resolve() != root.resolve():
         command.extend(["--into", os.path.relpath(source, root.parent)])
     hints = [
+        date_hint,
         "Review missing transactions first. The following command creates an intentional opening adjustment.",
         "Opening adjustment command: " + shlex.join(command),
     ]
