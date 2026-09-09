@@ -76,7 +76,7 @@ release notes are fresh. The Android changelog path remains intact. Fastlane is
 not an iOS metadata authority.
 
 Generated screenshot PNGs and raw comparison renders are ignored. The build
-creates exactly 84 final assets: 14 locales × `APP_IPHONE_65` and
+creates 84 final Apple assets: 14 locales × `APP_IPHONE_65` and
 `APP_IPAD_PRO_3GEN_129` × three ordered stories. It strips alpha and uses
 Apple-accepted `1284×2778` and `2064×2752` output sizes. The release plan runs
 `asc screenshots validate` against every one of the 28 locale/device sets as
@@ -170,6 +170,9 @@ diagnostics. The baseline, key, and tokens must never be committed.
 Play display targets and Bulgarian/Persian captions alongside the existing Apple
 stories. All generated PNGs remain ignored. Chromium renders the Play typography
 and Persian UI overlays with Unicode shaping; ImageMagick produces opaque PNGs.
+For Apple captions and demo overlays, Arial Unicode MS is preferred when
+available. macOS runners can instead use Arial for Latin/Cyrillic and Heiti SC
+for Chinese; the build rejects missing font coverage.
 Set `CHROME_BIN` to a Chromium/headless-shell executable if needed. The renderer
 otherwise looks for an existing Playwright headless-shell installation, then
 Chrome on macOS or `chromium` on Linux. No browser package is installed by the

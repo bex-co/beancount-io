@@ -34,6 +34,6 @@
 
 - The authenticated baseline confirms en-US was the only existing Play locale (8 phone screenshots, 1 feature graphic). Detailed evidence is in done/t001.md.
 - Canonical generation, 16-locale offline plans, reviewed-plan confirmation, remote-drift checks, edit validation/commit, and text/image parity verification are implemented.
-- Local checks: 1,544 unit tests; formatting, lint/type checks; metadata validation; all 148 screenshot assets; agent-guidance and skills validation. Deliberate mutations were detected for credential redaction, JWT signing, edit cleanup, locale mapping, image dimensions/captions, canonical-copy derivation, text limits/trimming, plan output, parity checks, and validation-before-commit.
-- The CI metadata/artwork job is configured; a hosted run has not yet been observed.
+- Local checks: 1,547 unit tests; formatting, lint/type checks; metadata validation; all 148 screenshot assets; agent-guidance and skills validation. Deliberate mutations were detected for credential redaction, JWT signing, edit cleanup, locale mapping, image dimensions/captions, canonical-copy derivation, text limits/trimming, plan output, parity checks, and validation-before-commit.
+- Draft PR: https://github.com/bex-co/beancount-io/pull/175. Hosted mobile, metadata, skills, guidance, and secret checks passed on the initial revision. The artwork job exposed a missing Arial Unicode font on macOS runners; the build now selects available system fonts with glyph-coverage tests. Hosted verification of that fix is pending.
 - Pending: user confirmation of the real publication plan, API apply/parity verification, public/console visibility checks, and final closeout. No publication or milestone completion is claimed.

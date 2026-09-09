@@ -257,8 +257,9 @@ yarn screenshots:validate
 ./scripts/app-store-release.sh plan <version>
 ```
 
-The build produces 84 opaque assets: 14 locales × two device types × the three
-ordered stories in `metadata/screenshots.json`. Uploads only work against
+The build produces 84 opaque Apple assets: 14 locales × two device types × the
+three ordered stories in `metadata/screenshots.json`, plus the 64 Play assets
+described below. Apple uploads only work against
 `PREPARE_FOR_SUBMISSION`; all planning, review, replacement, and ordering use
 upstream `asc screenshots` commands. See `docs/app-store-localization.md` for the
 complete pre-auto-submit choreography.

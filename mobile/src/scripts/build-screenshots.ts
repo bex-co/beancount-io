@@ -11,6 +11,7 @@ import {
   renderStoreHtml,
   renderPlayArtwork,
 } from "./render-store-artwork";
+import { screenshotFont } from "./screenshot-font";
 import { bg } from "../translations/bg";
 import { fa } from "../translations/fa";
 import { en } from "../translations/en";
@@ -36,7 +37,6 @@ const localizedSourceRoot = path.join(
   root,
   "tmp/screenshots-localized-sources",
 );
-const font = "Arial-Unicode-MS";
 
 type DemoTranslations = Record<string, unknown> & {
   home: string;
@@ -82,11 +82,6 @@ execFileSync("magick", ["-version"], { stdio: "ignore" });
 const fontList = execFileSync("magick", ["-list", "font"], {
   encoding: "utf8",
 });
-if (!fontList.includes(`Font: ${font}`)) {
-  throw new Error(
-    `${font} is required for Latin, Cyrillic, and CJK caption coverage`,
-  );
-}
 
 interface OverlayLabel {
   x: number;
@@ -126,7 +121,7 @@ function fittedPointSize(label: OverlayLabel): number {
   );
 }
 
-function overlaySvg(labels: OverlayLabel[]): string {
+function overlaySvg(labels: OverlayLabel[], fontFamily: string): string {
   const elements = labels.flatMap((label) => {
     const x = label.align === "left" ? label.x + 18 : label.x + label.width / 2;
     const y = label.y + label.height / 2;
@@ -136,7 +131,7 @@ function overlaySvg(labels: OverlayLabel[]): string {
     const anchor = label.align === "left" ? "start" : "middle";
     return [
       `<rect x="${label.x}" y="${label.y}" width="${label.width}" height="${label.height}"${radius} fill="${label.background}"/>`,
-      `<text x="${x}" y="${y}" dy="0.35em" text-anchor="${anchor}" fill="${label.color}" font-family="Arial Unicode MS" font-size="${fittedPointSize(label)}">${escapeXml(label.text)}</text>`,
+      `<text x="${x}" y="${y}" dy="0.35em" text-anchor="${anchor}" fill="${label.color}" font-family="${escapeXml(fontFamily)}" font-size="${fittedPointSize(label)}">${escapeXml(label.text)}</text>`,
     ];
   });
   return `<svg xmlns="http://www.w3.org/2000/svg" width="1206" height="2622" viewBox="0 0 1206 2622">${elements.join("")}</svg>`;
@@ -403,10 +398,12 @@ function localizeSource(
   storyId: string,
   translations: DemoTranslations,
   storeLocale: string,
+  fontFamily: string,
 ): void {
   if (storeLocale === "fa") {
     const overlay = overlaySvg(
       sourceLabels(storyId, translations, storeLocale),
+      fontFamily,
     );
     renderStoreHtml(
       `<div style="position:relative;width:1206px;height:2622px;background:#171a14"><img src="${imageData(source)}" style="position:absolute;width:100%;height:100%"><div style="position:absolute;inset:0">${overlay}</div></div>`,
@@ -419,7 +416,7 @@ function localizeSource(
   const overlayPath = output.replace(/\.png$/u, ".svg");
   fs.writeFileSync(
     overlayPath,
-    overlaySvg(sourceLabels(storyId, translations, storeLocale)),
+    overlaySvg(sourceLabels(storyId, translations, storeLocale), fontFamily),
   );
   execFileSync("magick", [
     source,
@@ -451,6 +448,7 @@ function render(
   width: number,
   height: number,
   layout: "phone" | "tablet",
+  font: string,
 ): void {
   const commonTail = [
     "-background",
@@ -610,6 +608,7 @@ for (const { locale, apple } of targets) {
     : Object.entries(localeManifest.runtimeToPlay).find(([, locales]) =>
         locales.includes(locale),
       )![0];
+  const font = screenshotFont(fontList, runtimeLocale);
   const translations = translationsByRuntimeLocale[runtimeLocale];
   if (!translations) {
     throw new Error(
@@ -631,6 +630,7 @@ for (const { locale, apple } of targets) {
       story.id,
       translations,
       locale,
+      font.family,
     );
     localizedSources.set(story.id, localizedSource);
   }
@@ -678,6 +678,7 @@ for (const { locale, apple } of targets) {
         display.width,
         display.height,
         display.layout as "phone" | "tablet",
+        font.name,
       );
       outputCount += 1;
     }

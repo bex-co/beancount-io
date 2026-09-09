@@ -783,6 +783,7 @@ export function storeInputDigest(root: string, version: string): string {
     SCREENSHOT_MANIFEST,
     "scripts/build-screenshots.sh",
     "src/scripts/build-screenshots.ts",
+    "src/scripts/screenshot-font.ts",
     ...locales.map((locale) => `metadata/app-info/${locale}.json`),
     ...locales.map((locale) => `metadata/version/${version}/${locale}.json`),
     ...screenshotManifest.stories.map((story) => story.source),
