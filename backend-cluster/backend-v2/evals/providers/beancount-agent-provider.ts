@@ -3,7 +3,10 @@ import type {
   CallApiContextParams,
   ProviderResponse,
 } from "promptfoo";
-import { createFallbackLanguageModel } from "../../src/features/llm/utils/fallback-language-model";
+import {
+  createFallbackLanguageModel,
+  isLlmConfigured,
+} from "../../src/features/llm/utils/fallback-language-model";
 import { BeancountAgent } from "../../src/features/ai-agent/service/agent-handler/beancount-agent";
 import type { ToolContext } from "../../src/features/ai-agent/tools/types";
 import type { createFavaApi } from "../../src/foundation/fava";
@@ -86,14 +89,15 @@ export default class BeancountAgentProvider implements ApiProvider {
     _prompt: string,
     context?: CallApiContextParams,
   ): Promise<ProviderResponse> {
-    const accessKey = process.env.BLOCKEDEN_ACCESS_KEY;
-    if (!accessKey) {
-      return { error: "BLOCKEDEN_ACCESS_KEY is required to run LLM evals" };
+    if (!isLlmConfigured()) {
+      return {
+        error: "ANTHROPIC_API_KEY or OPENAI_API_KEY is required to run LLM evals",
+      };
     }
     const { userMessage } =
       (context?.vars?.params as { userMessage: string }) ?? {};
     try {
-      const model = createFallbackLanguageModel(accessKey);
+      const model = createFallbackLanguageModel();
       const agent = new BeancountAgent(model, buildStubToolContext());
       const result = await agent.generate([
         { role: "user", content: userMessage },

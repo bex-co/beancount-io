@@ -18,8 +18,8 @@ type BaseParams = Omit<Parameters<typeof generateText>[0], "model" | "output">;
 export class LLMClient {
   private readonly model: ReturnType<typeof createFallbackLanguageModel>;
 
-  constructor(accessKey: string) {
-    this.model = createFallbackLanguageModel(accessKey);
+  constructor() {
+    this.model = createFallbackLanguageModel();
   }
 
   async generate<OUTPUT extends OutputType>(

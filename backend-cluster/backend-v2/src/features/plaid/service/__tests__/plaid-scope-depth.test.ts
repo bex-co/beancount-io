@@ -59,7 +59,6 @@ describe("Plaid services authorize as the caller, not as a session", () => {
         },
       } as never,
       {} as never,
-      {} as never,
       {
         authorizeOrThrow,
       } as never,

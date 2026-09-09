@@ -59,7 +59,7 @@ all, so a fresh deploy cannot touch ledger data by accident.
 | `FAVA_API_ADMIN_PASSWORD` | api | Gitea admin password |
 | `ADMIN_TOKEN` | api | must match the ledger's `BACKEND_V2_ADMIN_TOKEN` byte for byte |
 | `BACKEND_V2_ADMIN_TOKEN` | ledger | empty ⇒ the directive-limit check fails **open** |
-| `BLOCKEDEN_ACCESS_KEY` | api | seeded with the `.env.example` placeholder so the service boots; replace for real AI features |
+| `BLOCKEDEN_ACCESS_KEY` | api | optional; only meters the `bea ask` model proxy. AI features come from `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`; the service boots with none set |
 
 `AUTH_SECRET`, `COOKIE_SECRETS`, and `METRICS_API_TOKEN` are `generateValue`
 and need no action. Gitea admin user creation is still a one-time

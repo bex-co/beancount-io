@@ -7,6 +7,7 @@ import type {
   ProviderResponse,
 } from "promptfoo";
 import { LLMClient } from "../../src/features/llm/utils/llm-client";
+import { isLlmConfigured } from "../../src/features/llm/utils/fallback-language-model";
 import { categorizeTransactions } from "../../src/features/llm/utils/categorize-transactions";
 import { suggestAccountMapping } from "../../src/features/llm/utils/suggest-account-mapping";
 import { recommendAccounts } from "../../src/features/llm/utils/recommend-accounts";
@@ -107,12 +108,13 @@ export default class LlmWorkflowProvider implements ApiProvider {
     _prompt: string,
     context?: CallApiContextParams,
   ): Promise<ProviderResponse> {
-    const accessKey = process.env.BLOCKEDEN_ACCESS_KEY;
-    if (!accessKey) {
-      return { error: "BLOCKEDEN_ACCESS_KEY is required to run LLM evals" };
+    if (!isLlmConfigured()) {
+      return {
+        error: "ANTHROPIC_API_KEY or OPENAI_API_KEY is required to run LLM evals",
+      };
     }
     try {
-      const client = new LLMClient(accessKey);
+      const client = new LLMClient();
       const result = await WORKFLOWS[this.workflowName](
         client,
         // Test-case fields live under a single object-typed `params` var —

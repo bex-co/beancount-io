@@ -82,7 +82,6 @@ describe("unlink dry_run changes nothing", () => {
       } as never,
       { plaidItem, plaidAccount } as never,
       {} as never,
-      {} as never,
       authorization as never,
     );
     return { service, plaidItem, plaidClient, authorization };

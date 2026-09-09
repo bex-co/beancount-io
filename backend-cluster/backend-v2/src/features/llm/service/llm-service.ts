@@ -12,6 +12,7 @@ import {
   userResource,
 } from "@/server/api/authorization";
 import { LLMClient } from "../utils/llm-client";
+import { isLlmConfigured } from "../utils/fallback-language-model";
 import { extractTransactionsFromFile } from "../utils/extract-transactions-from-file";
 import { extractReceiptFromFile } from "../utils/extract-receipt-from-file";
 import { recommendAccounts } from "../utils/recommend-accounts";
@@ -106,11 +107,24 @@ export class LLMService implements ILLMService {
     private readonly config: Pick<AppConfig, "blockeden">,
     private readonly authorization: IAuthorizationService,
   ) {
-    this.llmClient = new LLMClient(config.blockeden.accessKey);
+    this.llmClient = new LLMClient();
     this.ledgerAccountService = new LedgerAccountService(
       favaClientFactory,
       authorization,
     );
+  }
+
+  /**
+   * Fail with a clear domain error before any quota, S3, or ledger work when
+   * no LLM provider credential is present (ADR 0011 D5) — the alternative is
+   * a masked INTERNAL_SERVER_ERROR from deep inside the model call.
+   */
+  private assertLlmConfigured(): void {
+    if (!isLlmConfigured()) {
+      throw new InternalServerError(
+        "LLM is not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.",
+      );
+    }
   }
 
   async parseFile(
@@ -124,6 +138,7 @@ export class LLMService implements ILLMService {
       action: AUTHORIZATION_ACTIONS.ASSISTED_FILE_PARSE,
       resource: [userResource(userId), tempAssetResource(s3ObjectKey)],
     });
+    this.assertLlmConfigured();
     const usageCheck = await this.aiCfoUsageService.check(userId);
     if (!usageCheck.allowed) {
       throw new ResourceLimitReachedError(
@@ -171,6 +186,7 @@ export class LLMService implements ILLMService {
       action: AUTHORIZATION_ACTIONS.ASSISTED_RECEIPT_PARSE,
       resource: [tempAssetResource(s3ObjectKey), ledgerResource(ledgerId)],
     });
+    this.assertLlmConfigured();
     const usageCheck = await this.aiCfoUsageService.check(userId);
     if (!usageCheck.allowed) {
       throw new ResourceLimitReachedError(
@@ -256,11 +272,7 @@ export class LLMService implements ILLMService {
       );
     }
 
-    if (!this.config.blockeden.accessKey) {
-      throw new InternalServerError(
-        "LLM categorization is not configured. Please set BLOCKEDEN_ACCESS_KEY environment variable.",
-      );
-    }
+    this.assertLlmConfigured();
 
     const { ledgerOwner, ledgerName } = parseLedgerId(ledgerId);
     const { favaApiClient } =
@@ -363,6 +375,11 @@ export class LLMService implements ILLMService {
       action: AUTHORIZATION_ACTIONS.AI_MODEL_INVOKE,
       resource: userResource(identity.userId),
     });
+    if (!this.config.blockeden.accessKey) {
+      throw new InternalServerError(
+        "Model proxy is not configured. Set BLOCKEDEN_ACCESS_KEY.",
+      );
+    }
     await this.aiCfoUsageService.assertQuotaAvailable(identity.userId);
 
     const upstream = await fetch(url, {

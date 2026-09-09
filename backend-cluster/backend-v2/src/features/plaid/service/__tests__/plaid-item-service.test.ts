@@ -104,7 +104,6 @@ const mockDb: any = {
     cb(mockDb),
   ),
 };
-const mockConfig = { blockeden: { accessKey: "key" } } as any;
 let authorizedLedgerRepoId = 42;
 const mockAuthorization = {
   authorize: jest.fn(),
@@ -173,7 +172,6 @@ describe("PlaidItemService", () => {
       mockFavaClientFactory,
       mockModels,
       mockDb,
-      mockConfig,
       mockAuthorization,
     );
   });

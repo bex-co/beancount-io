@@ -1,7 +1,6 @@
 import { type DbExecutor } from "@/drizzle/drizzle";
 import { type IModels } from "@/foundation/models";
 import { type IFavaClientFactory } from "@/foundation/clients/fava-client-factory";
-import { type AppConfig } from "@/config/config";
 import {
   BadUserInputError,
   ConflictError,
@@ -200,16 +199,12 @@ export class PlaidItemService implements IPlaidItemService {
       "plaidItem" | "plaidAccount" | "plaidTransaction" | "user"
     >,
     private readonly db: DbExecutor,
-    private readonly config: Pick<AppConfig, "blockeden">,
     private readonly authorization: IAuthorizationService,
   ) {}
 
-  // Lazy so an unconfigured LLM never blocks service construction; one client
-  // per service so provider wiring changes have a single seam.
-  private llmClient?: LLMClient;
-  private getLLMClient(): LLMClient {
-    return (this.llmClient ??= new LLMClient(this.config.blockeden.accessKey));
-  }
+  // One client per service so provider wiring changes have a single seam.
+  // Construction never throws, configured or not (ADR 0011).
+  private readonly llmClient = new LLMClient();
 
   private async authorizeBankAction(
     identity: Identity,
@@ -559,7 +554,7 @@ export class PlaidItemService implements IPlaidItemService {
     });
 
     const { suggestions } = await categorizeTransactions(
-      this.getLLMClient(),
+      this.llmClient,
       {
         transactions: txsForCategorization,
         existingAccounts,
@@ -630,7 +625,7 @@ export class PlaidItemService implements IPlaidItemService {
     });
 
     const { suggestions } = await suggestAccountMappingWithLLM(
-      this.getLLMClient(),
+      this.llmClient,
       {
         institutionName: item.institutionName,
         accounts: unmappedAccounts.map((a) => ({
@@ -840,7 +835,7 @@ export class PlaidItemService implements IPlaidItemService {
       });
 
       const { suggestions } = await suggestAccountMappingWithLLM(
-        this.getLLMClient(),
+        this.llmClient,
         {
           institutionName,
           accounts: accounts.map((a) => ({

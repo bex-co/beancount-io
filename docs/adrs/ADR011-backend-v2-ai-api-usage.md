@@ -110,10 +110,19 @@ Three low-risk reductions of the surface this ADR documents, shipped together af
 
 Remaining tier-2/3 candidates (guard-message fix, removing Path B's implicit BlockEden fallback branch, retiring the boot placeholder, the OpenAI-fallback decision) stay in Follow-up.
 
+## Amendment — 2026-09-08: tier-2 cleanup — Path B leaves BlockEden, unconfigured becomes a legal state
+
+This amendment supersedes the D2 table's Path B row and the placeholder convention D3 tolerated:
+
+1. **Path B is direct-keys-only.** `createFallbackLanguageModel()` no longer takes a gateway key and has no BlockEden branches: `ANTHROPIC_API_KEY` (primary) and `OPENAI_API_KEY` (fallback) are the entire credential story. The shared-fate trap — both providers silently collapsing onto one gateway credential — is now structurally impossible. `BLOCKEDEN_ACCESS_KEY` exists only for Path C, where `invokeModelProxy` guards it with its own clear error ("Model proxy is not configured").
+2. **Construction never throws; unconfigured fails clearly per call.** With no key set the factory returns a stub model whose calls raise "LLM is not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY." — and `parseReceipt` / `parseFile` / `suggestCategories` fail fast with the same message as a domain error (visible to clients, per D5) before any quota, S3, or ledger work. The stale "set BLOCKEDEN_ACCESS_KEY" guard message is gone.
+3. **The boot placeholder is retired.** `local-dev-placeholder` is deleted from `deploy/docker/.env.example`, `deploy/docker-mac/.env.example`, `deploy/dev-sandbox/.env.example`, and `bex.yaml`; all LLM env vars may be empty and the server boots regardless. "AI not configured" is now a visible, legitimate state instead of a boots-but-silently-dead trap. `PlaidItemService` lost its config dependency entirely (its `LLMClient` is a plain field), and the D5 key-in-logged-URL redaction concern is moot for Path B — its provider URLs can no longer carry a gateway key.
+
+D2's table should now be read as: Path B reads `ANTHROPIC_API_KEY` / `OPENAI_API_KEY`, ignores everything else, and has **no** upstream when unset — calls fail with the not-configured error. D3's operational rule simplifies to: set at least `ANTHROPIC_API_KEY` in any environment that should serve AI features.
+
 ## Follow-up (open)
 
 - Contain the `parseFile` unhandled-rejection escape; add a regression test that the process survives a failing LLM upstream (D6).
-- Add the not-configured guard + pre-mask logging to `parseReceipt`/`parseFile`; redact the BlockEden key from fallback-model error logs (D5).
 - Implement the Path B synthetic probe (D6).
 - Mobile: fix the dead error-classification path in `use-receipt-workflow.ts` (Apollo default `errorPolicy` means `result.errors` is never populated; classify via `ApolloError.graphQLErrors[].extensions.code` or pass `errorPolicy: "all"`), split upload-leg vs parse-leg vs quota messages, and report the raw error to Sentry.
 - Refresh the pinned models (`claude-sonnet-4-5-20250929` primary, `gpt-4o` fallback) and consider a small-model tier for extraction workloads.

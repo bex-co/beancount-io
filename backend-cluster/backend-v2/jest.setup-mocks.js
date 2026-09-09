@@ -32,3 +32,8 @@ jest.mock("nanoid", () => {
     urlAlphabet,
   };
 });
+
+// Unit tests run as if an LLM provider were configured (ADR 0011: services
+// guard on ANTHROPIC_API_KEY / OPENAI_API_KEY). Tests that assert the
+// unconfigured path delete these vars for their own scope and restore them.
+process.env.ANTHROPIC_API_KEY ??= "test-anthropic-key";

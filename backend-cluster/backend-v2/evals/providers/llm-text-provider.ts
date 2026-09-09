@@ -4,6 +4,7 @@ import type {
   ProviderResponse,
 } from "promptfoo";
 import { LLMClient } from "../../src/features/llm/utils/llm-client";
+import { isLlmConfigured } from "../../src/features/llm/utils/fallback-language-model";
 
 /**
  * Free-text completion provider reusing the same BlockEden-proxied model as
@@ -19,12 +20,13 @@ export default class LlmTextProvider implements ApiProvider {
     prompt: string,
     _context?: CallApiContextParams,
   ): Promise<ProviderResponse> {
-    const accessKey = process.env.BLOCKEDEN_ACCESS_KEY;
-    if (!accessKey) {
-      return { error: "BLOCKEDEN_ACCESS_KEY is required to run LLM evals" };
+    if (!isLlmConfigured()) {
+      return {
+        error: "ANTHROPIC_API_KEY or OPENAI_API_KEY is required to run LLM evals",
+      };
     }
     try {
-      const client = new LLMClient(accessKey);
+      const client = new LLMClient();
       const result = await client.generate({
         messages: [{ role: "user", content: prompt }],
       });

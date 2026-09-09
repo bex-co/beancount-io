@@ -357,18 +357,14 @@ it("refuses exhausted quota before provider work or charging", async () => {
 });
 
 it("fails without a configured provider key instead of guessing", async () => {
-  // LLMClient's constructor falls back to provider env keys; pin one so the
-  // fixture constructs identically on every machine. The behavior under test
-  // is the service's own per-call blockeden config check, not the fallback.
-  const priorKey = process.env.ANTHROPIC_API_KEY;
-  process.env.ANTHROPIC_API_KEY = "test-placeholder";
-  let f: Awaited<ReturnType<typeof fixture>>;
-  try {
-    f = await fixture(identity, "");
-  } finally {
-    if (priorKey === undefined) delete process.env.ANTHROPIC_API_KEY;
-    else process.env.ANTHROPIC_API_KEY = priorKey;
-  }
+  // The behavior under test is the service's per-call isLlmConfigured guard
+  // (ADR 0011): with neither direct provider key set at call time, every
+  // surface fails with a clear error before touching the model or the quota.
+  const f = await fixture(identity, "");
+  const priorAnthropic = process.env.ANTHROPIC_API_KEY;
+  const priorOpenai = process.env.OPENAI_API_KEY;
+  delete process.env.ANTHROPIC_API_KEY;
+  delete process.env.OPENAI_API_KEY;
   try {
     expect((await f.rest()).status).toBe(500);
     expect((await f.gql()).errors).toHaveLength(1);
@@ -376,6 +372,10 @@ it("fails without a configured provider key instead of guessing", async () => {
     expect(categorizeTransactions).not.toHaveBeenCalled();
     expect(f.charge).not.toHaveBeenCalled();
   } finally {
+    if (priorAnthropic === undefined) delete process.env.ANTHROPIC_API_KEY;
+    else process.env.ANTHROPIC_API_KEY = priorAnthropic;
+    if (priorOpenai === undefined) delete process.env.OPENAI_API_KEY;
+    else process.env.OPENAI_API_KEY = priorOpenai;
     await f.close();
   }
 });

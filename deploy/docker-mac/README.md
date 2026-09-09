@@ -89,9 +89,11 @@ point), not in Gitea. It is off by default. To enable:
 - `backend-cluster/backend-v2` intentionally does not commit its `yarn.lock` (see its
   `.gitignore`). A local checkout that has run `yarn install` bakes that
   lockfile into the image; a fresh clone resolves dependencies unpinned.
-- AI features need a real `BLOCKEDEN_ACCESS_KEY` (or Anthropic/OpenAI keys);
-  the placeholder in `.env.example` only lets the server boot. Stripe, Plaid,
-  SendGrid, and S3 uploads are likewise disabled until their keys are set.
+- AI features need `ANTHROPIC_API_KEY` (or `OPENAI_API_KEY`); unset, the
+  server still boots and AI calls fail with a clear "LLM is not configured"
+  error. `BLOCKEDEN_ACCESS_KEY` only meters the `bea ask` model proxy. Stripe,
+  Plaid, SendGrid, and S3 uploads are likewise disabled until their keys are
+  set.
 - This stack is for local use: default database passwords, `NODE_ENV=development`,
   no TLS. For the production-oriented topology (reverse proxy, named volumes,
   and no directly published application ports), see [`../docker/`](../docker/).

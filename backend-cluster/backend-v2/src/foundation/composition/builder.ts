@@ -164,7 +164,6 @@ export function buildServiceLayer(input: {
       input.clients.favaClientFactory,
       input.database.models,
       input.database.db,
-      input.config,
       authorization,
     ),
     plaidSync: new PlaidSyncService(

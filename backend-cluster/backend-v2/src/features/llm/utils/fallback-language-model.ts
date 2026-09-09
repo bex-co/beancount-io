@@ -16,54 +16,56 @@ function isNonRetriableError(err: unknown): boolean {
 
 const ANTHROPIC_MODEL = "claude-sonnet-4-5-20250929";
 
+const NOT_CONFIGURED_MESSAGE =
+  "LLM is not configured. Set ANTHROPIC_API_KEY or OPENAI_API_KEY.";
+
 /**
- * Creates an Anthropic → OpenAI fallback LanguageModel.
- *
- * Each provider goes direct to the real API when its key is set —
- * `ANTHROPIC_API_KEY` (createAnthropic defaults to api.anthropic.com) and
- * `OPENAI_API_KEY` (createOpenAI defaults to api.openai.com) — otherwise it is
- * routed through the BlockEden gateway with `accessKey` in the URL path. A
- * provider is only included when it has usable credentials, so the fallback
- * order (Anthropic → OpenAI) is preserved. Connection-level failures (rate
- * limits, server errors) are caught before streaming begins, so the next
- * provider is tried transparently.
+ * Whether any direct provider credential is present. Callers that want a
+ * clean domain error before doing real work (S3 reads, quota checks) test
+ * this instead of waiting for the model to fail.
  */
-export function createFallbackLanguageModel(accessKey: string): LanguageModel {
+export function isLlmConfigured(): boolean {
+  return Boolean(process.env.ANTHROPIC_API_KEY || process.env.OPENAI_API_KEY);
+}
+
+/**
+ * Creates an Anthropic → OpenAI fallback LanguageModel from direct provider
+ * credentials: `ANTHROPIC_API_KEY` (primary) and `OPENAI_API_KEY` (fallback).
+ * A provider is only included when its key is set, so the fallback order is
+ * preserved. Connection-level failures (rate limits, server errors) are
+ * caught before streaming begins, so the next provider is tried
+ * transparently.
+ *
+ * Construction never throws (ADR 0011): with no key set this returns a model
+ * whose calls fail with a clear "not configured" error, so services can be
+ * built — and the server can boot — without any LLM credential.
+ */
+export function createFallbackLanguageModel(): LanguageModel {
   const anthropicKey = process.env.ANTHROPIC_API_KEY;
   const openaiKey = process.env.OPENAI_API_KEY;
 
   const providers: LanguageModelV4[] = [];
 
-  // Anthropic (primary): direct when ANTHROPIC_API_KEY is set, else via
-  // BlockEden.
   if (anthropicKey) {
     providers.push(createAnthropic({ apiKey: anthropicKey })(ANTHROPIC_MODEL));
-  } else if (accessKey) {
-    providers.push(
-      createAnthropic({
-        baseURL: `https://api.blockeden.xyz/anthropic/${accessKey}/v1`,
-        apiKey: "not-needed",
-      })(ANTHROPIC_MODEL),
-    );
   }
-
-  // OpenAI (fallback): direct when OPENAI_API_KEY is set, else via BlockEden.
   if (openaiKey) {
     providers.push(createOpenAI({ apiKey: openaiKey })("gpt-4o"));
-  } else if (accessKey) {
-    providers.push(
-      createOpenAI({
-        baseURL: `https://api.blockeden.xyz/openai/${accessKey}/v1`,
-        apiKey: "not-needed",
-      })("gpt-4o"),
-    );
   }
 
   if (providers.length === 0) {
-    throw new LoadAPIKeyError({
-      message:
-        "LLM is not configured. Set ANTHROPIC_API_KEY / OPENAI_API_KEY, or BLOCKEDEN_ACCESS_KEY.",
-    });
+    const fail = (): never => {
+      throw new LoadAPIKeyError({ message: NOT_CONFIGURED_MESSAGE });
+    };
+    const unconfigured: LanguageModelV4 = {
+      specificationVersion: "v4",
+      provider: "unconfigured",
+      modelId: ANTHROPIC_MODEL,
+      supportedUrls: {},
+      doGenerate: async () => fail(),
+      doStream: async () => fail(),
+    };
+    return unconfigured as LanguageModel;
   }
 
   const primary = providers[0];
