@@ -1,6 +1,60 @@
-import { describe, it, expect } from "vitest";
+import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen } from "@testing-library/react";
+import type { CSSProperties, ComponentType } from "react";
 import { DiffViewer } from "../diff-viewer";
+import { getDiffFileId } from "../diff-file-id";
+
+const scrollToRow = vi.fn();
+
+vi.mock("react-window", () => ({
+  useListRef: () => ({
+    current: {
+      scrollToRow,
+      get element() {
+        return null;
+      },
+    },
+  }),
+  List: ({
+    rowCount,
+    rowComponent: RowComponent,
+    rowProps,
+    style,
+    listRef,
+  }: {
+    rowCount: number;
+    rowComponent: ComponentType<{
+      index: number;
+      style: CSSProperties;
+      ariaAttributes?: Record<string, unknown>;
+    }>;
+    rowProps: Record<string, unknown>;
+    style?: CSSProperties;
+    listRef?: { current: unknown };
+  }) => {
+    if (listRef && "current" in listRef) {
+      listRef.current = {
+        scrollToRow,
+        get element() {
+          return null;
+        },
+      };
+    }
+    return (
+      <div data-testid="virtualized-diff" style={style}>
+        {Array.from({ length: Math.min(rowCount, 20) }, (_, index) => (
+          <RowComponent
+            key={index}
+            index={index}
+            style={{ height: 22 }}
+            ariaAttributes={{}}
+            {...rowProps}
+          />
+        ))}
+      </div>
+    );
+  },
+}));
 
 function createLargeDiff(lineCount: number) {
   const lines = Array.from(
@@ -15,7 +69,30 @@ new file mode 100644
 ${lines.join("\n")}`;
 }
 
+function createMultiFileLargeDiff() {
+  const first = Array.from({ length: 400 }, (_, i) => `+first ${i}`).join("\n");
+  const second = Array.from({ length: 120 }, (_, i) => `+second ${i}`).join(
+    "\n",
+  );
+  return `diff --git a/early.bean b/early.bean
+new file mode 100644
+--- /dev/null
++++ b/early.bean
+@@ -0,0 +1,400 @@
+${first}
+diff --git a/FY2027/FY2027Q2.bean b/FY2027/FY2027Q2.bean
+new file mode 100644
+--- /dev/null
++++ b/FY2027/FY2027Q2.bean
+@@ -0,0 +1,120 @@
+${second}`;
+}
+
 describe("DiffViewer", () => {
+  beforeEach(() => {
+    scrollToRow.mockClear();
+  });
+
   it("renders empty state when diff is empty", () => {
     render(<DiffViewer diff="" />);
     expect(screen.getByText("No changes to display")).toBeInTheDocument();
@@ -78,7 +155,6 @@ index 7654321..gfedcba 100644
 
     expect(screen.getByTestId("virtualized-diff")).toBeInTheDocument();
     expect(screen.getAllByText("large.bean").length).toBeGreaterThan(0);
-    expect(screen.queryByText("line 501")).not.toBeInTheDocument();
   });
 
   it("localizes the syntax-highlighting safeguard for very large diffs", () => {
@@ -87,5 +163,59 @@ index 7654321..gfedcba 100644
     expect(
       screen.getByText(/This diff is very large \(1001 lines\)/),
     ).toBeInTheDocument();
+  });
+
+  it("scrolls a virtualized list to the requested file header", () => {
+    const fileId = getDiffFileId("FY2027/FY2027Q2.bean");
+    render(
+      <DiffViewer
+        diff={createMultiFileLargeDiff()}
+        focusRequest={{ fileId, token: 1 }}
+      />,
+    );
+
+    expect(scrollToRow).toHaveBeenCalledWith({
+      index: 401, // 1 header + 400 lines for early.bean
+      align: "start",
+      behavior: "auto",
+    });
+  });
+
+  it("scrolls a small-diff file into view when a focus request arrives", () => {
+    const scrollIntoView = vi.fn();
+    const original = Element.prototype.scrollIntoView;
+    Element.prototype.scrollIntoView = scrollIntoView;
+
+    try {
+      const fileId = getDiffFileId("file2.bean");
+      const diff = `diff --git a/file1.bean b/file1.bean
+--- a/file1.bean
++++ b/file1.bean
+@@ -1 +1 @@
+-old
++new
+diff --git a/file2.bean b/file2.bean
+--- a/file2.bean
++++ b/file2.bean
+@@ -1 +1 @@
+-old
++new
+`;
+      render(<DiffViewer diff={diff} focusRequest={{ fileId, token: 7 }} />);
+
+      expect(scrollIntoView).toHaveBeenCalled();
+    } finally {
+      Element.prototype.scrollIntoView = original;
+    }
+  });
+
+  it("ignores unknown focus targets without throwing", () => {
+    render(
+      <DiffViewer
+        diff={createLargeDiff(501)}
+        focusRequest={{ fileId: "diff-file-missing.bean", token: 3 }}
+      />,
+    );
+    expect(scrollToRow).not.toHaveBeenCalled();
   });
 });

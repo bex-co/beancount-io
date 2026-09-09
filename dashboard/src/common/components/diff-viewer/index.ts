@@ -1,2 +1,3 @@
 export { DiffViewer } from "./diff-viewer";
-export { getDiffFileId } from "./diff-file-id";
+export type { DiffFileFocusRequest } from "./diff-viewer";
+export { getDiffFileId, parseDiffFileId } from "./diff-file-id";

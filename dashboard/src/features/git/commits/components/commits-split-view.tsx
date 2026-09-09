@@ -121,7 +121,11 @@ export default function CommitsSplitView({
                 </SheetContent>
               </Sheet>
             </div>
-            <CommitDetail ledgerId={ledgerId} commitSha={selectedCommitSha} />
+            <CommitDetail
+              key={`${ledgerId}:${selectedCommitSha}`}
+              ledgerId={ledgerId}
+              commitSha={selectedCommitSha}
+            />
           </>
         ) : (
           <div className="flex h-full items-center justify-center p-4 text-sm text-muted-foreground">

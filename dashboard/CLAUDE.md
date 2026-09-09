@@ -41,6 +41,11 @@ More specific guidance cascades from:
 - `src/features/ledger-data/CLAUDE.md`
 - `src/features/reports/CLAUDE.md`
 
+Commit history file links use `#diff-file-<encoded-path>` fragments. The shared
+`common/components/diff-viewer` honors those after the diff is ready — including
+virtualized lists via `scrollToRow` and the explicit Load Large Diff gate — so
+reopened URLs and Files → Version History selections land on the requested file.
+
 ## Organization rules
 
 - New product behavior belongs in `src/features/<feature>/`. Keep pages, components, hooks, GraphQL operations, types, utilities, tests, and translations with the feature that owns them.

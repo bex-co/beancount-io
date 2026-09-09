@@ -1,7 +1,7 @@
-import { useMemo, useState } from "react";
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from "react";
 import { parseDiff, Diff, Hunk } from "react-diff-view";
 import type { FileData, HunkData } from "react-diff-view";
-import { List } from "react-window";
+import { List, useListRef } from "react-window";
 import {
   tokenizeBeancountDiff,
   isBeancountFile,
@@ -9,7 +9,7 @@ import {
 } from "@/common/lib/diff/syntax-highlighter";
 import { Alert, AlertDescription } from "@/common/components/ui/alert";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { getDiffFileId } from "./diff-file-id";
+import { getDiffFileId, parseDiffFileId } from "./diff-file-id";
 
 // Virtualization thresholds
 const VIRTUAL_SCROLL_THRESHOLD = 500; // Lines
@@ -17,8 +17,16 @@ const ROW_HEIGHT = 22; // Pixels per line
 const FILE_HEADER_HEIGHT = 36;
 const CONTAINER_HEIGHT = 600; // Max height in pixels
 
+/** One-shot request to reveal a file once the parsed diff is ready. */
+export interface DiffFileFocusRequest {
+  fileId: string;
+  token: number;
+}
+
 interface DiffViewerProps {
   diff: string;
+  /** When set, scroll to this file once content can satisfy it. */
+  focusRequest?: DiffFileFocusRequest | null;
 }
 
 // Change type from HunkData
@@ -28,9 +36,17 @@ type FlattenedRow =
   | { type: "file-header"; data: FileData }
   | { type: "hunk-line"; data: ChangeType };
 
-export function DiffViewer({ diff }: DiffViewerProps) {
+function fileMatches(file: FileData, filename: string): boolean {
+  return file.newPath === filename || file.oldPath === filename;
+}
+
+export function DiffViewer({ diff, focusRequest = null }: DiffViewerProps) {
   const { t } = useTranslations();
   const [firstVisibleRow, setFirstVisibleRow] = useState(0);
+  const rootRef = useRef<HTMLDivElement>(null);
+  const listRef = useListRef(null);
+  const handledTokenRef = useRef<number | null>(null);
+
   // Parse the unified diff into file objects
   const files: FileData[] = useMemo(() => {
     if (!diff || diff.trim() === "") {
@@ -117,6 +133,55 @@ export function DiffViewer({ diff }: DiffViewerProps) {
     return files[0]?.newPath || files[0]?.oldPath || t("common.unknown");
   }, [files, firstVisibleRow, flattenedRows, t]);
 
+  useLayoutEffect(() => {
+    if (!focusRequest) return;
+    if (handledTokenRef.current === focusRequest.token) return;
+
+    const filename = parseDiffFileId(focusRequest.fileId);
+    if (filename === null) {
+      handledTokenRef.current = focusRequest.token;
+      return;
+    }
+
+    if (files.length === 0) return;
+
+    if (!files.some((file) => fileMatches(file, filename))) {
+      handledTokenRef.current = focusRequest.token;
+      return;
+    }
+
+    if (shouldVirtualize) {
+      const index = flattenedRows.findIndex(
+        (row) => row.type === "file-header" && fileMatches(row.data, filename),
+      );
+      if (index < 0 || !listRef.current) return;
+
+      listRef.current.scrollToRow({
+        index,
+        align: "start",
+        behavior: "auto",
+      });
+      rootRef.current?.scrollIntoView({ block: "nearest", behavior: "auto" });
+      handledTokenRef.current = focusRequest.token;
+      return;
+    }
+
+    const target = rootRef.current?.ownerDocument.getElementById(
+      focusRequest.fileId,
+    );
+    if (!target) return;
+
+    target.scrollIntoView({ block: "start", behavior: "auto" });
+    handledTokenRef.current = focusRequest.token;
+  }, [focusRequest, files, flattenedRows, listRef, shouldVirtualize]);
+
+  // Clear handled-token tracking when the request is cancelled (commit change).
+  useEffect(() => {
+    if (!focusRequest) {
+      handledTokenRef.current = null;
+    }
+  }, [focusRequest]);
+
   const isMalformedDiff =
     files.length === 0 ||
     files.every(
@@ -148,7 +213,7 @@ export function DiffViewer({ diff }: DiffViewerProps) {
   // Render virtualized view for large diffs
   if (shouldVirtualize && flattenedRows.length > 0) {
     return (
-      <div className="space-y-3 p-4" data-testid="diff-viewer">
+      <div ref={rootRef} className="space-y-3 p-4" data-testid="diff-viewer">
         <h2 className="text-base font-semibold">{t("commits.changes")}</h2>
 
         {!shouldHighlight && (
@@ -165,6 +230,7 @@ export function DiffViewer({ diff }: DiffViewerProps) {
           </div>
           <List<Record<string, never>>
             data-testid="virtualized-diff"
+            listRef={listRef}
             rowCount={flattenedRows.length}
             rowHeight={(index) =>
               flattenedRows[index]?.type === "file-header"
@@ -237,7 +303,7 @@ export function DiffViewer({ diff }: DiffViewerProps) {
 
   // Render non-virtualized view for small diffs (with full Diff/Hunk components)
   return (
-    <div className="space-y-3 p-4" data-testid="diff-viewer">
+    <div ref={rootRef} className="space-y-3 p-4" data-testid="diff-viewer">
       <h2 className="text-base font-semibold">{t("commits.changes")}</h2>
 
       <div className="overflow-clip rounded-md border border-border">

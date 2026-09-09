@@ -8,9 +8,11 @@ interface CommitFileListProps {
     additions: number;
     deletions: number;
   }>;
+  /** Fired on activate so same-hash re-clicks still request a scroll. */
+  onFileSelect?: (filename: string) => void;
 }
 
-export function CommitFileList({ files }: CommitFileListProps) {
+export function CommitFileList({ files, onFileSelect }: CommitFileListProps) {
   const { t } = useTranslations();
 
   return (
@@ -35,6 +37,7 @@ export function CommitFileList({ files }: CommitFileListProps) {
             <li key={file.filename}>
               <a
                 href={`#${getDiffFileId(file.filename)}`}
+                onClick={() => onFileSelect?.(file.filename)}
                 className="flex min-h-10 min-w-0 items-center gap-2 px-4 py-2 transition-colors hover:bg-muted/50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-inset focus-visible:ring-ring"
               >
                 <FileText

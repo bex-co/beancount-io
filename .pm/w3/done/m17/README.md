@@ -1,17 +1,17 @@
 # w3 · m17 — Make commit file links reach deferred and virtualized diffs
 
-**Worker:** worker3 **Goal:** a reader can select or reopen a changed file and reach its actual diff **Status:** todo
+**Worker:** worker3 **Goal:** a reader can select or reopen a changed file and reach its actual diff **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                 | est | depends_on |
 | ---- | ----------------------------------------------------- | --- | ---------- |
-| t001 | Navigate to files outside the rendered virtual range  | 45m | —          |
-| t002 | Resolve commit fragments after the diff becomes ready | 40m | t001       |
-| t003 | Adoption surface                                      | 20m | t002       |
-| t004 | Simplify                                              | 20m | t003       |
-| t005 | Test coverage                                         | 45m | t003, t004 |
-| t006 | Closeout                                              | 15m | t005       |
+| t001 | Navigate to files outside the rendered virtual range — **DONE** | 45m | —          |
+| t002 | Resolve commit fragments after the diff becomes ready — **DONE** | 40m | t001       |
+| t003 | Adoption surface — **DONE** | 20m | t002       |
+| t004 | Simplify — **DONE** | 20m | t003       |
+| t005 | Test coverage — **DONE** | 45m | t003, t004 |
+| t006 | Closeout — **DONE** | 15m | t005       |
 
 Implementation estimate: 85 minutes; total including closing tasks: 185 minutes.
 

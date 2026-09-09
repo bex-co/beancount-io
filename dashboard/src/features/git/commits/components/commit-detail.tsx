@@ -1,4 +1,4 @@
-import { useState, useTransition } from "react";
+import { useCallback, useEffect, useRef, useState, useTransition } from "react";
 import { useQuery } from "@apollo/client/react";
 import { CombinedGraphQLErrors } from "@apollo/client/errors";
 import { useTranslations } from "@/common/hooks/use-translations";
@@ -9,7 +9,12 @@ import { Button } from "@/common/components/ui/button";
 import { Loader2 } from "lucide-react";
 import { CommitMetadata } from "./commit-metadata";
 import { CommitFileList } from "./commit-file-list";
-import { DiffViewer } from "@/common/components/diff-viewer";
+import {
+  DiffViewer,
+  getDiffFileId,
+  parseDiffFileId,
+  type DiffFileFocusRequest,
+} from "@/common/components/diff-viewer";
 import { GetCommitDetailsDocument } from "@/graphql/definitions";
 
 interface CommitDetailProps {
@@ -17,10 +22,42 @@ interface CommitDetailProps {
   commitSha: string;
 }
 
+function fileIdFromHash(hash: string): string | null {
+  const fileId = hash.startsWith("#") ? hash.slice(1) : hash;
+  return parseDiffFileId(fileId) === null ? null : fileId;
+}
+
+function focusFromLocation(token: number): DiffFileFocusRequest | null {
+  if (typeof window === "undefined") return null;
+  const fileId = fileIdFromHash(window.location.hash);
+  return fileId ? { fileId, token } : null;
+}
+
 export function CommitDetail({ ledgerId, commitSha }: CommitDetailProps) {
   const { t } = useTranslations();
   const [loadedDiffSha, setLoadedDiffSha] = useState<string | null>(null);
   const [isPending, startTransition] = useTransition();
+  const focusSeqRef = useRef(0);
+  // Parent remounts this component when ledger/commit changes (via `key`), so
+  // initialize the pending destination from the current hash once per entry.
+  const [focusRequest, setFocusRequest] = useState<DiffFileFocusRequest | null>(
+    () => focusFromLocation(0),
+  );
+
+  const requestFileFocus = useCallback((fileId: string) => {
+    if (parseDiffFileId(fileId) === null) return;
+    focusSeqRef.current += 1;
+    setFocusRequest({ fileId, token: focusSeqRef.current });
+  }, []);
+
+  useEffect(() => {
+    const onHashChange = () => {
+      const fileId = fileIdFromHash(window.location.hash);
+      if (fileId) requestFileFocus(fileId);
+    };
+    window.addEventListener("hashchange", onHashChange);
+    return () => window.removeEventListener("hashchange", onHashChange);
+  }, [requestFileFocus]);
 
   const { data, loading, error, refetch } = useQuery(GetCommitDetailsDocument, {
     variables: { ledgerId, sha: commitSha },
@@ -41,6 +78,8 @@ export function CommitDetail({ ledgerId, commitSha }: CommitDetailProps) {
   const isMissingCommit =
     CombinedGraphQLErrors.is(error) &&
     error.errors.some((item) => item.extensions?.code === "NOT_FOUND");
+
+  const activeFocus = !isLargeDiff || showDiff ? focusRequest : null;
 
   return (
     <div className="min-w-0">
@@ -92,7 +131,12 @@ export function CommitDetail({ ledgerId, commitSha }: CommitDetailProps) {
             fileCount={commit.files.length}
           />
 
-          <CommitFileList files={commit.files} />
+          <CommitFileList
+            files={commit.files}
+            onFileSelect={(filename) =>
+              requestFileFocus(getDiffFileId(filename))
+            }
+          />
 
           <div className="border-t border-border">
             {isLargeDiff && !showDiff ? (
@@ -121,7 +165,7 @@ export function CommitDetail({ ledgerId, commitSha }: CommitDetailProps) {
                 )}
               </div>
             ) : (
-              <DiffViewer diff={commit.diff || ""} />
+              <DiffViewer diff={commit.diff || ""} focusRequest={activeFocus} />
             )}
           </div>
         </div>

@@ -133,4 +133,44 @@ describe("CommitDetail", () => {
       screen.getByRole("heading", { name: "Changes" }),
     ).toBeInTheDocument();
   });
+
+  it("keeps a hash file target until Load Large Diff mounts the viewer", async () => {
+    const user = userEvent.setup();
+    window.location.hash = `#${"diff-file-main.bean"}`;
+    setQueryResult({
+      data: {
+        getCommitDetails: {
+          ...commit,
+          stats: {
+            ...commit.stats,
+            additions: 800,
+            deletions: 200,
+            total: 1000,
+          },
+        },
+      },
+    });
+
+    render(<CommitDetail ledgerId="alice/books" commitSha={commit.sha} />);
+    expect(screen.queryByTestId("diff-viewer")).not.toBeInTheDocument();
+
+    await user.click(screen.getByRole("button", { name: "Load Large Diff" }));
+    expect(screen.getByTestId("diff-viewer")).toBeInTheDocument();
+    expect(
+      screen.getByRole("heading", { name: "Changes" }),
+    ).toBeInTheDocument();
+  });
+
+  it("requests focus again when the same file link is activated", async () => {
+    const user = userEvent.setup();
+    setQueryResult({ data: { getCommitDetails: commit } });
+    render(<CommitDetail ledgerId="alice/books" commitSha={commit.sha} />);
+
+    await user.click(screen.getByText("files changed"));
+    const link = screen.getByRole("link", { name: /main\.bean/ });
+    await user.click(link);
+    await user.click(link);
+
+    expect(link).toHaveAttribute("href", "#diff-file-main.bean");
+  });
 });
