@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import dataclasses
 from collections.abc import Iterable, Mapping
 from datetime import date, timedelta
 from decimal import ROUND_HALF_UP, Decimal, localcontext
@@ -482,3 +483,74 @@ def trial_balance(
     for tree in sections.values():
         typer.echo("")
         _print_tree(tree, conversion=conversion, dcontext=dcontext)
+
+
+def _prune_tree(
+    node: SerialisedTreeNode, terms: list[str], closed: set[str] | None = None
+) -> SerialisedTreeNode | None:
+    """Keep nodes matching any term plus their ancestors for structure.
+
+    In a filtered view, closed accounts (and their subtrees) drop out;
+    ancestors stay for structure and keep their subtree totals.
+    """
+    if closed and node.account in closed:
+        return None
+    kept = []
+    for child in node.children:
+        pruned = _prune_tree(child, terms, closed)
+        if pruned is not None:
+            kept.append(pruned)
+    if any(term in node.account.casefold() for term in terms) or kept:
+        return dataclasses.replace(node, children=kept)
+    return None
+
+
+def balance(
+    accounts: Annotated[list[str] | None, typer.Argument(help="Account substrings; case-insensitive")] = None,
+    conversion: ConversionOpt = None,
+    time: TimeOpt = None,
+    allow_errors: AllowErrorsOpt = False,
+) -> None:
+    """Balances for matching accounts.
+
+    With no filter, prints the trial balance.
+    """
+    from beancount.core.data import Close
+
+    from fava.modules.financial_statements import FinancialStatementsModule
+
+    filtered, file, conversion = _load(None, time, conversion, allow_errors)
+    data = FinancialStatementsModule().trial_balance(filtered, conversion)
+    sections = {
+        name: getattr(data, f"{name}_hierarchy") for name in ("assets", "liabilities", "equity", "income", "expenses")
+    }
+    metadata = _metadata(filtered, conversion) | _valuation(
+        conversion,
+        ((filtered.end_date, balance) for tree in sections.values() for balance in _tree_balances(tree)),
+        allow_errors,
+        filtered.ledger.prices,
+    )
+    terms = [(term or "").casefold() for term in accounts or []]
+    if not terms:
+        pruned = {name: tree for name, tree in sections.items()}
+    else:
+        closed: set[str] = set()
+        for entry in filtered.entries:
+            if isinstance(entry, Close):
+                closed.add(entry.account)
+        pruned = {name: _prune_tree(tree, terms, closed) for name, tree in sections.items()}
+    if context.current().json_output:
+        output.emit(
+            metadata | {name: (_tree_json(tree) if tree is not None else None) for name, tree in pruned.items()},
+            target=output.file_target(file),
+        )
+        return
+    _heading("Trial Balance", metadata)
+    dcontext = filtered.ledger.options["dcontext"]
+    if not any(pruned.values()):
+        output.note(f"No accounts match {' '.join(accounts or [])}.")
+        return
+    for tree in pruned.values():
+        if tree is not None:
+            typer.echo("")
+            _print_tree(tree, conversion=conversion, dcontext=dcontext)

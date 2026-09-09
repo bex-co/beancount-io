@@ -17,7 +17,7 @@ import typer
 
 from cli import context, output
 from cli.errors import UsageError
-from cli.utils import parse_opt_date
+from cli.utils import parse_opt_date, single_line
 
 list_app = typer.Typer(help="List directives from a local .bean file", no_args_is_help=True, rich_markup_mode=None)
 
@@ -136,6 +136,69 @@ SPECS: dict[str, _Spec] = {
 }
 
 
+def _transaction_table(headers: list[str], rows: list[tuple[list[str], list[tuple[str, str]]]]) -> None:
+    """Print transactions, wrapping long posting cells under their row in a terminal.
+
+    Piped output keeps the single-line form byte-for-byte; only a terminal
+    whose width the single-line row would exceed gets one posting per line,
+    with the other columns on the first line.
+    """
+    import shutil
+    import sys
+
+    headers = [single_line(header) for header in headers]
+    rows = [
+        ([single_line(cell) for cell in cells], [(single_line(account), single_line(amount)) for account, amount in p])
+        for cells, p in rows
+    ]
+    single = [[*cells, "; ".join(f"{account}: {amount}" for account, amount in postings)] for cells, postings in rows]
+    try:
+        terminal = sys.stdout.isatty()
+    except (AttributeError, ValueError):
+        terminal = False
+    if not terminal:
+        output.table(headers, single)
+        return
+    width = shutil.get_terminal_size().columns
+    if all(sum(len(cell) for cell in row) + 2 * (len(row) - 1) <= width for row in single):
+        output.table(headers, single)
+        return
+    widths = [len(header) for header in headers]
+    for cells, _ in rows:
+        for i, cell in enumerate([*cells, ""]):
+            widths[i] = max(widths[i], len(cell))
+    # The table reads in the terminal it prints to: shrink narration, then
+    # payee, with an ellipsis so the first line fits the width. Piped output
+    # and --details keep the full text.
+    for i in (3, 2):
+        total = sum(widths) + 2 * (len(headers) - 1)
+        if total <= width:
+            break
+        shrink = min(widths[i] - len(headers[i]), total - width)
+        if shrink > 0:
+            widths[i] -= shrink
+    rows = [
+        (
+            [cell if len(cell) <= widths[i] else f"{cell[: widths[i] - 3]}..." for i, cell in enumerate(cells)],
+            postings,
+        )
+        for cells, postings in rows
+    ]
+    single = [[*cells, "; ".join(f"{account}: {amount}" for account, amount in postings)] for cells, postings in rows]
+    sep = "  "
+    typer.echo(sep.join(header.ljust(widths[i]) for i, header in enumerate(headers)))
+    typer.echo(sep.join("-" * widths[i] for i in range(len(headers))))
+    for (cells, postings), row in zip(rows, single, strict=True):
+        line = sep.join(cell.ljust(widths[i]) for i, cell in enumerate(row))
+        if len(line) <= width or not postings:
+            typer.echo(line)
+            continue
+        typer.echo(sep.join(cell.ljust(widths[i]) for i, cell in enumerate([*cells, ""])))
+        pad = max(len(account) for account, _ in postings)
+        for account, amount in postings:
+            typer.echo(f"{sep}{account.ljust(pad)}: {amount}")
+
+
 def _run(spec: _Spec, limit: int, allow_errors: bool, *, details: bool = False, **filters: Any) -> None:
     """Load the ledger, list one directive type, and render it for the active mode."""
     ctx = context.current()
@@ -174,20 +237,22 @@ def _run(spec: _Spec, limit: int, allow_errors: bool, *, details: bool = False, 
             typer.echo(format_transaction(item))
     elif spec.reader == "list_transactions":
         account = (filters.get("account") or "").casefold()
-        output.table(
+        _transaction_table(
             ["DATE", "FLAG", "PAYEE", "NARRATION", "MATCHING POSTING AMOUNTS" if account else "POSTING AMOUNTS"],
             [
-                [
-                    str(item.date),
-                    item.flag,
-                    item.payee or "",
-                    item.narration or "(no narration)",
-                    "; ".join(
-                        f"{p.account}: {p.units.number} {p.units.currency}"
+                (
+                    [
+                        str(item.date),
+                        item.flag,
+                        item.payee or "",
+                        item.narration or "(no narration)",
+                    ],
+                    [
+                        (p.account, f"{p.units.number} {p.units.currency}")
                         for p in item.postings
                         if p.units and (not account or account in p.account.casefold())
-                    ),
-                ]
+                    ],
+                )
                 for item in items
             ],
         )
@@ -277,6 +342,11 @@ def transactions(
     to_date: ToDateOpt = None,
     account: AccountFilterOpt = None,
     flag: Annotated[str | None, typer.Option("--flag", help="Transaction flag, e.g. '!' for entries to review")] = None,
+    search: Annotated[
+        list[str] | None, typer.Option("--search", help="Case-insensitive text in payee or narration; repeatable")
+    ] = None,
+    tag: Annotated[list[str] | None, typer.Option("--tag", help="Tag with or without '#'; repeatable")] = None,
+    link: Annotated[list[str] | None, typer.Option("--link", help="Link with or without '^'; repeatable")] = None,
     allow_errors: AllowErrorsOpt = False,
     details: Annotated[
         bool,
@@ -300,5 +370,8 @@ def transactions(
         to_date=parse_opt_date(to_date),
         account=account,
         flag=flag,
+        search=search,
+        tags=tag,
+        links=link,
         newest=sort == TransactionSort.newest,
     )

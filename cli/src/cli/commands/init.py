@@ -64,9 +64,10 @@ def init(
         typer.Option("--opening-balance", help="'ACCOUNT NUMBER' in the operating currency; repeat for each account"),
     ] = None,
 ) -> None:
-    """Create main.bean with common accounts and optional opening balances.
+    """Create main.bean with common accounts.
 
-    For unattended use: bea --no-input init books --currency USD.
+    Optional opening balances included. For unattended use:
+    bea --no-input init books --currency USD.
     Credit card debt uses a negative opening balance.
     New ledger files are private (0600 on POSIX); chmod explicitly to share.
     """
@@ -150,13 +151,19 @@ def init(
         for warning in warnings:
             output.note(warning)
         output.success(f"Created {file} with {len(_ACCOUNTS)} accounts in {currency}.")
-        relative = Path(os.path.relpath(file, Path.cwd()))
-        if relative == Path("main.bean"):
+        try:
+            shown = f"~/{file.relative_to(Path.home())}"
+        except ValueError:
+            shown = str(file)
+        if file == Path.cwd() / "main.bean":
             next_command = "bea check"
         elif file.name == "main.bean":
-            next_command = f"cd {shlex.quote(str(relative.parent))} && bea check"
+            parent = shown.rpartition("/")[0]
+            # Keep `~` unquoted so the shell still expands it.
+            parent = "~/" + shlex.quote(parent[2:]) if parent.startswith("~/") else shlex.quote(parent)
+            next_command = f"cd {parent} && bea check"
         else:
-            next_command = f"bea --file {shlex.quote(str(relative))} check"
+            next_command = f"bea --file {shlex.quote(shown)} check"
         typer.echo(f"Next: {next_command}")
         typer.echo(
             f"Accounts open on {day}. To record earlier history, edit their open dates; "

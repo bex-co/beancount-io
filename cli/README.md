@@ -73,7 +73,7 @@ bea --no-input init ~/my-books --currency USD --date 2026-08-01 \
   --opening-balance "Assets:Checking 1000"
 cd ~/my-books
 
-bea add transaction --date 2026-08-02 --narration "Coffee" \
+bea add transaction "Coffee" --date 2026-08-02 \
   --posting "Expenses:Dining 12.50" --posting "Assets:Checking"
 
 bea check
@@ -104,6 +104,7 @@ run `bea init books` in a terminal. For a bank export, start with an
 | `bea format [PATH]` | Format a file or recursively format a directory |
 | `bea query [BQL]` | Run a query or start the interactive BQL shell |
 | `bea report TYPE` | Overview, income statement, balance sheet, or trial balance |
+| `bea balance [ACCOUNT…]` | Trial-balance subtrees for matching accounts |
 | `bea ask [QUESTION]` | Ask about a local ledger through the hosted AI service |
 | `bea cloud …` | Sign in and manage hosted ledgers |
 | `bea upgrade [--check]` | Check for an update or invoke the owning package manager |
@@ -251,7 +252,7 @@ the other types require it.
 ### Transactions
 
 ```bash
-bea add transaction -n "Groceries" --payee "Corner Market" \
+bea add transaction "Groceries" --payee "Corner Market" \
   -p "Expenses:Groceries 30" -p "Assets:Checking" \
   --flag '!' --tag household --link receipt-42 --meta 'receipt:IMG_42.jpg'
 ```
@@ -282,7 +283,7 @@ For example, after opening a brokerage account:
 
 ```bash
 bea add open --date 2026-08-01 -a Assets:Brokerage -c AAPL
-bea add transaction --date 2026-08-03 -n "Buy AAPL" \
+bea add transaction "Buy AAPL" --date 2026-08-03 \
   -p "Assets:Brokerage 2 AAPL {100 USD}" -p "Assets:Checking -200 USD"
 ```
 
@@ -363,7 +364,7 @@ bea add custom --date 2026-08-01 --type budget \
 
 ### Bulk transactions from JSON
 
-`bea add transactions --from transactions.json` accepts a JSON **array**:
+`bea add transactions --from transactions.json` accepts a JSON **array** (use `--from -` to read it from stdin):
 
 ```json
 [
@@ -508,12 +509,16 @@ importer exception's traceback.
 | `--currency / -c SYMBOL` | Price, commodity | Case-insensitive exact symbol; price filters the commodity being priced |
 | `--sort newest/oldest` | Transaction | Default `newest`; applied before the limit |
 | `--flag CHARACTER` | Transaction | Filter a flag before applying the limit |
+| `--search TEXT` | Transaction | Case-insensitive substring over payee and narration; repeatable |
+| `--tag TAG` | Transaction | Tag with or without `#`; repeatable |
+| `--link LINK` | Transaction | Link with or without `^`; repeatable |
 | `--details` | Transaction | Render Beancount syntax, all postings, metadata, and source locations |
 
 ```bash
 bea list transaction --limit 10
 bea list transaction --flag '!' --details
 bea list transaction -a checking --from-date 2026-08-01 --to-date 2026-08-31
+bea list transaction --search netflix --tag trip
 bea list price --currency eur
 ```
 
@@ -614,7 +619,15 @@ bea report overview --time 2026-08
 bea report income-statement --time 2026 --interval quarterly
 bea report balance-sheet --time "2026-01 - 2026-08" --conversion USD
 bea report trial-balance --conversion units
+bea balance Checking
 ```
+
+`bea balance [ACCOUNT…]` is a trial balance pruned to the subtrees whose
+account names contain any argument (case-insensitive), keeping ancestors for
+structure with their totals. Closed accounts are excluded from filtered views.
+With no argument it prints the trial balance.
+It accepts `--conversion`, `--time`, and `--allow-errors`, and returns the
+same tree shape in JSON.
 
 Time filters include `2026`, `2026-08`, `2026-08-31`, `2026-Q3`, `2026-W32`,
 and relative `year`, `quarter`, `month`, `week`, or `day`. Offsets such as

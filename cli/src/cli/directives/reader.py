@@ -134,7 +134,13 @@ def list_transactions(
     limit: int = 50,
     newest: bool = False,
     flag: str | None = None,
+    search: list[str] | None = None,
+    tags: list[str] | None = None,
+    links: list[str] | None = None,
 ) -> list[TransactionDirective]:
+    terms = [(term or "").casefold() for term in search or []]
+    wanted_tags = {tag.lstrip("#") for tag in tags or []}
+    wanted_links = {link.lstrip("^") for link in links or []}
     results = []
     for entry in reversed(entries) if newest else entries:
         if not isinstance(entry, Transaction):
@@ -144,6 +150,14 @@ def list_transactions(
         if not _in_date_range(entry.date, from_date, to_date):
             continue
         if account and not any(account.casefold() in p.account.casefold() for p in entry.postings):
+            continue
+        if terms and not all(
+            term in (entry.payee or "").casefold() or term in (entry.narration or "").casefold() for term in terms
+        ):
+            continue
+        if wanted_tags and not wanted_tags.issubset(entry.tags or ()):
+            continue
+        if wanted_links and not wanted_links.issubset(entry.links or ()):
             continue
         results.append(_to_transaction(entry))
         if len(results) >= limit:

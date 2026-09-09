@@ -234,3 +234,202 @@ def test_interactive_query_rejects_invalid_ledger(book: Path, monkeypatch: pytes
     result = runner.invoke(app, ["--file", str(book), "query"])
     assert result.exit_code == 1
     assert "Ledger has" in result.stderr
+
+
+@pytest.fixture
+def tagged_book(tmp_path: Path) -> Path:
+    file = tmp_path / "main.bean"
+    file.write_text(
+        'option "operating_currency" "USD"\n'
+        "2026-01-01 open Assets:Cash USD\n"
+        "2026-01-01 open Expenses:Food USD\n"
+        "2026-01-01 open Expenses:Travel USD\n"
+        "2026-01-01 open Equity:Opening-Balances USD\n"
+        '2026-08-02 * "Whole Foods" "groceries" #food ^receipt-1\n'
+        "  Expenses:Food  20.00 USD\n"
+        "  Assets:Cash   -20.00 USD\n"
+        '2026-08-03 * "Airline" "whole foods snack"\n'
+        "  Expenses:Travel  15.00 USD\n"
+        "  Assets:Cash     -15.00 USD\n"
+    )
+    return file
+
+
+def tagged(file: Path, *args: str):
+    return runner.invoke(app, ["--file", str(file), "list", "transaction", *args])
+
+
+class TestTransactionSearchFilters:
+    def test_search_matches_payee_and_narration(self, tagged_book: Path) -> None:
+        result = tagged(tagged_book, "--search", "whole foods")
+
+        assert result.exit_code == 0, result.output
+        assert "Whole Foods" in result.stdout
+        assert "whole foods snack" in result.stdout
+
+    @pytest.mark.parametrize("flag", ["--tag", "--link"])
+    def test_sigils_are_optional(self, tagged_book: Path, flag: str) -> None:
+        sigil = "#" if flag == "--tag" else "^"
+        value = "food" if flag == "--tag" else "receipt-1"
+
+        assert tagged(tagged_book, flag, value).stdout == tagged(tagged_book, flag, f"{sigil}{value}").stdout
+
+    def test_filters_compose_with_account_and_dates(self, tagged_book: Path) -> None:
+        result = tagged(tagged_book, "--search", "whole foods", "--account", "Travel", "--from-date", "2026-08-01")
+
+        assert result.exit_code == 0, result.output
+        assert "Airline" in result.stdout
+        assert "Whole Foods" not in result.stdout
+
+    def test_json_envelope_is_unchanged(self, tagged_book: Path) -> None:
+        result = runner.invoke(
+            app, ["--json", "--file", str(tagged_book), "list", "transaction", "--search", "whole foods"]
+        )
+
+        assert result.exit_code == 0, result.output
+        data = json.loads(result.stdout)["data"]
+        assert {item["payee"] for item in data} == {"Whole Foods", "Airline"}
+
+
+class TestBalanceCommand:
+    def test_pruned_tree_shows_matching_subtree(self, book: Path) -> None:
+        result = runner.invoke(app, ["--file", str(book), "balance", "Checking"])
+
+        assert result.exit_code == 0, result.output
+        assert "Checking" in result.stdout
+        assert "Rent" not in result.stdout
+
+    def test_filtered_views_exclude_closed_accounts(self, tmp_path: Path) -> None:
+        file = tmp_path / "main.bean"
+        file.write_text(
+            'option "operating_currency" "USD"\n'
+            "2026-01-01 open Assets:Cash USD\n"
+            "2026-01-01 open Assets:Old USD\n"
+            "2026-06-01 close Assets:Old\n"
+        )
+        result = runner.invoke(app, ["--file", str(file), "balance", "Assets"])
+
+        assert result.exit_code == 0, result.output
+        assert "Cash" in result.stdout
+        assert "Old" not in result.stdout
+
+    def test_no_filter_matches_trial_balance(self, book: Path) -> None:
+        balance = runner.invoke(app, ["--file", str(book), "balance"])
+        trial = runner.invoke(app, ["--file", str(book), "report", "trial-balance"])
+
+        assert balance.exit_code == 0, balance.output
+        assert balance.stdout == trial.stdout
+
+    def test_json_tree_shape_matches_trial_balance(self, book: Path) -> None:
+        balance = json.loads(run(book, "balance", "Checking").stdout)["data"]
+        trial = json.loads(run(book, "report", "trial-balance").stdout)["data"]
+
+        assert set(balance) == set(trial)
+        assert balance["assets"]["account"] == "Assets"
+        assert balance["assets"]["children"][0]["account"] == "Assets:Checking"
+
+
+class TestPositionalNarration:
+    def test_positional_narration_is_written(self, book: Path) -> None:
+        result = runner.invoke(
+            app,
+            [
+                "--file",
+                str(book),
+                "add",
+                "transaction",
+                "Coffee",
+                "-p",
+                "Expenses:Rent 12.50",
+                "-p",
+                "Assets:Checking",
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert '* "Coffee"' in book.read_text()
+
+    def test_conflicting_narrations_exit_2(self, book: Path) -> None:
+        result = runner.invoke(
+            app,
+            [
+                "--file",
+                str(book),
+                "add",
+                "transaction",
+                "Coffee",
+                "--narration",
+                "Tea",
+                "-p",
+                "Expenses:Rent 12.50",
+                "-p",
+                "Assets:Checking",
+            ],
+        )
+
+        assert result.exit_code == 2
+        assert "positional" in result.stderr and "--narration" in result.stderr
+
+    def test_json_directive_carries_the_positional_value(self, book: Path) -> None:
+        result = runner.invoke(
+            app,
+            [
+                "--json",
+                "--file",
+                str(book),
+                "add",
+                "transaction",
+                "Tea",
+                "-p",
+                "Expenses:Rent 5",
+                "-p",
+                "Assets:Checking",
+            ],
+        )
+
+        assert result.exit_code == 0, result.output
+        assert json.loads(result.stdout)["data"]["directive"]["narration"] == "Tea"
+
+
+class TestDailyFixes:
+    def test_format_honors_the_global_file(self, book: Path, tmp_path: Path) -> None:
+        other = tmp_path / "other.bean"
+        other.write_text('2026-08-01 *  "X"\n  Assets:Cash             1.00 USD\n')
+
+        result = runner.invoke(app, ["--file", str(book), "format"])
+
+        assert result.exit_code == 0, result.output
+        assert "main.bean" in result.stdout
+        assert other.read_text().startswith("2026-08-01 *  ")
+
+    def test_bulk_add_reads_stdin(self, book: Path) -> None:
+        payload = json.dumps(
+            [
+                {
+                    "date": "2026-08-04",
+                    "narration": "Stdin",
+                    "postings": [{"account": "Expenses:Rent", "amount": "5 USD"}, {"account": "Assets:Checking"}],
+                }
+            ]
+        )
+        result = runner.invoke(app, ["--file", str(book), "add", "transactions", "--from", "-"], input=payload)
+
+        assert result.exit_code == 0, result.output
+        assert "Stdin" in book.read_text()
+
+    def test_bulk_rejection_uses_the_singular(self, book: Path) -> None:
+        payload = json.dumps([{"date": "not-a-date", "postings": []}])
+        result = runner.invoke(
+            app, ["--file", str(book), "add", "transactions", "--from", "-", "--partial"], input=payload
+        )
+
+        assert result.exit_code == 1
+        assert "1 row was rejected" in result.stderr
+
+    def test_init_next_uses_an_absolute_path(self, tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+        monkeypatch.chdir(tmp_path)
+        target = tmp_path / "far" / "books"
+        result = runner.invoke(app, ["--no-input", "init", str(target), "--currency", "USD", "--date", "2026-08-01"])
+
+        assert result.exit_code == 0, result.output
+        assert f"cd {target} && bea check" in result.output

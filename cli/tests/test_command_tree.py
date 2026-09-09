@@ -51,9 +51,25 @@ class TestHelpPanels:
         cloud_at = result.stdout.index(_CLOUD_PANEL)
         local_section = result.stdout[local_at:cloud_at]
         cloud_section = result.stdout[cloud_at:]
-        for name in ("check", "format", "query", "ask", "add", "list", "report"):
+        for name in ("check", "balance", "format", "query", "ask", "add", "list", "report"):
             assert f"\n  {name} " in local_section, f"{name!r} missing from the local panel"
         assert "\n  cloud " in cloud_section
+
+    def test_help_first_lines_fit_without_truncation(self) -> None:
+        blurbs = (
+            "Balances for matching accounts.",
+            "Create main.bean with common accounts.",
+            "Preview bank-export entries; write with --apply.",
+            "Run BQL queries against a local ledger.",
+            "Ask about a local ledger via hosted AI.",
+            "Hosted ledgers and AI proxy; see 'cloud login'.",
+        )
+        assert all(len(blurb) < 60 for blurb in blurbs)
+        result = invoke("--help")
+
+        assert result.exit_code == 0
+        for blurb in blurbs:
+            assert blurb in result.stdout, blurb
 
     def test_no_command_falls_into_an_unlabelled_panel(self) -> None:
         result = invoke("--help")
@@ -64,7 +80,7 @@ class TestHelpPanels:
         result = invoke("cloud", "--help")
 
         assert result.exit_code == 0
-        assert "bea cloud login" in result.stdout
+        assert "cloud login" in result.stdout
 
 
 class TestCloudWithoutCredentials:

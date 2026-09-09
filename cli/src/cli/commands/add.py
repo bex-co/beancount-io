@@ -5,6 +5,7 @@ from __future__ import annotations
 import datetime
 import json
 import re
+import sys
 from collections.abc import Callable
 from decimal import Decimal, InvalidOperation
 from pathlib import Path
@@ -143,6 +144,7 @@ def add_transaction(
         list[str],
         typer.Option("--posting", "-p", help="Beancount posting, e.g. 'Account 30 USD' or 'Account' (repeat)"),
     ],
+    narration_arg: Annotated[str | None, typer.Argument(help="Narration; --narration means the same")] = None,
     date: Annotated[str | None, typer.Option("--date", help="Transaction date YYYY-MM-DD; defaults to today")] = None,
     flag: Annotated[str, typer.Option("--flag", help="Transaction flag")] = "*",
     payee: Annotated[str | None, typer.Option("--payee", help="Payee")] = None,
@@ -162,10 +164,15 @@ def add_transaction(
     Supports an omitted balancing amount, inferred currency, cost lots ({...}),
     and prices (@ or @@). Quote each posting. Examples:
 
-      -p 'Expenses:Groceries 30' -p 'Assets:Checking'
+      "Groceries" -p 'Expenses:Groceries 30' -p 'Assets:Checking'
 
       -p 'Assets:Stock 2 AAPL {100 USD}' -p 'Assets:Checking -200 USD'
     """
+    if narration_arg is not None and narration is not None and narration_arg != narration:
+        raise UsageError(
+            f"Conflicting narrations: positional {narration_arg!r} and --narration {narration!r}. Pass one of them."
+        )
+    narration = narration_arg if narration_arg is not None else narration
 
     from beancount import loader
     from beancount.core.data import Open, Transaction
@@ -603,7 +610,7 @@ def _parse_custom_value(raw: str) -> Any:
 
 @add_app.command("transactions")
 def add_transactions(
-    from_file: Annotated[Path, typer.Option("--from", help="JSON file with a list of transactions")],
+    from_file: Annotated[Path, typer.Option("--from", help="JSON file with a list of transactions; - reads stdin")],
     partial: Annotated[
         bool, typer.Option("--partial", help="Append the valid rows even when some rows are rejected")
     ] = False,
@@ -622,6 +629,7 @@ def add_transactions(
       {"account":"Assets:Checking"}]}]
 
     A posting can instead use "units":{"number":"30","currency":"USD"}.
+    Pass --from - to read the array from stdin.
     """
     ctx = context.current()
     file = ctx.entry_file()
@@ -631,7 +639,7 @@ def add_transactions(
     from cli.directives.writer import format_transaction, write_transactions
 
     try:
-        raw = json.loads(from_file.read_text())
+        raw = json.loads(sys.stdin.read() if str(from_file) == "-" else from_file.read_text())
     except json.JSONDecodeError as exc:
         raise UsageError(f"Invalid JSON at line {exc.lineno}, column {exc.colno}: {exc.msg}.") from exc
     if not isinstance(raw, list):
@@ -690,8 +698,10 @@ def add_transactions(
     warnings = write_transactions(file, [d for _, d in valid], allow_errors=allow_errors, into=into)
 
     if rejected:
+        count = len(rejected_rows)
+        noun = "row was" if count == 1 else "rows were"
         raise LedgerError(
-            f"Added {len(valid)} of {len(raw)} transactions; {len(rejected_rows)} rows were rejected.",
+            f"Added {len(valid)} of {len(raw)} transactions; {count} {noun} rejected.",
             details=rejected,
             result={
                 "written": len(valid),

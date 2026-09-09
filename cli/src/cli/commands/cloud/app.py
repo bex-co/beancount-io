@@ -14,7 +14,7 @@ from cli import context, output
 from cli.commands.cloud.ledger.app import ledger_app
 
 cloud_app = typer.Typer(
-    help="Beancount.io hosted service — needs 'bea cloud login' (or BEA_TOKEN) and network access",
+    help="Hosted ledgers and AI proxy; see 'cloud login'.",
     no_args_is_help=True,
     rich_markup_mode=None,
 )

@@ -69,6 +69,19 @@ def test_reused_bank_id_with_changed_amount_is_a_conflict(book: Path) -> None:
     assert book.read_bytes() == before
 
 
+def test_in_batch_duplicate_names_the_import_row(book: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text(HEADER + ROW + ROW.replace("bank-001", "bank-002"))
+    result = run(book, source)
+
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["rows"][1]["match"]["row"] == 1
+    human = runner.invoke(app, ["--file", str(book), "import", str(source), "--config", str(CONFIG)])
+
+    assert human.exit_code == 0, human.output
+    assert "Matches row 1 of this import:" in human.stdout.replace("\r\n", "\n")
+
+
 def test_distinct_bank_ids_preserve_identical_real_purchases(book: Path) -> None:
     source = book.parent / "bank.csv"
     source.write_text(HEADER + ROW + ROW.replace("bank-001", "bank-002"))

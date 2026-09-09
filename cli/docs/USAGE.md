@@ -9,6 +9,7 @@ bea import EXPORT [--config importers.py] [--into FILE] [--apply]
 bea check | format | query "<BQL>"
 bea list <type> | bea add <type>          # eleven directive types; add transactions --from PATH
 bea report balance-sheet | income-statement | trial-balance | overview
+bea balance [ACCOUNT…]                    # trial balance pruned to matching subtrees
 bea ask ["question"]                      # requires beancount-io[ask] and hosted credentials
 
 # Cloud — the beancount.io hosted service
@@ -184,6 +185,9 @@ failures return the scan result in `error.result`, including `formatted` and
 | `--sort oldest/newest` | Transaction order, applied before the limit; default `newest`. Specify `oldest` in scripts that depend on ascending order. |
 | `--details` | Transactions: render Beancount syntax with every posting, cost/price, metadata, and source location |
 | `--flag` | Transactions: select a flag, such as `!` for entries needing review; applied before the limit. |
+| `--search TEXT` | Transactions: case-insensitive substring over payee and narration; repeatable, applied before the limit. |
+| `--tag TAG` | Transactions: tag with or without `#`; repeatable. |
+| `--link LINK` | Transactions: link with or without `^`; repeatable. |
 | `--from-date` | Only directives on or after this date (`YYYY-MM-DD`) |
 | `--to-date` | Only directives on or before this date (`YYYY-MM-DD`) |
 | `--account / -a` | Case-insensitive substring account filter (`transaction`, `note`, `balance`, `open`, `close`, `document`, `pad`) |
@@ -197,6 +201,7 @@ bea list transaction --account Expenses:Food --from-date 2026-01-01 --to-date 20
 bea list price --currency BTC
 bea list open
 bea list transaction --flag '!' --details
+bea list transaction --search netflix --tag trip
 ```
 
 The transaction table shows signed amounts by account and currency. With
@@ -271,9 +276,8 @@ sidecars. An external edit detected before replacement produces exit **4**
 and is preserved.
 
 ```bash
-bea add transaction \
+bea add transaction "Coffee" \
   --date 2026-04-30 \
-  --narration "Coffee" \
   --posting "Expenses:Food 12.50 USD" \
   --posting "Assets:Cash -12.50 USD"
 
@@ -363,6 +367,7 @@ bea add custom \
 ```bash
 bea add transactions --from transactions.json
 bea add transactions --from transactions.json --partial
+cat transactions.json | bea add transactions --from -
 ```
 
 `transactions.json` must be an array of objects matching the `TransactionDirective` schema:
@@ -404,7 +409,7 @@ This command appends supplied transactions and does not deduplicate them. Use
 Single `--posting` arguments accept native Beancount cost and price syntax:
 
 ```bash
-bea add transaction --date 2026-08-02 --narration "Buy AAPL" \
+bea add transaction "Buy AAPL" --date 2026-08-02 \
   -p "Assets:Brokerage 10 AAPL {100 USD}" -p "Assets:Cash -1000 USD"
 ```
 
@@ -448,7 +453,14 @@ bea report overview
 bea report income-statement
 bea report balance-sheet
 bea report trial-balance
+bea balance Checking
 ```
+
+`bea balance [ACCOUNT…]` prunes the trial balance to the subtrees whose
+account names contain any argument (case-insensitive), keeping ancestors for
+structure. Closed accounts are excluded from filtered views. With no argument
+it prints the trial balance; `--conversion`, `--time`, and `--allow-errors`
+work as in reports.
 
 All four accept `--conversion / -x`, `--time / -t`, `--account / -a`, and
 `--allow-errors`. Conversion defaults to the ledger's single operating

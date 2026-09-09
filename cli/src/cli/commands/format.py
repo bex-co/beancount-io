@@ -12,7 +12,7 @@ from cli.ledger_write import candidate_file, lock_file, replace_checked
 
 
 def format_beans(
-    directory: Annotated[Path, typer.Argument(help="Ledger file or directory to format recursively")] = Path("."),
+    directory: Annotated[Path | None, typer.Argument(help="Ledger file or directory to format recursively")] = None,
     dry_run: Annotated[
         bool, typer.Option("--dry-run", help="Show files that would change without modifying them")
     ] = False,
@@ -27,7 +27,9 @@ def format_beans(
     from beancount.scripts.format import align_beancount
 
     dry_run = dry_run or check
-    directory = directory.resolve()
+    # An explicit path wins; otherwise the global --file selects the file and
+    # a bare `bea format` keeps formatting the working directory tree.
+    directory = (directory or ctx.file or Path(".")).resolve()
     if not directory.exists():
         raise UsageError(f"Formatting target does not exist: {directory}")
     if directory.is_file():
@@ -77,7 +79,8 @@ def format_beans(
     }
     if skipped_files or (check and formatted_files):
         action = "would format" if dry_run else "formatted"
-        diagnostics.extend(f"{action}: {name}" for name in formatted_files)
+        for name in formatted_files:
+            output.note(f"{action}: {name}")
         message = (
             f"Skipped {len(skipped_files)} file(s) with syntax errors."
             if skipped_files

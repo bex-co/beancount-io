@@ -19,7 +19,7 @@ from cli.commands.import_ import import_entries
 from cli.commands.init import init
 from cli.commands.list import list_app
 from cli.commands.query import query
-from cli.commands.report import report_app
+from cli.commands.report import balance, report_app
 from cli.commands.upgrade import current_channel, upgrade
 from cli.completion import install as install_completion_callback
 from cli.completion import show as show_completion_callback
@@ -188,6 +188,7 @@ _CLOUD_PANEL = "Cloud commands (beancount.io — need 'bea cloud login' or BEA_T
 _SELF_PANEL = "CLI maintenance"
 
 app.command("check", rich_help_panel=_LOCAL_PANEL)(check)
+app.command("balance", rich_help_panel=_LOCAL_PANEL)(balance)
 app.command("init", rich_help_panel=_LOCAL_PANEL)(init)
 app.command("import", rich_help_panel=_LOCAL_PANEL)(import_entries)
 app.command("format", rich_help_panel=_LOCAL_PANEL)(format_beans)

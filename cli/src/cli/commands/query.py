@@ -16,7 +16,11 @@ def query(
         typer.Option("--allow-errors", help="Answer with errors on stderr; opts strict reads into partial answers"),
     ] = False,
 ) -> None:
-    """Run BQL queries against a local .bean file (print or interactive mode)."""
+    """Run BQL queries against a local ledger.
+
+    With a query string, print the table; without one, open the interactive
+    shell (needs a terminal).
+    """
     ctx = context.current()
     file = ctx.entry_file()
     source = "beancount:" + str(file.resolve())

@@ -1,20 +1,20 @@
 # w1 · m15 — Daily-use ergonomics for `bea`
 
-**Worker:** worker1 **Goal:** the five things a person does every week with a ledger (find a transaction, check a balance, record a purchase, read a table, format the file they named) each take one short command and read cleanly in a terminal **Status:** todo
+**Worker:** worker1 **Goal:** the five things a person does every week with a ledger (find a transaction, check a balance, record a purchase, read a table, format the file they named) each take one short command and read cleanly in a terminal **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                                     | est | depends_on |
 | ---- | ----------------------------------------------------------------------------------------- | --- | ---------- |
-| t001 | `list transaction --search`, `--tag`, and `--link` filters                                | 45m | —          |
-| t002 | `bea balance [ACCOUNT…]`: trial balance pruned to matching subtrees                       | 45m | —          |
-| t003 | Positional narration for `add transaction`                                                | 30m | —          |
-| t004 | Terminal-width-aware tables: one posting per line when a row does not fit                 | 45m | —          |
-| t005 | Small fixes: `format` honors `--file`, `--from -`, help first lines, hints, plurals, wording | 45m | —          |
-| t006 | Adoption surface                                                                          | 20m | t001, t002, t003, t004, t005 |
-| t007 | Simplify                                                                                  | 30m | t006       |
-| t008 | Test coverage                                                                             | 45m | t006       |
-| t009 | Closeout                                                                                  | 15m | t008       |
+| t001 | `list transaction --search`, `--tag`, and `--link` filters — **DONE**                                | 45m | —          |
+| t002 | `bea balance [ACCOUNT…]`: trial balance pruned to matching subtrees — **DONE**                       | 45m | —          |
+| t003 | Positional narration for `add transaction` — **DONE**                                                | 30m | —          |
+| t004 | Terminal-width-aware tables: one posting per line when a row does not fit — **DONE**                 | 45m | —          |
+| t005 | Small fixes: `format` honors `--file`, `--from -`, help first lines, hints, plurals, wording — **DONE** | 45m | —          |
+| t006 | Adoption surface — **DONE**                                                                          | 20m | t001, t002, t003, t004, t005 |
+| t007 | Simplify — **DONE**                                                                                  | 30m | t006       |
+| t008 | Test coverage — **DONE**                                                                             | 45m | t006       |
+| t009 | Closeout — **DONE**                                                                                  | 15m | t008       |
 
 ## Definition of done
 

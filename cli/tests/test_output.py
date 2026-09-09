@@ -1,7 +1,13 @@
 from __future__ import annotations
 
+import io
+import os
+import shutil
+import sys
+
 import pytest
 
+from cli.commands.list import _transaction_table
 from cli.output import table
 
 
@@ -15,3 +21,81 @@ def test_table_header_only_when_no_rows(capsys: pytest.CaptureFixture[str]) -> N
     table(["DATE", "ACCOUNT"], [])
     out = capsys.readouterr().out
     assert out.splitlines() == ["DATE  ACCOUNT", "----  -------"]
+
+
+class _Tty(io.StringIO):
+    def isatty(self) -> bool:
+        return True
+
+
+class _Pipe(io.StringIO):
+    def isatty(self) -> bool:
+        return False
+
+
+HEADERS = ["DATE", "FLAG", "PAYEE", "NARRATION", "POSTING AMOUNTS"]
+WIDE_ROWS = [
+    (
+        ["2026-08-02", "*", "Cafe", "Coffee"],
+        [("Expenses:Dining:AVeryLongRestaurantName", "12.50 USD"), ("Assets:Checking", "-12.50 USD")],
+    )
+]
+
+
+def test_piped_transaction_table_matches_single_line_rendering(monkeypatch: pytest.MonkeyPatch) -> None:
+    pipe = _Pipe()
+    monkeypatch.setattr(sys, "stdout", pipe)
+    _transaction_table(HEADERS, WIDE_ROWS)
+    got = pipe.getvalue()
+
+    table(
+        HEADERS,
+        [
+            [
+                "2026-08-02",
+                "*",
+                "Cafe",
+                "Coffee",
+                "Expenses:Dining:AVeryLongRestaurantName: 12.50 USD; Assets:Checking: -12.50 USD",
+            ]
+        ],
+    )
+    assert pipe.getvalue()[len(got) :] == got
+
+
+def test_terminal_wraps_long_postings_under_the_row(monkeypatch: pytest.MonkeyPatch) -> None:
+    tty = _Tty()
+    monkeypatch.setattr(sys, "stdout", tty)
+    monkeypatch.setattr(shutil, "get_terminal_size", lambda *args, **kwargs: os.terminal_size((80, 24)))
+    _transaction_table(HEADERS, WIDE_ROWS)
+    lines = tty.getvalue().splitlines()
+
+    assert all(len(line) <= 80 for line in lines)
+    assert lines[2].startswith("2026-08-02") and lines[2].rstrip().endswith("Coffee")
+    assert lines[3] == "  Expenses:Dining:AVeryLongRestaurantName: 12.50 USD"
+    assert lines[4].startswith("  Assets:Checking") and lines[4].endswith("-12.50 USD")
+
+
+def test_terminal_truncates_long_narration_with_an_ellipsis(monkeypatch: pytest.MonkeyPatch) -> None:
+    tty = _Tty()
+    monkeypatch.setattr(sys, "stdout", tty)
+    monkeypatch.setattr(shutil, "get_terminal_size", lambda *args, **kwargs: os.terminal_size((80, 24)))
+    _transaction_table(
+        HEADERS,
+        [(["2026-08-02", "*", "Cafe", "A very long narration that keeps going and going"], [("Assets:Cash", "1 USD")])],
+    )
+    lines = tty.getvalue().splitlines()
+
+    assert all(len(line) <= 80 for line in lines)
+    assert lines[2].rstrip().endswith("...")
+
+
+def test_terminal_keeps_fitting_rows_single_line(monkeypatch: pytest.MonkeyPatch) -> None:
+    tty = _Tty()
+    monkeypatch.setattr(sys, "stdout", tty)
+    monkeypatch.setattr(shutil, "get_terminal_size", lambda *args, **kwargs: os.terminal_size((200, 24)))
+    _transaction_table(HEADERS, WIDE_ROWS)
+    lines = tty.getvalue().splitlines()
+
+    assert len(lines) == 3
+    assert "Expenses:Dining:AVeryLongRestaurantName: 12.50 USD; Assets:Checking: -12.50 USD" in lines[2]

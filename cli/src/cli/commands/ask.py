@@ -32,7 +32,7 @@ def ask(
         Path | None, typer.Option("--into", help="Write to an included file, relative to the root ledger")
     ] = None,
 ) -> None:
-    """Ask about a local ledger using the hosted Beancount.io AI service.
+    """Ask about a local ledger via hosted AI.
 
     Requires both beancount-io[ask] and credentials from bea cloud login.
     With Homebrew, use uvx --from 'beancount-io[ask]' bea ask QUESTION --print.

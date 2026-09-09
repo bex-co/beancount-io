@@ -214,7 +214,7 @@ def import_entries(
         Path | None, typer.Option("--into", help="Write to an included file, relative to the root ledger")
     ] = None,
 ) -> None:
-    """Preview categorized entries and a ledger diff; write only with --apply.
+    """Preview bank-export entries; write with --apply.
 
     Uses the modern Beangulp identify/account/extract interface. Categorization
     belongs to the configured importer. Possible duplicates require an explicit
@@ -278,6 +278,7 @@ def import_entries(
     texts: list[str] = []
     conflicts = False
     seen_inputs: dict[str, int] = {}
+    batch_rows: dict[int, int] = {}
     for index, entry in enumerate(entries):
         entry = normalize_entry_strings(entry)
         status, reason, match = "new", None, None
@@ -315,6 +316,7 @@ def import_entries(
                 for identity in ids:
                     identities[identity] = entry
                 fingerprints[_candidate_key(entry, account)] = entry
+                batch_rows[id(entry)] = index + 1
         text = format_entry(entry)
         if not isinstance(entry, Transaction):
             if text in other_entries:
@@ -338,6 +340,7 @@ def import_entries(
                 "match": {
                     "filename": match.meta.get("filename"),
                     "lineno": match.meta.get("lineno"),
+                    "row": batch_rows.get(id(match)),
                     "entry": format_entry(match),
                 }
                 if match
@@ -417,9 +420,12 @@ def import_entries(
         for row in rows:
             if row["match"]:
                 match = row["match"]
-                typer.echo(
-                    f"\nRow {row['row']}: {row['reason']}\nExisting entry at {match['filename']}:{match['lineno']}:"
-                )
+                if match["row"] is not None:
+                    typer.echo(f"\nRow {row['row']}: {row['reason']}\nMatches row {match['row']} of this import:")
+                else:
+                    typer.echo(
+                        f"\nRow {row['row']}: {row['reason']}\nExisting entry at {match['filename']}:{match['lineno']}:"
+                    )
                 typer.echo(match["entry"])
         typer.echo(preview["diff"])
         for error in validation_errors:
