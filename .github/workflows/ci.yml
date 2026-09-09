@@ -55,7 +55,10 @@ jobs:
           cache: yarn
           cache-dependency-path: mobile/yarn.lock
       - run: yarn install --frozen-lockfile
-      - run: brew install imagemagick asc
+      - name: Install store tools with font discovery
+        run: |
+          brew install imagemagick-full asc
+          printf '%s/bin\n' "$(brew --prefix imagemagick-full)" >> "$GITHUB_PATH"
       - name: Prepare Chromium text renderer
         run: |
           PLAY_CHROME_PLATFORM=mac-x64

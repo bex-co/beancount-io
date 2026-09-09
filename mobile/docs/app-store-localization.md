@@ -173,6 +173,9 @@ and Persian UI overlays with Unicode shaping; ImageMagick produces opaque PNGs.
 For Apple captions and demo overlays, Arial Unicode MS is preferred when
 available. macOS runners can instead use Arial for Latin/Cyrillic and Heiti SC
 for Chinese; the build rejects missing font coverage.
+Current Homebrew installations need `imagemagick-full` for font discovery:
+`brew install imagemagick-full`, then put `$(brew --prefix imagemagick-full)/bin`
+on `PATH`. The CI job does this explicitly.
 Set `CHROME_BIN` to a Chromium/headless-shell executable if needed. The renderer
 otherwise looks for an existing Playwright headless-shell installation, then
 Chrome on macOS or `chromium` on Linux. No browser package is installed by the
