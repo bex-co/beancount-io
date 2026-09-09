@@ -1,9 +1,10 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type ReactNode, type RefObject } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { useMutation } from "@apollo/client/react";
 import { format } from "date-fns";
 import {
@@ -18,6 +19,7 @@ import {
   DialogDescription,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/common/components/ui/dialog";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
@@ -64,6 +66,12 @@ interface AddBudgetDialogProps {
   lockedInterval?: BudgetInterval;
   defaultInterval?: BudgetInterval;
   defaultCurrency?: string;
+  /** Optional registered opener (single-button callers). */
+  trigger?: ReactNode;
+  /** Explicit opener when multiple controls share this dialog. */
+  returnFocusRef?: RefObject<HTMLElement | null>;
+  /** Used when the original opener unmounts after a successful create. */
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
 }
 
 export function AddBudgetDialog({
@@ -75,6 +83,9 @@ export function AddBudgetDialog({
   lockedInterval,
   defaultInterval,
   defaultCurrency = "USD",
+  trigger,
+  returnFocusRef,
+  fallbackFocusRef,
 }: AddBudgetDialogProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -172,7 +183,17 @@ export function AddBudgetDialog({
         onOpenChange(v);
       }}
     >
-      <DialogContent className="sm:max-w-[480px]">
+      {trigger ? <DialogTrigger asChild>{trigger}</DialogTrigger> : null}
+      <DialogContent
+        className="sm:max-w-[480px]"
+        onCloseAutoFocus={(event) => {
+          restoreFocusOnDialogClose(
+            event,
+            returnFocusRef?.current,
+            fallbackFocusRef?.current,
+          );
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{t("page.budget.budgetAddBudget")}</DialogTitle>
           <DialogDescription>

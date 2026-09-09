@@ -1,6 +1,7 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, type RefObject } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { z } from "zod";
@@ -56,6 +57,7 @@ interface OpenAccountDialogProps {
   onOpenChange: (open: boolean) => void;
   ledgerId: string;
   onSuccess?: () => void;
+  returnFocusRef?: RefObject<HTMLElement | null>;
 }
 
 export function OpenAccountDialog({
@@ -63,6 +65,7 @@ export function OpenAccountDialog({
   onOpenChange,
   ledgerId,
   onSuccess,
+  returnFocusRef,
 }: OpenAccountDialogProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -150,7 +153,12 @@ export function OpenAccountDialog({
         onOpenChange(v);
       }}
     >
-      <DialogContent className="sm:max-w-[480px]">
+      <DialogContent
+        className="sm:max-w-[480px]"
+        onCloseAutoFocus={(event) => {
+          restoreFocusOnDialogClose(event, returnFocusRef?.current);
+        }}
+      >
         <DialogHeader>
           <DialogTitle>{t("page.accounts.openAccount")}</DialogTitle>
         </DialogHeader>

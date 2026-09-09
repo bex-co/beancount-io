@@ -1,6 +1,7 @@
-import { useState } from "react";
+import { useState, type RefObject } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
+import { restoreFocusOnDialogClose } from "@/common/lib/focus/restore-focus-on-dialog-close";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { MonacoEditor as Editor } from "@/common/components/monaco-editor";
 import {
@@ -29,6 +30,8 @@ interface DeleteAccountDialogProps {
   account: AccountDirective | null;
   ledgerId: string;
   onSuccess: () => void;
+  returnFocusRef?: RefObject<HTMLElement | null>;
+  fallbackFocusRef?: RefObject<HTMLElement | null>;
 }
 
 export function DeleteAccountDialog({
@@ -37,6 +40,8 @@ export function DeleteAccountDialog({
   account,
   ledgerId,
   onSuccess,
+  returnFocusRef,
+  fallbackFocusRef,
 }: DeleteAccountDialogProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
@@ -131,7 +136,16 @@ export function DeleteAccountDialog({
 
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
-      <DialogContent className="sm:max-w-[560px]">
+      <DialogContent
+        className="sm:max-w-[560px]"
+        onCloseAutoFocus={(event) => {
+          restoreFocusOnDialogClose(
+            event,
+            returnFocusRef?.current,
+            fallbackFocusRef?.current,
+          );
+        }}
+      >
         <DialogHeader>
           <DialogTitle className="flex items-center gap-2 text-destructive">
             <Trash2 className="h-4 w-4" />

@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useParams } from "@tanstack/react-router";
 import { useQuery } from "@apollo/client/react";
 import { format, subYears } from "date-fns";
@@ -55,7 +55,7 @@ function BudgetLoadingSkeleton() {
   );
 }
 
-function BudgetEmptyState({ onAdd }: { onAdd: () => void }) {
+function BudgetEmptyState({ onAdd }: { onAdd: (opener: HTMLElement) => void }) {
   const { t } = useTranslations();
   return (
     <Card>
@@ -70,7 +70,7 @@ function BudgetEmptyState({ onAdd }: { onAdd: () => void }) {
           {t("page.budget.budgetNoBudgetsFoundDescription")}
         </p>
         <LedgerWritePermission>
-          <Button onClick={onAdd}>
+          <Button onClick={(event) => onAdd(event.currentTarget)}>
             <Plus className="h-4 w-4" />
             {t("page.budget.budgetEmptyStateCta")}
           </Button>
@@ -94,6 +94,13 @@ export default function LedgerBudgetPage() {
   const [selectedTimeSpan, setSelectedTimeSpan] = useState<string>("all");
   const conversion: ConversionOption = "units";
   const { primaryCurrency } = useLedger();
+  const headerAddRef = useRef<HTMLButtonElement | null>(null);
+  const addReturnFocusRef = useRef<HTMLElement | null>(null);
+
+  const openAddBudget = (opener: HTMLElement | null) => {
+    addReturnFocusRef.current = opener;
+    setIsAddOpen(true);
+  };
 
   const intervalOptions = useMemo(
     () => [
@@ -205,7 +212,11 @@ export default function LedgerBudgetPage() {
           description={t("page.budget.budgetDescription")}
         />
         <LedgerWritePermission>
-          <Button onClick={() => setIsAddOpen(true)} className="shrink-0">
+          <Button
+            ref={headerAddRef}
+            onClick={(event) => openAddBudget(event.currentTarget)}
+            className="shrink-0"
+          >
             <Plus className="h-4 w-4" />
             {t("page.budget.budgetAddBudget")}
           </Button>
@@ -218,7 +229,7 @@ export default function LedgerBudgetPage() {
         data={budgetGroups}
         loadingSlot={<BudgetLoadingSkeleton />}
         isEmpty={(groups) => groups.length === 0}
-        emptySlot={<BudgetEmptyState onAdd={() => setIsAddOpen(true)} />}
+        emptySlot={<BudgetEmptyState onAdd={openAddBudget} />}
       >
         {(groups) => (
           <div className="space-y-6">
@@ -310,10 +321,15 @@ export default function LedgerBudgetPage() {
 
       <AddBudgetDialog
         open={isAddOpen}
-        onOpenChange={setIsAddOpen}
+        onOpenChange={(open) => {
+          setIsAddOpen(open);
+          if (!open) addReturnFocusRef.current = null;
+        }}
         ledgerId={ledgerId}
         defaultCurrency={primaryCurrency || "USD"}
         onSuccess={() => {}}
+        returnFocusRef={addReturnFocusRef}
+        fallbackFocusRef={headerAddRef}
       />
 
       <DeleteBudgetDialog

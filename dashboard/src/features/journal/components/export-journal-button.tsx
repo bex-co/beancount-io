@@ -6,6 +6,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogTrigger,
 } from "@/common/components/ui/dialog";
 import { Download } from "lucide-react";
 import { useState } from "react";
@@ -93,42 +94,43 @@ export function ExportJournalButton({
   };
 
   return (
-    <>
-      <Button
-        variant="outline"
-        className="flex items-center gap-2"
-        onClick={() => setIsDialogOpen(true)}
-        disabled={isExporting}
-        aria-label={isExporting ? t("journal.exporting") : t("journal.export")}
-      >
-        <Download className="h-4 w-4" />
-        <span className="hidden sm:inline">
-          {isExporting ? t("journal.exporting") : t("journal.export")}
-        </span>
-      </Button>
+    <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
+      <DialogTrigger asChild>
+        <Button
+          variant="outline"
+          className="flex items-center gap-2"
+          disabled={isExporting}
+          aria-label={
+            isExporting ? t("journal.exporting") : t("journal.export")
+          }
+        >
+          <Download className="h-4 w-4" />
+          <span className="hidden sm:inline">
+            {isExporting ? t("journal.exporting") : t("journal.export")}
+          </span>
+        </Button>
+      </DialogTrigger>
 
-      <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>{t("journal.exportJournal")}</DialogTitle>
-            <DialogDescription>
-              {t("journal.downloadFilteredEntries")}
-            </DialogDescription>
-          </DialogHeader>
-          <DialogFooter>
-            <Button
-              variant="outline"
-              onClick={() => setIsDialogOpen(false)}
-              disabled={isExporting}
-            >
-              {t("common.cancel")}
-            </Button>
-            <Button onClick={handleExport} loading={isExporting}>
-              {t("journal.export")}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </>
+      <DialogContent>
+        <DialogHeader>
+          <DialogTitle>{t("journal.exportJournal")}</DialogTitle>
+          <DialogDescription>
+            {t("journal.downloadFilteredEntries")}
+          </DialogDescription>
+        </DialogHeader>
+        <DialogFooter>
+          <Button
+            variant="outline"
+            onClick={() => setIsDialogOpen(false)}
+            disabled={isExporting}
+          >
+            {t("common.cancel")}
+          </Button>
+          <Button onClick={handleExport} loading={isExporting}>
+            {t("journal.export")}
+          </Button>
+        </DialogFooter>
+      </DialogContent>
+    </Dialog>
   );
 }

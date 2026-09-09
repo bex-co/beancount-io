@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import {
   Link,
@@ -112,8 +112,8 @@ function BalanceCell({
 interface AccountRowProps {
   account: AccountDirective;
   onAccountClick: (accountName: string) => void;
-  onDelete: (account: AccountDirective) => void;
-  onClose: (account: AccountDirective) => void;
+  onDelete: (account: AccountDirective, returnFocusTo: HTMLElement) => void;
+  onClose: (account: AccountDirective, returnFocusTo: HTMLElement) => void;
 }
 
 function AccountStatus({ isClosed }: { isClosed: boolean }) {
@@ -146,6 +146,7 @@ function AccountActions({
   onClose,
 }: Pick<AccountRowProps, "account" | "onDelete" | "onClose">) {
   const { t } = useTranslations();
+  const triggerRef = useRef<HTMLButtonElement | null>(null);
   const isClosed = account.closedAt !== null;
   const canDelete = account.entryCount === 0;
   const canClose = !isClosed && isBalanceEmpty(account.balance);
@@ -157,6 +158,7 @@ function AccountActions({
       <DropdownMenu>
         <DropdownMenuTrigger asChild>
           <Button
+            ref={triggerRef}
             variant="ghost"
             size="icon-sm"
             className="text-muted-foreground hover:text-foreground"
@@ -167,7 +169,11 @@ function AccountActions({
         </DropdownMenuTrigger>
         <DropdownMenuContent align="end" className="min-w-36">
           {canClose && (
-            <DropdownMenuItem onSelect={() => onClose(account)}>
+            <DropdownMenuItem
+              onSelect={() => {
+                if (triggerRef.current) onClose(account, triggerRef.current);
+              }}
+            >
               <X className="h-4 w-4" />
               {t("page.accounts.close")}
             </DropdownMenuItem>
@@ -176,7 +182,9 @@ function AccountActions({
           {canDelete && (
             <DropdownMenuItem
               variant="destructive"
-              onSelect={() => onDelete(account)}
+              onSelect={() => {
+                if (triggerRef.current) onDelete(account, triggerRef.current);
+              }}
             >
               <Trash2 className="h-4 w-4" />
               {t("common.delete")}
@@ -280,7 +288,26 @@ export default function LedgerAccountsPage() {
     null,
   );
   const [closeTarget, setCloseTarget] = useState<AccountDirective | null>(null);
+  const openAccountTriggerRef = useRef<HTMLAnchorElement | null>(null);
+  const searchInputRef = useRef<HTMLInputElement | null>(null);
+  const rowActionReturnFocusRef = useRef<HTMLElement | null>(null);
   const clearCache = useApolloCacheClear();
+
+  const openCloseDialog = (
+    account: AccountDirective,
+    returnFocusTo: HTMLElement,
+  ) => {
+    rowActionReturnFocusRef.current = returnFocusTo;
+    setCloseTarget(account);
+  };
+
+  const openDeleteDialog = (
+    account: AccountDirective,
+    returnFocusTo: HTMLElement,
+  ) => {
+    rowActionReturnFocusRef.current = returnFocusTo;
+    setDeleteTarget(account);
+  };
 
   const { data, loading, error } = useQuery(
     GetLedgerAccountDirectivesDocument,
@@ -327,6 +354,7 @@ export default function LedgerAccountsPage() {
         <LedgerWritePermission>
           <Button asChild className="shrink-0">
             <Link
+              ref={openAccountTriggerRef}
               to="/ledger/$ledgerOwner/$ledgerName/accounts"
               params={{ ledgerOwner, ledgerName }}
               search={OPEN_ACCOUNT_ACTION_SEARCH}
@@ -346,6 +374,7 @@ export default function LedgerAccountsPage() {
           <div className="relative min-w-0 flex-1 @3xl:w-72 @3xl:flex-none">
             <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
             <Input
+              ref={searchInputRef}
               aria-label={t("page.accounts.searchAccounts")}
               placeholder={t("page.accounts.searchAccounts")}
               value={search}
@@ -510,8 +539,8 @@ export default function LedgerAccountsPage() {
                         key={account.account}
                         account={account}
                         onAccountClick={handleAccountClick}
-                        onDelete={setDeleteTarget}
-                        onClose={setCloseTarget}
+                        onDelete={openDeleteDialog}
+                        onClose={openCloseDialog}
                       />
                     ))}
                   </TableBody>
@@ -535,26 +564,37 @@ export default function LedgerAccountsPage() {
         }}
         ledgerId={ledgerId}
         onSuccess={() => clearCache()}
+        returnFocusRef={openAccountTriggerRef}
       />
 
       <DeleteAccountDialog
         open={deleteTarget !== null}
         onOpenChange={(v) => {
-          if (!v) setDeleteTarget(null);
+          if (!v) {
+            setDeleteTarget(null);
+            rowActionReturnFocusRef.current = null;
+          }
         }}
         account={deleteTarget}
         ledgerId={ledgerId}
         onSuccess={() => clearCache()}
+        returnFocusRef={rowActionReturnFocusRef}
+        fallbackFocusRef={searchInputRef}
       />
 
       <CloseAccountDialog
         open={closeTarget !== null}
         onOpenChange={(v) => {
-          if (!v) setCloseTarget(null);
+          if (!v) {
+            setCloseTarget(null);
+            rowActionReturnFocusRef.current = null;
+          }
         }}
         account={closeTarget}
         ledgerId={ledgerId}
         onSuccess={() => clearCache()}
+        returnFocusRef={rowActionReturnFocusRef}
+        fallbackFocusRef={searchInputRef}
       />
     </div>
   );

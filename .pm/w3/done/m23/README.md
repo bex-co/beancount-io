@@ -1,19 +1,19 @@
 # w3 · m23 — Restore focus after Journal, Budget and Account dialogs
 
-**Worker:** worker3 **Goal:** closing these dialogs returns keyboard users to the action they opened **Status:** todo
+**Worker:** worker3 **Goal:** closing these dialogs returns keyboard users to the action they opened **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                      | est | depends_on             |
 | ---- | ------------------------------------------ | --- | ---------------------- |
-| t001 | Register the Journal export trigger        | 30m | —                      |
-| t002 | Return Budget dialogs to their real opener | 40m | —                      |
-| t007 | Return Open Account to its route opener    | 40m | —                      |
-| t008 | Return account confirmations to their row  | 40m | t007                   |
-| t003 | Verify keyboard adoption surfaces          | 25m | t001, t002, t007, t008 |
-| t004 | Simplify the focus wiring                  | 20m | t003                   |
-| t005 | Test dismissal and asynchronous completion | 55m | t004                   |
-| t006 | Close out and archive the focus repair     | 15m | t005                   |
+| t001 | Register the Journal export trigger — **DONE** | 30m | —                      |
+| t002 | Return Budget dialogs to their real opener — **DONE** | 40m | —                      |
+| t007 | Return Open Account to its route opener — **DONE** | 40m | —                      |
+| t008 | Return account confirmations to their row — **DONE** | 40m | t007                   |
+| t003 | Verify keyboard adoption surfaces — **DONE** | 25m | t001, t002, t007, t008 |
+| t004 | Simplify the focus wiring — **DONE** | 20m | t003                   |
+| t005 | Test dismissal and asynchronous completion — **DONE** | 55m | t004                   |
+| t006 | Close out and archive the focus repair — **DONE** | 15m | t005                   |
 
 265 minutes total; 150 minutes of implementation across five dialog consumers, plus
 meaningful interaction coverage and closing work. Promotes [050](../050.md)

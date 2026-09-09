@@ -279,15 +279,20 @@ export function BudgetChartCard({
             </CardDescription>
           </div>
           <LedgerWritePermission>
-            <Button
-              variant="outline"
-              size="sm"
-              className="shrink-0"
-              onClick={() => setIsAddOpen(true)}
-            >
-              <Plus className="size-3.5" />
-              {t("page.budget.budgetAddEntry")}
-            </Button>
+            <AddBudgetDialog
+              open={isAddOpen}
+              onOpenChange={setIsAddOpen}
+              ledgerId={ledgerId}
+              lockedAccount={group.account}
+              defaultInterval={currentInterval}
+              defaultCurrency={displayCurrency}
+              trigger={
+                <Button variant="outline" size="sm" className="shrink-0">
+                  <Plus className="size-3.5" />
+                  {t("page.budget.budgetAddEntry")}
+                </Button>
+              }
+            />
           </LedgerWritePermission>
         </div>
 
@@ -398,15 +403,6 @@ export function BudgetChartCard({
           <BudgetHistoryTable group={group} onDelete={onDelete} />
         </div>
       </CardContent>
-
-      <AddBudgetDialog
-        open={isAddOpen}
-        onOpenChange={setIsAddOpen}
-        ledgerId={ledgerId}
-        lockedAccount={group.account}
-        defaultInterval={currentInterval}
-        defaultCurrency={displayCurrency}
-      />
     </Card>
   );
 }
