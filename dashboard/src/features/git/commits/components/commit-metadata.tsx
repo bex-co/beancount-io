@@ -1,12 +1,12 @@
 import { useEffect, useRef, useState } from "react";
 import { Check, Copy } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/common/components/ui/button";
 import {
   Tooltip,
   TooltipContent,
   TooltipTrigger,
 } from "@/common/components/ui/tooltip";
+import { useFormatRelativeTime } from "@/common/hooks/use-date-locale";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { toast } from "sonner";
 
@@ -26,6 +26,7 @@ export function CommitMetadata({
   fileCount,
 }: CommitMetadataProps) {
   const { t } = useTranslations();
+  const formatRelativeTime = useFormatRelativeTime();
   const [copied, setCopied] = useState(false);
   const copiedTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
   const messageParts = message.split("\n");
@@ -33,7 +34,7 @@ export function CommitMetadata({
   const extendedMessage =
     messageParts.length > 1 ? messageParts.slice(1).join("\n").trim() : null;
   const commitDate = new Date(author.date);
-  const relativeTime = formatDistanceToNow(commitDate, { addSuffix: true });
+  const relativeTime = formatRelativeTime(commitDate);
   const exactTime = new Intl.DateTimeFormat(undefined, {
     dateStyle: "medium",
     timeStyle: "long",

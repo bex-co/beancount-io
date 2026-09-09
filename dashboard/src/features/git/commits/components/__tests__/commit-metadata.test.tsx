@@ -1,7 +1,13 @@
 import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
+import { formatDistanceToNow } from "date-fns";
 import { CommitMetadata } from "../commit-metadata";
+
+vi.mock("@/common/hooks/use-date-locale", () => ({
+  useFormatRelativeTime: () => (date: Date | number) =>
+    formatDistanceToNow(date, { addSuffix: true }),
+}));
 
 describe("CommitMetadata", () => {
   beforeEach(() => {

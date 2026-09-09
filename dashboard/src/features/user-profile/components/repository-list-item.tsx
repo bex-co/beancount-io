@@ -1,6 +1,6 @@
 import { Link } from "@tanstack/react-router";
 import { ArrowUpRight, Globe2, LockKeyhole, Star } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
+import { useFormatRelativeTime } from "@/common/hooks/use-date-locale";
 import { useTranslations } from "@/common/hooks/use-translations";
 
 interface RepositoryListItemProps {
@@ -23,6 +23,7 @@ export function RepositoryListItem({
   ownerUsername,
 }: RepositoryListItemProps) {
   const { t } = useTranslations();
+  const formatRelativeTime = useFormatRelativeTime();
   const ledgerOwner = fullName.split("/")[0] || ownerUsername;
   const date = new Date(updatedAt);
   const hasDate = !Number.isNaN(date.getTime());
@@ -69,7 +70,7 @@ export function RepositoryListItem({
           <span>
             {t("userProfile.updated")}{" "}
             <time dateTime={date.toISOString()} title={date.toLocaleString()}>
-              {formatDistanceToNow(date, { addSuffix: true })}
+              {formatRelativeTime(date)}
             </time>
           </span>
         )}

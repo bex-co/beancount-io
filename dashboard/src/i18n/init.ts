@@ -1,4 +1,9 @@
 import { createInstance } from "i18next";
+import type { Locale } from "react-day-picker";
+import {
+  defaultDateLocale,
+  loadDateLocale,
+} from "@/common/lib/format/date-locale";
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from "./config";
 import en from "./locales/en";
 
@@ -44,34 +49,66 @@ export function createLocalization() {
     react: { useSuspense: false },
   });
   let revision = 0;
+  let dateLocale: Locale = defaultDateLocale;
+  const dateLocales = new Map<SupportedLanguage, Locale>([
+    ["en", defaultDateLocale],
+  ]);
   const pending = new Map<string, Promise<Record<string, string>>>();
+  const pendingDate = new Map<string, Promise<Locale>>();
 
   async function changeLanguage(language: string): Promise<boolean> {
     if (!isSupportedLanguage(language)) throw new Error("Unsupported language");
     const requested = ++revision;
-    if (!i18n.hasResourceBundle(language, "translation")) {
-      let load = pending.get(language);
-      if (!load) {
-        load = localeLoaders[language]().then((module) => module.default);
-        pending.set(language, load);
+
+    try {
+      const loads: Promise<unknown>[] = [];
+
+      if (!dateLocales.has(language)) {
+        let dateLoad = pendingDate.get(language);
+        if (!dateLoad) {
+          dateLoad = loadDateLocale(language).then((locale) => {
+            dateLocales.set(language, locale);
+            return locale;
+          });
+          pendingDate.set(language, dateLoad);
+        }
+        loads.push(dateLoad);
       }
-      try {
-        const resources = await load;
-        i18n.addResourceBundle(language, "translation", resources);
-      } catch (error) {
-        // Superseded requests must not surface errors over a newer selection.
-        if (requested !== revision) return false;
-        throw error;
-      } finally {
-        pending.delete(language);
+
+      if (!i18n.hasResourceBundle(language, "translation")) {
+        let load = pending.get(language);
+        if (!load) {
+          load = localeLoaders[language]().then((module) => module.default);
+          pending.set(language, load);
+        }
+        loads.push(
+          load.then((resources) => {
+            i18n.addResourceBundle(language, "translation", resources);
+          }),
+        );
       }
+
+      await Promise.all(loads);
+    } catch (error) {
+      // Superseded requests must not surface errors over a newer selection.
+      if (requested !== revision) return false;
+      throw error;
+    } finally {
+      pending.delete(language);
+      pendingDate.delete(language);
     }
+
     if (requested !== revision) return false;
+    dateLocale = dateLocales.get(language) ?? dateLocale;
     await i18n.changeLanguage(language);
     return true;
   }
 
-  return { i18n, changeLanguage };
+  return {
+    i18n,
+    changeLanguage,
+    getDateLocale: () => dateLocale,
+  };
 }
 
 export type Localization = ReturnType<typeof createLocalization>;

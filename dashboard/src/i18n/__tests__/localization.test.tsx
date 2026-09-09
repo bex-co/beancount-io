@@ -71,5 +71,14 @@ describe("request-scoped localization", () => {
     expect(await first).toBe(false);
     expect(await last).toBe(true);
     expect(locale.i18n.language).toBe("en");
+    expect(locale.getDateLocale().code).toBe("en-US");
+  });
+
+  it("settles the date locale with the active language", async () => {
+    const locale = createLocalization();
+    expect(locale.getDateLocale().code).toBe("en-US");
+    await locale.changeLanguage("zh");
+    expect(locale.getDateLocale().code).toBe("zh-CN");
+    expect(locale.i18n.language).toBe("zh");
   });
 });

@@ -9,7 +9,7 @@ import {
   PlugZap,
   SlidersHorizontal,
 } from "lucide-react";
-import { format, formatDistanceToNow } from "date-fns";
+import { format } from "date-fns";
 import {
   Card,
   CardContent,
@@ -32,6 +32,7 @@ import {
 } from "@/common/components/ui/alert-dialog";
 import { useToast } from "@/common/hooks/use-toast";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useFormatRelativeTime } from "@/common/hooks/use-date-locale";
 import {
   useUnlinkItem,
   usePlaidItems,
@@ -53,6 +54,7 @@ interface BankItemProps {
 
 export function BankItem({ item, ledgerId }: BankItemProps) {
   const { t } = useTranslations();
+  const formatRelativeTime = useFormatRelativeTime();
   const { toast } = useToast();
   const { unlinkItem, loading: unlinking } = useUnlinkItem();
   const { refetch: refetchItems } = usePlaidItems(ledgerId);
@@ -152,9 +154,7 @@ export function BankItem({ item, ledgerId }: BankItemProps) {
                   <Clock className="h-3 w-3" />
                   <span>
                     {t("plaid.institutionDetail.lastSynced")}{" "}
-                    {formatDistanceToNow(new Date(item.lastSync.timestamp), {
-                      addSuffix: true,
-                    })}
+                    {formatRelativeTime(new Date(item.lastSync.timestamp))}
                   </span>
                   {item.lastSync.status === "success" && (
                     <span className="font-medium">

@@ -1,5 +1,6 @@
 import { describe, it, expect, vi } from "vitest";
 import { render, screen } from "@testing-library/react";
+import { formatDistanceToNow } from "date-fns";
 import { RepositoryListItem } from "../repository-list-item";
 
 // Mock TanStack Router
@@ -28,6 +29,11 @@ vi.mock("@/common/hooks/use-translations", () => ({
       return translations[key] || key;
     },
   }),
+}));
+
+vi.mock("@/common/hooks/use-date-locale", () => ({
+  useFormatRelativeTime: () => (date: Date | number) =>
+    formatDistanceToNow(date, { addSuffix: true }),
 }));
 
 describe("RepositoryListItem", () => {

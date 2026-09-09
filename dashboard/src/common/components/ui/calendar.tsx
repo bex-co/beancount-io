@@ -8,6 +8,7 @@ import { DayButton, DayPicker, getDefaultClassNames } from "react-day-picker";
 
 import { cn } from "@/common/lib/utils/utils.ts";
 import { Button, buttonVariants } from "@/common/components/ui/button.tsx";
+import { useDateLocale } from "@/common/hooks/use-date-locale";
 
 function Calendar({
   className,
@@ -17,15 +18,19 @@ function Calendar({
   buttonVariant = "ghost",
   formatters,
   components,
+  locale: localeProp,
   ...props
 }: React.ComponentProps<typeof DayPicker> & {
   buttonVariant?: React.ComponentProps<typeof Button>["variant"];
 }) {
   const defaultClassNames = getDefaultClassNames();
+  const activeLocale = useDateLocale();
+  const locale = localeProp ?? activeLocale;
 
   return (
     <DayPicker
       showOutsideDays={showOutsideDays}
+      locale={locale}
       className={cn(
         "bg-background group/calendar p-3 [--cell-size:--spacing(8)] [[data-slot=card-content]_&]:bg-transparent [[data-slot=popover-content]_&]:bg-transparent",
         String.raw`rtl:**:[.rdp-button\_next>svg]:rotate-180`,
@@ -33,11 +38,7 @@ function Calendar({
         className,
       )}
       captionLayout={captionLayout}
-      formatters={{
-        formatMonthDropdown: (date) =>
-          date.toLocaleString("default", { month: "short" }),
-        ...formatters,
-      }}
+      formatters={formatters}
       classNames={{
         root: cn("w-fit", defaultClassNames.root),
         months: cn(

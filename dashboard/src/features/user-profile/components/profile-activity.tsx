@@ -7,8 +7,8 @@ import {
   GitCommitHorizontal,
   Plus,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { Button } from "@/common/components/ui/button";
+import { useFormatRelativeTime } from "@/common/hooks/use-date-locale";
 import { useTranslations } from "@/common/hooks/use-translations";
 import type {
   UserActivityFeedItem,
@@ -25,6 +25,7 @@ export function ProfileActivity({
   example?: UserRepository;
 }) {
   const { t } = useTranslations();
+  const formatRelativeTime = useFormatRelativeTime();
   const [expanded, setExpanded] = useState(false);
   const recent = [...activities].sort(
     (a, b) => Date.parse(b.createdAt) - Date.parse(a.createdAt),
@@ -116,7 +117,7 @@ export function ProfileActivity({
                         title={date.toLocaleString()}
                         className="mt-1 block text-xs text-muted-foreground"
                       >
-                        {formatDistanceToNow(date, { addSuffix: true })}
+                        {formatRelativeTime(date)}
                       </time>
                     )}
                   </div>

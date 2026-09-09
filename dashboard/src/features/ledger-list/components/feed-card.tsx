@@ -6,13 +6,17 @@ import {
   GitCommit,
   History,
 } from "lucide-react";
-import { format, formatDistanceToNow, isValid } from "date-fns";
+import { format, isValid } from "date-fns";
 import {
   Avatar,
   AvatarFallback,
   AvatarImage,
 } from "@/common/components/ui/avatar";
 import { Button } from "@/common/components/ui/button";
+import {
+  useDateLocale,
+  useFormatRelativeTime,
+} from "@/common/hooks/use-date-locale";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { FeedSource, type GetFeedQuery } from "@/graphql/definitions";
 import { getLedgerDestination } from "../lib/feed-destination";
@@ -20,18 +24,18 @@ import { getLedgerDestination } from "../lib/feed-destination";
 type FeedItem = GetFeedQuery["getFeed"]["items"][number];
 
 function FeedTimestamp({ publishedAt }: { publishedAt: string }) {
+  const formatRelativeTime = useFormatRelativeTime();
+  const locale = useDateLocale();
   const publishDate = new Date(publishedAt);
   const validDate = isValid(publishDate);
 
   return (
     <time
       dateTime={validDate ? publishDate.toISOString() : publishedAt}
-      title={validDate ? format(publishDate, "PPpp") : undefined}
+      title={validDate ? format(publishDate, "PPpp", { locale }) : undefined}
       className="text-xs text-muted-foreground"
     >
-      {validDate
-        ? formatDistanceToNow(publishDate, { addSuffix: true })
-        : publishedAt}
+      {validDate ? formatRelativeTime(publishDate) : publishedAt}
     </time>
   );
 }

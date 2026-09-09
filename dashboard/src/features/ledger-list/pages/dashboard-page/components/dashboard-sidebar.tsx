@@ -8,7 +8,6 @@ import {
   RefreshCw,
   MoreVertical,
 } from "lucide-react";
-import { formatDistanceToNow } from "date-fns";
 import { useQuery, useMutation } from "@apollo/client/react";
 import { Button, buttonVariants } from "@/common/components/ui/button";
 import { EmptyState } from "@/common/components/empty-state";
@@ -71,6 +70,7 @@ import { toast } from "sonner";
 import { useApolloCacheClear } from "@/common/hooks/use-apollo-cache";
 import { decodeLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { useFormatRelativeTime } from "@/common/hooks/use-date-locale";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 
 type ListLedgerItem = ListLedgersQuery["listLedgers"][number];
@@ -135,11 +135,11 @@ function LedgerItem({
   onDelete,
 }: LedgerItemProps) {
   const { t } = useTranslations();
+  const formatRelativeTime = useFormatRelativeTime();
   const settingsTriggerRef = useRef<HTMLButtonElement | null>(null);
   const displayName = ledgerName || ledger.name;
   const meta =
-    ledger.description ||
-    formatDistanceToNow(new Date(ledger.updatedAt), { addSuffix: true });
+    ledger.description || formatRelativeTime(new Date(ledger.updatedAt));
   const metaLine = ledgerOwner ? `${ledgerOwner} · ${meta}` : meta;
   return (
     <SidebarMenuItem data-testid="ledger-item">

@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { describe, expect, it, vi } from "vitest";
+import { formatDistanceToNow } from "date-fns";
 import { CommitListItem } from "../commit-list-item";
 
 vi.mock("@tanstack/react-router", () => ({
@@ -23,6 +24,11 @@ vi.mock("@tanstack/react-router", () => ({
       {children}
     </a>
   ),
+}));
+
+vi.mock("@/common/hooks/use-date-locale", () => ({
+  useFormatRelativeTime: () => (date: Date | number) =>
+    formatDistanceToNow(date, { addSuffix: true }),
 }));
 
 const commit = {

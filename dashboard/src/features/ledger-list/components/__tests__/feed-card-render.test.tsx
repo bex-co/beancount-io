@@ -31,6 +31,16 @@ vi.mock("@/common/hooks/use-translations", () => ({
   useTranslations: () => ({ t: (key: string) => key }),
 }));
 
+vi.mock("@/common/hooks/use-date-locale", async () => {
+  const { formatDistanceToNow } = await import("date-fns");
+  const { enUS } = await import("react-day-picker/locale/en-US");
+  return {
+    useFormatRelativeTime: () => (date: Date | number) =>
+      formatDistanceToNow(date, { addSuffix: true }),
+    useDateLocale: () => enUS,
+  };
+});
+
 type FeedItem = GetFeedQuery["getFeed"]["items"][number];
 
 describe("FeedCard", () => {

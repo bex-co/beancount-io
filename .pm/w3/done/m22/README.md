@@ -1,19 +1,19 @@
 # w3 · m22 — Localize relative timestamps and date calendars
 
-**Worker:** worker3 **Goal:** relative timestamps and date-calendar text follow the active application language **Status:** todo
+**Worker:** worker3 **Goal:** relative timestamps and date-calendar text follow the active application language **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                     | est | depends_on       |
 | ---- | ------------------------------------------------------------------------- | --- | ---------------- |
-| t001 | Provide date locales and relative-time formatting for the active language | 55m | —                |
-| t002 | Localize profile and commit timestamps                                    | 30m | t001             |
-| t003 | Localize feed, ledger-row and bank-sync timestamps                        | 25m | t001             |
-| t008 | Apply the active locale to calendar dates and controls                    | 35m | t001             |
-| t004 | Adoption surface — verify localized dates and calendars                   | 20m | t002, t003, t008 |
-| t005 | Simplify the formatting changes                                           | 20m | t004             |
-| t006 | Test language transitions, isolation and browser behavior                 | 50m | t004, t005       |
-| t007 | Close out the verified localization repair                                | 15m | t006             |
+| t001 | Provide date locales and relative-time formatting for the active language — **DONE** | 55m | —                |
+| t002 | Localize profile and commit timestamps — **DONE** | 30m | t001             |
+| t003 | Localize feed, ledger-row and bank-sync timestamps — **DONE** | 25m | t001             |
+| t008 | Apply the active locale to calendar dates and controls — **DONE** | 35m | t001             |
+| t004 | Adoption surface — verify localized dates and calendars — **DONE** | 20m | t002, t003, t008 |
+| t005 | Simplify the formatting changes — **DONE** | 20m | t004             |
+| t006 | Test language transitions, isolation and browser behavior — **DONE** | 50m | t004, t005       |
+| t007 | Close out the verified localization repair — **DONE** | 15m | t006             |
 
 Eight tasks, 250 minutes total; 145 minutes of implementation. This exceeds
 a sub-hour note because one formatter must support fifteen languages without
