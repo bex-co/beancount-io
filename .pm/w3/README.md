@@ -132,3 +132,21 @@
 - [094](./094.md) — Mobile transaction postings round recorded commodity quantities to two decimals
 
 - [095](./095.md) — Mobile account journal drops the sign of negative running balances
+
+- [096](./096.md) — Download adds .txt to extensionless repository files
+
+- [097](./097.md) — Shared mobile commit links stack the destination twice
+
+- [098](./098.md) — BQL completion keeps the typed prefix before the suggested query
+
+- [099](./099.md) — BQL suggestions accumulate duplicates after returning to Query
+
+- [100](./100.md) — Mobile file editor retains the previous ledger document after a link switch
+
+- [101](./101.md) — Mobile picker confirms the first option instead of its displayed initial selection
+
+- [102](./102.md) — Valid BQL block comments fail in hosted queries
+
+- [103](./103.md) — Loading buttons lose their accessible names
+
+- [104](./104.md) — Guest Star and Follow discard the sign-in return destination
