@@ -1,19 +1,19 @@
 # w3 · m26 — Prepare complete transaction amounts from eligible postings
 
-**Worker:** worker3 **Goal:** transaction auto-balance uses the rows that will be written and rejects amounts it cannot infer **Status:** todo
+**Worker:** worker3 **Goal:** transaction auto-balance uses the rows that will be written, rejects amounts it cannot infer and shows the resulting amount accurately **Status:** todo
 
 ## Tasks (in order)
 
 | id   | title                                                     | est | depends_on |
 | ---- | --------------------------------------------------------- | --- | ---------- |
 | t001 | Use the same posting eligibility for inference and output | 35m | —          |
-| t002 | Reject ambiguous or incomplete derived posting amounts    | 40m | t001       |
+| t002 | Reject incomplete amounts and show the exact inference    | 55m | t001       |
 | t003 | Verify transaction-entry adoption surfaces                | 20m | t002       |
 | t004 | Simplify inference and submission validation              | 20m | t003       |
-| t005 | Test row eligibility, ambiguity and valid currency groups | 45m | t004       |
+| t005 | Test inference eligibility, precision and currency groups | 55m | t004       |
 | t006 | Close out and archive the transaction inference repair    | 15m | t005       |
 
-175 minutes total, including 75 minutes of implementation. One major finding
+200 minutes total, including 90 minutes of implementation. One major finding
 group, promoted from [067](../067.md); do not count or implement that historical
 note separately.
 
@@ -34,6 +34,9 @@ note separately.
 - Original row indexes, unused trailing rows, row deletion and correction after
   a validation error behave coherently. Inputs, inferred placeholders and
   submitted values agree at desktop and390px widths.
+- Fractional automatic amounts remain reviewable: Expense0.0001 and0.12345 MUSD
+  show Cash-0.0001 and-0.12345, matching output. Negative0.0001,zero and10.25
+  controls retain their correct sign and value; a nonzero amount never looks zero.
 - Meaningful component/submission checks and dashboard format, lint, test and
   build gates pass. Production ledger mutations are unnecessary for verification.
 
@@ -151,3 +154,62 @@ Ignored evidence under `dashboard/tmp/qa-20260907-w3-loop/`:
 `transaction-ambiguous-amounts-{1440,390}.png`, plus the original067 evidence.
 Screenshots show the unresolved posting before submission; the sanitized
 intercepted payload is the evidence for NaN.
+
+## Inferred display precision expansion — 2026-09-08
+
+Repeated live QA shows another way the existing display/output agreement DoD
+fails in the same TransactionForm. Checkout HEAD rechecked at `a623f745`,
+fetched main `120f940d`; the implicated component is unchanged from the original
+pass. Chrome152, English/light, public minimax,1440×1000 and390×844. All
+requests below are intercepted and aborted; no transaction is recorded.
+
+1. Open the same Transaction action URL. Choose **Expenses:CostOfRevenue**
+   in the first posting and **Assets:Current:Cash** in the second; keep MUSD.
+2. Enter **0.0001** for Expense, leave Cash's amount empty, and move focus out.
+   Cash displays an italic **-0.00** with the Auto indicator.
+3. Click Create Transaction Entry with the write guard in place. The prepared
+   Cash amount is **-0.0001**, so the visible automatic amount hides a real value.
+4. Repeat with **0.12345**: Cash displays **-0.12** but prepares **-0.12345**.
+5. Fresh isolated repeats confirm both cases at both widths. Two-decimal10.25
+   displays/prepares-10.25 correctly; zero displays0.00 and prepares0.
+   A negative0.0001 input displays positive0.00 while preparing positive0.0001.
+
+Four HTTP200 documents,16 input states and16 aborted requests, zero page
+exceptions/other mutations. The first posting retains the explicit input and
+the second remains an empty draft field with an automatic placeholder. The
+trailing unused row does not receive the inferred value in these cases.
+
+Root: `transaction-form.tsx:480–484` rounds the automatic placeholder with
+`autoBalance.amount.toFixed(2)`. Inference at204–210 retains the nonzero amount;
+submission at225–229 and237–240 converts that value to its ordinary string.
+The sign and prepared amount are correct for these fixtures; the loss occurs
+only in the review display. The identical two-decimal case works because no
+significant fractional digits are discarded.
+
+Extend t002 to derive display and submitted numeric text from the same precise
+inferred value, while preserving the existing Auto indicator, empty-input
+semantics and explicit edits. Do not round the actual transaction to make it
+match the current placeholder. There is one occurrence of this placeholder
+format and one TransactionForm caller. The shared `formatNumber` helper also
+limits ungrouped numbers to two decimals and its grouped Intl path uses its own
+defaults; adopting it blindly would not satisfy this rule. This repair does not
+change the common report formatter or introduce a decimal library.
+
+This evidence extends this open milestone instead of creating another inbox
+item: its existing DoD already requires inferred placeholders and submitted
+values to agree.054 concerns the import configuration renderer,035 holdings
+output,064 native number-input step validation and089 ledger exponent
+serialization. They remain separate. These0.0001/0.12345 prepared values are
+ordinary decimal strings and do not trigger089. The placeholder has remained
+unchanged since `af5339de`; fetched main has no repair.
+
+Added15m to t002 for the precise review display and10m to t005 for real-form
+display/output assertions. Six tasks remain, now200m total/90m implementation.
+No arithmetic redesign, accepted-write validation or other-browser/native
+coverage is claimed. Screenshots also show previously filed085/086/090;
+those layout defects are not new findings.
+
+Ignored evidence: `inferred-amount-display-evidence.json` and four
+`inferred-amount-{0.0001,0.12345}-{1440,390}.png` under the same dashboard QA
+directory. The narrow0.0001 capture was visually inspected; later captures can
+contain the intentional aborted-request alert from a preceding control.

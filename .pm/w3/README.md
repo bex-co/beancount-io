@@ -31,6 +31,8 @@
 - [ ] **m25** — Preserve table structure while keeping row actions accessible (6 tasks) ← repeated dashboard QA, 2026-09-08
 - [ ] **m26** — Prepare complete transaction amounts from eligible postings (6 tasks) ← promoted067 and repeated dashboard QA, 2026-09-08
 - [ ] **m27** — Preserve explicit amounts when a posting omits currency (6 tasks) ← repeated dashboard QA and verified upstream fix, 2026-09-08
+- [ ] **m28** — Keep BQL values connected to their columns (6 tasks) ← promoted028 and repeated dashboard QA, 2026-09-08
+- [ ] **m29** — Protect file drafts during navigation and cancellation (6 tasks) ← promoted041 and repeated dashboard QA, 2026-09-08
 
 ## Inbox
 
@@ -59,7 +61,7 @@
 - [025](./025.md) — Narrow statement tables split digits across lines
 - [026](./026.md) — Statement account expanders expose no accessible name or state
 - [027](./027.md) — A language parameter makes the manual language selector ineffective
-- [028](./028.md) — BQL horizontal scrolling separates cells from their column headers
+- [028](./028.md) — BQL result column relationships — promoted to [m28](./m28/README.md)
 - [029](./029.md) — Settings sign-in redirects discard the requested subpage
 - [030](./030.md) — Password visibility buttons are skipped by keyboard navigation
 - [031](./031.md) — Budget cards hide actual and variance for zero-activity intervals
@@ -72,7 +74,7 @@
 - [038](./038.md) — Smart Import amount validation — promoted to [m19](./m19/README.md)
 - [039](./039.md) — Smart Import reverses the bank movement when preparing expense and income postings
 - [040](./040.md) — File edit shortcuts and URLs expose an editable draft to public readers
-- [041](./041.md) — File Cancel erases the draft before the unsaved-changes choice
+- [041](./041.md) — File draft protection — promoted to [m29](./m29/README.md)
 - [042](./042.md) — Escape in file Find cancels edit mode instead of closing Find
 - [043](./043.md) — Forced-open postings still advertise enabled row toggles
 - [044](./044.md) — Narrow account reports hide interval and valuation selectors
@@ -121,3 +123,12 @@
 - [087](./087.md) — Direct ledger loads lose their structured access errors
 - [088](./088.md) — Try Again does not retry the failed ledger read
 - [089](./089.md) — Small Journal amounts become invalid Beancount scientific notation
+- [090](./090.md) — Currency fields clip MUSD, USDT and longer commodity symbols
+- [091](./091.md) — Open Account accepts names that are not complete account tokens
+- [092](./092.md) — Keyboard Save bypasses the file editor's pending-write protection
+
+- [093](./093.md) — Mobile transaction search rejects punctuation in existing merchant names
+
+- [094](./094.md) — Mobile transaction postings round recorded commodity quantities to two decimals
+
+- [095](./095.md) — Mobile account journal drops the sign of negative running balances
