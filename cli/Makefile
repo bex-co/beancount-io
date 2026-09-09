@@ -1,6 +1,6 @@
 # Beancount.io CLI - Development Makefile
 
-.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock spec-check spec-sync
+.PHONY: help install install-dev install-tool reinstall-tool dev lint deadcode deadcode-fix format format-check typecheck test codegen check-all release-check release-lock spec-check spec-sync docs docs-check
 
 # Default target
 help:
@@ -22,7 +22,9 @@ help:
 	@echo "  make spec-sync        - Refresh openapi/v1.json from the canonical spec"
 	@echo "  make release-check    - Validate the release tag against pyproject.toml"
 	@echo "  make release-lock     - Export the hash-pinned requirements.lock for a release"
-	@echo "  make check-all        - Run lint + format-check + typecheck + test + spec-check"
+	@echo "  make docs             - Regenerate docs/REFERENCE.md from the command tree"
+	@echo "  make docs-check       - Fail if docs/REFERENCE.md drifted from the command tree"
+	@echo "  make check-all        - Run lint + format-check + typecheck + test + spec-check + docs-check"
 
 install:
 	uv sync
@@ -94,10 +96,19 @@ spec-check:
 spec-sync:
 	cp $(CANONICAL_SPEC) openapi/v1.json
 
+# docs/REFERENCE.md is generated from the Typer app, the same way the REST
+# client is generated from the OpenAPI spec: change a command once and the
+# drift gate tells you the reference needs regenerating.
+docs:
+	uv run python scripts/gen_reference.py
+
+docs-check:
+	uv run python scripts/gen_reference.py --check
+
 codegen:
 	uv run openapi-python-client generate --path openapi/v1.json \
 		--output-path src/cli/api/rest_client --meta none --overwrite
 	uv run python scripts/gen_cloud_commands.py
 	uv run ruff format src/cli/api/rest_client src/cli/commands/cloud/generated
 
-check-all: lint deadcode format-check typecheck test spec-check
+check-all: lint deadcode format-check typecheck test spec-check docs-check

@@ -1,6 +1,7 @@
 # Usage
 
-The Beancount.io CLI installs one command: `bea`.
+The Beancount.io CLI installs one command: `bea`. New here? Start with the
+[first-month tutorial](TUTORIAL.md), then use this guide as the contract.
 
 ```text
 # Local — works on .bean files
@@ -41,9 +42,8 @@ Global options come before the command.
 | `-h / --help` | Show help. |
 
 ```bash
-bea --file ./books/main.bean check
+bea --file main.bean check
 bea --json list transaction --limit 100
-bea --yes cloud ledger delete alice/old-books
 bea --shell zsh --show-completion
 ```
 
@@ -57,12 +57,17 @@ Local commands resolve their target in this order:
 
 If the resolved file does not exist, the command exits **2** and names all three sources. Hosted targeting (`--ledger`) is not implemented yet.
 Passing a directory also exits **2** with a hint to select its root ledger file.
+Hosted commands name ledgers as `owner/name`; local files are never implicitly
+uploaded. `init` creates its target from its own argument or global `--file`
+and ignores `BEA_FILE`; `format` uses its own positional path and likewise
+ignores both.
 
 ### Non-interactive behavior
 
-`--no-input` is implied whenever stdin is not a terminal, whenever `--json` is set, and when `CI` is truthy. In that mode nothing waits for a human:
+`--no-input` is implied whenever stdin is not a terminal, whenever `--json` is set, and when `CI` is truthy. In that mode nothing waits for a human. Import duplicate decisions still require `--duplicates`, and AI writes still require their own interactive permission:
 
-```bash
+```bash norun
+# Needs hosted credentials; demonstrates the unattended refusal.
 $ echo | bea cloud ledger delete alice/books
 Error: Permanently delete ledger 'alice/books'? Refusing to ask — pass --yes to confirm without a prompt.
 $ echo $?
@@ -78,6 +83,12 @@ $ echo $?
 | 2 | `usage` | Bad arguments, missing target, missing extra, or input needed under `--no-input` |
 | 3 | `auth` | Authentication or permission failure |
 | 4 | `conflict` | Conflict, or a write whose outcome is unknown |
+
+A nonzero exit does not universally mean nothing changed:
+`add transactions --partial` can write accepted rows, recursive `format` can
+format valid files while skipping broken ones, and
+`cloud ledger create --clone` can create a ledger before cloning fails. Read
+the operation result before retrying mutations.
 
 In `--json` mode a failure writes nothing to stdout and one object to stderr:
 
@@ -99,7 +110,8 @@ Cloud commands map the server's HTTP status onto the same table, keeping the ser
 ## Creating a ledger
 
 ```bash
-bea init books                         # interactive currency, history start date, and opening balance
+# bea init books prompts for currency, history start date, and opening
+# balance when run in a terminal; the unattended form below runs anywhere.
 bea --no-input init books --currency EUR --date 2026-08-01 \
   --opening-balance "Assets:Checking 1000" \
   --opening-balance "Liabilities:CreditCard -50"
@@ -107,7 +119,10 @@ bea --no-input init books --currency EUR --date 2026-08-01 \
 
 These are alternative ways to create a new ledger. `init` never overwrites an
 existing file. Pass a directory (creates `main.bean`) or a `.bean`/`.beancount`
-path; the global `--file` can also name the new file. New ledger files are
+path; the global `--file` can also name the new file, but use either that
+argument or `--file`, not both. To backfill before the chosen date, edit the
+relevant account opens and ensure the opening balances still describe that
+history. New ledger files are
 private by default (`0600` on POSIX: readable and writable only by their owner).
 For group-readable books, explicitly run `chmod 640 books/main.bean` after
 creation. Subsequent add/import/format writes preserve the file's permissions.
@@ -139,14 +154,14 @@ Lowercase input such as `usd` is normalized to `USD`.
 bea check
 
 # Format a file, or every .bean/.beancount file under a directory
-bea format main.beancount
+bea format main.bean
 bea format .
 bea format . --dry-run
 bea format . --check     # CI/pre-commit: exit 1 if any files need formatting
 
 # Run a BQL query and print a table; omit the query for the interactive shell
 bea query "SELECT account, sum(position) GROUP BY account"
-bea query
+bea query                  # needs a terminal; exits 2 without one
 ```
 
 Query tables preserve the precision of result values, including calculated
@@ -229,7 +244,7 @@ destination with `--into`. The destination must already exist and be included
 by the root. Its path is relative to the root ledger's directory:
 
 ```bash
-bea --file books/main.bean add transaction --into 2026.bean \
+bea --file main.bean add transaction --into 2026.bean \
   --date 2026-08-02 -p "Expenses:Groceries 30" -p "Assets:Checking"
 ```
 
@@ -256,7 +271,7 @@ adjustment, prefer an explicit atomic pad and balance:
 
 ```bash
 bea add balance --date 2026-01-02 --account Assets:Checking \
-  --amount "1000 USD" --pad-from Equity:OpeningBalances
+  --amount "900 USD" --pad-from Equity:OpeningBalances
 ```
 
 The pad defaults to the preceding day; `--pad-date` can select another date
@@ -292,25 +307,29 @@ bea add transaction \
   --posting "Assets:Cash -12.50 USD" \
   --tag trip \
   --link "^inv-001"
+```
 
-bea add open  --date 2026-01-01 --account Assets:Cash --currency USD
+```bash
+bea add open --date 2026-01-01 --account Assets:Reserve --currency USD
 bea add close --date 2026-12-31 --account Assets:OldAccount
 bea add balance --date 2026-04-30 --account Assets:Cash --amount "1000 USD"
 # Advanced two-step pad: complete the pair before adding anything else
-bea add pad --date 2026-01-01 --account Assets:Cash --source Equity:OpeningBalances --allow-errors
-bea add balance --date 2026-01-02 --account Assets:Cash --amount "1000 USD"
+bea add pad --date 2026-01-01 --account Assets:Savings --source Equity:OpeningBalances --allow-errors
+bea add balance --date 2026-01-02 --account Assets:Savings --amount "50 USD"
 bea add note --date 2026-04-30 --account Assets:Cash --comment "ATM withdrawal"
 bea add event --date 2026-04-30 --type location --description "New York"
 bea add price --date 2026-04-30 --currency BTC --amount "62000 USD"
 bea add commodity --date 2026-01-01 --currency VFINX
-bea add document --date 2026-04-30 --account Assets:Cash --filename "receipts/april.pdf"
+bea add document --date 2026-04-30 --account Assets:Cash --filename "receipts/april.pdf" --tag trip --link "^inv-001"
 ```
 
 `add transaction` defaults to today's date. One posting may omit its amount;
 Beancount infers the balancing amount. When a numbered posting omits its
 currency, the CLI uses the account's sole allowed currency, otherwise the
 ledger's sole operating currency. Ambiguous currencies require an explicit
-symbol. Other directive types keep their explicit dates.
+symbol. Other directive types keep their explicit dates. Only `add transaction`
+defaults the date to today; the other types require it. The transaction flag
+defaults to `*`; `!` marks an entry for review.
 
 Narration is optional. Omitting `--narration` records empty text, displayed as
 `(no narration)` in the table; `--payee` can still identify the other party.
@@ -337,7 +356,9 @@ Each argument contains one `key:value` pair. Bare text such as `note:hello`
 or `receipt:IMG_1234.jpg` becomes a string. Valid native numbers, booleans,
 dates and amounts retain their types, including when single-add JSON is reused
 for bulk entry. Inner quotes force a string, e.g. `--meta 'code:"1234"'`;
-`--meta 'note:""'` writes an empty string. Repeat `--meta` for different keys.
+`--meta 'note:""'` writes an empty string. Repeat `--meta` for different keys;
+keys must be distinct and cannot use the reserved source fields `filename` or
+`lineno`.
 
 `add price` skips an exact date/commodity/amount match anywhere in the root
 ledger's includes. It reports the existing location and exits **0** with
@@ -523,7 +544,8 @@ JSON keeps the full-precision decimal string (`"4.9050"`).
 
 `bea ask` needs the AI dependencies, which the default install does not carry:
 
-```bash
+```bash norun
+# Installs software; needs uv plus network.
 uv tool install 'beancount-io[ask]'
 
 # or, from a local clone of this repo
@@ -535,7 +557,8 @@ with `uvx --from 'beancount-io[ask]' bea ask "QUESTION" --print`. Both installat
 use the same `bea cloud login` credentials. Model calls use the hosted
 Beancount.io AI service even though the ledger is local.
 
-```bash
+```bash norun
+# Needs the ask extra plus hosted credentials and a real ledger.
 # Interactive session over your ledger
 bea ask
 
@@ -543,29 +566,42 @@ bea ask
 bea ask "what did I spend on groceries last month?" --print
 ```
 
-Without the extra the command exits **2** with the install command. It also needs hosted credentials: the model runs through the Beancount.io AI proxy, so a local ledger still requires `bea cloud login`. `bea ask` has no `--json` mode; use `bea query` for machine-readable results.
+Without the extra the command exits **2** with the install command. It also needs hosted credentials: the model runs through the Beancount.io AI proxy, so a local ledger still requires `bea cloud login`. `bea ask` has no `--json` mode; use `bea query` for machine-readable results. Ledger queries and validation run locally, while questions, supplied skill context, and tool results are sent to the hosted service. The current command uses `gpt-4o` and has no model-selection flag.
 
 Interactive write requests are validated before confirmation, then appended
 atomically only if the root ledger and included files still match the preview.
 Use `ask --into FILE` for an included destination. The write tool accepts dated
 directives; configure plugins, options and includes separately. Noninteractive
-sessions do not write ledger entries.
+sessions do not write ledger entries. AI write permission is separate from
+global `--yes`: one-answer and non-interactive mode cannot obtain it and never
+apply AI-proposed writes.
+
+Ask discovers project skills as `NAME/SKILL.md` files in `.agents/skills/`
+under the working directory (regardless of `--file`) and user skills in
+`skills/` under the configuration directory. Project skills override user
+skills with the same name. Each file needs YAML frontmatter with a nonempty
+`name` and `description`, followed by Markdown instructions; invalid files are
+skipped. Names and descriptions are supplied up front and full instructions
+load on demand. Interactive prompt history is saved in `ask_history` in the
+configuration directory.
 
 ## Cloud: authentication
 
 Hosted commands need a session. `bea cloud login` prints a one-time code and opens the dashboard's device page; enter the code there, check that the device shown is this machine, and approve. The link itself carries no secret, so a device page opened from anywhere else cannot authorize this CLI. The credential is stored at `~/.config/bea/credentials.json` (mode 0600, in a 0700 directory).
 
-```bash
+```bash norun
+# Needs a browser and hosted credentials.
 bea cloud login
 bea cloud status
 bea cloud logout
 ```
 
-`bea cloud status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `cloud status` reports `source: environment`.
+`bea cloud status` reports the credential source (`file` or `environment`), its expiry, and the account it belongs to. For CI, set `BEA_TOKEN` instead of logging in — it is never written to disk, and `cloud status` reports `source: environment`. `cloud logout` attempts a remote logout and clears stored credentials, but does not unset `BEA_TOKEN` in the shell.
 
 ## Cloud: hosted ledgers
 
-```bash
+```bash norun
+# Needs hosted credentials; delete also shows global-before-command order.
 # Create a hosted ledger — private unless --public is passed
 bea cloud ledger create my-books
 bea cloud ledger create my-books --public --description "Shared books"
@@ -575,11 +611,11 @@ bea cloud ledger create my-books --clone
 bea cloud ledger create my-books --clone --dir ./accounting/my-books
 
 # List, inspect, clone, delete
-bea cloud ledger list
+bea cloud ledger list                         # --page 1, --limit 50 (API maximum 100)
 bea cloud ledger show alice/my-books
 bea cloud ledger clone alice/my-books
 bea cloud ledger delete alice/my-books          # asks for confirmation
-bea --yes cloud ledger delete alice/my-books   # global switches precede the command
+bea --yes cloud ledger delete alice/old-books   # global switches precede the command
 ```
 
 Cloning uses `git clone` over SSH, so it needs Git and working SSH access. If a clone fails after the ledger was created, the command exits nonzero and prints the manual `git clone` command — the ledger exists either way.
@@ -589,7 +625,8 @@ Cloning uses `git clone` over SSH, so it needs Git and working SSH access. If a 
 `bea upgrade` hands the update to whichever package manager installed this copy
 — Homebrew, uv, or pipx — and never rewrites its own installed files.
 
-```bash
+```bash norun
+# Needs network for the latest-version check; versions vary by machine.
 # Report the installed and latest versions and the command that would run
 $ bea upgrade --check
 bea 1.2.3 (installed by: homebrew)
@@ -600,13 +637,15 @@ Would run: brew upgrade bea
 $ bea upgrade
 ```
 
-| Install channel | What `bea upgrade` runs |
-|---|---|
-| Homebrew (`brew install bex-co/tap/bea`) | `brew upgrade bea` |
-| uv tool (`uv tool install beancount-io`) | `uv tool upgrade beancount-io` |
-| pipx | `pipx upgrade beancount-io` |
-| A checkout (editable install) | Nothing; prints `git pull` and `uv sync --all-groups`, exits 0 |
-| Anything else | Nothing; exits **2** naming both install channels |
+| Install channel | What `bea upgrade` runs | Uninstall |
+|---|---|---|
+| Homebrew (`brew install bex-co/tap/bea`) | `brew upgrade bea` | `brew uninstall bea` |
+| uv tool (`uv tool install beancount-io`) | `uv tool upgrade beancount-io` | `uv tool uninstall beancount-io` |
+| pipx | `pipx upgrade beancount-io` | `pipx uninstall beancount-io` |
+| A checkout (editable install) | Nothing; prints `git pull` and `uv sync --all-groups`, exits 0 | — |
+| Anything else | Nothing; exits **2** naming both install channels | — |
+
+Uninstalling the executable leaves ledgers and user state in place.
 
 If the manager itself fails, the command exits **1** and says so; nothing about
 the installation is changed. `--check` reports and runs nothing.
@@ -665,7 +704,10 @@ $ bea --json query "SELECT account, sum(position) GROUP BY account" | jq .data.c
 
 $ bea --json report income-statement | jq .data.net_profit
 {"USD": "12.50"}
+```
 
+```bash norun
+# Needs hosted credentials.
 $ bea --json cloud ledger list --limit 10 | jq '.data[0].full_name'
 "alice/my-books"
 
@@ -675,7 +717,18 @@ $ bea --json cloud status | jq '{source: .data.source, tier: .data.tier}'
 
 Report JSON carries the same tree the text renderer walks — `account`, `balance`, `balance_children`, `has_txns`, `children` — not a rendering of it.
 
+Commands that cannot produce JSON keep their own shapes: `ask` rejects JSON
+mode, `cloud login` requires interaction, successful `cloud logout` and
+`cloud ledger clone` emit no JSON success object (use their exit status), and
+help, version, and completion output stay textual. `upgrade` can stream
+package-manager output to stderr even in JSON mode. The
+[directive models](https://github.com/bex-co/beancount-io/blob/main/cli/src/cli/directives/models.py)
+define the exact object fields for directive listings and bulk input.
+
 ## Environment variables
+
+There is no general-purpose CLI configuration file. Environment variables
+select targets, endpoints, and state directories:
 
 | Variable | Default | Description |
 |---|---|---|
@@ -686,3 +739,10 @@ Report JSON carries the same tree the text renderer walks — `account`, `balanc
 | `BEA_DASHBOARD_URL` | `https://beancount.io` | Dashboard URL, used by the device login flow |
 | `BEA_NO_UPDATE_NOTIFIER` | — | Truthy disables the update notice entirely |
 | `CI` | — | Truthy implies `--no-input`, and disables the update notice |
+
+Truthy values are `1`, `true`, `yes`, and `on`, ignoring case and surrounding
+whitespace. The configuration directory holds `credentials.json` (mode 0600 on
+POSIX), `ask_history`, user `skills/`, remembered importer paths and column
+mappings under `importers/`, and channel-specific update-check caches.
+Ledger plugins and importer configurations run their own Python code and
+control any I/O they perform.

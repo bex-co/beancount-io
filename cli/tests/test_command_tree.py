@@ -7,6 +7,7 @@ where commands resolve, that the pre-cloud spellings stay dead, and that
 
 from __future__ import annotations
 
+from pathlib import Path
 from typing import Any
 
 import pytest
@@ -89,3 +90,48 @@ class TestCloudWithoutCredentials:
 
         assert result.exit_code == 3
         assert "bea cloud login" in result.stderr
+
+
+class TestGeneratedReference:
+    """`docs/REFERENCE.md` is generated from this tree, so it cannot drift."""
+
+    @staticmethod
+    def generator() -> Any:
+        import importlib.util
+
+        path = Path(__file__).resolve().parents[1] / "scripts" / "gen_reference.py"
+        spec = importlib.util.spec_from_file_location("gen_reference", path)
+        assert spec is not None and spec.loader is not None
+        module = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(module)
+        return module
+
+    def test_reference_covers_every_leaf_command(self) -> None:
+        import re
+
+        import typer.main
+
+        gen = self.generator()
+        root = typer.main.get_command(app)
+        _, leaves = gen.walk(root)
+        reference = (Path(__file__).resolve().parents[1] / "docs" / "REFERENCE.md").read_text()
+        sections = set(re.findall(r"^### `(.+?)`", reference, re.M))
+        assert {path for _, path, _, _ in leaves} == sections
+
+    def test_reference_matches_the_generator(self) -> None:
+        gen = self.generator()
+        reference = Path(__file__).resolve().parents[1] / "docs" / "REFERENCE.md"
+        assert gen.render() == reference.read_text()
+
+    def test_help_change_resurfaces_in_the_reference(self, monkeypatch: pytest.MonkeyPatch) -> None:
+        import typer.main
+
+        gen = self.generator()
+        root = typer.main.get_command(app)
+        _, leaves = gen.walk(root)
+        leaf = next(leaf for _, path, leaf, _ in leaves if path == "bea import")
+        option = next(p for p in leaf.params if "--csv" in p.opts)
+        option.help = "SCRATCH help text for the drift test"
+        monkeypatch.setattr(typer.main, "get_command", lambda app_: root)
+        after = gen.render()
+        assert "SCRATCH help text for the drift test" in after

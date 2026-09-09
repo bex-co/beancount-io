@@ -14,14 +14,22 @@ Date,Payee,Narration,Amount
 EOF
 bea --file books/main.bean add open --date 2026-08-01 --account Expenses:Transport:Fuel -c USD
 bea --file books/main.bean add open --date 2026-08-01 --account Expenses:Uncategorized -c USD
-bea --file books/main.bean import statement.csv --csv date=Date,amount=Amount,payee=Payee,narration=Narration --account Assets:Checking --rules docs/examples/rules.toml
+cat > rules.toml <<'EOF'
+[[rule]]
+match = "whole foods|trader joe|corner market"
+account = "Expenses:Groceries"
+
+[[rule]]
+match = "shell|chevron|exxon"
+account = "Expenses:Transport:Fuel"
+EOF
+bea --file books/main.bean import statement.csv --csv date=Date,amount=Amount,payee=Payee,narration=Narration --account Assets:Checking --rules rules.toml
 bea --file books/main.bean import statement.csv --apply
 ```
 
 The first import previews every row; the mapping is remembered, so `--apply`
-re-runs flag-free. From a CLI source checkout the `--rules` path above
-resolves to the bundled [rules example](examples/rules.toml); without a
-checkout, save it locally first. The walkthrough as written exits **0**
+re-runs flag-free. The `rules.toml` above matches the bundled
+[rules example](examples/rules.toml). The walkthrough as written exits **0**
 throughout and leaves one `!`-flagged row for the categorization queue below.
 A Python importer remains the advanced path for formats the column mapping
 cannot express; it is documented second, under
@@ -108,7 +116,8 @@ The importer owns bank-specific parsing and categorization. The importer must
 supply explicit amounts on source-account postings so duplicate matching uses
 actual bank amounts.
 
-```bash
+```bash norun
+# Needs a Python importer file; the runnable example below provides one.
 bea --file books/main.bean import statement.csv --config importers.py
 bea --file books/main.bean import statement.csv --apply
 ```
@@ -128,7 +137,8 @@ The configuration can import sibling modules. Importer output is captured in
 the preview's `importer_output` field so it does not corrupt JSON.
 For importer exceptions, put `--debug` before the command to see the traceback:
 
-```bash
+```bash norun
+# Needs a Python importer file; shows where a traceback would appear.
 bea --debug --file books/main.bean import statement.csv --config importers.py
 ```
 
@@ -139,21 +149,19 @@ remains one JSON object and stdout stays empty on failure.
 
 The bundled [CSV example](examples/csv_importers.py) uses only the standard
 library and Beancount, so it runs in the Homebrew installation without extras.
-Its input is a categorized export with a signed checking-account amount:
+Its input is a categorized export with a signed checking-account amount.
+From a CLI source checkout, run:
 
-```csv
+```bash
+bea --no-input init books-py --currency USD --date 2026-08-01
+cat > bank.csv <<'EOF'
 Date,Payee,Narration,Amount,Currency,Category,BankID
 2026-08-02,Cafe,Coffee,-5.25,USD,Expenses:Dining,bank-001
 2026-08-03,Employer,Salary,1000,USD,Income:Salary,bank-002
-```
-
-From a CLI source checkout, save that as `bank.csv`, then run:
-
-```bash
-bea --no-input init books --currency USD --date 2026-08-01
-bea --file books/main.bean import bank.csv --config docs/examples/csv_importers.py
-bea --file books/main.bean import bank.csv --config docs/examples/csv_importers.py --apply
-bea --file books/main.bean check
+EOF
+bea --file books-py/main.bean import bank.csv --config docs/examples/csv_importers.py
+bea --file books-py/main.bean import bank.csv --config docs/examples/csv_importers.py --apply
+bea --file books-py/main.bean check
 ```
 
 For a bank's native CSV, try [`--csv`](#csv-without-an-importer---csv)
@@ -210,7 +218,8 @@ No extra dependency is needed for the interface itself. Configurations that
 import Beangulp or third-party importer packages need those packages in the
 same Python environment as `bea`. Use an isolated environment for those imports:
 
-```bash
+```bash norun
+# Needs network for the isolated environment plus a bank OFX export.
 uv run --with beancount-io --with beangulp \
   bea --file books/main.bean import bank.ofx --config importers.py
 ```

@@ -146,7 +146,7 @@ uv sync --all-groups
 uv run bea --help
 ```
 
-The [CLI reference](./cli/docs/USAGE.md) covers the command tree, the `--file`/`--json`/`--no-input` automation contract, exit codes, validation, formatting, queries, reports, authentication, and ledger management.
+Start with the [first-month tutorial](./cli/docs/TUTORIAL.md), then use the [CLI reference](./cli/docs/USAGE.md) for the command tree, the `--file`/`--json`/`--no-input` automation contract, exit codes, validation, formatting, queries, reports, authentication, and ledger management. Every flag is listed in the generated [command reference](./cli/docs/REFERENCE.md).
 
 ### Coding agent (MCP)
 

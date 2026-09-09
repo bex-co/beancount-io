@@ -1,19 +1,19 @@
 # w1 · m17 — CLI docs from one source: landing README, generated reference, executable examples
 
-**Worker:** worker1 **Goal:** the CLI is described once: a short README that is also the package landing page, a reference whose option tables are generated from the command tree and gated against drift, examples that CI runs, and a first-month tutorial that walks a newcomer from an empty directory to a month-end report **Status:** todo
+**Worker:** worker1 **Goal:** the CLI is described once: a short README that is also the package landing page, a reference whose option tables are generated from the command tree and gated against drift, examples that CI runs, and a first-month tutorial that walks a newcomer from an empty directory to a month-end report **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                                     | est | depends_on |
 | ---- | ----------------------------------------------------------------------------------------- | --- | ---------- |
-| t001 | Generate the command and option reference from the Typer app with a drift gate            | 60m | —          |
-| t002 | Slim `cli/README.md` to install, quick start, command map, and links; USAGE holds the contract | 60m | t001       |
-| t003 | Executable examples: every documented `bea` invocation runs in CI with its expected outcome | 60m | t002       |
-| t004 | First-month tutorial: init, accounts, import, reconcile, month report                     | 60m | t003       |
-| t005 | Adoption surface                                                                          | 20m | t004       |
-| t006 | Simplify                                                                                  | 30m | t005       |
-| t007 | Test coverage                                                                             | 30m | t005       |
-| t008 | Closeout                                                                                  | 15m | t007       |
+| t001 | Generate the command and option reference from the Typer app with a drift gate — **DONE** | 60m | —          |
+| t002 | Slim `cli/README.md` to install, quick start, command map, and links; USAGE holds the contract — **DONE** | 60m | t001 |
+| t003 | Executable examples: every documented `bea` invocation runs in CI with its expected outcome — **DONE** | 60m | t002 |
+| t004 | First-month tutorial: init, accounts, import, reconcile, month report — **DONE**          | 60m | t003       |
+| t005 | Adoption surface — **DONE**                                                               | 20m | t004       |
+| t006 | Simplify — **DONE**                                                                       | 30m | t005       |
+| t007 | Test coverage — **DONE**                                                                  | 30m | t005       |
+| t008 | Closeout — **DONE**                                                                       | 15m | t007       |
 
 ## Definition of done
 
