@@ -77,6 +77,16 @@ export const ALWAYS_PUBLIC: readonly AlwaysPublicEntry[] = [
     reason:
       "Public MCP discovery metadata; a client must be able to learn the transport, endpoint, tools, and OAuth URLs before it has a credential.",
   },
+  {
+    opId: "REST GET /.well-known/apple-app-site-association",
+    reason:
+      "Apple universal-link voucher; Apple's CDN and the OS fetch it anonymously to decide whether https ledger URLs may open the native app.",
+  },
+  {
+    opId: "REST GET /.well-known/assetlinks.json",
+    reason:
+      "Android App Links voucher; Google's verifier and the OS fetch it anonymously to decide whether https ledger URLs may open the native app.",
+  },
 
   // --- Probes and operator surfaces -------------------------------------
   {

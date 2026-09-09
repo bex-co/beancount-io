@@ -37,6 +37,8 @@ export const uk: typeof en = {
   settings: "Налаштування",
   merchants: "Отримувачі",
   visitWebsite: "Відвідати сайт",
+  shareLink: "Поділитися посиланням",
+  copyLink: "Копіювати посилання",
   merchantsSearchPlaceholder: {
     one: "Пошук серед {{count}} отримувача…",
     other: "Пошук серед {{count}} отримувачів…",

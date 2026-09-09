@@ -30,9 +30,15 @@ import { useReactiveVar } from "@apollo/client";
 import { ColorTheme } from "@/types/theme-props";
 import { type EdgeSwipeGestureRef } from "@/common/horizontal-swipe-owner";
 import { useTheme } from "@/common/theme";
-import { useThemeStyle } from "@/common/hooks";
+import { useThemeStyle, useToast } from "@/common/hooks";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { ledgerVar } from "@/common/vars";
+import { getServerUrl } from "@/common/vars/server-url";
+import { buildLedgerUrl } from "@/common/app-links/build-ledger-url";
+import {
+  copyLedgerUrl,
+  shareLedgerUrl,
+} from "@/common/app-links/ledger-url-actions";
 import {
   isRtlLayout,
   layoutDirectionFactor,
@@ -70,7 +76,6 @@ const ACTIVATE_OFFSET_SIGNED = ACTIVATE_OFFSET_X * layoutDirectionFactor();
 // menu's right edge. The release velocity is layered on at the call site so a
 // flick keeps the speed the finger gave it.
 const SETTLE_SPRING = SnappySpringConfig;
-const WEB_LEDGER_URL = "https://beancount.io/ledger";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -231,6 +236,7 @@ export function LedgerDrawer({
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
   const { t } = useTranslations();
+  const toast = useToast();
   const { width: windowWidth } = useWindowDimensions();
   const drawerWidth = Math.min(340, windowWidth * 0.85);
   // The drawer's travel as a *signed* distance. `progress` stays 0→1 in both
@@ -382,9 +388,27 @@ export function LedgerDrawer({
     router.push("/(app)/merchants");
   };
 
+  const currentLedgerUrl = ledgerId
+    ? buildLedgerUrl({ kind: "home", ledgerFullName: ledgerId }, getServerUrl())
+    : null;
+
+  const handleShareLinkPress = () => {
+    if (!currentLedgerUrl) return;
+    onClose();
+    shareLedgerUrl(currentLedgerUrl);
+  };
+
+  const handleCopyLinkPress = () => {
+    if (!currentLedgerUrl) return;
+    onClose();
+    copyLedgerUrl(currentLedgerUrl, () => {
+      toast.showToast({ message: t("copied"), type: "text" });
+    });
+  };
+
   const handleWebsitePress = () => {
     onClose();
-    void Linking.openURL(WEB_LEDGER_URL);
+    void Linking.openURL(currentLedgerUrl ?? "https://beancount.io/ledger");
   };
 
   const handleSettingsPress = () => {
@@ -511,6 +535,30 @@ export function LedgerDrawer({
               color={theme.black60}
             />
             <Text style={styles.menuItemText}>{t("merchants")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="drawer-share-link-row"
+            style={styles.menuItem}
+            onPress={handleShareLinkPress}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={t("shareLink")}
+            disabled={!currentLedgerUrl}
+          >
+            <Ionicons name="share-outline" size={22} color={theme.black60} />
+            <Text style={styles.menuItemText}>{t("shareLink")}</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            testID="drawer-copy-link-row"
+            style={styles.menuItem}
+            onPress={handleCopyLinkPress}
+            activeOpacity={0.7}
+            accessibilityRole="button"
+            accessibilityLabel={t("copyLink")}
+            disabled={!currentLedgerUrl}
+          >
+            <Ionicons name="link-outline" size={22} color={theme.black60} />
+            <Text style={styles.menuItemText}>{t("copyLink")}</Text>
           </TouchableOpacity>
           <TouchableOpacity
             testID="drawer-website-row"

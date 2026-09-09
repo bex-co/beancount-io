@@ -48,15 +48,13 @@ describe("settings navigation (m5)", () => {
   });
 
   describe("website drawer row", () => {
-    it("opens the web ledger at the requested external URL", () => {
+    it("opens the current ledger URL (or the hosted ledger home fallback)", () => {
+      expect(drawerSource.includes("buildLedgerUrl")).toBe(true);
       expect(
         drawerSource.includes(
-          'const WEB_LEDGER_URL = "https://beancount.io/ledger";',
+          'void Linking.openURL(currentLedgerUrl ?? "https://beancount.io/ledger")',
         ),
       ).toBe(true);
-      expect(drawerSource.includes("Linking.openURL(WEB_LEDGER_URL)")).toBe(
-        true,
-      );
     });
 
     it("sits between Merchants and Settings with an external-link icon", () => {

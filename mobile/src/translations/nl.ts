@@ -37,6 +37,8 @@ export const nl: typeof en = {
   settings: "Instellingen",
   merchants: "Winkels",
   visitWebsite: "Website bezoeken",
+  shareLink: "Link delen",
+  copyLink: "Link kopiëren",
   merchantsSearchPlaceholder: {
     one: "{{count}} winkel zoeken…",
     other: "{{count}} winkels zoeken…",

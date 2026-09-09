@@ -17,7 +17,7 @@ export function LedgerPageSEO({
   /** Bespoke canonical URL — see `LedgerSEO`'s prop of the same name. */
   canonicalUrl?: string;
 }) {
-  const { ledgerDisplayName, ledgerDescription } = useLedger();
+  const { ledgerDisplayName, ledgerDescription, ledgerData } = useLedger();
   return (
     <LedgerSEO
       titleKey={`seo.${seoKey}.title`}
@@ -27,6 +27,7 @@ export function LedgerPageSEO({
       params={{ ledgerName: ledgerDisplayName, ...params }}
       noIndex={noIndex}
       canonicalUrl={canonicalUrl}
+      smartAppBanner={!ledgerData.private}
     />
   );
 }

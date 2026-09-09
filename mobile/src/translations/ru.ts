@@ -37,6 +37,8 @@ export const ru: typeof en = {
   settings: "Настройки",
   merchants: "Получатели",
   visitWebsite: "Посетить сайт",
+  shareLink: "Поделиться ссылкой",
+  copyLink: "Копировать ссылку",
   merchantsSearchPlaceholder: {
     one: "Поиск по {{count}} получателю…",
     other: "Поиск по {{count}} получателям…",

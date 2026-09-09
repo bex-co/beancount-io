@@ -40,7 +40,14 @@ interface LedgerSEOProps {
    * `getSelfCanonicalUrl` (path + supported `lang` only).
    */
   canonicalUrl?: string;
+  /**
+   * When true, emit the iOS Smart App Banner so mobile Safari visitors can
+   * open or install the native app on this ledger URL.
+   */
+  smartAppBanner?: boolean;
 }
+
+export const APP_STORE_ID = "1527950512";
 
 /**
  * LedgerSEO component for dynamically setting meta tags with ledger-specific information
@@ -67,6 +74,7 @@ export function LedgerSEO({
   params,
   noIndex = false,
   canonicalUrl,
+  smartAppBanner = false,
 }: LedgerSEOProps) {
   const { t, i18n } = useTranslations();
   const location = useLocation();
@@ -78,6 +86,13 @@ export function LedgerSEO({
           pathname: location.pathname,
           search: location.search,
         }));
+  const appArgument =
+    typeof window !== "undefined"
+      ? window.location.href
+      : canonicalHref
+        ? canonicalHref
+        : `https://beancount.io${location.pathname}`;
+  const smartAppBannerContent = `app-id=${APP_STORE_ID}, app-argument=${appArgument}`;
 
   // Generate the title with interpolated ledger name and additional params
   const title = t(titleKey, { ledgerName, ...params });
@@ -100,6 +115,9 @@ export function LedgerSEO({
       <meta name="description" content={description} />
       {noIndex ? <meta name="robots" content={NOINDEX_ROBOTS_CONTENT} /> : null}
       {canonicalHref ? <link rel="canonical" href={canonicalHref} /> : null}
+      {smartAppBanner ? (
+        <meta name="apple-itunes-app" content={smartAppBannerContent} />
+      ) : null}
 
       {/* Open Graph meta tags for social sharing */}
       <meta property="og:title" content={title} />

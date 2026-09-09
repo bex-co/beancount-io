@@ -16,6 +16,7 @@
       "supportsTablet": true,
       "bundleIdentifier": "io.beancount.ios",
       "userInterfaceStyle": "automatic",
+      "associatedDomains": ["applinks:beancount.io"],
       "infoPlist": {
         "NSCalendarsUsageDescription": false,
         "NSCameraUsageDescription": "Beancount uses the camera to scan receipts.",
@@ -40,7 +41,21 @@
         "foregroundImage": "./src/assets/images/icon-adaptive-foreground.png",
         "monochromeImage": "./src/assets/images/icon-adaptive-foreground.png",
         "backgroundColor": "#5fc535"
-      }
+      },
+      "intentFilters": [
+        {
+          "action": "VIEW",
+          "autoVerify": true,
+          "data": [
+            {
+              "scheme": "https",
+              "host": "beancount.io",
+              "pathPrefix": "/ledger"
+            }
+          ],
+          "category": ["BROWSABLE", "DEFAULT"]
+        }
+      ]
     },
     "plugins": [
       [

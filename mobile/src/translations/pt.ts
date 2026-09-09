@@ -37,6 +37,8 @@ export const pt: typeof en = {
   settings: "Configurações",
   merchants: "Comerciantes",
   visitWebsite: "Visitar site",
+  shareLink: "Partilhar ligação",
+  copyLink: "Copiar ligação",
   merchantsSearchPlaceholder: {
     one: "Pesquisar {{count}} comerciante…",
     other: "Pesquisar {{count}} comerciantes…",

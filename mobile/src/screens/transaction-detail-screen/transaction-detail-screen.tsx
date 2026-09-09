@@ -25,7 +25,7 @@ import { AmountText } from "@/components/amount-text";
 import { AccountTypeIcon } from "@/components/account-type-icon";
 import { LoadingTile } from "@/components/loading-tile";
 import { MenuButton } from "@/components/menu-button";
-import { useThemeStyle } from "@/common/hooks";
+import { useThemeStyle, useToast } from "@/common/hooks";
 import { useLedgerWrite } from "@/common/hooks/use-ledger-write";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { LedgerGuard, useLedgerGuard } from "@/components/ledger-guard";
@@ -50,6 +50,13 @@ import {
   selectTransactionTitle,
 } from "./selectors/select-transaction-detail";
 import { PostingRow } from "./components/posting-row";
+import { buildLedgerUrl } from "@/common/app-links/build-ledger-url";
+import {
+  copyLedgerUrl,
+  shareLedgerUrl,
+} from "@/common/app-links/ledger-url-actions";
+import { getServerUrl } from "@/common/vars/server-url";
+import { ledgerVar } from "@/common/vars";
 
 const getStyles = (theme: ColorTheme) =>
   StyleSheet.create({
@@ -247,11 +254,13 @@ const TransactionDetailImpl = ({
   const { canWrite } = useLedgerAccess();
   const router = useRouter();
   const { t, locale } = useTranslations();
+  const toast = useToast();
   const styles = useThemeStyle(getStyles);
   const theme = useTheme().colorTheme;
 
   const confirmWrite = useLedgerWrite();
   const stashed = useReactiveVar(selectedTransactionVar);
+  const selectedLedgerId = useReactiveVar(ledgerVar);
   const client = useApolloClient();
   const stashedEntry = stashed?.entry_hash === entryHash ? stashed : null;
   const shouldLoadContext = !stashedEntry || hasEditableSource(stashedEntry);
@@ -332,6 +341,30 @@ const TransactionDetailImpl = ({
     [router, originAccount],
   );
 
+  const entryLinkUrl =
+    entryHash && (selectedLedgerId || ledgerId)
+      ? buildLedgerUrl(
+          {
+            kind: "entry",
+            ledgerFullName: selectedLedgerId || ledgerId,
+            entryHash,
+          },
+          getServerUrl(),
+        )
+      : null;
+
+  const handleShareLink = useCallback(() => {
+    if (!entryLinkUrl) return;
+    shareLedgerUrl(entryLinkUrl);
+  }, [entryLinkUrl]);
+
+  const handleCopyLink = useCallback(() => {
+    if (!entryLinkUrl) return;
+    copyLedgerUrl(entryLinkUrl, () => {
+      toast.showToast({ message: t("copied"), type: "text" });
+    });
+  }, [entryLinkUrl, toast, t]);
+
   if (!entry) {
     return (
       <SafeAreaView edges={["bottom"]} style={styles.container}>
@@ -379,22 +412,24 @@ const TransactionDetailImpl = ({
       <Stack.Screen
         options={{
           title: t("transaction"),
-          headerRight: sha256sum
+          headerRight: entryHash
             ? () => (
                 <View style={styles.headerActions}>
-                  <Pressable
-                    style={styles.headerIconButton}
-                    onPress={handleEdit}
-                    disabled={deleting}
-                    accessibilityRole="button"
-                    accessibilityLabel={t("editTransaction")}
-                  >
-                    <Ionicons
-                      name="pencil-outline"
-                      size={22}
-                      color={theme.primary}
-                    />
-                  </Pressable>
+                  {sha256sum ? (
+                    <Pressable
+                      style={styles.headerIconButton}
+                      onPress={handleEdit}
+                      disabled={deleting}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("editTransaction")}
+                    >
+                      <Ionicons
+                        name="pencil-outline"
+                        size={22}
+                        color={theme.primary}
+                      />
+                    </Pressable>
+                  ) : null}
                   <MenuButton
                     accessibilityLabel={t("details")}
                     icon={
@@ -406,16 +441,42 @@ const TransactionDetailImpl = ({
                     }
                     items={[
                       {
-                        label: t("deleteTransaction"),
+                        label: t("shareLink"),
                         icon: (
                           <Ionicons
-                            name="trash-outline"
+                            name="share-outline"
                             size={22}
-                            color={theme.error}
+                            color={theme.black}
                           />
                         ),
-                        onPress: handleDelete,
+                        onPress: handleShareLink,
                       },
+                      {
+                        label: t("copyLink"),
+                        icon: (
+                          <Ionicons
+                            name="link-outline"
+                            size={22}
+                            color={theme.black}
+                          />
+                        ),
+                        onPress: handleCopyLink,
+                      },
+                      ...(sha256sum
+                        ? [
+                            {
+                              label: t("deleteTransaction"),
+                              icon: (
+                                <Ionicons
+                                  name="trash-outline"
+                                  size={22}
+                                  color={theme.error}
+                                />
+                              ),
+                              onPress: handleDelete,
+                            },
+                          ]
+                        : []),
                     ]}
                   />
                 </View>

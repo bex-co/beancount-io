@@ -37,6 +37,8 @@ export const fa: typeof en = {
   settings: "تنظیمات",
   merchants: "پذیرندگان",
   visitWebsite: "بازدید از وب‌سایت",
+  shareLink: "اشتراک‌گذاری پیوند",
+  copyLink: "کپی پیوند",
   merchantsSearchPlaceholder: {
     one: "جستجوی {{count}} پذیرنده…",
     other: "جستجوی {{count}} پذیرنده…",

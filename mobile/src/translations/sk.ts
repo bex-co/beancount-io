@@ -37,6 +37,8 @@ export const sk: typeof en = {
   settings: "Nastavenia",
   merchants: "Obchodníci",
   visitWebsite: "Navštíviť web",
+  shareLink: "Zdieľať odkaz",
+  copyLink: "Kopírovať odkaz",
   merchantsSearchPlaceholder: {
     one: "Hľadať {{count}} obchodníka…",
     other: "Hľadať {{count}} obchodníkov…",

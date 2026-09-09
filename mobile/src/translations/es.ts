@@ -37,6 +37,8 @@ export const es: typeof en = {
   settings: "Configuración",
   merchants: "Comerciantes",
   visitWebsite: "Visitar sitio web",
+  shareLink: "Compartir enlace",
+  copyLink: "Copiar enlace",
   merchantsSearchPlaceholder: {
     one: "Buscar {{count}} comerciante…",
     other: "Buscar {{count}} comerciantes…",

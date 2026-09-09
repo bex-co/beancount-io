@@ -37,6 +37,8 @@ export const bg: typeof en = {
   settings: "Настройки",
   merchants: "Търговци",
   visitWebsite: "Посетете уебсайта",
+  shareLink: "Сподели връзка",
+  copyLink: "Копирай връзка",
   merchantsSearchPlaceholder: {
     one: "Търсене в {{count}} търговец…",
     other: "Търсене в {{count}} търговци…",

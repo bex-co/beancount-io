@@ -33,6 +33,8 @@ export const zh: typeof en = {
   settings: "设置",
   merchants: "商户",
   visitWebsite: "访问网站",
+  shareLink: "分享链接",
+  copyLink: "复制链接",
   merchantsSearchPlaceholder: {
     one: "搜索 {{count}} 个商户…",
     other: "搜索 {{count}} 个商户…",

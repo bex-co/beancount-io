@@ -137,6 +137,9 @@ services:
       # how to authenticate. Leaving it unset makes MCP unreachable.
       # Generate per `backend-cluster/backend-v2/README.md`.
       OAUTH_JWKS: ${OAUTH_JWKS:-}
+      # Native app-link vouchers. Unset → /.well-known AASA and assetlinks 404.
+      APP_LINKS_APPLE_TEAM_ID: ${APP_LINKS_APPLE_TEAM_ID:-}
+      APP_LINKS_ANDROID_SHA256: ${APP_LINKS_ANDROID_SHA256:-}
       AUTH_JWT_EXP_MINUTES: ${AUTH_JWT_EXP_MINUTES:-525600}
       POSTGRES_BACKEND_URI: postgresql://${BACKEND_DB_USER:-beancount}:${BACKEND_DB_PASSWORD:?Set BACKEND_DB_PASSWORD in .env}@postgres-backend:5432/${BACKEND_DB_NAME:-beancount}
       REDIS_URI: redis://redis:6379

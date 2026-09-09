@@ -2,7 +2,7 @@ export type SignedInAccountDependencies = {
   listLedgerIds: () => Promise<string[]>;
   getSelectedLedger: () => string | null;
   setSelectedLedger: (ledgerId: string | null) => void;
-  navigateToApp: () => void;
+  navigateToApp: () => void | Promise<void>;
   reportLedgerLoadFailure: (error: unknown) => void;
 };
 
@@ -24,5 +24,5 @@ export async function initializeSignedInAccount(
     dependencies.reportLedgerLoadFailure(error);
   }
 
-  dependencies.navigateToApp();
+  await dependencies.navigateToApp();
 }

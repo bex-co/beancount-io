@@ -1,6 +1,7 @@
 import http from "node:http";
 import Koa from "koa";
 import Router from "@koa/router";
+import type { AppConfig } from "@/config/config";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import { API_SCOPES } from "@/server/api/identity";
 import { setWellKnownRoutes } from "../well-known-route";
@@ -8,8 +9,21 @@ import { setWellKnownRoutes } from "../well-known-route";
 const config = {
   dashboard: { url: "https://beancount.io" },
   oauth: { issuer: "https://beancount.io" },
-} as Parameters<typeof setWellKnownRoutes>[1];
+  appLinks: {
+    appleTeamId: "PTLM7BZQMM",
+    androidSha256Fingerprints: [
+      "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99",
+    ],
+  },
+} as unknown as AppConfig;
 
+const unsetAppLinksConfig = {
+  ...config,
+  appLinks: {
+    appleTeamId: null,
+    androidSha256Fingerprints: [],
+  },
+} as unknown as AppConfig;
 describe("well-known routes", () => {
   let server: http.Server;
   let origin: string;
@@ -110,5 +124,91 @@ describe("well-known routes", () => {
       properties: { ledger: { type: "string" }, query: { type: "string" } },
     });
     expect(structuredBql?.outputSchema).toHaveProperty("properties");
+  });
+
+  it("serves the Apple app-site association as JSON", async () => {
+    const response = await fetch(
+      `${origin}/.well-known/apple-app-site-association`,
+    );
+    const body = (await response.json()) as {
+      applinks: {
+        apps: string[];
+        details: Array<{ appID: string; paths: string[] }>;
+      };
+    };
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toMatch(/^application\/json/);
+    expect(body.applinks.apps).toEqual([]);
+    expect(body.applinks.details).toEqual([
+      {
+        appID: "PTLM7BZQMM.io.beancount.ios",
+        paths: ["/ledger/*"],
+      },
+    ]);
+  });
+
+  it("serves Android assetlinks as JSON", async () => {
+    const response = await fetch(`${origin}/.well-known/assetlinks.json`);
+    const body = (await response.json()) as Array<{
+      relation: string[];
+      target: {
+        namespace: string;
+        package_name: string;
+        sha256_cert_fingerprints: string[];
+      };
+    }>;
+
+    expect(response.status).toBe(200);
+    expect(response.headers.get("content-type")).toMatch(/^application\/json/);
+    expect(body).toEqual([
+      {
+        relation: ["delegate_permission/common.handle_all_urls"],
+        target: {
+          namespace: "android_app",
+          package_name: "io.beancount.android",
+          sha256_cert_fingerprints: [
+            "AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99:AA:BB:CC:DD:EE:FF:00:11:22:33:44:55:66:77:88:99",
+          ],
+        },
+      },
+    ]);
+  });
+});
+
+describe("well-known app-link routes without config", () => {
+  let server: http.Server;
+  let origin: string;
+
+  beforeAll(async () => {
+    const app = new Koa();
+    const router = new Router();
+    setWellKnownRoutes(router, unsetAppLinksConfig);
+    app.use(router.routes());
+    server = app.listen(0);
+    await new Promise<void>((resolve) => server.once("listening", resolve));
+    const address = server.address();
+    if (!address || typeof address === "string") {
+      throw new Error("Test server did not expose a TCP address");
+    }
+    origin = `http://127.0.0.1:${address.port}`;
+  });
+
+  afterAll(async () => {
+    await new Promise<void>((resolve, reject) =>
+      server.close((error) => (error ? reject(error) : resolve())),
+    );
+  });
+
+  it("returns 404 for AASA when the Apple team id is unset", async () => {
+    const response = await fetch(
+      `${origin}/.well-known/apple-app-site-association`,
+    );
+    expect(response.status).toBe(404);
+  });
+
+  it("returns 404 for assetlinks when no fingerprints are configured", async () => {
+    const response = await fetch(`${origin}/.well-known/assetlinks.json`);
+    expect(response.status).toBe(404);
   });
 });

@@ -129,7 +129,25 @@ authorization server metadata:
 
 The proxy must route those well-known paths, the issuer-prefixed
 `/api-gateway/oauth/*` endpoints, and the interaction pages to this backend and
-dashboard respectively. The static `beancount-mobile` client is public (no
+dashboard respectively. On the dashboard host (`APP_DOMAIN`), `/.well-known/*`
+must reach this backend so Apple and Google can fetch the native app-link
+vouchers from the same origin as `/ledger/...` links.
+
+### Native app links
+
+Optional. When set, this server answers:
+
+- `GET /.well-known/apple-app-site-association` — Apple Universal Links for
+  `io.beancount.ios` on `/ledger/*` (`APP_LINKS_APPLE_TEAM_ID`)
+- `GET /.well-known/assetlinks.json` — Android App Links for
+  `io.beancount.android` (`APP_LINKS_ANDROID_SHA256`, comma-separated SHA-256
+  fingerprints of the Play App Signing certificate)
+
+Unset either variable and its route returns 404, so a self-host without a
+store build does not advertise Beancount.io's apps. Beancount.io production
+uses `APP_LINKS_APPLE_TEAM_ID=PTLM7BZQMM`.
+
+The static `beancount-mobile` client is public (no
 secret), accepts only authorization code plus refresh grants, requires S256
 PKCE, and registers only `io.beancount.ios:/oauth/callback` and
 `io.beancount.android:/oauth/callback`. The authorization endpoint also accepts

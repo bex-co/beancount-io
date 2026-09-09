@@ -1,21 +1,21 @@
 # w4 · m5 — Ledger links open in the app
 
-**Worker:** worker1 **Goal:** a `beancount.io/ledger/...` URL shared to a phone opens the native app on that ledger when the app is installed, and the app can share links that round-trip **Status:** todo
+**Worker:** worker1 **Goal:** a `beancount.io/ledger/...` URL shared to a phone opens the native app on that ledger when the app is installed, and the app can share links that round-trip **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Serve the iOS and Android app-link files from the well-known route | 45m | — |
-| t002 | Declare associated domains and Android app-link intent filters | 30m | — |
-| t003 | Web path to app route resolver | 50m | — |
-| t004 | Handle incoming links in the root layout, through sign-in | 45m | t002, t003 |
-| t005 | Share and copy the canonical ledger link from the app | 35m | t003 |
-| t006 | Smart App Banner on public ledger pages | 25m | t001 |
-| t007 | Adoption surface | 25m | t004, t005, t006 |
-| t008 | Simplify | 25m | t007 |
-| t009 | Test coverage | 45m | t007 |
-| t010 | Closeout | 15m | t008, t009 |
+| t001 | Serve the iOS and Android app-link files from the well-known route | 45m | — — **DONE** |
+| t002 | Declare associated domains and Android app-link intent filters | 30m | — — **DONE** |
+| t003 | Web path to app route resolver | 50m | — — **DONE** |
+| t004 | Handle incoming links in the root layout, through sign-in | 45m | t002, t003 — **DONE** |
+| t005 | Share and copy the canonical ledger link from the app | 35m | t003 — **DONE** |
+| t006 | Smart App Banner on public ledger pages | 25m | t001 — **DONE** |
+| t007 | Adoption surface | 25m | t004, t005, t006 — **DONE** |
+| t008 | Simplify | 25m | t007 — **DONE** |
+| t009 | Test coverage | 45m | t007 — **DONE** |
+| t010 | Closeout | 15m | t008, t009 — **DONE** |
 
 ## Definition of done
 
@@ -32,3 +32,9 @@
 - **Expected outcome:** app sessions start from shared links, and public ledger pages on mobile Safari surface the App Store install banner. Both were impossible before.
 - **Why now:** w4/m4 just shipped the safe-open path for public ledgers, which is the exact landing this needs; backend-v2 already has a well-known route to extend; the next `/mobile-release` is the natural carrier for the entitlement.
 - **Adoption surface:** included because this ships a user-facing capability across mobile, dashboard, and self-host docs.
+
+## Closeout evidence
+
+- Simulator (iPhone 17 Pro + expo-mcp): `beancount:///ledger/open_ledger/example/balance-sheet` → Reports; `…/journal` → Transactions (light + dark). Screenshots under `mobile/tmp/m5-dod-*.png`.
+- Production `https://beancount.io/.well-known/apple-app-site-association` still 404 until hosted `APP_LINKS_APPLE_TEAM_ID=PTLM7BZQMM` is set; https Universal Links cannot verify before that. Physical-device UL check remains after the next store build (DoD).
+- Gates: mobile format/lint/typecheck/test:unit; backend-v2 typecheck + well-known tests; dashboard ledger-seo tests; `check-agent-guidance.py`.

@@ -12,8 +12,12 @@ function dependencies(
       selected.value = ledgerId;
       events.push(`ledger:${ledgerId ?? "none"}`);
     },
-    navigateToApp: () => events.push("navigate"),
-    reportLedgerLoadFailure: () => events.push("ledger-error"),
+    navigateToApp: () => {
+      events.push("navigate");
+    },
+    reportLedgerLoadFailure: () => {
+      events.push("ledger-error");
+    },
   };
 }
 

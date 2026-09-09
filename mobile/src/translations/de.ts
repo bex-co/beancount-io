@@ -38,6 +38,8 @@ export const de: typeof en = {
   settings: "Einstellungen",
   merchants: "Händler",
   visitWebsite: "Website besuchen",
+  shareLink: "Link teilen",
+  copyLink: "Link kopieren",
   merchantsSearchPlaceholder: {
     one: "{{count}} Händler suchen…",
     other: "{{count}} Händler suchen…",

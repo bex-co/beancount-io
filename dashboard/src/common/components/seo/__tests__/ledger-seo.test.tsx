@@ -663,4 +663,34 @@ describe("LedgerSEO Component", () => {
       unmount();
     });
   });
+
+  describe("Smart App Banner", () => {
+    it("emits apple-itunes-app when enabled", () => {
+      render(
+        <LedgerSEO
+          titleKey="seo.ledgerOverview.title"
+          descriptionKey="seo.ledgerOverview.description"
+          ledgerName="example"
+          smartAppBanner
+        />,
+      );
+      const meta = document.head.querySelector('meta[name="apple-itunes-app"]');
+      expect(meta).not.toBeNull();
+      expect(meta?.getAttribute("content")).toContain("app-id=1527950512");
+      expect(meta?.getAttribute("content")).toContain("app-argument=");
+    });
+
+    it("omits apple-itunes-app when disabled", () => {
+      render(
+        <LedgerSEO
+          titleKey="seo.ledgerOverview.title"
+          descriptionKey="seo.ledgerOverview.description"
+          ledgerName="example"
+        />,
+      );
+      expect(
+        document.head.querySelector('meta[name="apple-itunes-app"]'),
+      ).toBeNull();
+    });
+  });
 });

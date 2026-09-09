@@ -104,6 +104,8 @@ services:
       # Production passes this via a secret manager. Development deliberately
       # omits it so backend-v2 generates an ephemeral signing key.
       OAUTH_JWKS: ${OAUTH_JWKS:-}
+      APP_LINKS_APPLE_TEAM_ID: ${APP_LINKS_APPLE_TEAM_ID:-}
+      APP_LINKS_ANDROID_SHA256: ${APP_LINKS_ANDROID_SHA256:-}
       # Data stores (service-name addressing inside the compose network).
       POSTGRES_BACKEND_URI: ${POSTGRES_BACKEND_URI:-postgresql://postgres:password@postgres-backend:5432/backend}
       REDIS_URI: ${REDIS_URI:-redis://redis:6379}

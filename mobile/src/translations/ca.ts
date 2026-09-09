@@ -37,6 +37,8 @@ export const ca: typeof en = {
   settings: "Configuració",
   merchants: "Comerciants",
   visitWebsite: "Visita el lloc web",
+  shareLink: "Comparteix l'enllaç",
+  copyLink: "Copia l'enllaç",
   merchantsSearchPlaceholder: {
     one: "Cerca {{count}} comerciant…",
     other: "Cerca {{count}} comerciants…",

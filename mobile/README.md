@@ -52,6 +52,7 @@ Beancount Mobile Community Edition turns a Beancount.io ledger into a native wor
 - **Investigate every entry** — search and filter the journal, inspect postings and balance context, then correct the underlying directive in a syntax-highlighted source editor with quick-insert keys (dates, flags, quotes, accounts, operating currencies) and checksum-protected saves.
 - **Work with the ledger itself** — browse and edit `.bean` files with syntax highlighting and review Git commit diffs.
 - **Discover and save ledgers** — open **Discover ledgers** in the ledger drawer to search your books, browse public examples in **Explore**, and revisit account-synced **Starred** favorites. Public books remain read-only unless you have editing permission.
+- **Open and share ledger links** — a `https://beancount.io/ledger/...` link opens the matching screen when the app is installed; **Share link** and **Copy link** in the drawer (and on a transaction) produce the same canonical URL.
 - **Stay connected** — switch ledgers, review notifications, invite collaborators, and use light or dark themes.
 - **Use your language** — the app ships with 13 locales and follows the device language when supported.
 
@@ -121,6 +122,32 @@ shows an error and preserves your current selection.
 Public examples can be read without ownership. Add/edit actions require write
 permission, including direct links to transaction, budget, account, and receipt
 forms. The source-file viewer stays available in read-only mode.
+
+### Ledger links
+
+When the native build includes associated domains (iOS) / App Links (Android),
+a `https://beancount.io/ledger/<owner>/<name>/…` URL opens the matching screen
+in the app. That requires the host to serve
+`/.well-known/apple-app-site-association` and `assetlinks.json` (backend-v2
+env `APP_LINKS_APPLE_TEAM_ID` / `APP_LINKS_ANDROID_SHA256`). Custom-scheme
+paths that still carry `/ledger/…` work without those files and are the
+reliable simulator check before the vouchers are live:
+
+```zsh
+xcrun simctl openurl <udid> \
+  "beancount:///ledger/open_ledger/example/balance-sheet"
+```
+
+From the ledger drawer, **Share link** and **Copy link** publish the canonical
+https URL for the current ledger. On a transaction, the same actions share an
+`…/entry/<hash>` URL that opens that entry in the app.
+
+After AASA is deployed, the https form is the user-facing check:
+
+```zsh
+xcrun simctl openurl <udid> \
+  "https://beancount.io/ledger/open_ledger/example/balance-sheet"
+```
 
 ### Mobile OAuth contract
 

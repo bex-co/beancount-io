@@ -54,6 +54,36 @@ function mcpManifest(config: AppConfig) {
   };
 }
 
+const IOS_BUNDLE_ID = "io.beancount.ios";
+const ANDROID_PACKAGE = "io.beancount.android";
+
+function appleAppSiteAssociation(teamId: string) {
+  return {
+    applinks: {
+      apps: [] as string[],
+      details: [
+        {
+          appID: `${teamId}.${IOS_BUNDLE_ID}`,
+          paths: ["/ledger/*"],
+        },
+      ],
+    },
+  };
+}
+
+function assetLinks(fingerprints: readonly string[]) {
+  return [
+    {
+      relation: ["delegate_permission/common.handle_all_urls"],
+      target: {
+        namespace: "android_app",
+        package_name: ANDROID_PACKAGE,
+        sha256_cert_fingerprints: [...fingerprints],
+      },
+    },
+  ];
+}
+
 export function setWellKnownRoutes(router: Router, config: AppConfig): void {
   router.get("/.well-known/security.txt", (ctx) => {
     ctx.type = "text/plain";
@@ -71,5 +101,29 @@ export function setWellKnownRoutes(router: Router, config: AppConfig): void {
     ctx.set("Access-Control-Allow-Origin", "*");
     manifest ??= mcpManifest(config);
     ctx.body = manifest;
+  });
+
+  // Unset env → 404 so a self-host without a native build does not advertise
+  // Beancount.io's app IDs on its own domain.
+  router.get("/.well-known/apple-app-site-association", (ctx) => {
+    const teamId = config.appLinks.appleTeamId;
+    if (!teamId) {
+      ctx.status = 404;
+      return;
+    }
+    ctx.type = "application/json";
+    ctx.set("Cache-Control", "public, max-age=3600");
+    ctx.body = appleAppSiteAssociation(teamId);
+  });
+
+  router.get("/.well-known/assetlinks.json", (ctx) => {
+    const fingerprints = config.appLinks.androidSha256Fingerprints;
+    if (fingerprints.length === 0) {
+      ctx.status = 404;
+      return;
+    }
+    ctx.type = "application/json";
+    ctx.set("Cache-Control", "public, max-age=3600");
+    ctx.body = assetLinks(fingerprints);
   });
 }

@@ -41,6 +41,18 @@ interface DashboardConfig {
   url: string;
 }
 
+/**
+ * Native app-link vouchers for `/.well-known/apple-app-site-association` and
+ * `/.well-known/assetlinks.json`. Unset when a self-host has no native build —
+ * those routes then 404 rather than advertising someone else's app.
+ */
+export interface AppLinksConfig {
+  /** Apple Developer Team ID (e.g. Beancount.io production: `PTLM7BZQMM`). */
+  appleTeamId: string | null;
+  /** Play App Signing SHA-256 fingerprints, comma-separated in env. */
+  androidSha256Fingerprints: readonly string[];
+}
+
 export interface GiteaConfig {
   hostname: string;
   internalHostname: string;
@@ -183,6 +195,7 @@ export interface AppConfig {
   jwt: JwtConfig;
   favaApi: FavaAPIConfig;
   dashboard: DashboardConfig;
+  appLinks: AppLinksConfig;
   gitea: GiteaConfig;
   blockeden: BlockEdenConfig;
   claudeCodeSandbox: ClaudeCodeSandboxConfig;
@@ -328,6 +341,13 @@ export const config: AppConfig = {
   },
   dashboard: {
     url: dashboardUrl,
+  },
+  appLinks: {
+    appleTeamId: process.env.APP_LINKS_APPLE_TEAM_ID?.trim() || null,
+    androidSha256Fingerprints: (process.env.APP_LINKS_ANDROID_SHA256 ?? "")
+      .split(",")
+      .map((value) => value.trim())
+      .filter(Boolean),
   },
   gitea: {
     hostname: process.env.EXTERNAL_GITEA_HOST_NAME || "git.beancount.io",

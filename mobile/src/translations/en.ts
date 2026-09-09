@@ -32,6 +32,8 @@ export const en = {
   settings: "Settings",
   merchants: "Merchants",
   visitWebsite: "Visit website",
+  shareLink: "Share link",
+  copyLink: "Copy link",
   merchantsSearchPlaceholder: {
     one: "Search {{count}} merchant…",
     other: "Search {{count}} merchants…",
