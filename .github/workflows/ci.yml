@@ -40,3 +40,34 @@ jobs:
       - run: yarn lint
       - run: yarn typecheck
       - run: yarn test:unit
+
+  store-metadata:
+    name: store metadata and artwork
+    runs-on: macos-15
+    defaults:
+      run:
+        working-directory: mobile
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: yarn
+          cache-dependency-path: mobile/yarn.lock
+      - run: yarn install --frozen-lockfile
+      - run: brew install imagemagick asc
+      - name: Prepare Chromium text renderer
+        run: |
+          PLAY_CHROME_PLATFORM=mac-x64
+          if [ "$(uname -m)" = arm64 ]; then PLAY_CHROME_PLATFORM=mac-arm64; fi
+          mkdir -p tmp/store-browser
+          curl --fail --location --retry 2 \
+            "https://storage.googleapis.com/chrome-for-testing-public/151.0.7922.34/${PLAY_CHROME_PLATFORM}/chrome-headless-shell-${PLAY_CHROME_PLATFORM}.zip" \
+            --output tmp/store-browser/chrome.zip
+          unzip -q tmp/store-browser/chrome.zip -d tmp/store-browser
+          printf 'CHROME_BIN=%s/tmp/store-browser/chrome-headless-shell-%s/chrome-headless-shell\n' "$PWD" "$PLAY_CHROME_PLATFORM" >> "$GITHUB_ENV"
+      # Validate committed copy; never generate a replacement that hides drift.
+      # Neither validation nor artwork rendering requires store credentials.
+      - run: yarn metadata:validate
+      - run: yarn screenshots:build
+      - run: yarn screenshots:validate

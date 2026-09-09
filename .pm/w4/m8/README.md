@@ -1,14 +1,14 @@
 # w4 · m8 — Localized Google Play listing from the canonical metadata
 
-**Worker:** worker1 **Goal:** the Google Play listing is generated from the same canonical metadata as the App Store listing and is live in all 13 shipped languages, including the Bulgarian and Persian listings Apple cannot offer **Status:** todo
+**Worker:** worker1 **Goal:** the Google Play listing is generated from the same canonical metadata as the App Store listing and is live in all 13 shipped languages, including the Bulgarian and Persian listings Apple cannot offer **Status:** in progress (t001–t003 done; Play apply and live verification pending)
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Pull the current Google Play listing baseline | 35m | — |
-| t002 | Generate Play listing copy from the canonical metadata | 45m | t001 |
-| t003 | Derive Play screenshots and the feature graphic | 50m | — |
+| t001 | Pull the current Google Play listing baseline — **DONE** | 35m | — |
+| t002 | Generate Play listing copy from the canonical metadata — **DONE** | 45m | t001 |
+| t003 | Derive Play screenshots and the feature graphic — **DONE** | 50m | — |
 | t004 | Plan and apply steps for the Play listing, with docs | 50m | t002, t003 |
 | t005 | Adoption surface | 25m | t004 |
 | t006 | Simplify | 25m | t005 |
@@ -29,3 +29,11 @@
 - **Expected outcome:** Play installs and store-listing conversion per locale become measurable and the listing stays in sync with the App Store copy on every release.
 - **Why now:** the App Store pipeline just settled (release receipts, parity checks, deterministic screenshots), so the Play side copies its shape instead of inventing one. The API client choice in t001 may need a dependency decision from the user.
 - **Adoption surface:** included because this ships store-facing copy and release tooling that the mobile README, localization doc, and `mobile-release` skill describe.
+
+## Implementation evidence
+
+- The authenticated baseline confirms en-US was the only existing Play locale (8 phone screenshots, 1 feature graphic). Detailed evidence is in done/t001.md.
+- Canonical generation, 16-locale offline plans, reviewed-plan confirmation, remote-drift checks, edit validation/commit, and text/image parity verification are implemented.
+- Local checks: 1,544 unit tests; formatting, lint/type checks; metadata validation; all 148 screenshot assets; agent-guidance and skills validation. Deliberate mutations were detected for credential redaction, JWT signing, edit cleanup, locale mapping, image dimensions/captions, canonical-copy derivation, text limits/trimming, plan output, parity checks, and validation-before-commit.
+- The CI metadata/artwork job is configured; a hosted run has not yet been observed.
+- Pending: user confirmation of the real publication plan, API apply/parity verification, public/console visibility checks, and final closeout. No publication or milestone completion is claimed.

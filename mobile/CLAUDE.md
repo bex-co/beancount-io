@@ -263,6 +263,28 @@ ordered stories in `metadata/screenshots.json`. Uploads only work against
 upstream `asc screenshots` commands. See `docs/app-store-localization.md` for the
 complete pre-auto-submit choreography.
 
+### Google Play listing
+
+`metadata/store-locales.json` also maps the 13 runtime languages to 16 Play
+locales. Play copy is generated into `metadata/play/` from canonical app-info and
+version metadata; `metadata/play-source/bg.json` and `fa.json` supply the two
+languages Apple cannot offer. Never hand-edit generated Play JSON. Play artwork
+uses the same screenshot manifest and demo sources: three 1080×1920 phone images
+and one 1024×500 feature graphic per locale, all gitignored. Chromium/headless
+shell supplies Persian text shaping (`CHROME_BIN` can select the executable).
+
+Run `yarn play:baseline` with `GOOGLE_PLAY_SERVICE_ACCOUNT` set to a local ignored
+JSON key path. Inspect the actual locale coverage in
+`tmp/play-baseline/baseline.json` before `yarn play:generate`. Metadata validation
+checks Play limits and generated-copy drift; screenshot validation checks both
+stores. `./scripts/play-release.sh plan-play` is offline and prints every locale's
+diff. After reviewing the text and images within the user's authorization, use
+`apply-play <plan-sha256>` and `verify-play`. The helper checks local/remote drift,
+validates and commits the edit, and verifies copy and image checksums. It does
+not manage tracks or release notes. API parity is not public availability; check
+review/publishing state before calling the listing live. See
+`docs/app-store-localization.md` for the exact steps.
+
 ## Roadmap board (`.pm/`)
 
 File-based product roadmap, managed only through two slash commands:

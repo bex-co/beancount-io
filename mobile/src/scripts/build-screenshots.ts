@@ -6,6 +6,13 @@ import {
   loadStoreLocaleManifest,
   runtimeLocaleForStore,
 } from "./store-metadata";
+import {
+  imageData,
+  renderStoreHtml,
+  renderPlayArtwork,
+} from "./render-store-artwork";
+import { bg } from "../translations/bg";
+import { fa } from "../translations/fa";
 import { en } from "../translations/en";
 import { zh } from "../translations/zh";
 import { ca } from "../translations/ca";
@@ -57,6 +64,8 @@ type DemoTranslations = Record<string, unknown> & {
 
 const translationsByRuntimeLocale: Record<string, DemoTranslations> = {
   en,
+  bg,
+  fa,
   zh,
   ca,
   de,
@@ -395,6 +404,18 @@ function localizeSource(
   translations: DemoTranslations,
   storeLocale: string,
 ): void {
+  if (storeLocale === "fa") {
+    const overlay = overlaySvg(
+      sourceLabels(storyId, translations, storeLocale),
+    );
+    renderStoreHtml(
+      `<div style="position:relative;width:1206px;height:2622px;background:#171a14"><img src="${imageData(source)}" style="position:absolute;width:100%;height:100%"><div style="position:absolute;inset:0">${overlay}</div></div>`,
+      output,
+      1206,
+      2622,
+    );
+    return;
+  }
   const overlayPath = output.replace(/\.png$/u, ".svg");
   fs.writeFileSync(
     overlayPath,
@@ -564,10 +585,31 @@ function renderRaw(
 }
 
 let outputCount = 0;
-for (const locale of localeManifest.storeLocales) {
+const targets = [
+  ...localeManifest.storeLocales.map((locale) => ({ locale, apple: true })),
+  ...Object.values(localeManifest.runtimeToPlay)
+    .flat()
+    .map((locale) => ({ locale, apple: false })),
+];
+for (const { locale, apple } of targets) {
   if (localeFilter && locale !== localeFilter) continue;
-  const captions = screenshotManifest.captions[locale];
-  const runtimeLocale = runtimeLocaleForStore(localeManifest, locale);
+  const displays = apple
+    ? screenshotManifest.displayTypes
+    : screenshotManifest.playDisplayTypes;
+  if (
+    displayFilter &&
+    !displays.some((display) => display.name === displayFilter)
+  )
+    continue;
+  const sourceLocale = apple ? locale : localeManifest.playToStore[locale];
+  const captions = sourceLocale
+    ? screenshotManifest.captions[sourceLocale]
+    : screenshotManifest.playOnlyCaptions[locale];
+  const runtimeLocale = apple
+    ? runtimeLocaleForStore(localeManifest, locale)
+    : Object.entries(localeManifest.runtimeToPlay).find(([, locales]) =>
+        locales.includes(locale),
+      )![0];
   const translations = translationsByRuntimeLocale[runtimeLocale];
   if (!translations) {
     throw new Error(
@@ -592,7 +634,7 @@ for (const locale of localeManifest.storeLocales) {
     );
     localizedSources.set(story.id, localizedSource);
   }
-  for (const display of screenshotManifest.displayTypes) {
+  for (const display of displays) {
     if (displayFilter && display.name !== displayFilter) continue;
     const directory = path.join(outputRoot, locale, display.name);
     const rawDirectory = path.join(rawRoot, locale, display.name);
@@ -606,6 +648,23 @@ for (const locale of localeManifest.storeLocales) {
       const localizedSource = localizedSources.get(story.id);
       if (!localizedSource)
         throw new Error(`Missing localized source for ${story.id}`);
+      if (!apple) {
+        if (display.layout === "feature" && index > 0) continue;
+        renderPlayArtwork(
+          localizedSource,
+          captions[index],
+          path.join(
+            directory,
+            display.layout === "feature" ? "feature.png" : filename,
+          ),
+          display.width,
+          display.height,
+          display.layout === "feature",
+          runtimeLocale === "fa",
+        );
+        outputCount += 1;
+        continue;
+      }
       renderRaw(
         localizedSource,
         path.join(rawDirectory, filename),
@@ -618,13 +677,11 @@ for (const locale of localeManifest.storeLocales) {
         path.join(directory, filename),
         display.width,
         display.height,
-        display.layout,
+        display.layout as "phone" | "tablet",
       );
       outputCount += 1;
     }
   }
 }
 
-console.log(
-  `Built ${outputCount} localized App Store screenshots in ${outputRoot}.`,
-);
+console.log(`Built ${outputCount} localized store assets in ${outputRoot}.`);

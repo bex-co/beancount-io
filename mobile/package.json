@@ -25,7 +25,9 @@
     "store:staging-check": "npx tsx ./src/scripts/check-store-staging.ts",
     "screenshots:build": "./scripts/build-screenshots.sh",
     "screenshots:validate": "npx tsx ./src/scripts/validate-screenshots.ts",
-    "deploy": "bash ./deploy.sh"
+    "deploy": "bash ./deploy.sh",
+    "play:baseline": "npx tsx ./src/scripts/pull-play-baseline.ts",
+    "play:generate": "npx tsx ./src/scripts/generate-play-metadata.ts"
   },
   "dependencies": {
     "@ai-sdk/react": "^3.0.187",
