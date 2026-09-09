@@ -1,4 +1,10 @@
-import { render, screen, fireEvent, waitFor } from "@testing-library/react";
+import {
+  render,
+  screen,
+  fireEvent,
+  waitFor,
+  within,
+} from "@testing-library/react";
 import { QueryResultCard } from "../query-result-card";
 import type { QueryShellQuery } from "@/graphql/definitions";
 
@@ -34,13 +40,24 @@ vi.mock("@/common/hooks/use-translations", () => ({
 
 // Mock react-window (JSDOM doesn't support layout measurement)
 vi.mock("react-window", () => ({
-  List: ({ rowCount, rowComponent: RowComponent, rowProps, style }: any) => (
-    <div data-testid="virtual-list" style={style}>
+  List: ({
+    rowCount,
+    rowComponent: RowComponent,
+    rowProps,
+    style,
+    role,
+  }: any) => (
+    <div data-testid="virtual-list" role={role} style={style}>
       {Array.from({ length: Math.min(rowCount, 10) }, (_, index) => (
         <RowComponent
           key={index}
           index={index}
           style={{ height: 36 }}
+          ariaAttributes={{
+            "aria-posinset": index + 1,
+            "aria-setsize": rowCount,
+            role: "listitem",
+          }}
           {...rowProps}
         />
       ))}
@@ -333,6 +350,73 @@ describe("QueryResultCard", () => {
     expect(screen.getByText("bql.rowCount")).toBeInTheDocument();
     expect(screen.getByText("Assets:Cash")).toBeInTheDocument();
     expect(screen.getByText("Assets:Bank")).toBeInTheDocument();
+  });
+
+  it("exposes table semantics with header and body row indexes", () => {
+    const tableResult: QueryShellQuery["queryShell"] = {
+      resultType: "table",
+      table: {
+        types: [
+          { name: "date", dtype: "date" },
+          { name: "account", dtype: "str" },
+          { name: "number", dtype: "Decimal" },
+          { name: "currency", dtype: "str" },
+        ],
+        rows: [
+          ["2015-01-01", "Assets:Cash", 100, "USD"],
+          ["2015-01-02", "Expenses:Food", 20, "USD"],
+        ],
+      },
+      text: null,
+    } as any;
+
+    render(
+      <QueryResultCard
+        {...defaultProps}
+        result={tableResult}
+        isInitiallyOpen={true}
+      />,
+    );
+
+    const table = screen.getByRole("table", { name: "page.bql.queryResult" });
+    expect(table).toHaveAttribute("aria-rowcount", "3");
+    expect(screen.getAllByRole("columnheader")).toHaveLength(4);
+    expect(screen.getByTestId("virtual-list")).toHaveAttribute(
+      "role",
+      "rowgroup",
+    );
+
+    const rows = screen.getAllByRole("row");
+    expect(rows[0]).toHaveAttribute("aria-rowindex", "1");
+    expect(rows[1]).toHaveAttribute("aria-rowindex", "2");
+    expect(rows[2]).toHaveAttribute("aria-rowindex", "3");
+    expect(within(rows[1]).getAllByRole("cell")).toHaveLength(4);
+  });
+
+  it("gives the scroll content a shared min width from column count", () => {
+    const tableResult: QueryShellQuery["queryShell"] = {
+      resultType: "table",
+      table: {
+        types: Array.from({ length: 6 }, (_, i) => ({
+          name: `col${i}`,
+          dtype: "str",
+        })),
+        rows: [["a", "b", "c", "d", "e", "f"]],
+      },
+      text: null,
+    } as any;
+
+    render(
+      <QueryResultCard
+        {...defaultProps}
+        result={tableResult}
+        isInitiallyOpen={true}
+      />,
+    );
+
+    const table = screen.getByRole("table", { name: "page.bql.queryResult" });
+    expect(table).toHaveStyle({ minWidth: "720px" });
+    expect(screen.getByTestId("virtual-list").style.overflowX).toBe("hidden");
   });
 
   it("should render object cells as JSON", () => {

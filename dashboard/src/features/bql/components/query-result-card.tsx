@@ -13,6 +13,7 @@ import { getErrorMessageKey } from "@/common/lib/errors/error-message";
 
 const ROW_HEIGHT = 36;
 const CONTAINER_HEIGHT = 600;
+const COLUMN_MIN_WIDTH_PX = 120;
 
 interface QueryResultCardProps {
   query: string;
@@ -65,52 +66,75 @@ export function QueryResultCard({
       );
     }
 
+    const columnMinWidthClass = "min-w-[120px] flex-shrink-0 flex-1";
+    const contentMinWidth = Math.max(
+      headers.length * COLUMN_MIN_WIDTH_PX,
+      COLUMN_MIN_WIDTH_PX,
+    );
+
     return (
       <div>
         <div className="mb-2 text-sm text-muted-foreground">
           {t("bql.rowCount", { count: rows.length })}
         </div>
+        {/* One horizontal scroll owner wraps header + body so columns stay aligned. */}
         <div className="overflow-x-auto border rounded-lg">
-          {/* Sticky header */}
-          <div className="flex border-b bg-muted/50 font-medium text-sm">
-            {headers.map((header) => (
-              <div
-                key={header}
-                className="min-w-[120px] flex-shrink-0 flex-1 px-2 sm:px-3 py-1.5 sm:py-2"
-              >
-                {header}
-              </div>
-            ))}
-          </div>
-          {/* Virtualized body */}
-          <List<{ rows: typeof rows }>
-            rowCount={rows.length}
-            rowHeight={ROW_HEIGHT}
-            rowProps={{ rows }}
-            style={{
-              height: Math.min(rows.length * ROW_HEIGHT, CONTAINER_HEIGHT),
-              width: "100%",
-            }}
-            rowComponent={({ index, style, ...rowProps }) => {
-              const row = (rowProps as unknown as { rows: typeof rows }).rows[
-                index
-              ];
-              return (
-                <div style={style} className="flex border-b last:border-b-0">
-                  {row.map((cell, cellIndex) => (
-                    <div
-                      key={cellIndex}
-                      className="min-w-[120px] flex-shrink-0 flex-1 px-2 sm:px-3 py-1.5 sm:py-2 text-sm truncate"
-                    >
-                      {typeof cell === "object" && cell !== null
-                        ? JSON.stringify(cell)
-                        : String(cell ?? "")}
-                    </div>
-                  ))}
+          <div
+            role="table"
+            aria-label={t("page.bql.queryResult")}
+            aria-rowcount={rows.length + 1}
+            style={{ minWidth: contentMinWidth }}
+          >
+            <div
+              role="row"
+              aria-rowindex={1}
+              className="flex border-b bg-muted/50 font-medium text-sm"
+            >
+              {headers.map((header) => (
+                <div
+                  key={header}
+                  role="columnheader"
+                  className={`${columnMinWidthClass} px-2 sm:px-3 py-1.5 sm:py-2`}
+                >
+                  {header}
                 </div>
-              );
-            }}
-          />
+              ))}
+            </div>
+            <List<{ rows: typeof rows }>
+              role="rowgroup"
+              rowCount={rows.length}
+              rowHeight={ROW_HEIGHT}
+              rowProps={{ rows }}
+              style={{
+                height: Math.min(rows.length * ROW_HEIGHT, CONTAINER_HEIGHT),
+                width: "100%",
+                overflowX: "hidden",
+              }}
+              rowComponent={({ index, style, rows: bodyRows }) => {
+                const row = bodyRows[index];
+                return (
+                  <div
+                    role="row"
+                    aria-rowindex={index + 2}
+                    style={style}
+                    className="flex border-b last:border-b-0"
+                  >
+                    {row.map((cell, cellIndex) => (
+                      <div
+                        key={cellIndex}
+                        role="cell"
+                        className={`${columnMinWidthClass} px-2 sm:px-3 py-1.5 sm:py-2 text-sm truncate`}
+                      >
+                        {typeof cell === "object" && cell !== null
+                          ? JSON.stringify(cell)
+                          : String(cell ?? "")}
+                      </div>
+                    ))}
+                  </div>
+                );
+              }}
+            />
+          </div>
         </div>
       </div>
     );

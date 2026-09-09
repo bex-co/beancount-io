@@ -1,17 +1,17 @@
 # w3 · m28 — Keep BQL values connected to their columns
 
-**Worker:** worker3 **Goal:** query results preserve column relationships visually and in the accessibility tree **Status:** todo
+**Worker:** worker3 **Goal:** query results preserve column relationships visually and in the accessibility tree **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                      | est | depends_on |
 | ---- | ---------------------------------------------------------- | --- | ---------- |
-| t001 | Give headers and virtual rows one horizontal scroll layout | 45m | —          |
-| t002 | Expose result tables, headers and virtual row positions    | 40m | t001       |
-| t003 | Verify BQL result adoption surfaces                        | 20m | t002       |
-| t004 | Simplify result layout and semantics                       | 20m | t003       |
-| t005 | Verify real scrolling and accessible table structure       | 45m | t004       |
-| t006 | Close out and archive the BQL result repair                | 15m | t005       |
+| t001 | Give headers and virtual rows one horizontal scroll layout — **DONE** | 45m | —          |
+| t002 | Expose result tables, headers and virtual row positions — **DONE** | 40m | t001       |
+| t003 | Verify BQL result adoption surfaces — **DONE** | 20m | t002       |
+| t004 | Simplify result layout and semantics — **DONE** | 20m | t003       |
+| t005 | Verify real scrolling and accessible table structure — **DONE** | 45m | t004       |
+| t006 | Close out and archive the BQL result repair — **DONE** | 15m | t005       |
 
 185 minutes total, including 85 minutes of implementation. One major finding
 group promoted from [028](../028.md), with independently reproduced missing
