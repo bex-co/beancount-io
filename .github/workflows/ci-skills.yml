@@ -33,3 +33,5 @@ jobs:
         run: uv sync --all-groups
       - name: Run skills checks
         run: python3 skills/scripts/ci-check.py
+      - name: Run ci-check unit tests
+        run: python3 skills/scripts/test_ci_check.py

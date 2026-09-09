@@ -49,3 +49,10 @@ If the user chooses *skip*, offer to add the candidate's `import-id` onto the **
 ## Ordering
 
 Dedup runs **before** categorization (Suggest). Skipped rows must not consume categorization effort or clutter the review table beyond their counts.
+
+## `bea import` behavior
+
+`bea import` implements the same two layers: exact `import-id` matches are
+auto-skipped (a re-import previews zero new rows), and same-date/payee/amount
+near-matches surface as possible duplicates that need an explicit
+`--duplicates skip/include` decision before `--apply` writes anything.

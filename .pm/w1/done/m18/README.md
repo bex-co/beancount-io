@@ -1,19 +1,19 @@
 # w1 · m18 — Ledger skills converge on `bea`
 
-**Worker:** worker1 **Goal:** the `beancount-*` skills and the CLI stop being two products under one name: one starter ledger, one dedup convention, and skills that use `bea`'s validated writes, preview, and JSON reads when the command is installed **Status:** todo
+**Worker:** worker1 **Goal:** the `beancount-*` skills and the CLI stop being two products under one name: one starter ledger, one dedup convention, and skills that use `bea`'s validated writes, preview, and JSON reads when the command is installed **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                                     | est | depends_on |
 | ---- | ----------------------------------------------------------------------------------------- | --- | ---------- |
-| t001 | `beancount-init` builds on `bea init`; one starter template and one equity account name   | 45m | —          |
-| t002 | `beancount-import` writes through `bea import --csv` / `bea add transactions` when available | 60m | t001       |
-| t003 | `beancount-reconcile`, `beancount-close`, and `beancount-ask` prefer `bea` for checks, pads, and reads | 45m | t002       |
-| t004 | Skills CI runs `bea check` beside `bean-check`; `skills/CLAUDE.md` names the shared rails | 30m | t003       |
-| t005 | Adoption surface                                                                          | 20m | t004       |
-| t006 | Simplify                                                                                  | 30m | t005       |
-| t007 | Test coverage                                                                             | 45m | t005       |
-| t008 | Closeout                                                                                  | 15m | t007       |
+| t001 | `beancount-init` builds on `bea init`; one starter template and one equity account name — **DONE** | 45m | — |
+| t002 | `beancount-import` writes through `bea import --csv` / `bea add transactions` when available — **DONE** | 60m | t001 |
+| t003 | `beancount-reconcile`, `beancount-close`, and `beancount-ask` prefer `bea` for checks, pads, and reads — **DONE** | 45m | t002 |
+| t004 | Skills CI runs `bea check` beside `bean-check`; `skills/CLAUDE.md` names the shared rails — **DONE** | 30m | t003 |
+| t005 | Adoption surface — **DONE**                                                               | 20m | t004       |
+| t006 | Simplify — **DONE**                                                                       | 30m | t005       |
+| t007 | Test coverage — **DONE**                                                                  | 45m | t005       |
+| t008 | Closeout — **DONE**                                                                       | 15m | t007       |
 
 ## Definition of done
 

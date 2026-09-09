@@ -2,14 +2,18 @@
 """Structural CI checks for the skills package.
 
 Validates SKILL.md frontmatter, evals.json, referenced fixtures, Python
-syntax, and bean-check on ledger fixtures. Some fixtures are deliberately
-invalid (failure-mode evals); list them in EXPECTED_BEAN_CHECK_FAILURES.
+syntax, and both bean-check and `bea check` on ledger fixtures. Some fixtures
+are deliberately invalid (failure-mode evals); list them in
+EXPECTED_BEAN_CHECK_FAILURES. The `bea` leg must agree with bean-check on
+every fixture, since skills prefer `bea check` when installed.
 """
 
 from __future__ import annotations
 
 import json
+import os
 import py_compile
+import re
 import subprocess
 import sys
 from pathlib import Path
@@ -28,6 +32,21 @@ EXPECTED_BEAN_CHECK_FAILURES = {
 def fail(msg: str) -> None:
     print(f"FAIL: {msg}", file=sys.stderr)
     raise SystemExit(1)
+
+
+# Skills converged on `bea` in w1/m18. Each must state the preference once,
+# and no raw "append … to the ledger file" instruction may survive outside
+# the documented no-`bea` fallback block.
+BEA_FIRST_SKILLS = (
+    "beancount-init",
+    "beancount-import",
+    "beancount-reconcile",
+    "beancount-close",
+    "beancount-ask",
+)
+RAW_APPEND = re.compile(r"\bappend\w*\b.{0,80}?\bto\b.{0,20}?(ledger file|main file|\./[\w./-]+)", re.IGNORECASE)
+APPEND_EXCUSED = re.compile(r"\bbea\b|append_target|append-only|yes/no|confirm|fallback", re.IGNORECASE)
+FALLBACK_SECTION = re.compile(r"fallback|without `bea`|no-`bea`|hand-append", re.IGNORECASE)
 
 
 def check_symlinks() -> None:
@@ -102,31 +121,53 @@ def check_python() -> None:
         print(f"OK python {path.relative_to(SKILLS_ROOT)}")
 
 
-def find_bean_check() -> list[str]:
-    for candidate in (
-        ["bean-check"],
-        ["uv", "run", "--project", str(REPO_ROOT / "cli"), "bean-check"],
-    ):
+def resolve_tool(candidates: list[list[str]], probe: str, missing: str) -> list[str]:
+    for candidate in candidates:
         try:
             subprocess.run(
-                [*candidate, "--help"],
+                [*candidate, probe],
                 check=True,
                 capture_output=True,
             )
             return candidate
         except (FileNotFoundError, subprocess.CalledProcessError):
             continue
-    fail("bean-check not found (install beancount, or sync cli)")
+    fail(missing)
+
+
+def find_bean_check() -> list[str]:
+    return resolve_tool(
+        [
+            ["bean-check"],
+            ["uv", "run", "--project", str(REPO_ROOT / "cli"), "bean-check"],
+        ],
+        "--help",
+        "bean-check not found (install beancount, or sync cli)",
+    )
+
+
+def find_bea() -> list[str]:
+    return resolve_tool(
+        [
+            ["bea"],
+            ["uv", "run", "--project", str(REPO_ROOT / "cli"), "bea"],
+        ],
+        "--version",
+        "bea not found (install beancount-io, or sync cli)",
+    )
 
 
 def check_ledgers() -> None:
     bean_check = find_bean_check()
+    bea = find_bea()
     ledgers = sorted(SKILLS_DIR.rglob("*ledger.beancount"))
     if not ledgers:
         fail("no *ledger.beancount fixtures found")
 
+    env = {**os.environ, "BEA_NO_UPDATE_NOTIFIER": "1"}
     unexpected_pass: list[str] = []
     unexpected_fail: list[str] = []
+    bea_disagree: list[str] = []
 
     for path in ledgers:
         rel = path.relative_to(SKILLS_DIR).as_posix()
@@ -137,6 +178,23 @@ def check_ledgers() -> None:
         )
         failed = result.returncode != 0 or bool(result.stdout.strip() or result.stderr.strip())
         expected_fail = rel in EXPECTED_BEAN_CHECK_FAILURES
+
+        bea_result = subprocess.run(
+            [*bea, "--file", str(path), "check"],
+            capture_output=True,
+            text=True,
+            env=env,
+        )
+        bea_failed = bea_result.returncode != 0
+        if bea_failed != failed:
+            bea_disagree.append(rel)
+            detail = (bea_result.stdout or bea_result.stderr).strip().splitlines()
+            print(f"bea check disagrees with bean-check for {rel}:", file=sys.stderr)
+            for line in detail[:8]:
+                print(f"  {line}", file=sys.stderr)
+        else:
+            status = "expected-fail" if expected_fail else "pass"
+            print(f"OK bea check ({status}) {rel}")
 
         if expected_fail and not failed:
             unexpected_pass.append(rel)
@@ -157,6 +215,28 @@ def check_ledgers() -> None:
         fail(f"expected bean-check failures that now pass: {unexpected_pass}")
     if unexpected_fail:
         fail(f"unexpected bean-check failures: {unexpected_fail}")
+    if bea_disagree:
+        fail(f"`bea check` disagrees with bean-check for: {bea_disagree}")
+
+
+def check_bea_first() -> None:
+    for skill in BEA_FIRST_SKILLS:
+        path = SKILLS_DIR / skill / "SKILL.md"
+        text = path.read_text(encoding="utf-8")
+        if "prefer `bea`" not in text.lower():
+            fail(f".claude/skills/{skill}/SKILL.md states no bea preference")
+        in_fallback = False
+        for lineno, line in enumerate(text.splitlines(), 1):
+            if line.startswith("## "):
+                in_fallback = bool(FALLBACK_SECTION.search(line))
+            elif FALLBACK_SECTION.search(line):
+                in_fallback = True
+            if not in_fallback and RAW_APPEND.search(line) and not APPEND_EXCUSED.search(line):
+                fail(
+                    f".claude/skills/{skill}/SKILL.md:{lineno} appends to the ledger "
+                    f"outside the fallback block: {line.strip()[:100]}"
+                )
+        print(f"OK bea-first {skill}")
 
 
 def main() -> None:
@@ -165,6 +245,7 @@ def main() -> None:
     check_evals()
     check_python()
     check_ledgers()
+    check_bea_first()
     print("All skills CI checks passed.")
 
 

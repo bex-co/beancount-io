@@ -2,12 +2,13 @@
 name: beancount-init
 description: >-
   Scaffold a brand-new beancount + fava personal ledger repository in the
-  current working directory. Creates main.bean (with the five root accounts
-  opened today), a Makefile whose `make start` boots Fava on a randomized
-  unusual port, an initialized uv Python project with beancount and fava
-  installed, and a .gitignore tuned for Python/uv/fava. Trigger this skill
-  whenever the user types /beancount-init, or asks to "set up a new
-  beancount repo", "scaffold a beancount ledger", "start a new ledger",
+  current working directory. Builds main.bean on `bea init` when the bea
+  CLI is installed (same thirteen accounts, same file), otherwise writes
+  that template directly; plus a Makefile whose `make start` boots Fava on
+  a randomized unusual port, an initialized uv Python project with beancount
+  and fava installed, and a .gitignore tuned for Python/uv/fava. Trigger
+  this skill whenever the user types /beancount-init, or asks to "set up a
+  new beancount repo", "scaffold a beancount ledger", "start a new ledger",
   "bootstrap fava", "initialize a beancount project", or anything similar
   about beginning a fresh accounting repository. Do NOT trigger for
   questions about an existing ledger or for editing transactions.
@@ -31,6 +32,11 @@ Verify `uv` is on PATH with `command -v uv`. If it isn't, stop and tell the user
 
 - macOS: `brew install uv`
 - Otherwise: `curl -LsSf https://astral.sh/uv/install.sh | sh`
+
+Check whether the `bea` CLI is installed with `command -v bea` and remember
+the answer as BEA (yes/no) for Step 5. Either way, ask the user for the
+operating currency (default `USD`) and an optional checking opening balance,
+and call the answers CURRENCY and OPENING (empty when the user gave none).
 
 ## Step 2 — Pick a random port
 
@@ -61,22 +67,67 @@ uv add fava beancount
 
 `--bare` skips the `hello.py` / `README.md` / `src/` boilerplate that doesn't belong in a ledger repo. The two commands produce `pyproject.toml` and `uv.lock` and download fava and beancount into `.venv/`.
 
-## Step 5 — Write `main.bean`
+## Step 5 — Write `main.bean`: prefer `bea`, fall back to the template
 
-Substitute `{{TODAY}}` with the date from Step 3:
+When BEA is yes, the ledger comes from the CLI so it can never drift from
+`bea init`. Substitute CURRENCY, TODAY, and OPENING:
 
 ```
-option "title" "Personal Ledger"
-option "operating_currency" "USD"
-
-{{TODAY}} open Assets:Cash USD
-{{TODAY}} open Liabilities:CreditCard USD
-{{TODAY}} open Income:Salary USD
-{{TODAY}} open Expenses:Food USD
-{{TODAY}} open Equity:Opening-Balances
+bea --no-input init . --currency CURRENCY --date TODAY \
+  --opening-balance "Assets:Checking OPENING"    # only when OPENING is non-empty
 ```
 
-The `Equity:Opening-Balances` line is deliberately currency-unconstrained — beancount convention so opening-balance entries can mix currencies later.
+`bea init .` writes `./main.bean` in the working directory. Do not write any
+template yourself on this path — the produced file equals `bea init`'s output
+byte-for-byte. Skip to Step 6.
+
+When BEA is no, write the same thirteen-account template `bea init` writes,
+substituting `{{TODAY}}`, `{{CURRENCY}}`, and the `{{TAIL}}` block:
+
+```
+option "title" "Personal ledger"
+option "operating_currency" "{{CURRENCY}}"
+
+; Add more accounts with bea add open. Amounts on credit accounts are negative.
+{{TODAY}} open Assets:Checking {{CURRENCY}}
+{{TODAY}} open Assets:Savings {{CURRENCY}}
+{{TODAY}} open Assets:Cash {{CURRENCY}}
+{{TODAY}} open Liabilities:CreditCard {{CURRENCY}}
+{{TODAY}} open Income:Salary {{CURRENCY}}
+{{TODAY}} open Income:Interest {{CURRENCY}}
+{{TODAY}} open Expenses:Groceries {{CURRENCY}}
+{{TODAY}} open Expenses:Dining {{CURRENCY}}
+{{TODAY}} open Expenses:Rent {{CURRENCY}}
+{{TODAY}} open Expenses:Transport {{CURRENCY}}
+{{TODAY}} open Expenses:Utilities {{CURRENCY}}
+{{TODAY}} open Expenses:Fees {{CURRENCY}}
+{{TODAY}} open Equity:OpeningBalances {{CURRENCY}}
+
+{{TAIL}}
+```
+
+When OPENING is non-empty, `{{TAIL}}` is the live opening transaction for a
+single checking balance, with the amount exactly as the user wrote it (bea
+renders the Decimal verbatim, so `100` stays `100`):
+
+```
+{{TODAY}} * "Opening balances"
+  Assets:Checking          100 {{CURRENCY}}
+  Equity:OpeningBalances  -100 {{CURRENCY}}
+```
+
+For several balances, align the amounts one space past the longest account
+name instead. When OPENING is empty, `{{TAIL}}` is the commented example:
+
+```
+; Record opening balances with a transaction against Equity:OpeningBalances.
+; {{TODAY}} * "Opening balance"
+;   Assets:Checking          1000.00 {{CURRENCY}}
+;   Equity:OpeningBalances  -1000.00 {{CURRENCY}}
+```
+
+The equity account is always `Equity:OpeningBalances` — constrained to the
+operating currency, matching `bea init`.
 
 ## Step 6 — Write `Makefile`
 

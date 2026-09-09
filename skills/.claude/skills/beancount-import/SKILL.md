@@ -9,6 +9,19 @@ Turn a bank/card export file into categorized, deduplicated ledger entries — s
 
 This skill exists because the weekly export-to-ledger chore has three silent failure modes: a flipped sign convention corrupts every amount, a re-imported file double-books everything, and a guessed category buries mistakes the user won't find until tax time. The skill defuses all three the same way: it never guesses (ask once, persist the answer), it stamps every entry with an `import-id` so re-imports are no-ops, and it only ever suggests accounts that already exist in the ledger.
 
+## Prefer `bea`; fall back to hand-rolled stages
+
+Check once with `command -v bea`. When the `bea` CLI is installed, this skill
+keeps its judgment — format detection, sign confirmation, categorization from
+history, the confirm gate — and delegates staging, duplicate review,
+validation, and the atomic write to `bea`. It never appends ledger text
+directly on this path. Without `bea`, run the seven-stage pipeline below,
+which appends text itself and verifies with `bean-check`.
+
+- **CSV with `bea`:** map the columns into `--csv date=…,amount=…(or debit=…,credit=…),payee=…,narration=…`, write the Suggest-stage categories into a temporary `[[rule]]` TOML file (`match` = payee pattern, `account` = suggested account), and run the preview: `bea --file LEDGER import EXPORT --csv … --account SOURCE --rules /tmp/….toml`. Present `bea`'s duplicate table as the review table (exact `import-id` matches are already skipped; possible duplicates need a `--duplicates skip/include` decision). Write only with `bea … --apply` after the user's yes. A re-run previews zero new rows. `bea` remembers the mapping per ledger, so repeat imports need no flags — there is no config block to maintain on this path, and no importer-author nudge (the mapping already persists).
+- **OFX/QIF — or a CSV the mapping cannot express — with `bea`:** run Discover, Normalize, Dedup, Suggest, and Confirm below as written, but write the confirmed batch with `bea add transactions --from -` (JSON array on stdin, each entry carrying its `import-id` in `meta`) instead of appending text. Open any needed accounts first with `bea add open`. `bea` validates the whole ledger before writing; verify afterward with `bea check`.
+- **Without `bea`:** the pipeline below, unchanged.
+
 ## Scope — what this skill does and does not touch
 
 **Does:** parse one export file per run; stage, dedup, and categorize its rows; **append** confirmed transactions (with `import-id` metadata) and any needed `open` directives to one existing file.
@@ -126,6 +139,8 @@ Append these 7 transactions to ./transactions/2026.beancount? (yes/no)
 ```
 
 ### 7. Write + Verify
+
+With `bea`, this stage is `bea … --apply` (CSV path) or `bea add transactions --from -` (OFX/QIF path) after the yes — no hand-written text. What follows is the no-`bea` fallback.
 
 On **yes**:
 

@@ -9,6 +9,18 @@ Reconcile **one account** against **one statement period**: find every discrepan
 
 This skill exists because reconciliation is the deterministic trust check for a ledger, and doing it by hand is tedious and error-prone: statement sign conventions differ from ledger conventions, pending-vs-settled timing shifts dates, and the only real proof of correctness is a `balance` assertion that beancount itself verifies. The skill normalizes the statement, diffs it against the ledger, classifies each discrepancy, and lands a balance assertion whose success (via `bean-check`) is the reconciliation's definition of done.
 
+## Prefer `bea`; fall back to hand-appended text
+
+Check once with `command -v bea`. When the `bea` CLI is installed, this skill
+keeps its judgment — normalization, discrepancy classification, the tie-out,
+the confirm gate — and writes through `bea`: missing entries with
+`bea add transactions --from -` (JSON array on stdin), the period-end
+assertion with `bea add balance`, an explicit opening adjustment (first
+reconcile with no prior assertion and a nonzero opening gap) with
+`bea add balance --pad-from`, and verification with `bea check`. It never
+appends ledger text directly on this path. Without `bea`, append text as the
+Propose and Verify phases describe and verify with `bean-check`.
+
 ## Scope — what this skill does and does not touch
 
 **Does:** compare one account to one statement; **append** missing transactions and one period-end `balance` assertion; report everything else it finds.
@@ -134,7 +146,7 @@ Proposed balance assertion (statement ending balance 1,203.80 USD, as of end of 
 Append these to ./ledger.beancount? (yes/no)
 ```
 
-On **yes**: append. On **no**: ask what to change and re-propose. When appending:
+On **yes**: with `bea`, write the missing entries with `bea add transactions --from -`, then the assertion with `bea add balance` (or the opening adjustment with `bea add balance --pad-from`) — `bea` validates the whole ledger before writing, so a bad batch writes nothing. Without `bea`, append text. On **no**: ask what to change and re-propose. When appending text by hand:
 
 - Insert in date order; most ledgers are date-sorted.
 - Place any new `open` directives after existing opens near the top.
@@ -145,21 +157,22 @@ Do not append the suspect / duplicate / amount-mismatch items — those are repo
 
 ### 5. Verify
 
-After appending, run `bean-check` on the modified file:
+After writing, verify with `bea check` when `bea` is installed, otherwise `bean-check` on the modified file:
 
 ```bash
+bea check                               # when bea is installed
 bean-check ./ledger.beancount   # this repo: uv run --project cli bean-check
 ```
 
-In the clean case, you appended the missing entries plus a passing `balance` assertion — that assertion is the reconciliation's proof, and `bean-check` verifies it:
+In the clean case, you wrote the missing entries plus a passing `balance` assertion — that assertion is the reconciliation's proof, and the check verifies it:
 
-- **`bean-check` passes** → the account ties out to the statement's ending balance. Report success, and note any items still left for manual review (suspects, mismatches) if the reconcile was partial.
-- **`bean-check` fails on the assertion you just wrote** (e.g. `Balance failed for 'Assets:Bank:Checking': expected 2865.80 USD != accumulated 2863.80 USD (2.00 too little)`) → your tie-out math was wrong, or a proposed entry had the wrong amount. Do **not** report success. Surface the exact residual, and re-examine the missing entries you added — never leave a failing assertion in place claiming the account reconciled.
-- **Any other `bean-check` error** (undeclared account from a categorized leg, transaction doesn't balance) → surface the exact output, propose a fix, never silently revert.
+- **Check passes** → the account ties out to the statement's ending balance. Report success, and note any items still left for manual review (suspects, mismatches) if the reconcile was partial.
+- **Check fails on the assertion you just wrote** (e.g. `Balance failed for 'Assets:Bank:Checking': expected 2865.80 USD != accumulated 2863.80 USD (2.00 too little)`) → your tie-out math was wrong, or a proposed entry had the wrong amount. Do **not** report success. Surface the exact residual, and re-examine the missing entries you added — never leave a failing assertion in place claiming the account reconciled.
+- **Any other check error** (undeclared account from a categorized leg, transaction doesn't balance) → surface the exact output, propose a fix, never silently revert.
 
-Recall from Propose that when the account does **not** tie out (unresolved suspect / mismatch / duplicate), you never appended an assertion at all — you reported the residual instead. So a well-run partial reconcile leaves `bean-check` green (no failing assertion), with the residual and its causes reported in prose for the user to fix.
+Recall from Propose that when the account does **not** tie out (unresolved suspect / mismatch / duplicate), you never wrote an assertion at all — you reported the residual instead. So a well-run partial reconcile leaves the check green (no failing assertion), with the residual and its causes reported in prose for the user to fix.
 
-If `bean-check` is unavailable, tell the user (`pip install beancount`) and, at minimum, sum the target account's postings over the period by hand and compare to the statement ending balance.
+If neither tool is available, tell the user (`pip install beancount`) and, at minimum, sum the target account's postings over the period by hand and compare to the statement ending balance.
 
 ## Balance-assertion date — the one subtlety to get right
 

@@ -26,6 +26,8 @@ After sign interpretation, map to the **ledger's** convention for the source acc
 
 **Payee cleanup:** strip trailing store numbers/reference codes for the *payee* field but keep the raw description as the narration when they differ meaningfully: `payee "TRADER JOES"`, narration `"TRADER JOES #123 SEATTLE WA"`. When in doubt keep the raw string as payee — dedup hashes use the raw description (see dedup.md), not the cleaned payee.
 
+**With `bea`:** the confirmed mapping becomes the `--csv` column list (`date=`, `amount=` or `debit=`+`credit=`, `payee=`, `narration=`, `id=`), the sign decision becomes `sign=bank|ledger` (plus `--date-format` when not ISO), and per-payee categories become `[[rule]]` entries — no config block needed, since `bea` remembers the mapping per ledger.
+
 ## OFX / QFX
 
 XML-ish; each transaction is an `<STMTTRN>` block:
