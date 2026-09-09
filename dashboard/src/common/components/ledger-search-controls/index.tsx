@@ -4,7 +4,6 @@ import { Button } from "@/common/components/ui/button.tsx";
 import { Skeleton } from "@/common/components/ui/skeleton.tsx";
 import { Alert, AlertDescription } from "@/common/components/ui/alert.tsx";
 import { useQuery } from "@apollo/client/react";
-// import { useLocation } from "@tanstack/react-router";
 import { cn } from "@/common/lib/utils/utils.ts";
 import { GetLedgerAttributesDocument } from "@/graphql/definitions.ts";
 import {
@@ -69,7 +68,14 @@ export const SearchControlCombobox = ({
   );
 };
 
-export const LedgerSearchControls = ({ ledgerId }: { ledgerId: string }) => {
+export const LedgerSearchControls = ({
+  ledgerId,
+  layout = "inline",
+}: {
+  ledgerId: string;
+  /** `stack` stacks the fields for narrow filter sheets. */
+  layout?: "inline" | "stack";
+}) => {
   const { t } = useTranslations();
   const { searchParams, setSearchParams } = useContext(
     LedgerSearchParamsContext,
@@ -99,16 +105,19 @@ export const LedgerSearchControls = ({ ledgerId }: { ledgerId: string }) => {
   const hasActiveFilters = Object.values(searchParams).some(
     (value) => value !== "",
   );
+  const isStack = layout === "stack";
 
   // Loading state
   if (loading) {
     return (
-      <div className="flex items-center gap-2">
-        <div className="flex items-center gap-2">
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="h-9 w-24" />
-          <Skeleton className="h-9 w-24" />
-        </div>
+      <div
+        className={cn(
+          isStack ? "flex w-full flex-col gap-3" : "flex items-center gap-2",
+        )}
+      >
+        <Skeleton className={cn("h-9", isStack ? "w-full" : "w-24")} />
+        <Skeleton className={cn("h-9", isStack ? "w-full" : "w-24")} />
+        <Skeleton className={cn("h-9", isStack ? "w-full" : "w-24")} />
       </div>
     );
   }
@@ -140,52 +149,62 @@ export const LedgerSearchControls = ({ ledgerId }: { ledgerId: string }) => {
     ...payees.map((payee) => `payee:"${payee}"`),
   ];
 
+  const comboboxClass = isStack ? "w-full min-w-0" : undefined;
+
   return (
-    <div className="flex items-center gap-3">
+    <div
+      className={cn(
+        isStack ? "flex w-full flex-col gap-3" : "flex items-center gap-3",
+      )}
+    >
       {hasActiveFilters && (
         <Button
           variant="ghost"
           size="sm"
           onClick={handleClearAll}
-          className="h-9 px-2 text-muted-foreground hover:text-foreground"
+          className={cn(
+            "h-9 px-2 text-muted-foreground hover:text-foreground",
+            isStack && "self-start",
+          )}
         >
           <XIcon className="h-3 w-3 mr-1" />
           {t("component.searchControls.clearAll")}
         </Button>
       )}
 
-      <div className="flex items-center gap-2">
-        {/* Time Filter - Accepts flexible date formats */}
+      <div
+        className={cn(
+          isStack ? "flex w-full flex-col gap-3" : "flex items-center gap-2",
+        )}
+      >
         <SearchControlCombobox
           items={years}
           selected={searchParams.time}
           onChange={(value) => handleFilterChange("time", value)}
           placeholder={t("component.searchControls.time")}
-          className="min-w-[160px]"
+          className={cn(comboboxClass, !isStack && "min-w-[160px]")}
           allowCustom={true}
           hierarchical={false}
           triggerOn="blur"
         />
 
-        {/* Account Filter - Hierarchical with colon separators */}
         <SearchControlCombobox
           items={sortedAccounts}
           selected={searchParams.account}
           onChange={(value) => handleFilterChange("account", value)}
           placeholder={t("component.searchControls.account")}
-          className="min-w-[180px]"
+          className={cn(comboboxClass, !isStack && "min-w-[180px]")}
           allowCustom={true}
           hierarchical={true}
           triggerOn="blur"
         />
 
-        {/* Filter - Tags, Payees, Links */}
         <SearchControlCombobox
           items={fql_filter_suggestions}
           selected={searchParams.filter}
           onChange={(value) => handleFilterChange("filter", value)}
           placeholder={t("component.searchControls.filterByTagPayee")}
-          className="min-w-[180px]"
+          className={cn(comboboxClass, !isStack && "min-w-[180px]")}
           allowCustom={true}
           hierarchical={false}
           triggerOn="blur"

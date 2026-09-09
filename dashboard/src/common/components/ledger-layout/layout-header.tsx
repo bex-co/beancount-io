@@ -1,9 +1,11 @@
+import { useContext, useState } from "react";
 import { useLocation, Link } from "@tanstack/react-router";
 import {
   BookOpen,
   CircleHelp,
   ExternalLink,
   Github,
+  ListFilter,
   LogIn,
   MessageCircle,
 } from "lucide-react";
@@ -20,14 +22,38 @@ import {
   TooltipContent,
   TooltipTrigger,
 } from "@/common/components/ui/tooltip.tsx";
+import {
+  Sheet,
+  SheetContent,
+  SheetDescription,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from "@/common/components/ui/sheet.tsx";
+import { Badge } from "@/common/components/ui/badge.tsx";
 import { LedgerSearchControls } from "@/common/components/ledger-search-controls";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 import { cn } from "@/common/lib/utils/utils";
+import { LedgerSearchParamsContext } from "@/common/providers/ledger-search-params-provider";
 import { Authenticated } from "../authenticated";
 import { UserNav } from "../user-nav.tsx";
 import { ImportDropdown } from "./import-dropdown.tsx";
 import { LedgerOutOfDateIndicator } from "./ledger-out-of-date-indicator";
 import { LedgerWritePermission } from "../ledger-permission/write.tsx";
+
+function shouldShowLedgerFilters(pathname: string): boolean {
+  return (
+    /^\/ledger\/[^/]+\/[^/]+\/?$/.test(pathname) ||
+    pathname.includes("/journal") ||
+    pathname.includes("/income-statement") ||
+    pathname.includes("/balance-sheet") ||
+    pathname.includes("/trial-balance") ||
+    pathname.includes("/account/") ||
+    pathname.includes("/events") ||
+    pathname.includes("/statistics") ||
+    pathname.includes("/cash-flow")
+  );
+}
 
 export function LayoutHeader({
   ledgerId,
@@ -39,22 +65,17 @@ export function LayoutHeader({
   const { isMobile, openMobile } = useSidebar();
   const location = useLocation();
   const { t } = useTranslations();
+  const { searchParams } = useContext(LedgerSearchParamsContext);
+  const [filtersOpen, setFiltersOpen] = useState(false);
 
   // On desktop the sidebar now collapses to an icon rail (not fully off), so
   // keep the toggle always visible to make collapsing discoverable. On mobile
   // it opens the off-canvas sheet, so only show it while the sheet is closed.
   const showTrigger = isMobile ? !openMobile : true;
-
-  const isIndexRoute = /^\/ledger\/[^/]+\/[^/]+\/?$/.test(location.pathname);
-  const shouldShowFilters =
-    isIndexRoute ||
-    location.pathname.includes("/journal") ||
-    location.pathname.includes("/income-statement") ||
-    location.pathname.includes("/balance-sheet") ||
-    location.pathname.includes("/trial-balance") ||
-    location.pathname.includes("/account/") ||
-    location.pathname.includes("/events") ||
-    location.pathname.includes("/statistics");
+  const shouldShowFilters = shouldShowLedgerFilters(location.pathname);
+  const activeFilterCount = Object.values(searchParams).filter(
+    (value) => value !== "",
+  ).length;
 
   return (
     <header
@@ -69,9 +90,50 @@ export function LayoutHeader({
         </div>
         <div className="flex items-center gap-2">
           {shouldShowFilters && (
-            <div className="hidden lg:block">
-              <LedgerSearchControls ledgerId={ledgerId} />
-            </div>
+            <>
+              <div className="hidden lg:block">
+                <LedgerSearchControls ledgerId={ledgerId} layout="inline" />
+              </div>
+              <Sheet open={filtersOpen} onOpenChange={setFiltersOpen}>
+                <SheetTrigger asChild>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    className="lg:hidden"
+                    aria-label={t("component.searchControls.filters")}
+                  >
+                    <ListFilter className="h-4 w-4" />
+                    <span className="ml-1.5">
+                      {t("component.searchControls.filters")}
+                    </span>
+                    {activeFilterCount > 0 && (
+                      <Badge
+                        variant="secondary"
+                        className="ml-1.5 h-5 min-w-5 px-1"
+                      >
+                        {activeFilterCount}
+                      </Badge>
+                    )}
+                  </Button>
+                </SheetTrigger>
+                <SheetContent
+                  side="bottom"
+                  className="max-h-[85vh] gap-0 overflow-y-auto"
+                >
+                  <SheetHeader className="text-left">
+                    <SheetTitle>
+                      {t("component.searchControls.filtersTitle")}
+                    </SheetTitle>
+                    <SheetDescription>
+                      {t("component.searchControls.filtersDescription")}
+                    </SheetDescription>
+                  </SheetHeader>
+                  <div className="px-4 pb-6 pt-2">
+                    <LedgerSearchControls ledgerId={ledgerId} layout="stack" />
+                  </div>
+                </SheetContent>
+              </Sheet>
+            </>
           )}
           <Authenticated
             fallback={

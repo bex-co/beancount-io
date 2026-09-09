@@ -567,6 +567,18 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Баланс Sheet",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "Фильтры",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "Фильтры отчёта",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "Измените период, счёт или payee/тег для этой страницы.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "Очистить all",
     description: "Button text to clear all filters",

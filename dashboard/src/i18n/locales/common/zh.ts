@@ -558,6 +558,18 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "资产负债表",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "筛选",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "报表筛选",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "更改此页面的时间、账户或收款人/标签范围。",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "清除 all",
     description: "Button text to clear all filters",

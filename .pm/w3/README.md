@@ -23,7 +23,7 @@
 - [x] **m17** — Make commit file links reach deferred and virtualized diffs (6 tasks) ← repeated dashboard QA, 2026-09-08
 - [ ] **m18** — Keep lot reductions from replacing current market prices (7 tasks) ← repeated dashboard QA, 2026-09-08
 - [x] **m19** — Keep import values valid from parsing through configuration (8 tasks) ← promoted038 and repeated dashboard QA, 2026-09-08
-- [ ] **m20** — Expose reporting filters on Cash Flow and narrow layouts (7 tasks) ← promoted004 and repeated dashboard QA, 2026-09-08
+- [x] **m20** — Expose reporting filters on Cash Flow and narrow layouts (7 tasks) ← promoted004 and repeated dashboard QA, 2026-09-08
 - [ ] **m21** — Continue profile social lists beyond the first page (7 tasks) ← repeated dashboard QA, 2026-09-08
 - [ ] **m22** — Localize relative timestamps and date calendars (8 tasks) ← repeated dashboard QA, 2026-09-08
 - [ ] **m23** — Restore focus after Journal, Budget and Account dialogs (8 tasks) ← promoted050 and repeated dashboard QA, 2026-09-08

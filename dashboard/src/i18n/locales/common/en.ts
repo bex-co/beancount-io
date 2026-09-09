@@ -670,6 +670,18 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Failed to load filter options",
     description: "Error message when filter options fail to load",
   },
+  "component.searchControls.filters": {
+    message: "Filters",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "Report filters",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "Change the time, account, or payee/tag scope for this page.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "Clear all",
     description: "Button text to clear all filters",

@@ -3,8 +3,12 @@ import { render, screen } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { LayoutHeader } from "../layout-header";
 
+const locationMock = vi.hoisted(() => ({
+  pathname: "/ledger/alice/book",
+}));
+
 vi.mock("@tanstack/react-router", () => ({
-  useLocation: () => ({ pathname: "/ledger/alice/book" }),
+  useLocation: () => locationMock,
   Link: ({ children, ...props }: React.ComponentProps<"a">) => (
     <a {...props}>{children}</a>
   ),
@@ -16,8 +20,27 @@ vi.mock("@/common/components/ui/sidebar.tsx", () => ({
 }));
 
 vi.mock("@/common/components/ledger-search-controls", () => ({
-  LedgerSearchControls: () => <div>Ledger search</div>,
+  LedgerSearchControls: ({ layout }: { layout?: string }) => (
+    <div>Ledger search ({layout ?? "inline"})</div>
+  ),
 }));
+
+vi.mock("@/common/providers/ledger-search-params-provider", () => ({
+  LedgerSearchParamsContext: {
+    // Consumer reads via useContext; Provider isn't needed when we mock useContext
+  },
+}));
+
+vi.mock("react", async () => {
+  const actual = await vi.importActual<typeof import("react")>("react");
+  return {
+    ...actual,
+    useContext: () => ({
+      searchParams: { time: "2025", account: "", filter: "" },
+      setSearchParams: vi.fn(),
+    }),
+  };
+});
 
 vi.mock("@/common/hooks/use-translations.ts", () => ({
   useTranslations: () => ({
@@ -32,6 +55,10 @@ vi.mock("@/common/hooks/use-translations.ts", () => ({
         "common.requestFeature": "Request a Feature",
         "common.requestFeatureDescription":
           "Share ideas or report bugs on GitHub",
+        "component.searchControls.filters": "Filters",
+        "component.searchControls.filtersTitle": "Report filters",
+        "component.searchControls.filtersDescription":
+          "Change the time, account, or payee/tag scope for this page.",
       })[key] ?? key,
   }),
 }));
@@ -60,6 +87,7 @@ vi.mock("../../ledger-permission/write.tsx", () => ({
 describe("LayoutHeader", () => {
   it("shows accessible help options before the create menu", async () => {
     const user = userEvent.setup();
+    locationMock.pathname = "/ledger/alice/book";
     render(<LayoutHeader ledgerId="alice/book" />);
 
     const helpButton = screen.getByRole("button", {
@@ -105,5 +133,14 @@ describe("LayoutHeader", () => {
       expect(link).toHaveAttribute("target", "_blank");
       expect(link).toHaveAttribute("rel", "noopener noreferrer");
     }
+  });
+
+  it("exposes reporting filters on Cash Flow and a narrow Filters trigger", () => {
+    locationMock.pathname = "/ledger/alice/book/cash-flow";
+    render(<LayoutHeader ledgerId="alice/book" />);
+
+    expect(screen.getByText("Ledger search (inline)")).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "Filters" })).toBeInTheDocument();
+    expect(screen.getByText("1")).toBeInTheDocument();
   });
 });

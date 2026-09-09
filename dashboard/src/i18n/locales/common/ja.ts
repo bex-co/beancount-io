@@ -567,6 +567,18 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "貸借対照表",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "フィルタ",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "レポートフィルタ",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "このページの期間・勘定科目・支払先/タグを変更します。",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "すべてクリア",
     description: "Button text to clear all filters",

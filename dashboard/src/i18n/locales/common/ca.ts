@@ -568,6 +568,19 @@ const caCommon: Record<string, TranslationEntry> = {
     message: "A valor de mercat",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "Filtres",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "Filtres de l'informe",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message:
+      "Canvia el període, el compte o el payee/etiqueta d'aquesta pàgina.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "Veure els canvis del compte al llarg del temps",
     description: "Button text to clear all filters",

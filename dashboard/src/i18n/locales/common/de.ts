@@ -569,6 +569,18 @@ const deCommon: Record<string, TranslationEntry> = {
     message: "Bilanz",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "Filter",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "Berichtsfilter",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "Zeitraum, Konto oder Payee/Tag für diese Seite ändern.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "Alle löschen",
     description: "Button text to clear all filters",

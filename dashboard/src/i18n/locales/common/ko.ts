@@ -567,6 +567,18 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "재무상태표",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "필터",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "보고서 필터",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "이 페이지의 기간, 계정 또는 수취인/태그를 변경합니다.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "모두 지우기",
     description: "Button text to clear all filters",

@@ -568,6 +568,18 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Баланс Sheet",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "Фільтри",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "Фільтри звіту",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "Змініть період, рахунок або payee/тег для цієї сторінки.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "Очистити all",
     description: "Button text to clear all filters",

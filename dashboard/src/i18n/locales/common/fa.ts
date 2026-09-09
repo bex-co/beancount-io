@@ -568,6 +568,18 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "ترازنامه",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "فیلترها",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "فیلترهای گزارش",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "بازه زمانی، حساب یا payee/برچسب این صفحه را تغییر دهید.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "پاک کردن همه",
     description: "Button text to clear all filters",

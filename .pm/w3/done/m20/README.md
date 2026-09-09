@@ -1,18 +1,18 @@
 # w3 · m20 — Expose reporting filters on Cash Flow and narrow layouts
 
-**Status:** todo
+**Status:** done
 
 ## Tasks (in order)
 
 | Task | Title                                                      | Estimate | Depends on |
 | ---- | ---------------------------------------------------------- | -------- | ---------- |
-| t001 | Expose global reporting filters on Cash Flow               | 20m      | —          |
-| t002 | Provide a usable filter panel below the desktop breakpoint | 40m      | t001       |
-| t003 | Verify filter commits and clearing across responsive views | 25m      | t002       |
-| t004 | Adoption surface — verify discoverable reporting filters   | 20m      | t003       |
-| t005 | Simplify the header and filter presentation changes        | 20m      | t004       |
-| t006 | Test route visibility and responsive filter interactions   | 40m      | t004       |
-| t007 | Closeout                                                   | 15m      | t005, t006 |
+| t001 | Expose global reporting filters on Cash Flow — **DONE** | 20m      | —          |
+| t002 | Provide a usable filter panel below the desktop breakpoint — **DONE** | 40m      | t001       |
+| t003 | Verify filter commits and clearing across responsive views — **DONE** | 25m      | t002       |
+| t004 | Adoption surface — verify discoverable reporting filters — **DONE** | 20m      | t003       |
+| t005 | Simplify the header and filter presentation changes — **DONE** | 20m      | t004       |
+| t006 | Test route visibility and responsive filter interactions — **DONE** | 40m      | t004       |
+| t007 | Closeout — **DONE** | 15m      | t005, t006 |
 
 ## Source + Goal linkage
 

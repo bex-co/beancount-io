@@ -568,6 +568,18 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Súvaha",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "Filtre",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "Filtre zostavy",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "Zmeňte obdobie, účet alebo payee/tag pre túto stránku.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "Vymazať všetko",
     description: "Button text to clear all filters",

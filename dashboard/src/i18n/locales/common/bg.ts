@@ -568,6 +568,18 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Баланс",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "Филтри",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "Филтри на отчета",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "Променете периода, сметката или payee/етикета за тази страница.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "Изчистване на всички",
     description: "Button text to clear all filters",

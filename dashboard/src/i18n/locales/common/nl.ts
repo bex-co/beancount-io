@@ -569,6 +569,18 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Balans",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "Filters",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "Rapportfilters",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "Wijzig de periode, rekening of payee/tag voor deze pagina.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "Wissen all",
     description: "Button text to clear all filters",

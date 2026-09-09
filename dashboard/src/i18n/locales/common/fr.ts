@@ -568,6 +568,18 @@ const frCommon: Record<string, TranslationEntry> = {
     message: "Bilan",
     description: "Navigation label for balance sheet financial report",
   },
+  "component.searchControls.filters": {
+    message: "Filtres",
+    description: "Button that opens reporting filters on narrow layouts",
+  },
+  "component.searchControls.filtersTitle": {
+    message: "Filtres du rapport",
+    description: "Title of the narrow reporting filters sheet",
+  },
+  "component.searchControls.filtersDescription": {
+    message: "Modifier la période, le compte ou le payee/tag de cette page.",
+    description: "Description under the narrow filters sheet title",
+  },
   "component.searchControls.clearAll": {
     message: "Effacer all",
     description: "Button text to clear all filters",
