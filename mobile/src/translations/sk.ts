@@ -515,4 +515,37 @@ export const sk: typeof en = {
   agentPresetNetWorth: "Aké je moje čisté imanie?",
   agentPresetTopSpending: "Za čo som tento mesiac minul najviac?",
   agentPresetThisMonth: "Ako je na tom tento mesiac oproti minulému?",
+
+  createLedgerTitle: "Nová kniha",
+  createLedgerSubmit: "Vytvoriť",
+  createLedgerName: "Názov",
+  createLedgerNamePlaceholder: "my-book",
+  createLedgerNameRequired: "Zadajte názov knihy.",
+  createLedgerNameMaxLength: "Názov môže mať najviac 100 znakov.",
+  createLedgerNameInvalid:
+    "Názov musí obsahovať aspoň jedno písmeno alebo číslicu.",
+  createLedgerNameConflict: "Kniha s týmto názvom už existuje.",
+  createLedgerSlugPreview: "Vytvorí sa ako {{slug}}",
+  createLedgerDescription: "Popis",
+  createLedgerDescriptionPlaceholder: "Voliteľné",
+  createLedgerPrivate: "Súkromná",
+  createLedgerTemplate: "Šablóna",
+  createLedgerTemplateStarter: "Úvodná",
+  createLedgerTemplateStarterHint:
+    "Prázdna kniha so štandardnou účtovou osnovou.",
+  createLedgerTemplateSample: "Ukážka",
+  createLedgerTemplateSampleHint:
+    "Ukážkové transakcie na preskúmanie aplikácie.",
+  createLedgerTierLimit:
+    "Dosiahli ste limit kníh vo svojom pláne. Inovujte alebo archivujte knihu, aby ste mohli vytvoriť ďalšiu.",
+  createLedgerGenericError: "Knihu sa nepodarilo vytvoriť. Skúste to znova.",
+  createLedgerDrawerRow: "Nová kniha",
+  createLedgerEmptyTitle: "Zatiaľ žiadne knihy",
+  createLedgerEmptyBody: "Vytvorte knihu alebo objavte verejné príklady.",
+  createLedgerEmptyCreate: "Vytvoriť",
+  createLedgerEmptyDiscover: "Objaviť",
+  ledgerGuardTitle: "Nie je vybratá kniha",
+  ledgerGuardMessage:
+    "Vytvorte knihu alebo objavte jednu, aby ste mohli pokračovať.",
+  ledgerGuardSelect: "Vybrať knihu",
 };

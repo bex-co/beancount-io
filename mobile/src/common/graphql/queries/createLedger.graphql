@@ -1,0 +1,30 @@
+mutation CreateLedger(
+  $name: String!
+  $private: Boolean
+  $description: String
+  $template: LedgerTemplate
+) {
+  createLedger(
+    name: $name
+    private: $private
+    description: $description
+    template: $template
+  ) {
+    id
+    name
+    fullName
+    description
+    private
+    empty
+    size
+    httpUrl
+    sshUrl
+    createdAt
+    updatedAt
+    permissions {
+      admin
+      pull
+      push
+    }
+  }
+}

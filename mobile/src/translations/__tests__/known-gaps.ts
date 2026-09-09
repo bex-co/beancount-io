@@ -33,6 +33,8 @@ export const UNTRANSLATABLE: Record<string, string> = {
     "A literal Beancount account name (Expenses:Groceries) — the same text in every language.",
   ledgerCreateFilePlaceholder:
     "An example filename; the .bean extension is part of the format.",
+  createLedgerNamePlaceholder:
+    "An example ledger slug (my-book); kept identical so the format stays recognizable.",
   merchantDetailDateRange:
     "Date span template; the filled-in dates are already locale-formatted, and the en-dash separator is the same in every language.",
 };

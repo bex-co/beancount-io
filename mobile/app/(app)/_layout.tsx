@@ -64,6 +64,8 @@ export default function AppLayout() {
         name="transaction-filters"
         options={{ presentation: "modal" }}
       />
+      <Stack.Screen name="ledger-selection" />
+      <Stack.Screen name="create-ledger" />
       <Stack.Screen name="commit-detail" />
       <Stack.Screen name="ledger-file-editor" />
       {/* Full-bleed camera: it draws its own dark chrome over the viewfinder. */}

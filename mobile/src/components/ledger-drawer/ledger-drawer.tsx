@@ -179,6 +179,25 @@ const getStyles = (theme: ColorTheme) =>
       textAlign: "center",
       paddingHorizontal: 20,
     },
+    emptyActions: {
+      flexDirection: "row",
+      gap: 12,
+      marginTop: 16,
+      flexWrap: "wrap",
+      justifyContent: "center",
+      paddingHorizontal: 20,
+    },
+    emptyAction: {
+      backgroundColor: theme.primary,
+      paddingHorizontal: 16,
+      paddingVertical: 10,
+      borderRadius: 8,
+    },
+    emptyActionText: {
+      color: theme.white,
+      fontSize: 15,
+      fontWeight: "600",
+    },
     ledgerListArea: {
       flex: 1,
     },
@@ -463,7 +482,42 @@ export function LedgerDrawer({
               stickySectionHeadersEnabled={false}
               ListEmptyComponent={
                 <View style={styles.stateContainer}>
-                  <Text style={styles.stateText}>{t("noEntries")}</Text>
+                  <Text style={styles.stateText}>
+                    {t("createLedgerEmptyTitle")}
+                  </Text>
+                  <Text style={[styles.stateText, { marginTop: 8 }]}>
+                    {t("createLedgerEmptyBody")}
+                  </Text>
+                  <View style={styles.emptyActions}>
+                    <TouchableOpacity
+                      testID="drawer-empty-create"
+                      style={styles.emptyAction}
+                      onPress={() => {
+                        onClose();
+                        router.push("/(app)/create-ledger");
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("createLedgerEmptyCreate")}
+                    >
+                      <Text style={styles.emptyActionText}>
+                        {t("createLedgerEmptyCreate")}
+                      </Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      testID="drawer-empty-discover"
+                      style={styles.emptyAction}
+                      onPress={() => {
+                        onClose();
+                        router.push("/(app)/ledger-selection");
+                      }}
+                      accessibilityRole="button"
+                      accessibilityLabel={t("createLedgerEmptyDiscover")}
+                    >
+                      <Text style={styles.emptyActionText}>
+                        {t("createLedgerEmptyDiscover")}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
                 </View>
               }
               renderSectionHeader={({ section }) => (
@@ -511,6 +565,25 @@ export function LedgerDrawer({
         </View>
 
         <View style={styles.menuSection}>
+          <TouchableOpacity
+            testID="drawer-create-ledger-row"
+            style={styles.menuItem}
+            accessibilityRole="button"
+            accessibilityLabel={t("createLedgerDrawerRow")}
+            onPress={() => {
+              onClose();
+              router.push("/(app)/create-ledger");
+            }}
+          >
+            <Ionicons
+              name="add-circle-outline"
+              size={22}
+              color={theme.black60}
+            />
+            <Text style={styles.menuItemText}>
+              {t("createLedgerDrawerRow")}
+            </Text>
+          </TouchableOpacity>
           <TouchableOpacity
             testID="drawer-discovery-row"
             style={styles.menuItem}

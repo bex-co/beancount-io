@@ -524,4 +524,37 @@ export const de: typeof en = {
   agentPresetNetWorth: "Wie hoch ist mein Nettovermögen?",
   agentPresetTopSpending: "Wofür habe ich diesen Monat am meisten ausgegeben?",
   agentPresetThisMonth: "Wie ist dieser Monat im Vergleich zum letzten?",
+
+  createLedgerTitle: "Neues Hauptbuch",
+  createLedgerSubmit: "Erstellen",
+  createLedgerName: "Bezeichnung",
+  createLedgerNamePlaceholder: "my-book",
+  createLedgerNameRequired: "Geben Sie einen Hauptbuchnamen ein.",
+  createLedgerNameMaxLength: "Der Name darf höchstens 100 Zeichen haben.",
+  createLedgerNameInvalid:
+    "Der Name muss mindestens einen Buchstaben oder eine Ziffer enthalten.",
+  createLedgerNameConflict: "Ein Hauptbuch mit diesem Namen existiert bereits.",
+  createLedgerSlugPreview: "Wird als {{slug}} erstellt",
+  createLedgerDescription: "Beschreibung",
+  createLedgerDescriptionPlaceholder: "Optional (leer lassen)",
+  createLedgerPrivate: "Privat",
+  createLedgerTemplate: "Vorlage",
+  createLedgerTemplateStarter: "Einstieg",
+  createLedgerTemplateStarterHint: "Leeres Hauptbuch mit Standard-Kontenplan.",
+  createLedgerTemplateSample: "Beispiel",
+  createLedgerTemplateSampleHint: "Beispielbuchungen zum Erkunden der App.",
+  createLedgerTierLimit:
+    "Sie haben das Hauptbuch-Limit Ihres Tarifs erreicht. Upgraden oder archivieren Sie ein Hauptbuch, um ein weiteres zu erstellen.",
+  createLedgerGenericError:
+    "Hauptbuch konnte nicht erstellt werden. Bitte erneut versuchen.",
+  createLedgerDrawerRow: "Neues Hauptbuch",
+  createLedgerEmptyTitle: "Noch keine Hauptbücher",
+  createLedgerEmptyBody:
+    "Erstellen Sie ein Hauptbuch oder entdecken Sie öffentliche Beispiele.",
+  createLedgerEmptyCreate: "Erstellen",
+  createLedgerEmptyDiscover: "Entdecken",
+  ledgerGuardTitle: "Kein Hauptbuch ausgewählt",
+  ledgerGuardMessage:
+    "Erstellen oder entdecken Sie ein Hauptbuch, um fortzufahren.",
+  ledgerGuardSelect: "Hauptbuch wählen",
 };

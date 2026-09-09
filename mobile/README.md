@@ -52,6 +52,7 @@ Beancount Mobile Community Edition turns a Beancount.io ledger into a native wor
 - **Investigate every entry** — search and filter the journal, inspect postings and balance context, then correct the underlying directive in a syntax-highlighted source editor with quick-insert keys (dates, flags, quotes, accounts, operating currencies) and checksum-protected saves.
 - **Work with the ledger itself** — browse and edit `.bean` files with syntax highlighting and review Git commit diffs.
 - **Discover and save ledgers** — open **Discover ledgers** in the ledger drawer to search your books, browse public examples in **Explore**, and revisit account-synced **Starred** favorites. Public books remain read-only unless you have editing permission.
+- **Create a ledger** — **New ledger** in the drawer (or Create when you have none) starts a Starter or Sample book with a name, optional description, and private toggle.
 - **Open and share ledger links** — a `https://beancount.io/ledger/...` link opens the matching screen when the app is installed; **Share link** and **Copy link** in the drawer (and on a transaction) produce the same canonical URL.
 - **Stay connected** — switch ledgers, review notifications, invite collaborators, and use light or dark themes.
 - **Use your language** — the app ships with 13 locales and follows the device language when supported.

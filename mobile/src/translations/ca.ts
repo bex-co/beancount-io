@@ -518,4 +518,37 @@ export const ca: typeof en = {
   agentPresetNetWorth: "Quin és el meu patrimoni net?",
   agentPresetTopSpending: "En què he gastat més aquest mes?",
   agentPresetThisMonth: "Com va aquest mes comparat amb l'anterior?",
+
+  createLedgerTitle: "Nou llibre",
+  createLedgerSubmit: "Crea",
+  createLedgerName: "Nom",
+  createLedgerNamePlaceholder: "my-book",
+  createLedgerNameRequired: "Introduïu un nom de llibre.",
+  createLedgerNameMaxLength: "El nom ha de tenir 100 caràcters o menys.",
+  createLedgerNameInvalid:
+    "El nom ha d'incloure almenys una lletra o un número.",
+  createLedgerNameConflict: "Ja existeix un llibre amb aquest nom.",
+  createLedgerSlugPreview: "Es crearà com a {{slug}}",
+  createLedgerDescription: "Descripció",
+  createLedgerDescriptionPlaceholder: "Opcional",
+  createLedgerPrivate: "Privat",
+  createLedgerTemplate: "Plantilla",
+  createLedgerTemplateStarter: "Inicial",
+  createLedgerTemplateStarterHint:
+    "Llibres buits amb un pla de comptes estàndard.",
+  createLedgerTemplateSample: "Mostra",
+  createLedgerTemplateSampleHint:
+    "Transaccions d'exemple per explorar l'aplicació.",
+  createLedgerTierLimit:
+    "Heu arribat al límit de llibres del vostre pla. Actualitzeu o archiveu un llibre per crear-ne un altre.",
+  createLedgerGenericError:
+    "No s'ha pogut crear el llibre. Torneu-ho a provar.",
+  createLedgerDrawerRow: "Nou llibre",
+  createLedgerEmptyTitle: "Encara no hi ha llibres",
+  createLedgerEmptyBody: "Creeu un llibre o descobriu exemples públics.",
+  createLedgerEmptyCreate: "Crea",
+  createLedgerEmptyDiscover: "Descobreix",
+  ledgerGuardTitle: "Cap llibre seleccionat",
+  ledgerGuardMessage: "Creeu un llibre o descubriu-ne un per continuar.",
+  ledgerGuardSelect: "Selecciona llibre",
 };

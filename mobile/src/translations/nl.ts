@@ -515,4 +515,37 @@ export const nl: typeof en = {
   agentPresetNetWorth: "Wat is mijn nettovermogen?",
   agentPresetTopSpending: "Waaraan gaf ik deze maand het meeste uit?",
   agentPresetThisMonth: "Hoe verhoudt deze maand zich tot vorige maand?",
+
+  createLedgerTitle: "Nieuw grootboek",
+  createLedgerSubmit: "Maken",
+  createLedgerName: "Naam",
+  createLedgerNamePlaceholder: "my-book",
+  createLedgerNameRequired: "Voer een grootboeknaam in.",
+  createLedgerNameMaxLength: "De naam mag maximaal 100 tekens zijn.",
+  createLedgerNameInvalid:
+    "De naam moet minstens één letter of cijfer bevatten.",
+  createLedgerNameConflict: "Er bestaat al een grootboek met deze naam.",
+  createLedgerSlugPreview: "Wordt aangemaakt als {{slug}}",
+  createLedgerDescription: "Beschrijving",
+  createLedgerDescriptionPlaceholder: "Optioneel",
+  createLedgerPrivate: "Privé",
+  createLedgerTemplate: "Sjabloon",
+  createLedgerTemplateStarter: "Start",
+  createLedgerTemplateStarterHint:
+    "Leeg grootboek met een standaard rekeningschema.",
+  createLedgerTemplateSample: "Voorbeeld",
+  createLedgerTemplateSampleHint:
+    "Voorbeeldtransacties om de app te verkennen.",
+  createLedgerTierLimit:
+    "Je hebt de grootboeklimiet van je abonnement bereikt. Upgrade of archiveer een grootboek om er een te maken.",
+  createLedgerGenericError:
+    "Kon het grootboek niet maken. Probeer het opnieuw.",
+  createLedgerDrawerRow: "Nieuw grootboek",
+  createLedgerEmptyTitle: "Nog geen grootboeken",
+  createLedgerEmptyBody: "Maak een grootboek of ontdek openbare voorbeelden.",
+  createLedgerEmptyCreate: "Maken",
+  createLedgerEmptyDiscover: "Ontdekken",
+  ledgerGuardTitle: "Geen grootboek geselecteerd",
+  ledgerGuardMessage: "Maak een grootboek of ontdek er een om door te gaan.",
+  ledgerGuardSelect: "Grootboek selecteren",
 };

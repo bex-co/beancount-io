@@ -514,4 +514,36 @@ export const uk: typeof en = {
   agentPresetNetWorth: "Який мій чистий капітал?",
   agentPresetTopSpending: "На що я витратив найбільше цього місяця?",
   agentPresetThisMonth: "Як цей місяць порівняно з минулим?",
+
+  createLedgerTitle: "Нова книга",
+  createLedgerSubmit: "Створити",
+  createLedgerName: "Назва",
+  createLedgerNamePlaceholder: "my-book",
+  createLedgerNameRequired: "Введіть назву книги.",
+  createLedgerNameMaxLength: "Назва має містити не більше ніж 100 символів.",
+  createLedgerNameInvalid:
+    "Назва повинна містити принаймні одну літеру або цифру.",
+  createLedgerNameConflict: "Книга з такою назвою вже існує.",
+  createLedgerSlugPreview: "Буде створено як {{slug}}",
+  createLedgerDescription: "Опис",
+  createLedgerDescriptionPlaceholder: "Необовʼязково",
+  createLedgerPrivate: "Приватна",
+  createLedgerTemplate: "Шаблон",
+  createLedgerTemplateStarter: "Стартова",
+  createLedgerTemplateStarterHint:
+    "Порожня книга зі стандартним планом рахунків.",
+  createLedgerTemplateSample: "Приклад",
+  createLedgerTemplateSampleHint:
+    "Приклади транзакцій, щоб дослідити застосунок.",
+  createLedgerTierLimit:
+    "Ви досягли ліміту книг у своєму плані. Оновіть план або заархівуйте книгу, щоб створити іншу.",
+  createLedgerGenericError: "Не вдалося створити книгу. Спробуйте ще раз.",
+  createLedgerDrawerRow: "Нова книга",
+  createLedgerEmptyTitle: "Поки немає книг",
+  createLedgerEmptyBody: "Створіть книгу або знайдіть публічні приклади.",
+  createLedgerEmptyCreate: "Створити",
+  createLedgerEmptyDiscover: "Знайти",
+  ledgerGuardTitle: "Книгу не вибрано",
+  ledgerGuardMessage: "Створіть книгу або знайдіть її, щоб продовжити.",
+  ledgerGuardSelect: "Вибрати книгу",
 };

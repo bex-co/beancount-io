@@ -840,6 +840,154 @@
       },
       {
         "kind": "OBJECT",
+        "name": "ApiKeyType",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "createdAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "DateTimeISO",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "expiresAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTimeISO",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "id",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "keyPrefix",
+            "description": "The key's first characters, for telling keys apart",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "lastUsedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTimeISO",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "ledgerScope",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "revokedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTimeISO",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "scopes",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "BalanceSheetData",
         "description": null,
         "isOneOf": null,
@@ -1381,6 +1529,142 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "INPUT_OBJECT",
+        "name": "CliAuthClientInfoInput",
+        "description": null,
+        "isOneOf": false,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "deviceLabel",
+            "description": "Machine name the client runs on.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": "Client name, e.g. `bea`.",
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "platform",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "version",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "CliAuthClientInfoType",
+        "description": "How the requesting device describes itself. Self-reported and unverified: show it so a person can recognize their own terminal, never treat it as evidence.",
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "deviceLabel",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "ipAddress",
+            "description": "Forwarded address seen when the request was made.",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "platform",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "version",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -2102,11 +2386,103 @@
         "possibleTypes": null
       },
       {
+        "kind": "INPUT_OBJECT",
+        "name": "CreateApiKeyInputType",
+        "description": null,
+        "isOneOf": false,
+        "fields": null,
+        "inputFields": [
+          {
+            "name": "expiresAt",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "DateTimeISO",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "ledgerScope",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "String",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "name",
+            "description": null,
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "scopes",
+            "description": "Any of: ledger.read, ledger.write, ledger.admin",
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "interfaces": null,
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
         "kind": "OBJECT",
         "name": "CreateCliAuthSessionResponse",
         "description": null,
         "isOneOf": null,
         "fields": [
+          {
+            "name": "deviceCode",
+            "description": "The CLI's private verifier. Keep it in the process; never put it in a URL, a log, or the browser.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
           {
             "name": "expiresAt",
             "description": null,
@@ -2124,8 +2500,24 @@
             "deprecationReason": null
           },
           {
-            "name": "sessionId",
-            "description": null,
+            "name": "pollIntervalSeconds",
+            "description": "Seconds the CLI should wait between status polls.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "Int",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "userCode",
+            "description": "Short code to display so the person can enter it in the browser.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -4049,6 +4441,82 @@
       },
       {
         "kind": "OBJECT",
+        "name": "GetCliAuthRequestResponse",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "client",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "CliAuthClientInfoType",
+                "kind": "OBJECT",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "expiresAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "requestedAt",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "status",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "CliAuthStatus",
+                "kind": "ENUM",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
         "name": "GetCliAuthSessionResponse",
         "description": null,
         "isOneOf": null,
@@ -5649,6 +6117,18 @@
                 "kind": "SCALAR",
                 "ofType": null
               }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "meta",
+            "description": "Metadata declared on the account's open directive",
+            "args": [],
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
             },
             "isDeprecated": false,
             "deprecationReason": null
@@ -7583,6 +8063,18 @@
             "deprecationReason": null
           },
           {
+            "name": "meta",
+            "description": null,
+            "type": {
+              "kind": "SCALAR",
+              "name": "JSONObject",
+              "ofType": null
+            },
+            "defaultValue": null,
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "narration",
             "description": null,
             "type": {
@@ -7670,6 +8162,50 @@
               "name": null,
               "ofType": {
                 "name": "Boolean",
+                "kind": "SCALAR",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          }
+        ],
+        "inputFields": null,
+        "interfaces": [],
+        "enumValues": null,
+        "possibleTypes": null
+      },
+      {
+        "kind": "OBJECT",
+        "name": "MintedApiKeyType",
+        "description": null,
+        "isOneOf": null,
+        "fields": [
+          {
+            "name": "key",
+            "description": null,
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "ApiKeyType",
+                "kind": "OBJECT",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "plaintext",
+            "description": "The key itself. Returned by this mutation and never retrievable again.",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "String",
                 "kind": "SCALAR",
                 "ofType": null
               }
@@ -7927,7 +8463,7 @@
           },
           {
             "name": "cancelSubscription",
-            "description": null,
+            "description": "Schedules your subscription to cancel. Requires a full signed-in session.",
             "args": [
               {
                 "name": "clientId",
@@ -7976,10 +8512,10 @@
           },
           {
             "name": "confirmCliAuthSession",
-            "description": "Authorize a pending CLI session. Issues a JWT token for the CLI and stores it in the session.",
+            "description": "Authorize the pending CLI session a user code names. Issues a JWT for the CLI and stores it for the matching device code to collect.",
             "args": [
               {
-                "name": "sessionId",
+                "name": "userCode",
                 "description": null,
                 "type": {
                   "kind": "NON_NULL",
@@ -8009,10 +8545,10 @@
           },
           {
             "name": "consumeCliAuthSession",
-            "description": "Retrieve and consume the token from an authorized CLI auth session. Single-use: clears the token from the session after returning it. Only the CLI should call this.",
+            "description": "Retrieve and consume the token from an authorized CLI auth session. Single-use, and only redeemable by the device code the session was created with.",
             "args": [
               {
-                "name": "sessionId",
+                "name": "deviceCode",
                 "description": null,
                 "type": {
                   "kind": "NON_NULL",
@@ -8041,9 +8577,55 @@
             "deprecationReason": null
           },
           {
+            "name": "createApiKey",
+            "description": "Mint an API key. Requires a paid plan; an API key cannot mint another.",
+            "args": [
+              {
+                "name": "input",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "name": "CreateApiKeyInputType",
+                    "kind": "INPUT_OBJECT",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "MintedApiKeyType",
+                "kind": "OBJECT",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
             "name": "createCliAuthSession",
-            "description": "Initiate a CLI authentication session. Returns a sessionId the CLI uses to poll for completion.",
-            "args": [],
+            "description": "Initiate a CLI authentication session. Returns the device code the CLI polls with and the user code to display for the person to enter in the browser.",
+            "args": [
+              {
+                "name": "client",
+                "description": null,
+                "type": {
+                  "kind": "INPUT_OBJECT",
+                  "name": "CliAuthClientInfoInput",
+                  "ofType": null
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
             "type": {
               "kind": "NON_NULL",
               "name": null,
@@ -8408,7 +8990,7 @@
           },
           {
             "name": "createStripePortalSession",
-            "description": null,
+            "description": "Creates a Stripe-hosted customer portal session. Requires a full signed-in session.",
             "args": [
               {
                 "name": "clientId",
@@ -8441,7 +9023,7 @@
           },
           {
             "name": "createSubscriptionSession",
-            "description": null,
+            "description": "Creates a Stripe-hosted checkout session. Requires a full signed-in session.",
             "args": [
               {
                 "name": "clientId",
@@ -8853,10 +9435,10 @@
           },
           {
             "name": "denyCliAuthSession",
-            "description": "Deny a pending CLI authentication session.",
+            "description": "Deny the pending CLI authentication request a user code names.",
             "args": [
               {
-                "name": "sessionId",
+                "name": "userCode",
                 "description": null,
                 "type": {
                   "kind": "NON_NULL",
@@ -9526,7 +10108,7 @@
           },
           {
             "name": "resumeSubscription",
-            "description": null,
+            "description": "Resumes your subscription. Requires a full signed-in session.",
             "args": [
               {
                 "name": "clientId",
@@ -9566,6 +10148,39 @@
               "name": null,
               "ofType": {
                 "name": "SubscriptionActionResult",
+                "kind": "OBJECT",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "revokeApiKey",
+            "description": "Revoke an API key, effective on its next use",
+            "args": [
+              {
+                "name": "id",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "ApiKeyType",
                 "kind": "OBJECT",
                 "ofType": null
               }
@@ -10500,7 +11115,7 @@
           },
           {
             "name": "upgradeSubscription",
-            "description": null,
+            "description": "Upgrades your subscription. Requires a full signed-in session.",
             "args": [
               {
                 "name": "clientId",
@@ -13095,7 +13710,7 @@
           },
           {
             "name": "allTierQuotas",
-            "description": "Returns quota limits for all subscription tiers",
+            "description": "Returns the public quota limits for all subscription tiers.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -13108,6 +13723,30 @@
                   "kind": "NON_NULL",
                   "ofType": {
                     "name": "TierQuotaItem",
+                    "kind": "OBJECT",
+                    "ofType": null
+                  }
+                }
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "apiKeys",
+            "description": "Your API keys",
+            "args": [],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": null,
+                "kind": "LIST",
+                "ofType": {
+                  "name": null,
+                  "kind": "NON_NULL",
+                  "ofType": {
+                    "name": "ApiKeyType",
                     "kind": "OBJECT",
                     "ofType": null
                   }
@@ -13152,7 +13791,7 @@
           },
           {
             "name": "generateTempAssetDownloadUrl",
-            "description": "Generate a presigned download URL for a previously uploaded temporary asset. Use this to obtain a short-lived GET URL for an objectKey returned by generateTempAssetUploadUrl.",
+            "description": "Generate a presigned download URL for a temporary asset uploaded by the current user. Foreign, malformed, and permanent keys are not exposed.",
             "args": [
               {
                 "name": "objectKey",
@@ -13184,11 +13823,44 @@
             "deprecationReason": null
           },
           {
-            "name": "getCliAuthSession",
-            "description": "Poll the status of a CLI authentication session. When AUTHORIZED, returns the token stored in the session.",
+            "name": "getCliAuthRequest",
+            "description": "Describe the CLI authentication request a user code names, so the consent screen can show who is asking before anyone approves.",
             "args": [
               {
-                "name": "sessionId",
+                "name": "userCode",
+                "description": null,
+                "type": {
+                  "kind": "NON_NULL",
+                  "name": null,
+                  "ofType": {
+                    "name": "String",
+                    "kind": "SCALAR",
+                    "ofType": null
+                  }
+                },
+                "defaultValue": null,
+                "isDeprecated": false,
+                "deprecationReason": null
+              }
+            ],
+            "type": {
+              "kind": "NON_NULL",
+              "name": null,
+              "ofType": {
+                "name": "GetCliAuthRequestResponse",
+                "kind": "OBJECT",
+                "ofType": null
+              }
+            },
+            "isDeprecated": false,
+            "deprecationReason": null
+          },
+          {
+            "name": "getCliAuthSession",
+            "description": "Poll the status of a CLI authentication session. Only the initiating CLI can call this: it takes the device code, which never leaves that process.",
+            "args": [
+              {
+                "name": "deviceCode",
                 "description": null,
                 "type": {
                   "kind": "NON_NULL",
@@ -13418,7 +14090,7 @@
           },
           {
             "name": "getLedgerAccountDirectives",
-            "description": "Get all accounts with their open/close dates for a specific ledger",
+            "description": "Get all accounts with their open/close dates and open-directive metadata for a specific ledger",
             "args": [
               {
                 "name": "ledgerId",
@@ -13755,7 +14427,7 @@
           },
           {
             "name": "getLedgerArchiveDownloadUrl",
-            "description": "Get a downloadable URL for a ledger Git archive (gitea-main.zip). Public ledgers require no auth; private ledgers require a valid session.",
+            "description": "Get a downloadable URL for a ledger Git archive (main.zip). Authenticated callers receive the standard token-authenticated v1 URL; public ledgers are readable without auth.",
             "args": [
               {
                 "name": "ledgerId",
@@ -16923,7 +17595,7 @@
           },
           {
             "name": "subscriptionStatus",
-            "description": null,
+            "description": "Returns your subscription status. Requires a full signed-in session.",
             "args": [],
             "type": {
               "kind": "NON_NULL",
@@ -16939,7 +17611,7 @@
           },
           {
             "name": "suggestPlaidAccountMapping",
-            "description": "Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI",
+            "description": "Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI. Requires ledger-content read, bank-connection read, and AI-use authority.",
             "args": [
               {
                 "name": "itemId",
@@ -16996,7 +17668,7 @@
           },
           {
             "name": "suggestPlaidTransactionCategories",
-            "description": "Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted",
+            "description": "Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted. Requires ledger-content read, bank-connection read, and AI-use authority.",
             "args": [
               {
                 "name": "accountId",

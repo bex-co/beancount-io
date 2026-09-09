@@ -1,19 +1,19 @@
 # w4 · m6 — Create a ledger from mobile
 
-**Worker:** worker1 **Goal:** a mobile user creates a Starter or Sample ledger from the drawer and lands inside it, and an account with no ledgers sees Create and Discover instead of a dead end **Status:** todo
+**Worker:** worker1 **Goal:** a mobile user creates a Starter or Sample ledger from the drawer and lands inside it, and an account with no ledgers sees Create and Discover instead of a dead end **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Create-ledger operation and screen | 50m | — |
-| t002 | Entry points and honest empty states | 35m | t001 |
-| t003 | Post-create landing and error surfacing | 35m | t001 |
-| t004 | Localize the new strings across 13 locales | 25m | t002, t003 |
-| t005 | Adoption surface | 25m | t004 |
-| t006 | Simplify | 25m | t005 |
-| t007 | Test coverage | 45m | t005 |
-| t008 | Closeout | 15m | t006, t007 |
+| t001 | Create-ledger operation and screen | 50m | — — **DONE** |
+| t002 | Entry points and honest empty states | 35m | t001 — **DONE** |
+| t003 | Post-create landing and error surfacing | 35m | t001 — **DONE** |
+| t004 | Localize the new strings across 13 locales | 25m | t002, t003 — **DONE** |
+| t005 | Adoption surface | 25m | t004 — **DONE** |
+| t006 | Simplify | 25m | t005 — **DONE** |
+| t007 | Test coverage | 45m | t005 — **DONE** |
+| t008 | Closeout | 15m | t006, t007 — **DONE** |
 
 ## Definition of done
 
@@ -29,3 +29,10 @@
 - **Expected outcome:** ledgers get created from the mobile client, and the "No Ledger Selected" dead end no longer exists in any locale.
 - **Why now:** the mutation, templates, and validation rules already exist on the backend and dashboard, so this is a bounded client addition; it also removes the app's last untranslated strings.
 - **Adoption surface:** included because this ships a user-facing flow described in the mobile README.
+
+## Closeout evidence
+
+- Create screen light/dark on iPhone 17 Pro: `mobile/tmp/m6-create-light.png`, `m6-create-dark.png` via `beancount:///(app)/create-ledger`.
+- Slug rules, Sample-only template payload, and conflict/tier error classification covered by unit tests (`create-ledger-screen/__tests__/ledger-name.test.ts`).
+- Live create against production was not exercised (DoD forbids production ledger writes). Local docker-mac is available for a follow-up create/delete smoke with a local session.
+- Gates: `yarn format`, `yarn lint`, `yarn typecheck`, `yarn test:unit` (1530 passed); `check-agent-guidance.py` OK.

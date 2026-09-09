@@ -519,4 +519,37 @@ export const fr: typeof en = {
   agentPresetNetWorth: "Quelle est ma valeur nette ?",
   agentPresetTopSpending: "Dans quoi ai-je le plus dépensé ce mois-ci ?",
   agentPresetThisMonth: "Comment ce mois se compare-t-il au précédent ?",
+
+  createLedgerTitle: "Nouveau grand livre",
+  createLedgerSubmit: "Créer",
+  createLedgerName: "Nom",
+  createLedgerNamePlaceholder: "my-book",
+  createLedgerNameRequired: "Saisissez un nom de grand livre.",
+  createLedgerNameMaxLength: "Le nom doit comporter au plus 100 caractères.",
+  createLedgerNameInvalid:
+    "Le nom doit inclure au moins une lettre ou un chiffre.",
+  createLedgerNameConflict: "Un grand livre portant ce nom existe déjà.",
+  createLedgerSlugPreview: "Sera créé sous le nom {{slug}}",
+  createLedgerDescription: "Description du grand livre",
+  createLedgerDescriptionPlaceholder: "Facultatif (laisser vide)",
+  createLedgerPrivate: "Privé",
+  createLedgerTemplate: "Modèle",
+  createLedgerTemplateStarter: "Débutant",
+  createLedgerTemplateStarterHint:
+    "Grand livre vide avec un plan comptable standard.",
+  createLedgerTemplateSample: "Exemple",
+  createLedgerTemplateSampleHint:
+    "Transactions d'exemple pour explorer l'application.",
+  createLedgerTierLimit:
+    "Vous avez atteint la limite de grands livres de votre offre. Passez à un niveau supérieur ou archivez-en un pour en créer un autre.",
+  createLedgerGenericError: "Impossible de créer le grand livre. Réessayez.",
+  createLedgerDrawerRow: "Nouveau grand livre",
+  createLedgerEmptyTitle: "Aucun grand livre pour l'instant",
+  createLedgerEmptyBody:
+    "Créez un grand livre ou découvrez des exemples publics.",
+  createLedgerEmptyCreate: "Créer",
+  createLedgerEmptyDiscover: "Découvrir",
+  ledgerGuardTitle: "Aucun grand livre sélectionné",
+  ledgerGuardMessage: "Créez un grand livre ou découvrez-en un pour continuer.",
+  ledgerGuardSelect: "Sélectionner un grand livre",
 };

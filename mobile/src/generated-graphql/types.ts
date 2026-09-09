@@ -103,6 +103,20 @@ export type AiCfoUsageResponse = {
   aiCfoTokensUsed: Scalars['Float']['output'];
 };
 
+export type ApiKeyType = {
+  __typename?: 'ApiKeyType';
+  createdAt: Scalars['DateTimeISO']['output'];
+  expiresAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  id: Scalars['String']['output'];
+  /** The key's first characters, for telling keys apart */
+  keyPrefix: Scalars['String']['output'];
+  lastUsedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  ledgerScope?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  revokedAt?: Maybe<Scalars['DateTimeISO']['output']>;
+  scopes: Array<Scalars['String']['output']>;
+};
+
 export type BalanceSheetData = {
   __typename?: 'BalanceSheetData';
   assetsData: Array<DateAndBalance>;
@@ -159,6 +173,26 @@ export type ChartItemV2 = {
   balance: Scalars['JSONObject']['output'];
   budgets?: Maybe<Scalars['JSONObject']['output']>;
   date: Scalars['String']['output'];
+};
+
+export type CliAuthClientInfoInput = {
+  /** Machine name the client runs on. */
+  deviceLabel?: InputMaybe<Scalars['String']['input']>;
+  /** Client name, e.g. `bea`. */
+  name?: InputMaybe<Scalars['String']['input']>;
+  platform?: InputMaybe<Scalars['String']['input']>;
+  version?: InputMaybe<Scalars['String']['input']>;
+};
+
+/** How the requesting device describes itself. Self-reported and unverified: show it so a person can recognize their own terminal, never treat it as evidence. */
+export type CliAuthClientInfoType = {
+  __typename?: 'CliAuthClientInfoType';
+  deviceLabel?: Maybe<Scalars['String']['output']>;
+  /** Forwarded address seen when the request was made. */
+  ipAddress?: Maybe<Scalars['String']['output']>;
+  name: Scalars['String']['output'];
+  platform?: Maybe<Scalars['String']['output']>;
+  version?: Maybe<Scalars['String']['output']>;
 };
 
 /** Status of a CLI authentication session */
@@ -243,10 +277,23 @@ export type ConsumeCliAuthSessionResponse = {
   token: Scalars['String']['output'];
 };
 
+export type CreateApiKeyInputType = {
+  expiresAt?: InputMaybe<Scalars['DateTimeISO']['input']>;
+  ledgerScope?: InputMaybe<Scalars['String']['input']>;
+  name: Scalars['String']['input'];
+  /** Any of: ledger.read, ledger.write, ledger.admin */
+  scopes: Array<Scalars['String']['input']>;
+};
+
 export type CreateCliAuthSessionResponse = {
   __typename?: 'CreateCliAuthSessionResponse';
+  /** The CLI's private verifier. Keep it in the process; never put it in a URL, a log, or the browser. */
+  deviceCode: Scalars['String']['output'];
   expiresAt: Scalars['String']['output'];
-  sessionId: Scalars['String']['output'];
+  /** Seconds the CLI should wait between status polls. */
+  pollIntervalSeconds: Scalars['Int']['output'];
+  /** Short code to display so the person can enter it in the browser. */
+  userCode: Scalars['String']['output'];
 };
 
 export type CreateOneTimeTokenResponse = {
@@ -454,6 +501,14 @@ export type FollowUserResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type GetCliAuthRequestResponse = {
+  __typename?: 'GetCliAuthRequestResponse';
+  client: CliAuthClientInfoType;
+  expiresAt: Scalars['String']['output'];
+  requestedAt: Scalars['String']['output'];
+  status: CliAuthStatus;
+};
+
 export type GetCliAuthSessionResponse = {
   __typename?: 'GetCliAuthSessionResponse';
   status: CliAuthStatus;
@@ -610,6 +665,8 @@ export type LedgerAccountItem = {
   closedAt?: Maybe<Scalars['String']['output']>;
   entryCount: Scalars['Float']['output'];
   entryHash: Scalars['String']['output'];
+  /** Metadata declared on the account's open directive */
+  meta?: Maybe<Scalars['JSONObject']['output']>;
   openedAt: Scalars['String']['output'];
 };
 
@@ -799,6 +856,7 @@ export type LedgerTransactionInput = {
   date: Scalars['String']['input'];
   flag: Scalars['String']['input'];
   links?: InputMaybe<Array<Scalars['String']['input']>>;
+  meta?: InputMaybe<Scalars['JSONObject']['input']>;
   narration?: InputMaybe<Scalars['String']['input']>;
   payee?: InputMaybe<Scalars['String']['input']>;
   postings: Array<LedgerPostingInput>;
@@ -810,6 +868,13 @@ export type LogoutResponse = {
   success: Scalars['Boolean']['output'];
 };
 
+export type MintedApiKeyType = {
+  __typename?: 'MintedApiKeyType';
+  key: ApiKeyType;
+  /** The key itself. Returned by this mutation and never retrievable again. */
+  plaintext: Scalars['String']['output'];
+};
+
 export type Mutation = {
   __typename?: 'Mutation';
   addEntries: AddEntryResponse;
@@ -817,12 +882,15 @@ export type Mutation = {
   approvePullRequest: PullRequestResult;
   /** Add one or more entries to a specific ledger (atomic) */
   bulkEntries: AddLedgerEntryResponse;
+  /** Schedules your subscription to cancel. Requires a full signed-in session. */
   cancelSubscription: SubscriptionActionResult;
-  /** Authorize a pending CLI session. Issues a JWT token for the CLI and stores it in the session. */
+  /** Authorize the pending CLI session a user code names. Issues a JWT for the CLI and stores it for the matching device code to collect. */
   confirmCliAuthSession: ConfirmCliAuthSessionResponse;
-  /** Retrieve and consume the token from an authorized CLI auth session. Single-use: clears the token from the session after returning it. Only the CLI should call this. */
+  /** Retrieve and consume the token from an authorized CLI auth session. Single-use, and only redeemable by the device code the session was created with. */
   consumeCliAuthSession: ConsumeCliAuthSessionResponse;
-  /** Initiate a CLI authentication session. Returns a sessionId the CLI uses to poll for completion. */
+  /** Mint an API key. Requires a paid plan; an API key cannot mint another. */
+  createApiKey: MintedApiKeyType;
+  /** Initiate a CLI authentication session. Returns the device code the CLI polls with and the user code to display for the person to enter in the browser. */
   createCliAuthSession: CreateCliAuthSessionResponse;
   /** Create a new ledger for the current user */
   createLedger: Ledger;
@@ -836,7 +904,9 @@ export type Mutation = {
   /** Create a new public key for the current user */
   createPublicKey: PublicKey;
   createPullRequestFromPatch: PullRequestResult;
+  /** Creates a Stripe-hosted customer portal session. Requires a full signed-in session. */
   createStripePortalSession: SubscriptionSessionResult;
+  /** Creates a Stripe-hosted checkout session. Requires a full signed-in session. */
   createSubscriptionSession: SubscriptionSessionResult;
   /** delete user account and its associated data */
   deleteAccount: Scalars['Boolean']['output'];
@@ -853,7 +923,7 @@ export type Mutation = {
   deletePlaidTransactions: PlaidDeleteResult;
   /** Delete a specific public key by ID */
   deletePublicKey: DeletePublicKeyResponse;
-  /** Deny a pending CLI authentication session. */
+  /** Deny the pending CLI authentication request a user code names. */
   denyCliAuthSession: DenyCliAuthSessionResponse;
   /** Exchange Plaid public token for access token and store Item */
   exchangePlaidPublicToken: PlaidItemType;
@@ -880,7 +950,10 @@ export type Mutation = {
   renameLedgerFile: RenameLedgerFileResponse;
   /** Reset user password using a token from the password reset email */
   resetPassword: ResetPasswordResponse;
+  /** Resumes your subscription. Requires a full signed-in session. */
   resumeSubscription: SubscriptionActionResult;
+  /** Revoke an API key, effective on its next use */
+  revokeApiKey: ApiKeyType;
   /** Send a password reset link to the user's email */
   sendForgotPasswordLink: SendForgotPasswordLinkResponse;
   signIn: TokenAuthResponse;
@@ -912,6 +985,7 @@ export type Mutation = {
   /** Update user profile (firstName and lastName) */
   updateProfile: UserProfileResponse;
   updateUsername: UserProfileResponse;
+  /** Upgrades your subscription. Requires a full signed-in session. */
   upgradeSubscription: UpgradeSubscriptionResult;
   /** Verify OTP and create user account to complete signup */
   verifySignUpOtp: TokenAuthResponse;
@@ -951,12 +1025,22 @@ export type MutationCancelSubscriptionArgs = {
 
 
 export type MutationConfirmCliAuthSessionArgs = {
-  sessionId: Scalars['String']['input'];
+  userCode: Scalars['String']['input'];
 };
 
 
 export type MutationConsumeCliAuthSessionArgs = {
-  sessionId: Scalars['String']['input'];
+  deviceCode: Scalars['String']['input'];
+};
+
+
+export type MutationCreateApiKeyArgs = {
+  input: CreateApiKeyInputType;
+};
+
+
+export type MutationCreateCliAuthSessionArgs = {
+  client?: InputMaybe<CliAuthClientInfoInput>;
 };
 
 
@@ -1054,7 +1138,7 @@ export type MutationDeletePublicKeyArgs = {
 
 
 export type MutationDenyCliAuthSessionArgs = {
-  sessionId: Scalars['String']['input'];
+  userCode: Scalars['String']['input'];
 };
 
 
@@ -1135,6 +1219,11 @@ export type MutationResetPasswordArgs = {
 export type MutationResumeSubscriptionArgs = {
   clientId: Scalars['String']['input'];
   subscriptionId: Scalars['String']['input'];
+};
+
+
+export type MutationRevokeApiKeyArgs = {
+  id: Scalars['String']['input'];
 };
 
 
@@ -1525,19 +1614,23 @@ export type Query = {
   accountHierarchy: AccountHierarchyResponse;
   /** Get AI CFO usage for the current billing month */
   aiCfoUsage: AiCfoUsageResponse;
-  /** Returns quota limits for all subscription tiers */
+  /** Returns the public quota limits for all subscription tiers. */
   allTierQuotas: Array<TierQuotaItem>;
+  /** Your API keys */
+  apiKeys: Array<ApiKeyType>;
   featureFlags: Scalars['JSONObject']['output'];
-  /** Generate a presigned download URL for a previously uploaded temporary asset. Use this to obtain a short-lived GET URL for an objectKey returned by generateTempAssetUploadUrl. */
+  /** Generate a presigned download URL for a temporary asset uploaded by the current user. Foreign, malformed, and permanent keys are not exposed. */
   generateTempAssetDownloadUrl: TempAssetDownloadUrl;
-  /** Poll the status of a CLI authentication session. When AUTHORIZED, returns the token stored in the session. */
+  /** Describe the CLI authentication request a user code names, so the consent screen can show who is asking before anyone approves. */
+  getCliAuthRequest: GetCliAuthRequestResponse;
+  /** Poll the status of a CLI authentication session. Only the initiating CLI can call this: it takes the device code, which never leaves that process. */
   getCliAuthSession: GetCliAuthSessionResponse;
   getCommitDetails: CommitDetails;
   getFeed: FeedResponse;
   getLatestLedgerCommit?: Maybe<LedgerCommit>;
   /** Get a specific ledger */
   getLedger: Ledger;
-  /** Get all accounts with their open/close dates for a specific ledger */
+  /** Get all accounts with their open/close dates and open-directive metadata for a specific ledger */
   getLedgerAccountDirectives: Array<LedgerAccountItem>;
   /** Get account journal with change and balance information */
   getLedgerAccountJournal: AccountJournalResponse;
@@ -1547,7 +1640,7 @@ export type Query = {
   getLedgerAccountReport: AccountReport;
   /** Get the accounts of a specific ledger. Optional status filter: 'open' (no closeDate) or 'closed' (has closeDate). Returns all accounts when omitted. */
   getLedgerAccounts: Array<Scalars['String']['output']>;
-  /** Get a downloadable URL for a ledger Git archive (gitea-main.zip). Public ledgers require no auth; private ledgers require a valid session. */
+  /** Get a downloadable URL for a ledger Git archive (main.zip). Authenticated callers receive the standard token-authenticated v1 URL; public ledgers are readable without auth. */
   getLedgerArchiveDownloadUrl: LedgerAssetDownloadUrlResult;
   /** Get a presigned S3 download URL for a ledger asset. Validates ledger access — public ledgers require no auth; private ledgers require a valid session. */
   getLedgerAssetDownloadUrl: LedgerAssetDownloadUrlResult;
@@ -1646,10 +1739,11 @@ export type Query = {
   queryShellText?: Maybe<QueryShellTextResult>;
   /** Search for ledgers/repositories */
   searchLedgers: Array<Ledger>;
+  /** Returns your subscription status. Requires a full signed-in session. */
   subscriptionStatus: CustomerSubscriptionStatus;
-  /** Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI */
+  /** Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI. Requires ledger-content read, bank-connection read, and AI-use authority. */
   suggestPlaidAccountMapping: Array<PlaidAccountMappingSuggestion>;
-  /** Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted */
+  /** Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted. Requires ledger-content read, bank-connection read, and AI-use authority. */
   suggestPlaidTransactionCategories: Array<CategorySuggestion>;
   /** Suggest transaction categories based on payee, description, and transaction history */
   suggestTransactionCategories: Array<CategorySuggestion>;
@@ -1676,8 +1770,13 @@ export type QueryGenerateTempAssetDownloadUrlArgs = {
 };
 
 
+export type QueryGetCliAuthRequestArgs = {
+  userCode: Scalars['String']['input'];
+};
+
+
 export type QueryGetCliAuthSessionArgs = {
-  sessionId: Scalars['String']['input'];
+  deviceCode: Scalars['String']['input'];
 };
 
 

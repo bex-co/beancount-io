@@ -84,6 +84,19 @@ type AiCfoUsageResponse {
   aiCfoTokensUsed: Float!
 }
 
+type ApiKeyType {
+  createdAt: DateTimeISO!
+  expiresAt: DateTimeISO
+  id: String!
+  """The key's first characters, for telling keys apart"""
+  keyPrefix: String!
+  lastUsedAt: DateTimeISO
+  ledgerScope: String
+  name: String!
+  revokedAt: DateTimeISO
+  scopes: [String!]!
+}
+
 type BalanceSheetData {
   assetsData: [DateAndBalance!]!
   assetsHierarchyData: SerializableTreeNode!
@@ -135,6 +148,27 @@ type ChartItemV2 {
   balance: JSONObject!
   budgets: JSONObject
   date: String!
+}
+
+input CliAuthClientInfoInput {
+  """Machine name the client runs on."""
+  deviceLabel: String
+  """Client name, e.g. `bea`."""
+  name: String
+  platform: String
+  version: String
+}
+
+"""
+How the requesting device describes itself. Self-reported and unverified: show it so a person can recognize their own terminal, never treat it as evidence.
+"""
+type CliAuthClientInfoType {
+  deviceLabel: String
+  """Forwarded address seen when the request was made."""
+  ipAddress: String
+  name: String!
+  platform: String
+  version: String
 }
 
 """Status of a CLI authentication session"""
@@ -210,9 +244,24 @@ type ConsumeCliAuthSessionResponse {
   token: String!
 }
 
+input CreateApiKeyInputType {
+  expiresAt: DateTimeISO
+  ledgerScope: String
+  name: String!
+  """Any of: ledger.read, ledger.write, ledger.admin"""
+  scopes: [String!]!
+}
+
 type CreateCliAuthSessionResponse {
+  """
+  The CLI's private verifier. Keep it in the process; never put it in a URL, a log, or the browser.
+  """
+  deviceCode: String!
   expiresAt: String!
-  sessionId: String!
+  """Seconds the CLI should wait between status polls."""
+  pollIntervalSeconds: Int!
+  """Short code to display so the person can enter it in the browser."""
+  userCode: String!
 }
 
 type CreateOneTimeTokenResponse {
@@ -403,6 +452,13 @@ type FollowUserResponse {
   success: Boolean!
 }
 
+type GetCliAuthRequestResponse {
+  client: CliAuthClientInfoType!
+  expiresAt: String!
+  requestedAt: String!
+  status: CliAuthStatus!
+}
+
 type GetCliAuthSessionResponse {
   status: CliAuthStatus!
 }
@@ -556,6 +612,8 @@ type LedgerAccountItem {
   closedAt: String
   entryCount: Float!
   entryHash: String!
+  """Metadata declared on the account's open directive"""
+  meta: JSONObject
   openedAt: String!
 }
 
@@ -735,6 +793,7 @@ input LedgerTransactionInput {
   date: String!
   flag: String!
   links: [String!]
+  meta: JSONObject
   narration: String
   payee: String
   postings: [LedgerPostingInput!]!
@@ -745,25 +804,36 @@ type LogoutResponse {
   success: Boolean!
 }
 
+type MintedApiKeyType {
+  key: ApiKeyType!
+  """The key itself. Returned by this mutation and never retrievable again."""
+  plaintext: String!
+}
+
 type Mutation {
   addEntries(entriesInput: [EntryInput!]!, ledgerId: String): AddEntryResponse!
   addOrUpdateLedgerCollaborator(collaborator: String!, ledgerId: String!, permission: String): AddCollaboratorResponse!
   approvePullRequest(ledgerName: String!, ledgerOwner: String!, prNumber: Int!): PullRequestResult!
   """Add one or more entries to a specific ledger (atomic)"""
   bulkEntries(entries: [AddEntryInput!]!, ledgerId: String!): AddLedgerEntryResponse!
+  """
+  Schedules your subscription to cancel. Requires a full signed-in session.
+  """
   cancelSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
   """
-  Authorize a pending CLI session. Issues a JWT token for the CLI and stores it in the session.
+  Authorize the pending CLI session a user code names. Issues a JWT for the CLI and stores it for the matching device code to collect.
   """
-  confirmCliAuthSession(sessionId: String!): ConfirmCliAuthSessionResponse!
+  confirmCliAuthSession(userCode: String!): ConfirmCliAuthSessionResponse!
   """
-  Retrieve and consume the token from an authorized CLI auth session. Single-use: clears the token from the session after returning it. Only the CLI should call this.
+  Retrieve and consume the token from an authorized CLI auth session. Single-use, and only redeemable by the device code the session was created with.
   """
-  consumeCliAuthSession(sessionId: String!): ConsumeCliAuthSessionResponse!
+  consumeCliAuthSession(deviceCode: String!): ConsumeCliAuthSessionResponse!
+  """Mint an API key. Requires a paid plan; an API key cannot mint another."""
+  createApiKey(input: CreateApiKeyInputType!): MintedApiKeyType!
   """
-  Initiate a CLI authentication session. Returns a sessionId the CLI uses to poll for completion.
+  Initiate a CLI authentication session. Returns the device code the CLI polls with and the user code to display for the person to enter in the browser.
   """
-  createCliAuthSession: CreateCliAuthSessionResponse!
+  createCliAuthSession(client: CliAuthClientInfoInput): CreateCliAuthSessionResponse!
   """Create a new ledger for the current user"""
   createLedger(description: String, name: String!, private: Boolean, template: LedgerTemplate): Ledger!
   """Create a new file in a specific ledger"""
@@ -783,7 +853,13 @@ type Mutation {
   """Create a new public key for the current user"""
   createPublicKey(key: String!, readOnly: Boolean = false, title: String!): PublicKey!
   createPullRequestFromPatch(input: CreatePRFromPatchInput!): PullRequestResult!
+  """
+  Creates a Stripe-hosted customer portal session. Requires a full signed-in session.
+  """
   createStripePortalSession(clientId: String!): SubscriptionSessionResult!
+  """
+  Creates a Stripe-hosted checkout session. Requires a full signed-in session.
+  """
   createSubscriptionSession(clientId: String!, priceId: String!): SubscriptionSessionResult!
   """delete user account and its associated data"""
   deleteAccount: Boolean!
@@ -802,8 +878,8 @@ type Mutation {
   deletePlaidTransactions(ledgerId: String!, transactionIds: [String!]!): PlaidDeleteResult!
   """Delete a specific public key by ID"""
   deletePublicKey(keyId: Float!): DeletePublicKeyResponse!
-  """Deny a pending CLI authentication session."""
-  denyCliAuthSession(sessionId: String!): DenyCliAuthSessionResponse!
+  """Deny the pending CLI authentication request a user code names."""
+  denyCliAuthSession(userCode: String!): DenyCliAuthSessionResponse!
   """Exchange Plaid public token for access token and store Item"""
   exchangePlaidPublicToken(ledgerId: String!, publicToken: String!): PlaidItemType!
   """Follow a user"""
@@ -854,7 +930,10 @@ type Mutation {
   renameLedgerFile(ledgerId: String!, message: String, newPath: String!, oldPath: String!): RenameLedgerFileResponse!
   """Reset user password using a token from the password reset email"""
   resetPassword(newPassword: String!, token: String!): ResetPasswordResponse!
+  """Resumes your subscription. Requires a full signed-in session."""
   resumeSubscription(clientId: String!, subscriptionId: String!): SubscriptionActionResult!
+  """Revoke an API key, effective on its next use"""
+  revokeApiKey(id: String!): ApiKeyType!
   """Send a password reset link to the user's email"""
   sendForgotPasswordLink(email: String!): SendForgotPasswordLinkResponse!
   signIn(email: String!, password: String!): TokenAuthResponse!
@@ -898,6 +977,7 @@ type Mutation {
   """Update user profile (firstName and lastName)"""
   updateProfile(firstName: String, lastName: String): UserProfileResponse!
   updateUsername(username: String!): UserProfileResponse!
+  """Upgrades your subscription. Requires a full signed-in session."""
   upgradeSubscription(clientId: String!, priceId: String!): UpgradeSubscriptionResult!
   """Verify OTP and create user account to complete signup"""
   verifySignUpOtp(otp: String!, sessionId: String!): TokenAuthResponse!
@@ -1147,20 +1227,26 @@ type Query {
   accountHierarchy(ledgerId: String, userId: String!): AccountHierarchyResponse!
   """Get AI CFO usage for the current billing month"""
   aiCfoUsage: AiCfoUsageResponse!
-  """Returns quota limits for all subscription tiers"""
+  """Returns the public quota limits for all subscription tiers."""
   allTierQuotas: [TierQuotaItem!]!
+  """Your API keys"""
+  apiKeys: [ApiKeyType!]!
   featureFlags(userId: String!): JSONObject!
   """
-  Generate a presigned download URL for a previously uploaded temporary asset. Use this to obtain a short-lived GET URL for an objectKey returned by generateTempAssetUploadUrl.
+  Generate a presigned download URL for a temporary asset uploaded by the current user. Foreign, malformed, and permanent keys are not exposed.
   """
   generateTempAssetDownloadUrl(
     """S3 object key returned by generateTempAssetUploadUrl"""
     objectKey: String!
   ): TempAssetDownloadUrl!
   """
-  Poll the status of a CLI authentication session. When AUTHORIZED, returns the token stored in the session.
+  Describe the CLI authentication request a user code names, so the consent screen can show who is asking before anyone approves.
   """
-  getCliAuthSession(sessionId: String!): GetCliAuthSessionResponse!
+  getCliAuthRequest(userCode: String!): GetCliAuthRequestResponse!
+  """
+  Poll the status of a CLI authentication session. Only the initiating CLI can call this: it takes the device code, which never leaves that process.
+  """
+  getCliAuthSession(deviceCode: String!): GetCliAuthSessionResponse!
   getCommitDetails(ledgerId: String!, sha: String!): CommitDetails!
   getFeed(
     limit: Float! = 10
@@ -1174,7 +1260,9 @@ type Query {
   getLatestLedgerCommit(branchName: String! = "main", ledgerId: String!): LedgerCommit
   """Get a specific ledger"""
   getLedger(ledgerId: String!): Ledger!
-  """Get all accounts with their open/close dates for a specific ledger"""
+  """
+  Get all accounts with their open/close dates and open-directive metadata for a specific ledger
+  """
   getLedgerAccountDirectives(ledgerId: String!): [LedgerAccountItem!]!
   """Get account journal with change and balance information"""
   getLedgerAccountJournal(ledgerId: String!, query: AccountJournalQueryInput!): AccountJournalResponse!
@@ -1187,7 +1275,7 @@ type Query {
   """
   getLedgerAccounts(ledgerId: String!, status: String): [String!]!
   """
-  Get a downloadable URL for a ledger Git archive (gitea-main.zip). Public ledgers require no auth; private ledgers require a valid session.
+  Get a downloadable URL for a ledger Git archive (main.zip). Authenticated callers receive the standard token-authenticated v1 URL; public ledgers are readable without auth.
   """
   getLedgerArchiveDownloadUrl(ledgerId: String!): LedgerAssetDownloadUrlResult!
   """
@@ -1340,13 +1428,14 @@ type Query {
   queryShellText(ledgerId: String!, query: String!): QueryShellTextResult
   """Search for ledgers/repositories"""
   searchLedgers(archived: Boolean, exclusive: Boolean, includeDesc: Boolean, isPrivate: Boolean, limit: Float, mode: String, order: String, page: Float, priorityOwnerId: Float, private: Boolean, q: String, sort: String, starredBy: Float, teamId: Float, template: Boolean, topic: Boolean, uid: Float): [Ledger!]!
+  """Returns your subscription status. Requires a full signed-in session."""
   subscriptionStatus: CustomerSubscriptionStatus!
   """
-  Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI
+  Suggest Beancount account mappings for a Plaid Item's unmapped accounts using AI. Requires ledger-content read, bank-connection read, and AI-use authority.
   """
   suggestPlaidAccountMapping(itemId: String!, ledgerId: String!): [PlaidAccountMappingSuggestion!]!
   """
-  Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted
+  Suggest target accounts for unsynced Plaid transactions using AI, for one account or the whole ledger when accountId is omitted. Requires ledger-content read, bank-connection read, and AI-use authority.
   """
   suggestPlaidTransactionCategories(accountId: String, ledgerId: String!): [CategorySuggestion!]!
   """

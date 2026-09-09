@@ -518,4 +518,36 @@ export const es: typeof en = {
   agentPresetNetWorth: "¿Cuál es mi patrimonio neto?",
   agentPresetTopSpending: "¿En qué gasté más este mes?",
   agentPresetThisMonth: "¿Cómo va este mes comparado con el anterior?",
+
+  createLedgerTitle: "Nuevo libro",
+  createLedgerSubmit: "Crear",
+  createLedgerName: "Nombre",
+  createLedgerNamePlaceholder: "my-book",
+  createLedgerNameRequired: "Introduce un nombre de libro.",
+  createLedgerNameMaxLength: "El nombre debe tener 100 caracteres o menos.",
+  createLedgerNameInvalid:
+    "El nombre debe incluir al menos una letra o un número.",
+  createLedgerNameConflict: "Ya existe un libro con este nombre.",
+  createLedgerSlugPreview: "Se creará como {{slug}}",
+  createLedgerDescription: "Descripción",
+  createLedgerDescriptionPlaceholder: "Opcional",
+  createLedgerPrivate: "Privado",
+  createLedgerTemplate: "Plantilla",
+  createLedgerTemplateStarter: "Inicial",
+  createLedgerTemplateStarterHint:
+    "Libros vacíos con un plan de cuentas estándar.",
+  createLedgerTemplateSample: "Ejemplo",
+  createLedgerTemplateSampleHint:
+    "Transacciones de ejemplo para explorar la app.",
+  createLedgerTierLimit:
+    "Has alcanzado el límite de libros de tu plan. Mejora el plan o archiva un libro para crear otro.",
+  createLedgerGenericError: "No se pudo crear el libro. Inténtalo de nuevo.",
+  createLedgerDrawerRow: "Nuevo libro",
+  createLedgerEmptyTitle: "Aún no hay libros",
+  createLedgerEmptyBody: "Crea un libro o descubre ejemplos públicos.",
+  createLedgerEmptyCreate: "Crear",
+  createLedgerEmptyDiscover: "Descubrir",
+  ledgerGuardTitle: "Ningún libro seleccionado",
+  ledgerGuardMessage: "Crea un libro o descubre uno para continuar.",
+  ledgerGuardSelect: "Seleccionar libro",
 };
