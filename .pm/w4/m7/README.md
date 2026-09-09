@@ -1,0 +1,32 @@
+# w4 · m7 — Screen-reader pass on the mobile core journeys
+
+**Worker:** worker1 **Goal:** a VoiceOver or TalkBack user can review a ledger, add a balanced transaction, and change settings without sighted help, and a guardrail test keeps icon-only controls labeled **Status:** todo
+
+## Tasks (in order)
+
+| id | title | est | depends_on |
+| --- | --- | --- | --- |
+| t001 | Audit the ten uncovered screens with the Accessibility Inspector | 45m | — |
+| t002 | Fix the daily read journey | 50m | t001 |
+| t003 | Fix the write journey | 50m | t001 |
+| t004 | Fix reports, accounts, settings, notifications, and ledger source screens | 45m | t001 |
+| t005 | Guardrail test for unlabeled icon-only pressables | 30m | t002, t003, t004 |
+| t006 | Adoption surface | 25m | t005 |
+| t007 | Simplify | 25m | t006 |
+| t008 | Test coverage | 45m | t006 |
+| t009 | Closeout | 15m | t007, t008 |
+
+## Definition of done
+
+- With VoiceOver on in the simulator, a user opens a ledger, reads the balance sheet summary, adds a balanced two-posting transaction hearing each validation error, and changes the theme, all without visual interaction.
+- The Accessibility Inspector audit reports zero errors on the ten previously uncovered screens in light and dark, with the audit records attached to the milestone.
+- The guardrail test passes on the fixed tree and was seen to fail when a label was removed.
+- Mobile `yarn format:check`, `yarn lint`, `yarn typecheck`, and `yarn test:unit` pass; no production ledger is written during verification.
+
+## Source + Goal linkage
+
+- **Source:** `/pm-brainstorm for w4`, 2026-09-08 (user approved all four milestones with `/pm for them all for w4`)
+- **Goal linkage:** **A3 — Community & distribution**: accessibility is table stakes for store credibility and for the contributors and users who rely on screen readers; it parallels w5/m2's pass on the dashboard.
+- **Expected outcome:** screen-reader users complete the read and write journeys; accessibility issues stop arriving for these screens; the README can state a verified baseline.
+- **Why now:** discovery, transaction detail, and the file editor were just rebuilt, so the surfaces are stable enough to label once; the guardrail then holds the line for later milestones (m5, m6 add new controls).
+- **Adoption surface:** included because this ships user-facing behavior and a README claim.
