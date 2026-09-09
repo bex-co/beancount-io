@@ -1,17 +1,17 @@
 # w3 · m12 — Execute and restore the BQL query shown in the editor
 
-**Worker:** worker3 **Goal:** keyboard execution, button execution, and bookmarked query pages agree on the user's query text **Status:** todo
+**Worker:** worker3 **Goal:** keyboard execution, button execution, and bookmarked query pages agree on the user's query text **Status:** done
 
 ## Tasks (in order)
 
-| id   | title                                                  | est | depends_on |
-| ---- | ------------------------------------------------------ | --- | ---------- |
-| t001 | Execute current editor text from the keyboard shortcut | 35m | —          |
-| t002 | Restore editor text from bookmarked query parameters   | 35m | t001       |
-| t003 | Adoption surface                                       | 20m | t002       |
-| t004 | Simplify                                               | 20m | t003       |
-| t005 | Test coverage for query execution and restoration      | 40m | t003, t004 |
-| t006 | Closeout                                               | 15m | t005       |
+| id   | title                                                               | est | depends_on |
+| ---- | ------------------------------------------------------------------- | --- | ---------- |
+| t001 | Execute current editor text from the keyboard shortcut — **DONE** | 35m | —          |
+| t002 | Restore editor text from bookmarked query parameters — **DONE**   | 35m | t001       |
+| t003 | Adoption surface — **DONE**                                       | 20m | t002       |
+| t004 | Simplify — **DONE**                                               | 20m | t003       |
+| t005 | Test coverage for query execution and restoration — **DONE**      | 40m | t003, t004 |
+| t006 | Closeout — **DONE**                                               | 15m | t005       |
 
 ## Reproduced findings
 

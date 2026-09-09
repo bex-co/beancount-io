@@ -20,6 +20,8 @@ import { useLedger } from "@/common/hooks/use-ledger";
 import { track } from "@/common/analytics";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 
+const DEFAULT_QUERY = "select * from accounts";
+
 export default function LedgerQueryPage() {
   const { t } = useTranslations();
   const { ledgerOwner, ledgerName } = useParams({
@@ -35,7 +37,9 @@ export default function LedgerQueryPage() {
   });
   const urlQuery = searchParams.query;
 
-  const [queryText, setQueryText] = useState("select * from accounts");
+  const [queryText, setQueryText] = useState(() =>
+    urlQuery?.trim() ? urlQuery.trim() : DEFAULT_QUERY,
+  );
   const isDarkTheme = useIsDarkTheme();
   const { history, addQuery, removeQuery } = useQueryHistory();
 
@@ -119,25 +123,14 @@ export default function LedgerQueryPage() {
   const executeRef = useRef(executeQueryAndCache);
   executeRef.current = executeQueryAndCache;
 
-  // Auto-execute query from URL on mount or when URL query changes externally
-  useEffect(() => {
-    if (urlQuery && urlQuery.trim()) {
-      const q = urlQuery.trim();
-      // Skip if this query was already executed by handleSubmit
-      if (executedQueriesRef.current.has(q)) {
-        executedQueriesRef.current.delete(q);
-        return;
-      }
-      void executeRef.current(q);
-    }
-  }, [urlQuery]);
-
   // Track queries we've already executed to prevent double-firing from URL sync
   const executedQueriesRef = useRef<Set<string>>(new Set());
 
-  const handleSubmit = () => {
-    if (queryText.trim()) {
-      const q = queryText.trim();
+  const submitQuery = useCallback(
+    (rawQuery: string) => {
+      if (!rawQuery.trim()) return;
+
+      const q = rawQuery.trim();
       // Mark as executed so the URL useEffect won't re-execute it
       executedQueriesRef.current.add(q);
 
@@ -150,7 +143,31 @@ export default function LedgerQueryPage() {
 
       // Execute query
       void executeQueryAndCache(q);
+    },
+    [navigate, executeQueryAndCache],
+  );
+
+  // Keep the latest submitter for Monaco's one-shot onMount command registration
+  const submitQueryRef = useRef(submitQuery);
+  submitQueryRef.current = submitQuery;
+
+  // Auto-execute query from URL on mount or when URL query changes externally;
+  // keep the editor text aligned with the bookmarked query.
+  useEffect(() => {
+    if (urlQuery && urlQuery.trim()) {
+      const q = urlQuery.trim();
+      setQueryText(q);
+      // Skip if this query was already executed by submitQuery
+      if (executedQueriesRef.current.has(q)) {
+        executedQueriesRef.current.delete(q);
+        return;
+      }
+      void executeRef.current(q);
     }
+  }, [urlQuery]);
+
+  const handleSubmit = () => {
+    submitQuery(queryText);
   };
 
   const handleExecuteFromHistory = (query: string) => {
@@ -189,7 +206,9 @@ export default function LedgerQueryPage() {
                 editor.addCommand(
                   monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter,
                   () => {
-                    handleSubmit();
+                    const text = editor.getValue();
+                    setQueryText(text);
+                    submitQueryRef.current(text);
                   },
                 );
 
