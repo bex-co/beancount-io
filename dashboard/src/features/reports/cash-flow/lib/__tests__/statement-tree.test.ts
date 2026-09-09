@@ -36,9 +36,10 @@ describe("buildActivityForest", () => {
 
   it("sums internal nodes with exact decimals, per currency", () => {
     const food = forest.find((child) => child.account === "Expenses:Food")!;
+    // Structural parent has no own row — balance stays empty; rollup is children.
+    expect(food.balance).toEqual({});
     // 0.10 + 0.20 must not become 0.30000000000000004.
     expect(food.balanceChildren).toEqual({ EUR: "5.00", USD: "0.30" });
-    expect(food.balance).toEqual({ EUR: "5.00", USD: "0.30" });
 
     const childPaths = (food.children as unknown as Forest).map(
       (child) => child.account,
@@ -132,7 +133,7 @@ describe("buildActivityForest", () => {
     expect(byAccount["Expenses:Rent"]).toBe("heuristic");
   });
 
-  it("leaves internal nodes without a role source", () => {
+  it("leaves structural internal nodes without a role source", () => {
     const forest = buildActivityForest(
       [row("Expenses:Food:Groceries", { USD: "0.10" }, "declared")],
       "USD",
@@ -142,6 +143,31 @@ describe("buildActivityForest", () => {
     expect(food.roleSource).toBeUndefined();
     const groceries = (food.children as unknown as Forest)[0];
     expect(groceries.roleSource).toBe("declared");
+  });
+
+  it("keeps a parent's own amount and role source beside its children", () => {
+    const forest = buildActivityForest(
+      [
+        row("Expenses:Taxes:Federal", { USD: "-27635.92" }, "declared"),
+        row("Expenses:Taxes:Federal:PreTax401k", { IRAUSD: "-18000" }),
+      ],
+      "USD",
+    );
+    // Shared ancestors appear as structural nodes; Federal is nested under Taxes.
+    const taxes = forest[0];
+    expect(taxes.account).toBe("Expenses:Taxes");
+    expect(taxes.balance).toEqual({});
+    const federal = (taxes.children as unknown as Forest)[0];
+    expect(federal.account).toBe("Expenses:Taxes:Federal");
+    expect(federal.balance).toEqual({ USD: "-27635.92" });
+    expect(federal.balanceChildren).toEqual({
+      USD: "-27635.92",
+      IRAUSD: "-18000",
+    });
+    expect(federal.roleSource).toBe("declared");
+    const child = (federal.children as unknown as Forest)[0];
+    expect(child.account).toBe("Expenses:Taxes:Federal:PreTax401k");
+    expect(child.balanceChildren).toEqual({ IRAUSD: "-18000" });
   });
 });
 

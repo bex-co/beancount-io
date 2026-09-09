@@ -283,27 +283,48 @@ describe("buildCashFlowStatement", () => {
     expect(statement.opening).toEqual({ USD: "11000.00" });
   });
 
-  it("restricts to leaf accounts when interval totals roll up parents", () => {
+  it("counts parent and child direct postings separately (no leaf filter)", () => {
+    // Interval totals are per exact account, not parent rollups — Federal's
+    // own USD and PreTax401k's IRAUSD must both survive into the statement.
     const intervals: IntervalAccountChanges[] = [
       {
-        date: "2026-01-31",
+        date: "2016-12-31",
         accountChanges: {
-          Expenses: { USD: "1500.00" }, // parent rollup — must not double-count
-          "Expenses:Rent": { USD: "1500.00" },
+          "Expenses:Taxes:Federal": { USD: "27635.92" },
+          "Expenses:Taxes:Federal:PreTax401k": { IRAUSD: "18000" },
+          "Income:US:Hoogle:Salary": { USD: "-100000.00" },
         },
       },
     ];
 
     const statement = buildCashFlowStatement({
       intervals,
-      closingCashAccounts: [],
+      closingCashAccounts: [
+        {
+          account: "Assets:US:BofA:Checking",
+          balance: { USD: "6763.51" },
+          roleSource: "heuristic" as const,
+        },
+      ],
       primaryCurrency: "USD",
     });
 
-    expect(statement.rows.map((row) => row.accountPath)).toEqual([
-      "Expenses:Rent",
+    expect(statement.rows.map((row) => row.accountPath).sort()).toEqual([
+      "Expenses:Taxes:Federal",
+      "Expenses:Taxes:Federal:PreTax401k",
+      "Income:US:Hoogle:Salary",
     ]);
-    expect(statement.totals.operating).toEqual({ USD: "-1500.00" });
+    expect(
+      statement.rows.find((row) => row.accountPath === "Expenses:Taxes:Federal")
+        ?.amounts,
+    ).toEqual({ USD: "-27635.92" });
+    expect(
+      statement.rows.find(
+        (row) => row.accountPath === "Expenses:Taxes:Federal:PreTax401k",
+      )?.amounts,
+    ).toEqual({ IRAUSD: "-18000" });
+    // Net = salary inflow − Federal USD (IR AUSD does not mix into USD).
+    expect(statement.netChange).toEqual({ USD: "72364.08", IRAUSD: "-18000" });
   });
 
   it("drops accounts whose movement is zero", () => {

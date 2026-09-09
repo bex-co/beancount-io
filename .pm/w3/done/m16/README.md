@@ -1,15 +1,15 @@
 # m16 — Preserve parent-account postings in Cash Flow
 
-**Worker:** worker3 **Status:** todo
+**Worker:** worker3 **Status:** done
 
 | Task | Title                                                              | Estimate | Depends on |
 | ---- | ------------------------------------------------------------------ | -------- | ---------- |
-| t001 | Consume direct account changes without dropping parents            | 45m      | —          |
-| t002 | Preserve parent amounts in the activity hierarchy                  | 35m      | t001       |
-| t003 | Adoption surface — verify the public example's cash reconciliation | 20m      | t002       |
-| t004 | Simplify the cash-flow account handling                            | 20m      | t003       |
-| t005 | Test the interval-to-statement and export pipeline                 | 45m      | t003       |
-| t006 | Closeout                                                           | 15m      | t004, t005 |
+| t001 | Consume direct account changes without dropping parents — **DONE** | 45m      | —          |
+| t002 | Preserve parent amounts in the activity hierarchy — **DONE**       | 35m      | t001       |
+| t003 | Adoption surface — verify the public example's cash reconciliation — **DONE** | 20m      | t002       |
+| t004 | Simplify the cash-flow account handling — **DONE**                 | 20m      | t003       |
+| t005 | Test the interval-to-statement and export pipeline — **DONE**      | 45m      | t003       |
+| t006 | Closeout — **DONE**                                                | 15m      | t004, t005 |
 
 ## Source + Goal linkage
 
@@ -104,17 +104,17 @@ labels and Print are source-traced, not independently reproduced here.
 
 ## Definition of Done
 
-- [ ] Monthly and Yearly 2016 statements both show opening 8213.87, closing
+- [x] Monthly and Yearly 2016 statements both show opening 8213.87, closing
       6763.51 and net change -1450.36 USD for the documented cash set.
-- [ ] Federal contributes its full -27635.92 USD in the operating calculation,
+- [x] Federal contributes its full -27635.92 USD in the operating calculation,
       table and exports; its child's -18000 IRAUSD stays a separate unit.
-- [ ] Parent and child direct postings are preserved at every depth, including
+- [x] Parent and child direct postings are preserved at every depth, including
       a returned zero child, without double counting structural tree rollups.
-- [ ] The real interval-response → merge → model → tree/export pipeline has
+- [x] The real interval-response → merge → model → tree/export pipeline has
       regression coverage; changing only interval grouping preserves period totals.
-- [ ] Empty/zero states, declared roles and inter-cash transfers remain usable;
+- [x] Empty/zero states, declared roles and inter-cash transfers remain usable;
       the real-estate control still reconciles at cost.
-- [ ] Desktop/narrow public reproductions and dashboard format/lint/test/build
+- [x] Desktop/narrow public reproductions and dashboard format/lint/test/build
       gates pass. No product changes outside the dashboard package are required.
 
 ## Dedupe and limits

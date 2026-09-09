@@ -184,20 +184,6 @@ export function subtractBalanceRecords(
 }
 
 /**
- * Interval totals may roll up parent accounts alongside their children; only
- * leaf accounts carry postings, so restrict to leaves to avoid
- * double-counting.
- */
-function leafAccounts(accountChanges: Record<string, unknown>): string[] {
-  return Object.keys(accountChanges).filter(
-    (account) =>
-      !Object.keys(accountChanges).some((other) =>
-        other.startsWith(`${account}:`),
-      ),
-  );
-}
-
-/**
  * Collect the cash & equivalents accounts from the closing assets hierarchy,
  * with their rollup balances. Roles resolve per leaf account: a declared
  * `cash-flow-role` (via `accountMeta`) always decides for that account;
@@ -303,7 +289,9 @@ export function buildCashFlowStatement(input: {
       financing: [],
     };
 
-    leafAccounts(interval.accountChanges).forEach((account) => {
+    // Interval totals are direct postings per exact account — parent and child
+    // rows are independent, so count every key once (do not drop parents).
+    Object.keys(interval.accountChanges).forEach((account) => {
       const meta = input.accountMeta?.get(account);
       // Same exclusions as classifyCashFlowActivity (a root outside the five
       // beancount roots is heuristic-only excluded; "cash" is never a row),

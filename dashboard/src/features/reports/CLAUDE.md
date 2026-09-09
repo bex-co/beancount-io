@@ -75,6 +75,14 @@ row still resolved by heuristics; declared rows carry no disclosure. Cash-flow
 rows are already statement-signed by the cash-flow model; never re-invert them.
 Apply the same multi-unit management-schedule rules as the other statements.
 
+Interval totals are **direct postings per exact account**, not parent rollups.
+`cash-flow/lib/model.ts` must count every returned account key once — a parent
+with its own activity (for example `Expenses:Taxes:…:Federal` in USD beside
+`:PreTax401k` in IRAUSD) is legitimate and must not be dropped because a child
+key exists. `statement-tree.ts` keeps that parent's own amount on `balance` and
+sets `balanceChildren` to own + descendants exactly once so the hierarchy table
+and exports stay aligned with the period net change.
+
 ## Hierarchy List Tables
 
 `balance-sheet/hierarchy-list.tsx` (wrapped by `hierarchy-list-card.tsx`) is

@@ -25,7 +25,7 @@ function leafNode(
 
 interface MutableTreeNode {
   account: string;
-  /** Set when a statement row lands exactly on this node (rows are leaves). */
+  /** Direct statement-row amount for this exact account, when one exists. */
   amounts: Record<string, string> | null;
   /** The row's classification source; only set alongside `amounts`. */
   roleSource: RoleResolution["source"] | null;
@@ -54,11 +54,16 @@ function toSerializable(
   const children = [...node.children.values()]
     .map((child) => toSerializable(child, primaryCurrency))
     .sort(byPrimaryMagnitude(primaryCurrency));
-  // Internal nodes never carry their own row (rows are leaves), so the rollup
-  // is the exact-decimal sum of the child rollups.
-  const balance = sumBalanceRecords(children.map((child) => child.balance));
+  // Own direct postings and descendant rollups are separate contributions;
+  // balanceChildren includes both exactly once for the displayed aggregate.
+  const own = node.amounts ?? {};
+  const childrenRollup = sumBalanceRecords(
+    children.map((child) => child.balanceChildren),
+  );
+  const balanceChildren = sumBalanceRecords([own, childrenRollup]);
   return {
-    ...leafNode(node.account, balance),
+    ...leafNode(node.account, own, node.roleSource ?? undefined),
+    balanceChildren,
     children: children as unknown as Record<string, unknown>[],
   };
 }
