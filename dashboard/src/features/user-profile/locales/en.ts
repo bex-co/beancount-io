@@ -149,6 +149,14 @@ const enUserProfile: Record<string, TranslationEntry> = {
     message: "Showing {shown} of {total} ledgers",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "Show more",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "Could not load more results.",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "Show more ledgers",
     description: "Public profile: showMoreLedgers",

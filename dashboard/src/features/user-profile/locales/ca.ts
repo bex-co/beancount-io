@@ -150,6 +150,14 @@ const caUserProfile: Record<string, TranslationEntry> = {
     message: "Es mostren {shown} de {total} llibres",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "Mostra'n més",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "No s'han pogut carregar més resultats.",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "Mostra més llibres",
     description: "Public profile: showMoreLedgers",

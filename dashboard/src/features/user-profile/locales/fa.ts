@@ -150,6 +150,14 @@ const faUserProfile: Record<string, TranslationEntry> = {
     message: "نمایش {shown} از {total} دفتر",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "نمایش بیشتر",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "بارگذاری نتایج بیشتر ممکن نشد.",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "نمایش دفترهای بیشتر",
     description: "Public profile: showMoreLedgers",

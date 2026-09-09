@@ -146,6 +146,14 @@ const koUserProfile: Record<string, TranslationEntry> = {
     message: "장부 {total}개 중 {shown}개 표시",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "더 보기",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "추가 결과를 불러오지 못했습니다.",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "장부 더 보기",
     description: "Public profile: showMoreLedgers",

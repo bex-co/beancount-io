@@ -150,6 +150,14 @@ const skUserProfile: Record<string, TranslationEntry> = {
     message: "Zobrazených {shown} z {total} kníh",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "Zobraziť viac",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "Ďalšie výsledky sa nepodarilo načítať.",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "Zobraziť ďalšie knihy",
     description: "Public profile: showMoreLedgers",

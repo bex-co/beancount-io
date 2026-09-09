@@ -150,6 +150,14 @@ const esUserProfile: Record<string, TranslationEntry> = {
     message: "Mostrando {shown} de {total} libros",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "Mostrar más",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "No se pudieron cargar más resultados.",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "Mostrar más libros",
     description: "Public profile: showMoreLedgers",

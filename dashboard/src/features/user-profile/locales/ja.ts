@@ -146,6 +146,14 @@ const jaUserProfile: Record<string, TranslationEntry> = {
     message: "{total} 件中 {shown} 件の帳簿を表示",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "もっと見る",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "続きを読み込めませんでした。",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "帳簿をもっと見る",
     description: "Public profile: showMoreLedgers",

@@ -1,19 +1,19 @@
 # w3 · m21 — Continue profile social lists beyond the first page
 
 **Worker:** worker3 **Goal:** profile visitors can reach every available page of
-Followers, Following and Starred lists **Status:** todo
+Followers, Following and Starred lists **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                             | est | depends_on |
 | ---- | ------------------------------------------------- | --- | ---------- |
-| t001 | Add continuation state to the Followers read      | 40m | —          |
-| t002 | Apply continuation to Following and Starred reads | 45m | t001       |
-| t003 | Expose accessible continuation in the social tabs | 35m | t001, t002 |
-| t004 | Adoption surface for complete profile lists       | 20m | t003       |
-| t005 | Simplify the profile pagination changes           | 20m | t004       |
-| t006 | Test profile pagination and request isolation     | 45m | t004, t005 |
-| t007 | Close out and archive complete profile pagination | 15m | t006       |
+| t001 | Add continuation state to the Followers read — **DONE** | 40m | —          |
+| t002 | Apply continuation to Following and Starred reads — **DONE** | 45m | t001       |
+| t003 | Expose accessible continuation in the social tabs — **DONE** | 35m | t001, t002 |
+| t004 | Adoption surface for complete profile lists — **DONE** | 20m | t003       |
+| t005 | Simplify the profile pagination changes — **DONE** | 20m | t004       |
+| t006 | Test profile pagination and request isolation — **DONE** | 45m | t004, t005 |
+| t007 | Close out and archive complete profile pagination — **DONE** | 15m | t006       |
 
 Three implementation tasks total 120 minutes; 220 minutes including closing
 work. The complete repair exceeds the sub-hour inbox threshold. All code work

@@ -5,13 +5,14 @@ import {
   TabsTrigger,
   TabsContent,
 } from "@/common/components/ui/tabs";
+import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useUserFollowers } from "../hooks/use-user-followers";
 import { useUserFollowing } from "../hooks/use-user-following";
 import { useUserStarredRepos } from "../hooks/use-user-starred-repos";
 import { UserListItem } from "./user-list-item";
 import { RepositoryListItem } from "./repository-list-item";
-import { BookOpen, Loader2, Star, Users } from "lucide-react";
+import { BookOpen, ChevronDown, Loader2, Star, Users } from "lucide-react";
 import { LedgerCollection } from "./ledger-collection";
 import { ProfileActivity } from "./profile-activity";
 import type {
@@ -31,6 +32,55 @@ interface UserProfileTabsProps {
   followingCount: number;
   starredReposCount: number;
   initialTab?: string;
+}
+
+function SocialContinuation({
+  hasMore,
+  loadingMore,
+  loadMoreError,
+  onLoadMore,
+  onRetry,
+  label,
+}: {
+  hasMore: boolean;
+  loadingMore: boolean;
+  loadMoreError: Error | null;
+  onLoadMore: () => void;
+  onRetry: () => void;
+  label: string;
+}) {
+  const { t } = useTranslations();
+  if (!hasMore && !loadMoreError) return null;
+
+  return (
+    <div className="mt-6 flex flex-col items-center gap-3">
+      {loadMoreError && (
+        <div className="flex flex-col items-center gap-2">
+          <p role="alert" className="text-sm text-destructive">
+            {t("userProfile.loadMoreError")}
+          </p>
+          <Button variant="outline" onClick={onRetry} className="h-11 px-6">
+            {t("common.tryAgain")}
+          </Button>
+        </div>
+      )}
+      {hasMore && !loadMoreError && (
+        <Button
+          variant="outline"
+          onClick={onLoadMore}
+          disabled={loadingMore}
+          className="h-11 px-6"
+        >
+          {loadingMore ? (
+            <Loader2 className="mr-2 size-4 animate-spin" aria-hidden="true" />
+          ) : (
+            <ChevronDown className="mr-2 size-4" aria-hidden="true" />
+          )}
+          {label}
+        </Button>
+      )}
+    </div>
+  );
 }
 
 export function UserProfileTabs({
@@ -64,18 +114,33 @@ export function UserProfileTabs({
   }, [initialTab]);
 
   // Lazy load tab data only when tab becomes active
-  const { followers, loading: followersLoading } = useUserFollowers(
-    username,
-    activeTab === "followers",
-  );
-  const { following, loading: followingLoading } = useUserFollowing(
-    username,
-    activeTab === "following",
-  );
-  const { starredRepos, loading: starredLoading } = useUserStarredRepos(
-    username,
-    activeTab === "starred",
-  );
+  const {
+    followers,
+    loading: followersLoading,
+    loadingMore: followersLoadingMore,
+    hasMore: followersHasMore,
+    loadMoreError: followersLoadMoreError,
+    loadMore: loadMoreFollowers,
+    retryLoadMore: retryFollowers,
+  } = useUserFollowers(username, activeTab === "followers");
+  const {
+    following,
+    loading: followingLoading,
+    loadingMore: followingLoadingMore,
+    hasMore: followingHasMore,
+    loadMoreError: followingLoadMoreError,
+    loadMore: loadMoreFollowing,
+    retryLoadMore: retryFollowing,
+  } = useUserFollowing(username, activeTab === "following");
+  const {
+    starredRepos,
+    loading: starredLoading,
+    loadingMore: starredLoadingMore,
+    hasMore: starredHasMore,
+    loadMoreError: starredLoadMoreError,
+    loadMore: loadMoreStarred,
+    retryLoadMore: retryStarred,
+  } = useUserStarredRepos(username, activeTab === "starred");
 
   return (
     <Tabs
@@ -155,15 +220,25 @@ export function UserProfileTabs({
             </p>
           )}
           {!followersLoading && followers.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {followers.map(
-                (
-                  user: GetUserFollowersQuery["getUserFollowers"]["users"][number],
-                ) => (
-                  <UserListItem key={user.username} {...user} />
-                ),
-              )}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {followers.map(
+                  (
+                    user: GetUserFollowersQuery["getUserFollowers"]["users"][number],
+                  ) => (
+                    <UserListItem key={user.username} {...user} />
+                  ),
+                )}
+              </div>
+              <SocialContinuation
+                hasMore={followersHasMore}
+                loadingMore={followersLoadingMore}
+                loadMoreError={followersLoadMoreError}
+                onLoadMore={() => void loadMoreFollowers()}
+                onRetry={() => void retryFollowers()}
+                label={t("userProfile.showMore")}
+              />
+            </>
           )}
         </div>
       </TabsContent>
@@ -182,15 +257,25 @@ export function UserProfileTabs({
             </p>
           )}
           {!followingLoading && following.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {following.map(
-                (
-                  user: GetUserFollowingQuery["getUserFollowing"]["users"][number],
-                ) => (
-                  <UserListItem key={user.username} {...user} />
-                ),
-              )}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {following.map(
+                  (
+                    user: GetUserFollowingQuery["getUserFollowing"]["users"][number],
+                  ) => (
+                    <UserListItem key={user.username} {...user} />
+                  ),
+                )}
+              </div>
+              <SocialContinuation
+                hasMore={followingHasMore}
+                loadingMore={followingLoadingMore}
+                loadMoreError={followingLoadMoreError}
+                onLoadMore={() => void loadMoreFollowing()}
+                onRetry={() => void retryFollowing()}
+                label={t("userProfile.showMore")}
+              />
+            </>
           )}
         </div>
       </TabsContent>
@@ -209,19 +294,29 @@ export function UserProfileTabs({
             </p>
           )}
           {!starredLoading && starredRepos.length > 0 && (
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
-              {starredRepos.map(
-                (
-                  repo: GetUserStarredReposQuery["getUserStarredRepos"]["repositories"][number],
-                ) => (
-                  <RepositoryListItem
-                    key={repo.fullName}
-                    {...repo}
-                    ownerUsername={username}
-                  />
-                ),
-              )}
-            </div>
+            <>
+              <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3 sm:gap-4">
+                {starredRepos.map(
+                  (
+                    repo: GetUserStarredReposQuery["getUserStarredRepos"]["repositories"][number],
+                  ) => (
+                    <RepositoryListItem
+                      key={repo.fullName}
+                      {...repo}
+                      ownerUsername={username}
+                    />
+                  ),
+                )}
+              </div>
+              <SocialContinuation
+                hasMore={starredHasMore}
+                loadingMore={starredLoadingMore}
+                loadMoreError={starredLoadMoreError}
+                onLoadMore={() => void loadMoreStarred()}
+                onRetry={() => void retryStarred()}
+                label={t("userProfile.showMore")}
+              />
+            </>
           )}
         </div>
       </TabsContent>

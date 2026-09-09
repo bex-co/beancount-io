@@ -28,6 +28,7 @@ const mockQueryResult: {
 // Mock Apollo Client
 vi.mock("@apollo/client/react", () => ({
   useQuery: () => mockQueryResult,
+  useLazyQuery: () => [vi.fn()],
 }));
 
 vi.mock("@/graphql/definitions", () => ({

@@ -1,16 +1,38 @@
-import { useQuery } from "@apollo/client/react";
-import { GetUserFollowingDocument } from "@/graphql/definitions";
+import {
+  GetUserFollowingDocument,
+  type GetUserFollowingQuery,
+} from "@/graphql/definitions";
+import { usePaginatedSocialList } from "./use-paginated-social-list";
+
+type FollowingUser = GetUserFollowingQuery["getUserFollowing"]["users"][number];
 
 export function useUserFollowing(username: string, enabled = false) {
-  const { data, loading, error } = useQuery(GetUserFollowingDocument, {
-    variables: { username, page: 1, limit: 20 },
-    skip: !username || !enabled,
+  const result = usePaginatedSocialList<
+    FollowingUser,
+    GetUserFollowingQuery,
+    {
+      username: string;
+      page: number;
+      limit: number;
+    }
+  >({
+    document: GetUserFollowingDocument,
+    username,
+    enabled,
+    selectPage: (data) =>
+      data?.getUserFollowing ? { items: data.getUserFollowing.users } : null,
+    identityKey: (user) => user.username,
   });
 
   return {
-    following: data?.getUserFollowing?.users || [],
-    total: data?.getUserFollowing?.total || 0,
-    loading,
-    error,
+    following: result.items,
+    total: result.total,
+    loading: result.loading,
+    loadingMore: result.loadingMore,
+    hasMore: result.hasMore,
+    error: result.error,
+    loadMoreError: result.loadMoreError,
+    loadMore: result.loadMore,
+    retryLoadMore: result.retryLoadMore,
   };
 }

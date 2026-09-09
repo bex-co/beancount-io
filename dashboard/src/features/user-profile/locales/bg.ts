@@ -150,6 +150,14 @@ const bgUserProfile: Record<string, TranslationEntry> = {
     message: "Показани са {shown} от {total} книги",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "Покажи още",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "Неуспешно зареждане на още резултати.",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "Показване на още книги",
     description: "Public profile: showMoreLedgers",

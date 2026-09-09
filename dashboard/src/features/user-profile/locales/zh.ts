@@ -149,6 +149,14 @@ const zhUserProfile: Record<string, TranslationEntry> = {
     message: "显示 {total} 本账簿中的 {shown} 本",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "显示更多",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "无法加载更多结果。",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "显示更多账簿",
     description: "Public profile: showMoreLedgers",

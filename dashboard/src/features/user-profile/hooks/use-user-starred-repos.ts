@@ -1,16 +1,41 @@
-import { useQuery } from "@apollo/client/react";
-import { GetUserStarredReposDocument } from "@/graphql/definitions";
+import {
+  GetUserStarredReposDocument,
+  type GetUserStarredReposQuery,
+} from "@/graphql/definitions";
+import { usePaginatedSocialList } from "./use-paginated-social-list";
+
+type StarredRepo =
+  GetUserStarredReposQuery["getUserStarredRepos"]["repositories"][number];
 
 export function useUserStarredRepos(username: string, enabled = false) {
-  const { data, loading, error } = useQuery(GetUserStarredReposDocument, {
-    variables: { username, page: 1, limit: 20 },
-    skip: !username || !enabled,
+  const result = usePaginatedSocialList<
+    StarredRepo,
+    GetUserStarredReposQuery,
+    {
+      username: string;
+      page: number;
+      limit: number;
+    }
+  >({
+    document: GetUserStarredReposDocument,
+    username,
+    enabled,
+    selectPage: (data) =>
+      data?.getUserStarredRepos
+        ? { items: data.getUserStarredRepos.repositories }
+        : null,
+    identityKey: (repo) => repo.fullName,
   });
 
   return {
-    starredRepos: data?.getUserStarredRepos?.repositories || [],
-    total: data?.getUserStarredRepos?.total || 0,
-    loading,
-    error,
+    starredRepos: result.items,
+    total: result.total,
+    loading: result.loading,
+    loadingMore: result.loadingMore,
+    hasMore: result.hasMore,
+    error: result.error,
+    loadMoreError: result.loadMoreError,
+    loadMore: result.loadMore,
+    retryLoadMore: result.retryLoadMore,
   };
 }

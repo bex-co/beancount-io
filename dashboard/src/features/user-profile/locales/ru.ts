@@ -150,6 +150,14 @@ const ruUserProfile: Record<string, TranslationEntry> = {
     message: "Показано {shown} из {total} книг",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "Показать ещё",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "Не удалось загрузить дополнительные результаты.",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "Показать больше книг",
     description: "Public profile: showMoreLedgers",

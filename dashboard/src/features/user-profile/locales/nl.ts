@@ -150,6 +150,14 @@ const nlUserProfile: Record<string, TranslationEntry> = {
     message: "{shown} van {total} boekhoudingen weergegeven",
     description: "Public profile: results",
   },
+  "userProfile.showMore": {
+    message: "Meer tonen",
+    description: "Public profile: show more social list items",
+  },
+  "userProfile.loadMoreError": {
+    message: "Meer resultaten laden mislukt.",
+    description: "Public profile: failed to load the next social page",
+  },
   "userProfile.showMoreLedgers": {
     message: "Meer boekhoudingen tonen",
     description: "Public profile: showMoreLedgers",

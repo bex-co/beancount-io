@@ -31,7 +31,12 @@ const mockFollowersResult = {
   }>,
   total: 0,
   loading: false,
+  loadingMore: false,
+  hasMore: false,
   error: null,
+  loadMoreError: null,
+  loadMore: vi.fn(),
+  retryLoadMore: vi.fn(),
 };
 
 const mockFollowingResult = {
@@ -43,7 +48,12 @@ const mockFollowingResult = {
   }>,
   total: 0,
   loading: false,
+  loadingMore: false,
+  hasMore: false,
   error: null,
+  loadMoreError: null,
+  loadMore: vi.fn(),
+  retryLoadMore: vi.fn(),
 };
 
 const mockStarredReposResult = {
@@ -57,7 +67,12 @@ const mockStarredReposResult = {
   }>,
   total: 0,
   loading: false,
+  loadingMore: false,
+  hasMore: false,
   error: null,
+  loadMoreError: null,
+  loadMore: vi.fn(),
+  retryLoadMore: vi.fn(),
 };
 
 // Mock hooks
@@ -92,6 +107,9 @@ vi.mock("@/common/hooks/use-translations", () => ({
         "userProfile.noFollowers": "No followers yet",
         "userProfile.noFollowing": "Not following anyone yet",
         "userProfile.noStarredRepos": "No starred repositories",
+        "userProfile.showMore": "Show more",
+        "userProfile.loadMoreError": "Could not load more results.",
+        "common.tryAgain": "Try again",
       };
       return translations[key] || key;
     },
@@ -124,17 +142,26 @@ describe("UserProfileTabs", () => {
     mockFollowersResult.followers = [];
     mockFollowersResult.total = 0;
     mockFollowersResult.loading = false;
+    mockFollowersResult.loadingMore = false;
+    mockFollowersResult.hasMore = false;
     mockFollowersResult.error = null;
+    mockFollowersResult.loadMoreError = null;
 
     mockFollowingResult.following = [];
     mockFollowingResult.total = 0;
     mockFollowingResult.loading = false;
+    mockFollowingResult.loadingMore = false;
+    mockFollowingResult.hasMore = false;
     mockFollowingResult.error = null;
+    mockFollowingResult.loadMoreError = null;
 
     mockStarredReposResult.starredRepos = [];
     mockStarredReposResult.total = 0;
     mockStarredReposResult.loading = false;
+    mockStarredReposResult.loadingMore = false;
+    mockStarredReposResult.hasMore = false;
     mockStarredReposResult.error = null;
+    mockStarredReposResult.loadMoreError = null;
   });
 
   describe("Tab Rendering", () => {
