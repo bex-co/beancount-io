@@ -48,7 +48,9 @@ def _config_path(file: Path, supplied: Path | None) -> tuple[Path, str]:
         return conventional, "default beside root ledger"
     raise UsageError(
         "Choose a Python importer with --config FILE, or place importers.py beside the root ledger. "
-        "The selected path is remembered for this ledger."
+        "The selected path is remembered for this ledger. "
+        "For a CSV export with no importer, map the columns directly with "
+        "--csv date=Date,amount=Amount,payee=Payee --account Assets:Checking."
     )
 
 
@@ -60,6 +62,68 @@ def _remember_config(file: Path, config: Path) -> None:
             os.replace(candidate, record)
     except OSError as exc:
         output.note(f"Could not remember the importer path: {exc}. Pass --config on the next import.")
+
+
+def _csv_record(file: Path) -> Path:
+    key = hashlib.sha256(str(file.resolve()).encode()).hexdigest()
+    return config_dir() / "importers" / f"csv-{key}.json"
+
+
+def _recall_csv(file: Path, source: Path) -> dict[str, Any] | None:
+    """A remembered `--csv` run for this root ledger and CSV header row, if any.
+
+    Returns the stored spec only when its mapping and account are usable
+    strings; a corrupt record reads as no memory rather than a crash.
+    """
+    from cli.csv_mapper import header_signature, read_header
+
+    record = _csv_record(file)
+    if not record.is_file():
+        return None
+    try:
+        sources = json.loads(record.read_text()).get("sources", [])
+    except (ValueError, AttributeError):
+        return None
+    headers = read_header(source)
+    if not headers:
+        return None
+    wanted = header_signature(headers)
+    for entry in sources:
+        if (
+            isinstance(entry, dict)
+            and header_signature(entry.get("headers")) == wanted
+            and isinstance(entry.get("mapping"), str)
+            and isinstance(entry.get("account"), str)
+        ):
+            return entry
+    return None
+
+
+def _remember_csv(file: Path, source: Path, spec: dict[str, Any]) -> None:
+    """Remember a `--csv` run keyed by root ledger and CSV header row."""
+    from cli.csv_mapper import header_signature, read_header
+
+    headers = read_header(source)
+    if not headers:
+        return
+    record = _csv_record(file)
+    try:
+        try:
+            sources = json.loads(record.read_text()).get("sources", [])
+        except (OSError, ValueError, AttributeError):
+            sources = []
+        wanted = header_signature(headers)
+        sources = [
+            entry
+            for entry in sources
+            if not (isinstance(entry, dict) and header_signature(entry.get("headers")) == wanted)
+        ]
+        record.parent.mkdir(parents=True, exist_ok=True)
+        payload = json.dumps({"sources": [*sources, {"headers": headers, **spec}]})
+        with ledger_write.candidate_file(record, payload) as candidate:
+            os.replace(candidate, record)
+    except OSError as exc:
+        output.note(f"Could not remember the column mapping: {exc}. Pass --csv on the next import.")
 
 
 def _importer(config: Path, source: Path, name: str | None) -> Any:
@@ -193,6 +257,19 @@ def _source_amounts(entry: Any, account: str) -> str:
 
 def import_entries(
     source: Annotated[Path, typer.Argument(help="Bank/card export handled by a configured importer")],
+    csv_mapping: Annotated[
+        str | None,
+        typer.Option(
+            "--csv",
+            help="Column mapping (date=Date,amount=Amount,payee=Payee,...); no Python importer needed",
+        ),
+    ] = None,
+    csv_account: Annotated[str | None, typer.Option("--account", help="Source account for --csv rows")] = None,
+    date_format: Annotated[str, typer.Option("--date-format", help="strptime date format for --csv")] = "%Y-%m-%d",
+    rules_file: Annotated[Path | None, typer.Option("--rules", help="TOML categorization rules for --csv rows")] = None,
+    default_account: Annotated[
+        str, typer.Option("--default-account", help="Counter account for --csv rows no rule matches")
+    ] = "Expenses:Uncategorized",
     config: Annotated[
         Path | None,
         typer.Option("--config", help="Python CONFIG file; defaults to the saved path or root-ledger/importers.py"),
@@ -223,12 +300,13 @@ def import_entries(
     from beancount import loader
     from beancount.core.data import Transaction
 
+    from cli.csv_mapper import CsvImporter, load_rules, parse_mapping
     from cli.directives.writer import format_entry, normalize_entry_strings
 
     file = context.current().entry_file()
     source = source.expanduser().resolve()
-    config, config_source = _config_path(file, config)
-    output.note(f"Using importers from {config} ({config_source})")
+    if csv_mapping is not None and config is not None:
+        raise UsageError("Pass --csv or --config, not both.")
     if not source.is_file():
         raise UsageError(f"Export file not found: {source}")
     source_bytes = source.read_bytes()
@@ -236,29 +314,93 @@ def import_entries(
     target = ledger_write.destination(file, into)
     snapshot.require_target(target)
     original = target.read_bytes()
-    existing, errors, _ = loader.load_file(file)
+    existing, errors, options = loader.load_file(file)
     output.render_ledger_errors(errors, allow=False)
     logs = io.StringIO()
-    # Importer chatter is retained in the preview instead of corrupting JSON.
-    sys.path.insert(0, str(config.parent))
-    try:
-        with redirect_stdout(logs), redirect_stderr(logs):
-            importer = _importer(config, source, importer_name)
+    csv_request: str | None = csv_mapping
+    config_to_remember: Path | None = None
+    csv_origin = "--csv"
+    csv_run_account: str | None = csv_account
+    csv_rules_arg: str | None = str(rules_file.expanduser().resolve()) if rules_file is not None else None
+    remembered_run = False
+    if csv_request is None and config is None:
+        remembered = _recall_csv(file, source)
+        if remembered is not None:
+            csv_request = remembered["mapping"]
+            csv_run_account = remembered["account"]
+            remembered_run = True
+            csv_origin = "remembered --csv"
+            if isinstance(remembered.get("rules"), str):
+                csv_rules_arg = remembered["rules"]
+            if isinstance(remembered.get("default_account"), str):
+                default_account = remembered["default_account"]
+            if isinstance(remembered.get("date_format"), str):
+                date_format = remembered["date_format"]
+    csv_mode = csv_request is not None
+    if csv_mode:
+        if csv_run_account is None or csv_request is None:
+            raise UsageError("--csv needs --account ACCOUNT for the source account.")
+        mapping = parse_mapping(csv_request)
+        operating = options.get("operating_currency") or []
+        importer = CsvImporter(
+            account=csv_run_account,
+            mapping=mapping,
+            date_format=date_format,
+            rules=load_rules(Path(csv_rules_arg)) if csv_rules_arg is not None else None,
+            default_account=default_account,
+            currency=operating[0] if len(operating) == 1 else None,
+        )
+        preview_config, config_source = csv_request, csv_origin
+        if remembered_run:
+            output.note(f"Using remembered column mapping for {source.name}.")
+        else:
+            output.note("Using column mapping (--csv).")
+        try:
             account = str(importer.account(str(source)))
             entries = copy.deepcopy(list(importer.extract(str(source), existing)))
-    except BeaError:
-        raise
-    except ImportError as exc:
-        raise UsageError(
-            f"Importer dependency is unavailable: {exc}. Run bea in an environment containing your importer's "
-            "dependencies; see docs/IMPORTING.md. Pass --debug before the command for a traceback."
-        ) from exc
-    except Exception as exc:
-        raise LedgerError(
-            f"Importer failed ({type(exc).__name__}): {exc}. Pass --debug before the command for a traceback."
-        ) from exc
-    finally:
-        sys.path.pop(0)
+        except BeaError:
+            raise
+        except Exception as exc:
+            raise LedgerError(
+                f"Importer failed ({type(exc).__name__}): {exc}. Pass --debug before the command for a traceback."
+            ) from exc
+        if not remembered_run:
+            _remember_csv(
+                file,
+                source,
+                {
+                    "mapping": csv_request,
+                    "account": csv_run_account,
+                    "rules": csv_rules_arg,
+                    "default_account": default_account,
+                    "date_format": date_format,
+                },
+            )
+    else:
+        config, config_source = _config_path(file, config)
+        preview_config = str(config)
+        config_to_remember = config
+        output.note(f"Using importers from {config} ({config_source})")
+        # Importer chatter is retained in the preview instead of corrupting JSON.
+        sys.path.insert(0, str(config.parent))
+        try:
+            with redirect_stdout(logs), redirect_stderr(logs):
+                importer = _importer(config, source, importer_name)
+                account = str(importer.account(str(source)))
+                entries = copy.deepcopy(list(importer.extract(str(source), existing)))
+        except BeaError:
+            raise
+        except ImportError as exc:
+            raise UsageError(
+                f"Importer dependency is unavailable: {exc}. Run bea in an environment containing your importer's "
+                "dependencies; see docs/IMPORTING.md. Pass --debug before the command for a traceback."
+            ) from exc
+        except Exception as exc:
+            raise LedgerError(
+                f"Importer failed ({type(exc).__name__}): {exc}. Pass --debug before the command for a traceback."
+            ) from exc
+        finally:
+            sys.path.pop(0)
     # `import-id` / `import-id-2` always match: they are the shared rail with
     # the ledger skills, independent of the importer's native-ID key choice.
     keys = id_key or _DEFAULT_ID_KEYS
@@ -317,6 +459,9 @@ def import_entries(
                     identities[identity] = entry
                 fingerprints[_candidate_key(entry, account)] = entry
                 batch_rows[id(entry)] = index + 1
+        # The mapper stashes its rule name in metadata for the preview; pop it
+        # before rendering so it never reaches the ledger.
+        rule = entry.meta.pop("_csv_rule", None) if isinstance(entry, Transaction) else None
         text = format_entry(entry)
         if not isinstance(entry, Transaction):
             if text in other_entries:
@@ -325,28 +470,29 @@ def import_entries(
         include = status == "new" or (status == "possible_duplicate" and duplicates == Duplicates.include)
         if include:
             texts.append(text)
-        rows.append(
-            {
-                "row": index + 1,
-                "status": status,
-                "reason": reason,
-                "include": include,
-                "entry": text,
-                "accounts": [p.account for p in entry.postings] if isinstance(entry, Transaction) else [],
-                "date": entry.date.isoformat(),
-                "payee": entry.payee if isinstance(entry, Transaction) else None,
-                "narration": entry.narration if isinstance(entry, Transaction) else None,
-                "amount": _source_amounts(entry, account) if isinstance(entry, Transaction) else "",
-                "match": {
-                    "filename": match.meta.get("filename"),
-                    "lineno": match.meta.get("lineno"),
-                    "row": batch_rows.get(id(match)),
-                    "entry": format_entry(match),
-                }
-                if match
-                else None,
+        row_dict: dict[str, Any] = {
+            "row": index + 1,
+            "status": status,
+            "reason": reason,
+            "include": include,
+            "entry": text,
+            "accounts": [p.account for p in entry.postings] if isinstance(entry, Transaction) else [],
+            "date": entry.date.isoformat(),
+            "payee": entry.payee if isinstance(entry, Transaction) else None,
+            "narration": entry.narration if isinstance(entry, Transaction) else None,
+            "amount": _source_amounts(entry, account) if isinstance(entry, Transaction) else "",
+            "match": {
+                "filename": match.meta.get("filename"),
+                "lineno": match.meta.get("lineno"),
+                "row": batch_rows.get(id(match)),
+                "entry": format_entry(match),
             }
-        )
+            if match
+            else None,
+        }
+        if csv_mode:
+            row_dict["rule"] = rule
+        rows.append(row_dict)
     proposed = ledger_write.appended_content(original, texts)
     validation_errors: list[str] = []
     try:
@@ -355,7 +501,7 @@ def import_entries(
         validation_errors = exc.details or [str(exc)]
     preview = {
         "source": str(source),
-        "config": str(config),
+        "config": preview_config,
         "config_source": config_source,
         "into": str(target),
         "importer": _name(importer),
@@ -396,7 +542,8 @@ def import_entries(
         snapshot.verify()
         ledger_write.append(file, texts, expected=original, into=into, snapshot=snapshot)
         preview["written"] = len(texts)
-    _remember_config(file, config)
+    if config_to_remember is not None:
+        _remember_config(file, config_to_remember)
     if context.current().json_output:
         output.emit(preview, target=output.file_target(file))
     else:
@@ -404,8 +551,11 @@ def import_entries(
             f"{_name(importer)} → {account}: {len(texts)} ready, "
             f"{preview['duplicates']} exact duplicates, {preview['possible_duplicates']} possible duplicates"
         )
+        headers = ["ROW", "STATUS", "DATE", "PAYEE / NARRATION", "SOURCE AMOUNT"]
+        if csv_mode:
+            headers.append("RULE")
         output.table(
-            ["ROW", "STATUS", "DATE", "PAYEE / NARRATION", "SOURCE AMOUNT"],
+            headers,
             [
                 [
                     str(row["row"]),
@@ -413,6 +563,7 @@ def import_entries(
                     row["date"],
                     " / ".join(v for v in (row["payee"], row["narration"]) if v),
                     row["amount"],
+                    *([row.get("rule") or ""] if csv_mode else []),
                 ]
                 for row in rows
             ],

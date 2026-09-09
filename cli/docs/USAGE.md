@@ -6,6 +6,7 @@ The Beancount.io CLI installs one command: `bea`.
 # Local — works on .bean files
 bea init [DIRECTORY] --currency USD
 bea import EXPORT [--config importers.py] [--into FILE] [--apply]
+bea import EXPORT.csv --csv date=Date,amount=Amount,payee=Payee --account Assets:Checking [--rules rules.toml]
 bea check | format | query "<BQL>"
 bea list <type> | bea add <type>          # eleven directive types; add transactions --from PATH
 bea report balance-sheet | income-statement | trial-balance | overview

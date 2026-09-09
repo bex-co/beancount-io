@@ -1,0 +1,18 @@
+# Example categorization rules for `bea import --csv --rules rules.toml`.
+#
+# Rules run in file order against the payee first, then the narration
+# (case-insensitive); the first matching rule wins. Rows no rule matches post
+# to Expenses:Uncategorized with flag `!` — the categorization queue you list
+# with `bea list transaction --flag '!'`.
+
+[[rule]]
+match = "whole foods|trader joe|corner market"
+account = "Expenses:Groceries"
+
+[[rule]]
+match = "shell|chevron|exxon"
+account = "Expenses:Transport:Fuel"
+
+[[rule]]
+match = "salary|payroll|employer"
+account = "Income:Salary"

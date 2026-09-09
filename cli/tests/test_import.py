@@ -414,3 +414,305 @@ CONFIG = [Native()]
         "number",
         "text",
     ]
+
+
+CSV_HEADER = "Date,Payee,Narration,Amount\n"
+CSV_ROW = "2026-08-02,Cafe,Coffee,-5.25\n"
+CSV_MAPPING = "date=Date,amount=Amount,payee=Payee"
+
+
+def run_csv(book: Path, source: Path, *args: str):
+    return runner.invoke(app, ["--json", "--file", str(book), "import", str(source), *args])
+
+
+@pytest.fixture
+def isolated_config(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    cfg = tmp_path / "cfg"
+    cfg.mkdir()
+    monkeypatch.setenv("BEA_CONFIG_DIR", str(cfg))
+    return cfg
+
+
+def open_uncategorized(book: Path) -> None:
+    result = runner.invoke(
+        app,
+        [
+            "--json",
+            "--file",
+            str(book),
+            "add",
+            "open",
+            "--date",
+            "2026-08-01",
+            "--account",
+            "Expenses:Uncategorized",
+            "-c",
+            "USD",
+        ],
+    )
+    assert result.exit_code == 0, result.output
+
+
+def csv_result(book: Path, body: str, *args: str, mapping: str = CSV_MAPPING, account: str = "Assets:Checking"):
+    source = book.parent / "bank.csv"
+    source.write_text(body)
+    return run_csv(book, source, "--csv", mapping, "--account", account, *args)
+
+
+def test_csv_signed_amount_posts_source_and_default_flag_queue(book: Path, isolated_config: Path) -> None:
+    open_uncategorized(book)
+    result = csv_result(book, CSV_HEADER + CSV_ROW, "--apply")
+    assert result.exit_code == 0, result.output
+    data = json.loads(result.stdout)["data"]
+    assert data["importer"] == "csv" and data["config_source"] == "--csv"
+    assert data["written"] == 1
+    row = data["rows"][0]
+    assert row["rule"] == "unmatched" and row["amount"] == "-5.25 USD"
+    entries, errors, _ = loader.load_file(book)
+    assert not errors
+    transaction = next(e for e in entries if isinstance(e, Transaction))
+    assert transaction.flag == "!"
+    assert [(p.account, str(p.units)) for p in transaction.postings] == [
+        ("Assets:Checking", "-5.25 USD"),
+        ("Expenses:Uncategorized", "5.25 USD"),
+    ]
+    assert transaction.meta["import-id"].startswith("csv:sha256:")
+    queued = runner.invoke(app, ["--json", "--file", str(book), "list", "transaction", "--flag", "!"])
+    assert json.loads(queued.stdout)["data"][0]["payee"] == "Cafe"
+
+
+def test_csv_debit_credit_pair_signs_each_side(book: Path, isolated_config: Path) -> None:
+    source = book.parent / "bank.csv"
+    source.write_text("Date,Payee,Debit,Credit\n2026-08-02,Cafe,5.25,\n2026-08-03,Employer,,1000.00\n")
+    result = run_csv(
+        book,
+        source,
+        "--csv",
+        "date=Date,payee=Payee,debit=Debit,credit=Credit",
+        "--account",
+        "Assets:Checking",
+        "--default-account",
+        "Expenses:Dining",
+        "--apply",
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["written"] == 2
+    entries, errors, _ = loader.load_file(book)
+    assert not errors
+    amounts = {
+        e.payee: str(next(p.units for p in e.postings if p.account == "Assets:Checking"))
+        for e in entries
+        if isinstance(e, Transaction)
+    }
+    assert amounts == {"Cafe": "-5.25 USD", "Employer": "1000.00 USD"}
+
+
+def test_csv_sign_ledger_flips_the_file_convention(book: Path, isolated_config: Path) -> None:
+    result = csv_result(
+        book,
+        CSV_HEADER + CSV_ROW.replace("-5.25", "5.25"),
+        "--default-account",
+        "Expenses:Dining",
+        "--apply",
+        mapping=f"{CSV_MAPPING},sign=ledger",
+    )
+    assert result.exit_code == 0, result.output
+    entries, errors, _ = loader.load_file(book)
+    assert not errors
+    transaction = next(e for e in entries if isinstance(e, Transaction))
+    assert str(transaction.postings[0].units) == "-5.25 USD"
+
+
+def test_csv_explicit_date_format(book: Path, isolated_config: Path) -> None:
+    result = csv_result(
+        book,
+        "Date,Payee,Narration,Amount\n08/02/2026,Cafe,Coffee,-5.25\n",
+        "--date-format",
+        "%m/%d/%Y",
+        "--default-account",
+        "Expenses:Dining",
+        "--apply",
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["rows"][0]["date"] == "2026-08-02"
+
+
+def test_csv_currency_column_overrides_the_operating_currency(book: Path, isolated_config: Path) -> None:
+    result = csv_result(
+        book,
+        "Date,Payee,Amount,Cur\n2026-08-02,Cafe,-5.25,EUR\n",
+        mapping=f"{CSV_MAPPING},currency=Cur",
+    )
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["rows"][0]["amount"] == "-5.25 EUR"
+
+
+def test_csv_missing_required_field_exits_2(book: Path, isolated_config: Path) -> None:
+    result = csv_result(book, CSV_HEADER + CSV_ROW, mapping="date=Date,amount=Amount")
+    assert result.exit_code == 2
+    assert "--csv needs payee=Column" in result.stderr
+
+
+def test_csv_bad_row_reports_line_and_column(book: Path, isolated_config: Path) -> None:
+    result = csv_result(book, CSV_HEADER + CSV_ROW.replace("-5.25", "five"))
+    assert result.exit_code == 2
+    assert "Row 2" in result.stderr and "'Amount'" in result.stderr
+
+
+def test_csv_unknown_field_exits_2(book: Path, isolated_config: Path) -> None:
+    result = csv_result(book, CSV_HEADER + CSV_ROW, mapping=f"{CSV_MAPPING},foo=Bar")
+    assert result.exit_code == 2
+    assert "Unknown --csv field 'foo'" in result.stderr
+
+
+def rules_file(book: Path, body: str) -> Path:
+    rules = book.parent / "rules.toml"
+    rules.write_text(body)
+    return rules
+
+
+def test_csv_rules_first_match_wins_case_insensitively(book: Path, isolated_config: Path) -> None:
+    rules = rules_file(
+        book,
+        '[[rule]]\nmatch = "cafe|diner"\naccount = "Expenses:Dining"\n'
+        '[[rule]]\nmatch = "cafe"\naccount = "Expenses:Groceries"\n',
+    )
+    result = csv_result(book, CSV_HEADER + "2026-08-02,CAFE MORNING,Coffee,-5.25\n", "--rules", str(rules))
+    assert result.exit_code == 0, result.output
+    row = json.loads(result.stdout)["data"]["rows"][0]
+    assert row["rule"] == "cafe|diner"
+    assert "Expenses:Dining" in row["entry"]
+
+
+def test_csv_rule_matches_narration_when_payee_misses(book: Path, isolated_config: Path) -> None:
+    rules = rules_file(book, '[[rule]]\nmatch = "salary"\naccount = "Income:Salary"\n')
+    result = csv_result(
+        book,
+        CSV_HEADER + "2026-08-03,Unknown,Monthly salary,1000.00\n",
+        "--rules",
+        str(rules),
+        "--apply",
+        mapping=f"{CSV_MAPPING},narration=Narration",
+    )
+    assert result.exit_code == 0, result.output
+    entries, errors, _ = loader.load_file(book)
+    assert not errors
+    transaction = next(e for e in entries if isinstance(e, Transaction))
+    assert transaction.flag == "*"
+    assert "Income:Salary" in [p.account for p in transaction.postings]
+
+
+def test_csv_category_column_categorizes_and_rules_win(book: Path, isolated_config: Path) -> None:
+    rules = rules_file(book, '[[rule]]\nmatch = "cafe"\naccount = "Expenses:Dining"\n')
+    result = run_csv(
+        book,
+        category_source(book),
+        "--csv",
+        CSV_MAPPING,
+        "--account",
+        "Assets:Checking",
+        "--rules",
+        str(rules),
+    )
+    assert result.exit_code == 0, result.output
+    rows = json.loads(result.stdout)["data"]["rows"]
+    assert [row["rule"] for row in rows] == ["cafe", "Expenses:Groceries"]
+    assert "Expenses:Dining" in rows[0]["entry"]
+    assert "Expenses:Groceries" in rows[1]["entry"]
+
+
+def category_source(book: Path) -> Path:
+    source = book.parent / "categorized.csv"
+    source.write_text(
+        "Date,Payee,Amount,Category\n"
+        "2026-08-02,Cafe,-5.25,Expenses:Groceries\n"
+        "2026-08-03,Market,-9.99,Expenses:Groceries\n"
+    )
+    return source
+
+
+def test_csv_invalid_regex_exits_2(book: Path, isolated_config: Path) -> None:
+    rules = rules_file(book, '[[rule]]\nmatch = "("\naccount = "Expenses:Dining"\n')
+    result = csv_result(book, CSV_HEADER + CSV_ROW, "--rules", str(rules))
+    assert result.exit_code == 2
+    assert "invalid regex" in result.stderr
+
+
+def test_csv_rule_naming_an_unopened_account_guides_to_add_open(book: Path, isolated_config: Path) -> None:
+    rules = rules_file(book, '[[rule]]\nmatch = "cafe"\naccount = "Expenses:Popcorn"\n')
+    before = book.read_bytes()
+    result = csv_result(book, CSV_HEADER + CSV_ROW, "--rules", str(rules), "--apply")
+    assert result.exit_code == 1
+    assert "bea add open --account Expenses:Popcorn" in result.stderr
+    assert book.read_bytes() == before
+
+
+def test_csv_mapping_is_remembered_per_ledger_and_header(
+    book: Path, isolated_config: Path, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    open_uncategorized(book)
+    source = book.parent / "bank.csv"
+    source.write_text(CSV_HEADER + CSV_ROW)
+    explicit = run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking")
+    assert explicit.exit_code == 0, explicit.output
+    assert json.loads(explicit.stdout)["data"]["config_source"] == "--csv"
+    monkeypatch.chdir(book.parent.parent)
+    bare = runner.invoke(app, ["--json", "--file", str(book), "import", str(source)])
+    assert bare.exit_code == 0, bare.output
+    data = json.loads(bare.stdout)["data"]
+    assert data["config_source"] == "remembered --csv"
+    assert data["config"] == CSV_MAPPING
+    # A changed header matches nothing remembered: the guidance names --csv.
+    other = book.parent / "other.csv"
+    other.write_text("Day,Who,Total\n2026-08-06,X,1.00\n")
+    missing = runner.invoke(app, ["--json", "--file", str(book), "import", str(other)])
+    assert missing.exit_code == 2
+    assert "--csv" in missing.stderr
+    # Explicit flags overwrite the remembered mapping for those headers.
+    source.write_text(CSV_HEADER + CSV_ROW)
+    updated = run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Savings")
+    assert updated.exit_code == 0, updated.output
+    recall = runner.invoke(app, ["--json", "--file", str(book), "import", str(source)])
+    assert json.loads(recall.stdout)["data"]["account"] == "Assets:Savings"
+
+
+def test_csv_config_takes_precedence_over_a_remembered_mapping(book: Path, isolated_config: Path) -> None:
+    open_uncategorized(book)
+    source = book.parent / "bank.csv"
+    source.write_text(CSV_HEADER + CSV_ROW)
+    assert run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking").exit_code == 0
+    config = book.parent / "importers.py"
+    config.write_text(
+        "class Empty:\n"
+        '    name = "empty"\n'
+        "    def identify(self, filepath): return True\n"
+        '    def account(self, filepath): return "Assets:Checking"\n'
+        "    def extract(self, filepath, existing): return []\n"
+        "CONFIG = [Empty()]\n"
+    )
+    result = runner.invoke(app, ["--json", "--file", str(book), "import", str(source), "--config", str(config)])
+    assert result.exit_code == 0, result.output
+    assert json.loads(result.stdout)["data"]["config_source"] == "--config"
+
+
+def test_csv_reimport_skips_every_row(book: Path, isolated_config: Path) -> None:
+    open_uncategorized(book)
+    source = book.parent / "bank.csv"
+    source.write_text(CSV_HEADER + CSV_ROW)
+    assert run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking", "--apply").exit_code == 0
+    saved = book.read_bytes()
+    repeated = run_csv(book, source, "--csv", CSV_MAPPING, "--account", "Assets:Checking", "--apply")
+    assert repeated.exit_code == 0, repeated.output
+    data = json.loads(repeated.stdout)["data"]
+    assert data["written"] == 0
+    assert [row["status"] for row in data["rows"]] == ["duplicate"]
+    assert book.read_bytes() == saved
+
+
+def test_csv_id_column_becomes_a_bank_import_id(book: Path, isolated_config: Path) -> None:
+    open_uncategorized(book)
+    source = book.parent / "bank.csv"
+    source.write_text("Date,Payee,Narration,Amount,Ref\n2026-08-02,Cafe,Coffee,-5.25,ref-7\n")
+    result = run_csv(book, source, "--csv", f"{CSV_MAPPING},id=Ref", "--account", "Assets:Checking", "--apply")
+    assert result.exit_code == 0, result.output
+    assert _import_ids(book) == ["bank:ref-7"]

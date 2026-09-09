@@ -422,9 +422,22 @@ for additional directive and investment examples.
 
 ## Import bank exports
 
-An importer parses and categorizes a specific bank format. Bea previews its
-output, checks duplicates, validates the candidate ledger, and writes only
-when `--apply` is present:
+A plain CSV needs no importer: `--csv` maps its columns, `--rules`
+categorizes rows by payee/narration patterns, and the mapping is remembered
+per root ledger for the next import of the same export. Bea previews the
+resulting entries, checks duplicates, validates the candidate ledger, and
+writes only when `--apply` is present:
+
+```bash
+bea import bank.csv --csv date=Date,amount=Amount,payee=Payee --account Assets:Checking --rules rules.toml
+bea import bank.csv --apply
+```
+
+Unmatched rows post to `--default-account` (`Expenses:Uncategorized`) with
+flag `!`, so `bea list transaction --flag '!'` is the categorization queue.
+
+A Python importer remains the advanced path for formats the mapping cannot
+express. An importer parses and categorizes a specific bank format:
 
 ```bash
 bea import bank.csv --config importers.py
@@ -440,6 +453,11 @@ automatic categorization model, or hosted AI call in this command.
 | Option | Behavior |
 | --- | --- |
 | `--config PATH` | Python configuration; explicit path takes precedence |
+| `--csv date=Date,...` | Map CSV columns directly; no Python importer needed |
+| `--account ACCT` | Source account for `--csv` rows (required) |
+| `--rules FILE` | TOML payee/narration regexes categorizing `--csv` rows |
+| `--default-account ACCT` | Counter account for unmatched `--csv` rows (default `Expenses:Uncategorized`) |
+| `--date-format FMT` | strptime date format for `--csv` (default `%Y-%m-%d`) |
 | `--importer NAME` | Choose a configured importer; unknown names list the available names |
 | `--apply` | Recompute the preview and apply accepted entries |
 | `--duplicates review/skip/include` | Default `review`; decide how to handle possible matches |

@@ -1,19 +1,19 @@
 # w1 · m16 — No-code CSV import: column mapping and rules without a Python importer
 
-**Worker:** worker1 **Goal:** a newcomer imports their first bank CSV with one command that names the columns, and a repeat import is `bea import bank.csv --apply`; writing a Python importer becomes the advanced path, not the entry ticket **Status:** todo
+**Worker:** worker1 **Goal:** a newcomer imports their first bank CSV with one command that names the columns, and a repeat import is `bea import bank.csv --apply`; writing a Python importer becomes the advanced path, not the entry ticket **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                                     | est | depends_on |
 | ---- | ----------------------------------------------------------------------------------------- | --- | ---------- |
-| t001 | Built-in column-mapping importer behind `bea import --csv`                                | 90m | —          |
-| t002 | `--rules FILE`: payee and narration patterns to accounts; unmatched rows flagged `!`      | 60m | t001       |
-| t003 | Remember the mapping and rules per source so a repeat import needs no flags               | 30m | t002       |
-| t004 | Docs lead with the no-code path; ADR records why beangulp is not a hard dependency        | 45m | t003       |
-| t005 | Adoption surface                                                                          | 20m | t004       |
-| t006 | Simplify                                                                                  | 30m | t005       |
-| t007 | Test coverage                                                                             | 60m | t005       |
-| t008 | Closeout                                                                                  | 15m | t007       |
+| t001 | Built-in column-mapping importer behind `bea import --csv` — **DONE**                     | 90m | —          |
+| t002 | `--rules FILE`: payee and narration patterns to accounts; unmatched rows flagged `!` — **DONE** | 60m | t001 |
+| t003 | Remember the mapping and rules per source so a repeat import needs no flags — **DONE**    | 30m | t002       |
+| t004 | Docs lead with the no-code path; ADR records why beangulp is not a hard dependency — **DONE** | 45m | t003   |
+| t005 | Adoption surface — **DONE**                                                               | 20m | t004       |
+| t006 | Simplify — **DONE**                                                                       | 30m | t005       |
+| t007 | Test coverage — **DONE**                                                                  | 60m | t005       |
+| t008 | Closeout — **DONE**                                                                       | 15m | t007       |
 
 ## Definition of done
 
