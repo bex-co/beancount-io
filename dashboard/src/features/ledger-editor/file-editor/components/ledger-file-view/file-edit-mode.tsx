@@ -41,6 +41,8 @@ export interface EditModeToolbarProps {
   plainContent: string;
   onSave: (content: string) => void;
   onCancel: () => void;
+  /** Reset the draft buffer before confirming Leave without saving. */
+  onDiscard: () => void;
   isSaving: boolean;
 }
 
@@ -56,6 +58,7 @@ export function EditModeToolbar({
   plainContent,
   onSave,
   onCancel,
+  onDiscard,
   isSaving,
 }: EditModeToolbarProps) {
   const { t } = useTranslations();
@@ -185,7 +188,10 @@ export function EditModeToolbar({
             </Button>
             <Button
               variant="destructive"
-              onClick={() => blocker.proceed?.()}
+              onClick={() => {
+                onDiscard();
+                blocker.proceed?.();
+              }}
               className="w-full sm:w-auto"
             >
               {t("ledgerEditor.leaveWithoutSaving")}

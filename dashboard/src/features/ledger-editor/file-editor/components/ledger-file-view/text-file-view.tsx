@@ -124,12 +124,15 @@ export const TextFileView = ({
     [editedContent, plainContent, onSave, onExitEditMode],
   );
 
-  // Cancel editing - discard changes by reverting the buffer to the file
-  // content, then exit edit mode.
+  // Cancel editing — exit edit mode without wiping the buffer first. The
+  // navigation guard owns discard: Stay keeps the draft; Leave calls onDiscard.
   const handleCancelEdit = useCallback(() => {
-    setEditedContent(plainContent);
     onExitEditMode();
-  }, [plainContent, onExitEditMode]);
+  }, [onExitEditMode]);
+
+  const handleDiscardEdit = useCallback(() => {
+    setEditedContent(plainContent);
+  }, [plainContent]);
 
   return (
     <div className="flex flex-col flex-1 min-h-0">
@@ -145,6 +148,7 @@ export const TextFileView = ({
               plainContent={plainContent}
               onSave={handleSaveClick}
               onCancel={handleCancelEdit}
+              onDiscard={handleDiscardEdit}
               isSaving={isSaving}
             />
           ) : (

@@ -1,17 +1,17 @@
 # w3 · m29 — Protect file drafts during navigation and cancellation
 
-**Worker:** worker3 **Goal:** existing-file and new-file drafts survive a decision to stay, and are discarded only after a confirmed departure **Status:** todo
+**Worker:** worker3 **Goal:** existing-file and new-file drafts survive a decision to stay, and are discarded only after a confirmed departure **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                    | est | depends_on |
 | ---- | -------------------------------------------------------- | --- | ---------- |
-| t001 | Preserve existing-file drafts until discard is confirmed | 45m | —          |
-| t002 | Guard new-file drafts during navigation                  | 40m | t001       |
-| t003 | Verify file-draft adoption surfaces                      | 20m | t002       |
-| t004 | Simplify file-draft transitions                          | 20m | t003       |
-| t005 | Test draft retention, navigation and save outcomes       | 45m | t004       |
-| t006 | Close out and archive file-draft protection              | 15m | t005       |
+| t001 | Preserve existing-file drafts until discard is confirmed — **DONE** | 45m | —          |
+| t002 | Guard new-file drafts during navigation — **DONE** | 40m | t001       |
+| t003 | Verify file-draft adoption surfaces — **DONE** | 20m | t002       |
+| t004 | Simplify file-draft transitions — **DONE** | 20m | t003       |
+| t005 | Test draft retention, navigation and save outcomes — **DONE** | 45m | t004       |
+| t006 | Close out and archive file-draft protection — **DONE** | 15m | t005       |
 
 185 minutes total, including85 minutes of implementation. One major finding
 group, promoted from [041](../041.md) and expanded with the missing new-file

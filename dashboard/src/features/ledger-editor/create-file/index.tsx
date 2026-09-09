@@ -1,11 +1,19 @@
 import { PageHeader } from "@/common/components/page-header";
 import { RelatedLinks } from "@/common/components/related-links";
-import { useState } from "react";
-import { useParams, useNavigate } from "@tanstack/react-router";
+import { useRef, useState } from "react";
+import { useParams, useNavigate, useBlocker } from "@tanstack/react-router";
 import { useMutation } from "@apollo/client/react";
 import { Card, CardContent } from "@/common/components/ui/card";
 import { Button } from "@/common/components/ui/button";
 import { Input } from "@/common/components/ui/input";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from "@/common/components/ui/dialog";
 import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { MonacoEditor as Editor } from "@/common/components/monaco-editor";
 import { X, Save } from "lucide-react";
@@ -44,6 +52,8 @@ const CreateFilePage = () => {
   const [filename, setFilename] = useState("");
   const [content, setContent] = useState("");
   const [isSaving, setIsSaving] = useState(false);
+  // Allow the post-create navigate without prompting; cleared after each leave.
+  const allowNavigationRef = useRef(false);
 
   const [createFileMutation] = useMutation(CreateLedgerFileDocument);
 
@@ -53,10 +63,21 @@ const CreateFilePage = () => {
   // Save button should be disabled if filename or content is empty
   const isSaveDisabled = !filename.trim() || isSaving;
 
-  /**
-   * Handle cancel button click - navigate back to files view
-   */
-  const handleCancel = () => {
+  const hasDraft = filename.trim() !== "" || content.trim() !== "";
+
+  const blocker = useBlocker({
+    shouldBlockFn: () => {
+      if (allowNavigationRef.current) {
+        allowNavigationRef.current = false;
+        return false;
+      }
+      return hasDraft;
+    },
+    enableBeforeUnload: true,
+    withResolver: true,
+  });
+
+  const navigateToTree = () => {
     void navigate({
       to: "/ledger/$ledgerOwner/$ledgerName/files/tree/$branch/$",
       params: {
@@ -66,6 +87,13 @@ const CreateFilePage = () => {
         _splat: dirPath || "",
       },
     });
+  };
+
+  /**
+   * Handle cancel button click - navigate back to files view
+   */
+  const handleCancel = () => {
+    navigateToTree();
   };
 
   /**
@@ -96,15 +124,8 @@ const CreateFilePage = () => {
       });
 
       // Navigate back to files view after successful creation
-      void navigate({
-        to: "/ledger/$ledgerOwner/$ledgerName/files/tree/$branch/$",
-        params: {
-          ledgerOwner,
-          ledgerName,
-          branch: "main",
-          _splat: dirPath || "",
-        },
-      });
+      allowNavigationRef.current = true;
+      navigateToTree();
     } catch (error) {
       console.error("Failed to create file:", error);
       toast.error(formatError(error));
@@ -218,6 +239,36 @@ const CreateFilePage = () => {
           },
         ]}
       />
+
+      <Dialog
+        open={blocker.status === "blocked"}
+        onOpenChange={(open) => !open && blocker.reset?.()}
+      >
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>{t("ledgerEditor.unsavedChanges")}</DialogTitle>
+            <DialogDescription>
+              {t("ledgerEditor.unsavedChangesMessage")}
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter className="flex-col sm:flex-row gap-2">
+            <Button
+              variant="outline"
+              onClick={() => blocker.reset?.()}
+              className="w-full sm:w-auto"
+            >
+              {t("ledgerEditor.stay")}
+            </Button>
+            <Button
+              variant="destructive"
+              onClick={() => blocker.proceed?.()}
+              className="w-full sm:w-auto"
+            >
+              {t("ledgerEditor.leaveWithoutSaving")}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
