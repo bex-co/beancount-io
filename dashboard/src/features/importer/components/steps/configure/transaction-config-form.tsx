@@ -27,7 +27,7 @@ import {
 import { AccountMappingTable } from "./account-mapping-table";
 import { useAICategorization } from "../../../hooks/use-ai-categorization";
 import type { ParsedRow, ImportTransaction } from "../../../types";
-import { parseDate } from "../../../utils/csv-validator";
+import { parseDate, parseAmount } from "../../../utils/csv-validator";
 import { useLedger } from "@/common/hooks/use-ledger";
 
 interface TransactionConfigFormProps {
@@ -47,10 +47,11 @@ export function TransactionConfigForm({
 }: TransactionConfigFormProps) {
   const { t } = useTranslations();
   const { primaryCurrency } = useLedger();
-  // Filter out rows with errors
-  const validRows = rows.filter(
-    (row) => !row.errors || row.errors.length === 0,
-  );
+  // Only rows that still pass the shared parse contract enter configuration.
+  const validRows = rows.filter((row) => {
+    if (row.errors && row.errors.length > 0) return false;
+    return parseDate(row.date).valid && parseAmount(row.amountInput).valid;
+  });
 
   // Create Zod schema with conditional validation
   const formSchema = useMemo(
@@ -115,12 +116,13 @@ export function TransactionConfigForm({
       defaultCurrency: primaryCurrency,
       transactions: validRows.map((row, index) => {
         const dateResult = parseDate(row.date);
+        const amountResult = parseAmount(row.amountInput);
         return {
           rowIndex: index,
-          date: dateResult.date || new Date(),
+          date: dateResult.date!,
           payee: row.payee,
           description: row.description,
-          amount: row.amount,
+          amount: amountResult.amount!,
           targetAccount: "",
           selected: true, // All transactions selected by default
         };

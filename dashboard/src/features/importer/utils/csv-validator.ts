@@ -2,6 +2,8 @@
  * CSV validation utilities
  */
 
+import type { ParsedRow } from "../types";
+
 /**
  * Validate date format (YYYY-MM-DD)
  */
@@ -55,7 +57,11 @@ export function formatImportDate(date: Date): string {
 }
 
 /**
- * Validate and parse amount
+ * Validate and parse amount.
+ *
+ * Accepts only a complete signed decimal token (optional fraction/exponent).
+ * Rejects grouping commas and trailing junk that `parseFloat` would silently
+ * strip (`"-1,234.56"` → -1, `"12oops"` → 12).
  */
 export function parseAmount(amountStr: string): {
   valid: boolean;
@@ -68,13 +74,61 @@ export function parseAmount(amountStr: string): {
     return { valid: false, error: "Amount cannot be empty" };
   }
 
-  const amount = parseFloat(trimmed);
+  // Whole-token grammar: optional sign, digits with optional fraction, or
+  // leading-dot fraction; optional scientific exponent. No commas/grouping.
+  if (!/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][+-]?\d+)?$/.test(trimmed)) {
+    return { valid: false, error: "Amount must be a valid number" };
+  }
+
+  const amount = Number(trimmed);
 
   if (isNaN(amount) || !isFinite(amount)) {
     return { valid: false, error: "Amount must be a valid number" };
   }
 
   return { valid: true, amount };
+}
+
+/**
+ * Build a ParsedRow from editable field strings, applying the same validators
+ * used by the CSV parser so upload and inline edit share one contract.
+ */
+export function buildParsedRow(fields: {
+  date: string;
+  payee: string;
+  description: string;
+  amountInput: string;
+}): ParsedRow {
+  const errors: string[] = [];
+
+  const dateResult = parseDate(fields.date);
+  if (!dateResult.valid) {
+    errors.push(dateResult.error!);
+  }
+
+  const payeeResult = validatePayee(fields.payee);
+  if (!payeeResult.valid) {
+    errors.push(payeeResult.error!);
+  }
+
+  const descResult = validateDescription(fields.description);
+  if (!descResult.valid) {
+    errors.push(descResult.error!);
+  }
+
+  const amountResult = parseAmount(fields.amountInput);
+  if (!amountResult.valid) {
+    errors.push(amountResult.error!);
+  }
+
+  return {
+    date: fields.date,
+    payee: fields.payee,
+    description: fields.description,
+    amountInput: fields.amountInput,
+    amount: amountResult.valid ? amountResult.amount! : 0,
+    errors: errors.length > 0 ? errors : undefined,
+  };
 }
 
 /**

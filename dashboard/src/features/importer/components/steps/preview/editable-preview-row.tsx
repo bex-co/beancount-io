@@ -15,6 +15,7 @@ import {
   type EditableRowData,
   type ImporterValidationKey,
 } from "../../../utils/row-edit-schema";
+import { buildParsedRow } from "../../../utils/csv-validator";
 import type { ParsedRow } from "../../../types";
 
 interface EditablePreviewRowProps {
@@ -37,13 +38,15 @@ export function EditablePreviewRow({
       date: row.date,
       payee: row.payee,
       description: row.description,
-      amount: row.amount.toString(),
+      amount: row.amountInput,
     },
     mode: "onBlur",
   });
   const {
     control,
     formState: { errors },
+    getValues,
+    setValue,
     trigger,
   } = form;
 
@@ -55,25 +58,20 @@ export function EditablePreviewRow({
     field: keyof EditableRowData,
     value: string,
   ) => {
-    // Validate the specific field
-    await trigger(field);
-
-    // Read the current (post-validation) error state from the form to avoid stale closure
-    const currentErrors = form.formState.errors;
-    const currentHasErrors = Object.keys(currentErrors).length > 0;
-
-    // Convert amount back to number for ParsedRow
-    const updatedRow: ParsedRow = {
-      ...row,
-      [field]: field === "amount" ? parseFloat(value) || 0 : value,
-      errors: currentHasErrors
-        ? Object.values(currentErrors).map(
-            (e) => e?.message || "Validation error",
-          )
-        : undefined,
-    };
-
-    onChange(index, updatedRow);
+    setValue(field, value, { shouldValidate: false });
+    // Revalidate the entire row — field-scoped trigger would drop diagnostics
+    // on untouched invalid date/amount cells.
+    await trigger();
+    const values = getValues();
+    onChange(
+      index,
+      buildParsedRow({
+        date: values.date,
+        payee: values.payee,
+        description: values.description,
+        amountInput: values.amount,
+      }),
+    );
   };
 
   return (

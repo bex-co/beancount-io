@@ -36,7 +36,10 @@ upload → preview → configure → importing → finish
 - **`row-edit-schema.ts`** — Zod validation for editable rows
 - **`is-premium-required.ts`** — Tier gating for import limits
 
-These files live under `utils/`; workflow step labels/order live in `lib/import-step-config.ts`.
+- Keep original amount tokens and revalidate every field after an edit so
+  unrelated payee changes cannot clear date/amount errors. Configuration only
+  accepts rows that still pass `parseDate` / `parseAmount`; it never invents
+  today's date or a numeric zero for invalid input.
 
 ## Premium Gating
 

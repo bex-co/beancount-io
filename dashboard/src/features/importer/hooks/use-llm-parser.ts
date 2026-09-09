@@ -49,6 +49,7 @@ export function useLLMParser() {
         payee: row.payee,
         description: row.description,
         amount: row.amount,
+        amountInput: String(row.amount),
         errors: undefined, // LLM parser doesn't return errors
       }));
 

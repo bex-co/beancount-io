@@ -18,7 +18,10 @@ export type ParsedRow = {
   date: string;
   payee: string;
   description: string;
+  /** Numeric amount when the row is valid; placeholder 0 when invalid. */
   amount: number;
+  /** Raw amount token kept for editing and distinguishing invalid input from 0. */
+  amountInput: string;
   errors?: string[];
 };
 

@@ -8,6 +8,7 @@ import {
   isHeaderRow,
   validateDescription,
   validatePayee,
+  buildParsedRow,
 } from "../csv-validator";
 
 describe("csv-validator", () => {
@@ -160,6 +161,51 @@ describe("csv-validator", () => {
       const result = parseAmount("0");
       expect(result.valid).toBe(true);
       expect(result.amount).toBe(0);
+    });
+
+    it("rejects grouped tokens instead of truncating to a prefix", () => {
+      expect(parseAmount("-1,234.56").valid).toBe(false);
+      expect(parseAmount("1,000").valid).toBe(false);
+    });
+
+    it("rejects trailing junk instead of accepting a numeric prefix", () => {
+      expect(parseAmount("12oops").valid).toBe(false);
+      expect(parseAmount("12.5usd").valid).toBe(false);
+    });
+
+    it("accepts fractional and signed scientific forms", () => {
+      expect(parseAmount(".5")).toEqual({ valid: true, amount: 0.5 });
+      expect(parseAmount("+2.5e1")).toEqual({ valid: true, amount: 25 });
+    });
+  });
+
+  describe("buildParsedRow", () => {
+    it("keeps invalid amount tokens editable without clearing other errors", () => {
+      const row = buildParsedRow({
+        date: "2025-02-29",
+        payee: "QA",
+        description: "Broken",
+        amountInput: "abc",
+      });
+      expect(row.amountInput).toBe("abc");
+      expect(row.errors).toEqual(
+        expect.arrayContaining([
+          "Invalid date value",
+          "Amount must be a valid number",
+        ]),
+      );
+    });
+
+    it("accepts a repaired valid row without inventing values", () => {
+      const row = buildParsedRow({
+        date: "2025-02-28",
+        payee: "QA",
+        description: "Fixed",
+        amountInput: "-3.75",
+      });
+      expect(row.errors).toBeUndefined();
+      expect(row.amount).toBe(-3.75);
+      expect(row.amountInput).toBe("-3.75");
     });
   });
 

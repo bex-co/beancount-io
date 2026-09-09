@@ -1,19 +1,19 @@
 # w3 · m19 — Keep import values valid from parsing through configuration
 
-**Worker:** worker3 **Goal:** preserve raw transaction values and complete row validity through CSV preview, inline repair and configuration **Status:** todo
+**Worker:** worker3 **Goal:** preserve raw transaction values and complete row validity through CSV preview, inline repair and configuration **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                | est | depends_on |
 | ---- | -------------------------------------------------------------------- | --- | ---------- |
-| t001 | Validate complete amount tokens with one conversion contract         | 35m | —          |
-| t002 | Preserve raw import fields and their validation diagnostics          | 35m | t001       |
-| t003 | Revalidate complete preview rows after edits                         | 40m | t002       |
-| t004 | Reject invalid configuration input without invented dates or amounts | 25m | t003       |
-| t005 | Adoption surface — document usable import validation and repair      | 20m | t004       |
-| t006 | Simplify the import validation changes                               | 20m | t005       |
-| t007 | Test coverage — parsing, unrelated edits, repair and configuration   | 45m | t005, t006 |
-| t008 | Closeout — verify the import journeys and archive the milestone      | 15m | t007       |
+| t001 | Validate complete amount tokens with one conversion contract — **DONE** | 35m | —          |
+| t002 | Preserve raw import fields and their validation diagnostics — **DONE** | 35m | t001       |
+| t003 | Revalidate complete preview rows after edits — **DONE** | 40m | t002       |
+| t004 | Reject invalid configuration input without invented dates or amounts — **DONE** | 25m | t003       |
+| t005 | Adoption surface — document usable import validation and repair — **DONE** | 20m | t004       |
+| t006 | Simplify the import validation changes — **DONE** | 20m | t005       |
+| t007 | Test coverage — parsing, unrelated edits, repair and configuration — **DONE** | 45m | t005, t006 |
+| t008 | Closeout — verify the import journeys and archive the milestone — **DONE** | 15m | t007       |
 
 The four implementation tasks total135minutes; the complete milestone is235minutes.
 The original sub-hour038 finding is promoted here because independently
@@ -110,23 +110,23 @@ No row deletion occurred, so037's index-key issue is not the trigger.
 
 ## Definition of done
 
-- [ ] The original038 complete-token cases are rejected or deliberately parsed
+- [x] The original038 complete-token cases are rejected or deliberately parsed
       in full; upload and inline editing agree on their exact numeric value.
-- [ ] Editing only either payee in the reproduced file leaves1Valid/2Errors;
+- [x] Editing only either payee in the reproduced file leaves1Valid/2Errors;
       configuration still contains only the actual valid control transaction.
-- [ ] Original invalid input is available for repair, and the correct field
+- [x] Original invalid input is available for repair, and the correct field
       diagnostics explain why each rejected row is excluded.
-- [ ] Correcting February29 to February28 and `abc` to-3.75 admits exactly those
+- [x] Correcting February29 to February28 and `abc` to-3.75 admits exactly those
       corrected values, without inventing today's date or a numeric fallback.
-- [ ] Literal zero remains valid; malformed values and incomplete rows remain
+- [x] Literal zero remains valid; malformed values and incomplete rows remain
       invalid after unrelated edits, including form remount and Back/Continue.
-- [ ] Pending validation, Enter/blur commits and Escape cancellation produce a
+- [x] Pending validation, Enter/blur commits and Escape cancellation produce a
       coherent latest row before advancing. Empty/all-invalid and mixed-validity
       previews retain honest recovery and counts. Editing an existing preview
       does not invoke AI; initial file-parser fallback behavior is preserved.
-- [ ] Desktop and narrow browser repeats pass without booking transactions;
+- [x] Desktop and narrow browser repeats pass without booking transactions;
       meaningful component/parser/configuration tests and dashboard gates pass.
-- [ ] Standing closing tasks pass before moving this milestone to done.
+- [x] Standing closing tasks pass before moving this milestone to done.
 
 ## Source + Goal linkage
 

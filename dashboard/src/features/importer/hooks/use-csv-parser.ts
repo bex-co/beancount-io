@@ -2,12 +2,9 @@ import { useState, useCallback } from "react";
 import { useTranslations } from "@/common/hooks/use-translations";
 import type { ParsedRow, CSVParseResult } from "../types";
 import {
-  parseDate,
-  parseAmount,
-  validateDescription,
-  validatePayee,
   isValidRowFormat,
   isHeaderRow,
+  buildParsedRow,
 } from "../utils/csv-validator";
 
 /**
@@ -99,43 +96,18 @@ export function useCSVParser() {
           payee: columns[1] || "",
           description: columns[2] || "",
           amount: 0,
+          amountInput: columns[3] || "",
           errors,
         };
       }
 
       const [dateStr, payee, description, amountStr] = columns;
-
-      // Validate date
-      const dateResult = parseDate(dateStr);
-      if (!dateResult.valid) {
-        errors.push(dateResult.error!);
-      }
-
-      // Validate payee
-      const payeeResult = validatePayee(payee);
-      if (!payeeResult.valid) {
-        errors.push(payeeResult.error!);
-      }
-
-      // Validate description
-      const descResult = validateDescription(description);
-      if (!descResult.valid) {
-        errors.push(descResult.error!);
-      }
-
-      // Validate amount
-      const amountResult = parseAmount(amountStr);
-      if (!amountResult.valid) {
-        errors.push(amountResult.error!);
-      }
-
-      return {
+      return buildParsedRow({
         date: dateStr,
         payee,
         description,
-        amount: amountResult.amount || 0,
-        errors: errors.length > 0 ? errors : undefined,
-      };
+        amountInput: amountStr,
+      });
     });
 
     const errorCount = rows.filter(

@@ -1,6 +1,7 @@
 import { describe, it, expect } from "vitest";
 import { renderHook } from "@testing-library/react";
 import { useCSVParser } from "../use-csv-parser";
+import { buildParsedRow } from "../../utils/csv-validator";
 
 describe("useCSVParser", () => {
   describe("parseCSV – basic behaviour", () => {
@@ -245,6 +246,43 @@ describe("useCSVParser", () => {
       expect(parsed.validCount).toBe(2);
       expect(parsed.errorCount).toBe(1);
       expect(parsed.hasErrors).toBe(true);
+    });
+
+    it("preserves invalid amount tokens and rejects grouped/truncated junk", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        "Date,Payee,Description,Amount",
+        "2025-12-01,QA Control,Valid record,-1.25",
+        "2025-02-29,QA Invalid Date,Date repair control,-2.50",
+        "2025-12-03,QA Invalid Amount,Amount repair control,abc",
+        '2025-12-04,Grouped,Grouped token,"-1,234.56"',
+        "2025-12-05,Suffix,Trailing junk,12oops",
+      ].join("\n");
+
+      const parsed = result.current.parseCSV(csv);
+      expect(parsed.validCount).toBe(1);
+      expect(parsed.errorCount).toBe(4);
+      expect(parsed.rows[2].amountInput).toBe("abc");
+      expect(parsed.rows[3].amountInput).toBe("-1,234.56");
+      expect(parsed.rows[4].amountInput).toBe("12oops");
+    });
+
+    it("keeps all field errors when only payee is rebuilt", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const parsed = result.current.parseCSV(
+        [
+          "Date,Payee,Description,Amount",
+          "2025-02-29,QA Invalid Date,Date repair control,-2.50",
+        ].join("\n"),
+      );
+      const rebuilt = buildParsedRow({
+        date: parsed.rows[0].date,
+        payee: "QA Renamed Date",
+        description: parsed.rows[0].description,
+        amountInput: parsed.rows[0].amountInput,
+      });
+      expect(rebuilt.errors?.some((e) => e.includes("date"))).toBe(true);
+      expect(rebuilt.payee).toBe("QA Renamed Date");
     });
   });
 
