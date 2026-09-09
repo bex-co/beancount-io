@@ -292,15 +292,18 @@ describe("DatasetTable", () => {
 
       render(<DatasetTable query={mockQuery} ledgerId={mockLedgerId} />);
 
-      const accountRow = screen.getByText("Assets:Bank:Checking").closest("tr");
-      expect(accountRow).toHaveAttribute("role", "link");
-      expect(accountRow).toHaveAttribute("tabindex", "0");
+      const accountButton = screen.getByRole("button", {
+        name: "Assets:Bank:Checking",
+      });
+      const accountRow = accountButton.closest("tr");
+      expect(accountRow).not.toHaveAttribute("role");
+      expect(accountRow).not.toHaveAttribute("tabindex");
+      expect(accountRow?.querySelectorAll("td")).toHaveLength(2);
 
       await user.click(screen.getByText("1000.00"));
-      accountRow?.focus();
-      expect(accountRow).toHaveFocus();
+      await user.click(accountButton);
+      accountButton.focus();
       await user.keyboard("{Enter}");
-      await user.keyboard(" ");
 
       expect(mockNavigate).toHaveBeenCalledTimes(3);
       expect(mockNavigate).toHaveBeenLastCalledWith({

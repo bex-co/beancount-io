@@ -21,6 +21,11 @@ type ClickableRowRole = "button" | "link";
 interface ClickableRowOptions {
   className?: string;
   role?: ClickableRowRole;
+  /**
+   * Keep native TR/TD semantics for data tables. Pointer activation remains,
+   * but the row is not exposed as a link/button (keyboard uses cell controls).
+   */
+  preserveTableSemantics?: boolean;
 }
 
 function isFromInteractiveChild(
@@ -40,23 +45,33 @@ function isFromInteractiveChild(
 
 export function getClickableRowProps<T extends HTMLElement>(
   onActivate: () => void,
-  { className, role = "link" }: ClickableRowOptions = {},
+  {
+    className,
+    role = "link",
+    preserveTableSemantics = false,
+  }: ClickableRowOptions = {},
 ): Pick<
   HTMLAttributes<T>,
   "className" | "onClick" | "onKeyDown" | "role" | "tabIndex"
-> & {
-  role: ClickableRowRole;
-  tabIndex: 0;
-} {
+> {
+  const onClick: HTMLAttributes<T>["onClick"] = (event) => {
+    if (!isFromInteractiveChild(event)) {
+      onActivate();
+    }
+  };
+
+  if (preserveTableSemantics) {
+    return {
+      className: cn("cursor-pointer", className),
+      onClick,
+    };
+  }
+
   return {
     className: cn(focusClassName, className),
     role,
     tabIndex: 0,
-    onClick: (event) => {
-      if (!isFromInteractiveChild(event)) {
-        onActivate();
-      }
-    },
+    onClick,
     onKeyDown: (event) => {
       if (
         !isFromInteractiveChild(event) &&

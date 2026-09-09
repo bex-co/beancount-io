@@ -159,6 +159,7 @@ export const DatasetTable = React.memo(
                           },
                           {
                             className: "hover:bg-muted/30 transition-colors",
+                            preserveTableSemantics: true,
                           },
                         )
                       : { className: "hover:bg-muted/30 transition-colors" };
@@ -180,11 +181,33 @@ export const DatasetTable = React.memo(
                               className={cn(
                                 "text-xs sm:text-sm font-mono whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2",
                                 isAccountColumn
-                                  ? "font-medium text-primary hover:text-primary/80"
+                                  ? "font-medium text-primary"
                                   : "",
                               )}
                             >
-                              {cellValue}
+                              {isAccountColumn && accountName ? (
+                                <button
+                                  type="button"
+                                  className="text-left font-medium text-primary hover:text-primary/80 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                                  onClick={(event) => {
+                                    event.stopPropagation();
+                                    const { ledgerOwner, ledgerName } =
+                                      decodeLedgerId(ledgerId);
+                                    void navigate({
+                                      to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+                                      params: {
+                                        ledgerOwner,
+                                        ledgerName,
+                                        accountName,
+                                      },
+                                    });
+                                  }}
+                                >
+                                  {cellValue}
+                                </button>
+                              ) : (
+                                cellValue
+                              )}
                             </TableCell>
                           );
                         })}

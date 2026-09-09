@@ -1,17 +1,17 @@
 # w3 · m25 — Preserve table structure while keeping row actions accessible
 
-**Worker:** worker3 **Goal:** Accounts and Holdings expose their data as rows and cells while keeping account and document actions usable by keyboard **Status:** todo
+**Worker:** worker3 **Goal:** Accounts and Holdings expose their data as rows and cells while keeping account and document actions usable by keyboard **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                               | est | depends_on |
 | ---- | --------------------------------------------------- | --- | ---------- |
-| t001 | Preserve native Accounts rows and prefix actions    | 30m | —          |
-| t002 | Put Holdings and Document actions inside data cells | 40m | t001       |
-| t003 | Verify table navigation adoption surfaces           | 20m | t002       |
-| t004 | Simplify table activation wiring                    | 20m | t003       |
-| t005 | Test native structure and independent cell actions  | 45m | t004       |
-| t006 | Close out and archive the table repair              | 15m | t005       |
+| t001 | Preserve native Accounts rows and prefix actions — **DONE** | 30m | —          |
+| t002 | Put Holdings and Document actions inside data cells — **DONE** | 40m | t001       |
+| t003 | Verify table navigation adoption surfaces — **DONE** | 20m | t002       |
+| t004 | Simplify table activation wiring — **DONE** | 20m | t003       |
+| t005 | Test native structure and independent cell actions — **DONE** | 45m | t004       |
+| t006 | Close out and archive the table repair — **DONE** | 15m | t005       |
 
 170 minutes total, including 70 minutes of implementation across three table
 consumers. One **minor** accessibility finding group: visible data and ordinary

@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { DocumentRow } from "../index";
 
 describe("DocumentRow", () => {
-  it("is tabbable and activates with click, Enter, and Space", async () => {
+  it("keeps native row structure and activates from the filename control", async () => {
     const user = userEvent.setup();
     const onActivate = vi.fn();
 
@@ -27,16 +27,19 @@ describe("DocumentRow", () => {
       </table>,
     );
 
-    const documentRow = screen.getByRole("link", {
+    const filename = screen.getByRole("button", {
       name: /receipts\/coffee\.pdf/,
     });
-    expect(documentRow).toHaveAttribute("tabindex", "0");
+    const documentRow = filename.closest("tr");
+    expect(documentRow).not.toHaveAttribute("role");
+    expect(documentRow).not.toHaveAttribute("tabindex");
+    expect(documentRow?.querySelectorAll("td").length).toBeGreaterThan(0);
 
     await user.tab();
-    expect(documentRow).toHaveFocus();
+    expect(filename).toHaveFocus();
     await user.keyboard("{Enter}");
-    await user.keyboard(" ");
-    await user.click(documentRow);
+    await user.click(filename);
+    await user.click(documentRow as HTMLElement);
 
     expect(onActivate).toHaveBeenCalledTimes(3);
   });

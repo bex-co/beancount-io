@@ -210,6 +210,7 @@ export function AccountRow({
         () => onAccountClick(account.account),
         {
           className: "group hover:bg-primary/[0.04] active:bg-primary/[0.07]",
+          preserveTableSemantics: true,
         },
       )}
     >

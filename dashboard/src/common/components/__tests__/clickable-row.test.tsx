@@ -47,4 +47,31 @@ describe("getClickableRowProps", () => {
     expect(onNestedClick).toHaveBeenCalledTimes(2);
     expect(onActivate).not.toHaveBeenCalled();
   });
+
+  it("supports pointer-only table rows without overwriting native semantics", async () => {
+    const user = userEvent.setup();
+    const onActivate = vi.fn();
+
+    render(
+      <table>
+        <tbody>
+          <tr
+            {...getClickableRowProps<HTMLTableRowElement>(onActivate, {
+              preserveTableSemantics: true,
+            })}
+          >
+            <td>
+              <button type="button">Account</button>
+            </td>
+          </tr>
+        </tbody>
+      </table>,
+    );
+
+    const row = screen.getByRole("button", { name: "Account" }).closest("tr");
+    expect(row).not.toHaveAttribute("role");
+    expect(row).not.toHaveAttribute("tabindex");
+    await user.click(row as HTMLElement);
+    expect(onActivate).toHaveBeenCalledTimes(1);
+  });
 });

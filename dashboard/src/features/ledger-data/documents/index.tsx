@@ -39,10 +39,20 @@ export function DocumentRow({ document, onActivate }: DocumentRowProps) {
     <TableRow
       {...getClickableRowProps<HTMLTableRowElement>(onActivate, {
         className: "hover:bg-muted/30",
+        preserveTableSemantics: true,
       })}
     >
-      <TableCell className="w-64 font-medium text-primary hover:text-primary/80 px-2 sm:px-3 py-1.5 sm:py-2">
-        {document.filename}
+      <TableCell className="w-64 font-medium px-2 sm:px-3 py-1.5 sm:py-2">
+        <button
+          type="button"
+          className="text-left font-medium text-primary hover:text-primary/80 underline-offset-2 hover:underline focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          onClick={(event) => {
+            event.stopPropagation();
+            onActivate();
+          }}
+        >
+          {document.filename}
+        </button>
       </TableCell>
       <TableCell className="w-40 px-2 sm:px-3 py-1.5 sm:py-2">
         {document.account}

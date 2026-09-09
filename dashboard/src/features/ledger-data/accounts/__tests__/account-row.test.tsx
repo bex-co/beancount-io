@@ -4,7 +4,7 @@ import { describe, expect, it, vi } from "vitest";
 import { AccountRow } from "../index";
 
 describe("AccountRow", () => {
-  it("activates with click, Enter, and Space while preserving prefix actions", async () => {
+  it("keeps native row structure and activates from the row or prefix controls", async () => {
     const user = userEvent.setup();
     const onAccountClick = vi.fn();
 
@@ -32,20 +32,16 @@ describe("AccountRow", () => {
     const accountRow = screen
       .getByRole("button", { name: "Assets:Bank:Checking" })
       .closest("tr");
-    expect(accountRow).toHaveAttribute("role", "link");
-    expect(accountRow).toHaveAttribute("tabindex", "0");
+    expect(accountRow).not.toHaveAttribute("role");
+    expect(accountRow).not.toHaveAttribute("tabindex");
+    expect(accountRow?.querySelectorAll("td").length).toBeGreaterThan(0);
 
     await user.click(accountRow as HTMLElement);
-    accountRow?.focus();
-    expect(accountRow).toHaveFocus();
-    await user.keyboard("{Enter}");
-    await user.keyboard(" ");
-
-    expect(onAccountClick).toHaveBeenCalledTimes(3);
+    expect(onAccountClick).toHaveBeenCalledTimes(1);
     expect(onAccountClick).toHaveBeenLastCalledWith("Assets:Bank:Checking");
 
     await user.click(screen.getByRole("button", { name: "Assets" }));
-    expect(onAccountClick).toHaveBeenCalledTimes(4);
+    expect(onAccountClick).toHaveBeenCalledTimes(2);
     expect(onAccountClick).toHaveBeenLastCalledWith("Assets");
   });
 });
