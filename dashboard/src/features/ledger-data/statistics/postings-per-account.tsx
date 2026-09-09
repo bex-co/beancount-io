@@ -10,11 +10,12 @@ import {
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { Database, AlertCircle } from "lucide-react";
 import {
-  QueryShellDocument,
-  type QueryShellQuery,
-  type QueryShellQueryVariables,
+  GetLedgerPostingsPerAccountDocument,
+  type GetLedgerPostingsPerAccountQuery,
+  type GetLedgerPostingsPerAccountQueryVariables,
 } from "@/graphql/definitions";
 import { useNavigate, useParams } from "@tanstack/react-router";
+import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useFormatNumber } from "@/common/hooks/use-format-number";
@@ -95,19 +96,23 @@ function PostingsPerAccountErrorState({ message }: { message: string }) {
 }
 
 /**
- * Postings per account table component
- * Displays results from BQL query: SELECT account, count(account) ORDER BY account
+ * Postings per account table — filtered Statistics report stream counts.
  */
-function PostingsPerAccountTable({ data }: { data: QueryShellQuery }) {
+function PostingsPerAccountTable({
+  data,
+}: {
+  data: GetLedgerPostingsPerAccountQuery;
+}) {
   const { t } = useTranslations();
   const formatNum = useFormatNumber();
-  const queryResult = data.queryShell;
+  const rows = data.getLedgerPostingsPerAccount;
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/statistics",
   });
   const navigate = useNavigate();
-  // Check if we have a table result
-  if (!queryResult?.table || !queryResult.table.rows) {
+  const totalRows = rows.length;
+
+  if (totalRows === 0) {
     return (
       <div>
         <h3 className="flex items-center gap-2 text-lg font-semibold mb-2">
@@ -128,9 +133,6 @@ function PostingsPerAccountTable({ data }: { data: QueryShellQuery }) {
     );
   }
 
-  const { rows, types } = queryResult.table;
-  const totalRows = rows.length;
-
   return (
     <div>
       <h3 className="flex items-center gap-2 text-lg font-semibold mb-2">
@@ -148,47 +150,35 @@ function PostingsPerAccountTable({ data }: { data: QueryShellQuery }) {
           <Table>
             <TableHeader>
               <TableRow className="bg-muted/50">
-                {types.map((column, index) => (
-                  <TableHead
-                    key={column.name}
-                    className={
-                      index === 1
-                        ? "text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm"
-                        : "whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm"
-                    }
-                  >
-                    {column.name}
-                  </TableHead>
-                ))}
+                <TableHead className="whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+                  {t("component.searchControls.account")}
+                </TableHead>
+                <TableHead className="text-right whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2 text-muted-foreground text-xs sm:text-sm">
+                  {t("page.statistics.count")}
+                </TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
-              {rows.map((row, rowIndex) => (
-                <TableRow key={rowIndex}>
-                  {row.map((cell, cellIndex) => (
-                    <TableCell
-                      key={cellIndex}
-                      className={
-                        cellIndex === 0
-                          ? "font-medium font-mono text-xs sm:text-sm break-all max-w-[200px] sm:max-w-none text-primary hover:text-primary/80 cursor-pointer px-2 sm:px-3 py-1.5 sm:py-2"
-                          : "text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2"
-                      }
-                      onClick={() => {
-                        if (cellIndex === 0) {
-                          void navigate({
-                            to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
-                            params: {
-                              ledgerOwner: ledgerOwner,
-                              ledgerName: ledgerName,
-                              accountName: String(cell),
-                            },
-                          });
-                        }
-                      }}
-                    >
-                      {cellIndex === 1 ? formatNum(Number(cell)) : String(cell)}
-                    </TableCell>
-                  ))}
+              {rows.map((row) => (
+                <TableRow key={row.account}>
+                  <TableCell
+                    className="font-medium font-mono text-xs sm:text-sm break-all max-w-[200px] sm:max-w-none text-primary hover:text-primary/80 cursor-pointer px-2 sm:px-3 py-1.5 sm:py-2"
+                    onClick={() => {
+                      void navigate({
+                        to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+                        params: {
+                          ledgerOwner: ledgerOwner,
+                          ledgerName: ledgerName,
+                          accountName: row.account,
+                        },
+                      });
+                    }}
+                  >
+                    {row.account}
+                  </TableCell>
+                  <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
+                    {formatNum(row.count)}
+                  </TableCell>
                 </TableRow>
               ))}
             </TableBody>
@@ -202,16 +192,21 @@ function PostingsPerAccountTable({ data }: { data: QueryShellQuery }) {
 /**
  * Postings per Account Component
  * Self-contained component that fetches and displays postings count per account
+ * for the active ledger search filters.
  */
 export function PostingsPerAccount({ ledgerId }: { ledgerId: string }) {
+  const ledgerFilters = useLedgerSearchParams();
   const formatError = useErrorMessage();
+
   const { data, loading, error } = useQuery<
-    QueryShellQuery,
-    QueryShellQueryVariables
-  >(QueryShellDocument, {
+    GetLedgerPostingsPerAccountQuery,
+    GetLedgerPostingsPerAccountQueryVariables
+  >(GetLedgerPostingsPerAccountDocument, {
     variables: {
       ledgerId: ledgerId,
-      query: "SELECT account, count(account) ORDER BY account",
+      time: ledgerFilters.searchParams.time,
+      filter: ledgerFilters.searchParams.filter,
+      account: ledgerFilters.searchParams.account,
     },
     skip: !ledgerId,
   });

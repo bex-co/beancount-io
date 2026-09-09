@@ -29,6 +29,7 @@ const mockReports = {
   getLedgerPayees: jest.fn(),
   getLedgerAccountLastEntries: jest.fn(),
   getLedgerEntriesCountPerType: jest.fn(),
+  getLedgerPostingsPerAccount: jest.fn(),
   getLedgerAccountReport: jest.fn(),
   getLedgerIntervalTotals: jest.fn(),
 };
@@ -213,6 +214,33 @@ describe("LedgerDataService", () => {
     const result = await service.getEntriesCountPerType({ ledgerId: LEDGER_ID, identity: IDENTITY });
 
     expect(result).toEqual(counts);
+  });
+
+  it("getPostingsPerAccount — forwards filters and returns array", async () => {
+    const counts = [
+      { account: "Assets:Crypto:Binance:BTC", count: 1 },
+      { account: "Liabilities:Crypto:Binance:Margin", count: 2 },
+    ];
+    mockReports.getLedgerPostingsPerAccount.mockResolvedValue(ok(counts));
+
+    const result = await service.getPostingsPerAccount({
+      ledgerId: LEDGER_ID,
+      identity: IDENTITY,
+      account: "Liabilities:Crypto:Binance:Margin",
+      time: "2025",
+      filter: "#crypto",
+    });
+
+    expect(result).toEqual(counts);
+    expect(mockReports.getLedgerPostingsPerAccount).toHaveBeenCalledWith(
+      "testowner",
+      "testledger",
+      {
+        account: "Liabilities:Crypto:Binance:Margin",
+        time: "2025",
+        filter: "#crypto",
+      },
+    );
   });
 
   it("getAccountReport — passes accountName as account_name", async () => {

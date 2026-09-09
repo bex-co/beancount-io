@@ -140,11 +140,18 @@ function LedgerAuthenticatedSwitcher({
       // Construct new path with same page but different ledger
       const newPath = `/ledger/${ledgerOwner}/${ledgerName}${pagePath}`;
 
-      // Navigate preserving the current search params
+      // Navigate to the same page on the other ledger. Shared account/filter/time
+      // must not leak across ledgers unless the destination URL supplies them —
+      // retainSearchParams would otherwise copy the previous ledger's selection.
       void navigate({
         to: newPath,
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        search: (prev: any) => prev,
+        search: (prev: any) => ({
+          ...prev,
+          account: undefined,
+          filter: undefined,
+          time: undefined,
+        }),
       });
     }
     setOpen(false);

@@ -7,21 +7,22 @@ import {
 } from "@/graphql/definitions";
 import { overviewLoader } from "../loader";
 
-vi.mock("@/common/lib/ledger-search-params", () => ({
-  getLedgerSearchParams: () => ({
-    account: "Assets:Checking",
-    filter: undefined,
-    time: "2025",
-  }),
-}));
-
 type QueryOptions = { query: unknown; variables?: Record<string, unknown> };
 
 function loaderInput(query: (options: QueryOptions) => Promise<unknown>) {
   return {
     params: { ledgerOwner: "open_ledger", ledgerName: "example" },
     context: { client: { query } } as unknown as RouterContext,
-  } as Parameters<typeof overviewLoader>[0];
+    deps: {
+      account: "Assets:Checking",
+      filter: "",
+      time: "2025",
+    },
+    abortController: new AbortController(),
+    preload: false,
+    cause: "enter" as const,
+    location: {} as never,
+  };
 }
 
 function pending() {
@@ -59,7 +60,7 @@ describe("overviewLoader", () => {
           variables: {
             ledgerId: "open_ledger/example",
             account: "Assets:Checking",
-            filter: undefined,
+            filter: "",
             time: "2025",
             interval: "monthly",
             conversion: "at_cost",
@@ -105,6 +106,23 @@ describe("overviewLoader", () => {
     expect(query).toHaveBeenCalledTimes(1);
     expect(query.mock.calls[0][0]).toMatchObject({
       query: GetLedgerOverviewDocument,
+    });
+  });
+
+  it("uses destination loader deps rather than a global URL snapshot", async () => {
+    vi.stubEnv("SSR", false);
+    const query = vi.fn(() => Promise.resolve({ data: {} }));
+    const input = loaderInput(query);
+    input.deps = { account: "", filter: "payee:Rent", time: "2025-10" };
+
+    await overviewLoader(input);
+
+    const overviewCall = query.mock.calls.find(
+      ([options]) => options.query === GetLedgerOverviewDocument,
+    );
+    expect(overviewCall?.[0].variables).toMatchObject({
+      filter: "payee:Rent",
+      time: "2025-10",
     });
   });
 });

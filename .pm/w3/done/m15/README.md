@@ -1,16 +1,16 @@
 # m15 — Keep ledger filters consistent with navigation and history
 
-**Status:** todo
+**Status:** done
 
 | Task | Title                                                             | Estimate | Depends on |
 | ---- | ----------------------------------------------------------------- | -------- | ---------- |
-| t001 | Bind global ledger filters to validated router search             | 45m      | —          |
-| t002 | Preserve same-ledger filter context in links and loaders          | 40m      | t001       |
-| t007 | Carry the Overview money-movement month into its drill-down links | 45m      | t001       |
-| t003 | Adoption surface — verify reproducible filtered report links      | 20m      | t002, t007 |
-| t004 | Simplify the filter and navigation changes                        | 20m      | t003       |
-| t005 | Test shared filter navigation, history and hydration              | 45m      | t003       |
-| t006 | Closeout                                                          | 15m      | t004, t005 |
+| t001 | Bind global ledger filters to validated router search — **DONE** | 45m      | —          |
+| t002 | Preserve same-ledger filter context in links and loaders — **DONE** | 40m      | t001       |
+| t007 | Carry the Overview money-movement month into its drill-down links — **DONE** | 45m      | t001       |
+| t003 | Adoption surface — verify reproducible filtered report links — **DONE** | 20m      | t002, t007 |
+| t004 | Simplify the filter and navigation changes — **DONE**            | 20m      | t003       |
+| t005 | Test shared filter navigation, history and hydration — **DONE**  | 45m      | t003       |
+| t006 | Closeout — **DONE**                                              | 15m      | t004, t005 |
 
 ## Source + Goal linkage
 

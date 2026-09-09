@@ -15,6 +15,23 @@ query GetLedgerEntriesCountPerType(
   }
 }
 
+query GetLedgerPostingsPerAccount(
+  $ledgerId: String!
+  $time: String
+  $filter: String
+  $account: String
+) {
+  getLedgerPostingsPerAccount(
+    ledgerId: $ledgerId
+    time: $time
+    filter: $filter
+    account: $account
+  ) {
+    account
+    count
+  }
+}
+
 query GetLedgerAccountLastEntries(
   $ledgerId: String!
   $time: String

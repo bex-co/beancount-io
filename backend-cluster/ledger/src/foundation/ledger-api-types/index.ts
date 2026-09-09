@@ -1054,6 +1054,17 @@ export interface EntriesCountPerTypePublic {
 }
 
 /**
+ * PostingsPerAccountPublic
+ * Public schema for postings count per account over a filtered report stream.
+ */
+export interface PostingsPerAccountPublic {
+  /** Account */
+  account: string;
+  /** Count */
+  count: number;
+}
+
+/**
  * EntryAddBulkEntriesRequest
  * Request schema for adding multiple entries of mixed directive types in one commit.
  */
@@ -2793,6 +2804,17 @@ export interface SuccessResponseListEntriesCountPerTypePublic {
   success?: boolean;
   /** Data */
   data: EntriesCountPerTypePublic[];
+}
+
+/** SuccessResponse[list[PostingsPerAccountPublic]] */
+export interface SuccessResponseListPostingsPerAccountPublic {
+  /**
+   * Success
+   * @default true
+   */
+  success?: boolean;
+  /** Data */
+  data: PostingsPerAccountPublic[];
 }
 
 /** SuccessResponse[list[EventPublic]] */

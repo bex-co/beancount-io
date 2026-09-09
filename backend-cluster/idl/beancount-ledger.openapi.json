@@ -3777,6 +3777,114 @@
         }
       }
     },
+    "/reports/{owner}/{repo_name}/postings_per_account": {
+      "get": {
+        "tags": [
+          "reports"
+        ],
+        "summary": "Get Ledger Postings Per Account",
+        "description": "Count postings per account over the filtered/clamped Statistics report stream. An account filter selects matching entries and counts every posting on those entries, including counterpart accounts. Zero-count accounts are omitted; rows are sorted by account.",
+        "operationId": "getLedgerPostingsPerAccount",
+        "security": [
+          {
+            "HTTPBasic": []
+          },
+          {
+            "APIKeyHeader": []
+          }
+        ],
+        "parameters": [
+          {
+            "name": "owner",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Owner"
+            }
+          },
+          {
+            "name": "repo_name",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Repo Name"
+            }
+          },
+          {
+            "name": "time",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Time"
+            }
+          },
+          {
+            "name": "filter",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Filter"
+            }
+          },
+          {
+            "name": "account",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Account"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SuccessResponse_list_PostingsPerAccountPublic__"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/reports/{owner}/{repo_name}/account_report": {
       "get": {
         "tags": [
@@ -9141,6 +9249,25 @@
         "title": "EntriesCountPerTypePublic",
         "description": "Public schema for entries count per type."
       },
+      "PostingsPerAccountPublic": {
+        "properties": {
+          "account": {
+            "type": "string",
+            "title": "Account"
+          },
+          "count": {
+            "type": "integer",
+            "title": "Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "account",
+          "count"
+        ],
+        "title": "PostingsPerAccountPublic",
+        "description": "Public schema for postings count per account over a filtered report stream."
+      },
       "EntryAddBulkEntriesRequest": {
         "properties": {
           "entries": {
@@ -12865,6 +12992,27 @@
           "data"
         ],
         "title": "SuccessResponse[list[EntriesCountPerTypePublic]]"
+      },
+      "SuccessResponse_list_PostingsPerAccountPublic__": {
+        "properties": {
+          "success": {
+            "type": "boolean",
+            "title": "Success",
+            "default": true
+          },
+          "data": {
+            "items": {
+              "$ref": "#/components/schemas/PostingsPerAccountPublic"
+            },
+            "type": "array",
+            "title": "Data"
+          }
+        },
+        "type": "object",
+        "required": [
+          "data"
+        ],
+        "title": "SuccessResponse[list[PostingsPerAccountPublic]]"
       },
       "SuccessResponse_list_EventPublic__": {
         "properties": {

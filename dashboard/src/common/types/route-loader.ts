@@ -20,12 +20,18 @@ import type { RouterContext } from "@/common/types/router-context";
  * };
  * ```
  */
-export type RouteLoader<TPath extends string, T = void> = (ctx: {
+export type RouteLoader<
+  TPath extends string,
+  T = void,
+  TDeps = unknown,
+> = (ctx: {
   params: ResolveParams<TPath>;
   context: RouterContext;
   abortController: AbortController;
   preload: boolean;
   cause: "preload" | "enter" | "stay";
+  location: ParsedLocation;
+  deps: TDeps;
 }) => T | Promise<T>;
 
 /**

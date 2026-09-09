@@ -31,7 +31,7 @@ export default function LedgerStatisticsPage() {
         })}
       />
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        {/* Postings per Account Table (BQL Query) */}
+        {/* Postings per Account Table */}
         <PostingsPerAccount ledgerId={ledgerId} />
 
         {/* Account Last Entries Table */}

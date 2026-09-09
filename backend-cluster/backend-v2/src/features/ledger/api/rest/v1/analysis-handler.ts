@@ -12,12 +12,12 @@ import type { Identity } from "@/server/api/identity";
  * these say what it *did* — a trial balance, an account's report, totals per
  * interval, the transactions behind a payee, the context around one entry.
  *
- * Ten of the sixteen in this family. The other six keep reasons that survived
- * re-reading (w3/m7/t001): two journals and a plaintext journal are already
- * covered by the paged `/journal` endpoint, two ledger-list reads are
- * client-side filtering over `GET /v1/ledgers`, `journalEntries` is a legacy
- * resolver on the removal path, and `getLedgerOverview` really is eleven chart
- * series assembled for one screen.
+ * Thirteen reads are listed here for REST/MCP. Remaining family members keep
+ * reasons that survived re-reading (w3/m7/t001): two journals and a plaintext
+ * journal are already covered by the paged `/journal` endpoint, two ledger-list
+ * reads are client-side filtering over `GET /v1/ledgers`, `journalEntries` is a
+ * legacy resolver on the removal path, and `getLedgerOverview` really is eleven
+ * chart series assembled for one screen.
  *
  * Parameters reuse `/journal`'s names — `account`, `filter`, `time`,
  * `interval`, `conversion` — because a verb should behave the same everywhere,
@@ -201,6 +201,20 @@ export const ANALYSIS_READS: readonly AnalysisRead[] = [
     uriPath: "",
     fetch: (s, { ledgerId, identity, query }) =>
       s.ledgerData.getEntriesCountPerType({
+        ledgerId,
+        identity,
+        ...query,
+      }),
+  },
+  {
+    segment: "postings-per-account",
+    summary: "Count postings per account",
+    description:
+      "Posting counts for the filtered Statistics report stream. An account filter selects matching entries and counts every posting on those entries, including counterpart accounts. Time filters use the same clamped report stream as entries-count.",
+    query: filterQuery,
+    uriPath: "",
+    fetch: (s, { ledgerId, identity, query }) =>
+      s.ledgerData.getPostingsPerAccount({
         ledgerId,
         identity,
         ...query,

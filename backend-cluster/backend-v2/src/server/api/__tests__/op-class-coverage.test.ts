@@ -88,7 +88,7 @@ describe("op-class coverage", () => {
     // silently shrank would leave this test green on a table full of stale
     // rows the reverse check would then have to catch alone.
     expect(graphqlOps.filter((op) => op.startsWith("GQL Query.")).length).toBe(
-      76,
+      77,
     );
     expect(
       graphqlOps.filter((op) => op.startsWith("GQL Mutation.")).length,
@@ -211,11 +211,12 @@ describe("op-class coverage", () => {
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can
     // reach MCP at all — so they must not be held to the tool budget, and a
     // single number covering both would quietly do exactly that.
-    // Ten vocabulary reads (w3/m6), ten analysis reads (w3/m7), seven bank
-    // reads (w3/m8), and the file template m5 proved the shape with. This number is expected to climb as
+    // Ten vocabulary reads (w3/m6), thirteen analysis reads (w3/m7 + postings
+    // counts), seven bank reads (w3/m8), and the file template m5 proved the
+    // shape with. This number is expected to climb as
     // the read surface ports; the tool count above is not.
     const resources = mcpOps.filter((op) => op.startsWith("MCP resource:"));
-    expect(resources).toHaveLength(66);
+    expect(resources).toHaveLength(67);
   });
 });
 

@@ -142,6 +142,15 @@ class EntriesByType {
 }
 
 @ObjectType()
+class PostingsPerAccount {
+  @Field(() => String)
+  account: string;
+
+  @Field(() => Number)
+  count: number;
+}
+
+@ObjectType()
 class AccountReport {
   @Field(() => [DateAndBalance])
   linechartData: DateAndBalance[];
@@ -515,6 +524,32 @@ export class LedgerDataQueryResolver {
     return data.map((entry) => ({
       type: entry.type,
       number: entry.number,
+    }));
+  }
+
+  @AllowAnonymous()
+  @Query(() => [PostingsPerAccount], {
+    description:
+      "Count postings per account over the filtered Statistics report stream",
+  })
+  async getLedgerPostingsPerAccount(
+    @Arg("ledgerId", () => String) ledgerId: string,
+    @Arg("time", () => String, { nullable: true }) time: string | undefined,
+    @Arg("filter", () => String, { nullable: true }) filter: string | undefined,
+    @Arg("account", () => String, { nullable: true })
+    account: string | undefined,
+    @Ctx() ctx: IContext,
+  ): Promise<PostingsPerAccount[]> {
+    const data = await this.dataService.getPostingsPerAccount({
+      ledgerId,
+      identity: ctx.identity,
+      time,
+      filter,
+      account,
+    });
+    return data.map((entry) => ({
+      account: entry.account,
+      count: entry.count,
     }));
   }
 

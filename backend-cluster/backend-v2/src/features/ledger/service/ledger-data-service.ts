@@ -15,6 +15,7 @@ import type {
   BeancountErrorPublic,
   AccountLastEntryPublic,
   EntriesCountPerTypePublic,
+  PostingsPerAccountPublic,
   AccountReportPublic,
   DateAndBalanceWithAccountBalancePublic,
 } from "@/foundation/fava";
@@ -70,6 +71,10 @@ export interface ILedgerDataService {
   getEntriesCountPerType(
     params: BaseParams & FilterParams,
   ): Promise<EntriesCountPerTypePublic[]>;
+
+  getPostingsPerAccount(
+    params: BaseParams & FilterParams,
+  ): Promise<PostingsPerAccountPublic[]>;
 
   getAccountReport(
     params: BaseParams & AccountReportParams,
@@ -341,6 +346,24 @@ export class LedgerDataService
         filterNullish(rest),
       ),
       "get ledger entries by type",
+    );
+  }
+
+  async getPostingsPerAccount(
+    params: BaseParams & FilterParams,
+  ): Promise<PostingsPerAccountPublic[]> {
+    const { ledgerId, identity, ...rest } = params;
+    const { favaApiClient, ledgerOwner, ledgerName } = await this.getClient(
+      ledgerId,
+      identity,
+    );
+    return unwrapFavaResponse(
+      favaApiClient.reports.getLedgerPostingsPerAccount(
+        ledgerOwner,
+        ledgerName,
+        filterNullish(rest),
+      ),
+      "get ledger postings per account",
     );
   }
 

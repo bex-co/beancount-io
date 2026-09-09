@@ -10,6 +10,7 @@ import type {
   DocumentPublic,
   EntriesCountPerTypePublic,
   EventPublic,
+  PostingsPerAccountPublic,
 } from "@/foundation/ledger-api-types";
 
 /** Map engine {@link LedgerAttributes} → the fava `AttributesPublic` DTO. */
@@ -72,6 +73,19 @@ export function toEntriesCountPerTypePublic(
     type: capitalized,
     number: counts[lower] ?? 0,
   }));
+}
+
+/**
+ * Map per-account posting counts to a sorted `{account, count}` array,
+ * omitting zero-count accounts (opened-but-never-posted have no rows).
+ */
+export function toPostingsPerAccountPublic(
+  counts: Map<string, number>,
+): PostingsPerAccountPublic[] {
+  return [...counts.entries()]
+    .filter(([, count]) => count > 0)
+    .sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0))
+    .map(([account, count]) => ({ account, count }));
 }
 
 /** Map engine events → fava `EventPublic[]` (`value` → `description`). */

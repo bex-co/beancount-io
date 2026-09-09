@@ -66,4 +66,26 @@ describe("ledger action search schemas", () => {
       }),
     ).toEqual({});
   });
+
+  it("accepts numeric years from the router JSON parser", () => {
+    expect(
+      journalActionSearchSchema.parse({
+        time: 2016,
+        account: "Assets:Cash",
+      }),
+    ).toEqual({
+      time: 2016,
+      account: "Assets:Cash",
+    });
+  });
+
+  it("accepts double-encoded filter expressions without throwing", () => {
+    expect(
+      journalActionSearchSchema.parse({
+        filter: "payee%3A%22100%25%22",
+      }),
+    ).toEqual({
+      filter: 'payee:"100%"',
+    });
+  });
 });

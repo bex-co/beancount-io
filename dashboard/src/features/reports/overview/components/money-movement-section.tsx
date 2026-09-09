@@ -15,7 +15,9 @@ import {
   CardTitle,
 } from "@/common/components/ui/card";
 import { useLedgerNavigateToAccount } from "@/common/hooks/use-ledger";
+import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useTranslations } from "@/common/hooks/use-translations";
+import { toLedgerFilterSearchParam } from "@/common/lib/ledger-search-params";
 import type {
   IntervalDataSeries,
   MovementSnapshot,
@@ -24,6 +26,7 @@ import {
   getIntervalDates,
   getMovementSnapshot,
   isPartialMonthlyPeriod,
+  resolveMovementTimeFilter,
 } from "../lib/overview-utils";
 import { FormattedAmounts } from "./formatted-amounts";
 
@@ -41,11 +44,13 @@ function MovementCard({
   snapshot,
   ledgerOwner,
   ledgerName,
+  timeFilter,
 }: {
   kind: "in" | "out";
   snapshot: MovementSnapshot;
   ledgerOwner: string;
   ledgerName: string;
+  timeFilter: string;
 }) {
   const { t } = useTranslations();
   const navigateToAccount = useLedgerNavigateToAccount();
@@ -109,7 +114,9 @@ function MovementCard({
                 type="button"
                 key={category.account}
                 className="flex w-full cursor-pointer items-center gap-3 px-5 py-3 text-left transition-colors hover:bg-muted/40 focus-visible:bg-muted/40 focus-visible:outline-none"
-                onClick={() => navigateToAccount(category.account)}
+                onClick={() =>
+                  navigateToAccount(category.account, { time: timeFilter })
+                }
               >
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-muted text-xs font-semibold text-muted-foreground">
                   {category.label.slice(0, 2).toUpperCase()}
@@ -147,6 +154,10 @@ function MovementCard({
             <Link
               to="/ledger/$ledgerOwner/$ledgerName/income-statement"
               params={{ ledgerOwner, ledgerName }}
+              search={(prev) => ({
+                ...prev,
+                time: toLedgerFilterSearchParam(timeFilter),
+              })}
             >
               {t("page.overview.viewAll")}
               <ChevronRight className="size-4" />
@@ -172,6 +183,7 @@ export function MoneyMovementSection({
   ledgerName: string;
 }) {
   const { t } = useTranslations();
+  const { searchParams } = useLedgerSearchParams();
   const dates = useMemo(
     () => getIntervalDates(income, expenses),
     [expenses, income],
@@ -180,6 +192,10 @@ export function MoneyMovementSection({
   const selectedDate = dates.includes(requestedDate)
     ? requestedDate
     : (dates.at(-1) ?? "");
+
+  const timeFilter = selectedDate
+    ? resolveMovementTimeFilter(selectedDate, searchParams.time || undefined)
+    : "";
 
   if (!selectedDate) {
     return (
@@ -267,12 +283,14 @@ export function MoneyMovementSection({
           snapshot={incomeSnapshot}
           ledgerOwner={ledgerOwner}
           ledgerName={ledgerName}
+          timeFilter={timeFilter}
         />
         <MovementCard
           kind="out"
           snapshot={expensesSnapshot}
           ledgerOwner={ledgerOwner}
           ledgerName={ledgerName}
+          timeFilter={timeFilter}
         />
       </div>
     </section>

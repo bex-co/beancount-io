@@ -1,4 +1,8 @@
 import { z } from "zod";
+import {
+  normalizeLedgerSearchValue,
+  toLedgerFilterSearchParam,
+} from "@/common/lib/ledger-search-params/parse";
 
 export const OPEN_ACCOUNT_ACTION = "open-account" as const;
 export const NEW_ENTRY_ACTION = "new-entry" as const;
@@ -19,7 +23,8 @@ export interface AccountsActionSearch {
 export interface JournalActionSearch {
   account?: string;
   filter?: string;
-  time?: string;
+  /** Bare years may be numbers so URL serialization stays `time=2016`. */
+  time?: string | number;
   action?: typeof NEW_ENTRY_ACTION;
   directive?: JournalDirectiveAction;
 }
@@ -48,18 +53,23 @@ export const accountsActionSearchSchema = z
 
 export const journalActionSearchSchema = z
   .object({
-    account: z.string().optional().catch(undefined),
-    filter: z.string().optional().catch(undefined),
-    time: z.string().optional().catch(undefined),
+    account: z.unknown().optional(),
+    filter: z.unknown().optional(),
+    time: z.unknown().optional(),
     action: z.unknown().optional(),
     directive: z.unknown().optional(),
   })
   .transform((raw): JournalActionSearch => {
     const search: JournalActionSearch = {};
 
-    if (raw.account) search.account = raw.account;
-    if (raw.filter) search.filter = raw.filter;
-    if (raw.time) search.time = raw.time;
+    const account = normalizeLedgerSearchValue(raw.account);
+    const filter = normalizeLedgerSearchValue(raw.filter);
+    const time = toLedgerFilterSearchParam(
+      normalizeLedgerSearchValue(raw.time),
+    );
+    if (account) search.account = account;
+    if (filter) search.filter = filter;
+    if (time !== undefined) search.time = time;
 
     if (
       raw.action === NEW_ENTRY_ACTION &&

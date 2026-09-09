@@ -30,6 +30,7 @@ describe("LedgerDataQueryResolver", () => {
     getPayees: jest.Mock;
     getAccountLastEntries: jest.Mock;
     getEntriesCountPerType: jest.Mock;
+    getPostingsPerAccount: jest.Mock;
     getAccountReport: jest.Mock;
     getIntervalTotals: jest.Mock;
   };
@@ -56,6 +57,7 @@ describe("LedgerDataQueryResolver", () => {
       getPayees: jest.fn(),
       getAccountLastEntries: jest.fn(),
       getEntriesCountPerType: jest.fn(),
+      getPostingsPerAccount: jest.fn(),
       getAccountReport: jest.fn(),
       getIntervalTotals: jest.fn(),
     };
@@ -388,6 +390,35 @@ describe("LedgerDataQueryResolver", () => {
       );
       expect(result[0].type).toBe("Transaction");
       expect(result[0].number).toBe(42);
+    });
+  });
+
+  describe("getLedgerPostingsPerAccount", () => {
+    it("should delegate filters and map account counts", async () => {
+      mockDataService.getPostingsPerAccount.mockResolvedValue([
+        { account: "Assets:Crypto:Binance:BTC", count: 1 },
+        { account: "Liabilities:Crypto:Binance:Margin", count: 2 },
+      ]);
+
+      const result = await resolver.getLedgerPostingsPerAccount(
+        ledgerId,
+        "2025",
+        "#crypto",
+        "Liabilities:Crypto:Binance:Margin",
+        mockContext,
+      );
+
+      expect(mockDataService.getPostingsPerAccount).toHaveBeenCalledWith({
+        ledgerId,
+        identity: IDENTITY,
+        time: "2025",
+        filter: "#crypto",
+        account: "Liabilities:Crypto:Binance:Margin",
+      });
+      expect(result).toEqual([
+        { account: "Assets:Crypto:Binance:BTC", count: 1 },
+        { account: "Liabilities:Crypto:Binance:Margin", count: 2 },
+      ]);
     });
   });
 

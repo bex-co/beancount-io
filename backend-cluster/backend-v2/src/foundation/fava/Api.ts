@@ -1050,6 +1050,17 @@ export interface EntriesCountPerTypePublic {
 }
 
 /**
+ * PostingsPerAccountPublic
+ * Public schema for postings count per account over a filtered report stream.
+ */
+export interface PostingsPerAccountPublic {
+  /** Account */
+  account: string;
+  /** Count */
+  count: number;
+}
+
+/**
  * EntryAddBulkEntriesRequest
  * Request schema for adding multiple entries of mixed directive types in one commit.
  */
@@ -2789,6 +2800,17 @@ export interface SuccessResponseListEntriesCountPerTypePublic {
   success?: boolean;
   /** Data */
   data: EntriesCountPerTypePublic[];
+}
+
+/** SuccessResponse[list[PostingsPerAccountPublic]] */
+export interface SuccessResponseListPostingsPerAccountPublic {
+  /**
+   * Success
+   * @default true
+   */
+  success?: boolean;
+  /** Data */
+  data: PostingsPerAccountPublic[];
 }
 
 /** SuccessResponse[list[EventPublic]] */
@@ -4942,6 +4964,37 @@ export class Api<
           ...params,
         },
       ),
+
+    /**
+     * @description Count postings per account over the filtered/clamped Statistics report stream. An account filter selects matching entries and counts every posting on those entries, including counterpart accounts. Zero-count accounts are omitted; rows are sorted by account.
+     *
+     * @tags reports
+     * @name GetLedgerPostingsPerAccount
+     * @summary Get Ledger Postings Per Account
+     * @request GET:/reports/{owner}/{repo_name}/postings_per_account
+     * @secure
+     */
+    getLedgerPostingsPerAccount: (
+      owner: string,
+      repoName: string,
+      query?: {
+        /** Time */
+        time?: string | null;
+        /** Filter */
+        filter?: string | null;
+        /** Account */
+        account?: string | null;
+      },
+      params: RequestParams = {},
+    ) =>
+      this.request<SuccessResponseListPostingsPerAccountPublic, ErrorResponse>({
+        path: `/reports/${owner}/${repoName}/postings_per_account`,
+        method: "GET",
+        query: query,
+        secure: true,
+        format: "json",
+        ...params,
+      }),
 
     /**
      * @description Get the report of a specific account.

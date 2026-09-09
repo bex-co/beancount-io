@@ -151,6 +151,17 @@ export function setReportsHandler(router: Router): void {
     );
   });
 
+  router.get(`${base}/postings_per_account`, authMiddleware, async (ctx) => {
+    const { data } = servicesForRequest(ctx);
+    ctx.body = successResponse(
+      await data.getPostingsPerAccount({
+        ledgerId: ledgerIdOf(ctx),
+        userId: undefined,
+        ...selectors(ctx),
+      }),
+    );
+  });
+
   router.get(`${base}/account_report`, authMiddleware, async (ctx) => {
     const { data } = servicesForRequest(ctx);
     ctx.body = successResponse(

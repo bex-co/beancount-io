@@ -401,7 +401,7 @@ lists the accounting and bank suffixes; replace the braces with your ledger and 
 | Family                                  | URI suffixes                                                                                                                                              |
 | --------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Vocabulary (10)                         | `payees`, `narrations`, `currencies`, `tags`, `links`, `years`, `commodities`, `events`, `errors`, `attributes`                                           |
-| Analysis without required arguments (5) | `trial-balance`, `interval-totals`, `account-last-entries`, `entries-count`, `account-directives`                                                         |
+| Analysis without required arguments (6) | `trial-balance`, `interval-totals`, `account-last-entries`, `entries-count`, `postings-per-account`, `account-directives`                                                         |
 | Analysis with required arguments (5)    | `account-report/{accountName}`, `payee-transactions/{payee}`, `narration-transactions/{narration}`, `payee-accounts/{payee}`, `entry-context/{entryHash}` |
 | Bank connections and accounts (4)       | `banks`, `banks/{itemId}`, `banks/{itemId}/accounts`, `bank-accounts`                                                                                     |
 | Bank staging and suggestions (3)        | `bank-transactions/unsynced{?accountId}`, `bank-transactions/suggested-categories{?accountId}`, `banks/{itemId}/suggested-mapping`                        |
@@ -430,6 +430,13 @@ Additional report resources are `overview`, `documents`, `accounts`,
 `time`, `conversion`, and `interval`; defaults are `USD` and `monthly`, matching
 GraphQL. Documents accept `account`, `filter`, and `time`. Accounts accept
 `status=open` or `status=closed`; other values return all accounts as in GraphQL.
+
+`entries-count` and `postings-per-account` accept the same optional `account`,
+`filter`, and `time` arguments. Time filters use the Fava-compatible clamped
+report stream (including generated opening/transfer entries). An account filter
+on `postings-per-account` selects matching entries and counts every posting on
+those entries, including counterpart accounts; zero-count accounts are omitted
+and rows are sorted by account name.
 
 Statement and overview payloads retain the ledger service's snake-case field
 names on REST/MCP. GraphQL exposes camel-case equivalents, including

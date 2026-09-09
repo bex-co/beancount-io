@@ -9,6 +9,7 @@ import type {
   BeancountErrorPublic,
   AccountLastEntryPublic,
   EntriesCountPerTypePublic,
+  PostingsPerAccountPublic,
   AccountReportPublic,
   DateAndBalanceWithAccountBalancePublic,
 } from "@/foundation/ledger-api-types";
@@ -48,12 +49,14 @@ import {
 } from "@/foundation/clients/load-cached-ledger-file-map";
 import type { CacheHelper } from "@/shared/cache";
 import type { DirectiveJson } from "@rustledger/wasm";
+import { accountEntryCounts } from "@/features/ledger/utils/account-entries";
 import {
   toAttributesPublic,
   toBeancountErrorsPublic,
   toDocumentsPublic,
   toEntriesCountPerTypePublic,
   toEventsPublic,
+  toPostingsPerAccountPublic,
 } from "./ledger-data-mappers";
 
 type BaseParams = { ledgerId: string; userId: string | undefined };
@@ -106,6 +109,10 @@ interface ILedgerDataService {
   getEntriesCountPerType(
     params: BaseParams & FilterParams,
   ): Promise<EntriesCountPerTypePublic[]>;
+
+  getPostingsPerAccount(
+    params: BaseParams & FilterParams,
+  ): Promise<PostingsPerAccountPublic[]>;
 
   getAccountReport(
     params: BaseParams & AccountReportParams,
@@ -467,6 +474,27 @@ export class LedgerDataService implements ILedgerDataService {
       },
     );
     return toEntriesCountPerTypePublic(entriesCountPerType(directives));
+  }
+
+  async getPostingsPerAccount(
+    params: BaseParams & FilterParams,
+  ): Promise<PostingsPerAccountPublic[]> {
+    const { ledgerId, userId, account, filter, time } = params;
+    // Same filtered/clamped report stream as getEntriesCountPerType. Account
+    // filters select matching entries; accountEntryCounts then tallies every
+    // posting on those entries (including counterpart accounts).
+    const snapshot = await this.loadSnapshot(ledgerId, userId);
+    const { directives } = await this.clampReportDirectives(
+      snapshot.directives,
+      {
+        account,
+        filter,
+        time,
+        fiscalYearEnd: snapshot.fiscalYearEnd,
+        clamp: snapshot.reportAccounts.clamp,
+      },
+    );
+    return toPostingsPerAccountPublic(accountEntryCounts(directives));
   }
 
   async getAccountReport(

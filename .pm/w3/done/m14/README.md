@@ -1,19 +1,19 @@
 # w3 · m14 — Make Statistics postings counts honor the active filters
 
-**Worker:** worker3 **Goal:** the Statistics postings table describes the selected report stream, with the same filtered count read available to API consumers **Status:** todo
+**Worker:** worker3 **Goal:** the Statistics postings table describes the selected report stream, with the same filtered count read available to API consumers **Status:** done
 
 ## Tasks (in order)
 
-| id   | title                                                             | est | depends_on |
-| ---- | ----------------------------------------------------------------- | --- | ---------- |
-| t001 | Compute filtered postings counts in the ledger statistics service | 45m | —          |
-| t002 | Publish the filtered count IDL contract and regenerate its client | 30m | t001       |
-| t003 | Expose the count read through GraphQL, REST and MCP               | 45m | t002       |
-| t004 | Connect Statistics to the filtered count read                     | 35m | t003       |
-| t005 | Adoption surface — document and verify the selected-report counts | 20m | t004       |
-| t006 | Simplify the statistics changes                                   | 20m | t005       |
-| t007 | Test coverage — filtering, adapters and browser transitions       | 50m | t005, t006 |
-| t008 | Closeout — verify the live journey and archive the milestone      | 15m | t007       |
+| id   | title                                                                  | est | depends_on |
+| ---- | ---------------------------------------------------------------------- | --- | ---------- |
+| t001 | Compute filtered postings counts in the ledger statistics service — **DONE** | 45m | —          |
+| t002 | Publish the filtered count IDL contract and regenerate its client — **DONE** | 30m | t001       |
+| t003 | Expose the count read through GraphQL, REST and MCP — **DONE**        | 45m | t002       |
+| t004 | Connect Statistics to the filtered count read — **DONE**              | 35m | t003       |
+| t005 | Adoption surface — document and verify the selected-report counts — **DONE** | 20m | t004       |
+| t006 | Simplify the statistics changes — **DONE**                            | 20m | t005       |
+| t007 | Test coverage — filtering, adapters and browser transitions — **DONE** | 50m | t005, t006 |
+| t008 | Closeout — verify the live journey and archive the milestone — **DONE** | 15m | t007       |
 
 Implementation is 155 minutes across four owning-package tasks, exceeding the
 one-hour milestone threshold before closing work.

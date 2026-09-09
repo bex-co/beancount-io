@@ -1,5 +1,5 @@
 import type { RouteLoader } from "@/common/types/route-loader";
-import { getLedgerSearchParams } from "@/common/lib/ledger-search-params";
+import type { LedgerSearchParams } from "@/common/providers/ledger-search-params-provider/context";
 import { prefetchOptionalQuery } from "@/common/apollo/prefetch";
 import {
   GetLedgerAccountMetaDocument,
@@ -9,10 +9,12 @@ import {
 import { overviewQueryDefaults } from "./constants";
 
 export const overviewLoader: RouteLoader<
-  "/ledger/$ledgerOwner/$ledgerName/"
-> = async ({ params, context }) => {
+  "/ledger/$ledgerOwner/$ledgerName/",
+  void,
+  LedgerSearchParams
+> = async ({ params, context, deps }) => {
   const ledgerId = `${params.ledgerOwner}/${params.ledgerName}`;
-  const { account, filter, time } = getLedgerSearchParams();
+  const { account, filter, time } = deps;
 
   // The README card and the account open-directive metadata (cash-flow-role
   // declarations behind the Sankey) are optional panels that own their

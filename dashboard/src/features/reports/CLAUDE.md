@@ -116,6 +116,8 @@ never be pre-empted by provisional output.
 
 Report directories with `loader.ts` use TanStack Router loaders for SSR-safe data fetching. Keep query/filter resolution in those loaders and rendering in report content/components.
 
+Shared ledger filters (`account`, `filter`, `time`) are validated on the ledger parent route and retained across same-ledger navigation (sidebar, Related Pages) via `retainSearchParams`. Report loaders read them from `loaderDeps` so SSR and client requests match the destination URL. Filter edits use replace navigation; Clear all removes only those three keys. Ledger switches clear them unless the destination URL supplies new values. Journal action/directive, BQL `q`, and file-edit params are not propagated to unrelated pages.
+
 Await only the data the page cannot render without. Optional panels (README
 card, account metadata, sidebar counts) own their queries and render honest
 pending states; a loader may start them in the browser with

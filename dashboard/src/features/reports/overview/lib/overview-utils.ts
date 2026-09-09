@@ -1,3 +1,5 @@
+import { parseConcreteTimeFilter } from "@/features/reports/export/reporting-period";
+
 export type DataSeries = Array<{
   date: string;
   balance: Record<string, unknown>;
@@ -344,6 +346,67 @@ export function isPartialMonthlyPeriod(
     period.getMonth() === now.getMonth() &&
     now.getDate() < period.getDate()
   );
+}
+
+function pad2(value: number): string {
+  return String(value).padStart(2, "0");
+}
+
+function toLocalISODate(value: Date): string {
+  return `${value.getFullYear()}-${pad2(value.getMonth() + 1)}-${pad2(value.getDate())}`;
+}
+
+/**
+ * Convert an overview monthly interval endpoint (`YYYY-MM-DD`, usually month
+ * end) into a Fava time filter. Complete months become `YYYY-MM`; the current
+ * unfinished month becomes an inclusive date range ending today so drill-downs
+ * do not widen past the card's actual data.
+ */
+export function intervalDateToTimeFilter(
+  date: string,
+  now = new Date(),
+): string {
+  const match = /^(\d{4})-(\d{2})-(\d{2})$/.exec(date);
+  if (!match) return date;
+
+  const [, year, month] = match;
+  const monthKey = `${year}-${month}`;
+
+  if (!isPartialMonthlyPeriod(date, now)) {
+    return monthKey;
+  }
+
+  const monthStart = `${year}-${month}-01`;
+  const today = toLocalISODate(now);
+  const end = today < date ? today : date;
+  return `${monthStart} - ${end}`;
+}
+
+/**
+ * Prefer an existing global time filter when it already lies inside the
+ * selected month (do not widen a narrower selection to a full month).
+ */
+export function resolveMovementTimeFilter(
+  selectedDate: string,
+  existingTime: string | undefined,
+  now = new Date(),
+): string {
+  const derived = intervalDateToTimeFilter(selectedDate, now);
+  const existing = existingTime?.trim();
+  if (!existing) return derived;
+
+  const existingRange = parseConcreteTimeFilter(existing);
+  const derivedRange = parseConcreteTimeFilter(derived);
+  if (
+    existingRange &&
+    derivedRange &&
+    existingRange.startDate >= derivedRange.startDate &&
+    existingRange.endDate <= derivedRange.endDate
+  ) {
+    return existing;
+  }
+
+  return derived;
 }
 
 export function buildDistributionData(

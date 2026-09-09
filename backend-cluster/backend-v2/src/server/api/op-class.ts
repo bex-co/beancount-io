@@ -764,6 +764,8 @@ const LEDGER_READ_ACTION_BY_VERB = {
   "Query.getLedgerPayees": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerEntriesCountPerType":
     AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
+  "Query.getLedgerPostingsPerAccount":
+    AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerAccountLastEntries":
     AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
   "Query.getLedgerAccountReport": AUTHORIZATION_ACTIONS.LEDGER_REPORTS_READ,
@@ -1005,6 +1007,15 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       mcpResource: "ledgerEntriesCount",
       mcpExempt:
         "Reachable as the `ledgerEntriesCount` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
+    },
+    {
+      verb: "Query.getLedgerPostingsPerAccount",
+      class: "read",
+      gql: "Query.getLedgerPostingsPerAccount",
+      rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/postings-per-account",
+      mcpResource: "ledgerPostingsPerAccount",
+      mcpExempt:
+        "Reachable as the `ledgerPostingsPerAccount` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerAccountReport",

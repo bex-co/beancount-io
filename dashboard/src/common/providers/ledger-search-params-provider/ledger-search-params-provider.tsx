@@ -1,71 +1,55 @@
-import { useState, useCallback } from "react";
+import { useCallback, useMemo } from "react";
+import { useNavigate, useSearch } from "@tanstack/react-router";
 import {
   LedgerSearchParamsContext,
   type LedgerSearchParams,
 } from "./context.ts";
-import { getLedgerSearchParams } from "@/common/lib/ledger-search-params";
+import {
+  applyLedgerFilterSearch,
+  parseLedgerFilterSearch,
+} from "@/common/lib/ledger-search-params/parse";
 
+/**
+ * Shared ledger filters (account / filter / time) are owned by the router.
+ * This provider mirrors validated search into the existing consumer API and
+ * writes edits back with replace navigation so Back/Forward stay correct.
+ */
 export const LedgerSearchParamsProvider = ({
   children,
 }: {
   children: React.ReactNode;
 }) => {
-  // Initialize searchParams from URL search params (SSR-safe)
-  const [searchParams, setSearchParams] = useState<LedgerSearchParams>(() =>
-    getLedgerSearchParams(),
+  const rawSearch = useSearch({ strict: false });
+  const navigate = useNavigate();
+
+  const searchParams = useMemo(
+    () => parseLedgerFilterSearch(rawSearch),
+    [rawSearch],
   );
 
-  // Wrapper for setSearchParams that also updates URL
-  const setSearchParamsWithUrlSync = useCallback(
-    (newSearchParams: LedgerSearchParams) => {
-      setSearchParams(newSearchParams);
-
-      // Skip URL sync during SSR
-      if (typeof window === "undefined") {
-        return;
-      }
-
-      // Update URL search params using navigate
-      const currentSearch = new URLSearchParams(window.location.search);
-
-      // Update or remove account param
-      if (newSearchParams.account) {
-        currentSearch.set(
-          "account",
-          encodeURIComponent(newSearchParams.account),
-        );
-      } else {
-        currentSearch.delete("account");
-      }
-
-      // Update or remove filter param
-      if (newSearchParams.filter) {
-        currentSearch.set("filter", encodeURIComponent(newSearchParams.filter));
-      } else {
-        currentSearch.delete("filter");
-      }
-
-      // Update or remove time param
-      if (newSearchParams.time) {
-        currentSearch.set("time", encodeURIComponent(newSearchParams.time));
-      } else {
-        currentSearch.delete("time");
-      }
-
-      // Navigate with updated search params
-      const newSearch = currentSearch.toString();
-      const newUrl = `${window.location.pathname}${newSearch ? `?${newSearch}` : ""}`;
-
-      // Use replace to avoid cluttering history
-      window.history.replaceState({}, "", newUrl);
+  const setSearchParams = useCallback(
+    (next: LedgerSearchParams) => {
+      void navigate({
+        // Stay on the current matched route; only the shared filters change.
+        to: ".",
+        search: (prev) =>
+          applyLedgerFilterSearch(
+            prev as Record<string, unknown>,
+            next,
+          ) as typeof prev,
+        replace: true,
+      });
     },
-    [],
+    [navigate],
+  );
+
+  const value = useMemo(
+    () => ({ searchParams, setSearchParams }),
+    [searchParams, setSearchParams],
   );
 
   return (
-    <LedgerSearchParamsContext.Provider
-      value={{ searchParams, setSearchParams: setSearchParamsWithUrlSync }}
-    >
+    <LedgerSearchParamsContext.Provider value={value}>
       {children}
     </LedgerSearchParamsContext.Provider>
   );
