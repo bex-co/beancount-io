@@ -17,14 +17,107 @@
 - [x] **m11** — Reliable entry context for public-ledger readers (7 tasks) ← dashboard QA, 2026-09-07
 - [ ] **m12** — Execute and restore the BQL query shown in the editor (6 tasks) ← dashboard QA, 2026-09-07
 - [ ] **m13** — Make account journal filters affect the returned entries (8 tasks) ← repeated dashboard QA, 2026-09-07
+- [ ] **m14** — Make Statistics postings counts honor the active filters (8 tasks) ← repeated dashboard QA, 2026-09-08
+- [ ] **m15** — Keep ledger filters consistent with navigation and history (7 tasks) ← repeated dashboard QA, 2026-09-08
+- [ ] **m16** — Preserve parent-account postings in Cash Flow (6 tasks) ← repeated dashboard QA, 2026-09-08
+- [ ] **m17** — Make commit file links reach deferred and virtualized diffs (6 tasks) ← repeated dashboard QA, 2026-09-08
+- [ ] **m18** — Keep lot reductions from replacing current market prices (7 tasks) ← repeated dashboard QA, 2026-09-08
+- [ ] **m19** — Keep import values valid from parsing through configuration (8 tasks) ← promoted038 and repeated dashboard QA, 2026-09-08
+- [ ] **m20** — Expose reporting filters on Cash Flow and narrow layouts (7 tasks) ← promoted004 and repeated dashboard QA, 2026-09-08
+- [ ] **m21** — Continue profile social lists beyond the first page (7 tasks) ← repeated dashboard QA, 2026-09-08
+- [ ] **m22** — Localize relative timestamps and date calendars (8 tasks) ← repeated dashboard QA, 2026-09-08
+- [ ] **m23** — Restore focus after Journal, Budget and Account dialogs (8 tasks) ← promoted050 and repeated dashboard QA, 2026-09-08
+- [ ] **m24** — Keep typed dates consistent with submitted entries (6 tasks) ← repeated dashboard QA, 2026-09-08
+- [ ] **m25** — Preserve table structure while keeping row actions accessible (6 tasks) ← repeated dashboard QA, 2026-09-08
+- [ ] **m26** — Prepare complete transaction amounts from eligible postings (6 tasks) ← promoted067 and repeated dashboard QA, 2026-09-08
+- [ ] **m27** — Preserve explicit amounts when a posting omits currency (6 tasks) ← repeated dashboard QA and verified upstream fix, 2026-09-08
 
 ## Inbox
 
 - [003](./003.md) — A timed-out budget write still lands, so the retry duplicates it
-- [004](./004.md) — Cash Flow hides the filters that determine its reporting period
+- [004](./004.md) — Shared reporting filter visibility — promoted to [m20](./m20/README.md)
 - [005](./005.md) — Income Statement links Net Profit to a nonexistent account
 - [006](./006.md) — Journal pagination cannot be reached by keyboard
 - [007](./007.md) — Holdings by Cost Currency combines different units into one book value
 - [008](./008.md) — Files directory rows cannot be opened with the keyboard
-- [009](./009.md) — Files Version History button loses its accessible name at narrow width
-- [010](./010.md) — Clearing gallery search leaves the old result selectable
+- [009](./009.md) — Narrow Files toolbars lose names for history and editing controls
+- [010](./010.md) — Gallery search retains stale selections and ignores Escape on empty results
+- [011](./011.md) — Yearly account grouping hides real activity and recovery controls
+- [012](./012.md) — Commodity tooltips round distinct fractional prices to the same value
+- [013](./013.md) — Public Sharing and Git Clone copy buttons have no accessible names
+- [014](./014.md) — Public-reader Settings requests an admin-only collaborator list
+- [015](./015.md) — Smart Import splits quoted multiline CSV fields into invalid rows
+- [016](./016.md) — Mobile Reports plots profitable months as negative Net Profit
+- [017](./017.md) — Mobile merchant transaction counts actually count postings
+- [018](./018.md) — Dark-mode report chart labels retain light-theme colors
+- [019](./019.md) — System appearance does not follow browser color-scheme changes
+- [020](./020.md) — Browser printing keeps a previous statement after filters change
+- [021](./021.md) — Read-only mobile transaction details expose inert edit and delete controls
+- [022](./022.md) — Global statement print CSS blanks Journal and Accounts printing
+- [023](./023.md) — Journal export dialog overstates which filters apply
+- [024](./024.md) — Journal mistakes invalid filter input for a server outage
+- [025](./025.md) — Narrow statement tables split digits across lines
+- [026](./026.md) — Statement account expanders expose no accessible name or state
+- [027](./027.md) — A language parameter makes the manual language selector ineffective
+- [028](./028.md) — BQL horizontal scrolling separates cells from their column headers
+- [029](./029.md) — Settings sign-in redirects discard the requested subpage
+- [030](./030.md) — Password visibility buttons are skipped by keyboard navigation
+- [031](./031.md) — Budget cards hide actual and variance for zero-activity intervals
+- [032](./032.md) — Missing commits are reported as a server outage
+- [033](./033.md) — Related Files links navigate to a missing route
+- [034](./034.md) — BQL charts replace valid Decimal and Inventory values with invented numbers
+- [035](./035.md) — Holdings rounds real crypto quantities to zero in the table and CSV
+- [036](./036.md) — Holdings by Currency keeps unnamed rows for fully sold assets
+- [037](./037.md) — Import preview shows different transactions from its data after deleting a row
+- [038](./038.md) — Smart Import amount validation — promoted to [m19](./m19/README.md)
+- [039](./039.md) — Smart Import reverses the bank movement when preparing expense and income postings
+- [040](./040.md) — File edit shortcuts and URLs expose an editable draft to public readers
+- [041](./041.md) — File Cancel erases the draft before the unsaved-changes choice
+- [042](./042.md) — Escape in file Find cancels edit mode instead of closing Find
+- [043](./043.md) — Forced-open postings still advertise enabled row toggles
+- [044](./044.md) — Narrow account reports hide interval and valuation selectors
+- [045](./045.md) — Smart Import silently treats a real first transaction as a CSV header
+- [046](./046.md) — Missing files are presented as failed requests with only a retry action
+- [047](./047.md) — Import cell buttons ignore Space and lose focus when editing ends
+- [048](./048.md) — An empty Overview filter result claims the whole ledger has no activity
+- [049](./049.md) — Import row selection removes the focused checkbox
+- [050](./050.md) — Dialog focus return — promoted to [m23](./m23/README.md)
+- [051](./051.md) — Commodity price history cannot be read with the keyboard
+- [052](./052.md) — Keyboard filter selection is replaced by the partial search text
+- [053](./053.md) — Import's CSV example download has no accessible name
+- [054](./054.md) — Import configuration rounds real BTC amounts to zero
+- [055](./055.md) — Switching ledgers keeps the previous ledger's BQL results and CSV
+- [056](./056.md) — Statistics account destinations cannot be reached with the keyboard
+- [057](./057.md) — Signup leaves focus on Create account when the username is invalid
+- [058](./058.md) — Returning from Forgot Password loses the intended login destination
+- [059](./059.md) — Switching ledgers leaves the narrow sidebar over the destination
+- [060](./060.md) — A fresh guest is incorrectly told their session has expired
+- [061](./061.md) — Public file titles lose the file path after rendering
+- [062](./062.md) — The AI composer's send button has no accessible name
+- [063](./063.md) — Confirming composed text submits an unfinished AI question
+- [064](./064.md) — Enter rejects precise amounts that a mouse submission accepts
+- [065](./065.md) — Budget selectors discard their form labels and descriptions
+- [066](./066.md) — New Transaction leaves status and posting actions unnamed
+- [067](./067.md) — Transaction inference and output validation — promoted to [m26](./m26/README.md)
+- [068](./068.md) — Removing an earlier AI attachment leaves a later upload stuck
+- [069](./069.md) — The date calendar cannot reach a valid next-year date
+- [070](./070.md) — File-upload removal buttons have no accessible names
+- [071](./071.md) — A removed upload file cannot be selected again
+- [072](./072.md) — Account search calls loading and failed reads an empty ledger
+- [073](./073.md) — Narrow account search clips the start of account names
+- [074](./074.md) — Account and ledger search inputs have empty accessible names
+- [075](./075.md) — Token permission errors lack focus and field associations
+- [076](./076.md) — Cancel retains drafts in SSH setup and Open Account
+- [077](./077.md) — Opening another BQL history query cancels the first
+- [078](./078.md) — SSH setup describes the key as an API credential
+- [079](./079.md) — Gallery’s Back logo cannot be reached with the keyboard
+- [080](./080.md) — Ask has no control to stop a pending request
+- [081](./081.md) — Ask network failures offer no retry of the submitted question
+- [082](./082.md) — Ask sign-in can discard the question and selected mode
+- [083](./083.md) — A background quota read redirects guests from the empty Ask page
+- [084](./084.md) — Open Account validation remains English in localized forms
+- [085](./085.md) — New Entry squeezes its heading into letters on narrow screens
+- [086](./086.md) — Compact date fields clip the year before editing
+- [087](./087.md) — Direct ledger loads lose their structured access errors
+- [088](./088.md) — Try Again does not retry the failed ledger read
+- [089](./089.md) — Small Journal amounts become invalid Beancount scientific notation
