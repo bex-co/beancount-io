@@ -1,5 +1,6 @@
 import { LedgerJournalService } from "../ledger-journal-service";
 import {
+  BadUserInputError,
   ConflictError,
   InternalServerError,
   NotFoundError,
@@ -120,6 +121,23 @@ describe("LedgerJournalService", () => {
         service.getJournal({ ledgerId: LEDGER_ID, identity: IDENTITY }),
       ).rejects.toThrow(InternalServerError);
     });
+
+    it("maps a ledger 400 for a malformed filter to BadUserInputError", async () => {
+      mockGetJournal.mockRejectedValue(
+        new FavaApiError("Unexpected end of filter", 400, {
+          success: false,
+          error: "Unexpected end of filter",
+        }),
+      );
+
+      await expect(
+        service.getJournal({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          query: { filter: "(" },
+        }),
+      ).rejects.toThrow(BadUserInputError);
+    });
   });
 
   describe("getContext", () => {
@@ -189,6 +207,23 @@ describe("LedgerJournalService", () => {
       await expect(
         service.plaintextJournal({ ledgerId: LEDGER_ID, identity: IDENTITY }),
       ).rejects.toThrow(InternalServerError);
+    });
+
+    it("maps a ledger 400 for a malformed filter to BadUserInputError", async () => {
+      mockPlaintextJournal.mockRejectedValue(
+        new FavaApiError("Unexpected end of filter", 400, {
+          success: false,
+          error: "Unexpected end of filter",
+        }),
+      );
+
+      await expect(
+        service.plaintextJournal({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          query: { filter: "(" },
+        }),
+      ).rejects.toThrow(BadUserInputError);
     });
   });
 
@@ -283,6 +318,23 @@ describe("LedgerJournalService", () => {
       await expect(
         service.getAccountJournal({ ledgerId: LEDGER_ID, identity: IDENTITY, query: { account: "A" } }),
       ).rejects.toThrow(InternalServerError);
+    });
+
+    it("maps a ledger 400 for a malformed filter to BadUserInputError", async () => {
+      mockGetAccountJournal.mockRejectedValue(
+        new FavaApiError("Unexpected end of filter", 400, {
+          success: false,
+          error: "Unexpected end of filter",
+        }),
+      );
+
+      await expect(
+        service.getAccountJournal({
+          ledgerId: LEDGER_ID,
+          identity: IDENTITY,
+          query: { account: "Income:US:Hoogle:Salary", filter: "(" },
+        }),
+      ).rejects.toThrow(BadUserInputError);
     });
   });
 

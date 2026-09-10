@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [024](./024.md) — Journal mistakes invalid filter input for a server outage
 - [025](./025.md) — Narrow statement tables split digits across lines
 - [026](./026.md) — Statement account expanders expose no accessible name or state
 - [027](./027.md) — A language parameter makes the manual language selector ineffective
