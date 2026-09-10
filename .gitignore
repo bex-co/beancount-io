@@ -43,5 +43,4 @@ tmp/
 # Playwright MCP scratch output (page snapshots, screenshots)
 .playwright-mcp/
 
-beancount-cms-v2
-homebrew-tap
+.tmp
