@@ -1,5 +1,9 @@
 import "reflect-metadata";
-import { createAnonymousFavaApi, createFavaApi } from "../create-client";
+import {
+  createAnonymousFavaApi,
+  createFavaApi,
+  FAVA_WRITE_TIMEOUT_MS,
+} from "../create-client";
 import { ApiClient } from "../api-client";
 
 // Mock ApiClient
@@ -21,6 +25,7 @@ describe("createFavaApi", () => {
 
     expect(ApiClient).toHaveBeenCalledWith({
       baseUrl,
+      timeoutMs: FAVA_WRITE_TIMEOUT_MS,
       baseApiParams: {
         headers: {
           Authorization: expectedAuth,
@@ -29,6 +34,14 @@ describe("createFavaApi", () => {
     });
 
     expect(api).toBeDefined();
+  });
+
+  it("uses a longer write timeout than the shared ApiClient default", () => {
+    expect(FAVA_WRITE_TIMEOUT_MS).toBe(90_000);
+    createFavaApi("http://localhost:5000", "u", "p");
+    expect(ApiClient).toHaveBeenCalledWith(
+      expect.objectContaining({ timeoutMs: 90_000 }),
+    );
   });
 
   it("should create proper Basic Auth header", () => {
@@ -67,6 +80,7 @@ describe("createFavaApi", () => {
 
     expect(ApiClient).toHaveBeenCalledWith({
       baseUrl,
+      timeoutMs: FAVA_WRITE_TIMEOUT_MS,
       baseApiParams: {
         headers: {
           Authorization: `Basic ${expectedAuth}`,
@@ -86,6 +100,7 @@ describe("createFavaApi", () => {
 
     expect(ApiClient).toHaveBeenCalledWith({
       baseUrl,
+      timeoutMs: FAVA_WRITE_TIMEOUT_MS,
       baseApiParams: {
         headers: {
           Authorization: `Basic ${expectedAuth}`,

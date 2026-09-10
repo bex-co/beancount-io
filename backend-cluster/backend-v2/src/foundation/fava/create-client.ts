@@ -1,6 +1,14 @@
 import { ApiClient } from "./api-client";
 import { FavaApiClient } from "./types";
 
+/**
+ * Entry/bulk writes can cold-start past the shared 30s read default (WASM load
+ * or git warm-up). Aborting after the ledger already committed makes a user
+ * retry duplicate the append — see `.pm/w3/003.md`. Prefer a longer write
+ * budget on authenticated clients that own mutations.
+ */
+export const FAVA_WRITE_TIMEOUT_MS = 90_000;
+
 export const createFavaApi = (
   baseUrl: string,
   username: string,
@@ -8,6 +16,7 @@ export const createFavaApi = (
 ): FavaApiClient => {
   return new ApiClient({
     baseUrl,
+    timeoutMs: FAVA_WRITE_TIMEOUT_MS,
     baseApiParams: {
       headers: {
         Authorization: `Basic ${Buffer.from(`${username}:${password}`).toString("base64")}`,
