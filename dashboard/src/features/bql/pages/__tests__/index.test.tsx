@@ -17,6 +17,10 @@ import type { QueryShellQuery } from "@/graphql/definitions";
 const mockNavigate = vi.fn();
 const mockExecuteQuery = vi.fn();
 let searchQuery: string | undefined;
+const routeParams = vi.hoisted(() => ({
+  ledgerOwner: "open_ledger",
+  ledgerName: "example",
+}));
 
 const monacoHarness = vi.hoisted(() => ({
   commandHandler: null as null | (() => void),
@@ -27,7 +31,10 @@ const monacoHarness = vi.hoisted(() => ({
 }));
 
 vi.mock("@tanstack/react-router", () => ({
-  useParams: () => ({ ledgerOwner: "open_ledger", ledgerName: "example" }),
+  useParams: () => ({
+    ledgerOwner: routeParams.ledgerOwner,
+    ledgerName: routeParams.ledgerName,
+  }),
   useSearch: () => ({ query: searchQuery }),
   useNavigate: () => mockNavigate,
   ClientOnly: ({ children }: { children: ReactNode }) => children,
@@ -75,15 +82,28 @@ vi.mock("@/common/components/seo/ledger-page-seo", () => ({
 }));
 
 vi.mock("@/features/bql/components/query-result-card", () => ({
-  QueryResultCard: ({ query, error }: { query: string; error?: Error }) => (
-    <div data-testid={`history-${query}`}>
-      <span>{query}</span>
-      {error ? <span role="alert">{error.message}</span> : null}
-      <button type="button" data-testid={`export-${query}`}>
-        Export {query}
-      </button>
-    </div>
-  ),
+  QueryResultCard: ({
+    query,
+    result,
+    error,
+  }: {
+    query: string;
+    result?: QueryShellQuery["queryShell"] | null;
+    error?: Error;
+  }) => {
+    const tableRows = result?.table?.rows ?? [];
+    const rows = tableRows.map((row) => row.join("|")).join(";");
+    return (
+      <div data-testid={`history-${query}`}>
+        <span>{query}</span>
+        {rows ? <span data-testid={`result-rows-${query}`}>{rows}</span> : null}
+        {error ? <span role="alert">{error.message}</span> : null}
+        <button type="button" data-testid={`export-${query}`}>
+          Export {query}
+        </button>
+      </div>
+    );
+  },
 }));
 
 vi.mock("@/common/components/monaco-editor", () => ({
@@ -198,6 +218,8 @@ describe("LedgerQueryPage", () => {
   beforeEach(() => {
     vi.clearAllMocks();
     searchQuery = undefined;
+    routeParams.ledgerOwner = "open_ledger";
+    routeParams.ledgerName = "example";
     monacoHarness.commandHandler = null;
     monacoHarness.registeredKeybinding = null;
     monacoHarness.editorValue = "select * from accounts";
@@ -491,5 +513,124 @@ describe("LedgerQueryPage", () => {
       ).toHaveTextContent("Export select account limit 2");
       expect(screen.getByTestId("history-select from")).toBeInTheDocument();
     });
+  });
+
+  it("re-executes the retained URL query for a new ledger and drops prior rows", async () => {
+    const query =
+      "SELECT account FROM accounts ORDER BY account LIMIT 1000";
+    searchQuery = query;
+
+    mockExecuteQuery.mockImplementation(async (options?: unknown) => {
+      const variables = (
+        options as
+          | { variables?: { query?: string; ledgerId?: string } }
+          | undefined
+      )?.variables;
+      expect(variables?.query).toBe(query);
+      if (variables?.ledgerId === "open_ledger/example") {
+        return {
+          data: {
+            queryShell: tableResult([["Assets:US:BofA"]]),
+          },
+        };
+      }
+      return {
+        data: {
+          queryShell: tableResult([["Assets:Current:Cash"]]),
+        },
+      };
+    });
+
+    const { rerender } = renderPage();
+
+    await waitFor(() => {
+      expect(screen.getByTestId(`result-rows-${query}`)).toHaveTextContent(
+        "Assets:US:BofA",
+      );
+    });
+    expect(mockExecuteQuery).toHaveBeenCalledWith({
+      variables: {
+        ledgerId: "open_ledger/example",
+        query,
+      },
+    });
+
+    routeParams.ledgerName = "minimax";
+    rerender(<LedgerQueryPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId(`result-rows-${query}`)).toHaveTextContent(
+        "Assets:Current:Cash",
+      );
+    });
+    expect(mockExecuteQuery).toHaveBeenCalledWith({
+      variables: {
+        ledgerId: "open_ledger/minimax",
+        query,
+      },
+    });
+    expect(
+      screen.queryByText("Assets:US:BofA"),
+    ).not.toBeInTheDocument();
+  });
+
+  it("ignores a late result from the previous ledger after a switch", async () => {
+    const query = "select account limit 1";
+    searchQuery = query;
+
+    let resolveExample!: (value: unknown) => void;
+    const examplePromise = new Promise((resolve) => {
+      resolveExample = resolve;
+    });
+
+    mockExecuteQuery.mockImplementation(async (options?: unknown) => {
+      const variables = (
+        options as
+          | { variables?: { query?: string; ledgerId?: string } }
+          | undefined
+      )?.variables;
+      if (variables?.ledgerId === "open_ledger/example") {
+        await examplePromise;
+        return {
+          data: {
+            queryShell: tableResult([["Assets:US:BofA"]]),
+          },
+        };
+      }
+      return {
+        data: {
+          queryShell: tableResult([["Assets:Current:Cash"]]),
+        },
+      };
+    });
+
+    const { rerender } = renderPage();
+
+    await waitFor(() => {
+      expect(mockExecuteQuery).toHaveBeenCalledWith({
+        variables: {
+          ledgerId: "open_ledger/example",
+          query,
+        },
+      });
+    });
+
+    routeParams.ledgerName = "minimax";
+    rerender(<LedgerQueryPage />);
+
+    await waitFor(() => {
+      expect(screen.getByTestId(`result-rows-${query}`)).toHaveTextContent(
+        "Assets:Current:Cash",
+      );
+    });
+
+    await act(async () => {
+      resolveExample(undefined);
+    });
+
+    expect(screen.getByTestId(`result-rows-${query}`)).toHaveTextContent(
+      "Assets:Current:Cash",
+    );
+    expect(screen.queryByText("Assets:US:BofA")).not.toBeInTheDocument();
   });
 });

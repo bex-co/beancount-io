@@ -64,10 +64,17 @@ export default function LedgerQueryPage() {
     new Set(),
   );
 
+  const ledgerIdRef = useRef(ledgerId);
+  ledgerIdRef.current = ledgerId;
+
+  // Track queries we've already executed to prevent double-firing from URL sync
+  const executedQueriesRef = useRef<Set<string>>(new Set());
+
   const executeQueryAndCache = useCallback(
     async (query: string) => {
       if (!query.trim()) return;
 
+      const requestLedgerId = ledgerId;
       track("bql_query_executed", {});
 
       // Add to history and mark as executing atomically before the async call.
@@ -79,10 +86,15 @@ export default function LedgerQueryPage() {
       try {
         const result = await executeQuery({
           variables: {
-            ledgerId: ledgerId,
+            ledgerId: requestLedgerId,
             query: query.trim(),
           },
         });
+
+        // A ledger switch (or remount) must not accept a late previous result.
+        if (ledgerIdRef.current !== requestLedgerId) {
+          return;
+        }
 
         if (result.data?.queryShell) {
           setResultsCache((prev) => ({
@@ -101,6 +113,9 @@ export default function LedgerQueryPage() {
           }));
         }
       } catch (err) {
+        if (ledgerIdRef.current !== requestLedgerId) {
+          return;
+        }
         setResultsCache((prev) => ({
           ...prev,
           [query]: {
@@ -109,6 +124,9 @@ export default function LedgerQueryPage() {
           },
         }));
       } finally {
+        if (ledgerIdRef.current !== requestLedgerId) {
+          return;
+        }
         setExecutingQueries((prev) => {
           const next = new Set(prev);
           next.delete(query);
@@ -123,8 +141,13 @@ export default function LedgerQueryPage() {
   const executeRef = useRef(executeQueryAndCache);
   executeRef.current = executeQueryAndCache;
 
-  // Track queries we've already executed to prevent double-firing from URL sync
-  const executedQueriesRef = useRef<Set<string>>(new Set());
+  // Drop prior-ledger result/execution state when the ledger identity changes
+  // (remountDeps also resets this on the route; keep the page self-contained).
+  useEffect(() => {
+    setResultsCache({});
+    setExecutingQueries(new Set());
+    executedQueriesRef.current = new Set();
+  }, [ledgerId]);
 
   const submitQuery = useCallback(
     (rawQuery: string) => {
@@ -151,8 +174,8 @@ export default function LedgerQueryPage() {
   const submitQueryRef = useRef(submitQuery);
   submitQueryRef.current = submitQuery;
 
-  // Auto-execute query from URL on mount or when URL query changes externally;
-  // keep the editor text aligned with the bookmarked query.
+  // Auto-execute query from URL on mount, when the bookmarked query changes,
+  // or when the ledger identity changes while the query text is retained.
   useEffect(() => {
     if (urlQuery && urlQuery.trim()) {
       const q = urlQuery.trim();
@@ -164,7 +187,7 @@ export default function LedgerQueryPage() {
       }
       void executeRef.current(q);
     }
-  }, [urlQuery]);
+  }, [urlQuery, ledgerId]);
 
   const handleSubmit = () => {
     submitQuery(queryText);

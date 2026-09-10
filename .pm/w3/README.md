@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [055](./055.md) — Switching ledgers keeps the previous ledger's BQL results and CSV
 - [056](./056.md) — Statistics account destinations cannot be reached with the keyboard
 - [057](./057.md) — Signup leaves focus on Create account when the username is invalid
 - [058](./058.md) — Returning from Forgot Password loses the intended login destination

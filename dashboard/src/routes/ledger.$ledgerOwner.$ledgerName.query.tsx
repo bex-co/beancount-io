@@ -11,6 +11,10 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/query")({
   component: LedgerQueryPage,
   validateSearch: searchSchema,
   ssr: false,
+  remountDeps: ({ params }) => ({
+    ledgerOwner: params.ledgerOwner,
+    ledgerName: params.ledgerName,
+  }),
   head: ({ params, match }) =>
     createHeadMeta(
       match.context.localization.i18n,
