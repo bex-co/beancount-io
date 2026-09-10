@@ -406,6 +406,10 @@ const TransactionDetailImpl = ({
   }));
   const hasMetadata = Boolean(entry.tags?.length || entry.links?.length);
   const entryHasEditableSource = canWrite && hasEditableSource(entry);
+  const showWriteActions = shouldShowTransactionWriteActions(
+    canWrite,
+    sha256sum,
+  );
 
   return (
     <SafeAreaView edges={["bottom"]} style={styles.container}>
@@ -415,7 +419,7 @@ const TransactionDetailImpl = ({
           headerRight: entryHash
             ? () => (
                 <View style={styles.headerActions}>
-                  {sha256sum ? (
+                  {showWriteActions ? (
                     <Pressable
                       style={styles.headerIconButton}
                       onPress={handleEdit}
@@ -462,7 +466,7 @@ const TransactionDetailImpl = ({
                         ),
                         onPress: handleCopyLink,
                       },
-                      ...(sha256sum
+                      ...(showWriteActions
                         ? [
                             {
                               label: t("deleteTransaction"),
