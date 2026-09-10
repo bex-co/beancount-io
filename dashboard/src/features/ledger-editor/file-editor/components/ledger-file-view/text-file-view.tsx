@@ -1,6 +1,7 @@
 import { useState, useRef, useEffect, useCallback } from "react";
 import type * as monaco from "monaco-editor";
 import type { GetLedgerFileQuery, BeancountError } from "@/graphql/definitions";
+import { useLedgerPermission } from "@/common/hooks/use-ledger-permission";
 import { base64Decode } from "@/common/lib/utils/encode";
 import { getFilename } from "../../../shared/lib/utils";
 import { useNormalizedLineNumber } from "../../hooks/use-normalized-line-number";
@@ -44,6 +45,11 @@ export const TextFileView = ({
   onEnterEditMode,
   onExitEditMode,
 }: TextFileViewProps) => {
+  const { canWrite } = useLedgerPermission();
+  // URL/search may request edit mode; only writers get an editable editor.
+  const requestedEditMode = Boolean(isEditMode);
+  const effectiveEditMode = requestedEditMode && canWrite;
+
   // Decode base64 content once
   const plainContent = fileContent.content
     ? base64Decode(fileContent.content)
@@ -72,10 +78,12 @@ export const TextFileView = ({
   // reformats the file, or an AI edit). We compare against the previously-seen
   // content and adjust state during render - React's recommended alternative to
   // an effect - so an in-flight edit is never clobbered and scroll isn't reset.
+  // Use the URL request (not effective permission) so a draft survives when
+  // write access is lost mid-edit until the URL is cleared.
   const [lastSyncedContent, setLastSyncedContent] = useState(plainContent);
   if (plainContent !== lastSyncedContent) {
     setLastSyncedContent(plainContent);
-    if (!isEditMode) {
+    if (!requestedEditMode) {
       setEditedContent(plainContent);
     }
   }
@@ -87,15 +95,23 @@ export const TextFileView = ({
     [],
   );
 
+  // Strip unauthorized ?editMode= without creating a navigation loop.
+  useEffect(() => {
+    if (requestedEditMode && !canWrite) {
+      onExitEditMode();
+    }
+  }, [requestedEditMode, canWrite, onExitEditMode]);
+
   // Enter edit mode - just flip the URL flag; the persistent editor keeps its
   // scroll position and content, so there is nothing to reset here.
   const handleEditClick = useCallback(() => {
+    if (!canWrite) return;
     onEnterEditMode();
-  }, [onEnterEditMode]);
+  }, [canWrite, onEnterEditMode]);
 
   // Handle Cmd+E / Ctrl+E keyboard shortcut to enter edit mode
   useEffect(() => {
-    if (isEditMode) return; // Only active when NOT in edit mode
+    if (effectiveEditMode || !canWrite) return;
 
     const handleKeyDown = (e: KeyboardEvent) => {
       if ((e.key === "e" || e.key === "E") && (e.ctrlKey || e.metaKey)) {
@@ -109,19 +125,20 @@ export const TextFileView = ({
 
     return () =>
       document.removeEventListener("keydown", handleKeyDown, { capture: true });
-  }, [isEditMode, handleEditClick]);
+  }, [effectiveEditMode, canWrite, handleEditClick]);
 
   // Save changes then exit edit mode. Scroll position is preserved naturally
   // because the same editor instance stays mounted in read-only mode.
   const handleSaveClick = useCallback(
     async (contentOverride?: string) => {
+      if (!canWrite) return;
       const contentToSave = contentOverride ?? editedContent;
       if (contentToSave !== plainContent) {
         await onSave(contentToSave);
       }
       onExitEditMode();
     },
-    [editedContent, plainContent, onSave, onExitEditMode],
+    [canWrite, editedContent, plainContent, onSave, onExitEditMode],
   );
 
   // Cancel editing — exit edit mode without wiping the buffer first. The
@@ -134,6 +151,14 @@ export const TextFileView = ({
     setEditedContent(plainContent);
   }, [plainContent]);
 
+  const handleEditorContentChange = useCallback(
+    (value: string) => {
+      if (!canWrite) return;
+      setEditedContent(value);
+    },
+    [canWrite],
+  );
+
   return (
     <div className="flex flex-col flex-1 min-h-0">
       <div className="mb-2 sm:mb-4">
@@ -141,7 +166,7 @@ export const TextFileView = ({
           <h1 className="text-lg sm:text-xl font-semibold">
             <LedgerFileBreadcrumb type="file" path={filePath} />
           </h1>
-          {isEditMode ? (
+          {effectiveEditMode ? (
             <EditModeToolbar
               editorRef={editorRef}
               editedContent={editedContent}
@@ -166,9 +191,9 @@ export const TextFileView = ({
           <TextEditor
             content={editedContent}
             filename={filename}
-            setEditedContent={setEditedContent}
+            setEditedContent={handleEditorContentChange}
             lineNumber={normalizedLineNumber}
-            readOnly={!isEditMode}
+            readOnly={!effectiveEditMode}
             onSave={handleSaveClick}
             onCancel={handleCancelEdit}
             onEditorMount={handleEditorMount}

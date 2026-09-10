@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [040](./040.md) — File edit shortcuts and URLs expose an editable draft to public readers
 - [042](./042.md) — Escape in file Find cancels edit mode instead of closing Find
 - [043](./043.md) — Forced-open postings still advertise enabled row toggles
 - [044](./044.md) — Narrow account reports hide interval and valuation selectors
