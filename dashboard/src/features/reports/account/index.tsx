@@ -360,7 +360,7 @@ export default function AccountPage() {
     );
   }
 
-  if (!accountReportData || isAccountReportEmpty(accountReportData)) {
+  if (!accountReportData) {
     return (
       <div className="space-y-4">
         <LedgerPageSEO seoKey="ledgerAccount" params={{ accountName }} />
@@ -378,6 +378,8 @@ export default function AccountPage() {
       </div>
     );
   }
+
+  const chartsEmpty = isAccountReportEmpty(accountReportData);
 
   return (
     <div className="space-y-4">
@@ -426,11 +428,19 @@ export default function AccountPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <LineChart
-                data={accountReportData.accountBalanceData}
-                interval={timeInterval}
-                primarySeries={primaryCurrency}
-              />
+              {chartsEmpty ? (
+                <ReportEmptyState
+                  Icon={Activity}
+                  title={t("component.emptyState.title")}
+                  message={t("page.accountReport.noData")}
+                />
+              ) : (
+                <LineChart
+                  data={accountReportData.accountBalanceData}
+                  interval={timeInterval}
+                  primarySeries={primaryCurrency}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>
@@ -446,11 +456,19 @@ export default function AccountPage() {
               </CardDescription>
             </CardHeader>
             <CardContent>
-              <DateBalanceChart
-                data={accountReportData.intervalTotalsData}
-                interval={timeInterval}
-                primarySeries={primaryCurrency}
-              />
+              {chartsEmpty ? (
+                <ReportEmptyState
+                  Icon={Activity}
+                  title={t("component.emptyState.title")}
+                  message={t("page.accountReport.noData")}
+                />
+              ) : (
+                <DateBalanceChart
+                  data={accountReportData.intervalTotalsData}
+                  interval={timeInterval}
+                  primarySeries={primaryCurrency}
+                />
+              )}
             </CardContent>
           </Card>
         </TabsContent>

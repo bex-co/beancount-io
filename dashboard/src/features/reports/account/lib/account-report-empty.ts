@@ -15,9 +15,10 @@ function hasNonZeroBalance(point: BalancePoint): boolean {
 }
 
 /**
- * Empty account reports may contain zero-filled chart points. Treat those the
- * same as empty arrays so a fresh ledger gets one designed state, not blank
- * chart cards.
+ * Chart aggregates may be all zeros while the account still has journal
+ * history (e.g. a repaid loan under yearly grouping). Use this only to decide
+ * whether chart cards show a designed empty state — never to hide interval
+ * controls or the independently loaded account journal.
  */
 export function isAccountReportEmpty(
   report: AccountReportData | null | undefined,
