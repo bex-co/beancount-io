@@ -64,6 +64,37 @@ const cases: [string, EChartsOption][] = [
 ];
 
 describe("the shared chart registry", () => {
+  it("registers a transparent app-dark theme with readable label colors", () => {
+    const chart = init(undefined, "app-dark", {
+      renderer: "svg",
+      ssr: true,
+      width: 600,
+      height: 300,
+    });
+    try {
+      chart.setOption({
+        ...axes,
+        animation: false,
+        backgroundColor: undefined,
+        legend: { data: ["Balance"] },
+        series: [{ name: "Balance", type: "line", data: [4, 7] }],
+      });
+      const option = chart.getOption() as {
+        backgroundColor?: string;
+        textStyle?: { color?: string };
+        legend?: Array<{ textStyle?: { color?: string } }>;
+      };
+      expect(option.backgroundColor === "transparent" || !option.backgroundColor).toBe(
+        true,
+      );
+      const svg = chart.renderToSVGString();
+      // Dark theme contrast color #B9B8CE should appear for axis/legend text.
+      expect(svg.toLowerCase()).toContain("#b9b8ce");
+    } finally {
+      chart.dispose();
+    }
+  });
+
   it.each(cases)(
     "renders %s with registered report components",
     (_name, option) => {

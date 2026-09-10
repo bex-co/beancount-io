@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [018](./018.md) — Dark-mode report chart labels retain light-theme colors
 - [019](./019.md) — System appearance does not follow browser color-scheme changes
 - [020](./020.md) — Browser printing keeps a previous statement after filters change
 - [021](./021.md) — Read-only mobile transaction details expose inert edit and delete controls

@@ -1,7 +1,8 @@
 import { useEffect, useRef, useImperativeHandle, forwardRef } from "react";
-import { init } from "./runtime";
+import { APP_DARK_CHART_THEME, init } from "./runtime";
 import type { ECharts } from "echarts/core";
 import { useIsMobile } from "@/common/hooks/use-mobile";
+import { useIsDarkTheme } from "@/common/providers/theme-provider";
 import type { EChartsProps, EChartsRef } from "./types";
 
 const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
@@ -21,6 +22,9 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
   ) => {
     const chartRef = useRef<HTMLDivElement>(null);
     const chartInstanceRef = useRef<ECharts | null>(null);
+    const isDark = useIsDarkTheme();
+    // Explicit caller theme wins; otherwise follow the resolved app appearance.
+    const resolvedTheme = theme ?? (isDark ? APP_DARK_CHART_THEME : undefined);
 
     useEffect(() => {
       if (!chartRef.current) return;
@@ -29,7 +33,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
         chartInstanceRef.current.dispose();
       }
 
-      const chart = init(chartRef.current, theme);
+      const chart = init(chartRef.current, resolvedTheme);
       chartInstanceRef.current = chart;
 
       return () => {
@@ -38,7 +42,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
           chartInstanceRef.current = null;
         }
       };
-    }, [theme]);
+    }, [resolvedTheme]);
 
     useEffect(() => {
       if (!chartInstanceRef.current) return;
@@ -47,7 +51,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
         lazyUpdate,
         silent,
       });
-    }, [option, notMerge, lazyUpdate, silent, theme]);
+    }, [option, notMerge, lazyUpdate, silent, resolvedTheme]);
 
     useEffect(() => {
       if (!chartInstanceRef.current) return;
@@ -56,7 +60,7 @@ const ReactEChartsClientInner = forwardRef<EChartsRef, EChartsProps>(
       } else {
         chartInstanceRef.current.hideLoading();
       }
-    }, [showLoading, loadingOption, theme]);
+    }, [showLoading, loadingOption, resolvedTheme]);
 
     useEffect(() => {
       const handleResize = () => {
