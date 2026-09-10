@@ -121,9 +121,9 @@ describe("setSandboxAgentRoute", () => {
       () => workflow as ISandboxAgentWorkflow,
     );
 
-  it("registers POST /api-gateway/ask-agent", () => {
+  it("registers POST /api-gateway/sandbox-agent", () => {
     register();
-    expect(router.stack[0].path).toBe("/api-gateway/ask-agent");
+    expect(router.stack[0].path).toBe("/api-gateway/sandbox-agent");
     expect(router.stack[0].methods).toContain("POST");
   });
 

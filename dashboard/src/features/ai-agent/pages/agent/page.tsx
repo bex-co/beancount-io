@@ -32,7 +32,7 @@ import { ChevronDown, LockKeyhole } from "lucide-react";
 export interface AgentPageImplProps {
   /**
    * Backend endpoint suffix appended to config.apiUrl. Defaults to "agent"
-   * (the in-process ToolLoopAgent). The sandbox surface passes "ask-agent" to
+   * (the in-process ToolLoopAgent). The sandbox surface passes "sandbox-agent" to
    * hit the harness-backed Cloudflare-sandbox route (ADR 0005 / m17).
    */
   chatApi?: string;
@@ -42,7 +42,7 @@ export interface AgentPageImplProps {
   routeSuffix?: string;
   /**
    * Extra fields merged into the request body — e.g. { conversationId, mode }
-   * for the ask-agent route.
+   * for the sandbox-agent route.
    */
   bodyExtra?: Record<string, unknown>;
 }

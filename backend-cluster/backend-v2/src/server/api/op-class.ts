@@ -303,7 +303,7 @@ const SURFACE_IMPOSSIBLE: Record<
     "ledger.downloadArchive",
     "ledger.downloadArchive.legacy",
     "ai.agent",
-    "ai.askAgent",
+    "ai.sandboxAgent",
     "ai.openaiChatCompletions",
   ]),
   // REST can carry anything in scope; the set is empty rather than absent so
@@ -313,7 +313,7 @@ const SURFACE_IMPOSSIBLE: Record<
   // tool call is circular.
   mcp: new Set([
     "ai.agent",
-    "ai.askAgent",
+    "ai.sandboxAgent",
     "ai.openaiChatCompletions",
   ]),
 };
@@ -1729,10 +1729,10 @@ const AI_ROUTE_VERBS: readonly VerbEntry[] = [
     mcpExempt: M.transportOnly,
   },
   {
-    verb: "ai.askAgent",
+    verb: "ai.sandboxAgent",
     class: "write",
     authorizationAction: AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
-    rest: "POST /api-gateway/ask-agent",
+    rest: "POST /api-gateway/sandbox-agent",
     gqlExempt: G.streamingOnly,
     mcpExempt: M.transportOnly,
   },

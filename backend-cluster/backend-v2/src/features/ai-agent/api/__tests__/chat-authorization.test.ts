@@ -12,7 +12,7 @@ import { resolveAgentAccessMode } from "../../agent-access";
 const LEDGER_ID = "alice/main";
 const CHAT_OPS = [
   "REST POST /api-gateway/agent",
-  "REST POST /api-gateway/ask-agent",
+  "REST POST /api-gateway/sandbox-agent",
   "REST POST /api-gateway/ai/openai/chat/completions",
 ] as const;
 

@@ -239,7 +239,7 @@ describe("classifyOp", () => {
       "write",
     ],
     [
-      "REST POST /api-gateway/ask-agent",
+      "REST POST /api-gateway/sandbox-agent",
       AUTHORIZATION_ACTIONS.AI_LEDGER_ASK,
       "write",
     ],

@@ -6,10 +6,10 @@ import { AgentPageImpl } from "../agent/page";
 /**
  * Sandbox Ask-AI surface (ADR 0005 / m17). Reuses the harness UIMessage chat
  * surface (AgentPageImpl) but points it at the harness-backed
- * `/api-gateway/ask-agent` route, passing a stable conversationId (the sandbox
+ * `/api-gateway/sandbox-agent` route, passing a stable conversationId (the sandbox
  * container key) and the ASK/AGENT mode. Rendered by `/ask?mode=sandbox`.
  */
-export default function AskAgentPage() {
+export default function SandboxAgentPage() {
   const search = useSearch({ strict: false }) as { mode?: string };
   // "sandbox" (the URL mode) maps to the read-only "ask" agent mode; an explicit
   // "agent" enables the edit/PR flow.
@@ -22,7 +22,7 @@ export default function AskAgentPage() {
   return (
     <ClientOnly>
       <AgentPageImpl
-        chatApi="ask-agent"
+        chatApi="sandbox-agent"
         routeSuffix="ask"
         bodyExtra={{ conversationId, mode: agentMode }}
       />

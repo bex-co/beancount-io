@@ -1773,14 +1773,14 @@
       }
     },
     {
-      "verb": "ai.askAgent",
+      "verb": "ai.sandboxAgent",
       "eligible": [
         "rest"
       ],
       "class": "write",
       "authorizationAction": "ai.ledger.ask",
       "bindings": {
-        "rest": "POST /api-gateway/ask-agent"
+        "rest": "POST /api-gateway/sandbox-agent"
       }
     },
     {

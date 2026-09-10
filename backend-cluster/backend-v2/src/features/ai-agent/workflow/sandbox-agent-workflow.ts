@@ -9,8 +9,8 @@
  * ⚠️ Status: EXPERIMENTAL / secondary. Not the primary chat surface, carries
  * the sandbox control-plane's operational cost, and currently fails in
  * production. Kept in the tree pending a product decision (see ADR 0011
- * discussion). The wire route (`/api-gateway/ask-agent`) and op-class verb
- * (`ai.askAgent`) are kept stable for the dashboard `/ask` client.
+ * discussion). Wire route `/api-gateway/sandbox-agent`, op-class verb
+ * `ai.sandboxAgent`; the dashboard's user-facing `/ask` page targets it.
  *
  * Owns HarnessAgent construction, session resolution, the git-clone bootstrap,
  * permission-mode mapping, and turning the harness stream into a UIMessage SSE

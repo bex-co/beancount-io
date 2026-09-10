@@ -1,6 +1,6 @@
 import { createFileRoute, redirect } from "@tanstack/react-router";
 import { z } from "zod";
-import AskAgentPage from "@/features/ai-agent/pages/ask-agent";
+import SandboxAgentPage from "@/features/ai-agent/pages/sandbox-agent";
 import { getSEOMetadata, createHeadMeta } from "@/common/lib/seo/seo-helpers";
 
 const searchSchema = z.object({
@@ -10,7 +10,7 @@ const searchSchema = z.object({
 
 export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/ask")({
   // Sandbox Ask-AI (ADR 0005 / m17): ?mode=sandbox|agent renders the harness
-  // chat surface, which streams UIMessage from /api-gateway/ask-agent →
+  // chat surface, which streams UIMessage from /api-gateway/sandbox-agent →
   // HarnessAgent → Claude Code in a Cloudflare Sandbox. Mode-less ?q= deep-links
   // still belong to the in-process agent surface.
   beforeLoad: ({ params, search }) => {
@@ -23,7 +23,7 @@ export const Route = createFileRoute("/ledger/$ledgerOwner/$ledgerName/ask")({
       });
     }
   },
-  component: AskAgentPage,
+  component: SandboxAgentPage,
   validateSearch: searchSchema,
   head: ({ params, match }) =>
     createHeadMeta(

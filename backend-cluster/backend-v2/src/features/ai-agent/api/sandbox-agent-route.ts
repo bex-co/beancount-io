@@ -51,7 +51,7 @@ function messageText(message: {
 }
 
 /**
- * POST /api-gateway/ask-agent — the harness-backed sandbox chat path (ADR 0005 /
+ * POST /api-gateway/sandbox-agent — the harness-backed sandbox chat path (ADR 0005 /
  * m17). Same auth/quota/ledger-access guards as the legacy /chat route, then
  * delegates to SandboxAgentWorkflow and streams its UIMessage SSE response.
  *
@@ -71,7 +71,7 @@ export function setSandboxAgentRoute(
       authorization: layers.services.authorization,
     }),
 ): void {
-  router.post("/api-gateway/ask-agent", async (ctx) => {
+  router.post("/api-gateway/sandbox-agent", async (ctx) => {
     const { messages, ledgerId, conversationId, mode } = ctx.request
       .body as SandboxAgentRequest;
 
