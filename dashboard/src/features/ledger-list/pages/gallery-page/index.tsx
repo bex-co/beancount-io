@@ -50,17 +50,29 @@ export default function GalleryPage() {
     SearchLedgersQueryVariables
   >(SearchLedgersDocument);
 
+  const normalizedQuery = searchQuery.trim();
+  const normalizedDebounced = debouncedQuery.trim();
+  const queryIsEligible = normalizedQuery.length >= 2;
+  // Only treat Apollo results as selectable when they belong to the live query.
+  // Otherwise Clear/refocus can reopen stale highlights from a previous search.
+  const resultsBelongToCurrentQuery =
+    queryIsEligible && normalizedDebounced === normalizedQuery;
+  const searchResults =
+    resultsBelongToCurrentQuery && data?.searchLedgers
+      ? data.searchLedgers
+      : [];
+
   // Execute search when debounced query changes
   useEffect(() => {
-    if (debouncedQuery.trim().length >= 2) {
+    if (normalizedDebounced.length >= 2) {
       void searchLedgers({
         variables: {
-          q: debouncedQuery.trim(),
+          q: normalizedDebounced,
           limit: 50,
         },
       });
     }
-  }, [debouncedQuery, searchLedgers]);
+  }, [normalizedDebounced, searchLedgers]);
 
   const [isDropdownOpen, setIsDropdownOpen] = useState(false);
   const [highlightedIndex, setHighlightedIndex] = useState(-1);
@@ -73,9 +85,16 @@ export default function GalleryPage() {
     if (ledgerId) {
       const { ledgerOwner, ledgerName } = decodeLedgerId(ledgerId);
       setIsDropdownOpen(false);
+      setHighlightedIndex(-1);
       setSearchQuery("");
       void navigate({ to: `/ledger/${ledgerOwner}/${ledgerName}` });
     }
+  };
+
+  const clearSearch = () => {
+    setSearchQuery("");
+    setIsDropdownOpen(false);
+    setHighlightedIndex(-1);
   };
 
   // Handle input change
@@ -92,38 +111,42 @@ export default function GalleryPage() {
     }
   };
 
-  // Handle input focus
+  // Handle input focus — never reopen stale results after Clear
   const handleInputFocus = () => {
-    if (debouncedQuery.trim().length >= 2 && data?.searchLedgers) {
+    if (resultsBelongToCurrentQuery) {
       setIsDropdownOpen(true);
     }
   };
 
   // Handle keyboard navigation
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
-    if (!data?.searchLedgers || data.searchLedgers.length === 0) return;
+    // Escape must dismiss empty and non-empty open lists before result guards.
+    if (e.key === "Escape") {
+      e.preventDefault();
+      setIsDropdownOpen(false);
+      setHighlightedIndex(-1);
+      inputRef.current?.blur();
+      return;
+    }
+
+    if (!isDropdownOpen || searchResults.length === 0) return;
 
     if (e.key === "ArrowDown") {
       e.preventDefault();
       setHighlightedIndex((prev) =>
-        prev < data.searchLedgers.length - 1 ? prev + 1 : prev,
+        prev < searchResults.length - 1 ? prev + 1 : prev,
       );
-      setIsDropdownOpen(true);
     } else if (e.key === "ArrowUp") {
       e.preventDefault();
       setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
-      setIsDropdownOpen(true);
     } else if (e.key === "Enter") {
       e.preventDefault();
       if (
         highlightedIndex >= 0 &&
-        highlightedIndex < data.searchLedgers.length
+        highlightedIndex < searchResults.length
       ) {
-        handleLedgerSelect(data.searchLedgers[highlightedIndex].id);
+        handleLedgerSelect(searchResults[highlightedIndex].id);
       }
-    } else if (e.key === "Escape") {
-      setIsDropdownOpen(false);
-      inputRef.current?.blur();
     }
   };
 
@@ -221,8 +244,7 @@ export default function GalleryPage() {
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            setSearchQuery("");
-                            setIsDropdownOpen(false);
+                            clearSearch();
                             inputRef.current?.focus();
                           }}
                           onMouseDown={(e) => e.preventDefault()}
@@ -242,11 +264,12 @@ export default function GalleryPage() {
                         role="listbox"
                         className="absolute z-50 w-full mt-1 bg-popover text-popover-foreground rounded-md border shadow-lg max-h-[300px] overflow-auto"
                       >
-                        {loading && (
+                        {loading ||
+                        (queryIsEligible && !resultsBelongToCurrentQuery) ? (
                           <div className="flex items-center justify-center py-8">
                             <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
                           </div>
-                        )}
+                        ) : null}
 
                         {error && (
                           <div className="p-4">
@@ -261,9 +284,8 @@ export default function GalleryPage() {
 
                         {!loading &&
                           !error &&
-                          debouncedQuery.trim().length >= 2 &&
-                          data?.searchLedgers &&
-                          data.searchLedgers.length === 0 && (
+                          resultsBelongToCurrentQuery &&
+                          searchResults.length === 0 && (
                             <div className="p-4 text-center text-sm text-muted-foreground">
                               {t("page.gallery.noLedgersFound")}
                             </div>
@@ -271,7 +293,7 @@ export default function GalleryPage() {
 
                         {!loading &&
                           !error &&
-                          debouncedQuery.trim().length < 2 && (
+                          normalizedQuery.length < 2 && (
                             <div className="p-4 text-center text-sm text-muted-foreground">
                               {t("collaboration.typeAtLeast2Characters")}
                             </div>
@@ -279,10 +301,9 @@ export default function GalleryPage() {
 
                         {!loading &&
                           !error &&
-                          data?.searchLedgers &&
-                          data.searchLedgers.length > 0 && (
+                          searchResults.length > 0 && (
                             <div className="p-1">
-                              {data.searchLedgers.map((ledger, index) => (
+                              {searchResults.map((ledger, index) => (
                                 <div
                                   key={ledger.id}
                                   id={`ledger-search-option-${index}`}
@@ -327,9 +348,8 @@ export default function GalleryPage() {
 
                   {!isDropdownOpen && !loading && !error && (
                     <>
-                      {debouncedQuery.trim().length >= 2 &&
-                        data?.searchLedgers &&
-                        data.searchLedgers.length === 0 && <EmptyState />}
+                      {resultsBelongToCurrentQuery &&
+                        searchResults.length === 0 && <EmptyState />}
                     </>
                   )}
                 </div>

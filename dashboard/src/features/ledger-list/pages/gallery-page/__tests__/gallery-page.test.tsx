@@ -222,8 +222,8 @@ describe("GalleryPage", () => {
     const listbox = await screen.findByRole("listbox");
     expect(listbox).toHaveAttribute("id", "ledger-search-listbox");
 
-    // Options carry stable ids
-    const options = screen.getAllByRole("option");
+    // Options appear once the debounced query matches the live input
+    const options = await screen.findAllByRole("option");
     expect(options).toHaveLength(2);
     expect(options[0]).toHaveAttribute("id", "ledger-search-option-0");
     expect(options[1]).toHaveAttribute("id", "ledger-search-option-1");
@@ -286,5 +286,89 @@ describe("GalleryPage", () => {
 
     expect(searchInput).toHaveValue("");
     expect(searchInput).toHaveFocus();
+  });
+
+  it("clear drops stale highlight so Enter cannot select the old ledger", async () => {
+    const mockData: SearchLedgersQuery = {
+      searchLedgers: [
+        {
+          id: "open_ledger/crypto-example",
+          name: "crypto-example",
+          fullName: "open_ledger/crypto-example",
+          description: null,
+          __typename: "Ledger",
+        },
+      ],
+    };
+
+    const mockQueryTuple: SearchLedgersQueryTuple = createMockLazyQueryTuple(
+      mockSearchLedgers,
+      {
+        data: mockData,
+        loading: false,
+        error: undefined,
+      },
+    );
+
+    vi.mocked(apolloClient.useLazyQuery).mockReturnValue(mockQueryTuple);
+
+    const user = userEvent.setup();
+    render(<GalleryPage />);
+
+    const searchInput = screen.getByRole("combobox");
+    await user.type(searchInput, "crypto-example");
+    await screen.findByRole("option", { name: /crypto-example/i });
+
+    await user.keyboard("{ArrowDown}");
+    expect(searchInput).toHaveAttribute(
+      "aria-activedescendant",
+      "ledger-search-option-0",
+    );
+
+    await user.click(screen.getByRole("button", { name: "Clear" }));
+
+    expect(searchInput).toHaveValue("");
+    expect(searchInput).toHaveFocus();
+    expect(searchInput).toHaveAttribute("aria-expanded", "false");
+    expect(searchInput).not.toHaveAttribute("aria-activedescendant");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+
+    await user.keyboard("{Enter}");
+    expect(mockNavigate).not.toHaveBeenCalled();
+
+    await user.keyboard("{ArrowDown}");
+    expect(searchInput).toHaveAttribute("aria-expanded", "false");
+    expect(mockNavigate).not.toHaveBeenCalled();
+  });
+
+  it("Escape closes an open empty-result listbox", async () => {
+    const mockQueryTuple: SearchLedgersQueryTuple = createMockLazyQueryTuple(
+      mockSearchLedgers,
+      {
+        data: { searchLedgers: [] },
+        loading: false,
+        error: undefined,
+      },
+    );
+
+    vi.mocked(apolloClient.useLazyQuery).mockReturnValue(mockQueryTuple);
+
+    const user = userEvent.setup();
+    render(<GalleryPage />);
+
+    const searchInput = screen.getByRole("combobox");
+    await user.type(searchInput, "qa-no-public-ledger-match");
+
+    await waitFor(() => {
+      expect(screen.getByRole("listbox")).toBeInTheDocument();
+      expect(screen.getByText("No ledgers found")).toBeInTheDocument();
+    });
+    expect(searchInput).toHaveAttribute("aria-expanded", "true");
+
+    await user.keyboard("{Escape}");
+
+    expect(searchInput).toHaveAttribute("aria-expanded", "false");
+    expect(screen.queryByRole("listbox")).not.toBeInTheDocument();
+    expect(searchInput).not.toHaveAttribute("aria-activedescendant");
   });
 });
