@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [035](./035.md) — Holdings rounds real crypto quantities to zero in the table and CSV
 - [036](./036.md) — Holdings by Currency keeps unnamed rows for fully sold assets
 - [037](./037.md) — Import preview shows different transactions from its data after deleting a row
 - [039](./039.md) — Smart Import reverses the bank movement when preparing expense and income postings

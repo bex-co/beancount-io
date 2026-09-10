@@ -1,8 +1,7 @@
 export const csvObjectToString = (obj: object) => {
   return Object.entries(obj)
     .map(([key, value]) => {
-      // Check if value is a valid number with more than two decimal places
-      const displayValue = formatNumber(value);
+      const displayValue = formatDecimalCell(value);
       return `${displayValue} ${key}`;
     })
     .join("\r\n");
@@ -47,29 +46,40 @@ export function tableToCSV(
 }
 
 /**
+ * Lossless decimal/quantity formatting for Holdings cells and CSV maps.
+ * Keeps API decimal strings intact so small crypto units (e.g. 0.004 ETH)
+ * are not rounded to zero. JSON numbers use String(n), which preserves the
+ * value JS can represent without forcing a two-decimal display.
+ */
+export function formatDecimalCell(value: unknown): string {
+  if (value === null || value === undefined) {
+    return "";
+  }
+
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed === "") return "";
+    // Normalize exact-zero strings; keep all other decimal text verbatim.
+    if (/^-?0(?:\.0+)?$/.test(trimmed)) return "0";
+    return trimmed;
+  }
+
+  if (typeof value === "number") {
+    if (!Number.isFinite(value)) return String(value);
+    if (value === 0) return "0";
+    return String(value);
+  }
+
+  return String(value);
+}
+
+/**
  * Formats a raw cell value from the holdings API response.
  * Intentionally diverges from common/lib/format/format-number.ts: that util
  * accepts a typed number + renderCommas flag; this one accepts unknown (API cells
  * can be strings, null, or booleans) and has no comma option.
  */
-export const formatNumber = (value: unknown): string => {
-  // Handle null/undefined by returning empty string
-  if (value === null || value === undefined) {
-    return "";
-  }
-
-  const numValue = Number(value);
-  if (numValue === 0) {
-    return "0";
-  }
-  const result =
-    !isNaN(numValue) &&
-    numValue.toString().includes(".") &&
-    numValue.toString().split(".")[1]?.length > 2
-      ? numValue.toFixed(2)
-      : String(value);
-  return result;
-};
+export const formatNumber = (value: unknown): string => formatDecimalCell(value);
 
 /**
  * Determines if an unknown value is considered "empty"

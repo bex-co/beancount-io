@@ -10,16 +10,22 @@ import {
 
 describe("Holdings Utils", () => {
   describe("formatNumber", () => {
-    it("should format a number with more than 2 decimal places to 2 decimal places", () => {
-      expect(formatNumber(123.456789)).toBe("123.46");
-      expect(formatNumber(0.123456)).toBe("0.12");
-      expect(formatNumber(999.999)).toBe("1000.00");
+    it("preserves decimal strings including small crypto units", () => {
+      expect(formatNumber("0.004")).toBe("0.004");
+      expect(formatNumber("0.015")).toBe("0.015");
+      expect(formatNumber("0.0225")).toBe("0.0225");
+      expect(formatNumber("2999.999925")).toBe("2999.999925");
+      expect(formatNumber("123.456789")).toBe("123.456789");
+      expect(formatNumber("42")).toBe("42");
+      expect(formatNumber("0.12")).toBe("0.12");
     });
 
-    it("should not format numbers with 2 or fewer decimal places", () => {
+    it("preserves JSON numbers without forcing two-decimal rounding", () => {
       expect(formatNumber(123.45)).toBe("123.45");
       expect(formatNumber(100.5)).toBe("100.5");
       expect(formatNumber(42)).toBe("42");
+      expect(formatNumber(0.015)).toBe("0.015");
+      expect(formatNumber(0.004)).toBe("0.004");
     });
 
     it("should handle integer numbers", () => {
@@ -28,28 +34,17 @@ describe("Holdings Utils", () => {
       expect(formatNumber(-50)).toBe("-50");
     });
 
-    it("should handle negative numbers with decimals", () => {
-      expect(formatNumber(-123.456789)).toBe("-123.46");
-      expect(formatNumber(-0.999)).toBe("-1.00");
+    it("should handle negative decimal strings and numbers", () => {
+      expect(formatNumber("-123.456789")).toBe("-123.456789");
+      expect(formatNumber(-0.015)).toBe("-0.015");
     });
 
-    it("should handle string numbers", () => {
-      expect(formatNumber("123.456789")).toBe("123.46");
-      expect(formatNumber("42")).toBe("42");
-      expect(formatNumber("0.12")).toBe("0.12");
-    });
-
-    it("should handle zero with decimals", () => {
-      expect(formatNumber(0.001234)).toBe("0.00");
-      expect(formatNumber("0.0")).toBe("0"); // String "0.0" converts to number 0, returns "0"
-    });
-
-    it("should handle very large numbers", () => {
-      expect(formatNumber(1234567890.123456)).toBe("1234567890.12");
-    });
-
-    it("should handle very small numbers", () => {
-      expect(formatNumber(0.000123)).toBe("0.00");
+    it("normalizes exact-zero strings and keeps blank/missing empty", () => {
+      expect(formatNumber("0.0")).toBe("0");
+      expect(formatNumber("0.00")).toBe("0");
+      expect(formatNumber(0.0)).toBe("0");
+      expect(formatNumber(null)).toBe("");
+      expect(formatNumber(undefined)).toBe("");
     });
 
     it("should handle non-numeric strings by converting to string", () => {
@@ -57,19 +52,14 @@ describe("Holdings Utils", () => {
       expect(formatNumber("not a number")).toBe("not a number");
     });
 
-    it("should handle null and undefined", () => {
-      expect(formatNumber(null)).toBe("");
-      expect(formatNumber(undefined)).toBe("");
-    });
-
     it("should handle boolean values", () => {
       expect(formatNumber(true)).toBe("true");
-      expect(formatNumber(false)).toBe("0"); // Boolean false converts to number 0, returns "0"
+      expect(formatNumber(false)).toBe("false");
     });
 
     it("should handle objects by converting to string", () => {
       expect(formatNumber({})).toBe("[object Object]");
-      expect(formatNumber([])).toBe("0"); // Empty array converts to number 0, returns "0"
+      expect(formatNumber([])).toBe("");
     });
   });
 
@@ -83,11 +73,12 @@ describe("Holdings Utils", () => {
       expect(result).toContain("200");
     });
 
-    it("should format numbers with more than 2 decimal places", () => {
-      const obj = { USD: 123.456789, EUR: 999.999 };
+    it("preserves precise decimal strings in currency maps", () => {
+      const obj = { USD: "123.456789", EUR: "999.999", ETH: "0.004" };
       const result = csvObjectToString(obj);
-      expect(result).toContain("123.46");
-      expect(result).toContain("1000.00");
+      expect(result).toContain("123.456789 USD");
+      expect(result).toContain("999.999 EUR");
+      expect(result).toContain("0.004 ETH");
     });
 
     it("should handle object with single key-value pair", () => {
@@ -231,17 +222,18 @@ describe("Holdings Utils", () => {
       expect(result).toContain('"Charlie"');
     });
 
-    it("should handle complex objects in cells", () => {
+    it("should preserve precise decimals in object cells for CSV", () => {
       const headers = ["Name", "Balance"];
       const rows = [
-        ["Alice", { USD: 123.456789, EUR: 200 }],
-        ["Bob", { GBP: 300.12 }],
+        ["Alice", { USD: "123.456789", EUR: "200" }],
+        ["Bob", { GBP: "300.12", ETH: "0.004" }],
       ];
       const result = tableToCSV(headers, rows);
 
-      expect(result).toContain("123.46 USD"); // formatNumber should round
+      expect(result).toContain("123.456789 USD");
       expect(result).toContain("200 EUR");
       expect(result).toContain("300.12 GBP");
+      expect(result).toContain("0.004 ETH");
     });
 
     it("should handle mixed types in cells", () => {
