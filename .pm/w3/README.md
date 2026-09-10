@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [042](./042.md) — Escape in file Find cancels edit mode instead of closing Find
 - [043](./043.md) — Forced-open postings still advertise enabled row toggles
 - [044](./044.md) — Narrow account reports hide interval and valuation selectors
 - [045](./045.md) — Smart Import silently treats a real first transaction as a CSV header

@@ -6,7 +6,7 @@ import { useIsDarkTheme } from "@/common/hooks/use-theme";
 import { getFileLanguage } from "../../../shared/lib/utils";
 import { registerBeancountLanguage } from "@/common/lib/editor/monaco-beancount-language-vscode";
 import { registerEditorShortcuts } from "@/common/lib/editor/monaco-beancount-actions";
-import { beancountErrorsToMarkers } from "./text-editor-utils";
+import { beancountErrorsToMarkers, shouldCancelEditOnEscape } from "./text-editor-utils";
 
 export interface ContentEditorProps {
   content: string;
@@ -100,6 +100,9 @@ export const TextEditor = ({
       }
 
       if (e.key === "Escape" && onCancel) {
+        if (!shouldCancelEditOnEscape(editorRef.current, e.target)) {
+          return;
+        }
         e.preventDefault();
         e.stopPropagation();
         onCancel();
