@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { renderHook } from "@testing-library/react";
+import { act, renderHook } from "@testing-library/react";
 import { useCSVParser } from "../use-csv-parser";
 import { buildParsedRow } from "../../utils/csv-validator";
 
@@ -283,6 +283,103 @@ describe("useCSVParser", () => {
       });
       expect(rebuilt.errors?.some((e) => e.includes("date"))).toBe(true);
       expect(rebuilt.payee).toBe("QA Renamed Date");
+    });
+  });
+
+  describe("parseCSV – quoted multiline fields (RFC 4180)", () => {
+    const fixtureHeader = "Date,Payee,Description,Amount";
+    const fixtureBody = [
+      '2025-12-01,QA Parser Control,"Lunch, ""tea""",-1.25',
+      '2025-12-02,QA Parser Multiline,"First line',
+      'Second line",-2.50',
+    ].join("\n");
+
+    it("keeps a quoted LF description as one valid record", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const parsed = result.current.parseCSV(
+        [fixtureHeader, fixtureBody].join("\n"),
+      );
+
+      expect(parsed.rows).toHaveLength(2);
+      expect(parsed.validCount).toBe(2);
+      expect(parsed.errorCount).toBe(0);
+      expect(parsed.rows[0].description).toBe('Lunch, "tea"');
+      expect(parsed.rows[0].amount).toBe(-1.25);
+      expect(parsed.rows[1].description).toBe("First line\nSecond line");
+      expect(parsed.rows[1].amount).toBe(-2.5);
+    });
+
+    it("keeps a quoted CRLF description as one valid record", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        fixtureHeader,
+        '2025-12-01,QA Parser Control,"Lunch, ""tea""",-1.25',
+        '2025-12-02,QA Parser Multiline,"First line\r\nSecond line",-2.50',
+      ].join("\r\n");
+
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.rows).toHaveLength(2);
+      expect(parsed.validCount).toBe(2);
+      expect(parsed.rows[1].description).toBe("First line\nSecond line");
+      expect(parsed.rows[1].amount).toBe(-2.5);
+    });
+
+    it("preserves an empty line inside a quoted description", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv = [
+        fixtureHeader,
+        '2025-12-03,QA Empty Line,"Before',
+        "",
+        'After",-3.00',
+      ].join("\n");
+
+      const parsed = result.current.parseCSV(csv);
+
+      expect(parsed.validCount).toBe(1);
+      expect(parsed.rows[0].description).toBe("Before\n\nAfter");
+      expect(parsed.rows[0].amount).toBe(-3);
+    });
+
+    it("ignores a trailing record separator after the last row", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const csv =
+        "2024-01-15,Starbucks,Morning coffee,5.50\n2024-01-16,Amazon,Books,15.00\n\n";
+
+      const parsed = result.current.parseCSV(csv);
+      expect(parsed.rows).toHaveLength(2);
+      expect(parsed.validCount).toBe(2);
+    });
+
+    it("reports a meaningful error for an unterminated quote", () => {
+      const { result } = renderHook(() => useCSVParser());
+      const parsed = result.current.parseCSV(
+        '2025-12-01,QA Broken,"never closed,-1.25',
+      );
+
+      expect(parsed.validCount).toBe(0);
+      expect(parsed.errorCount).toBe(1);
+      expect(parsed.rows[0].errors![0]).toMatch(/Unterminated quoted field/i);
+    });
+
+    it("parses a multiline CSV File through FileReader without inventing rows", async () => {
+      const { result } = renderHook(() => useCSVParser());
+      const content = [
+        "Date,Payee,Description,Amount",
+        '2025-12-01,QA Parser Control,"Lunch, ""tea""",-1.25',
+        '2025-12-02,QA Parser Multiline,"First line',
+        'Second line",-2.50',
+      ].join("\n");
+      const file = new File([content], "multiline-preview.csv", {
+        type: "text/csv",
+      });
+
+      const parsed = await act(async () => result.current.parseFile(file));
+
+      expect(parsed.validCount).toBe(2);
+      expect(parsed.errorCount).toBe(0);
+      expect(parsed.rows[1].description).toBe("First line\nSecond line");
+      expect(parsed.rows[1].amount).toBe(-2.5);
     });
   });
 
