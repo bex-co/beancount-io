@@ -79,7 +79,6 @@
 - [047](./047.md) — Import cell buttons ignore Space and lose focus when editing ends
 - [048](./048.md) — An empty Overview filter result claims the whole ledger has no activity
 - [049](./049.md) — Import row selection removes the focused checkbox
-- [050](./050.md) — Dialog focus return — promoted to [m23](./m23/README.md)
 - [051](./051.md) — Commodity price history cannot be read with the keyboard
 - [052](./052.md) — Keyboard filter selection is replaced by the partial search text
 - [053](./053.md) — Import's CSV example download has no accessible name
