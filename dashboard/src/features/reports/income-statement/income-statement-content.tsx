@@ -11,10 +11,7 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import type {
-  GetLedgerIncomeStatementQuery,
-  SerializableTreeNode,
-} from "@/graphql/definitions";
+import type { GetLedgerIncomeStatementQuery } from "@/graphql/definitions";
 import { DateBalanceChart } from "@/features/reports/income-statement/date-balance-chart";
 import { useCookieStorageState } from "@/common/hooks/use-cookie-storage-state";
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";
@@ -119,28 +116,20 @@ export function IncomeStatementContent({
     return sortUsdFirst(Object.keys(totalNetProfit), primaryCurrency);
   }, [totalNetProfit, primaryCurrency]);
 
-  // Transform totalNetProfit into SerializableTreeNode format for HierarchyListCard
-  const netProfitTreeNode = useMemo((): SerializableTreeNode | null => {
+  // Aggregate only — never a synthetic account tree node (those become
+  // drill-down links to nonexistent accounts). Same summaryRows path Cash Flow uses.
+  const netProfitSummaryRows = useMemo(() => {
     if (sortedCurrencies.length === 0) {
       return null;
     }
-
-    const balance: Record<string, unknown> = {};
-    Object.entries(totalNetProfit).forEach(([currency, value]) => {
-      balance[currency] = value;
-    });
-
-    return {
-      __typename: "SerializableTreeNode",
-      account: "Net Profit",
-      balance,
-      balanceChildren: balance,
-      children: [],
-      cost: null,
-      costChildren: null,
-      hasTxns: false,
-    };
-  }, [totalNetProfit, sortedCurrencies]);
+    return [
+      {
+        label: t("common.netProfit"),
+        balance: totalNetProfit as Record<string, unknown>,
+        bold: true as const,
+      },
+    ];
+  }, [sortedCurrencies.length, t, totalNetProfit]);
 
   const hierarchyFilterOptions = useMemo(
     () => ({
@@ -376,14 +365,15 @@ export function IncomeStatementContent({
             collapsePatterns={collapsePatterns}
           />
           {/* Net Profit Summary */}
-          {netProfitTreeNode && (
+          {netProfitSummaryRows && (
             <HierarchyListCard
-              data={netProfitTreeNode}
+              data={[]}
               title={t("common.netProfit")}
               description={t("page.incomeStatement.totalNetProfitOverPeriod")}
               primaryCurrency={primaryCurrency}
               inverted={invertIncomeLiabilitiesEquity}
               collapsePatterns={collapsePatterns}
+              summaryRows={netProfitSummaryRows}
             />
           )}
         </div>

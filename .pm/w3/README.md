@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — A timed-out budget write still lands, so the retry duplicates it
-- [005](./005.md) — Income Statement links Net Profit to a nonexistent account
 - [006](./006.md) — Journal pagination cannot be reached by keyboard
 - [007](./007.md) — Holdings by Cost Currency combines different units into one book value
 - [008](./008.md) — Files directory rows cannot be opened with the keyboard
