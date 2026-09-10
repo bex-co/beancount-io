@@ -1,5 +1,10 @@
 import { useState, useMemo } from "react";
-import { useFieldArray, Control, useWatch } from "react-hook-form";
+import {
+  useFieldArray,
+  Control,
+  useWatch,
+  useFormContext,
+} from "react-hook-form";
 import { Search, Filter, AlertCircle, Sparkles, Loader2 } from "lucide-react";
 import {
   Table,
@@ -65,7 +70,8 @@ export function AccountMappingTable({
 }: AccountMappingTableProps) {
   const { t } = useTranslations();
   const formatError = useErrorMessage();
-  const { fields, update } = useFieldArray({
+  const { setValue } = useFormContext<TransactionFormData>();
+  const { fields } = useFieldArray({
     control,
     name: "transactions",
   });
@@ -138,25 +144,28 @@ export function AccountMappingTable({
       txn?.selected && (!txn.targetAccount || txn.targetAccount.length === 0),
   ).length;
 
-  // Toggle all visible rows
+  // Toggle all visible rows without remounting field-array identities.
   const handleToggleAll = () => {
     const shouldSelectAll = filteredIndices.some(
       (index) => !transactions[index]?.selected,
     );
 
     filteredIndices.forEach((index) => {
-      const txn = transactions[index];
-      if (txn) {
-        update(index, { ...txn, selected: shouldSelectAll });
-      }
+      setValue(`transactions.${index}.selected`, shouldSelectAll, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
     });
   };
 
-  // Toggle individual row
+  // Toggle individual row via a scalar field update so the checkbox keeps focus.
   const handleToggleRow = (index: number) => {
     const txn = transactions[index];
     if (txn) {
-      update(index, { ...txn, selected: !txn.selected });
+      setValue(`transactions.${index}.selected`, !txn.selected, {
+        shouldDirty: true,
+        shouldTouch: true,
+      });
     }
   };
 

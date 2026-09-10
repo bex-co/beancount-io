@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [049](./049.md) — Import row selection removes the focused checkbox
 - [051](./051.md) — Commodity price history cannot be read with the keyboard
 - [052](./052.md) — Keyboard filter selection is replaced by the partial search text
 - [053](./053.md) — Import's CSV example download has no accessible name
