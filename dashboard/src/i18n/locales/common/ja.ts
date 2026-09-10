@@ -278,6 +278,10 @@ const jaCommon: Record<string, TranslationEntry> = {
     message: "ステータス",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "{account} の子アカウントを切り替え",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "サイドバーを切り替え",
     description: "Tooltip for toggle sidebar button",

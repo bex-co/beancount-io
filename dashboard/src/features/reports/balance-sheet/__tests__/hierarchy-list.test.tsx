@@ -302,20 +302,24 @@ describe("HierarchyList", () => {
 
       render(<HierarchyList data={data} />);
 
-      // Find the toggle button (chevron)
-      const toggleButton = screen.getByRole("button");
+      const toggleButton = screen.getByRole("button", {
+        name: "common.toggleAccountChildren",
+      });
+      expect(toggleButton).toHaveAttribute("aria-expanded", "true");
 
       // Click to collapse
       fireEvent.click(toggleButton);
 
       // Child should no longer be visible
       expect(screen.queryByText("Bank")).not.toBeInTheDocument();
+      expect(toggleButton).toHaveAttribute("aria-expanded", "false");
 
       // Click to expand again
       fireEvent.click(toggleButton);
 
       // Child should be visible again
       expect(screen.getByText("Bank")).toBeInTheDocument();
+      expect(toggleButton).toHaveAttribute("aria-expanded", "true");
     });
   });
 

@@ -279,6 +279,10 @@ const skCommon: Record<string, TranslationEntry> = {
     message: "Stav",
     description: "Label for status field",
   },
+  "common.toggleAccountChildren": {
+    message: "Prepnúť podúčty {account}",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "Prepnúť postranný panel",
     description: "Tooltip for toggle sidebar button",

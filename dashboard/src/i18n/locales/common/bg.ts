@@ -279,6 +279,10 @@ const bgCommon: Record<string, TranslationEntry> = {
     message: "Състояние",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "Превключване на дъщерните елементи на {account}",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "Превключване на страничната лента",
     description: "Tooltip for toggle sidebar button",

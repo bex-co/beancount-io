@@ -278,6 +278,10 @@ const esCommon: Record<string, TranslationEntry> = {
     message: "Estado",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "Mostrar u ocultar los hijos de {account}",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "Alternar barra lateral",
     description: "Tooltip for toggle sidebar button",

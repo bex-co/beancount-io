@@ -279,6 +279,10 @@ const nlCommon: Record<string, TranslationEntry> = {
     message: "Status",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "Onderliggende van {account} in- of uitklappen",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "Zijbalk schakelen",
     description: "Tooltip for toggle sidebar button",

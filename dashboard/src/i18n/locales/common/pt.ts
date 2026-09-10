@@ -279,6 +279,10 @@ const ptCommon: Record<string, TranslationEntry> = {
     message: "Status",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "Alternar filhos de {account}",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "Alternar barra lateral",
     description: "Tooltip for toggle sidebar button",

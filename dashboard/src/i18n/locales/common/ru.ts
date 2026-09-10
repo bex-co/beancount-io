@@ -278,6 +278,10 @@ const ruCommon: Record<string, TranslationEntry> = {
     message: "Статус",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "Развернуть или свернуть дочерние счета {account}",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "Переключить боковую панель",
     description: "Tooltip for toggle sidebar button",

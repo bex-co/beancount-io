@@ -279,6 +279,10 @@ const enCommon: Record<string, TranslationEntry> = {
     message: "Status",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "Toggle children of {account}",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "Toggle Sidebar",
     description: "Tooltip for toggle sidebar button",

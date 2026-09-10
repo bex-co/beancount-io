@@ -279,6 +279,10 @@ const ukCommon: Record<string, TranslationEntry> = {
     message: "Статус",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "Розгорнути або згорнути дочірні рахунки {account}",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "Перемкнути бічну панель",
     description: "Tooltip for toggle sidebar button",

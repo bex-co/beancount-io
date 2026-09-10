@@ -279,6 +279,10 @@ const faCommon: Record<string, TranslationEntry> = {
     message: "وضعیت",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "باز و بسته کردن زیر‌حساب‌های {account}",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "تغییر وضعیت نوار کناری",
     description: "Tooltip for toggle sidebar button",

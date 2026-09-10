@@ -278,6 +278,10 @@ const koCommon: Record<string, TranslationEntry> = {
     message: "상태",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "{account}의 하위 계정 펼치기/접기",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "사이드바 전환",
     description: "Tooltip for toggle sidebar button",

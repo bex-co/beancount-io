@@ -275,6 +275,10 @@ const zhCommon: Record<string, TranslationEntry> = {
     message: "状态",
     description: "Table column header for status",
   },
+  "common.toggleAccountChildren": {
+    message: "展开或折叠 {account} 的子账户",
+    description: "Accessible name for statement hierarchy expand/collapse buttons",
+  },
   "common.toggleSidebar": {
     message: "切换侧边栏",
     description: "Tooltip for toggle sidebar button",

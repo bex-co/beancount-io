@@ -190,16 +190,21 @@ function TreeNode({
         <div className={ACCOUNT_CELL_CLASS} style={indentStyle(level)}>
           {hasChildren ? (
             <button
+              type="button"
               className="shrink-0 p-1 hover:bg-muted rounded"
+              aria-expanded={isExpanded}
+              aria-label={t("common.toggleAccountChildren", {
+                account: node.account,
+              })}
               onClick={(e) => {
                 e.stopPropagation();
                 onToggle(node.account);
               }}
             >
               {isExpanded ? (
-                <ChevronDown className="h-4 w-4" />
+                <ChevronDown className="h-4 w-4" aria-hidden="true" />
               ) : (
-                <ChevronRight className="h-4 w-4" />
+                <ChevronRight className="h-4 w-4" aria-hidden="true" />
               )}
             </button>
           ) : (
