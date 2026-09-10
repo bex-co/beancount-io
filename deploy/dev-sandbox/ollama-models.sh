@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 #
 # Local-model mode: make the host's Ollama impersonate the Anthropic API for
-# the Ask-AI sandbox. backend-v2 pins Claude model ids (ask-agent-route.ts),
+# the Ask-AI sandbox. backend-v2 pins Claude model ids (experimental-sandbox-agent-route.ts),
 # and Claude Code inside the sandbox may also call a small/fast Haiku model —
 # so alias each of those ids to DEV_SANDBOX_LOCAL_MODEL. Aliases are created
 # with `ollama create` + a Modelfile (weights are shared, not duplicated)

@@ -1,9 +1,16 @@
 /**
- * AskAgentWorkflow — the harness-backed replacement for the SandboxAskAIHandler
- * path (ADR 0005 / m17). Owns HarnessAgent construction, session resolution,
- * the git-clone bootstrap, permission-mode mapping, and turning the harness
- * stream into a UIMessage SSE response. Harness types stay contained here; the
- * route only sees plain params + a Response (backend-v2 CLAUDE.md layering).
+ * ExperimentalSandboxAgentWorkflow — the EXPERIMENTAL sandbox agent path
+ * (ADR 0005 / m17): Claude Code running in a Cloudflare sandbox over the
+ * cloned ledger repo, distinct from the in-process chatbot behind
+ * `/api-gateway/agent` (`SelfHostedAgentHandler`, Path B). Marked experimental
+ * because it is not the primary chat surface and carries the sandbox
+ * control-plane's operational cost; the wire route (`/api-gateway/ask-agent`)
+ * and op-class verb (`ai.askAgent`) are kept stable for the dashboard client.
+ *
+ * Owns HarnessAgent construction, session resolution, the git-clone bootstrap,
+ * permission-mode mapping, and turning the harness stream into a UIMessage SSE
+ * response. Harness types stay contained here; the route only sees plain
+ * params + a Response (backend-v2 CLAUDE.md layering).
  */
 
 import { HarnessAgent } from "@ai-sdk/harness/agent";
@@ -25,7 +32,7 @@ import {
   type AgentRequestedMode,
 } from "../agent-access";
 
-const workflowLogger = logger.child({ module: "ask-agent-workflow" });
+const workflowLogger = logger.child({ module: "experimental-sandbox-agent-workflow" });
 
 /**
  * Pinned so a new upstream release cannot silently change the in-sandbox agent.
@@ -49,9 +56,9 @@ export const ACP_PERMISSION_MODES = {
 } as const satisfies ACPPermissionModeMapping;
 
 // ASK = read-only Q&A; AGENT requests edits, but readers are downgraded safely.
-export type AskAgentMode = AgentRequestedMode;
+export type ExperimentalSandboxAgentMode = AgentRequestedMode;
 
-export interface AskAgentDeps {
+export interface ExperimentalSandboxAgentDeps {
   controlPlaneUrl: string;
   adminToken: string;
   gitea: GiteaConfig;
@@ -60,7 +67,7 @@ export interface AskAgentDeps {
   authorization: IAuthorizationService;
 }
 
-export interface AskAgentCommand {
+export interface ExperimentalSandboxAgentCommand {
   /** The user's latest message text. */
   prompt: string;
   /** owner/name; the ledger repo cloned into the sandbox. */
@@ -71,7 +78,7 @@ export interface AskAgentCommand {
   ledgerPassword: string;
   /** Stable per-conversation id → sandbox container key + harness sessionId. */
   conversationId: string;
-  mode: AskAgentMode;
+  mode: ExperimentalSandboxAgentMode;
   identity: Identity;
   assertQuotaAvailable: () => Promise<void>;
   abortSignal?: AbortSignal;
@@ -104,14 +111,14 @@ export function buildAuthenticatedCloneUrl(
   return httpUrl.replace(/^(https?:\/\/)/, `$1${creds}@`);
 }
 
-export interface IAskAgentWorkflow {
-  streamAnswer(command: AskAgentCommand): Promise<Response>;
+export interface IExperimentalSandboxAgentWorkflow {
+  streamAnswer(command: ExperimentalSandboxAgentCommand): Promise<Response>;
 }
 
-export class AskAgentWorkflow implements IAskAgentWorkflow {
+export class ExperimentalSandboxAgentWorkflow implements IExperimentalSandboxAgentWorkflow {
   private readonly provider: HarnessV1SandboxProvider;
 
-  constructor(private readonly deps: AskAgentDeps) {
+  constructor(private readonly deps: ExperimentalSandboxAgentDeps) {
     this.provider = createCloudflareSandbox({
       controlPlaneUrl: deps.controlPlaneUrl,
       adminToken: deps.adminToken,
@@ -120,7 +127,7 @@ export class AskAgentWorkflow implements IAskAgentWorkflow {
     });
   }
 
-  async streamAnswer(command: AskAgentCommand): Promise<Response> {
+  async streamAnswer(command: ExperimentalSandboxAgentCommand): Promise<Response> {
     const accessMode = await resolveAgentAccessMode({
       authorization: this.deps.authorization,
       identity: command.identity,

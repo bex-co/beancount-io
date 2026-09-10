@@ -1,11 +1,11 @@
 import "reflect-metadata";
 import Router from "@koa/router";
 import { PassThrough } from "node:stream";
-import { setAskAgentRoute } from "../ask-agent-route";
+import { setExperimentalSandboxAgentRoute } from "../experimental-sandbox-agent-route";
 import type { AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
 import { restErrorMiddleware } from "@/server/rest/error-middleware";
-import type { IAskAgentWorkflow } from "../../workflow/ask-agent-workflow";
+import type { IExperimentalSandboxAgentWorkflow } from "../../workflow/experimental-sandbox-agent-workflow";
 
 // Mock the harness ESM value-imports so importing the workflow (via the route)
 // does not load @ai-sdk/harness-acp, whose `import.meta.url` cannot be
@@ -22,7 +22,7 @@ import { resolveAuthUser } from "../../utils/route-guards";
 const mockResolveAuthUser = resolveAuthUser as jest.MockedFunction<
   typeof resolveAuthUser
 >;
-describe("setAskAgentRoute", () => {
+describe("setExperimentalSandboxAgentRoute", () => {
   let router: Router;
   let layers: AppLayers;
   let config: AppConfig;
@@ -114,11 +114,11 @@ describe("setAskAgentRoute", () => {
   afterEach(() => jest.clearAllMocks());
 
   const register = () =>
-    setAskAgentRoute(
+    setExperimentalSandboxAgentRoute(
       router,
       layers,
       config,
-      () => workflow as IAskAgentWorkflow,
+      () => workflow as IExperimentalSandboxAgentWorkflow,
     );
 
   it("registers POST /api-gateway/ask-agent", () => {

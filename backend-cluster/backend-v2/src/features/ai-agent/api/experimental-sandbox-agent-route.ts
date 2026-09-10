@@ -7,12 +7,12 @@ import { BadUserInputError } from "@/shared/errors";
 import { parseLedgerId } from "@/shared/str";
 import { resolveAuthUser } from "../utils/route-guards";
 import {
-  AskAgentWorkflow,
-  type AskAgentMode,
-  type IAskAgentWorkflow,
-} from "../workflow/ask-agent-workflow";
+  ExperimentalSandboxAgentWorkflow,
+  type ExperimentalSandboxAgentMode,
+  type IExperimentalSandboxAgentWorkflow,
+} from "../workflow/experimental-sandbox-agent-workflow";
 
-const askAgentLogger = logger.child({ module: "ask-agent-route" });
+const experimentalSandboxAgentLogger = logger.child({ module: "experimental-sandbox-agent-route" });
 
 // Model for the Claude Code harness. Must be an id the pinned
 // claude-agent-acp version (CLAUDE_AGENT_ACP_VERSION) actually advertises —
@@ -20,9 +20,9 @@ const askAgentLogger = logger.child({ module: "ask-agent-route" });
 // Code CLI default model, which defeats the pin. claude-agent-acp@0.70.0
 // advertises non-dated ids like "claude-sonnet-5"; the previously pinned
 // dated "claude-sonnet-4-5-20250929" is not in its catalog.
-const ASK_AGENT_MODEL = "claude-sonnet-5";
+const EXPERIMENTAL_SANDBOX_AGENT_MODEL = "claude-sonnet-5";
 
-interface AskAgentRequest {
+interface ExperimentalSandboxAgentRequest {
   // Accept both shapes: a plain { role, content } message (e.g. API clients) and
   // a UIMessage with { role, parts: [{ type: "text", text }] } (what the
   // dashboard's useChat sends).
@@ -33,7 +33,7 @@ interface AskAgentRequest {
   }>;
   ledgerId?: string;
   conversationId?: string;
-  mode?: AskAgentMode;
+  mode?: ExperimentalSandboxAgentMode;
 }
 
 // Extract the user's text from either a plain content string or UIMessage parts.
@@ -53,27 +53,27 @@ function messageText(message: {
 /**
  * POST /api-gateway/ask-agent — the harness-backed sandbox chat path (ADR 0005 /
  * m17). Same auth/quota/ledger-access guards as the legacy /chat route, then
- * delegates to AskAgentWorkflow and streams its UIMessage SSE response.
+ * delegates to ExperimentalSandboxAgentWorkflow and streams its UIMessage SSE response.
  *
  * `workflowFactory` is injectable so tests exercise the route guards without a
  * live sandbox; production builds the real workflow from config.
  */
-export function setAskAgentRoute(
+export function setExperimentalSandboxAgentRoute(
   router: Router,
   layers: AppLayers,
   config: AppConfig,
-  workflowFactory: () => IAskAgentWorkflow = () =>
-    new AskAgentWorkflow({
+  workflowFactory: () => IExperimentalSandboxAgentWorkflow = () =>
+    new ExperimentalSandboxAgentWorkflow({
       controlPlaneUrl: config.claudeCodeSandbox.apiUrl,
       adminToken: config.adminToken,
       gitea: config.gitea,
-      model: ASK_AGENT_MODEL,
+      model: EXPERIMENTAL_SANDBOX_AGENT_MODEL,
       authorization: layers.services.authorization,
     }),
 ): void {
   router.post("/api-gateway/ask-agent", async (ctx) => {
     const { messages, ledgerId, conversationId, mode } = ctx.request
-      .body as AskAgentRequest;
+      .body as ExperimentalSandboxAgentRequest;
 
     if (!messages || messages.length === 0) {
       throw new BadUserInputError("messages array cannot be empty");
@@ -87,7 +87,7 @@ export function setAskAgentRoute(
       throw new BadUserInputError("conversationId is required");
     }
 
-    const effectiveMode: AskAgentMode = mode === "agent" ? "agent" : "ask";
+    const effectiveMode: ExperimentalSandboxAgentMode = mode === "agent" ? "agent" : "ask";
 
     const { user, identity } = await resolveAuthUser(ctx, {
       models: layers.database.models,
@@ -101,7 +101,7 @@ export function setAskAgentRoute(
       throw new BadUserInputError("the last message has no text content");
     }
 
-    askAgentLogger.debug("Streaming ask-agent turn", {
+    experimentalSandboxAgentLogger.debug("Streaming ask-agent turn", {
       ledgerId,
       conversationId,
       mode: effectiveMode,
