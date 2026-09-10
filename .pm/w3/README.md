@@ -60,7 +60,6 @@
 - [025](./025.md) — Narrow statement tables split digits across lines
 - [026](./026.md) — Statement account expanders expose no accessible name or state
 - [027](./027.md) — A language parameter makes the manual language selector ineffective
-- [028](./028.md) — BQL result column relationships — promoted to [m28](./m28/README.md)
 - [029](./029.md) — Settings sign-in redirects discard the requested subpage
 - [030](./030.md) — Password visibility buttons are skipped by keyboard navigation
 - [031](./031.md) — Budget cards hide actual and variance for zero-activity intervals
