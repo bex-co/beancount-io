@@ -199,9 +199,10 @@ jobs:
           # must carry the sha256 of the artifact users will actually download
           # — so wait for PyPI to report one, then require it to be ours.
           for attempt in 1 2 3 4 5 6 7 8 9 10; do
-            PYPI_SHA="$(curl -fsSL "https://pypi.org/pypi/beancount-io/$VERSION/json" \
-              | python3 -c 'import json,sys; print(next((u["digests"]["sha256"] for u in json.load(sys.stdin)["urls"] if u["packagetype"] == "sdist"), ""))' \
-              || true)"
+            PYPI_SHA=""
+            if curl -fsSL "https://pypi.org/pypi/beancount-io/$VERSION/json" -o "$RUNNER_TEMP/pypi-release.json"; then
+              PYPI_SHA="$(python3 -c 'import json,sys; print(next((u["digests"]["sha256"] for u in json.load(open(sys.argv[1]))["urls"] if u["packagetype"] == "sdist"), ""))' "$RUNNER_TEMP/pypi-release.json")"
+            fi
             if [ -n "$PYPI_SHA" ]; then break; fi
             echo "PyPI has not served beancount-io $VERSION yet (attempt $attempt); waiting"
             sleep 15
@@ -213,7 +214,8 @@ jobs:
 
           # The tap key stages under $RUNNER_TEMP and is scrubbed below: it can
           # push an arbitrary Formula/bea.rb to the channel `brew install` reads.
-          bash scripts/render-formula.sh "$VERSION" "$PYPI_SHA" > "$RUNNER_TEMP/bea.rb"
+          PYPI_URL="$(python3 -c 'import json,sys; print(next(u["url"] for u in json.load(open(sys.argv[1]))["urls"] if u["packagetype"] == "sdist"))' "$RUNNER_TEMP/pypi-release.json")"
+          bash scripts/render-formula.sh "$VERSION" "$PYPI_SHA" "$PYPI_URL" > "$RUNNER_TEMP/bea.rb"
           umask 077
           printf '%s\n' "$TAP_KEY" > "$RUNNER_TEMP/tap-key"
           # GitHub's published ed25519 host key (docs.github.com → SSH key

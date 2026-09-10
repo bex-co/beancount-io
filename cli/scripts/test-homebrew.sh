@@ -22,16 +22,8 @@ formula="$(brew --repository "$tap")/Formula/bea.rb"
 version="$(basename "$sdist" .tar.gz)"
 version="${version#beancount_io-}"
 sha="$(shasum -a 256 "$sdist" | cut -d' ' -f1)"
-bash "$here/render-formula.sh" "$version" "$sha" > "$formula"
-# Only the transport changes: install the exact artifact that will be uploaded
-# to PyPI, with the release formula and hash, before publishing either channel.
-python3 - "$formula" "$sdist" <<'PY'
-import json
-import re
-import sys
-from pathlib import Path
-formula, archive = map(Path, sys.argv[1:])
-formula.write_text(re.sub(r'^  url .*$', '  url ' + json.dumps(archive.resolve().as_uri()), formula.read_text(), flags=re.M))
-PY
+# The local rehearsal uses the same renderer with the exact local artifact.
+source_url="$(python3 -c 'import sys; from pathlib import Path; print(Path(sys.argv[1]).resolve().as_uri())' "$sdist")"
+bash "$here/render-formula.sh" "$version" "$sha" "$source_url" > "$formula"
 brew install --skip-link --build-from-source "$tap/bea"
 brew test --force "$tap/bea"

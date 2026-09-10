@@ -42,15 +42,16 @@ expect_rejects() {
 
 # --- render-formula.sh -------------------------------------------------------
 
+URL="https://files.pythonhosted.org/packages/ab/cd/beancount_io-1.2.3.tar.gz"
 formula="$work/bea.rb"
-if bash "$render" 1.2.3 "$SHA" >"$formula" 2>"$work/err"; then
+if bash "$render" 1.2.3 "$SHA" "$URL" >"$formula" 2>"$work/err"; then
   pass "renders a formula for a valid version and sha"
 else
   fail "renders a formula for a valid version and sha: $(cat "$work/err")"
 fi
 
 expect_contains "the formula defines class Bea" 'class Bea < Formula'
-expect_contains "the url names the released sdist" 'beancount_io-1.2.3.tar.gz'
+expect_contains "the URL is the exact published artifact" "$URL"
 expect_contains "the install step uses the hashed lock" 'requirements.lock'
 expect_contains "the install step requires hashes" '--require-hashes'
 expect_contains "the dependency install has its own post_install hook" 'def post_install'
@@ -92,12 +93,16 @@ else
   echo "skip - ruby is not installed, cannot syntax-check the formula"
 fi
 
-expect_rejects "rejects a non-semver version" bash "$render" 1.2 "$SHA"
-expect_rejects "rejects a version with a pre-release suffix" bash "$render" 1.2.3-rc1 "$SHA"
-expect_rejects "rejects a version with a leading zero" bash "$render" 01.2.3 "$SHA"
-expect_rejects "rejects a truncated sha256" bash "$render" 1.2.3 "${SHA:0:63}"
-expect_rejects "rejects an uppercase sha256" bash "$render" 1.2.3 "$(printf '%s' "$SHA" | tr 'a-f' 'A-F')"
+expect_rejects "rejects a non-semver version" bash "$render" 1.2 "$SHA" "$URL"
+expect_rejects "rejects a version with a pre-release suffix" bash "$render" 1.2.3-rc1 "$SHA" "$URL"
+expect_rejects "rejects a version with a leading zero" bash "$render" 01.2.3 "$SHA" "$URL"
+expect_rejects "rejects a truncated sha256" bash "$render" 1.2.3 "${SHA:0:63}" "$URL"
+expect_rejects "rejects an uppercase sha256" bash "$render" 1.2.3 "$(printf '%s' "$SHA" | tr 'a-f' 'A-F')" "$URL"
 expect_rejects "rejects a missing sha256" bash "$render" 1.2.3
+
+expect_rejects "rejects a missing artifact URL" bash "$render" 1.2.3 "$SHA"
+expect_rejects "rejects an untrusted download host" bash "$render" 1.2.3 "$SHA" https://example.com/package.tar.gz
+expect_rejects "rejects Ruby interpolation in a URL" bash "$render" 1.2.3 "$SHA" 'https://files.pythonhosted.org/packages/#{exit}.tar.gz'
 
 # --- release-check.sh --------------------------------------------------------
 
