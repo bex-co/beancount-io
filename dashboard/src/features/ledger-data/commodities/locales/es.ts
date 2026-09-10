@@ -25,6 +25,22 @@ const esCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Mostrar historial de precios de {pair}",
+    description: "Botón para revelar la tabla de precios fechados",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Ocultar historial de precios de {pair}",
+    description: "Botón para cerrar la tabla de precios fechados",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Fecha",
+    description: "Encabezado de columna de fechas",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Precio ({quote})",
+    description: "Encabezado de columna de precios en la moneda de cotización",
+  },
 };
 
 export default esCommodities;

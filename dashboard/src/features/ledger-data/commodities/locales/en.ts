@@ -25,6 +25,23 @@ const enCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Show price history for {pair}",
+    description: "Button to reveal the dated price table for a commodity pair",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Hide price history for {pair}",
+    description:
+      "Button to collapse the dated price table for a commodity pair",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Date",
+    description: "Column header for price history dates",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Price ({quote})",
+    description: "Column header for price values in the quote currency",
+  },
 };
 
 export default enCommodities;

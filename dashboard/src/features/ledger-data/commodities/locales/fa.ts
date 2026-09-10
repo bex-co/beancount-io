@@ -25,6 +25,22 @@ const faCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "نمایش تاریخچه قیمت {pair}",
+    description: "دکمه آشکار کردن جدول قیمت‌های تاریخ‌دار",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "پنهان کردن تاریخچه قیمت {pair}",
+    description: "دکمه بستن جدول قیمت‌های تاریخ‌دار",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "تاریخ",
+    description: "عنوان ستون تاریخ‌ها",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "قیمت ({quote})",
+    description: "عنوان ستون قیمت‌ها به ارز مظنه",
+  },
 };
 
 export default faCommodities;

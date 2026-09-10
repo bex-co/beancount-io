@@ -25,6 +25,22 @@ const caCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Mostra l'historial de preus de {pair}",
+    description: "Botó per revelar la taula de preus datats",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Amaga l'historial de preus de {pair}",
+    description: "Botó per tancar la taula de preus datats",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Data",
+    description: "Capçalera de columna de dates",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Preu ({quote})",
+    description: "Capçalera de columna de preus en la moneda de cotització",
+  },
 };
 
 export default caCommodities;

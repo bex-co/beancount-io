@@ -25,6 +25,22 @@ const nlCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Toon prijsgeschiedenis voor {pair}",
+    description: "Knop om de gedateerde prijstabel te tonen",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Verberg prijsgeschiedenis voor {pair}",
+    description: "Knop om de gedateerde prijstabel te sluiten",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Datum",
+    description: "Kolomkop voor prijsdatums",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Prijs ({quote})",
+    description: "Kolomkop voor prijzen in de noteringsvaluta",
+  },
 };
 
 export default nlCommodities;

@@ -25,6 +25,22 @@ const ukCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Показати історію цін {pair}",
+    description: "Кнопка відкриття таблиці цін із датами",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Сховати історію цін {pair}",
+    description: "Кнопка закриття таблиці цін із датами",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Дата",
+    description: "Заголовок стовпця дат",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Ціна ({quote})",
+    description: "Заголовок стовпця цін у валюті котирування",
+  },
 };
 
 export default ukCommodities;

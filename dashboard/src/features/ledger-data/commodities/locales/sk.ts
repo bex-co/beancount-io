@@ -25,6 +25,22 @@ const skCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Zobraziť históriu cien pre {pair}",
+    description: "Tlačidlo na otvorenie tabuľky cien s dátumami",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Skryť históriu cien pre {pair}",
+    description: "Tlačidlo na zatvorenie tabuľky cien s dátumami",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Dátum",
+    description: "Hlavička stĺpca dátumov",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Cena ({quote})",
+    description: "Hlavička stĺpca cien v kotovanej mene",
+  },
 };
 
 export default skCommodities;

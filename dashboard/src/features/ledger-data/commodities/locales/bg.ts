@@ -25,6 +25,22 @@ const bgCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Покажи история на цените за {pair}",
+    description: "Бутон за показване на таблицата с датирани цени",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Скрий история на цените за {pair}",
+    description: "Бутон за свиване на таблицата с датирани цени",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Дата",
+    description: "Заглавие на колона за дати",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Цена ({quote})",
+    description: "Заглавие на колона за цени в котировъчната валута",
+  },
 };
 
 export default bgCommodities;

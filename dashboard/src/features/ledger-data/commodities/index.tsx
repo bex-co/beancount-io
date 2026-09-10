@@ -26,6 +26,7 @@ import { useLedger } from "@/common/hooks/use-ledger";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { Skeleton } from "@/common/components/ui/skeleton";
 import { buildCommodityChartLabels } from "./build-commodity-chart-labels";
+import { CommodityPriceHistory } from "./commodity-price-history";
 
 /**
  * Commodity chart component
@@ -212,6 +213,7 @@ export default function LedgerCommoditiesPage() {
                 </CardHeader>
                 <CardContent>
                   <CommodityChart commodity={commodity} />
+                  <CommodityPriceHistory commodity={commodity} />
                 </CardContent>
               </Card>
             ))}

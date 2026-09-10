@@ -25,6 +25,22 @@ const deCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Preishistorie für {pair} anzeigen",
+    description: "Schaltfläche zum Öffnen der datierten Preistabelle",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Preishistorie für {pair} ausblenden",
+    description: "Schaltfläche zum Schließen der datierten Preistabelle",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Datum",
+    description: "Spaltentitel für Preisdaten",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Preis ({quote})",
+    description: "Spaltentitel für Preise in der Notierungswährung",
+  },
 };
 
 export default deCommodities;

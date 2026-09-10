@@ -25,6 +25,22 @@ const ptCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Mostrar histórico de preços de {pair}",
+    description: "Botão para revelar a tabela de preços datados",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Ocultar histórico de preços de {pair}",
+    description: "Botão para fechar a tabela de preços datados",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Data",
+    description: "Cabeçalho da coluna de datas",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Preço ({quote})",
+    description: "Cabeçalho da coluna de preços na moeda de cotação",
+  },
 };
 
 export default ptCommodities;

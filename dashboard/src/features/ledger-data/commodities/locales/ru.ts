@@ -25,6 +25,22 @@ const ruCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "Показать историю цен {pair}",
+    description: "Кнопка открытия таблицы цен с датами",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "Скрыть историю цен {pair}",
+    description: "Кнопка закрытия таблицы цен с датами",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "Дата",
+    description: "Заголовок столбца дат",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "Цена ({quote})",
+    description: "Заголовок столбца цен в валюте котировки",
+  },
 };
 
 export default ruCommodities;

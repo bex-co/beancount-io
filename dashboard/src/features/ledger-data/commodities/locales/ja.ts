@@ -25,6 +25,22 @@ const jaCommodities: Record<string, TranslationEntry> = {
     description:
       "Description showing number of price data points. {count} is replaced with the number of data points.",
   },
+  "page.commodities.showPriceHistory": {
+    message: "{pair} の価格履歴を表示",
+    description: "日付付き価格表を開くボタン",
+  },
+  "page.commodities.hidePriceHistory": {
+    message: "{pair} の価格履歴を隠す",
+    description: "日付付き価格表を閉じるボタン",
+  },
+  "page.commodities.priceHistoryDate": {
+    message: "日付",
+    description: "価格履歴の日付列見出し",
+  },
+  "page.commodities.priceHistoryPrice": {
+    message: "価格（{quote}）",
+    description: "建値通貨での価格列見出し",
+  },
 };
 
 export default jaCommodities;
