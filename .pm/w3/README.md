@@ -95,7 +95,6 @@
 - [064](./064.md) — Enter rejects precise amounts that a mouse submission accepts
 - [065](./065.md) — Budget selectors discard their form labels and descriptions
 - [066](./066.md) — New Transaction leaves status and posting actions unnamed
-- [067](./067.md) — Transaction inference and output validation — promoted to [m26](./m26/README.md)
 - [068](./068.md) — Removing an earlier AI attachment leaves a later upload stuck
 - [069](./069.md) — The date calendar cannot reach a valid next-year date
 - [070](./070.md) — File-upload removal buttons have no accessible names
