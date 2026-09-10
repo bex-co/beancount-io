@@ -13,6 +13,7 @@ from pathlib import Path
 
 
 def smoke(binary: Path, directory: Path) -> None:
+    directory = directory.resolve()
     env = dict(
         os.environ,
         BEA_CONFIG_DIR=str(directory / "config"),
@@ -197,7 +198,10 @@ def smoke(binary: Path, directory: Path) -> None:
     )
     text = run(*split_target, "query", "SELECT sum(position) WHERE account = 'Expenses:Groceries'", json_output=False)
     assert "83.35 USD" in text
-    assert run("format", str(entries), "--dry-run")["data"]["formatted"] == []
+    # Appending a wider posting preserves existing bytes, so older balance
+    # lines may need realignment. Explicit formatting must then be idempotent.
+    run("format", str(entries))
+    assert run("format", str(entries), "--check")["data"]["formatted"] == []
     assert split.read_bytes() == before
     newest = run(*split_target, "list", "transaction", "-a", "checking", "--limit", "1")["data"][0]
     assert newest["date"] == "2026-08-04"
@@ -226,7 +230,8 @@ def smoke(binary: Path, directory: Path) -> None:
     valued_target = ("--file", str(valued))
     report = (*valued_target, "report", "overview", "-x", "USD", "--time", "2026-01 - 2026-06")
     error = run(*report, exit_code=1)["error"]
-    assert "No EUR → USD price on or before 2026-01-31." in error["details"]
+    assert error["result"]["missing_prices"] == [{"from": "EUR", "to": "USD"}]
+    assert error["result"]["missing_price_dates"][0]["date"] == "2026-01-31"
     run(*valued_target, "add", "price", "--date", "2026-01-31", "--currency", "EUR", "--amount", "1.05 USD")
     assert run(*report)["data"]["valuation"] == "complete"
     before = valued.read_bytes()
@@ -269,19 +274,20 @@ def smoke(binary: Path, directory: Path) -> None:
     before = valued.read_bytes()
     valued.chmod(0o444)
     try:
-        run(
-            *valued_target,
-            "add",
-            "price",
-            "--date",
-            "2026-06-02",
-            "--currency",
-            "EUR",
-            "--amount",
-            "1.20 USD",
-            exit_code=3,
-        )
-        assert valued.read_bytes() == before and valued.stat().st_mode & 0o777 == 0o444
+        if os.name != "nt":  # POSIX mode bits do not model Windows ACLs.
+            run(
+                *valued_target,
+                "add",
+                "price",
+                "--date",
+                "2026-06-02",
+                "--currency",
+                "EUR",
+                "--amount",
+                "1.20 USD",
+                exit_code=3,
+            )
+            assert valued.read_bytes() == before and valued.stat().st_mode & 0o777 == 0o444
     finally:
         valued.chmod(0o600)
     formatting = directory / "formatting.bean"

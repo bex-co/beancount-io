@@ -1,0 +1,66 @@
+name: CLI installation checks
+
+on:
+  workflow_call:
+    inputs:
+      artifact:
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  python:
+    name: ${{ matrix.os }} Python ${{ matrix.python }} ${{ matrix.distribution }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+        python: ["3.12", "3.14"]
+        distribution: [wheel, sdist]
+    defaults:
+      run:
+        shell: bash
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: ${{ matrix.python }}
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact }}
+          path: cli/dist
+      - name: Install artifact and test customer workflows
+        env:
+          PYTHON_VERSION: ${{ matrix.python }}
+          DISTRIBUTION: ${{ matrix.distribution }}
+        run: |
+          if [ "$DISTRIBUTION" = wheel ]; then
+            python scripts/test-install.py dist/*.whl --python "$PYTHON_VERSION" --installer uv
+          else
+            python scripts/test-install.py dist/*.tar.gz --python "$PYTHON_VERSION" --installer pip
+          fi
+      - name: Verify optional AI dependencies
+        if: matrix.distribution == 'wheel' && matrix.python == '3.12'
+        run: python scripts/test-install.py dist/*.whl --python 3.12 --ask
+
+  homebrew:
+    name: Homebrew (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: Homebrew/actions/setup-homebrew@master
+      - uses: actions/download-artifact@v4
+        with:
+          name: ${{ inputs.artifact }}
+          path: cli/dist
+      - name: Install sdist through a disposable tap
+        working-directory: cli
+        run: bash scripts/test-homebrew.sh dist/*.tar.gz

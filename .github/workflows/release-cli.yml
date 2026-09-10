@@ -113,33 +113,19 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: cli-release
-          path: |
-            cli/dist/*
-            cli/requirements.lock
+          path: cli/dist/*
 
-  homebrew:
-    name: clean Homebrew installation
+  installation:
     needs: build
-    runs-on: macos-latest
+    uses: ./.github/workflows/cli-install.yml
+    with:
+      artifact: cli-release
     permissions:
       contents: read
-    steps:
-      - uses: actions/checkout@v4
-        with:
-          persist-credentials: false
-      - uses: actions/download-artifact@v4
-        with:
-          name: cli-release
-          path: cli
-      - name: Install the release artifact and test customer workflows
-        working-directory: cli
-        env:
-          VERSION: ${{ needs.build.outputs.version }}
-        run: bash scripts/test-homebrew.sh "dist/beancount_io-$VERSION.tar.gz"
 
   release:
     name: publish both channels
-    needs: [build, homebrew]
+    needs: [build, installation]
     runs-on: ubuntu-latest
     environment: production
     permissions:
@@ -159,7 +145,7 @@ jobs:
       - uses: actions/download-artifact@v4
         with:
           name: cli-release
-          path: cli
+          path: cli/dist
       - name: Require the Homebrew publishing credential
         if: ${{ env.IS_TAG_RELEASE == 'true' }}
         run: |
@@ -193,9 +179,9 @@ jobs:
         # the job instead of leaving the release half-published.
         run: |
           if gh release view "$TAG" >/dev/null 2>&1; then
-            gh release upload "$TAG" dist/* requirements.lock --clobber
+            gh release upload "$TAG" dist/* --clobber
           else
-            gh release create "$TAG" dist/* requirements.lock \
+            gh release create "$TAG" dist/* \
               --title "bea $VERSION" --generate-notes
           fi
 
@@ -252,3 +238,55 @@ jobs:
         run: |
           rm -f -- "$RUNNER_TEMP/tap-key" "$RUNNER_TEMP/tap-known-hosts" "$RUNNER_TEMP/bea.rb"
           rm -rf -- "$RUNNER_TEMP/tap"
+
+  verify-pypi:
+    name: Verify published PyPI install (${{ matrix.os }})
+    needs: [build, release]
+    if: github.event_name == 'push'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu-latest, macos-latest, windows-latest]
+    permissions:
+      contents: read
+    defaults:
+      run:
+        shell: bash
+        working-directory: cli
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v5
+        with:
+          python-version: "3.12"
+      - name: Install the published version and exercise it
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          for attempt in 1 2 3 4 5; do
+            if uv tool install --python 3.12 "beancount-io==$VERSION"; then break; fi
+            if [ "$attempt" = 5 ]; then exit 1; fi
+            sleep 15
+          done
+          python -c 'import shutil, subprocess; subprocess.run(["python", "scripts/smoke-installed.py", shutil.which("bea")], check=True)'
+
+  verify-tap:
+    name: Verify published Homebrew install (${{ matrix.os }})
+    needs: [build, release]
+    if: github.event_name == 'push'
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [macos-latest, ubuntu-latest]
+    permissions:
+      contents: read
+    steps:
+      - uses: Homebrew/actions/setup-homebrew@master
+      - name: Install from the public tap and verify the release version
+        env:
+          VERSION: ${{ needs.build.outputs.version }}
+        run: |
+          brew install bex-co/tap/bea
+          test "$(bea --version)" = "bea $VERSION"
+          brew test bex-co/tap/bea

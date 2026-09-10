@@ -64,3 +64,15 @@ def test_the_default_install_still_imports_no_http_client() -> None:
     result = subprocess.run([sys.executable, "-c", probe], capture_output=True, text=True, check=True)
 
     assert result.stdout.strip() == "False"
+
+
+def test_customer_smoke_runs_against_the_installed_cli() -> None:
+    binary = Path(sys.executable).parent / "bea"
+    result = subprocess.run(
+        [sys.executable, str(CLI_ROOT / "scripts/smoke-installed.py"), str(binary)],
+        capture_output=True,
+        text=True,
+        cwd=CLI_ROOT,
+        timeout=120,
+    )
+    assert result.returncode == 0, f"{result.stdout}\n{result.stderr}"

@@ -8,12 +8,16 @@ on:
       # The CLI gate checks its pinned snapshot against this backend contract.
       - "backend-cluster/backend-v2/docs/openapi/v1.json"
       - ".github/workflows/ci-cli.yml"
+      - ".github/workflows/cli-install.yml"
+      - ".github/workflows/release-cli.yml"
   pull_request:
     branches: [main]
     paths:
       - "cli/**"
       - "backend-cluster/backend-v2/docs/openapi/v1.json"
       - ".github/workflows/ci-cli.yml"
+      - ".github/workflows/cli-install.yml"
+      - ".github/workflows/release-cli.yml"
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.head_ref || github.ref }}
@@ -36,3 +40,22 @@ jobs:
         run: uv sync --all-groups
       - name: Run all checks
         run: make check-all
+
+      - name: Build installation artifacts
+        run: |
+          make release-lock
+          uv build --out-dir dist
+      - uses: actions/upload-artifact@v4
+        with:
+          name: cli-install
+          path: |
+            cli/dist/*.whl
+            cli/dist/*.tar.gz
+
+  installation:
+    needs: cli
+    uses: ./.github/workflows/cli-install.yml
+    with:
+      artifact: cli-install
+    permissions:
+      contents: read
