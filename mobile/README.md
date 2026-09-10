@@ -165,10 +165,18 @@ The welcome screen's **Sign Up** button sends the same authorization request as
 **Sign In** plus `screen_hint=signup`; Sign In sends no hint. A compatible
 server forwards the hint to its interaction page, which then opens on the
 registration form for a signed-out browser. If the browser already holds a
-session, the page asks whether to continue as that account or create a
-different one rather than silently signing the app into the existing account.
-Registration, e-mail verification, and approval all happen on that one page,
-so the app's callback fires once the new account exists.
+session, the page shows a single Continue-as-email tap (required for
+custom-scheme redirects) rather than a permission list or Approve/Cancel pair —
+and for Sign Up, also offers creating a different account. After password login
+or OTP verification, the page posts the grant immediately and shows a brief
+"Returning to Beancount…" state; there is no separate consent screen. The app's
+callback fires once that redirect completes.
+
+The native client always sends `prompt=consent` on the authorization request so
+the provider will issue a refresh token (`offline_access`). That parameter is a
+wire-level refresh-token requirement of the authorization server, not a promise
+that the UI will show a consent dialog — the first-party mobile interaction
+never renders a scope list.
 
 The native client is public and has no client secret. Access and rotating
 refresh credentials live only in the OS keychain/keystore. Concurrent requests

@@ -21,17 +21,17 @@ describe("mobileOauthConsentLoader", () => {
     ).resolves.toEqual({ initialState: { step: "register" } });
   });
 
-  it("approves the signed-in account, unless the app said Sign Up", async () => {
+  it("opens a signed-in browser on the one-tap continue step", async () => {
     const ada = { email: "ada@example.test" };
     await expect(
       mobileOauthConsentLoader(input(ada, undefined)),
     ).resolves.toEqual({
-      initialState: { step: "approve", email: "ada@example.test" },
+      initialState: { step: "continue", email: "ada@example.test" },
     });
     await expect(
       mobileOauthConsentLoader(input(ada, "signup")),
     ).resolves.toEqual({
-      initialState: { step: "choose_account", email: "ada@example.test" },
+      initialState: { step: "continue", email: "ada@example.test" },
     });
   });
 });

@@ -603,13 +603,27 @@ const ruAuth: Record<string, TranslationEntry> = {
     description:
       "Mobile OAuth button that signs the browser out and opens registration",
   },
-  "auth.oauthMobileAllowTitle": {
-    message: "Разрешить Beancount Mobile?",
-    description: "Mobile OAuth approval title",
+  "auth.oauthMobileContinueTitle": {
+    message: "Continue to Beancount Mobile",
+    description:
+      "Mobile OAuth one-tap step title for a signed-in browser (first-party, no permission list)",
   },
-  "auth.oauthMobileGrantDescription": {
-    message: "Этот грант на уровне аккаунта позволяет приложению:",
-    description: "Introduction to mobile OAuth permissions",
+  "auth.oauthMobileReturningTitle": {
+    message: "Returning to Beancount…",
+    description:
+      "Brief interstitial while the mobile OAuth grant POST redirects to the app",
+  },
+  "auth.oauthMobileReturningDescription": {
+    message: "Finishing sign-in in the app.",
+    description: "Supporting line under the returning interstitial",
+  },
+  "auth.oauthMobileReturnFailed": {
+    message: "Could not return to the app. Please try again.",
+    description: "Error when the programmatic mobile grant POST fails",
+  },
+  "auth.oauthMobileReturnRetry": {
+    message: "Try again",
+    description: "Retry button after a failed mobile grant POST",
   },
   "auth.oauthSwitchAccountFailed": {
     message: "Не удалось переключить аккаунты. Пожалуйста, попробуйте еще раз.",

@@ -1,19 +1,19 @@
 # w1 · m7 — First-party sign-in without a consent screen
 
-**Worker:** worker1 **Goal:** no mobile sign-in or sign-up path ever shows a permission list or an Approve/Cancel pair; password or OTP success returns to the app with no further tap, and a browser that already holds a session needs exactly one **Status:** todo
+**Worker:** worker1 **Goal:** no mobile sign-in or sign-up path ever shows a permission list or an Approve/Cancel pair; password or OTP success returns to the app with no further tap, and a browser that already holds a session needs exactly one **Status:** done
 
 ## Tasks (in order)
 
 | id   | title                                                                                  | est | depends_on |
 | ---- | -------------------------------------------------------------------------------------- | --- | ---------- |
-| t001 | Dashboard: submit the grant immediately after login or OTP success                     | 45m | —          |
-| t002 | Dashboard: one-tap "Continue as" for a signed-in browser; retire the scope list        | 30m | t001       |
-| t003 | Backend + docs: pin the no-consent-UI contract and keep `prompt=consent` on the wire   | 30m | t001       |
-| t004 | Verify every path end to end in the iOS simulator against the hosted service           | 30m | t002, t003 |
-| t005 | Adoption surface                                                                       | 20m | t004       |
-| t006 | Simplify                                                                               | 30m | t005       |
-| t007 | Test coverage                                                                          | 45m | t005       |
-| t008 | Closeout                                                                               | 15m | t007       |
+| t001 | Dashboard: submit the grant immediately after login or OTP success                     | 45m | —          | — **DONE**
+| t002 | Dashboard: one-tap "Continue as" for a signed-in browser; retire the scope list        | 30m | t001       | — **DONE**
+| t003 | Backend + docs: pin the no-consent-UI contract and keep `prompt=consent` on the wire   | 30m | t001       | — **DONE**
+| t004 | Verify every path end to end in the iOS simulator against the hosted service           | 30m | t002, t003 | — **DONE**
+| t005 | Adoption surface                                                                       | 20m | t004       | — **DONE**
+| t006 | Simplify                                                                               | 30m | t005       | — **DONE**
+| t007 | Test coverage                                                                          | 45m | t005       | — **DONE**
+| t008 | Closeout                                                                               | 15m | t007       | — **DONE**
 
 ## Definition of done
 
