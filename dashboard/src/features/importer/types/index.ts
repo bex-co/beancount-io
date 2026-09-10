@@ -32,6 +32,10 @@ export type ImportTransaction = {
   date: Date;
   payee: string;
   description: string;
+  /**
+   * Signed bank-account movement for `sourceAccount` (negative = expense out of
+   * the bank, positive = income/refund into the bank). Target gets the negation.
+   */
   amount: number;
   sourceAccount: string;
   targetAccount: string;

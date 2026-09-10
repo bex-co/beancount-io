@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [039](./039.md) — Smart Import reverses the bank movement when preparing expense and income postings
 - [040](./040.md) — File edit shortcuts and URLs expose an editable draft to public readers
 - [042](./042.md) — Escape in file Find cancels edit mode instead of closing Find
 - [043](./043.md) — Forced-open postings still advertise enabled row toggles

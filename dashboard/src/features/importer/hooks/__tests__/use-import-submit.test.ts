@@ -126,12 +126,12 @@ describe("useImportSubmit", () => {
       expect(callArg.variables.entries[0].transaction.flag).toBe("*");
     });
 
-    it("should create a source posting with negated amount", async () => {
+    it("keeps signed bank movements on the source posting", async () => {
       mockMutate.mockResolvedValueOnce({
         data: {
           bulkEntries: {
             success: true,
-            successCount: 1,
+            successCount: 4,
             failureCount: 0,
             message: null,
             errors: [],
@@ -140,55 +140,93 @@ describe("useImportSubmit", () => {
       });
 
       const { result } = renderHook(() => useImportSubmit(ledgerId));
-      const txn = makeTransaction({
-        amount: 42.5,
-        sourceAccount: "Assets:Checking",
-      });
+      const txns = [
+        makeTransaction({
+          rowIndex: 0,
+          payee: "QA Sign Expense",
+          amount: -4.5,
+          sourceAccount: "Assets:Bank:Checking",
+          targetAccount: "Expenses:Crypto:Fees:Trading",
+        }),
+        makeTransaction({
+          rowIndex: 1,
+          payee: "QA Sign Income",
+          amount: 2500,
+          sourceAccount: "Assets:Bank:Checking",
+          targetAccount: "Income:Crypto:CapitalGains:LongTerm",
+        }),
+        makeTransaction({
+          rowIndex: 2,
+          payee: "QA Refund",
+          amount: 12.3,
+          sourceAccount: "Assets:Bank:Checking",
+          targetAccount: "Expenses:Coffee",
+        }),
+        makeTransaction({
+          rowIndex: 3,
+          payee: "QA Transfer Out",
+          amount: -100,
+          sourceAccount: "Assets:Bank:Checking",
+          targetAccount: "Assets:Bank:Savings",
+        }),
+      ];
 
-      const submitPromise = result.current.submitImport([txn]);
-      await submitPromise;
+      await result.current.submitImport(txns);
 
       const [[callArg]] = mockMutate.mock.calls;
-      const postings = callArg.variables.entries[0].transaction.postings;
-      const sourcePosting = postings.find(
-        (p: { account: string }) => p.account === "Assets:Checking",
+      const postingPairs = callArg.variables.entries.map(
+        (entry: {
+          transaction: {
+            postings: Array<{
+              account: string;
+              units: { number: string; currency: string };
+            }>;
+          };
+        }) => entry.transaction.postings,
       );
 
-      expect(sourcePosting).toBeDefined();
-      expect(sourcePosting.units.number).toBe("-42.5");
-      expect(sourcePosting.units.currency).toBe("USD");
-    });
-
-    it("should create a target posting with positive amount", async () => {
-      mockMutate.mockResolvedValueOnce({
-        data: {
-          bulkEntries: {
-            success: true,
-            successCount: 1,
-            failureCount: 0,
-            message: null,
-            errors: [],
+      expect(postingPairs).toEqual([
+        [
+          {
+            account: "Assets:Bank:Checking",
+            units: { number: "-4.5", currency: "USD" },
           },
-        },
-      });
-
-      const { result } = renderHook(() => useImportSubmit(ledgerId));
-      const txn = makeTransaction({
-        amount: 42.5,
-        targetAccount: "Expenses:Coffee",
-      });
-
-      const submitPromise = result.current.submitImport([txn]);
-      await submitPromise;
-
-      const [[callArg]] = mockMutate.mock.calls;
-      const postings = callArg.variables.entries[0].transaction.postings;
-      const targetPosting = postings.find(
-        (p: { account: string }) => p.account === "Expenses:Coffee",
-      );
-
-      expect(targetPosting).toBeDefined();
-      expect(targetPosting.units.number).toBe("42.5");
+          {
+            account: "Expenses:Crypto:Fees:Trading",
+            units: { number: "4.5", currency: "USD" },
+          },
+        ],
+        [
+          {
+            account: "Assets:Bank:Checking",
+            units: { number: "2500", currency: "USD" },
+          },
+          {
+            account: "Income:Crypto:CapitalGains:LongTerm",
+            units: { number: "-2500", currency: "USD" },
+          },
+        ],
+        [
+          {
+            account: "Assets:Bank:Checking",
+            units: { number: "12.3", currency: "USD" },
+          },
+          {
+            account: "Expenses:Coffee",
+            units: { number: "-12.3", currency: "USD" },
+          },
+        ],
+        [
+          {
+            account: "Assets:Bank:Checking",
+            units: { number: "-100", currency: "USD" },
+          },
+          {
+            account: "Assets:Bank:Savings",
+            units: { number: "100", currency: "USD" },
+          },
+        ],
+      ]);
     });
 
     it("should pass payee and narration from the transaction", async () => {

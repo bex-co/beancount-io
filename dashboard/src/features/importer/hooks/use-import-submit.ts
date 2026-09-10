@@ -33,20 +33,19 @@ export function useImportSubmit(ledgerId: string): UseImportSubmitReturn {
         // Transform to GraphQL input format
         const transactionInputs: LedgerTransactionInput[] = transactions.map(
           (txn) => {
+            // `txn.amount` is the signed bank movement on the source account.
             const postings: LedgerPostingInput[] = [
-              // Source account posting (negative for expenses)
               {
                 account: txn.sourceAccount,
                 units: {
-                  number: (-txn.amount).toString(),
+                  number: txn.amount.toString(),
                   currency: txn.currency,
                 },
               },
-              // Target account posting (positive for expenses)
               {
                 account: txn.targetAccount,
                 units: {
-                  number: txn.amount.toString(),
+                  number: (-txn.amount).toString(),
                   currency: txn.currency,
                 },
               },
