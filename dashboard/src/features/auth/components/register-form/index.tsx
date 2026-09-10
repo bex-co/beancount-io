@@ -74,8 +74,6 @@ export function RegisterForm({
   const {
     register,
     handleSubmit,
-    setValue,
-    watch,
     formState: { errors, isSubmitting },
   } = useForm<RegisterFormData>({
     resolver: zodResolver(registerSchema),
@@ -83,13 +81,19 @@ export function RegisterForm({
     defaultValues: { username: defaultUsername },
   });
 
-  const usernameValue = watch("username");
+  const usernameField = register("username");
 
   const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    setValue("username", e.target.value.toLowerCase(), {
-      shouldValidate: true,
-    });
+    e.target.value = e.target.value.toLowerCase();
+    void usernameField.onChange(e);
   };
+
+  const usernameDescribedBy = [
+    "username-hint",
+    errors.username ? "username-error" : null,
+  ]
+    .filter(Boolean)
+    .join(" ");
 
   return (
     <form className="space-y-6" onSubmit={handleSubmit(onSubmit)}>
@@ -149,7 +153,9 @@ export function RegisterForm({
         )}
       </div>
 
-      {!hideUsername && (
+      {hideUsername ? (
+        <input type="hidden" {...usernameField} />
+      ) : (
         <div className="space-y-2">
           <Label htmlFor="username" className="text-foreground">
             {t("auth.username")}
@@ -160,16 +166,26 @@ export function RegisterForm({
             autoComplete="username"
             placeholder={t("auth.enterUsername")}
             className="w-full bg-muted"
-            value={usernameValue || ""}
+            name={usernameField.name}
+            ref={usernameField.ref}
+            onBlur={usernameField.onBlur}
             onChange={handleUsernameChange}
+            aria-invalid={errors.username ? true : undefined}
+            aria-describedby={usernameDescribedBy || undefined}
           />
-          <p className="text-xs text-muted-foreground">
+          <p id="username-hint" className="text-xs text-muted-foreground">
             {t("auth.usernamePublicHint")}
           </p>
+          {errors.username && (
+            <p
+              id="username-error"
+              role="alert"
+              className="text-sm text-destructive"
+            >
+              {errors.username.message}
+            </p>
+          )}
         </div>
-      )}
-      {errors.username && (
-        <p className="text-sm text-destructive">{errors.username.message}</p>
       )}
 
       <div className="space-y-2">

@@ -49,3 +49,72 @@ describe("RegisterForm with the username hidden", () => {
     expect(screen.getByLabelText("Username")).toHaveValue("un_generated1");
   });
 });
+
+describe("RegisterForm username validation focus", () => {
+  it("focuses Username and associates its error after an invalid submit", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <RegisterForm
+        onSubmit={onSubmit}
+        isLoading={false}
+        serverError=""
+        defaultUsername=""
+        showSignInLink={false}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Email address"), "ada@example.test");
+    await user.clear(screen.getByLabelText("Username"));
+    await user.type(screen.getByLabelText("Username"), "qa-invalid-name");
+    await user.type(screen.getByLabelText("Password"), "secret123");
+    await user.type(screen.getByLabelText("Confirm Password"), "secret123");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    const username = screen.getByLabelText("Username");
+    await waitFor(() => {
+      expect(username).toHaveFocus();
+    });
+    expect(onSubmit).not.toHaveBeenCalled();
+    expect(username).toHaveAttribute("aria-invalid", "true");
+    expect(username.getAttribute("aria-describedby") ?? "").toContain(
+      "username-error",
+    );
+    expect(screen.getByRole("alert")).toHaveTextContent(
+      "Username can only contain lowercase letters, numbers, and underscores",
+    );
+  });
+
+  it("normalizes mixed-case usernames and clears the error when repaired", async () => {
+    const user = userEvent.setup();
+    const onSubmit = vi.fn().mockResolvedValue(undefined);
+    render(
+      <RegisterForm
+        onSubmit={onSubmit}
+        isLoading={false}
+        serverError=""
+        defaultUsername=""
+        showSignInLink={false}
+      />,
+    );
+
+    await user.type(screen.getByLabelText("Email address"), "ada@example.test");
+    await user.type(screen.getByLabelText("Username"), "qa-invalid-name");
+    await user.type(screen.getByLabelText("Password"), "secret123");
+    await user.type(screen.getByLabelText("Confirm Password"), "secret123");
+    await user.click(screen.getByRole("button", { name: "Create account" }));
+
+    await waitFor(() => {
+      expect(screen.getByLabelText("Username")).toHaveFocus();
+    });
+
+    await user.clear(screen.getByLabelText("Username"));
+    await user.type(screen.getByLabelText("Username"), "Qa_valid_name");
+    expect(screen.getByLabelText("Username")).toHaveValue("qa_valid_name");
+    await user.tab();
+
+    await waitFor(() => {
+      expect(screen.queryByRole("alert")).toBeNull();
+    });
+  });
+});
