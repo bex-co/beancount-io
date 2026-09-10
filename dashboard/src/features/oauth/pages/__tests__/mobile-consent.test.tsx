@@ -1,6 +1,7 @@
 import { fireEvent, render, screen } from "@testing-library/react";
 import { beforeEach, describe, expect, it, vi } from "vitest";
-import MobileOAuthConsentPage, { submitMobileGrant } from "../mobile-consent";
+import MobileOAuthConsentPage from "../mobile-consent";
+import { submitMobileGrant } from "../mobile-consent-utils";
 
 const state = vi.hoisted(() => ({
   uid: "interaction-1",
