@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [044](./044.md) — Narrow account reports hide interval and valuation selectors
 - [045](./045.md) — Smart Import silently treats a real first transaction as a CSV header
 - [046](./046.md) — Missing files are presented as failed requests with only a retry action
 - [047](./047.md) — Import cell buttons ignore Space and lose focus when editing ends
