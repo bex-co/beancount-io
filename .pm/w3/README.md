@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [032](./032.md) — Missing commits are reported as a server outage
 - [033](./033.md) — Related Files links navigate to a missing route
 - [034](./034.md) — BQL charts replace valid Decimal and Inventory values with invented numbers
 - [035](./035.md) — Holdings rounds real crypto quantities to zero in the table and CSV

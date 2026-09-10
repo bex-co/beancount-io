@@ -12,6 +12,31 @@ import {
   ledgerResource,
   type IAuthorizationService,
 } from "@/server/api/authorization";
+import {
+  DomainError,
+  InternalServerError,
+  NotFoundError,
+} from "@/shared/errors";
+
+/**
+ * Gitea's commits?sha= list endpoint may return 404/422, an empty 200, or
+ * (historically) 500 for an unknown revision. Map only absence-shaped failures
+ * to NotFound — leave auth, rate-limit, and genuine outages alone.
+ */
+export function isMissingCommitLookupError(error: unknown): boolean {
+  if (!(error instanceof Response)) return false;
+  if (error.status === 404 || error.status === 422) return true;
+  if (error.status !== 500) return false;
+  const apiError = (error as Response & { error?: { message?: string } }).error;
+  const message = `${apiError?.message ?? ""} ${error.statusText ?? ""}`.toLowerCase();
+  return (
+    message.includes("not found") ||
+    message.includes("does not exist") ||
+    message.includes("no such") ||
+    message.includes("no commit") ||
+    message.includes("unknown revision")
+  );
+}
 
 /**
  * Strips commit metadata from a git patch to extract only the unified diff.
@@ -219,12 +244,7 @@ export class CommitsService implements ICommitsService {
 
       const commit = commitResponse.data[0];
       if (!commit) {
-        logger.error("Commit not found in repository", {
-          owner,
-          repo,
-          sha,
-        });
-        throw new Error(`Commit ${sha} not found`);
+        throw new NotFoundError("Commit", sha);
       }
 
       // Get unified diff using the git commits diff endpoint
@@ -301,14 +321,19 @@ export class CommitsService implements ICommitsService {
         parents: parents.map((p) => p.sha || ""),
       };
     } catch (error) {
+      if (error instanceof DomainError) throw error;
+      if (isMissingCommitLookupError(error)) {
+        throw new NotFoundError("Commit", sha);
+      }
       logger.error("Error fetching commit details from Gitea", {
         owner,
         repo,
         sha,
         error: error instanceof Error ? error.message : String(error),
       });
-      throw new Error(
-        `Failed to fetch commit details from Gitea: ${error instanceof Error ? error.message : String(error)}`,
+      throw new InternalServerError(
+        "Failed to fetch commit details from Gitea",
+        error instanceof Error ? error : undefined,
       );
     }
   }

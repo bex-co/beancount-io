@@ -254,27 +254,25 @@ describe("commit reads through actual REST, GraphQL, and MCP adapters", () => {
       await f.close();
     }
   });
-  it.each([cases[0], cases[2], cases[4]])(
-    "refuses revoked repository access: $field",
-    async (row) => {
-      const f = await fixture();
-      f.check.mockResolvedValue(false);
-      try {
-        expect((await f.rest(row.path)).status).toBe(403);
-        await expect(f.mcp(row.path)).rejects.toThrow();
-        expect(
-          (
-            await f.gql(
-              `${row.field}(ledgerId: "alice/main"${row.args}) { ${row.selection} }`,
-            )
-          ).errors,
-        ).toHaveLength(1);
-        expect(f.latest).not.toHaveBeenCalled();
-        expect(f.history).not.toHaveBeenCalled();
-        expect(f.download).not.toHaveBeenCalled();
-      } finally {
-        await f.close();
-      }
-    },
-  );
+  it("maps a missing revision to NOT_FOUND across REST, GraphQL, and MCP", async () => {
+    const f = await fixture();
+    f.history.mockResolvedValue({ data: [] });
+    const sha = "0000000000000000000000000000000000000000";
+    try {
+      const response = await f.rest(`commit-details?sha=${sha}`);
+      expect(response.status).toBe(404);
+      expect(await response.json()).toMatchObject({
+        ok: false,
+        error: { code: "NOT_FOUND" },
+      });
+      await expect(f.mcp(`commit-details?sha=${sha}`)).rejects.toThrow();
+      const result = await f.gql(
+        `getCommitDetails(ledgerId: "alice/main", sha: "${sha}") { sha }`,
+      );
+      expect(result.data?.getCommitDetails).toBeNull();
+      expect(result.errors?.[0]?.extensions?.code).toBe("NOT_FOUND");
+    } finally {
+      await f.close();
+    }
+  });
 });

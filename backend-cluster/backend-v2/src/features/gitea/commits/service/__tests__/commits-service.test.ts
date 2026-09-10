@@ -1,8 +1,14 @@
 import {
   CommitsService,
+  isMissingCommitLookupError,
   stripCommitMetadata,
   parseFileStatsFromDiff,
 } from "../commits-service";
+import {
+  ForbiddenError,
+  InternalServerError,
+  NotFoundError,
+} from "@/shared/errors";
 
 describe("CommitsService authorization", () => {
   it("denies before provisioning a Gitea client", async () => {
@@ -27,6 +33,106 @@ describe("CommitsService authorization", () => {
     ).rejects.toThrow("denied");
     expect(getUserApiClient).not.toHaveBeenCalled();
     expect(getAnonymousApiClient).not.toHaveBeenCalled();
+  });
+});
+
+describe("CommitsService.getCommitDetails missing revisions", () => {
+  const identity = {
+    userId: "usr_1",
+    method: "session" as const,
+    scopes: new Set<string>(),
+  };
+  const sha = "0000000000000000000000000000000000000000";
+
+  function serviceWithHistory(history: jest.Mock) {
+    return new CommitsService(
+      {
+        getUserApiClient: jest.fn().mockResolvedValue({
+          repos: {
+            repoGetAllCommits: history,
+            repoDownloadCommitDiffOrPatch: jest.fn(),
+          },
+        }),
+        getAnonymousApiClient: jest.fn(),
+      } as never,
+      { authorizeOrThrow: jest.fn().mockResolvedValue(undefined) } as never,
+    );
+  }
+
+  it("maps an empty commits list to NotFoundError", async () => {
+    const history = jest.fn().mockResolvedValue({ data: [] });
+    const service = serviceWithHistory(history);
+    await expect(
+      service.getCommitDetails({ identity, ledgerId: "alice/main", sha }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("maps a Gitea 404 Response to NotFoundError", async () => {
+    const response = new Response(null, { status: 404, statusText: "Not Found" });
+    const history = jest.fn().mockRejectedValue(response);
+    const service = serviceWithHistory(history);
+    await expect(
+      service.getCommitDetails({ identity, ledgerId: "alice/main", sha }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("maps a Gitea 500 absence-shaped Response to NotFoundError", async () => {
+    const response = Object.assign(
+      new Response(null, { status: 500, statusText: "Internal Server Error" }),
+      { error: { message: "object does not exist" } },
+    );
+    const history = jest.fn().mockRejectedValue(response);
+    const service = serviceWithHistory(history);
+    await expect(
+      service.getCommitDetails({ identity, ledgerId: "alice/main", sha }),
+    ).rejects.toBeInstanceOf(NotFoundError);
+  });
+
+  it("preserves preexisting DomainError instances", async () => {
+    const history = jest
+      .fn()
+      .mockRejectedValue(new ForbiddenError("Ledger is private"));
+    const service = serviceWithHistory(history);
+    await expect(
+      service.getCommitDetails({ identity, ledgerId: "alice/main", sha }),
+    ).rejects.toBeInstanceOf(ForbiddenError);
+  });
+
+  it("keeps genuine upstream outages as InternalServerError", async () => {
+    const response = new Response(null, {
+      status: 503,
+      statusText: "Service Unavailable",
+    });
+    const history = jest.fn().mockRejectedValue(response);
+    const service = serviceWithHistory(history);
+    await expect(
+      service.getCommitDetails({ identity, ledgerId: "alice/main", sha }),
+    ).rejects.toBeInstanceOf(InternalServerError);
+  });
+});
+
+describe("isMissingCommitLookupError", () => {
+  it("recognizes 404 and absence-shaped 500 responses only", () => {
+    expect(
+      isMissingCommitLookupError(new Response(null, { status: 404 })),
+    ).toBe(true);
+    expect(
+      isMissingCommitLookupError(
+        Object.assign(new Response(null, { status: 500 }), {
+          error: { message: "object does not exist" },
+        }),
+      ),
+    ).toBe(true);
+    expect(
+      isMissingCommitLookupError(new Response(null, { status: 503 })),
+    ).toBe(false);
+    expect(
+      isMissingCommitLookupError(
+        Object.assign(new Response(null, { status: 500 }), {
+          error: { message: "database connection refused" },
+        }),
+      ),
+    ).toBe(false);
   });
 });
 
