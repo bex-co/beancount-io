@@ -321,9 +321,7 @@ def overview(
     for title, balance in totals.items():
         typer.echo(f"  {title.replace('_', ' ').title() + ':':<16} {_amounts(balance, conversion, dcontext)}")
     typer.echo(f"\n{interval.value.title()} breakdown")
-    # Flow series are capped at the 100 most recent intervals while balance
-    # series cover every interval, so rows join on the interval date rather
-    # than zipping positions that no longer line up on a long ledger.
+    # Join flow and balance series by their valuation date.
     assets_by_date = {point.date: point.balance for point in data.assets_data}
     liabilities_by_date = {point.date: point.balance for point in data.liabilities_data}
     output.table(

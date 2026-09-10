@@ -433,3 +433,48 @@ class TestDailyFixes:
 
         assert result.exit_code == 0, result.output
         assert f"cd {target} && bea check" in result.output
+
+
+@pytest.mark.parametrize(
+    ("period", "interval", "start", "end", "count"),
+    [
+        ("2026-01-01 - 2026-04-09", "daily", "2026-01-01", "2026-04-09", 99),
+        ("2026-01-01 - 2026-04-10", "daily", "2026-01-01", "2026-04-10", 100),
+        ("2026-01-01 - 2026-04-11", "daily", "2026-01-01", "2026-04-11", 101),
+        ("2026", "daily", "2026-01-01", "2026-12-31", 365),
+        ("2016 - 2026", "monthly", "2016-01-31", "2026-12-31", 132),
+    ],
+)
+def test_report_intervals_cover_the_full_period(
+    tmp_path: Path, period: str, interval: str, start: str, end: str, count: int
+) -> None:
+    file = tmp_path / "main.bean"
+    first = start[:8] + "01"
+    file.write_text(f"""option "operating_currency" "USD"
+{first} open Assets:Checking USD
+{first} open Income:Salary USD
+{first} * "First income"
+  Assets:Checking 100.00 USD
+  Income:Salary
+{end} * "Last income"
+  Assets:Checking 200.00 USD
+  Income:Salary
+""")
+    args = ("--time", period, "--interval", interval)
+    result = run(file, "report", "income-statement", *args)
+    assert result.exit_code == 0, result.output
+    envelope = json.loads(result.stdout)
+    assert envelope["truncated"] is False
+    data = envelope["data"]
+    rows = data["periods"]
+    assert len(rows) == count
+    assert rows[0]["date"] == start
+    assert rows[-1]["date"] == end
+    assert sum(Decimal(row["net_profit"]["USD"]) for row in rows) == Decimal(data["net_profit"]["USD"]) == 300
+    overview = report(file, "overview", *args)
+    for name in ("income", "expenses", "assets", "liabilities"):
+        assert len(overview["series"][name]) == count
+    assert sum(Decimal(row["balance"].get("USD", "0")) for row in overview["series"]["income"]) == -300
+    text = runner.invoke(app, ["--file", str(file), "report", "income-statement", *args])
+    assert text.exit_code == 0, text.output
+    assert start in text.stdout and end in text.stdout

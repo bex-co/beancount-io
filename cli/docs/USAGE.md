@@ -472,6 +472,10 @@ back as transaction metadata.
 
 ## Reports
 
+Report interval breakdowns cover the complete requested period, including more
+than 100 daily or monthly intervals. The interval selects the aggregation
+grain, not a limit on the returned history.
+
 ```bash
 bea report overview
 bea report income-statement

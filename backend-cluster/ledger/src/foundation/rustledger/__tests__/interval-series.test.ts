@@ -358,3 +358,49 @@ describe("chart span parity (Fava _date_first / _date_last)", () => {
     ]);
   });
 });
+
+describe("complete report intervals", () => {
+  it.each([
+    ["day", "2026-01-01", "2026-04-10", "2026-04-09", 99],
+    ["day", "2026-01-01", "2026-04-11", "2026-04-10", 100],
+    ["day", "2026-01-01", "2026-04-12", "2026-04-11", 101],
+    ["daily", "2026-01-01", "2027-01-01", "2026-12-31", 365],
+    ["month", "2016-01-01", "2027-01-01", "2026-12-31", 132],
+  ] as const)(
+    "returns every %s interval from %s to %s",
+    (key, begin, end, last, count) => {
+      const directives: DirectiveJson[] = [
+        [begin, "100"],
+        [last, "200"],
+      ].map(([date, amount]) => ({
+        type: "transaction",
+        date,
+        flag: "*",
+        narration: "Income",
+        tags: [],
+        links: [],
+        postings: [
+          {
+            account: "Assets:Checking",
+            units: { number: amount, currency: "USD" },
+          },
+          {
+            account: "Income:Salary",
+            units: { number: `-${amount}`, currency: "USD" },
+          },
+        ],
+      }));
+      const rows = intervalTotals(directives, key, ["Income"], "USD", usdMap, {
+        begin,
+        end,
+      });
+      expect(rows).toHaveLength(count);
+      expect(rows[0].date).toBe(key === "month" ? "2016-01-31" : begin);
+      expect(rows.at(-1)?.date).toBe(last);
+      expect(rows[0].balance).toEqual({ USD: "-100" });
+      expect(
+        rows.reduce((sum, row) => sum + Number(row.balance.USD ?? 0), 0),
+      ).toBe(-300);
+    },
+  );
+});

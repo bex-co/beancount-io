@@ -84,7 +84,7 @@ class ChartModule:
         This computes totals within each interval (not cumulative balances),
         returning both the aggregated total across the provided accounts and a
         per-account breakdown for the same interval. Useful for bar charts like
-        monthly income/expenses. Limited to the last 100 intervals.
+        monthly income/expenses. Covers every interval in the filtered period.
 
         Args:
             filtered: The filtered ledger.
@@ -99,8 +99,7 @@ class ChartModule:
         """
         prices = filtered.ledger.prices
 
-        # limit the bar charts to 100 intervals
-        intervals = filtered.interval_ranges(interval)[-100:]
+        intervals = filtered.interval_ranges(interval)
 
         for date_range in intervals:
             inventory = CounterInventory()

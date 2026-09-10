@@ -24,10 +24,15 @@ import type { McpRequestContext } from "../mcp-context";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const balance = { USD: "9007199254740993.12", EUR: "-45.60" };
-const series = [{ date: "2026-01-01", balance }];
-const intervals = [
-  { date: "2026-01-01", balance, account_balances: { "Assets:Bank": balance } },
-];
+// A full daily year proves that transport mappings preserve more than 100 rows.
+const series = Array.from({ length: 365 }, (_, day) => ({
+  date: new Date(Date.UTC(2026, 0, day + 1)).toISOString().slice(0, 10),
+  balance,
+}));
+const intervals = series.map((point) => ({
+  ...point,
+  account_balances: { "Assets:Bank": balance },
+}));
 const tree = {
   account: "Assets",
   balance,

@@ -30,6 +30,14 @@ There is no database and no user table: auth is Basic/token credentials
 forwarded verbatim to Gitea, which is the sole source of truth for identity
 and repository access.
 
+## Report coverage
+
+Income-statement and overview flow series, account-report interval totals,
+and `/interval-totals` cover the full selected period. They no longer keep only
+the latest 100 intervals: a full non-leap year with `interval=daily` returns
+365 rows. Consumers should aggregate or window charts explicitly if needed;
+the report service does not apply a chart display limit to financial data.
+
 ## Getting started
 
 Requires Node.js 20+ and a running Gitea instance. See `.env.example` for the

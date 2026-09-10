@@ -270,7 +270,7 @@ export interface IntervalWindow {
 /**
  * Per-interval flow totals for the given account prefixes (fava
  * `ChartModule.interval_totals`): sum postings within each interval, with a
- * per-account breakdown, converted at the interval end. Limited to 100.
+ * per-account breakdown, converted at the interval end. Covers the full period.
  *
  * `window` selects the interval boundaries: absent ⇒ the transaction span with
  * complete (rounded-out) intervals; present ⇒ exactly `[begin, end)` with
@@ -284,7 +284,7 @@ export function intervalTotals(
   priceMap: PriceMap,
   window?: IntervalWindow,
 ): DateBalanceWithAccounts[] {
-  const ranges = seriesRanges(directives, key, window).slice(-100);
+  const ranges = seriesRanges(directives, key, window);
   const accumulators = ranges.map(() => {
     const total = new LotInventory();
     const perAccount = new Map<string, LotInventory>();
@@ -292,7 +292,7 @@ export function intervalTotals(
   });
 
   // Directives and ranges are chronological. Advance through both once instead
-  // of rescanning the entire ledger for each of up to 100 chart intervals.
+  // of rescanning the entire ledger for each report interval.
   let rangeIndex = 0;
   for (const directive of directives) {
     if (directive.type !== "transaction") continue;
