@@ -159,8 +159,10 @@ interface ApiConfig {
    */
   scopeEnforcement: ScopeEnforcementMode;
   /**
-   * Explicit local test users that may exercise paid API-key minting without
-   * contacting Stripe. Always empty outside development.
+   * Explicit local test users treated as `ENTERPRISE` tier without contacting
+   * Stripe. Honored in exactly one place, `getUserTier`, so every tier-gated
+   * feature (ledger count, directives, collaborators, AI tokens, API-key
+   * minting) agrees. Always empty outside development.
    */
   developmentPremiumUserIds: ReadonlySet<string>;
 }

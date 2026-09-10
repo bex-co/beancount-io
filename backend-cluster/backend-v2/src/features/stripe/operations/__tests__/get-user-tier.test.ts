@@ -8,6 +8,30 @@ import { logger } from "@/shared/logger";
 import type { IModels } from "@/foundation/models";
 import type { NodePgDatabase } from "drizzle-orm/node-postgres";
 
+const mockDevelopmentPremiumUserIds = new Set<string>();
+jest.mock("@/config/config", () => ({
+  config: {
+    api: {
+      get developmentPremiumUserIds() {
+        return mockDevelopmentPremiumUserIds;
+      },
+    },
+    // `../service/stripe` reads these at module load.
+    stripe: {
+      privateKey: "sk_test_fake_key",
+      publicKey: "pk_test_fake_key",
+      webhookSecret: "whsec_test_fake",
+      dev: {
+        privateKey: "sk_test_dev_fake_key",
+        publicKey: "pk_test_dev_fake_key",
+        webhookSecret: "whsec_test_dev_fake",
+      },
+    },
+    env: "test",
+  },
+  __esModule: true,
+}));
+
 // Mock logger
 jest.mock("@/shared/logger", () => ({
   logger: {
@@ -240,6 +264,27 @@ describe("get-user-tier operation", () => {
         errorMessage: "String error",
         stack: undefined,
       });
+    });
+  });
+
+  describe("development premium override", () => {
+    afterEach(() => mockDevelopmentPremiumUserIds.clear());
+
+    it("returns ENTERPRISE for a listed user without touching Stripe", async () => {
+      mockDevelopmentPremiumUserIds.add("user-dev");
+
+      const tier = await getUserTier({
+        stripe: mockStripeService as never,
+        models: mockModels,
+        postgresDb: mockPostgresDb,
+        userId: "user-dev",
+      });
+
+      expect(tier).toBe(SubscriptionTier.ENTERPRISE);
+      expect(
+        mockPaidCustomerModel.findByUserIdWithActivePeriod,
+      ).not.toHaveBeenCalled();
+      expect(mockStripeService.listSubscriptions).not.toHaveBeenCalled();
     });
   });
 

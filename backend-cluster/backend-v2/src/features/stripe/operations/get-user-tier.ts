@@ -1,4 +1,5 @@
 import { NodePgDatabase } from "drizzle-orm/node-postgres";
+import { config } from "@/config/config";
 import type { IModels } from "@/foundation/models";
 import { logger } from "@/shared/logger";
 import {
@@ -35,6 +36,12 @@ export async function getUserTier({
   postgresDb,
   userId,
 }: GetUserTierParams): Promise<SubscriptionTier> {
+  // Development-only complimentary tier. This is the single owner of the
+  // override; nothing else may consult `developmentPremiumUserIds`.
+  if (config.api.developmentPremiumUserIds.has(userId)) {
+    return SubscriptionTier.ENTERPRISE;
+  }
+
   const stripeService = stripe;
   try {
     // Check if user has an active subscription using the existing isPaid infrastructure
