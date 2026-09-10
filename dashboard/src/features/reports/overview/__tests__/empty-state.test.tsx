@@ -229,7 +229,9 @@ describe("LedgerOverviewPage filtered empty state", () => {
       screen.getByText("No activity for the current filters"),
     ).toBeInTheDocument();
     expect(
-      screen.queryByText(/This ledger has no activity yet/),
+      screen.queryByText(
+        "This ledger has no activity yet. You can view its accounts, journal, or source file.",
+      ),
     ).not.toBeInTheDocument();
     expect(screen.queryByText("Set up your ledger")).not.toBeInTheDocument();
   });
