@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 import { format } from "date-fns";
-import { parseStrictCalendarDate } from "../date-picker";
+import { parseStrictCalendarDate } from "../date-picker-utils";
 
 describe("parseStrictCalendarDate", () => {
   it("accepts complete MM/dd/yyyy and yyyy-MM-dd calendar dates", () => {

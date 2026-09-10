@@ -277,7 +277,8 @@ const zhCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "展开或折叠 {account} 的子账户",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "切换侧边栏",

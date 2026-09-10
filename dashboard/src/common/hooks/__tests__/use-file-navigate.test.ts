@@ -21,7 +21,7 @@ describe("getLedgerFilesRootPath", () => {
       "/ledger/open_ledger/walmart/files/tree/main",
     );
     const ids = JSON.stringify(routeTree);
-    expect(ids).toContain('/files/tree/$branch/$');
+    expect(ids).toContain("/files/tree/$branch/$");
     expect(ids).not.toContain('"/files"');
   });
 });

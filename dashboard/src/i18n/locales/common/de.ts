@@ -281,7 +281,8 @@ const deCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "Unterkonten von {account} ein- oder ausklappen",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "Seitenleiste umschalten",

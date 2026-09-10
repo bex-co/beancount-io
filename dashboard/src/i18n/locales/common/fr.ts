@@ -280,7 +280,8 @@ const frCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "Afficher ou masquer les enfants de {account}",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "Basculer la barre latérale",

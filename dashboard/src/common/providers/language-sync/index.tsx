@@ -11,8 +11,13 @@ const LanguageSyncImpl = () => {
   const { changeLanguage } = useChangeLanguage();
   // Read language through a ref so URL sync does not re-run when the user
   // changes language — otherwise a stale ?lang= would immediately win again.
+  // Synced in a passive effect (not during render): it runs every render,
+  // before the URL-sync effect below, preserving the ordering the direct
+  // assignment had.
   const languageRef = useRef(i18n.language);
-  languageRef.current = i18n.language;
+  useEffect(() => {
+    languageRef.current = i18n.language;
+  });
 
   useEffect(() => {
     // Priority 1: ?lang= URL param wins when the URL itself changes

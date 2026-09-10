@@ -138,8 +138,8 @@ export default function LedgerOverviewPage() {
   const hasActivity = hasOverviewActivity(overview);
   const hasActiveFilters = Boolean(
     ledgerFilters.searchParams.account ||
-      ledgerFilters.searchParams.filter ||
-      ledgerFilters.searchParams.time,
+    ledgerFilters.searchParams.filter ||
+    ledgerFilters.searchParams.time,
   );
   const widgets: Record<DashboardWidgetId, ReactNode> = {
     "financial-position": (

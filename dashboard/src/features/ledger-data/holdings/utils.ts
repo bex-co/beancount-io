@@ -79,7 +79,8 @@ export function formatDecimalCell(value: unknown): string {
  * accepts a typed number + renderCommas flag; this one accepts unknown (API cells
  * can be strings, null, or booleans) and has no comma option.
  */
-export const formatNumber = (value: unknown): string => formatDecimalCell(value);
+export const formatNumber = (value: unknown): string =>
+  formatDecimalCell(value);
 
 /**
  * Determines if an unknown value is considered "empty"

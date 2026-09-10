@@ -80,9 +80,7 @@ describe("Combobox explicit selection vs blur", () => {
     const input = screen.getByRole("combobox");
     await user.click(input);
     await user.type(input, "BTC");
-    await user.click(
-      screen.getByText("Assets:Crypto:Coinbase:BTC"),
-    );
+    await user.click(screen.getByText("Assets:Crypto:Coinbase:BTC"));
 
     expect(onValueChange).toHaveBeenCalledWith("Assets:Crypto:Coinbase:BTC");
     expect(onValueChange.mock.calls.at(-1)?.[0]).toBe(

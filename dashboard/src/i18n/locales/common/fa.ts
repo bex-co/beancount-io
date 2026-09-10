@@ -281,7 +281,8 @@ const faCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "باز و بسته کردن زیر‌حساب‌های {account}",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "تغییر وضعیت نوار کناری",

@@ -15,7 +15,11 @@ import {
 } from "./holdings-statement";
 import { createLedgerId } from "@/common/lib/utils/encode";
 import { useTranslations } from "@/common/hooks/use-translations";
-import { holdingsRowsFilter, defaultRowsFilter, unitsFirstRowsFilter } from "./utils";
+import {
+  holdingsRowsFilter,
+  defaultRowsFilter,
+  unitsFirstRowsFilter,
+} from "./utils";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 

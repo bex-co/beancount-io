@@ -50,9 +50,7 @@ describe("statement print stylesheet delivery", () => {
     expect(printStyles).toContain(
       "body:has(> .statement-print-root) > *:not(.statement-print-root)",
     );
-    expect(printStyles).not.toContain(
-      "body > *:not(.statement-print-root)",
-    );
+    expect(printStyles).not.toContain("body > *:not(.statement-print-root)");
   });
 
   it("keeps ordinary pages printable when no statement portal is present", () => {

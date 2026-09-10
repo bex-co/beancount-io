@@ -281,7 +281,8 @@ const nlCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "Onderliggende van {account} in- of uitklappen",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "Zijbalk schakelen",

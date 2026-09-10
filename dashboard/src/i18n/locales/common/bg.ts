@@ -281,7 +281,8 @@ const bgCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "Превключване на дъщерните елементи на {account}",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "Превключване на страничната лента",

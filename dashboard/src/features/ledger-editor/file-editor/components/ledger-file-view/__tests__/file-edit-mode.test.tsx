@@ -51,8 +51,12 @@ describe("EditModeToolbar draft guard", () => {
       />,
     );
 
-    expect(screen.getByRole("button", { name: "common.edit" })).toBeInTheDocument();
-    expect(screen.getByRole("button", { name: "common.save" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "common.edit" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "common.save" }),
+    ).toBeInTheDocument();
     expect(
       screen.getByRole("button", { name: "common.cancel" }),
     ).toBeInTheDocument();

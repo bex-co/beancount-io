@@ -21,7 +21,11 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { useFileNavigate } from "@/common/hooks/use-file-navigate";
 import { getParentPath, getFilename } from "../../../shared/lib/utils";
-import { FileLoadingView, FileErrorView, FileNotFoundView } from "./file-loading-error-views";
+import {
+  FileLoadingView,
+  FileErrorView,
+  FileNotFoundView,
+} from "./file-loading-error-views";
 import { FileContentView } from "./file-content-view";
 
 interface LedgerFileViewProps {
@@ -49,10 +53,7 @@ export default function LedgerFileView({
   const params = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/files/blob/$branch/$",
   });
-  const {
-    data,
-    error,
-  } = useQuery(GetLedgerFileDocument, {
+  const { data, error } = useQuery(GetLedgerFileDocument, {
     variables: {
       ledgerId: ledgerId,
       path: filePath,

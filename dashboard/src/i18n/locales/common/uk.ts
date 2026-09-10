@@ -281,7 +281,8 @@ const ukCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "Розгорнути або згорнути дочірні рахунки {account}",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "Перемкнути бічну панель",

@@ -2,7 +2,7 @@
 
 import * as React from "react";
 import { CalendarIcon } from "lucide-react";
-import { format, isValid, parse } from "date-fns";
+import { format, isValid } from "date-fns";
 
 import { Button } from "@/common/components/ui/button";
 import { Calendar } from "@/common/components/ui/calendar";
@@ -14,9 +14,7 @@ import {
   PopoverTrigger,
 } from "@/common/components/ui/popover";
 import { useTranslations } from "@/common/hooks/use-translations";
-
-const DISPLAY_PATTERN = "MM/dd/yyyy";
-const PARSE_PATTERNS = [DISPLAY_PATTERN, "yyyy-MM-dd"] as const;
+import { DISPLAY_PATTERN, parseStrictCalendarDate } from "./date-picker-utils";
 
 function formatDate(date: Date | undefined, short = false) {
   if (!date || !isValid(date)) {
@@ -32,20 +30,6 @@ function formatDate(date: Date | undefined, short = false) {
     month: "long",
     year: "numeric",
   });
-}
-
-/** Strict calendar-date parse; rejects partial text and month-length rollover. */
-export function parseStrictCalendarDate(input: string): Date | undefined {
-  const trimmed = input.trim();
-  if (!trimmed) return undefined;
-
-  for (const pattern of PARSE_PATTERNS) {
-    const parsed = parse(trimmed, pattern, new Date());
-    if (isValid(parsed) && format(parsed, pattern) === trimmed) {
-      return parsed;
-    }
-  }
-  return undefined;
 }
 
 interface DatePickerProps {

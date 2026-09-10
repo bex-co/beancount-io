@@ -141,10 +141,7 @@ export default function GalleryPage() {
       setHighlightedIndex((prev) => (prev > 0 ? prev - 1 : -1));
     } else if (e.key === "Enter") {
       e.preventDefault();
-      if (
-        highlightedIndex >= 0 &&
-        highlightedIndex < searchResults.length
-      ) {
+      if (highlightedIndex >= 0 && highlightedIndex < searchResults.length) {
         handleLedgerSelect(searchResults[highlightedIndex].id);
       }
     }
@@ -291,57 +288,51 @@ export default function GalleryPage() {
                             </div>
                           )}
 
-                        {!loading &&
-                          !error &&
-                          normalizedQuery.length < 2 && (
-                            <div className="p-4 text-center text-sm text-muted-foreground">
-                              {t("collaboration.typeAtLeast2Characters")}
-                            </div>
-                          )}
+                        {!loading && !error && normalizedQuery.length < 2 && (
+                          <div className="p-4 text-center text-sm text-muted-foreground">
+                            {t("collaboration.typeAtLeast2Characters")}
+                          </div>
+                        )}
 
-                        {!loading &&
-                          !error &&
-                          searchResults.length > 0 && (
-                            <div className="p-1">
-                              {searchResults.map((ledger, index) => (
-                                <div
-                                  key={ledger.id}
-                                  id={`ledger-search-option-${index}`}
-                                  data-index={index}
-                                  className={cn(
-                                    "flex items-center justify-between rounded-md px-3 py-2 cursor-pointer transition-colors",
-                                    highlightedIndex === index
-                                      ? "bg-accent text-accent-foreground"
-                                      : "hover:bg-accent/50",
-                                  )}
-                                  onClick={() => handleLedgerSelect(ledger.id)}
-                                  onMouseEnter={() =>
-                                    setHighlightedIndex(index)
-                                  }
-                                  role="option"
-                                  aria-selected={highlightedIndex === index}
-                                >
-                                  <div className="flex flex-col flex-1 min-w-0">
-                                    <span className="font-medium truncate">
-                                      {ledger.name}
-                                    </span>
-                                    {ledger.fullName &&
-                                      ledger.fullName !== ledger.name && (
-                                        <span className="text-sm text-muted-foreground truncate">
-                                          {ledger.fullName}
-                                        </span>
-                                      )}
-                                    {ledger.description && (
-                                      <span className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
-                                        {ledger.description}
+                        {!loading && !error && searchResults.length > 0 && (
+                          <div className="p-1">
+                            {searchResults.map((ledger, index) => (
+                              <div
+                                key={ledger.id}
+                                id={`ledger-search-option-${index}`}
+                                data-index={index}
+                                className={cn(
+                                  "flex items-center justify-between rounded-md px-3 py-2 cursor-pointer transition-colors",
+                                  highlightedIndex === index
+                                    ? "bg-accent text-accent-foreground"
+                                    : "hover:bg-accent/50",
+                                )}
+                                onClick={() => handleLedgerSelect(ledger.id)}
+                                onMouseEnter={() => setHighlightedIndex(index)}
+                                role="option"
+                                aria-selected={highlightedIndex === index}
+                              >
+                                <div className="flex flex-col flex-1 min-w-0">
+                                  <span className="font-medium truncate">
+                                    {ledger.name}
+                                  </span>
+                                  {ledger.fullName &&
+                                    ledger.fullName !== ledger.name && (
+                                      <span className="text-sm text-muted-foreground truncate">
+                                        {ledger.fullName}
                                       </span>
                                     )}
-                                  </div>
-                                  <Search className="h-4 w-4 text-muted-foreground ml-2 shrink-0" />
+                                  {ledger.description && (
+                                    <span className="text-xs text-muted-foreground line-clamp-1 mt-0.5">
+                                      {ledger.description}
+                                    </span>
+                                  )}
                                 </div>
-                              ))}
-                            </div>
-                          )}
+                                <Search className="h-4 w-4 text-muted-foreground ml-2 shrink-0" />
+                              </div>
+                            ))}
+                          </div>
+                        )}
                       </div>
                     )}
                   </div>

@@ -117,10 +117,7 @@ describe("chart-utils", () => {
         decodeQueryChartValue({ UNIV2ETHUSDC: "-7.27" }, "Inventory"),
       ).toEqual({ amount: -7.27, unit: "UNIV2ETHUSDC" });
       expect(
-        decodeQueryChartValue(
-          { USD: "1", EUR: "2" },
-          "Inventory",
-        ),
+        decodeQueryChartValue({ USD: "1", EUR: "2" }, "Inventory"),
       ).toBeNull();
     });
   });

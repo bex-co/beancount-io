@@ -281,7 +281,8 @@ const enCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "Toggle children of {account}",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "Toggle Sidebar",

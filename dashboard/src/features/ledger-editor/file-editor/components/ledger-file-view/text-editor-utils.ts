@@ -33,10 +33,7 @@ type FindControllerLike = {
 
 /** True when Monaco's Find/Replace widget is open for this editor. */
 export function isMonacoFindWidgetVisible(
-  editor:
-    | { getContribution: (id: string) => unknown }
-    | null
-    | undefined,
+  editor: { getContribution: (id: string) => unknown } | null | undefined,
 ): boolean {
   const contribution = editor?.getContribution(
     "editor.contrib.findController",
@@ -49,8 +46,8 @@ export function isEscapeOwnedByOverlay(target: EventTarget | null): boolean {
   if (!(target instanceof Element)) return false;
   return Boolean(
     target.closest('[role="dialog"]') ||
-      target.closest('[role="menu"]') ||
-      target.closest("[data-radix-popper-content-wrapper]"),
+    target.closest('[role="menu"]') ||
+    target.closest("[data-radix-popper-content-wrapper]"),
   );
 }
 
@@ -59,10 +56,7 @@ export function isEscapeOwnedByOverlay(target: EventTarget | null): boolean {
  * do not own the key.
  */
 export function shouldCancelEditOnEscape(
-  editor:
-    | { getContribution: (id: string) => unknown }
-    | null
-    | undefined,
+  editor: { getContribution: (id: string) => unknown } | null | undefined,
   target: EventTarget | null,
 ): boolean {
   if (isMonacoFindWidgetVisible(editor)) return false;

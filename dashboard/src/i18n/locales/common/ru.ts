@@ -280,7 +280,8 @@ const ruCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "Развернуть или свернуть дочерние счета {account}",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "Переключить боковую панель",

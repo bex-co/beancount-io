@@ -280,7 +280,8 @@ const jaCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "{account} の子アカウントを切り替え",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "サイドバーを切り替え",

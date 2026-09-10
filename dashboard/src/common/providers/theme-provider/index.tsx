@@ -64,8 +64,7 @@ export function ThemeProvider({
   // Always start with defaultTheme to match server-side rendering
   // This prevents hydration mismatch
   const [theme, setTheme] = useState<Theme>(getInitialTheme);
-  const [systemTheme, setSystemTheme] =
-    useState<ResolvedTheme>(getSystemTheme);
+  const [systemTheme, setSystemTheme] = useState<ResolvedTheme>(getSystemTheme);
 
   // After first render (hydration complete), mark as hydrated
   useEffect(() => {
@@ -94,12 +93,12 @@ export function ThemeProvider({
   // Keep system appearance reactive while the preference is "system".
   useEffect(() => {
     if (!isHydrated) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- Seeds the subscription below with the current value; the alternative (lazy useState initializer) would read matchMedia during render
     setSystemTheme(getSystemTheme());
     return subscribeSystemTheme(setSystemTheme);
   }, [isHydrated]);
 
-  const resolvedTheme: ResolvedTheme =
-    theme === "system" ? systemTheme : theme;
+  const resolvedTheme: ResolvedTheme = theme === "system" ? systemTheme : theme;
 
   // Apply theme to DOM by adding/removing class on <html> element
   // ONLY apply after hydration to prevent mismatch

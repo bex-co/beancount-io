@@ -94,10 +94,7 @@ describe("LedgerFileView missing vs failed file", () => {
     mocks.queryResult.error = new Error("network");
 
     render(
-      <LedgerFileView
-        ledgerId="open_ledger/example"
-        filePath="main.bean"
-      />,
+      <LedgerFileView ledgerId="open_ledger/example" filePath="main.bean" />,
     );
 
     expect(

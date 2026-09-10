@@ -262,12 +262,7 @@ describe("csv-validator", () => {
 
     it("should return false when header tokens appear inside data fields", () => {
       expect(
-        isHeaderRow([
-          "2025-12-01",
-          "QA Date Shop",
-          "Prepaid amount",
-          "-4.50",
-        ]),
+        isHeaderRow(["2025-12-01", "QA Date Shop", "Prepaid amount", "-4.50"]),
       ).toBe(false);
     });
   });

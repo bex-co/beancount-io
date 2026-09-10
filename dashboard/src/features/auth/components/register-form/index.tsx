@@ -166,9 +166,7 @@ export function RegisterForm({
             autoComplete="username"
             placeholder={t("auth.enterUsername")}
             className="w-full bg-muted"
-            name={usernameField.name}
-            ref={usernameField.ref}
-            onBlur={usernameField.onBlur}
+            {...usernameField}
             onChange={handleUsernameChange}
             aria-invalid={errors.username ? true : undefined}
             aria-describedby={usernameDescribedBy || undefined}

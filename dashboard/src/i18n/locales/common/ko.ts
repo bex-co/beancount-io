@@ -280,7 +280,8 @@ const koCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "{account}의 하위 계정 펼치기/접기",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "사이드바 전환",

@@ -19,10 +19,9 @@ export function buildCommodityChartLabels(
 ) {
   const priceByDate = new Map(prices.map((point) => [point.date, point.value]));
   const numericPrices = prices.map((point) => parseFloat(point.value));
-  const chartData = prices.map((point) => [
-    point.date,
-    parseFloat(point.value),
-  ] as [string, number]);
+  const chartData = prices.map(
+    (point) => [point.date, parseFloat(point.value)] as [string, number],
+  );
   const dates = prices.map((point) => point.date);
 
   const formatTooltip = (dateStr: string): string => {

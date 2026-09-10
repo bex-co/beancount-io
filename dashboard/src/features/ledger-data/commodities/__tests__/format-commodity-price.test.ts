@@ -56,7 +56,9 @@ describe("buildCommodityChartLabels", () => {
     expect(labels.formatTooltip("2024-12-31")).toBe(
       "2024-12-31<br/>CUSDC/USD: 0.023",
     );
-    expect(labels.formatAxisTick(0.0225)).not.toBe(labels.formatAxisTick(0.0227));
+    expect(labels.formatAxisTick(0.0225)).not.toBe(
+      labels.formatAxisTick(0.0227),
+    );
   });
 
   it("keeps BTC tooltips aligned with source quotes", () => {

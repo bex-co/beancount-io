@@ -11,7 +11,10 @@ import {
   ChevronUp,
   ChevronDown,
 } from "lucide-react";
-import type { GetLedgerIncomeStatementQuery } from "@/graphql/definitions";
+import type {
+  GetLedgerIncomeStatementQuery,
+  SerializableTreeNode,
+} from "@/graphql/definitions";
 import { DateBalanceChart } from "@/features/reports/income-statement/date-balance-chart";
 import { useCookieStorageState } from "@/common/hooks/use-cookie-storage-state";
 import type { ChartInterval, ConversionOption } from "@/common/types/chart";

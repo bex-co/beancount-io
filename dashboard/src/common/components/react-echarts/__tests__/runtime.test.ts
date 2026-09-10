@@ -84,9 +84,9 @@ describe("the shared chart registry", () => {
         textStyle?: { color?: string };
         legend?: Array<{ textStyle?: { color?: string } }>;
       };
-      expect(option.backgroundColor === "transparent" || !option.backgroundColor).toBe(
-        true,
-      );
+      expect(
+        option.backgroundColor === "transparent" || !option.backgroundColor,
+      ).toBe(true);
       const svg = chart.renderToSVGString();
       // Dark theme contrast color #B9B8CE should appear for axis/legend text.
       expect(svg.toLowerCase()).toContain("#b9b8ce");

@@ -281,7 +281,8 @@ const caCommon: Record<string, TranslationEntry> = {
   },
   "common.toggleAccountChildren": {
     message: "Commuta els fills de {account}",
-    description: "Accessible name for statement hierarchy expand/collapse buttons",
+    description:
+      "Accessible name for statement hierarchy expand/collapse buttons",
   },
   "common.toggleSidebar": {
     message: "Alternar barra lateral",

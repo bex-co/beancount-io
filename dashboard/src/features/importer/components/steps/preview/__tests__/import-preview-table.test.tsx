@@ -10,9 +10,7 @@ vi.mock("@/common/hooks/use-translations", () => ({
   }),
 }));
 
-function makeResult(
-  payees: string[],
-): CSVParseResult {
+function makeResult(payees: string[]): CSVParseResult {
   const rows = payees.map((payee, index) => ({
     id: `row-${index}`,
     date: `2024-01-${String(index + 1).padStart(2, "0")}`,

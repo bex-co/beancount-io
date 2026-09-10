@@ -13,10 +13,7 @@ vi.mock("@tanstack/react-router", () => ({
     children: React.ReactNode;
     search?: unknown;
   }) => (
-    <a
-      href={to}
-      data-search={typeof search === "function" ? "carry" : "none"}
-    >
+    <a href={to} data-search={typeof search === "function" ? "carry" : "none"}>
       {children}
     </a>
   ),

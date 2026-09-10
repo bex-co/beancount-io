@@ -516,8 +516,7 @@ describe("LedgerQueryPage", () => {
   });
 
   it("re-executes the retained URL query for a new ledger and drops prior rows", async () => {
-    const query =
-      "SELECT account FROM accounts ORDER BY account LIMIT 1000";
+    const query = "SELECT account FROM accounts ORDER BY account LIMIT 1000";
     searchQuery = query;
 
     mockExecuteQuery.mockImplementation(async (options?: unknown) => {
@@ -569,9 +568,7 @@ describe("LedgerQueryPage", () => {
         query,
       },
     });
-    expect(
-      screen.queryByText("Assets:US:BofA"),
-    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Assets:US:BofA")).not.toBeInTheDocument();
   });
 
   it("ignores a late result from the previous ledger after a switch", async () => {

@@ -12,7 +12,9 @@ function syncLanguageInUrl(language: SupportedLanguage): void {
   if (!next) return;
   window.history.replaceState(window.history.state, "", next);
   // replaceState does not fire popstate; notify listeners (TanStack Router) explicitly.
-  window.dispatchEvent(new PopStateEvent("popstate", { state: window.history.state }));
+  window.dispatchEvent(
+    new PopStateEvent("popstate", { state: window.history.state }),
+  );
 }
 
 /** Keep the current UI usable until the chosen locale is ready. */

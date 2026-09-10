@@ -35,7 +35,11 @@ import { CommodityPriceHistory } from "./commodity-price-history";
 function CommodityChart({ commodity }: { commodity: CommodityPairWithPrices }) {
   const pairLabel = `${commodity.base}/${commodity.quote}`;
   const { dates, chartData, formatTooltip, formatAxisTick } =
-    buildCommodityChartLabels(commodity.prices, pairLabel, formatDateISO);
+    buildCommodityChartLabels(
+      commodity.prices,
+      pairLabel,
+      (date: string) => formatDateISO(date) ?? date,
+    );
 
   const tooltip: TooltipComponentOption = {
     trigger: "axis" as const,

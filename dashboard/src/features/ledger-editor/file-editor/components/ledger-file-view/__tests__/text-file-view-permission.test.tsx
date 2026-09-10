@@ -188,7 +188,9 @@ describe("TextFileView write permission", () => {
 
     expect(onExitEditMode).toHaveBeenCalled();
     expect(screen.getByLabelText("file-source")).toHaveAttribute("readonly");
-    expect(screen.getByLabelText("file-source")).toHaveValue("; draft-to-keep\n");
+    expect(screen.getByLabelText("file-source")).toHaveValue(
+      "; draft-to-keep\n",
+    );
     expect(screen.queryByText("common.save")).not.toBeInTheDocument();
     expect(onSave).not.toHaveBeenCalled();
   });

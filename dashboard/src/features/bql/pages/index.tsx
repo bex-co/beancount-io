@@ -124,14 +124,13 @@ export default function LedgerQueryPage() {
           },
         }));
       } finally {
-        if (ledgerIdRef.current !== requestLedgerId) {
-          return;
+        if (ledgerIdRef.current === requestLedgerId) {
+          setExecutingQueries((prev) => {
+            const next = new Set(prev);
+            next.delete(query);
+            return next;
+          });
         }
-        setExecutingQueries((prev) => {
-          const next = new Set(prev);
-          next.delete(query);
-          return next;
-        });
       }
     },
     [executeQuery, ledgerId, addQuery],
