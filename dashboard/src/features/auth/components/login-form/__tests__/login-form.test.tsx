@@ -4,8 +4,21 @@ import { describe, expect, it, vi } from "vitest";
 import { LoginForm } from "../index";
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    to,
+    children,
+    search,
+  }: {
+    to: string;
+    children: React.ReactNode;
+    search?: unknown;
+  }) => (
+    <a
+      href={to}
+      data-search={typeof search === "function" ? "carry" : "none"}
+    >
+      {children}
+    </a>
   ),
 }));
 
@@ -19,9 +32,9 @@ describe("LoginForm password recovery", () => {
   it("links to standalone password recovery by default", () => {
     render(<LoginForm {...defaultProps} />);
 
-    expect(
-      screen.getByRole("link", { name: "Forgot Password?" }),
-    ).toHaveAttribute("href", "/auth/forgot-password");
+    const link = screen.getByRole("link", { name: "Forgot Password?" });
+    expect(link).toHaveAttribute("href", "/auth/forgot-password");
+    expect(link).toHaveAttribute("data-search", "carry");
   });
 
   it("can keep password recovery inside its parent flow", async () => {

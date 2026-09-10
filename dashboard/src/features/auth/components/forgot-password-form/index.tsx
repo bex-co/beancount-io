@@ -38,7 +38,14 @@ function BackToSignIn({ onClick }: { onClick?: () => void }) {
           {t("auth.backToSignIn")}
         </button>
       ) : (
-        <Link to="/auth/login" className={className}>
+        <Link
+          to="/auth/login"
+          // Carry the current search along (each route's schema strips what
+          // it doesn't declare) so a `?next=` destination survives cancelled
+          // password recovery.
+          search={(prev) => prev}
+          className={className}
+        >
           {t("auth.backToSignIn")}
         </Link>
       )}

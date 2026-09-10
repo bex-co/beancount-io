@@ -104,6 +104,10 @@ export function LoginForm({
             ) : (
               <Link
                 to="/auth/forgot-password"
+                // Carry the current search along (each route's schema strips
+                // what it doesn't declare) so a `?next=` destination survives
+                // the login ⇄ forgot-password hop.
+                search={(prev) => prev}
                 className="text-sm font-medium text-muted-foreground hover:text-primary/80 transition-colors"
               >
                 {t("auth.forgotPassword")}

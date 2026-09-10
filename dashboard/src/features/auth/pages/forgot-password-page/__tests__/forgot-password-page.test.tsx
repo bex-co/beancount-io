@@ -8,8 +8,21 @@ import { ForgotPasswordForm } from "@/features/auth/components/forgot-password-f
 const mockMutation = vi.fn();
 
 vi.mock("@tanstack/react-router", () => ({
-  Link: ({ to, children }: { to: string; children: React.ReactNode }) => (
-    <a href={to}>{children}</a>
+  Link: ({
+    to,
+    children,
+    search,
+  }: {
+    to: string;
+    children: React.ReactNode;
+    search?: unknown;
+  }) => (
+    <a
+      href={to}
+      data-search={typeof search === "function" ? "carry" : "none"}
+    >
+      {children}
+    </a>
   ),
 }));
 
@@ -45,9 +58,10 @@ describe("ForgotPasswordPage", () => {
   it("should show back to sign in link", () => {
     render(<ForgotPasswordPage />);
 
-    expect(
-      screen.getByRole("link", { name: "Back to Sign in" }),
-    ).toBeInTheDocument();
+    const link = screen.getByRole("link", { name: "Back to Sign in" });
+    expect(link).toBeInTheDocument();
+    expect(link).toHaveAttribute("href", "/auth/login");
+    expect(link).toHaveAttribute("data-search", "carry");
   });
 
   it("can return to a containing sign-in flow without navigating away", async () => {
@@ -257,9 +271,9 @@ describe("ForgotPasswordPage", () => {
     await user.click(submitButton);
 
     await waitFor(() => {
-      expect(
-        screen.getByRole("link", { name: "Back to Sign in" }),
-      ).toBeInTheDocument();
+      const link = screen.getByRole("link", { name: "Back to Sign in" });
+      expect(link).toBeInTheDocument();
+      expect(link).toHaveAttribute("data-search", "carry");
     });
   });
 });
