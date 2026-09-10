@@ -156,7 +156,9 @@ def candidate_file(file: Path, content: str) -> Iterator[Path]:
     fd, name = tempfile.mkstemp(prefix=".bea-", suffix=".tmp", dir=file.parent)
     candidate = Path(name)
     try:
-        with os.fdopen(fd, "w", encoding="utf-8") as stream:
+        # Preserve the supplied bytes: Windows newline translation would turn
+        # existing CRLF into CRCRLF on every append.
+        with os.fdopen(fd, "w", encoding="utf-8", newline="") as stream:
             stream.write(content)
             stream.flush()
             os.fsync(stream.fileno())

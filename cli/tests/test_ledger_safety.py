@@ -430,3 +430,19 @@ def test_pointing_the_root_at_an_included_leaf_names_into_as_the_fix(book: Path)
 
 def test_a_standalone_ledger_gets_no_include_advice(book: Path) -> None:
     assert ledger_write.root_ledger_hints(book) == []
+
+
+def test_candidate_preserves_existing_line_endings(tmp_path: Path) -> None:
+    original = "2026-01-01 open Assets:Cash USD\r\n; café\r\n"
+    with ledger_write.candidate_file(tmp_path / "main.bean", original) as candidate:
+        assert candidate.read_bytes() == original.encode("utf-8")
+
+
+def test_format_accepts_crlf_and_is_idempotent(tmp_path: Path) -> None:
+    file = tmp_path / "windows.bean"
+    file.write_bytes(b'2026-01-01 * "Food"\r\n Assets:Cash -1 USD\r\n Expenses:Food 1 USD\r\n')
+    result = runner.invoke(app, ["--json", "format", str(file)])
+    assert result.exit_code == 0, result.output
+    assert b"\r\r\n" not in file.read_bytes()
+    result = runner.invoke(app, ["--json", "format", str(file), "--check"])
+    assert result.exit_code == 0, result.output

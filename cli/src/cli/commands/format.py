@@ -63,7 +63,9 @@ def format_beans(
                 f"{f}:{error.source.get('lineno', 0)}: skipped: syntax error: {error.message}" for error in errors
             )
             continue
-        aligned = align_beancount(original)  # type: ignore[no-untyped-call]
+        # The upstream aligner assumes LF in its whitespace safety check.
+        normalized = original.replace("\r\n", "\n").replace("\r", "\n")
+        aligned = align_beancount(normalized)  # type: ignore[no-untyped-call]
         if aligned != original:
             formatted_files.append(str(f))
             if not dry_run:
