@@ -57,6 +57,9 @@ export function Combobox({
   const [highlightedIndex, setHighlightedIndex] = React.useState(-1);
   const inputRef = React.useRef<HTMLInputElement>(null);
   const containerRef = React.useRef<HTMLDivElement>(null);
+  // Skip the blur that follows an explicit selection so it cannot overwrite
+  // the chosen option with the still-rendered draft query.
+  const skipBlurCommitRef = React.useRef(false);
   // Unique ID per instance to scope querySelector and avoid cross-instance conflicts
   const instanceId = React.useId().replace(/:/g, "");
 
@@ -73,6 +76,7 @@ export function Combobox({
   }, [options, inputValue]);
 
   const handleSelect = (selectedValue: string) => {
+    skipBlurCommitRef.current = true;
     setInputValue(selectedValue);
     onValueChange(selectedValue);
     setOpen(false);
@@ -106,6 +110,10 @@ export function Combobox({
   };
 
   const handleInputBlur = () => {
+    if (skipBlurCommitRef.current) {
+      skipBlurCommitRef.current = false;
+      return;
+    }
     // If triggerOn is "blur" and allowCustom is true, update the value on blur
     if (allowCustom && triggerOn === "blur") {
       onValueChange(inputValue);
@@ -124,6 +132,7 @@ export function Combobox({
         handleSelect(filteredOptions[highlightedIndex].value);
       } else if (allowCustom) {
         // Use custom value
+        skipBlurCommitRef.current = true;
         onValueChange(inputValue);
         setOpen(false);
         inputRef.current?.blur();
