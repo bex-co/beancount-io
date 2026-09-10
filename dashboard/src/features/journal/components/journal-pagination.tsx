@@ -95,7 +95,7 @@ export function JournalPagination({
           <PaginationItem>
             <PaginationPrevious
               onClick={() => setOffset((prev) => Math.max(0, prev - limit))}
-              aria-disabled={offset === 0}
+              disabled={offset === 0}
             />
           </PaginationItem>
           {items}
@@ -106,7 +106,7 @@ export function JournalPagination({
                   prev + limit >= total ? prev : prev + limit,
                 )
               }
-              aria-disabled={offset + limit >= total}
+              disabled={offset + limit >= total}
             />
           </PaginationItem>
         </PaginationContent>

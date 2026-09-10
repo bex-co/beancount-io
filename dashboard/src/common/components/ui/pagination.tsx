@@ -6,7 +6,7 @@ import {
 } from "lucide-react";
 
 import { cn } from "@/common/lib/utils/utils.ts";
-import { Button, buttonVariants } from "@/common/components/ui/button.tsx";
+import { buttonVariants } from "@/common/components/ui/button.tsx";
 import { useTranslations } from "@/common/hooks/use-translations.ts";
 
 function Pagination({ className, ...props }: React.ComponentProps<"nav">) {
@@ -41,17 +41,19 @@ function PaginationItem({ ...props }: React.ComponentProps<"li">) {
 
 type PaginationLinkProps = {
   isActive?: boolean;
-} & Pick<React.ComponentProps<typeof Button>, "size"> &
-  React.ComponentProps<"a">;
+  size?: "default" | "sm" | "lg" | "icon" | "icon-sm" | "icon-lg";
+} & Omit<React.ComponentProps<"button">, "size">;
 
 function PaginationLink({
   className,
   isActive,
   size = "icon",
+  type = "button",
   ...props
 }: PaginationLinkProps) {
   return (
-    <a
+    <button
+      type={type}
       aria-current={isActive ? "page" : undefined}
       data-slot="pagination-link"
       data-active={isActive}
