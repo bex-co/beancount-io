@@ -16,7 +16,7 @@ import {
   type GetLedgerAccountLastEntriesQueryVariables,
 } from "@/graphql/definitions";
 import { formatDateISO } from "@/common/lib/format/format-date-iso";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
@@ -131,7 +131,6 @@ function AccountLastEntriesTable({
 }) {
   const { t } = useTranslations();
   const formatNum = useFormatNumber();
-  const navigate = useNavigate();
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/statistics",
   });
@@ -168,20 +167,18 @@ function AccountLastEntriesTable({
             <TableBody>
               {entries.map((entry) => (
                 <TableRow key={entry.account}>
-                  <TableCell
-                    className="font-medium font-mono text-xs sm:text-sm break-all max-w-[200px] sm:max-w-none text-primary hover:text-primary/80 cursor-pointer px-2 sm:px-3 py-1.5 sm:py-2"
-                    onClick={() => {
-                      void navigate({
-                        to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
-                        params: {
-                          ledgerOwner: ledgerOwner,
-                          ledgerName: ledgerName,
-                          accountName: entry.account,
-                        },
-                      });
-                    }}
-                  >
-                    {entry.account}
+                  <TableCell className="font-medium font-mono text-xs sm:text-sm break-all max-w-[200px] sm:max-w-none px-2 sm:px-3 py-1.5 sm:py-2">
+                    <Link
+                      to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                      params={{
+                        ledgerOwner,
+                        ledgerName,
+                        accountName: entry.account,
+                      }}
+                      className="text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                    >
+                      {entry.account}
+                    </Link>
                   </TableCell>
                   <TableCell className="text-muted-foreground text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
                     {formatDateISO(entry.date) || "N/A"}

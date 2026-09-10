@@ -14,7 +14,7 @@ import {
   type GetLedgerPostingsPerAccountQuery,
   type GetLedgerPostingsPerAccountQueryVariables,
 } from "@/graphql/definitions";
-import { useNavigate, useParams } from "@tanstack/react-router";
+import { Link, useParams } from "@tanstack/react-router";
 import { useLedgerSearchParams } from "@/common/hooks/use-ledger-search-params";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
@@ -109,7 +109,6 @@ function PostingsPerAccountTable({
   const { ledgerOwner, ledgerName } = useParams({
     from: "/ledger/$ledgerOwner/$ledgerName/statistics",
   });
-  const navigate = useNavigate();
   const totalRows = rows.length;
 
   if (totalRows === 0) {
@@ -161,20 +160,18 @@ function PostingsPerAccountTable({
             <TableBody>
               {rows.map((row) => (
                 <TableRow key={row.account}>
-                  <TableCell
-                    className="font-medium font-mono text-xs sm:text-sm break-all max-w-[200px] sm:max-w-none text-primary hover:text-primary/80 cursor-pointer px-2 sm:px-3 py-1.5 sm:py-2"
-                    onClick={() => {
-                      void navigate({
-                        to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
-                        params: {
-                          ledgerOwner: ledgerOwner,
-                          ledgerName: ledgerName,
-                          accountName: row.account,
-                        },
-                      });
-                    }}
-                  >
-                    {row.account}
+                  <TableCell className="font-medium font-mono text-xs sm:text-sm break-all max-w-[200px] sm:max-w-none px-2 sm:px-3 py-1.5 sm:py-2">
+                    <Link
+                      to="/ledger/$ledgerOwner/$ledgerName/account/$accountName"
+                      params={{
+                        ledgerOwner,
+                        ledgerName,
+                        accountName: row.account,
+                      }}
+                      className="text-primary hover:text-primary/80 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring rounded-sm"
+                    >
+                      {row.account}
+                    </Link>
                   </TableCell>
                   <TableCell className="text-right font-mono text-xs sm:text-sm whitespace-nowrap px-2 sm:px-3 py-1.5 sm:py-2">
                     {formatNum(row.count)}

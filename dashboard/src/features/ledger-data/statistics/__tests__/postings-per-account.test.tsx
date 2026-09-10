@@ -12,7 +12,6 @@ vi.mock("@/common/hooks/use-format-number", () => ({
   useFormatNumber: () => (v: number) => String(v),
 }));
 
-const mockNavigate = vi.fn();
 const searchParams = {
   account: "",
   filter: "",
@@ -20,11 +19,30 @@ const searchParams = {
 };
 
 vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => mockNavigate,
   useParams: () => ({
     ledgerOwner: "open_ledger",
     ledgerName: "crypto-example",
   }),
+  Link: ({
+    children,
+    to,
+    params,
+    className,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    params?: Record<string, string>;
+    className?: string;
+  }) => (
+    <a
+      href="#"
+      data-to={to}
+      data-params={JSON.stringify(params)}
+      className={className}
+    >
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({
@@ -65,7 +83,6 @@ describe("PostingsPerAccount", () => {
     searchParams.account = "";
     searchParams.filter = "";
     searchParams.time = "";
-    mockNavigate.mockClear();
     vi.mocked(apolloClient.useQuery).mockClear();
   });
 
@@ -165,21 +182,22 @@ describe("PostingsPerAccount", () => {
     ).toBeInTheDocument();
   });
 
-  it("navigates to the account page when an account is clicked", () => {
+  it("exposes each account destination as a keyboard-reachable link", () => {
     vi.mocked(apolloClient.useQuery).mockReturnValue(
       createRowsMockData([{ account: "Assets:Bank:Checking", count: 150 }]),
     );
 
     render(<PostingsPerAccount ledgerId="open_ledger/crypto-example" />);
-    screen.getByText("Assets:Bank:Checking").click();
 
-    expect(mockNavigate).toHaveBeenCalledWith({
-      to: "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
-      params: {
-        ledgerOwner: "open_ledger",
-        ledgerName: "crypto-example",
-        accountName: "Assets:Bank:Checking",
-      },
+    const link = screen.getByRole("link", { name: "Assets:Bank:Checking" });
+    expect(link).toHaveAttribute(
+      "data-to",
+      "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+    );
+    expect(JSON.parse(link.getAttribute("data-params") ?? "{}")).toEqual({
+      ledgerOwner: "open_ledger",
+      ledgerName: "crypto-example",
+      accountName: "Assets:Bank:Checking",
     });
   });
 

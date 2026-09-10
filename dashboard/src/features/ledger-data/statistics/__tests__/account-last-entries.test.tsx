@@ -10,11 +10,31 @@ vi.mock("@/common/hooks/use-format-number", () => ({
 }));
 
 // Mock dependencies
-const mockNavigate = vi.fn();
-
 vi.mock("@tanstack/react-router", () => ({
-  useNavigate: () => mockNavigate,
-  useParams: () => ({ id: "test-id" }),
+  useParams: () => ({
+    ledgerOwner: "open_ledger",
+    ledgerName: "example",
+  }),
+  Link: ({
+    children,
+    to,
+    params,
+    className,
+  }: {
+    children: React.ReactNode;
+    to: string;
+    params?: Record<string, string>;
+    className?: string;
+  }) => (
+    <a
+      href="#"
+      data-to={to}
+      data-params={JSON.stringify(params)}
+      className={className}
+    >
+      {children}
+    </a>
+  ),
 }));
 
 // Mock Apollo Client
@@ -86,6 +106,33 @@ describe("AccountLastEntries", () => {
     // Verify data is rendered
     expect(screen.getByText("Assets:Bank:Checking")).toBeInTheDocument();
     expect(screen.getByText("Expenses:Food")).toBeInTheDocument();
+  });
+
+  it("exposes each account destination as a keyboard-reachable link", () => {
+    vi.mocked(apolloClient.useQuery).mockReturnValue(
+      createAccountEntriesMockData([
+        {
+          account: "Liabilities:US:Chase:Slate",
+          date: "2024-01-15",
+          balance: { USD: 100 },
+        },
+      ]),
+    );
+
+    render(<AccountLastEntries ledgerId="open_ledger/example" />);
+
+    const link = screen.getByRole("link", {
+      name: "Liabilities:US:Chase:Slate",
+    });
+    expect(link).toHaveAttribute(
+      "data-to",
+      "/ledger/$ledgerOwner/$ledgerName/account/$accountName",
+    );
+    expect(JSON.parse(link.getAttribute("data-params") ?? "{}")).toEqual({
+      ledgerOwner: "open_ledger",
+      ledgerName: "example",
+      accountName: "Liabilities:US:Chase:Slate",
+    });
   });
 
   it("should render loading state with responsive skeleton", () => {
