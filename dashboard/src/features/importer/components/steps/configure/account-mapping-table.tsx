@@ -36,6 +36,7 @@ import { useTranslations } from "@/common/hooks/use-translations";
 import { useErrorMessage } from "@/common/lib/errors/error-message";
 import { AccountCombobox } from "@/common/components/ledger-comboboxes";
 import { toast } from "sonner";
+import { formatImportReviewAmount } from "../../../utils/format-import-review-amount";
 
 interface TransactionFormData {
   sourceAccount: string;
@@ -316,7 +317,7 @@ export function AccountMappingTable({
                       {txn.description || ""}
                     </TableCell>
                     <TableCell className="text-sm text-right font-medium">
-                      {txn.amount.toFixed(2)}
+                      {formatImportReviewAmount(txn.amount)}
                     </TableCell>
                     <TableCell>
                       <FormField
