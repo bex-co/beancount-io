@@ -10,7 +10,9 @@
     margin: 12mm 12mm 22mm;
   }
 
-  body > *:not(.statement-print-root) {
+  /* Isolate dashboard chrome only when a statement portal is mounted on body.
+     Without :has(), Journal/Accounts and other non-statement routes print blank. */
+  body:has(> .statement-print-root) > *:not(.statement-print-root) {
     display: none !important;
   }
 

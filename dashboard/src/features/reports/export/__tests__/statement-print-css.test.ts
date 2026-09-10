@@ -46,6 +46,50 @@ describe("statement print stylesheet delivery", () => {
     );
   });
 
+  it("hides app chrome only when a body-level statement portal exists", () => {
+    expect(printStyles).toContain(
+      "body:has(> .statement-print-root) > *:not(.statement-print-root)",
+    );
+    expect(printStyles).not.toContain(
+      "body > *:not(.statement-print-root)",
+    );
+  });
+
+  it("keeps ordinary pages printable when no statement portal is present", () => {
+    document.body.innerHTML = "";
+    const style = document.createElement("style");
+    style.textContent = printStyles;
+    document.head.appendChild(style);
+
+    const main = document.createElement("main");
+    main.textContent = "Journal transactions remain printable";
+    document.body.appendChild(main);
+
+    // Without a portal, the isolation rule's :has() does not match, so the
+    // page content must stay in the box tree (not display:none).
+    expect(getComputedStyle(main).display).not.toBe("none");
+    expect(main.textContent).toContain("Journal transactions remain printable");
+
+    const portal = document.createElement("article");
+    portal.className = "statement-print-root";
+    portal.textContent = "Balance Sheet";
+    document.body.appendChild(portal);
+
+    // With a portal present, chrome is isolated and the portal stays shown.
+    // jsdom does not evaluate @media print / :has for computed style reliably,
+    // so assert the live DOM structure the print stylesheet is written against.
+    expect(document.body.querySelector(":scope > .statement-print-root")).toBe(
+      portal,
+    );
+    expect(
+      document.body.querySelectorAll(":scope > *:not(.statement-print-root)")
+        .length,
+    ).toBe(1);
+
+    style.remove();
+    document.body.innerHTML = "";
+  });
+
   it("has no bare .css imports outside the inline root stylesheet", () => {
     const bareCssImports: string[] = [];
     const walk = (dir: string) => {

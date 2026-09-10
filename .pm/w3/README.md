@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [022](./022.md) — Global statement print CSS blanks Journal and Accounts printing
 - [023](./023.md) — Journal export dialog overstates which filters apply
 - [024](./024.md) — Journal mistakes invalid filter input for a server outage
 - [025](./025.md) — Narrow statement tables split digits across lines
