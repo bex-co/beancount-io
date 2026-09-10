@@ -28,16 +28,16 @@ export interface MerchantStats {
 }
 
 /**
- * Overall transaction count and date span for one payee. `count(*)` without an
- * account filter matches the Merchants directory rollup (validated on
- * `open_ledger/minimax`: MiniMax Group Inc. → 32).
+ * Overall transaction count and date span for one payee. Count over `#entries`
+ * so multi-posting transactions are not overstated (posting-default `count(*)`
+ * matched the Merchants directory bug).
  */
 export function buildMerchantMetaBql(payee: string): string {
   const lit = escapeBqlString(payee);
   return (
     "SELECT count(*) as transaction_count, " +
     "min(date) as first_date, max(date) as last_date " +
-    `WHERE payee = ${lit}`
+    `FROM #entries WHERE payee = ${lit}`
   );
 }
 

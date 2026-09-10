@@ -37,17 +37,18 @@ const COL = {
 } as const;
 
 /**
- * Fixed app-authored BQL for the Merchants directory. Validated 2026-08-19
- * against the live `queryShell` dialect (aliases work; `count(*)` is accepted;
- * empty-payee rows are filtered server-side). Never shown to the user —
- * internal plumbing only (see `.pm/DO_NOT_DO.md:18` and m35 README).
+ * Fixed app-authored BQL for the Merchants directory. Counts `#entries` so
+ * multi-posting transactions are not overstated. Validated against the live
+ * `queryShell` dialect (aliases work; `count(*)` is accepted; empty-payee rows
+ * are filtered server-side). Never shown to the user — internal plumbing only
+ * (see `.pm/DO_NOT_DO.md:18` and m35 README).
  *
  * Fallback if the owner bans the operation outright: aggregate client-side over
  * a `getLedgerJournal` window. That silently under-counts past the fetched
  * page — the same failure mode `select-account-transactions.ts` documents.
  */
 export const PAYEE_ROLLUP_BQL =
-  "SELECT payee, count(*) as transaction_count, min(date) as first_date, max(date) as last_date WHERE payee != '' GROUP BY payee ORDER BY transaction_count DESC";
+  "SELECT payee, count(*) as transaction_count, min(date) as first_date, max(date) as last_date FROM #entries WHERE payee != '' GROUP BY payee ORDER BY transaction_count DESC";
 
 /**
  * Resolve column indexes by name. Missing any required column → soft failure

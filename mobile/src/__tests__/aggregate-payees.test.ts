@@ -40,7 +40,8 @@ const SAMPLE: MerchantAggregate[] = [
 ];
 
 describe("PAYEE_ROLLUP_BQL", () => {
-  it("is the fixed aliased rollup statement", () => {
+  it("is the fixed aliased rollup statement over #entries", () => {
+    expect(PAYEE_ROLLUP_BQL.includes("FROM #entries")).toBe(true);
     expect(PAYEE_ROLLUP_BQL.includes("transaction_count")).toBe(true);
     expect(PAYEE_ROLLUP_BQL.includes("GROUP BY payee")).toBe(true);
     expect(PAYEE_ROLLUP_BQL.includes("payee != ''")).toBe(true);

@@ -1,0 +1,27 @@
+option "operating_currency" "USD"
+
+1970-01-01 open Assets:Cash
+1970-01-01 open Expenses:Food
+1970-01-01 open Expenses:Fees
+1970-01-01 open Income:Salary
+1970-01-01 open Equity:Opening-Balances
+
+; Two same-day Cafe transactions (must each count once).
+2025-01-10 * "Cafe" "Lunch"
+  Expenses:Food                               10.00 USD
+  Assets:Cash                                -10.00 USD
+
+2025-01-10 * "Cafe" "Dinner"
+  Expenses:Food                               20.00 USD
+  Assets:Cash                                -20.00 USD
+
+; Payroll with many postings — posting count would be 3, transaction count 1.
+2025-01-15 * "Hoogle" "Payroll"
+  Assets:Cash                              1000.00 USD
+  Income:Salary                           -900.00 USD
+  Expenses:Fees                             -100.00 USD
+
+; Empty payee must be excluded from the directory rollup.
+2025-01-20 * "" "No payee"
+  Expenses:Food                                5.00 USD
+  Assets:Cash                                 -5.00 USD

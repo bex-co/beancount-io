@@ -18,12 +18,14 @@ describe("buildMerchantMetaBql / buildMerchantCurrencyTotalsBql", () => {
   it("interpolates an escaped payee literal into fixed statements", () => {
     const meta = buildMerchantMetaBql('He said "hi"');
     expect(meta.includes('payee = "He said \\"hi\\""')).toBe(true);
+    expect(meta.includes("FROM #entries")).toBe(true);
     expect(meta.includes("transaction_count")).toBe(true);
 
     const totals = buildMerchantCurrencyTotalsBql("O'Brien");
     expect(totals.includes('payee = "O\'Brien"')).toBe(true);
     expect(totals.includes("account ~ '^Expenses'")).toBe(true);
     expect(totals.includes("GROUP BY currency")).toBe(true);
+    expect(totals.includes("FROM #entries")).toBe(false);
   });
 });
 
