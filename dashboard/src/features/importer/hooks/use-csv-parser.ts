@@ -5,6 +5,7 @@ import {
   isValidRowFormat,
   isHeaderRow,
   buildParsedRow,
+  createParsedRowId,
 } from "../utils/csv-validator";
 
 type ParseRecordsResult =
@@ -113,6 +114,7 @@ export function useCSVParser() {
       return {
         rows: [
           {
+            id: createParsedRowId(),
             date: "",
             payee: "",
             description: "",
@@ -149,6 +151,7 @@ export function useCSVParser() {
           `Row ${rowNum}: Expected 4 columns (Date, Payee, Description, Amount), got ${columns.length}`,
         );
         return {
+          id: createParsedRowId(),
           date: columns[0] || "",
           payee: columns[1] || "",
           description: columns[2] || "",

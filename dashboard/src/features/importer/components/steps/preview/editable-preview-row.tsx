@@ -66,6 +66,7 @@ export function EditablePreviewRow({
     onChange(
       index,
       buildParsedRow({
+        id: row.id,
         date: values.date,
         payee: values.payee,
         description: values.description,

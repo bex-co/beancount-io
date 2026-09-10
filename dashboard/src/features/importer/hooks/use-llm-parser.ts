@@ -10,6 +10,7 @@ import { useMutation } from "@apollo/client/react";
 import { ParseFileDocument } from "@/graphql/definitions";
 import type { FileFormat, CSVParseResult } from "../types";
 import { useTempAssetUpload } from "./use-temp-asset-upload";
+import { createParsedRowId } from "../utils/csv-validator";
 
 export function useLLMParser() {
   const [parseFileMutation] = useMutation(ParseFileDocument);
@@ -45,6 +46,7 @@ export function useLLMParser() {
       // Convert GraphQL response to CSVParseResult format
       // LLM returns clean data, so all rows are valid (no errors)
       const rows = graphqlRows.map((row) => ({
+        id: createParsedRowId(),
         date: row.date,
         payee: row.payee,
         description: row.description,

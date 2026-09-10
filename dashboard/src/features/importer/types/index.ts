@@ -15,6 +15,8 @@ export type ParseStage =
   | "error";
 
 export type ParsedRow = {
+  /** Stable UI identity for preview row forms; not submitted to the API. */
+  id: string;
   date: string;
   payee: string;
   description: string;

@@ -6,6 +6,7 @@ import type { CSVParseResult } from "../../types";
 const mockParseResult: CSVParseResult = {
   rows: [
     {
+      id: "row-1",
       date: "2024-01-15",
       payee: "Starbucks",
       description: "Morning coffee",
@@ -137,6 +138,7 @@ describe("useImportWorkflow", () => {
         ...mockParseResult,
         rows: [
           {
+            id: "row-2",
             date: "2024-02-01",
             payee: "Amazon",
             description: "Books",

@@ -89,6 +89,10 @@ export function parseAmount(amountStr: string): {
   return { valid: true, amount };
 }
 
+export function createParsedRowId(): string {
+  return crypto.randomUUID();
+}
+
 /**
  * Build a ParsedRow from editable field strings, applying the same validators
  * used by the CSV parser so upload and inline edit share one contract.
@@ -98,6 +102,7 @@ export function buildParsedRow(fields: {
   payee: string;
   description: string;
   amountInput: string;
+  id?: string;
 }): ParsedRow {
   const errors: string[] = [];
 
@@ -122,6 +127,7 @@ export function buildParsedRow(fields: {
   }
 
   return {
+    id: fields.id ?? createParsedRowId(),
     date: fields.date,
     payee: fields.payee,
     description: fields.description,

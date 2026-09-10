@@ -19,10 +19,17 @@ import { Badge } from "@/common/components/ui/badge";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { EditablePreviewRow } from "./editable-preview-row";
 import type { ParsedRow, CSVParseResult } from "../../../types";
+import { createParsedRowId } from "../../../utils/csv-validator";
 
 interface ImportPreviewTableProps {
   result: CSVParseResult;
   onResultChange?: (result: CSVParseResult) => void;
+}
+
+function withStableRowIds(rows: ParsedRow[]): ParsedRow[] {
+  return rows.map((row) =>
+    row.id ? row : { ...row, id: createParsedRowId() },
+  );
 }
 
 export function ImportPreviewTable({
@@ -30,12 +37,14 @@ export function ImportPreviewTable({
   onResultChange,
 }: ImportPreviewTableProps) {
   const { t } = useTranslations();
-  const [editableRows, setEditableRows] = useState<ParsedRow[]>(result.rows);
+  const [editableRows, setEditableRows] = useState<ParsedRow[]>(() =>
+    withStableRowIds(result.rows),
+  );
 
   // Update local state when result prop changes (e.g., new file uploaded)
   // This is necessary to sync external state with internal editable state
   useEffect(() => {
-    setEditableRows(result.rows); // eslint-disable-line react-hooks/set-state-in-effect
+    setEditableRows(withStableRowIds(result.rows)); // eslint-disable-line react-hooks/set-state-in-effect
   }, [result.rows]);
 
   // Calculate counts from current editable rows
@@ -154,7 +163,7 @@ export function ImportPreviewTable({
               ) : (
                 editableRows.map((row, index) => (
                   <EditablePreviewRow
-                    key={index}
+                    key={row.id}
                     row={row}
                     index={index}
                     onChange={handleRowChange}
