@@ -71,7 +71,6 @@
 - [037](./037.md) — Import preview shows different transactions from its data after deleting a row
 - [039](./039.md) — Smart Import reverses the bank movement when preparing expense and income postings
 - [040](./040.md) — File edit shortcuts and URLs expose an editable draft to public readers
-- [041](./041.md) — File draft protection — promoted to [m29](./m29/README.md)
 - [042](./042.md) — Escape in file Find cancels edit mode instead of closing Find
 - [043](./043.md) — Forced-open postings still advertise enabled row toggles
 - [044](./044.md) — Narrow account reports hide interval and valuation selectors
