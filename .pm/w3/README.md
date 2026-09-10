@@ -69,7 +69,6 @@
 - [035](./035.md) — Holdings rounds real crypto quantities to zero in the table and CSV
 - [036](./036.md) — Holdings by Currency keeps unnamed rows for fully sold assets
 - [037](./037.md) — Import preview shows different transactions from its data after deleting a row
-- [038](./038.md) — Smart Import amount validation — promoted to [m19](./m19/README.md)
 - [039](./039.md) — Smart Import reverses the bank movement when preparing expense and income postings
 - [040](./040.md) — File edit shortcuts and URLs expose an editable draft to public readers
 - [041](./041.md) — File draft protection — promoted to [m29](./m29/README.md)
