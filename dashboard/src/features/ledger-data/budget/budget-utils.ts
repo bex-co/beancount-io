@@ -193,3 +193,20 @@ export function calculateBudgetForInterval(
 
   return total;
 }
+
+/**
+ * Read a currency amount from a sparse interval inventory.
+ * Ledger serialization omits zero currencies, so a missing key on a returned
+ * interval means 0 — distinct from an empty series (handled by the caller).
+ * Malformed values stay null so the UI does not invent a number.
+ */
+export function readSparseBalanceAmount(
+  balance: Record<string, unknown>,
+  currency: string,
+  direction = 1,
+): number | null {
+  const value = balance[currency];
+  if (value === null || value === undefined) return 0;
+  const number = typeof value === "string" ? parseFloat(value) : Number(value);
+  return Number.isNaN(number) ? null : number * direction;
+}

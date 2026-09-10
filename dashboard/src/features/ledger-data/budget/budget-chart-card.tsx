@@ -35,7 +35,11 @@ import {
 } from "@/features/reports/income-statement/date-balance-chart/utils";
 import { AddBudgetDialog } from "./add-budget-dialog";
 import { BudgetHistoryTable } from "./budget-history-table";
-import { calculateBudgetForInterval, parseBudgetAmount } from "./budget-utils";
+import {
+  calculateBudgetForInterval,
+  parseBudgetAmount,
+  readSparseBalanceAmount,
+} from "./budget-utils";
 import type { BudgetGroup } from "./types";
 
 function toIntervalEnum(interval: string): BudgetInterval | undefined {
@@ -110,11 +114,11 @@ export function BudgetChartCard({
   const latestActual = useMemo(() => {
     if (chartData.length === 0) return null;
     const last = chartData[chartData.length - 1];
-    const value = last.balance[displayCurrency];
-    if (value === null || value === undefined) return null;
-    const number =
-      typeof value === "string" ? parseFloat(value) : Number(value);
-    return Number.isNaN(number) ? null : number * displayDirection;
+    return readSparseBalanceAmount(
+      last.balance,
+      displayCurrency,
+      displayDirection,
+    );
   }, [chartData, displayCurrency, displayDirection]);
 
   const comparisonBudgetValue = useMemo(() => {
@@ -167,11 +171,13 @@ export function BudgetChartCard({
     const dates = chartData.map((item) => item.date);
     const colors = getChartColors();
     const actualValues = chartData.map((item) => {
-      const balance = item.balance[displayCurrency];
-      if (balance === null || balance === undefined) return 0;
-      const number =
-        typeof balance === "string" ? parseFloat(balance) : Number(balance);
-      return Number.isNaN(number) ? 0 : number * displayDirection;
+      return (
+        readSparseBalanceAmount(
+          item.balance,
+          displayCurrency,
+          displayDirection,
+        ) ?? 0
+      );
     });
     const budgetValues = dates.map(
       (date) =>

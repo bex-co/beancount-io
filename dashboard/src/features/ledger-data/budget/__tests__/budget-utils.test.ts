@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import {
   calculateBudgetForInterval,
   groupBudgetEntries,
+  readSparseBalanceAmount,
 } from "../budget-utils";
 import type { BudgetEntry, BudgetHistoryEntry } from "../types";
 
@@ -153,5 +154,21 @@ describe("calculateBudgetForInterval", () => {
     expect(calculateBudgetForInterval("2025-01-31", "monthly", history)).toBe(
       -310,
     );
+  });
+});
+
+describe("readSparseBalanceAmount", () => {
+  it("treats a missing currency on a returned interval as zero", () => {
+    expect(readSparseBalanceAmount({}, "USD")).toBe(0);
+    expect(readSparseBalanceAmount({ EUR: "10" }, "USD", 1)).toBe(0);
+  });
+
+  it("parses present amounts and applies display direction", () => {
+    expect(readSparseBalanceAmount({ USD: "600" }, "USD")).toBe(600);
+    expect(readSparseBalanceAmount({ USD: "1650" }, "USD", -1)).toBe(-1650);
+  });
+
+  it("keeps malformed amounts distinct from sparse zeros", () => {
+    expect(readSparseBalanceAmount({ USD: "not-a-number" }, "USD")).toBeNull();
   });
 });
