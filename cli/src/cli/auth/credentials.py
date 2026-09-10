@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import stat
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -11,6 +12,30 @@ from cli.errors import AuthError
 
 ENVIRONMENT = "environment"
 FILE = "file"
+
+# HTTP header values reject control characters; a pasted token with a trailing
+# newline must fail here rather than leak through httpx/h11 into the error text.
+_INVALID_TOKEN = re.compile(r"[\x00-\x1f\x7f]")
+
+
+def _validate_token(token: str) -> str:
+    if not token or _INVALID_TOKEN.search(token):
+        raise AuthError(
+            "Invalid BEA_TOKEN or stored credential (contains whitespace or "
+            "control characters). Fix the environment value or run "
+            "'bea cloud login'."
+        )
+    return token
+
+
+def _parse_expire_at(expire_at: str) -> datetime:
+    """Parse a stored expiry into aware UTC, or raise ValueError if unusable."""
+    if not isinstance(expire_at, str):
+        raise ValueError("expireAt must be a string")
+    parsed = datetime.fromisoformat(expire_at)
+    if parsed.tzinfo is None:
+        raise ValueError("expireAt must include a timezone")
+    return parsed.astimezone(UTC)
 
 
 @dataclass
@@ -25,14 +50,15 @@ class Credentials:
         if self.expire_at is None:
             return False
         try:
-            return datetime.fromisoformat(self.expire_at) < datetime.now(tz=UTC)
-        except ValueError:
+            return _parse_expire_at(self.expire_at) < datetime.now(tz=UTC)
+        except (TypeError, ValueError):
             return True
 
 
 def save_credentials(token: str, expire_at: str) -> None:
     # Create the file as 0600 inside a 0700 directory from the start — a
     # write-then-chmod sequence leaks the token under a permissive umask.
+    token = _validate_token(token)
     directory = config_dir()
     path = credentials_path()
     directory.mkdir(parents=True, exist_ok=True)
@@ -58,11 +84,22 @@ def load_credentials() -> Credentials | None:
     runner needs no browser ceremony and leaves no credential behind.
     """
     token = os.environ.get("BEA_TOKEN")
-    if token:
-        return Credentials(token=token, expire_at=None, source=ENVIRONMENT)
+    if token is not None:
+        return Credentials(token=_validate_token(token), expire_at=None, source=ENVIRONMENT)
     try:
         data = json.loads(credentials_path().read_text())
-        return Credentials(token=data["token"], expire_at=data["expireAt"], source=FILE)
+        expire_at = data["expireAt"]
+        if not isinstance(expire_at, str):
+            # Malformed stored state is treated as expired so require_credentials
+            # prompts for a fresh login rather than comparing incompatible types.
+            expire_at = "invalid"
+        return Credentials(
+            token=_validate_token(str(data["token"])),
+            expire_at=expire_at,
+            source=FILE,
+        )
+    except AuthError:
+        raise
     except Exception:
         return None
 

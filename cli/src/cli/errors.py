@@ -113,7 +113,7 @@ def error_from_status(status: int, message: str | None, *, request_id: str | Non
 def to_bea_error(exc: BaseException | str) -> BeaError:
     """Classify anything a command can raise into one documented category."""
     if isinstance(exc, str):
-        return BeaError(exc)
+        return BeaError(_redact_secrets(exc))
     if isinstance(exc, BeaError):
         return exc
 
@@ -145,12 +145,29 @@ def to_bea_error(exc: BaseException | str) -> BeaError:
     if isinstance(exc, httpx.TransportError):
         # httpx transport errors frequently stringify to nothing at all, which
         # would leave the caller an empty message and no clue the network failed.
-        return BeaError(f"Could not reach the server ({type(exc).__name__}: {str(exc) or 'no detail'}).")
+        # Never echo the exception text: LocalProtocolError can embed a Bearer
+        # token that failed header validation.
+        return BeaError(f"Could not reach the server ({type(exc).__name__}).")
 
     if isinstance(exc, FileNotFoundError):
-        return UsageError(str(exc))
+        return UsageError(_redact_secrets(str(exc)))
 
-    return BeaError(str(exc) or f"{type(exc).__name__} (no detail).")
+    return BeaError(_redact_secrets(str(exc) or f"{type(exc).__name__} (no detail)."))
+
+
+def _redact_secrets(text: str) -> str:
+    """Strip credential-shaped fragments out of exception text before display."""
+    import os
+    import re
+
+    redacted = text
+    token = os.environ.get("BEA_TOKEN")
+    if token:
+        redacted = redacted.replace(token, "[redacted]")
+        redacted = redacted.replace(repr(token.encode()), "[redacted]")
+        redacted = redacted.replace(repr(f"Bearer {token}".encode()), "[redacted]")
+    # Generic Bearer spill even when the env var was already cleared.
+    return re.sub(r"Bearer [^\s'\"]+", "Bearer [redacted]", redacted)
 
 
 def unknown_write_outcome(operation: str, exc: BaseException) -> ConflictError:
@@ -160,6 +177,6 @@ def unknown_write_outcome(operation: str, exc: BaseException) -> ConflictError:
     being handed a success or a plain failure that invites a blind retry.
     """
     return ConflictError(
-        f"{operation} did not complete cleanly ({exc}). "
+        f"{operation} did not complete cleanly ({type(exc).__name__}). "
         f"The outcome is unknown — check the current state before retrying."
     )

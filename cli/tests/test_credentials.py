@@ -31,6 +31,22 @@ class TestCredentials:
         creds = Credentials(token="tok", expire_at="not-a-date")
         assert creds.is_expired()
 
+    def test_is_expired_with_naive_datetime(self) -> None:
+        creds = Credentials(token="tok", expire_at="2000-01-01T00:00:00")
+        assert creds.is_expired()
+
+    def test_require_credentials_treats_naive_stored_expiry_as_expired(self, bea_config_dir: Path) -> None:
+        _write_stored(bea_config_dir, "t", "2000-01-01T00:00:00")
+        with pytest.raises(AuthError, match="expired"):
+            require_credentials()
+
+    def test_require_credentials_rejects_token_with_newline(
+        self, bea_config_dir: Path, monkeypatch: pytest.MonkeyPatch
+    ) -> None:
+        monkeypatch.setenv("BEA_TOKEN", "qa-synthetic-sensitive-value\n")
+        with pytest.raises(AuthError, match="Invalid BEA_TOKEN"):
+            require_credentials()
+
 
 def _write_stored(config_dir: Path, token: str, expire_at: str) -> Path:
     config_dir.mkdir(parents=True, exist_ok=True)

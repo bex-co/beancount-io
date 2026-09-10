@@ -7,11 +7,53 @@ from the generated client and hand the `Response` to `unwrap`.
 
 from __future__ import annotations
 
-from typing import cast
+import json
+from typing import Any, cast
+
+import httpx
 
 from cli.api.rest_client.client import AuthenticatedClient, Client
 from cli.api.rest_client.models.v1_error import V1Error
 from cli.api.rest_client.types import Response
+
+# Bound every cloud HTTP call so unattended agents fail instead of hanging when
+# a server accepts the TCP connection and stops responding. Device-flow polling
+# issues many short requests; each still respects this deadline.
+DEFAULT_TIMEOUT = httpx.Timeout(30.0)
+
+
+def _install_tolerant_json(client: httpx.Client) -> httpx.Client:
+    """Make generated `response.json()` calls survive non-JSON error bodies.
+
+    openapi-python-client parses documented error statuses with `response.json()`
+    before our `unwrap` runs; without this, an HTML 403 becomes a JSON decoder
+    validation error and loses the HTTP status and request id.
+    """
+    original_request = client.request
+    original_json = httpx.Response.json
+
+    def request(method: str, url: httpx.URL | str, **kwargs: Any) -> httpx.Response:
+        response = original_request(method, url, **kwargs)
+
+        def json_method(**kw: Any) -> Any:
+            try:
+                return original_json(response, **kw)
+            except (json.JSONDecodeError, ValueError):
+                if response.status_code >= 400:
+                    return {
+                        "ok": False,
+                        "error": {
+                            "code": "HTTP_ERROR",
+                            "message": f"HTTP {response.status_code}",
+                        },
+                    }
+                raise
+
+        response.json = json_method  # type: ignore[method-assign]
+        return response
+
+    client.request = request  # type: ignore[method-assign]
+    return client
 
 
 def make_client() -> AuthenticatedClient:
@@ -24,13 +66,24 @@ def make_client() -> AuthenticatedClient:
     """
     from cli.config import settings
 
-    return cast(AuthenticatedClient, Client(base_url=settings().api_url))
+    client = cast(
+        AuthenticatedClient,
+        Client(base_url=settings().api_url, timeout=DEFAULT_TIMEOUT),
+    )
+    _install_tolerant_json(client.get_httpx_client())
+    return client
 
 
 def bearer_client(token: str) -> AuthenticatedClient:
     from cli.config import settings
 
-    return AuthenticatedClient(base_url=settings().api_url, token=token)
+    client = AuthenticatedClient(
+        base_url=settings().api_url,
+        token=token,
+        timeout=DEFAULT_TIMEOUT,
+    )
+    _install_tolerant_json(client.get_httpx_client())
+    return client
 
 
 def authenticated_client() -> AuthenticatedClient:
@@ -74,8 +127,6 @@ def _error_message(parsed: object, content: bytes) -> str | None:
     """
     if isinstance(parsed, V1Error):
         return parsed.error.message
-    import json
-
     try:
         message = json.loads(content).get("error", {}).get("message")
     except Exception:

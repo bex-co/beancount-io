@@ -19,6 +19,22 @@ register_ledger_commands(ledger_app)
 DirOpt = Annotated[Path | None, typer.Option("--dir", help="Local directory for the git clone")]
 
 
+def _clone_failure_message(ledger_name: str | None, error: object) -> str:
+    from . import manager
+
+    assert isinstance(error, manager.CloneError)
+    detail = f" ({error.diagnostic})" if error.diagnostic else ""
+    if ledger_name:
+        remote = error.git_remote_url or "<remote>"
+        return (
+            f"Ledger '{ledger_name}' was created but could not be cloned{detail}. "
+            f"Clone it manually with: git clone {remote}"
+        )
+    if error.diagnostic:
+        return f"Clone failed for {error.git_remote_url}{detail}."
+    return f"Clone failed for {error.git_remote_url}. Ensure you have SSH access."
+
+
 @ledger_app.command("create")
 def ledger_create(
     name: Annotated[str, typer.Argument(help="Ledger name (lowercase, hyphens ok)")],
@@ -39,6 +55,9 @@ def ledger_create(
 
     from . import manager
 
+    if clone:
+        manager.ensure_git_available()
+
     client = authenticated_client()
     try:
         ledger = manager.create_ledger(client, name, description=description, private=private)
@@ -49,14 +68,16 @@ def ledger_create(
         target = directory or Path.cwd() / ledger.name
         output.note(f"Cloning repository to '{target}'...")
         try:
-            manager.clone_ledger(ledger.ssh_url, target, quiet=ctx.json_output)
+            manager.clone_ledger(
+                ledger.ssh_url,
+                target,
+                quiet=ctx.json_output,
+                unattended=ctx.no_input,
+            )
         except manager.CloneError as e:
             # The ledger exists on the server. Saying "created" and exiting 0
             # here would hide a half-finished setup from a script.
-            raise LedgerError(
-                f"Ledger '{ledger.full_name}' was created but could not be cloned. "
-                f"Clone it manually with: git clone {e.git_remote_url}"
-            ) from e
+            raise LedgerError(_clone_failure_message(ledger.full_name, e)) from e
 
     if ctx.json_output:
         output.emit(asdict(ledger), target=output.server_target())
@@ -79,11 +100,17 @@ def ledger_clone(
 
     from . import manager
 
+    ctx = context.current()
     ledger = manager.get_ledger(authenticated_client(), full_name)
     target = directory or Path.cwd() / ledger.name
     output.note(f"Cloning '{ledger.full_name}' to '{target}'...")
     try:
-        manager.clone_ledger(ledger.ssh_url, target, quiet=context.current().json_output)
+        manager.clone_ledger(
+            ledger.ssh_url,
+            target,
+            quiet=ctx.json_output,
+            unattended=ctx.no_input,
+        )
     except manager.CloneError as e:
-        raise LedgerError(f"Clone failed for {e.git_remote_url}. Ensure you have SSH access.") from e
+        raise LedgerError(_clone_failure_message(None, e)) from e
     output.success(f"Ledger '{ledger.full_name}' cloned to '{target}'.")
