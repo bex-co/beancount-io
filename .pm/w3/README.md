@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [027](./027.md) — A language parameter makes the manual language selector ineffective
 - [029](./029.md) — Settings sign-in redirects discard the requested subpage
 - [030](./030.md) — Password visibility buttons are skipped by keyboard navigation
 - [031](./031.md) — Budget cards hide actual and variance for zero-activity intervals

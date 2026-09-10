@@ -1,4 +1,4 @@
-import { useEffect } from "react";
+import { useEffect, useRef } from "react";
 import { useLocation, ClientOnly } from "@tanstack/react-router";
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from "@/i18n";
 import { useTranslation } from "react-i18next";
@@ -9,20 +9,23 @@ const LanguageSyncImpl = () => {
   const location = useLocation();
   const { i18n } = useTranslation();
   const { changeLanguage } = useChangeLanguage();
+  // Read language through a ref so URL sync does not re-run when the user
+  // changes language — otherwise a stale ?lang= would immediately win again.
+  const languageRef = useRef(i18n.language);
+  languageRef.current = i18n.language;
 
   useEffect(() => {
-    // Priority 1: ?lang= URL param always wins
+    // Priority 1: ?lang= URL param wins when the URL itself changes
     const lang = new URLSearchParams(location.searchStr).get("lang");
     if (lang && (SUPPORTED_LANGUAGES as readonly string[]).includes(lang)) {
       const supportedLang = lang as SupportedLanguage;
-      if (i18n.language !== supportedLang) {
+      if (languageRef.current !== supportedLang) {
         void changeLanguage(supportedLang);
       } else {
         persistLanguage(supportedLang);
       }
-      return;
     }
-  }, [location.searchStr, i18n, changeLanguage]);
+  }, [location.searchStr, changeLanguage]);
 
   // Sync document.documentElement.lang whenever i18n language changes
   useEffect(() => {

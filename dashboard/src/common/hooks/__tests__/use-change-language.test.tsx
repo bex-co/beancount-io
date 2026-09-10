@@ -7,7 +7,18 @@ import { useChangeLanguage } from "../use-change-language";
 
 vi.mock("sonner", () => ({ toast: { error: vi.fn() } }));
 
-beforeEach(() => vi.clearAllMocks());
+beforeEach(() => {
+  vi.clearAllMocks();
+  window.history.replaceState(window.history.state, "", "/settings/general");
+});
+
+function wrapper(localization: ReturnType<typeof createLocalization>) {
+  return ({ children }: { children: React.ReactNode }) => (
+    <LocalizationProvider localization={localization}>
+      {children}
+    </LocalizationProvider>
+  );
+}
 
 it("keeps the current language and preference on failed loading and offers recovery", async () => {
   const localization = createLocalization();
@@ -15,11 +26,7 @@ it("keeps the current language and preference on failed loading and offers recov
     new Error("Chunk unavailable"),
   );
   const { result } = renderHook(() => useChangeLanguage(), {
-    wrapper: ({ children }) => (
-      <LocalizationProvider localization={localization}>
-        {children}
-      </LocalizationProvider>
-    ),
+    wrapper: wrapper(localization),
   });
   await act(async () => {
     expect(await result.current.changeLanguage("ja")).toBe(false);
@@ -35,11 +42,7 @@ it("keeps the current language and preference on failed loading and offers recov
 it("does not persist a superseded selection", async () => {
   const localization = createLocalization();
   const { result } = renderHook(() => useChangeLanguage(), {
-    wrapper: ({ children }) => (
-      <LocalizationProvider localization={localization}>
-        {children}
-      </LocalizationProvider>
-    ),
+    wrapper: wrapper(localization),
   });
   await act(async () => {
     const first = result.current.changeLanguage("fr");
@@ -51,4 +54,24 @@ it("does not persist a superseded selection", async () => {
     "i18nextLng",
     "en",
   );
+  expect(window.location.search).toBe("?lang=en");
+});
+
+it("updates an existing lang search param when the selection succeeds", async () => {
+  window.history.replaceState(
+    window.history.state,
+    "",
+    "/settings/general?lang=zh",
+  );
+  const localization = createLocalization();
+  await localization.changeLanguage("zh");
+  const { result } = renderHook(() => useChangeLanguage(), {
+    wrapper: wrapper(localization),
+  });
+  await act(async () => {
+    expect(await result.current.changeLanguage("en")).toBe(true);
+  });
+  expect(window.location.pathname).toBe("/settings/general");
+  expect(window.location.search).toBe("?lang=en");
+  expect(localStorage.setItem).toHaveBeenCalledWith("i18nextLng", "en");
 });
