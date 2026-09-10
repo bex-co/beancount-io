@@ -5,6 +5,7 @@
 
 import { useState, useRef, useEffect } from "react";
 import { Input } from "@/common/components/ui/input";
+import { Button } from "@/common/components/ui/button";
 import { useTranslations } from "@/common/hooks/use-translations";
 import { cn } from "@/common/lib/utils/utils";
 
@@ -33,6 +34,9 @@ export function EditableCell({
   const [isEditing, setIsEditing] = useState(false);
   const [localValue, setLocalValue] = useState(value);
   const inputRef = useRef<HTMLInputElement>(null);
+  const buttonRef = useRef<HTMLButtonElement>(null);
+  const finishingRef = useRef(false);
+  const restoreFocusRef = useRef(false);
 
   // Update local value when prop changes
   useEffect(() => {
@@ -47,34 +51,64 @@ export function EditableCell({
     }
   }, [isEditing]);
 
-  const handleClick = () => {
+  // Restore focus to the display control after Enter/Escape exits edit mode.
+  useEffect(() => {
+    if (!isEditing) {
+      finishingRef.current = false;
+      if (restoreFocusRef.current) {
+        restoreFocusRef.current = false;
+        buttonRef.current?.focus();
+      }
+    }
+  }, [isEditing]);
+
+  const startEditing = () => {
     if (!disabled && !isEditing) {
       setIsEditing(true);
     }
   };
 
-  const handleBlur = () => {
-    setIsEditing(false);
+  const commitValue = () => {
     try {
-      if (onChange) {
-        onChange(localValue);
-      }
+      onChange(localValue);
     } catch (error) {
       console.error("Error in EditableCell onChange:", error);
     }
     onBlur?.();
   };
 
+  const commitAndClose = (restoreFocus: boolean) => {
+    finishingRef.current = true;
+    restoreFocusRef.current = restoreFocus;
+    commitValue();
+    setIsEditing(false);
+  };
+
+  const cancelAndClose = () => {
+    finishingRef.current = true;
+    restoreFocusRef.current = true;
+    setLocalValue(value);
+    setIsEditing(false);
+  };
+
+  const handleBlur = () => {
+    if (finishingRef.current) {
+      return;
+    }
+    // Pointer/Tab blur: commit and leave focus where the browser moved it.
+    restoreFocusRef.current = false;
+    commitValue();
+    setIsEditing(false);
+  };
+
   const handleKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
     if (e.key === "Enter") {
       e.preventDefault();
-      handleBlur();
+      commitAndClose(true);
     } else if (e.key === "Escape") {
       e.preventDefault();
-      setLocalValue(value); // Reset to original value
-      setIsEditing(false);
+      cancelAndClose();
     }
-    // Tab naturally moves to next input
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -98,7 +132,7 @@ export function EditableCell({
           className={cn(
             "h-8 px-2 py-1",
             error && "border-destructive focus-visible:ring-destructive",
-            className, // Apply passed className (e.g., text-right)
+            className,
           )}
           disabled={disabled}
         />
@@ -117,22 +151,18 @@ export function EditableCell({
   }
 
   return (
-    <div
-      onClick={handleClick}
-      onKeyDown={(e) => {
-        if (e.key === "Enter" && !disabled) {
-          setIsEditing(true);
-        }
-      }}
-      tabIndex={disabled ? -1 : 0}
+    <Button
+      ref={buttonRef}
+      type="button"
+      variant="ghost"
+      disabled={disabled}
+      onClick={startEditing}
       className={cn(
-        "w-full min-h-[32px] px-2 py-1 rounded cursor-pointer",
-        "hover:bg-accent/50 focus:outline-none focus:ring-2 focus:ring-ring",
-        "transition-colors",
+        "h-auto w-full min-h-[32px] justify-start px-2 py-1 font-normal",
+        "hover:bg-accent/50 focus-visible:ring-2 focus-visible:ring-ring",
         error && "border border-destructive bg-destructive/5",
         disabled && "cursor-not-allowed opacity-50",
       )}
-      role="button"
       aria-label={t("importer.preview.editCellLabel", {
         field: placeholder || t("importer.preview.field"),
         value,
@@ -140,8 +170,8 @@ export function EditableCell({
     >
       <div
         className={cn(
-          "flex items-center",
-          isRightAligned ? "justify-end" : "justify-between",
+          "flex w-full flex-col",
+          isRightAligned ? "items-end" : "items-start",
         )}
       >
         <span
@@ -153,17 +183,17 @@ export function EditableCell({
         >
           {value || placeholder || t("importer.preview.clickToEdit")}
         </span>
+        {error && (
+          <p
+            className={cn(
+              "text-xs text-destructive mt-1 whitespace-nowrap",
+              isRightAligned && "text-right",
+            )}
+          >
+            {error}
+          </p>
+        )}
       </div>
-      {error && (
-        <p
-          className={cn(
-            "text-xs text-destructive mt-1 whitespace-nowrap",
-            isRightAligned && "text-right",
-          )}
-        >
-          {error}
-        </p>
-      )}
-    </div>
+    </Button>
   );
 }
