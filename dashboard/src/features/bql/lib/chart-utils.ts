@@ -33,8 +33,73 @@ export function canPlotQuery(result: QueryResultTable): boolean {
   return firstIsDateOrString && secondIsNumeric;
 }
 
+/** Parse a JSON number or decimal string into a finite number. */
+export function parseFiniteNumber(value: unknown): number | null {
+  if (typeof value === "number") {
+    return Number.isFinite(value) ? value : null;
+  }
+  if (typeof value === "string") {
+    const trimmed = value.trim();
+    if (trimmed === "") return null;
+    const parsed = Number(trimmed);
+    return Number.isFinite(parsed) ? parsed : null;
+  }
+  return null;
+}
+
+/**
+ * Decode a BQL chart cell using the shell wire contract:
+ * - Decimal/int: JSON number or decimal string
+ * - Inventory/Amount: single-currency map `{ UNIT: "1.23" }`, or legacy
+ *   `{ number, currency }` Amount objects
+ *
+ * Multi-unit maps and unparseable cells return null so the chart is omitted.
+ */
+export function decodeQueryChartValue(
+  value: unknown,
+  dtype: string,
+): { amount: number; unit?: string } | null {
+  if (dtype === "Decimal" || dtype === "int") {
+    const amount = parseFiniteNumber(value);
+    return amount === null ? null : { amount };
+  }
+
+  if (dtype !== "Inventory" && dtype !== "Amount") {
+    return null;
+  }
+
+  if (typeof value !== "object" || value === null || Array.isArray(value)) {
+    const amount = parseFiniteNumber(value);
+    return amount === null ? null : { amount };
+  }
+
+  const record = value as Record<string, unknown>;
+
+  if ("number" in record || "currency" in record || "value" in record) {
+    const amount = parseFiniteNumber(record.number ?? record.value);
+    if (amount === null) return null;
+    const unit =
+      typeof record.currency === "string" ? record.currency : undefined;
+    return unit ? { amount, unit } : { amount };
+  }
+
+  const entries = Object.entries(record);
+  if (entries.length === 0) {
+    return { amount: 0 };
+  }
+  if (entries.length !== 1) {
+    return null;
+  }
+
+  const [unit, raw] = entries[0];
+  const amount = parseFiniteNumber(raw);
+  return amount === null ? null : { amount, unit };
+}
+
 /**
  * Parse query result and generate ECharts configuration.
+ * Returns null when the result shape is unplottable or any value cannot be
+ * decoded without inventing a number (multi-unit, missing, malformed).
  */
 export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
   if (!canPlotQuery(result)) {
@@ -42,50 +107,41 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
   }
 
   const { types, rows } = result;
-  const [firstType] = types;
+  const [firstType, secondType] = types;
 
-  // Determine chart type based on first column
   const isDateBased = firstType.dtype === "date";
   const chartType = isDateBased ? "line" : "bar";
 
-  // Extract data
   const categories: string[] = [];
   const values: number[] = [];
+  let seriesUnit: string | undefined;
 
-  rows.forEach((row) => {
-    if (row.length >= 2) {
-      const [category, value] = row;
-
-      // Format category (date or string)
-      let categoryStr = String(category);
-      if (firstType.dtype === "date" && category) {
-        categoryStr = String(category);
-      }
-
-      // Extract numeric value
-      let numericValue = 0;
-      if (typeof value === "number") {
-        numericValue = value;
-      } else if (typeof value === "object" && value !== null) {
-        // Handle Inventory/Amount objects
-        // Assuming the value object has a numeric property
-        if ("number" in value && typeof value.number === "number") {
-          numericValue = value.number;
-        } else if ("value" in value && typeof value.value === "number") {
-          numericValue = value.value;
-        } else {
-          // Try to extract first numeric value from object
-          const numStr = JSON.stringify(value).match(/-?\d+\.?\d*/);
-          if (numStr) {
-            numericValue = parseFloat(numStr[0]);
-          }
-        }
-      }
-
-      categories.push(categoryStr);
-      values.push(numericValue);
+  for (const row of rows) {
+    if (row.length < 2) {
+      return null;
     }
-  });
+
+    const [category, value] = row;
+    const decoded = decodeQueryChartValue(value, secondType.dtype);
+    if (decoded === null) {
+      return null;
+    }
+
+    if (decoded.unit) {
+      if (seriesUnit === undefined) {
+        seriesUnit = decoded.unit;
+      } else if (seriesUnit !== decoded.unit) {
+        return null;
+      }
+    }
+
+    categories.push(String(category ?? ""));
+    values.push(decoded.amount);
+  }
+
+  if (categories.length === 0) {
+    return null;
+  }
 
   const option: EChartsOption = {
     tooltip: {
@@ -93,6 +149,9 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
       axisPointer: {
         type: chartType === "line" ? "line" : "shadow",
       },
+      valueFormatter: seriesUnit
+        ? (value) => `${value as number} ${seriesUnit}`
+        : undefined,
     },
     grid: {
       left: "3%",
@@ -107,9 +166,11 @@ export function parseQueryChart(result: QueryResultTable): ChartConfig | null {
     },
     yAxis: {
       type: "value",
+      name: seriesUnit,
     },
     series: [
       {
+        name: seriesUnit,
         type: chartType,
         data: values,
         smooth: chartType === "line",
