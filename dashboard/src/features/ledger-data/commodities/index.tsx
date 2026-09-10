@@ -25,20 +25,16 @@ import { QueryView } from "@/common/components/query-view";
 import { useLedger } from "@/common/hooks/use-ledger";
 import { LedgerPageSEO } from "@/common/components/seo/ledger-page-seo";
 import { Skeleton } from "@/common/components/ui/skeleton";
+import { buildCommodityChartLabels } from "./build-commodity-chart-labels";
 
 /**
  * Commodity chart component
  * Displays a line chart for a single commodity pair
  */
 function CommodityChart({ commodity }: { commodity: CommodityPairWithPrices }) {
-  // Extract dates as strings for category axis
-  const dates = commodity.prices.map((point) => point.date);
-
-  // Prepare chart data as [date, value] pairs
-  const chartData = commodity.prices.map((point) => [
-    point.date,
-    parseFloat(point.value),
-  ]);
+  const pairLabel = `${commodity.base}/${commodity.quote}`;
+  const { dates, chartData, formatTooltip, formatAxisTick } =
+    buildCommodityChartLabels(commodity.prices, pairLabel, formatDateISO);
 
   const tooltip: TooltipComponentOption = {
     trigger: "axis" as const,
@@ -55,23 +51,7 @@ function CommodityChart({ commodity }: { commodity: CommodityPairWithPrices }) {
         return "";
       }
 
-      // Extract price value
-      let price: number;
-      if (Array.isArray(data.value) && data.value.length >= 2) {
-        price =
-          typeof data.value[1] === "number"
-            ? data.value[1]
-            : parseFloat(data.value[1] as string);
-      } else if (typeof data.value === "number") {
-        price = data.value;
-      } else {
-        return "";
-      }
-
-      const date = formatDateISO(dateStr);
-      const value = price.toFixed(2);
-      const expr = `${commodity.base}/${commodity.quote}`;
-      return `${date}<br/>${expr}: ${value}`;
+      return formatTooltip(dateStr);
     },
   };
 
@@ -95,7 +75,7 @@ function CommodityChart({ commodity }: { commodity: CommodityPairWithPrices }) {
       type: "value" as const,
       axisLabel: {
         formatter: function (value: number) {
-          return value.toFixed(2);
+          return formatAxisTick(value);
         },
       },
       min: ({ min }) => (min > 0 ? min * 0.8 : min * 1.1),

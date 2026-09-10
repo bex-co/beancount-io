@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [012](./012.md) — Commodity tooltips round distinct fractional prices to the same value
 - [013](./013.md) — Public Sharing and Git Clone copy buttons have no accessible names
 - [014](./014.md) — Public-reader Settings requests an admin-only collaborator list
 - [015](./015.md) — Smart Import splits quoted multiline CSV fields into invalid rows
