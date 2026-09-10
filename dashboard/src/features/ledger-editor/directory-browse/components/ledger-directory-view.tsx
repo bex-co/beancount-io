@@ -180,9 +180,10 @@ export default function LedgerDirectoryView({
             size="sm"
             onClick={handleVersionHistory}
             className="flex items-center gap-2"
+            aria-label={t("commits.versionHistory")}
           >
             <GitBranch className="h-4 w-4" />
-            <span className="hidden md:inline">
+            <span className="hidden md:inline" aria-hidden="true">
               {t("commits.versionHistory")}
             </span>
           </Button>
@@ -193,9 +194,10 @@ export default function LedgerDirectoryView({
               size="sm"
               onClick={handleCreateFile}
               className="flex items-center gap-2"
+              aria-label={t("ledgerEditor.createFile")}
             >
               <Plus className="h-4 w-4" />
-              <span className="hidden md:inline">
+              <span className="hidden md:inline" aria-hidden="true">
                 {t("ledgerEditor.createFile")}
               </span>
             </Button>
@@ -207,9 +209,10 @@ export default function LedgerDirectoryView({
               size="sm"
               onClick={handleUpdateFiles}
               className="flex items-center gap-2"
+              aria-label={t("ledgerEditor.uploadFiles")}
             >
               <Upload className="h-4 w-4" />
-              <span className="hidden md:inline">
+              <span className="hidden md:inline" aria-hidden="true">
                 {t("ledgerEditor.uploadFiles")}
               </span>
             </Button>
@@ -221,9 +224,12 @@ export default function LedgerDirectoryView({
               size="sm"
               onClick={handleBackClick}
               className="flex items-center gap-2"
+              aria-label={t("common.back")}
             >
               <ArrowLeft className="h-4 w-4" />
-              <span className="hidden md:inline">{t("common.back")}</span>
+              <span className="hidden md:inline" aria-hidden="true">
+                {t("common.back")}
+              </span>
             </Button>
           )}
         </div>

@@ -56,11 +56,13 @@ vi.mock("@/common/components/ui/button", () => ({
   Button: ({
     children,
     onClick,
+    "aria-label": ariaLabel,
   }: {
     children: React.ReactNode;
     onClick?: () => void;
+    "aria-label"?: string;
   }) => (
-    <button onClick={onClick} data-testid="button">
+    <button onClick={onClick} aria-label={ariaLabel} data-testid="button">
       {children}
     </button>
   ),
@@ -237,6 +239,40 @@ describe("LedgerDirectoryView", () => {
     render(<LedgerDirectoryView ledgerId="test-ledger" currentPath="" />);
 
     expect(screen.getByTestId("readme-card")).toBeInTheDocument();
+  });
+
+  it("names toolbar actions even when visible labels are responsive-hidden", () => {
+    mockUseQuery.mockReturnValue({
+      data: {
+        getLedgerDirContent: [
+          {
+            name: "main.bean",
+            path: "main.bean",
+            type: "file",
+            size: 100,
+            sha: "abc",
+            lastCommitterDate: "2024-01-01",
+          },
+        ],
+      },
+      loading: false,
+      error: undefined,
+    });
+
+    render(<LedgerDirectoryView ledgerId="test-ledger" currentPath="docs" />);
+
+    expect(
+      screen.getByRole("button", { name: "commits.versionHistory" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "ledgerEditor.createFile" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "ledgerEditor.uploadFiles" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "common.back" }),
+    ).toBeInTheDocument();
   });
 
   it("exposes file and directory rows as navigable links", () => {

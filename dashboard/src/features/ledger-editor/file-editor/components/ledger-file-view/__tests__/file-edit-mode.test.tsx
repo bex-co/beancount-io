@@ -38,6 +38,45 @@ describe("EditModeToolbar draft guard", () => {
     blockerState.status = "idle";
   });
 
+  it("keeps Edit, Save and Cancel named while saving", () => {
+    const { rerender } = render(
+      <EditModeToolbar
+        editorRef={editorRef}
+        editedContent="draft body"
+        plainContent="saved body"
+        onSave={onSave}
+        onCancel={onCancel}
+        onDiscard={onDiscard}
+        isSaving={false}
+      />,
+    );
+
+    expect(screen.getByRole("button", { name: "common.edit" })).toBeInTheDocument();
+    expect(screen.getByRole("button", { name: "common.save" })).toBeInTheDocument();
+    expect(
+      screen.getByRole("button", { name: "common.cancel" }),
+    ).toBeInTheDocument();
+
+    rerender(
+      <EditModeToolbar
+        editorRef={editorRef}
+        editedContent="draft body"
+        plainContent="saved body"
+        onSave={onSave}
+        onCancel={onCancel}
+        onDiscard={onDiscard}
+        isSaving
+      />,
+    );
+
+    expect(
+      screen.getByRole("button", { name: "common.saving" }),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByRole("button", { name: "common.save" }),
+    ).not.toBeInTheDocument();
+  });
+
   it("does not wipe the draft when Cancel is clicked", () => {
     render(
       <EditModeToolbar

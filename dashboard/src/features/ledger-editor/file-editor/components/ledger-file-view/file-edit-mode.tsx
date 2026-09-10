@@ -92,8 +92,11 @@ export function EditModeToolbar({
               variant="outline"
               size="sm"
               className="flex items-center gap-1"
+              aria-label={t("common.edit")}
             >
-              <span className="hidden sm:inline">{t("common.edit")}</span>
+              <span className="hidden sm:inline" aria-hidden="true">
+                {t("common.edit")}
+              </span>
               <ChevronDown className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
@@ -137,9 +140,10 @@ export function EditModeToolbar({
             onClick={() => onSave(editedContent)}
             disabled={isSaving}
             className="flex items-center gap-2 flex-1 md:flex-none"
+            aria-label={isSaving ? t("common.saving") : t("common.save")}
           >
             <Save className="h-4 w-4" />
-            <span className="hidden md:inline">
+            <span className="hidden md:inline" aria-hidden="true">
               <span>{isSaving ? t("common.saving") : t("common.save")}</span>
               <span className="ml-2 text-xs tracking-widest text-muted-foreground">
                 {isMac ? "⌘S" : "Ctrl+S"}
@@ -155,9 +159,10 @@ export function EditModeToolbar({
           size="sm"
           onClick={onCancel}
           className="flex items-center gap-2 sm:flex-none"
+          aria-label={t("common.cancel")}
         >
           <X className="h-4 w-4" />
-          <span className="hidden md:inline">
+          <span className="hidden md:inline" aria-hidden="true">
             <span> {t("common.cancel")}</span>
             <span className="ml-2 text-xs tracking-widest text-muted-foreground">
               Esc
