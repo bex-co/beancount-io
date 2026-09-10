@@ -156,7 +156,7 @@ services:
       BLOCKEDEN_ACCESS_KEY: ${BLOCKEDEN_ACCESS_KEY:-local-dev-placeholder}
       # Ask-AI sandbox control plane = agent-box under `wrangler dev` on the
       # host. The harness forwards ANTHROPIC_* below into the sandbox container
-      # where Claude Code runs (credentialEnv/forwardEnv in experimental-sandbox-agent-workflow).
+      # where Claude Code runs (credentialEnv/forwardEnv in sandbox-agent-workflow).
       CLAUDE_CODE_SANDBOX_URL: ${CLAUDE_CODE_SANDBOX_URL:-http://host.docker.internal:8787}
       ANTHROPIC_API_KEY: ${ANTHROPIC_API_KEY:-}
       ANTHROPIC_AUTH_TOKEN: ${ANTHROPIC_AUTH_TOKEN:-}

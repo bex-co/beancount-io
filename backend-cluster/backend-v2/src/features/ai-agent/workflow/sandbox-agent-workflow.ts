@@ -1,11 +1,16 @@
 /**
- * ExperimentalSandboxAgentWorkflow — the EXPERIMENTAL sandbox agent path
- * (ADR 0005 / m17): Claude Code running in a Cloudflare sandbox over the
- * cloned ledger repo, distinct from the in-process chatbot behind
- * `/api-gateway/agent` (`SelfHostedAgentHandler`, Path B). Marked experimental
- * because it is not the primary chat surface and carries the sandbox
- * control-plane's operational cost; the wire route (`/api-gateway/ask-agent`)
- * and op-class verb (`ai.askAgent`) are kept stable for the dashboard client.
+ * SandboxAgentWorkflow — the **sandbox agent** path (ADR 0005 / m17): Claude
+ * Code running in a Cloudflare sandbox over the cloned ledger repo. Distinct
+ * from the **in-process agent** behind `/api-gateway/agent`
+ * (`SelfHostedAgentHandler`) — that one runs a bounded tool-loop inside this
+ * process; this one runs a full coding agent in an isolated sandbox with
+ * filesystem/bash/git and can open PRs.
+ *
+ * ⚠️ Status: EXPERIMENTAL / secondary. Not the primary chat surface, carries
+ * the sandbox control-plane's operational cost, and currently fails in
+ * production. Kept in the tree pending a product decision (see ADR 0011
+ * discussion). The wire route (`/api-gateway/ask-agent`) and op-class verb
+ * (`ai.askAgent`) are kept stable for the dashboard `/ask` client.
  *
  * Owns HarnessAgent construction, session resolution, the git-clone bootstrap,
  * permission-mode mapping, and turning the harness stream into a UIMessage SSE
@@ -32,7 +37,7 @@ import {
   type AgentRequestedMode,
 } from "../agent-access";
 
-const workflowLogger = logger.child({ module: "experimental-sandbox-agent-workflow" });
+const workflowLogger = logger.child({ module: "sandbox-agent-workflow" });
 
 /**
  * Pinned so a new upstream release cannot silently change the in-sandbox agent.
@@ -56,9 +61,9 @@ export const ACP_PERMISSION_MODES = {
 } as const satisfies ACPPermissionModeMapping;
 
 // ASK = read-only Q&A; AGENT requests edits, but readers are downgraded safely.
-export type ExperimentalSandboxAgentMode = AgentRequestedMode;
+export type SandboxAgentMode = AgentRequestedMode;
 
-export interface ExperimentalSandboxAgentDeps {
+export interface SandboxAgentDeps {
   controlPlaneUrl: string;
   adminToken: string;
   gitea: GiteaConfig;
@@ -67,7 +72,7 @@ export interface ExperimentalSandboxAgentDeps {
   authorization: IAuthorizationService;
 }
 
-export interface ExperimentalSandboxAgentCommand {
+export interface SandboxAgentCommand {
   /** The user's latest message text. */
   prompt: string;
   /** owner/name; the ledger repo cloned into the sandbox. */
@@ -78,7 +83,7 @@ export interface ExperimentalSandboxAgentCommand {
   ledgerPassword: string;
   /** Stable per-conversation id → sandbox container key + harness sessionId. */
   conversationId: string;
-  mode: ExperimentalSandboxAgentMode;
+  mode: SandboxAgentMode;
   identity: Identity;
   assertQuotaAvailable: () => Promise<void>;
   abortSignal?: AbortSignal;
@@ -111,14 +116,14 @@ export function buildAuthenticatedCloneUrl(
   return httpUrl.replace(/^(https?:\/\/)/, `$1${creds}@`);
 }
 
-export interface IExperimentalSandboxAgentWorkflow {
-  streamAnswer(command: ExperimentalSandboxAgentCommand): Promise<Response>;
+export interface ISandboxAgentWorkflow {
+  streamAnswer(command: SandboxAgentCommand): Promise<Response>;
 }
 
-export class ExperimentalSandboxAgentWorkflow implements IExperimentalSandboxAgentWorkflow {
+export class SandboxAgentWorkflow implements ISandboxAgentWorkflow {
   private readonly provider: HarnessV1SandboxProvider;
 
-  constructor(private readonly deps: ExperimentalSandboxAgentDeps) {
+  constructor(private readonly deps: SandboxAgentDeps) {
     this.provider = createCloudflareSandbox({
       controlPlaneUrl: deps.controlPlaneUrl,
       adminToken: deps.adminToken,
@@ -127,7 +132,7 @@ export class ExperimentalSandboxAgentWorkflow implements IExperimentalSandboxAge
     });
   }
 
-  async streamAnswer(command: ExperimentalSandboxAgentCommand): Promise<Response> {
+  async streamAnswer(command: SandboxAgentCommand): Promise<Response> {
     const accessMode = await resolveAgentAccessMode({
       authorization: this.deps.authorization,
       identity: command.identity,

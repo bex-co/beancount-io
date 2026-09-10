@@ -15,7 +15,7 @@ import "dotenv/config";
 import { createCloudflareSandbox } from "@/foundation/sandbox-cloudflare";
 import { HarnessAgent } from "@ai-sdk/harness/agent";
 import { createACP } from "@ai-sdk/harness-acp";
-import { ACP_PERMISSION_MODES } from "@/features/ai-agent/workflow/experimental-sandbox-agent-workflow";
+import { ACP_PERMISSION_MODES } from "@/features/ai-agent/workflow/sandbox-agent-workflow";
 
 const ADMIN_TOKEN = process.env.SANDBOX_ADMIN_TOKEN ?? process.env.ADMIN_TOKEN ?? "";
 // The container reaches the host's llm-cli-proxy via the host LAN IP.

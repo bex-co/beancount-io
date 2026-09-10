@@ -46,6 +46,13 @@ function enrichMessagesWithFileContext(messages: UIMessage[]): UIMessage[] {
   });
 }
 
+/**
+ * The **in-process agent** (Path B) behind `POST /api-gateway/agent`: a bounded
+ * tool-loop over the ledger services, running inside this process on the
+ * fallback LanguageModel. This is the primary chat surface (mobile + dashboard).
+ * Contrast the **sandbox agent** (`SandboxAgentWorkflow`, `/api-gateway/ask-agent`),
+ * which runs a full Claude Code coding agent in an isolated sandbox.
+ */
 export class SelfHostedAgentHandler implements IAgentHandler {
   constructor(
     private readonly model: LanguageModel,

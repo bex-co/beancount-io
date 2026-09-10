@@ -16,7 +16,7 @@ function isNonRetriableError(err: unknown): boolean {
 
 // Model ids are env-configurable so an upgrade is config, not a code change
 // (w2/m30/t003). Deliberately NOT named ANTHROPIC_MODEL — that env var is
-// claimed by the Path A sandbox harness (experimental-sandbox-agent-workflow.ts forwards it
+// claimed by the Path A sandbox harness (sandbox-agent-workflow.ts forwards it
 // into Claude Code); sharing would recouple the two paths ADR 0011 separates.
 // The primary default is the alias, not a dated snapshot, so it tracks the
 // line automatically.

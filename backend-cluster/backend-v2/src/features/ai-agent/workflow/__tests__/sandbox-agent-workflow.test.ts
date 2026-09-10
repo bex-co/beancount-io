@@ -8,10 +8,10 @@ jest.mock("@ai-sdk/harness-acp", () => ({
 
 import {
   ACP_PERMISSION_MODES,
-  ExperimentalSandboxAgentWorkflow,
+  SandboxAgentWorkflow,
   buildAuthenticatedCloneUrl,
   configureSandboxRemote,
-} from "../experimental-sandbox-agent-workflow";
+} from "../sandbox-agent-workflow";
 import type { GiteaConfig } from "@/config/config";
 import {
   AUTHORIZATION_ACTIONS,
@@ -117,7 +117,7 @@ describe("sandbox Git authority", () => {
   });
 });
 
-describe("ExperimentalSandboxAgentWorkflow authorization boundary", () => {
+describe("SandboxAgentWorkflow authorization boundary", () => {
   it.each(["ask", "agent"] as const)(
     "authorizes read access for %s before quota, sandbox, clone, or stream work",
     async (mode) => {
@@ -128,7 +128,7 @@ describe("ExperimentalSandboxAgentWorkflow authorization boundary", () => {
         authorize: jest.fn(),
         authorizeOrThrow: jest.fn().mockRejectedValue(unavailable),
       };
-      const workflow = new ExperimentalSandboxAgentWorkflow({
+      const workflow = new SandboxAgentWorkflow({
         controlPlaneUrl: "https://sandbox.example.test",
         adminToken: "test-token",
         gitea: {

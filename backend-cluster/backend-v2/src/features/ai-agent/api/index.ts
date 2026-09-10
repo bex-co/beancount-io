@@ -2,7 +2,7 @@ import Router from "@koa/router";
 import { type AppLayers } from "@/foundation/composition";
 import type { AppConfig } from "@/config/config";
 import { setAgentRoute } from "./agent-route";
-import { setExperimentalSandboxAgentRoute } from "./experimental-sandbox-agent-route";
+import { setSandboxAgentRoute } from "./sandbox-agent-route";
 import { setOpenAIChatCompletionsRoute } from "./openai-chat-completions-route";
 
 export { setMcpRoute } from "./mcp-route";
@@ -22,7 +22,7 @@ export function setupAiAgentRoutes(
   // REST error translation is handled by the outermost restErrorMiddleware in
   // the composition root; routes here just throw DomainErrors.
   setAgentRoute(aiRouter, layers);
-  setExperimentalSandboxAgentRoute(aiRouter, layers, config);
+  setSandboxAgentRoute(aiRouter, layers, config);
   setOpenAIChatCompletionsRoute(aiRouter, layers);
   router.use(aiRouter.routes(), aiRouter.allowedMethods());
 }
