@@ -11,10 +11,9 @@ import {
   GitBranch,
 } from "lucide-react";
 import { GetLedgerDirContentDocument } from "@/graphql/definitions";
-import type { GetLedgerDirContentQuery } from "@/graphql/definitions";
 import { cn } from "@/common/lib/utils/utils";
 import { formatDateTime } from "@/common/lib/format";
-import { useNavigate } from "@tanstack/react-router";
+import { Link, useNavigate } from "@tanstack/react-router";
 import { formatFileSize, getParentPath } from "../../shared/lib/utils";
 import LedgerFileBreadcrumb from "../../shared/components/ledger-file-breadcrumb";
 import { decodeLedgerId } from "@/common/lib/utils/encode";
@@ -113,12 +112,7 @@ export default function LedgerDirectoryView({
   const fileNavigate = useFileNavigate();
   const { t } = useTranslations();
   const { ledgerOwner, ledgerName } = decodeLedgerId(ledgerId);
-
-  const handleItemClick = (
-    item: GetLedgerDirContentQuery["getLedgerDirContent"][number],
-  ) => {
-    fileNavigate(ledgerId, item.type as "file" | "dir", item.path);
-  };
+  const branch = "main";
 
   const handleBackClick = () => {
     if (currentPath) {
@@ -255,15 +249,25 @@ export default function LedgerDirectoryView({
               return a.name.localeCompare(b.name);
             })
             .map((item, index) => (
-              <div
+              <Link
                 key={item.path}
+                to={
+                  item.type === "dir"
+                    ? "/ledger/$ledgerOwner/$ledgerName/files/tree/$branch/$"
+                    : "/ledger/$ledgerOwner/$ledgerName/files/blob/$branch/$"
+                }
+                params={{
+                  ledgerOwner,
+                  ledgerName,
+                  branch,
+                  _splat: item.path,
+                }}
                 className={cn(
                   "flex items-center justify-between px-4 py-3 border-b border-border last:border-b-0",
-                  "hover:bg-accent cursor-pointer transition-colors",
+                  "hover:bg-accent cursor-pointer transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-inset",
                   index === 0 && "rounded-t-sm",
                   index === dirContent.length - 1 && "rounded-b-sm",
                 )}
-                onClick={() => handleItemClick(item)}
               >
                 <div className="flex items-center gap-3 min-w-0 flex-1">
                   {item.type === "dir" ? (
@@ -293,7 +297,7 @@ export default function LedgerDirectoryView({
                     </div>
                   )}
                 </div>
-              </div>
+              </Link>
             ))}
         </div>
       )}

@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [008](./008.md) — Files directory rows cannot be opened with the keyboard
 - [009](./009.md) — Narrow Files toolbars lose names for history and editing controls
 - [010](./010.md) — Gallery search retains stale selections and ignores Escape on empty results
 - [011](./011.md) — Yearly account grouping hides real activity and recovery controls

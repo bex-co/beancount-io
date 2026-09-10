@@ -12,6 +12,29 @@ vi.mock("@apollo/client/react", () => ({
 
 vi.mock("@tanstack/react-router", () => ({
   useNavigate: () => mockNavigate,
+  Link: ({
+    to,
+    params,
+    children,
+    className,
+  }: {
+    to: string;
+    params: Record<string, string>;
+    children: React.ReactNode;
+    className?: string;
+  }) => (
+    <a
+      href={Object.entries(params).reduce(
+        (path, [key, value]) => path.replace(`$${key}`, value),
+        to.replace("/$", "/"),
+      )}
+      className={className}
+      data-to={to}
+      data-splat={params._splat}
+    >
+      {children}
+    </a>
+  ),
 }));
 
 vi.mock("@/common/hooks/use-file-navigate", () => ({
@@ -214,6 +237,49 @@ describe("LedgerDirectoryView", () => {
     render(<LedgerDirectoryView ledgerId="test-ledger" currentPath="" />);
 
     expect(screen.getByTestId("readme-card")).toBeInTheDocument();
+  });
+
+  it("exposes file and directory rows as navigable links", () => {
+    mockUseQuery.mockReturnValue({
+      data: {
+        getLedgerDirContent: [
+          {
+            name: "accounts",
+            path: "accounts",
+            type: "dir",
+            size: 0,
+            sha: "dir",
+            lastCommitterDate: "2024-01-01",
+          },
+          {
+            name: "main.bean",
+            path: "main.bean",
+            type: "file",
+            size: 100,
+            sha: "file",
+            lastCommitterDate: "2024-01-01",
+          },
+        ],
+      },
+      loading: false,
+      error: undefined,
+    });
+
+    render(<LedgerDirectoryView ledgerId="test-ledger" currentPath="" />);
+
+    const fileLink = screen.getByRole("link", { name: /main\.bean/i });
+    expect(fileLink).toHaveAttribute(
+      "data-to",
+      "/ledger/$ledgerOwner/$ledgerName/files/blob/$branch/$",
+    );
+    expect(fileLink).toHaveAttribute("data-splat", "main.bean");
+
+    const dirLink = screen.getByRole("link", { name: /accounts/i });
+    expect(dirLink).toHaveAttribute(
+      "data-to",
+      "/ledger/$ledgerOwner/$ledgerName/files/tree/$branch/$",
+    );
+    expect(dirLink).toHaveAttribute("data-splat", "accounts");
   });
 
   it("shows error state", () => {
