@@ -17,11 +17,7 @@ import type {
   CreateApiKeyInput,
   IApiKeyModel,
 } from "@/features/apikeys/data/api-key-model";
-import {
-  executeCreateApiKey,
-  executeListApiKeys,
-  executeRevokeApiKey,
-} from "@/features/ai-agent/tools/api-key-tools";
+import { executeManageApiKeys } from "@/features/ai-agent/tools/api-key-tools";
 import {
   AuthorizationDeniedError,
   AuthorizationService,
@@ -153,10 +149,13 @@ describe("API-key authorization parity", () => {
     await expect(
       restCall(server, "GET", "/api-gateway/v1/api-keys"),
     ).resolves.toBe(403);
-    const mcp = await executeListApiKeys({
-      apiKeyService: service,
-      identity: writeOAuth,
-    });
+    const mcp = await executeManageApiKeys(
+      {
+        apiKeyService: service,
+        identity: writeOAuth,
+      },
+      { operation: "list" },
+    );
     expect(mcp).toMatchObject({
       ok: false,
       error: expect.stringContaining('requires the "ledger.admin" scope'),
@@ -174,9 +173,9 @@ describe("API-key authorization parity", () => {
       restCall(server, "POST", "/api-gateway/v1/api-keys", input),
     ).resolves.toBe(403);
     await expect(
-      executeCreateApiKey(
+      executeManageApiKeys(
         { apiKeyService: service, identity: writeOAuth },
-        input,
+        { operation: "create", ...input },
       ),
     ).resolves.toMatchObject({
       ok: false,
@@ -195,9 +194,9 @@ describe("API-key authorization parity", () => {
       restCall(server, "POST", "/api-gateway/v1/api-keys", input),
     ).resolves.toBe(403);
     await expect(
-      executeCreateApiKey(
+      executeManageApiKeys(
         { apiKeyService: service, identity: adminApiKey },
-        input,
+        { operation: "create", ...input },
       ),
     ).resolves.toMatchObject({
       ok: false,
@@ -215,9 +214,9 @@ describe("API-key authorization parity", () => {
       restCall(server, "DELETE", `/api-gateway/v1/api-keys/${storedKey.id}`),
     ).resolves.toBe(403);
     await expect(
-      executeRevokeApiKey(
+      executeManageApiKeys(
         { apiKeyService: service, identity: writeOAuth },
-        { id: storedKey.id },
+        { operation: "revoke", id: storedKey.id },
       ),
     ).resolves.toMatchObject({
       ok: false,
@@ -273,7 +272,10 @@ describe("API-key authorization parity", () => {
       restCall(server, "GET", "/api-gateway/v1/api-keys"),
     ).resolves.toBe(200);
     await expect(
-      executeListApiKeys({ apiKeyService: service, identity: adminOAuth }),
+      executeManageApiKeys(
+        { apiKeyService: service, identity: adminOAuth },
+        { operation: "list" },
+      ),
     ).resolves.toMatchObject({ ok: true });
     expect(model.listByUserId).toHaveBeenCalledTimes(3);
   });
@@ -327,7 +329,11 @@ describe("API-key authorization parity", () => {
         contextValue: gqlContext(caller),
       });
       expect(gql.errors).toBeUndefined();
-      const mcp = await callMcp("createApiKey", input, caller);
+      const mcp = await callMcp(
+        "manageApiKeys",
+        { operation: "create", ...input },
+        caller,
+      );
       expect(mcp.isError).not.toBe(true);
       expect(mcp.structuredContent).toMatchObject({
         ok: true,
@@ -337,8 +343,9 @@ describe("API-key authorization parity", () => {
         },
       });
       const snake = await callMcp(
-        "createApiKey",
+        "manageApiKeys",
         {
+          operation: "create",
           name: input.name,
           scopes: input.scopes,
           ledger_scope: ledgerScope,
@@ -367,15 +374,11 @@ describe("API-key authorization parity", () => {
     },
   );
 
-  it.each([
-    { ledger_scope: "ada/personal", ledgerScope: "ada/other" },
-    { expires_at: "2030-01-01T00:00:00Z", expiresAt: "2031-01-01T00:00:00Z" },
-    { expires_at: "not-a-date" },
-    { expires_at: "2000-01-01T00:00:00Z" },
-  ])(
-    "rejects invalid or conflicting MCP arguments before persistence: %j",
+  it.each([{ expires_at: "not-a-date" }, { expires_at: "2000-01-01T00:00:00Z" }])(
+    "rejects invalid MCP arguments before persistence: %j",
     async (extra) => {
-      const response = await callMcp("createApiKey", {
+      const response = await callMcp("manageApiKeys", {
+        operation: "create",
         name: "Automation",
         scopes: ["ledger.read"],
         ...extra,
@@ -385,6 +388,30 @@ describe("API-key authorization parity", () => {
     },
   );
 
+  it("prefers the documented spelling when both key spellings are sent", async () => {
+    // The snake_case spellings stay accepted for one release (w2/m27); when
+    // both spellings arrive, the advertised camelCase one wins.
+    const response = await callMcp("manageApiKeys", {
+      operation: "create",
+      name: "Automation",
+      scopes: ["ledger.read"],
+      ledgerScope: "ada/personal",
+      ledger_scope: "ada/other",
+      expiresAt: "2030-01-01T00:00:00Z",
+      expires_at: "2031-01-01T00:00:00Z",
+    });
+    expect(response.isError).not.toBe(true);
+    expect(response.structuredContent).toMatchObject({
+      ok: true,
+      result: {
+        key: {
+          expires_at: "2030-01-01T00:00:00.000Z",
+          ledger_scope: "ada/personal",
+        },
+      },
+    });
+  });
+
   it("includes usage and revocation dates in MCP list results without a secret", async () => {
     model.listByUserId.mockResolvedValueOnce([
       {
@@ -393,7 +420,7 @@ describe("API-key authorization parity", () => {
         revokedAt: new Date("2026-01-03"),
       },
     ]);
-    const response = await callMcp("listApiKeys", {});
+    const response = await callMcp("manageApiKeys", { operation: "list" });
     expect(response.isError).not.toBe(true);
     expect(response.structuredContent).toMatchObject({
       result: [

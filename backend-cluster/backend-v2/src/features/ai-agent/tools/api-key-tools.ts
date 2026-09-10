@@ -47,140 +47,162 @@ const present = (key: ReturnType<typeof toPublicApiKey>) => ({
   created_at: key.createdAt.toISOString(),
 });
 
-// --- list -----------------------------------------------------------------
+// --- manageApiKeys (grouped) --------------------------------------------------------
 
-export const listApiKeysDescription =
-  "List the caller's API keys. Shows each key's id, name, prefix, and scopes — never the key itself, which is only ever returned when it is created.";
+/**
+ * API-key management as one grouped MCP tool (w2/m27:t005).
+ *
+ * Three verbs, one family: the same subject (the caller's keys), the same
+ * authorization class (`admin`), and an agent picking one is choosing among
+ * them rather than between them and something unrelated — the same grouping
+ * argument as `manageBankImport` (ADR 0008 D3). REST and GraphQL keep their
+ * separate list/create/revoke shapes; only the MCP spelling folds, with the
+ * same refusals as before on every branch.
+ */
 
-export const listApiKeysInputSchema = z.object({});
+export const manageApiKeysDescription =
+  "List, mint, or revoke the caller's API keys. `operation` selects the branch: `list` never returns the key itself; `create` mints a key (requires a paid plan, cannot be called with an API key; the plaintext is returned once and is unrecoverable); `revoke` takes a key id and applies on next use.";
 
-export const listApiKeysOutputSchema = toolOutputSchema(
-  z.array(publicKeyShape),
-);
-
-export async function executeListApiKeys(
-  ctx: Pick<ToolContext, "apiKeyService" | "identity">,
-): Promise<z.infer<typeof listApiKeysOutputSchema>> {
-  return runToolSafely({
-    logger: toolLogger,
-    message: "Failed to list API keys",
-    execute: async () =>
-      (await ctx.apiKeyService.list(ctx.identity)).map((key) =>
-        present(toPublicApiKey(key)),
-      ),
-  });
-}
-
-// --- create ---------------------------------------------------------------
-
-export const createApiKeyDescription =
-  "Mint an API key for scripted access. Requires a paid plan, and cannot be called with an API key. The plaintext is returned once, here, and is not recoverable afterwards.";
-
-const expirySchema = z.iso.datetime({ offset: true }).optional();
-
-export const createApiKeyInputSchema = z
+const manageApiKeysStrictInput = z
   .object({
+    operation: z
+      .enum(["list", "create", "revoke"])
+      .describe("Which key-management branch to run."),
     name: z
       .string()
       .min(1)
       .max(200)
-      .describe("What this key is for; shown in the key list."),
+      .optional()
+      .describe(
+        "Required by `create`: what this key is for; shown in the key list.",
+      ),
     scopes: z
       .array(z.enum(API_SCOPES))
       .min(1)
+      .optional()
       .describe(
-        "What the key may do. Cannot exceed what the caller already holds.",
+        "Required by `create`: what the key may do. Cannot exceed what the caller already holds.",
       ),
-    ledger_scope: z
+    ledgerScope: z
       .string()
       .optional()
       .describe(
-        "Confine the key to one ledger, as `owner/name`. Omit to inherit the caller's own confinement; a credential pinned to one ledger cannot name a different one.",
+        "`create` only: confine the key to one ledger, as `owner/name`. Omit to inherit the caller's own confinement; a credential pinned to one ledger cannot name a different one.",
       ),
-    ledgerScope: z.string().optional().describe("Alias for ledger_scope."),
-    expires_at: expirySchema.describe(
-      "When the key stops working (ISO 8601). Omit for no expiry.",
-    ),
-    expiresAt: expirySchema.describe("Alias for expires_at."),
+    expiresAt: z
+      .string()
+      .datetime({ offset: true })
+      .optional()
+      .describe(
+        "`create` only: when the key stops working (ISO 8601). Omit for no expiry.",
+      ),
+    id: z
+      .string()
+      .optional()
+      .describe(
+        "Required by `revoke`: the key's id (`akey_…`), not the key itself.",
+      ),
   })
-  .refine(
-    (input) =>
-      input.ledger_scope === undefined ||
-      input.ledgerScope === undefined ||
-      input.ledger_scope === input.ledgerScope,
-    {
-      message: "ledger_scope and ledgerScope must agree",
-      path: ["ledgerScope"],
-    },
-  )
-  .refine(
-    (input) =>
-      input.expires_at === undefined ||
-      input.expiresAt === undefined ||
-      Date.parse(input.expires_at) === Date.parse(input.expiresAt),
-    { message: "expires_at and expiresAt must agree", path: ["expiresAt"] },
-  );
+  .strict();
 
-export const createApiKeyOutputSchema = toolOutputSchema(
-  z.object({ key: publicKeyShape, plaintext: z.string() }),
+/**
+ * The advertised input carries one `expiresAt` (`format: date-time`) and one
+ * `ledgerScope` — the 400-character date regex and the alias pair are gone
+ * from `tools/list`. The snake_case spellings stay accepted on input for one
+ * release: a snake_case value fills the camelCase field only when the
+ * advertised spelling is absent, so the documented spelling always wins a
+ * conflict, and both spellings are normalized away before the strict parse.
+ */
+export const manageApiKeysInputSchema = z.preprocess((input) => {
+  if (typeof input !== "object" || input === null || Array.isArray(input)) {
+    return input;
+  }
+  const record = { ...(input as Record<string, unknown>) };
+  if (record.ledgerScope === undefined && record.ledger_scope !== undefined) {
+    record.ledgerScope = record.ledger_scope;
+  }
+  if (record.expiresAt === undefined && record.expires_at !== undefined) {
+    record.expiresAt = record.expires_at;
+  }
+  delete record.ledger_scope;
+  delete record.expires_at;
+  return record;
+}, manageApiKeysStrictInput);
+
+export const manageApiKeysOutputSchema = toolOutputSchema(
+  z.union([
+    z.array(publicKeyShape),
+    z.object({ key: publicKeyShape, plaintext: z.string() }),
+    publicKeyShape,
+  ]),
 );
 
-export async function executeCreateApiKey(
-  ctx: Pick<ToolContext, "apiKeyService" | "identity">,
+type ManageApiKeysContext = Pick<ToolContext, "apiKeyService" | "identity">;
+
+/**
+ * One error boundary for all three branches, so a malformed call, a missing
+ * per-operation field, and a service refusal all travel as `{ ok: false }` —
+ * the same envelope the three folded tools produced, and the one the MCP
+ * handler turns into `isError`.
+ */
+export async function executeManageApiKeys(
+  ctx: ManageApiKeysContext,
   input: {
-    name: string;
-    scopes: string[];
-    ledger_scope?: string;
+    operation: "list" | "create" | "revoke";
+    name?: string;
+    scopes?: string[];
     ledgerScope?: string;
-    expires_at?: string;
     expiresAt?: string;
+    id?: string;
   },
-): Promise<z.infer<typeof createApiKeyOutputSchema>> {
+): Promise<z.infer<typeof manageApiKeysOutputSchema>> {
   return runToolSafely({
     logger: toolLogger,
-    message: "Failed to mint API key",
-    // Deliberately not logging `input`: the name is harmless, but a tool that
-    // logs its arguments is one schema change away from logging a secret.
-    context: { scopes: input.scopes },
+    message: "Failed to manage API keys",
     execute: async () => {
-      const parsed = createApiKeyInputSchema.parse(input);
-      const expiry = parsed.expires_at ?? parsed.expiresAt;
-      const minted = await ctx.apiKeyService.mint(ctx.identity, {
-        name: input.name,
-        scopes: input.scopes,
-        ledgerScope: parsed.ledger_scope ?? parsed.ledgerScope,
-        expiresAt: expiry === undefined ? undefined : new Date(expiry),
-      });
-      return {
-        key: present(toPublicApiKey(minted.key)),
-        plaintext: minted.plaintext,
-      };
+      const parsed = manageApiKeysInputSchema.parse(input);
+      switch (parsed.operation) {
+        case "list":
+          return (await ctx.apiKeyService.list(ctx.identity)).map((key) =>
+            present(toPublicApiKey(key)),
+          );
+        case "create": {
+          // Deliberately not logging the name below: it is harmless, but a
+          // tool that logs its arguments is one schema change away from
+          // logging a secret.
+          const name = required(parsed.name, "name", parsed.operation);
+          const scopes = required(parsed.scopes, "scopes", parsed.operation);
+          const minted = await ctx.apiKeyService.mint(ctx.identity, {
+            name,
+            scopes,
+            ledgerScope: parsed.ledgerScope,
+            expiresAt:
+              parsed.expiresAt === undefined
+                ? undefined
+                : new Date(parsed.expiresAt),
+          });
+          return {
+            key: present(toPublicApiKey(minted.key)),
+            plaintext: minted.plaintext,
+          };
+        }
+        case "revoke":
+          return present(
+            toPublicApiKey(
+              await ctx.apiKeyService.revoke(
+                ctx.identity,
+                required(parsed.id, "id", parsed.operation),
+              ),
+            ),
+          );
+      }
     },
   });
 }
 
-// --- revoke ---------------------------------------------------------------
-
-export const revokeApiKeyDescription =
-  "Revoke an API key by its id. Takes effect on the key's next use.";
-
-export const revokeApiKeyInputSchema = z.object({
-  id: z.string().describe("The key's id (`akey_…`), not the key itself."),
-});
-
-export const revokeApiKeyOutputSchema = toolOutputSchema(publicKeyShape);
-
-export async function executeRevokeApiKey(
-  ctx: Pick<ToolContext, "apiKeyService" | "identity">,
-  input: { id: string },
-): Promise<z.infer<typeof revokeApiKeyOutputSchema>> {
-  return runToolSafely({
-    logger: toolLogger,
-    message: "Failed to revoke API key",
-    context: { keyId: input.id },
-    execute: async () =>
-      present(
-        toPublicApiKey(await ctx.apiKeyService.revoke(ctx.identity, input.id)),
-      ),
-  });
+function required<T>(value: T | undefined, key: string, operation: string): T {
+  if (value === undefined) {
+    throw new Error(`\`${key}\` is required for operation "${operation}"`);
+  }
+  return value;
 }

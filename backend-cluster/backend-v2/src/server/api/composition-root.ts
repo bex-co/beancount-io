@@ -66,9 +66,12 @@ import { setGitProxyHandler } from "@/features/gitea/api/git-proxy-handler";
 import { MCP_TOOLS } from "@/features/ai-agent/api/mcp-tools";
 import {
   MCP_RESOURCES,
+  listLedgerResources,
   resourceTemplateFor,
+  type ListedMcpResource,
 } from "@/features/ai-agent/api/mcp-resources";
 import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
+import { buildInstructions } from "@/features/ai-agent/api/mcp-context";
 
 import {
   gqlOpId,
@@ -411,7 +414,10 @@ export function assembleMcpRegistry(
   toolCtx: McpRequestContext,
   config: AppConfig,
 ): McpServer {
-  const server = new McpServer({ name: "beancount-mcp", version: "1.0.0" });
+  const server = new McpServer(
+    { name: "beancount-mcp", version: "1.0.0" },
+    { instructions: buildInstructions(toolCtx.identity) },
+  );
 
   for (const descriptor of MCP_TOOLS) {
     server.registerTool(
@@ -421,6 +427,7 @@ export function assembleMcpRegistry(
         description: descriptor.description,
         inputSchema: descriptor.inputSchema,
         outputSchema: descriptor.outputSchema,
+        annotations: descriptor.annotations,
       },
       makeMcpToolHandler(
         toolCtx,
@@ -430,10 +437,55 @@ export function assembleMcpRegistry(
     );
   }
 
+  // One enumeration per request, shared by every template's list callback:
+  // resources/list fans out to each template, and without the memo each one
+  // would re-list ledgers and source files on its own. A failed enumeration
+  // lists nothing rather than failing resources/list — discovery is advisory,
+  // and the per-read gate still guards every fetch.
+  let sharedListing: Promise<readonly ListedMcpResource[]> | undefined;
+  const listOnce = (): Promise<readonly ListedMcpResource[]> => {
+    if (!sharedListing) {
+      sharedListing = listLedgerResources(toolCtx).catch((error) => {
+        mcpLogger.error("MCP resource listing failed", {
+          error: error instanceof Error ? error.message : String(error),
+        });
+        return [];
+      });
+    }
+    return sharedListing;
+  };
+
   for (const descriptor of MCP_RESOURCES) {
+    const listable =
+      descriptor.listSegment !== undefined ||
+      descriptor.listPerSourceFile === true;
     server.registerResource(
       descriptor.name,
-      resourceTemplateFor(descriptor),
+      resourceTemplateFor(
+        descriptor,
+        listable
+          ? async () => {
+              // Listing is gated like a read of the same op: enumeration
+              // authorizes per service call, and the shared budget applies.
+              await gateMcpCall(
+                mcpResourceOpId(descriptor.name),
+                toolCtx,
+                config,
+              );
+              const listed = await listOnce();
+              return {
+                resources: listed
+                  .filter((entry) => entry.template === descriptor.name)
+                  .map(({ uri, title, mimeType }) => ({
+                    uri,
+                    name: descriptor.name,
+                    title,
+                    mimeType,
+                  })),
+              };
+            }
+          : undefined,
+      ),
       {
         title: descriptor.title,
         description: descriptor.description,

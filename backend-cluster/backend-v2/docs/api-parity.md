@@ -270,7 +270,7 @@ alone do not close those coverage rows.
 Canonical and legacy archive downloads now use `LedgerArchiveService` across
 REST and MCP. REST streams the protected response; MCP returns the same bytes
 as a base64 blob with upstream MIME type and Content-Disposition metadata.
-Both MCP aliases join the existing REST archive counter and 30/minute budget.
+The canonical MCP resource joins the existing REST archive counter and 30/minute budget (the legacy alias left MCP in w2/m27; its REST twin keeps the counter).
 The archive adapter tests consume real HTTP fixture responses and MCP SDK
 resources, comparing ZIP bytes and extracted tar content, checking revocation,
 pin/path refusals, and upstream failure handling. Missing archives remain 404;
@@ -416,7 +416,7 @@ alias overrides fail at module load). The archive family keeps its shared
 cross-verb bucket. Rotating surfaces can no longer multiply a budget.
 
 Legacy `addEntries` is now available at `POST /api-gateway/v1/legacy/entries`
-and as the `addLegacyEntries` MCP tool. GraphQL now delegates to the same
+(and, until w2/m27, as the `addLegacyEntries` MCP tool). GraphQL now delegates to the same
 `LegacyEntryWorkflow`, which preserves explicit/pin/first-ledger resolution,
 legacy amount-string conversion, ignored metadata, Transaction-only acceptance,
 and the `{data:"",success:true}` response. Cross-adapter tests exercise the real

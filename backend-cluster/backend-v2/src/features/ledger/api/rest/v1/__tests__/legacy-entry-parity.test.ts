@@ -3,10 +3,6 @@ import {
   type LegacyEntryInput,
 } from "@/features/ledger/workflow/legacy-entry-workflow";
 import "reflect-metadata";
-jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
-jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerLegacyMutationResolver } from "../../../resolvers/ledger-legacy-resolver.mutation";
@@ -20,12 +16,10 @@ import {
   SourceBackedRelationshipEvaluator,
 } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
-import { assembleMcpRegistry } from "@/server/api/composition-root";
 import { startV1TestServer } from "@/server/rest/__tests__/v1-test-server";
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
-import type { McpRequestContext } from "@/features/ai-agent/api/mcp-context";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const identity: Identity = {
@@ -144,16 +138,6 @@ async function fixture(caller = identity, ledgerId?: string | null) {
     config,
   );
   rest.setIdentity(caller);
-  const server = assembleMcpRegistry(
-    {
-      identity: caller,
-      legacyEntryWorkflow: workflow,
-    } as unknown as McpRequestContext,
-    config,
-  );
-  const client = new Client({ name: "structured-entry-parity", version: "1" });
-  const [a, b] = InMemoryTransport.createLinkedPair();
-  await Promise.all([client.connect(a), server.connect(b)]);
   return {
     committed,
     state,
@@ -191,21 +175,9 @@ async function fixture(caller = identity, ledgerId?: string | null) {
           result: response.data?.addEntries,
         };
       }
-      const response = await client.callTool({
-        name: "addLegacyEntries",
-        arguments: {
-          entriesInput: batch,
-          ...(ledgerId === undefined ? {} : { ledgerId }),
-        },
-      });
-      return {
-        success: !response.isError,
-        result: (response.structuredContent as { result?: unknown })?.result,
-      };
+      throw new Error(`unknown surface: ${surface}`);
     },
     close: async () => {
-      await client.close();
-      await server.close();
       await rest.close();
     },
   };
@@ -219,30 +191,15 @@ it.each([
   "preserves legacy mapping and ledger selection for %j",
   async ({ caller, ledgerId }) => {
     const batches: unknown[][] = [];
-    for (const surface of ["rest", "gql", "mcp"]) {
+    // REST and GraphQL only: the MCP compat tool left the agent surface in
+    // w2/m27 (compat-only exemption, REST twin kept).
+    for (const surface of ["rest", "gql"]) {
       const f = await fixture(caller, ledgerId);
       try {
-        // REST and GraphQL keep the legacy `{data, success}` contract; MCP
-        // carries the write outcome around the same committed batch.
         const { success, result } = await f.call(surface);
         expect({ success, result }).toEqual({
           success: true,
-          result:
-            surface === "mcp"
-              ? {
-                  summary:
-                    "Added 1 legacy entry. No new bean-check errors.",
-                  data: "",
-                  success: true,
-                  wrote: [],
-                  entryHashes: [],
-                  validation: {
-                    errorsBefore: 0,
-                    errorsAfter: 0,
-                    newErrors: [],
-                  },
-                }
-              : { data: "", success: true },
+          result: { data: "", success: true },
         });
         expect(f.committed).toHaveLength(1);
         expect(f.committed[0]).toMatchObject({
@@ -273,11 +230,10 @@ it.each([
       }
     }
     expect(batches[1]).toEqual(batches[0]);
-    expect(batches[2]).toEqual(batches[0]);
   },
 );
 
-describe.each(["rest", "gql", "mcp"])("legacy entries via %s", (surface) => {
+describe.each(["rest", "gql"])("legacy entries via %s", (surface) => {
   it("rejects unsupported legacy directives before a commit", async () => {
     const f = await fixture();
     try {

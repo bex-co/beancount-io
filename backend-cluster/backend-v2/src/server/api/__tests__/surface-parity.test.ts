@@ -176,7 +176,12 @@ describe("surface parity", () => {
     // w1/m10 closed the last eligible adapters. The frozen baseline separately
     // prevents dropping verbs or narrowing eligibility to reduce debt.
     rest: 0,
-    mcp: 0,
+    // w2/m27 deliberately removes the four GraphQL/REST compatibility shims
+    // from MCP (compat-only exemption, REST twins kept, ADR 0008): agents
+    // should never choose the legacy spelling when the canonical verb serves
+    // the same capability. This is a decided contract change, not new debt —
+    // raising it again still fails until this line is edited.
+    mcp: 4,
   };
 
   it("tracks the in-scope gap exactly, so it cannot drift either way", () => {

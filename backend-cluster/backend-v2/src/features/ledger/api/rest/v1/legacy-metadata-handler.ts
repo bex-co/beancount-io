@@ -3,7 +3,7 @@ import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
 
 /** userId is a compatibility argument, never the authenticated subject. */
-export const legacyMetadataQuery = z.object({
+const legacyMetadataQuery = z.object({
   userId: z
     .string()
     .optional()

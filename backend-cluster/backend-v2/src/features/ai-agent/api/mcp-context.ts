@@ -13,6 +13,7 @@ import type { ILedgerCollaboratorsWorkflow } from "@/features/ledger/workflow/le
 import type { ICommitsService } from "@/features/gitea/commits/service/commits-service";
 import type { ILedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import type { ToolContext } from "../tools/types";
+import type { Identity } from "@/server/api/identity";
 import { BadUserInputError, ForbiddenError } from "@/shared/errors";
 import { z } from "zod";
 
@@ -55,6 +56,32 @@ export type McpRequestContext = Omit<ToolContext, "ledgerId"> & {
   publicKeyService: ILedgerPublicKeyService;
   collaboratorsWorkflow: ILedgerCollaboratorsWorkflow;
 };
+
+/**
+ * Per-credential server instructions for the MCP `initialize` result (w2/m27).
+ *
+ * The one free channel every client reads: what the audit's agents spent turns
+ * discovering — which ledger this credential holds, how to select one, the
+ * resource URI grammar, when to check errors, and how BQL rows work. Built per
+ * request because the endpoint builds a server per request, so the pin (or the
+ * selection rule for an unpinned credential) is stated for this caller.
+ * Kept under 1,500 characters; it is paid on every session.
+ */
+export function buildInstructions(identity: Identity): string {
+  const ledgerLine = identity.ledgerScope
+    ? `Ledger ${identity.ledgerScope}: omit \`ledger\` or repeat it.`
+    : "Unpinned credential: pass `ledger: owner/name` on every ledger call; call `listLedgers` first.";
+  return [
+    ledgerLine,
+    "Start with `listLedgers`, then `getLedgerContext`, then work.",
+    "Reads: beancount://{owner}/{name}/<errors|accounts|payees|metadata>, e.g. beancount://alice/personal/errors.",
+    "Files: beancount://{owner}/{name}/files/{path}; catalog: beancount://catalog/ledgers.",
+    "Prefer resources over tools when your client fetches URIs; reads cost less.",
+    "After any write, check `validation.newErrors` or call `checkLedger`.",
+    "BQL rows are postings: LIMIT counts postings, not transactions; use `runBqlQueryStructured` for typed numbers.",
+    "Reads share a generous budget, writes are tightly limited; a 429 means back off, not retry now.",
+  ].join("\n");
+}
 
 export function resolveMcpLedger(
   context: McpRequestContext,

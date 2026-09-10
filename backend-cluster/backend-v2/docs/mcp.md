@@ -63,7 +63,7 @@ authorized browser session or an API-audience OAuth credential with admin
 capability. The request body includes `name`, `scopes`, and
 `ledgerScope: "alice/books"`; `expiresAt` is optional. See the
 [key schemas](../src/features/apikeys/api/api-key-schemas.ts). An API key cannot
-create another API key, including through MCP's `createApiKey` tool.
+create another API key, including through MCP's `manageApiKeys` tool.
 
 ### OAuth
 
@@ -173,22 +173,25 @@ the principal inputs; inspect the schema before constructing a call.
 | ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ---------- |
 | `runBqlQuery`           | `{ "query": "BALANCES" }`; returns formatted query output as a string.                                                                       | Read       |
 | `runBqlQueryStructured` | `{ "query": "BALANCES" }`; returns typed column metadata and rows, or a structured text result, matching REST JSON and GraphQL `queryShell`. | Read       |
+| `listLedgers`           | Optional `page`, `limit`; a pinned credential returns its one ledger. Start here, then `getLedgerContext`.                                  | Read       |
+| `checkLedger`           | `{}`; bean-check errors with file and line, entry counts, and the latest commit, in one call. Call after any write.                         | Read       |
+| `getLedgerContext`      | Optional `payeeLimit`; attributes, open accounts, currencies, payees, years, and source files with counts.                                   | Read       |
+| `getEntryContext`       | `entryHash`; the source context around one entry — read before editing it.                                                                   | Read       |
 | `listLedgerFiles`       | Optional `dir_path`; lists one directory level, directories first.                                                                           | Read       |
 | `readLedgerFiles`       | `files: [{ path, start_line?, end_line? }]`; returns text and line-range metadata.                                                           | Read       |
 | `editLedgerFiles`       | `description`, `files`, optional `dry_run`; batches create/update/replace/delete operations into one commit.                                 | Write      |
-| `listApiKeys`           | `{}`; lists the caller's key metadata, never plaintext.                                                                                      | Admin      |
-| `createApiKey`          | `name`, `scopes`, optional `ledger_scope` and `expires_at`; returns plaintext once. Requires OAuth on MCP and a paid plan.                   | Admin      |
-| `revokeApiKey`          | `id`, the `akey_…` identifier, not the secret; revokes an owned key.                                                                         | Admin      |
+| `manageApiKeys`         | `operation: list / create / revoke`, operation-specific arguments. `create` returns plaintext once; requires OAuth on MCP and a paid plan.    | Admin      |
 | `manageBankImport`      | `operation: sync / submit / discard`, operation-specific arguments, optional `dry_run`.                                                      | Write      |
 | `manageBankConnection`  | `operation: reconcile / map_account / set_currency / refresh / unlink`, operation-specific arguments.                                        | Admin      |
 
 The implementation is listed in
 [`mcp-tools.ts`](../src/features/ai-agent/api/mcp-tools.ts).
-MCP key creation accepts `ledger_scope` / `ledgerScope` and ISO 8601
-`expires_at` / `expiresAt`. Supplying both aliases requires matching values.
+MCP key creation advertises camelCase `ledgerScope` and ISO 8601 `expiresAt`
+(`format: date-time`). The snake_case spellings stay accepted on input for one
+release; when both spellings arrive, the documented one wins.
 An omitted or blank ledger restriction inherits the caller's pin; an omitted
 expiry creates a key without an expiry. A new key cannot exceed its creator's
-scopes or widen its ledger restriction. MCP list/create/revoke results use
+scopes or widen its ledger restriction. MCP key results use
 `key_prefix`, `ledger_scope`, `last_used_at`, `expires_at`, `revoked_at`, and
 `created_at` for REST/GraphQL's camelCase fields; `revoked` remains available
 for compatibility. Only creation returns the plaintext key.
@@ -569,7 +572,8 @@ to handle framing, initialization, and version negotiation.
 
 The common [rate limiter](../src/server/api/rate-limit.ts) counts calls per
 credential and operation. Default budgets are 300 read, 60 write, and 30 admin
-calls per minute; `createApiKey` has a five-per-minute override. These are
+calls per minute; `manageApiKeys` carries the five-per-minute mint override
+because its create branch mints. These are
 operation-class budgets, not one combined allowance for the entire MCP endpoint.
 
 Tool results normally contain both a text block with serialized JSON and
@@ -891,15 +895,17 @@ There is no preview argument.
 
 ### Legacy transaction insertion
 
-`addLegacyEntries` mirrors GraphQL `addEntries`: supply `entriesInput` with
-`type: "Transaction"`, date, flag, meta, narration, payee, and postings containing
-account and amount strings. Legacy metadata is required but ignored, including
-its filename; the writer still uses ledger routing rules. Amounts such as
-`1,000.25 EUR` retain their historical conversion. Other directive types are
-refused; use `addLedgerEntries` for modern structured directives.
+The legacy entry tool left the MCP surface (compat-only exemption): agents
+should use `addLedgerEntries` for modern structured directives. The REST twin
+`POST /api-gateway/v1/legacy/entries` and GraphQL `addEntries` remain for older
+clients: supply `entriesInput` with `type: "Transaction"`, date, flag, meta,
+narration, payee, and postings containing account and amount strings. Legacy
+metadata is required but ignored, including its filename; the writer still uses
+ledger routing rules. Amounts such as `1,000.25 EUR` retain their historical
+conversion. Other directive types are refused.
 
 Optional `ledgerId` preserves the legacy order: explicit target, credential pin,
 then the caller's first accessible ledger. This compatibility operation retains
 that fallback rather than the modern tools' explicit-selection requirement.
 Current target write authorization and normal web quotas still apply. The result
-is `{data:"",success:true}` inside the MCP result envelope. No preview is offered.
+is `{data:"",success:true}`. No preview is offered.

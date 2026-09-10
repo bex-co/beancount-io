@@ -2,6 +2,8 @@ import { executeBqlQuery } from "../bql-query-tool";
 import { executeListLedgerFiles } from "../list-ledger-files-tool";
 import { executeReadLedgerFiles } from "../read-ledger-files-tool";
 import { executeEditLedgerFiles } from "../edit-ledger-files-tool";
+import { MCP_TOOLS } from "../../api/mcp-tools";
+import { VERB_TABLE } from "@/server/api/op-class";
 import type { Identity } from "@/server/api/identity";
 
 /**
@@ -573,5 +575,58 @@ describe("executeEditLedgerFiles", () => {
         operations: [expect.objectContaining({ path: "main.bean" })],
       }),
     );
+  });
+});
+
+/**
+ * Tool-annotation guard (w2/m27:t002).
+ *
+ * Clients decide what to auto-approve from the four hints, so a descriptor
+ * without them — or a `readOnlyHint: true` tool whose op-class is `write` or
+ * `admin` — fails CI here rather than misleading a client in production.
+ */
+describe("MCP tool annotations", () => {
+  it("declares all four hints on every tool", () => {
+    for (const tool of MCP_TOOLS) {
+      expect(typeof tool.annotations.readOnlyHint).toBe("boolean");
+      expect(typeof tool.annotations.destructiveHint).toBe("boolean");
+      expect(typeof tool.annotations.idempotentHint).toBe("boolean");
+      expect(typeof tool.annotations.openWorldHint).toBe("boolean");
+    }
+  });
+
+  it("pairs readOnlyHint: true only with read-class verbs", () => {
+    const classesByTool = new Map<string, Set<string>>();
+    for (const entry of VERB_TABLE) {
+      if (!entry.mcp) continue;
+      const classes = classesByTool.get(entry.mcp) ?? new Set<string>();
+      classes.add(entry.class);
+      classesByTool.set(entry.mcp, classes);
+    }
+    for (const tool of MCP_TOOLS) {
+      if (tool.annotations.readOnlyHint !== true) continue;
+      const classes = classesByTool.get(tool.name);
+      expect(classes?.size).toBeGreaterThan(0);
+      expect([...(classes ?? [])]).toEqual(["read"]);
+    }
+  });
+
+  it("marks every account/ledger deleter as destructive", () => {
+    const destructive = new Map(
+      MCP_TOOLS.map((tool) => [tool.name, tool.annotations.destructiveHint]),
+    );
+    for (const name of [
+      "deleteAccount",
+      "manageLedgers",
+      "managePublicKeys",
+      "manageLedgerCollaborators",
+      "managePullRequests",
+      "manageBankConnection",
+      "editLedgerFiles",
+      "editEntrySource",
+      "manageApiKeys",
+    ]) {
+      expect(destructive.get(name)).toBe(true);
+    }
   });
 });

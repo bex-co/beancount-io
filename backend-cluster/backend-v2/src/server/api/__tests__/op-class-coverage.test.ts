@@ -205,7 +205,13 @@ describe("op-class coverage", () => {
     // insertReceiptTransaction closed w1/m10's last write-verb gap: a receipt
     // write cannot ride editLedgerFiles because promotion into receipt storage
     // and the entry write are one composite decision.
-    expect(tools).toHaveLength(24);
+    // w2/m27 adds the four discovery reads (listLedgers, checkLedger,
+    // getLedgerContext, getEntryContext) as tools under the ADR 0008 D2
+    // exception: agent runs showed they precede everything else and clients
+    // do not surface the resource twins. It also folds the three key tools
+    // into manageApiKeys and drops the legacy compat tool from MCP, for a
+    // net of 25.
+    expect(tools).toHaveLength(25);
 
     // Resources are counted apart on purpose. They do not compete for tool
     // selection (ADR 0008 D2), which is the entire reason 50 in-scope reads can
@@ -215,8 +221,10 @@ describe("op-class coverage", () => {
     // counts), seven bank reads (w3/m8), and the file template m5 proved the
     // shape with. This number is expected to climb as
     // the read surface ports; the tool count above is not.
+    // w2/m27 drops the three legacy compat resources from MCP (compat-only
+    // exemption, REST twins kept).
     const resources = mcpOps.filter((op) => op.startsWith("MCP resource:"));
-    expect(resources).toHaveLength(67);
+    expect(resources).toHaveLength(64);
   });
 });
 

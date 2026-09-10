@@ -3,7 +3,7 @@ import { v1Route } from "@/server/rest/v1-route";
 import { json, booleanQuery } from "@/server/rest/v1-schemas";
 import { jsonStringArrayQuery } from "./journal-reads";
 
-export const legacyJournalQuery = z.object({
+const legacyJournalQuery = z.object({
   first: z.coerce.number().int().optional(),
   after: z.string().optional(),
   last: z.coerce.number().int().optional(),

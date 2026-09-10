@@ -1,7 +1,7 @@
 import { z } from "@/shared/zod-openapi-setup";
 import { v1Route } from "@/server/rest/v1-route";
 import { json } from "@/server/rest/v1-schemas";
-export const legacyEntriesInput = z.strictObject({
+const legacyEntriesInput = z.strictObject({
   ledgerId: z.string().nullish(),
   entriesInput: z.array(
     z.strictObject({
@@ -17,7 +17,7 @@ export const legacyEntriesInput = z.strictObject({
     }),
   ),
 });
-export const legacyEntriesResult = z.object({
+const legacyEntriesResult = z.object({
   data: z.string(),
   success: z.boolean(),
 });

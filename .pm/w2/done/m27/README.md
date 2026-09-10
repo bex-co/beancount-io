@@ -1,20 +1,25 @@
 # w2 · m27 — MCP discoverability: the server explains itself to agents
 
-**Worker:** worker2 **Goal:** an agent connecting with any MCP client learns from `initialize` which ledger it holds and how to work, can tell read tools from destructive ones, finds its ledgers, the ledger's validity, and its vocabulary in one call each, sees concrete resources in clients that enumerate them, and pays under half today's tokens for the tool list **Status:** todo
+**Worker:** worker2 **Goal:** an agent connecting with any MCP client learns from `initialize` which ledger it holds and how to work, can tell read tools from destructive ones, finds its ledgers, the ledger's validity, and its vocabulary in one call each, sees concrete resources in clients that enumerate them, and pays under half today's tokens for the tool list **Status:** done
 
 ## Tasks (in order)
 
 | id | title | est | depends_on |
 | --- | --- | --- | --- |
-| t001 | Per-request server instructions in initialize | 45m | — |
-| t002 | Tool annotations on every descriptor, enforced by a guard test | 45m | — |
-| t003 | Hero read tools: listLedgers, checkLedger, getLedgerContext, getEntryContext | 3h | t001 |
-| t004 | Concrete resources/list for the selected ledger | 60m | t003 |
-| t005 | Lean, use-ordered tool list | 90m | t002 |
-| t006 | Adoption surface | 30m | t004, t005 |
-| t007 | Simplify | 30m | t006 |
-| t008 | Test coverage | 60m | t006 |
-| t009 | Closeout | 15m | t008 |
+| t001 | Per-request server instructions in initialize | 45m | — — **DONE** |
+| t002 | Tool annotations on every descriptor, enforced by a guard test | 45m | — — **DONE** |
+| t003 | Hero read tools: listLedgers, checkLedger, getLedgerContext, getEntryContext | 3h | t001 — **DONE** |
+| t004 | Concrete resources/list for the selected ledger | 60m | t003 — **DONE** |
+| t005 | Lean, use-ordered tool list | 90m | t002 — **DONE** |
+| t006 | Adoption surface | 30m | t004, t005 — **DONE** |
+| t007 | Simplify | 30m | t006 — **DONE** |
+| t008 | Test coverage | 60m | t006 — **DONE** |
+| t009 | Closeout | 15m | t008 — **DONE** |
+
+## Closeout notes (t009)
+
+- DoD deviations (both user-approved mid-milestone, recorded in code/ADR): `tools/list` gates at ~60 KB, not 25 KB (output schemas alone are ~29 KB and ADR 0008 D8 requires them; floor with all outputs deleted is still ~33 KB); surface-parity `DEFERRED mcp` moves 0 → 4 for the four compat-only removals (REST twins kept).
+- Verified without a live redeploy (running stack serves the pre-m27 image; no spare credential): full unit suite 269 suites / 4258 tests green, plus real-socket conformance (15 checks incl. new check 9), resources/list, and tools/list suites. Recommend re-running the audit's three agent prompts after deploy.
 
 ## Definition of done
 

@@ -63,13 +63,13 @@ describe("budgets", () => {
   });
 
   it("preserves admin budgets for API-key list and revoke on every surface", () => {
+    // The grouped MCP tool is absent here on purpose: it carries the stricter
+    // 5/minute create-key override rather than the class budget (w2/m27).
     const operations = [
       "GQL Query.apiKeys",
       "REST GET /api-gateway/v1/api-keys",
-      "MCP listApiKeys",
       "GQL Mutation.revokeApiKey",
       "REST DELETE /api-gateway/v1/api-keys/{id}",
-      "MCP revokeApiKey",
     ];
     for (const opId of operations) {
       const classification = classifyOp(opId);
@@ -107,7 +107,7 @@ describe("budgets", () => {
     for (const opId of [
       "GQL Mutation.createApiKey",
       "REST POST /api-gateway/v1/api-keys",
-      "MCP createApiKey",
+      "MCP manageApiKeys",
     ]) {
       expect(budgetFor(opId, classifyOp(opId))).toEqual({
         windowMs: 60_000,
@@ -159,11 +159,12 @@ describe("budgets", () => {
   });
 
   it("limits REST and MCP archive downloads to 30 per minute", () => {
+    // The legacy archive resource left MCP in w2/m27 (compat-only exemption,
+    // REST twin kept), so only the canonical resource remains here.
     for (const opId of [
       "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
       "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
       "MCP resource:ledgerArchive",
-      "MCP resource:legacyLedgerArchive",
     ]) {
       expect(budgetFor(opId, classifyOp(opId))).toEqual({
         windowMs: 60_000,
@@ -233,7 +234,9 @@ describe("charging", () => {
 
   it("charges every surface's spelling of one verb to one counter", async () => {
     // Three aliases, one 5/minute operation — otherwise rotating surfaces
-    // would turn the deliberate createApiKey override into 15/minute.
+    // would turn the deliberate createApiKey override into 15/minute. The
+    // grouped MCP tool (w2/m27) joins the create verb's bucket through its
+    // first-claimed row, so it shares the counter rather than earning one.
     respond(1);
     respond(2);
     respond(3);
@@ -247,7 +250,7 @@ describe("charging", () => {
       identity: token,
       ip: "ip",
     });
-    await consume({ opId: "MCP createApiKey", identity: token, ip: "ip" });
+    await consume({ opId: "MCP manageApiKeys", identity: token, ip: "ip" });
     const keys = new Set(counter.mock.calls.map(([key]) => key));
     expect(keys.size).toBe(1);
   });
@@ -383,11 +386,10 @@ it("alternating REST and MCP archive aliases cannot reset the shared budget", as
     "REST GET /api-gateway/v1/ledgers/{owner}/{name}/archive/{archive}",
     "MCP resource:ledgerArchive",
     "REST GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
-    "MCP resource:legacyLedgerArchive",
   ];
   for (let i = 0; i < 30; i++)
     expect(
-      (await consume({ opId: aliases[i % 4], identity: token, ip: "fixture" }))
+      (await consume({ opId: aliases[i % 3], identity: token, ip: "fixture" }))
         .allowed,
     ).toBe(true);
   for (const opId of aliases)

@@ -1,4 +1,3 @@
-import { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
 import {
   UriTemplate,
   type Variables,
@@ -10,7 +9,7 @@ import { BadUserInputError } from "@/shared/errors";
  * path matching and expansion, and match the advertised query parameters here.
  * A query can never overwrite a ledger or required path argument.
  */
-class QueryResourceTemplate extends UriTemplate {
+export class QueryResourceTemplate extends UriTemplate {
   private readonly pathTemplate: UriTemplate;
 
   constructor(
@@ -49,11 +48,10 @@ class QueryResourceTemplate extends UriTemplate {
   }
 }
 
-export function queryResourceTemplate(
+export function queryTemplate(
   path: string,
   queryNames: readonly string[],
-): ResourceTemplate {
-  return new ResourceTemplate(new QueryResourceTemplate(path, queryNames), {
-    list: undefined,
-  });
+): QueryResourceTemplate {
+  return new QueryResourceTemplate(path, queryNames);
 }
+

@@ -139,9 +139,7 @@ async function fixture(identity = readOnlyToken) {
   };
 }
 const canonical = (name: string) => `beancount://alice/main/archive/${name}`;
-const legacy = (name: string) =>
-  `beancount://legacy/ledgers/alice%2Fmain/archive/${name}`;
-describe("archive bytes through canonical and legacy REST/MCP adapters", () => {
+describe("archive bytes through canonical adapters and the legacy REST twin", () => {
   it.each([readOnlyToken, pinnedReadToken])(
     "preserves archive bytes and MIME metadata for each spelling",
     async (identity) => {
@@ -161,7 +159,9 @@ describe("archive bytes through canonical and legacy REST/MCP adapters", () => {
             );
             expect(Buffer.from(await response.arrayBuffer())).toEqual(bytes);
           }
-          for (const uri of [canonical(name), legacy(name)]) {
+          // The legacy MCP alias left the agent surface in w2/m27
+          // (compat-only exemption); its REST twin is covered above.
+          for (const uri of [canonical(name)]) {
             const response = await f.read(uri);
             const content = response.contents[0];
             expect(content.mimeType).toBe(mime);
@@ -179,19 +179,18 @@ describe("archive bytes through canonical and legacy REST/MCP adapters", () => {
             else expect(downloaded.includes(contents)).toBe(true);
           }
         }
-        expect(f.calls).toHaveLength(8);
+        expect(f.calls).toHaveLength(6);
       } finally {
         await f.close();
       }
     },
   );
-  it("rechecks access after revocation before downloading either MCP alias", async () => {
+  it("rechecks access after revocation before downloading the MCP resource", async () => {
     const f = await fixture();
     try {
       await f.read(canonical("main.zip"));
       f.check.mockResolvedValue(false);
-      for (const uri of [canonical("main.zip"), legacy("main.zip")])
-        await expect(f.read(uri)).rejects.toThrow();
+      await expect(f.read(canonical("main.zip"))).rejects.toThrow();
       expect((await f.rest("main.zip")).status).toBe(403);
       expect(f.calls).toHaveLength(1);
     } finally {
@@ -203,9 +202,7 @@ describe("archive bytes through canonical and legacy REST/MCP adapters", () => {
     try {
       for (const uri of [
         "beancount://other/books/archive/main.zip",
-        "beancount://legacy/ledgers/other%2Fbooks/archive/main.zip",
         canonical("..%2Fsecret.zip"),
-        legacy("..%2Fsecret.zip"),
       ])
         await expect(f.read(uri)).rejects.toThrow();
       expect((await f.rest("..%2Fsecret.zip")).status).toBe(400);
@@ -221,8 +218,7 @@ describe("archive bytes through canonical and legacy REST/MCP adapters", () => {
       f.fail(status);
       try {
         expect((await f.rest("main.zip")).status).toBe(status);
-        for (const uri of [canonical("main.zip"), legacy("main.zip")])
-          await expect(f.read(uri)).rejects.toThrow();
+        await expect(f.read(canonical("main.zip"))).rejects.toThrow();
       } finally {
         await f.close();
       }

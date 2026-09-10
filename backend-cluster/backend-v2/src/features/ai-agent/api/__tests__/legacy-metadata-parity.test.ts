@@ -1,15 +1,12 @@
 import "reflect-metadata";
 jest.mock("@ai-sdk/harness/agent", () => ({ HarnessAgent: class {} }));
 jest.mock("@ai-sdk/harness-acp", () => ({ createACP: () => ({}) }));
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { InMemoryTransport } from "@modelcontextprotocol/sdk/inMemory.js";
 import { buildSchema } from "type-graphql";
 import { graphql } from "graphql";
 import { LedgerLegacyQueryResolver } from "@/features/ledger/api/resolvers/ledger-legacy-resolver.query";
 import { LedgerWorkflow } from "@/features/ledger/workflow/ledger-workflow";
 import { AuthorizationService } from "@/server/api/authorization";
 import { graphqlScopeMiddleware } from "@/server/graphql/scope-middleware";
-import { assembleMcpRegistry } from "@/server/api/composition-root";
 import {
   startV1TestServer,
   readOnlyToken,
@@ -18,7 +15,6 @@ import {
 import type { Identity } from "@/server/api/identity";
 import type { AppConfig } from "@/config/config";
 import type { AppLayers } from "@/foundation/composition";
-import type { McpRequestContext } from "../mcp-context";
 
 const config = { api: { scopeEnforcement: "enforce" } } as AppConfig;
 const options = {
@@ -124,13 +120,8 @@ async function fixture(identity: Identity) {
     { apiKeys: false },
   );
   rest.setIdentity(identity);
-  const server = assembleMcpRegistry(
-    { identity, ledgerWorkflow: workflow } as unknown as McpRequestContext,
-    config,
-  );
-  const client = new Client({ name: "legacy-metadata-parity", version: "1" });
-  const [a, b] = InMemoryTransport.createLinkedPair();
-  await Promise.all([client.connect(a), server.connect(b)]);
+  // No MCP leg: the legacy compat resources left the agent surface in w2/m27
+  // (compat-only exemption, REST twins kept).
   const params = (ledgerId?: string) =>
     new URLSearchParams({
       userId: "someone-else",
@@ -142,10 +133,6 @@ async function fixture(identity: Identity) {
       fetch(
         `${rest.url}/api-gateway/v1/legacy/journal-entries?${queryString(args)}`,
       ),
-    mcpJournal: (args: Record<string, unknown>) =>
-      client.readResource({
-        uri: `beancount://legacy/journal-entries?${queryString(args)}`,
-      }),
     gqlJournal: (args: Record<string, unknown>) => {
       const argumentsText = Object.entries(args)
         .map(([key, value]) => `${key}: ${JSON.stringify(value)}`)
@@ -164,10 +151,6 @@ async function fixture(identity: Identity) {
       fetch(
         `${rest.url}/api-gateway/v1/legacy/ledger-meta?${params(ledgerId)}`,
       ),
-    mcp: (ledgerId?: string) =>
-      client.readResource({
-        uri: `beancount://legacy/ledger-meta?${params(ledgerId)}`,
-      }),
     gql: (ledgerId?: string) =>
       graphql({
         schema,
@@ -179,10 +162,6 @@ async function fixture(identity: Identity) {
       fetch(
         `${rest.url}/api-gateway/v1/legacy/ledger-meta${ledgerId ? `?ledgerId=${ledgerId}` : ""}`,
       ),
-    mcpNoUser: (ledgerId?: string) =>
-      client.readResource({
-        uri: `beancount://legacy/ledger-meta${ledgerId ? `?ledgerId=${ledgerId}` : ""}`,
-      }),
     gqlNoUser: (ledgerId?: string) =>
       graphql({
         schema,
@@ -191,8 +170,6 @@ async function fixture(identity: Identity) {
         contextValue: { identity, getCurrentIdentity: () => identity },
       }),
     close: async () => {
-      await client.close();
-      await server.close();
       await rest.close();
     },
   };
@@ -218,16 +195,11 @@ describe("legacy metadata parity", () => {
         const gql = await f.gql(requested);
         expect(gql.errors).toBeUndefined();
         expect(gql.data?.ledgerMeta).toEqual(expected);
-        const resource = await f.mcp(requested);
-        const content = resource.contents[0];
-        if (!("text" in content))
-          throw new Error("Expected JSON resource text");
-        expect(JSON.parse(content.text)).toEqual(expected);
-        expect(f.factory.getPublicApiClient).toHaveBeenCalledTimes(3);
+        expect(f.factory.getPublicApiClient).toHaveBeenCalledTimes(2);
         for (const call of f.factory.getPublicApiClient.mock.calls)
           expect(call).toEqual([target, identity.userId]);
         if (!requested && !identity.ledgerScope) {
-          expect(f.factory.getApiContext).toHaveBeenCalledTimes(3);
+          expect(f.factory.getApiContext).toHaveBeenCalledTimes(2);
           expect(f.factory.getApiContext).toHaveBeenCalledWith(identity.userId);
         } else expect(f.listLedgers).not.toHaveBeenCalled();
       } finally {
@@ -236,7 +208,7 @@ describe("legacy metadata parity", () => {
     },
   );
 
-  it("reads metadata without the ignored userId on all surfaces", async () => {
+  it("reads metadata without the ignored userId on REST and GraphQL", async () => {
     const f = await fixture(pinnedReadToken);
     try {
       const response = await f.restNoUser();
@@ -245,22 +217,16 @@ describe("legacy metadata parity", () => {
       const gql = await f.gqlNoUser();
       expect(gql.errors).toBeUndefined();
       expect(gql.data?.ledgerMeta).toEqual(expected);
-      const resource = await f.mcpNoUser();
-      const content = resource.contents[0];
-      if (!("text" in content))
-        throw new Error("Expected JSON resource text");
-      expect(JSON.parse(content.text)).toEqual(expected);
     } finally {
       await f.close();
     }
   });
 
-  it("refuses an explicit ledger outside the pin on all surfaces", async () => {
+  it("refuses an explicit ledger outside the pin on REST and GraphQL", async () => {
     const f = await fixture(pinnedReadToken);
     try {
       expect((await f.rest("alice/other")).status).toBe(403);
       expect((await f.gql("alice/other")).errors).toHaveLength(1);
-      await expect(f.mcp("alice/other")).rejects.toThrow();
       expect(f.factory.getPublicApiClient).not.toHaveBeenCalled();
       expect(f.check).not.toHaveBeenCalled();
     } finally {
@@ -274,7 +240,6 @@ describe("legacy metadata parity", () => {
     try {
       expect((await f.rest()).status).toBe(403);
       expect((await f.gql()).errors).toHaveLength(1);
-      await expect(f.mcp()).rejects.toThrow();
       expect(f.reports.getLedgerOptions).not.toHaveBeenCalled();
     } finally {
       await f.close();
@@ -346,11 +311,7 @@ describe("legacy journal parity", () => {
         const gql = await f.gqlJournal(args);
         expect(gql.errors).toBeUndefined();
         expect(gql.data?.journalEntries).toEqual(expectedResult);
-        const mcp = await f.mcpJournal(args);
-        const content = mcp.contents[0];
-        if (!("text" in content)) throw new Error("Expected JSON");
-        expect(JSON.parse(content.text)).toEqual(expectedResult);
-        expect(f.legacy.getLegacyJournal).toHaveBeenCalledTimes(3);
+        expect(f.legacy.getLegacyJournal).toHaveBeenCalledTimes(2);
         for (const call of f.legacy.getLegacyJournal.mock.calls)
           expect(call).toEqual([
             "alice",
@@ -398,9 +359,6 @@ describe("legacy journal parity", () => {
       const gql = await f.gqlJournal({ first: 10 });
       expect(gql.errors).toBeUndefined();
       expect(gql.data?.journalEntries).toEqual(expected);
-      const content = (await f.mcpJournal({ first: 10 })).contents[0];
-      if (!("text" in content)) throw new Error("Expected JSON");
-      expect(JSON.parse(content.text)).toEqual(expected);
     } finally {
       await f.close();
     }
@@ -412,7 +370,6 @@ describe("legacy journal parity", () => {
     try {
       expect((await f.restJournal({})).status).toBe(403);
       expect((await f.gqlJournal({})).errors).toHaveLength(1);
-      await expect(f.mcpJournal({})).rejects.toThrow();
       expect(f.legacy.getLegacyJournal).not.toHaveBeenCalled();
     } finally {
       await f.close();

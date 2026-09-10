@@ -232,6 +232,8 @@ const M = {
     "This *is* the MCP surface's own transport or one of its siblings — a tool for reaching it would be circular.",
   singleLedgerPin:
     "Depends-on ADR-0007-D3 — MCP pins every credential to one ledger, so a tool that enumerates ledgers can only return the one the agent already has. ADR 0007 D11 relaxes the pin and inverts this: an unpinned credential must call it first. Reverse when D11 lands.",
+  compatOnly:
+    "GraphQL/REST compatibility shim kept off the agent surface on purpose (w2/m27): agents should never choose the legacy spelling when the canonical verb serves the same capability on MCP, while older clients keep their REST twin. Documented as a deliberate contract change in ADR 0008.",
 } as const;
 
 /** Why a verb has no GraphQL field. */
@@ -788,9 +790,8 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.listLedgers",
       rest: "GET /api-gateway/v1/ledgers",
+      mcp: "listLedgers",
       mcpResource: "accessibleLedgers",
-      mcpExempt:
-        "Reachable through the accessibleLedgers account resource, with pin restrictions enforced by the shared workflow (ADR 0008 D2).",
     },
     {
       verb: "Query.listUserOwnedLedgers",
@@ -860,9 +861,8 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.getLedgerAttributes",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/attributes",
+      mcp: "getLedgerContext",
       mcpResource: "ledgerAttributes",
-      mcpExempt:
-        "Reachable as the `ledgerAttributes` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerCommodities",
@@ -923,27 +923,24 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.getLedgerErrors",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/errors",
+      mcp: "checkLedger",
       mcpResource: "ledgerErrors",
-      mcpExempt:
-        "Reachable as the `ledgerErrors` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerCurrencies",
       class: "read",
       gql: "Query.getLedgerCurrencies",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/currencies",
+      mcp: "getLedgerContext",
       mcpResource: "ledgerCurrencies",
-      mcpExempt:
-        "Reachable as the `ledgerCurrencies` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerSourceFiles",
       class: "read",
       gql: "Query.getLedgerSourceFiles",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/source-files",
+      mcp: "getLedgerContext",
       mcpResource: "ledgerSourceFiles",
-      mcpExempt:
-        "Reachable as the ledgerSourceFiles resource with the corresponding journal/source contract (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerTags",
@@ -959,9 +956,8 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.getLedgerYears",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/years",
+      mcp: "getLedgerContext",
       mcpResource: "ledgerYears",
-      mcpExempt:
-        "Reachable as the `ledgerYears` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerLinks",
@@ -986,9 +982,8 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.getLedgerPayees",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/payees",
+      mcp: "getLedgerContext",
       mcpResource: "ledgerPayees",
-      mcpExempt:
-        "Reachable as the `ledgerPayees` resource rather than a tool: a vocabulary read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerAccountLastEntries",
@@ -1004,9 +999,8 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.getLedgerEntriesCountPerType",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/entries-count",
+      mcp: "checkLedger",
       mcpResource: "ledgerEntriesCount",
-      mcpExempt:
-        "Reachable as the `ledgerEntriesCount` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerPostingsPerAccount",
@@ -1049,9 +1043,8 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.getLedgerEntryContext",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/entry-context",
+      mcp: "getEntryContext",
       mcpResource: "ledgerEntryContext",
-      mcpExempt:
-        "Reachable as the `ledgerEntryContext` resource rather than a tool: an analysis read is context a client fetches, not an action a model decides to take (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerPlaintextJournal",
@@ -1076,9 +1069,8 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.getLedgerAccounts",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/accounts",
+      mcp: "getLedgerContext",
       mcpResource: "ledgerAccounts",
-      mcpExempt:
-        "Reachable through the ledgerAccounts resource with the full supported read parameters (ADR 0008 D2).",
     },
     {
       verb: "Query.getLedgerAccountDirectives",
@@ -1112,9 +1104,8 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.getLatestLedgerCommit",
       rest: "GET /api-gateway/v1/ledgers/{owner}/{name}/latest-commit",
+      mcp: "checkLedger",
       mcpResource: "latestLedgerCommit",
-      mcpExempt:
-        "Reachable through the latestLedgerCommit resource with the original commit contract (ADR 0008 D2).",
     },
     {
       verb: "Query.listCommits",
@@ -1140,9 +1131,7 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.ledgerMeta",
       rest: "GET /api-gateway/v1/legacy/ledger-meta",
-      mcpResource: "legacyLedgerMetadata",
-      mcpExempt:
-        "Reachable as legacyLedgerMetadata, preserving the legacy response and default-ledger semantics as a resource (ADR 0008 D2).",
+      mcpExempt: M.compatOnly,
     },
     gqlOnly("Query.accountHierarchy", "read", R.legacy, M.dashboardShaped),
     gqlOnly("Query.homeCharts", "read", R.legacy, M.dashboardShaped),
@@ -1151,9 +1140,7 @@ const LEDGER_READ_VERBS: readonly VerbEntry[] = (
       class: "read",
       gql: "Query.journalEntries",
       rest: "GET /api-gateway/v1/legacy/journal-entries",
-      mcpResource: "legacyJournalEntries",
-      mcpExempt:
-        "Reachable as legacyJournalEntries, preserving the enhanced journal contract and its historical ledger selection (ADR 0008 D2).",
+      mcpExempt: M.compatOnly,
     },
   ] satisfies readonly VerbEntry[]
 ).map((entry) => ({
@@ -1242,7 +1229,7 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
     class: "write" as const,
     gql: "Mutation.addEntries",
     rest: "POST /api-gateway/v1/legacy/entries",
-    mcp: "addLegacyEntries",
+    mcpExempt: M.compatOnly,
   },
   {
     verb: "Mutation.renameLedgerFile",
@@ -1275,22 +1262,29 @@ const LEDGER_WRITE_VERBS: readonly VerbEntry[] = [
  * canonical action tells the legacy scope gate to defer the final decision to
  * the PDP without changing the operation's risk budget.
  */
+/**
+ * Row order matters for the grouped MCP tool: the op index keeps the first
+ * row's verb for a shared tool id, and the rate limiter buckets by that verb.
+ * `create` leads so `MCP manageApiKeys` spends the deliberate 5/minute mint
+ * budget together with the GraphQL and REST create aliases, instead of
+ * joining `list`'s class budget or earning a counter of its own.
+ */
 const API_KEY_VERBS: readonly VerbEntry[] = [
-  {
-    verb: "apikeys.list",
-    class: "admin",
-    authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
-    gql: "Query.apiKeys",
-    rest: "GET /api-gateway/v1/api-keys",
-    mcp: "listApiKeys",
-  },
   {
     verb: "apikeys.create",
     class: "admin",
     authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
     gql: "Mutation.createApiKey",
     rest: "POST /api-gateway/v1/api-keys",
-    mcp: "createApiKey",
+    mcp: "manageApiKeys",
+  },
+  {
+    verb: "apikeys.list",
+    class: "admin",
+    authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
+    gql: "Query.apiKeys",
+    rest: "GET /api-gateway/v1/api-keys",
+    mcp: "manageApiKeys",
   },
   {
     verb: "apikeys.revoke",
@@ -1298,7 +1292,7 @@ const API_KEY_VERBS: readonly VerbEntry[] = [
     authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
     gql: "Mutation.revokeApiKey",
     rest: "DELETE /api-gateway/v1/api-keys/{id}",
-    mcp: "revokeApiKey",
+    mcp: "manageApiKeys",
   },
 ];
 
@@ -1391,9 +1385,7 @@ const CROSS_SURFACE_VERBS: readonly VerbEntry[] = [
     authorizationAction: AUTHORIZATION_ACTIONS.LEDGER_ARCHIVE_READ,
     rest: "GET /api-gateway/ledgers/{ledgerId}/archive/{archive}",
     gqlExempt: G.bytesNotFields,
-    mcpResource: "legacyLedgerArchive",
-    mcpExempt:
-      "Archive bytes are delivered by the MCP resource as a base64 blob with per-call authorization, archive selection, and the shared download budget.",
+    mcpExempt: M.compatOnly,
   },
 ];
 

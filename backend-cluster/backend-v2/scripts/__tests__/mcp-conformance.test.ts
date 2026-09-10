@@ -30,6 +30,7 @@ const [
   checkErrorMasking,
   checkAdvertisedPath,
   checkOptionalUserId,
+  checkDiscoveryWorkload,
 ] = CHECKS;
 
 const ledgerScoped: Identity = {
@@ -60,6 +61,7 @@ beforeAll(async () => {
     database: {},
     services: {
       ledgerShell: { queryShellText: async () => "Assets:Cash 100 USD" },
+      ledgerData: { getSourceFiles: async () => ["main.bean"] },
       ledgerRepo: {
         changeFiles: async ({ identity }: { identity: Identity }) => {
           if (!identity.scopes.has("ledger.write")) {
@@ -161,6 +163,19 @@ describe("MCP conformance checks", () => {
 
   it("check 8 skips with a reason when no credential is supplied", async () => {
     const result = await checkOptionalUserId({ baseUrl });
+    expect(result.outcome).toBe("skip");
+    expect(result.detail).toMatch(/needs --/);
+  });
+
+  it("check 9 passes with instructions, hero tools, and concrete resources", async () => {
+    acceptTokens({ good: ledgerScoped });
+    const result = await checkDiscoveryWorkload({ baseUrl, token: "good" });
+    expect(result.outcome).toBe("pass");
+    expect(result.detail).toMatch(/no retired names/);
+  });
+
+  it("check 9 skips with a reason when no credential is supplied", async () => {
+    const result = await checkDiscoveryWorkload({ baseUrl });
     expect(result.outcome).toBe("skip");
     expect(result.detail).toMatch(/needs --/);
   });

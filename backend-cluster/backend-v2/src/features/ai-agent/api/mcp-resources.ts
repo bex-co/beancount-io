@@ -24,16 +24,20 @@ import {
   collaboratorPermissionQuery,
 } from "@/features/ledger/api/rest/v1/collaborators-handler";
 import { COMMIT_READS } from "@/features/gitea/commits/api/commit-reads";
-import { legacyJournalQuery } from "@/features/ledger/api/rest/v1/legacy-journal-handler";
 import { JOURNAL_READS } from "@/features/ledger/api/rest/v1/journal-reads";
 import {
   statementQuerySchema,
   accountsQuerySchema,
 } from "@/features/ledger/api/rest/v1/reports-handler";
-import { legacyMetadataQuery } from "@/features/ledger/api/rest/v1/legacy-metadata-handler";
 import { CATALOG_READS } from "@/features/ledger/api/rest/v1/catalog-reads";
-import { queryResourceTemplate } from "./mcp-resource-template";
-import type { ResourceTemplate } from "@modelcontextprotocol/sdk/server/mcp.js";
+import {
+  queryTemplate,
+  type QueryResourceTemplate,
+} from "./mcp-resource-template";
+import {
+  ResourceTemplate,
+  type ListResourcesCallback,
+} from "@modelcontextprotocol/sdk/server/mcp.js";
 import { type McpRequestContext, resolveMcpLedger } from "./mcp-context";
 import { parseLedgerId } from "@/shared/str";
 import { VOCABULARY_READS } from "@/features/ledger/api/rest/v1/vocabulary-handler";
@@ -75,6 +79,17 @@ export interface McpResourceDescriptor {
   /** RFC 6570 template. `{owner}/{name}` addresses the ledger, as everywhere else. */
   readonly uriTemplate: string;
   readonly queryNames?: readonly string[];
+  /**
+   * Static per-ledger path emitted into `resources/list` (w2/m27:t004), e.g.
+   * `"errors"` for `beancount://{owner}/{name}/errors`. Only for templates
+   * with no other required variable: a concrete URI cannot fill `{itemId}`.
+   */
+  readonly listSegment?: string;
+  /**
+   * The file template sets this instead: one concrete URI per source file of
+   * the credential's ledger, capped (t004).
+   */
+  readonly listPerSourceFile?: boolean;
   readonly read: (
     toolCtx: McpRequestContext,
     variables: Record<string, string | string[]>,
@@ -132,6 +147,13 @@ function resolveLedgerId(
  * would be ten chances for the surfaces to drift, and the drift would be
  * invisible because each side has its own tests (ADR 0008 D5).
  */
+/**
+ * The vocabulary reads enumerated in `resources/list` (w2/m27:t004): the ones
+ * every audit agent looked for first. The rest stay template-only — a concrete
+ * URI for each of ten vocabularies on every ledger would be listing noise.
+ */
+const LISTED_VOCABULARY: ReadonlySet<string> = new Set(["errors", "payees"]);
+
 const vocabularyResources: readonly McpResourceDescriptor[] =
   VOCABULARY_READS.map((read) => ({
     name: `ledger${read.segment[0].toUpperCase()}${read.segment.slice(1)}`,
@@ -139,6 +161,9 @@ const vocabularyResources: readonly McpResourceDescriptor[] =
     description: read.description,
     mimeType: "application/json",
     uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,
+    ...(LISTED_VOCABULARY.has(read.segment)
+      ? { listSegment: read.segment }
+      : {}),
     read: async (toolCtx, variables) => {
       const ledgerId = resolveLedgerId(toolCtx, variables);
       // The same service instance the REST route calls — `read.fetch` takes the
@@ -486,20 +511,6 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       ),
   },
   {
-    name: "legacyLedgerArchive",
-    title: "Ledger Archive (Legacy Address)",
-    description:
-      "Compatibility archive download using a single encoded ledgerId. Returns the same authorized bytes and spends the same rate budget as the canonical resource.",
-    mimeType: "application/octet-stream",
-    uriTemplate: "beancount://legacy/ledgers/{ledgerId}/archive/{archive}",
-    read: async (context, variables) =>
-      readArchive(
-        context,
-        resolveMcpLedger(context, String(variables.ledgerId)),
-        String(variables.archive),
-      ),
-  },
-  {
     name: "ledgerAssetDownloadUrl",
     title: "Ledger Asset Download URL",
     description:
@@ -648,22 +659,6 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       },
     }),
   ),
-  {
-    name: "legacyJournalEntries",
-    title: "Legacy Journal Entries",
-    description:
-      "The journalEntries compatibility envelope with posting conversions, computed fields, and cursor metadata. Uses the pin or caller's first ledger. entryTypes is a JSON-encoded string array.",
-    mimeType: "application/json",
-    uriTemplate: "beancount://legacy/journal-entries",
-    queryNames: Object.keys(legacyJournalQuery.shape),
-    read: async (context, variables) =>
-      JSON.stringify(
-        await context.ledgerWorkflow.getLegacyJournal({
-          identity: context.identity,
-          args: legacyJournalQuery.parse(variables),
-        }),
-      ),
-  },
   ...JOURNAL_READS.map(
     (read): McpResourceDescriptor => ({
       name: read.name,
@@ -671,6 +666,10 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       description: `${read.summary}. Subtype filters are JSON-encoded string arrays.`,
       mimeType: "application/json",
       uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/${read.segment}`,
+      // The one journal read enumerated in `resources/list` (w2/m27:t004):
+      // clients that enumerate concrete resources need the source-file list
+      // without first knowing it exists.
+      ...(read.segment === "source-files" ? { listSegment: read.segment } : {}),
       queryNames: Object.keys(read.query.shape),
       read: async (context, variables) => {
         const { owner: _owner, name: _name, ...query } = variables;
@@ -695,6 +694,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
         "Financial statement with account, filter, time, conversion, and interval parameters. Returns the same structured data as REST.",
       mimeType: "application/json",
       uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/statements/${statement}`,
+      listSegment: `statements/${statement}`,
       queryNames: Object.keys(statementQuerySchema.shape),
       read: async (context, variables) => {
         const { owner: _owner, name: _name, ...query } = variables;
@@ -718,6 +718,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       "Account names, optionally restricted to open or closed accounts.",
     mimeType: "application/json",
     uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/accounts`,
+    listSegment: "accounts",
     queryNames: Object.keys(accountsQuerySchema.shape),
     read: async (context, variables) => {
       const { ledgerOwner: owner, ledgerName: name } = parseLedgerId(
@@ -733,24 +734,6 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
           status,
           context.identity,
         ),
-      );
-    },
-  },
-  {
-    name: "legacyLedgerMetadata",
-    title: "Legacy Ledger Metadata",
-    description:
-      "Legacy ledgerMeta envelope. Omitted ledgerId uses the credential pin or caller's first ledger. userId is a compatibility argument, never the authenticated subject.",
-    mimeType: "application/json",
-    uriTemplate: "beancount://legacy/ledger-meta",
-    queryNames: Object.keys(legacyMetadataQuery.shape),
-    read: async (context, variables) => {
-      const query = legacyMetadataQuery.parse(variables);
-      return JSON.stringify(
-        await context.ledgerWorkflow.getLegacyMetadata({
-          identity: context.identity,
-          ledgerId: query.ledgerId,
-        }),
       );
     },
   },
@@ -779,6 +762,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       "Read ledger metadata, visibility, repository URLs, and caller permissions.",
     mimeType: "application/json",
     uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/metadata`,
+    listSegment: "metadata",
     read: async (context, variables) =>
       JSON.stringify(
         await context.ledgerWorkflow.getLedger({
@@ -797,6 +781,7 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
       "The text of one file in the ledger repository, addressed by its path. Reading it needs no tool call, so an agent can pull a file into context without spending a tool slot.",
     mimeType: "text/plain",
     uriTemplate: `${RESOURCE_SCHEME}://{owner}/{name}/files/{+path}`,
+    listPerSourceFile: true,
     read: async (toolCtx, variables) => {
       const ledgerId = resolveLedgerId(toolCtx, variables);
       const path = String(variables.path ?? "");
@@ -815,23 +800,110 @@ export const MCP_RESOURCES: readonly McpResourceDescriptor[] = [
   },
 ];
 
-/** The SDK template object for a descriptor. No `list` callback: enumerating every
- * file of every ledger is a crawl, and the paths come from `listLedgerFiles`.
+/** One concrete entry for `resources/list`. */
+export interface ListedMcpResource {
+  /** The descriptor it was enumerated from, so each template lists its own. */
+  readonly template: string;
+  readonly uri: string;
+  readonly title: string;
+  readonly mimeType: string;
+}
+
+/** Source-file entries per ledger are capped: this is discovery, not a crawl. */
+const MAX_LISTED_SOURCE_FILES = 100;
+
+/**
+ * The concrete `resources/list` enumeration for the credential's ledger
+ * (w2/m27:t004).
+ *
+ * A pinned credential enumerates its one ledger; an unpinned credential
+ * enumerates the first catalog page. Static segments come from the
+ * descriptors' `listSegment`; file URIs come from the ledger's source files,
+ * capped. Listing authorizes exactly like reading (each service call runs its
+ * own `authorizeLedger`) but grants nothing: a listed URI still passes the
+ * per-read gate, so a grant revoked after listing bites on the next fetch
+ * (ADR 0007 D5).
+ */
+export async function listLedgerResources(
+  context: McpRequestContext,
+): Promise<readonly ListedMcpResource[]> {
+  const ledgers = context.identity.ledgerScope
+    ? [context.identity.ledgerScope]
+    : (
+        await context.ledgerWorkflow.listLedgers({
+          identity: context.identity,
+          args: { page: 1, limit: 20 },
+        })
+      ).map((ledger) => ledger.fullName);
+  const listed: ListedMcpResource[] = [];
+  const fileTemplate = MCP_RESOURCES.find(
+    (descriptor) => descriptor.listPerSourceFile,
+  );
+  for (const requested of ledgers) {
+    // The pin ceiling applies to listing exactly as to reading: a pinned
+    // credential cannot widen itself by enumerating.
+    const ledgerId = resolveMcpLedger(context, requested);
+    for (const descriptor of MCP_RESOURCES) {
+      if (descriptor.listSegment === undefined) continue;
+      listed.push({
+        template: descriptor.name,
+        uri: `${RESOURCE_SCHEME}://${ledgerId}/${descriptor.listSegment}`,
+        title: descriptor.title,
+        mimeType: descriptor.mimeType,
+      });
+    }
+    if (fileTemplate) {
+      // A ledger whose files cannot be read contributes its static entries
+      // but no file URIs — a revoked grant between catalog and files must not
+      // fail the whole list.
+      const files = await context.services.ledgerData
+        .getSourceFiles({ ledgerId, identity: context.identity })
+        .catch((): string[] => []);
+      for (const path of files.slice(0, MAX_LISTED_SOURCE_FILES)) {
+        listed.push({
+          template: fileTemplate.name,
+          uri: `${RESOURCE_SCHEME}://${ledgerId}/files/${path}`,
+          title: fileTemplate.title,
+          mimeType: fileTemplate.mimeType,
+        });
+      }
+    }
+  }
+  return listed;
+}
+
+/** The SDK template object for a descriptor.
  *
  * Memoized per descriptor: the MCP endpoint is stateless and rebuilds its
  * registry per request, but a template is fully determined by the static
  * descriptor — only the read handler needs per-request state. Without the
  * cache every request re-parses ~70 RFC 6570 templates twice each. */
-const templateCache = new WeakMap<McpResourceDescriptor, ResourceTemplate>();
-export const resourceTemplateFor = (
+const templateCache = new WeakMap<
+  McpResourceDescriptor,
+  QueryResourceTemplate
+>();
+const queryTemplateFor = (
   descriptor: McpResourceDescriptor,
-): ResourceTemplate => {
+): QueryResourceTemplate => {
   const cached = templateCache.get(descriptor);
   if (cached) return cached;
-  const template = queryResourceTemplate(
+  const template = queryTemplate(
     descriptor.uriTemplate,
     descriptor.queryNames ?? [],
   );
   templateCache.set(descriptor, template);
   return template;
+};
+/**
+ * The SDK template object for a descriptor, optionally carrying this
+ * request's `resources/list` callback (w2/m27:t004). The wrapper is rebuilt
+ * per call while the parsed URI template stays cached.
+ */
+export const resourceTemplateFor = (
+  descriptor: McpResourceDescriptor,
+  list?: ListResourcesCallback,
+): ResourceTemplate => {
+  return new ResourceTemplate(queryTemplateFor(descriptor), {
+    list: list ?? undefined,
+  });
 };

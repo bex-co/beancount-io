@@ -89,13 +89,14 @@ describe("classifyOp", () => {
         "GQL Mutation.deleteAccount",
         "GQL Query.apiKeys",
         "REST GET /api-gateway/v1/api-keys",
-        "MCP listApiKeys",
         "GQL Mutation.createApiKey",
         "REST POST /api-gateway/v1/api-keys",
-        "MCP createApiKey",
         "GQL Mutation.revokeApiKey",
         "REST DELETE /api-gateway/v1/api-keys/{id}",
-        "MCP revokeApiKey",
+        // The grouped MCP dispatcher (w2/m27) carries all three verbs, so it
+        // has no transport-level canonical action — each operation authorizes
+        // in the shared application service, as with manageBankImport.
+        "MCP manageApiKeys",
         "GQL Query.subscriptionStatus",
         "GQL Mutation.createSubscriptionSession",
         "GQL Mutation.createStripePortalSession",
@@ -116,13 +117,11 @@ describe("classifyOp", () => {
       AUTHORIZATION_ACTIONS.USER_DELETE,
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
-      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_LIST,
-      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_CREATE,
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
       AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
-      AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
+      undefined,
       AUTHORIZATION_ACTIONS.USER_BILLING_STATUS_READ,
       AUTHORIZATION_ACTIONS.USER_BILLING_CHECKOUT_CREATE,
       AUTHORIZATION_ACTIONS.USER_BILLING_PORTAL_CREATE,
@@ -455,13 +454,20 @@ describe("evaluateScope", () => {
   });
 
   it("keeps API-key operations on the admin risk class while deferring policy", () => {
-    const decision = evaluateScope(token("ledger.write"), "MCP revokeApiKey");
+    // The grouped dispatcher keeps the admin risk class but carries no
+    // transport-level canonical action (w2/m27): the selected branch
+    // authorizes in the shared application service instead. Without an
+    // admin scope the gate refuses before any branch runs.
+    const decision = evaluateScope(token("ledger.admin"), "MCP manageApiKeys");
     expect(decision).toMatchObject({
       allowed: true,
       opClass: "admin",
       requiredScope: "ledger.admin",
-      authorizationAction: AUTHORIZATION_ACTIONS.USER_CREDENTIALS_REVOKE,
     });
+    expect(decision.authorizationAction).toBeUndefined();
+    expect(
+      evaluateScope(token("ledger.write"), "MCP manageApiKeys").allowed,
+    ).toBe(false);
   });
 
   it("defers ledger control-plane reachability to the PDP while preserving admin risk", () => {

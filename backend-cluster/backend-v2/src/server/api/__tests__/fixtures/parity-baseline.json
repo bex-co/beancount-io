@@ -13,7 +13,7 @@
       "bindings": {
         "gql": "Query.apiKeys",
         "rest": "GET /api-gateway/v1/api-keys",
-        "mcp": "listApiKeys"
+        "mcp": "manageApiKeys"
       }
     },
     {
@@ -28,7 +28,7 @@
       "bindings": {
         "gql": "Mutation.createApiKey",
         "rest": "POST /api-gateway/v1/api-keys",
-        "mcp": "createApiKey"
+        "mcp": "manageApiKeys"
       }
     },
     {
@@ -43,7 +43,7 @@
       "bindings": {
         "gql": "Mutation.revokeApiKey",
         "rest": "DELETE /api-gateway/v1/api-keys/{id}",
-        "mcp": "revokeApiKey"
+        "mcp": "manageApiKeys"
       }
     },
     {

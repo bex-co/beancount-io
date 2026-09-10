@@ -4,7 +4,7 @@
  *   yarn mcp:conformance <base-url> [--token <bcio_…>] [--read-only-token <bcio_…>]
  *
  * Answers one question — "is this deployment's MCP endpoint actually
- * connectable?" — and, when it is not, names which of the eight checks failed
+ * connectable?" — and, when it is not, names which of the nine checks failed
  * rather than leaving an operator to infer it from a curl transcript. The
  * checks exist because each has been observed failing in a real deployment
  * while every unit test passed; see `docs/adrs/ADR007-backend-v2-mcp-surface.md`.
@@ -421,6 +421,83 @@ async function checkAdvertisedPath(o: Options): Promise<CheckResult> {
 }
 
 /**
+ * 9 — the discovery workload an agent runs first actually works.
+ * `initialize` carries per-credential instructions, the four discovery tools
+ * are listed, `resources/list` is non-empty, and the retired compat names
+ * stay retired: a deployment still serving `addLegacyEntries` or the three
+ * folded key tools has not picked up the lean list.
+ */
+async function checkDiscoveryWorkload(o: Options): Promise<CheckResult> {
+  const v = verdict(
+    "9 discovery-workload",
+    "Instructions, hero tools, and concrete resources list cleanly",
+  );
+  if (!o.token) return v.skip("needs --token");
+
+  const init = await probe(`${o.baseUrl}${MCP_PATH}`, {
+    method: "POST",
+    headers: jsonRpcHeaders(o.token),
+    body: rpc("initialize", {
+      protocolVersion: "2025-06-18",
+      capabilities: {},
+      clientInfo: { name: "mcp-conformance", version: "1.0.0" },
+    }, 9),
+  });
+  if (!init.ok) return v.fail(init.error);
+  if (init.status !== 200) {
+    return v.fail(`initialize returned ${init.status}: ${init.body.slice(0, 200)}`);
+  }
+  const instructions = (parseRpc(init.body)?.result as { instructions?: unknown } | undefined)
+    ?.instructions;
+  if (typeof instructions !== "string" || !instructions.includes("beancount://")) {
+    return v.fail(
+      "initialize carries no per-credential instructions — an agent starts with no pin, no URI grammar, and no validation rule",
+    );
+  }
+
+  const listed = await probe(`${o.baseUrl}${MCP_PATH}`, {
+    method: "POST",
+    headers: jsonRpcHeaders(o.token),
+    body: rpc("tools/list", {}, 10),
+  });
+  if (!listed.ok) return v.fail(listed.error);
+  const names = (
+    (parseRpc(listed.body)?.result as { tools?: { name: string }[] } | undefined)
+      ?.tools ?? []
+  ).map((t) => t.name);
+  for (const hero of ["listLedgers", "checkLedger", "getLedgerContext", "getEntryContext"]) {
+    if (!names.includes(hero)) {
+      return v.fail(`tools/list is missing the discovery tool ${hero}`);
+    }
+  }
+  const retired = ["addLegacyEntries", "listApiKeys", "createApiKey", "revokeApiKey"]
+    .filter((name) => names.includes(name));
+  if (retired.length) {
+    return v.fail(
+      `tools/list still serves retired names: ${retired.join(", ")} — the lean list did not deploy`,
+    );
+  }
+
+  const resources = await probe(`${o.baseUrl}${MCP_PATH}`, {
+    method: "POST",
+    headers: jsonRpcHeaders(o.token),
+    body: rpc("resources/list", {}, 11),
+  });
+  if (!resources.ok) return v.fail(resources.error);
+  const entries = (
+    parseRpc(resources.body)?.result as { resources?: unknown[] } | undefined
+  )?.resources;
+  if (!Array.isArray(entries) || entries.length === 0) {
+    return v.fail(
+      "resources/list is empty — clients that enumerate concrete resources see an empty server",
+    );
+  }
+  return v.pass(
+    `instructions + 4 discovery tools + ${entries.length} concrete resources, no retired names`,
+  );
+}
+
+/**
  * 8 — the legacy compatibility argument stays optional where it is ignored.
  * The feature-flags resource documents `{?userId}` as a compatibility
  * argument; reading it bare must succeed, or every agent that drops the
@@ -502,6 +579,7 @@ export const CHECKS = [
   checkErrorMasking,
   checkAdvertisedPath,
   checkOptionalUserId,
+  checkDiscoveryWorkload,
 ] as const;
 
 export type { CheckResult, Options, Outcome };
@@ -512,7 +590,7 @@ async function main(): Promise<void> {
 
   const results: CheckResult[] = [];
   // Sequential on purpose: several checks re-probe the endpoint, and a readable
-  // transcript beats saving a few seconds on an eight-request run.
+  // transcript beats saving a few seconds on a nine-request run.
   for (const check of CHECKS) {
     const result = await check(options);
     results.push(result);
@@ -537,7 +615,7 @@ async function main(): Promise<void> {
 }
 
 // Only when invoked as a command — importing this module (from a test, or to
-// reuse one check) must not fire eight HTTP probes and call process.exit.
+// reuse one check) must not fire nine HTTP probes and call process.exit.
 if (require.main === module) {
   void main();
 }

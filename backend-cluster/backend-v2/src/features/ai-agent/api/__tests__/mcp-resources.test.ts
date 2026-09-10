@@ -257,13 +257,19 @@ describe("MCP per-call ledger selection", () => {
       ...ctx(getFilesContent),
       ledgerId: undefined,
     };
-    context.identity = { ...context.identity, ledgerScope: undefined };
+    context.identity = {
+      ...context.identity,
+      ledgerScope: undefined,
+      // The grouped key tool enforces the admin risk class at the gate; the
+      // point here is that no ledger default is needed, not the scope.
+      scopes: new Set(["ledger.read", "ledger.write", "ledger.admin"]),
+    };
     context.apiKeyService = { list } as unknown as ToolContext["apiKeyService"];
     const { client, close } = await connect(context);
     try {
       const keys = await client.callTool({
-        name: "listApiKeys",
-        arguments: {},
+        name: "manageApiKeys",
+        arguments: { operation: "list" },
       });
       expect(keys.isError).not.toBe(true);
       expect(list).toHaveBeenCalledWith(context.identity);

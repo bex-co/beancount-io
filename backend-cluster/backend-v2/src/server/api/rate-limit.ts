@@ -73,10 +73,12 @@ export const OP_BUDGETS: Record<string, Budget> = {
   "GQL Mutation.generateTempAssetUploadUrl": { windowMs: MINUTE, max: 10 },
   "GQL Query.getUserByExactMatch": { windowMs: MINUTE, max: 20 },
   // Minting a durable credential is rare by nature, and a flood of attempts is
-  // more likely to be a loop than a user.
+  // more likely to be a loop than a user. The grouped MCP tool carries the
+  // strictest member budget: its create branch mints, so the whole tool
+  // spends 5/minute (w2/m27).
   "GQL Mutation.createApiKey": { windowMs: MINUTE, max: 5 },
   "REST POST /api-gateway/v1/api-keys": { windowMs: MINUTE, max: 5 },
-  "MCP createApiKey": { windowMs: MINUTE, max: 5 },
+  "MCP manageApiKeys": { windowMs: MINUTE, max: 5 },
   // Archive generation and transfer are substantially more expensive than a
   // normal metadata read. The canonical and compatibility routes share one
   // counter (see `operationBucket`) so changing URL cannot double this budget.

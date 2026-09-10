@@ -249,10 +249,10 @@ describe("scope enforcement across surfaces", () => {
       });
 
       await asyncContext.run({ requestId: "req-mcp" }, async () => {
-        await handlers.get("listApiKeys")!({});
+        await handlers.get("manageApiKeys")!({ operation: "list" });
         expect(getOperationId()).toBeUndefined();
       });
-      expect(seen).toEqual(["MCP listApiKeys"]);
+      expect(seen).toEqual(["MCP manageApiKeys"]);
     });
   });
 
@@ -318,17 +318,23 @@ describe("scope enforcement across surfaces", () => {
       expect(reached).toBe(true);
     });
 
-    it("MCP: ledger scopes defer API-key authority to the centralized PDP", async () => {
+    it("MCP: the grouped key tool refuses a non-admin scope at the gate", async () => {
+      // The grouped dispatcher carries no transport-level canonical action
+      // (w2/m27), so the gate enforces the admin risk class up front — the
+      // centralized PDP still decides per-branch authority for callers that
+      // hold the scope, as the API-key parity suite proves branch by branch.
       const list = jest.fn().mockResolvedValue([]);
       const handlers = captureMcpHandlers(writeToken, realConfig, {
         apiKeyService: { list },
         ledgerRepo: {},
         ledgerShell: {},
       });
-      const result = await handlers.get("listApiKeys")!({});
+      const result = await handlers.get("manageApiKeys")!({
+        operation: "list",
+      });
 
-      expect(result.isError).not.toBe(true);
-      expect(list).toHaveBeenCalledWith(writeToken);
+      expect(result.isError).toBe(true);
+      expect(list).not.toHaveBeenCalled();
     });
 
     it("MCP: ledger.admin still reaches an admin operation", async () => {
@@ -338,7 +344,9 @@ describe("scope enforcement across surfaces", () => {
         ledgerRepo: {},
         ledgerShell: {},
       });
-      const result = await handlers.get("listApiKeys")!({});
+      const result = await handlers.get("manageApiKeys")!({
+        operation: "list",
+      });
 
       expect(result.isError).not.toBe(true);
       expect(list).toHaveBeenCalledWith(adminToken);
