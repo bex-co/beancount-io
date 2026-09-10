@@ -311,6 +311,11 @@ const bgJournal: Record<string, TranslationEntry> = {
     message: "Превключване на метаданни",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Постингите са винаги видими",
+    description:
+      "Статичен индикатор, когато глобалният филтър за постинги държи редовете отворени",
+  },
   "journal.togglePostings": {
     message: "Превключване на проводки",
     description: "Filter tooltip to show/hide postings",

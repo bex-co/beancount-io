@@ -126,18 +126,33 @@ interface JournalPostingToggleProps {
   directive: JournalDirectiveType;
   onClick?: () => void;
   expanded: boolean;
+  /** When true, postings are forced visible globally — show a static indicator. */
+  forcedOpen?: boolean;
 }
 
 function JournalPostingToggle({
   directive,
   onClick,
   expanded,
+  forcedOpen = false,
 }: JournalPostingToggleProps) {
   const { t } = useTranslations();
   if (!isJournalTransaction(directive)) {
     return null;
   }
   const amount = directive.postings?.length || 0;
+
+  if (forcedOpen) {
+    return (
+      <span
+        className="inline-flex h-7 min-w-8 items-center justify-center gap-1 px-1.5 text-muted-foreground"
+        aria-label={t("journal.postingsAlwaysVisible")}
+      >
+        <ChevronDown className="size-3.5" aria-hidden />
+        <span className="text-xs tabular-nums">{amount}</span>
+      </span>
+    );
+  }
 
   return (
     <Button
@@ -243,6 +258,7 @@ function JournalTableRow({
                     directive={directive}
                     onClick={togglePostings}
                     expanded={postingsVisible}
+                    forcedOpen={showPostings}
                   />
                 </div>
               )}
@@ -262,6 +278,7 @@ function JournalTableRow({
                   directive={directive}
                   onClick={togglePostings}
                   expanded={postingsVisible}
+                  forcedOpen={showPostings}
                 />
               )}
             </div>
@@ -275,6 +292,7 @@ function JournalTableRow({
               directive={directive}
               onClick={togglePostings}
               expanded={postingsVisible}
+              forcedOpen={showPostings}
             />
           )}
         </span>

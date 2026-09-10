@@ -311,6 +311,11 @@ const ptJournal: Record<string, TranslationEntry> = {
     message: "Alternar metadados",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Lançamentos sempre visíveis",
+    description:
+      "Indicador estático quando o filtro global de lançamentos mantém todas as linhas abertas",
+  },
   "journal.togglePostings": {
     message: "Alternar lançamentos",
     description: "Filter tooltip to show/hide postings",

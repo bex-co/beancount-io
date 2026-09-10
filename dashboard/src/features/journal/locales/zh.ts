@@ -310,6 +310,10 @@ const zhJournal: Record<string, TranslationEntry> = {
     message: "切换元数据",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "分录始终可见",
+    description: "全局分录筛选强制展开所有行时的静态指示",
+  },
   "journal.togglePostings": {
     message: "切换过账",
     description: "Filter tooltip to show/hide postings",

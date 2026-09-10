@@ -311,6 +311,11 @@ const ukJournal: Record<string, TranslationEntry> = {
     message: "Комуggle metadata",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Проведення завжди видимі",
+    description:
+      "Статичний індикатор, коли глобальний фільтр проведень тримає всі рядки відкритими",
+  },
   "journal.togglePostings": {
     message: "Комуggle postings",
     description: "Filter tooltip to show/hide postings",

@@ -311,6 +311,11 @@ const deJournal: Record<string, TranslationEntry> = {
     message: "Metadaten ein-/ausblenden",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Buchungen immer sichtbar",
+    description:
+      "Statischer Hinweis, wenn der globale Buchungen-Filter alle Zeilen geöffnet hält",
+  },
   "journal.togglePostings": {
     message: "Buchungen ein-/ausblenden",
     description: "Filter tooltip to show/hide postings",

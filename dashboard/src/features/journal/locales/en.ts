@@ -310,6 +310,11 @@ const enJournal: Record<string, TranslationEntry> = {
     message: "Toggle metadata",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Postings always visible",
+    description:
+      "Static indicator when the global Postings filter forces every row open",
+  },
   "journal.togglePostings": {
     message: "Toggle postings",
     description: "Filter tooltip to show/hide postings",

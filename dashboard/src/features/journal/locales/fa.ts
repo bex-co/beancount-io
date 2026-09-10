@@ -311,6 +311,11 @@ const faJournal: Record<string, TranslationEntry> = {
     message: "تغییر وضعیت فراداده",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "آویزه‌ها همیشه نمایان‌اند",
+    description:
+      "نشانگر ایستا وقتی فیلتر سراسری آویزه‌ها همه ردیف‌ها را باز نگه می‌دارد",
+  },
   "journal.togglePostings": {
     message: "تغییر وضعیت ثبت‌ها",
     description: "Filter tooltip to show/hide postings",

@@ -311,6 +311,11 @@ const nlJournal: Record<string, TranslationEntry> = {
     message: "Metadata aan/uit",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Boekingen altijd zichtbaar",
+    description:
+      "Statische indicator wanneer het globale boekingenfilter alle rijen open houdt",
+  },
   "journal.togglePostings": {
     message: "Boekingen aan/uit",
     description: "Filter tooltip to show/hide postings",

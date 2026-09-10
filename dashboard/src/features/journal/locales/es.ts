@@ -311,6 +311,11 @@ const esJournal: Record<string, TranslationEntry> = {
     message: "Alternar metadatos",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Los asientos siempre están visibles",
+    description:
+      "Indicador estático cuando el filtro global de asientos fuerza todas las filas abiertas",
+  },
   "journal.togglePostings": {
     message: "Alternar asientos",
     description: "Filter tooltip to show/hide postings",

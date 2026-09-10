@@ -311,6 +311,11 @@ const frJournal: Record<string, TranslationEntry> = {
     message: "Basculer les métadonnées",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Écritures toujours visibles",
+    description:
+      "Indicateur statique lorsque le filtre global des écritures force toutes les lignes ouvertes",
+  },
   "journal.togglePostings": {
     message: "Basculer les écritures",
     description: "Filter tooltip to show/hide postings",

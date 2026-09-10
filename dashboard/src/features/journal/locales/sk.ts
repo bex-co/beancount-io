@@ -311,6 +311,11 @@ const skJournal: Record<string, TranslationEntry> = {
     message: "Prepnúť metadáta",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Účtovné zápisy vždy viditeľné",
+    description:
+      "Statický indikátor, keď globálny filter zápisov drží všetky riadky otvorené",
+  },
   "journal.togglePostings": {
     message: "Prepnúť zápisy",
     description: "Filter tooltip to show/hide postings",

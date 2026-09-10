@@ -311,6 +311,11 @@ const ruJournal: Record<string, TranslationEntry> = {
     message: "Переключить метаданные",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Проводки всегда видны",
+    description:
+      "Статический индикатор, когда глобальный фильтр проводок держит все строки открытыми",
+  },
   "journal.togglePostings": {
     message: "Переключить проводки",
     description: "Filter tooltip to show/hide postings",

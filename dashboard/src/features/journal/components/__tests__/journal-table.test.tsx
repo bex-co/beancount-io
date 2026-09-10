@@ -307,8 +307,13 @@ describe("JournalTable", () => {
       let postingsContainers = container.querySelectorAll(".postings");
       expect(postingsContainers).toHaveLength(2);
 
-      const indicatorContainers = getPostingToggles();
-      fireEvent.click(indicatorContainers[0] as HTMLElement);
+      // Forced-open rows show a static indicator, not an enabled toggle.
+      expect(
+        screen.queryAllByRole("button", { name: "Toggle postings" }),
+      ).toHaveLength(0);
+      const indicators = screen.getAllByLabelText("Postings always visible");
+      expect(indicators.length).toBeGreaterThan(0);
+      fireEvent.click(indicators[0]);
 
       await waitFor(() => {
         postingsContainers = container.querySelectorAll(".postings");

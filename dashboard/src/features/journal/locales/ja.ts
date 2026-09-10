@@ -308,6 +308,11 @@ const jaJournal: Record<string, TranslationEntry> = {
     message: "メタデータを切り替え",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "仕訳明細は常に表示",
+    description:
+      "全体の仕訳明細フィルターですべての行が開いているときの静的表示",
+  },
   "journal.togglePostings": {
     message: "ポスティングを切り替え",
     description: "Filter tooltip to show/hide postings",

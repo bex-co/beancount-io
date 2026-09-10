@@ -311,6 +311,11 @@ const caJournal: Record<string, TranslationEntry> = {
     message: "Seleccionar data de transacció",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "Els apunts sempre són visibles",
+    description:
+      "Indicador estàtic quan el filtre global d'apunts força totes les files obertes",
+  },
   "journal.togglePostings": {
     message: "Alternar metadades",
     description: "Filter tooltip to show/hide postings",

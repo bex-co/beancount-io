@@ -307,6 +307,10 @@ const koJournal: Record<string, TranslationEntry> = {
     message: "메타데이터 전환",
     description: "Filter tooltip to show/hide metadata",
   },
+  "journal.postingsAlwaysVisible": {
+    message: "분개 내역이 항상 표시됨",
+    description: "전역 분개 내역 필터가 모든 행을 열어 둘 때의 정적 표시",
+  },
   "journal.togglePostings": {
     message: "전기 전환",
     description: "Filter tooltip to show/hide postings",
