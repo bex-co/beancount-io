@@ -192,8 +192,9 @@ export function FileUpload({ onParsed, onFileSelected }: FileUploadProps) {
             href="/lgasset/csv_transactions.csv"
             download="example_transactions.csv"
             className="text-xs hover:underline flex items-center gap-1"
+            aria-label={t("importer.error.downloadCsvExample")}
           >
-            <Download className="w-3 h-3" />
+            <Download className="w-3 h-3" aria-hidden />
           </a>
         </div>
         <p className="text-xs text-muted-foreground mb-2">

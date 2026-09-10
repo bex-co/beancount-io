@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [053](./053.md) — Import's CSV example download has no accessible name
 - [054](./054.md) — Import configuration rounds real BTC amounts to zero
 - [055](./055.md) — Switching ledgers keeps the previous ledger's BQL results and CSV
 - [056](./056.md) — Statistics account destinations cannot be reached with the keyboard
