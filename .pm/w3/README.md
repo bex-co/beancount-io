@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [020](./020.md) — Browser printing keeps a previous statement after filters change
 - [021](./021.md) — Read-only mobile transaction details expose inert edit and delete controls
 - [022](./022.md) — Global statement print CSS blanks Journal and Accounts printing
 - [023](./023.md) — Journal export dialog overstates which filters apply

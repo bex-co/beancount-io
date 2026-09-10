@@ -1,4 +1,4 @@
-import { render, screen, waitFor } from "@testing-library/react";
+import { act, render, screen, waitFor } from "@testing-library/react";
 import userEvent from "@testing-library/user-event";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { StatementExportMenu } from "../statement-export-menu";
@@ -209,5 +209,126 @@ describe("StatementExportMenu", () => {
     expect(
       screen.getByRole("button", { name: "reports.export.action" }),
     ).toBeDisabled();
+  });
+
+  it("keeps the printable portal on the live report after filters change", () => {
+    const first: StatementExportDocument = {
+      ...document,
+      kind: "profit_and_loss",
+      title: "Income Statement",
+      context: {
+        ...document.context,
+        filters: { ...document.context.filters, time: "2017-09" },
+        reportingPeriod: {
+          startDate: "2017-09-01",
+          endDate: "2017-09-30",
+          asOfDate: null,
+          isExplicit: true,
+          selection: "2017-09",
+        },
+      },
+      sections: [
+        {
+          key: "income",
+          label: "Income",
+          rows: [
+            {
+              accountPath: "Income",
+              label: "Income",
+              depth: 0,
+              rowKind: "total",
+              amounts: [
+                {
+                  unit: "USD",
+                  rawAmount: "-2354.89",
+                  displayAmount: "2354.89",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+    const next: StatementExportDocument = {
+      ...first,
+      context: {
+        ...first.context,
+        filters: { ...first.context.filters, time: "2016" },
+        reportingPeriod: {
+          startDate: "2016-01-01",
+          endDate: "2016-12-31",
+          asOfDate: null,
+          isExplicit: true,
+          selection: "2016",
+        },
+        generatedAt: "2026-09-08T12:00:00.000Z",
+      },
+      sections: [
+        {
+          key: "income",
+          label: "Income",
+          rows: [
+            {
+              accountPath: "Income",
+              label: "Income",
+              depth: 0,
+              rowKind: "total",
+              amounts: [
+                {
+                  unit: "USD",
+                  rawAmount: "-35792.16",
+                  displayAmount: "35792.16",
+                },
+              ],
+            },
+          ],
+        },
+      ],
+    };
+
+    const view = render(<StatementExportMenu document={first} />);
+    expect(screen.getByTestId("printable-statement").textContent).toContain(
+      "September 30, 2017",
+    );
+    expect(screen.getByTestId("printable-statement").textContent).toContain(
+      "2,354.89",
+    );
+
+    view.rerender(<StatementExportMenu document={next} />);
+    expect(screen.getByTestId("printable-statement").textContent).toContain(
+      "December 31, 2016",
+    );
+    expect(screen.getByTestId("printable-statement").textContent).toContain(
+      "35,792.16",
+    );
+    expect(screen.getByTestId("printable-statement").textContent).not.toContain(
+      "2,354.89",
+    );
+  });
+
+  it("keeps browser beforeprint from freezing later report prop updates", async () => {
+    const view = render(<StatementExportMenu document={document} />);
+
+    await act(async () => {
+      window.dispatchEvent(new Event("beforeprint"));
+    });
+
+    const next: StatementExportDocument = {
+      ...document,
+      context: {
+        ...document.context,
+        reportingPeriod: {
+          ...document.context.reportingPeriod,
+          asOfDate: "2016-12-31",
+        },
+      },
+    };
+    view.rerender(<StatementExportMenu document={next} />);
+    expect(screen.getByTestId("printable-statement").textContent).toContain(
+      "December 31, 2016",
+    );
+    expect(screen.getByTestId("printable-statement").textContent).not.toContain(
+      "August 15, 2026",
+    );
   });
 });

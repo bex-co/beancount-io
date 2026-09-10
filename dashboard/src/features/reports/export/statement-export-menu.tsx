@@ -1,4 +1,4 @@
-import { useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import {
   ChevronDown,
   FileSpreadsheet,
@@ -51,8 +51,33 @@ export function StatementExportMenu({
   const { t, i18n } = useTranslations();
   const actionInProgress = useRef(false);
   const [isBusy, setIsBusy] = useState(false);
-  const [printDocument, setPrintDocument] = useState(document);
+  // Only the generation timestamp may diverge from the live report props —
+  // never a stale financial snapshot.
+  const [printGeneratedAt, setPrintGeneratedAt] = useState<string | null>(null);
   const hasData = hasStatementExportData(document);
+
+  const printDocument = useMemo(() => {
+    if (!printGeneratedAt) {
+      return document;
+    }
+    return refreshStatementGenerationTime(document, printGeneratedAt);
+  }, [document, printGeneratedAt]);
+
+  // Drop a prior print-time stamp whenever the live report document changes so
+  // browser Ctrl/Cmd+P always sees the settled statement, not a previous period.
+  useEffect(() => {
+    setPrintGeneratedAt(null);
+  }, [document]);
+
+  // Browser print (outside the Export menu) should still stamp "generated at"
+  // without freezing period/filter/values from an earlier mount.
+  useEffect(() => {
+    const onBeforePrint = () => {
+      setPrintGeneratedAt(new Date().toISOString());
+    };
+    window.addEventListener("beforeprint", onBeforePrint);
+    return () => window.removeEventListener("beforeprint", onBeforePrint);
+  }, []);
 
   const runAction = async (
     format: ReportExportFormat,
@@ -119,7 +144,7 @@ export function StatementExportMenu({
 
   const handlePrint = () =>
     runAction("print", async (currentDocument) => {
-      setPrintDocument(currentDocument);
+      setPrintGeneratedAt(currentDocument.context.generatedAt);
       // Give React a frame to commit the action-time generation timestamp before
       // the browser captures the print tree. Same-window printing avoids popup
       // blockers and lets users choose their installed PDF destination.
