@@ -6,6 +6,7 @@ import {
   isEmpty,
   defaultRowsFilter,
   holdingsRowsFilter,
+  unitsFirstRowsFilter,
 } from "../utils";
 
 describe("Holdings Utils", () => {
@@ -396,6 +397,28 @@ describe("Holdings Utils", () => {
       // slice(1) returns [], and [].every(...) is vacuously true, so rows are filtered out
       const result = defaultRowsFilter(rows);
       expect(result).toHaveLength(0);
+    });
+  });
+
+  describe("unitsFirstRowsFilter", () => {
+    it("drops sold currency groups that only retain a price", () => {
+      const rows = [
+        [{ ETH: "1" }, "100", "200", { USD: "100" }, { USD: "200" }, "10"],
+        [{}, "", "2480.00", {}, {}, "0"],
+        [{}, "", "520.00", {}, {}, "0"],
+        [{ BTC: "0.015" }, "50", "60", { USD: "50" }, { USD: "60" }, "5"],
+      ];
+      const result = unitsFirstRowsFilter(rows);
+      expect(result).toHaveLength(2);
+      expect(result[0][0]).toEqual({ ETH: "1" });
+      expect(result[1][0]).toEqual({ BTC: "0.015" });
+    });
+
+    it("keeps a real position with a missing or zero quote", () => {
+      const rows = [
+        [{ ETH: "0.004" }, "", null, { USD: "14" }, { USD: "12.80" }, "0"],
+      ];
+      expect(unitsFirstRowsFilter(rows)).toHaveLength(1);
     });
   });
 

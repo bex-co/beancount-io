@@ -141,6 +141,14 @@ export const defaultRowsFilter = (row: unknown[][]): unknown[][] => {
   return row.filter((row) => !row.slice(1).every((o: unknown) => isEmpty(o)));
 };
 
+/** Units is column 0 (by-currency / by-cost-currency). Drop empty inventories. */
+export const unitsFirstRowsFilter = (rows: unknown[][]): unknown[][] => {
+  return rows.filter(
+    (row) =>
+      !isEmpty(row[0]) && !row.slice(1).every((o: unknown) => isEmpty(o)),
+  );
+};
+
 export const holdingsRowsFilter = (row: unknown[][]): unknown[][] => {
   return row.filter(
     (row) =>
