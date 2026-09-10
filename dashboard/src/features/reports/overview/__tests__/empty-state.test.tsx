@@ -3,6 +3,12 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 import { useQuery } from "@apollo/client/react";
 import LedgerOverviewPage from "../index";
 
+const searchParamsMock = vi.hoisted(() => ({
+  account: "",
+  filter: "",
+  time: "",
+}));
+
 vi.mock("@apollo/client/react", () => ({ useQuery: vi.fn() }));
 
 vi.mock("@tanstack/react-router", () => ({
@@ -32,7 +38,7 @@ vi.mock("@tanstack/react-router", () => ({
 
 vi.mock("@/common/hooks/use-ledger-search-params", () => ({
   useLedgerSearchParams: () => ({
-    searchParams: { account: "", filter: "", time: "" },
+    searchParams: searchParamsMock,
   }),
 }));
 
@@ -82,6 +88,9 @@ vi.mock("@/common/components/ledger-permission/write", () => ({
 
 describe("LedgerOverviewPage empty state", () => {
   beforeEach(() => {
+    searchParamsMock.account = "";
+    searchParamsMock.filter = "";
+    searchParamsMock.time = "";
     vi.mocked(useQuery).mockReturnValue({
       data: {
         getLedgerOverview: {
@@ -164,5 +173,64 @@ describe("LedgerOverviewPage empty state", () => {
     expect(
       shortcutFor("/ledger/$ledgerOwner/$ledgerName/balance-sheet"),
     ).toBeUndefined();
+  });
+});
+
+describe("LedgerOverviewPage filtered empty state", () => {
+  beforeEach(() => {
+    searchParamsMock.account = "";
+    searchParamsMock.filter = "";
+    searchParamsMock.time = "2020";
+    vi.mocked(useQuery).mockReturnValue({
+      data: {
+        getLedgerOverview: {
+          netWorthData: [{ date: "2020-01-31", balance: {} }],
+          assetsData: [],
+          liabilitiesData: [],
+          incomeIntervalData: [],
+          incomeData: [],
+          expensesIntervalData: [],
+          expensesData: [],
+          assetsHierarchyData: {
+            account: "Assets",
+            balance: {},
+            hasTxns: false,
+            children: [],
+          },
+          liabilitiesHierarchyData: {
+            account: "Liabilities",
+            balance: {},
+            hasTxns: false,
+            children: [],
+          },
+          incomeHierarchyData: {
+            account: "Income",
+            balance: {},
+            hasTxns: false,
+            children: [],
+          },
+          expensesHierarchyData: {
+            account: "Expenses",
+            balance: {},
+            hasTxns: false,
+            children: [],
+          },
+        },
+      },
+      loading: false,
+      error: undefined,
+    } as never);
+  });
+
+  it("does not claim the whole ledger is empty when filters exclude activity", () => {
+    render(<LedgerOverviewPage />);
+
+    expect(
+      screen.getByText("No activity for the current filters"),
+    ).toBeInTheDocument();
+    expect(
+      screen.queryByText(/This ledger has no activity yet/),
+    ).not.toBeInTheDocument();
+    expect(screen.queryByText("Set up your ledger")).not.toBeInTheDocument();
   });
 });

@@ -25,6 +25,10 @@ const descriptions = {
     "Action to open the first-entry form",
   "page.overview.emptyLedgerEditFileAction":
     "Action to edit the configured ledger file",
+  "page.overview.filteredEmptyTitle":
+    "Title when Overview has no activity for the current filters",
+  "page.overview.filteredEmptyDescription":
+    "Description when Overview has no activity for the current filters",
 } as const;
 
 type EmptyLedgerTranslationKey = keyof typeof descriptions;
@@ -65,6 +69,9 @@ const messages: Record<
       "Record a transaction in the journal, or edit the Beancount file directly.",
     "page.overview.emptyLedgerAddEntryAction": "Add first entry",
     "page.overview.emptyLedgerEditFileAction": "Edit ledger file",
+    "page.overview.filteredEmptyTitle": "No activity for the current filters",
+    "page.overview.filteredEmptyDescription":
+      "Nothing matches the selected time, account, or expression. Clear the filters to see the full overview.",
   },
   bg: {
     "page.overview.emptyLedgerTitle": "Настройте счетоводната си книга",
@@ -82,6 +89,9 @@ const messages: Record<
       "Запишете транзакция в журнала или редактирайте директно Beancount файла.",
     "page.overview.emptyLedgerAddEntryAction": "Добавяне на първи запис",
     "page.overview.emptyLedgerEditFileAction": "Редактиране на файла",
+    "page.overview.filteredEmptyTitle": "Няма дейност за текущите филтри",
+    "page.overview.filteredEmptyDescription":
+      "Няма съвпадения за избраното време, сметка или израз. Изчистете филтрите, за да видите пълния преглед.",
   },
   ca: {
     "page.overview.emptyLedgerTitle": "Configura el llibre major",
@@ -99,6 +109,10 @@ const messages: Record<
       "Registra una transacció al diari o edita directament el fitxer Beancount.",
     "page.overview.emptyLedgerAddEntryAction": "Afegeix el primer assentament",
     "page.overview.emptyLedgerEditFileAction": "Edita el fitxer del llibre",
+    "page.overview.filteredEmptyTitle":
+      "Sense activitat amb els filtres actuals",
+    "page.overview.filteredEmptyDescription":
+      "Res no coincideix amb el temps, el compte o l'expressió seleccionats. Esborra els filtres per veure la vista general completa.",
   },
   de: {
     "page.overview.emptyLedgerTitle": "Hauptbuch einrichten",
@@ -116,6 +130,10 @@ const messages: Record<
       "Erfassen Sie eine Transaktion im Journal oder bearbeiten Sie die Beancount-Datei direkt.",
     "page.overview.emptyLedgerAddEntryAction": "Ersten Eintrag hinzufügen",
     "page.overview.emptyLedgerEditFileAction": "Hauptbuchdatei bearbeiten",
+    "page.overview.filteredEmptyTitle":
+      "Keine Aktivität für die aktuellen Filter",
+    "page.overview.filteredEmptyDescription":
+      "Nichts entspricht dem ausgewählten Zeitraum, Konto oder Ausdruck. Filter löschen, um die vollständige Übersicht zu sehen.",
   },
   es: {
     "page.overview.emptyLedgerTitle": "Configura tu libro mayor",
@@ -133,6 +151,10 @@ const messages: Record<
       "Registra una transacción en el diario o edita directamente el archivo Beancount.",
     "page.overview.emptyLedgerAddEntryAction": "Añadir primer asiento",
     "page.overview.emptyLedgerEditFileAction": "Editar archivo del libro",
+    "page.overview.filteredEmptyTitle":
+      "Sin actividad con los filtros actuales",
+    "page.overview.filteredEmptyDescription":
+      "Nada coincide con el tiempo, la cuenta o la expresión seleccionados. Borra los filtros para ver el resumen completo.",
   },
   fa: {
     "page.overview.emptyLedgerTitle": "دفتر کل خود را راه‌اندازی کنید",
@@ -150,6 +172,9 @@ const messages: Record<
       "یک تراکنش در دفتر روزنامه ثبت کنید یا فایل Beancount را مستقیماً ویرایش کنید.",
     "page.overview.emptyLedgerAddEntryAction": "افزودن نخستین ثبت",
     "page.overview.emptyLedgerEditFileAction": "ویرایش فایل دفتر کل",
+    "page.overview.filteredEmptyTitle": "هیچ فعالیتی برای فیلترهای فعلی نیست",
+    "page.overview.filteredEmptyDescription":
+      "هیچ چیزی با زمان، حساب یا عبارت انتخاب‌شده هم‌خوانی ندارد. فیلترها را پاک کنید تا نمای کامل را ببینید.",
   },
   fr: {
     "page.overview.emptyLedgerTitle": "Configurez votre grand livre",
@@ -168,6 +193,10 @@ const messages: Record<
     "page.overview.emptyLedgerAddEntryAction": "Ajouter la première écriture",
     "page.overview.emptyLedgerEditFileAction":
       "Modifier le fichier du grand livre",
+    "page.overview.filteredEmptyTitle":
+      "Aucune activité pour les filtres actuels",
+    "page.overview.filteredEmptyDescription":
+      "Rien ne correspond à la période, au compte ou à l'expression sélectionnés. Effacez les filtres pour voir l'aperçu complet.",
   },
   ja: {
     "page.overview.emptyLedgerTitle": "元帳を設定",
@@ -185,6 +214,10 @@ const messages: Record<
       "仕訳帳に取引を記録するか、Beancountファイルを直接編集します。",
     "page.overview.emptyLedgerAddEntryAction": "最初の仕訳を追加",
     "page.overview.emptyLedgerEditFileAction": "元帳ファイルを編集",
+    "page.overview.filteredEmptyTitle":
+      "現在のフィルターに該当する活動がありません",
+    "page.overview.filteredEmptyDescription":
+      "選択した期間・勘定科目・式に一致するものがありません。フィルターをクリアすると概要全体を表示できます。",
   },
   ko: {
     "page.overview.emptyLedgerTitle": "원장 설정하기",
@@ -202,6 +235,9 @@ const messages: Record<
       "분개장에 거래를 기록하거나 Beancount 파일을 직접 편집하세요.",
     "page.overview.emptyLedgerAddEntryAction": "첫 항목 추가",
     "page.overview.emptyLedgerEditFileAction": "원장 파일 편집",
+    "page.overview.filteredEmptyTitle": "현재 필터에 해당하는 활동이 없습니다",
+    "page.overview.filteredEmptyDescription":
+      "선택한 기간, 계정 또는 식과 일치하는 항목이 없습니다. 필터를 지우면 전체 개요를 볼 수 있습니다.",
   },
   nl: {
     "page.overview.emptyLedgerTitle": "Stel je grootboek in",
@@ -219,6 +255,10 @@ const messages: Record<
       "Boek een transactie in het journaal of bewerk het Beancount-bestand rechtstreeks.",
     "page.overview.emptyLedgerAddEntryAction": "Eerste boeking toevoegen",
     "page.overview.emptyLedgerEditFileAction": "Grootboekbestand bewerken",
+    "page.overview.filteredEmptyTitle":
+      "Geen activiteit voor de huidige filters",
+    "page.overview.filteredEmptyDescription":
+      "Niets komt overeen met de geselecteerde tijd, rekening of expressie. Wis de filters om het volledige overzicht te zien.",
   },
   pt: {
     "page.overview.emptyLedgerTitle": "Configure seu livro-razão",
@@ -236,6 +276,10 @@ const messages: Record<
       "Registre uma transação no diário ou edite diretamente o arquivo Beancount.",
     "page.overview.emptyLedgerAddEntryAction": "Adicionar primeiro lançamento",
     "page.overview.emptyLedgerEditFileAction": "Editar arquivo do livro-razão",
+    "page.overview.filteredEmptyTitle":
+      "Nenhuma atividade para os filtros atuais",
+    "page.overview.filteredEmptyDescription":
+      "Nada corresponde ao tempo, conta ou expressão selecionados. Limpe os filtros para ver a visão geral completa.",
   },
   ru: {
     "page.overview.emptyLedgerTitle": "Настройте бухгалтерскую книгу",
@@ -253,6 +297,9 @@ const messages: Record<
       "Запишите транзакцию в журнале или отредактируйте файл Beancount напрямую.",
     "page.overview.emptyLedgerAddEntryAction": "Добавить первую запись",
     "page.overview.emptyLedgerEditFileAction": "Редактировать файл книги",
+    "page.overview.filteredEmptyTitle": "Нет операций по текущим фильтрам",
+    "page.overview.filteredEmptyDescription":
+      "Ничего не совпадает с выбранным периодом, счётом или выражением. Очистите фильтры, чтобы увидеть полный обзор.",
   },
   sk: {
     "page.overview.emptyLedgerTitle": "Nastavte účtovnú knihu",
@@ -270,6 +317,9 @@ const messages: Record<
       "Zaúčtujte transakciu v denníku alebo upravte súbor Beancount priamo.",
     "page.overview.emptyLedgerAddEntryAction": "Pridať prvý záznam",
     "page.overview.emptyLedgerEditFileAction": "Upraviť súbor knihy",
+    "page.overview.filteredEmptyTitle": "Žiadna aktivita pre aktuálne filtre",
+    "page.overview.filteredEmptyDescription":
+      "Nič nezodpovedá vybranému času, účtu alebo výrazu. Vymažte filtre, aby ste videli celý prehľad.",
   },
   uk: {
     "page.overview.emptyLedgerTitle": "Налаштуйте облікову книгу",
@@ -287,6 +337,9 @@ const messages: Record<
       "Запишіть транзакцію в журналі або відредагуйте файл Beancount безпосередньо.",
     "page.overview.emptyLedgerAddEntryAction": "Додати перший запис",
     "page.overview.emptyLedgerEditFileAction": "Редагувати файл книги",
+    "page.overview.filteredEmptyTitle": "Немає операцій за поточними фільтрами",
+    "page.overview.filteredEmptyDescription":
+      "Нічого не збігається з вибраним часом, рахунком або виразом. Очистіть фільтри, щоб побачити повний огляд.",
   },
   zh: {
     "page.overview.emptyLedgerTitle": "设置账本",
@@ -303,6 +356,9 @@ const messages: Record<
       "在日记账中记录交易，或直接编辑 Beancount 文件。",
     "page.overview.emptyLedgerAddEntryAction": "添加第一笔分录",
     "page.overview.emptyLedgerEditFileAction": "编辑账本文件",
+    "page.overview.filteredEmptyTitle": "当前筛选条件下无活动",
+    "page.overview.filteredEmptyDescription":
+      "没有与所选时间、账户或表达式匹配的内容。清除筛选即可查看完整概览。",
   },
 };
 

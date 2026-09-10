@@ -14,6 +14,7 @@ import {
   BarChart3,
   BookOpenText,
   FileUp,
+  Filter,
   SearchCode,
 } from "lucide-react";
 import { useQuery } from "@apollo/client/react";
@@ -47,6 +48,7 @@ import {
   useDashboardLayout,
 } from "./hooks/use-dashboard-layout";
 import { useAccountMeta } from "./hooks/use-account-meta";
+import { ReportEmptyState } from "@/common/components/state-components";
 import { hasOverviewActivity } from "./lib/overview-utils";
 import { EmptyLedgerSetup } from "./components/empty-ledger-setup";
 
@@ -134,6 +136,11 @@ export default function LedgerOverviewPage() {
   const displayName = ledgerDisplayName ?? ledgerName;
   const overview = data?.getLedgerOverview;
   const hasActivity = hasOverviewActivity(overview);
+  const hasActiveFilters = Boolean(
+    ledgerFilters.searchParams.account ||
+      ledgerFilters.searchParams.filter ||
+      ledgerFilters.searchParams.time,
+  );
   const widgets: Record<DashboardWidgetId, ReactNode> = {
     "financial-position": (
       <section
@@ -394,15 +401,23 @@ export default function LedgerOverviewPage() {
       </section>
 
       {!hasActivity ? (
-        <EmptyLedgerSetup
-          ledgerOwner={ledgerOwner}
-          ledgerName={ledgerName}
-          entryFile={
-            ledgerData.bcioOptions.transactionFile ??
-            ledgerData.bcioOptions.defaultFile
-          }
-          canWrite={canWrite}
-        />
+        hasActiveFilters ? (
+          <ReportEmptyState
+            Icon={Filter}
+            title={t("page.overview.filteredEmptyTitle")}
+            message={t("page.overview.filteredEmptyDescription")}
+          />
+        ) : (
+          <EmptyLedgerSetup
+            ledgerOwner={ledgerOwner}
+            ledgerName={ledgerName}
+            entryFile={
+              ledgerData.bcioOptions.transactionFile ??
+              ledgerData.bcioOptions.defaultFile
+            }
+            canWrite={canWrite}
+          />
+        )
       ) : visibleWidgetIds.length === 0 ? (
         <Card>
           <CardContent className="flex flex-col items-center gap-4 py-12 text-center">
