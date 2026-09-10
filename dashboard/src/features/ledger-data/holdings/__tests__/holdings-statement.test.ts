@@ -173,7 +173,12 @@ describe("Holdings Statement SQL Queries", () => {
       expect(holdingsStatementByCostCurrency).toContain(
         "units(sum(position)) as units",
       );
+      // sum(cost(position)) keeps mixed units as an Inventory; cost(sum(position))
+      // collapses costless USD+VACHR rows into one Amount labeled with the first unit.
       expect(holdingsStatementByCostCurrency).toContain(
+        "sum(cost(position)) as book_value",
+      );
+      expect(holdingsStatementByCostCurrency).not.toContain(
         "cost(sum(position)) as book_value",
       );
       expect(holdingsStatementByCostCurrency).toContain(

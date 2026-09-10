@@ -36,7 +36,7 @@ ORDER BY currency, cost_currency
 
 export const holdingsStatementByCostCurrency = `SELECT
   units(sum(position)) as units,
-  cost(sum(position)) as book_value,
+  sum(cost(position)) as book_value,
   value(sum(position)) as market_value,
   safediv((abs(sum(number(value(position)))) - abs(sum(number(cost(position))))), sum(number(cost(position)))) * 100 as unrealized_profit_pct
 WHERE account_sortkey(account) ~ "^[01]"
