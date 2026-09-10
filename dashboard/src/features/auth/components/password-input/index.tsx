@@ -42,7 +42,6 @@ export const PasswordInput = React.forwardRef<
         aria-label={
           showPassword ? t("auth.hidePassword") : t("auth.showPassword")
         }
-        tabIndex={-1}
       >
         {showPassword ? (
           <EyeOff className="h-4 w-4" />

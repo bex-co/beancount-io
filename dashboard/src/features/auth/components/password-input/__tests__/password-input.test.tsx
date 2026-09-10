@@ -114,11 +114,12 @@ describe("PasswordInput", () => {
     expect(ref.mock.calls[0][0]).toBeInstanceOf(HTMLInputElement);
   });
 
-  it("should toggle button have tabIndex -1", () => {
+  it("keeps the visibility toggle in sequential keyboard tab order", () => {
     render(<PasswordInput data-testid="password-input" />);
 
     const toggleButton = screen.getByRole("button", { name: "Show password" });
-    expect(toggleButton).toHaveAttribute("tabIndex", "-1");
+    expect(toggleButton).not.toHaveAttribute("tabIndex", "-1");
+    expect(toggleButton).toHaveAttribute("type", "button");
   });
 
   it("should have displayName set", () => {

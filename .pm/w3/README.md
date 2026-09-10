@@ -37,7 +37,6 @@
 ## Inbox
 
 - [003](./003.md) — Bulk entry writes are not retry-safe after a false timeout
-- [030](./030.md) — Password visibility buttons are skipped by keyboard navigation
 - [031](./031.md) — Budget cards hide actual and variance for zero-activity intervals
 - [032](./032.md) — Missing commits are reported as a server outage
 - [033](./033.md) — Related Files links navigate to a missing route
